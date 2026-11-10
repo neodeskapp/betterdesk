@@ -65,7 +65,7 @@ var (
 		// The same for the activity the seed spreads over working hours:
 		// which devices have summaries, and their numbers, change with the
 		// hour, and so does the saved report made from them.
-		"GET /api/activity":      {"~summaries"},
+		"GET /api/activity":      {"~summaries", "total"},
 		"GET /api/reports/saved": {"~[*].payload"},
 		// One entry holds the size of the backup the matrix downloads
 		// ("0.33 MB"), which changes with the instance.

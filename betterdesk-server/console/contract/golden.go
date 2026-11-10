@@ -428,3 +428,47 @@ func marshalPlain(value any) ([]byte, error) {
 	}
 	return bytes.TrimSpace(buf.Bytes()), nil
 }
+
+// withHandMarks adds the marks set by hand in the code to those a golden
+// holds, so a mark added after a golden was recorded counts without
+// recording again. A mark that is free in format takes the format off a
+// recorded mark for the same path.
+func withHandMarks(want GoldenAnswer, volatile, volatileHeaders []string) GoldenAnswer {
+	paths, free := handMarks(volatile)
+	if len(paths) > 0 {
+		marks := append([]VolatileMark(nil), want.Volatile...)
+		known := map[string]int{}
+		for i, mark := range marks {
+			known[mark.Path] = i
+		}
+		for _, p := range paths {
+			i, ok := known[p]
+			switch {
+			case !ok:
+				marks = append(marks, VolatileMark{Path: p})
+			case free[p]:
+				marks[i] = VolatileMark{Path: p}
+			}
+		}
+		want.Volatile = marks
+	}
+	if len(volatileHeaders) > 0 {
+		headers := append([]string(nil), want.VolatileHeaders...)
+		for _, name := range volatileHeaders {
+			if !containsFold(headers, name) {
+				headers = append(headers, name)
+			}
+		}
+		want.VolatileHeaders = headers
+	}
+	return want
+}
+
+func containsFold(list []string, s string) bool {
+	for _, item := range list {
+		if strings.EqualFold(item, s) {
+			return true
+		}
+	}
+	return false
+}

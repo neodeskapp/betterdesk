@@ -148,6 +148,7 @@ func (s *Suite) judge(t *testing.T, sl *slot, role Role, answer Answer) {
 			lines = append(lines, fmt.Sprintf("the golden has no answer for role %s: record it again", role))
 			break
 		}
+		want = withHandMarks(want, sl.rec.Volatile, sl.rec.VolatileHeaders)
 		for _, diff := range CompareAnswers(want, answer) {
 			lines = append(lines, diff.String())
 		}

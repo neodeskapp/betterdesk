@@ -292,3 +292,34 @@ func TestGoldenFileNames(t *testing.T) {
 		}
 	}
 }
+
+// A mark set by hand after a golden was recorded counts at once: the value
+// at its path is compared by type only, and a header named by hand only
+// has to be present.
+func TestHandMarksCountWithoutRecordingAgain(t *testing.T) {
+	recorded := Answer{Status: 200, Headers: map[string][]string{"x-rev": {"a1"}}, Body: Body{Kind: BodyJSON, JSON: []byte(`{"n":1,"when":"2026-01-02 03:04:05","list":[1,2]}`)}}
+	now := Answer{Status: 200, Headers: map[string][]string{"x-rev": {"b2"}}, Body: Body{Kind: BodyJSON, JSON: []byte(`{"n":7,"when":"1m3.2s","list":[1,2,3]}`)}}
+	want := newGoldenAnswer(recorded, []VolatileMark{{Path: "when", Format: "9999-99-99 99:99:99"}}, nil)
+
+	if diffs := CompareAnswers(want, now); len(diffs) != 4 {
+		t.Fatalf("without hand marks: %d differences, want 4 (header, n, when, list): %v", len(diffs), diffs)
+	}
+	marked := withHandMarks(want, []string{"n", "~when", "~list"}, []string{"X-Rev"})
+	if diffs := CompareAnswers(marked, now); len(diffs) != 0 {
+		t.Errorf("with hand marks: %v", diffs)
+	}
+	// A hand mark that is not free keeps the recorded format
+	kept := withHandMarks(want, []string{"n", "when", "~list"}, []string{"x-rev"})
+	if diffs := CompareAnswers(kept, now); len(diffs) != 1 {
+		t.Errorf("a plain hand mark must keep the recorded format: %v", diffs)
+	}
+	// The type still counts
+	wrongType := now
+	wrongType.Body = Body{Kind: BodyJSON, JSON: []byte(`{"n":"7","when":"x","list":[]}`)}
+	if diffs := CompareAnswers(marked, wrongType); len(diffs) != 1 {
+		t.Errorf("a volatile value of another type must be reported once: %v", diffs)
+	}
+	if len(want.Volatile) != 1 || want.Volatile[0].Format == "" {
+		t.Error("withHandMarks changed the golden it was given")
+	}
+}

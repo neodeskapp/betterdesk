@@ -1,0 +1,3 @@
+# The repository ignores *credentials*; these are recorded answers of routes
+# with that word in their address and hold no credentials.
+!*credentials*
