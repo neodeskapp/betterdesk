@@ -1,0 +1,159 @@
+{
+ "id": "GET /api/reports/saved",
+ "request": {
+  "method": "GET",
+  "path": "/api/reports/saved"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Authentication required"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "panel_access_denied",
+     "error": "Panel access denied: reports",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": [
+     {
+      "created_at": "<volatile>",
+      "created_by": "admin",
+      "filters": "{}",
+      "id": 1,
+      "payload": "{\"total_devices\":30,\"online\":0,\"offline\":30,\"banned\":2,\"platform_distribution\":{\"Windows 11 Pro\":5,\"Windows 10 Pro\":2,\"macOS 15.1\":1,\"macOS 14.6\":1,\"macOS 15.0\":1,\"Windows 10 IoT\":3,\"Android 14\":2,\"Android 13\":1,\"Ubuntu 24.04\":1,\"Debian 12\":1,\"Linux 6.1\":1,\"Ubuntu 22.04\":2,\"Windows 11 Home\":2,\"iOS 18.1\":1,\"Android 15\":1,\"Linux 6.6 (Raspberry Pi)\":2,\"Windows Server 2022\":1,\"Windows 7\":1,\"Linux 5.15\":1},\"stats\":{\"total\":30,\"online\":0,\"banned\":2,\"offline\":30}}",
+      "report_type": "devices",
+      "title": "Demo weekly device summary"
+     },
+     {
+      "created_at": "<volatile>",
+      "created_by": "admin",
+      "filters": "{}",
+      "id": 2,
+      "payload": "{\"stats\":{\"total\":9,\"open\":4,\"in_progress\":2,\"resolved\":1,\"closed\":2},\"total_tickets\":9,\"category_distribution\":{\"network\":2,\"hardware\":3,\"software\":3,\"access\":1},\"priority_distribution\":{\"high\":2,\"medium\":2,\"critical\":2,\"low\":3}}",
+      "report_type": "tickets",
+      "title": "Demo open tickets"
+     },
+     {
+      "created_at": "<volatile>",
+      "created_by": "admin",
+      "filters": "{}",
+      "id": 3,
+      "payload": "{\"total_inventoried\":14,\"os_distribution\":{\"Windows 11 Pro\":2,\"Windows 10 Pro\":2,\"macOS 15.1\":1,\"macOS 14.6\":1,\"Windows 10 IoT\":1,\"Ubuntu 24.04\":1,\"Debian 12\":1,\"Ubuntu 22.04\":2,\"Windows 11 Home\":1,\"Linux 6.6 (Raspberry Pi)\":1,\"Windows Server 2022\":1},\"avg_ram_mb\":37595}",
+      "report_type": "inventory",
+      "title": "Demo hardware inventory"
+     },
+     {
+      "created_at": "<volatile>",
+      "created_by": "admin",
+      "filters": "{}",
+      "id": 4,
+      "payload": "{\"devices_with_activity\":6,\"daily_reports\":28,\"total_active_secs\":637475,\"total_idle_secs\":221460,\"top_applications\":[{\"name\":\"Microsoft Excel\",\"category\":\"productivity\",\"total_secs\":80942,\"sessions\":45,\"devices\":6},{\"name\":\"Microsoft Word\",\"category\":\"productivity\",\"total_secs\":79837,\"sessions\":46,\"devices\":6},{\"name\":\"Spotify\",\"category\":\"media\",\"total_secs\":78220,\"sessions\":44,\"devices\":6},{\"name\":\"Visual Studio Code\",\"category\":\"development\",\"total_secs\":69625,\"sessions\":46,\"devices\":6},{\"name\":\"Demo Accounting Suite\",\"category\":\"productivity\",\"total_secs\":62358,\"sessions\":40,\"devices\":6},{\"name\":\"Microsoft Outlook\",\"category\":\"communication\",\"total_secs\":56597,\"sessions\":36,\"devices\":6},{\"name\":\"Microsoft Edge\",\"category\":\"browser\",\"total_secs\":55670,\"sessions\":37,\"devices\":6},{\"name\":\"Microsoft Teams\",\"category\":\"communication\",\"total_secs\":55388,\"sessions\":37,\"devices\":6},{\"name\":\"Windows Explorer\",\"category\":\"system\",\"total_secs\":54141,\"sessions\":39,\"devices\":6},{\"name\":\"Google Chrome\",\"category\":\"browser\",\"total_secs\":44697,\"sessions\":27,\"devices\":6}]}",
+      "report_type": "activity",
+      "title": "Demo app usage this week"
+     }
+    ]
+   }
+  }
+ ]
+}

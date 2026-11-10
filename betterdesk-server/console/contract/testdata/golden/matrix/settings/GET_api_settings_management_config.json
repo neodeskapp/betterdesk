@@ -1,0 +1,221 @@
+{
+ "id": "GET /api/settings/management/config",
+ "request": {
+  "method": "GET",
+  "path": "/api/settings/management/config"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "panel_access_denied",
+     "error": "Panel access denied: settings",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "envPath": "/repo/web-nodejs/.env",
+      "keys": [
+       "AGENT_ARTIFACT_DIR",
+       "AGENT_BUILD_COOLDOWN_MS",
+       "AGENT_BUILD_POLL_MS",
+       "AGENT_BUILD_WORKER",
+       "ALLOW_SHARED_NAT_INITIATOR",
+       "API_ENABLED",
+       "API_HOST",
+       "API_KEY_PATH",
+       "API_PORT",
+       "API_TOKEN_EXPIRY_DAYS",
+       "BETTERDESK_API_URL",
+       "BETTERDESK_CLIENT_ALLOWED_REPOS",
+       "BETTERDESK_CLIENT_BUILD_COMMAND",
+       "BETTERDESK_CLIENT_BUILD_MIN_FREE_MB",
+       "BETTERDESK_CLIENT_BUILD_TIMEOUT_MS",
+       "BETTERDESK_CLIENT_BUILD_WORKFLOW",
+       "BETTERDESK_CLIENT_GENERATOR_MODE",
+       "BETTERDESK_CLIENT_GITHUB_ACTIONS",
+       "BETTERDESK_CLIENT_PROVIDER_TARGETS_FILE",
+       "BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON",
+       "BETTERDESK_CLIENT_REF",
+       "BETTERDESK_CLIENT_RELEASE_TAG",
+       "BETTERDESK_CLIENT_REPO",
+       "BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED",
+       "BETTERDESK_GITHUB_TOKEN",
+       "BETTERDESK_SUPPORT_RELEASE_PUBLIC_KEY",
+       "BILLING_MAX_CLOCK_SKEW_MS",
+       "BILLING_REQUIRE_SYNCED_CLOCK",
+       "BILLING_REQUIRE_WORK_REPORT",
+       "BILLING_ROUNDING_MINUTES",
+       "BILLING_TRUST_OS_NTP",
+       "CDAP_ENABLED",
+       "CDAP_TLS",
+       "CDAP_TLS_REQUIRED",
+       "CLIENT_SESSION_EXPIRY_DAYS",
+       "CLIENT_SESSION_MAX_DAYS",
+       "CLIENT_SESSION_SLIDING",
+       "DATABASE_URL",
+       "DATA_DIR",
+       "DB_PATH",
+       "DB_TYPE",
+       "DEFAULT_ADMIN_PASSWORD",
+       "DEFAULT_ADMIN_USERNAME",
+       "GO_API_PORT",
+       "GUACD_ADDRESS",
+       "HBBS_API_URL",
+       "HOST",
+       "HTTPS_ENABLED",
+       "HTTPS_PORT",
+       "HTTP_REDIRECT_HTTPS",
+       "KEYS_PATH",
+       "LOG_LEVEL",
+       "NODE_ENV",
+       "NTP_SERVERS",
+       "ORG_PEER_VAULT_KEY",
+       "PANEL_PUBLIC_HOST",
+       "PANEL_PUBLIC_URL",
+       "PANEL_SIGNAL_PROXY_CIDRS",
+       "PORT",
+       "PUBLIC_API_URL",
+       "PUBLIC_RELAY_SERVER",
+       "PUBLIC_SERVER_ID",
+       "PUB_KEY_PATH",
+       "REMOTE_TARGET_VAULT_KEY",
+       "RUSTDESK_API_PROXY",
+       "RUSTDESK_API_TLS",
+       "RUSTDESK_DIR",
+       "SERVER_BACKEND",
+       "SESSION_IDLE_TIMEOUT",
+       "SESSION_IDLE_WARN_MS",
+       "SESSION_MAX_AGE",
+       "SESSION_MAX_PER_USER",
+       "SESSION_SECRET",
+       "SMTP_ALERT_EMAIL",
+       "SMTP_FROM",
+       "SMTP_HOST",
+       "SMTP_PASS",
+       "SMTP_PORT",
+       "SMTP_SECURE",
+       "SMTP_TLS_VERIFY",
+       "SMTP_USER",
+       "SSL_CA_PATH",
+       "SSL_CERT_PATH",
+       "SSL_KEY_PATH",
+       "TRUSTED_PROXIES",
+       "TRUST_PROXY",
+       "UPDATE_GITHUB_BRANCH",
+       "UPDATE_GITHUB_TOKEN",
+       "WEB_UI_DIR",
+       "WS_ALLOWED_ORIGINS"
+      ],
+      "values": {
+       "BILLING_MAX_CLOCK_SKEW_MS": "3500",
+       "BILLING_REQUIRE_SYNCED_CLOCK": "0",
+       "BILLING_TRUST_OS_NTP": "0",
+       "NTP_SERVERS": "time.example.com"
+      }
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

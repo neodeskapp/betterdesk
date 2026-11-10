@@ -1,0 +1,365 @@
+{
+ "id": "GET /api/panel/resource-control/devices",
+ "request": {
+  "method": "GET",
+  "path": "/api/panel/resource-control/devices"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Permission denied: server.config",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "devices": [
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-reception-01",
+       "id": "900100001",
+       "platform": "Windows 11 Pro",
+       "status": "ONLINE",
+       "tags": "office,ground-floor"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-reception-02",
+       "id": "900100002",
+       "platform": "Windows 11 Pro",
+       "status": "OFFLINE",
+       "tags": "office,ground-floor"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-accounts-01",
+       "id": "900100003",
+       "platform": "Windows 10 Pro",
+       "status": "ONLINE",
+       "tags": "office,finance"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-accounts-02",
+       "id": "900100004",
+       "platform": "Windows 10 Pro",
+       "status": "OFFLINE",
+       "tags": "finance"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-ceo-macbook",
+       "id": "900100005",
+       "platform": "macOS 15.1",
+       "status": "ONLINE",
+       "tags": "vip"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-design-imac",
+       "id": "900100006",
+       "platform": "macOS 14.6",
+       "status": "ONLINE",
+       "tags": "design"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-design-mbp",
+       "id": "900100007",
+       "platform": "macOS 15.0",
+       "status": "OFFLINE",
+       "tags": "design,laptop"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-warehouse-pc",
+       "id": "900100008",
+       "platform": "Windows 10 IoT",
+       "status": "ONLINE",
+       "tags": "warehouse"
+      },
+      {
+       "device_type": "mobile",
+       "hostname": "demo-warehouse-scan-1",
+       "id": "900100009",
+       "platform": "Android 14",
+       "status": "ONLINE",
+       "tags": "warehouse,scanner"
+      },
+      {
+       "device_type": "mobile",
+       "hostname": "demo-warehouse-scan-2",
+       "id": "900100010",
+       "platform": "Android 13",
+       "status": "OFFLINE",
+       "tags": "warehouse,scanner"
+      },
+      {
+       "device_type": "mobile",
+       "hostname": "demo-warehouse-scan-3",
+       "id": "900100011",
+       "platform": "Android 14",
+       "status": "OFFLINE",
+       "tags": "warehouse,scanner"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-build-server",
+       "id": "900100012",
+       "platform": "Ubuntu 24.04",
+       "status": "ONLINE",
+       "tags": "server,linux"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-file-server",
+       "id": "900100013",
+       "platform": "Debian 12",
+       "status": "ONLINE",
+       "tags": "server,linux"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-backup-nas",
+       "id": "900100014",
+       "platform": "Linux 6.1",
+       "status": "OFFLINE",
+       "tags": "server,storage"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-db-primary",
+       "id": "900100015",
+       "platform": "Ubuntu 22.04",
+       "status": "ONLINE",
+       "tags": "server,linux,critical"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-db-replica",
+       "id": "900100016",
+       "platform": "Ubuntu 22.04",
+       "status": "OFFLINE",
+       "tags": "server,linux"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-sales-laptop-01",
+       "id": "900100017",
+       "platform": "Windows 11 Home",
+       "status": "ONLINE",
+       "tags": "laptop,sales"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-sales-laptop-02",
+       "id": "900100018",
+       "platform": "Windows 11 Home",
+       "status": "OFFLINE",
+       "tags": "laptop,sales"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-sales-laptop-03",
+       "id": "900100019",
+       "platform": "Windows 11 Pro",
+       "status": "OFFLINE",
+       "tags": "laptop,sales"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-kiosk-lobby",
+       "id": "900100020",
+       "platform": "Windows 10 IoT",
+       "status": "ONLINE",
+       "tags": "kiosk"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-kiosk-canteen",
+       "id": "900100021",
+       "platform": "Windows 10 IoT",
+       "status": "OFFLINE",
+       "tags": "kiosk"
+      },
+      {
+       "device_type": "mobile",
+       "hostname": "demo-support-ipad",
+       "id": "900100022",
+       "platform": "iOS 18.1",
+       "status": "OFFLINE",
+       "tags": "mobile"
+      },
+      {
+       "device_type": "mobile",
+       "hostname": "demo-support-pixel",
+       "id": "900100023",
+       "platform": "Android 15",
+       "status": "ONLINE",
+       "tags": "mobile"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-lab-rpi-01",
+       "id": "900100024",
+       "platform": "Linux 6.6 (Raspberry Pi)",
+       "status": "ONLINE",
+       "tags": "lab,iot"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-lab-rpi-02",
+       "id": "900100025",
+       "platform": "Linux 6.6 (Raspberry Pi)",
+       "status": "OFFLINE",
+       "tags": "lab,iot"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-lab-win-vm",
+       "id": "900100026",
+       "platform": "Windows Server 2022",
+       "status": "ONLINE",
+       "tags": "lab,vm"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-old-xp-box",
+       "id": "900100027",
+       "platform": "Windows 7",
+       "status": "OFFLINE",
+       "tags": "legacy"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-stolen-laptop",
+       "id": "900100028",
+       "platform": "Windows 11 Pro",
+       "status": "OFFLINE",
+       "tags": "laptop"
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-unknown-box",
+       "id": "900100029",
+       "platform": "Linux 5.15",
+       "status": "OFFLINE",
+       "tags": ""
+      },
+      {
+       "device_type": "rustdesk",
+       "hostname": "demo-noted-pc",
+       "id": "900100031",
+       "platform": "Windows 11 Pro",
+       "status": "OFFLINE",
+       "tags": "office"
+      }
+     ],
+     "total": 30
+    }
+   }
+  }
+ ]
+}

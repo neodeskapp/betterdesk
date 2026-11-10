@@ -1,0 +1,2235 @@
+{
+ "id": "GET /api/panel/security-audit/events",
+ "request": {
+  "method": "GET",
+  "path": "/api/panel/security-audit/events"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Permission denied: audit.view",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer",
+    "operator",
+    "global_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "events[*].timestamp",
+     "pattern": "^9999-99-99A99:99:99\\.9+A$"
+    },
+    {
+     "path": "events[0].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[10].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[1].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[2].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[3].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[4].details.org_id",
+     "pattern": "^[9aA+/_=-]+$"
+    },
+    {
+     "path": "events[5].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[6].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[7].details.org_id",
+     "pattern": "^[9aA+/_=-]+$"
+    },
+    {
+     "path": "events[8].details.org_id",
+     "pattern": "^[9aA+/_=-]+$"
+    },
+    {
+     "path": "events[9].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "count": 41,
+     "enabled": true,
+     "events": [
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "network",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "update",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "connection",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_user_linked",
+       "actor": "127.0.0.1",
+       "details": {
+        "org_id": "<volatile>",
+        "role": "operator",
+        "user_id": "4"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "update",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "network",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "security",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "features",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "connection",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_user_linked",
+       "actor": "127.0.0.1",
+       "details": {
+        "org_id": "<volatile>",
+        "role": "user",
+        "user_id": "3"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_user_linked",
+       "actor": "127.0.0.1",
+       "details": {
+        "org_id": "<volatile>",
+        "role": "admin",
+        "user_id": "2"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "office"
+       },
+       "target": "900100031",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "laptop"
+       },
+       "target": "900100028",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "legacy"
+       },
+       "target": "900100027",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "lab,vm"
+       },
+       "target": "900100026",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "lab,iot"
+       },
+       "target": "900100025",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "lab,iot"
+       },
+       "target": "900100024",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "mobile"
+       },
+       "target": "900100023",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "mobile"
+       },
+       "target": "900100022",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "kiosk"
+       },
+       "target": "900100021",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "kiosk"
+       },
+       "target": "900100020",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "laptop,sales"
+       },
+       "target": "900100019",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "laptop,sales"
+       },
+       "target": "900100018",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "laptop,sales"
+       },
+       "target": "900100017",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,linux"
+       },
+       "target": "900100016",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,linux,critical"
+       },
+       "target": "900100015",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,storage"
+       },
+       "target": "900100014",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,linux"
+       },
+       "target": "900100013",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,linux"
+       },
+       "target": "900100012",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "warehouse,scanner"
+       },
+       "target": "900100011",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "warehouse,scanner"
+       },
+       "target": "900100010",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "warehouse,scanner"
+       },
+       "target": "900100009",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "warehouse"
+       },
+       "target": "900100008",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "design,laptop"
+       },
+       "target": "900100007",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "design"
+       },
+       "target": "900100006",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "vip"
+       },
+       "target": "900100005",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "finance"
+       },
+       "target": "900100004",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "office,finance"
+       },
+       "target": "900100003",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "office,ground-floor"
+       },
+       "target": "900100002",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "office,ground-floor"
+       },
+       "target": "900100001",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "server_start",
+       "actor": "system",
+       "details": {
+        "mode": "all",
+        "version": "3.5.224"
+       },
+       "timestamp": "<volatile>"
+      }
+     ],
+     "total": 41
+    }
+   }
+  },
+  {
+   "roles": [
+    "server_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "events[*].timestamp",
+     "pattern": "^9999-99-99A99:99:99\\.9+A$"
+    },
+    {
+     "path": "events[10].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[11].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[12].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[13].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[14].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[15].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[16].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[3].details.id",
+     "pattern": "^[9aA+/_=-]{16}$"
+    },
+    {
+     "path": "events[6].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[7].details.org_id",
+     "pattern": "^[9aA+/_=-]+$"
+    },
+    {
+     "path": "events[8].details.org_id",
+     "pattern": "^[9aA+/_=-]+$"
+    },
+    {
+     "path": "events[9].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "count": 47,
+     "enabled": true,
+     "events": [
+      {
+       "action": "device_rejected",
+       "actor": "127.0.0.1",
+       "details": {
+        "banned": "false",
+        "device_id": "999999999"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "enrollment_rejection_cleared",
+       "actor": "127.0.0.1",
+       "details": {
+        "device_id": "999999999",
+        "peer_removed": "false",
+        "unbanned": "false"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "device_rejected",
+       "actor": "127.0.0.1",
+       "details": {
+        "banned": "false",
+        "device_id": "999999999"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "pairing_code_created",
+       "actor": "127.0.0.1",
+       "details": {
+        "id": "<volatile>",
+        "label": ""
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_peer_credential_clear",
+       "actor": "127.0.0.1",
+       "details": {
+        "action": "clear",
+        "actor": "apikey:console-bridge",
+        "org_id": "999999999"
+       },
+       "target": "999999999",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "branding_updated",
+       "actor": "127.0.0.1",
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "network",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "update",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "connection",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_user_linked",
+       "actor": "127.0.0.1",
+       "details": {
+        "org_id": "<volatile>",
+        "role": "operator",
+        "user_id": "4"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "update",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "network",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "security",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "features",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "connection",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_user_linked",
+       "actor": "127.0.0.1",
+       "details": {
+        "org_id": "<volatile>",
+        "role": "user",
+        "user_id": "3"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_user_linked",
+       "actor": "127.0.0.1",
+       "details": {
+        "org_id": "<volatile>",
+        "role": "admin",
+        "user_id": "2"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "office"
+       },
+       "target": "900100031",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "laptop"
+       },
+       "target": "900100028",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "legacy"
+       },
+       "target": "900100027",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "lab,vm"
+       },
+       "target": "900100026",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "lab,iot"
+       },
+       "target": "900100025",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "lab,iot"
+       },
+       "target": "900100024",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "mobile"
+       },
+       "target": "900100023",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "mobile"
+       },
+       "target": "900100022",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "kiosk"
+       },
+       "target": "900100021",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "kiosk"
+       },
+       "target": "900100020",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "laptop,sales"
+       },
+       "target": "900100019",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "laptop,sales"
+       },
+       "target": "900100018",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "laptop,sales"
+       },
+       "target": "900100017",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,linux"
+       },
+       "target": "900100016",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,linux,critical"
+       },
+       "target": "900100015",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,storage"
+       },
+       "target": "900100014",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,linux"
+       },
+       "target": "900100013",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,linux"
+       },
+       "target": "900100012",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "warehouse,scanner"
+       },
+       "target": "900100011",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "warehouse,scanner"
+       },
+       "target": "900100010",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "warehouse,scanner"
+       },
+       "target": "900100009",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "warehouse"
+       },
+       "target": "900100008",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "design,laptop"
+       },
+       "target": "900100007",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "design"
+       },
+       "target": "900100006",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "vip"
+       },
+       "target": "900100005",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "finance"
+       },
+       "target": "900100004",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "office,finance"
+       },
+       "target": "900100003",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "office,ground-floor"
+       },
+       "target": "900100002",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "office,ground-floor"
+       },
+       "target": "900100001",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "server_start",
+       "actor": "system",
+       "details": {
+        "mode": "all",
+        "version": "3.5.224"
+       },
+       "timestamp": "<volatile>"
+      }
+     ],
+     "total": 47
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "events[*].timestamp",
+     "pattern": "^9999-99-99A99:99:99\\.9+A$"
+    },
+    {
+     "path": "events[10].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[11].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[12].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[13].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[14].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[15].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[16].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[17].details.org_id",
+     "pattern": "^[9aA+/_=-]+$"
+    },
+    {
+     "path": "events[18].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[19].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[6].details.id",
+     "pattern": "^[9aA+/_=-]{16}$"
+    },
+    {
+     "path": "events[9].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "count": 50,
+     "enabled": true,
+     "events": [
+      {
+       "action": "ldap_config_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "enabled": "false",
+        "host": "",
+        "port": "389"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "config_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "value": "30"
+       },
+       "target": "availability_history_retention_days",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "config_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "value": "false"
+       },
+       "target": "availability_history_enabled",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "device_rejected",
+       "actor": "127.0.0.1",
+       "details": {
+        "banned": "false",
+        "device_id": "999999999"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "enrollment_rejection_cleared",
+       "actor": "127.0.0.1",
+       "details": {
+        "device_id": "999999999",
+        "peer_removed": "false",
+        "unbanned": "false"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "device_rejected",
+       "actor": "127.0.0.1",
+       "details": {
+        "banned": "false",
+        "device_id": "999999999"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "pairing_code_created",
+       "actor": "127.0.0.1",
+       "details": {
+        "id": "<volatile>",
+        "label": ""
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_peer_credential_clear",
+       "actor": "127.0.0.1",
+       "details": {
+        "action": "clear",
+        "actor": "apikey:console-bridge",
+        "org_id": "999999999"
+       },
+       "target": "999999999",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "branding_updated",
+       "actor": "127.0.0.1",
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "network",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "update",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "connection",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_user_linked",
+       "actor": "127.0.0.1",
+       "details": {
+        "org_id": "<volatile>",
+        "role": "operator",
+        "user_id": "4"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "update",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "network",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "security",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "features",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "connection",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_user_linked",
+       "actor": "127.0.0.1",
+       "details": {
+        "org_id": "<volatile>",
+        "role": "user",
+        "user_id": "3"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_user_linked",
+       "actor": "127.0.0.1",
+       "details": {
+        "org_id": "<volatile>",
+        "role": "admin",
+        "user_id": "2"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "office"
+       },
+       "target": "900100031",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "laptop"
+       },
+       "target": "900100028",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "legacy"
+       },
+       "target": "900100027",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "lab,vm"
+       },
+       "target": "900100026",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "lab,iot"
+       },
+       "target": "900100025",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "lab,iot"
+       },
+       "target": "900100024",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "mobile"
+       },
+       "target": "900100023",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "mobile"
+       },
+       "target": "900100022",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "kiosk"
+       },
+       "target": "900100021",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "kiosk"
+       },
+       "target": "900100020",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "laptop,sales"
+       },
+       "target": "900100019",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "laptop,sales"
+       },
+       "target": "900100018",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "laptop,sales"
+       },
+       "target": "900100017",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,linux"
+       },
+       "target": "900100016",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,linux,critical"
+       },
+       "target": "900100015",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,storage"
+       },
+       "target": "900100014",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,linux"
+       },
+       "target": "900100013",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,linux"
+       },
+       "target": "900100012",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "warehouse,scanner"
+       },
+       "target": "900100011",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "warehouse,scanner"
+       },
+       "target": "900100010",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "warehouse,scanner"
+       },
+       "target": "900100009",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "warehouse"
+       },
+       "target": "900100008",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "design,laptop"
+       },
+       "target": "900100007",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "design"
+       },
+       "target": "900100006",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "vip"
+       },
+       "target": "900100005",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "finance"
+       },
+       "target": "900100004",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "office,finance"
+       },
+       "target": "900100003",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "office,ground-floor"
+       },
+       "target": "900100002",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "office,ground-floor"
+       },
+       "target": "900100001",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "server_start",
+       "actor": "system",
+       "details": {
+        "mode": "all",
+        "version": "3.5.224"
+       },
+       "timestamp": "<volatile>"
+      }
+     ],
+     "total": 50
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "events[*].timestamp",
+     "pattern": "^9999-99-99A99:99:99\\.9+A$"
+    },
+    {
+     "path": "events[16].details.id",
+     "pattern": "^[9aA+/_=-]{16}$"
+    },
+    {
+     "path": "events[19].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[20].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[21].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[22].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[23].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[24].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[25].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[26].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[27].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[28].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[29].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[7].details.id",
+     "pattern": "^[9aA+/_=-]{16}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "count": 50,
+     "enabled": true,
+     "events": [
+      {
+       "action": "ldap_config_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "enabled": "false",
+        "host": "",
+        "port": "389"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "config_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "value": "30"
+       },
+       "target": "availability_history_retention_days",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "config_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "value": "false"
+       },
+       "target": "availability_history_enabled",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "device_rejected",
+       "actor": "127.0.0.1",
+       "details": {
+        "banned": "false",
+        "device_id": "999999999"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "enrollment_rejection_cleared",
+       "actor": "127.0.0.1",
+       "details": {
+        "device_id": "999999999",
+        "peer_removed": "false",
+        "unbanned": "false"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "device_rejected",
+       "actor": "127.0.0.1",
+       "details": {
+        "banned": "false",
+        "device_id": "999999999"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "enrollment_rejection_cleared",
+       "actor": "127.0.0.1",
+       "details": {
+        "device_id": "999999999",
+        "peer_removed": "false",
+        "unbanned": "false"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "pairing_code_created",
+       "actor": "127.0.0.1",
+       "details": {
+        "id": "<volatile>",
+        "label": ""
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_peer_credential_clear",
+       "actor": "127.0.0.1",
+       "details": {
+        "action": "clear",
+        "actor": "apikey:console-bridge",
+        "org_id": "999999999"
+       },
+       "target": "999999999",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "branding_updated",
+       "actor": "127.0.0.1",
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "ldap_config_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "enabled": "false",
+        "host": "",
+        "port": "389"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "config_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "value": "30"
+       },
+       "target": "availability_history_retention_days",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "config_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "value": "false"
+       },
+       "target": "availability_history_enabled",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "device_rejected",
+       "actor": "127.0.0.1",
+       "details": {
+        "banned": "false",
+        "device_id": "999999999"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "enrollment_rejection_cleared",
+       "actor": "127.0.0.1",
+       "details": {
+        "device_id": "999999999",
+        "peer_removed": "false",
+        "unbanned": "false"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "device_rejected",
+       "actor": "127.0.0.1",
+       "details": {
+        "banned": "false",
+        "device_id": "999999999"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "pairing_code_created",
+       "actor": "127.0.0.1",
+       "details": {
+        "id": "<volatile>",
+        "label": ""
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_peer_credential_clear",
+       "actor": "127.0.0.1",
+       "details": {
+        "action": "clear",
+        "actor": "apikey:console-bridge",
+        "org_id": "999999999"
+       },
+       "target": "999999999",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "branding_updated",
+       "actor": "127.0.0.1",
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "network",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "update",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "connection",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_user_linked",
+       "actor": "127.0.0.1",
+       "details": {
+        "org_id": "<volatile>",
+        "role": "operator",
+        "user_id": "4"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "update",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "network",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "security",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "features",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "connection",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_user_linked",
+       "actor": "127.0.0.1",
+       "details": {
+        "org_id": "<volatile>",
+        "role": "user",
+        "user_id": "3"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_user_linked",
+       "actor": "127.0.0.1",
+       "details": {
+        "org_id": "<volatile>",
+        "role": "admin",
+        "user_id": "2"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "office"
+       },
+       "target": "900100031",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "laptop"
+       },
+       "target": "900100028",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "legacy"
+       },
+       "target": "900100027",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "lab,vm"
+       },
+       "target": "900100026",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "lab,iot"
+       },
+       "target": "900100025",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "lab,iot"
+       },
+       "target": "900100024",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "mobile"
+       },
+       "target": "900100023",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "mobile"
+       },
+       "target": "900100022",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "kiosk"
+       },
+       "target": "900100021",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "kiosk"
+       },
+       "target": "900100020",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "laptop,sales"
+       },
+       "target": "900100019",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "laptop,sales"
+       },
+       "target": "900100018",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "laptop,sales"
+       },
+       "target": "900100017",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,linux"
+       },
+       "target": "900100016",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,linux,critical"
+       },
+       "target": "900100015",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,storage"
+       },
+       "target": "900100014",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,linux"
+       },
+       "target": "900100013",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "server,linux"
+       },
+       "target": "900100012",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "warehouse,scanner"
+       },
+       "target": "900100011",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "warehouse,scanner"
+       },
+       "target": "900100010",
+       "timestamp": "<volatile>"
+      }
+     ],
+     "total": 60
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,412 @@
+{
+ "id": "GET /api/activity",
+ "request": {
+  "method": "GET",
+  "path": "/api/activity"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "panel_access_denied",
+     "error": "Panel access denied: activity",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "summaries[*].received_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "summaries[*].reported_at",
+     "format": "9999-99-99A99:99:99.999A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "summaries": [
+      {
+       "detail_count": 16,
+       "device_id": "900100005",
+       "hostname": "demo-ceo-macbook",
+       "idle_seconds": 11640,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 16,
+       "total_active_secs": 25668
+      },
+      {
+       "detail_count": 20,
+       "device_id": "900100006",
+       "hostname": "demo-design-imac",
+       "idle_seconds": 12000,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 20,
+       "total_active_secs": 23953
+      },
+      {
+       "detail_count": 14,
+       "device_id": "900100001",
+       "hostname": "demo-reception-01",
+       "idle_seconds": 8700,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 14,
+       "total_active_secs": 26128
+      },
+      {
+       "detail_count": 20,
+       "device_id": "900100003",
+       "hostname": "demo-accounts-01",
+       "idle_seconds": 10140,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 20,
+       "total_active_secs": 28460
+      },
+      {
+       "detail_count": 15,
+       "device_id": "900100026",
+       "hostname": "demo-lab-win-vm",
+       "idle_seconds": 9000,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 15,
+       "total_active_secs": 26595
+      },
+      {
+       "detail_count": 13,
+       "device_id": "900100017",
+       "hostname": "demo-sales-laptop-01",
+       "idle_seconds": 7800,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 13,
+       "total_active_secs": 22160
+      },
+      {
+       "detail_count": 26,
+       "device_id": "900100003",
+       "hostname": "demo-accounts-01",
+       "idle_seconds": 3660,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 6,
+       "total_active_secs": 11266
+      },
+      {
+       "detail_count": 21,
+       "device_id": "900100005",
+       "hostname": "demo-ceo-macbook",
+       "idle_seconds": 2100,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 5,
+       "total_active_secs": 9636
+      },
+      {
+       "detail_count": 21,
+       "device_id": "900100026",
+       "hostname": "demo-lab-win-vm",
+       "idle_seconds": 3480,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 6,
+       "total_active_secs": 9357
+      },
+      {
+       "detail_count": 18,
+       "device_id": "900100001",
+       "hostname": "demo-reception-01",
+       "idle_seconds": 2460,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 4,
+       "total_active_secs": 6704
+      },
+      {
+       "detail_count": 44,
+       "device_id": "900100003",
+       "hostname": "demo-accounts-01",
+       "idle_seconds": 12540,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 18,
+       "total_active_secs": 24246
+      },
+      {
+       "detail_count": 38,
+       "device_id": "900100026",
+       "hostname": "demo-lab-win-vm",
+       "idle_seconds": 8520,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 17,
+       "total_active_secs": 25634
+      },
+      {
+       "detail_count": 34,
+       "device_id": "900100006",
+       "hostname": "demo-design-imac",
+       "idle_seconds": 8880,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 14,
+       "total_active_secs": 25966
+      },
+      {
+       "detail_count": 32,
+       "device_id": "900100001",
+       "hostname": "demo-reception-01",
+       "idle_seconds": 5640,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 14,
+       "total_active_secs": 24850
+      },
+      {
+       "detail_count": 35,
+       "device_id": "900100005",
+       "hostname": "demo-ceo-macbook",
+       "idle_seconds": 7860,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 14,
+       "total_active_secs": 21332
+      },
+      {
+       "detail_count": 26,
+       "device_id": "900100017",
+       "hostname": "demo-sales-laptop-01",
+       "idle_seconds": 8700,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 13,
+       "total_active_secs": 20362
+      },
+      {
+       "detail_count": 55,
+       "device_id": "900100026",
+       "hostname": "demo-lab-win-vm",
+       "idle_seconds": 6480,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 17,
+       "total_active_secs": 29002
+      },
+      {
+       "detail_count": 50,
+       "device_id": "900100005",
+       "hostname": "demo-ceo-macbook",
+       "idle_seconds": 9720,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 15,
+       "total_active_secs": 24580
+      },
+      {
+       "detail_count": 40,
+       "device_id": "900100017",
+       "hostname": "demo-sales-laptop-01",
+       "idle_seconds": 7740,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 14,
+       "total_active_secs": 27104
+      },
+      {
+       "detail_count": 53,
+       "device_id": "900100006",
+       "hostname": "demo-design-imac",
+       "idle_seconds": 9960,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 19,
+       "total_active_secs": 24151
+      },
+      {
+       "detail_count": 49,
+       "device_id": "900100001",
+       "hostname": "demo-reception-01",
+       "idle_seconds": 8400,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 17,
+       "total_active_secs": 23359
+      },
+      {
+       "detail_count": 56,
+       "device_id": "900100003",
+       "hostname": "demo-accounts-01",
+       "idle_seconds": 8940,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 12,
+       "total_active_secs": 21196
+      },
+      {
+       "detail_count": 67,
+       "device_id": "900100005",
+       "hostname": "demo-ceo-macbook",
+       "idle_seconds": 8580,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 17,
+       "total_active_secs": 25446
+      },
+      {
+       "detail_count": 55,
+       "device_id": "900100017",
+       "hostname": "demo-sales-laptop-01",
+       "idle_seconds": 6600,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 15,
+       "total_active_secs": 28477
+      },
+      {
+       "detail_count": 66,
+       "device_id": "900100001",
+       "hostname": "demo-reception-01",
+       "idle_seconds": 9420,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 17,
+       "total_active_secs": 26686
+      },
+      {
+       "detail_count": 72,
+       "device_id": "900100026",
+       "hostname": "demo-lab-win-vm",
+       "idle_seconds": 7800,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 17,
+       "total_active_secs": 26677
+      },
+      {
+       "detail_count": 66,
+       "device_id": "900100006",
+       "hostname": "demo-design-imac",
+       "idle_seconds": 7920,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 13,
+       "total_active_secs": 24018
+      },
+      {
+       "detail_count": 71,
+       "device_id": "900100003",
+       "hostname": "demo-accounts-01",
+       "idle_seconds": 6780,
+       "received_at": "<volatile>",
+       "reported_at": "<volatile>",
+       "session_count": 15,
+       "total_active_secs": 24462
+      }
+     ],
+     "total": 28
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,445 @@
+{
+ "id": "GET /api/panel/access/catalog",
+ "request": {
+  "method": "GET",
+  "path": "/api/panel/access/catalog"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "panel_access_denied",
+     "error": "Panel access denied: users",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "features": [
+       {
+        "hardLock": false,
+        "key": "remote_control",
+        "label": "Remote control"
+       },
+       {
+        "hardLock": false,
+        "key": "file_transfer",
+        "label": "File transfer"
+       },
+       {
+        "hardLock": false,
+        "key": "clipboard",
+        "label": "Clipboard"
+       },
+       {
+        "hardLock": false,
+        "key": "audio",
+        "label": "Audio"
+       },
+       {
+        "hardLock": false,
+        "key": "tunnel",
+        "label": "Tunnel"
+       },
+       {
+        "hardLock": false,
+        "key": "terminal",
+        "label": "Terminal"
+       },
+       {
+        "hardLock": false,
+        "key": "port_forwarding",
+        "label": "Port forwarding"
+       },
+       {
+        "hardLock": false,
+        "key": "reboot",
+        "label": "Remote reboot"
+       },
+       {
+        "hardLock": false,
+        "key": "privacy_mode",
+        "label": "Privacy mode"
+       },
+       {
+        "hardLock": true,
+        "key": "client_actions",
+        "label": "Client actions"
+       }
+      ],
+      "groups": [
+       {
+        "key": "core",
+        "label": "Core"
+       },
+       {
+        "key": "administration",
+        "label": "Administration"
+       },
+       {
+        "key": "operations",
+        "label": "Operations"
+       },
+       {
+        "key": "commercialization",
+        "label": "Commercialization"
+       },
+       {
+        "key": "security",
+        "label": "Security"
+       },
+       {
+        "key": "system",
+        "label": "System"
+       }
+      ],
+      "levels": [
+       "none",
+       "read",
+       "write"
+      ],
+      "sections": [
+       {
+        "group": "core",
+        "key": "dashboard",
+        "label": "Dashboard",
+        "readPermission": "device.view",
+        "writePermission": null
+       },
+       {
+        "group": "core",
+        "key": "devices",
+        "label": "Devices",
+        "readPermission": "device.view",
+        "writePermission": "device.edit"
+       },
+       {
+        "group": "core",
+        "key": "registrations",
+        "label": "Registrations",
+        "readPermission": "enrollment.approve",
+        "writePermission": "enrollment.manage"
+       },
+       {
+        "group": "core",
+        "key": "remote",
+        "label": "Remote access",
+        "readPermission": "remote_target.view",
+        "writePermission": "remote_target.connect"
+       },
+       {
+        "group": "administration",
+        "key": "users",
+        "label": "Users",
+        "readPermission": "user.view",
+        "writePermission": "user.edit"
+       },
+       {
+        "group": "administration",
+        "key": "organizations",
+        "label": "Organizations",
+        "readPermission": "user.view",
+        "writePermission": "org.edit"
+       },
+       {
+        "group": "administration",
+        "key": "folders",
+        "label": "Folders",
+        "readPermission": "device.view",
+        "writePermission": "device.edit"
+       },
+       {
+        "group": "administration",
+        "key": "strategies",
+        "label": "Strategies",
+        "readPermission": "device.view",
+        "writePermission": "device.edit"
+       },
+       {
+        "group": "administration",
+        "key": "guests",
+        "label": "Guest access",
+        "readPermission": "guest.create",
+        "writePermission": "guest.create"
+       },
+       {
+        "group": "operations",
+        "key": "tickets",
+        "label": "Tickets",
+        "readPermission": "device.view",
+        "writePermission": "device.edit"
+       },
+       {
+        "group": "operations",
+        "key": "help-requests",
+        "label": "Help requests",
+        "readPermission": "device.view",
+        "writePermission": "device.edit"
+       },
+       {
+        "group": "operations",
+        "key": "cdap",
+        "label": "CDAP",
+        "readPermission": "cdap.view",
+        "writePermission": "cdap.command"
+       },
+       {
+        "group": "operations",
+        "key": "fleet",
+        "label": "Fleet",
+        "readPermission": "org.manage_devices",
+        "writePermission": "org.manage_devices"
+       },
+       {
+        "group": "operations",
+        "key": "chat",
+        "label": "Chat",
+        "readPermission": "chat.access",
+        "writePermission": "chat.access"
+       },
+       {
+        "group": "operations",
+        "key": "activity",
+        "label": "Activity",
+        "readPermission": "audit.view",
+        "writePermission": null
+       },
+       {
+        "group": "operations",
+        "key": "automation",
+        "label": "Automation",
+        "readPermission": "device.view",
+        "writePermission": "device.edit"
+       },
+       {
+        "group": "operations",
+        "key": "files",
+        "label": "File transfer",
+        "readPermission": "device.view",
+        "writePermission": "device.edit"
+       },
+       {
+        "group": "operations",
+        "key": "network",
+        "label": "Network",
+        "readPermission": "server.config",
+        "writePermission": "server.config"
+       },
+       {
+        "group": "operations",
+        "key": "dataguard",
+        "label": "Data guard",
+        "readPermission": "server.config",
+        "writePermission": "server.config"
+       },
+       {
+        "group": "operations",
+        "key": "reports",
+        "label": "Reports",
+        "readPermission": "metrics.view",
+        "writePermission": null
+       },
+       {
+        "group": "operations",
+        "key": "agents",
+        "label": "Agents",
+        "readPermission": "device.view",
+        "writePermission": "device.edit"
+       },
+       {
+        "group": "operations",
+        "key": "toolkit",
+        "label": "Toolkit",
+        "readPermission": "device.connect",
+        "writePermission": "device.edit"
+       },
+       {
+        "group": "commercialization",
+        "key": "commercialization",
+        "label": "Commercialization",
+        "readPermission": "billing.view",
+        "writePermission": "billing.manage"
+       },
+       {
+        "group": "commercialization",
+        "key": "scaling",
+        "label": "Scaling",
+        "readPermission": "server.config",
+        "writePermission": "server.config"
+       },
+       {
+        "group": "commercialization",
+        "key": "cross-platform",
+        "label": "Cross-platform",
+        "readPermission": "server.config",
+        "writePermission": "server.config"
+       },
+       {
+        "group": "commercialization",
+        "key": "toolkit",
+        "label": "Toolkit",
+        "readPermission": "server.config",
+        "writePermission": "server.config"
+       },
+       {
+        "group": "security",
+        "key": "security-audit",
+        "label": "Security audit",
+        "readPermission": "audit.view",
+        "writePermission": "server.config"
+       },
+       {
+        "group": "system",
+        "key": "languages",
+        "label": "Languages",
+        "readPermission": "server.config",
+        "writePermission": "server.config"
+       },
+       {
+        "group": "system",
+        "key": "resource-control",
+        "label": "Resource control",
+        "readPermission": "server.config",
+        "writePermission": "server.config"
+       },
+       {
+        "group": "system",
+        "key": "system",
+        "label": "System",
+        "readPermission": "server.config",
+        "writePermission": "server.config"
+       },
+       {
+        "group": "system",
+        "key": "permissions",
+        "label": "Permissions",
+        "readPermission": "server.config",
+        "writePermission": "server.config"
+       },
+       {
+        "group": "system",
+        "key": "server-management",
+        "label": "Server management",
+        "readPermission": "server.config",
+        "writePermission": "server.config"
+       },
+       {
+        "group": "system",
+        "key": "settings",
+        "label": "Settings",
+        "readPermission": "server.config",
+        "writePermission": "server.config"
+       },
+       {
+        "group": "system",
+        "key": "server-attestation",
+        "label": "Server attestation",
+        "readPermission": "server.attestation",
+        "writePermission": "branding.edit"
+       }
+      ]
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

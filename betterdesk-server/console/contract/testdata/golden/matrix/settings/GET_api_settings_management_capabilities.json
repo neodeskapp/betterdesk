@@ -1,0 +1,335 @@
+{
+ "id": "GET /api/settings/management/capabilities",
+ "request": {
+  "method": "GET",
+  "path": "/api/settings/management/capabilities"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "panel_access_denied",
+     "error": "Panel access denied: settings",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "checks": [
+       {
+        "directory": true,
+        "exists": true,
+        "id": "console-read",
+        "path": "/repo/web-nodejs",
+        "ready": true
+       },
+       {
+        "directory": true,
+        "exists": true,
+        "id": "console-write",
+        "path": "/repo/web-nodejs",
+        "ready": true
+       },
+       {
+        "directory": true,
+        "exists": true,
+        "id": "data-write",
+        "path": "/app/data",
+        "ready": true
+       },
+       {
+        "directory": true,
+        "exists": true,
+        "id": "server-read",
+        "path": "/opt/rustdesk",
+        "ready": true
+       },
+       {
+        "directory": true,
+        "exists": true,
+        "id": "server-write",
+        "path": "/opt/rustdesk",
+        "ready": true
+       },
+       {
+        "directory": false,
+        "exists": false,
+        "id": "backup-write",
+        "path": "/app/data/backups",
+        "ready": true
+       },
+       {
+        "directory": false,
+        "exists": true,
+        "id": "env-write",
+        "path": "/repo/web-nodejs/.env",
+        "ready": true
+       },
+       {
+        "error": "Docker CLI or daemon unavailable",
+        "id": "restart",
+        "method": "unavailable",
+        "ready": false
+       },
+       {
+        "id": "config-schema",
+        "ready": true
+       },
+       {
+        "error": "Docker CLI unavailable",
+        "id": "update",
+        "method": "docker-compose",
+        "ready": false
+       }
+      ],
+      "docker": true,
+      "groups": {
+       "backup": {
+        "checks": [
+         {
+          "directory": false,
+          "exists": false,
+          "id": "backup-write",
+          "path": "/app/data/backups",
+          "ready": true
+         }
+        ],
+        "ready": true
+       },
+       "config": {
+        "checks": [
+         {
+          "directory": true,
+          "exists": true,
+          "id": "console-write",
+          "path": "/repo/web-nodejs",
+          "ready": true
+         },
+         {
+          "directory": false,
+          "exists": true,
+          "id": "env-write",
+          "path": "/repo/web-nodejs/.env",
+          "ready": true
+         },
+         {
+          "id": "config-schema",
+          "ready": true
+         }
+        ],
+        "ready": true
+       },
+       "health": {
+        "checks": [
+         {
+          "id": "health",
+          "method": "post-operation-health-check",
+          "ready": true
+         }
+        ],
+        "ready": true
+       },
+       "permissions": {
+        "checks": [
+         {
+          "directory": true,
+          "exists": true,
+          "id": "data-write",
+          "path": "/app/data",
+          "ready": true
+         },
+         {
+          "directory": true,
+          "exists": true,
+          "id": "server-write",
+          "path": "/opt/rustdesk",
+          "ready": true
+         },
+         {
+          "directory": false,
+          "exists": true,
+          "id": "env-write",
+          "path": "/repo/web-nodejs/.env",
+          "ready": true
+         }
+        ],
+        "ready": true
+       },
+       "restart": {
+        "checks": [
+         {
+          "error": "Docker CLI or daemon unavailable",
+          "id": "restart",
+          "method": "unavailable",
+          "ready": false
+         }
+        ],
+        "ready": false
+       },
+       "update": {
+        "checks": [
+         {
+          "directory": true,
+          "exists": true,
+          "id": "console-read",
+          "path": "/repo/web-nodejs",
+          "ready": true
+         },
+         {
+          "directory": true,
+          "exists": true,
+          "id": "console-write",
+          "path": "/repo/web-nodejs",
+          "ready": true
+         },
+         {
+          "directory": true,
+          "exists": true,
+          "id": "data-write",
+          "path": "/app/data",
+          "ready": true
+         },
+         {
+          "directory": true,
+          "exists": true,
+          "id": "server-read",
+          "path": "/opt/rustdesk",
+          "ready": true
+         },
+         {
+          "directory": true,
+          "exists": true,
+          "id": "server-write",
+          "path": "/opt/rustdesk",
+          "ready": true
+         },
+         {
+          "error": "Docker CLI unavailable",
+          "id": "update",
+          "method": "docker-compose",
+          "ready": false
+         }
+        ],
+        "ready": false
+       }
+      },
+      "paths": {
+       "backupPath": "/app/data/backups",
+       "consolePath": "/repo/web-nodejs",
+       "dataPath": "/app/data",
+       "envPath": "/repo/web-nodejs/.env",
+       "examplePath": "/repo/web-nodejs/.env.example",
+       "serverPath": "/opt/rustdesk"
+      },
+      "platform": "linux",
+      "services": [
+       "betterdesk",
+       "betterdesk-server",
+       "betterdesk-console"
+      ],
+      "success": true
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

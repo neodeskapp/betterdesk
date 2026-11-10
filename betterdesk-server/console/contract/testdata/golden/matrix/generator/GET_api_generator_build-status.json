@@ -1,0 +1,248 @@
+{
+ "id": "GET /api/generator/build-status",
+ "request": {
+  "method": "GET",
+  "path": "/api/generator/build-status"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Admin access required",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "activeBuilds": 0,
+      "artifactRoot": "/app/data/agent-builds",
+      "buildReady": false,
+      "capabilities": null,
+      "clientBuilderReady": false,
+      "kind": "client-template",
+      "mode": "legacy-custom-txt",
+      "moduleReady": false,
+      "platformCatalog": [
+       {
+        "arch": "x64",
+        "available": false,
+        "format": "portable",
+        "label": "Windows x64 portable (.zip)",
+        "platform": "windows",
+        "provider": "legacy-template",
+        "reason": "template_missing"
+       },
+       {
+        "arch": "arm64",
+        "available": false,
+        "format": "portable",
+        "label": "Windows ARM64 portable (.zip)",
+        "platform": "windows",
+        "provider": "legacy-template",
+        "reason": "template_missing"
+       },
+       {
+        "arch": "x64",
+        "available": false,
+        "format": "portable",
+        "label": "Linux x64 portable (.tar.gz)",
+        "platform": "linux",
+        "provider": "legacy-template",
+        "reason": "template_missing"
+       },
+       {
+        "arch": "x64",
+        "available": false,
+        "format": "deb",
+        "label": "Debian/Ubuntu x64 package (.deb)",
+        "platform": "linux",
+        "provider": "legacy-template",
+        "reason": "template_missing"
+       },
+       {
+        "arch": "x64",
+        "available": false,
+        "format": "rpm",
+        "label": "Fedora/RHEL/openSUSE x64 package (.rpm)",
+        "platform": "linux",
+        "provider": "legacy-template",
+        "reason": "template_missing"
+       },
+       {
+        "arch": "x64",
+        "available": false,
+        "format": "arch",
+        "label": "Arch Linux x64 package (.pkg.tar.zst)",
+        "platform": "linux",
+        "provider": "legacy-template",
+        "reason": "template_missing"
+       },
+       {
+        "arch": "arm64",
+        "available": false,
+        "format": "portable",
+        "label": "Linux ARM64 portable (.tar.gz)",
+        "platform": "linux",
+        "provider": "legacy-template",
+        "reason": "template_missing"
+       },
+       {
+        "arch": "arm64",
+        "available": false,
+        "format": "deb",
+        "label": "Debian/Ubuntu ARM64 package (.deb)",
+        "platform": "linux",
+        "provider": "legacy-template",
+        "reason": "template_missing"
+       },
+       {
+        "arch": "arm64",
+        "available": false,
+        "format": "rpm",
+        "label": "Fedora/RHEL/openSUSE ARM64 package (.rpm)",
+        "platform": "linux",
+        "provider": "legacy-template",
+        "reason": "template_missing"
+       },
+       {
+        "arch": "arm64",
+        "available": false,
+        "format": "arch",
+        "label": "Arch Linux ARM64 package (.pkg.tar.zst)",
+        "platform": "linux",
+        "provider": "legacy-template",
+        "reason": "template_missing"
+       },
+       {
+        "arch": "x64",
+        "available": false,
+        "format": "portable",
+        "label": "macOS Intel portable (.tar.gz)",
+        "platform": "macos",
+        "provider": "legacy-template",
+        "reason": "template_missing"
+       },
+       {
+        "arch": "arm64",
+        "available": false,
+        "format": "portable",
+        "label": "macOS Apple Silicon portable (.tar.gz)",
+        "platform": "macos",
+        "provider": "legacy-template",
+        "reason": "template_missing"
+       }
+      ],
+      "platforms": [],
+      "startupReady": false,
+      "templatesDir": "/app/data/modules/betterdesk-support-generator/templates",
+      "templatesPresent": false,
+      "workerEnabled": false
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

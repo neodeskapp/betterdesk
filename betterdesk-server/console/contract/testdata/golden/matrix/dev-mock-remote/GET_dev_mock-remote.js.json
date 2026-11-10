@@ -1,0 +1,78 @@
+{
+ "id": "GET /dev/mock-remote.js",
+ "request": {
+  "method": "GET",
+  "path": "/dev/mock-remote.js"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 404,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self'; frame-src 'none'; worker-src 'self' blob:; connect-src 'self'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; script-src 'self' 'sha256-xTQM7V4ywctaWeIGqiJ1amibCKKSO4IoqejxLuLjYYc='; style-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+    "content-type": "text/html; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "bytes",
+    "type": "text/html",
+    "length": 3098,
+    "sha256": "2ba222b6e4ecee9c58aa9005b97de62d54e536ab6771e9dc1b38ac44fbc3e475",
+    "head": "<!doctype html>\n<html lang=\"en\" dir=\"ltr\" data-theme=\"light\" data-theme-mode=\"system\">\n\t<head><meta name=\"bd-error\" content=\"404\">\n\t\t<meta charset=\"utf-8\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\" />\n\t\t<meta name=\"robots\" content=\"noindex, nofollow\""
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 404,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self'; frame-src 'none'; worker-src 'self' blob:; connect-src 'self'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; script-src 'self' 'sha256-xTQM7V4ywctaWeIGqiJ1amibCKKSO4IoqejxLuLjYYc='; style-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+    "content-type": "text/html; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "bytes",
+    "type": "text/html",
+    "length": 3098,
+    "sha256": "2ba222b6e4ecee9c58aa9005b97de62d54e536ab6771e9dc1b38ac44fbc3e475",
+    "head": "<!doctype html>\n<html lang=\"en\" dir=\"ltr\" data-theme=\"light\" data-theme-mode=\"system\">\n\t<head><meta name=\"bd-error\" content=\"404\">\n\t\t<meta charset=\"utf-8\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\" />\n\t\t<meta name=\"robots\" content=\"noindex, nofollow\""
+   }
+  }
+ ]
+}

@@ -1,0 +1,212 @@
+{
+ "id": "GET /api/settings/themes",
+ "request": {
+  "method": "GET",
+  "path": "/api/settings/themes"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "panel_access_denied",
+     "error": "Panel access denied: settings",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": [
+      {
+       "colors": {
+        "accentBlue": "#58a6ff",
+        "accentBlueHover": "#79b8ff",
+        "accentBlueMuted": "rgba(88, 166, 255, 0.15)",
+        "accentGreen": "#2ea44f",
+        "accentGreenHover": "#3fb950",
+        "accentGreenMuted": "#2ea44f",
+        "accentPurple": "#a371f7",
+        "accentPurpleHover": "#bc8cff",
+        "accentPurpleMuted": "#a371f7",
+        "accentRed": "#f85149",
+        "accentRedHover": "#ff6b6b",
+        "accentRedMuted": "#f85149",
+        "accentYellow": "#d29922",
+        "accentYellowHover": "#e3b341",
+        "accentYellowMuted": "#d29922",
+        "bgElevated": "#30363d",
+        "bgPrimary": "#0d1117",
+        "bgSecondary": "#161b22",
+        "bgTertiary": "#21262d",
+        "borderPrimary": "#797f86",
+        "borderSecondary": "#21262d",
+        "textPrimary": "#e6edf3",
+        "textSecondary": "#8b949e"
+       },
+       "description": "BetterDesk Server Management",
+       "id": "default",
+       "name": "BetterDesk Dark"
+      },
+      {
+       "colors": {
+        "accentBlue": "#ffd600",
+        "accentBlueHover": "#ffe040",
+        "accentBlueMuted": "#c8a800",
+        "accentGreen": "#2ea44f",
+        "accentGreenHover": "#3fb950",
+        "accentGreenMuted": "#2ea44f",
+        "accentPurple": "#a371f7",
+        "accentPurpleHover": "#bc8cff",
+        "accentPurpleMuted": "#a371f7",
+        "accentRed": "#f85149",
+        "accentRedHover": "#ff6b6b",
+        "accentRedMuted": "#f85149",
+        "accentYellow": "#ffd600",
+        "accentYellowHover": "#ffe040",
+        "accentYellowMuted": "#c8a800",
+        "bgElevated": "#252b38",
+        "bgPrimary": "#0c0f14",
+        "bgSecondary": "#12161e",
+        "bgTertiary": "#1a1f2b",
+        "borderPrimary": "#6e7481",
+        "borderSecondary": "#1a1f2b",
+        "textPrimary": "#e8ecf1",
+        "textSecondary": "#8a94a6"
+       },
+       "description": "Insolve Device Management",
+       "id": "insolve",
+       "name": "insolve Core Server"
+      },
+      {
+       "colors": {
+        "accentBlue": "#1b62cf",
+        "accentBlueHover": "#1854b3",
+        "accentBlueMuted": "rgba(27, 98, 207, 0.15)",
+        "accentGreen": "#1a7f37",
+        "accentGreenHover": "#116329",
+        "accentGreenMuted": "#dafbe1",
+        "accentPurple": "#8250df",
+        "accentPurpleHover": "#6639ba",
+        "accentPurpleMuted": "#fbefff",
+        "accentRed": "#cf222e",
+        "accentRedHover": "#a40e26",
+        "accentRedMuted": "#ffebe9",
+        "accentYellow": "#9a6700",
+        "accentYellowHover": "#7d4e00",
+        "accentYellowMuted": "#fff8c5",
+        "bgElevated": "#ffffff",
+        "bgPrimary": "#ffffff",
+        "bgSecondary": "#f6f8fa",
+        "bgTertiary": "#eaeef2",
+        "borderPrimary": "#828990",
+        "borderSecondary": "#eaeef2",
+        "textPrimary": "#1f2328",
+        "textSecondary": "#656d76"
+       },
+       "description": "BetterDesk Server Management",
+       "id": "light",
+       "name": "BetterDesk Light"
+      }
+     ],
+     "success": true
+    }
+   }
+  }
+ ]
+}

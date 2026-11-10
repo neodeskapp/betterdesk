@@ -1,0 +1,301 @@
+{
+ "id": "GET /api/tickets",
+ "request": {
+  "method": "GET",
+  "path": "/api/tickets"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Authentication required"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "tickets[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "tickets[*].sla_due_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "tickets[*].updated_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "tickets[6].closed_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "tickets[6].resolved_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "tickets[7].resolved_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "tickets[8].closed_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "tickets[8].resolved_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "tickets": [
+      {
+       "assigned_to": null,
+       "category": "network",
+       "closed_at": null,
+       "created_at": "<volatile>",
+       "created_by": "admin",
+       "description": "Visitors see a browser certificate warning on the check-in page.",
+       "device_id": "900100020",
+       "id": 9,
+       "priority": "high",
+       "resolved_at": null,
+       "sla_due_at": "<volatile>",
+       "status": "open",
+       "title": "Lobby kiosk shows a certificate warning",
+       "updated_at": "<volatile>"
+      },
+      {
+       "assigned_to": null,
+       "category": "hardware",
+       "closed_at": null,
+       "created_at": "<volatile>",
+       "created_by": "admin",
+       "description": "Since this morning every job from demo-reception-01 comes out blank. The test page from the printer menu is fine.",
+       "device_id": "900100001",
+       "id": 8,
+       "priority": "medium",
+       "resolved_at": null,
+       "sla_due_at": "<volatile>",
+       "status": "open",
+       "title": "Reception printer prints blank pages",
+       "updated_at": "<volatile>"
+      },
+      {
+       "assigned_to": "admin",
+       "category": "software",
+       "closed_at": null,
+       "created_at": "<volatile>",
+       "created_by": "admin",
+       "description": "Replication lag on demo-db-replica is above 40 minutes and growing.",
+       "device_id": "900100016",
+       "id": 7,
+       "priority": "critical",
+       "resolved_at": null,
+       "sla_due_at": "<volatile>",
+       "status": "open",
+       "title": "Database replica lagging behind primary",
+       "updated_at": "<volatile>"
+      },
+      {
+       "assigned_to": "demo_operator",
+       "category": "network",
+       "closed_at": null,
+       "created_at": "<volatile>",
+       "created_by": "demo_operator",
+       "description": "Started after the client update last week. Happens on hotel Wi-Fi and at home.",
+       "device_id": "900100017",
+       "id": 6,
+       "priority": "high",
+       "resolved_at": null,
+       "sla_due_at": "<volatile>",
+       "status": "in_progress",
+       "title": "VPN drops every 20 minutes on sales laptop",
+       "updated_at": "<volatile>"
+      },
+      {
+       "assigned_to": "demo_operator",
+       "category": "access",
+       "closed_at": null,
+       "created_at": "<volatile>",
+       "created_by": "admin",
+       "description": "Starts on Monday in accounts. Needs a laptop, mail account and access to the finance share.",
+       "device_id": null,
+       "id": 5,
+       "priority": "low",
+       "resolved_at": null,
+       "sla_due_at": "<volatile>",
+       "status": "open",
+       "title": "New starter needs accounts and a laptop",
+       "updated_at": "<volatile>"
+      },
+      {
+       "assigned_to": "demo_serveradmin",
+       "category": "hardware",
+       "closed_at": null,
+       "created_at": "<volatile>",
+       "created_by": "demo_serveradmin",
+       "description": "Nightly backups failed twice. The NAS does not answer ping.",
+       "device_id": "900100014",
+       "id": 4,
+       "priority": "critical",
+       "resolved_at": null,
+       "sla_due_at": "<volatile>",
+       "status": "in_progress",
+       "title": "Backup NAS offline since the weekend",
+       "updated_at": "<volatile>"
+      },
+      {
+       "assigned_to": "demo_operator",
+       "category": "software",
+       "closed_at": "<volatile>",
+       "created_at": "<volatile>",
+       "created_by": "admin",
+       "description": "Marketing needs the new brand fonts for the spring campaign.",
+       "device_id": "900100006",
+       "id": 3,
+       "priority": "low",
+       "resolved_at": "<volatile>",
+       "sla_due_at": "<volatile>",
+       "status": "closed",
+       "title": "Install brand fonts on design iMac",
+       "updated_at": "<volatile>"
+      },
+      {
+       "assigned_to": "demo_operator",
+       "category": "software",
+       "closed_at": null,
+       "created_at": "<volatile>",
+       "created_by": "demo_operator",
+       "description": "The label printing app closes right after the splash screen.",
+       "device_id": "900100008",
+       "id": 2,
+       "priority": "medium",
+       "resolved_at": "<volatile>",
+       "sla_due_at": "<volatile>",
+       "status": "resolved",
+       "title": "Label software crashes on start",
+       "updated_at": "<volatile>"
+      },
+      {
+       "assigned_to": "admin",
+       "category": "hardware",
+       "closed_at": "<volatile>",
+       "created_at": "<volatile>",
+       "created_by": "demo_operator",
+       "description": "User reports a grinding noise from the case fan.",
+       "device_id": "900100031",
+       "id": 1,
+       "priority": "low",
+       "resolved_at": "<volatile>",
+       "sla_due_at": "<volatile>",
+       "status": "closed",
+       "title": "Replace loud fan in demo-noted-pc",
+       "updated_at": "<volatile>"
+      }
+     ],
+     "total": 9
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "tickets": [],
+     "total": 0
+    }
+   }
+  }
+ ]
+}

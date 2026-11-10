@@ -1,0 +1,640 @@
+{
+ "id": "GET /api/panel/org/:id/available-users",
+ "request": {
+  "method": "GET",
+  "path": "/api/panel/org/999999999/available-users"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "server_admin"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Permission denied: org.manage_users",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "users[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[0].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[11].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[5].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[6].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[7].last_login",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "users": [
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 1,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "admin",
+       "totp_enabled": false,
+       "username": "admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 2,
+       "is_server_admin": false,
+       "role": "operator",
+       "totp_enabled": false,
+       "username": "demo_operator"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 4,
+       "is_server_admin": false,
+       "role": "server_admin",
+       "totp_enabled": false,
+       "username": "demo_serveradmin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 3,
+       "is_server_admin": false,
+       "role": "viewer",
+       "totp_enabled": false,
+       "username": "demo_viewer"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 5,
+       "is_server_admin": false,
+       "role": "admin",
+       "totp_enabled": false,
+       "username": "e2e_admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 8,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "global_admin",
+       "totp_enabled": false,
+       "username": "e2e_global_admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 11,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "guest_issuer",
+       "totp_enabled": false,
+       "username": "e2e_guest_issuer"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 9,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "operator",
+       "totp_enabled": false,
+       "username": "e2e_operator"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 12,
+       "is_server_admin": false,
+       "role": "pro",
+       "totp_enabled": false,
+       "username": "e2e_pro"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 7,
+       "is_server_admin": false,
+       "role": "server_admin",
+       "totp_enabled": false,
+       "username": "e2e_server_admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 6,
+       "is_server_admin": false,
+       "role": "super_admin",
+       "totp_enabled": false,
+       "username": "e2e_super_admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 10,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "viewer",
+       "totp_enabled": false,
+       "username": "e2e_viewer"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "users[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[0].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[10].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[11].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[5].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[6].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[7].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[9].last_login",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "users": [
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 1,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "admin",
+       "totp_enabled": false,
+       "username": "admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 2,
+       "is_server_admin": false,
+       "role": "operator",
+       "totp_enabled": false,
+       "username": "demo_operator"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 4,
+       "is_server_admin": false,
+       "role": "server_admin",
+       "totp_enabled": false,
+       "username": "demo_serveradmin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 3,
+       "is_server_admin": false,
+       "role": "viewer",
+       "totp_enabled": false,
+       "username": "demo_viewer"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 5,
+       "is_server_admin": false,
+       "role": "admin",
+       "totp_enabled": false,
+       "username": "e2e_admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 8,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "global_admin",
+       "totp_enabled": false,
+       "username": "e2e_global_admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 11,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "guest_issuer",
+       "totp_enabled": false,
+       "username": "e2e_guest_issuer"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 9,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "operator",
+       "totp_enabled": false,
+       "username": "e2e_operator"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 12,
+       "is_server_admin": false,
+       "role": "pro",
+       "totp_enabled": false,
+       "username": "e2e_pro"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 7,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "server_admin",
+       "totp_enabled": false,
+       "username": "e2e_server_admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 6,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "super_admin",
+       "totp_enabled": false,
+       "username": "e2e_super_admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 10,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "viewer",
+       "totp_enabled": false,
+       "username": "e2e_viewer"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "users[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[0].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[10].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[11].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[4].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[5].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[6].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[7].last_login",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[9].last_login",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "users": [
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 1,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "admin",
+       "totp_enabled": false,
+       "username": "admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 2,
+       "is_server_admin": false,
+       "role": "operator",
+       "totp_enabled": false,
+       "username": "demo_operator"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 4,
+       "is_server_admin": false,
+       "role": "server_admin",
+       "totp_enabled": false,
+       "username": "demo_serveradmin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 3,
+       "is_server_admin": false,
+       "role": "viewer",
+       "totp_enabled": false,
+       "username": "demo_viewer"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 5,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "admin",
+       "totp_enabled": false,
+       "username": "e2e_admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 8,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "global_admin",
+       "totp_enabled": false,
+       "username": "e2e_global_admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 11,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "guest_issuer",
+       "totp_enabled": false,
+       "username": "e2e_guest_issuer"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 9,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "operator",
+       "totp_enabled": false,
+       "username": "e2e_operator"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 12,
+       "is_server_admin": false,
+       "role": "pro",
+       "totp_enabled": false,
+       "username": "e2e_pro"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 7,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "server_admin",
+       "totp_enabled": false,
+       "username": "e2e_server_admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 6,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "super_admin",
+       "totp_enabled": false,
+       "username": "e2e_super_admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 10,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "viewer",
+       "totp_enabled": false,
+       "username": "e2e_viewer"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}
