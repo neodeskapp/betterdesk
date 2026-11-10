@@ -35,7 +35,6 @@ const ticketsRoutes = lazyRoute('./tickets.routes');
 const activityRoutes = lazyRoute('./activity.routes');
 const automationRoutes = lazyRoute('./automation.routes');
 const fileTransferRoutes = lazyRoute('./fileTransfer.routes');
-const networkRoutes = lazyRoute('./network.routes');
 const dataguardRoutes = lazyRoute('./dataguard.routes');
 const reportsRoutes = lazyRoute('./reports.routes');
 const cdapRoutes = lazyRoute('./cdap.routes');
@@ -76,7 +75,6 @@ router.use('/api/automation', automationRoutes); // admin-facing: /api/automatio
 router.use('/api/bd', automationRoutes);         // device-facing: /api/bd/commands
 router.use('/api/files', fileTransferRoutes);    // admin-facing: /api/files/transfer(s)
 router.use('/api/bd', fileTransferRoutes);       // device-facing: /api/bd/file-transfer
-router.use('/api/network', networkRoutes);       // admin-facing: /api/network/*
 router.use('/api/dataguard', dataguardRoutes);   // device-facing, second address: /api/dataguard/dlp-policies, /api/dataguard/dlp-events (policies, events and stats are in the Go console)
 router.use('/api/bd', dataguardRoutes);          // device-facing: /api/bd/dlp-policies, /api/bd/dlp-events
 router.use('/api/reports', reportsRoutes);       // admin-facing: /api/reports/*

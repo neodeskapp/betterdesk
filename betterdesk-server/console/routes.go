@@ -16,6 +16,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/keys"
 	"github.com/unitronix/betterdesk-server/console/routes/languages"
 	"github.com/unitronix/betterdesk-server/console/routes/meshcentral"
+	"github.com/unitronix/betterdesk-server/console/routes/network"
 	"github.com/unitronix/betterdesk-server/console/routes/pairing"
 	"github.com/unitronix/betterdesk-server/console/routes/panelaccess"
 	"github.com/unitronix/betterdesk-server/console/routes/permissions"
@@ -50,6 +51,8 @@ func registerRoutes(d *kit.Deps) {
 	i18nroutes.Register(d)    // routes/i18n.routes.js at /api/i18n
 	// routes/tickets.routes.js at /api/tickets, without the device routes /api/tickets/bd
 	tickets.Register(d.At("/api/tickets"))
+	// routes/network.routes.js at /api/network
+	network.Register(d.At("/api/network"))
 	// routes/dataguard.routes.js at /api/dataguard and at /api/bd, without the device routes dlp-policies and dlp-events
 	dataguard.Register(d.At("/api/dataguard"))
 	dataguard.Register(d.At("/api/bd"))
