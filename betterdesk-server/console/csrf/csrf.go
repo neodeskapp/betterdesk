@@ -65,6 +65,11 @@ type Options struct {
 	// SignedIn reports whether a request carries a signed-in session. Gate
 	// asks it for requests under /api/bd/.
 	SignedIn func(r *http.Request) bool
+	// BodyToken returns the _csrf field of a request's body, "" when the
+	// body has none. Set it where something in front of the protector has
+	// read the body. nil makes the protector read the field from r.Body
+	// itself.
+	BodyToken func(r *http.Request) string
 	// OnError answers a request that Gate refused. nil answers 403 with a
 	// plain text.
 	OnError func(w http.ResponseWriter, r *http.Request)
@@ -76,6 +81,7 @@ type Protector struct {
 	cookieName string
 	secure     bool
 	signedIn   func(r *http.Request) bool
+	bodyToken  func(r *http.Request) string
 	onError    func(w http.ResponseWriter, r *http.Request)
 }
 
@@ -92,7 +98,11 @@ func New(opts Options) (*Protector, error) {
 		cookieName: cookieNameHTTP,
 		secure:     opts.HTTPS,
 		signedIn:   opts.SignedIn,
+		bodyToken:  opts.BodyToken,
 		onError:    opts.OnError,
+	}
+	if p.bodyToken == nil {
+		p.bodyToken = bodyToken
 	}
 	if opts.HTTPS {
 		p.cookieName = cookieNameHTTPS
@@ -176,7 +186,7 @@ func (p *Protector) Check(r *http.Request) error {
 		return ErrInvalidToken
 	}
 	token, hash, ok := splitPair(value)
-	sent := requestToken(r)
+	sent := p.requestToken(r)
 	if !ok || subtle.ConstantTimeCompare([]byte(token), []byte(sent)) != 1 || !p.fits(sent, hash) {
 		return ErrInvalidToken
 	}
@@ -249,15 +259,16 @@ func (p *Protector) fits(token, hash string) bool {
 
 // requestToken is the token a write sends: the X-CSRF-Token header, or the
 // _csrf field of the body when the header is empty.
-func requestToken(r *http.Request) string {
+func (p *Protector) requestToken(r *http.Request) string {
 	if header := httpx.Latin1(strings.Join(r.Header.Values("X-CSRF-Token"), ", ")); header != "" {
 		return header
 	}
-	return bodyToken(r)
+	return p.bodyToken(r)
 }
 
 // bodyToken reads the _csrf field of a JSON or form body and puts the body
-// back, so the handler reads it from the start.
+// back, so the handler reads it from the start. It is what a Protector
+// without Options.BodyToken uses.
 func bodyToken(r *http.Request) string {
 	if r.Body == nil || r.Body == http.NoBody || r.Header.Get("Content-Encoding") != "" {
 		return ""

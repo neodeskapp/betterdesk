@@ -192,19 +192,15 @@ func (s *Server) toNode(w http.ResponseWriter, r *http.Request) {
 }
 
 // csrfGate is step 16. The gate takes the token from the X-CSRF-Token
-// header or, without one, from the _csrf field of the body. The body step
-// has read the body by now, so a token that came in the body is handed to
-// the gate in the header of a copy of the request.
+// header or, without one, from the _csrf field of the body, which it gets
+// from csrfBodyToken.
 func (s *Server) csrfGate(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		checked := r
-		if r.Header.Get("X-CSRF-Token") == "" {
-			if token, ok := middleware.Body(r).String("_csrf"); ok && token != "" {
-				checked = r.Clone(r.Context())
-				checked.Header.Set("X-CSRF-Token", token)
-			}
-		}
-		passed := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { next.ServeHTTP(w, r) })
-		s.deps.CSRF.Gate(passed).ServeHTTP(w, checked)
-	})
+	return s.deps.CSRF.Gate(next)
+}
+
+// csrfBodyToken is the _csrf field of the body the body step has read, for
+// the CSRF protector.
+func csrfBodyToken(r *http.Request) string {
+	token, _ := middleware.Body(r).String("_csrf")
+	return token
 }

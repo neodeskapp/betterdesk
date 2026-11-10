@@ -133,10 +133,11 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		return nil, fmt.Errorf("session store: %w", err)
 	}
 	protector, err := csrf.New(csrf.Options{
-		Secret:   secret,
-		HTTPS:    cfg.HTTPS,
-		SignedIn: func(r *http.Request) bool { return kit.UserID(r) != 0 },
-		OnError:  host.CSRFError,
+		Secret:    secret,
+		HTTPS:     cfg.HTTPS,
+		SignedIn:  func(r *http.Request) bool { return kit.UserID(r) != 0 },
+		BodyToken: csrfBodyToken,
+		OnError:   host.CSRFError,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("csrf: %w", err)

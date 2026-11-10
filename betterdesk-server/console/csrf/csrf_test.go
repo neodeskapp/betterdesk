@@ -3,6 +3,7 @@ package csrf
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -435,5 +436,76 @@ func TestNewRefusesBadOptions(t *testing.T) {
 	p.Gate(http.NotFoundHandler()).ServeHTTP(rec, req("POST", "/", "", ""))
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("default refusal: status %d, want 403", rec.Code)
+	}
+}
+
+// With Options.BodyToken the protector takes the body field from the hook
+// and does not read r.Body: something in front of it has read the body.
+func TestBodyTokenHook(t *testing.T) {
+	asked, field := 0, vectorToken
+	f := newFixture(t, func(o *Options) {
+		o.BodyToken = func(*http.Request) string {
+			asked++
+			return field
+		}
+	})
+	post := func(body, header string) *http.Request {
+		r := httptest.NewRequest("POST", "/api/x", strings.NewReader(body))
+		r.Header.Set("Cookie", vectorPair)
+		r.Header.Set("Content-Type", "application/json")
+		if header != "" {
+			r.Header.Set("X-CSRF-Token", header)
+		}
+		return r
+	}
+	inBody := `{"_csrf":"` + vectorToken + `"}`
+
+	// The body is read to its end, as behind the pipeline's body step
+	r := post(inBody, "")
+	if _, err := io.Copy(io.Discard, r.Body); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.p.Check(r); err != nil {
+		t.Errorf("Check with the token from the hook: %v", err)
+	}
+	r = post(inBody, "")
+	if _, err := io.Copy(io.Discard, r.Body); err != nil {
+		t.Fatal(err)
+	}
+	if !f.gate(r) {
+		t.Error("Gate refused the token from the hook")
+	}
+	if asked != 2 {
+		t.Errorf("the hook was asked %d times for two writes", asked)
+	}
+
+	// The hook is the only source: a good field in r.Body does not count
+	field = ""
+	r = post(inBody, "")
+	if err := f.p.Check(r); err == nil {
+		t.Error("the protector read r.Body although it has a hook")
+	}
+	if left, _ := io.ReadAll(r.Body); string(left) != inBody {
+		t.Errorf("the body after Check is %q, want it untouched", left)
+	}
+	field = "wrong"
+	if f.gate(post(inBody, "")) {
+		t.Error("Gate passed a wrong token from the hook")
+	}
+
+	// The header comes first, and the hook is not asked next to it
+	asked, field = 0, vectorToken
+	if err := f.p.Check(post(inBody, "wrong")); err == nil {
+		t.Error("a wrong header passed because the hook had the token")
+	}
+	field = "wrong"
+	if err := f.p.Check(post(inBody, vectorToken)); err != nil {
+		t.Errorf("a good header next to a wrong hook: %v", err)
+	}
+	if err := f.p.Check(req("GET", "/api/x", vectorPair, "")); err != nil {
+		t.Errorf("GET: %v", err)
+	}
+	if asked != 0 {
+		t.Errorf("the hook was asked %d times where the header or the method decides", asked)
 	}
 }
