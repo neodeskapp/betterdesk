@@ -251,6 +251,67 @@ func maskTimes(text string) string {
 	})
 }
 
+// orderSameNames puts neighbours with the same name in a list of targets
+// into the order of their ids, and leaves every other byte as it is. The
+// list is ordered by name only, so PostgreSQL returns targets of one name
+// in the order it finds them, which differs from run to run (NM12).
+func orderSameNames(text string) string {
+	var list []json.RawMessage
+	if !strings.HasPrefix(text, "[{") || json.Unmarshal([]byte(text), &list) != nil {
+		return text
+	}
+	type key struct {
+		ID   int64   `json:"id"`
+		Name *string `json:"name"`
+	}
+	keys := make([]key, len(list))
+	for i, raw := range list {
+		if json.Unmarshal(raw, &keys[i]) != nil || keys[i].Name == nil {
+			return text
+		}
+	}
+	join := func(from, to int) string {
+		parts := make([]string, 0, to-from)
+		for _, raw := range list[from:to] {
+			parts = append(parts, string(raw))
+		}
+		return strings.Join(parts, ",")
+	}
+	for from := 0; from < len(list); {
+		to := from + 1
+		for to < len(list) && *keys[to].Name == *keys[from].Name {
+			to++
+		}
+		if to-from > 1 {
+			before := join(from, to)
+			run, runKeys := list[from:to], keys[from:to]
+			for i := 1; i < len(run); i++ {
+				for j := i; j > 0 && runKeys[j].ID < runKeys[j-1].ID; j-- {
+					run[j], run[j-1] = run[j-1], run[j]
+					runKeys[j], runKeys[j-1] = runKeys[j-1], runKeys[j]
+				}
+			}
+			text = strings.Replace(text, before, join(from, to), 1)
+		}
+		from = to
+	}
+	return text
+}
+
+func TestOrderSameNames(t *testing.T) {
+	a, b, c := `{"id":23,"name":"{}","x":1}`, `{"id":15,"name":"{}","x":2}`, `{"id":4,"name":"z"}`
+	if got, want := orderSameNames("["+a+","+b+","+c+"]"), "["+b+","+a+","+c+"]"; got != want {
+		t.Errorf("got %s, want %s", got, want)
+	}
+	// Another order of names stays a difference
+	if in := "[" + c + "," + a + "]"; orderSameNames(in) != in {
+		t.Errorf("%s was changed", in)
+	}
+	if in := `{"error":"x"}`; orderSameNames(in) != in {
+		t.Errorf("%s was changed", in)
+	}
+}
+
 // TestNodeSteps replays the steps the Node console answered, in order, on
 // the database they were recorded on. Times differ from run to run and
 // are compared by their form; ids are the same, since both start from an
@@ -305,7 +366,7 @@ func TestNodeSteps(t *testing.T) {
 			if s.Method == "HEAD" {
 				continue
 			}
-			if got, want := maskTimes(rec.Body.String()), maskTimes(s.Text); got != want {
+			if got, want := orderSameNames(maskTimes(rec.Body.String())), orderSameNames(maskTimes(s.Text)); got != want {
 				t.Errorf("%s: %s", s.Name, firstDifference(got, want))
 			}
 		}
