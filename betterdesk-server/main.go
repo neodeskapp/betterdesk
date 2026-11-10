@@ -613,6 +613,12 @@ func main() {
 		}
 		defer adminSrv.Stop()
 
+		stopConsole, err := startConsole(ctx)
+		if err != nil {
+			log.Fatalf("Failed to start console: %v", err)
+		}
+		defer stopConsole()
+
 	case "signal":
 		log.Printf("Starting signal + API servers...")
 		sig := sigServer.New(cfg, kp, database)
