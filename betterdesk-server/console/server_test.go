@@ -3,10 +3,10 @@ package console
 import (
 	"context"
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -14,293 +14,402 @@ import (
 	"github.com/coder/websocket"
 
 	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// fakeNode stands in for the Node console: it reports what it received.
-func fakeNode(t *testing.T) *httptest.Server {
+// mixed is a console with the fake Node console behind it and a few Go
+// routes: GET /api/ported/{id} guarded by sign-in, an unguarded probe for
+// GET and POST, and a page route.
+func mixed(t *testing.T, o setup) *world {
 	t.Helper()
-	mux := http.NewServeMux()
-	mux.HandleFunc("/ws/echo", func(w http.ResponseWriter, r *http.Request) {
-		conn, err := websocket.Accept(w, r, nil)
-		if err != nil {
-			t.Errorf("upstream accept: %v", err)
-			return
-		}
-		defer conn.Close(websocket.StatusNormalClosure, "")
-		typ, msg, err := conn.Read(r.Context())
-		if err != nil {
-			return
-		}
-		_ = conn.Write(r.Context(), typ, append([]byte("node:"), msg...))
-	})
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		body, _ := io.ReadAll(r.Body)
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Add("Set-Cookie", "bd.sid=abc; Path=/; HttpOnly")
-		w.WriteHeader(http.StatusTeapot)
-		_ = json.NewEncoder(w).Encode(map[string]string{
-			"server": "node",
-			"method": r.Method,
-			"uri":    r.RequestURI,
-			"host":   r.Host,
-			"xff":    r.Header.Get("X-Forwarded-For"),
-			"proto":  r.Header.Get("X-Forwarded-Proto"),
-			"xfhost": r.Header.Get("X-Forwarded-Host"),
-			"realip": r.Header.Get("X-Real-IP"),
-			"cookie": r.Header.Get("Cookie"),
-			"body":   string(body),
-		})
-	})
-	srv := httptest.NewServer(mux)
-	t.Cleanup(srv.Close)
-	return srv
+	o.node = true
+	w := newWorld(t, o)
+	d := w.s.Deps()
+	w.s.Router().Get("/api/ported/{id}", probe, d.RequireAuth)
+	w.s.Router().Get("/api/open", probe)
+	w.s.Router().Post("/api/open", probe)
+	w.s.Router().Get("/ported-page", probe)
+	return w
 }
 
-func frontDoor(t *testing.T, upstream string, trustProxy string) (*Server, *httptest.Server) {
-	t.Helper()
-	cfg := &config.Config{Host: "127.0.0.1"}
-	if upstream != "" {
-		u, err := url.Parse(upstream)
-		if err != nil {
-			t.Fatal(err)
-		}
-		cfg.NodeUpstream = u
+// node decodes what the fake Node console answered; ok is false when the
+// answer is not Node's.
+func (a answer) node() (seen, bool) {
+	var got seen
+	if a.status != http.StatusTeapot || json.Unmarshal([]byte(a.body), &got) != nil || got.Server != "node" {
+		return seen{}, false
 	}
-	trust, err := httpx.ParseTrustProxy(trustProxy)
-	if err != nil {
-		t.Fatal(err)
-	}
-	cfg.TrustProxy = trust
-	s := New(cfg)
-	front := httptest.NewServer(s)
-	t.Cleanup(front.Close)
-	return s, front
+	return got, true
 }
 
-func getJSON(t *testing.T, req *http.Request) (*http.Response, map[string]string) {
+// wantUntouched checks that an answer is the Node console's alone: none
+// of the Go pipeline's headers and cookies are on it.
+func wantUntouched(t *testing.T, name string, a answer) seen {
 	t.Helper()
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatal(err)
+	got, ok := a.node()
+	if !ok {
+		t.Fatalf("%s: answered %d %.200s, want the Node console's answer", name, a.status, a.body)
 	}
-	defer res.Body.Close()
-	var body map[string]string
-	_ = json.NewDecoder(res.Body).Decode(&body)
-	return res, body
+	for _, header := range []string{"Content-Security-Policy", "X-Frame-Options", "RateLimit-Limit", "Access-Control-Allow-Origin"} {
+		if a.header.Get(header) != "" {
+			t.Errorf("%s: Go's %s is on Node's answer", name, header)
+		}
+	}
+	if cookies := a.header.Values("Set-Cookie"); len(cookies) != 1 || !strings.HasPrefix(cookies[0], "node.sid=") {
+		t.Errorf("%s: Set-Cookie = %q, want Node's cookie only", name, cookies)
+	}
+	return got
 }
 
-func TestUnportedRequestGoesToNode(t *testing.T) {
-	node := fakeNode(t)
-	_, front := frontDoor(t, node.URL, "")
-
-	req, _ := http.NewRequest("POST", front.URL+"/api/devices/A%2Fb?x=1&y=%zz", strings.NewReader(`{"a":1}`))
-	req.Host = "panel.example:5000"
-	req.Header.Set("Cookie", "bd.sid=s%3Aabc.sig")
-	req.Header.Set("X-Forwarded-For", "203.0.113.50")
-	req.Header.Set("X-Forwarded-Proto", "https")
-	req.Header.Set("X-Real-IP", "203.0.113.51")
-	res, body := getJSON(t, req)
-
-	if res.StatusCode != http.StatusTeapot {
-		t.Errorf("status = %d, want Node's 418", res.StatusCode)
+func TestUnportedRequestGoesToNodeUntouched(t *testing.T) {
+	w := mixed(t, setup{})
+	a := w.agent()
+	res := a.do("POST", "/api/devices/A%2Fb?x=1&y=%zz", `{"a":1}`,
+		"Host", "panel.example:5000", "Cookie", "bd.sid=s%3Aabc.sig", "Content-Type", "application/json",
+		"X-Forwarded-For", "203.0.113.50", "X-Forwarded-Proto", "https", "X-Real-IP", "203.0.113.51")
+	got := wantUntouched(t, "unported POST", res)
+	want := seen{
+		Server: "node", Method: "POST", URI: "/api/devices/A%2Fb?x=1&y=%zz", Host: "panel.example:5000",
+		XFF: "127.0.0.1", Proto: "http", XFHost: "panel.example:5000", RealIP: "",
+		Cookie: "bd.sid=s%3Aabc.sig", Type: "application/json", Body: `{"a":1}`,
 	}
-	if got := res.Header.Get("Set-Cookie"); !strings.HasPrefix(got, "bd.sid=abc") {
-		t.Errorf("Set-Cookie = %q, want Node's cookie", got)
-	}
-	want := map[string]string{
-		"server": "node",
-		"method": "POST",
-		"uri":    "/api/devices/A%2Fb?x=1&y=%zz",
-		"host":   "panel.example:5000",
-		"xff":    "127.0.0.1",
-		"proto":  "http",
-		"xfhost": "panel.example:5000",
-		"realip": "",
-		"cookie": "bd.sid=s%3Aabc.sig",
-		"body":   `{"a":1}`,
-	}
-	for k, v := range want {
-		if body[k] != v {
-			t.Errorf("node saw %s = %q, want %q", k, body[k], v)
-		}
+	if got != want {
+		t.Errorf("node saw %+v\nwant     %+v", got, want)
 	}
 }
 
 func TestTrustedProxyHeadersReachNode(t *testing.T) {
-	node := fakeNode(t)
-	_, front := frontDoor(t, node.URL, "loopback")
-
-	req, _ := http.NewRequest("GET", front.URL+"/api/x", nil)
-	req.Header.Set("X-Forwarded-For", "203.0.113.50, 127.0.0.1")
-	req.Header.Set("X-Forwarded-Proto", "https")
-	req.Header.Set("X-Forwarded-Host", "panel.example")
-	_, body := getJSON(t, req)
-
-	if body["xff"] != "203.0.113.50" || body["proto"] != "https" || body["host"] != "panel.example" {
-		t.Errorf("node saw xff=%q proto=%q host=%q, want the client behind the trusted proxy", body["xff"], body["proto"], body["host"])
+	w := mixed(t, setup{trustProxy: "loopback"})
+	res := w.agent().get("/api/x", "X-Forwarded-For", "203.0.113.50, 127.0.0.1", "X-Forwarded-Proto", "https", "X-Forwarded-Host", "panel.example")
+	got, _ := res.node()
+	if got.XFF != "203.0.113.50" || got.Proto != "https" || got.Host != "panel.example" {
+		t.Errorf("node saw %+v, want the client behind the trusted proxy", got)
 	}
 }
 
-func TestGoRouteAnswersBeforeNode(t *testing.T) {
-	node := fakeNode(t)
-	s, front := frontDoor(t, node.URL, "")
-	s.Router().Get("/api/ported/{id}", func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(map[string]string{"server": "go", "id": r.PathValue("id")})
-	})
-
-	req, _ := http.NewRequest("GET", front.URL+"/API/Ported/7/", nil)
-	res, body := getJSON(t, req)
-	if res.StatusCode != http.StatusOK || body["server"] != "go" || body["id"] != "7" {
-		t.Errorf("status %d body %v, want the Go route", res.StatusCode, body)
+// Go answers nothing it has no route for: not the 404, not preflights,
+// not files, not pages.
+func TestWithNodeGoAnswersOnlyItsRoutes(t *testing.T) {
+	w := mixed(t, setup{build: true, public: publicFolder(t)})
+	a := w.agent()
+	for name, res := range map[string]answer{
+		"unknown API path":        a.get("/api/nothing"),
+		"preflight of a path":     a.do("OPTIONS", "/api/nothing", "", "Origin", "tauri://localhost"),
+		"static file":             a.get("/favicon.svg"),
+		"file of the web app":     a.get("/_ui/immutable/assets/app.t3st.css"),
+		"page of the web app":     a.get("/devices", "Accept", "text/html"),
+		"sign-in page":            a.get("/login", "Accept", "text/html"),
+		"broken body, no route":   a.do("POST", "/api/nothing", "{broken", "Content-Type", "application/json"),
+		"write without a token":   a.do("POST", "/api/nothing", "{}", "Content-Type", "application/json"),
+		"other method of a route": a.do("DELETE", "/api/ported/7", ""),
+		"POST where Go has GET":   a.do("POST", "/api/ported/7", `{"a":1}`, "Content-Type", "application/json"),
+		"deeper path":             a.get("/api/ported/7/more"),
+		"shorter path":            a.get("/api/ported"),
+	} {
+		wantUntouched(t, name, res)
 	}
-
-	// Another method on the same path is not a Go route
-	req, _ = http.NewRequest("DELETE", front.URL+"/api/ported/7", nil)
-	_, body = getJSON(t, req)
-	if body["server"] != "node" {
-		t.Errorf("DELETE answered by %q, want node", body["server"])
+	// The body of a request Go does not handle is not read by Go
+	res := a.do("POST", "/api/ported/7", `{"a":1}`, "Content-Type", "application/json")
+	if got, _ := res.node(); got.Body != `{"a":1}` || got.Method != "POST" {
+		t.Errorf("node saw %+v", got)
 	}
 }
 
-// routingFront is a front door with the routing report switched on or off
-// and one Go route, GET /api/ported/{id}.
-func routingFront(t *testing.T, upstream string, debug bool) *httptest.Server {
-	t.Helper()
-	cfg := &config.Config{Host: "127.0.0.1", DebugRouting: debug}
-	if upstream != "" {
-		u, err := url.Parse(upstream)
+func TestWithNodeGoRouteMatchesLikeExpress(t *testing.T) {
+	w := mixed(t, setup{})
+	a := w.agent().signIn("viewer")
+	seenBefore := w.node.count()
+	for _, target := range []string{"/api/ported/7", "/api/ported/7/", "/API/Ported/7", "/Api/PORTED/7/"} {
+		res := a.get(target)
+		if res.status != 200 || res.json(t)["user"] != float64(roleIDs["viewer"]) {
+			t.Errorf("GET %s: %d %.100s, want the Go route", target, res.status, res.body)
+		}
+		wantSecurityHeaders(t, res)
+	}
+	res := a.do("HEAD", "/api/ported/7", "")
+	if res.status != 200 || res.body != "" || res.header.Get("Content-Type") != "application/json; charset=utf-8" || res.header.Get("X-Node") != "" {
+		t.Errorf("HEAD on a Go GET route: %d %q %v", res.status, res.body, res.header)
+	}
+	if w.node.count() != seenBefore {
+		t.Errorf("the Node console saw %d of these requests", w.node.count()-seenBefore)
+	}
+	if w.s.handles(httptest.NewRequest("GET", "/api/ported//7", nil)) {
+		t.Error("a path with an empty part matched a Go route")
+	}
+}
+
+func TestWithNodeOptionsOnAGoRoute(t *testing.T) {
+	w := mixed(t, setup{})
+	before := w.node.count()
+	// Under /api/ the preflight ends in Go's step 3, as it would in Node's
+	res := w.agent().do("OPTIONS", "/api/ported/7", "", "Origin", "tauri://localhost")
+	if res.status != 204 || res.header.Get("Access-Control-Allow-Origin") != "tauri://localhost" || res.header.Get("X-Node") != "" {
+		t.Errorf("OPTIONS on a Go API route: %d %v", res.status, res.header)
+	}
+	// Outside /api/ the route table lists its methods
+	res = w.agent().do("OPTIONS", "/ported-page", "")
+	if res.status != 200 || res.header.Get("Allow") != "GET,HEAD" || res.body != "GET,HEAD" {
+		t.Errorf("OPTIONS on a Go page route: %d Allow=%q body=%q", res.status, res.header.Get("Allow"), res.body)
+	}
+	if w.node.count() != before {
+		t.Error("the Node console saw a preflight of a Go route")
+	}
+}
+
+func TestWithNodeGuardRefusalIsGosAnswer(t *testing.T) {
+	w := mixed(t, setup{})
+	before := w.node.count()
+	res := w.agent().get("/api/ported/7")
+	if res.status != 401 || res.body != `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}` {
+		t.Errorf("guard refusal: %d %s", res.status, res.body)
+	}
+	wantSecurityHeaders(t, res)
+	// The pipeline's own refusals are Go's too: the CSRF gate and the body step
+	if res := w.agent().do("POST", "/api/open", "{}", "Content-Type", "application/json"); res.status != 403 {
+		t.Errorf("write to a Go route without a token: %d", res.status)
+	}
+	if res := w.agent().do("POST", "/api/open", "{broken", "Content-Type", "application/json"); res.status != 400 {
+		t.Errorf("broken body to a Go route: %d", res.status)
+	}
+	if w.node.count() != before {
+		t.Errorf("the Node console saw %d refused requests", w.node.count()-before)
+	}
+}
+
+func TestWithNodeWebsocketUpgradeGoesToNode(t *testing.T) {
+	w := mixed(t, setup{})
+	// Go has a GET route for this very path
+	called := false
+	w.s.Router().Get("/api/socket", func(http.ResponseWriter, *http.Request) { called = true })
+	w.s.Early().Get("/ws/echo", func(http.ResponseWriter, *http.Request) { called = true })
+
+	for _, path := range []string{"/api/socket", "/ws/echo"} {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		conn, _, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(w.front.URL, "http")+path, nil)
 		if err != nil {
+			cancel()
+			t.Fatalf("dial %s through the front door: %v", path, err)
+		}
+		if err := conn.Write(ctx, websocket.MessageText, []byte("hello")); err != nil {
 			t.Fatal(err)
 		}
-		cfg.NodeUpstream = u
+		_, msg, err := conn.Read(ctx)
+		if err != nil || string(msg) != "node:hello" {
+			t.Errorf("%s: got %q %v, want node:hello", path, msg, err)
+		}
+		conn.Close(websocket.StatusNormalClosure, "")
+		cancel()
 	}
-	s := New(cfg)
-	s.Router().Get("/api/ported/{id}", func(w http.ResponseWriter, r *http.Request) {})
-	front := httptest.NewServer(s)
-	t.Cleanup(front.Close)
-	return front
+	if called {
+		t.Error("a Go route answered a websocket upgrade")
+	}
+	// Without the upgrade headers the same path is the Go route
+	if res := w.agent().get("/api/socket"); res.status != 200 || !called {
+		t.Errorf("plain GET: %d", res.status)
+	}
 }
 
-func whoAnswers(t *testing.T, front *httptest.Server, method, path string) (int, map[string]string) {
-	t.Helper()
-	q := url.Values{"method": {method}, "path": {path}}
-	req, _ := http.NewRequest("GET", front.URL+"/__bd/routing?"+q.Encode(), nil)
-	res, body := getJSON(t, req)
-	return res.StatusCode, body
+func TestWithNodePassOnReachesNodeWithItsBody(t *testing.T) {
+	w := mixed(t, setup{})
+	bearer := func(rw http.ResponseWriter, r *http.Request) {
+		if !strings.HasPrefix(r.Header.Get("Authorization"), "Bearer ") {
+			// The body step has read the body by now
+			if text, _ := kit.Body(r).String("name"); text == "" && r.Method == http.MethodPost && r.Header.Get("Content-Type") == "application/json" {
+				t.Errorf("the early handler did not see the parsed body")
+			}
+			kit.PassOn(rw, r)
+			return
+		}
+		kit.JSON(rw, r, http.StatusOK, map[string]string{"stage": "early"})
+	}
+	w.s.Early().Post("/api/devices", bearer)
+	w.s.Early().Get("/api/devices", bearer)
+	w.s.Early().Get("/api/strategies", bearer)
+	w.s.Router().Get("/api/strategies", probe)
+
+	a := w.agent().signIn("admin")
+	if res := a.do("POST", "/api/devices", `{"name":"x"}`, "Content-Type", "application/json", "Authorization", "Bearer t"); res.body != `{"stage":"early"}` {
+		t.Fatalf("with a bearer token: %d %s", res.status, res.body)
+	}
+
+	// What the early stage passes on still meets the later steps in Go, as
+	// it did in Node: without a token the CSRF gate refuses it
+	if res := a.do("POST", "/api/devices", `{"name":"x"}`, "Content-Type", "application/json"); res.status != 403 || res.header.Get("X-Node") != "" {
+		t.Errorf("passed on without a CSRF token: %d, want Go's 403", res.status)
+	}
+
+	body := `{"name":"` + strings.Repeat("y", 70000) + `"}`
+	res := a.post("/api/devices?q=1", body)
+	got := wantUntouched(t, "passed on POST", res)
+	if got.Body != body || got.Method != "POST" || got.URI != "/api/devices?q=1" || got.Type != "application/json" {
+		t.Errorf("node saw method %s uri %s type %s and %d body bytes, want the request as it arrived (%d bytes)", got.Method, got.URI, got.Type, len(got.Body), len(body))
+	}
+	if !strings.Contains(got.Cookie, "bd.sid=") {
+		t.Errorf("node saw cookies %q", got.Cookie)
+	}
+
+	form := "a=1&b=two+words"
+	w.s.Early().Put("/device/form", bearer)
+	res = a.do("PUT", "/device/form", form, "Content-Type", "application/x-www-form-urlencoded", "X-CSRF-Token", a.csrf())
+	if got := wantUntouched(t, "passed on form", res); got.Body != form {
+		t.Errorf("node saw form body %q", got.Body)
+	}
+	if got := wantUntouched(t, "passed on GET", a.get("/api/devices")); got.Body != "" {
+		t.Errorf("node saw a body on GET: %q", got.Body)
+	}
+
+	// A later Go route takes what the early stage passes on
+	before := w.node.count()
+	if res := a.get("/api/strategies"); res.status != 200 || !strings.Contains(res.body, `"route":"GET /api/strategies"`) || res.json(t)["lang"] != "en" {
+		t.Errorf("passed on to a Go route: %d %.100s", res.status, res.body)
+	}
+	if w.node.count() != before {
+		t.Error("the Node console saw a request a Go route answered")
+	}
 }
 
-func TestRoutingReportFollowsTheRouteTable(t *testing.T) {
-	node := fakeNode(t)
-	front := routingFront(t, node.URL, true)
+func TestWithNodeStepAsideInTheLaterStageReachesNode(t *testing.T) {
+	w := mixed(t, setup{})
+	w.s.Router().Mount("/api/bd").Get("/rules", probe, kit.OnMount("/api/automation"))
+	res := w.agent().get("/api/bd/rules")
+	wantUntouched(t, "route that steps aside", res)
+}
+
+func TestRoutingReportFollowsTheRouteTables(t *testing.T) {
+	w := mixed(t, setup{debug: true})
+	w.s.Early().Get("/api/early/{id}", probe)
+	who := func(w *world, method, path string) string {
+		q := url.Values{"method": {method}, "path": {path}}
+		res := w.agent().get("/__bd/routing?" + q.Encode())
+		if res.status != 200 {
+			t.Fatalf("routing report: %d %s", res.status, res.body)
+		}
+		handler, _ := res.json(t)["handler"].(string)
+		return handler
+	}
 	for _, c := range []struct{ method, path, want string }{
 		{"GET", "/api/ported/7", "go"},
 		{"HEAD", "/API/Ported/7/", "go"},
+		{"OPTIONS", "/api/ported/7", "go"},
 		{"DELETE", "/api/ported/7", "node"},
 		{"GET", "/api/ported", "node"},
 		{"GET", "/api/devices", "node"},
+		{"GET", "/api/early/7", "go"},
+		{"POST", "/api/early/7", "node"},
 		{"GET", "/__bd/routing", "go"},
 	} {
-		code, body := whoAnswers(t, front, c.method, c.path)
-		if code != http.StatusOK || body["handler"] != c.want {
-			t.Errorf("%s %s = %d %v, want handler %q", c.method, c.path, code, body, c.want)
+		if got := who(w, c.method, c.path); got != c.want {
+			t.Errorf("%s %s = %q, want %q", c.method, c.path, got, c.want)
 		}
 	}
 
-	goOnly := routingFront(t, "", true)
-	if _, body := whoAnswers(t, goOnly, "GET", "/api/devices"); body["handler"] != "none" {
-		t.Errorf("without Node: %v, want handler none", body)
+	alone := newWorld(t, setup{debug: true})
+	alone.s.Router().Get("/api/ported/{id}", probe)
+	if got := who(alone, "GET", "/api/devices"); got != "none" {
+		t.Errorf("without Node: %q, want none", got)
 	}
-	if _, body := whoAnswers(t, goOnly, "GET", "/api/ported/7"); body["handler"] != "go" {
-		t.Errorf("without Node: %v, want handler go", body)
+	if got := who(alone, "GET", "/api/ported/7"); got != "go" {
+		t.Errorf("without Node: %q, want go", got)
 	}
 }
 
 func TestRoutingReportIsOffByDefault(t *testing.T) {
-	node := fakeNode(t)
-	front := routingFront(t, node.URL, false)
-	code, body := whoAnswers(t, front, "GET", "/api/ported/7")
-	if code != http.StatusTeapot || body["server"] != "node" || body["handler"] != "" {
-		t.Errorf("status %d body %v, want the request passed to Node like any other path", code, body)
+	w := mixed(t, setup{})
+	if _, ok := w.agent().get("/__bd/routing?method=GET&path=/api/ported/7").node(); !ok {
+		t.Error("the routing report answers without CONSOLE_DEBUG_ROUTING")
 	}
-
-	goOnly := routingFront(t, "", false)
-	if code, _ := whoAnswers(t, goOnly, "GET", "/api/ported/7"); code != http.StatusNotFound {
-		t.Errorf("without Node: status %d, want 404", code)
-	}
-}
-
-func TestWebsocketGoesToNode(t *testing.T) {
-	node := fakeNode(t)
-	_, front := frontDoor(t, node.URL, "")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	conn, _, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(front.URL, "http")+"/ws/echo", nil)
-	if err != nil {
-		t.Fatalf("dial through the front door: %v", err)
-	}
-	defer conn.Close(websocket.StatusNormalClosure, "")
-	if err := conn.Write(ctx, websocket.MessageText, []byte("hello")); err != nil {
-		t.Fatal(err)
-	}
-	_, msg, err := conn.Read(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if string(msg) != "node:hello" {
-		t.Errorf("got %q, want node:hello", msg)
+	alone := newWorld(t, setup{})
+	if res := alone.agent().get("/__bd/routing?method=GET&path=/x"); res.status != 404 {
+		t.Errorf("without Node: status %d, want 404", res.status)
 	}
 }
 
 func TestNodeDownAnswers502(t *testing.T) {
-	node := fakeNode(t)
-	_, front := frontDoor(t, node.URL, "")
-	node.Close()
-
-	req, _ := http.NewRequest("GET", front.URL+"/api/x", nil)
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatal(err)
+	w := mixed(t, setup{})
+	w.node.Close()
+	res := w.agent().get("/api/x")
+	if res.status != http.StatusBadGateway || res.json(t)["success"] != false {
+		t.Errorf("status %d body %s, want 502 with success false", res.status, res.body)
 	}
-	defer res.Body.Close()
-	var body map[string]any
-	_ = json.NewDecoder(res.Body).Decode(&body)
-	if res.StatusCode != http.StatusBadGateway || body["success"] != false {
-		t.Errorf("status %d body %v, want 502 with success false", res.StatusCode, body)
+	// Go's own routes still answer
+	if res := w.agent().get("/api/open"); res.status != 200 {
+		t.Errorf("a Go route with Node down: %d", res.status)
 	}
 }
 
-func TestWithoutNodeUnknownPathIs404(t *testing.T) {
-	_, front := frontDoor(t, "", "")
-	req, _ := http.NewRequest("GET", front.URL+"/api/nothing", nil)
-	res, err := http.DefaultClient.Do(req)
+func TestStartAndStopLeaveNothingRunning(t *testing.T) {
+	db := storetest.Migrated(t)
+	node := newFakeNode(t)
+	upstream, _ := url.Parse(node.URL)
+	client := &http.Client{Transport: &http.Transport{}}
+	settle := func() int {
+		client.CloseIdleConnections()
+		best := runtime.NumGoroutine()
+		for i := 0; i < 100; i++ {
+			time.Sleep(20 * time.Millisecond)
+			if n := runtime.NumGoroutine(); n < best {
+				best = n
+			}
+		}
+		return best
+	}
+	// One request before the count, so the fake Node console's own goroutines are in it
+	if res, err := client.Get(node.URL + "/warm"); err == nil {
+		res.Body.Close()
+	}
+	before := settle()
+
+	cfg := &config.Config{
+		Host: "127.0.0.1", NodeUpstream: upstream, DataDir: t.TempDir(), UploadsDir: t.TempDir(),
+		LangDir: "../../web-nodejs/lang", WebUIDir: t.TempDir(), DefaultLanguage: "en",
+		Getenv: func(key string) string {
+			if key == "SESSION_SECRET" {
+				return testSecret
+			}
+			return ""
+		},
+	}
+	s, err := New(context.Background(), Options{Config: cfg, Store: db, API: http.NotFoundHandler()})
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer res.Body.Close()
-	var body map[string]any
-	_ = json.NewDecoder(res.Body).Decode(&body)
-	if res.StatusCode != http.StatusNotFound || body["error"] != "Not Found" {
-		t.Errorf("status %d body %v, want 404 Not Found", res.StatusCode, body)
+	ticking := make(chan struct{}, 1)
+	ended := make(chan struct{})
+	s.Jobs().Add("test job", func(ctx context.Context) {
+		ticking <- struct{}{}
+		<-ctx.Done()
+		close(ended)
+	})
+	if got := strings.Join(s.Jobs().Names(), ","); got != "session cleanup,test job" {
+		t.Errorf("jobs = %q", got)
 	}
-}
-
-func TestStartAndStop(t *testing.T) {
-	s := New(&config.Config{Host: "127.0.0.1", Port: 0})
 	if err := s.Start(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	res, err := http.Get("http://" + s.Addr() + "/nothing")
-	if err != nil {
-		t.Fatal(err)
+	<-ticking
+	for _, target := range []string{"/health", "/api/unported"} {
+		res, err := client.Get("http://" + s.Addr() + target)
+		if err != nil {
+			t.Fatal(err)
+		}
+		res.Body.Close()
+		if want := map[string]int{"/health": 200, "/api/unported": 418}[target]; res.StatusCode != want {
+			t.Errorf("GET %s = %d, want %d", target, res.StatusCode, want)
+		}
 	}
-	res.Body.Close()
-	if res.StatusCode != http.StatusNotFound {
-		t.Errorf("status = %d, want 404", res.StatusCode)
-	}
+
 	s.Stop()
-	if _, err := http.Get("http://" + s.Addr() + "/nothing"); err == nil {
-		t.Error("server still answers after Stop")
+	select {
+	case <-ended:
+	default:
+		t.Error("a background job is still running after Stop")
+	}
+	if _, err := client.Get("http://" + s.Addr() + "/health"); err == nil {
+		t.Error("the server still answers after Stop")
+	}
+	if after := settle(); after > before {
+		buf := make([]byte, 1<<16)
+		t.Errorf("%d goroutines before Start, %d after Stop:\n%s", before, after, buf[:runtime.Stack(buf, true)])
 	}
 }

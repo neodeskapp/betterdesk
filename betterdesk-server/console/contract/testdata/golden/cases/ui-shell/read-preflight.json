@@ -1,0 +1,42 @@
+{
+ "id": "ui-shell/read-preflight",
+ "request": {
+  "method": "OPTIONS",
+  "path": "/api/ui-shell",
+  "notes": [
+   "header Origin: tauri://localhost"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "admin"
+   ],
+   "status": 204,
+   "headers": {
+    "access-control-allow-credentials": "true",
+    "access-control-allow-headers": "Content-Type, Authorization, X-API-Key, X-CSRF-Token",
+    "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    "access-control-allow-origin": "tauri://localhost",
+    "access-control-max-age": "86400",
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

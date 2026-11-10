@@ -1,0 +1,7410 @@
+{
+ "node": "v22.23.4",
+ "levels": [
+  {
+   "log_level": null,
+   "production": false,
+   "node_env": null,
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": null,
+   "production": true,
+   "node_env": "production",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": null,
+   "production": false,
+   "node_env": "development",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": null,
+   "production": false,
+   "node_env": "Production",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": null,
+   "production": false,
+   "node_env": "test",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "",
+   "production": false,
+   "node_env": null,
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "",
+   "production": true,
+   "node_env": "production",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": "",
+   "production": false,
+   "node_env": "development",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "",
+   "production": false,
+   "node_env": "Production",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "",
+   "production": false,
+   "node_env": "test",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "error",
+   "production": false,
+   "node_env": null,
+   "level": "error",
+   "printed": {
+    "error": "error",
+    "warn": null,
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 1
+  },
+  {
+   "log_level": "error",
+   "production": true,
+   "node_env": "production",
+   "level": "error",
+   "printed": {
+    "error": "error",
+    "warn": null,
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 1
+  },
+  {
+   "log_level": "error",
+   "production": false,
+   "node_env": "development",
+   "level": "error",
+   "printed": {
+    "error": "error",
+    "warn": null,
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 1
+  },
+  {
+   "log_level": "error",
+   "production": false,
+   "node_env": "Production",
+   "level": "error",
+   "printed": {
+    "error": "error",
+    "warn": null,
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 1
+  },
+  {
+   "log_level": "error",
+   "production": false,
+   "node_env": "test",
+   "level": "error",
+   "printed": {
+    "error": "error",
+    "warn": null,
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 1
+  },
+  {
+   "log_level": "warn",
+   "production": false,
+   "node_env": null,
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": "warn",
+   "production": true,
+   "node_env": "production",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": "warn",
+   "production": false,
+   "node_env": "development",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": "warn",
+   "production": false,
+   "node_env": "Production",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": "warn",
+   "production": false,
+   "node_env": "test",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": "info",
+   "production": false,
+   "node_env": null,
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "info",
+   "production": true,
+   "node_env": "production",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "info",
+   "production": false,
+   "node_env": "development",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "info",
+   "production": false,
+   "node_env": "Production",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "info",
+   "production": false,
+   "node_env": "test",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "debug",
+   "production": false,
+   "node_env": null,
+   "level": "debug",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": "log"
+   },
+   "child_printed": 4
+  },
+  {
+   "log_level": "debug",
+   "production": true,
+   "node_env": "production",
+   "level": "debug",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": "log"
+   },
+   "child_printed": 4
+  },
+  {
+   "log_level": "debug",
+   "production": false,
+   "node_env": "development",
+   "level": "debug",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": "log"
+   },
+   "child_printed": 4
+  },
+  {
+   "log_level": "debug",
+   "production": false,
+   "node_env": "Production",
+   "level": "debug",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": "log"
+   },
+   "child_printed": 4
+  },
+  {
+   "log_level": "debug",
+   "production": false,
+   "node_env": "test",
+   "level": "debug",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": "log"
+   },
+   "child_printed": 4
+  },
+  {
+   "log_level": "ERROR",
+   "production": false,
+   "node_env": null,
+   "level": "error",
+   "printed": {
+    "error": "error",
+    "warn": null,
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 1
+  },
+  {
+   "log_level": "ERROR",
+   "production": true,
+   "node_env": "production",
+   "level": "error",
+   "printed": {
+    "error": "error",
+    "warn": null,
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 1
+  },
+  {
+   "log_level": "ERROR",
+   "production": false,
+   "node_env": "development",
+   "level": "error",
+   "printed": {
+    "error": "error",
+    "warn": null,
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 1
+  },
+  {
+   "log_level": "ERROR",
+   "production": false,
+   "node_env": "Production",
+   "level": "error",
+   "printed": {
+    "error": "error",
+    "warn": null,
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 1
+  },
+  {
+   "log_level": "ERROR",
+   "production": false,
+   "node_env": "test",
+   "level": "error",
+   "printed": {
+    "error": "error",
+    "warn": null,
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 1
+  },
+  {
+   "log_level": " Warn ",
+   "production": false,
+   "node_env": null,
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": " Warn ",
+   "production": true,
+   "node_env": "production",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": " Warn ",
+   "production": false,
+   "node_env": "development",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": " Warn ",
+   "production": false,
+   "node_env": "Production",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": " Warn ",
+   "production": false,
+   "node_env": "test",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": "\tdebug\n",
+   "production": false,
+   "node_env": null,
+   "level": "debug",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": "log"
+   },
+   "child_printed": 4
+  },
+  {
+   "log_level": "\tdebug\n",
+   "production": true,
+   "node_env": "production",
+   "level": "debug",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": "log"
+   },
+   "child_printed": 4
+  },
+  {
+   "log_level": "\tdebug\n",
+   "production": false,
+   "node_env": "development",
+   "level": "debug",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": "log"
+   },
+   "child_printed": 4
+  },
+  {
+   "log_level": "\tdebug\n",
+   "production": false,
+   "node_env": "Production",
+   "level": "debug",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": "log"
+   },
+   "child_printed": 4
+  },
+  {
+   "log_level": "\tdebug\n",
+   "production": false,
+   "node_env": "test",
+   "level": "debug",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": "log"
+   },
+   "child_printed": 4
+  },
+  {
+   "log_level": "verbose",
+   "production": false,
+   "node_env": null,
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "verbose",
+   "production": true,
+   "node_env": "production",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": "verbose",
+   "production": false,
+   "node_env": "development",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "verbose",
+   "production": false,
+   "node_env": "Production",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "verbose",
+   "production": false,
+   "node_env": "test",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "trace",
+   "production": false,
+   "node_env": null,
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "trace",
+   "production": true,
+   "node_env": "production",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": "trace",
+   "production": false,
+   "node_env": "development",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "trace",
+   "production": false,
+   "node_env": "Production",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "trace",
+   "production": false,
+   "node_env": "test",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "warning",
+   "production": false,
+   "node_env": null,
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "warning",
+   "production": true,
+   "node_env": "production",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": "warning",
+   "production": false,
+   "node_env": "development",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "warning",
+   "production": false,
+   "node_env": "Production",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "warning",
+   "production": false,
+   "node_env": "test",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "fatal",
+   "production": false,
+   "node_env": null,
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "fatal",
+   "production": true,
+   "node_env": "production",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": "fatal",
+   "production": false,
+   "node_env": "development",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "fatal",
+   "production": false,
+   "node_env": "Production",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "fatal",
+   "production": false,
+   "node_env": "test",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "0",
+   "production": false,
+   "node_env": null,
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "0",
+   "production": true,
+   "node_env": "production",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": "0",
+   "production": false,
+   "node_env": "development",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "0",
+   "production": false,
+   "node_env": "Production",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "0",
+   "production": false,
+   "node_env": "test",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "constructor",
+   "production": false,
+   "node_env": null,
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "constructor",
+   "production": true,
+   "node_env": "production",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": "constructor",
+   "production": false,
+   "node_env": "development",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "constructor",
+   "production": false,
+   "node_env": "Production",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "constructor",
+   "production": false,
+   "node_env": "test",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "toString",
+   "production": false,
+   "node_env": null,
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "toString",
+   "production": true,
+   "node_env": "production",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": "toString",
+   "production": false,
+   "node_env": "development",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "toString",
+   "production": false,
+   "node_env": "Production",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "toString",
+   "production": false,
+   "node_env": "test",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "in fo",
+   "production": false,
+   "node_env": null,
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "in fo",
+   "production": true,
+   "node_env": "production",
+   "level": "warn",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": null,
+    "debug": null
+   },
+   "child_printed": 2
+  },
+  {
+   "log_level": "in fo",
+   "production": false,
+   "node_env": "development",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "in fo",
+   "production": false,
+   "node_env": "Production",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "in fo",
+   "production": false,
+   "node_env": "test",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "\u00a0info\u00a0",
+   "production": false,
+   "node_env": null,
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "\u00a0info\u00a0",
+   "production": true,
+   "node_env": "production",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "\u00a0info\u00a0",
+   "production": false,
+   "node_env": "development",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "\u00a0info\u00a0",
+   "production": false,
+   "node_env": "Production",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  },
+  {
+   "log_level": "\u00a0info\u00a0",
+   "production": false,
+   "node_env": "test",
+   "level": "info",
+   "printed": {
+    "error": "error",
+    "warn": "warn",
+    "info": "log",
+    "debug": null
+   },
+   "child_printed": 3
+  }
+ ],
+ "parts": [
+  {
+   "in": "Login failed: user 'administrator' not found",
+   "out": "Login failed: user 'a***r' not found"
+  },
+  {
+   "in": "Login successful for 'alice'",
+   "out": "Login successful for 'a***e'"
+  },
+  {
+   "in": "for 'admin'",
+   "out": "for 'a***n'"
+  },
+  {
+   "in": "user 'admin'",
+   "out": "user 'a***n'"
+  },
+  {
+   "in": "Synced 'alice' from Go (provider=ldap, role=operator)",
+   "out": "Synced 'a***e' from Go (provider=ldap, role=operator)"
+  },
+  {
+   "in": "Login failed: 'alice' is an SSO account",
+   "out": "Login failed: 'a***e' is an SSO account"
+  },
+  {
+   "in": "Login failed: 'john.doe@example.com' is an SSO account",
+   "out": "Login failed: 'john.doe@example.com' is an SSO account"
+  },
+  {
+   "in": "Login failed: 'john.doe' is an SSO account",
+   "out": "Login failed: 'john.doe' is an SSO account"
+  },
+  {
+   "in": "Login failed: LDAP credentials rejected for 'john.doe'",
+   "out": "Login failed: LDAP credentials rejected for 'j***e'"
+  },
+  {
+   "in": "Verifying password for 'alice' (hash type: bcrypt, length: 60)",
+   "out": "Verifying password for 'a***e' (hash type: bcrypt, length: 60)"
+  },
+  {
+   "in": "Login blocked: username collision for local 'alice' (Go provider=ldap)",
+   "out": "Login blocked: username collision for local 'a***e' (Go provider=ldap)"
+  },
+  {
+   "in": "Auto-created local user 'alice' (role: operator, provider: local) for session storage",
+   "out": "Auto-created local user 'a***e' (role: operator, provider: local) for session storage"
+  },
+  {
+   "in": "Failed to sync local hash for 'alice': SQLITE_BUSY",
+   "out": "Failed to sync local hash for 'a***e': SQLITE_BUSY"
+  },
+  {
+   "in": "user 'user' not found",
+   "out": "u***r 'user' not found"
+  },
+  {
+   "in": "for 'or'",
+   "out": "f*** '***'"
+  },
+  {
+   "in": "for 'for'",
+   "out": "f***r 'f***r'"
+  },
+  {
+   "in": "user 'us'",
+   "out": "***er '***'"
+  },
+  {
+   "in": "credentials for 'red'",
+   "out": "cr***dentials for 'r***d'"
+  },
+  {
+   "in": "credentials for 'alice'",
+   "out": "credentials for 'a***e'"
+  },
+  {
+   "in": "local user 'local'",
+   "out": "l***l user 'l***l'"
+  },
+  {
+   "in": "local user 'bob'",
+   "out": "local user 'b***b'"
+  },
+  {
+   "in": "synced 'sync'",
+   "out": "s***ced 's***c'"
+  },
+  {
+   "in": "account 'count'",
+   "out": "acc***t 'c***t'"
+  },
+  {
+   "in": "account 'alice' locked",
+   "out": "account 'a***e' locked"
+  },
+  {
+   "in": "therefor 'alice'",
+   "out": "therefor 'a***e'"
+  },
+  {
+   "in": "platform 'alice'",
+   "out": "platform 'a***e'"
+  },
+  {
+   "in": "FOR 'alice'",
+   "out": "FOR 'a***e'"
+  },
+  {
+   "in": "User 'alice'",
+   "out": "User 'a***e'"
+  },
+  {
+   "in": "ACCOUNT 'alice'",
+   "out": "ACCOUNT 'a***e'"
+  },
+  {
+   "in": "u\u017fer 'alice'",
+   "out": "u\u017fer 'a***e'"
+  },
+  {
+   "in": "\u017fynced 'alice'",
+   "out": "\u017fynced 'a***e'"
+  },
+  {
+   "in": "for'alice'",
+   "out": "for'a***e'"
+  },
+  {
+   "in": "for  'alice'",
+   "out": "for  'a***e'"
+  },
+  {
+   "in": "for\t'alice'",
+   "out": "for\t'a***e'"
+  },
+  {
+   "in": "for\n'alice'",
+   "out": "for\\n'a***e'"
+  },
+  {
+   "in": "for 'a'",
+   "out": "for '***'"
+  },
+  {
+   "in": "for 'ab'",
+   "out": "for '***'"
+  },
+  {
+   "in": "for 'abc'",
+   "out": "for 'a***c'"
+  },
+  {
+   "in": "for ''",
+   "out": "for ''"
+  },
+  {
+   "in": "for ' '",
+   "out": "for(empty)' '"
+  },
+  {
+   "in": "for ' ab '",
+   "out": "for '***'"
+  },
+  {
+   "in": "for '  alice  '",
+   "out": "for 'a***e'"
+  },
+  {
+   "in": "for 'al ice'",
+   "out": "for 'a***e'"
+  },
+  {
+   "in": "for 'a\ud83d\ude00b'",
+   "out": "for 'a***b'"
+  },
+  {
+   "in": "for '\ud83d\ude00'",
+   "out": "for '***'"
+  },
+  {
+   "in": "for '\ud83d\ude00\ud83d\ude01'",
+   "out": "for '\ufffd***\ufffd'"
+  },
+  {
+   "in": "for 'alice' and for 'bob'",
+   "out": "for 'a***e' and for 'b***b'"
+  },
+  {
+   "in": "for 'alice' for 'alice'",
+   "out": "for 'a***e' for 'a***e'"
+  },
+  {
+   "in": "for 'alice's'",
+   "out": "for 'a***e's'"
+  },
+  {
+   "in": "for 'ali'ce'",
+   "out": "for 'a***i'ce'"
+  },
+  {
+   "in": "user 'x' 'y'",
+   "out": "user '***' 'y'"
+  },
+  {
+   "in": "user 'xy' 'zw'",
+   "out": "user '***' '***'"
+  },
+  {
+   "in": "'alice'",
+   "out": "'a***e'"
+  },
+  {
+   "in": "'a'",
+   "out": "'a'"
+  },
+  {
+   "in": "'ab'",
+   "out": "'***'"
+  },
+  {
+   "in": "'abc'",
+   "out": "'a***c'"
+  },
+  {
+   "in": "''",
+   "out": "''"
+  },
+  {
+   "in": "' '",
+   "out": "' '"
+  },
+  {
+   "in": "'a b'",
+   "out": "'a b'"
+  },
+  {
+   "in": "'al-ice'",
+   "out": "'a***e'"
+  },
+  {
+   "in": "'al_ice'",
+   "out": "'a***e'"
+  },
+  {
+   "in": "'a@b'",
+   "out": "'a***b'"
+  },
+  {
+   "in": "'a.b'",
+   "out": "'a.b'"
+  },
+  {
+   "in": "'a/b'",
+   "out": "'a/b'"
+  },
+  {
+   "in": "'a\\b'",
+   "out": "'a\\b'"
+  },
+  {
+   "in": "'a:b'",
+   "out": "'a:b'"
+  },
+  {
+   "in": "'http://x'",
+   "out": "'http://x'"
+  },
+  {
+   "in": "'HTTPS'",
+   "out": "'H***S'"
+  },
+  {
+   "in": "'https'",
+   "out": "'h***s'"
+  },
+  {
+   "in": "'httpx'",
+   "out": "'h***x'"
+  },
+  {
+   "in": "'BETTERDESK_API_KEY'",
+   "out": "'BETTERDESK_API_KEY'"
+  },
+  {
+   "in": "'betterdesk_x'",
+   "out": "'betterdesk_x'"
+  },
+  {
+   "in": "'BETTERDESK'",
+   "out": "'B***K'"
+  },
+  {
+   "in": "'LDAP+local'",
+   "out": "'LDAP+local'"
+  },
+  {
+   "in": "'ldap+x'",
+   "out": "'ldap+x'"
+  },
+  {
+   "in": "'LDAP'",
+   "out": "'L***P'"
+  },
+  {
+   "in": "'Go server'",
+   "out": "'Go server'"
+  },
+  {
+   "in": "'go server'",
+   "out": "'go server'"
+  },
+  {
+   "in": "'Go serverx'",
+   "out": "'Go serverx'"
+  },
+  {
+   "in": "'Go'",
+   "out": "'***'"
+  },
+  {
+   "in": "'PBKDF2'",
+   "out": "'PBKDF2'"
+  },
+  {
+   "in": "'pbkdf2x'",
+   "out": "'pbkdf2x'"
+  },
+  {
+   "in": "'PBKDF'",
+   "out": "'P***F'"
+  },
+  {
+   "in": "'bcrypt'",
+   "out": "'bcrypt'"
+  },
+  {
+   "in": "'BCRYPTx'",
+   "out": "'BCRYPTx'"
+  },
+  {
+   "in": "'bcryp'",
+   "out": "'b***p'"
+  },
+  {
+   "in": "'admin'",
+   "out": "'admin'"
+  },
+  {
+   "in": "'ADMIN'",
+   "out": "'ADMIN'"
+  },
+  {
+   "in": "'Admin'",
+   "out": "'Admin'"
+  },
+  {
+   "in": "'admins'",
+   "out": "'a***s'"
+  },
+  {
+   "in": "'operator'",
+   "out": "'operator'"
+  },
+  {
+   "in": "'viewer'",
+   "out": "'viewer'"
+  },
+  {
+   "in": "'user'",
+   "out": "'user'"
+  },
+  {
+   "in": "'role'",
+   "out": "'role'"
+  },
+  {
+   "in": "'provider'",
+   "out": "'provider'"
+  },
+  {
+   "in": "'hash type'",
+   "out": "'hash type'"
+  },
+  {
+   "in": "'HASH TYPE'",
+   "out": "'HASH TYPE'"
+  },
+  {
+   "in": "'empty'",
+   "out": "'empty'"
+  },
+  {
+   "in": "'invalid'",
+   "out": "'invalid'"
+  },
+  {
+   "in": "'Invalid'",
+   "out": "'Invalid'"
+  },
+  {
+   "in": "'invalid2'",
+   "out": "'i***2'"
+  },
+  {
+   "in": "'xadmin'",
+   "out": "'x***n'"
+  },
+  {
+   "in": "'admin '",
+   "out": "'admin '"
+  },
+  {
+   "in": "' admin'",
+   "out": "' admin'"
+  },
+  {
+   "in": "'\u00e4dmin'",
+   "out": "'\u00e4dmin'"
+  },
+  {
+   "in": "'alice' 'bob'",
+   "out": "'a***e' 'b***b'"
+  },
+  {
+   "in": "'alice''bob'",
+   "out": "'a***e''b***b'"
+  },
+  {
+   "in": "'alice'bob'carol'",
+   "out": "'a***e'bob'c***l'"
+  },
+  {
+   "in": "a 'b' c 'de' f 'ghi'",
+   "out": "a 'b' c 'de' f 'ghi'"
+  },
+  {
+   "in": "it's alice's and bob's",
+   "out": "it's alice's and bob's"
+  },
+  {
+   "in": "don't 'x' won't",
+   "out": "don't 'x' won't"
+  },
+  {
+   "in": "'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'",
+   "out": "'a***a'"
+  },
+  {
+   "in": "'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'",
+   "out": "'a***a'"
+  },
+  {
+   "in": "'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'",
+   "out": "'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'"
+  },
+  {
+   "in": "'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' 'bob'",
+   "out": "'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' 'b***b'"
+  },
+  {
+   "in": "'\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00'",
+   "out": "'\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00'"
+  },
+  {
+   "in": "'\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00'",
+   "out": "'\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00'"
+  },
+  {
+   "in": "'\ud83d\ude00'",
+   "out": "'\ud83d\ude00'"
+  },
+  {
+   "in": "'a\ud83d\ude00'",
+   "out": "'a\ud83d\ude00'"
+  },
+  {
+   "in": "'\u00e9\u00e9'",
+   "out": "'\u00e9\u00e9'"
+  },
+  {
+   "in": "'BETTERDES\u212a_X'",
+   "out": "'BETTERDES\u212a_X'"
+  },
+  {
+   "in": "'\u212a\u212a'",
+   "out": "'\u212a\u212a'"
+  },
+  {
+   "in": "'bcr\u0443pt'",
+   "out": "'bcr\u0443pt'"
+  },
+  {
+   "in": "'u\u017fer'",
+   "out": "'u\u017fer'"
+  },
+  {
+   "in": "'U\u017fER'",
+   "out": "'U\u017fER'"
+  },
+  {
+   "in": "'admi\u0274'",
+   "out": "'admi\u0274'"
+  },
+  {
+   "in": "line1\nline2 for 'alice'",
+   "out": "line1\\nline2 for 'a***e'"
+  },
+  {
+   "in": "for 'ali\nce'",
+   "out": "for 'a***e'"
+  },
+  {
+   "in": "for\u2028'alice'",
+   "out": "for\\n'a***e'"
+  },
+  {
+   "in": "a\r\nb",
+   "out": "a\\n\\nb"
+  },
+  {
+   "in": "\u2029",
+   "out": "\\n"
+  },
+  {
+   "in": "plain",
+   "out": "plain"
+  },
+  {
+   "in": "",
+   "out": ""
+  },
+  {
+   "in": " ",
+   "out": " "
+  },
+  {
+   "in": "100% for 'alice'",
+   "out": "100% for 'a***e'"
+  },
+  {
+   "in": "$& for '$&x'",
+   "out": "$& for '$***x'"
+  },
+  {
+   "in": "for '$1ab'",
+   "out": "for '$***b'"
+  },
+  {
+   "in": "for 'a$'",
+   "out": "for '***'"
+  },
+  {
+   "in": "for '$$$$'",
+   "out": "for '$***$'"
+  },
+  {
+   "in": "user '$`ab'",
+   "out": "user '$***b'"
+  },
+  {
+   "in": "for 'ab' ab ab",
+   "out": "for '***' ab ab"
+  },
+  {
+   "in": "abc for 'abc'",
+   "out": "abc for 'a***c'"
+  },
+  {
+   "in": "for 'r'",
+   "out": "fo*** 'r'"
+  },
+  {
+   "in": "for ' for'",
+   "out": "for 'f***r'"
+  },
+  {
+   "in": "user 'ser'",
+   "out": "us***r 's***r'"
+  },
+  {
+   "in": "for 'f'",
+   "out": "***or 'f'"
+  },
+  {
+   "in": "[AUTH] Login failed: password mismatch for 'bob' (hash type: PBKDF2)",
+   "out": "[AUTH] Login failed: password mismatch for 'b***b' (hash type: PBKDF2)"
+  },
+  {
+   "in": "role 'admin' for 'root'",
+   "out": "role 'admin' for 'r***t'"
+  },
+  {
+   "in": "provider 'ldap'",
+   "out": "provider 'l***p'"
+  },
+  {
+   "in": "hash 'bcrypt' vs 'PBKDF2-SHA256'",
+   "out": "hash 'bcrypt' vs 'PBKDF2-SHA256'"
+  },
+  {
+   "in": "file 'C:\\x\\y.txt'",
+   "out": "file 'C:\\x\\y.txt'"
+  },
+  {
+   "in": "env 'NODE_ENV'",
+   "out": "env 'N***V'"
+  },
+  {
+   "in": "key 'k1' value 'v_2'",
+   "out": "key '***' value 'v***2'"
+  },
+  {
+   "in": "'abababababababababababababababababababababababababababababababababababababababab'",
+   "out": "'abababababababababababababababababababababababababababababababababababababababab'"
+  },
+  {
+   "in": "for 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'",
+   "out": "for 'x***x'"
+  },
+  {
+   "in": "'\ud83d\ude00'ab'cd'",
+   "out": "'\ud83d\ude00'ab'***'"
+  },
+  {
+   "in": "'\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00'ab'cd'",
+   "out": "'\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00'***'cd'"
+  },
+  {
+   "in": "'\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00'ab'cd'",
+   "out": "'\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00'ab'***'"
+  },
+  {
+   "in": "u\u017fer 'al ice'",
+   "out": "u\u017fer 'al ice'"
+  },
+  {
+   "in": "\u017fynced 'a b c'",
+   "out": "\u017fynced 'a b c'"
+  },
+  {
+   "in": "U\u017fER 'al ice' user 'al ice'",
+   "out": "U\u017fER 'al ice' user 'a***e'"
+  },
+  {
+   "in": "local u\u017fer 'x y'",
+   "out": "local u\u017fer 'x y'"
+  },
+  {
+   "in": "\u212aey for 'a b'",
+   "out": "\u212aey for 'a***b'"
+  },
+  {
+   "in": "account\u0085'al ice'",
+   "out": "account\u0085'al ice'"
+  },
+  {
+   "in": "account\u00a0'al ice'",
+   "out": "account\u00a0'a***e'"
+  },
+  {
+   "in": "x for'alice' y 'alice'",
+   "out": "x for'a***e' y 'a***e'"
+  },
+  {
+   "in": "for'ab'",
+   "out": "for'***'"
+  },
+  {
+   "in": "x for'ab' y 'ab'",
+   "out": "x for'***' y '***'"
+  },
+  {
+   "in": "for'a'",
+   "out": "for'a'"
+  },
+  {
+   "in": "x for'a' y 'a'",
+   "out": "x for'a' y 'a'"
+  },
+  {
+   "in": "for 'alice'",
+   "out": "for 'a***e'"
+  },
+  {
+   "in": "x for 'alice' y 'alice'",
+   "out": "x for 'a***e' y 'a***e'"
+  },
+  {
+   "in": "x for 'ab' y 'ab'",
+   "out": "x for '***' y '***'"
+  },
+  {
+   "in": "x for 'a' y 'a'",
+   "out": "x for '***' y 'a'"
+  },
+  {
+   "in": "x for 'admin' y 'admin'",
+   "out": "x for 'a***n' y 'admin'"
+  },
+  {
+   "in": "x for 'al ice' y 'al ice'",
+   "out": "x for 'a***e' y 'al ice'"
+  },
+  {
+   "in": "for 'a.b'",
+   "out": "for 'a***b'"
+  },
+  {
+   "in": "x for 'a.b' y 'a.b'",
+   "out": "x for 'a***b' y 'a.b'"
+  },
+  {
+   "in": "for '\ud83d\ude00xy'",
+   "out": "for '\ufffd***y'"
+  },
+  {
+   "in": "x for '\ud83d\ude00xy' y '\ud83d\ude00xy'",
+   "out": "x for '\ufffd***y' y '\ud83d\ude00xy'"
+  },
+  {
+   "in": "for 'user'",
+   "out": "for 'u***r'"
+  },
+  {
+   "in": "x for 'user' y 'user'",
+   "out": "x for 'u***r' y 'user'"
+  },
+  {
+   "in": "for 'BETTERDESK_X'",
+   "out": "for 'B***X'"
+  },
+  {
+   "in": "x for 'BETTERDESK_X' y 'BETTERDESK_X'",
+   "out": "x for 'B***X' y 'BETTERDESK_X'"
+  },
+  {
+   "in": "x for 'for' y 'for'",
+   "out": "x f***r 'f***r' y 'f***r'"
+  },
+  {
+   "in": "x for  'alice' y 'alice'",
+   "out": "x for  'a***e' y 'a***e'"
+  },
+  {
+   "in": "for  'ab'",
+   "out": "for  '***'"
+  },
+  {
+   "in": "x for  'ab' y 'ab'",
+   "out": "x for  '***' y '***'"
+  },
+  {
+   "in": "for  'a'",
+   "out": "for  '***'"
+  },
+  {
+   "in": "x for  'a' y 'a'",
+   "out": "x for  '***' y 'a'"
+  },
+  {
+   "in": "x for\t'alice' y 'alice'",
+   "out": "x for\t'a***e' y 'a***e'"
+  },
+  {
+   "in": "for\t'ab'",
+   "out": "for\t'***'"
+  },
+  {
+   "in": "x for\t'ab' y 'ab'",
+   "out": "x for\t'***' y '***'"
+  },
+  {
+   "in": "for\t'a'",
+   "out": "for\t'***'"
+  },
+  {
+   "in": "x for\t'a' y 'a'",
+   "out": "x for\t'***' y 'a'"
+  },
+  {
+   "in": "for\u00a0'alice'",
+   "out": "for\u00a0'a***e'"
+  },
+  {
+   "in": "x for\u00a0'alice' y 'alice'",
+   "out": "x for\u00a0'a***e' y 'a***e'"
+  },
+  {
+   "in": "for\u00a0'ab'",
+   "out": "for\u00a0'***'"
+  },
+  {
+   "in": "x for\u00a0'ab' y 'ab'",
+   "out": "x for\u00a0'***' y '***'"
+  },
+  {
+   "in": "for\u00a0'a'",
+   "out": "for\u00a0'***'"
+  },
+  {
+   "in": "x for\u00a0'a' y 'a'",
+   "out": "x for\u00a0'***' y 'a'"
+  },
+  {
+   "in": "for\u3000'alice'",
+   "out": "for\u3000'a***e'"
+  },
+  {
+   "in": "x for\u3000'alice' y 'alice'",
+   "out": "x for\u3000'a***e' y 'a***e'"
+  },
+  {
+   "in": "for\u3000'ab'",
+   "out": "for\u3000'***'"
+  },
+  {
+   "in": "x for\u3000'ab' y 'ab'",
+   "out": "x for\u3000'***' y '***'"
+  },
+  {
+   "in": "for\u3000'a'",
+   "out": "for\u3000'***'"
+  },
+  {
+   "in": "x for\u3000'a' y 'a'",
+   "out": "x for\u3000'***' y 'a'"
+  },
+  {
+   "in": "for\ufeff'alice'",
+   "out": "for\ufeff'a***e'"
+  },
+  {
+   "in": "x for\ufeff'alice' y 'alice'",
+   "out": "x for\ufeff'a***e' y 'a***e'"
+  },
+  {
+   "in": "for\ufeff'ab'",
+   "out": "for\ufeff'***'"
+  },
+  {
+   "in": "x for\ufeff'ab' y 'ab'",
+   "out": "x for\ufeff'***' y '***'"
+  },
+  {
+   "in": "for\ufeff'a'",
+   "out": "for\ufeff'***'"
+  },
+  {
+   "in": "x for\ufeff'a' y 'a'",
+   "out": "x for\ufeff'***' y 'a'"
+  },
+  {
+   "in": "for\u0085'alice'",
+   "out": "for\u0085'a***e'"
+  },
+  {
+   "in": "x for\u0085'alice' y 'alice'",
+   "out": "x for\u0085'a***e' y 'a***e'"
+  },
+  {
+   "in": "for\u0085'ab'",
+   "out": "for\u0085'***'"
+  },
+  {
+   "in": "x for\u0085'ab' y 'ab'",
+   "out": "x for\u0085'***' y '***'"
+  },
+  {
+   "in": "for\u0085'a'",
+   "out": "for\u0085'a'"
+  },
+  {
+   "in": "x for\u0085'a' y 'a'",
+   "out": "x for\u0085'a' y 'a'"
+  },
+  {
+   "in": "for\u200b'alice'",
+   "out": "for\u200b'a***e'"
+  },
+  {
+   "in": "x for\u200b'alice' y 'alice'",
+   "out": "x for\u200b'a***e' y 'a***e'"
+  },
+  {
+   "in": "for\u200b'ab'",
+   "out": "for\u200b'***'"
+  },
+  {
+   "in": "x for\u200b'ab' y 'ab'",
+   "out": "x for\u200b'***' y '***'"
+  },
+  {
+   "in": "for\u200b'a'",
+   "out": "for\u200b'a'"
+  },
+  {
+   "in": "x for\u200b'a' y 'a'",
+   "out": "x for\u200b'a' y 'a'"
+  },
+  {
+   "in": "for\u2003'alice'",
+   "out": "for\u2003'a***e'"
+  },
+  {
+   "in": "x for\u2003'alice' y 'alice'",
+   "out": "x for\u2003'a***e' y 'a***e'"
+  },
+  {
+   "in": "for\u2003'ab'",
+   "out": "for\u2003'***'"
+  },
+  {
+   "in": "x for\u2003'ab' y 'ab'",
+   "out": "x for\u2003'***' y '***'"
+  },
+  {
+   "in": "for\u2003'a'",
+   "out": "for\u2003'***'"
+  },
+  {
+   "in": "x for\u2003'a' y 'a'",
+   "out": "x for\u2003'***' y 'a'"
+  },
+  {
+   "in": "x for\u2028'alice' y 'alice'",
+   "out": "x for\\n'a***e' y 'a***e'"
+  },
+  {
+   "in": "for\u2028'ab'",
+   "out": "for\\n'***'"
+  },
+  {
+   "in": "x for\u2028'ab' y 'ab'",
+   "out": "x for\\n'***' y '***'"
+  },
+  {
+   "in": "for\u2028'a'",
+   "out": "for\\n'a'"
+  },
+  {
+   "in": "x for\u2028'a' y 'a'",
+   "out": "x for\\n'a' y 'a'"
+  },
+  {
+   "in": "user'alice'",
+   "out": "user'a***e'"
+  },
+  {
+   "in": "x user'alice' y 'alice'",
+   "out": "x user'a***e' y 'a***e'"
+  },
+  {
+   "in": "user'ab'",
+   "out": "user'***'"
+  },
+  {
+   "in": "x user'ab' y 'ab'",
+   "out": "x user'***' y '***'"
+  },
+  {
+   "in": "user'a'",
+   "out": "user'a'"
+  },
+  {
+   "in": "x user'a' y 'a'",
+   "out": "x user'a' y 'a'"
+  },
+  {
+   "in": "user 'alice'",
+   "out": "user 'a***e'"
+  },
+  {
+   "in": "x user 'alice' y 'alice'",
+   "out": "x user 'a***e' y 'a***e'"
+  },
+  {
+   "in": "user 'ab'",
+   "out": "user '***'"
+  },
+  {
+   "in": "x user 'ab' y 'ab'",
+   "out": "x user '***' y '***'"
+  },
+  {
+   "in": "user 'a'",
+   "out": "user '***'"
+  },
+  {
+   "in": "x user 'a' y 'a'",
+   "out": "x user '***' y 'a'"
+  },
+  {
+   "in": "x user 'admin' y 'admin'",
+   "out": "x user 'a***n' y 'admin'"
+  },
+  {
+   "in": "user 'al ice'",
+   "out": "user 'a***e'"
+  },
+  {
+   "in": "x user 'al ice' y 'al ice'",
+   "out": "x user 'a***e' y 'al ice'"
+  },
+  {
+   "in": "user 'a.b'",
+   "out": "user 'a***b'"
+  },
+  {
+   "in": "x user 'a.b' y 'a.b'",
+   "out": "x user 'a***b' y 'a.b'"
+  },
+  {
+   "in": "user '\ud83d\ude00xy'",
+   "out": "user '\ufffd***y'"
+  },
+  {
+   "in": "x user '\ud83d\ude00xy' y '\ud83d\ude00xy'",
+   "out": "x user '\ufffd***y' y '\ud83d\ude00xy'"
+  },
+  {
+   "in": "user 'user'",
+   "out": "u***r 'user'"
+  },
+  {
+   "in": "x user 'user' y 'user'",
+   "out": "x u***r 'user' y 'user'"
+  },
+  {
+   "in": "user 'BETTERDESK_X'",
+   "out": "user 'B***X'"
+  },
+  {
+   "in": "x user 'BETTERDESK_X' y 'BETTERDESK_X'",
+   "out": "x user 'B***X' y 'BETTERDESK_X'"
+  },
+  {
+   "in": "user 'for'",
+   "out": "user 'f***r'"
+  },
+  {
+   "in": "x user 'for' y 'for'",
+   "out": "x user 'f***r' y 'f***r'"
+  },
+  {
+   "in": "user  'alice'",
+   "out": "user  'a***e'"
+  },
+  {
+   "in": "x user  'alice' y 'alice'",
+   "out": "x user  'a***e' y 'a***e'"
+  },
+  {
+   "in": "user  'ab'",
+   "out": "user  '***'"
+  },
+  {
+   "in": "x user  'ab' y 'ab'",
+   "out": "x user  '***' y '***'"
+  },
+  {
+   "in": "user  'a'",
+   "out": "user  '***'"
+  },
+  {
+   "in": "x user  'a' y 'a'",
+   "out": "x user  '***' y 'a'"
+  },
+  {
+   "in": "user\t'alice'",
+   "out": "user\t'a***e'"
+  },
+  {
+   "in": "x user\t'alice' y 'alice'",
+   "out": "x user\t'a***e' y 'a***e'"
+  },
+  {
+   "in": "user\t'ab'",
+   "out": "user\t'***'"
+  },
+  {
+   "in": "x user\t'ab' y 'ab'",
+   "out": "x user\t'***' y '***'"
+  },
+  {
+   "in": "user\t'a'",
+   "out": "user\t'***'"
+  },
+  {
+   "in": "x user\t'a' y 'a'",
+   "out": "x user\t'***' y 'a'"
+  },
+  {
+   "in": "user\u00a0'alice'",
+   "out": "user\u00a0'a***e'"
+  },
+  {
+   "in": "x user\u00a0'alice' y 'alice'",
+   "out": "x user\u00a0'a***e' y 'a***e'"
+  },
+  {
+   "in": "user\u00a0'ab'",
+   "out": "user\u00a0'***'"
+  },
+  {
+   "in": "x user\u00a0'ab' y 'ab'",
+   "out": "x user\u00a0'***' y '***'"
+  },
+  {
+   "in": "user\u00a0'a'",
+   "out": "user\u00a0'***'"
+  },
+  {
+   "in": "x user\u00a0'a' y 'a'",
+   "out": "x user\u00a0'***' y 'a'"
+  },
+  {
+   "in": "user\u3000'alice'",
+   "out": "user\u3000'a***e'"
+  },
+  {
+   "in": "x user\u3000'alice' y 'alice'",
+   "out": "x user\u3000'a***e' y 'a***e'"
+  },
+  {
+   "in": "user\u3000'ab'",
+   "out": "user\u3000'***'"
+  },
+  {
+   "in": "x user\u3000'ab' y 'ab'",
+   "out": "x user\u3000'***' y '***'"
+  },
+  {
+   "in": "user\u3000'a'",
+   "out": "user\u3000'***'"
+  },
+  {
+   "in": "x user\u3000'a' y 'a'",
+   "out": "x user\u3000'***' y 'a'"
+  },
+  {
+   "in": "user\ufeff'alice'",
+   "out": "user\ufeff'a***e'"
+  },
+  {
+   "in": "x user\ufeff'alice' y 'alice'",
+   "out": "x user\ufeff'a***e' y 'a***e'"
+  },
+  {
+   "in": "user\ufeff'ab'",
+   "out": "user\ufeff'***'"
+  },
+  {
+   "in": "x user\ufeff'ab' y 'ab'",
+   "out": "x user\ufeff'***' y '***'"
+  },
+  {
+   "in": "user\ufeff'a'",
+   "out": "user\ufeff'***'"
+  },
+  {
+   "in": "x user\ufeff'a' y 'a'",
+   "out": "x user\ufeff'***' y 'a'"
+  },
+  {
+   "in": "user\u0085'alice'",
+   "out": "user\u0085'a***e'"
+  },
+  {
+   "in": "x user\u0085'alice' y 'alice'",
+   "out": "x user\u0085'a***e' y 'a***e'"
+  },
+  {
+   "in": "user\u0085'ab'",
+   "out": "user\u0085'***'"
+  },
+  {
+   "in": "x user\u0085'ab' y 'ab'",
+   "out": "x user\u0085'***' y '***'"
+  },
+  {
+   "in": "user\u0085'a'",
+   "out": "user\u0085'a'"
+  },
+  {
+   "in": "x user\u0085'a' y 'a'",
+   "out": "x user\u0085'a' y 'a'"
+  },
+  {
+   "in": "user\u200b'alice'",
+   "out": "user\u200b'a***e'"
+  },
+  {
+   "in": "x user\u200b'alice' y 'alice'",
+   "out": "x user\u200b'a***e' y 'a***e'"
+  },
+  {
+   "in": "user\u200b'ab'",
+   "out": "user\u200b'***'"
+  },
+  {
+   "in": "x user\u200b'ab' y 'ab'",
+   "out": "x user\u200b'***' y '***'"
+  },
+  {
+   "in": "user\u200b'a'",
+   "out": "user\u200b'a'"
+  },
+  {
+   "in": "x user\u200b'a' y 'a'",
+   "out": "x user\u200b'a' y 'a'"
+  },
+  {
+   "in": "user\u2003'alice'",
+   "out": "user\u2003'a***e'"
+  },
+  {
+   "in": "x user\u2003'alice' y 'alice'",
+   "out": "x user\u2003'a***e' y 'a***e'"
+  },
+  {
+   "in": "user\u2003'ab'",
+   "out": "user\u2003'***'"
+  },
+  {
+   "in": "x user\u2003'ab' y 'ab'",
+   "out": "x user\u2003'***' y '***'"
+  },
+  {
+   "in": "user\u2003'a'",
+   "out": "user\u2003'***'"
+  },
+  {
+   "in": "x user\u2003'a' y 'a'",
+   "out": "x user\u2003'***' y 'a'"
+  },
+  {
+   "in": "user\u2028'alice'",
+   "out": "user\\n'a***e'"
+  },
+  {
+   "in": "x user\u2028'alice' y 'alice'",
+   "out": "x user\\n'a***e' y 'a***e'"
+  },
+  {
+   "in": "user\u2028'ab'",
+   "out": "user\\n'***'"
+  },
+  {
+   "in": "x user\u2028'ab' y 'ab'",
+   "out": "x user\\n'***' y '***'"
+  },
+  {
+   "in": "user\u2028'a'",
+   "out": "user\\n'a'"
+  },
+  {
+   "in": "x user\u2028'a' y 'a'",
+   "out": "x user\\n'a' y 'a'"
+  },
+  {
+   "in": "account'alice'",
+   "out": "account'a***e'"
+  },
+  {
+   "in": "x account'alice' y 'alice'",
+   "out": "x account'a***e' y 'a***e'"
+  },
+  {
+   "in": "account'ab'",
+   "out": "account'***'"
+  },
+  {
+   "in": "x account'ab' y 'ab'",
+   "out": "x account'***' y '***'"
+  },
+  {
+   "in": "account'a'",
+   "out": "account'a'"
+  },
+  {
+   "in": "x account'a' y 'a'",
+   "out": "x account'a' y 'a'"
+  },
+  {
+   "in": "account 'alice'",
+   "out": "account 'a***e'"
+  },
+  {
+   "in": "x account 'alice' y 'alice'",
+   "out": "x account 'a***e' y 'a***e'"
+  },
+  {
+   "in": "account 'ab'",
+   "out": "account '***'"
+  },
+  {
+   "in": "x account 'ab' y 'ab'",
+   "out": "x account '***' y '***'"
+  },
+  {
+   "in": "account 'a'",
+   "out": "***ccount 'a'"
+  },
+  {
+   "in": "x account 'a' y 'a'",
+   "out": "x ***ccount 'a' y 'a'"
+  },
+  {
+   "in": "account 'admin'",
+   "out": "account 'a***n'"
+  },
+  {
+   "in": "x account 'admin' y 'admin'",
+   "out": "x account 'a***n' y 'admin'"
+  },
+  {
+   "in": "account 'al ice'",
+   "out": "account 'a***e'"
+  },
+  {
+   "in": "x account 'al ice' y 'al ice'",
+   "out": "x account 'a***e' y 'al ice'"
+  },
+  {
+   "in": "account 'a.b'",
+   "out": "account 'a***b'"
+  },
+  {
+   "in": "x account 'a.b' y 'a.b'",
+   "out": "x account 'a***b' y 'a.b'"
+  },
+  {
+   "in": "account '\ud83d\ude00xy'",
+   "out": "account '\ufffd***y'"
+  },
+  {
+   "in": "x account '\ud83d\ude00xy' y '\ud83d\ude00xy'",
+   "out": "x account '\ufffd***y' y '\ud83d\ude00xy'"
+  },
+  {
+   "in": "account 'user'",
+   "out": "account 'u***r'"
+  },
+  {
+   "in": "x account 'user' y 'user'",
+   "out": "x account 'u***r' y 'user'"
+  },
+  {
+   "in": "account 'BETTERDESK_X'",
+   "out": "account 'B***X'"
+  },
+  {
+   "in": "x account 'BETTERDESK_X' y 'BETTERDESK_X'",
+   "out": "x account 'B***X' y 'BETTERDESK_X'"
+  },
+  {
+   "in": "account 'for'",
+   "out": "account 'f***r'"
+  },
+  {
+   "in": "x account 'for' y 'for'",
+   "out": "x account 'f***r' y 'f***r'"
+  },
+  {
+   "in": "account  'alice'",
+   "out": "account  'a***e'"
+  },
+  {
+   "in": "x account  'alice' y 'alice'",
+   "out": "x account  'a***e' y 'a***e'"
+  },
+  {
+   "in": "account  'ab'",
+   "out": "account  '***'"
+  },
+  {
+   "in": "x account  'ab' y 'ab'",
+   "out": "x account  '***' y '***'"
+  },
+  {
+   "in": "account  'a'",
+   "out": "***ccount  'a'"
+  },
+  {
+   "in": "x account  'a' y 'a'",
+   "out": "x ***ccount  'a' y 'a'"
+  },
+  {
+   "in": "account\t'alice'",
+   "out": "account\t'a***e'"
+  },
+  {
+   "in": "x account\t'alice' y 'alice'",
+   "out": "x account\t'a***e' y 'a***e'"
+  },
+  {
+   "in": "account\t'ab'",
+   "out": "account\t'***'"
+  },
+  {
+   "in": "x account\t'ab' y 'ab'",
+   "out": "x account\t'***' y '***'"
+  },
+  {
+   "in": "account\t'a'",
+   "out": "***ccount\t'a'"
+  },
+  {
+   "in": "x account\t'a' y 'a'",
+   "out": "x ***ccount\t'a' y 'a'"
+  },
+  {
+   "in": "account\u00a0'alice'",
+   "out": "account\u00a0'a***e'"
+  },
+  {
+   "in": "x account\u00a0'alice' y 'alice'",
+   "out": "x account\u00a0'a***e' y 'a***e'"
+  },
+  {
+   "in": "account\u00a0'ab'",
+   "out": "account\u00a0'***'"
+  },
+  {
+   "in": "x account\u00a0'ab' y 'ab'",
+   "out": "x account\u00a0'***' y '***'"
+  },
+  {
+   "in": "account\u00a0'a'",
+   "out": "***ccount\u00a0'a'"
+  },
+  {
+   "in": "x account\u00a0'a' y 'a'",
+   "out": "x ***ccount\u00a0'a' y 'a'"
+  },
+  {
+   "in": "account\u3000'alice'",
+   "out": "account\u3000'a***e'"
+  },
+  {
+   "in": "x account\u3000'alice' y 'alice'",
+   "out": "x account\u3000'a***e' y 'a***e'"
+  },
+  {
+   "in": "account\u3000'ab'",
+   "out": "account\u3000'***'"
+  },
+  {
+   "in": "x account\u3000'ab' y 'ab'",
+   "out": "x account\u3000'***' y '***'"
+  },
+  {
+   "in": "account\u3000'a'",
+   "out": "***ccount\u3000'a'"
+  },
+  {
+   "in": "x account\u3000'a' y 'a'",
+   "out": "x ***ccount\u3000'a' y 'a'"
+  },
+  {
+   "in": "account\ufeff'alice'",
+   "out": "account\ufeff'a***e'"
+  },
+  {
+   "in": "x account\ufeff'alice' y 'alice'",
+   "out": "x account\ufeff'a***e' y 'a***e'"
+  },
+  {
+   "in": "account\ufeff'ab'",
+   "out": "account\ufeff'***'"
+  },
+  {
+   "in": "x account\ufeff'ab' y 'ab'",
+   "out": "x account\ufeff'***' y '***'"
+  },
+  {
+   "in": "account\ufeff'a'",
+   "out": "***ccount\ufeff'a'"
+  },
+  {
+   "in": "x account\ufeff'a' y 'a'",
+   "out": "x ***ccount\ufeff'a' y 'a'"
+  },
+  {
+   "in": "account\u0085'alice'",
+   "out": "account\u0085'a***e'"
+  },
+  {
+   "in": "x account\u0085'alice' y 'alice'",
+   "out": "x account\u0085'a***e' y 'a***e'"
+  },
+  {
+   "in": "account\u0085'ab'",
+   "out": "account\u0085'***'"
+  },
+  {
+   "in": "x account\u0085'ab' y 'ab'",
+   "out": "x account\u0085'***' y '***'"
+  },
+  {
+   "in": "account\u0085'a'",
+   "out": "account\u0085'a'"
+  },
+  {
+   "in": "x account\u0085'a' y 'a'",
+   "out": "x account\u0085'a' y 'a'"
+  },
+  {
+   "in": "account\u200b'alice'",
+   "out": "account\u200b'a***e'"
+  },
+  {
+   "in": "x account\u200b'alice' y 'alice'",
+   "out": "x account\u200b'a***e' y 'a***e'"
+  },
+  {
+   "in": "account\u200b'ab'",
+   "out": "account\u200b'***'"
+  },
+  {
+   "in": "x account\u200b'ab' y 'ab'",
+   "out": "x account\u200b'***' y '***'"
+  },
+  {
+   "in": "account\u200b'a'",
+   "out": "account\u200b'a'"
+  },
+  {
+   "in": "x account\u200b'a' y 'a'",
+   "out": "x account\u200b'a' y 'a'"
+  },
+  {
+   "in": "account\u2003'alice'",
+   "out": "account\u2003'a***e'"
+  },
+  {
+   "in": "x account\u2003'alice' y 'alice'",
+   "out": "x account\u2003'a***e' y 'a***e'"
+  },
+  {
+   "in": "account\u2003'ab'",
+   "out": "account\u2003'***'"
+  },
+  {
+   "in": "x account\u2003'ab' y 'ab'",
+   "out": "x account\u2003'***' y '***'"
+  },
+  {
+   "in": "account\u2003'a'",
+   "out": "***ccount\u2003'a'"
+  },
+  {
+   "in": "x account\u2003'a' y 'a'",
+   "out": "x ***ccount\u2003'a' y 'a'"
+  },
+  {
+   "in": "account\u2028'alice'",
+   "out": "account\\n'a***e'"
+  },
+  {
+   "in": "x account\u2028'alice' y 'alice'",
+   "out": "x account\\n'a***e' y 'a***e'"
+  },
+  {
+   "in": "account\u2028'ab'",
+   "out": "account\\n'***'"
+  },
+  {
+   "in": "x account\u2028'ab' y 'ab'",
+   "out": "x account\\n'***' y '***'"
+  },
+  {
+   "in": "account\u2028'a'",
+   "out": "account\\n'a'"
+  },
+  {
+   "in": "x account\u2028'a' y 'a'",
+   "out": "x account\\n'a' y 'a'"
+  },
+  {
+   "in": "credentials for'alice'",
+   "out": "credentials for'a***e'"
+  },
+  {
+   "in": "x credentials for'alice' y 'alice'",
+   "out": "x credentials for'a***e' y 'a***e'"
+  },
+  {
+   "in": "credentials for'ab'",
+   "out": "credentials for'***'"
+  },
+  {
+   "in": "x credentials for'ab' y 'ab'",
+   "out": "x credentials for'***' y '***'"
+  },
+  {
+   "in": "credentials for'a'",
+   "out": "credentials for'a'"
+  },
+  {
+   "in": "x credentials for'a' y 'a'",
+   "out": "x credentials for'a' y 'a'"
+  },
+  {
+   "in": "x credentials for 'alice' y 'alice'",
+   "out": "x credentials for 'a***e' y 'a***e'"
+  },
+  {
+   "in": "credentials for 'ab'",
+   "out": "credentials for '***'"
+  },
+  {
+   "in": "x credentials for 'ab' y 'ab'",
+   "out": "x credentials for '***' y '***'"
+  },
+  {
+   "in": "credentials for 'a'",
+   "out": "credenti***ls for 'a'"
+  },
+  {
+   "in": "x credentials for 'a' y 'a'",
+   "out": "x credenti***ls for 'a' y 'a'"
+  },
+  {
+   "in": "credentials for 'admin'",
+   "out": "credentials for 'a***n'"
+  },
+  {
+   "in": "x credentials for 'admin' y 'admin'",
+   "out": "x credentials for 'a***n' y 'admin'"
+  },
+  {
+   "in": "credentials for 'al ice'",
+   "out": "credentials for 'a***e'"
+  },
+  {
+   "in": "x credentials for 'al ice' y 'al ice'",
+   "out": "x credentials for 'a***e' y 'al ice'"
+  },
+  {
+   "in": "credentials for 'a.b'",
+   "out": "credentials for 'a***b'"
+  },
+  {
+   "in": "x credentials for 'a.b' y 'a.b'",
+   "out": "x credentials for 'a***b' y 'a.b'"
+  },
+  {
+   "in": "credentials for '\ud83d\ude00xy'",
+   "out": "credentials for '\ufffd***y'"
+  },
+  {
+   "in": "x credentials for '\ud83d\ude00xy' y '\ud83d\ude00xy'",
+   "out": "x credentials for '\ufffd***y' y '\ud83d\ude00xy'"
+  },
+  {
+   "in": "credentials for 'user'",
+   "out": "credentials for 'u***r'"
+  },
+  {
+   "in": "x credentials for 'user' y 'user'",
+   "out": "x credentials for 'u***r' y 'user'"
+  },
+  {
+   "in": "credentials for 'BETTERDESK_X'",
+   "out": "credentials for 'B***X'"
+  },
+  {
+   "in": "x credentials for 'BETTERDESK_X' y 'BETTERDESK_X'",
+   "out": "x credentials for 'B***X' y 'BETTERDESK_X'"
+  },
+  {
+   "in": "credentials for 'for'",
+   "out": "credentials f***r 'f***r'"
+  },
+  {
+   "in": "x credentials for 'for' y 'for'",
+   "out": "x credentials f***r 'f***r' y 'f***r'"
+  },
+  {
+   "in": "credentials for  'alice'",
+   "out": "credentials for  'a***e'"
+  },
+  {
+   "in": "x credentials for  'alice' y 'alice'",
+   "out": "x credentials for  'a***e' y 'a***e'"
+  },
+  {
+   "in": "credentials for  'ab'",
+   "out": "credentials for  '***'"
+  },
+  {
+   "in": "x credentials for  'ab' y 'ab'",
+   "out": "x credentials for  '***' y '***'"
+  },
+  {
+   "in": "credentials for  'a'",
+   "out": "credenti***ls for  'a'"
+  },
+  {
+   "in": "x credentials for  'a' y 'a'",
+   "out": "x credenti***ls for  'a' y 'a'"
+  },
+  {
+   "in": "credentials for\t'alice'",
+   "out": "credentials for\t'a***e'"
+  },
+  {
+   "in": "x credentials for\t'alice' y 'alice'",
+   "out": "x credentials for\t'a***e' y 'a***e'"
+  },
+  {
+   "in": "credentials for\t'ab'",
+   "out": "credentials for\t'***'"
+  },
+  {
+   "in": "x credentials for\t'ab' y 'ab'",
+   "out": "x credentials for\t'***' y '***'"
+  },
+  {
+   "in": "credentials for\t'a'",
+   "out": "credenti***ls for\t'a'"
+  },
+  {
+   "in": "x credentials for\t'a' y 'a'",
+   "out": "x credenti***ls for\t'a' y 'a'"
+  },
+  {
+   "in": "credentials for\u00a0'alice'",
+   "out": "credentials for\u00a0'a***e'"
+  },
+  {
+   "in": "x credentials for\u00a0'alice' y 'alice'",
+   "out": "x credentials for\u00a0'a***e' y 'a***e'"
+  },
+  {
+   "in": "credentials for\u00a0'ab'",
+   "out": "credentials for\u00a0'***'"
+  },
+  {
+   "in": "x credentials for\u00a0'ab' y 'ab'",
+   "out": "x credentials for\u00a0'***' y '***'"
+  },
+  {
+   "in": "credentials for\u00a0'a'",
+   "out": "credenti***ls for\u00a0'a'"
+  },
+  {
+   "in": "x credentials for\u00a0'a' y 'a'",
+   "out": "x credenti***ls for\u00a0'a' y 'a'"
+  },
+  {
+   "in": "credentials for\u3000'alice'",
+   "out": "credentials for\u3000'a***e'"
+  },
+  {
+   "in": "x credentials for\u3000'alice' y 'alice'",
+   "out": "x credentials for\u3000'a***e' y 'a***e'"
+  },
+  {
+   "in": "credentials for\u3000'ab'",
+   "out": "credentials for\u3000'***'"
+  },
+  {
+   "in": "x credentials for\u3000'ab' y 'ab'",
+   "out": "x credentials for\u3000'***' y '***'"
+  },
+  {
+   "in": "credentials for\u3000'a'",
+   "out": "credenti***ls for\u3000'a'"
+  },
+  {
+   "in": "x credentials for\u3000'a' y 'a'",
+   "out": "x credenti***ls for\u3000'a' y 'a'"
+  },
+  {
+   "in": "credentials for\ufeff'alice'",
+   "out": "credentials for\ufeff'a***e'"
+  },
+  {
+   "in": "x credentials for\ufeff'alice' y 'alice'",
+   "out": "x credentials for\ufeff'a***e' y 'a***e'"
+  },
+  {
+   "in": "credentials for\ufeff'ab'",
+   "out": "credentials for\ufeff'***'"
+  },
+  {
+   "in": "x credentials for\ufeff'ab' y 'ab'",
+   "out": "x credentials for\ufeff'***' y '***'"
+  },
+  {
+   "in": "credentials for\ufeff'a'",
+   "out": "credenti***ls for\ufeff'a'"
+  },
+  {
+   "in": "x credentials for\ufeff'a' y 'a'",
+   "out": "x credenti***ls for\ufeff'a' y 'a'"
+  },
+  {
+   "in": "credentials for\u0085'alice'",
+   "out": "credentials for\u0085'a***e'"
+  },
+  {
+   "in": "x credentials for\u0085'alice' y 'alice'",
+   "out": "x credentials for\u0085'a***e' y 'a***e'"
+  },
+  {
+   "in": "credentials for\u0085'ab'",
+   "out": "credentials for\u0085'***'"
+  },
+  {
+   "in": "x credentials for\u0085'ab' y 'ab'",
+   "out": "x credentials for\u0085'***' y '***'"
+  },
+  {
+   "in": "credentials for\u0085'a'",
+   "out": "credentials for\u0085'a'"
+  },
+  {
+   "in": "x credentials for\u0085'a' y 'a'",
+   "out": "x credentials for\u0085'a' y 'a'"
+  },
+  {
+   "in": "credentials for\u200b'alice'",
+   "out": "credentials for\u200b'a***e'"
+  },
+  {
+   "in": "x credentials for\u200b'alice' y 'alice'",
+   "out": "x credentials for\u200b'a***e' y 'a***e'"
+  },
+  {
+   "in": "credentials for\u200b'ab'",
+   "out": "credentials for\u200b'***'"
+  },
+  {
+   "in": "x credentials for\u200b'ab' y 'ab'",
+   "out": "x credentials for\u200b'***' y '***'"
+  },
+  {
+   "in": "credentials for\u200b'a'",
+   "out": "credentials for\u200b'a'"
+  },
+  {
+   "in": "x credentials for\u200b'a' y 'a'",
+   "out": "x credentials for\u200b'a' y 'a'"
+  },
+  {
+   "in": "credentials for\u2003'alice'",
+   "out": "credentials for\u2003'a***e'"
+  },
+  {
+   "in": "x credentials for\u2003'alice' y 'alice'",
+   "out": "x credentials for\u2003'a***e' y 'a***e'"
+  },
+  {
+   "in": "credentials for\u2003'ab'",
+   "out": "credentials for\u2003'***'"
+  },
+  {
+   "in": "x credentials for\u2003'ab' y 'ab'",
+   "out": "x credentials for\u2003'***' y '***'"
+  },
+  {
+   "in": "credentials for\u2003'a'",
+   "out": "credenti***ls for\u2003'a'"
+  },
+  {
+   "in": "x credentials for\u2003'a' y 'a'",
+   "out": "x credenti***ls for\u2003'a' y 'a'"
+  },
+  {
+   "in": "credentials for\u2028'alice'",
+   "out": "credentials for\\n'a***e'"
+  },
+  {
+   "in": "x credentials for\u2028'alice' y 'alice'",
+   "out": "x credentials for\\n'a***e' y 'a***e'"
+  },
+  {
+   "in": "credentials for\u2028'ab'",
+   "out": "credentials for\\n'***'"
+  },
+  {
+   "in": "x credentials for\u2028'ab' y 'ab'",
+   "out": "x credentials for\\n'***' y '***'"
+  },
+  {
+   "in": "credentials for\u2028'a'",
+   "out": "credentials for\\n'a'"
+  },
+  {
+   "in": "x credentials for\u2028'a' y 'a'",
+   "out": "x credentials for\\n'a' y 'a'"
+  },
+  {
+   "in": "local user'alice'",
+   "out": "local user'a***e'"
+  },
+  {
+   "in": "x local user'alice' y 'alice'",
+   "out": "x local user'a***e' y 'a***e'"
+  },
+  {
+   "in": "local user'ab'",
+   "out": "local user'***'"
+  },
+  {
+   "in": "x local user'ab' y 'ab'",
+   "out": "x local user'***' y '***'"
+  },
+  {
+   "in": "local user'a'",
+   "out": "local user'a'"
+  },
+  {
+   "in": "x local user'a' y 'a'",
+   "out": "x local user'a' y 'a'"
+  },
+  {
+   "in": "local user 'alice'",
+   "out": "local user 'a***e'"
+  },
+  {
+   "in": "x local user 'alice' y 'alice'",
+   "out": "x local user 'a***e' y 'a***e'"
+  },
+  {
+   "in": "local user 'ab'",
+   "out": "local user '***'"
+  },
+  {
+   "in": "x local user 'ab' y 'ab'",
+   "out": "x local user '***' y '***'"
+  },
+  {
+   "in": "local user 'a'",
+   "out": "loc***l user 'a'"
+  },
+  {
+   "in": "x local user 'a' y 'a'",
+   "out": "x loc***l user 'a' y 'a'"
+  },
+  {
+   "in": "local user 'admin'",
+   "out": "local user 'a***n'"
+  },
+  {
+   "in": "x local user 'admin' y 'admin'",
+   "out": "x local user 'a***n' y 'admin'"
+  },
+  {
+   "in": "local user 'al ice'",
+   "out": "local user 'a***e'"
+  },
+  {
+   "in": "x local user 'al ice' y 'al ice'",
+   "out": "x local user 'a***e' y 'al ice'"
+  },
+  {
+   "in": "local user 'a.b'",
+   "out": "local user 'a***b'"
+  },
+  {
+   "in": "x local user 'a.b' y 'a.b'",
+   "out": "x local user 'a***b' y 'a.b'"
+  },
+  {
+   "in": "local user '\ud83d\ude00xy'",
+   "out": "local user '\ufffd***y'"
+  },
+  {
+   "in": "x local user '\ud83d\ude00xy' y '\ud83d\ude00xy'",
+   "out": "x local user '\ufffd***y' y '\ud83d\ude00xy'"
+  },
+  {
+   "in": "local user 'user'",
+   "out": "local u***r 'user'"
+  },
+  {
+   "in": "x local user 'user' y 'user'",
+   "out": "x local u***r 'user' y 'user'"
+  },
+  {
+   "in": "local user 'BETTERDESK_X'",
+   "out": "local user 'B***X'"
+  },
+  {
+   "in": "x local user 'BETTERDESK_X' y 'BETTERDESK_X'",
+   "out": "x local user 'B***X' y 'BETTERDESK_X'"
+  },
+  {
+   "in": "local user 'for'",
+   "out": "local user 'f***r'"
+  },
+  {
+   "in": "x local user 'for' y 'for'",
+   "out": "x local user 'f***r' y 'f***r'"
+  },
+  {
+   "in": "local user  'alice'",
+   "out": "local user  'a***e'"
+  },
+  {
+   "in": "x local user  'alice' y 'alice'",
+   "out": "x local user  'a***e' y 'a***e'"
+  },
+  {
+   "in": "local user  'ab'",
+   "out": "local user  '***'"
+  },
+  {
+   "in": "x local user  'ab' y 'ab'",
+   "out": "x local user  '***' y '***'"
+  },
+  {
+   "in": "local user  'a'",
+   "out": "loc***l user  'a'"
+  },
+  {
+   "in": "x local user  'a' y 'a'",
+   "out": "x loc***l user  'a' y 'a'"
+  },
+  {
+   "in": "local user\t'alice'",
+   "out": "local user\t'a***e'"
+  },
+  {
+   "in": "x local user\t'alice' y 'alice'",
+   "out": "x local user\t'a***e' y 'a***e'"
+  },
+  {
+   "in": "local user\t'ab'",
+   "out": "local user\t'***'"
+  },
+  {
+   "in": "x local user\t'ab' y 'ab'",
+   "out": "x local user\t'***' y '***'"
+  },
+  {
+   "in": "local user\t'a'",
+   "out": "loc***l user\t'a'"
+  },
+  {
+   "in": "x local user\t'a' y 'a'",
+   "out": "x loc***l user\t'a' y 'a'"
+  },
+  {
+   "in": "local user\u00a0'alice'",
+   "out": "local user\u00a0'a***e'"
+  },
+  {
+   "in": "x local user\u00a0'alice' y 'alice'",
+   "out": "x local user\u00a0'a***e' y 'a***e'"
+  },
+  {
+   "in": "local user\u00a0'ab'",
+   "out": "local user\u00a0'***'"
+  },
+  {
+   "in": "x local user\u00a0'ab' y 'ab'",
+   "out": "x local user\u00a0'***' y '***'"
+  },
+  {
+   "in": "local user\u00a0'a'",
+   "out": "loc***l user\u00a0'a'"
+  },
+  {
+   "in": "x local user\u00a0'a' y 'a'",
+   "out": "x loc***l user\u00a0'a' y 'a'"
+  },
+  {
+   "in": "local user\u3000'alice'",
+   "out": "local user\u3000'a***e'"
+  },
+  {
+   "in": "x local user\u3000'alice' y 'alice'",
+   "out": "x local user\u3000'a***e' y 'a***e'"
+  },
+  {
+   "in": "local user\u3000'ab'",
+   "out": "local user\u3000'***'"
+  },
+  {
+   "in": "x local user\u3000'ab' y 'ab'",
+   "out": "x local user\u3000'***' y '***'"
+  },
+  {
+   "in": "local user\u3000'a'",
+   "out": "loc***l user\u3000'a'"
+  },
+  {
+   "in": "x local user\u3000'a' y 'a'",
+   "out": "x loc***l user\u3000'a' y 'a'"
+  },
+  {
+   "in": "local user\ufeff'alice'",
+   "out": "local user\ufeff'a***e'"
+  },
+  {
+   "in": "x local user\ufeff'alice' y 'alice'",
+   "out": "x local user\ufeff'a***e' y 'a***e'"
+  },
+  {
+   "in": "local user\ufeff'ab'",
+   "out": "local user\ufeff'***'"
+  },
+  {
+   "in": "x local user\ufeff'ab' y 'ab'",
+   "out": "x local user\ufeff'***' y '***'"
+  },
+  {
+   "in": "local user\ufeff'a'",
+   "out": "loc***l user\ufeff'a'"
+  },
+  {
+   "in": "x local user\ufeff'a' y 'a'",
+   "out": "x loc***l user\ufeff'a' y 'a'"
+  },
+  {
+   "in": "local user\u0085'alice'",
+   "out": "local user\u0085'a***e'"
+  },
+  {
+   "in": "x local user\u0085'alice' y 'alice'",
+   "out": "x local user\u0085'a***e' y 'a***e'"
+  },
+  {
+   "in": "local user\u0085'ab'",
+   "out": "local user\u0085'***'"
+  },
+  {
+   "in": "x local user\u0085'ab' y 'ab'",
+   "out": "x local user\u0085'***' y '***'"
+  },
+  {
+   "in": "local user\u0085'a'",
+   "out": "local user\u0085'a'"
+  },
+  {
+   "in": "x local user\u0085'a' y 'a'",
+   "out": "x local user\u0085'a' y 'a'"
+  },
+  {
+   "in": "local user\u200b'alice'",
+   "out": "local user\u200b'a***e'"
+  },
+  {
+   "in": "x local user\u200b'alice' y 'alice'",
+   "out": "x local user\u200b'a***e' y 'a***e'"
+  },
+  {
+   "in": "local user\u200b'ab'",
+   "out": "local user\u200b'***'"
+  },
+  {
+   "in": "x local user\u200b'ab' y 'ab'",
+   "out": "x local user\u200b'***' y '***'"
+  },
+  {
+   "in": "local user\u200b'a'",
+   "out": "local user\u200b'a'"
+  },
+  {
+   "in": "x local user\u200b'a' y 'a'",
+   "out": "x local user\u200b'a' y 'a'"
+  },
+  {
+   "in": "local user\u2003'alice'",
+   "out": "local user\u2003'a***e'"
+  },
+  {
+   "in": "x local user\u2003'alice' y 'alice'",
+   "out": "x local user\u2003'a***e' y 'a***e'"
+  },
+  {
+   "in": "local user\u2003'ab'",
+   "out": "local user\u2003'***'"
+  },
+  {
+   "in": "x local user\u2003'ab' y 'ab'",
+   "out": "x local user\u2003'***' y '***'"
+  },
+  {
+   "in": "local user\u2003'a'",
+   "out": "loc***l user\u2003'a'"
+  },
+  {
+   "in": "x local user\u2003'a' y 'a'",
+   "out": "x loc***l user\u2003'a' y 'a'"
+  },
+  {
+   "in": "local user\u2028'alice'",
+   "out": "local user\\n'a***e'"
+  },
+  {
+   "in": "x local user\u2028'alice' y 'alice'",
+   "out": "x local user\\n'a***e' y 'a***e'"
+  },
+  {
+   "in": "local user\u2028'ab'",
+   "out": "local user\\n'***'"
+  },
+  {
+   "in": "x local user\u2028'ab' y 'ab'",
+   "out": "x local user\\n'***' y '***'"
+  },
+  {
+   "in": "local user\u2028'a'",
+   "out": "local user\\n'a'"
+  },
+  {
+   "in": "x local user\u2028'a' y 'a'",
+   "out": "x local user\\n'a' y 'a'"
+  },
+  {
+   "in": "synced'alice'",
+   "out": "synced'a***e'"
+  },
+  {
+   "in": "x synced'alice' y 'alice'",
+   "out": "x synced'a***e' y 'a***e'"
+  },
+  {
+   "in": "synced'ab'",
+   "out": "synced'***'"
+  },
+  {
+   "in": "x synced'ab' y 'ab'",
+   "out": "x synced'***' y '***'"
+  },
+  {
+   "in": "synced'a'",
+   "out": "synced'a'"
+  },
+  {
+   "in": "x synced'a' y 'a'",
+   "out": "x synced'a' y 'a'"
+  },
+  {
+   "in": "synced 'alice'",
+   "out": "synced 'a***e'"
+  },
+  {
+   "in": "x synced 'alice' y 'alice'",
+   "out": "x synced 'a***e' y 'a***e'"
+  },
+  {
+   "in": "synced 'ab'",
+   "out": "synced '***'"
+  },
+  {
+   "in": "x synced 'ab' y 'ab'",
+   "out": "x synced '***' y '***'"
+  },
+  {
+   "in": "synced 'a'",
+   "out": "synced '***'"
+  },
+  {
+   "in": "x synced 'a' y 'a'",
+   "out": "x synced '***' y 'a'"
+  },
+  {
+   "in": "synced 'admin'",
+   "out": "synced 'a***n'"
+  },
+  {
+   "in": "x synced 'admin' y 'admin'",
+   "out": "x synced 'a***n' y 'admin'"
+  },
+  {
+   "in": "synced 'al ice'",
+   "out": "synced 'a***e'"
+  },
+  {
+   "in": "x synced 'al ice' y 'al ice'",
+   "out": "x synced 'a***e' y 'al ice'"
+  },
+  {
+   "in": "synced 'a.b'",
+   "out": "synced 'a***b'"
+  },
+  {
+   "in": "x synced 'a.b' y 'a.b'",
+   "out": "x synced 'a***b' y 'a.b'"
+  },
+  {
+   "in": "synced '\ud83d\ude00xy'",
+   "out": "synced '\ufffd***y'"
+  },
+  {
+   "in": "x synced '\ud83d\ude00xy' y '\ud83d\ude00xy'",
+   "out": "x synced '\ufffd***y' y '\ud83d\ude00xy'"
+  },
+  {
+   "in": "synced 'user'",
+   "out": "synced 'u***r'"
+  },
+  {
+   "in": "x synced 'user' y 'user'",
+   "out": "x synced 'u***r' y 'user'"
+  },
+  {
+   "in": "synced 'BETTERDESK_X'",
+   "out": "synced 'B***X'"
+  },
+  {
+   "in": "x synced 'BETTERDESK_X' y 'BETTERDESK_X'",
+   "out": "x synced 'B***X' y 'BETTERDESK_X'"
+  },
+  {
+   "in": "synced 'for'",
+   "out": "synced 'f***r'"
+  },
+  {
+   "in": "x synced 'for' y 'for'",
+   "out": "x synced 'f***r' y 'f***r'"
+  },
+  {
+   "in": "synced  'alice'",
+   "out": "synced  'a***e'"
+  },
+  {
+   "in": "x synced  'alice' y 'alice'",
+   "out": "x synced  'a***e' y 'a***e'"
+  },
+  {
+   "in": "synced  'ab'",
+   "out": "synced  '***'"
+  },
+  {
+   "in": "x synced  'ab' y 'ab'",
+   "out": "x synced  '***' y '***'"
+  },
+  {
+   "in": "synced  'a'",
+   "out": "synced  '***'"
+  },
+  {
+   "in": "x synced  'a' y 'a'",
+   "out": "x synced  '***' y 'a'"
+  },
+  {
+   "in": "synced\t'alice'",
+   "out": "synced\t'a***e'"
+  },
+  {
+   "in": "x synced\t'alice' y 'alice'",
+   "out": "x synced\t'a***e' y 'a***e'"
+  },
+  {
+   "in": "synced\t'ab'",
+   "out": "synced\t'***'"
+  },
+  {
+   "in": "x synced\t'ab' y 'ab'",
+   "out": "x synced\t'***' y '***'"
+  },
+  {
+   "in": "synced\t'a'",
+   "out": "synced\t'***'"
+  },
+  {
+   "in": "x synced\t'a' y 'a'",
+   "out": "x synced\t'***' y 'a'"
+  },
+  {
+   "in": "synced\u00a0'alice'",
+   "out": "synced\u00a0'a***e'"
+  },
+  {
+   "in": "x synced\u00a0'alice' y 'alice'",
+   "out": "x synced\u00a0'a***e' y 'a***e'"
+  },
+  {
+   "in": "synced\u00a0'ab'",
+   "out": "synced\u00a0'***'"
+  },
+  {
+   "in": "x synced\u00a0'ab' y 'ab'",
+   "out": "x synced\u00a0'***' y '***'"
+  },
+  {
+   "in": "synced\u00a0'a'",
+   "out": "synced\u00a0'***'"
+  },
+  {
+   "in": "x synced\u00a0'a' y 'a'",
+   "out": "x synced\u00a0'***' y 'a'"
+  },
+  {
+   "in": "synced\u3000'alice'",
+   "out": "synced\u3000'a***e'"
+  },
+  {
+   "in": "x synced\u3000'alice' y 'alice'",
+   "out": "x synced\u3000'a***e' y 'a***e'"
+  },
+  {
+   "in": "synced\u3000'ab'",
+   "out": "synced\u3000'***'"
+  },
+  {
+   "in": "x synced\u3000'ab' y 'ab'",
+   "out": "x synced\u3000'***' y '***'"
+  },
+  {
+   "in": "synced\u3000'a'",
+   "out": "synced\u3000'***'"
+  },
+  {
+   "in": "x synced\u3000'a' y 'a'",
+   "out": "x synced\u3000'***' y 'a'"
+  },
+  {
+   "in": "synced\ufeff'alice'",
+   "out": "synced\ufeff'a***e'"
+  },
+  {
+   "in": "x synced\ufeff'alice' y 'alice'",
+   "out": "x synced\ufeff'a***e' y 'a***e'"
+  },
+  {
+   "in": "synced\ufeff'ab'",
+   "out": "synced\ufeff'***'"
+  },
+  {
+   "in": "x synced\ufeff'ab' y 'ab'",
+   "out": "x synced\ufeff'***' y '***'"
+  },
+  {
+   "in": "synced\ufeff'a'",
+   "out": "synced\ufeff'***'"
+  },
+  {
+   "in": "x synced\ufeff'a' y 'a'",
+   "out": "x synced\ufeff'***' y 'a'"
+  },
+  {
+   "in": "synced\u0085'alice'",
+   "out": "synced\u0085'a***e'"
+  },
+  {
+   "in": "x synced\u0085'alice' y 'alice'",
+   "out": "x synced\u0085'a***e' y 'a***e'"
+  },
+  {
+   "in": "synced\u0085'ab'",
+   "out": "synced\u0085'***'"
+  },
+  {
+   "in": "x synced\u0085'ab' y 'ab'",
+   "out": "x synced\u0085'***' y '***'"
+  },
+  {
+   "in": "synced\u0085'a'",
+   "out": "synced\u0085'a'"
+  },
+  {
+   "in": "x synced\u0085'a' y 'a'",
+   "out": "x synced\u0085'a' y 'a'"
+  },
+  {
+   "in": "synced\u200b'alice'",
+   "out": "synced\u200b'a***e'"
+  },
+  {
+   "in": "x synced\u200b'alice' y 'alice'",
+   "out": "x synced\u200b'a***e' y 'a***e'"
+  },
+  {
+   "in": "synced\u200b'ab'",
+   "out": "synced\u200b'***'"
+  },
+  {
+   "in": "x synced\u200b'ab' y 'ab'",
+   "out": "x synced\u200b'***' y '***'"
+  },
+  {
+   "in": "synced\u200b'a'",
+   "out": "synced\u200b'a'"
+  },
+  {
+   "in": "x synced\u200b'a' y 'a'",
+   "out": "x synced\u200b'a' y 'a'"
+  },
+  {
+   "in": "synced\u2003'alice'",
+   "out": "synced\u2003'a***e'"
+  },
+  {
+   "in": "x synced\u2003'alice' y 'alice'",
+   "out": "x synced\u2003'a***e' y 'a***e'"
+  },
+  {
+   "in": "synced\u2003'ab'",
+   "out": "synced\u2003'***'"
+  },
+  {
+   "in": "x synced\u2003'ab' y 'ab'",
+   "out": "x synced\u2003'***' y '***'"
+  },
+  {
+   "in": "synced\u2003'a'",
+   "out": "synced\u2003'***'"
+  },
+  {
+   "in": "x synced\u2003'a' y 'a'",
+   "out": "x synced\u2003'***' y 'a'"
+  },
+  {
+   "in": "synced\u2028'alice'",
+   "out": "synced\\n'a***e'"
+  },
+  {
+   "in": "x synced\u2028'alice' y 'alice'",
+   "out": "x synced\\n'a***e' y 'a***e'"
+  },
+  {
+   "in": "synced\u2028'ab'",
+   "out": "synced\\n'***'"
+  },
+  {
+   "in": "x synced\u2028'ab' y 'ab'",
+   "out": "x synced\\n'***' y '***'"
+  },
+  {
+   "in": "synced\u2028'a'",
+   "out": "synced\\n'a'"
+  },
+  {
+   "in": "x synced\u2028'a' y 'a'",
+   "out": "x synced\\n'a' y 'a'"
+  },
+  {
+   "in": "FOR'alice'",
+   "out": "FOR'a***e'"
+  },
+  {
+   "in": "x FOR'alice' y 'alice'",
+   "out": "x FOR'a***e' y 'a***e'"
+  },
+  {
+   "in": "FOR'ab'",
+   "out": "FOR'***'"
+  },
+  {
+   "in": "x FOR'ab' y 'ab'",
+   "out": "x FOR'***' y '***'"
+  },
+  {
+   "in": "FOR'a'",
+   "out": "FOR'a'"
+  },
+  {
+   "in": "x FOR'a' y 'a'",
+   "out": "x FOR'a' y 'a'"
+  },
+  {
+   "in": "x FOR 'alice' y 'alice'",
+   "out": "x FOR 'a***e' y 'a***e'"
+  },
+  {
+   "in": "FOR 'ab'",
+   "out": "FOR '***'"
+  },
+  {
+   "in": "x FOR 'ab' y 'ab'",
+   "out": "x FOR '***' y '***'"
+  },
+  {
+   "in": "FOR 'a'",
+   "out": "FOR '***'"
+  },
+  {
+   "in": "x FOR 'a' y 'a'",
+   "out": "x FOR '***' y 'a'"
+  },
+  {
+   "in": "FOR 'admin'",
+   "out": "FOR 'a***n'"
+  },
+  {
+   "in": "x FOR 'admin' y 'admin'",
+   "out": "x FOR 'a***n' y 'admin'"
+  },
+  {
+   "in": "FOR 'al ice'",
+   "out": "FOR 'a***e'"
+  },
+  {
+   "in": "x FOR 'al ice' y 'al ice'",
+   "out": "x FOR 'a***e' y 'al ice'"
+  },
+  {
+   "in": "FOR 'a.b'",
+   "out": "FOR 'a***b'"
+  },
+  {
+   "in": "x FOR 'a.b' y 'a.b'",
+   "out": "x FOR 'a***b' y 'a.b'"
+  },
+  {
+   "in": "FOR '\ud83d\ude00xy'",
+   "out": "FOR '\ufffd***y'"
+  },
+  {
+   "in": "x FOR '\ud83d\ude00xy' y '\ud83d\ude00xy'",
+   "out": "x FOR '\ufffd***y' y '\ud83d\ude00xy'"
+  },
+  {
+   "in": "FOR 'user'",
+   "out": "FOR 'u***r'"
+  },
+  {
+   "in": "x FOR 'user' y 'user'",
+   "out": "x FOR 'u***r' y 'user'"
+  },
+  {
+   "in": "FOR 'BETTERDESK_X'",
+   "out": "FOR 'B***X'"
+  },
+  {
+   "in": "x FOR 'BETTERDESK_X' y 'BETTERDESK_X'",
+   "out": "x FOR 'B***X' y 'BETTERDESK_X'"
+  },
+  {
+   "in": "FOR 'for'",
+   "out": "FOR 'f***r'"
+  },
+  {
+   "in": "x FOR 'for' y 'for'",
+   "out": "x FOR 'f***r' y 'f***r'"
+  },
+  {
+   "in": "FOR  'alice'",
+   "out": "FOR  'a***e'"
+  },
+  {
+   "in": "x FOR  'alice' y 'alice'",
+   "out": "x FOR  'a***e' y 'a***e'"
+  },
+  {
+   "in": "FOR  'ab'",
+   "out": "FOR  '***'"
+  },
+  {
+   "in": "x FOR  'ab' y 'ab'",
+   "out": "x FOR  '***' y '***'"
+  },
+  {
+   "in": "FOR  'a'",
+   "out": "FOR  '***'"
+  },
+  {
+   "in": "x FOR  'a' y 'a'",
+   "out": "x FOR  '***' y 'a'"
+  },
+  {
+   "in": "FOR\t'alice'",
+   "out": "FOR\t'a***e'"
+  },
+  {
+   "in": "x FOR\t'alice' y 'alice'",
+   "out": "x FOR\t'a***e' y 'a***e'"
+  },
+  {
+   "in": "FOR\t'ab'",
+   "out": "FOR\t'***'"
+  },
+  {
+   "in": "x FOR\t'ab' y 'ab'",
+   "out": "x FOR\t'***' y '***'"
+  },
+  {
+   "in": "FOR\t'a'",
+   "out": "FOR\t'***'"
+  },
+  {
+   "in": "x FOR\t'a' y 'a'",
+   "out": "x FOR\t'***' y 'a'"
+  },
+  {
+   "in": "FOR\u00a0'alice'",
+   "out": "FOR\u00a0'a***e'"
+  },
+  {
+   "in": "x FOR\u00a0'alice' y 'alice'",
+   "out": "x FOR\u00a0'a***e' y 'a***e'"
+  },
+  {
+   "in": "FOR\u00a0'ab'",
+   "out": "FOR\u00a0'***'"
+  },
+  {
+   "in": "x FOR\u00a0'ab' y 'ab'",
+   "out": "x FOR\u00a0'***' y '***'"
+  },
+  {
+   "in": "FOR\u00a0'a'",
+   "out": "FOR\u00a0'***'"
+  },
+  {
+   "in": "x FOR\u00a0'a' y 'a'",
+   "out": "x FOR\u00a0'***' y 'a'"
+  },
+  {
+   "in": "FOR\u3000'alice'",
+   "out": "FOR\u3000'a***e'"
+  },
+  {
+   "in": "x FOR\u3000'alice' y 'alice'",
+   "out": "x FOR\u3000'a***e' y 'a***e'"
+  },
+  {
+   "in": "FOR\u3000'ab'",
+   "out": "FOR\u3000'***'"
+  },
+  {
+   "in": "x FOR\u3000'ab' y 'ab'",
+   "out": "x FOR\u3000'***' y '***'"
+  },
+  {
+   "in": "FOR\u3000'a'",
+   "out": "FOR\u3000'***'"
+  },
+  {
+   "in": "x FOR\u3000'a' y 'a'",
+   "out": "x FOR\u3000'***' y 'a'"
+  },
+  {
+   "in": "FOR\ufeff'alice'",
+   "out": "FOR\ufeff'a***e'"
+  },
+  {
+   "in": "x FOR\ufeff'alice' y 'alice'",
+   "out": "x FOR\ufeff'a***e' y 'a***e'"
+  },
+  {
+   "in": "FOR\ufeff'ab'",
+   "out": "FOR\ufeff'***'"
+  },
+  {
+   "in": "x FOR\ufeff'ab' y 'ab'",
+   "out": "x FOR\ufeff'***' y '***'"
+  },
+  {
+   "in": "FOR\ufeff'a'",
+   "out": "FOR\ufeff'***'"
+  },
+  {
+   "in": "x FOR\ufeff'a' y 'a'",
+   "out": "x FOR\ufeff'***' y 'a'"
+  },
+  {
+   "in": "FOR\u0085'alice'",
+   "out": "FOR\u0085'a***e'"
+  },
+  {
+   "in": "x FOR\u0085'alice' y 'alice'",
+   "out": "x FOR\u0085'a***e' y 'a***e'"
+  },
+  {
+   "in": "FOR\u0085'ab'",
+   "out": "FOR\u0085'***'"
+  },
+  {
+   "in": "x FOR\u0085'ab' y 'ab'",
+   "out": "x FOR\u0085'***' y '***'"
+  },
+  {
+   "in": "FOR\u0085'a'",
+   "out": "FOR\u0085'a'"
+  },
+  {
+   "in": "x FOR\u0085'a' y 'a'",
+   "out": "x FOR\u0085'a' y 'a'"
+  },
+  {
+   "in": "FOR\u200b'alice'",
+   "out": "FOR\u200b'a***e'"
+  },
+  {
+   "in": "x FOR\u200b'alice' y 'alice'",
+   "out": "x FOR\u200b'a***e' y 'a***e'"
+  },
+  {
+   "in": "FOR\u200b'ab'",
+   "out": "FOR\u200b'***'"
+  },
+  {
+   "in": "x FOR\u200b'ab' y 'ab'",
+   "out": "x FOR\u200b'***' y '***'"
+  },
+  {
+   "in": "FOR\u200b'a'",
+   "out": "FOR\u200b'a'"
+  },
+  {
+   "in": "x FOR\u200b'a' y 'a'",
+   "out": "x FOR\u200b'a' y 'a'"
+  },
+  {
+   "in": "FOR\u2003'alice'",
+   "out": "FOR\u2003'a***e'"
+  },
+  {
+   "in": "x FOR\u2003'alice' y 'alice'",
+   "out": "x FOR\u2003'a***e' y 'a***e'"
+  },
+  {
+   "in": "FOR\u2003'ab'",
+   "out": "FOR\u2003'***'"
+  },
+  {
+   "in": "x FOR\u2003'ab' y 'ab'",
+   "out": "x FOR\u2003'***' y '***'"
+  },
+  {
+   "in": "FOR\u2003'a'",
+   "out": "FOR\u2003'***'"
+  },
+  {
+   "in": "x FOR\u2003'a' y 'a'",
+   "out": "x FOR\u2003'***' y 'a'"
+  },
+  {
+   "in": "FOR\u2028'alice'",
+   "out": "FOR\\n'a***e'"
+  },
+  {
+   "in": "x FOR\u2028'alice' y 'alice'",
+   "out": "x FOR\\n'a***e' y 'a***e'"
+  },
+  {
+   "in": "FOR\u2028'ab'",
+   "out": "FOR\\n'***'"
+  },
+  {
+   "in": "x FOR\u2028'ab' y 'ab'",
+   "out": "x FOR\\n'***' y '***'"
+  },
+  {
+   "in": "FOR\u2028'a'",
+   "out": "FOR\\n'a'"
+  },
+  {
+   "in": "x FOR\u2028'a' y 'a'",
+   "out": "x FOR\\n'a' y 'a'"
+  },
+  {
+   "in": "User'alice'",
+   "out": "User'a***e'"
+  },
+  {
+   "in": "x User'alice' y 'alice'",
+   "out": "x User'a***e' y 'a***e'"
+  },
+  {
+   "in": "User'ab'",
+   "out": "User'***'"
+  },
+  {
+   "in": "x User'ab' y 'ab'",
+   "out": "x User'***' y '***'"
+  },
+  {
+   "in": "User'a'",
+   "out": "User'a'"
+  },
+  {
+   "in": "x User'a' y 'a'",
+   "out": "x User'a' y 'a'"
+  },
+  {
+   "in": "x User 'alice' y 'alice'",
+   "out": "x User 'a***e' y 'a***e'"
+  },
+  {
+   "in": "User 'ab'",
+   "out": "User '***'"
+  },
+  {
+   "in": "x User 'ab' y 'ab'",
+   "out": "x User '***' y '***'"
+  },
+  {
+   "in": "User 'a'",
+   "out": "User '***'"
+  },
+  {
+   "in": "x User 'a' y 'a'",
+   "out": "x User '***' y 'a'"
+  },
+  {
+   "in": "User 'admin'",
+   "out": "User 'a***n'"
+  },
+  {
+   "in": "x User 'admin' y 'admin'",
+   "out": "x User 'a***n' y 'admin'"
+  },
+  {
+   "in": "User 'al ice'",
+   "out": "User 'a***e'"
+  },
+  {
+   "in": "x User 'al ice' y 'al ice'",
+   "out": "x User 'a***e' y 'al ice'"
+  },
+  {
+   "in": "User 'a.b'",
+   "out": "User 'a***b'"
+  },
+  {
+   "in": "x User 'a.b' y 'a.b'",
+   "out": "x User 'a***b' y 'a.b'"
+  },
+  {
+   "in": "User '\ud83d\ude00xy'",
+   "out": "User '\ufffd***y'"
+  },
+  {
+   "in": "x User '\ud83d\ude00xy' y '\ud83d\ude00xy'",
+   "out": "x User '\ufffd***y' y '\ud83d\ude00xy'"
+  },
+  {
+   "in": "User 'user'",
+   "out": "User 'u***r'"
+  },
+  {
+   "in": "x User 'user' y 'user'",
+   "out": "x User 'u***r' y 'user'"
+  },
+  {
+   "in": "User 'BETTERDESK_X'",
+   "out": "User 'B***X'"
+  },
+  {
+   "in": "x User 'BETTERDESK_X' y 'BETTERDESK_X'",
+   "out": "x User 'B***X' y 'BETTERDESK_X'"
+  },
+  {
+   "in": "User 'for'",
+   "out": "User 'f***r'"
+  },
+  {
+   "in": "x User 'for' y 'for'",
+   "out": "x User 'f***r' y 'f***r'"
+  },
+  {
+   "in": "User  'alice'",
+   "out": "User  'a***e'"
+  },
+  {
+   "in": "x User  'alice' y 'alice'",
+   "out": "x User  'a***e' y 'a***e'"
+  },
+  {
+   "in": "User  'ab'",
+   "out": "User  '***'"
+  },
+  {
+   "in": "x User  'ab' y 'ab'",
+   "out": "x User  '***' y '***'"
+  },
+  {
+   "in": "User  'a'",
+   "out": "User  '***'"
+  },
+  {
+   "in": "x User  'a' y 'a'",
+   "out": "x User  '***' y 'a'"
+  },
+  {
+   "in": "User\t'alice'",
+   "out": "User\t'a***e'"
+  },
+  {
+   "in": "x User\t'alice' y 'alice'",
+   "out": "x User\t'a***e' y 'a***e'"
+  },
+  {
+   "in": "User\t'ab'",
+   "out": "User\t'***'"
+  },
+  {
+   "in": "x User\t'ab' y 'ab'",
+   "out": "x User\t'***' y '***'"
+  },
+  {
+   "in": "User\t'a'",
+   "out": "User\t'***'"
+  },
+  {
+   "in": "x User\t'a' y 'a'",
+   "out": "x User\t'***' y 'a'"
+  },
+  {
+   "in": "User\u00a0'alice'",
+   "out": "User\u00a0'a***e'"
+  },
+  {
+   "in": "x User\u00a0'alice' y 'alice'",
+   "out": "x User\u00a0'a***e' y 'a***e'"
+  },
+  {
+   "in": "User\u00a0'ab'",
+   "out": "User\u00a0'***'"
+  },
+  {
+   "in": "x User\u00a0'ab' y 'ab'",
+   "out": "x User\u00a0'***' y '***'"
+  },
+  {
+   "in": "User\u00a0'a'",
+   "out": "User\u00a0'***'"
+  },
+  {
+   "in": "x User\u00a0'a' y 'a'",
+   "out": "x User\u00a0'***' y 'a'"
+  },
+  {
+   "in": "User\u3000'alice'",
+   "out": "User\u3000'a***e'"
+  },
+  {
+   "in": "x User\u3000'alice' y 'alice'",
+   "out": "x User\u3000'a***e' y 'a***e'"
+  },
+  {
+   "in": "User\u3000'ab'",
+   "out": "User\u3000'***'"
+  },
+  {
+   "in": "x User\u3000'ab' y 'ab'",
+   "out": "x User\u3000'***' y '***'"
+  },
+  {
+   "in": "User\u3000'a'",
+   "out": "User\u3000'***'"
+  },
+  {
+   "in": "x User\u3000'a' y 'a'",
+   "out": "x User\u3000'***' y 'a'"
+  },
+  {
+   "in": "User\ufeff'alice'",
+   "out": "User\ufeff'a***e'"
+  },
+  {
+   "in": "x User\ufeff'alice' y 'alice'",
+   "out": "x User\ufeff'a***e' y 'a***e'"
+  },
+  {
+   "in": "User\ufeff'ab'",
+   "out": "User\ufeff'***'"
+  },
+  {
+   "in": "x User\ufeff'ab' y 'ab'",
+   "out": "x User\ufeff'***' y '***'"
+  },
+  {
+   "in": "User\ufeff'a'",
+   "out": "User\ufeff'***'"
+  },
+  {
+   "in": "x User\ufeff'a' y 'a'",
+   "out": "x User\ufeff'***' y 'a'"
+  },
+  {
+   "in": "User\u0085'alice'",
+   "out": "User\u0085'a***e'"
+  },
+  {
+   "in": "x User\u0085'alice' y 'alice'",
+   "out": "x User\u0085'a***e' y 'a***e'"
+  },
+  {
+   "in": "User\u0085'ab'",
+   "out": "User\u0085'***'"
+  },
+  {
+   "in": "x User\u0085'ab' y 'ab'",
+   "out": "x User\u0085'***' y '***'"
+  },
+  {
+   "in": "User\u0085'a'",
+   "out": "User\u0085'a'"
+  },
+  {
+   "in": "x User\u0085'a' y 'a'",
+   "out": "x User\u0085'a' y 'a'"
+  },
+  {
+   "in": "User\u200b'alice'",
+   "out": "User\u200b'a***e'"
+  },
+  {
+   "in": "x User\u200b'alice' y 'alice'",
+   "out": "x User\u200b'a***e' y 'a***e'"
+  },
+  {
+   "in": "User\u200b'ab'",
+   "out": "User\u200b'***'"
+  },
+  {
+   "in": "x User\u200b'ab' y 'ab'",
+   "out": "x User\u200b'***' y '***'"
+  },
+  {
+   "in": "User\u200b'a'",
+   "out": "User\u200b'a'"
+  },
+  {
+   "in": "x User\u200b'a' y 'a'",
+   "out": "x User\u200b'a' y 'a'"
+  },
+  {
+   "in": "User\u2003'alice'",
+   "out": "User\u2003'a***e'"
+  },
+  {
+   "in": "x User\u2003'alice' y 'alice'",
+   "out": "x User\u2003'a***e' y 'a***e'"
+  },
+  {
+   "in": "User\u2003'ab'",
+   "out": "User\u2003'***'"
+  },
+  {
+   "in": "x User\u2003'ab' y 'ab'",
+   "out": "x User\u2003'***' y '***'"
+  },
+  {
+   "in": "User\u2003'a'",
+   "out": "User\u2003'***'"
+  },
+  {
+   "in": "x User\u2003'a' y 'a'",
+   "out": "x User\u2003'***' y 'a'"
+  },
+  {
+   "in": "User\u2028'alice'",
+   "out": "User\\n'a***e'"
+  },
+  {
+   "in": "x User\u2028'alice' y 'alice'",
+   "out": "x User\\n'a***e' y 'a***e'"
+  },
+  {
+   "in": "User\u2028'ab'",
+   "out": "User\\n'***'"
+  },
+  {
+   "in": "x User\u2028'ab' y 'ab'",
+   "out": "x User\\n'***' y '***'"
+  },
+  {
+   "in": "User\u2028'a'",
+   "out": "User\\n'a'"
+  },
+  {
+   "in": "x User\u2028'a' y 'a'",
+   "out": "x User\\n'a' y 'a'"
+  },
+  {
+   "in": "Synced'alice'",
+   "out": "Synced'a***e'"
+  },
+  {
+   "in": "x Synced'alice' y 'alice'",
+   "out": "x Synced'a***e' y 'a***e'"
+  },
+  {
+   "in": "Synced'ab'",
+   "out": "Synced'***'"
+  },
+  {
+   "in": "x Synced'ab' y 'ab'",
+   "out": "x Synced'***' y '***'"
+  },
+  {
+   "in": "Synced'a'",
+   "out": "Synced'a'"
+  },
+  {
+   "in": "x Synced'a' y 'a'",
+   "out": "x Synced'a' y 'a'"
+  },
+  {
+   "in": "Synced 'alice'",
+   "out": "Synced 'a***e'"
+  },
+  {
+   "in": "x Synced 'alice' y 'alice'",
+   "out": "x Synced 'a***e' y 'a***e'"
+  },
+  {
+   "in": "Synced 'ab'",
+   "out": "Synced '***'"
+  },
+  {
+   "in": "x Synced 'ab' y 'ab'",
+   "out": "x Synced '***' y '***'"
+  },
+  {
+   "in": "Synced 'a'",
+   "out": "Synced '***'"
+  },
+  {
+   "in": "x Synced 'a' y 'a'",
+   "out": "x Synced '***' y 'a'"
+  },
+  {
+   "in": "Synced 'admin'",
+   "out": "Synced 'a***n'"
+  },
+  {
+   "in": "x Synced 'admin' y 'admin'",
+   "out": "x Synced 'a***n' y 'admin'"
+  },
+  {
+   "in": "Synced 'al ice'",
+   "out": "Synced 'a***e'"
+  },
+  {
+   "in": "x Synced 'al ice' y 'al ice'",
+   "out": "x Synced 'a***e' y 'al ice'"
+  },
+  {
+   "in": "Synced 'a.b'",
+   "out": "Synced 'a***b'"
+  },
+  {
+   "in": "x Synced 'a.b' y 'a.b'",
+   "out": "x Synced 'a***b' y 'a.b'"
+  },
+  {
+   "in": "Synced '\ud83d\ude00xy'",
+   "out": "Synced '\ufffd***y'"
+  },
+  {
+   "in": "x Synced '\ud83d\ude00xy' y '\ud83d\ude00xy'",
+   "out": "x Synced '\ufffd***y' y '\ud83d\ude00xy'"
+  },
+  {
+   "in": "Synced 'user'",
+   "out": "Synced 'u***r'"
+  },
+  {
+   "in": "x Synced 'user' y 'user'",
+   "out": "x Synced 'u***r' y 'user'"
+  },
+  {
+   "in": "Synced 'BETTERDESK_X'",
+   "out": "Synced 'B***X'"
+  },
+  {
+   "in": "x Synced 'BETTERDESK_X' y 'BETTERDESK_X'",
+   "out": "x Synced 'B***X' y 'BETTERDESK_X'"
+  },
+  {
+   "in": "Synced 'for'",
+   "out": "Synced 'f***r'"
+  },
+  {
+   "in": "x Synced 'for' y 'for'",
+   "out": "x Synced 'f***r' y 'f***r'"
+  },
+  {
+   "in": "Synced  'alice'",
+   "out": "Synced  'a***e'"
+  },
+  {
+   "in": "x Synced  'alice' y 'alice'",
+   "out": "x Synced  'a***e' y 'a***e'"
+  },
+  {
+   "in": "Synced  'ab'",
+   "out": "Synced  '***'"
+  },
+  {
+   "in": "x Synced  'ab' y 'ab'",
+   "out": "x Synced  '***' y '***'"
+  },
+  {
+   "in": "Synced  'a'",
+   "out": "Synced  '***'"
+  },
+  {
+   "in": "x Synced  'a' y 'a'",
+   "out": "x Synced  '***' y 'a'"
+  },
+  {
+   "in": "Synced\t'alice'",
+   "out": "Synced\t'a***e'"
+  },
+  {
+   "in": "x Synced\t'alice' y 'alice'",
+   "out": "x Synced\t'a***e' y 'a***e'"
+  },
+  {
+   "in": "Synced\t'ab'",
+   "out": "Synced\t'***'"
+  },
+  {
+   "in": "x Synced\t'ab' y 'ab'",
+   "out": "x Synced\t'***' y '***'"
+  },
+  {
+   "in": "Synced\t'a'",
+   "out": "Synced\t'***'"
+  },
+  {
+   "in": "x Synced\t'a' y 'a'",
+   "out": "x Synced\t'***' y 'a'"
+  },
+  {
+   "in": "Synced\u00a0'alice'",
+   "out": "Synced\u00a0'a***e'"
+  },
+  {
+   "in": "x Synced\u00a0'alice' y 'alice'",
+   "out": "x Synced\u00a0'a***e' y 'a***e'"
+  },
+  {
+   "in": "Synced\u00a0'ab'",
+   "out": "Synced\u00a0'***'"
+  },
+  {
+   "in": "x Synced\u00a0'ab' y 'ab'",
+   "out": "x Synced\u00a0'***' y '***'"
+  },
+  {
+   "in": "Synced\u00a0'a'",
+   "out": "Synced\u00a0'***'"
+  },
+  {
+   "in": "x Synced\u00a0'a' y 'a'",
+   "out": "x Synced\u00a0'***' y 'a'"
+  },
+  {
+   "in": "Synced\u3000'alice'",
+   "out": "Synced\u3000'a***e'"
+  },
+  {
+   "in": "x Synced\u3000'alice' y 'alice'",
+   "out": "x Synced\u3000'a***e' y 'a***e'"
+  },
+  {
+   "in": "Synced\u3000'ab'",
+   "out": "Synced\u3000'***'"
+  },
+  {
+   "in": "x Synced\u3000'ab' y 'ab'",
+   "out": "x Synced\u3000'***' y '***'"
+  },
+  {
+   "in": "Synced\u3000'a'",
+   "out": "Synced\u3000'***'"
+  },
+  {
+   "in": "x Synced\u3000'a' y 'a'",
+   "out": "x Synced\u3000'***' y 'a'"
+  },
+  {
+   "in": "Synced\ufeff'alice'",
+   "out": "Synced\ufeff'a***e'"
+  },
+  {
+   "in": "x Synced\ufeff'alice' y 'alice'",
+   "out": "x Synced\ufeff'a***e' y 'a***e'"
+  },
+  {
+   "in": "Synced\ufeff'ab'",
+   "out": "Synced\ufeff'***'"
+  },
+  {
+   "in": "x Synced\ufeff'ab' y 'ab'",
+   "out": "x Synced\ufeff'***' y '***'"
+  },
+  {
+   "in": "Synced\ufeff'a'",
+   "out": "Synced\ufeff'***'"
+  },
+  {
+   "in": "x Synced\ufeff'a' y 'a'",
+   "out": "x Synced\ufeff'***' y 'a'"
+  },
+  {
+   "in": "Synced\u0085'alice'",
+   "out": "Synced\u0085'a***e'"
+  },
+  {
+   "in": "x Synced\u0085'alice' y 'alice'",
+   "out": "x Synced\u0085'a***e' y 'a***e'"
+  },
+  {
+   "in": "Synced\u0085'ab'",
+   "out": "Synced\u0085'***'"
+  },
+  {
+   "in": "x Synced\u0085'ab' y 'ab'",
+   "out": "x Synced\u0085'***' y '***'"
+  },
+  {
+   "in": "Synced\u0085'a'",
+   "out": "Synced\u0085'a'"
+  },
+  {
+   "in": "x Synced\u0085'a' y 'a'",
+   "out": "x Synced\u0085'a' y 'a'"
+  },
+  {
+   "in": "Synced\u200b'alice'",
+   "out": "Synced\u200b'a***e'"
+  },
+  {
+   "in": "x Synced\u200b'alice' y 'alice'",
+   "out": "x Synced\u200b'a***e' y 'a***e'"
+  },
+  {
+   "in": "Synced\u200b'ab'",
+   "out": "Synced\u200b'***'"
+  },
+  {
+   "in": "x Synced\u200b'ab' y 'ab'",
+   "out": "x Synced\u200b'***' y '***'"
+  },
+  {
+   "in": "Synced\u200b'a'",
+   "out": "Synced\u200b'a'"
+  },
+  {
+   "in": "x Synced\u200b'a' y 'a'",
+   "out": "x Synced\u200b'a' y 'a'"
+  },
+  {
+   "in": "Synced\u2003'alice'",
+   "out": "Synced\u2003'a***e'"
+  },
+  {
+   "in": "x Synced\u2003'alice' y 'alice'",
+   "out": "x Synced\u2003'a***e' y 'a***e'"
+  },
+  {
+   "in": "Synced\u2003'ab'",
+   "out": "Synced\u2003'***'"
+  },
+  {
+   "in": "x Synced\u2003'ab' y 'ab'",
+   "out": "x Synced\u2003'***' y '***'"
+  },
+  {
+   "in": "Synced\u2003'a'",
+   "out": "Synced\u2003'***'"
+  },
+  {
+   "in": "x Synced\u2003'a' y 'a'",
+   "out": "x Synced\u2003'***' y 'a'"
+  },
+  {
+   "in": "Synced\u2028'alice'",
+   "out": "Synced\\n'a***e'"
+  },
+  {
+   "in": "x Synced\u2028'alice' y 'alice'",
+   "out": "x Synced\\n'a***e' y 'a***e'"
+  },
+  {
+   "in": "Synced\u2028'ab'",
+   "out": "Synced\\n'***'"
+  },
+  {
+   "in": "x Synced\u2028'ab' y 'ab'",
+   "out": "x Synced\\n'***' y '***'"
+  },
+  {
+   "in": "Synced\u2028'a'",
+   "out": "Synced\\n'a'"
+  },
+  {
+   "in": "x Synced\u2028'a' y 'a'",
+   "out": "x Synced\\n'a' y 'a'"
+  },
+  {
+   "in": "users'alice'",
+   "out": "users'a***e'"
+  },
+  {
+   "in": "x users'alice' y 'alice'",
+   "out": "x users'a***e' y 'a***e'"
+  },
+  {
+   "in": "users'ab'",
+   "out": "users'***'"
+  },
+  {
+   "in": "x users'ab' y 'ab'",
+   "out": "x users'***' y '***'"
+  },
+  {
+   "in": "users'a'",
+   "out": "users'a'"
+  },
+  {
+   "in": "x users'a' y 'a'",
+   "out": "x users'a' y 'a'"
+  },
+  {
+   "in": "users 'alice'",
+   "out": "users 'a***e'"
+  },
+  {
+   "in": "x users 'alice' y 'alice'",
+   "out": "x users 'a***e' y 'a***e'"
+  },
+  {
+   "in": "users 'ab'",
+   "out": "users '***'"
+  },
+  {
+   "in": "x users 'ab' y 'ab'",
+   "out": "x users '***' y '***'"
+  },
+  {
+   "in": "users 'a'",
+   "out": "users 'a'"
+  },
+  {
+   "in": "x users 'a' y 'a'",
+   "out": "x users 'a' y 'a'"
+  },
+  {
+   "in": "users 'admin'",
+   "out": "users 'admin'"
+  },
+  {
+   "in": "x users 'admin' y 'admin'",
+   "out": "x users 'admin' y 'admin'"
+  },
+  {
+   "in": "users 'al ice'",
+   "out": "users 'al ice'"
+  },
+  {
+   "in": "x users 'al ice' y 'al ice'",
+   "out": "x users 'al ice' y 'al ice'"
+  },
+  {
+   "in": "users 'a.b'",
+   "out": "users 'a.b'"
+  },
+  {
+   "in": "x users 'a.b' y 'a.b'",
+   "out": "x users 'a.b' y 'a.b'"
+  },
+  {
+   "in": "users '\ud83d\ude00xy'",
+   "out": "users '\ud83d\ude00xy'"
+  },
+  {
+   "in": "x users '\ud83d\ude00xy' y '\ud83d\ude00xy'",
+   "out": "x users '\ud83d\ude00xy' y '\ud83d\ude00xy'"
+  },
+  {
+   "in": "users 'user'",
+   "out": "users 'user'"
+  },
+  {
+   "in": "x users 'user' y 'user'",
+   "out": "x users 'user' y 'user'"
+  },
+  {
+   "in": "users 'BETTERDESK_X'",
+   "out": "users 'BETTERDESK_X'"
+  },
+  {
+   "in": "x users 'BETTERDESK_X' y 'BETTERDESK_X'",
+   "out": "x users 'BETTERDESK_X' y 'BETTERDESK_X'"
+  },
+  {
+   "in": "users 'for'",
+   "out": "users 'f***r'"
+  },
+  {
+   "in": "x users 'for' y 'for'",
+   "out": "x users 'f***r' y 'f***r'"
+  },
+  {
+   "in": "users  'alice'",
+   "out": "users  'a***e'"
+  },
+  {
+   "in": "x users  'alice' y 'alice'",
+   "out": "x users  'a***e' y 'a***e'"
+  },
+  {
+   "in": "users  'ab'",
+   "out": "users  '***'"
+  },
+  {
+   "in": "x users  'ab' y 'ab'",
+   "out": "x users  '***' y '***'"
+  },
+  {
+   "in": "users  'a'",
+   "out": "users  'a'"
+  },
+  {
+   "in": "x users  'a' y 'a'",
+   "out": "x users  'a' y 'a'"
+  },
+  {
+   "in": "users\t'alice'",
+   "out": "users\t'a***e'"
+  },
+  {
+   "in": "x users\t'alice' y 'alice'",
+   "out": "x users\t'a***e' y 'a***e'"
+  },
+  {
+   "in": "users\t'ab'",
+   "out": "users\t'***'"
+  },
+  {
+   "in": "x users\t'ab' y 'ab'",
+   "out": "x users\t'***' y '***'"
+  },
+  {
+   "in": "users\t'a'",
+   "out": "users\t'a'"
+  },
+  {
+   "in": "x users\t'a' y 'a'",
+   "out": "x users\t'a' y 'a'"
+  },
+  {
+   "in": "users\u00a0'alice'",
+   "out": "users\u00a0'a***e'"
+  },
+  {
+   "in": "x users\u00a0'alice' y 'alice'",
+   "out": "x users\u00a0'a***e' y 'a***e'"
+  },
+  {
+   "in": "users\u00a0'ab'",
+   "out": "users\u00a0'***'"
+  },
+  {
+   "in": "x users\u00a0'ab' y 'ab'",
+   "out": "x users\u00a0'***' y '***'"
+  },
+  {
+   "in": "users\u00a0'a'",
+   "out": "users\u00a0'a'"
+  },
+  {
+   "in": "x users\u00a0'a' y 'a'",
+   "out": "x users\u00a0'a' y 'a'"
+  },
+  {
+   "in": "users\u3000'alice'",
+   "out": "users\u3000'a***e'"
+  },
+  {
+   "in": "x users\u3000'alice' y 'alice'",
+   "out": "x users\u3000'a***e' y 'a***e'"
+  },
+  {
+   "in": "users\u3000'ab'",
+   "out": "users\u3000'***'"
+  },
+  {
+   "in": "x users\u3000'ab' y 'ab'",
+   "out": "x users\u3000'***' y '***'"
+  },
+  {
+   "in": "users\u3000'a'",
+   "out": "users\u3000'a'"
+  },
+  {
+   "in": "x users\u3000'a' y 'a'",
+   "out": "x users\u3000'a' y 'a'"
+  },
+  {
+   "in": "users\ufeff'alice'",
+   "out": "users\ufeff'a***e'"
+  },
+  {
+   "in": "x users\ufeff'alice' y 'alice'",
+   "out": "x users\ufeff'a***e' y 'a***e'"
+  },
+  {
+   "in": "users\ufeff'ab'",
+   "out": "users\ufeff'***'"
+  },
+  {
+   "in": "x users\ufeff'ab' y 'ab'",
+   "out": "x users\ufeff'***' y '***'"
+  },
+  {
+   "in": "users\ufeff'a'",
+   "out": "users\ufeff'a'"
+  },
+  {
+   "in": "x users\ufeff'a' y 'a'",
+   "out": "x users\ufeff'a' y 'a'"
+  },
+  {
+   "in": "users\u0085'alice'",
+   "out": "users\u0085'a***e'"
+  },
+  {
+   "in": "x users\u0085'alice' y 'alice'",
+   "out": "x users\u0085'a***e' y 'a***e'"
+  },
+  {
+   "in": "users\u0085'ab'",
+   "out": "users\u0085'***'"
+  },
+  {
+   "in": "x users\u0085'ab' y 'ab'",
+   "out": "x users\u0085'***' y '***'"
+  },
+  {
+   "in": "users\u0085'a'",
+   "out": "users\u0085'a'"
+  },
+  {
+   "in": "x users\u0085'a' y 'a'",
+   "out": "x users\u0085'a' y 'a'"
+  },
+  {
+   "in": "users\u200b'alice'",
+   "out": "users\u200b'a***e'"
+  },
+  {
+   "in": "x users\u200b'alice' y 'alice'",
+   "out": "x users\u200b'a***e' y 'a***e'"
+  },
+  {
+   "in": "users\u200b'ab'",
+   "out": "users\u200b'***'"
+  },
+  {
+   "in": "x users\u200b'ab' y 'ab'",
+   "out": "x users\u200b'***' y '***'"
+  },
+  {
+   "in": "users\u200b'a'",
+   "out": "users\u200b'a'"
+  },
+  {
+   "in": "x users\u200b'a' y 'a'",
+   "out": "x users\u200b'a' y 'a'"
+  },
+  {
+   "in": "users\u2003'alice'",
+   "out": "users\u2003'a***e'"
+  },
+  {
+   "in": "x users\u2003'alice' y 'alice'",
+   "out": "x users\u2003'a***e' y 'a***e'"
+  },
+  {
+   "in": "users\u2003'ab'",
+   "out": "users\u2003'***'"
+  },
+  {
+   "in": "x users\u2003'ab' y 'ab'",
+   "out": "x users\u2003'***' y '***'"
+  },
+  {
+   "in": "users\u2003'a'",
+   "out": "users\u2003'a'"
+  },
+  {
+   "in": "x users\u2003'a' y 'a'",
+   "out": "x users\u2003'a' y 'a'"
+  },
+  {
+   "in": "users\u2028'alice'",
+   "out": "users\\n'a***e'"
+  },
+  {
+   "in": "x users\u2028'alice' y 'alice'",
+   "out": "x users\\n'a***e' y 'a***e'"
+  },
+  {
+   "in": "users\u2028'ab'",
+   "out": "users\\n'***'"
+  },
+  {
+   "in": "x users\u2028'ab' y 'ab'",
+   "out": "x users\\n'***' y '***'"
+  },
+  {
+   "in": "users\u2028'a'",
+   "out": "users\\n'a'"
+  },
+  {
+   "in": "x users\u2028'a' y 'a'",
+   "out": "x users\\n'a' y 'a'"
+  },
+  {
+   "in": "fo'alice'",
+   "out": "fo'a***e'"
+  },
+  {
+   "in": "x fo'alice' y 'alice'",
+   "out": "x fo'a***e' y 'a***e'"
+  },
+  {
+   "in": "fo'ab'",
+   "out": "fo'***'"
+  },
+  {
+   "in": "x fo'ab' y 'ab'",
+   "out": "x fo'***' y '***'"
+  },
+  {
+   "in": "fo'a'",
+   "out": "fo'a'"
+  },
+  {
+   "in": "x fo'a' y 'a'",
+   "out": "x fo'a' y 'a'"
+  },
+  {
+   "in": "fo 'alice'",
+   "out": "fo 'a***e'"
+  },
+  {
+   "in": "x fo 'alice' y 'alice'",
+   "out": "x fo 'a***e' y 'a***e'"
+  },
+  {
+   "in": "fo 'ab'",
+   "out": "fo '***'"
+  },
+  {
+   "in": "x fo 'ab' y 'ab'",
+   "out": "x fo '***' y '***'"
+  },
+  {
+   "in": "fo 'a'",
+   "out": "fo 'a'"
+  },
+  {
+   "in": "x fo 'a' y 'a'",
+   "out": "x fo 'a' y 'a'"
+  },
+  {
+   "in": "fo 'admin'",
+   "out": "fo 'admin'"
+  },
+  {
+   "in": "x fo 'admin' y 'admin'",
+   "out": "x fo 'admin' y 'admin'"
+  },
+  {
+   "in": "fo 'al ice'",
+   "out": "fo 'al ice'"
+  },
+  {
+   "in": "x fo 'al ice' y 'al ice'",
+   "out": "x fo 'al ice' y 'al ice'"
+  },
+  {
+   "in": "fo 'a.b'",
+   "out": "fo 'a.b'"
+  },
+  {
+   "in": "x fo 'a.b' y 'a.b'",
+   "out": "x fo 'a.b' y 'a.b'"
+  },
+  {
+   "in": "fo '\ud83d\ude00xy'",
+   "out": "fo '\ud83d\ude00xy'"
+  },
+  {
+   "in": "x fo '\ud83d\ude00xy' y '\ud83d\ude00xy'",
+   "out": "x fo '\ud83d\ude00xy' y '\ud83d\ude00xy'"
+  },
+  {
+   "in": "fo 'user'",
+   "out": "fo 'user'"
+  },
+  {
+   "in": "x fo 'user' y 'user'",
+   "out": "x fo 'user' y 'user'"
+  },
+  {
+   "in": "fo 'BETTERDESK_X'",
+   "out": "fo 'BETTERDESK_X'"
+  },
+  {
+   "in": "x fo 'BETTERDESK_X' y 'BETTERDESK_X'",
+   "out": "x fo 'BETTERDESK_X' y 'BETTERDESK_X'"
+  },
+  {
+   "in": "fo 'for'",
+   "out": "fo 'f***r'"
+  },
+  {
+   "in": "x fo 'for' y 'for'",
+   "out": "x fo 'f***r' y 'f***r'"
+  },
+  {
+   "in": "fo  'alice'",
+   "out": "fo  'a***e'"
+  },
+  {
+   "in": "x fo  'alice' y 'alice'",
+   "out": "x fo  'a***e' y 'a***e'"
+  },
+  {
+   "in": "fo  'ab'",
+   "out": "fo  '***'"
+  },
+  {
+   "in": "x fo  'ab' y 'ab'",
+   "out": "x fo  '***' y '***'"
+  },
+  {
+   "in": "fo  'a'",
+   "out": "fo  'a'"
+  },
+  {
+   "in": "x fo  'a' y 'a'",
+   "out": "x fo  'a' y 'a'"
+  },
+  {
+   "in": "fo\t'alice'",
+   "out": "fo\t'a***e'"
+  },
+  {
+   "in": "x fo\t'alice' y 'alice'",
+   "out": "x fo\t'a***e' y 'a***e'"
+  },
+  {
+   "in": "fo\t'ab'",
+   "out": "fo\t'***'"
+  },
+  {
+   "in": "x fo\t'ab' y 'ab'",
+   "out": "x fo\t'***' y '***'"
+  },
+  {
+   "in": "fo\t'a'",
+   "out": "fo\t'a'"
+  },
+  {
+   "in": "x fo\t'a' y 'a'",
+   "out": "x fo\t'a' y 'a'"
+  },
+  {
+   "in": "fo\u00a0'alice'",
+   "out": "fo\u00a0'a***e'"
+  },
+  {
+   "in": "x fo\u00a0'alice' y 'alice'",
+   "out": "x fo\u00a0'a***e' y 'a***e'"
+  },
+  {
+   "in": "fo\u00a0'ab'",
+   "out": "fo\u00a0'***'"
+  },
+  {
+   "in": "x fo\u00a0'ab' y 'ab'",
+   "out": "x fo\u00a0'***' y '***'"
+  },
+  {
+   "in": "fo\u00a0'a'",
+   "out": "fo\u00a0'a'"
+  },
+  {
+   "in": "x fo\u00a0'a' y 'a'",
+   "out": "x fo\u00a0'a' y 'a'"
+  },
+  {
+   "in": "fo\u3000'alice'",
+   "out": "fo\u3000'a***e'"
+  },
+  {
+   "in": "x fo\u3000'alice' y 'alice'",
+   "out": "x fo\u3000'a***e' y 'a***e'"
+  },
+  {
+   "in": "fo\u3000'ab'",
+   "out": "fo\u3000'***'"
+  },
+  {
+   "in": "x fo\u3000'ab' y 'ab'",
+   "out": "x fo\u3000'***' y '***'"
+  },
+  {
+   "in": "fo\u3000'a'",
+   "out": "fo\u3000'a'"
+  },
+  {
+   "in": "x fo\u3000'a' y 'a'",
+   "out": "x fo\u3000'a' y 'a'"
+  },
+  {
+   "in": "fo\ufeff'alice'",
+   "out": "fo\ufeff'a***e'"
+  },
+  {
+   "in": "x fo\ufeff'alice' y 'alice'",
+   "out": "x fo\ufeff'a***e' y 'a***e'"
+  },
+  {
+   "in": "fo\ufeff'ab'",
+   "out": "fo\ufeff'***'"
+  },
+  {
+   "in": "x fo\ufeff'ab' y 'ab'",
+   "out": "x fo\ufeff'***' y '***'"
+  },
+  {
+   "in": "fo\ufeff'a'",
+   "out": "fo\ufeff'a'"
+  },
+  {
+   "in": "x fo\ufeff'a' y 'a'",
+   "out": "x fo\ufeff'a' y 'a'"
+  },
+  {
+   "in": "fo\u0085'alice'",
+   "out": "fo\u0085'a***e'"
+  },
+  {
+   "in": "x fo\u0085'alice' y 'alice'",
+   "out": "x fo\u0085'a***e' y 'a***e'"
+  },
+  {
+   "in": "fo\u0085'ab'",
+   "out": "fo\u0085'***'"
+  },
+  {
+   "in": "x fo\u0085'ab' y 'ab'",
+   "out": "x fo\u0085'***' y '***'"
+  },
+  {
+   "in": "fo\u0085'a'",
+   "out": "fo\u0085'a'"
+  },
+  {
+   "in": "x fo\u0085'a' y 'a'",
+   "out": "x fo\u0085'a' y 'a'"
+  },
+  {
+   "in": "fo\u200b'alice'",
+   "out": "fo\u200b'a***e'"
+  },
+  {
+   "in": "x fo\u200b'alice' y 'alice'",
+   "out": "x fo\u200b'a***e' y 'a***e'"
+  },
+  {
+   "in": "fo\u200b'ab'",
+   "out": "fo\u200b'***'"
+  },
+  {
+   "in": "x fo\u200b'ab' y 'ab'",
+   "out": "x fo\u200b'***' y '***'"
+  },
+  {
+   "in": "fo\u200b'a'",
+   "out": "fo\u200b'a'"
+  },
+  {
+   "in": "x fo\u200b'a' y 'a'",
+   "out": "x fo\u200b'a' y 'a'"
+  },
+  {
+   "in": "fo\u2003'alice'",
+   "out": "fo\u2003'a***e'"
+  },
+  {
+   "in": "x fo\u2003'alice' y 'alice'",
+   "out": "x fo\u2003'a***e' y 'a***e'"
+  },
+  {
+   "in": "fo\u2003'ab'",
+   "out": "fo\u2003'***'"
+  },
+  {
+   "in": "x fo\u2003'ab' y 'ab'",
+   "out": "x fo\u2003'***' y '***'"
+  },
+  {
+   "in": "fo\u2003'a'",
+   "out": "fo\u2003'a'"
+  },
+  {
+   "in": "x fo\u2003'a' y 'a'",
+   "out": "x fo\u2003'a' y 'a'"
+  },
+  {
+   "in": "fo\u2028'alice'",
+   "out": "fo\\n'a***e'"
+  },
+  {
+   "in": "x fo\u2028'alice' y 'alice'",
+   "out": "x fo\\n'a***e' y 'a***e'"
+  },
+  {
+   "in": "fo\u2028'ab'",
+   "out": "fo\\n'***'"
+  },
+  {
+   "in": "x fo\u2028'ab' y 'ab'",
+   "out": "x fo\\n'***' y '***'"
+  },
+  {
+   "in": "fo\u2028'a'",
+   "out": "fo\\n'a'"
+  },
+  {
+   "in": "x fo\u2028'a' y 'a'",
+   "out": "x fo\\n'a' y 'a'"
+  },
+  {
+   "in": "alicebcrypt\u00a0_0orbob_BETTERDESK_",
+   "out": "alicebcrypt\u00a0_0orbob_BETTERDESK_"
+  },
+  {
+   "in": "-local userroleuser: x.y",
+   "out": "-local userroleuser: x.y"
+  },
+  {
+   "in": "ab\n:\u00e9bob$&\u00a0ser\u00e9",
+   "out": "ab\\n:\u00e9bob$&\u00a0ser\u00e9"
+  },
+  {
+   "in": "credentials foracredentials forsynced \u00a00 synced",
+   "out": "credentials foracredentials forsynced \u00a00 synced"
+  },
+  {
+   "in": "Userussynced",
+   "out": "Userussynced"
+  },
+  {
+   "in": "''User '",
+   "out": "''User '"
+  },
+  {
+   "in": "abab",
+   "out": "abab"
+  },
+  {
+   "in": "-$&local user\u00a0a/bsersynceda/baccount",
+   "out": "-$&local user\u00a0a/bsersynceda/baccount"
+  },
+  {
+   "in": "rolefor\ud83d\ude00_User",
+   "out": "rolefor\ud83d\ude00_User"
+  },
+  {
+   "in": "a/broleuserlocal user'or\ud83d\ude00a/b_a",
+   "out": "a/broleuserlocal user'or\ud83d\ude00a/b_a"
+  },
+  {
+   "in": "\u00e9\u00a0:0",
+   "out": "\u00e9\u00a0:0"
+  },
+  {
+   "in": "alicefor",
+   "out": "alicefor"
+  },
+  {
+   "in": "\u00e9",
+   "out": "\u00e9"
+  },
+  {
+   "in": "credentials foraba'",
+   "out": "credentials foraba'"
+  },
+  {
+   "in": "\ud83d\ude00alice\tx.yforser",
+   "out": "\ud83d\ude00alice\tx.yforser"
+  },
+  {
+   "in": "'\ud83d\ude00$&local user\nuser",
+   "out": "'\ud83d\ude00$&local user\\nuser"
+  },
+  {
+   "in": " or",
+   "out": " or"
+  },
+  {
+   "in": "'\u00a0admin\u00e90\u00e9-BETTERDESK_alice",
+   "out": "'\u00a0admin\u00e90\u00e9-BETTERDESK_alice"
+  },
+  {
+   "in": " \ud83d\ude00\ud83d\ude00orbob'@userfor",
+   "out": " \ud83d\ude00\ud83d\ude00orbob'@userfor"
+  },
+  {
+   "in": "ser\nseralice:orlocal useralice\n",
+   "out": "ser\\nseralice:orlocal useralice\\n"
+  },
+  {
+   "in": "local usersynced -':@$&",
+   "out": "local usersynced -':@$&"
+  },
+  {
+   "in": "forab \nuserUser$&0",
+   "out": "forab \\nuserUser$&0"
+  },
+  {
+   "in": "$&'oradminuser@a/b \ud83d\ude00",
+   "out": "$&'oradminuser@a/b \ud83d\ude00"
+  },
+  {
+   "in": " user_'alice",
+   "out": " user_'alice"
+  },
+  {
+   "in": "serBETTERDESK_aliceaccount'x.y",
+   "out": "serBETTERDESK_aliceaccount'x.y"
+  },
+  {
+   "in": "0x.y''\u00e90a",
+   "out": "0x.y''\u00e90a"
+  },
+  {
+   "in": "\nuser'$&",
+   "out": "\\nuser'$&"
+  },
+  {
+   "in": "userora/ba/bcredentials fora/b",
+   "out": "userora/ba/bcredentials fora/b"
+  },
+  {
+   "in": "x.y",
+   "out": "x.y"
+  },
+  {
+   "in": "admina",
+   "out": "admina"
+  },
+  {
+   "in": "\ud83d\ude00a/balicebcryptorbcrypt0alicex.y",
+   "out": "\ud83d\ude00a/balicebcryptorbcrypt0alicex.y"
+  },
+  {
+   "in": ":x.ya/bBETTERDESK_\tBETTERDESK_a\u00a0 '",
+   "out": ":x.ya/bBETTERDESK_\tBETTERDESK_a\u00a0 '"
+  },
+  {
+   "in": "bobuser-adminx.y$&_",
+   "out": "bobuser-adminx.y$&_"
+  },
+  {
+   "in": " 0_0account'\ud83d\ude00User\u00e9",
+   "out": " 0_0account'\ud83d\ude00User\u00e9"
+  },
+  {
+   "in": "'-'\ud83d\ude00 bcryptlocal usera/ba",
+   "out": "'-'\ud83d\ude00 bcryptlocal usera/ba"
+  },
+  {
+   "in": "\nuseraadmin",
+   "out": "\\nuseraadmin"
+  },
+  {
+   "in": "  bcryptx.yrole",
+   "out": "  bcryptx.yrole"
+  },
+  {
+   "in": "- \taccountforlocal usercredentials forsyncedaccountbcrypt",
+   "out": "- \taccountforlocal usercredentials forsyncedaccountbcrypt"
+  },
+  {
+   "in": "0roleaccount'-bcryptaba:x.y",
+   "out": "0roleaccount'-bcryptaba:x.y"
+  },
+  {
+   "in": "usabalice$&\ud83d\ude00synced",
+   "out": "usabalice$&\ud83d\ude00synced"
+  },
+  {
+   "in": "abfor- :ser'",
+   "out": "abfor- :ser'"
+  },
+  {
+   "in": ":bobser _'\nx.y",
+   "out": ":bobser _'\\nx.y"
+  },
+  {
+   "in": "_",
+   "out": "_"
+  },
+  {
+   "in": "alice bcryptlocal user-\ud83d\ude00uscredentials for\u00a0",
+   "out": "alice bcryptlocal user-\ud83d\ude00uscredentials for\u00a0"
+  },
+  {
+   "in": " :-0adminx.y_aliceforbob",
+   "out": " :-0adminx.y_aliceforbob"
+  },
+  {
+   "in": "\tforuserusx.y\u00e9",
+   "out": "\tforuserusx.y\u00e9"
+  },
+  {
+   "in": "accountx.yforadmin@adminroleus",
+   "out": "accountx.yforadmin@adminroleus"
+  },
+  {
+   "in": "User User\u00a0\u00e9Userus$&\n",
+   "out": "User User\u00a0\u00e9Userus$&\\n"
+  },
+  {
+   "in": "a/bUser bcrypt",
+   "out": "a/bUser bcrypt"
+  },
+  {
+   "in": "\tabob@$&",
+   "out": "\tabob@$&"
+  },
+  {
+   "in": "x.ycredentials for'alicebcryptaccountlocal user\u00e9ab",
+   "out": "x.ycredentials for'alicebcryptaccountlocal user\u00e9ab"
+  },
+  {
+   "in": "accountser'alicex.ycredentials for\u00e9'\u00e9",
+   "out": "accountser'alicex.ycredentials for\u00e9'\u00e9"
+  },
+  {
+   "in": "forlocal user'roleadminbob",
+   "out": "forlocal user'roleadminbob"
+  },
+  {
+   "in": "x.ybobor\u00a0Useruserlocal user@role",
+   "out": "x.ybobor\u00a0Useruserlocal user@role"
+  },
+  {
+   "in": "admin synced",
+   "out": "admin synced"
+  },
+  {
+   "in": "'x.y_user\u00a0\t_us\ud83d\ude00",
+   "out": "'x.y_user\u00a0\t_us\ud83d\ude00"
+  },
+  {
+   "in": "user\n  $&'",
+   "out": "user\\n  $&'"
+  },
+  {
+   "in": "local user\ud83d\ude00a_'_ 0",
+   "out": "local user\ud83d\ude00a_'_ 0"
+  },
+  {
+   "in": "local userroleor",
+   "out": "local userroleor"
+  },
+  {
+   "in": "''usaliceadmin\t\u00e9rolecredentials for",
+   "out": "''usaliceadmin\t\u00e9rolecredentials for"
+  },
+  {
+   "in": "'",
+   "out": "'"
+  },
+  {
+   "in": " \u00e9@credentials for\n",
+   "out": " \u00e9@credentials for\\n"
+  },
+  {
+   "in": "orlocal userx.yx.y",
+   "out": "orlocal userx.yx.y"
+  },
+  {
+   "in": "' credentials for:$&$&user_credentials for",
+   "out": "' credentials for:$&$&user_credentials for"
+  },
+  {
+   "in": "ab",
+   "out": "ab"
+  },
+  {
+   "in": "'user'a/bx.yBETTERDESK_bcrypt0:User",
+   "out": "'user'a/bx.yBETTERDESK_bcrypt0:User"
+  },
+  {
+   "in": "credentials for\n\u00a0ab:alice\tbcryptserbcrypt",
+   "out": "credentials for\\n\u00a0ab:alice\tbcryptserbcrypt"
+  },
+  {
+   "in": "alice-\u00a0a",
+   "out": "alice-\u00a0a"
+  },
+  {
+   "in": "Userbcrypt user\nrole",
+   "out": "Userbcrypt user\\nrole"
+  },
+  {
+   "in": "local userbcrypt",
+   "out": "local userbcrypt"
+  },
+  {
+   "in": " 'bcryptoradmincredentials for$&bob",
+   "out": " 'bcryptoradmincredentials for$&bob"
+  },
+  {
+   "in": "role\u00a0 adminaccountcredentials forx.y\t:",
+   "out": "role\u00a0 adminaccountcredentials forx.y\t:"
+  },
+  {
+   "in": "orUserabalicebcryptBETTERDESK_usabuser'",
+   "out": "orUserabalicebcryptBETTERDESK_usabuser'"
+  },
+  {
+   "in": "credentials for _$&\taccountaccountfororalice",
+   "out": "credentials for _$&\taccountaccountfororalice"
+  },
+  {
+   "in": "\u00e9 $&\nx.yserbobbcrypt'-",
+   "out": "\u00e9 $&\\nx.yserbobbcrypt'-"
+  },
+  {
+   "in": "_ab':$&@forser\n\u00a0",
+   "out": "_ab':$&@forser\\n\u00a0"
+  },
+  {
+   "in": "account0\u00a0'0for_account'alice",
+   "out": "account0\u00a0'0***t'alice"
+  },
+  {
+   "in": "@\u00e9:--Userserab",
+   "out": "@\u00e9:--Userserab"
+  },
+  {
+   "in": "user0:a/bfor'",
+   "out": "user0:a/bfor'"
+  },
+  {
+   "in": "alice-admin''role",
+   "out": "alice-admin''role"
+  },
+  {
+   "in": "local useralice'Useradmin'\u00e9",
+   "out": "local useralice'U***n'\u00e9"
+  },
+  {
+   "in": "\tUser'''x.yrole$&bob",
+   "out": "\tUser'''x.yrole$&bob"
+  },
+  {
+   "in": "Useradmin\u00e9local user'ser'",
+   "out": "Useradmin\u00e9local user's***r'"
+  },
+  {
+   "in": "ser a\ud83d\ude00a",
+   "out": "ser a\ud83d\ude00a"
+  },
+  {
+   "in": "alice$&BETTERDESK_'\na/b",
+   "out": "alice$&BETTERDESK_'\\na/b"
+  },
+  {
+   "in": "\u00a0",
+   "out": "\u00a0"
+  },
+  {
+   "in": "-bob",
+   "out": "-bob"
+  },
+  {
+   "in": "bcryptBETTERDESK_alicecredentials for0:'",
+   "out": "bcryptBETTERDESK_alicecredentials for0:'"
+  },
+  {
+   "in": "@syncedus ",
+   "out": "@syncedus "
+  },
+  {
+   "in": "ser:\ncredentials for\u00e9-''",
+   "out": "ser:\\ncredentials for\u00e9-''"
+  },
+  {
+   "in": "us':-@alice\n_usersynced",
+   "out": "us':-@alice\\n_usersynced"
+  },
+  {
+   "in": "@",
+   "out": "@"
+  },
+  {
+   "in": "alice::-'",
+   "out": "alice::-'"
+  },
+  {
+   "in": "_a0orsyncedus@aliceUsersynced",
+   "out": "_a0orsyncedus@aliceUsersynced"
+  },
+  {
+   "in": "BETTERDESK_",
+   "out": "BETTERDESK_"
+  },
+  {
+   "in": "us@BETTERDESK_BETTERDESK_user BETTERDESK_",
+   "out": "us@BETTERDESK_BETTERDESK_user BETTERDESK_"
+  },
+  {
+   "in": "for'",
+   "out": "for'"
+  },
+  {
+   "in": " usera'",
+   "out": " usera'"
+  },
+  {
+   "in": "synced",
+   "out": "synced"
+  },
+  {
+   "in": "@'",
+   "out": "@'"
+  },
+  {
+   "in": "0 ",
+   "out": "0 "
+  },
+  {
+   "in": "credentials foralice \tcredentials forsynced@credentials for '",
+   "out": "credentials foralice \tcredentials forsynced@credentials for '"
+  },
+  {
+   "in": "User \nadmin-userrole0",
+   "out": "User \\nadmin-userrole0"
+  },
+  {
+   "in": "'BETTERDESK_user\u00a0'",
+   "out": "'BETTERDESK_user\u00a0'"
+  },
+  {
+   "in": "rolebobalice",
+   "out": "rolebobalice"
+  },
+  {
+   "in": "\tbcrypt:role\na/bx.y",
+   "out": "\tbcrypt:role\\na/bx.y"
+  },
+  {
+   "in": " 0account ",
+   "out": " 0account "
+  },
+  {
+   "in": " roleuseralice'",
+   "out": " roleuseralice'"
+  },
+  {
+   "in": "us\u00e9",
+   "out": "us\u00e9"
+  },
+  {
+   "in": "@us@_\u00e9aadmin Userfor",
+   "out": "@us@_\u00e9aadmin Userfor"
+  },
+  {
+   "in": "@usor",
+   "out": "@usor"
+  },
+  {
+   "in": "aliceforrole@Userus",
+   "out": "aliceforrole@Userus"
+  },
+  {
+   "in": "- 0sercredentials for",
+   "out": "- 0sercredentials for"
+  },
+  {
+   "in": "BETTERDESK_a/bfor'credentials for local usercredentials forbob\t",
+   "out": "BETTERDESK_a/bfor'credentials for local usercredentials forbob\t"
+  },
+  {
+   "in": "BETTERDESK_\u00e90@User userbcryptsyncedbob",
+   "out": "BETTERDESK_\u00e90@User userbcryptsyncedbob"
+  },
+  {
+   "in": "UserUserx.y\u00a0:",
+   "out": "UserUserx.y\u00a0:"
+  },
+  {
+   "in": "aliceor@",
+   "out": "aliceor@"
+  },
+  {
+   "in": "oruser-a/b",
+   "out": "oruser-a/b"
+  },
+  {
+   "in": "\n'a/brolea/b\ud83d\ude00",
+   "out": "\\n'a/brolea/b\ud83d\ude00"
+  },
+  {
+   "in": "credentials for 'sera/b-or a\u00a0",
+   "out": "credentials for 'sera/b-or a\u00a0"
+  },
+  {
+   "in": "-ser \u00a0'local user",
+   "out": "-ser \u00a0'local user"
+  },
+  {
+   "in": "role\n_",
+   "out": "role\\n_"
+  },
+  {
+   "in": "serab syncedUsercredentials forbobBETTERDESK_'",
+   "out": "serab syncedUsercredentials forbobBETTERDESK_'"
+  },
+  {
+   "in": "'useraccountBETTERDESK_x.ya",
+   "out": "'useraccountBETTERDESK_x.ya"
+  },
+  {
+   "in": "credentials forBETTERDESK_synced\u00a0\u00e9",
+   "out": "credentials forBETTERDESK_synced\u00a0\u00e9"
+  },
+  {
+   "in": "a/blocal userusadmin",
+   "out": "a/blocal userusadmin"
+  },
+  {
+   "in": " ab",
+   "out": " ab"
+  },
+  {
+   "in": "abforus:\u00e9for",
+   "out": "abforus:\u00e9for"
+  },
+  {
+   "in": "'admin':for\u00a0BETTERDESK_ ",
+   "out": "'admin':for\u00a0BETTERDESK_ "
+  },
+  {
+   "in": "'usera/b@ '_'Useruser",
+   "out": "'usera/b@ '_'Useruser"
+  },
+  {
+   "in": "\u00a0x.y:\ud83d\ude00\u00a0",
+   "out": "\u00a0x.y:\ud83d\ude00\u00a0"
+  },
+  {
+   "in": "bcrypt'",
+   "out": "bcrypt'"
+  },
+  {
+   "in": "'\t'credentials forx.y_",
+   "out": "'\t'credentials forx.y_"
+  },
+  {
+   "in": "'-",
+   "out": "'-"
+  },
+  {
+   "in": "$&\t@\nrole''",
+   "out": "$&\t@\\nrole''"
+  },
+  {
+   "in": "abBETTERDESK_",
+   "out": "abBETTERDESK_"
+  },
+  {
+   "in": ":for$&\u00a0\u00a0_$&a/ba/b:",
+   "out": ":for$&\u00a0\u00a0_$&a/ba/b:"
+  },
+  {
+   "in": "role\nx.y  or",
+   "out": "role\\nx.y  or"
+  },
+  {
+   "in": "account\u00e9synced\u00a0BETTERDESK_'User0us'",
+   "out": "account\u00e9synced\u00a0BETTERDESK_'U***s'"
+  },
+  {
+   "in": "alice'oror''\ud83d\ude00 @a/b",
+   "out": "alice'o***r''\ud83d\ude00 @a/b"
+  },
+  {
+   "in": "BETTERDESK_admin'alicea/b $&0",
+   "out": "BETTERDESK_admin'alicea/b $&0"
+  },
+  {
+   "in": "$&BETTERDESK_'",
+   "out": "$&BETTERDESK_'"
+  },
+  {
+   "in": "userlocal user ",
+   "out": "userlocal user "
+  },
+  {
+   "in": "-'for",
+   "out": "-'for"
+  },
+  {
+   "in": "us \u00e9admin\ud83d\ude00or' ",
+   "out": "us \u00e9admin\ud83d\ude00or' "
+  },
+  {
+   "in": "0-",
+   "out": "0-"
+  },
+  {
+   "in": "alicealicea/brolea/bUser",
+   "out": "alicealicea/brolea/bUser"
+  },
+  {
+   "in": "for:-0BETTERDESK_x.y\t'syncedBETTERDESK_",
+   "out": "for:-0BETTERDESK_x.y\t'syncedBETTERDESK_"
+  },
+  {
+   "in": "ab-ser\t$&@user\nfor$&",
+   "out": "ab-ser\t$&@user\\nfor$&"
+  },
+  {
+   "in": "''usa/b''",
+   "out": "''usa/b''"
+  },
+  {
+   "in": "\ud83d\ude00usx.y'",
+   "out": "\ud83d\ude00usx.y'"
+  },
+  {
+   "in": "accountUser",
+   "out": "accountUser"
+  },
+  {
+   "in": "or alice bob'user\t",
+   "out": "or alice bob'user\t"
+  },
+  {
+   "in": "us",
+   "out": "us"
+  },
+  {
+   "in": "a''UseruserBETTERDESK_\u00e9credentials for'local user",
+   "out": "a''UseruserBETTERDESK_\u00e9credentials for'local user"
+  },
+  {
+   "in": "rolebcrypt:",
+   "out": "rolebcrypt:"
+  },
+  {
+   "in": "BETTERDESK_\u00e9UseraliceBETTERDESK_\u00e9credentials for bcryptUser",
+   "out": "BETTERDESK_\u00e9UseraliceBETTERDESK_\u00e9credentials for bcryptUser"
+  },
+  {
+   "in": " account :",
+   "out": " account :"
+  },
+  {
+   "in": "$&abUser",
+   "out": "$&abUser"
+  },
+  {
+   "in": "admin:0a ",
+   "out": "admin:0a "
+  },
+  {
+   "in": "\n\n  ab",
+   "out": "\\n\\n  ab"
+  },
+  {
+   "in": "orbob\u00e9'role bcrypta ",
+   "out": "orbob\u00e9'role bcrypta "
+  },
+  {
+   "in": "Userlocal user$&userus",
+   "out": "Userlocal user$&userus"
+  },
+  {
+   "in": "BETTERDESK_or'\u00e9@  :",
+   "out": "BETTERDESK_or'\u00e9@  :"
+  },
+  {
+   "in": "@bcrypta'",
+   "out": "@bcrypta'"
+  },
+  {
+   "in": " user@",
+   "out": " user@"
+  },
+  {
+   "in": "BETTERDESK_a/bbob-",
+   "out": "BETTERDESK_a/bbob-"
+  },
+  {
+   "in": "for$&bcrypt ",
+   "out": "for$&bcrypt "
+  },
+  {
+   "in": "admin @",
+   "out": "admin @"
+  },
+  {
+   "in": "_ role':accounta/b'",
+   "out": "_ role':accounta/b'"
+  },
+  {
+   "in": "\t'forsynceda/b: BETTERDESK_",
+   "out": "\t'forsynceda/b: BETTERDESK_"
+  },
+  {
+   "in": "bcryptuseralice ",
+   "out": "bcryptuseralice "
+  },
+  {
+   "in": "\t",
+   "out": "\t"
+  },
+  {
+   "in": "0a/b@orx.ybobbcryptbcrypt",
+   "out": "0a/b@orx.ybobbcryptbcrypt"
+  },
+  {
+   "in": "_ser@\u00e9'a",
+   "out": "_ser@\u00e9'a"
+  },
+  {
+   "in": "ablocal userrole\na0x.ybcrypt",
+   "out": "ablocal userrole\\na0x.ybcrypt"
+  },
+  {
+   "in": "or'$&0\ud83d\ude00'local user:UserBETTERDESK_",
+   "out": "or'$&0\ud83d\ude00'local user:UserBETTERDESK_"
+  },
+  {
+   "in": "forser",
+   "out": "forser"
+  },
+  {
+   "in": "user' 'alice :BETTERDESK_",
+   "out": "user' 'alice :BETTERDESK_"
+  },
+  {
+   "in": "_a/b",
+   "out": "_a/b"
+  },
+  {
+   "in": "$&",
+   "out": "$&"
+  },
+  {
+   "in": "userUser\n",
+   "out": "userUser\\n"
+  },
+  {
+   "in": " accounta\t",
+   "out": " accounta\t"
+  },
+  {
+   "in": "us0 \t_",
+   "out": "us0 \t_"
+  },
+  {
+   "in": "user\ud83d\ude00",
+   "out": "user\ud83d\ude00"
+  },
+  {
+   "in": "sera/baccountUser$&local user",
+   "out": "sera/baccountUser$&local user"
+  },
+  {
+   "in": "credentials forforusser\u00e9\trole",
+   "out": "credentials forforusser\u00e9\trole"
+  },
+  {
+   "in": " Usera/b-\u00a0abadminlocal user",
+   "out": " Usera/b-\u00a0abadminlocal user"
+  },
+  {
+   "in": "0bobab:  ''usbcrypt",
+   "out": "0bobab:  ''usbcrypt"
+  },
+  {
+   "in": "adminabob\ud83d\ude00\ud83d\ude00usx.y\trole",
+   "out": "adminabob\ud83d\ude00\ud83d\ude00usx.y\trole"
+  },
+  {
+   "in": "us-0userser$&'a'admin",
+   "out": "us-0userser$&'a'admin"
+  },
+  {
+   "in": "ususeradmin'local user' \n ",
+   "out": "ususeradmin'local user' \\n "
+  },
+  {
+   "in": "a'x.ybcrypt",
+   "out": "a'x.ybcrypt"
+  },
+  {
+   "in": "syncedserbcrypt\ud83d\ude00BETTERDESK_bob",
+   "out": "syncedserbcrypt\ud83d\ude00BETTERDESK_bob"
+  },
+  {
+   "in": "\ud83d\ude00'Useradmin",
+   "out": "\ud83d\ude00'Useradmin"
+  },
+  {
+   "in": "for\u00e9'-us'oraccount",
+   "out": "for\u00e9'-***s'oraccount"
+  },
+  {
+   "in": "credentials forcredentials forabadmin'\u00e9alicelocal user",
+   "out": "credentials forcredentials forabadmin'\u00e9alicelocal user"
+  },
+  {
+   "in": "role'accountalice",
+   "out": "role'accountalice"
+  },
+  {
+   "in": " 'ser\u00a0a/busalicebob",
+   "out": " 'ser\u00a0a/busalicebob"
+  },
+  {
+   "in": "usbcrypt@",
+   "out": "usbcrypt@"
+  },
+  {
+   "in": "BETTERDESK_\ud83d\ude00serbcryptBETTERDESK_local usersyncedser",
+   "out": "BETTERDESK_\ud83d\ude00serbcryptBETTERDESK_local usersyncedser"
+  },
+  {
+   "in": "\u00a0\t@_local user\ud83d\ude00:",
+   "out": "\u00a0\t@_local user\ud83d\ude00:"
+  },
+  {
+   "in": "\ud83d\ude00 'us a/ba/b ",
+   "out": "\ud83d\ude00 'us a/ba/b "
+  },
+  {
+   "in": "User'\ud83d\ude00a/b0bob'role@",
+   "out": "User'\ud83d\ude00a/b0bob'role@"
+  },
+  {
+   "in": "for",
+   "out": "for"
+  },
+  {
+   "in": "a/bab",
+   "out": "a/bab"
+  },
+  {
+   "in": "synceda$&usBETTERDESK_usser'_",
+   "out": "synceda$&usBETTERDESK_usser'_"
+  },
+  {
+   "in": "'@or\u00e9 \u00a0bob\ud83d\ude00",
+   "out": "'@or\u00e9 \u00a0bob\ud83d\ude00"
+  },
+  {
+   "in": "a/b:alice",
+   "out": "a/b:alice"
+  },
+  {
+   "in": "userus or'ab'x.yax.y",
+   "out": "userus or'***'x.yax.y"
+  },
+  {
+   "in": "orbcrypt- User@a/b",
+   "out": "orbcrypt- User@a/b"
+  },
+  {
+   "in": "@aaliceserlocal user",
+   "out": "@aaliceserlocal user"
+  },
+  {
+   "in": "role\tser",
+   "out": "role\tser"
+  },
+  {
+   "in": "synced\n'_x.yforab",
+   "out": "synced\\n'_x.yforab"
+  },
+  {
+   "in": "   0BETTERDESK_",
+   "out": "   0BETTERDESK_"
+  },
+  {
+   "in": "ser",
+   "out": "ser"
+  },
+  {
+   "in": "-\trole bcrypt\ud83d\ude00'usaccount",
+   "out": "-\trole bcrypt\ud83d\ude00'usaccount"
+  },
+  {
+   "in": "BETTERDESK_'",
+   "out": "BETTERDESK_'"
+  },
+  {
+   "in": "_UseraccountUserx.yBETTERDESK_",
+   "out": "_UseraccountUserx.yBETTERDESK_"
+  },
+  {
+   "in": "bob'User-BETTERDESK_'accountx.y",
+   "out": "bob'U***_'accountx.y"
+  },
+  {
+   "in": "@aabbobusadmin0local userBETTERDESK_x.y",
+   "out": "@aabbobusadmin0local userBETTERDESK_x.y"
+  },
+  {
+   "in": "\ud83d\ude00\u00e9-bob\n",
+   "out": "\ud83d\ude00\u00e9-bob\\n"
+  },
+  {
+   "in": "account@admin:BETTERDESK_oruseruser",
+   "out": "account@admin:BETTERDESK_oruseruser"
+  },
+  {
+   "in": "'synceduseraccount",
+   "out": "'synceduseraccount"
+  },
+  {
+   "in": "@syncedlocal user'@\u00a0\ud83d\ude00credentials for:",
+   "out": "@syncedlocal user'@\u00a0\ud83d\ude00credentials for:"
+  },
+  {
+   "in": "us\tforUseradmin\talice'ser0",
+   "out": "us\tforUseradmin\talice'ser0"
+  },
+  {
+   "in": " alicex.y' 0local user",
+   "out": " alicex.y' 0local user"
+  },
+  {
+   "in": ":forrole",
+   "out": ":forrole"
+  },
+  {
+   "in": "'\u00a00_x.y@\ud83d\ude00\u00e9",
+   "out": "'\u00a00_x.y@\ud83d\ude00\u00e9"
+  },
+  {
+   "in": "ser\nsynced",
+   "out": "ser\\nsynced"
+  },
+  {
+   "in": "abcryptser\u00a0\t",
+   "out": "abcryptser\u00a0\t"
+  },
+  {
+   "in": " \ud83d\ude00us' _",
+   "out": " \ud83d\ude00us' _"
+  },
+  {
+   "in": "useraccount :a/bbob",
+   "out": "useraccount :a/bbob"
+  },
+  {
+   "in": "\ud83d\ude00",
+   "out": "\ud83d\ude00"
+  },
+  {
+   "in": " bcryptalicecredentials forbcrypt\ud83d\ude00adminalice",
+   "out": " bcryptalicecredentials forbcrypt\ud83d\ude00adminalice"
+  },
+  {
+   "in": "accountorlocal useralice @alocal user-",
+   "out": "accountorlocal useralice @alocal user-"
+  },
+  {
+   "in": "credentials forUserBETTERDESK_Usercredentials forUser",
+   "out": "credentials forUserBETTERDESK_Usercredentials forUser"
+  },
+  {
+   "in": "alice: -bcryptaccount",
+   "out": "alice: -bcryptaccount"
+  },
+  {
+   "in": "a_credentials for",
+   "out": "a_credentials for"
+  },
+  {
+   "in": "\u00e9_'-\u00e9syncedlocal user",
+   "out": "\u00e9_'-\u00e9syncedlocal user"
+  },
+  {
+   "in": "\nabalice0local user@",
+   "out": "\\nabalice0local user@"
+  },
+  {
+   "in": "account\u00a0ser'account'bcryptsynced\u00a0",
+   "out": "account\u00a0ser'a***t'bcryptsynced\u00a0"
+  },
+  {
+   "in": "local useruser'x.ysynced$&'x.ysynced",
+   "out": "local useruser'x.ysynced$&'x.ysynced"
+  },
+  {
+   "in": "\u00e9''bob_role\t",
+   "out": "\u00e9''bob_role\t"
+  },
+  {
+   "in": "for'account",
+   "out": "for'account"
+  },
+  {
+   "in": "serora/bbcrypt0:'",
+   "out": "serora/bbcrypt0:'"
+  },
+  {
+   "in": "a/b:role",
+   "out": "a/b:role"
+  },
+  {
+   "in": "@BETTERDESK_serx.yalicesynced-",
+   "out": "@BETTERDESK_serx.yalicesynced-"
+  },
+  {
+   "in": "\ud83d\ude00for'-ab@alice",
+   "out": "\ud83d\ude00for'-ab@alice"
+  },
+  {
+   "in": "accountcredentials forab ab'BETTERDESK_",
+   "out": "accountcredentials forab ab'BETTERDESK_"
+  },
+  {
+   "in": "aba/b\nsyncedbobuser",
+   "out": "aba/b\\nsyncedbobuser"
+  },
+  {
+   "in": "'ab a/bser''\n ",
+   "out": "'ab a/bser''\\n "
+  },
+  {
+   "in": "BETTERDESK__-aoralice ",
+   "out": "BETTERDESK__-aoralice "
+  },
+  {
+   "in": ":_ bcrypt\t",
+   "out": ":_ bcrypt\t"
+  },
+  {
+   "in": "local user0BETTERDESK_ syncedaliceadmin",
+   "out": "local user0BETTERDESK_ syncedaliceadmin"
+  },
+  {
+   "in": "a/b'User\tab-:serus",
+   "out": "a/b'User\tab-:serus"
+  },
+  {
+   "in": ":bob",
+   "out": ":bob"
+  },
+  {
+   "in": "x.y$&\ud83d\ude00",
+   "out": "x.y$&\ud83d\ude00"
+  },
+  {
+   "in": "bcryptsera accountx.y_",
+   "out": "bcryptsera accountx.y_"
+  },
+  {
+   "in": "serrole",
+   "out": "serrole"
+  },
+  {
+   "in": "\u00a0credentials for'for \ud83d\ude00\t",
+   "out": "\u00a0credentials for'for \ud83d\ude00\t"
+  },
+  {
+   "in": "\u00a0\tfor-a\tlocal user\u00e9 ",
+   "out": "\u00a0\tfor-a\tlocal user\u00e9 "
+  },
+  {
+   "in": "''us'aliceBETTERDESK_@abab",
+   "out": "''***'aliceBETTERDESK_@abab"
+  },
+  {
+   "in": "\t\nadminforadminorx.yfor'",
+   "out": "\t\\nadminforadminorx.yfor'"
+  },
+  {
+   "in": "0 x.yseror\ud83d\ude00User\t",
+   "out": "0 x.yseror\ud83d\ude00User\t"
+  },
+  {
+   "in": "\u00a0User0aaccountadmin_: \u00a0",
+   "out": "\u00a0User0aaccountadmin_: \u00a0"
+  },
+  {
+   "in": "local userbobus ' us\t",
+   "out": "local userbobus ' us\t"
+  },
+  {
+   "in": "_0'' x.y0",
+   "out": "_0'' x.y0"
+  },
+  {
+   "in": "abus",
+   "out": "abus"
+  },
+  {
+   "in": "aba'@boborx.y",
+   "out": "aba'@boborx.y"
+  },
+  {
+   "in": " roleaccount- Userfor _",
+   "out": " roleaccount- Userfor _"
+  },
+  {
+   "in": "local useraccount'",
+   "out": "local useraccount'"
+  },
+  {
+   "in": "orbcrypt\ud83d\ude00accountfor\t",
+   "out": "orbcrypt\ud83d\ude00accountfor\t"
+  },
+  {
+   "in": "local user",
+   "out": "local user"
+  },
+  {
+   "in": ":\t :",
+   "out": ":\t :"
+  },
+  {
+   "in": "'0",
+   "out": "'0"
+  },
+  {
+   "in": "'userx.y''credentials for",
+   "out": "'userx.y''credentials for"
+  },
+  {
+   "in": "ser:'orlocal useradmin$&x.y@\ud83d\ude00",
+   "out": "ser:'orlocal useradmin$&x.y@\ud83d\ude00"
+  },
+  {
+   "in": "us a/b",
+   "out": "us a/b"
+  },
+  {
+   "in": " account\t\u00e9x.yalicebob'for",
+   "out": " account\t\u00e9x.yalicebob'for"
+  },
+  {
+   "in": "userab\u00a00BETTERDESK_user",
+   "out": "userab\u00a00BETTERDESK_user"
+  },
+  {
+   "in": "@ser syncedor",
+   "out": "@ser syncedor"
+  },
+  {
+   "in": "0\u00a00local userroleboblocal user'",
+   "out": "0\u00a00local userroleboblocal user'"
+  },
+  {
+   "in": "admin",
+   "out": "admin"
+  },
+  {
+   "in": "aadminsynceduser_alice  credentials for",
+   "out": "aadminsynceduser_alice  credentials for"
+  },
+  {
+   "in": "admin'ab:$&'",
+   "out": "admin'ab:$&'"
+  },
+  {
+   "in": "forlocal userablocal user ",
+   "out": "forlocal userablocal user "
+  },
+  {
+   "in": "for \naccountcredentials for_a-'",
+   "out": "for \\naccountcredentials for_a-'"
+  },
+  {
+   "in": "role",
+   "out": "role"
+  },
+  {
+   "in": "a@$&",
+   "out": "a@$&"
+  },
+  {
+   "in": "local useraliceUser@aliceor-",
+   "out": "local useraliceUser@aliceor-"
+  },
+  {
+   "in": " usa/b",
+   "out": " usa/b"
+  },
+  {
+   "in": "synced-alice''account@bob",
+   "out": "synced-alice''account@bob"
+  },
+  {
+   "in": "$&adminbob",
+   "out": "$&adminbob"
+  },
+  {
+   "in": "BETTERDESK_ abBETTERDESK_\nusercredentials forus",
+   "out": "BETTERDESK_ abBETTERDESK_\\nusercredentials forus"
+  },
+  {
+   "in": "'abalicebobaususer",
+   "out": "'abalicebobaususer"
+  },
+  {
+   "in": "usroleadmin'userabcrypt",
+   "out": "usroleadmin'userabcrypt"
+  },
+  {
+   "in": "bob",
+   "out": "bob"
+  },
+  {
+   "in": "local user'$&credentials forab$&'$&local user",
+   "out": "local user'$&credentials forab$&'$&local user"
+  },
+  {
+   "in": "\n abBETTERDESK_@local user   ",
+   "out": "\\n abBETTERDESK_@local user   "
+  },
+  {
+   "in": "'a@",
+   "out": "'a@"
+  },
+  {
+   "in": "credentials for@ or$&bob_0'",
+   "out": "credentials for@ or$&bob_0'"
+  },
+  {
+   "in": "'_adminBETTERDESK_local user\ud83d\ude00a/b",
+   "out": "'_adminBETTERDESK_local user\ud83d\ude00a/b"
+  },
+  {
+   "in": "_a/b0bcrypt-a/b\tUser",
+   "out": "_a/b0bcrypt-a/b\tUser"
+  },
+  {
+   "in": "a/b\ud83d\ude00",
+   "out": "a/b\ud83d\ude00"
+  },
+  {
+   "in": ":admincredentials forus\u00e9 ",
+   "out": ":admincredentials forus\u00e9 "
+  },
+  {
+   "in": "accountor",
+   "out": "accountor"
+  },
+  {
+   "in": "usorUser\t\ud83d\ude00adminab\u00e9credentials for0",
+   "out": "usorUser\t\ud83d\ude00adminab\u00e9credentials for0"
+  },
+  {
+   "in": "-",
+   "out": "-"
+  },
+  {
+   "in": "\ud83d\ude00local user0\u00e9 sera",
+   "out": "\ud83d\ude00local user0\u00e9 sera"
+  },
+  {
+   "in": "bob-for0$&'",
+   "out": "bob-for0$&'"
+  },
+  {
+   "in": "alice",
+   "out": "alice"
+  },
+  {
+   "in": "\u00e9us\u00a0rolecredentials for",
+   "out": "\u00e9us\u00a0rolecredentials for"
+  },
+  {
+   "in": " userabsynced\ud83d\ude00x.ya/ba\u00a0",
+   "out": " userabsynced\ud83d\ude00x.ya/ba\u00a0"
+  },
+  {
+   "in": "'_:'synced bob",
+   "out": "'_:'synced bob"
+  },
+  {
+   "in": "\u00a0 ",
+   "out": "\u00a0 "
+  },
+  {
+   "in": "\taccount-bob' _seraccountcredentials for",
+   "out": "\taccount-bob' _seraccountcredentials for"
+  },
+  {
+   "in": "\u00a0role0'0@ser\u00a0syncedor",
+   "out": "\u00a0role0'0@ser\u00a0syncedor"
+  },
+  {
+   "in": "User \u00e9",
+   "out": "User \u00e9"
+  },
+  {
+   "in": "a Userx.ylocal useror",
+   "out": "a Userx.ylocal useror"
+  },
+  {
+   "in": " bob' BETTERDESK_",
+   "out": " bob' BETTERDESK_"
+  },
+  {
+   "in": "0\u00a0ab'adminbcryptforrole_",
+   "out": "0\u00a0ab'adminbcryptforrole_"
+  },
+  {
+   "in": "userUser_admin'\nsynced@",
+   "out": "userUser_admin'\\nsynced@"
+  },
+  {
+   "in": "credentials for0$& alice",
+   "out": "credentials for0$& alice"
+  },
+  {
+   "in": "ababcredentials for'usBETTERDESK_credentials forbcryptx.y\t",
+   "out": "ababcredentials for'usBETTERDESK_credentials forbcryptx.y\t"
+  },
+  {
+   "in": "_ credentials for'a/b'-alice",
+   "out": "_ credentials for'a/b'-alice"
+  },
+  {
+   "in": "0",
+   "out": "0"
+  },
+  {
+   "in": "  ",
+   "out": "  "
+  },
+  {
+   "in": "local user\tab\u00a0\ud83d\ude00",
+   "out": "local user\tab\u00a0\ud83d\ude00"
+  },
+  {
+   "in": "rolea'",
+   "out": "rolea'"
+  },
+  {
+   "in": "aabaccountlocal user",
+   "out": "aabaccountlocal user"
+  },
+  {
+   "in": "-syncedus",
+   "out": "-syncedus"
+  },
+  {
+   "in": "\t' aa/b$&us\ud83d\ude00",
+   "out": "\t' aa/b$&us\ud83d\ude00"
+  },
+  {
+   "in": "roleusBETTERDESK_'",
+   "out": "roleusBETTERDESK_'"
+  },
+  {
+   "in": "- x.yforuserbob\u00a0\nBETTERDESK_user",
+   "out": "- x.yforuserbob\u00a0\\nBETTERDESK_user"
+  },
+  {
+   "in": "for\u00e9ab$&' adminorbcryptalice",
+   "out": "for\u00e9ab$&' adminorbcryptalice"
+  },
+  {
+   "in": "User",
+   "out": "User"
+  },
+  {
+   "in": "x.y \n\u00e9\ud83d\ude00",
+   "out": "x.y \\n\u00e9\ud83d\ude00"
+  },
+  {
+   "in": " a",
+   "out": " a"
+  },
+  {
+   "in": "'\ud83d\ude00:credentials foradmin\u00e9a$&credentials for",
+   "out": "'\ud83d\ude00:credentials foradmin\u00e9a$&credentials for"
+  },
+  {
+   "in": "_user\u00a0or\n$&credentials for",
+   "out": "_user\u00a0or\\n$&credentials for"
+  },
+  {
+   "in": "\ud83d\ude00'",
+   "out": "\ud83d\ude00'"
+  },
+  {
+   "in": "\nadminus\u00e9account\u00a0a/ba/b _",
+   "out": "\\nadminus\u00e9account\u00a0a/ba/b _"
+  },
+  {
+   "in": "_'adminx.yuserser",
+   "out": "_'adminx.yuserser"
+  },
+  {
+   "in": "account local user",
+   "out": "account local user"
+  },
+  {
+   "in": "\u00a0@\t'\u00e9or",
+   "out": "\u00a0@\t'\u00e9or"
+  },
+  {
+   "in": "-forsynced@",
+   "out": "-forsynced@"
+  },
+  {
+   "in": "usaccount0credentials forusUser:",
+   "out": "usaccount0credentials forusUser:"
+  },
+  {
+   "in": "_\n\u00e9 ' user",
+   "out": "_\\n\u00e9 ' user"
+  },
+  {
+   "in": "_aa/ba",
+   "out": "_aa/ba"
+  },
+  {
+   "in": " \n",
+   "out": " \\n"
+  },
+  {
+   "in": "synced x.ycredentials foralice",
+   "out": "synced x.ycredentials foralice"
+  },
+  {
+   "in": "rolesynced'admin$&ab",
+   "out": "rolesynced'admin$&ab"
+  },
+  {
+   "in": "\u00a0orcredentials for-alice:foraccount'role",
+   "out": "\u00a0orcredentials for-alice:foraccount'role"
+  },
+  {
+   "in": "\ud83d\ude00\u00a0userab",
+   "out": "\ud83d\ude00\u00a0userab"
+  },
+  {
+   "in": "syncedusforalice''bcrypt_",
+   "out": "syncedusforalice''bcrypt_"
+  },
+  {
+   "in": "\n0User",
+   "out": "\\n0User"
+  },
+  {
+   "in": "0x.yrolex.yrole\n:$&",
+   "out": "0x.yrolex.yrole\\n:$&"
+  },
+  {
+   "in": "\u00a0$&forser'@bob0@",
+   "out": "\u00a0$&forser'@bob0@"
+  },
+  {
+   "in": "admin\ud83d\ude00",
+   "out": "admin\ud83d\ude00"
+  },
+  {
+   "in": "bobbcryptaccount\nus",
+   "out": "bobbcryptaccount\\nus"
+  },
+  {
+   "in": "_accountcredentials for'BETTERDESK_for\ud83d\ude00$&or",
+   "out": "_accountcredentials for'BETTERDESK_for\ud83d\ude00$&or"
+  },
+  {
+   "in": "aBETTERDESK_@ alicesyncedlocal useruserlocal user",
+   "out": "aBETTERDESK_@ alicesyncedlocal useruserlocal user"
+  },
+  {
+   "in": "'syncedUsercredentials for\ta/buser'",
+   "out": "'syncedUsercredentials for\ta/buser'"
+  },
+  {
+   "in": "user0",
+   "out": "user0"
+  },
+  {
+   "in": "\u00a0'@",
+   "out": "\u00a0'@"
+  },
+  {
+   "in": "\u00a0  ",
+   "out": "\u00a0  "
+  },
+  {
+   "in": "\tforfor",
+   "out": "\tforfor"
+  },
+  {
+   "in": "admin\ud83d\ude00\t:-ab",
+   "out": "admin\ud83d\ude00\t:-ab"
+  },
+  {
+   "in": "synced'BETTERDESK_user'aa\u00e9\t",
+   "out": "synced'BETTERDESK_user'aa\u00e9\t"
+  },
+  {
+   "in": "\nUser0x.y\ud83d\ude00'\ud83d\ude00a/b$&",
+   "out": "\\nUser0x.y\ud83d\ude00'\ud83d\ude00a/b$&"
+  },
+  {
+   "in": "\n:\u00a0UsersyncedBETTERDESK_ -synced ",
+   "out": "\\n:\u00a0UsersyncedBETTERDESK_ -synced "
+  },
+  {
+   "in": "$&local usersynced'_",
+   "out": "$&local usersynced'_"
+  },
+  {
+   "in": "bcryptabbcrypt'synced$&'",
+   "out": "bcryptabbcrypt'synced$&'"
+  },
+  {
+   "in": "@@\tBETTERDESK_usa/b'\u00a0BETTERDESK__",
+   "out": "@@\tBETTERDESK_usa/b'\u00a0BETTERDESK__"
+  },
+  {
+   "in": "bob_0aliceablocal user'\n\u00e9",
+   "out": "bob_0aliceablocal user'\\n\u00e9"
+  },
+  {
+   "in": "or\ud83d\ude00a/balice",
+   "out": "or\ud83d\ude00a/balice"
+  },
+  {
+   "in": "credentials forusercredentials for0a/b@ax.y \u00a0",
+   "out": "credentials forusercredentials for0a/b@ax.y \u00a0"
+  },
+  {
+   "in": "\u00a0for\u00a0local userforBETTERDESK_ser",
+   "out": "\u00a0for\u00a0local userforBETTERDESK_ser"
+  },
+  {
+   "in": "\t$&@bob",
+   "out": "\t$&@bob"
+  },
+  {
+   "in": "rolebcrypt\u00e9admin'",
+   "out": "rolebcrypt\u00e9admin'"
+  },
+  {
+   "in": "user\ud83d\ude00adminuserbcrypt\u00a0synced",
+   "out": "user\ud83d\ude00adminuserbcrypt\u00a0synced"
+  },
+  {
+   "in": "_credentials for'",
+   "out": "_credentials for'"
+  },
+  {
+   "in": "   \u00e9alicerole",
+   "out": "   \u00e9alicerole"
+  },
+  {
+   "in": "x.ycredentials forx.ysynced",
+   "out": "x.ycredentials forx.ysynced"
+  },
+  {
+   "in": "BETTERDESK_x.y",
+   "out": "BETTERDESK_x.y"
+  },
+  {
+   "in": " bcrypt0\n",
+   "out": " bcrypt0\\n"
+  },
+  {
+   "in": "'bob'or_ ",
+   "out": "'b***b'or_ "
+  },
+  {
+   "in": "serforlocal usera_'@ab",
+   "out": "serforlocal usera_'@ab"
+  },
+  {
+   "in": "a: syncedfor0seradmin\u00e9",
+   "out": "a: syncedfor0seradmin\u00e9"
+  },
+  {
+   "in": "BETTERDESK_credentials forab'credentials for\ud83d\ude00 :",
+   "out": "BETTERDESK_credentials forab'credentials for\ud83d\ude00 :"
+  },
+  {
+   "in": "bob:a/bx.ybcrypt'us$&user:",
+   "out": "bob:a/bx.ybcrypt'us$&user:"
+  },
+  {
+   "in": "or",
+   "out": "or"
+  },
+  {
+   "in": "us\u00e9-local user:'",
+   "out": "us\u00e9-local user:'"
+  },
+  {
+   "in": "local usera/baaliceroleroleabBETTERDESK_'ser",
+   "out": "local usera/baaliceroleroleabBETTERDESK_'ser"
+  },
+  {
+   "in": "forBETTERDESK_a/b",
+   "out": "forBETTERDESK_a/b"
+  },
+  {
+   "in": "\n\n local user a/b",
+   "out": "\\n\\n local user a/b"
+  },
+  {
+   "in": "' ",
+   "out": "' "
+  },
+  {
+   "in": "a/broleusalicex.yalice' alice",
+   "out": "a/broleusalicex.yalice' alice"
+  },
+  {
+   "in": "'admin'bobUser\u00e9x.y\ud83d\ude00''",
+   "out": "'admin'bobUser\u00e9x.y\ud83d\ude00''"
+  },
+  {
+   "in": "\ud83d\ude00  bob$&",
+   "out": "\ud83d\ude00  bob$&"
+  },
+  {
+   "in": "-User0x.yrole",
+   "out": "-User0x.yrole"
+  },
+  {
+   "in": "absynced",
+   "out": "absynced"
+  },
+  {
+   "in": "credentials for'credentials forx.y",
+   "out": "credentials for'credentials forx.y"
+  },
+  {
+   "in": "local userbob_local userus",
+   "out": "local userbob_local userus"
+  },
+  {
+   "in": "orus credentials for",
+   "out": "orus credentials for"
+  },
+  {
+   "in": "'\n",
+   "out": "'\\n"
+  },
+  {
+   "in": "'\t-roleUseradmin",
+   "out": "'\t-roleUseradmin"
+  },
+  {
+   "in": "forx.y\ud83d\ude00bcrypt",
+   "out": "forx.y\ud83d\ude00bcrypt"
+  },
+  {
+   "in": ":",
+   "out": ":"
+  },
+  {
+   "in": "for ",
+   "out": "for "
+  },
+  {
+   "in": "or$&credentials for@account' syncedalice",
+   "out": "or$&credentials for@account' syncedalice"
+  },
+  {
+   "in": "user'a",
+   "out": "user'a"
+  },
+  {
+   "in": "\ud83d\ude00\u00a0\t'",
+   "out": "\ud83d\ude00\u00a0\t'"
+  },
+  {
+   "in": "$&\u00e9'accountab: ",
+   "out": "$&\u00e9'accountab: "
+  },
+  {
+   "in": "roleBETTERDESK_$&\u00e9  0bob",
+   "out": "roleBETTERDESK_$&\u00e9  0bob"
+  },
+  {
+   "in": " x.ylocal useraccountseruserx.y bob ",
+   "out": " x.ylocal useraccountseruserx.y bob "
+  },
+  {
+   "in": "@'\taliceaab\ud83d\ude00x.y@'",
+   "out": "@'\taliceaab\ud83d\ude00x.y@'"
+  },
+  {
+   "in": "\ud83d\ude00 local user 0  \ud83d\ude00@'",
+   "out": "\ud83d\ude00 local user 0  \ud83d\ude00@'"
+  },
+  {
+   "in": " for\t 'or@alice",
+   "out": " for\t 'or@alice"
+  },
+  {
+   "in": "0aliceuserbcryptbcrypt",
+   "out": "0aliceuserbcryptbcrypt"
+  },
+  {
+   "in": "'aborUser user'\t:",
+   "out": "'aborUser user'\t:"
+  },
+  {
+   "in": "local user$& 0'acredentials forus alice",
+   "out": "local user$& 0'acredentials forus alice"
+  },
+  {
+   "in": "bcryptx.y'",
+   "out": "bcryptx.y'"
+  },
+  {
+   "in": "role@0'for$&User or",
+   "out": "role@0'for$&User or"
+  },
+  {
+   "in": "\nuser'\u00a0",
+   "out": "\\nuser'\u00a0"
+  },
+  {
+   "in": "fora/b_BETTERDESK_ab",
+   "out": "fora/b_BETTERDESK_ab"
+  },
+  {
+   "in": "User\ud83d\ude00BETTERDESK_'",
+   "out": "User\ud83d\ude00BETTERDESK_'"
+  },
+  {
+   "in": "UserororBETTERDESK_bob",
+   "out": "UserororBETTERDESK_bob"
+  },
+  {
+   "in": " 'alicebob\t credentials forabcryptlocal user",
+   "out": " 'alicebob\t credentials forabcryptlocal user"
+  },
+  {
+   "in": "accountforsynced'user ",
+   "out": "accountforsynced'user "
+  },
+  {
+   "in": "user",
+   "out": "user"
+  },
+  {
+   "in": "x.yalicebcrypt0a/boradmin",
+   "out": "x.yalicebcrypt0a/boradmin"
+  },
+  {
+   "in": "\nBETTERDESK_:bcrypt",
+   "out": "\\nBETTERDESK_:bcrypt"
+  },
+  {
+   "in": "\tlocal userus0$&a/b:'0",
+   "out": "\tlocal userus0$&a/b:'0"
+  },
+  {
+   "in": "'for\t:aus$&\u00a0\n@",
+   "out": "'for\t:aus$&\u00a0\\n@"
+  },
+  {
+   "in": ":us",
+   "out": ":us"
+  },
+  {
+   "in": "alicesynced@bob",
+   "out": "alicesynced@bob"
+  },
+  {
+   "in": "bcryptrolea",
+   "out": "bcryptrolea"
+  },
+  {
+   "in": "$&\u00e9for\u00e90- account User",
+   "out": "$&\u00e9for\u00e90- account User"
+  },
+  {
+   "in": "credentials forus \t'x.y-$&",
+   "out": "credentials forus \t'x.y-$&"
+  },
+  {
+   "in": "alicesyncedsercredentials foraccount'",
+   "out": "alicesyncedsercredentials foraccount'"
+  },
+  {
+   "in": "BETTERDESK_bcrypt$&'serroleBETTERDESK_bobuserfor",
+   "out": "BETTERDESK_bcrypt$&'serroleBETTERDESK_bobuserfor"
+  },
+  {
+   "in": "serbcryptalice-bcrypt'@ser",
+   "out": "serbcryptalice-bcrypt'@ser"
+  },
+  {
+   "in": "x.yUser \ud83d\ude00bcrypt\u00a0ab@",
+   "out": "x.yUser \ud83d\ude00bcrypt\u00a0ab@"
+  },
+  {
+   "in": "\u00e9or'user",
+   "out": "\u00e9or'user"
+  },
+  {
+   "in": "\n'",
+   "out": "\\n'"
+  },
+  {
+   "in": "\u00a0serser@bob0\u00e9for'",
+   "out": "\u00a0serser@bob0\u00e9for'"
+  },
+  {
+   "in": "\u00e9accountrolea/b",
+   "out": "\u00e9accountrolea/b"
+  },
+  {
+   "in": "serroleaccount\t",
+   "out": "serroleaccount\t"
+  },
+  {
+   "in": "\u00a0syncedrole",
+   "out": "\u00a0syncedrole"
+  },
+  {
+   "in": "accountx.ybcrypt\n\tor bob",
+   "out": "accountx.ybcrypt\\n\tor bob"
+  },
+  {
+   "in": "orUserx.y\ud83d\ude00acredentials foralice",
+   "out": "orUserx.y\ud83d\ude00acredentials foralice"
+  },
+  {
+   "in": "adminalice-$&",
+   "out": "adminalice-$&"
+  },
+  {
+   "in": "x.y_'",
+   "out": "x.y_'"
+  },
+  {
+   "in": "User :roleaccount",
+   "out": "User :roleaccount"
+  },
+  {
+   "in": "\t\t ",
+   "out": "\t\t "
+  },
+  {
+   "in": " bcryptUser\ud83d\ude00",
+   "out": " bcryptUser\ud83d\ude00"
+  },
+  {
+   "in": "-\na/b@-ab ",
+   "out": "-\\na/b@-ab "
+  },
+  {
+   "in": "user'admin",
+   "out": "user'admin"
+  },
+  {
+   "in": "\ud83d\ude00account\u00a0\u00a0User\ud83d\ude00",
+   "out": "\ud83d\ude00account\u00a0\u00a0User\ud83d\ude00"
+  },
+  {
+   "in": "0-account'\u00e9user",
+   "out": "0-account'\u00e9user"
+  },
+  {
+   "in": "bob'@ bcryptaccount\u00a0",
+   "out": "bob'@ bcryptaccount\u00a0"
+  },
+  {
+   "in": ":$&BETTERDESK_\t0'Userlocal useradminser",
+   "out": ":$&BETTERDESK_\t0'Userlocal useradminser"
+  },
+  {
+   "in": "accountser'\u00e9_syncedusUser",
+   "out": "accountser'\u00e9_syncedusUser"
+  },
+  {
+   "in": "_  0'aBETTERDESK_ ",
+   "out": "_  0'aBETTERDESK_ "
+  },
+  {
+   "in": "user@for: -a\ud83d\ude00us",
+   "out": "user@for: -a\ud83d\ude00us"
+  },
+  {
+   "in": "alice\u00e9\u00e9 synced:or",
+   "out": "alice\u00e9\u00e9 synced:or"
+  },
+  {
+   "in": "accountroleaccount",
+   "out": "accountroleaccount"
+  },
+  {
+   "in": "local user'ser",
+   "out": "local user'ser"
+  },
+  {
+   "in": "user\u00a0\u00e9role0fora/bcredentials for\u00a0\n",
+   "out": "user\u00a0\u00e9role0fora/bcredentials for\u00a0\\n"
+  },
+  {
+   "in": "'@':bobBETTERDESK_ @",
+   "out": "'@':bobBETTERDESK_ @"
+  },
+  {
+   "in": " :",
+   "out": " :"
+  },
+  {
+   "in": "'a/ba$&$&credentials forbobcredentials for",
+   "out": "'a/ba$&$&credentials forbobcredentials for"
+  },
+  {
+   "in": "aaccount",
+   "out": "aaccount"
+  },
+  {
+   "in": "or@0:bob",
+   "out": "or@0:bob"
+  },
+  {
+   "in": "auser@",
+   "out": "auser@"
+  },
+  {
+   "in": "credentials foraccount\u00a0alicea/brole ",
+   "out": "credentials foraccount\u00a0alicea/brole "
+  },
+  {
+   "in": "\u00a0user\tbcrypt-alicesynced\u00e9'$&",
+   "out": "\u00a0user\tbcrypt-alicesynced\u00e9'$&"
+  }
+ ],
+ "lines": [
+  {
+   "prefix": null,
+   "level": "info",
+   "args": [
+    "plain message"
+   ],
+   "stream": "log",
+   "line": "plain message"
+  },
+  {
+   "prefix": null,
+   "level": "warn",
+   "args": [
+    "[Session] IP change during session: loginIp=1.2.3.4 currentIp=5.6.7.8 ua=x userId=5"
+   ],
+   "stream": "warn",
+   "line": "[Session] IP change during session: loginIp=1.2.3.4 currentIp=5.6.7.8 ua=x userId=5"
+  },
+  {
+   "prefix": null,
+   "level": "warn",
+   "args": [
+    "[Session] endCurrentSession failed:",
+    "database is locked"
+   ],
+   "stream": "warn",
+   "line": "[Session] endCurrentSession failed: database is locked"
+  },
+  {
+   "prefix": "AUTH",
+   "level": "info",
+   "args": [
+    "[AUTH] Login failed: user 'administrator' not found in database"
+   ],
+   "stream": "log",
+   "line": "[AUTH] [AUTH] Login failed: user 'a***r' not found in database"
+  },
+  {
+   "prefix": "AUTH",
+   "level": "warn",
+   "args": [
+    "[AUTH] Failed to migrate password hash for user id",
+    12,
+    ":",
+    "disk full"
+   ],
+   "stream": "warn",
+   "line": "[AUTH] [AUTH] Failed to migrate password hash for user id 12 : disk full"
+  },
+  {
+   "prefix": "AUTH",
+   "level": "error",
+   "args": [
+    "[AUTH] CRITICAL: createUser succeeded but getUserByUsername returned null for default admin"
+   ],
+   "stream": "error",
+   "line": "[AUTH] [AUTH] CRITICAL: createUser succeeded but getUserByUsername returned null for default admin"
+  },
+  {
+   "prefix": "REMOTE",
+   "level": "debug",
+   "args": [
+    "Connection snapshot from health failed:",
+    "timeout of 5000ms exceeded"
+   ],
+   "stream": "log",
+   "line": "[REMOTE] Connection snapshot from health failed: timeout of 5000ms exceeded"
+  },
+  {
+   "prefix": "REMOTE",
+   "level": "info",
+   "args": [
+    "Guest remote deny (explicit query, invalid/expired/not allowed):",
+    "123456789"
+   ],
+   "stream": "log",
+   "line": "[REMOTE] Guest remote deny (explicit query, invalid/expired/not allowed): 123456789"
+  },
+  {
+   "prefix": "REMOTE",
+   "level": "warn",
+   "args": [
+    "Guest grant validate failed:",
+    "no grant for 'alice'\nforged line"
+   ],
+   "stream": "warn",
+   "line": "[REMOTE] Guest grant validate failed: no grant for 'a***e'\\nforged line"
+  },
+  {
+   "prefix": "X",
+   "level": "info",
+   "args": [
+    "a",
+    "",
+    "b"
+   ],
+   "stream": "log",
+   "line": "[X] a  b"
+  },
+  {
+   "prefix": "X",
+   "level": "info",
+   "args": [],
+   "stream": "log",
+   "line": "[X]"
+  },
+  {
+   "prefix": null,
+   "level": "info",
+   "args": [],
+   "stream": "log",
+   "line": ""
+  },
+  {
+   "prefix": null,
+   "level": "info",
+   "args": [
+    ""
+   ],
+   "stream": "log",
+   "line": ""
+  },
+  {
+   "prefix": "X",
+   "level": "info",
+   "args": [
+    "numbers",
+    0,
+    -1,
+    1.5,
+    1e+21,
+    true,
+    false
+   ],
+   "stream": "log",
+   "line": "[X] numbers 0 -1 1.5 1e+21 true false"
+  },
+  {
+   "prefix": "X",
+   "level": "info",
+   "args": [
+    "for 'alice'",
+    "for 'bob'",
+    "'carol'"
+   ],
+   "stream": "log",
+   "line": "[X] for 'a***e' for 'b***b' 'c***l'"
+  },
+  {
+   "prefix": "X",
+   "level": "info",
+   "args": [
+    "two\r\nlines",
+    "and\u2028more"
+   ],
+   "stream": "log",
+   "line": "[X] two\\n\\nlines and\\nmore"
+  },
+  {
+   "prefix": "A B",
+   "level": "error",
+   "args": [
+    "user 'dave' failed"
+   ],
+   "stream": "error",
+   "line": "[A B] user 'd***e' failed"
+  },
+  {
+   "prefix": "",
+   "level": "info",
+   "args": [
+    "an empty prefix is no prefix"
+   ],
+   "stream": "log",
+   "line": "an empty prefix is no prefix"
+  },
+  {
+   "prefix": "X",
+   "level": "info",
+   "args": [
+    "100%s",
+    "not a format",
+    "%d"
+   ],
+   "stream": "log",
+   "line": "[X] 100%s not a format %d"
+  }
+ ]
+}

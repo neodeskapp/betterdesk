@@ -14,6 +14,12 @@ import (
 	"github.com/unitronix/betterdesk-server/logging"
 )
 
+// Proxy forwards requests to the Node console.
+type Proxy struct {
+	forward   *httputil.ReverseProxy
+	transport *http.Transport
+}
+
 // New returns a handler that forwards every request to upstream.
 //
 // The Node console must see the same client the Go console sees, so the
@@ -21,13 +27,13 @@ import (
 // worked out: one address in X-Forwarded-For, the scheme and the host.
 // Node trusts these because it listens on loopback only while it runs
 // behind Go (TRUST_PROXY=loopback).
-func New(upstream *url.URL, trust httpx.TrustProxy) http.Handler {
+func New(upstream *url.URL, trust httpx.TrustProxy) *Proxy {
 	transport := &http.Transport{
 		MaxIdleConns:        256,
 		MaxIdleConnsPerHost: 256,
 		IdleConnTimeout:     90 * time.Second,
 	}
-	return &httputil.ReverseProxy{
+	forward := &httputil.ReverseProxy{
 		Transport:     transport,
 		FlushInterval: -1,
 		Rewrite: func(pr *httputil.ProxyRequest) {
@@ -51,4 +57,15 @@ func New(upstream *url.URL, trust httpx.TrustProxy) http.Handler {
 			_ = json.NewEncoder(w).Encode(map[string]any{"success": false, "error": "Console backend unavailable"})
 		},
 	}
+	return &Proxy{forward: forward, transport: transport}
+}
+
+// ServeHTTP forwards the request and copies the answer back.
+func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	p.forward.ServeHTTP(w, r)
+}
+
+// Close drops the idle connections to the Node console.
+func (p *Proxy) Close() {
+	p.transport.CloseIdleConnections()
 }

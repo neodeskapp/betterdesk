@@ -3,25 +3,72 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
+	"strconv"
 
+	"github.com/unitronix/betterdesk-server/api"
+	"github.com/unitronix/betterdesk-server/config"
 	"github.com/unitronix/betterdesk-server/console"
 	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/unitronix/betterdesk-server/db"
+	"github.com/unitronix/betterdesk-server/events"
 )
 
 // startConsole starts the web console on its own port when CONSOLE_PORT is
-// set. The returned function stops it.
-func startConsole(ctx context.Context) (func(), error) {
-	cfg, err := consoleconfig.Load(os.Getenv)
+// set. The console works on the server's database: PostgreSQL through the
+// server's pool, SQLite through its own connections to the same file. The
+// returned function stops the console and everything it started.
+func startConsole(ctx context.Context, cfg *config.Config, database db.Database, apiSrv *api.Server, bus *events.Bus) (func(), error) {
+	ccfg, err := consoleconfig.Load(os.Getenv)
 	if err != nil {
 		return nil, fmt.Errorf("console configuration: %w", err)
 	}
-	if cfg.Port == 0 {
+	if ccfg.Port == 0 {
 		return func() {}, nil
 	}
-	srv := console.New(cfg)
-	if err := srv.Start(ctx); err != nil {
+	if os.Getenv("BETTERDESK_API_URL") == "" && os.Getenv("HBBS_API_URL") == "" {
+		ccfg.APIHost = net.JoinHostPort("127.0.0.1", strconv.Itoa(cfg.APIPort))
+	}
+
+	sdb, err := openConsoleStore(cfg, database)
+	if err != nil {
 		return nil, err
 	}
-	return srv.Stop, nil
+	if err := sdb.Migrate(ctx); err != nil {
+		_ = sdb.Close()
+		return nil, fmt.Errorf("console schema: %w", err)
+	}
+	srv, err := console.New(ctx, console.Options{
+		Config: ccfg,
+		Store:  sdb,
+		API:    apiSrv.InternalHandler(),
+		Events: bus,
+		Roles:  database,
+	})
+	if err != nil {
+		_ = sdb.Close()
+		return nil, err
+	}
+	if err := srv.Start(ctx); err != nil {
+		_ = sdb.Close()
+		return nil, err
+	}
+	return func() {
+		srv.Stop()
+		_ = sdb.Close()
+	}, nil
+}
+
+// openConsoleStore opens the console's access to the server's database.
+func openConsoleStore(cfg *config.Config, database db.Database) (*store.DB, error) {
+	if pg, ok := database.(*db.PostgresDB); ok {
+		return store.OpenPostgres(pg.Pool()), nil
+	}
+	sdb, err := store.OpenSQLite(cfg.DBPath)
+	if err != nil {
+		return nil, fmt.Errorf("console database: %w", err)
+	}
+	return sdb, nil
 }

@@ -613,7 +613,7 @@ func main() {
 		}
 		defer adminSrv.Stop()
 
-		stopConsole, err := startConsole(ctx)
+		stopConsole, err := startConsole(ctx, cfg, database, apiSrv, sig.EventBus())
 		if err != nil {
 			log.Fatalf("Failed to start console: %v", err)
 		}

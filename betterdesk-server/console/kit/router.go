@@ -1,13 +1,15 @@
-// Package kit is what every console route group builds on: the route
-// table, the middleware that guards routes, and the request helpers.
 package kit
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
 	"path"
 	"strings"
+	"unicode/utf8"
+
+	"github.com/unitronix/betterdesk-server/console/httpx"
 )
 
 // Middleware wraps a handler.
@@ -17,32 +19,75 @@ type Middleware func(http.Handler) http.Handler
 type Route struct {
 	// Method is the HTTP method, or "" for every method.
 	Method string
-	// Path is the pattern in http.ServeMux syntax: /api/devices/{id},
+	// Path is the whole pattern, mount included: /api/devices/{id},
 	// /files/{rest...}.
 	Path string
-
-	segments []string
-	wildcard bool
-	literals int
+	// Mount is the prefix the route's group was mounted at, "" for the
+	// root.
+	Mount string
 }
 
-// Router is the console's route table. It matches the way the console's
-// addresses have always matched: static parts of a path in any letter case,
-// and with or without one trailing slash. A path that matches no route is
-// reported by Lookup, so the caller decides what answers it.
+type route struct {
+	Route
+	segments []string
+	wildcard bool
+	handler  http.Handler
+}
+
+// table is the list of routes a Router and its mounts share.
+type table struct {
+	routes   []*route
+	badParam func(w http.ResponseWriter, r *http.Request, err error)
+}
+
+// Router is a route table of the console. It matches the way the
+// console's addresses have always matched:
+//
+//   - Routes are tried in the order they were added, and the first one
+//     whose method and path fit answers. A more specific pattern added
+//     later does not win.
+//   - Static parts of a path match in any letter case, and a path matches
+//     with or without one slash at its end.
+//   - A {name} part matches one path segment that is not empty and is
+//     handed on decoded (r.PathValue). {name...} at the end matches the
+//     rest of the path, which may be empty.
+//   - A GET route also answers HEAD.
+//   - An OPTIONS request to a path that only has routes for other methods
+//     is answered with the list of those methods.
+//
+// A handler, or a middleware in front of it, can decline a request with
+// PassOn. The router then tries the next route that fits, and reports the
+// request as unanswered when there is none.
 type Router struct {
-	mux    *http.ServeMux
-	routes []*Route
+	table  *table
+	prefix string
 }
 
 // NewRouter returns an empty route table.
 func NewRouter() *Router {
-	return &Router{mux: http.NewServeMux()}
+	return &Router{table: &table{}}
+}
+
+// OnBadParam sets what answers a request whose path parameter does not
+// decode to text (percent-encoded bytes that are not UTF-8). Without it
+// the answer is a plain 400.
+func (rt *Router) OnBadParam(fn func(w http.ResponseWriter, r *http.Request, err error)) {
+	rt.table.badParam = fn
+}
+
+// Mount returns a router that adds its routes to this table below prefix,
+// the way app.use(prefix, router) did: Mount("/api/bd").Get("/commands")
+// answers /api/bd/commands, and a route "/" answers the prefix itself.
+// Handlers read the prefix with MountPath and the rest with RoutePath.
+func (rt *Router) Mount(prefix string) *Router {
+	if !strings.HasPrefix(prefix, "/") || strings.HasSuffix(prefix, "/") {
+		panic(fmt.Sprintf("kit: mount %q must start with / and not end with one", prefix))
+	}
+	return &Router{table: rt.table, prefix: rt.prefix + prefix}
 }
 
 // Handle adds a route. The middleware runs in the order given, before h.
-// method is "" for every method. It panics on a pattern the mux refuses,
-// such as a duplicate, like http.ServeMux does.
+// method is "" for every method.
 func (rt *Router) Handle(method, pattern string, h http.Handler, mw ...Middleware) {
 	if !strings.HasPrefix(pattern, "/") {
 		panic(fmt.Sprintf("kit: route %q must start with /", pattern))
@@ -50,28 +95,22 @@ func (rt *Router) Handle(method, pattern string, h http.Handler, mw ...Middlewar
 	for i := len(mw) - 1; i >= 0; i-- {
 		h = mw[i](h)
 	}
-	route := &Route{Method: method, Path: pattern}
-	if pattern != "/" {
-		route.segments = strings.Split(strings.TrimPrefix(pattern, "/"), "/")
+	full := rt.prefix + pattern
+	if pattern == "/" && rt.prefix != "" {
+		full = rt.prefix
 	}
-	for _, seg := range route.segments {
-		switch {
-		case strings.HasPrefix(seg, "{") && strings.HasSuffix(seg, "...}"):
-			route.wildcard = true
-		case !isParam(seg):
-			route.literals++
+	entry := &route{Route: Route{Method: method, Path: full, Mount: rt.prefix}, handler: h}
+	if full != "/" {
+		entry.segments = strings.Split(strings.TrimPrefix(full, "/"), "/")
+	}
+	for i, seg := range entry.segments {
+		rest := strings.HasPrefix(seg, "{") && strings.HasSuffix(seg, "...}")
+		if rest && i != len(entry.segments)-1 {
+			panic(fmt.Sprintf("kit: route %q has {name...} before its end", full))
 		}
+		entry.wildcard = entry.wildcard || rest
 	}
-	muxPattern := pattern
-	if pattern == "/" {
-		// "/" alone would match every path
-		muxPattern = "/{$}"
-	}
-	if method != "" {
-		muxPattern = method + " " + muxPattern
-	}
-	rt.mux.Handle(muxPattern, h)
-	rt.routes = append(rt.routes, route)
+	rt.table.routes = append(rt.table.routes, entry)
 }
 
 // Get adds a GET route (HEAD requests reach it too).
@@ -99,85 +138,221 @@ func (rt *Router) Delete(pattern string, h http.HandlerFunc, mw ...Middleware) {
 	rt.Handle(http.MethodDelete, pattern, h, mw...)
 }
 
-// Routes lists what was registered, in order.
+// All adds a route for every method, like router.all.
+func (rt *Router) All(pattern string, h http.HandlerFunc, mw ...Middleware) {
+	rt.Handle("", pattern, h, mw...)
+}
+
+// Routes lists what was added to the table, in order.
 func (rt *Router) Routes() []Route {
-	out := make([]Route, len(rt.routes))
-	for i, r := range rt.routes {
-		out[i] = Route{Method: r.Method, Path: r.Path}
+	out := make([]Route, len(rt.table.routes))
+	for i, r := range rt.table.routes {
+		out[i] = r.Route
 	}
 	return out
 }
 
-// Lookup finds the route for a request. ok is false when no route has this
-// method and path; then nothing was written and the caller answers.
-func (rt *Router) Lookup(r *http.Request) (h http.Handler, ok bool) {
+// Match reports whether the table has a route for the request's method
+// and path. An OPTIONS request matches every path that has a route.
+func (rt *Router) Match(r *http.Request) bool {
+	parts, trailing, ok := splitPath(r)
+	if !ok {
+		return false
+	}
+	for _, entry := range rt.table.routes {
+		if entry.matches(parts, trailing) && (entry.allows(r.Method) || r.Method == http.MethodOptions) {
+			return true
+		}
+	}
+	return false
+}
+
+// Serve answers the request from the table and reports whether it did. On
+// false nothing was written: no route fits, or every route that fits
+// passed the request on.
+func (rt *Router) Serve(w http.ResponseWriter, r *http.Request) bool {
+	parts, trailing, ok := splitPath(r)
+	if !ok {
+		return false
+	}
+	var allow []string
+	for _, entry := range rt.table.routes {
+		if !entry.matches(parts, trailing) {
+			continue
+		}
+		if !entry.allows(r.Method) {
+			if r.Method == http.MethodOptions {
+				allow = entry.addMethods(allow)
+			}
+			continue
+		}
+		values, err := entry.values(parts)
+		if err != nil {
+			rt.refuseParam(w, r, err)
+			return true
+		}
+		state := &routeState{mount: entry.Mount}
+		attempt := r.WithContext(context.WithValue(r.Context(), routeKey{}, state))
+		for name, value := range values {
+			attempt.SetPathValue(name, value)
+		}
+		entry.handler.ServeHTTP(w, attempt)
+		if !state.passed {
+			return true
+		}
+	}
+	if len(allow) > 0 {
+		list := strings.Join(allow, ",")
+		w.Header().Set("Allow", list)
+		httpx.WriteBody(w, r, http.StatusOK, "text/html; charset=utf-8", []byte(list))
+		return true
+	}
+	return false
+}
+
+func (rt *Router) refuseParam(w http.ResponseWriter, r *http.Request, err error) {
+	if rt.table.badParam != nil {
+		rt.table.badParam(w, r, err)
+		return
+	}
+	http.Error(w, err.Error(), http.StatusBadRequest)
+}
+
+type routeKey struct{}
+
+// routeState is what the router keeps about one try of a route.
+type routeState struct {
+	mount  string
+	passed bool
+}
+
+// PassOn declines the request: the router goes on to the next route that
+// fits it, as next('route') and a router's next() did. Call it before
+// anything is written, and return right after. Outside a route it does
+// nothing.
+//
+// In the early stage this is how a client API route leaves a request
+// without a bearer token to the console route with the same address. In
+// the normal stage it is how a route steps aside for a later one.
+func PassOn(_ http.ResponseWriter, r *http.Request) {
+	if state, ok := r.Context().Value(routeKey{}).(*routeState); ok {
+		state.passed = true
+	}
+}
+
+// MountPath is the prefix the route answering r was mounted at
+// (req.baseUrl in the old console), "" for a route at the root.
+func MountPath(r *http.Request) string {
+	if state, ok := r.Context().Value(routeKey{}).(*routeState); ok {
+		return state.mount
+	}
+	return ""
+}
+
+// RoutePath is the request path below the mount, as the client wrote it
+// (req.path inside a mounted router in the old console). It always starts
+// with a slash.
+func RoutePath(r *http.Request) string {
+	raw := httpx.RawPath(r)
+	mount := MountPath(r)
+	if mount == "" {
+		return raw
+	}
+	if rest, _, ok := httpx.StripMount(raw, mount); ok {
+		return rest
+	}
+	return raw
+}
+
+// OnMount lets a route answer only when its group is mounted at prefix
+// and passes the request on otherwise. A group that is mounted twice uses
+// it for the routes that belong to one of the two addresses.
+func OnMount(prefix string) Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if MountPath(r) != prefix {
+				PassOn(w, r)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// Digits lets a route answer only when the path parameter name is made of
+// digits, and passes the request on otherwise: the pattern :id(\d+).
+func Digits(name string) Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			value := r.PathValue(name)
+			ok := value != ""
+			for i := 0; i < len(value) && ok; i++ {
+				ok = value[i] >= '0' && value[i] <= '9'
+			}
+			if !ok {
+				PassOn(w, r)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// splitPath cuts the request path into its parts. ok is false for a path
+// no route can match: one with an empty part or a dot segment.
+func splitPath(r *http.Request) (parts []string, trailing, ok bool) {
 	escaped := r.URL.EscapedPath()
-	trailing := len(escaped) > 1 && strings.HasSuffix(escaped, "/")
+	trailing = len(escaped) > 1 && strings.HasSuffix(escaped, "/")
 	if trailing {
 		escaped = escaped[:len(escaped)-1]
 	}
 	if escaped == "" || path.Clean(escaped) != escaped {
-		return nil, false
+		return nil, false, false
 	}
-	var parts []string
 	if escaped != "/" {
 		parts = strings.Split(strings.TrimPrefix(escaped, "/"), "/")
 	}
-	route := rt.best(r.Method, parts, trailing)
-	if route == nil {
-		return nil, false
-	}
-	canonical := route.canonical(parts)
-	if canonical == r.URL.EscapedPath() {
-		return rt.mux, true
-	}
-	unescaped, err := url.PathUnescape(canonical)
-	if err != nil {
-		return nil, false
-	}
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		clone := req.Clone(req.Context())
-		clone.URL.Path = unescaped
-		clone.URL.RawPath = canonical
-		rt.mux.ServeHTTP(w, clone)
-	}), true
+	return parts, trailing, true
 }
 
-// best picks the matching route with the most static parts, the way the mux
-// prefers the most specific pattern.
-func (rt *Router) best(method string, parts []string, trailing bool) *Route {
-	var found *Route
-	for _, route := range rt.routes {
-		if !route.allows(method) || !route.matches(parts, trailing) {
-			continue
-		}
-		if found == nil || route.literals > found.literals || (route.literals == found.literals && found.wildcard && !route.wildcard) {
-			found = route
-		}
-	}
-	return found
+func (entry *route) allows(method string) bool {
+	return entry.Method == "" || entry.Method == method ||
+		(entry.Method == http.MethodGet && method == http.MethodHead)
 }
 
-func (route *Route) allows(method string) bool {
-	return route.Method == "" || route.Method == method ||
-		(route.Method == http.MethodGet && method == http.MethodHead)
+// addMethods adds the route's methods to the list an OPTIONS request is
+// answered with.
+func (entry *route) addMethods(list []string) []string {
+	add := func(method string) {
+		for _, have := range list {
+			if have == method {
+				return
+			}
+		}
+		list = append(list, method)
+	}
+	add(entry.Method)
+	if entry.Method == http.MethodGet {
+		add(http.MethodHead)
+	}
+	return list
 }
 
 // matches reports whether the path parts fit the route. trailing says the
 // path ended with a slash: "/files/" fits "/files/{rest...}" with an empty
 // rest, "/files" does not.
-func (route *Route) matches(parts []string, trailing bool) bool {
-	if route.wildcard {
-		fixed := len(route.segments) - 1
+func (entry *route) matches(parts []string, trailing bool) bool {
+	if entry.wildcard {
+		fixed := len(entry.segments) - 1
 		if len(parts) < fixed || (len(parts) == fixed && !trailing) {
 			return false
 		}
 		parts = parts[:fixed]
-	} else if len(parts) != len(route.segments) {
+	} else if len(parts) != len(entry.segments) {
 		return false
 	}
 	for i, part := range parts {
-		seg := route.segments[i]
+		seg := entry.segments[i]
 		if isParam(seg) {
 			if part == "" {
 				return false
@@ -191,27 +366,49 @@ func (route *Route) matches(parts []string, trailing bool) bool {
 	return true
 }
 
-// canonical is the request path as the mux expects it: static parts spelled
-// as registered, parameters as sent.
-func (route *Route) canonical(parts []string) string {
-	if len(route.segments) == 0 {
-		return "/"
+// values decodes the path parameters of a path that fits the route.
+func (entry *route) values(parts []string) (map[string]string, error) {
+	var out map[string]string
+	set := func(name, raw string) error {
+		value, err := url.PathUnescape(raw)
+		if err != nil || !utf8.ValidString(value) {
+			return &ParamError{Raw: raw}
+		}
+		if out == nil {
+			out = map[string]string{}
+		}
+		out[name] = value
+		return nil
 	}
-	var b strings.Builder
-	for i, part := range parts {
-		b.WriteByte('/')
-		if i < len(route.segments) && !isParam(route.segments[i]) {
-			b.WriteString(route.segments[i])
-		} else {
-			b.WriteString(part)
+	for i, seg := range entry.segments {
+		if !isParam(seg) {
+			continue
+		}
+		if strings.HasSuffix(seg, "...}") {
+			rest := ""
+			if i < len(parts) {
+				rest = strings.Join(parts[i:], "/")
+			}
+			if err := set(seg[1:len(seg)-4], rest); err != nil {
+				return nil, err
+			}
+			continue
+		}
+		if err := set(seg[1:len(seg)-1], parts[i]); err != nil {
+			return nil, err
 		}
 	}
-	if route.wildcard && len(parts) == len(route.segments)-1 {
-		// "/files" for "/files/{rest...}": the mux wants the slash
-		b.WriteByte('/')
-	}
-	return b.String()
+	return out, nil
 }
+
+// ParamError is a path parameter that does not decode to text. The old
+// console answered it with status 400 through its error handler.
+type ParamError struct {
+	// Raw is the parameter as the client sent it.
+	Raw string
+}
+
+func (e *ParamError) Error() string { return "Failed to decode param '" + e.Raw + "'" }
 
 func isParam(seg string) bool {
 	return strings.HasPrefix(seg, "{") && strings.HasSuffix(seg, "}")
