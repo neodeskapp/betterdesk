@@ -1,0 +1,449 @@
+{
+ "id": "cdap-studio/templates",
+ "request": {
+  "method": "GET",
+  "path": "/api/cdap-studio/templates"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "success": true,
+     "templates": [
+      {
+       "description": "Modbus TCP temperature reading with high-temp alert",
+       "flow": {
+        "nodes": [
+         {
+          "config": {
+           "dataType": "float32",
+           "host": "192.168.1.100",
+           "interval": 5000,
+           "port": 502,
+           "register": 100,
+           "unitId": 1
+          },
+          "id": "n1",
+          "label": "Modbus TCP",
+          "type": "modbus-tcp",
+          "x": 100,
+          "y": 150
+         },
+         {
+          "config": {
+           "field": "value",
+           "operator": ">",
+           "threshold": 80
+          },
+          "id": "n2",
+          "label": "High Temp",
+          "type": "filter",
+          "x": 400,
+          "y": 150
+         },
+         {
+          "config": {
+           "valueField": "value",
+           "widgetId": ""
+          },
+          "id": "n3",
+          "label": "Dashboard",
+          "type": "widget-update",
+          "x": 700,
+          "y": 80
+         },
+         {
+          "config": {
+           "message": "Temperature ${value}°C exceeds threshold!",
+           "severity": "warning"
+          },
+          "id": "n4",
+          "label": "Alert",
+          "type": "alert",
+          "x": 700,
+          "y": 220
+         }
+        ],
+        "wires": [
+         {
+          "from": "n1",
+          "fromPort": "out",
+          "to": "n2",
+          "toPort": "in"
+         },
+         {
+          "from": "n2",
+          "fromPort": "pass",
+          "to": "n3",
+          "toPort": "in"
+         },
+         {
+          "from": "n2",
+          "fromPort": "pass",
+          "to": "n4",
+          "toPort": "in"
+         }
+        ]
+       },
+       "icon": "thermostat",
+       "id": "temp-monitor",
+       "name": "Temperature Monitor"
+      },
+      {
+       "description": "Poll SNMP devices and display uptime/status",
+       "flow": {
+        "nodes": [
+         {
+          "config": {
+           "community": "public",
+           "host": "192.168.1.1",
+           "interval": 10000,
+           "oids": [
+            "1.3.6.1.2.1.1.3.0"
+           ],
+           "version": "2c"
+          },
+          "id": "n1",
+          "label": "SNMP Poll",
+          "type": "snmp-poll",
+          "x": 100,
+          "y": 150
+         },
+         {
+          "config": {
+           "expression": "Math.floor(value / 100)"
+          },
+          "id": "n2",
+          "label": "Format",
+          "type": "transform",
+          "x": 400,
+          "y": 150
+         },
+         {
+          "config": {
+           "valueField": "value",
+           "widgetId": ""
+          },
+          "id": "n3",
+          "label": "Uptime Widget",
+          "type": "widget-update",
+          "x": 700,
+          "y": 150
+         }
+        ],
+        "wires": [
+         {
+          "from": "n1",
+          "fromPort": "out",
+          "to": "n2",
+          "toPort": "in"
+         },
+         {
+          "from": "n2",
+          "fromPort": "out",
+          "to": "n3",
+          "toPort": "in"
+         }
+        ]
+       },
+       "icon": "router",
+       "id": "snmp-health",
+       "name": "SNMP Health Dashboard"
+      },
+      {
+       "description": "Poll multiple REST endpoints and merge data",
+       "flow": {
+        "nodes": [
+         {
+          "config": {
+           "interval": 30000,
+           "method": "GET",
+           "url": "https://api.example.com/data"
+          },
+          "id": "n1",
+          "label": "API 1",
+          "type": "rest-poll",
+          "x": 100,
+          "y": 100
+         },
+         {
+          "config": {
+           "interval": 30000,
+           "method": "GET",
+           "url": "https://api.example.com/status"
+          },
+          "id": "n2",
+          "label": "API 2",
+          "type": "rest-poll",
+          "x": 100,
+          "y": 250
+         },
+         {
+          "config": {
+           "strategy": "latest"
+          },
+          "id": "n3",
+          "label": "Merge",
+          "type": "merge",
+          "x": 400,
+          "y": 175
+         },
+         {
+          "config": {
+           "level": "info",
+           "message": "Aggregated: ${JSON.stringify(data)}"
+          },
+          "id": "n4",
+          "label": "Log",
+          "type": "log",
+          "x": 700,
+          "y": 175
+         }
+        ],
+        "wires": [
+         {
+          "from": "n1",
+          "fromPort": "out",
+          "to": "n3",
+          "toPort": "in"
+         },
+         {
+          "from": "n2",
+          "fromPort": "out",
+          "to": "n3",
+          "toPort": "in"
+         },
+         {
+          "from": "n3",
+          "fromPort": "out",
+          "to": "n4",
+          "toPort": "in"
+         }
+        ]
+       },
+       "icon": "api",
+       "id": "rest-aggregator",
+       "name": "REST API Aggregator"
+      },
+      {
+       "description": "Read PLC registers, apply logic, write back",
+       "flow": {
+        "nodes": [
+         {
+          "config": {
+           "dataType": "int16",
+           "host": "192.168.1.50",
+           "interval": 2000,
+           "port": 502,
+           "register": 0,
+           "unitId": 1
+          },
+          "id": "n1",
+          "label": "Read PLC",
+          "type": "modbus-tcp",
+          "x": 100,
+          "y": 150
+         },
+         {
+          "config": {
+           "conditions": [
+            {
+             "field": "value",
+             "operator": ">",
+             "value": 100
+            }
+           ]
+          },
+          "id": "n2",
+          "label": "Check Range",
+          "type": "switch",
+          "x": 400,
+          "y": 150
+         },
+         {
+          "config": {
+           "host": "192.168.1.50",
+           "port": 502,
+           "register": 10,
+           "value": "1"
+          },
+          "id": "n3",
+          "label": "Write PLC",
+          "type": "modbus-write",
+          "x": 700,
+          "y": 80
+         },
+         {
+          "config": {
+           "message": "PLC value ${value} exceeded limit!",
+           "severity": "critical"
+          },
+          "id": "n4",
+          "label": "Over Range",
+          "type": "alert",
+          "x": 700,
+          "y": 220
+         }
+        ],
+        "wires": [
+         {
+          "from": "n1",
+          "fromPort": "out",
+          "to": "n2",
+          "toPort": "in"
+         },
+         {
+          "from": "n2",
+          "fromPort": "pass",
+          "to": "n3",
+          "toPort": "in"
+         },
+         {
+          "from": "n2",
+          "fromPort": "pass",
+          "to": "n4",
+          "toPort": "in"
+         }
+        ]
+       },
+       "icon": "precision_manufacturing",
+       "id": "modbus-control",
+       "name": "Modbus PLC Control"
+      },
+      {
+       "description": "Watch directory for changes and notify",
+       "flow": {
+        "nodes": [
+         {
+          "config": {
+           "events": [
+            "modify"
+           ],
+           "path": "/var/log/",
+           "pattern": "*.log"
+          },
+          "id": "n1",
+          "label": "Watch Files",
+          "type": "file-watch",
+          "x": 100,
+          "y": 150
+         },
+         {
+          "config": {
+           "cooldown": 5000
+          },
+          "id": "n2",
+          "label": "Debounce 5s",
+          "type": "debounce",
+          "x": 400,
+          "y": 150
+         },
+         {
+          "config": {
+           "message": "File changed: ${filename}",
+           "severity": "info"
+          },
+          "id": "n3",
+          "label": "Notify",
+          "type": "alert",
+          "x": 700,
+          "y": 150
+         }
+        ],
+        "wires": [
+         {
+          "from": "n1",
+          "fromPort": "out",
+          "to": "n2",
+          "toPort": "in"
+         },
+         {
+          "from": "n2",
+          "fromPort": "out",
+          "to": "n3",
+          "toPort": "in"
+         }
+        ]
+       },
+       "icon": "folder_open",
+       "id": "file-watcher",
+       "name": "File Change Detector"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

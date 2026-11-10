@@ -44,7 +44,6 @@ const dataguardRoutes = lazyRoute('./dataguard.routes');
 const reportsRoutes = lazyRoute('./reports.routes');
 const tenantsRoutes = lazyRoute('./tenants.routes');
 const cdapRoutes = lazyRoute('./cdap.routes');
-const chatRoutes = require('./chat.routes');
 const tokensRoutes = lazyRoute('./tokens.routes');
 const organizationsRoutes = lazyRoute('./organizations.routes');
 const policiesRoutes = lazyRoute('./policies.routes');
@@ -56,7 +55,6 @@ const toolkitRoutes = lazyRoute('./toolkit.routes');
 const securityAuditRoutes = lazyRoute('./security-audit.routes');
 const resourceControlRoutes = lazyRoute('./resource-control.routes');
 const systemRoutes = lazyRoute('./system.routes');
-const cdapStudioRoutes = lazyRoute('./cdap-studio.routes');
 const permissionsRoutes = lazyRoute('./permissions.routes');
 const phase45Routes = lazyRoute('./phase4_5.routes');
 const pairingRoutes = lazyRoute('./pairing.routes');
@@ -104,8 +102,6 @@ router.use('/', registrationRoutes);               // admin-facing: /registratio
 router.use('/api/bd', registrationRoutes);          // device-facing: /api/bd/register-request, /api/bd/register-status
 router.use('/', pagesRoutes);                          // page routes: /inventory, /tickets, /automation, etc.
 router.use('/', cdapRoutes);                            // admin-facing: /cdap/devices/:id, /api/cdap/*
-router.use('/', lazyRoute('./meshcentral.routes'));     // MeshCentral compat API + settings
-router.use('/', chatRoutes);                             // admin-facing: /chat, /api/chat/*
 router.use('/', tokensRoutes);                          // admin-facing: /tokens, /api/panel/tokens/*
 router.use('/api/desktop', desktopRoutes);               // admin-facing: /api/desktop/layout, /api/desktop/wallpapers
 router.use('/', organizationsRoutes);                    // admin-facing: /organizations, /api/panel/org/*
@@ -122,7 +118,6 @@ router.use('/', securityAuditRoutes);                        // admin-facing: /s
 router.use('/', resourceControlRoutes);                      // admin-facing: /resource-control, /api/panel/resource-control/*
 router.use('/api/bd', resourceControlRoutes);                 // device-facing: /api/bd/resource-policy
 router.use('/', systemRoutes);                           // admin-facing: /api/system/*, /api/logs/*, /api/database/*, /api/docker/*, /api/speed-test
-router.use('/', cdapStudioRoutes);                       // admin-facing: /cdap-studio, /api/cdap-studio/*
 router.use('/', permissionsRoutes);                      // admin-facing: /permissions, /api/panel/roles/*, /api/panel/role-permissions/*
 router.use('/', serverManagementRoutes);                 // admin-facing: /server-management, /api/server-management/* (BETA)
 router.use('/', serverAttestationRoutes);                // admin-facing: /server-attestation, /api/server-attestation/*

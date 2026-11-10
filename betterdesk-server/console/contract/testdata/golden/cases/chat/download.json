@@ -1,0 +1,298 @@
+{
+ "id": "chat/download",
+ "request": {
+  "method": "GET",
+  "path": "/api/chat/files/{file}"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatileHeaders": [
+    "content-disposition"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "server_admin"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatileHeaders": [
+    "content-disposition"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Permission denied: chat.access",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 200,
+   "headers": {
+    "accept-ranges": "bytes",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-disposition": "attachment; filename=\"487a79d0aafe60d89be665c313c0ee39.txt\"",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "text/plain; charset=UTF-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "last-modified": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatileHeaders": [
+    "content-disposition"
+   ],
+   "body": {
+    "kind": "bytes",
+    "type": "text/plain",
+    "length": 19,
+    "sha256": "436dc5b58922ebf5e3e0c3b943a35c71e6aac2f2bd8d4c2ffe637ff8eef897b6",
+    "head": "contract chat file\n"
+   }
+  },
+  {
+   "roles": [
+    "operator"
+   ],
+   "status": 200,
+   "headers": {
+    "accept-ranges": "bytes",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-disposition": "attachment; filename=\"dc8725bdd43f448d0ba6a6f71eb9f865.txt\"",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "text/plain; charset=UTF-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "last-modified": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatileHeaders": [
+    "content-disposition"
+   ],
+   "body": {
+    "kind": "bytes",
+    "type": "text/plain",
+    "length": 19,
+    "sha256": "436dc5b58922ebf5e3e0c3b943a35c71e6aac2f2bd8d4c2ffe637ff8eef897b6",
+    "head": "contract chat file\n"
+   }
+  },
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "accept-ranges": "bytes",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-disposition": "attachment; filename=\"b9775d0cae65cfe506b5ec89fcd7ebe9.txt\"",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "text/plain; charset=UTF-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "last-modified": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatileHeaders": [
+    "content-disposition"
+   ],
+   "body": {
+    "kind": "bytes",
+    "type": "text/plain",
+    "length": 19,
+    "sha256": "436dc5b58922ebf5e3e0c3b943a35c71e6aac2f2bd8d4c2ffe637ff8eef897b6",
+    "head": "contract chat file\n"
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "accept-ranges": "bytes",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-disposition": "attachment; filename=\"32aab3211bd85d8a8a0b2a71de433a30.txt\"",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "text/plain; charset=UTF-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "last-modified": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatileHeaders": [
+    "content-disposition"
+   ],
+   "body": {
+    "kind": "bytes",
+    "type": "text/plain",
+    "length": 19,
+    "sha256": "436dc5b58922ebf5e3e0c3b943a35c71e6aac2f2bd8d4c2ffe637ff8eef897b6",
+    "head": "contract chat file\n"
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "accept-ranges": "bytes",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-disposition": "attachment; filename=\"f831841ae8b31f97324d56b7dfdd529f.txt\"",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "text/plain; charset=UTF-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "last-modified": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatileHeaders": [
+    "content-disposition"
+   ],
+   "body": {
+    "kind": "bytes",
+    "type": "text/plain",
+    "length": 19,
+    "sha256": "436dc5b58922ebf5e3e0c3b943a35c71e6aac2f2bd8d4c2ffe637ff8eef897b6",
+    "head": "contract chat file\n"
+   }
+  }
+ ]
+}

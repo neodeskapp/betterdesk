@@ -1,0 +1,151 @@
+package meshcentral
+
+import (
+	"bufio"
+	"compress/gzip"
+	"encoding/json"
+	"net/http/httptest"
+	"os"
+	"strings"
+	"testing"
+)
+
+// vector is one line of testdata/query.json.gz: what the Node console made
+// of a query string (testdata/nodeoracle).
+type vector struct {
+	Q        string          `json:"q"`
+	Search   json.RawMessage `json:"search"`
+	Share    json.RawMessage `json:"share"`
+	Guest    json.RawMessage `json:"guest"`
+	ViewOnly bool            `json:"viewOnly"`
+	Watch    json.RawMessage `json:"watch"`
+}
+
+// expected reads a recorded value: its text, or that JavaScript raised an
+// error there.
+func expected(t *testing.T, raw json.RawMessage) (text string, ok bool) {
+	t.Helper()
+	if err := json.Unmarshal(raw, &text); err == nil {
+		return text, true
+	}
+	var thrown struct {
+		Throws string `json:"throws"`
+	}
+	if err := json.Unmarshal(raw, &thrown); err != nil || thrown.Throws != notText {
+		t.Fatalf("vector value %s is neither a text nor the error %q", raw, notText)
+	}
+	return "", false
+}
+
+func TestQueryVectors(t *testing.T) {
+	file, err := os.Open("testdata/query.json.gz")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+	unzipped, err := gzip.NewReader(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lines := bufio.NewScanner(unzipped)
+	lines.Buffer(make([]byte, 1<<20), 1<<24)
+	count, failures := 0, 0
+	for lines.Scan() {
+		var v vector
+		if err := json.Unmarshal(lines.Bytes(), &v); err != nil {
+			t.Fatal(err)
+		}
+		count++
+		check := func(what string, want json.RawMessage, got string, gotOK bool) {
+			wantText, wantOK := expected(t, want)
+			if got != wantText || gotOK != wantOK {
+				failures++
+				if failures <= 20 {
+					t.Errorf("%q: %s = %q (text %v), Node has %s", v.Q, what, got, gotOK, want)
+				}
+			}
+		}
+		q := parseQuery(v.Q)
+		search, ok := q.search()
+		check("search", v.Search, search, ok)
+		share, ok := trimmedText(q.get("mesh_share"))
+		check("share", v.Share, share, ok)
+		guest, ok := trimmedText(orValue(q.get("guest"), q.get("t")))
+		check("guest", v.Guest, guest, ok)
+		if got := truthy(q.get("view_only")); got != v.ViewOnly {
+			failures++
+			t.Errorf("%q: view_only is %v, Node has %v", v.Q, got, v.ViewOnly)
+		}
+		watching := parseQuery(v.Q)
+		if !truthy(watching.get("view_only")) {
+			watching.set("view_only", "1")
+		}
+		watch, ok := watching.search()
+		check("search with view_only", v.Watch, watch, ok)
+	}
+	if err := lines.Err(); err != nil {
+		t.Fatal(err)
+	}
+	if count < 6000 {
+		t.Fatalf("read %d vectors, the file has more than 6000", count)
+	}
+	if failures > 20 {
+		t.Errorf("%d differences in all", failures)
+	}
+}
+
+func TestRequestQueryReadsTheRequestLine(t *testing.T) {
+	cases := []struct{ target, want string }{
+		{"/x", ""},
+		{"/x?", ""},
+		{"/x?a=1&b=2", "a=1&b=2"},
+		{"/x?a=1#b=2", "a=1"},
+		{"/x?a=1&b=%23", "a=1&b=%23"},
+		// A byte above 0x7F is one Latin-1 letter, which goes out as UTF-8
+		{"/x?a=\xe9", "a=%C3%A9"},
+		{"/x?a=%E9", "a=%25E9"},
+	}
+	for _, c := range cases {
+		r := httptest.NewRequest("GET", "/x", nil)
+		path, raw, _ := strings.Cut(c.target, "?")
+		r.URL.Path, r.URL.RawQuery = path, raw
+		got, ok := requestQuery(r).search()
+		if !ok || got != c.want {
+			t.Errorf("%q: search = %q (text %v), want %q", c.target, got, ok, c.want)
+		}
+	}
+}
+
+// FuzzParseQuery feeds the parser arbitrary query strings: it must not
+// fail, and what it writes back must be a query string of plain
+// characters that reads back as texts only, one per name.
+func FuzzParseQuery(f *testing.F) {
+	for _, seed := range []string{
+		"", "a=1&a=2", "a[]=1&a[x]=2", "a[toString]=x", "mesh_share[]=abc&guest=%20", "a[1001]=x&a=y", "[0]=a&0=b",
+		"a[a][b][c][d][e][f][g]=1", "a%5B%5D=1&%zz=%E9", "__proto__[x]=1&constructor=2", "a[=1&a]=2&=3&&",
+	} {
+		f.Add(seed)
+	}
+	f.Fuzz(func(t *testing.T, raw string) {
+		q := parseQuery(raw)
+		search, ok := q.search()
+		if !ok {
+			return
+		}
+		for i := 0; i < len(search); i++ {
+			c := search[i]
+			plain := c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9'
+			if !plain && !strings.ContainsRune("*-._+%&=", rune(c)) {
+				t.Fatalf("%q was written as %q, with the character %q", raw, search, c)
+			}
+		}
+		if n := strings.Count(search, "="); n != len(q.values.keys()) {
+			t.Fatalf("%q was written as %q: %d pairs for %d parameters", raw, search, n, len(q.values.keys()))
+		}
+		for _, key := range q.values.keys() {
+			if key == "__proto__" {
+				t.Fatalf("%q gave a parameter named __proto__", raw)
+			}
+		}
+	})
+}

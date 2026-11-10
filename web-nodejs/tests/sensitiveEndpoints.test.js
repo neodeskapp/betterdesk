@@ -4,8 +4,6 @@
  *   admin role on the Go server, to any signed-in account. Now it needs
  *   server.keys; the masked key stays readable.
  * - GET /api/settings/audit needs audit.view, like the audit pages.
- * - Chat upload, file download and search need chat.access, like the chat
- *   WebSocket.
  */
 
 const request = require('supertest');
@@ -22,12 +20,11 @@ jest.mock('../middleware/rateLimiter', () => ({
     apiLimiter: (_req, _res, next) => next()
 }));
 jest.mock('../services/betterdeskApi', () => ({
-    apiClient: { get: jest.fn().mockResolvedValue({ data: { messages: [{ id: 1 }] } }) }
+    apiClient: {}
 }));
 
 const keysRoutes = require('../routes/keys.routes');
 const settingsRoutes = require('../routes/settings.routes');
-const chatRoutes = require('../routes/chat.routes');
 
 function app(role) {
     const a = createTestApp();
@@ -38,7 +35,6 @@ function app(role) {
     });
     a.use(keysRoutes);
     a.use(settingsRoutes);
-    a.use(chatRoutes);
     return a;
 }
 
@@ -68,19 +64,5 @@ describe('settings audit log', () => {
         const ok = await request(app('viewer')).get('/api/settings/audit');
         expect(ok.status).toBe(200);
         expect(ok.body.data).toHaveLength(1);
-    });
-});
-
-describe('chat over HTTP', () => {
-    test.each(['server_admin', 'guest_issuer'])('%s without chat.access gets 403', async (role) => {
-        expect((await request(app(role)).get('/api/chat/search?q=hi')).status).toBe(403);
-        expect((await request(app(role)).get('/api/chat/files/abc123')).status).toBe(403);
-        expect((await request(app(role)).post('/api/chat/upload')).status).toBe(403);
-    });
-
-    test('operator can search', async () => {
-        const res = await request(app('operator')).get('/api/chat/search?q=hi');
-        expect(res.status).toBe(200);
-        expect(res.body.messages).toHaveLength(1);
     });
 });

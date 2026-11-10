@@ -1,0 +1,52 @@
+{
+ "id": "chat/download-web-page",
+ "request": {
+  "method": "GET",
+  "path": "/api/chat/files/{page}"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "accept-ranges": "bytes",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-disposition": "attachment; filename=\"5059c10403c444224a607df3a5b90c08.HTML\"",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "text/html; charset=UTF-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "last-modified": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatileHeaders": [
+    "content-disposition"
+   ],
+   "body": {
+    "kind": "bytes",
+    "type": "text/html",
+    "length": 15,
+    "sha256": "322f13298e7edc335d9893ad933bd2f5513d0030532ffd0f6cf95d3b6a7a5f2c",
+    "head": "<p>not run</p>\n"
+   }
+  }
+ ]
+}

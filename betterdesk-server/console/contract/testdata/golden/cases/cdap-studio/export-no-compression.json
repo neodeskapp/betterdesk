@@ -1,0 +1,216 @@
+{
+ "id": "cdap-studio/export-no-compression",
+ "request": {
+  "method": "GET",
+  "path": "/api/cdap-studio/flows/{flow}/export",
+  "notes": [
+   "header Accept-Encoding: identity"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "operator"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-disposition": "attachment; filename=\"Contract_flow.bdflow\"",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "exportedAt",
+     "format": "9999-99-99A99:99:99.999A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "description": "",
+     "exportedAt": "<volatile>",
+     "exportedBy": "e2e_operator",
+     "flow": {
+      "nodes": [
+       {
+        "id": "n1",
+        "label": "Register 1",
+        "type": "modbus-tcp",
+        "x": 100,
+        "y": 150
+       },
+       {
+        "id": "n2",
+        "label": "Register 2",
+        "type": "modbus-tcp",
+        "x": 200,
+        "y": 150
+       },
+       {
+        "id": "n3",
+        "label": "Register 3",
+        "type": "modbus-tcp",
+        "x": 300,
+        "y": 150
+       },
+       {
+        "id": "n4",
+        "label": "Register 4",
+        "type": "modbus-tcp",
+        "x": 400,
+        "y": 150
+       },
+       {
+        "id": "n5",
+        "label": "Register 5",
+        "type": "modbus-tcp",
+        "x": 500,
+        "y": 150
+       },
+       {
+        "id": "n6",
+        "label": "Register 6",
+        "type": "modbus-tcp",
+        "x": 600,
+        "y": 150
+       },
+       {
+        "id": "n7",
+        "label": "Register 7",
+        "type": "modbus-tcp",
+        "x": 700,
+        "y": 150
+       },
+       {
+        "id": "n8",
+        "label": "Register 8",
+        "type": "modbus-tcp",
+        "x": 800,
+        "y": 150
+       },
+       {
+        "id": "n9",
+        "label": "Register 9",
+        "type": "modbus-tcp",
+        "x": 900,
+        "y": 150
+       },
+       {
+        "id": "n10",
+        "label": "Register 10",
+        "type": "modbus-tcp",
+        "x": 1000,
+        "y": 150
+       },
+       {
+        "id": "n11",
+        "label": "Register 11",
+        "type": "modbus-tcp",
+        "x": 1100,
+        "y": 150
+       },
+       {
+        "id": "n12",
+        "label": "Register 12",
+        "type": "modbus-tcp",
+        "x": 1200,
+        "y": 150
+       }
+      ],
+      "wires": [
+       {
+        "from": "n1",
+        "fromPort": "out",
+        "to": "n2",
+        "toPort": "in"
+       },
+       {
+        "from": "n2",
+        "fromPort": "out",
+        "to": "n3",
+        "toPort": "in"
+       },
+       {
+        "from": "n3",
+        "fromPort": "out",
+        "to": "n4",
+        "toPort": "in"
+       },
+       {
+        "from": "n4",
+        "fromPort": "out",
+        "to": "n5",
+        "toPort": "in"
+       },
+       {
+        "from": "n5",
+        "fromPort": "out",
+        "to": "n6",
+        "toPort": "in"
+       },
+       {
+        "from": "n6",
+        "fromPort": "out",
+        "to": "n7",
+        "toPort": "in"
+       },
+       {
+        "from": "n7",
+        "fromPort": "out",
+        "to": "n8",
+        "toPort": "in"
+       },
+       {
+        "from": "n8",
+        "fromPort": "out",
+        "to": "n9",
+        "toPort": "in"
+       },
+       {
+        "from": "n9",
+        "fromPort": "out",
+        "to": "n10",
+        "toPort": "in"
+       },
+       {
+        "from": "n10",
+        "fromPort": "out",
+        "to": "n11",
+        "toPort": "in"
+       },
+       {
+        "from": "n11",
+        "fromPort": "out",
+        "to": "n12",
+        "toPort": "in"
+       }
+      ]
+     },
+     "format": "bdflow",
+     "name": "Contract flow",
+     "version": "1.0"
+    }
+   }
+  }
+ ]
+}

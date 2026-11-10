@@ -1,0 +1,106 @@
+package meshcentral
+
+import (
+	"net/http"
+	"strings"
+
+	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/kit"
+)
+
+// desktop answers POST /api/mesh/devices/{id}/desktop, which opens a
+// desktop tunnel to a mesh agent. Two kinds of callers use it:
+//
+//   - Someone with a link, signed in or not: ?mesh_share=<token> for a
+//     share link, ?guest=<token> or ?t=<token> for a guest link. The API
+//     server says whether the token is good for this device, and the
+//     request goes on with the whole query. A guest link that only allows
+//     watching adds view_only=1 unless the query already has a value for
+//     it.
+//   - Someone signed in with device.connect. The query is not passed on.
+//
+// A share token wins over a guest token; the guest token is then not
+// checked here.
+func (h *handlers) desktop(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	query := requestQuery(r)
+	share, shareIsText := trimmedText(query.get("mesh_share"))
+	guest, guestIsText := trimmedText(orValue(query.get("guest"), query.get("t")))
+	if !shareIsText || !guestIsText {
+		// The old console stopped at such a token (BUGS.md MC1) and the
+		// client's connection closed without an answer.
+		panic(http.ErrAbortHandler)
+	}
+	if share == "" && guest == "" {
+		h.desktopForSession.ServeHTTP(w, r)
+		return
+	}
+
+	const badShare, badGuest = "Invalid or expired share link", "Invalid or expired guest link"
+	token := []goapi.CallOption{goapi.Query("token", share), goapi.Query("peer_id", id)}
+	if share != "" {
+		resp, err := h.api.Get(r.Context(), "/mesh/share/validate", token...)
+		if err != nil || !goapi.Truthy(goapi.Dig(resp.Data(), "valid")) {
+			kit.JSON(w, r, http.StatusForbidden, apiFailure{Error: badShare})
+			return
+		}
+	} else {
+		token[0] = goapi.Query("token", guest)
+		resp, err := h.api.Get(r.Context(), "/guest/access-links/validate", token...)
+		if err != nil {
+			kit.JSON(w, r, http.StatusForbidden, apiFailure{Error: badShare})
+			return
+		}
+		grant := resp.Data()
+		if !goapi.Truthy(goapi.Dig(grant, "valid")) {
+			kit.JSON(w, r, http.StatusForbidden, apiFailure{Error: badGuest})
+			return
+		}
+		if goapi.Truthy(goapi.Dig(grant, "view_only")) && !truthy(query.get("view_only")) {
+			query.set("view_only", "1")
+		}
+	}
+	search, ok := query.search()
+	if !ok {
+		kit.JSON(w, r, http.StatusInternalServerError, apiFailure{Error: unreachable})
+		return
+	}
+	h.pass(w, r, http.MethodPost, withSearch(devicePath(id, "desktop"), search))
+}
+
+// desktopTunnel opens the tunnel for a signed-in account.
+func (h *handlers) desktopTunnel(w http.ResponseWriter, r *http.Request) {
+	h.pass(w, r, http.MethodPost, devicePath(r.PathValue("id"), "desktop"))
+}
+
+// trimmedText is the value as text without the white space around it,
+// and "" for a missing or empty value. ok is false when the value
+// cannot be turned into text.
+func trimmedText(v any) (text string, ok bool) {
+	if !truthy(v) {
+		return "", true
+	}
+	text, ok = toText(v)
+	return strings.TrimFunc(text, isSpace), ok
+}
+
+// orValue is a || b.
+func orValue(a, b any) any {
+	if truthy(a) {
+		return a
+	}
+	return b
+}
+
+// isSpace reports the white space JavaScript's trim removes.
+func isSpace(r rune) bool {
+	switch {
+	case r >= '\t' && r <= '\r', r == ' ', r == 0xA0, r == 0x1680:
+		return true
+	case r >= 0x2000 && r <= 0x200A:
+		return true
+	case r == 0x2028, r == 0x2029, r == 0x202F, r == 0x205F, r == 0x3000, r == 0xFEFF:
+		return true
+	}
+	return false
+}
