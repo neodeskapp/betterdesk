@@ -2,6 +2,7 @@ package contract
 
 import (
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -97,7 +98,7 @@ func newSlot(layer, group, name, id string, request RequestInfo) *slot {
 
 // judge takes the answer a role got for a slot. Comparing, it fails the
 // test with the differences from the golden. Recording, it keeps the answer
-// for flush.
+// for flush when the Node console gave it (see recordable).
 func (s *Suite) judge(t *testing.T, sl *slot, role Role, answer Answer) {
 	t.Helper()
 	tally := sl.layer + "/" + sl.group
@@ -111,8 +112,17 @@ func (s *Suite) judge(t *testing.T, sl *slot, role Role, answer Answer) {
 	}
 
 	if s.Settings.Record != Compare {
-		sl.rec.Answers[role] = answer
-		s.Report.count(tally, true)
+		record, problem := recordable(handler)
+		switch {
+		case record:
+			sl.rec.Answers[role] = answer
+			s.Report.count(tally, true)
+		case problem == "":
+			s.Report.froze(sl.file(s.Settings.GoldenDir))
+		default:
+			s.Report.count(tally, false)
+			t.Errorf("%s as %s is not recorded: %s", sl.rec.ID, role, problem)
+		}
 		return
 	}
 
@@ -178,10 +188,51 @@ func (s *Suite) golden(file string) (*Golden, error) {
 	return g, nil
 }
 
+// recordable says what a recording does with an answer, by who gave it.
+//
+// Only an answer of the Node console is recorded. A request the Go console
+// answers has a frozen golden: it was recorded from the Node console before
+// the route moved and is the specification, so the file stays as it is
+// (record false, no problem). The request is still sent, because later
+// steps of a case group may need what it creates. An answer nobody stands
+// for, or one the routing report says nothing about, is a problem and is
+// not written either.
+func recordable(handler string) (record bool, problem string) {
+	switch handler {
+	case HandlerNode:
+		return true, ""
+	case HandlerGo:
+		return false, ""
+	case HandlerNone:
+		return false, "nobody answers it. Goldens are recorded from the Node console behind a Go console (STACK_MODE=front)"
+	}
+	return false, "the routing report does not say who answers it, so its golden may be frozen and stays as it is"
+}
+
+// recordingBlocked says why the run must not record, "" when it may. A
+// recording needs the routing report: without it the suite cannot tell the
+// frozen goldens from the others and would overwrite them.
+func (s *Suite) recordingBlocked() string {
+	if s.Settings.Record == Compare || s.Client.HasRouting() {
+		return ""
+	}
+	return "recording needs a Go console with the routing report in front of the Node console (STACK_MODE=front): " +
+		"it says which routes the Go console answers, and their goldens are frozen"
+}
+
+// requireRouting stops a run that must not record.
+func (s *Suite) requireRouting(t *testing.T) {
+	t.Helper()
+	if problem := s.recordingBlocked(); problem != "" {
+		t.Fatalf("%s", problem)
+	}
+}
+
 // flush writes the goldens of the slots when the run records. A first
 // recording writes what it got. A merging recording marks what differs from
 // the first as volatile; a difference that is not a volatile value fails
-// the test and names the request.
+// the test and names the request. A slot without recorded answers, as a
+// frozen one, is neither read nor written.
 func (s *Suite) flush(t *testing.T, slots []*slot) {
 	t.Helper()
 	if s.Settings.Record == Compare {
@@ -223,6 +274,55 @@ func (s *Suite) flush(t *testing.T, slots []*slot) {
 		for _, answer := range golden.Answers {
 			s.Report.volatile += len(answer.Volatile)
 		}
+	}
+}
+
+// prune ends a first recording of a layer: it removes the golden files
+// below dir that no route or case of the suite stands for any more, and the
+// folders that leaves empty. keep holds the files of the routes and cases
+// that exist. A leftover golden stays when the Node console does not answer
+// its request: the Go console does, so it is frozen like the others.
+func (s *Suite) prune(t *testing.T, dir string, keep map[string]bool) {
+	t.Helper()
+	if s.Settings.Record != RecordFirst {
+		return
+	}
+	var folders []string
+	err := filepath.WalkDir(dir, func(path string, entry fs.DirEntry, err error) error {
+		switch {
+		case err != nil && isNotExist(err):
+			return nil
+		case err != nil:
+			return err
+		case entry.IsDir():
+			if path != dir {
+				folders = append(folders, path)
+			}
+			return nil
+		case !strings.HasSuffix(path, ".json") || keep[filepath.Clean(path)]:
+			return nil
+		}
+		golden, err := LoadGolden(path)
+		if err != nil {
+			return err
+		}
+		target, _, _ := strings.Cut(variables{}.fill(golden.Request.Path), "?")
+		if s.Client.Handler(golden.Request.Method, target) != HandlerNode {
+			s.Report.froze(path)
+			return nil
+		}
+		if err := os.Remove(path); err != nil {
+			return err
+		}
+		s.Report.removed++
+		return nil
+	})
+	if err != nil {
+		t.Errorf("tidy the goldens below %s: %v", filepath.ToSlash(dir), err)
+	}
+	for i := len(folders) - 1; i >= 0; i-- {
+		// Remove fails on a folder that still holds a file, and that is the point
+		_ = os.Remove(folders[i])
 	}
 }
 

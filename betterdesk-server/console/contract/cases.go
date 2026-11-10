@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/textproto"
 	"net/url"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -422,13 +423,19 @@ func (c *Case) capture(answer Answer, vars variables) {
 // subtest (TestCases/<group>/<role>/<case>).
 func RunCases(t *testing.T) {
 	s := suiteFor(t)
+	s.requireRouting(t)
 	groups := Groups()
 	if len(groups) == 0 {
 		t.Fatal("no case groups are registered")
 	}
+	keep := map[string]bool{}
 	for _, group := range groups {
 		t.Run(group.Name, func(t *testing.T) { s.runGroup(t, group) })
+		for _, c := range group.Cases {
+			keep[filepath.Clean(goldenFile(s.Settings.GoldenDir, "cases", group.Name, c.Name))] = true
+		}
 	}
+	s.prune(t, filepath.Join(s.Settings.GoldenDir, "cases"), keep)
 }
 
 func (s *Suite) runGroup(t *testing.T, group *CaseGroup) {

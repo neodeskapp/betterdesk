@@ -1,7 +1,8 @@
 // Package contract is the black-box contract suite for the web console: it
 // records what a console answers and checks that another console answers
 // the same. The goldens are recorded against the Node console and are the
-// specification for the Go console.
+// specification for the Go console. Once the Go console answers a route, a
+// recording leaves its goldens as they are (README.md, "Frozen goldens").
 //
 // The suite talks to a base URL (BD_URL) and imports nothing from the
 // console. It has two layers. The matrix (RunMatrix) sends one placeholder

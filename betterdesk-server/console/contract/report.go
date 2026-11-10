@@ -26,6 +26,11 @@ type Report struct {
 	// files, volatile paths in them, and paths marked volatile because
 	// they hold a time close to now.
 	files, volatile, timeBound int
+	// frozen are the golden files a recording left as they are, because the
+	// Go console answers their requests. removed counts the golden files a
+	// first recording deleted: no route or case stands for them any more.
+	frozen  map[string]bool
+	removed int
 }
 
 type tally struct{ passed, failed int }
@@ -45,7 +50,13 @@ func newReport(settings *Settings) *Report {
 		tallies:  map[string]*tally{},
 		handlers: map[string]map[string]string{},
 		seen:     map[string]bool{},
+		frozen:   map[string]bool{},
 	}
+}
+
+// froze notes a golden file a recording left as it is.
+func (r *Report) froze(file string) {
+	r.frozen[file] = true
 }
 
 // count adds one checked (or recorded) answer to a group's tally.
@@ -146,6 +157,10 @@ func (r *Report) Print(w io.Writer) {
 			fmt.Fprintf(w, " (%d of them equal in both recordings but bound to today's date)", r.timeBound)
 		}
 		fmt.Fprintln(w)
+		fmt.Fprintf(w, "  frozen: %d (goldens of requests the Go console answers, left as they are)\n", len(r.frozen))
+		if r.removed > 0 {
+			fmt.Fprintf(w, "  removed %d golden files that no route or case stands for any more\n", r.removed)
+		}
 	}
 	printList(w, "answers that differ between two fresh instances in more than a value", r.problems)
 	printList(w, "findings", r.findings)

@@ -3,6 +3,7 @@ package contract
 import (
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -192,6 +193,7 @@ func (e MatrixEntry) slot() *slot {
 // that is where a role that may not use the console shows.
 func RunMatrix(t *testing.T) {
 	s := suiteFor(t)
+	s.requireRouting(t)
 	list, err := LoadRoutes(s.Settings.RoutesFile)
 	if err != nil {
 		t.Fatalf("%v", err)
@@ -231,6 +233,11 @@ func RunMatrix(t *testing.T) {
 		})
 	}
 	s.flush(t, ordered)
+	keep := map[string]bool{}
+	for _, sl := range ordered {
+		keep[filepath.Clean(sl.file(s.Settings.GoldenDir))] = true
+	}
+	s.prune(t, filepath.Join(s.Settings.GoldenDir, "matrix"), keep)
 }
 
 // planProblems checks a plan before anything is sent: two entries must not

@@ -33,9 +33,9 @@ either layer. Routes on the skip list (`matrix_skip.go`) need a case.
 Everything runs on test instances through one script (Git Bash):
 
     .ui-rework/go/tools/contract.sh check all                    # Go front door in front of Node
-    .ui-rework/go/tools/contract.sh check all STACK_MODE=node    # Node alone
     .ui-rework/go/tools/contract.sh check all STACK_MODE=go      # Go alone
     .ui-rework/go/tools/contract.sh check cases/devices
+    .ui-rework/go/tools/contract.sh check 'cases/(i18n|languages)'
     .ui-rework/go/tools/contract.sh check matrix STACK_DB=postgres
     .ui-rework/go/tools/contract.sh check cases --keep           # leave the instance up
     .ui-rework/go/tools/contract.sh check cases --on c1          # use the running bdgo-c1
@@ -46,9 +46,15 @@ Everything runs on test instances through one script (Git Bash):
     .ui-rework/go/tools/contract.sh record cases/devices
 
 `check` starts a fresh instance, compares, prints the summary and exits
-non-zero on a mismatch. `record` starts two fresh Node instances and writes
-the goldens. `all` runs the matrix and the cases on separate instances,
-because the matrix writes to everything it reaches.
+non-zero on a mismatch. `record` starts two fresh instances and writes the
+goldens of the routes Node still answers (see "Frozen goldens"). `all` runs
+the matrix and the cases on separate instances, because the matrix writes
+to everything it reaches.
+
+Both run with the Go console in front of Node (`STACK_MODE=front`). `check`
+also takes `STACK_MODE=go`, the Go console without Node: a route Go does not
+answer fails there. Node alone cannot be checked or recorded, and the script
+refuses `STACK_MODE=node`: Node no longer has the routes that moved to Go.
 
 To run the tests by hand against a console you started yourself:
 
@@ -166,7 +172,41 @@ that system only.
 
 Record a new group with `contract.sh record cases/<group>`, look at the
 goldens, then run `contract.sh check cases` once to see that the group also
-passes after the others.
+passes after the others. Write and record the cases of a group while Node
+still answers its routes: after the move their goldens are frozen.
+
+## Frozen goldens
+
+A golden is what the Node console answered. Once the Go console answers a
+route, its goldens are the specification and nothing may change them, least
+of all Go's own answer. So recording goes through the Go console in front of
+Node and asks the routing report (see "Who answered") about every matrix
+route and every case:
+
+- Node answers: the answer is recorded as before. The front door passes
+  Node's answers through unchanged.
+- Go answers: the request is sent, because a later step of the group may
+  need what it creates or captures, but the golden file is neither read nor
+  written. A route that has no golden yet gets none.
+- Nobody answers, or the report says nothing: the test fails and the golden
+  stays as it is.
+
+A recording against a console without the routing report stops before the
+first request. The summary of a recording ends with the count:
+
+```
+  wrote 31 golden files with 12 volatile paths
+  frozen: 87 (goldens of requests the Go console answers, left as they are)
+```
+
+A first recording also removes the golden files that no route and no case
+stands for any more (a case that was renamed or deleted). A leftover file
+stays when the Go console answers the request it names.
+
+The hand marks (`Volatile`, the tables in `matrix_params.go`) and the skip
+list work as before for the goldens that are recorded. A mark added to a
+case whose golden is frozen changes nothing, because the file is not
+written again.
 
 ## Goldens
 
