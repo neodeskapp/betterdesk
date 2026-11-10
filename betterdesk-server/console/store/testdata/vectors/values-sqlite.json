@@ -1,0 +1,403 @@
+{
+ "dialect": "sqlite",
+ "driver": "better-sqlite3 13.0.3",
+ "create": "CREATE TABLE vec (id INTEGER PRIMARY KEY AUTOINCREMENT, c_text TEXT, c_integer INTEGER, c_real REAL, c_blob BLOB, c_datetime DATETIME)",
+ "cases": [
+  {
+   "name": "text as datetime('now') writes it",
+   "go": "Time",
+   "js": "string",
+   "json": "\"2026-11-10 01:05:50\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('2026-11-10 01:05:50')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 1"
+  },
+  {
+   "name": "text as toISOString writes it",
+   "go": "Time",
+   "js": "string",
+   "json": "\"2026-11-10T01:05:50.930Z\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('2026-11-10T01:05:50.930Z')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 2"
+  },
+  {
+   "name": "text as a device sent it",
+   "go": "Time",
+   "js": "string",
+   "json": "\"2026-01-01T11:00:00Z\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('2026-01-01T11:00:00Z')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 3"
+  },
+  {
+   "name": "expiry text built in JavaScript",
+   "go": "Time",
+   "js": "string",
+   "json": "\"2026-11-17 01:05:51.694\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('2026-11-17 01:05:51.694')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 4"
+  },
+  {
+   "name": "empty text",
+   "go": "Time",
+   "js": "string",
+   "json": "\"\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 5"
+  },
+  {
+   "name": "text that is no time",
+   "go": "Time",
+   "js": "string",
+   "json": "\"not a time\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('not a time')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 6"
+  },
+  {
+   "name": "NULL",
+   "go": "Time",
+   "js": "null",
+   "json": "null",
+   "insert": "INSERT INTO vec (c_text) VALUES (NULL)",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 7"
+  },
+  {
+   "name": "DATETIME column",
+   "go": "Time",
+   "js": "string",
+   "json": "\"2026-11-10 01:05:50\"",
+   "insert": "INSERT INTO vec (c_datetime) VALUES ('2026-11-10 01:05:50')",
+   "query": "SELECT c_datetime AS v FROM vec WHERE id = 8"
+  },
+  {
+   "name": "DATETIME column filled by datetime()",
+   "go": "Time",
+   "js": "string",
+   "json": "\"2026-03-04 05:06:07\"",
+   "insert": "INSERT INTO vec (c_datetime) VALUES (datetime('2026-03-04 05:06:07'))",
+   "query": "SELECT c_datetime AS v FROM vec WHERE id = 9"
+  },
+  {
+   "name": "DATETIME column, NULL",
+   "go": "Time",
+   "js": "null",
+   "json": "null",
+   "insert": "INSERT INTO vec (c_datetime) VALUES (NULL)",
+   "query": "SELECT c_datetime AS v FROM vec WHERE id = 10"
+  },
+  {
+   "name": "flag 0",
+   "go": "Bool",
+   "js": "number",
+   "json": "0",
+   "insert": "INSERT INTO vec (c_integer) VALUES (0)",
+   "query": "SELECT c_integer AS v FROM vec WHERE id = 11"
+  },
+  {
+   "name": "flag 1",
+   "go": "Bool",
+   "js": "number",
+   "json": "1",
+   "insert": "INSERT INTO vec (c_integer) VALUES (1)",
+   "query": "SELECT c_integer AS v FROM vec WHERE id = 12"
+  },
+  {
+   "name": "flag with another number",
+   "go": "Bool",
+   "js": "number",
+   "json": "5",
+   "insert": "INSERT INTO vec (c_integer) VALUES (5)",
+   "query": "SELECT c_integer AS v FROM vec WHERE id = 13"
+  },
+  {
+   "name": "flag NULL",
+   "go": "Bool",
+   "js": "null",
+   "json": "null",
+   "insert": "INSERT INTO vec (c_integer) VALUES (NULL)",
+   "query": "SELECT c_integer AS v FROM vec WHERE id = 14"
+  },
+  {
+   "name": "integer 0",
+   "go": "Int64String",
+   "js": "number",
+   "json": "0",
+   "insert": "INSERT INTO vec (c_integer) VALUES (0)",
+   "query": "SELECT c_integer AS v FROM vec WHERE id = 15"
+  },
+  {
+   "name": "integer",
+   "go": "Int64String",
+   "js": "number",
+   "json": "42",
+   "insert": "INSERT INTO vec (c_integer) VALUES (42)",
+   "query": "SELECT c_integer AS v FROM vec WHERE id = 16"
+  },
+  {
+   "name": "negative integer",
+   "go": "Int64String",
+   "js": "number",
+   "json": "-7",
+   "insert": "INSERT INTO vec (c_integer) VALUES (-7)",
+   "query": "SELECT c_integer AS v FROM vec WHERE id = 17"
+  },
+  {
+   "name": "integer above 32 bits",
+   "go": "Int64String",
+   "js": "number",
+   "json": "5000000000",
+   "insert": "INSERT INTO vec (c_integer) VALUES (5000000000)",
+   "query": "SELECT c_integer AS v FROM vec WHERE id = 18"
+  },
+  {
+   "name": "integer NULL",
+   "go": "Int64String",
+   "js": "null",
+   "json": "null",
+   "insert": "INSERT INTO vec (c_integer) VALUES (NULL)",
+   "query": "SELECT c_integer AS v FROM vec WHERE id = 19"
+  },
+  {
+   "name": "real",
+   "go": "Float",
+   "js": "number",
+   "json": "0.1",
+   "insert": "INSERT INTO vec (c_real) VALUES (0.1)",
+   "query": "SELECT c_real AS v FROM vec WHERE id = 20"
+  },
+  {
+   "name": "real 0",
+   "go": "Float",
+   "js": "number",
+   "json": "0",
+   "insert": "INSERT INTO vec (c_real) VALUES (0)",
+   "query": "SELECT c_real AS v FROM vec WHERE id = 21"
+  },
+  {
+   "name": "real with an integer value",
+   "go": "Float",
+   "js": "number",
+   "json": "2",
+   "insert": "INSERT INTO vec (c_real) VALUES (2)",
+   "query": "SELECT c_real AS v FROM vec WHERE id = 22"
+  },
+  {
+   "name": "real with two decimals",
+   "go": "Float",
+   "js": "number",
+   "json": "99.99",
+   "insert": "INSERT INTO vec (c_real) VALUES (99.99)",
+   "query": "SELECT c_real AS v FROM vec WHERE id = 23"
+  },
+  {
+   "name": "large real",
+   "go": "Float",
+   "js": "number",
+   "json": "1e+21",
+   "insert": "INSERT INTO vec (c_real) VALUES (1e21)",
+   "query": "SELECT c_real AS v FROM vec WHERE id = 24"
+  },
+  {
+   "name": "small real",
+   "go": "Float",
+   "js": "number",
+   "json": "1e-7",
+   "insert": "INSERT INTO vec (c_real) VALUES (1e-7)",
+   "query": "SELECT c_real AS v FROM vec WHERE id = 25"
+  },
+  {
+   "name": "negative zero",
+   "go": "Float",
+   "js": "number",
+   "json": "0",
+   "insert": "INSERT INTO vec (c_real) VALUES (-0.0)",
+   "query": "SELECT c_real AS v FROM vec WHERE id = 26"
+  },
+  {
+   "name": "real NULL",
+   "go": "Float",
+   "js": "null",
+   "json": "null",
+   "insert": "INSERT INTO vec (c_real) VALUES (NULL)",
+   "query": "SELECT c_real AS v FROM vec WHERE id = 27"
+  },
+  {
+   "name": "JSON object in text",
+   "go": "JSONText",
+   "js": "string",
+   "json": "\"{\\\"b\\\": 2, \\\"a\\\": 1}\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('{\"b\": 2, \"a\": 1}')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 28"
+  },
+  {
+   "name": "JSON array in text",
+   "go": "JSONText",
+   "js": "string",
+   "json": "\"[]\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('[]')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 29"
+  },
+  {
+   "name": "empty text",
+   "go": "JSONText",
+   "js": "string",
+   "json": "\"\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 30"
+  },
+  {
+   "name": "NULL",
+   "go": "JSONText",
+   "js": "null",
+   "json": "null",
+   "insert": "INSERT INTO vec (c_text) VALUES (NULL)",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 31"
+  },
+  {
+   "name": "parsed object",
+   "go": "JSONParsed",
+   "js": "string",
+   "json": "\"{\\\"b\\\": 2, \\\"a\\\": 1, \\\"10\\\": [1.0, 1e2, 12345678901234567890], \\\"2\\\": {\\\"x\\\": null}}\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('{\"b\": 2, \"a\": 1, \"10\": [1.0, 1e2, 12345678901234567890], \"2\": {\"x\": null}}')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 32",
+   "fallback": "{}",
+   "parsed": "{\"2\":{\"x\":null},\"10\":[1,100,12345678901234567000],\"b\":2,\"a\":1}"
+  },
+  {
+   "name": "parsed array",
+   "go": "JSONParsed",
+   "js": "string",
+   "json": "\"[1, \\\"two\\\", true, null, 1.50]\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('[1, \"two\", true, null, 1.50]')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 33",
+   "fallback": "[]",
+   "parsed": "[1,\"two\",true,null,1.5]"
+  },
+  {
+   "name": "parsed object with a key twice",
+   "go": "JSONParsed",
+   "js": "string",
+   "json": "\"{\\\"a\\\": 1, \\\"a\\\": 2}\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('{\"a\": 1, \"a\": 2}')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 34",
+   "fallback": "{}",
+   "parsed": "{\"a\":2}"
+  },
+  {
+   "name": "empty text falls back",
+   "go": "JSONParsed",
+   "js": "string",
+   "json": "\"\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 35",
+   "fallback": "[]",
+   "parsed": "[]"
+  },
+  {
+   "name": "broken text falls back",
+   "go": "JSONParsed",
+   "js": "string",
+   "json": "\"not json\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('not json')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 36",
+   "fallback": "{}",
+   "parsed": "{}"
+  },
+  {
+   "name": "a number in text",
+   "go": "JSONParsed",
+   "js": "string",
+   "json": "\"5\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('5')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 37",
+   "fallback": "{}",
+   "parsed": "5"
+  },
+  {
+   "name": "a JSON string in text",
+   "go": "JSONParsed",
+   "js": "string",
+   "json": "\"\\\"text\\\"\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('\"text\"')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 38",
+   "fallback": "{}",
+   "parsed": "\"text\""
+  },
+  {
+   "name": "NULL is null, not the fallback",
+   "go": "JSONParsed",
+   "js": "null",
+   "json": "null",
+   "insert": "INSERT INTO vec (c_text) VALUES (NULL)",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 39",
+   "fallback": "[]",
+   "parsed": "null"
+  },
+  {
+   "name": "text",
+   "go": "NullString",
+   "js": "string",
+   "json": "\"plain\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('plain')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 40"
+  },
+  {
+   "name": "empty text",
+   "go": "NullString",
+   "js": "string",
+   "json": "\"\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 41"
+  },
+  {
+   "name": "NULL",
+   "go": "NullString",
+   "js": "null",
+   "json": "null",
+   "insert": "INSERT INTO vec (c_text) VALUES (NULL)",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 42"
+  },
+  {
+   "name": "text with quotes, control characters and non-ASCII",
+   "go": "NullString",
+   "js": "string",
+   "json": "\"a \\\"quoted\\\" \\\\ back\\nline\\ttab <b>&amp;</b> é 😀\\u0001\"",
+   "insert": "INSERT INTO vec (c_text) VALUES ('a \"quoted\" \\ back\nline\ttab <b>&amp;</b> é 😀' || char(1) || '')",
+   "query": "SELECT c_text AS v FROM vec WHERE id = 43"
+  },
+  {
+   "name": "blob",
+   "go": "none",
+   "js": "Buffer",
+   "json": "{\"type\":\"Buffer\",\"data\":[222,173,190,239]}",
+   "insert": "INSERT INTO vec (c_blob) VALUES (x'deadbeef')",
+   "query": "SELECT c_blob AS v FROM vec WHERE id = 44"
+  },
+  {
+   "name": "COUNT(*)",
+   "go": "Int64String",
+   "js": "number",
+   "json": "44",
+   "query": "SELECT COUNT(*) AS v FROM vec"
+  },
+  {
+   "name": "SUM of integers",
+   "go": "Int64String",
+   "js": "number",
+   "json": "5000000041",
+   "query": "SELECT SUM(c_integer) AS v FROM vec"
+  },
+  {
+   "name": "AVG",
+   "go": "Float",
+   "js": "number",
+   "json": "1.05",
+   "query": "SELECT AVG(c_real) AS v FROM vec WHERE c_real IN (0.1, 2)"
+  },
+  {
+   "name": "MAX of a DATETIME column",
+   "go": "Time",
+   "js": "string",
+   "json": "\"2026-11-10 01:05:50\"",
+   "query": "SELECT MAX(c_datetime) AS v FROM vec"
+  }
+ ]
+}

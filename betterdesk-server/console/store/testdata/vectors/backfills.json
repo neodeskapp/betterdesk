@@ -1,0 +1,381 @@
+{
+ "instants": [
+  {
+   "ms": 0,
+   "iso": "1970-01-01T00:00:00.000Z",
+   "expiry": "1970-01-01 00:00:00.000"
+  },
+  {
+   "ms": 1,
+   "iso": "1970-01-01T00:00:00.001Z",
+   "expiry": "1970-01-01 00:00:00.001"
+  },
+  {
+   "ms": 999,
+   "iso": "1970-01-01T00:00:00.999Z",
+   "expiry": "1970-01-01 00:00:00.999"
+  },
+  {
+   "ms": 1762736751694,
+   "iso": "2025-11-10T01:05:51.694Z",
+   "expiry": "2025-11-10 01:05:51.694"
+  },
+  {
+   "ms": -1,
+   "iso": "1969-12-31T23:59:59.999Z",
+   "expiry": "1969-12-31 23:59:59.999"
+  },
+  {
+   "ms": -62135596800000,
+   "iso": "0001-01-01T00:00:00.000Z",
+   "expiry": "0001-01-01 00:00:00.000"
+  },
+  {
+   "ms": -62198755200000,
+   "iso": "-000001-01-01T00:00:00.000Z",
+   "expiry": "-000001-01-01 00:00:00.000"
+  },
+  {
+   "ms": 253402300799999,
+   "iso": "9999-12-31T23:59:59.999Z",
+   "expiry": "9999-12-31 23:59:59.999"
+  },
+  {
+   "ms": 253402300800000,
+   "iso": "+010000-01-01T00:00:00.000Z",
+   "expiry": "+010000-01-01 00:00:00.000"
+  },
+  {
+   "ms": 8640000000000000,
+   "iso": "+275760-09-13T00:00:00.000Z",
+   "expiry": "+275760-09-13 00:00:00.000"
+  }
+ ],
+ "slugify": [
+  {
+   "name": "Acme",
+   "slug": "acme"
+  },
+  {
+   "name": "  Acme Corp  ",
+   "slug": "acme-corp"
+  },
+  {
+   "name": "Büro Köln",
+   "slug": "buro-koln"
+  },
+  {
+   "name": "Zażółć gęślą jaźń",
+   "slug": "zazolc-gesla-jazn"
+  },
+  {
+   "name": "Straße",
+   "slug": "strasse"
+  },
+  {
+   "name": "Æther Øresund Å",
+   "slug": "aether-oresund-a"
+  },
+  {
+   "name": "İstanbul",
+   "slug": "i-stanbul"
+  },
+  {
+   "name": "İzmir",
+   "slug": "i-zmir"
+  },
+  {
+   "name": "Москва",
+   "slug": ""
+  },
+  {
+   "name": "東京 office",
+   "slug": "office"
+  },
+  {
+   "name": "a",
+   "slug": "a"
+  },
+  {
+   "name": "ab",
+   "slug": "ab"
+  },
+  {
+   "name": "--x--",
+   "slug": "x"
+  },
+  {
+   "name": "!!!",
+   "slug": ""
+  },
+  {
+   "name": "",
+   "slug": ""
+  },
+  {
+   "name": "UPPER lower 123",
+   "slug": "upper-lower-123"
+  },
+  {
+   "name": "A very long bundle name that does not fit the limit",
+   "slug": "a-very-long-bundle-name-that-doe"
+  },
+  {
+   "name": "exactly-thirty-two-characters-ab",
+   "slug": "exactly-thirty-two-characters-ab"
+  },
+  {
+   "name": "thirty-one characters and a dash -x",
+   "slug": "thirty-one-characters-and-a-dash"
+  },
+  {
+   "name": "tab\tand\nnewline",
+   "slug": "tab-and-newline"
+  },
+  {
+   "name": "emoji 😀 name",
+   "slug": "emoji-name"
+  },
+  {
+   "name": "čďěňřšťůýž",
+   "slug": "cdenrstuyz"
+  },
+  {
+   "name": "K elvin",
+   "slug": "k-elvin"
+  },
+  {
+   "name": "under_score.dot",
+   "slug": "under-score-dot"
+  },
+  {
+   "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "slug": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+   "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "slug": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+   "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "slug": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+   "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-b",
+   "slug": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+   "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-b",
+   "slug": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+   "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa--b",
+   "slug": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-b"
+  }
+ ],
+ "scenarios": [
+  {
+   "name": "some bundles have a slug",
+   "column_missing": false,
+   "rows": [
+    {
+     "bundle_id": "a1b2c3d4e5f6",
+     "name": "Acme",
+     "slug": "acme"
+    },
+    {
+     "bundle_id": "b1b2c3d4e5f6",
+     "name": "Acme",
+     "slug": null
+    },
+    {
+     "bundle_id": "c1b2c3d4e5f6",
+     "name": "ACME!",
+     "slug": ""
+    },
+    {
+     "bundle_id": "d1b2c3d4e5f6",
+     "name": "Büro Köln",
+     "slug": null
+    },
+    {
+     "bundle_id": "e1b2c3d4e5f6",
+     "name": "",
+     "slug": null
+    },
+    {
+     "bundle_id": "f1b2c3d4e5f6",
+     "name": "!!!",
+     "slug": null
+    },
+    {
+     "bundle_id": "a2b2c3d4e5f6",
+     "name": "A very long bundle name that does not fit the limit",
+     "slug": null
+    },
+    {
+     "bundle_id": "b2b2c3d4e5f6",
+     "name": "A very long bundle name that does not fit the limit",
+     "slug": null
+    },
+    {
+     "bundle_id": "c2b2c3d4e5f6",
+     "name": "İstanbul Ofis",
+     "slug": null
+    },
+    {
+     "bundle_id": "d2b2c3d4e5f6",
+     "name": "x",
+     "slug": null
+    },
+    {
+     "bundle_id": "e2b2c3d4e5f6",
+     "name": "Zażółć gęślą jaźń",
+     "slug": null
+    },
+    {
+     "bundle_id": "f2b2c3d4e5f6",
+     "name": "Straße",
+     "slug": null
+    },
+    {
+     "bundle_id": "Z",
+     "name": "",
+     "slug": null
+    },
+    {
+     "bundle_id": "a3b2c3d4e5f6",
+     "name": "Support  --  Team #1",
+     "slug": null
+    },
+    {
+     "bundle_id": "b3b2c3d4e5f6",
+     "name": "acme 2",
+     "slug": null
+    }
+   ],
+   "want": {
+    "a1b2c3d4e5f6": "acme",
+    "b1b2c3d4e5f6": "acme-2",
+    "c1b2c3d4e5f6": "acme-3",
+    "d1b2c3d4e5f6": "buro-koln",
+    "e1b2c3d4e5f6": "e1b2c3d4e5f6",
+    "f1b2c3d4e5f6": "f1b2c3d4e5f6",
+    "a2b2c3d4e5f6": "a-very-long-bundle-name-that-doe",
+    "b2b2c3d4e5f6": "a-very-long-bundle-name-that-d-2",
+    "c2b2c3d4e5f6": "i-stanbul-ofis",
+    "d2b2c3d4e5f6": "d2b2c3d4e5f6",
+    "e2b2c3d4e5f6": "zazolc-gesla-jazn",
+    "f2b2c3d4e5f6": "strasse",
+    "Z": "Z",
+    "a3b2c3d4e5f6": "support-team-1",
+    "b3b2c3d4e5f6": "acme-2-2"
+   }
+  },
+  {
+   "name": "the table has no slug column",
+   "column_missing": true,
+   "rows": [
+    {
+     "bundle_id": "a1b2c3d4e5f6",
+     "name": "Acme",
+     "slug": null
+    },
+    {
+     "bundle_id": "b1b2c3d4e5f6",
+     "name": "Acme",
+     "slug": null
+    },
+    {
+     "bundle_id": "c1b2c3d4e5f6",
+     "name": "ACME!",
+     "slug": null
+    },
+    {
+     "bundle_id": "d1b2c3d4e5f6",
+     "name": "Büro Köln",
+     "slug": null
+    },
+    {
+     "bundle_id": "e1b2c3d4e5f6",
+     "name": "",
+     "slug": null
+    },
+    {
+     "bundle_id": "f1b2c3d4e5f6",
+     "name": "!!!",
+     "slug": null
+    },
+    {
+     "bundle_id": "a2b2c3d4e5f6",
+     "name": "A very long bundle name that does not fit the limit",
+     "slug": null
+    },
+    {
+     "bundle_id": "b2b2c3d4e5f6",
+     "name": "A very long bundle name that does not fit the limit",
+     "slug": null
+    },
+    {
+     "bundle_id": "c2b2c3d4e5f6",
+     "name": "İstanbul Ofis",
+     "slug": null
+    },
+    {
+     "bundle_id": "d2b2c3d4e5f6",
+     "name": "x",
+     "slug": null
+    },
+    {
+     "bundle_id": "e2b2c3d4e5f6",
+     "name": "Zażółć gęślą jaźń",
+     "slug": null
+    },
+    {
+     "bundle_id": "f2b2c3d4e5f6",
+     "name": "Straße",
+     "slug": null
+    },
+    {
+     "bundle_id": "Z",
+     "name": "",
+     "slug": null
+    },
+    {
+     "bundle_id": "a3b2c3d4e5f6",
+     "name": "Support  --  Team #1",
+     "slug": null
+    },
+    {
+     "bundle_id": "b3b2c3d4e5f6",
+     "name": "acme 2",
+     "slug": null
+    }
+   ],
+   "want": {
+    "a1b2c3d4e5f6": "acme",
+    "b1b2c3d4e5f6": "acme-2",
+    "c1b2c3d4e5f6": "acme-3",
+    "d1b2c3d4e5f6": "buro-koln",
+    "e1b2c3d4e5f6": "e1b2c3d4e5f6",
+    "f1b2c3d4e5f6": "f1b2c3d4e5f6",
+    "a2b2c3d4e5f6": "a-very-long-bundle-name-that-doe",
+    "b2b2c3d4e5f6": "a-very-long-bundle-name-that-d-2",
+    "c2b2c3d4e5f6": "i-stanbul-ofis",
+    "d2b2c3d4e5f6": "d2b2c3d4e5f6",
+    "e2b2c3d4e5f6": "zazolc-gesla-jazn",
+    "f2b2c3d4e5f6": "strasse",
+    "Z": "Z",
+    "a3b2c3d4e5f6": "support-team-1",
+    "b3b2c3d4e5f6": "acme-2-2"
+   }
+  }
+ ],
+ "token_hashes": {
+  "abc": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+  "token-2": "0f6bffa9661cb5dd2f3f7b2929f33061f58a7ba7fdd689530b1a306f8ed8f3ec",
+  "token-3": "a2f2b0b588bcc84fbf4d2ac8cc086b6f84de3e00fa3c1ba11e38ac078eb03192",
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef": "a8ae6e6ee929abea3afcfc5258c8ccd6f85273e0d4626d26c7279f3250f77c8e",
+  "töken €": "4f8df982c47d2ba1e1661e8acd74054e21604b429279a83c0049818db2bd1861"
+ }
+}

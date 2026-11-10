@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync/atomic"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
@@ -41,6 +42,8 @@ type DB struct {
 	write   *sql.DB
 	read    *sql.DB
 	dialect Dialect
+	// shape is what the tables looked like at the last Migrate or Inspect
+	shape atomic.Pointer[Shape]
 }
 
 // sqliteReaders is the number of read-only connections on SQLite.
