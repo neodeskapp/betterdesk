@@ -11,6 +11,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/i18n"
 	"github.com/unitronix/betterdesk-server/console/limits"
+	"github.com/unitronix/betterdesk-server/console/serverinfo"
 	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/webui"
@@ -59,6 +60,10 @@ type Deps struct {
 	// GoAPI is the client for the API server in this process
 	// (services/betterdeskApi.js).
 	GoAPI *goapi.Client
+	// ServerInfo answers how clients reach this server: the keys, the
+	// addresses, the client configuration (services/keyService.js,
+	// services/clientConfigHost.js and the services next to them).
+	ServerInfo *serverinfo.Service
 	// Audit writes the audit log. LogAction is the usual way to it.
 	Audit *auditlog.Log
 	// Log is the console's logger; a group takes d.Log.Child("TICKETS").

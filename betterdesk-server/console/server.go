@@ -37,6 +37,8 @@ import (
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/limits"
 	"github.com/unitronix/betterdesk-server/console/proxy"
+	"github.com/unitronix/betterdesk-server/console/qr"
+	"github.com/unitronix/betterdesk-server/console/serverinfo"
 	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/webui"
@@ -181,6 +183,24 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		Log:   kit.NewLogger(cfg.LogLevel, cfg.Production),
 		Jobs:  s.jobs,
 	}
+	s.deps.ServerInfo = serverinfo.New(serverinfo.Options{
+		PubKeyPath:  cfg.PubKeyPath,
+		APIKeyPath:  cfg.APIKeyPath,
+		DBPath:      cfg.DBPath,
+		APIURL:      cfg.APIURL,
+		GoAPIPort:   cfg.GoAPIPort,
+		APIPort:     cfg.APIPort,
+		DataDir:     cfg.DataDir,
+		EnvPath:     cfg.EnvPath,
+		IsDocker:    cfg.Docker,
+		Getenv:      getenv,
+		ComposePath: cfg.ComposePath,
+		GoAPI:       api,
+		QR: func(text string) (string, error) {
+			return qr.PNGDataURL(text, qr.Options{Width: 256, Margin: 2})
+		},
+		Logger: s.deps.Log,
+	})
 	badParam := func(w http.ResponseWriter, r *http.Request, err error) {
 		host.ServerError(w, r, err, http.StatusBadRequest)
 	}

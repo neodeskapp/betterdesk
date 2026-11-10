@@ -651,3 +651,11 @@ func isASCII(s string) bool {
 	}
 	return true
 }
+
+// URLPort returns the port of an absolute URL as "new URL(text).port"
+// reports it: the digits, or "" when the URL names no port or the one of
+// its scheme. ok is false where "new URL" throws.
+func URLPort(text string) (port string, ok bool) {
+	u, ok := parseJSURL(text)
+	return u.port, ok
+}

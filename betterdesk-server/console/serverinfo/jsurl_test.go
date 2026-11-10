@@ -46,3 +46,28 @@ func TestParseJSURLAgainstNode(t *testing.T) {
 		t.Fatalf("%d parsed and %d refused: too few", parsed, refused)
 	}
 }
+
+func TestURLPort(t *testing.T) {
+	for _, c := range []struct {
+		text, port string
+		ok         bool
+	}{
+		{"http://127.0.0.1:21114/api", "21114", true},
+		{"http://127.0.0.1:021121/api", "21121", true},
+		{"http://host/api", "", true},
+		{"http://host:80/api", "", true},
+		{"https://host:443", "", true},
+		{"https://host:80", "80", true},
+		{" http://host:5 ", "5", true},
+		{"localhost:21114/api", "", true},
+		{"127.0.0.1:21114/api", "", false},
+		{"http://host:99999", "", false},
+		{"not a url", "", false},
+		{"", "", false},
+	} {
+		port, ok := URLPort(c.text)
+		if port != c.port || ok != c.ok {
+			t.Errorf("URLPort(%q) = %q, %v; want %q, %v", c.text, port, ok, c.port, c.ok)
+		}
+	}
+}

@@ -87,6 +87,41 @@ type Config struct {
 	// (BETTERDESK_API_URL). Calls into the API carry it as Host.
 	APIHost string
 
+	// KeysPath is the folder the server writes its keys to (KEYS_PATH,
+	// RUSTDESK_DIR, RUSTDESK_PATH, else the first usual place).
+	KeysPath string
+	// DBPath is the database file as the old console named it (DB_PATH,
+	// else db_v2.sqlite3 in KeysPath). It is only reported.
+	DBPath string
+	// PubKeyPath and APIKeyPath are the server's public key file and the
+	// API key file (PUB_KEY_PATH, API_KEY_PATH, else id_ed25519.pub and
+	// .api_key in KeysPath).
+	PubKeyPath string
+	APIKeyPath string
+	// APIURL is the address of the server's API as configured
+	// (BETTERDESK_API_URL, else HBBS_API_URL, else
+	// http://127.0.0.1:21114/api), as written.
+	APIURL string
+	// GoAPIPort is the port of the server's API: GO_API_PORT, else the
+	// port of APIURL, else 21114.
+	GoAPIPort int
+	// APIPort is the client API port (API_PORT, default 21121), and
+	// APIEnabled says whether the old console listened on it
+	// (API_ENABLED).
+	APIPort    int
+	APIEnabled bool
+	// SignalHost and SignalPort are where the console reaches the signal
+	// server, RelayHost and RelayPort the relay (WS_HBBS_HOST,
+	// WS_HBBS_PORT, WS_HBBR_HOST, WS_HBBR_PORT).
+	SignalHost string
+	SignalPort int
+	RelayHost  string
+	RelayPort  int
+	// EnvPath is the old console's own .env file and ComposePath the
+	// compose file in the folder above the console.
+	EnvPath     string
+	ComposePath string
+
 	// Getenv reads the settings that packages parse themselves: the
 	// session secret and policy (package session) and the rate limits
 	// (package limits).
@@ -182,6 +217,21 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 	cfg.DeviceScopeDefault = strings.ToLower(orDefault(getenv("DEVICE_SCOPE_DEFAULT"), "open"))
 	cfg.LogLevel = getenv("LOG_LEVEL")
 	cfg.APIHost = apiHost(getenv)
+
+	cfg.KeysPath = keysPath(getenv, p, cfg.Docker)
+	cfg.DBPath = orDefault(getenv("DB_PATH"), filepath.Join(cfg.KeysPath, "db_v2.sqlite3"))
+	cfg.PubKeyPath = orDefault(getenv("PUB_KEY_PATH"), filepath.Join(cfg.KeysPath, "id_ed25519.pub"))
+	cfg.APIKeyPath = orDefault(getenv("API_KEY_PATH"), filepath.Join(cfg.KeysPath, ".api_key"))
+	cfg.APIURL = orDefault(orDefault(getenv("BETTERDESK_API_URL"), getenv("HBBS_API_URL")), defaultAPIURL)
+	cfg.GoAPIPort = parseIntOr(getenv("GO_API_PORT"), apiURLPort(cfg.APIURL, defaultGoAPIPort))
+	cfg.APIPort = parseIntOr(getenv("API_PORT"), 21121)
+	cfg.APIEnabled = isTrue(orDefault(getenv("API_ENABLED"), "true"))
+	cfg.SignalHost = orDefault(getenv("WS_HBBS_HOST"), "localhost")
+	cfg.SignalPort = parseIntOr(getenv("WS_HBBS_PORT"), 21116)
+	cfg.RelayHost = orDefault(getenv("WS_HBBR_HOST"), "localhost")
+	cfg.RelayPort = parseIntOr(getenv("WS_HBBR_PORT"), 21117)
+	cfg.EnvPath = filepath.Join(cfg.ConsoleDir, ".env")
+	cfg.ComposePath = filepath.Join(cfg.ConsoleDir, "..", "docker-compose.yml")
 	return cfg, nil
 }
 
@@ -260,3 +310,95 @@ func apiHost(getenv func(string) string) string {
 	}
 	return u.Host
 }
+
+// The API address and port of an install that sets neither.
+const (
+	defaultAPIURL    = "http://127.0.0.1:21114/api"
+	defaultGoAPIPort = 21114
+)
+
+// keysPath finds the folder the server keeps its keys in: KEYS_PATH, else
+// RUSTDESK_DIR, else RUSTDESK_PATH, else /opt/rustdesk in a container,
+// else the first of the usual two folders that has the private key
+// (id_ed25519), else the newer of the two.
+func keysPath(getenv func(string) string, p probe, docker bool) string {
+	for _, name := range []string{"KEYS_PATH", "RUSTDESK_DIR", "RUSTDESK_PATH"} {
+		if dir := getenv(name); dir != "" {
+			return dir
+		}
+	}
+	if docker {
+		return "/opt/rustdesk"
+	}
+	places, separator := []string{"/opt/betterdesk", "/opt/rustdesk"}, "/"
+	if p.windows {
+		places, separator = []string{`C:\BetterDesk`, `C:\RustDesk`}, `\`
+	}
+	for _, place := range places {
+		if p.exists(place + separator + "id_ed25519") {
+			return place
+		}
+	}
+	return places[0]
+}
+
+// parseIntOr is parseInt(s, 10) || fallback, which is how the old console
+// read its numeric settings: leading spaces and a sign are fine, digits
+// are read up to the first other character, and a value that is not a
+// number or is zero gives the fallback.
+func parseIntOr(s string, fallback int) int {
+	s = strings.TrimLeft(s, " \t\n\v\f\r")
+	negative := false
+	if s != "" && (s[0] == '+' || s[0] == '-') {
+		negative = s[0] == '-'
+		s = s[1:]
+	}
+	const ceiling = 1 << 53
+	n, digits := 0, 0
+	for digits < len(s) && s[digits] >= '0' && s[digits] <= '9' {
+		if n < ceiling {
+			n = n*10 + int(s[digits]-'0')
+		}
+		digits++
+	}
+	if digits == 0 || n == 0 {
+		return fallback
+	}
+	if negative {
+		return -n
+	}
+	return n
+}
+
+// apiURLPort is the port of an API address as the old console read it:
+// the one the address names, else 443 for https and 80 for any other
+// scheme, and fallback for a text that is not an address.
+func apiURLPort(raw string, fallback int) int {
+	raw = strings.TrimFunc(raw, func(r rune) bool { return r <= ' ' })
+	raw = strings.NewReplacer("\t", "", "\n", "", "\r", "").Replace(raw)
+	u, err := url.Parse(raw)
+	if err != nil || u.Scheme == "" {
+		return fallback
+	}
+	scheme := strings.ToLower(u.Scheme)
+	standard, known := schemePorts[scheme]
+	if known && u.Hostname() == "" {
+		return fallback
+	}
+	if text := u.Port(); text != "" {
+		port, err := strconv.Atoi(text)
+		if err != nil || port > 65535 {
+			return fallback
+		}
+		if !known || port != standard {
+			return port
+		}
+	}
+	if scheme == "https" {
+		return 443
+	}
+	return 80
+}
+
+// schemePorts are the ports an address of these schemes need not name.
+var schemePorts = map[string]int{"ftp": 21, "http": 80, "https": 443, "ws": 80, "wss": 443}

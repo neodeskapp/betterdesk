@@ -5,10 +5,13 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/cdapstudio"
 	"github.com/unitronix/betterdesk-server/console/routes/chat"
 	consoleroutes "github.com/unitronix/betterdesk-server/console/routes/console"
+	"github.com/unitronix/betterdesk-server/console/routes/dashboard"
 	"github.com/unitronix/betterdesk-server/console/routes/health"
 	i18nroutes "github.com/unitronix/betterdesk-server/console/routes/i18n"
+	"github.com/unitronix/betterdesk-server/console/routes/keys"
 	"github.com/unitronix/betterdesk-server/console/routes/languages"
 	"github.com/unitronix/betterdesk-server/console/routes/meshcentral"
+	"github.com/unitronix/betterdesk-server/console/routes/pairing"
 	"github.com/unitronix/betterdesk-server/console/routes/uishell"
 )
 
@@ -22,10 +25,13 @@ import (
 func registerRoutes(d *kit.Deps) {
 	health.Register(d)        // routes/index.js: GET /health
 	consoleroutes.Register(d) // routes/console.routes.js: the strings endpoint
+	dashboard.Register(d)     // routes/dashboard.routes.js
+	keys.Register(d)          // routes/keys.routes.js
 	uishell.Register(d)       // routes/ui-shell.routes.js
 	i18nroutes.Register(d)    // routes/i18n.routes.js at /api/i18n
-	languages.Register(d)     // routes/languages.routes.js
 	meshcentral.Register(d)   // routes/meshcentral.routes.js
 	chat.Register(d)          // routes/chat.routes.js
+	languages.Register(d)     // routes/languages.routes.js
 	cdapstudio.Register(d)    // routes/cdap-studio.routes.js
+	pairing.Register(d)       // routes/pairing.routes.js
 }

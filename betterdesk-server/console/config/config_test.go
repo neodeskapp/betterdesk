@@ -1,7 +1,10 @@
 package config
 
 import (
+	"encoding/json"
+	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 )
 
@@ -216,4 +219,190 @@ func TestLoadDebugRouting(t *testing.T) {
 			t.Errorf("CONSOLE_DEBUG_ROUTING=%q gives DebugRouting %v, want %v", value, cfg.DebugRouting, want)
 		}
 	}
+}
+
+// TestSettingsAsTheOldConsoleReadThem replays testdata/settings.json: what
+// config/config.js of the Node console made of each environment
+// (testdata/nodeoracle/settings.js).
+func TestSettingsAsTheOldConsoleReadThem(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("testdata", "settings.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var cases []struct {
+		Env    map[string]string `json:"env"`
+		Docker bool              `json:"docker"`
+		Config struct {
+			GoAPIPort  int    `json:"goApiPort"`
+			APIPort    int    `json:"apiPort"`
+			APIEnabled bool   `json:"apiEnabled"`
+			HbbsAPIURL string `json:"hbbsApiUrl"`
+			APIURL     string `json:"betterdeskApiUrl"`
+			KeysPath   string `json:"keysPath"`
+			DBPath     string `json:"dbPath"`
+			PubKeyPath string `json:"pubKeyPath"`
+			APIKeyPath string `json:"apiKeyPath"`
+			WSProxy    struct {
+				HbbsHost string `json:"hbbsHost"`
+				HbbsPort int    `json:"hbbsPort"`
+				HbbrHost string `json:"hbbrHost"`
+				HbbrPort int    `json:"hbbrPort"`
+			} `json:"wsProxy"`
+		} `json:"config"`
+	}
+	if err := json.Unmarshal(raw, &cases); err != nil {
+		t.Fatal(err)
+	}
+	if len(cases) < 100 {
+		t.Fatalf("only %d cases in testdata/settings.json", len(cases))
+	}
+	for _, c := range cases {
+		var files []string
+		if c.Docker {
+			files = append(files, "/.dockerenv")
+		}
+		cfg, err := load(env(c.Env), machine("/srv/bin", "/srv/run", files...))
+		if err != nil {
+			t.Errorf("%v: %v", c.Env, err)
+			continue
+		}
+		want := c.Config
+		if cfg.GoAPIPort != want.GoAPIPort || cfg.APIPort != want.APIPort || cfg.APIEnabled != want.APIEnabled {
+			t.Errorf("%q: GoAPIPort %d, APIPort %d, APIEnabled %v; the old console read %d, %d, %v",
+				c.Env, cfg.GoAPIPort, cfg.APIPort, cfg.APIEnabled, want.GoAPIPort, want.APIPort, want.APIEnabled)
+		}
+		if cfg.APIURL != want.APIURL || cfg.APIURL != want.HbbsAPIURL {
+			t.Errorf("%q: APIURL %q; the old console read %q", c.Env, cfg.APIURL, want.APIURL)
+		}
+		if cfg.KeysPath != want.KeysPath || cfg.DBPath != want.DBPath || cfg.PubKeyPath != want.PubKeyPath || cfg.APIKeyPath != want.APIKeyPath {
+			t.Errorf("%q: KeysPath %q, DBPath %q, PubKeyPath %q, APIKeyPath %q; the old console read %q, %q, %q, %q",
+				c.Env, cfg.KeysPath, cfg.DBPath, cfg.PubKeyPath, cfg.APIKeyPath, want.KeysPath, want.DBPath, want.PubKeyPath, want.APIKeyPath)
+		}
+		if cfg.SignalHost != want.WSProxy.HbbsHost || cfg.SignalPort != want.WSProxy.HbbsPort ||
+			cfg.RelayHost != want.WSProxy.HbbrHost || cfg.RelayPort != want.WSProxy.HbbrPort {
+			t.Errorf("%q: signal %s:%d, relay %s:%d; the old console read %+v",
+				c.Env, cfg.SignalHost, cfg.SignalPort, cfg.RelayHost, cfg.RelayPort, want.WSProxy)
+		}
+	}
+}
+
+func TestKeysPathSearch(t *testing.T) {
+	windows := func(files ...string) probe {
+		have := map[string]bool{}
+		for _, f := range files {
+			have[f] = true
+		}
+		return probe{exists: func(p string) bool { return have[p] }, windows: true}
+	}
+	cases := []struct {
+		name string
+		env  map[string]string
+		on   probe
+		want string
+	}{
+		{"nothing found: the newer folder", nil, machine("", ""), "/opt/betterdesk"},
+		{"the newer folder has the key", nil, machine("", "", "/opt/betterdesk/id_ed25519", "/opt/rustdesk/id_ed25519"), "/opt/betterdesk"},
+		{"only the older folder has the key", nil, machine("", "", "/opt/rustdesk/id_ed25519"), "/opt/rustdesk"},
+		{"the public key alone does not count", nil, machine("", "", "/opt/rustdesk/id_ed25519.pub"), "/opt/betterdesk"},
+		{"a container", nil, machine("", "", "/.dockerenv", "/opt/betterdesk/id_ed25519"), "/opt/rustdesk"},
+		{"KEYS_PATH first", map[string]string{"KEYS_PATH": "/k", "RUSTDESK_DIR": "/d", "RUSTDESK_PATH": "/p"}, machine("", "", "/.dockerenv"), "/k"},
+		{"then RUSTDESK_DIR", map[string]string{"RUSTDESK_DIR": "/d", "RUSTDESK_PATH": "/p"}, machine("", ""), "/d"},
+		{"then RUSTDESK_PATH", map[string]string{"RUSTDESK_PATH": "/p"}, machine("", "", "/opt/rustdesk/id_ed25519"), "/p"},
+		{"Windows, nothing found", nil, windows(), `C:\BetterDesk`},
+		{"Windows, the newer folder", nil, windows(`C:\BetterDesk\id_ed25519`, `C:\RustDesk\id_ed25519`), `C:\BetterDesk`},
+		{"Windows, the older folder", nil, windows(`C:\RustDesk\id_ed25519`), `C:\RustDesk`},
+	}
+	for _, c := range cases {
+		cfg, err := load(env(c.env), c.on)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if cfg.KeysPath != c.want {
+			t.Errorf("%s: KeysPath = %q, want %q", c.name, cfg.KeysPath, c.want)
+		}
+		if want := filepath.Join(c.want, "id_ed25519.pub"); cfg.PubKeyPath != want {
+			t.Errorf("%s: PubKeyPath = %q, want %q", c.name, cfg.PubKeyPath, want)
+		}
+		if want := filepath.Join(c.want, ".api_key"); cfg.APIKeyPath != want {
+			t.Errorf("%s: APIKeyPath = %q, want %q", c.name, cfg.APIKeyPath, want)
+		}
+		if want := filepath.Join(c.want, "db_v2.sqlite3"); cfg.DBPath != want {
+			t.Errorf("%s: DBPath = %q, want %q", c.name, cfg.DBPath, want)
+		}
+	}
+}
+
+func TestKeyFilesHaveTheirOwnSettings(t *testing.T) {
+	cfg, err := load(env(map[string]string{
+		"KEYS_PATH": "/k", "DB_PATH": "/x/db.sqlite3", "PUB_KEY_PATH": "/y/key.pub", "API_KEY_PATH": "/z/api",
+	}), machine("", ""))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.KeysPath != "/k" || cfg.DBPath != "/x/db.sqlite3" || cfg.PubKeyPath != "/y/key.pub" || cfg.APIKeyPath != "/z/api" {
+		t.Errorf("paths = %q %q %q %q", cfg.KeysPath, cfg.DBPath, cfg.PubKeyPath, cfg.APIKeyPath)
+	}
+}
+
+func TestEnvAndComposePaths(t *testing.T) {
+	cfg, err := load(env(map[string]string{"CONSOLE_DIR": "/opt/BetterDeskConsole"}), machine("", ""))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := filepath.Join("/opt/BetterDeskConsole", ".env"); cfg.EnvPath != want {
+		t.Errorf("EnvPath = %q, want %q", cfg.EnvPath, want)
+	}
+	if want := filepath.Join("/opt", "docker-compose.yml"); cfg.ComposePath != want {
+		t.Errorf("ComposePath = %q, want %q", cfg.ComposePath, want)
+	}
+}
+
+func TestSignalAndRelaySettings(t *testing.T) {
+	cfg, err := load(env(map[string]string{
+		"WS_HBBS_HOST": "signal.example", "WS_HBBS_PORT": "31116", "WS_HBBR_HOST": "relay.example", "WS_HBBR_PORT": "41117",
+	}), machine("", ""))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.SignalHost != "signal.example" || cfg.SignalPort != 31116 || cfg.RelayHost != "relay.example" || cfg.RelayPort != 41117 {
+		t.Errorf("signal %s:%d, relay %s:%d", cfg.SignalHost, cfg.SignalPort, cfg.RelayHost, cfg.RelayPort)
+	}
+}
+
+func TestAPIAddressDefaults(t *testing.T) {
+	cfg, err := load(env(nil), machine("", ""))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.APIURL != "http://127.0.0.1:21114/api" || cfg.GoAPIPort != 21114 || cfg.APIPort != 21121 || !cfg.APIEnabled {
+		t.Errorf("API defaults = %q %d %d %v", cfg.APIURL, cfg.GoAPIPort, cfg.APIPort, cfg.APIEnabled)
+	}
+	if cfg.SignalHost != "localhost" || cfg.SignalPort != 21116 || cfg.RelayHost != "localhost" || cfg.RelayPort != 21117 {
+		t.Errorf("signal and relay defaults = %s:%d %s:%d", cfg.SignalHost, cfg.SignalPort, cfg.RelayHost, cfg.RelayPort)
+	}
+}
+
+// FuzzAPIURLPort reads any text as an API address: the result is the
+// fallback or a port, and a plain http address with a port gives that
+// port.
+func FuzzAPIURLPort(f *testing.F) {
+	for _, seed := range []string{"http://127.0.0.1:21114/api", "https://host", "http://host:99999", " http://host:5 ", "localhost:1/x", "//host:5", "http://[::1]:7/", "not a url", "", "http://:5", "ftp://h:21"} {
+		f.Add(seed, 21114)
+	}
+	f.Fuzz(func(t *testing.T, raw string, port int) {
+		got := apiURLPort(raw, -1)
+		if got != -1 && (got < 0 || got > 65535) {
+			t.Fatalf("apiURLPort(%q) = %d", raw, got)
+		}
+		if port < 1 || port > 65535 || port == 80 {
+			return
+		}
+		address := "http://server.example:" + strconv.Itoa(port) + "/api"
+		if got := apiURLPort(address, -1); got != port {
+			t.Fatalf("apiURLPort(%q) = %d", address, got)
+		}
+		if got := parseIntOr(" +"+strconv.Itoa(port)+raw, -1); got < port && got != -1 {
+			t.Fatalf("parseIntOr(%q) = %d", " +"+strconv.Itoa(port)+raw, got)
+		}
+	})
 }

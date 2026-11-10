@@ -36,6 +36,29 @@
 //	                         else info
 //	BETTERDESK_API_URL       http://127.0.0.1:21114/api  Its host and port are the Host of calls into the API server.
 //	(or HBBS_API_URL)                              Without it the server's own API port is used.
+//	                                               Its host is also the host clients are given when nothing else
+//	                                               names one, and its scheme decides between http and https there.
+//	GO_API_PORT              port of the API       Port of the server's API in the API address given to clients. Without
+//	                         address, else 21114   a port in the address: 443 for https, 80 for any other scheme.
+//	API_PORT                 21121                 The client API port.
+//	API_ENABLED              true                  "true" in any letter case: the client API port is reported as the
+//	                                               port clients sign in on. Empty counts as not set.
+//	KEYS_PATH                (searched)            Folder the server writes its keys to. Else RUSTDESK_DIR, else
+//	(or RUSTDESK_DIR,                              RUSTDESK_PATH, else /opt/rustdesk in a container, else the first of
+//	RUSTDESK_PATH)                                 /opt/betterdesk and /opt/rustdesk that has id_ed25519 (C:\BetterDesk
+//	                                               and C:\RustDesk on Windows), else the first of the two.
+//	PUB_KEY_PATH             KEYS_PATH/id_ed25519.pub  The server's public key file.
+//	API_KEY_PATH             KEYS_PATH/.api_key    The API key file.
+//	DB_PATH                  KEYS_PATH/db_v2.sqlite3  The database file as the old console named it. Only reported.
+//	WS_HBBS_HOST             localhost             Where the console reaches the signal server. The server status
+//	WS_HBBS_PORT             21116                 reports the port and the ports next to it (NAT test, websockets).
+//	WS_HBBR_HOST             localhost             Where the console reaches the relay.
+//	WS_HBBR_PORT             21117
+//
+// The numbers are read as the old console read them: digits up to the
+// first other character, and the default for zero or no number. Two files
+// have fixed places: the old console's own .env in CONSOLE_DIR, and
+// docker-compose.yml in the folder above it.
 //
 // Read by the packages that own them, through Config.Getenv:
 //
