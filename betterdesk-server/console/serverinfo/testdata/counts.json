@@ -1,0 +1,70 @@
+{
+  "connection": {
+    "total": 9544,
+    "parse_systemd": 714,
+    "patch_systemd": 1428,
+    "parse_compose": 713,
+    "patch_compose": 1426,
+    "settings_from_env": 2004,
+    "env_vars_from_settings": 1684,
+    "settings_from_api": 1247,
+    "service": 318,
+    "shell": 10
+  },
+  "endpoints": {
+    "total": 3052,
+    "normalize": 1355,
+    "override_active": 8,
+    "read": 705,
+    "write": 984
+  },
+  "envmerge": {
+    "total": 7421,
+    "parse_env_lines": 731,
+    "parse_env_file": 731,
+    "build_fresh": 120,
+    "upsert": 2638,
+    "merge": 1501,
+    "substitute": 600,
+    "assert_resolved": 300,
+    "build_substitutions": 400,
+    "merge_file": 400
+  },
+  "hosts": {
+    "total": 9593,
+    "normalize_server_host": 2388,
+    "normalize_host_input": 2388,
+    "strip_request_host": 2388,
+    "phone_unreachable": 2388,
+    "default_server": 41
+  },
+  "idna": {
+    "total": 20961,
+    "inside": 10390,
+    "first": 10347,
+    "names": 224
+  },
+  "keys": {
+    "total": 9179,
+    "valid_key": 467,
+    "api_url_for_host": 392,
+    "payload": 8036,
+    "key_files": 19,
+    "api_key_half_characters": 3,
+    "runs": 260,
+    "qr_options": 2
+  },
+  "resolve": {
+    "total": 3480,
+    "resolve": 3480
+  },
+  "urls": {
+    "total": 2417,
+    "parse": 2417
+  },
+  "version": {
+    "total": 719,
+    "read": 717,
+    "embedded_without_dir": 2
+  }
+}
