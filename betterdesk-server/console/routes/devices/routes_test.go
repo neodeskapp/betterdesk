@@ -1,0 +1,273 @@
+package devices_test
+
+import (
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strings"
+	"testing"
+
+	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
+	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/unitronix/betterdesk-server/console/store/storetest"
+)
+
+// world is a console with a made-up API server that has the devices A
+// (open) and C (in a group only e2e_viewer may see), and answers every
+// write with success.
+func world(t *testing.T, db *store.DB, roles routetest.Overrides, configure func(cfg *config.Config)) (*routetest.World, *routetest.API) {
+	t.Helper()
+	api := routetest.NewAPI()
+	api.Fallback = func(c routetest.Call) routetest.Reply {
+		switch {
+		case c.Method == "GET" && c.Target == "/api/peers":
+			return routetest.Reply{Status: 200, Body: `{"peers":[{"id":"A","hostname":"a"},{"id":"C","hostname":"c"}]}`}
+		case c.Method == "GET" && strings.HasPrefix(c.Target, "/api/remote-targets"):
+			return routetest.Reply{Status: 200, Body: `{"targets":[]}`}
+		case c.Method == "GET" && (c.Target == "/api/peers/A" || c.Target == "/api/peers/C"):
+			id := strings.TrimPrefix(c.Target, "/api/peers/")
+			return routetest.Reply{Status: 200, Body: `{"id":"` + id + `","hostname":"h"}`}
+		case c.Method != "GET":
+			return routetest.Reply{Status: 200, Body: `{"status":"ok"}`}
+		}
+		return routetest.Reply{Status: 404, Body: `{"error":"not found"}`}
+	}
+	opts := routetest.Options{DB: db, API: api, Env: raisedLimits, Config: func(cfg *config.Config) {
+		nodeLanguages(cfg)
+		if configure != nil {
+			configure(cfg)
+		}
+	}}
+	if roles != nil {
+		opts.Roles = roles
+	}
+	w := routetest.New(t, opts)
+	ctx := context.Background()
+	for _, q := range []string{
+		`INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-viewer', 'Viewer only', '', '', 'manual', '')`,
+		`INSERT INTO device_group_user_access (device_group_id, user_id) SELECT id, 6 FROM device_groups WHERE guid = 'g-viewer'`,
+		`INSERT INTO device_group_members (device_group_id, peer_id) SELECT id, 'C' FROM device_groups WHERE guid = 'g-viewer'`,
+	} {
+		if _, err := db.Exec(ctx, q); err != nil {
+			t.Fatalf("%s: %v", q, err)
+		}
+	}
+	return w, api
+}
+
+// TestEveryRouteChecksTheScope sends every route that names a device, as
+// an account that has every permission but may not see device C: each
+// answers 403 and makes no call to the API server that changes anything.
+func TestEveryRouteChecksTheScope(t *testing.T) {
+	all := map[string]bool{}
+	for _, p := range []string{"device.view", "device.edit", "device.delete", "device.ban", "device.change_id", "device.connection_mode", "device.connect"} {
+		all[p] = true
+	}
+	w, api := world(t, storetest.Migrated(t), routetest.Overrides{"operator": all}, nil)
+	operator := w.As("operator")
+	forbidden := `{"success":false,"error":"errors.forbidden"}`
+	for _, c := range []struct{ method, path, body string }{
+		{"GET", "/api/devices/C", ""},
+		{"GET", "/api/devices/C/groups", ""},
+		{"PUT", "/api/devices/C/groups", `{"groupGuids":[]}`},
+		{"GET", "/api/devices/C/availability", ""},
+		{"GET", "/api/devices/C/connection-sessions", ""},
+		{"POST", "/api/devices/C/telemetry/refresh", `{}`},
+		{"POST", "/api/devices/C/telemetry/command", `{"command":"collect.services"}`},
+		{"PATCH", "/api/devices/C", `{"note":"x"}`},
+		{"DELETE", "/api/devices/C?hard=true", ``},
+		{"POST", "/api/devices/C/restore", `{}`},
+		{"POST", "/api/devices/C/connection-mode", `{"mode":"normal","reason":"x"}`},
+		{"POST", "/api/devices/C/ban", `{}`},
+		{"POST", "/api/devices/C/unban", `{}`},
+		{"POST", "/api/devices/C/change-id", `{"newId":"NEWID1"}`},
+		{"PUT", "/api/devices/C/tags", `{"tags":["x"]}`},
+		{"POST", "/api/devices/bulk-delete", `{"ids":["A","C"]}`},
+		{"GET", "/api/devices/C/access-policy", ""},
+		{"PUT", "/api/devices/C/access-policy", `{}`},
+		{"DELETE", "/api/devices/C/access-policy", ``},
+		{"GET", "/api/devices/C/connect-password", ""},
+		{"POST", "/api/devices/C/rename", `{"display_name":"x"}`},
+	} {
+		api.Calls()
+		got := operator.Do(c.method, c.path, c.body)
+		if got.Status != http.StatusForbidden || got.Body != forbidden {
+			t.Errorf("%s %s: %d %s, want 403 %s", c.method, c.path, got.Status, got.Body, forbidden)
+		}
+		for _, call := range api.Calls() {
+			if !strings.HasPrefix(call, "GET ") {
+				t.Errorf("%s %s made the call %s behind a refusal", c.method, c.path, call)
+			}
+		}
+	}
+	// What the account may see goes through
+	if got := operator.Do("PATCH", "/api/devices/A", `{"note":"x"}`); got.Status != http.StatusOK {
+		t.Errorf("PATCH of a device in scope: %d %s", got.Status, got.Body)
+	}
+	// The list leaves C out, the viewer sees it
+	if got := operator.Do("GET", "/api/devices?sortBy=id&sortOrder=asc", ""); strings.Contains(got.Body, `"id":"C"`) || !strings.Contains(got.Body, `"id":"A"`) {
+		t.Errorf("operator's list: %s", got.Body)
+	}
+	if got := w.As("viewer").Do("GET", "/api/devices?sortBy=id&sortOrder=asc", ""); !strings.Contains(got.Body, `"id":"C"`) {
+		t.Errorf("viewer's list: %s", got.Body)
+	}
+}
+
+// TestBearerRequestsGoToTheClientAPI checks the address GET /api/devices
+// shares with the RustDesk client API: a request with a bearer token goes
+// to the Node console as it arrived, with a session or without; one with
+// a blank token, another scheme or none is the console's.
+func TestBearerRequestsGoToTheClientAPI(t *testing.T) {
+	var node []string
+	upstream := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		node = append(node, r.Method+" "+r.URL.RequestURI()+" "+r.Header.Get("Authorization"))
+		rw.Header().Set("Content-Type", "application/json")
+		_, _ = rw.Write([]byte(`{"total":0,"data":[]}`))
+	}))
+	t.Cleanup(upstream.Close)
+	target, _ := url.Parse(upstream.URL)
+	w, _ := world(t, storetest.Migrated(t), nil, func(cfg *config.Config) { cfg.NodeUpstream = target })
+	admin, out := w.As("admin"), w.SignedOut()
+
+	client := `{"total":0,"data":[]}`
+	for _, c := range []struct {
+		who    *routetest.Agent
+		header string
+		want   string
+	}{
+		{out, "Bearer abc", client},
+		{admin, "Bearer abc", client},
+		{admin, "Bearer  \t abc  ", client},
+		{out, "Bearer ", `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`},
+		{out, "bearer abc", `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`},
+		{out, "Bearerabc", `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`},
+		{out, "Bearer  \xa0", `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`},
+		{out, "Basic YTpi", `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`},
+		{admin, "", `{"success":true,"data":{"devices":[`},
+	} {
+		node = nil
+		got := c.who.Do("GET", "/api/devices?pageSize=5", "", "Authorization", c.header)
+		if !strings.HasPrefix(got.Body, c.want) {
+			t.Errorf("Authorization %q: %d %s, want %s", c.header, got.Status, got.Body, c.want)
+		}
+		if reached := len(node) == 1; reached != (c.want == client) {
+			t.Errorf("Authorization %q: the Node console saw %q", c.header, node)
+		}
+	}
+	if len(node) != 0 {
+		t.Errorf("node saw %q", node)
+	}
+	node = nil
+	if out.Do("GET", "/api/devices?pageSize=5", "", "Authorization", "Bearer abc"); len(node) != 1 || node[0] != "GET /api/devices?pageSize=5 Bearer abc" {
+		t.Errorf("the Node console got %q, want the request as it arrived", node)
+	}
+}
+
+// TestAuditFailures checks which routes go on when the audit log cannot
+// be written: a change of a device does, a ban answers 500 after the
+// server banned.
+func TestAuditFailures(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w, api := world(t, db, nil, nil)
+		admin := w.As("admin")
+		if _, err := db.Exec(context.Background(), `DROP TABLE audit_log`); err != nil {
+			t.Fatal(err)
+		}
+		if got := admin.Do("PATCH", "/api/devices/A", `{"note":"x"}`); got.Status != http.StatusOK || got.Body != `{"success":true,"data":{"changes":1}}` {
+			t.Errorf("PATCH without an audit log: %d %s", got.Status, got.Body)
+		}
+		api.Calls()
+		if got := admin.Do("POST", "/api/devices/A/ban", `{"reason":"x"}`); got.Status != http.StatusInternalServerError {
+			t.Errorf("ban without an audit log: %d %s", got.Status, got.Body)
+		}
+		if calls := strings.Join(api.Calls(), "\n"); !strings.Contains(calls, `POST /api/peers/A/ban {"reason":"x"}`) {
+			t.Errorf("the ban did not reach the server: %s", calls)
+		}
+	})
+}
+
+// TestPermissions sends each route as an account whose role lacks the
+// route's permission (and passes the panel access guard): the guard of
+// the route answers, naming the permission.
+func TestPermissions(t *testing.T) {
+	w, api := world(t, storetest.Migrated(t), nil, nil)
+	agents := map[string]*routetest.Agent{}
+	for _, c := range []struct{ role, method, path, body, permission string }{
+		{"pro", "GET", "/api/devices", "", ""},
+		{"operator", "DELETE", "/api/devices/A", "", "device.delete"},
+		{"operator", "POST", "/api/devices/A/restore", "{}", "device.delete"},
+		{"operator", "POST", "/api/devices/bulk-delete", `{"ids":["A"]}`, "device.delete"},
+		{"operator", "POST", "/api/devices/A/ban", "{}", "device.ban"},
+		{"operator", "POST", "/api/devices/A/unban", "{}", "device.ban"},
+		{"operator", "POST", "/api/devices/A/change-id", `{"newId":"NEWID1"}`, "device.change_id"},
+		{"operator", "POST", "/api/remote-targets", "{}", "remote_target.edit"},
+		{"operator", "PATCH", "/api/remote-targets/rt_1", "{}", "remote_target.edit"},
+		{"operator", "PUT", "/api/remote-targets/rt_1/credentials", "{}", "remote_target.edit"},
+		{"operator", "DELETE", "/api/remote-targets/rt_1/credentials", "", "remote_target.edit"},
+		{"operator", "DELETE", "/api/remote-targets/rt_1", "", "remote_target.delete"},
+		{"viewer", "GET", "/api/devices/A/connect-password", "", "device.connect"},
+		{"guest_issuer", "GET", "/api/remote-targets", "", "remote_target.view"},
+		{"guest_issuer", "GET", "/api/remote-targets/rt_1", "", "remote_target.view"},
+		{"guest_issuer", "GET", "/api/remote-targets/rt_1/credentials", "", "remote_target.view"},
+	} {
+		a := agents[c.role]
+		if a == nil {
+			if c.role == "pro" {
+				a = w.SignedOut()
+			} else {
+				a = w.As(c.role)
+			}
+			agents[c.role] = a
+		}
+		api.Calls()
+		got := a.Do(c.method, c.path, c.body)
+		want := `{"success":false,"error":"Permission denied: ` + c.permission + `"}`
+		status := http.StatusForbidden
+		if c.permission == "" {
+			want, status = `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`, http.StatusUnauthorized
+		}
+		if got.Status != status || got.Body != want {
+			t.Errorf("%s %s as %s: %d %s, want %d %s", c.method, c.path, c.role, got.Status, got.Body, status, want)
+		}
+		if calls := api.Calls(); len(calls) > 0 {
+			t.Errorf("%s %s as %s called the server behind the refusal: %q", c.method, c.path, c.role, calls)
+		}
+	}
+}
+
+// TestListSortFields orders two devices by every field the list may be
+// ordered by, and by one it may not, which falls back on the last
+// contact. P1 comes first by every field but the last contact.
+func TestListSortFields(t *testing.T) {
+	api := routetest.NewAPI()
+	api.On("GET /api/peers", 200, `{"peers":[`+
+		`{"id":"P2","hostname":"b","os":"b","version":"b","user":"b","note":"b","created_at":"2020-01-02","last_online":"2020-01-01"},`+
+		`{"id":"P1","hostname":"a","os":"a","version":"a","user":"a","note":"a","created_at":"2020-01-01","last_online":"2021-01-01"}]}`)
+	api.On("GET /api/remote-targets?org_id=&include_disabled=false", 200, `{"targets":[]}`)
+	w := routetest.New(t, routetest.Options{API: api, Env: raisedLimits, Config: nodeLanguages})
+	admin := w.As("admin")
+	first := func(query string) string {
+		body := admin.Do("GET", "/api/devices?"+query, "").Body
+		i := strings.Index(body, `"id":"`)
+		if i < 0 {
+			return body
+		}
+		return body[i+6 : i+8]
+	}
+	for _, field := range []string{"id", "hostname", "created_at", "os", "version", "username", "note"} {
+		if got := first("sortBy=" + field + "&sortOrder=asc"); got != "P1" {
+			t.Errorf("sortBy=%s ascending: %s first, want P1", field, got)
+		}
+		if got := first("sortBy=" + field + "&sortOrder=DESC"); got != "P2" {
+			t.Errorf("sortBy=%s descending: %s first, want P2", field, got)
+		}
+	}
+	if got := first("sortBy=password&sortOrder=asc"); got != "P2" {
+		t.Errorf("an unknown field orders by last contact: %s first, want P2", got)
+	}
+	if got := first(""); got != "P1" {
+		t.Errorf("the default order is the newest contact first: %s first, want P1", got)
+	}
+}

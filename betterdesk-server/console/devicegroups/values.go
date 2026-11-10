@@ -71,6 +71,8 @@ func columnValue(dialect store.Dialect, typeName string) any {
 		if dialect == store.Postgres {
 			return new(store.JSONText)
 		}
+	case "FLOAT4":
+		return new(store.Float)
 	}
 	return new(jsbind.Cell)
 }
@@ -82,6 +84,8 @@ func deref(v any) any {
 	case *store.Int64String:
 		return *x
 	case *store.JSONText:
+		return *x
+	case *store.Float:
 		return *x
 	case *jsbind.Cell:
 		return *x

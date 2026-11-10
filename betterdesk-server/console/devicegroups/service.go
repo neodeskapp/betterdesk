@@ -4,6 +4,8 @@ import (
 	"context"
 	"math"
 	"regexp"
+	"sync"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -20,6 +22,9 @@ type Options struct {
 	// Access decides who may see which device and holds the queries on
 	// device groups it shares with this package.
 	Access *access.Service
+	// Now is the clock of the copy of the server's devices into the
+	// console's device table (SyncServerPeers); time.Now when nil.
+	Now func() time.Time
 }
 
 // Service reads and writes folders, device groups and user groups, and
@@ -28,11 +33,21 @@ type Options struct {
 type Service struct {
 	db     *store.DB
 	access *access.Service
+	now    func() time.Time
+
+	// syncMu guards lastSync, the time of the last copy of the server's
+	// devices (SyncServerPeers).
+	syncMu   sync.Mutex
+	lastSync time.Time
 }
 
 // New returns a Service.
 func New(opts Options) *Service {
-	return &Service{db: opts.DB, access: opts.Access}
+	now := opts.Now
+	if now == nil {
+		now = time.Now
+	}
+	return &Service{db: opts.DB, access: opts.Access, now: now}
 }
 
 var folderGroupGUID = regexp.MustCompile(`^(?i)folder_(\d+)$`)
@@ -76,8 +91,8 @@ func ScopeDevices(devices []*goapi.Object) []access.Device {
 	return out
 }
 
-// scopeGroup is a device group row as the scope rules read it.
-func scopeGroup(row *goapi.Object) access.DeviceGroup {
+// ScopeGroup is a device group row as the scope rules read it.
+func ScopeGroup(row *goapi.Object) access.DeviceGroup {
 	g := access.DeviceGroup{
 		GUID:      textOr(row.Get("guid"), ""),
 		TagFilter: textOr(row.Get("tag_filter"), ""),
@@ -112,7 +127,7 @@ func (s *Service) EnrichGroups(ctx context.Context, groups []*goapi.Object, devi
 	scoped := ScopeDevices(devices)
 	out := make([]*goapi.Object, 0, len(groups))
 	for _, group := range groups {
-		members := s.access.GroupPeerIDs(ctx, scopeGroup(group), scoped)
+		members := s.access.GroupPeerIDs(ctx, ScopeGroup(group), scoped)
 		row := group.Clone()
 		row.Set("source_type", orValue(row.Get("source_type"), "manual"))
 		row.Set("tag_filter", orValue(row.Get("tag_filter"), ""))

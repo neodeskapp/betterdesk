@@ -1,0 +1,167 @@
+{
+ "id": "devices/list-sort-by-note",
+ "request": {
+  "method": "GET",
+  "path": "/api/devices?hasNotes=true&sortBy=note"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "data.devices[*].groups[*].id"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.devices[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.devices[*].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[*].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[*].groups[*].id",
+     "integer": true
+    },
+    {
+     "path": "data.devices[*].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[*].last_online",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "devices": [
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Northwind Clinic",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-noted-pc",
+        "id": "900100031",
+        "ip": "10.0.3.50",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "Fan is loud, replace in spring",
+        "online": false,
+        "os": "Windows 11 Pro",
+        "platform": "Windows 11 Pro",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "office"
+        ],
+        "username": "demo.front",
+        "uuid": "demo-uuid-900100031",
+        "version": "1.4.2"
+       }
+      ],
+      "total": 1
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

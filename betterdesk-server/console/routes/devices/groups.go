@@ -1,0 +1,362 @@
+package devices
+
+import (
+	"errors"
+	"net/http"
+	"regexp"
+	"strings"
+
+	"github.com/unitronix/betterdesk-server/console/access"
+	"github.com/unitronix/betterdesk-server/console/devicegroups"
+	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/unitronix/betterdesk-server/console/kit"
+)
+
+// Device groups: manual ones whose members are stored, tag groups whose
+// members are the devices with a tag, both with an optional list of the
+// accounts and user groups that may see them. The groups that carry a
+// folder's access list are left to the folder routes.
+
+var groupGUIDPattern = regexp.MustCompile(`^[A-Za-z0-9_.:-]+$`)
+
+// validGroupGUID is isValidGroupGuid: text of 1 to 80 letters, digits and
+// _ . : -.
+func validGroupGUID(guid string) bool {
+	return guid != "" && len(guid) <= 80 && groupGUIDPattern.MatchString(guid)
+}
+
+// errNoGroup is the TypeError of reading the name of a group that is
+// gone.
+var errNoGroup = errors.New("Cannot read properties of null (reading 'name')")
+
+// deviceGroups answers GET /api/device-groups: the groups the account may
+// see, each with the number of its devices the account may see.
+func (h *handlers) deviceGroups(w http.ResponseWriter, r *http.Request) {
+	devices, err := h.visibleDevices(r)
+	if err != nil {
+		h.serverError(w, r, "Get device groups error:", err)
+		return
+	}
+	groups, err := h.visibleGroups(r)
+	if err != nil {
+		h.serverError(w, r, "Get device groups error:", err)
+		return
+	}
+	enriched := h.groups.EnrichGroups(r.Context(), groups, devices)
+	answer(w, r, http.StatusOK, withData{Success: true, Data: groupList{Groups: enriched, Total: len(enriched)}})
+}
+
+type groupList struct {
+	Groups []*goapi.Object `json:"groups"`
+	Total  int             `json:"total"`
+}
+
+// bodyMap is req.body as the group rules read it: the members of an
+// object body as encoding/json decodes them.
+func bodyMap(r *http.Request) map[string]any {
+	body := kit.Body(r)
+	out := make(map[string]any, body.Len())
+	for _, key := range body.Keys() {
+		var v any
+		if err := body.Get(key).Decode(&v); err == nil {
+			out[key] = v
+		} else {
+			out[key] = nil
+		}
+	}
+	return out
+}
+
+// groupData is the write of a device group from its fields.
+func groupData(f devicegroups.GroupFields) devicegroups.GroupData {
+	of := func(p *string) jsbind.Value {
+		if p == nil {
+			return jsbind.Undefined
+		}
+		return jsbind.String(*p)
+	}
+	return devicegroups.GroupData{Name: of(f.Name), Note: of(f.Note), TeamID: of(f.TeamID), SourceType: of(f.SourceType), TagFilter: of(f.TagFilter)}
+}
+
+// saveDeviceGroup answers POST /api/device-groups: a group without guid
+// is created, one with a guid is changed. allowed_users and
+// allowed_groups replace the access lists when the body has them.
+func (h *handlers) saveDeviceGroup(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	payload := devicegroups.NormalizeGroupPayload(bodyMap(r))
+	if payload.Name == "" {
+		fail(w, r, http.StatusBadRequest, "folders.name_required")
+		return
+	}
+	if payload.SourceType == "tag" && payload.TagFilter == "" {
+		fail(w, r, http.StatusBadRequest, "devices.group_tag_required")
+		return
+	}
+	for _, guid := range payload.AllowedGroups {
+		if !validGroupGUID(guid) {
+			fail(w, r, http.StatusBadRequest, "devices.group_invalid")
+			return
+		}
+	}
+	var group *goapi.Object
+	var err error
+	if payload.GUID != "" {
+		if !validGroupGUID(payload.GUID) {
+			fail(w, r, http.StatusBadRequest, "devices.group_invalid")
+			return
+		}
+		if _, folder := devicegroups.FolderIDFromGroupGUID(payload.GUID); folder {
+			fail(w, r, http.StatusBadRequest, "devices.folder_group_readonly")
+			return
+		}
+		group, err = h.groups.UpdateDeviceGroup(ctx, payload.GUID, groupData(payload.UpdateFields()))
+		if err == nil && group == nil {
+			fail(w, r, http.StatusNotFound, "devices.group_not_found")
+			return
+		}
+	} else {
+		group, err = h.groups.CreateDeviceGroup(ctx, groupData(payload.CreateFields()))
+	}
+	body := kit.Body(r)
+	if err == nil && body.Has("allowed_users") {
+		group, err = h.groups.SetDeviceGroupUserAccess(ctx, groupGUID(group), payload.AllowedUsers)
+	}
+	if err == nil && group != nil && body.Has("allowed_groups") {
+		group, err = h.groups.SetDeviceGroupUserGroupAccess(ctx, groupGUID(group), payload.AllowedGroups)
+	}
+	if err == nil && group == nil {
+		err = errNoGroup
+	}
+	var name string
+	if err == nil {
+		name, err = text(devicegroups.Plain(group.Get("name")))
+	}
+	if err == nil {
+		err = h.d.LogAction(r, "device_group_saved", "Device group "+name+" saved")
+	}
+	if err != nil {
+		h.serverError(w, r, "Save device group error:", err)
+		return
+	}
+	answer(w, r, http.StatusOK, withData{Success: true, Data: group})
+}
+
+// groupGUID is the guid of a group row as text.
+func groupGUID(group *goapi.Object) string {
+	if group == nil {
+		return ""
+	}
+	return jsTextOf(devicegroups.Plain(group.Get("guid")))
+}
+
+// deleteDeviceGroup answers DELETE /api/device-groups/{guid}.
+func (h *handlers) deleteDeviceGroup(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	guid := r.PathValue("guid")
+	if !validGroupGUID(guid) {
+		fail(w, r, http.StatusBadRequest, "devices.group_invalid")
+		return
+	}
+	group, err := h.groups.DeviceGroupByGUID(ctx, guid)
+	if err != nil {
+		h.serverError(w, r, "Delete device group error:", err)
+		return
+	}
+	if group == nil {
+		fail(w, r, http.StatusNotFound, "devices.group_not_found")
+		return
+	}
+	if _, folder := devicegroups.FolderIDFromGroupGUID(guid); folder {
+		fail(w, r, http.StatusBadRequest, "devices.folder_group_readonly")
+		return
+	}
+	name, err := text(devicegroups.Plain(group.Get("name")))
+	if err == nil {
+		err = h.groups.DeleteDeviceGroup(ctx, guid)
+	}
+	if err == nil {
+		err = h.d.LogAction(r, "device_group_deleted", "Device group "+name+" deleted")
+	}
+	if err != nil {
+		h.serverError(w, r, "Delete device group error:", err)
+		return
+	}
+	answer(w, r, http.StatusOK, done{Success: true})
+}
+
+// canSee reports whether the account may see the device, with the scope
+// computed over the devices it may see (userCanAccessDevice with the
+// whole list).
+func (h *handlers) canSee(r *http.Request, device *goapi.Object, all []*goapi.Object) (bool, error) {
+	one := devicegroups.ScopeDevices([]*goapi.Object{device})[0]
+	return h.d.Access.UserCanAccessDevice(r.Context(), devicegroups.ScopeUser(kit.User(r)), &one, devicegroups.ScopeDevices(all))
+}
+
+// memberships answers GET /api/devices/{id}/groups: the groups the
+// account may see, and those the device is in: the tag groups of its
+// tags, then the manual groups it is a stored member of.
+func (h *handlers) memberships(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	id := r.PathValue("id")
+	device := h.backend.GetDeviceByID(ctx, id, false)
+	if device == nil {
+		fail(w, r, http.StatusNotFound, "devices.not_found")
+		return
+	}
+	all, err := h.visibleDevices(r)
+	if err != nil {
+		h.serverError(w, r, "Get device memberships error:", err)
+		return
+	}
+	ok, err := h.canSee(r, device, all)
+	if err != nil {
+		h.serverError(w, r, "Get device memberships error:", err)
+		return
+	}
+	if !ok {
+		fail(w, r, http.StatusForbidden, "errors.forbidden")
+		return
+	}
+	visible, err := h.visibleGroups(r)
+	if err != nil {
+		h.serverError(w, r, "Get device memberships error:", err)
+		return
+	}
+	groups := h.groups.EnrichGroups(ctx, visible, all)
+	tags := access.NormalizeTags(devicegroups.Plain(device.Get("tags")))
+	memberships := []*goapi.Object{}
+	in := map[string]bool{}
+	for _, group := range groups {
+		if jsTextOf(devicegroups.Plain(group.Get("source_type"))) != "tag" {
+			continue
+		}
+		filter := jsbind.ToLower(jsTextOf(or(devicegroups.Plain(group.Get("tag_filter")), "")))
+		for _, tag := range tags {
+			if jsbind.ToLower(tag) == filter {
+				memberships = append(memberships, group)
+				in[groupGUID(group)] = true
+				break
+			}
+		}
+	}
+	manual, err := h.groups.DeviceGroupsForPeer(ctx, id)
+	if err != nil {
+		h.serverError(w, r, "Get device memberships error:", err)
+		return
+	}
+	stored := map[string]bool{}
+	for _, row := range manual {
+		stored[groupGUID(row)] = true
+	}
+	for _, group := range groups {
+		if guid := groupGUID(group); stored[guid] && !in[guid] {
+			memberships = append(memberships, group)
+			in[guid] = true
+		}
+	}
+	answer(w, r, http.StatusOK, withData{Success: true, Data: membershipList{Groups: groups, Memberships: memberships}})
+}
+
+type membershipList struct {
+	Groups      []*goapi.Object `json:"groups"`
+	Memberships []*goapi.Object `json:"memberships"`
+}
+
+// setMemberships answers PUT /api/devices/{id}/groups with {groupGuids}:
+// the device becomes a member of the one manual group of the list the
+// account may see and leaves the other manual groups it may see. A device
+// is in at most one manual group; tag groups are not touched.
+func (h *handlers) setMemberships(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	id := r.PathValue("id")
+	var guids []string
+	if list, ok := value(r, "groupGuids").([]any); ok {
+		for _, item := range list {
+			s, err := text(item)
+			if err != nil {
+				h.serverError(w, r, "Update device memberships error:", err)
+				return
+			}
+			guids = append(guids, s)
+		}
+	}
+	invalid := len(guids) > 100
+	for _, guid := range guids {
+		invalid = invalid || !validGroupGUID(guid)
+	}
+	if invalid {
+		fail(w, r, http.StatusBadRequest, "devices.group_invalid")
+		return
+	}
+	device := h.backend.GetDeviceByID(ctx, id, false)
+	if device == nil {
+		fail(w, r, http.StatusNotFound, "devices.not_found")
+		return
+	}
+	all, err := h.visibleDevices(r)
+	if err != nil {
+		h.serverError(w, r, "Update device memberships error:", err)
+		return
+	}
+	ok, err := h.canSee(r, device, all)
+	if err != nil {
+		h.serverError(w, r, "Update device memberships error:", err)
+		return
+	}
+	if !ok {
+		fail(w, r, http.StatusForbidden, "errors.forbidden")
+		return
+	}
+	groups, err := h.visibleGroups(r)
+	if err != nil {
+		h.serverError(w, r, "Update device memberships error:", err)
+		return
+	}
+	var manual []string
+	isManual := map[string]bool{}
+	for _, group := range groups {
+		if jsTextOf(or(devicegroups.Plain(group.Get("source_type")), "manual")) == "tag" {
+			continue
+		}
+		guid := groupGUID(group)
+		manual = append(manual, guid)
+		isManual[guid] = true
+	}
+	selected := []string{}
+	picked := map[string]bool{}
+	for _, guid := range guids {
+		if isManual[guid] && !picked[guid] {
+			picked[guid] = true
+			selected = append(selected, guid)
+		}
+	}
+	if len(selected) > 1 {
+		message := kit.T(r, "devices.group_one_only", nil)
+		if message == "" {
+			message = "A device can belong to only one group"
+		}
+		answer(w, r, http.StatusBadRequest, failure{Error: message})
+		return
+	}
+	for _, guid := range manual {
+		if len(selected) == 1 && selected[0] == guid {
+			err = h.groups.AddDeviceToGroup(ctx, guid, id)
+		} else {
+			err = h.groups.RemoveDeviceFromGroup(ctx, guid, id)
+		}
+		if err != nil {
+			h.serverError(w, r, "Update device memberships error:", err)
+			return
+		}
+	}
+	if err := h.d.LogAction(r, "device_group_membership_updated", "Device "+id+" groups set to ["+strings.Join(selected, ", ")+"]"); err != nil {
+		h.serverError(w, r, "Update device memberships error:", err)
+		return
+	}
+	answer(w, r, http.StatusOK, withData{Success: true, Data: groupGUIDs{GroupGUIDs: selected}})
+}
+
+type groupGUIDs struct {
+	GroupGUIDs []string `json:"groupGuids"`
+}

@@ -1,8 +1,8 @@
 'use strict';
 
 /**
- * The device list loads every device's groups in one query
- * (getDeviceGroupsForPeers) instead of one query per device.
+ * getDeviceGroupsForPeers loads the groups of many devices in one query
+ * and answers what one query per device would.
  */
 
 const fs = require('fs');
@@ -50,41 +50,5 @@ describe('getDeviceGroupsForPeers (SQLite)', () => {
         expect((await adapter.getDeviceGroupsForPeers([])).size).toBe(0);
         // Only the devices asked for
         expect([...(await adapter.getDeviceGroupsForPeers(['200'])).keys()]).toEqual(['200']);
-    });
-});
-
-describe('GET /api/devices group enrichment', () => {
-    test('uses one batched query, not one per device', async () => {
-        jest.resetModules();
-        jest.doMock('../services/serverBackend', () => ({
-            getAllDevices: jest.fn().mockResolvedValue([{ id: 'A1' }, { id: 'B2' }, { id: 'C3' }])
-        }));
-        jest.doMock('../services/deviceGroupService', () => ({
-            getDeviceScopeForUser: jest.fn().mockResolvedValue(null),
-            filterDevicesByScope: (devices) => devices
-        }));
-        const groups = new Map([['B2', [{ guid: 'g1', name: 'Lab' }]]]);
-        jest.doMock('../services/database', () => ({
-            getDeviceGroupsForPeer: jest.fn().mockResolvedValue([{ guid: 'x' }]),
-            getDeviceGroupsForPeers: jest.fn().mockResolvedValue(groups)
-        }));
-        jest.doMock('../services/bdRelay', () => ({ requestFromDevice: jest.fn() }));
-        jest.doMock('../services/betterdeskApi', () => ({}));
-        const request = require('supertest');
-        const { createTestApp } = require('./helpers');
-        const db = require('../services/database');
-        const app = createTestApp();
-        app.use((req, _res, next) => {
-            req.session.userId = 1;
-            req.session.user = { id: 1, username: 'a', role: 'admin' };
-            next();
-        });
-        app.use('/', require('../routes/devices.routes'));
-        const res = await request(app).get('/api/devices');
-        expect(res.status).toBe(200);
-        expect(db.getDeviceGroupsForPeers).toHaveBeenCalledTimes(1);
-        expect(db.getDeviceGroupsForPeers).toHaveBeenCalledWith(['A1', 'B2', 'C3']);
-        expect(db.getDeviceGroupsForPeer).not.toHaveBeenCalled();
-        expect(res.body.data.devices.map((d) => d.groups.length)).toEqual([0, 1, 0]);
     });
 });

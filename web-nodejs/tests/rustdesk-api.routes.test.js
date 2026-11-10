@@ -459,27 +459,6 @@ describe('RustDesk Client API routes', () => {
     });
 
     describe('panel route fallthrough (session cookie, no Bearer)', () => {
-        it('GET /api/devices falls through to panel routes', async () => {
-            const panelApp = createTestApp();
-            panelApp.use((req, _res, next) => {
-                req.session.userId = 1;
-                req.session.user = { id: 1, username: 'admin', role: 'admin' };
-                next();
-            });
-            const devicesRoutes = require('../routes/devices.routes');
-            panelApp.use('/', rustdeskApiRoutes);
-            panelApp.use('/', devicesRoutes);
-            serverBackend.getAllDevices.mockResolvedValue([
-                { id: '123456789', hostname: 'PC-1', last_online: '2026-03-26T12:00:00Z' }
-            ]);
-
-            const res = await request(panelApp).get('/api/devices');
-
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(res.body.data.devices).toHaveLength(1);
-        });
-
         it('GET /api/devices without Bearer falls through when no panel router is mounted', async () => {
             const res = await request(app).get('/api/devices');
             expect(res.status).toBe(404);

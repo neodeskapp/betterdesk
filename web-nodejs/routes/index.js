@@ -46,7 +46,7 @@ router.use(requireJsonContentType);
 // Mount routes
 router.use('/', authRoutes);
 router.use('/', require('./console.routes'));   // Svelte console: /console-boot.js, /api/console/*
-router.use('/', devicesRoutes);
+router.use('/', devicesRoutes);  // the routes that reach into an agent over bdRelay (the other device routes are in the Go console)
 router.use('/', settingsRoutes);
 router.use('/', generatorRoutes);
 router.use('/', require('./client-branding.routes'));

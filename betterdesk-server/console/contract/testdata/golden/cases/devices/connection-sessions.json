@@ -1,0 +1,152 @@
+{
+ "id": "devices/connection-sessions",
+ "request": {
+  "method": "GET",
+  "path": "/api/devices/900100001/connection-sessions?limit=3"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "data.sessions[*].duration_seconds"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.sessions[*].duration_seconds",
+     "integer": true
+    },
+    {
+     "path": "data.sessions[*].ended_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.sessions[*].started_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "count": 3,
+      "peer_id": "900100001",
+      "sessions": [
+       {
+        "active": false,
+        "duration_seconds": 0,
+        "ended_at": "<volatile>",
+        "host_id": "900100001",
+        "id": 1,
+        "peer_id": "900100023",
+        "peer_ip": "10.0.3.42",
+        "peer_name": "demo-support-pixel",
+        "source": "signal",
+        "started_at": "<volatile>",
+        "transport": "punch_hole",
+        "username": "demo_operator"
+       },
+       {
+        "active": false,
+        "duration_seconds": 0,
+        "ended_at": "<volatile>",
+        "host_id": "900100001",
+        "id": 4,
+        "peer_id": "900100023",
+        "peer_ip": "10.0.3.42",
+        "peer_name": "demo-support-pixel",
+        "source": "signal",
+        "started_at": "<volatile>",
+        "transport": "punch_hole",
+        "username": "admin"
+       },
+       {
+        "active": false,
+        "duration_seconds": 0,
+        "ended_at": "<volatile>",
+        "host_id": "900100001",
+        "id": 3,
+        "peer_id": "900100023",
+        "peer_ip": "10.0.3.42",
+        "peer_name": "demo-support-pixel",
+        "relay_uuid": "demo-relay-900100001-2",
+        "source": "signal",
+        "started_at": "<volatile>",
+        "transport": "request_relay",
+        "username": "admin"
+       }
+      ]
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

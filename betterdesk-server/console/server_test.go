@@ -226,26 +226,26 @@ func TestWithNodePassOnReachesNodeWithItsBody(t *testing.T) {
 		}
 		kit.JSON(rw, r, http.StatusOK, map[string]string{"stage": "early"})
 	}
-	w.s.Early().Post("/api/devices", bearer)
-	w.s.Early().Get("/api/devices", bearer)
+	w.s.Early().Post("/api/client-devices", bearer)
+	w.s.Early().Get("/api/client-devices", bearer)
 	w.s.Early().Get("/api/strategies", bearer)
 	w.s.Router().Get("/api/strategies", probe)
 
 	a := w.agent().signIn("admin")
-	if res := a.do("POST", "/api/devices", `{"name":"x"}`, "Content-Type", "application/json", "Authorization", "Bearer t"); res.body != `{"stage":"early"}` {
+	if res := a.do("POST", "/api/client-devices", `{"name":"x"}`, "Content-Type", "application/json", "Authorization", "Bearer t"); res.body != `{"stage":"early"}` {
 		t.Fatalf("with a bearer token: %d %s", res.status, res.body)
 	}
 
 	// What the early stage passes on still meets the later steps in Go, as
 	// it did in Node: without a token the CSRF gate refuses it
-	if res := a.do("POST", "/api/devices", `{"name":"x"}`, "Content-Type", "application/json"); res.status != 403 || res.header.Get("X-Node") != "" {
+	if res := a.do("POST", "/api/client-devices", `{"name":"x"}`, "Content-Type", "application/json"); res.status != 403 || res.header.Get("X-Node") != "" {
 		t.Errorf("passed on without a CSRF token: %d, want Go's 403", res.status)
 	}
 
 	body := `{"name":"` + strings.Repeat("y", 70000) + `"}`
-	res := a.post("/api/devices?q=1", body)
+	res := a.post("/api/client-devices?q=1", body)
 	got := wantUntouched(t, "passed on POST", res)
-	if got.Body != body || got.Method != "POST" || got.URI != "/api/devices?q=1" || got.Type != "application/json" {
+	if got.Body != body || got.Method != "POST" || got.URI != "/api/client-devices?q=1" || got.Type != "application/json" {
 		t.Errorf("node saw method %s uri %s type %s and %d body bytes, want the request as it arrived (%d bytes)", got.Method, got.URI, got.Type, len(got.Body), len(body))
 	}
 	if !strings.Contains(got.Cookie, "bd.sid=") {
@@ -258,7 +258,7 @@ func TestWithNodePassOnReachesNodeWithItsBody(t *testing.T) {
 	if got := wantUntouched(t, "passed on form", res); got.Body != form {
 		t.Errorf("node saw form body %q", got.Body)
 	}
-	if got := wantUntouched(t, "passed on GET", a.get("/api/devices")); got.Body != "" {
+	if got := wantUntouched(t, "passed on GET", a.get("/api/client-devices")); got.Body != "" {
 		t.Errorf("node saw a body on GET: %q", got.Body)
 	}
 
@@ -297,7 +297,7 @@ func TestRoutingReportFollowsTheRouteTables(t *testing.T) {
 		{"OPTIONS", "/api/ported/7", "go"},
 		{"DELETE", "/api/ported/7", "node"},
 		{"GET", "/api/ported", "node"},
-		{"GET", "/api/devices", "node"},
+		{"GET", "/api/client-devices", "node"},
 		{"GET", "/api/early/7", "go"},
 		{"POST", "/api/early/7", "node"},
 		{"GET", "/__bd/routing", "go"},
@@ -309,7 +309,7 @@ func TestRoutingReportFollowsTheRouteTables(t *testing.T) {
 
 	alone := newWorld(t, setup{debug: true})
 	alone.s.Router().Get("/api/ported/{id}", probe)
-	if got := who(alone, "GET", "/api/devices"); got != "none" {
+	if got := who(alone, "GET", "/api/client-devices"); got != "none" {
 		t.Errorf("without Node: %q, want none", got)
 	}
 	if got := who(alone, "GET", "/api/ported/7"); got != "go" {

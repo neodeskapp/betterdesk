@@ -1,0 +1,3114 @@
+{
+ "id": "devices/list",
+ "request": {
+  "method": "GET",
+  "path": "/api/devices?sortBy=id&sortOrder=asc"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "data.devices[*].groups[*].id"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "operator"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.devices[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.devices[*].groups[*].id",
+     "integer": true
+    },
+    {
+     "path": "data.devices[*].last_online",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.devices[0].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[0].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[0].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[10].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[10].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[10].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[16].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[16].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[16].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[1].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[1].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[1].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[20].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[20].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[21].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[21].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[22].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[22].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    "data.devices[22].groups[*].team_id",
+    {
+     "path": "data.devices[23].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[23].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[23].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[24].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[24].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[24].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    "data.devices[26].banned_at",
+    {
+     "path": "data.devices[27].banned_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.devices[28].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[28].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[28].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[2].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[2].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[2].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[3].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[3].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[3].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[4].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[4].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[4].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[5].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[5].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[5].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[7].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[7].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[7].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[8].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[8].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[8].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[9].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[9].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[9].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "devices": [
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Northwind Clinic",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-reception-01",
+        "id": "900100001",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Windows 11 Pro",
+        "platform": "Windows 11 Pro",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "office",
+         "ground-floor"
+        ],
+        "username": "demo.front",
+        "uuid": "demo-uuid-900100001",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Northwind Clinic",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-reception-02",
+        "id": "900100002",
+        "ip": "10.0.2.21",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Windows 11 Pro",
+        "platform": "Windows 11 Pro",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "office",
+         "ground-floor"
+        ],
+        "username": "demo.front",
+        "uuid": "demo-uuid-900100002",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Northwind Clinic",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-accounts-01",
+        "id": "900100003",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Windows 10 Pro",
+        "platform": "Windows 10 Pro",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "office",
+         "finance"
+        ],
+        "username": "demo.ledger",
+        "uuid": "demo-uuid-900100003",
+        "version": "1.3.9"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Northwind Clinic",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-accounts-02",
+        "id": "900100004",
+        "ip": "10.0.4.23",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Windows 10 Pro",
+        "platform": "Windows 10 Pro",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "finance"
+        ],
+        "username": "demo.ledger",
+        "uuid": "demo-uuid-900100004",
+        "version": "1.3.9"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Northwind Clinic",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-ceo-macbook",
+        "id": "900100005",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "macOS 15.1",
+        "platform": "macOS 15.1",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "vip"
+        ],
+        "username": "demo.boss",
+        "uuid": "demo-uuid-900100005",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Northwind Clinic",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-design-imac",
+        "id": "900100006",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "macOS 14.6",
+        "platform": "macOS 14.6",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "design"
+        ],
+        "username": "demo.pixel",
+        "uuid": "demo-uuid-900100006",
+        "version": "1.4.1"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [],
+        "hostname": "demo-design-mbp",
+        "id": "900100007",
+        "ip": "10.0.3.26",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "macOS 15.0",
+        "platform": "macOS 15.0",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "design",
+         "laptop"
+        ],
+        "username": "demo.pixel",
+        "uuid": "demo-uuid-900100007",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 2,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Harbor Logistics",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-warehouse-pc",
+        "id": "900100008",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Windows 10 IoT",
+        "platform": "Windows 10 IoT",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "warehouse"
+        ],
+        "username": "demo.stock",
+        "uuid": "demo-uuid-900100008",
+        "version": "1.3.7"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "mobile",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "mobile",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 2,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Harbor Logistics",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-warehouse-scan-1",
+        "id": "900100009",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Android 14",
+        "platform": "Android 14",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "warehouse",
+         "scanner"
+        ],
+        "username": "",
+        "uuid": "demo-uuid-900100009",
+        "version": "1.4.0"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "mobile",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "mobile",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 2,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Harbor Logistics",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-warehouse-scan-2",
+        "id": "900100010",
+        "ip": "10.0.2.29",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Android 13",
+        "platform": "Android 13",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "warehouse",
+         "scanner"
+        ],
+        "username": "",
+        "uuid": "demo-uuid-900100010",
+        "version": "1.3.9"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "mobile",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "mobile",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 2,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Harbor Logistics",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-warehouse-scan-3",
+        "id": "900100011",
+        "ip": "10.0.3.30",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Android 14",
+        "platform": "Android 14",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "warehouse",
+         "scanner"
+        ],
+        "username": "",
+        "uuid": "demo-uuid-900100011",
+        "version": "1.4.0"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 3,
+        "groups": [],
+        "hostname": "demo-build-server",
+        "id": "900100012",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Ubuntu 24.04",
+        "platform": "Ubuntu 24.04",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "server",
+         "linux"
+        ],
+        "username": "demo.ci",
+        "uuid": "demo-uuid-900100012",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 3,
+        "groups": [],
+        "hostname": "demo-file-server",
+        "id": "900100013",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Debian 12",
+        "platform": "Debian 12",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "server",
+         "linux"
+        ],
+        "username": "demo.ops",
+        "uuid": "demo-uuid-900100013",
+        "version": "1.4.1"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 3,
+        "groups": [],
+        "hostname": "demo-backup-nas",
+        "id": "900100014",
+        "ip": "10.0.2.33",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Linux 6.1",
+        "platform": "Linux 6.1",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "server",
+         "storage"
+        ],
+        "username": "demo.ops",
+        "uuid": "demo-uuid-900100014",
+        "version": "1.3.8"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 3,
+        "groups": [],
+        "hostname": "demo-db-primary",
+        "id": "900100015",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Ubuntu 22.04",
+        "platform": "Ubuntu 22.04",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "server",
+         "linux",
+         "critical"
+        ],
+        "username": "demo.ops",
+        "uuid": "demo-uuid-900100015",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 3,
+        "groups": [],
+        "hostname": "demo-db-replica",
+        "id": "900100016",
+        "ip": "10.0.4.35",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Ubuntu 22.04",
+        "platform": "Ubuntu 22.04",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "server",
+         "linux"
+        ],
+        "username": "demo.ops",
+        "uuid": "demo-uuid-900100016",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Harbor Logistics",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-sales-laptop-01",
+        "id": "900100017",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Windows 11 Home",
+        "platform": "Windows 11 Home",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "laptop",
+         "sales"
+        ],
+        "username": "demo.seller",
+        "uuid": "demo-uuid-900100017",
+        "version": "1.4.0"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [],
+        "hostname": "demo-sales-laptop-02",
+        "id": "900100018",
+        "ip": "10.0.2.37",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Windows 11 Home",
+        "platform": "Windows 11 Home",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "laptop",
+         "sales"
+        ],
+        "username": "demo.seller",
+        "uuid": "demo-uuid-900100018",
+        "version": "1.3.9"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [],
+        "hostname": "demo-kiosk-lobby",
+        "id": "900100020",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Windows 10 IoT",
+        "platform": "Windows 10 IoT",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "kiosk"
+        ],
+        "username": "",
+        "uuid": "demo-uuid-900100020",
+        "version": "1.3.5"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [],
+        "hostname": "demo-kiosk-canteen",
+        "id": "900100021",
+        "ip": "10.0.1.40",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Windows 10 IoT",
+        "platform": "Windows 10 IoT",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "kiosk"
+        ],
+        "username": "",
+        "uuid": "demo-uuid-900100021",
+        "version": "1.3.5"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "mobile",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "mobile",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Support team devices",
+          "note": "",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": ""
+         }
+        ],
+        "hostname": "demo-support-ipad",
+        "id": "900100022",
+        "ip": "10.0.2.41",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "iOS 18.1",
+        "platform": "iOS 18.1",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "mobile"
+        ],
+        "username": "demo.help",
+        "uuid": "demo-uuid-900100022",
+        "version": "1.4.0"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "mobile",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "mobile",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Support team devices",
+          "note": "",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": ""
+         }
+        ],
+        "hostname": "demo-support-pixel",
+        "id": "900100023",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Android 15",
+        "platform": "Android 15",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "mobile"
+        ],
+        "username": "demo.help",
+        "uuid": "demo-uuid-900100023",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 4,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Lab Collective",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-lab-rpi-01",
+        "id": "900100024",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Linux 6.6 (Raspberry Pi)",
+        "platform": "Linux 6.6 (Raspberry Pi)",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "lab",
+         "iot"
+        ],
+        "username": "",
+        "uuid": "demo-uuid-900100024",
+        "version": "1.3.9"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 4,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Lab Collective",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-lab-rpi-02",
+        "id": "900100025",
+        "ip": "10.0.1.44",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Linux 6.6 (Raspberry Pi)",
+        "platform": "Linux 6.6 (Raspberry Pi)",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "lab",
+         "iot"
+        ],
+        "username": "",
+        "uuid": "demo-uuid-900100025",
+        "version": "1.3.9"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 4,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Lab Collective",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-lab-win-vm",
+        "id": "900100026",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Windows Server 2022",
+        "platform": "Windows Server 2022",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "lab",
+         "vm"
+        ],
+        "username": "demo.lab",
+        "uuid": "demo-uuid-900100026",
+        "version": "1.4.1"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 4,
+        "groups": [],
+        "hostname": "demo-old-xp-box",
+        "id": "900100027",
+        "ip": "10.0.3.46",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Windows 7",
+        "platform": "Windows 7",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "legacy"
+        ],
+        "username": "",
+        "uuid": "demo-uuid-900100027",
+        "version": "1.1.9"
+       },
+       {
+        "ban_reason": "Reported stolen",
+        "banned": true,
+        "banned_at": "<volatile>",
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [],
+        "hostname": "demo-stolen-laptop",
+        "id": "900100028",
+        "ip": "10.0.4.47",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Windows 11 Pro",
+        "platform": "Windows 11 Pro",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "laptop"
+        ],
+        "username": "demo.lost",
+        "uuid": "demo-uuid-900100028",
+        "version": "1.4.0"
+       },
+       {
+        "ban_reason": "Unknown device, blocked",
+        "banned": true,
+        "banned_at": "<volatile>",
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [],
+        "hostname": "demo-unknown-box",
+        "id": "900100029",
+        "ip": "10.0.1.48",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Linux 5.15",
+        "platform": "Linux 5.15",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [],
+        "username": "",
+        "uuid": "demo-uuid-900100029",
+        "version": "1.2.0"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Northwind Clinic",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-noted-pc",
+        "id": "900100031",
+        "ip": "10.0.3.50",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "Fan is loud, replace in spring",
+        "online": false,
+        "os": "Windows 11 Pro",
+        "platform": "Windows 11 Pro",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "office"
+        ],
+        "username": "demo.front",
+        "uuid": "demo-uuid-900100031",
+        "version": "1.4.2"
+       }
+      ],
+      "total": 29
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.devices[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.devices[*].groups[*].id",
+     "integer": true
+    },
+    {
+     "path": "data.devices[*].last_online",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.devices[0].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[0].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[0].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[10].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[10].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[10].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[16].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[16].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[16].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[18].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[18].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[1].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[1].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[1].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[21].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[21].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[22].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[22].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[23].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[23].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[23].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[24].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[24].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[24].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[25].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[25].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[25].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[27].banned_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    "data.devices[28].banned_at",
+    {
+     "path": "data.devices[29].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[29].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[29].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[2].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[2].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[2].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[3].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[3].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[3].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[4].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[4].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[4].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[5].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[5].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[5].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[7].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[7].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[7].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[8].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[8].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[8].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[9].groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.devices[9].groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.devices[9].groups[*].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "devices": [
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Northwind Clinic",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-reception-01",
+        "id": "900100001",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Windows 11 Pro",
+        "platform": "Windows 11 Pro",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "office",
+         "ground-floor"
+        ],
+        "username": "demo.front",
+        "uuid": "demo-uuid-900100001",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Northwind Clinic",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-reception-02",
+        "id": "900100002",
+        "ip": "10.0.2.21",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Windows 11 Pro",
+        "platform": "Windows 11 Pro",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "office",
+         "ground-floor"
+        ],
+        "username": "demo.front",
+        "uuid": "demo-uuid-900100002",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Northwind Clinic",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-accounts-01",
+        "id": "900100003",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Windows 10 Pro",
+        "platform": "Windows 10 Pro",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "office",
+         "finance"
+        ],
+        "username": "demo.ledger",
+        "uuid": "demo-uuid-900100003",
+        "version": "1.3.9"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Northwind Clinic",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-accounts-02",
+        "id": "900100004",
+        "ip": "10.0.4.23",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Windows 10 Pro",
+        "platform": "Windows 10 Pro",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "finance"
+        ],
+        "username": "demo.ledger",
+        "uuid": "demo-uuid-900100004",
+        "version": "1.3.9"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Northwind Clinic",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-ceo-macbook",
+        "id": "900100005",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "macOS 15.1",
+        "platform": "macOS 15.1",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "vip"
+        ],
+        "username": "demo.boss",
+        "uuid": "demo-uuid-900100005",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Northwind Clinic",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-design-imac",
+        "id": "900100006",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "macOS 14.6",
+        "platform": "macOS 14.6",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "design"
+        ],
+        "username": "demo.pixel",
+        "uuid": "demo-uuid-900100006",
+        "version": "1.4.1"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [],
+        "hostname": "demo-design-mbp",
+        "id": "900100007",
+        "ip": "10.0.3.26",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "macOS 15.0",
+        "platform": "macOS 15.0",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "design",
+         "laptop"
+        ],
+        "username": "demo.pixel",
+        "uuid": "demo-uuid-900100007",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 2,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Harbor Logistics",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-warehouse-pc",
+        "id": "900100008",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Windows 10 IoT",
+        "platform": "Windows 10 IoT",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "warehouse"
+        ],
+        "username": "demo.stock",
+        "uuid": "demo-uuid-900100008",
+        "version": "1.3.7"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "mobile",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "mobile",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 2,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Harbor Logistics",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-warehouse-scan-1",
+        "id": "900100009",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Android 14",
+        "platform": "Android 14",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "warehouse",
+         "scanner"
+        ],
+        "username": "",
+        "uuid": "demo-uuid-900100009",
+        "version": "1.4.0"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "mobile",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "mobile",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 2,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Harbor Logistics",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-warehouse-scan-2",
+        "id": "900100010",
+        "ip": "10.0.2.29",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Android 13",
+        "platform": "Android 13",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "warehouse",
+         "scanner"
+        ],
+        "username": "",
+        "uuid": "demo-uuid-900100010",
+        "version": "1.3.9"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "mobile",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "mobile",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 2,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Harbor Logistics",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-warehouse-scan-3",
+        "id": "900100011",
+        "ip": "10.0.3.30",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Android 14",
+        "platform": "Android 14",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "warehouse",
+         "scanner"
+        ],
+        "username": "",
+        "uuid": "demo-uuid-900100011",
+        "version": "1.4.0"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 3,
+        "groups": [],
+        "hostname": "demo-build-server",
+        "id": "900100012",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Ubuntu 24.04",
+        "platform": "Ubuntu 24.04",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "server",
+         "linux"
+        ],
+        "username": "demo.ci",
+        "uuid": "demo-uuid-900100012",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 3,
+        "groups": [],
+        "hostname": "demo-file-server",
+        "id": "900100013",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Debian 12",
+        "platform": "Debian 12",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "server",
+         "linux"
+        ],
+        "username": "demo.ops",
+        "uuid": "demo-uuid-900100013",
+        "version": "1.4.1"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 3,
+        "groups": [],
+        "hostname": "demo-backup-nas",
+        "id": "900100014",
+        "ip": "10.0.2.33",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Linux 6.1",
+        "platform": "Linux 6.1",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "server",
+         "storage"
+        ],
+        "username": "demo.ops",
+        "uuid": "demo-uuid-900100014",
+        "version": "1.3.8"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 3,
+        "groups": [],
+        "hostname": "demo-db-primary",
+        "id": "900100015",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Ubuntu 22.04",
+        "platform": "Ubuntu 22.04",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "server",
+         "linux",
+         "critical"
+        ],
+        "username": "demo.ops",
+        "uuid": "demo-uuid-900100015",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 3,
+        "groups": [],
+        "hostname": "demo-db-replica",
+        "id": "900100016",
+        "ip": "10.0.4.35",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Ubuntu 22.04",
+        "platform": "Ubuntu 22.04",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "server",
+         "linux"
+        ],
+        "username": "demo.ops",
+        "uuid": "demo-uuid-900100016",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Harbor Logistics",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-sales-laptop-01",
+        "id": "900100017",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Windows 11 Home",
+        "platform": "Windows 11 Home",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "laptop",
+         "sales"
+        ],
+        "username": "demo.seller",
+        "uuid": "demo-uuid-900100017",
+        "version": "1.4.0"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [],
+        "hostname": "demo-sales-laptop-02",
+        "id": "900100018",
+        "ip": "10.0.2.37",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Windows 11 Home",
+        "platform": "Windows 11 Home",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "laptop",
+         "sales"
+        ],
+        "username": "demo.seller",
+        "uuid": "demo-uuid-900100018",
+        "version": "1.3.9"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Contract restricted",
+          "note": "",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": ""
+         }
+        ],
+        "hostname": "demo-sales-laptop-03",
+        "id": "900100019",
+        "ip": "10.0.3.38",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Windows 11 Pro",
+        "platform": "Windows 11 Pro",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "laptop",
+         "sales"
+        ],
+        "username": "demo.seller",
+        "uuid": "demo-uuid-900100019",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [],
+        "hostname": "demo-kiosk-lobby",
+        "id": "900100020",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Windows 10 IoT",
+        "platform": "Windows 10 IoT",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "kiosk"
+        ],
+        "username": "",
+        "uuid": "demo-uuid-900100020",
+        "version": "1.3.5"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [],
+        "hostname": "demo-kiosk-canteen",
+        "id": "900100021",
+        "ip": "10.0.1.40",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Windows 10 IoT",
+        "platform": "Windows 10 IoT",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "kiosk"
+        ],
+        "username": "",
+        "uuid": "demo-uuid-900100021",
+        "version": "1.3.5"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "mobile",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "mobile",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Support team devices",
+          "note": "",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": ""
+         }
+        ],
+        "hostname": "demo-support-ipad",
+        "id": "900100022",
+        "ip": "10.0.2.41",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "iOS 18.1",
+        "platform": "iOS 18.1",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "mobile"
+        ],
+        "username": "demo.help",
+        "uuid": "demo-uuid-900100022",
+        "version": "1.4.0"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "mobile",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "mobile",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Support team devices",
+          "note": "",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": ""
+         }
+        ],
+        "hostname": "demo-support-pixel",
+        "id": "900100023",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Android 15",
+        "platform": "Android 15",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "mobile"
+        ],
+        "username": "demo.help",
+        "uuid": "demo-uuid-900100023",
+        "version": "1.4.2"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 4,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Lab Collective",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-lab-rpi-01",
+        "id": "900100024",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Linux 6.6 (Raspberry Pi)",
+        "platform": "Linux 6.6 (Raspberry Pi)",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "lab",
+         "iot"
+        ],
+        "username": "",
+        "uuid": "demo-uuid-900100024",
+        "version": "1.3.9"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 4,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Lab Collective",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-lab-rpi-02",
+        "id": "900100025",
+        "ip": "10.0.1.44",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Linux 6.6 (Raspberry Pi)",
+        "platform": "Linux 6.6 (Raspberry Pi)",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "lab",
+         "iot"
+        ],
+        "username": "",
+        "uuid": "demo-uuid-900100025",
+        "version": "1.3.9"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 4,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Lab Collective",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-lab-win-vm",
+        "id": "900100026",
+        "ip": "127.0.0.1",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": true,
+        "os": "Windows Server 2022",
+        "platform": "Windows Server 2022",
+        "signal_ready": true,
+        "soft_deleted": false,
+        "status_tier": "ONLINE",
+        "tags": [
+         "lab",
+         "vm"
+        ],
+        "username": "demo.lab",
+        "uuid": "demo-uuid-900100026",
+        "version": "1.4.1"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 4,
+        "groups": [],
+        "hostname": "demo-old-xp-box",
+        "id": "900100027",
+        "ip": "10.0.3.46",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Windows 7",
+        "platform": "Windows 7",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "legacy"
+        ],
+        "username": "",
+        "uuid": "demo-uuid-900100027",
+        "version": "1.1.9"
+       },
+       {
+        "ban_reason": "Reported stolen",
+        "banned": true,
+        "banned_at": "<volatile>",
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [],
+        "hostname": "demo-stolen-laptop",
+        "id": "900100028",
+        "ip": "10.0.4.47",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Windows 11 Pro",
+        "platform": "Windows 11 Pro",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "laptop"
+        ],
+        "username": "demo.lost",
+        "uuid": "demo-uuid-900100028",
+        "version": "1.4.0"
+       },
+       {
+        "ban_reason": "Unknown device, blocked",
+        "banned": true,
+        "banned_at": "<volatile>",
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [],
+        "hostname": "demo-unknown-box",
+        "id": "900100029",
+        "ip": "10.0.1.48",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Linux 5.15",
+        "platform": "Linux 5.15",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [],
+        "username": "",
+        "uuid": "demo-uuid-900100029",
+        "version": "1.2.0"
+       },
+       {
+        "ban_reason": "",
+        "banned": false,
+        "banned_at": null,
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": 1,
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "guid": "<volatile>",
+          "id": 0,
+          "name": "Demo Northwind Clinic",
+          "note": "Default group created with organization (commercialization)",
+          "source_type": "manual",
+          "tag_filter": "",
+          "team_id": "<volatile>"
+         }
+        ],
+        "hostname": "demo-noted-pc",
+        "id": "900100031",
+        "ip": "10.0.3.50",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "Fan is loud, replace in spring",
+        "online": false,
+        "os": "Windows 11 Pro",
+        "platform": "Windows 11 Pro",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "office"
+        ],
+        "username": "demo.front",
+        "uuid": "demo-uuid-900100031",
+        "version": "1.4.2"
+       }
+      ],
+      "total": 30
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

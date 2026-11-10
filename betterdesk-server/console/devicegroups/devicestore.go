@@ -21,31 +21,11 @@ var _ goapi.Store = DeviceStore{}
 func (d DeviceStore) db() *store.DB { return d.Groups.db }
 
 // GetStats counts the devices in the console's table that are not
-// deleted: {total, online, banned, offline}. The device layer falls back
-// on it when the server gives no statistics.
+// deleted, after bringing the table up to date with the server's devices
+// (Service.PeerStats): {total, online, banned, offline}. The device layer
+// falls back on it when the server gives no statistics.
 func (d DeviceStore) GetStats(ctx context.Context) (any, error) {
-	db := d.db()
-	query := db.Pick(
-		`SELECT
-			(SELECT COUNT(*) FROM peer WHERE is_deleted = 0),
-			(SELECT COUNT(*) FROM peer WHERE is_deleted = 0 AND status_online = 1),
-			(SELECT COUNT(*) FROM peer WHERE is_deleted = 0 AND is_banned = 1)`,
-		`SELECT
-			COUNT(*) FILTER (WHERE NOT is_deleted),
-			COUNT(*) FILTER (WHERE NOT is_deleted AND status_online),
-			COUNT(*) FILTER (WHERE NOT is_deleted AND is_banned)
-		FROM peer`,
-	)
-	var total, online, banned int64
-	if err := db.QueryRow(ctx, query).Scan(&total, &online, &banned); err != nil {
-		return nil, fmt.Errorf("count the devices: %w", err)
-	}
-	return goapi.NewObject(
-		"total", float64(total),
-		"online", float64(online),
-		"banned", float64(banned),
-		"offline", float64(total-online),
-	), nil
+	return d.Groups.PeerStats(ctx)
 }
 
 // GetAllFolderAssignments is Service.AllFolderAssignments.

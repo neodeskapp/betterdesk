@@ -302,7 +302,7 @@ func TestStep10PanelAccessGuardRunsBeforeLimitersAndRoutes(t *testing.T) {
 	w := goOnly(t, setup{})
 	reached := false
 	w.s.Router().Get("/api/users/probe", func(rw http.ResponseWriter, r *http.Request) { reached = true; probe(rw, r) })
-	w.s.Router().Get("/api/devices/probe", probe)
+	w.s.Router().Get("/api/devices/probe/{a}/{b}/{c}", probe)
 
 	viewer := w.agent().signIn("viewer")
 	res := viewer.get("/api/users/probe")
@@ -319,7 +319,7 @@ func TestStep10PanelAccessGuardRunsBeforeLimitersAndRoutes(t *testing.T) {
 		t.Errorf("Cache-Control = %q, want step 1's: the guard answers before step 15", res.header.Get("Cache-Control"))
 	}
 
-	res = viewer.get("/api/devices/probe")
+	res = viewer.get("/api/devices/probe/a/b/c")
 	body := res.json(t)
 	if res.status != 200 || body["section"] != "devices" || body["loaded"] != true {
 		t.Errorf("viewer on a devices path: %d %s", res.status, res.body)
@@ -400,26 +400,26 @@ func TestStep12PassOnLeavesTheRequestToTheLaterStage(t *testing.T) {
 		}
 		kit.JSON(rw, r, http.StatusOK, map[string]string{"stage": "early"})
 	}
-	w.s.Early().Get("/api/devices", bearer)
-	w.s.Early().Post("/api/devices", bearer)
+	w.s.Early().Get("/api/client-devices", bearer)
+	w.s.Early().Post("/api/client-devices", bearer)
 	w.s.Early().Get("/api/only-early", bearer)
-	w.s.Router().Get("/api/devices", probe)
-	w.s.Router().Post("/api/devices", probe)
+	w.s.Router().Get("/api/client-devices", probe)
+	w.s.Router().Post("/api/client-devices", probe)
 
 	a := w.agent()
-	if res := a.get("/api/devices", "Authorization", "Bearer x"); res.body != `{"stage":"early"}` {
+	if res := a.get("/api/client-devices", "Authorization", "Bearer x"); res.body != `{"stage":"early"}` {
 		t.Errorf("with a bearer token: %s", res.body)
 	}
-	res := a.get("/api/devices?lang=de&pad=1", "Accept-Encoding", "gzip")
+	res := a.get("/api/client-devices?lang=de&pad=1", "Accept-Encoding", "gzip")
 	if res.status != 200 || res.header.Get("Content-Encoding") != "gzip" || res.cookie("betterdesk_lang") == "" ||
 		res.header.Get("Cache-Control") != "no-cache, no-store, must-revalidate" {
 		t.Errorf("without one the console route must answer, with language, cache header and compression: %d %v", res.status, res.header)
 	}
 	// ... and with the CSRF check the early stage does not have
-	if res := a.do("POST", "/api/devices", "{}", "Content-Type", "application/json"); res.status != 403 {
+	if res := a.do("POST", "/api/client-devices", "{}", "Content-Type", "application/json"); res.status != 403 {
 		t.Errorf("POST without a bearer token and without a CSRF token: %d, want 403", res.status)
 	}
-	if res := a.do("POST", "/api/devices", "{}", "Content-Type", "application/json", "Authorization", "Bearer x"); res.status != 200 {
+	if res := a.do("POST", "/api/client-devices", "{}", "Content-Type", "application/json", "Authorization", "Bearer x"); res.status != 200 {
 		t.Errorf("POST with a bearer token: %d", res.status)
 	}
 	// Nobody takes it: the 404

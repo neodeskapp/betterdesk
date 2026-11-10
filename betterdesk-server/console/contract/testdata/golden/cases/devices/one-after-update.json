@@ -1,0 +1,252 @@
+{
+ "id": "devices/one-after-update",
+ "request": {
+  "method": "GET",
+  "path": "/api/devices/900100018"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "server_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.last_online",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "ban_reason": "",
+      "banned": false,
+      "banned_at": null,
+      "cdap_connected": false,
+      "client_type": "rustdesk",
+      "connection_mode": {
+       "can_change": false,
+       "command": null,
+       "controllable": false,
+       "device_id": "900100018",
+       "policy": null,
+       "support_agent": false
+      },
+      "created_at": "<volatile>",
+      "deleted_at": null,
+      "device_type": "rustdesk",
+      "disabled": false,
+      "display_name": "",
+      "folder_id": null,
+      "hostname": "demo-sales-laptop-02",
+      "id": "900100018",
+      "ip": "10.0.2.37",
+      "last_online": "<volatile>",
+      "linked_peer_id": "",
+      "mesh_connected": false,
+      "mesh_node_id": "",
+      "nat_type": 0,
+      "no_signal": false,
+      "note": "",
+      "online": false,
+      "os": "Windows 11 Home",
+      "platform": "Windows 11 Home",
+      "signal_ready": false,
+      "soft_deleted": false,
+      "status_tier": "OFFLINE",
+      "sysinfo": {
+       "hostname": "demo-sales-laptop-02",
+       "os_full": "Windows 11 Home",
+       "platform": "Windows 11 Home",
+       "version": "1.3.9"
+      },
+      "tags": [
+       "laptop",
+       "sales"
+      ],
+      "telemetry": {
+       "device_id": "900100018",
+       "schema": 1,
+       "snapshots": {}
+      },
+      "username": "demo.seller",
+      "uuid": "demo-uuid-900100018",
+      "version": "1.3.9"
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.last_online",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "ban_reason": "",
+      "banned": false,
+      "banned_at": null,
+      "cdap_connected": false,
+      "client_type": "rustdesk",
+      "connection_mode": {
+       "can_change": true,
+       "command": null,
+       "controllable": false,
+       "device_id": "900100018",
+       "policy": null,
+       "support_agent": false
+      },
+      "created_at": "<volatile>",
+      "deleted_at": null,
+      "device_type": "rustdesk",
+      "disabled": false,
+      "display_name": "Contract name",
+      "folder_id": null,
+      "hostname": "demo-sales-laptop-02",
+      "id": "900100018",
+      "ip": "10.0.2.37",
+      "last_online": "<volatile>",
+      "linked_peer_id": "",
+      "mesh_connected": false,
+      "mesh_node_id": "",
+      "nat_type": 0,
+      "no_signal": false,
+      "note": "Contract note xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "online": false,
+      "os": "Windows 11 Home",
+      "platform": "Windows 11 Home",
+      "signal_ready": false,
+      "soft_deleted": false,
+      "status_tier": "OFFLINE",
+      "sysinfo": {
+       "hostname": "demo-sales-laptop-02",
+       "os_full": "Windows 11 Home",
+       "platform": "Windows 11 Home",
+       "version": "1.3.9"
+      },
+      "tags": [
+       "laptop",
+       "sales"
+      ],
+      "telemetry": {
+       "device_id": "900100018",
+       "schema": 1,
+       "snapshots": {}
+      },
+      "username": "contract-user",
+      "uuid": "demo-uuid-900100018",
+      "version": "1.3.9"
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

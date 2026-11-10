@@ -12,7 +12,6 @@ jest.mock('../services/serverBackend', () => ({
 }));
 
 jest.mock('../services/betterdeskApi', () => ({
-    getPeerConnectPassword: jest.fn(),
     getPeerTelemetry: jest.fn()
 }));
 
@@ -22,7 +21,6 @@ jest.mock('../services/deviceGroupService', () => ({
 
 const bdRelay = require('../services/bdRelay');
 const serverBackend = require('../services/serverBackend');
-const betterdeskApi = require('../services/betterdeskApi');
 const deviceGroupService = require('../services/deviceGroupService');
 const devicesRoutes = require('../routes/devices.routes');
 
@@ -75,40 +73,5 @@ describe('device route authorization', () => {
             null,
             15000
         );
-    });
-
-    test('does not expose connect passwords to viewers', async () => {
-        betterdeskApi.getPeerConnectPassword.mockResolvedValue({
-            password_set: true,
-            password: 'should-not-be-returned'
-        });
-
-        const app = createAuthenticatedApp({
-            id: 9,
-            username: 'viewer',
-            role: 'viewer'
-        });
-        const response = await request(app).get('/api/devices/TARGET01/connect-password');
-
-        expect(response.status).toBe(403);
-        expect(betterdeskApi.getPeerConnectPassword).not.toHaveBeenCalled();
-    });
-
-    test('allows connect passwords for operators within device scope', async () => {
-        betterdeskApi.getPeerConnectPassword.mockResolvedValue({
-            password_set: true,
-            password: 'operator-secret'
-        });
-
-        const app = createAuthenticatedApp({
-            id: 10,
-            username: 'operator',
-            role: 'operator'
-        });
-        const response = await request(app).get('/api/devices/TARGET01/connect-password');
-
-        expect(response.status).toBe(200);
-        expect(response.body.password).toBe('operator-secret');
-        expect(betterdeskApi.getPeerConnectPassword).toHaveBeenCalledWith('TARGET01');
     });
 });

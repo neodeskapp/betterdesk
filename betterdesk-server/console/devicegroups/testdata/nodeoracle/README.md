@@ -59,3 +59,18 @@ kind of failure and the code around the engine's text (`constraint failed:
 NOT NULL constraint failed: folders.name (1299)`); the test checks that
 Node's text is in it. `getUserById` is replayed through `UserIDByID`,
 which takes the id as a number, so the text `"2"` is read as 2.
+
+## The copy of the server's devices (`peers.js`)
+
+`peers.js` runs the two reads of the adapter that bring the console's
+device table (`peer`) up to date with the signal server's (`peers`) before
+they read it, `getPeerStats` and `getAllPeers` (`syncGoPeers` with its
+ghost clean-up and the id changes it carries over), on a scratch database
+with the server's tables as the server creates them. It records what they
+return and the rows of `peer` and its side tables afterwards:
+`../peers_sqlite.json` and `../peers_postgres.json`. `TestPeerSyncAgainstNode`
+replays them on the same rows and compares the JSON byte for byte.
+
+    tools/dev.sh "cd betterdesk-server/console/devicegroups/testdata && node nodeoracle/peers.js"
+    DEV_DOCKER_ARGS="--network bdgo" tools/dev.sh "cd betterdesk-server/console/devicegroups/testdata && \
+      ORACLE_PG_DSN='postgres://betterdesk:bdgo-local@bdgo-testpg:5432/betterdesk_test?sslmode=disable' node nodeoracle/peers.js"

@@ -1,0 +1,238 @@
+{
+ "dialect": "postgres",
+ "seed": [
+  [
+   "CREATE TABLE IF NOT EXISTS peers (\n        id TEXT PRIMARY KEY, uuid TEXT NOT NULL DEFAULT '', pk BYTEA DEFAULT NULL, ip TEXT NOT NULL DEFAULT '',\n        \"user\" TEXT NOT NULL DEFAULT '', hostname TEXT NOT NULL DEFAULT '', os TEXT NOT NULL DEFAULT '',\n        version TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'OFFLINE', nat_type INTEGER NOT NULL DEFAULT 0,\n        last_online TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), disabled BOOLEAN NOT NULL DEFAULT FALSE,\n        banned BOOLEAN NOT NULL DEFAULT FALSE, ban_reason TEXT NOT NULL DEFAULT '', banned_at TIMESTAMPTZ,\n        soft_deleted BOOLEAN NOT NULL DEFAULT FALSE, deleted_at TIMESTAMPTZ, note TEXT NOT NULL DEFAULT '',\n        tags TEXT NOT NULL DEFAULT '', heartbeat_seq BIGINT NOT NULL DEFAULT 0, device_type TEXT NOT NULL DEFAULT '',\n        linked_peer_id TEXT NOT NULL DEFAULT '', display_name TEXT NOT NULL DEFAULT '', guid TEXT NOT NULL DEFAULT '')",
+   []
+  ],
+  [
+   "CREATE TABLE IF NOT EXISTS id_change_history (\n        id BIGSERIAL PRIMARY KEY, old_id TEXT NOT NULL, new_id TEXT NOT NULL,\n        changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), reason TEXT NOT NULL DEFAULT '')",
+   []
+  ],
+  [
+   "INSERT INTO peers (id, uuid, pk, ip, \"user\", hostname, os, version, status, last_online, created_at, banned, ban_reason, banned_at, soft_deleted, tags)\n    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+   [
+    "P1",
+    "uuid-1",
+    null,
+    "10.0.0.1",
+    "ann",
+    "host-1",
+    "Windows 11",
+    "1.4.2",
+    "ONLINE",
+    "2020-01-01 10:00:00+00",
+    "2019-01-01 00:00:00+00",
+    false,
+    "",
+    null,
+    false,
+    "a,b"
+   ]
+  ],
+  [
+   "INSERT INTO peers (id, uuid, pk, ip, \"user\", hostname, os, version, status, last_online, created_at, banned, ban_reason, banned_at, soft_deleted, tags)\n    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+   [
+    "P2",
+    "",
+    null,
+    "",
+    "",
+    "",
+    "Linux",
+    "",
+    "OFFLINE",
+    "2020-01-02 10:00:00+00",
+    "2019-01-02 00:00:00+00",
+    true,
+    "stolen",
+    "2020-02-02 10:00:00+00",
+    false,
+    ""
+   ]
+  ],
+  [
+   "INSERT INTO peers (id, uuid, pk, ip, \"user\", hostname, os, version, status, last_online, created_at, banned, ban_reason, banned_at, soft_deleted, tags)\n    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+   [
+    "P3",
+    "uuid-3",
+    null,
+    "10.0.0.3",
+    "cy",
+    "host-3",
+    "macOS",
+    "1.0",
+    "ONLINE",
+    "2020-01-03 10:00:00+00",
+    "2019-01-03 00:00:00+00",
+    false,
+    "",
+    null,
+    true,
+    "gone"
+   ]
+  ],
+  [
+   "INSERT INTO peers (id, uuid, pk, ip, \"user\", hostname, os, version, status, last_online, created_at, banned, ban_reason, banned_at, soft_deleted, tags)\n    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+   [
+    "NEW2",
+    "uuid-n2",
+    null,
+    "10.0.0.4",
+    "dee",
+    "host-n2",
+    "Android",
+    "1.1",
+    "ONLINE",
+    null,
+    "2019-01-04 00:00:00+00",
+    false,
+    "",
+    null,
+    false,
+    "x"
+   ]
+  ],
+  [
+   "INSERT INTO peers (id, uuid, pk, ip, \"user\", hostname, os, version, status, last_online, created_at, banned, ban_reason, banned_at, soft_deleted, tags)\n    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+   [
+    "OLD3",
+    "uuid-o3",
+    null,
+    "",
+    "",
+    "host-o3",
+    "",
+    "",
+    "OFFLINE",
+    "2020-01-05 10:00:00+00",
+    "2019-01-05 00:00:00+00",
+    false,
+    "",
+    null,
+    false,
+    ""
+   ]
+  ],
+  [
+   "INSERT INTO peers (id, uuid, pk, ip, \"user\", hostname, os, version, status, last_online, created_at, banned, ban_reason, banned_at, soft_deleted, tags)\n    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+   [
+    "NEW3",
+    "uuid-n3",
+    null,
+    "",
+    "",
+    "host-n3",
+    "",
+    "",
+    "ONLINE",
+    "2020-01-06 10:00:00+00",
+    "2019-01-06 00:00:00+00",
+    false,
+    "",
+    null,
+    false,
+    "n3"
+   ]
+  ],
+  [
+   "UPDATE peers SET pk = decode('0102ff', 'hex') WHERE id = 'P1'",
+   []
+  ],
+  [
+   "INSERT INTO id_change_history (old_id, new_id) VALUES ('OLD2', 'NEW2')",
+   []
+  ],
+  [
+   "INSERT INTO id_change_history (old_id, new_id) VALUES ('OLD3', 'NEW3')",
+   []
+  ],
+  [
+   "INSERT INTO peer (id, uuid, info, ip, \"user\", status_online, last_online, created_at, is_deleted, is_banned, banned_reason)\n      VALUES ('P1', 'old-uuid', '{}', '', '', false, ?, ?, true, false, '')",
+   [
+    "2018-01-01 00:00:00+00",
+    "2018-01-01 00:00:00+00"
+   ]
+  ],
+  [
+   "INSERT INTO peer (id, uuid, info, ip, \"user\", status_online, last_online, created_at, is_deleted, is_banned, banned_reason, note)\n      VALUES ('P2', '', '{\"hostname\":\"kept\",\"os\":\"Kept OS\"}', '1.1.1.1', 'keep', true, NULL, ?, false, false, '', 'a note')",
+   [
+    "2018-01-02 00:00:00+00"
+   ]
+  ],
+  [
+   "INSERT INTO peer (id, uuid, info, status_online, created_at) VALUES ('OLD2', 'uuid-o2', '{\"hostname\":\"old two\"}', false, ?)",
+   [
+    "2018-01-03 00:00:00+00"
+   ]
+  ],
+  [
+   "INSERT INTO peer (id, uuid, info, status_online, created_at) VALUES ('OLD3', 'uuid-o3', '{\"hostname\":\"old three\"}', false, ?)",
+   [
+    "2018-01-04 00:00:00+00"
+   ]
+  ],
+  [
+   "INSERT INTO peer (id, uuid, info, status_online, created_at, folder_id) VALUES ('P5', 'uuid-5', ?, true, ?, 3)",
+   [
+    "{\"ip\":\"9.9.9.9\",\"platform\":\"Plan 9\"}",
+    "2018-01-05 00:00:00+00"
+   ]
+  ],
+  [
+   "INSERT INTO peer (id, uuid, info, status_online, is_banned, created_at) VALUES ('P7', 'u7', '{}', TRUE, TRUE, ?)",
+   [
+    "2018-01-07 00:00:00+00"
+   ]
+  ],
+  [
+   "INSERT INTO peer_sysinfo (peer_id, hostname) VALUES ('OLD3', 'sys-old3')",
+   []
+  ],
+  [
+   "INSERT INTO peer_metrics (peer_id, cpu_usage) VALUES ('OLD3', 5)",
+   []
+  ],
+  [
+   "INSERT INTO folders (id, name) VALUES (3, 'Three')",
+   []
+  ],
+  [
+   "INSERT INTO device_folder_assignments (device_id, folder_id) VALUES ('OLD3', 3)",
+   []
+  ]
+ ],
+ "steps": [
+  {
+   "op": "getPeerStats",
+   "result": "{\"total\":7,\"online\":5,\"banned\":1,\"offline\":2}"
+  },
+  {
+   "op": "rows",
+   "sql": "SELECT id, uuid, encode(pk, 'hex') AS pk, note, CAST(created_at AS TEXT) AS created_at, status_online,\n        CAST(last_online AS TEXT) AS last_online, is_deleted, CAST(info AS TEXT) AS info, ip, \"user\", is_banned,\n        CAST(banned_at AS TEXT) AS banned_at, banned_reason, folder_id FROM peer ORDER BY id",
+   "result": "[{\"id\":\"NEW2\",\"uuid\":\"uuid-n2\",\"pk\":null,\"note\":\"\",\"created_at\":\"2019-01-04 00:00:00+00\",\"status_online\":true,\"last_online\":null,\"is_deleted\":false,\"info\":\"{\\\"os\\\": \\\"Android\\\", \\\"version\\\": \\\"1.1\\\", \\\"hostname\\\": \\\"host-n2\\\", \\\"platform\\\": \\\"Android\\\"}\",\"ip\":\"10.0.0.4\",\"user\":\"dee\",\"is_banned\":false,\"banned_at\":null,\"banned_reason\":\"\",\"folder_id\":null},{\"id\":\"NEW3\",\"uuid\":\"uuid-n3\",\"pk\":null,\"note\":\"\",\"created_at\":\"2019-01-06 00:00:00+00\",\"status_online\":true,\"last_online\":\"2020-01-06 10:00:00+00\",\"is_deleted\":false,\"info\":\"{\\\"os\\\": \\\"\\\", \\\"version\\\": \\\"\\\", \\\"hostname\\\": \\\"host-n3\\\", \\\"platform\\\": \\\"\\\"}\",\"ip\":\"\",\"user\":\"\",\"is_banned\":false,\"banned_at\":null,\"banned_reason\":\"\",\"folder_id\":null},{\"id\":\"OLD3\",\"uuid\":\"uuid-o3\",\"pk\":null,\"note\":\"\",\"created_at\":\"2018-01-04 00:00:00+00\",\"status_online\":false,\"last_online\":\"2020-01-05 10:00:00+00\",\"is_deleted\":false,\"info\":\"{\\\"hostname\\\": \\\"old three\\\"}\",\"ip\":\"\",\"user\":\"\",\"is_banned\":false,\"banned_at\":null,\"banned_reason\":\"\",\"folder_id\":null},{\"id\":\"P1\",\"uuid\":\"old-uuid\",\"pk\":null,\"note\":\"\",\"created_at\":\"2018-01-01 00:00:00+00\",\"status_online\":true,\"last_online\":\"2020-01-01 10:00:00+00\",\"is_deleted\":false,\"info\":\"{\\\"os\\\": \\\"Windows 11\\\", \\\"version\\\": \\\"1.4.2\\\", \\\"hostname\\\": \\\"host-1\\\", \\\"platform\\\": \\\"Windows 11\\\"}\",\"ip\":\"\",\"user\":\"\",\"is_banned\":false,\"banned_at\":null,\"banned_reason\":\"\",\"folder_id\":null},{\"id\":\"P2\",\"uuid\":\"\",\"pk\":null,\"note\":\"a note\",\"created_at\":\"2018-01-02 00:00:00+00\",\"status_online\":false,\"last_online\":\"2020-01-02 10:00:00+00\",\"is_deleted\":false,\"info\":\"{\\\"os\\\": \\\"Kept OS\\\", \\\"hostname\\\": \\\"kept\\\"}\",\"ip\":\"1.1.1.1\",\"user\":\"keep\",\"is_banned\":false,\"banned_at\":null,\"banned_reason\":\"\",\"folder_id\":null},{\"id\":\"P5\",\"uuid\":\"uuid-5\",\"pk\":null,\"note\":\"\",\"created_at\":\"2018-01-05 00:00:00+00\",\"status_online\":true,\"last_online\":null,\"is_deleted\":false,\"info\":\"{\\\"ip\\\": \\\"9.9.9.9\\\", \\\"platform\\\": \\\"Plan 9\\\"}\",\"ip\":\"\",\"user\":\"\",\"is_banned\":false,\"banned_at\":null,\"banned_reason\":\"\",\"folder_id\":3},{\"id\":\"P7\",\"uuid\":\"u7\",\"pk\":null,\"note\":\"\",\"created_at\":\"2018-01-07 00:00:00+00\",\"status_online\":true,\"last_online\":null,\"is_deleted\":false,\"info\":\"{}\",\"ip\":\"\",\"user\":\"\",\"is_banned\":true,\"banned_at\":null,\"banned_reason\":\"\",\"folder_id\":null}]"
+  },
+  {
+   "op": "rows",
+   "sql": "SELECT 'sysinfo' AS t, peer_id AS id FROM peer_sysinfo UNION ALL SELECT 'metrics', peer_id FROM peer_metrics\n        UNION ALL SELECT 'folder', device_id FROM device_folder_assignments ORDER BY t, id",
+   "result": "[{\"t\":\"folder\",\"id\":\"NEW3\"},{\"t\":\"metrics\",\"id\":\"NEW3\"},{\"t\":\"sysinfo\",\"id\":\"NEW3\"}]"
+  },
+  {
+   "op": "getAllPeers",
+   "result": "[{\"id\":\"NEW2\",\"uuid\":\"uuid-n2\",\"pk\":null,\"hostname\":\"host-n2\",\"username\":\"dee\",\"platform\":\"Android\",\"ip\":\"10.0.0.4\",\"note\":\"\",\"online\":true,\"banned\":false,\"created_at\":\"2019-01-04T00:00:00.000Z\",\"last_online\":null,\"ban_reason\":\"\",\"folder_id\":null,\"info\":\"{\\\"os\\\":\\\"Android\\\",\\\"version\\\":\\\"1.1\\\",\\\"hostname\\\":\\\"host-n2\\\",\\\"platform\\\":\\\"Android\\\"}\",\"tags\":[]},{\"id\":\"NEW3\",\"uuid\":\"uuid-n3\",\"pk\":null,\"hostname\":\"host-n3\",\"username\":\"\",\"platform\":\"\",\"ip\":\"\",\"note\":\"\",\"online\":true,\"banned\":false,\"created_at\":\"2019-01-06T00:00:00.000Z\",\"last_online\":\"2020-01-06T10:00:00.000Z\",\"ban_reason\":\"\",\"folder_id\":null,\"info\":\"{\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"hostname\\\":\\\"host-n3\\\",\\\"platform\\\":\\\"\\\"}\",\"tags\":[]},{\"id\":\"OLD3\",\"uuid\":\"uuid-o3\",\"pk\":null,\"hostname\":\"old three\",\"username\":\"\",\"platform\":\"\",\"ip\":\"\",\"note\":\"\",\"online\":false,\"banned\":false,\"created_at\":\"2018-01-04T00:00:00.000Z\",\"last_online\":\"2020-01-05T10:00:00.000Z\",\"ban_reason\":\"\",\"folder_id\":null,\"info\":\"{\\\"hostname\\\":\\\"old three\\\"}\",\"tags\":[]},{\"id\":\"P1\",\"uuid\":\"old-uuid\",\"pk\":null,\"hostname\":\"host-1\",\"username\":\"\",\"platform\":\"Windows 11\",\"ip\":\"\",\"note\":\"\",\"online\":true,\"banned\":false,\"created_at\":\"2018-01-01T00:00:00.000Z\",\"last_online\":\"2020-01-01T10:00:00.000Z\",\"ban_reason\":\"\",\"folder_id\":null,\"info\":\"{\\\"os\\\":\\\"Windows 11\\\",\\\"version\\\":\\\"1.4.2\\\",\\\"hostname\\\":\\\"host-1\\\",\\\"platform\\\":\\\"Windows 11\\\"}\",\"tags\":[]},{\"id\":\"P2\",\"uuid\":\"\",\"pk\":null,\"hostname\":\"a note\",\"username\":\"keep\",\"platform\":\"Kept OS\",\"ip\":\"1.1.1.1\",\"note\":\"a note\",\"online\":false,\"banned\":false,\"created_at\":\"2018-01-02T00:00:00.000Z\",\"last_online\":\"2020-01-02T10:00:00.000Z\",\"ban_reason\":\"\",\"folder_id\":null,\"info\":\"{\\\"os\\\":\\\"Kept OS\\\",\\\"hostname\\\":\\\"kept\\\"}\",\"tags\":[]},{\"id\":\"P5\",\"uuid\":\"uuid-5\",\"pk\":null,\"hostname\":\"\",\"username\":\"\",\"platform\":\"Plan 9\",\"ip\":\"9.9.9.9\",\"note\":\"\",\"online\":true,\"banned\":false,\"created_at\":\"2018-01-05T00:00:00.000Z\",\"last_online\":null,\"ban_reason\":\"\",\"folder_id\":3,\"info\":\"{\\\"ip\\\":\\\"9.9.9.9\\\",\\\"platform\\\":\\\"Plan 9\\\"}\",\"tags\":[]},{\"id\":\"P7\",\"uuid\":\"u7\",\"pk\":null,\"hostname\":\"\",\"username\":\"\",\"platform\":\"\",\"ip\":\"\",\"note\":\"\",\"online\":true,\"banned\":true,\"created_at\":\"2018-01-07T00:00:00.000Z\",\"last_online\":null,\"ban_reason\":\"\",\"folder_id\":null,\"info\":\"{}\",\"tags\":[]}]"
+  },
+  {
+   "op": "exec",
+   "sql": "UPDATE peers SET status = 'OFFLINE', tags = 'changed' WHERE id = 'P1'"
+  },
+  {
+   "op": "getAllPeers",
+   "result": "[{\"id\":\"NEW2\",\"uuid\":\"uuid-n2\",\"pk\":null,\"hostname\":\"host-n2\",\"username\":\"dee\",\"platform\":\"Android\",\"ip\":\"10.0.0.4\",\"note\":\"\",\"online\":true,\"banned\":false,\"created_at\":\"2019-01-04T00:00:00.000Z\",\"last_online\":null,\"ban_reason\":\"\",\"folder_id\":null,\"info\":\"{\\\"os\\\":\\\"Android\\\",\\\"version\\\":\\\"1.1\\\",\\\"hostname\\\":\\\"host-n2\\\",\\\"platform\\\":\\\"Android\\\"}\",\"tags\":[]},{\"id\":\"NEW3\",\"uuid\":\"uuid-n3\",\"pk\":null,\"hostname\":\"host-n3\",\"username\":\"\",\"platform\":\"\",\"ip\":\"\",\"note\":\"\",\"online\":true,\"banned\":false,\"created_at\":\"2019-01-06T00:00:00.000Z\",\"last_online\":\"2020-01-06T10:00:00.000Z\",\"ban_reason\":\"\",\"folder_id\":null,\"info\":\"{\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"hostname\\\":\\\"host-n3\\\",\\\"platform\\\":\\\"\\\"}\",\"tags\":[]},{\"id\":\"OLD3\",\"uuid\":\"uuid-o3\",\"pk\":null,\"hostname\":\"old three\",\"username\":\"\",\"platform\":\"\",\"ip\":\"\",\"note\":\"\",\"online\":false,\"banned\":false,\"created_at\":\"2018-01-04T00:00:00.000Z\",\"last_online\":\"2020-01-05T10:00:00.000Z\",\"ban_reason\":\"\",\"folder_id\":null,\"info\":\"{\\\"hostname\\\":\\\"old three\\\"}\",\"tags\":[]},{\"id\":\"P1\",\"uuid\":\"old-uuid\",\"pk\":null,\"hostname\":\"host-1\",\"username\":\"\",\"platform\":\"Windows 11\",\"ip\":\"\",\"note\":\"\",\"online\":true,\"banned\":false,\"created_at\":\"2018-01-01T00:00:00.000Z\",\"last_online\":\"2020-01-01T10:00:00.000Z\",\"ban_reason\":\"\",\"folder_id\":null,\"info\":\"{\\\"os\\\":\\\"Windows 11\\\",\\\"version\\\":\\\"1.4.2\\\",\\\"hostname\\\":\\\"host-1\\\",\\\"platform\\\":\\\"Windows 11\\\"}\",\"tags\":[]},{\"id\":\"P2\",\"uuid\":\"\",\"pk\":null,\"hostname\":\"a note\",\"username\":\"keep\",\"platform\":\"Kept OS\",\"ip\":\"1.1.1.1\",\"note\":\"a note\",\"online\":false,\"banned\":false,\"created_at\":\"2018-01-02T00:00:00.000Z\",\"last_online\":\"2020-01-02T10:00:00.000Z\",\"ban_reason\":\"\",\"folder_id\":null,\"info\":\"{\\\"os\\\":\\\"Kept OS\\\",\\\"hostname\\\":\\\"kept\\\"}\",\"tags\":[]},{\"id\":\"P5\",\"uuid\":\"uuid-5\",\"pk\":null,\"hostname\":\"\",\"username\":\"\",\"platform\":\"Plan 9\",\"ip\":\"9.9.9.9\",\"note\":\"\",\"online\":true,\"banned\":false,\"created_at\":\"2018-01-05T00:00:00.000Z\",\"last_online\":null,\"ban_reason\":\"\",\"folder_id\":3,\"info\":\"{\\\"ip\\\":\\\"9.9.9.9\\\",\\\"platform\\\":\\\"Plan 9\\\"}\",\"tags\":[]},{\"id\":\"P7\",\"uuid\":\"u7\",\"pk\":null,\"hostname\":\"\",\"username\":\"\",\"platform\":\"\",\"ip\":\"\",\"note\":\"\",\"online\":true,\"banned\":true,\"created_at\":\"2018-01-07T00:00:00.000Z\",\"last_online\":null,\"ban_reason\":\"\",\"folder_id\":null,\"info\":\"{}\",\"tags\":[]}]"
+  },
+  {
+   "op": "rows",
+   "sql": "SELECT id, uuid, encode(pk, 'hex') AS pk, note, CAST(created_at AS TEXT) AS created_at, status_online,\n        CAST(last_online AS TEXT) AS last_online, is_deleted, CAST(info AS TEXT) AS info, ip, \"user\", is_banned,\n        CAST(banned_at AS TEXT) AS banned_at, banned_reason, folder_id FROM peer ORDER BY id",
+   "result": "[{\"id\":\"NEW2\",\"uuid\":\"uuid-n2\",\"pk\":null,\"note\":\"\",\"created_at\":\"2019-01-04 00:00:00+00\",\"status_online\":true,\"last_online\":null,\"is_deleted\":false,\"info\":\"{\\\"os\\\": \\\"Android\\\", \\\"version\\\": \\\"1.1\\\", \\\"hostname\\\": \\\"host-n2\\\", \\\"platform\\\": \\\"Android\\\"}\",\"ip\":\"10.0.0.4\",\"user\":\"dee\",\"is_banned\":false,\"banned_at\":null,\"banned_reason\":\"\",\"folder_id\":null},{\"id\":\"NEW3\",\"uuid\":\"uuid-n3\",\"pk\":null,\"note\":\"\",\"created_at\":\"2019-01-06 00:00:00+00\",\"status_online\":true,\"last_online\":\"2020-01-06 10:00:00+00\",\"is_deleted\":false,\"info\":\"{\\\"os\\\": \\\"\\\", \\\"version\\\": \\\"\\\", \\\"hostname\\\": \\\"host-n3\\\", \\\"platform\\\": \\\"\\\"}\",\"ip\":\"\",\"user\":\"\",\"is_banned\":false,\"banned_at\":null,\"banned_reason\":\"\",\"folder_id\":null},{\"id\":\"OLD3\",\"uuid\":\"uuid-o3\",\"pk\":null,\"note\":\"\",\"created_at\":\"2018-01-04 00:00:00+00\",\"status_online\":false,\"last_online\":\"2020-01-05 10:00:00+00\",\"is_deleted\":false,\"info\":\"{\\\"hostname\\\": \\\"old three\\\"}\",\"ip\":\"\",\"user\":\"\",\"is_banned\":false,\"banned_at\":null,\"banned_reason\":\"\",\"folder_id\":null},{\"id\":\"P1\",\"uuid\":\"old-uuid\",\"pk\":null,\"note\":\"\",\"created_at\":\"2018-01-01 00:00:00+00\",\"status_online\":true,\"last_online\":\"2020-01-01 10:00:00+00\",\"is_deleted\":false,\"info\":\"{\\\"os\\\": \\\"Windows 11\\\", \\\"version\\\": \\\"1.4.2\\\", \\\"hostname\\\": \\\"host-1\\\", \\\"platform\\\": \\\"Windows 11\\\"}\",\"ip\":\"\",\"user\":\"\",\"is_banned\":false,\"banned_at\":null,\"banned_reason\":\"\",\"folder_id\":null},{\"id\":\"P2\",\"uuid\":\"\",\"pk\":null,\"note\":\"a note\",\"created_at\":\"2018-01-02 00:00:00+00\",\"status_online\":false,\"last_online\":\"2020-01-02 10:00:00+00\",\"is_deleted\":false,\"info\":\"{\\\"os\\\": \\\"Kept OS\\\", \\\"hostname\\\": \\\"kept\\\"}\",\"ip\":\"1.1.1.1\",\"user\":\"keep\",\"is_banned\":false,\"banned_at\":null,\"banned_reason\":\"\",\"folder_id\":null},{\"id\":\"P5\",\"uuid\":\"uuid-5\",\"pk\":null,\"note\":\"\",\"created_at\":\"2018-01-05 00:00:00+00\",\"status_online\":true,\"last_online\":null,\"is_deleted\":false,\"info\":\"{\\\"ip\\\": \\\"9.9.9.9\\\", \\\"platform\\\": \\\"Plan 9\\\"}\",\"ip\":\"\",\"user\":\"\",\"is_banned\":false,\"banned_at\":null,\"banned_reason\":\"\",\"folder_id\":3},{\"id\":\"P7\",\"uuid\":\"u7\",\"pk\":null,\"note\":\"\",\"created_at\":\"2018-01-07 00:00:00+00\",\"status_online\":true,\"last_online\":null,\"is_deleted\":false,\"info\":\"{}\",\"ip\":\"\",\"user\":\"\",\"is_banned\":true,\"banned_at\":null,\"banned_reason\":\"\",\"folder_id\":null}]"
+  }
+ ]
+}

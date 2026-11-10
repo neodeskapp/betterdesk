@@ -12,6 +12,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/dashboard"
 	"github.com/unitronix/betterdesk-server/console/routes/dataguard"
 	"github.com/unitronix/betterdesk-server/console/routes/desktop"
+	"github.com/unitronix/betterdesk-server/console/routes/devices"
 	"github.com/unitronix/betterdesk-server/console/routes/filetransfer"
 	"github.com/unitronix/betterdesk-server/console/routes/fleet"
 	"github.com/unitronix/betterdesk-server/console/routes/folders"
@@ -52,6 +53,7 @@ func registerRoutes(d *kit.Deps) {
 	authroutes.Register(d)    // routes/auth.routes.js
 	consoleroutes.Register(d) // routes/console.routes.js: the strings endpoint
 	dashboard.Register(d)     // routes/dashboard.routes.js
+	devices.Register(d)       // routes/devices.routes.js, without the routes that reach into an agent (bdRelay)
 	keys.Register(d)          // routes/keys.routes.js
 	avatars.Register(d)       // routes/avatars.routes.js
 	panelaccess.Register(d)   // routes/panel-access.routes.js
