@@ -147,7 +147,11 @@ func init() {
 			Name: "assign-device", Method: "POST", Path: "/api/tenants/{tenant}/devices",
 			Body: map[string]any{"device_id": "900100001"},
 		},
-		contract.Case{Name: "devices-one", Path: "/api/tenants/{tenant}/devices"},
+		// Whether the device counts as online depends on when the console's
+		// copy of the devices was last brought up to date: the copy says
+		// online, and within 15 seconds a job says offline again because
+		// the last contact in it is old. So online is checked by its type.
+		contract.Case{Name: "devices-one", Path: "/api/tenants/{tenant}/devices", Volatile: []string{"~[*].online"}},
 		contract.Case{
 			Name: "assign-devices", Method: "POST", Path: "/api/tenants/{tenant}/devices",
 			Body: map[string]any{"device_ids": []string{"900100002", "900100001", "no-such-device"}, "device_id": "ignored"},
@@ -233,8 +237,8 @@ func init() {
 		contract.Case{Name: "users-of-missing-tenant", Path: "/api/tenants/999999999/users"},
 
 		// Stats
-		contract.Case{Name: "stats", Path: "/api/tenants/{tenant}/stats"},
-		contract.Case{Name: "stats-id-with-fraction", Path: "/api/tenants/{tenant}.0/stats"},
+		contract.Case{Name: "stats", Path: "/api/tenants/{tenant}/stats", Volatile: []string{"~online_devices"}},
+		contract.Case{Name: "stats-id-with-fraction", Path: "/api/tenants/{tenant}.0/stats", Volatile: []string{"~online_devices"}},
 		contract.Case{Name: "stats-of-tenant-with-defaults", Path: "/api/tenants/{second}/stats"},
 		contract.Case{Name: "stats-missing", Path: "/api/tenants/999999999/stats"},
 

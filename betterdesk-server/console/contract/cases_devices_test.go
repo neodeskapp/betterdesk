@@ -120,7 +120,10 @@ func init() {
 		contract.Case{Name: "availability-unknown", Path: "/api/devices/999999999/availability"},
 		contract.Case{
 			Name: "connection-sessions", Path: "/api/devices/900100001/connection-sessions", Query: map[string][]string{"limit": {"3"}},
-			Volatile: []string{"data.sessions[*].duration_seconds"},
+			// Which sessions the seed gives a device, and how many, depends
+			// on the hour it runs at: it puts them where the device was
+			// online. The replay of routes/devices pins the list itself.
+			Volatile: []string{"data.sessions[*].duration_seconds", "~data.sessions", "~data.count"},
 		},
 		contract.Case{Name: "connection-sessions-none", Path: "/api/devices/900100018/connection-sessions"},
 		contract.Case{Name: "connection-sessions-limit-text", Path: "/api/devices/900100018/connection-sessions", Query: map[string][]string{"limit": {"abc"}}},

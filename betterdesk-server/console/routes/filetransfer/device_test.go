@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/config"
@@ -109,6 +110,10 @@ func TestDeviceVectors(t *testing.T) {
 			}
 			got := w.Do(req)
 			want, _ := base64.StdEncoding.DecodeString(v.Body)
+			// A list is ordered by the millisecond a transfer was made in.
+			// The recording made its transfers milliseconds apart, so no
+			// two of this run may share one either.
+			time.Sleep(2 * time.Millisecond)
 
 			// A new transfer: remember which id of this run stands for it
 			for _, pattern := range []*regexp.Regexp{announcedID, createdID} {
