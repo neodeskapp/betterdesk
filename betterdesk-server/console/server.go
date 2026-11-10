@@ -33,6 +33,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/avatars"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/csrf"
+	"github.com/unitronix/betterdesk-server/console/devicegroups"
 	"github.com/unitronix/betterdesk-server/console/filetransfer"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/guestaccess"
@@ -217,6 +218,8 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		Rollbacks:     map[string]restart.Rollback{"connection-mode": restart.ConnectionModeRollback(s.deps.ServerInfo)},
 		Logger:        s.deps.Log,
 	})
+	s.deps.DeviceGroups = devicegroups.New(devicegroups.Options{DB: opts.Store, Access: s.deps.Access})
+	s.deps.Backend = goapi.NewBackend(api, devicegroups.DeviceStore{Groups: s.deps.DeviceGroups})
 	badParam := func(w http.ResponseWriter, r *http.Request, err error) {
 		host.ServerError(w, r, err, http.StatusBadRequest)
 	}
@@ -351,9 +354,10 @@ func (s *Server) Addr() string {
 	return s.listener.Addr().String()
 }
 
-// Stop closes the listener, gives open requests ten seconds to finish and
-// ends the background jobs. When it returns, nothing the server started
-// is still running.
+// Stop closes the listener, gives open requests ten seconds to finish,
+// ends the background jobs and waits for the profile picture syncs that
+// sign-ins started. When it returns, nothing the server started is still
+// running.
 func (s *Server) Stop() {
 	if s.httpSrv != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -363,6 +367,7 @@ func (s *Server) Stop() {
 		}
 	}
 	s.jobs.Stop()
+	s.deps.Avatars.Wait()
 	if s.node != nil {
 		s.node.Close()
 	}

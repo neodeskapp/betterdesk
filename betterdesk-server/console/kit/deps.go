@@ -10,6 +10,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/avatars"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/csrf"
+	"github.com/unitronix/betterdesk-server/console/devicegroups"
 	"github.com/unitronix/betterdesk-server/console/filetransfer"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/guestaccess"
@@ -84,6 +85,13 @@ type Deps struct {
 	// Restart collects the saved settings that need a restart of the
 	// server and runs that restart (services/restartCoordinator.js).
 	Restart *restart.Service
+	// DeviceGroups holds folders, device groups and user groups and
+	// answers which devices an account may see (services/deviceGroupService.js
+	// with its dbAdapter methods).
+	DeviceGroups *devicegroups.Service
+	// Backend is the device layer: the API server's devices with what the
+	// console's tables add to them (services/serverBackend.js).
+	Backend *goapi.Backend
 	// Audit writes the audit log. LogAction is the usual way to it.
 	Audit *auditlog.Log
 	// Log is the console's logger; a group takes d.Log.Child("TICKETS").

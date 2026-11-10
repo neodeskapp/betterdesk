@@ -1,0 +1,818 @@
+{
+ "dialect": "postgres",
+ "seed": [
+  [
+   "DELETE FROM device_groups",
+   []
+  ],
+  [
+   "DELETE FROM user_groups",
+   []
+  ],
+  [
+   "DELETE FROM users",
+   []
+  ],
+  [
+   "INSERT INTO users (id, username, password_hash, role) VALUES (1, ?, ?, ?)",
+   [
+    "bob",
+    "x",
+    "operator"
+   ]
+  ],
+  [
+   "INSERT INTO users (id, username, password_hash, role) VALUES (2, ?, ?, ?)",
+   [
+    "alice",
+    "x",
+    "viewer"
+   ]
+  ],
+  [
+   "INSERT INTO users (id, username, password_hash, role) VALUES (3, ?, ?, ?)",
+   [
+    "carol",
+    "x",
+    "admin"
+   ]
+  ],
+  [
+   "INSERT INTO user_groups (guid, name, note, team_id) VALUES ('ug-b', 'Beta', '', 'org-1')",
+   []
+  ],
+  [
+   "INSERT INTO user_groups (guid, name, note, team_id) VALUES ('ug-a', 'Alpha', NULL, '')",
+   []
+  ]
+ ],
+ "steps": [
+  {
+   "op": "createFolder",
+   "args": [
+    "Office",
+    "#22c55e",
+    {
+     "$": "undefined"
+    }
+   ],
+   "result": "1"
+  },
+  {
+   "op": "createFolder",
+   "args": [
+    "Annex",
+    "",
+    "box"
+   ],
+   "result": "2"
+  },
+  {
+   "op": "createFolder",
+   "args": [
+    "Odd",
+    5,
+    1.5
+   ],
+   "result": "3"
+  },
+  {
+   "op": "createFolder",
+   "args": [
+    "Flag",
+    true,
+    {
+     "$": "undefined"
+    }
+   ],
+   "result": "4"
+  },
+  {
+   "op": "createFolder",
+   "args": [
+    "Nulls",
+    null,
+    null
+   ],
+   "result": "5"
+  },
+  {
+   "op": "createFolder",
+   "args": [
+    null,
+    {
+     "$": "undefined"
+    },
+    {
+     "$": "undefined"
+    }
+   ],
+   "error": "null value in column \"name\" of relation \"folders\" violates not-null constraint"
+  },
+  {
+   "op": "createFolder",
+   "args": [
+    7,
+    {
+     "$": "undefined"
+    },
+    {
+     "$": "undefined"
+    }
+   ],
+   "result": "7"
+  },
+  {
+   "op": "getAllFolders",
+   "args": [],
+   "result": "[{\"id\":7,\"name\":\"7\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.530Z\"},{\"id\":2,\"name\":\"Annex\",\"color\":\"#6366f1\",\"icon\":\"box\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.501Z\"},{\"id\":4,\"name\":\"Flag\",\"color\":\"true\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.510Z\"},{\"id\":5,\"name\":\"Nulls\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.514Z\"},{\"id\":3,\"name\":\"Odd\",\"color\":\"5\",\"icon\":\"1.5\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.506Z\"},{\"id\":1,\"name\":\"Office\",\"color\":\"#22c55e\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.497Z\"}]"
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    1
+   ],
+   "result": "{\"id\":1,\"name\":\"Office\",\"color\":\"#22c55e\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.497Z\"}"
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    2
+   ],
+   "result": "{\"id\":2,\"name\":\"Annex\",\"color\":\"#6366f1\",\"icon\":\"box\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.501Z\"}"
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    3
+   ],
+   "result": "{\"id\":3,\"name\":\"Odd\",\"color\":\"5\",\"icon\":\"1.5\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.506Z\"}"
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    "1"
+   ],
+   "result": "{\"id\":1,\"name\":\"Office\",\"color\":\"#22c55e\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.497Z\"}"
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    " 2 "
+   ],
+   "result": "{\"id\":2,\"name\":\"Annex\",\"color\":\"#6366f1\",\"icon\":\"box\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.501Z\"}"
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    "abc"
+   ],
+   "error": "invalid input syntax for type integer: \"abc\""
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    {
+     "$": "NaN"
+    }
+   ],
+   "error": "invalid input syntax for type integer: \"NaN\""
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    1.5
+   ],
+   "error": "invalid input syntax for type integer: \"1.5\""
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    true
+   ],
+   "error": "invalid input syntax for type integer: \"true\""
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    false
+   ],
+   "error": "invalid input syntax for type integer: \"false\""
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    null
+   ],
+   "result": "null"
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    {
+     "$": "undefined"
+    }
+   ],
+   "result": "null"
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    0
+   ],
+   "result": "null"
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    -1
+   ],
+   "result": "null"
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    100000000000000000000
+   ],
+   "error": "value \"100000000000000000000\" is out of range for type integer"
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    2147483648
+   ],
+   "error": "value \"2147483648\" is out of range for type integer"
+  },
+  {
+   "op": "getFolderById",
+   "args": [
+    9007199254740992
+   ],
+   "error": "value \"9007199254740992\" is out of range for type integer"
+  },
+  {
+   "op": "updateFolder",
+   "args": [
+    1,
+    "Office 2",
+    {
+     "$": "undefined"
+    },
+    "star"
+   ],
+   "result": "null"
+  },
+  {
+   "op": "updateFolder",
+   "args": [
+    2,
+    {
+     "$": "undefined"
+    },
+    null,
+    {
+     "$": "undefined"
+    }
+   ],
+   "result": "null"
+  },
+  {
+   "op": "updateFolder",
+   "args": [
+    3,
+    {
+     "$": "undefined"
+    },
+    {
+     "$": "undefined"
+    },
+    {
+     "$": "undefined"
+    }
+   ],
+   "result": "null"
+  },
+  {
+   "op": "updateFolder",
+   "args": [
+    "abc",
+    "x",
+    {
+     "$": "undefined"
+    },
+    {
+     "$": "undefined"
+    }
+   ],
+   "error": "invalid input syntax for type integer: \"abc\""
+  },
+  {
+   "op": "updateFolder",
+   "args": [
+    {
+     "$": "NaN"
+    },
+    "x",
+    {
+     "$": "undefined"
+    },
+    {
+     "$": "undefined"
+    }
+   ],
+   "error": "invalid input syntax for type integer: \"NaN\""
+  },
+  {
+   "op": "updateFolder",
+   "args": [
+    1,
+    {
+     "$": "undefined"
+    },
+    true,
+    {
+     "$": "undefined"
+    }
+   ],
+   "result": "null"
+  },
+  {
+   "op": "updateFolder",
+   "args": [
+    1,
+    77,
+    {
+     "$": "undefined"
+    },
+    {
+     "$": "undefined"
+    }
+   ],
+   "result": "null"
+  },
+  {
+   "op": "getAllFolders",
+   "args": [],
+   "result": "[{\"id\":7,\"name\":\"7\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.530Z\"},{\"id\":1,\"name\":\"77\",\"color\":\"true\",\"icon\":\"star\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.497Z\"},{\"id\":2,\"name\":\"Annex\",\"color\":null,\"icon\":\"box\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.501Z\"},{\"id\":4,\"name\":\"Flag\",\"color\":\"true\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.510Z\"},{\"id\":5,\"name\":\"Nulls\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.514Z\"},{\"id\":3,\"name\":\"Odd\",\"color\":\"5\",\"icon\":\"1.5\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.506Z\"}]"
+  },
+  {
+   "op": "assignDevicesToFolder",
+   "args": [
+    [
+     "A",
+     "B",
+     7,
+     1.5
+    ],
+    1
+   ],
+   "result": "null"
+  },
+  {
+   "op": "assignDevicesToFolder",
+   "args": [
+    [
+     "C",
+     true
+    ],
+    2
+   ],
+   "result": "null"
+  },
+  {
+   "op": "assignDevicesToFolder",
+   "args": [
+    [
+     "D",
+     null
+    ],
+    2
+   ],
+   "error": "null value in column \"device_id\" of relation \"device_folder_assignments\" violates not-null constraint"
+  },
+  {
+   "op": "getAllFolderAssignments",
+   "args": [],
+   "result": "{\"7\":1,\"A\":1,\"B\":1,\"1.5\":1,\"C\":2,\"true\":2}"
+  },
+  {
+   "op": "assignDeviceToFolder",
+   "args": [
+    "A",
+    2
+   ],
+   "result": "null"
+  },
+  {
+   "op": "assignDeviceToFolder",
+   "args": [
+    "B",
+    null
+   ],
+   "result": "null"
+  },
+  {
+   "op": "assignDeviceToFolder",
+   "args": [
+    "E",
+    {
+     "$": "undefined"
+    }
+   ],
+   "result": "null"
+  },
+  {
+   "op": "assignDeviceToFolder",
+   "args": [
+    "F",
+    "3"
+   ],
+   "result": "null"
+  },
+  {
+   "op": "assignDeviceToFolder",
+   "args": [
+    "G",
+    "abc"
+   ],
+   "error": "invalid input syntax for type integer: \"abc\""
+  },
+  {
+   "op": "assignDeviceToFolder",
+   "args": [
+    "H",
+    2.5
+   ],
+   "error": "invalid input syntax for type integer: \"2.5\""
+  },
+  {
+   "op": "getAllFolderAssignments",
+   "args": [],
+   "result": "{\"7\":1,\"1.5\":1,\"C\":2,\"true\":2,\"A\":2,\"F\":3}"
+  },
+  {
+   "op": "assignDevicesToFolder",
+   "args": [
+    [
+     "A",
+     "7.0",
+     7
+    ],
+    null
+   ],
+   "result": "null"
+  },
+  {
+   "op": "getAllFolderAssignments",
+   "args": [],
+   "result": "{\"1.5\":1,\"C\":2,\"true\":2,\"F\":3}"
+  },
+  {
+   "op": "unassignDevicesFromFolder",
+   "args": [
+    "abc"
+   ],
+   "error": "invalid input syntax for type integer: \"abc\""
+  },
+  {
+   "op": "unassignDevicesFromFolder",
+   "args": [
+    2
+   ],
+   "result": "null"
+  },
+  {
+   "op": "getAllFolderAssignments",
+   "args": [],
+   "result": "{\"1.5\":1,\"F\":3}"
+  },
+  {
+   "op": "deleteFolder",
+   "args": [
+    1
+   ],
+   "result": "null"
+  },
+  {
+   "op": "deleteFolder",
+   "args": [
+    "abc"
+   ],
+   "error": "invalid input syntax for type integer: \"abc\""
+  },
+  {
+   "op": "getAllFolders",
+   "args": [],
+   "result": "[{\"id\":7,\"name\":\"7\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.530Z\"},{\"id\":2,\"name\":\"Annex\",\"color\":null,\"icon\":\"box\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.501Z\"},{\"id\":4,\"name\":\"Flag\",\"color\":\"true\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.510Z\"},{\"id\":5,\"name\":\"Nulls\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.514Z\"},{\"id\":3,\"name\":\"Odd\",\"color\":\"5\",\"icon\":\"1.5\",\"sort_order\":0,\"created_at\":\"2026-11-10T19:01:56.506Z\"}]"
+  },
+  {
+   "op": "getAllFolderAssignments",
+   "args": [],
+   "result": "{\"F\":3}"
+  },
+  {
+   "op": "createDeviceGroup",
+   "args": [
+    {
+     "guid": "g-tag",
+     "name": "Laptops",
+     "source_type": "tag",
+     "tag_filter": "laptop",
+     "team_id": "org-1",
+     "note": "n"
+    }
+   ],
+   "result": "{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops\",\"note\":\"n\",\"team_id\":\"org-1\",\"source_type\":\"tag\",\"tag_filter\":\"laptop\",\"created_at\":\"2026-11-10T19:01:56.813Z\"}"
+  },
+  {
+   "op": "createDeviceGroup",
+   "args": [
+    {
+     "guid": "folder_3",
+     "name": "Annex",
+     "source_type": "dynamic",
+     "tag_filter": "dropped"
+    }
+   ],
+   "result": "{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.820Z\"}"
+  },
+  {
+   "op": "createDeviceGroup",
+   "args": [
+    {
+     "name": "Random guid",
+     "note": {
+      "$": "undefined"
+     },
+     "team_id": null,
+     "source_type": "tag",
+     "tag_filter": ""
+    }
+   ],
+   "result": "{\"id\":4,\"guid\":\"c114dc17-7a45-4dc2-b8e8-8a6932c2eef2\",\"name\":\"Random guid\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.823Z\"}"
+  },
+  {
+   "op": "createDeviceGroup",
+   "args": [
+    {
+     "guid": "g-num",
+     "name": 5,
+     "note": 1.5,
+     "team_id": 7
+    }
+   ],
+   "result": "{\"id\":5,\"guid\":\"g-num\",\"name\":\"5\",\"note\":\"1.5\",\"team_id\":\"7\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.828Z\"}"
+  },
+  {
+   "op": "createDeviceGroup",
+   "args": [
+    {
+     "guid": "g-flag",
+     "name": "Flag",
+     "team_id": true
+    }
+   ],
+   "result": "{\"id\":6,\"guid\":\"g-flag\",\"name\":\"Flag\",\"note\":\"\",\"team_id\":\"true\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.831Z\"}"
+  },
+  {
+   "op": "createDeviceGroup",
+   "args": [
+    {
+     "guid": "g-tag",
+     "name": "Again"
+    }
+   ],
+   "error": "duplicate key value violates unique constraint \"device_groups_guid_key\""
+  },
+  {
+   "op": "createDeviceGroup",
+   "args": [
+    {
+     "guid": "g-noname",
+     "name": null
+    }
+   ],
+   "error": "null value in column \"name\" of relation \"device_groups\" violates not-null constraint"
+  },
+  {
+   "op": "setDeviceGroupUserAccess",
+   "args": [
+    "folder_3",
+    [
+     "carol",
+     " alice",
+     "nobody",
+     "alice",
+     ""
+    ]
+   ],
+   "result": "{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.820Z\",\"allowed_users\":[\"alice\",\"carol\"],\"allowed_groups\":[],\"allowed_user_groups\":[]}"
+  },
+  {
+   "op": "setDeviceGroupUserAccess",
+   "args": [
+    "no-such-group",
+    [
+     "bob"
+    ]
+   ],
+   "result": "null"
+  },
+  {
+   "op": "setDeviceGroupUserGroupAccess",
+   "args": [
+    "folder_3",
+    [
+     "ug-b",
+     " ug-a ",
+     "missing",
+     "ug-a",
+     ""
+    ]
+   ],
+   "result": "{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.820Z\",\"allowed_users\":[\"alice\",\"carol\"],\"allowed_groups\":[\"ug-a\",\"ug-b\"],\"allowed_user_groups\":[{\"guid\":\"ug-a\",\"name\":\"Alpha\"},{\"guid\":\"ug-b\",\"name\":\"Beta\"}]}"
+  },
+  {
+   "op": "setDeviceGroupUserGroupAccess",
+   "args": [
+    "no-such-group",
+    [
+     "ug-a"
+    ]
+   ],
+   "result": "null"
+  },
+  {
+   "op": "getDeviceGroupByGuid",
+   "args": [
+    "folder_3"
+   ],
+   "result": "{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.820Z\",\"allowed_users\":[\"alice\",\"carol\"],\"allowed_groups\":[\"ug-a\",\"ug-b\"],\"allowed_user_groups\":[{\"guid\":\"ug-a\",\"name\":\"Alpha\"},{\"guid\":\"ug-b\",\"name\":\"Beta\"}]}"
+  },
+  {
+   "op": "getDeviceGroupByGuid",
+   "args": [
+    "nothing"
+   ],
+   "result": "null"
+  },
+  {
+   "op": "getAllDeviceGroups",
+   "args": [],
+   "result": "[{\"id\":5,\"guid\":\"g-num\",\"name\":\"5\",\"note\":\"1.5\",\"team_id\":\"7\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.828Z\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.820Z\",\"member_count\":0,\"allowed_users\":[\"alice\",\"carol\"],\"allowed_groups\":[\"ug-a\",\"ug-b\"],\"allowed_user_groups\":[{\"guid\":\"ug-a\",\"name\":\"Alpha\"},{\"guid\":\"ug-b\",\"name\":\"Beta\"}]},{\"id\":6,\"guid\":\"g-flag\",\"name\":\"Flag\",\"note\":\"\",\"team_id\":\"true\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.831Z\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops\",\"note\":\"n\",\"team_id\":\"org-1\",\"source_type\":\"tag\",\"tag_filter\":\"laptop\",\"created_at\":\"2026-11-10T19:01:56.813Z\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":4,\"guid\":\"c114dc17-7a45-4dc2-b8e8-8a6932c2eef2\",\"name\":\"Random guid\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.823Z\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]}]"
+  },
+  {
+   "op": "updateDeviceGroup",
+   "args": [
+    "g-tag",
+    {
+     "name": "Laptops 2",
+     "tag_filter": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+   ],
+   "result": "{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops 2\",\"note\":\"n\",\"team_id\":\"org-1\",\"source_type\":\"tag\",\"tag_filter\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"created_at\":\"2026-11-10T19:01:56.813Z\"}"
+  },
+  {
+   "op": "updateDeviceGroup",
+   "args": [
+    "g-tag",
+    {
+     "source_type": "manual",
+     "tag_filter": 0,
+     "note": null
+    }
+   ],
+   "result": "{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops 2\",\"note\":null,\"team_id\":\"org-1\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.813Z\"}"
+  },
+  {
+   "op": "updateDeviceGroup",
+   "args": [
+    "g-tag",
+    {
+     "source_type": "tag",
+     "tag_filter": 12,
+     "team_id": ""
+    }
+   ],
+   "result": "{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops 2\",\"note\":null,\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"12\",\"created_at\":\"2026-11-10T19:01:56.813Z\"}"
+  },
+  {
+   "op": "updateDeviceGroup",
+   "args": [
+    "g-tag",
+    {}
+   ],
+   "result": "null"
+  },
+  {
+   "op": "updateDeviceGroup",
+   "args": [
+    "nothing",
+    {
+     "name": "x"
+    }
+   ],
+   "result": "null"
+  },
+  {
+   "op": "updateDeviceGroup",
+   "args": [
+    "g-tag",
+    {
+     "name": true
+    }
+   ],
+   "result": "{\"id\":2,\"guid\":\"g-tag\",\"name\":\"true\",\"note\":null,\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"12\",\"created_at\":\"2026-11-10T19:01:56.813Z\"}"
+  },
+  {
+   "op": "updateDeviceGroup",
+   "args": [
+    "g-tag",
+    {
+     "name": null
+    }
+   ],
+   "error": "null value in column \"name\" of relation \"device_groups\" violates not-null constraint"
+  },
+  {
+   "op": "getAllDeviceGroups",
+   "args": [],
+   "result": "[{\"id\":5,\"guid\":\"g-num\",\"name\":\"5\",\"note\":\"1.5\",\"team_id\":\"7\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.828Z\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.820Z\",\"member_count\":0,\"allowed_users\":[\"alice\",\"carol\"],\"allowed_groups\":[\"ug-a\",\"ug-b\"],\"allowed_user_groups\":[{\"guid\":\"ug-a\",\"name\":\"Alpha\"},{\"guid\":\"ug-b\",\"name\":\"Beta\"}]},{\"id\":6,\"guid\":\"g-flag\",\"name\":\"Flag\",\"note\":\"\",\"team_id\":\"true\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.831Z\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":4,\"guid\":\"c114dc17-7a45-4dc2-b8e8-8a6932c2eef2\",\"name\":\"Random guid\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.823Z\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":2,\"guid\":\"g-tag\",\"name\":\"true\",\"note\":null,\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"12\",\"created_at\":\"2026-11-10T19:01:56.813Z\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]}]"
+  },
+  {
+   "op": "deleteDeviceGroup",
+   "args": [
+    "folder_3"
+   ],
+   "result": "null"
+  },
+  {
+   "op": "deleteDeviceGroup",
+   "args": [
+    "nothing"
+   ],
+   "result": "null"
+  },
+  {
+   "op": "getAllDeviceGroups",
+   "args": [],
+   "result": "[{\"id\":5,\"guid\":\"g-num\",\"name\":\"5\",\"note\":\"1.5\",\"team_id\":\"7\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.828Z\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":6,\"guid\":\"g-flag\",\"name\":\"Flag\",\"note\":\"\",\"team_id\":\"true\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.831Z\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":4,\"guid\":\"c114dc17-7a45-4dc2-b8e8-8a6932c2eef2\",\"name\":\"Random guid\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10T19:01:56.823Z\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":2,\"guid\":\"g-tag\",\"name\":\"true\",\"note\":null,\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"12\",\"created_at\":\"2026-11-10T19:01:56.813Z\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]}]"
+  },
+  {
+   "op": "getAllUserGroups",
+   "args": [],
+   "result": "[{\"id\":3,\"guid\":\"ug-a\",\"name\":\"Alpha\",\"note\":null,\"team_id\":\"\",\"created_at\":\"2026-11-10T19:01:56.493Z\",\"member_count\":0},{\"id\":2,\"guid\":\"ug-b\",\"name\":\"Beta\",\"note\":\"\",\"team_id\":\"org-1\",\"created_at\":\"2026-11-10T19:01:56.489Z\",\"member_count\":0}]"
+  },
+  {
+   "op": "getUserById",
+   "args": [
+    1
+   ],
+   "result": "1"
+  },
+  {
+   "op": "getUserById",
+   "args": [
+    3
+   ],
+   "result": "3"
+  },
+  {
+   "op": "getUserById",
+   "args": [
+    4
+   ],
+   "result": "null"
+  },
+  {
+   "op": "getUserById",
+   "args": [
+    0
+   ],
+   "result": "null"
+  },
+  {
+   "op": "getUserById",
+   "args": [
+    {
+     "$": "NaN"
+    }
+   ],
+   "error": "invalid input syntax for type integer: \"NaN\""
+  },
+  {
+   "op": "getUserById",
+   "args": [
+    "2"
+   ],
+   "result": "2"
+  },
+  {
+   "op": "getUserById",
+   "args": [
+    2.5
+   ],
+   "error": "invalid input syntax for type integer: \"2.5\""
+  }
+ ]
+}

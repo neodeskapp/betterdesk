@@ -1,0 +1,192 @@
+package organizations_test
+
+import (
+	"context"
+	"regexp"
+	"strings"
+	"testing"
+
+	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
+	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/unitronix/betterdesk-server/console/store/storetest"
+)
+
+func want(t *testing.T, what string, got routetest.Answer, status int, body string) {
+	t.Helper()
+	if got.Status != status || got.Body != body {
+		t.Errorf("%s:\n got %d %s\nwant %d %s", what, got.Status, got.Body, status, body)
+	}
+}
+
+func calls(t *testing.T, what string, api *routetest.API, wanted ...string) {
+	t.Helper()
+	if got := strings.Join(api.Calls(), "\n"); got != strings.Join(wanted, "\n") {
+		t.Errorf("%s: calls\n%s\nwant\n%s", what, got, strings.Join(wanted, "\n"))
+	}
+}
+
+func exec(t *testing.T, db *store.DB, query string, args ...any) {
+	t.Helper()
+	if _, err := db.Exec(context.Background(), query, args...); err != nil {
+		t.Fatalf("%s: %v", query, err)
+	}
+}
+
+func TestPassingOn(t *testing.T) {
+	api := routetest.NewAPI()
+	w := routetest.New(t, routetest.Options{API: api})
+	admin, viewer := w.As("admin"), w.As("viewer")
+
+	api.On("GET /api/org", 200, `{"organizations":[{"id":"o1","name":"One"}]}`)
+	want(t, "list", viewer.Do("GET", "/api/panel/org", ""), 200, `{"organizations":[{"id":"o1","name":"One"}]}`)
+	api.On("GET /api/org/o1/settings", 200, `{"timezone":"UTC"}`)
+	want(t, "settings, as a viewer", viewer.Do("GET", "/api/panel/org/o1/settings", ""), 200, `{"timezone":"UTC"}`)
+	calls(t, "reads", api, "GET /api/org", "GET /api/org/o1/settings")
+
+	// A write goes on with the body; the API server's refusal comes back
+	api.On("PUT /api/org/o1", 409, `{"error":"slug taken"}`)
+	want(t, "update", admin.Do("PUT", "/api/panel/org/o1", `{"name":"x","__proto__":{"a":1}}`), 409, `{"error":"slug taken"}`)
+	calls(t, "update", api, `PUT /api/org/o1 {"name":"x"}`)
+	// No body from the API server, or no answer at all
+	api.On("DELETE /api/org/o1", 503, ``)
+	want(t, "delete", admin.Do("DELETE", "/api/panel/org/o1", ""), 503, `{"error":"Go server unreachable"}`)
+	api.Calls()
+
+	// Ids are checked before anything is sent
+	want(t, "an odd org id", viewer.Do("GET", "/api/panel/org/bad$id/devices", ""), 400, `{"error":"Invalid orgId"}`)
+	want(t, "an odd user id", admin.Do("PUT", "/api/panel/org/o1/users/a%20b", `{}`), 400, `{"error":"Invalid userId"}`)
+	want(t, "an odd device id", admin.Do("DELETE", "/api/panel/org/o1/devices/x$", ""), 400, `{"error":"Invalid deviceId"}`)
+	calls(t, "refused ids", api)
+
+	// The peer id of the credential vault is only escaped
+	api.On("PUT /api/org/o%3A1/peer-credentials/a%3Ab%40c%24", 400, `{"error":"invalid peer id"}`)
+	want(t, "credential", admin.Do("PUT", "/api/panel/org/o:1/peer-credentials/a:b@c$", `{"password":"x"}`), 400, `{"error":"invalid peer id"}`)
+	calls(t, "credential", api, `PUT /api/org/o%3A1/peer-credentials/a%3Ab%40c%24 {"password":"x"}`)
+	// "." gets through to the API client's path check, which refuses the
+	// call: that is an unanswered call here, not a 400 (BUGS OR1)
+	want(t, "credential .", admin.Do("DELETE", "/api/panel/org/o1/peer-credentials/%2E", ""), 500, `{"error":"Go server unreachable"}`)
+	calls(t, "credential .", api)
+
+	// A failure of the API server goes back as it came; an id with a
+	// slash in it is refused
+	api.On("GET /api/org/org-42", 502, `{"error":"Upstream failure"}`)
+	want(t, "detail", viewer.Do("GET", "/api/panel/org/org-42", ""), 502, `{"error":"Upstream failure"}`)
+	calls(t, "detail", api, "GET /api/org/org-42")
+	want(t, "a slash in the id", viewer.Do("GET", "/api/panel/org/foo%2Fbar", ""), 400, `{"error":"Invalid orgId"}`)
+	calls(t, "a slash in the id", api)
+
+	// Permissions
+	if got := viewer.Do("PUT", "/api/panel/org/o1/settings", `{}`); got.Status != 403 || !strings.Contains(got.Body, "org.edit") {
+		t.Errorf("a viewer writes settings: %d %s", got.Status, got.Body)
+	}
+	want(t, "an operator creates", w.As("operator").Do("POST", "/api/panel/org", `{"name":"Ops","slug":"ops"}`), 403, `{"success":false,"error":"Permission denied: org.create"}`)
+	if got := w.SignedOut().Do("GET", "/api/panel/org", ""); got.Status != 401 {
+		t.Errorf("signed out: %d %s", got.Status, got.Body)
+	}
+	calls(t, "refused", api)
+}
+
+func TestCreate(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		api := routetest.NewAPI()
+		w := routetest.New(t, routetest.Options{DB: db, API: api})
+		admin := w.As("admin")
+		exec(t, db, `DELETE FROM device_groups`)
+
+		api.On("POST /api/org", 201, `{"id":"org-1","name":"  Acme  ","slug":"acme"}`)
+		want(t, "create", admin.Do("POST", "/api/panel/org", `{"name":"  Acme  ","slug":"acme"}`), 201, `{"id":"org-1","name":"  Acme  ","slug":"acme"}`)
+		api.On("POST /api/org", 201, `{"id":"org-2","name":"   "}`)
+		admin.Do("POST", "/api/panel/org", `{"name":"x"}`)
+		api.On("POST /api/org", 201, `{"name":"no id"}`)
+		admin.Do("POST", "/api/panel/org", `{"name":"x"}`)
+		api.On("POST /api/org", 400, `{"error":"name is required"}`)
+		want(t, "refused", admin.Do("POST", "/api/panel/org", `{}`), 400, `{"error":"name is required"}`)
+		api.On("POST /api/org", 500, `null`)
+		want(t, "no answer", admin.Do("POST", "/api/panel/org", `{}`), 500, `{"error":"Go server unreachable"}`)
+
+		rows, err := db.Query(context.Background(), `SELECT name, note, team_id, source_type, tag_filter, guid FROM device_groups ORDER BY id`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer rows.Close()
+		var got []string
+		guid := regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
+		for rows.Next() {
+			var name, note, team, kind, filter, id string
+			if err := rows.Scan(&name, &note, &team, &kind, &filter, &id); err != nil {
+				t.Fatal(err)
+			}
+			if !guid.MatchString(id) {
+				t.Errorf("guid %q", id)
+			}
+			got = append(got, strings.Join([]string{name, note, team, kind, filter}, "|"))
+		}
+		if strings.Join(got, "\n") != "Acme|Default group created with organization (commercialization)|org-1|manual|\n"+
+			"Organization|Default group created with organization (commercialization)|org-2|manual|" {
+			t.Errorf("device groups made with organizations:\n%s", strings.Join(got, "\n"))
+		}
+	})
+}
+
+func TestRemoveMember(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		api := routetest.NewAPI()
+		api.Fallback = func(routetest.Call) routetest.Reply { return routetest.Reply{Status: 204} }
+		w := routetest.New(t, routetest.Options{DB: db, API: api})
+		admin := w.As("admin")
+		// An account's id goes on as that id, everything else as it came
+		for _, id := range []string{"0x1", "1e0", "%201", "+5", "0005", "99", "someone", "-1", "1.5", "0"} {
+			admin.Do("DELETE", "/api/panel/org/o1/members/"+id, "")
+		}
+		calls(t, "unlink", api,
+			"DELETE /api/org/o1/members/1", "DELETE /api/org/o1/members/1", "DELETE /api/org/o1/members/1",
+			"DELETE /api/org/o1/members/5", "DELETE /api/org/o1/members/5", "DELETE /api/org/o1/members/99",
+			"DELETE /api/org/o1/members/someone", "DELETE /api/org/o1/members/-1", "DELETE /api/org/o1/members/1.5",
+			"DELETE /api/org/o1/members/0")
+		want(t, "an odd user id", admin.Do("DELETE", "/api/panel/org/o1/members/a$", ""), 400, `{"error":"Invalid userId"}`)
+		want(t, "an odd org id", admin.Do("DELETE", "/api/panel/org/o$/members/1", ""), 400, `{"error":"Invalid orgId"}`)
+		calls(t, "refused", api)
+	})
+}
+
+func TestLinkedGroups(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		api := routetest.NewAPI()
+		api.On("GET /api/peers", 200, `{"peers":[{"id":"A","tags":"lab"},{"id":"B","tags":"office"}]}`)
+		api.Fallback = func(routetest.Call) routetest.Reply { return routetest.Reply{Status: 200, Body: `{"targets":[]}`} }
+		w := routetest.New(t, routetest.Options{DB: db, API: api})
+		exec(t, db, `DELETE FROM device_groups`)
+		exec(t, db, `DELETE FROM user_groups`)
+		exec(t, db, `INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES
+			('g-tag', 'Lab', 'n', ' o1 ', 'tag', 'LAB'), ('folder_3', 'Folder', '', 'o1', 'manual', ''),
+			('g-other', 'Other', '', 'o2', 'manual', ''), ('g-manual', 'Manual', NULL, 'o1', 'manual', '')`)
+		exec(t, db, `INSERT INTO device_group_members (device_group_id, peer_id) SELECT id, 'X' FROM device_groups WHERE guid = 'g-manual'`)
+		exec(t, db, `INSERT INTO user_groups (guid, name, note, team_id) VALUES ('u1', 'Team', NULL, 'o1'), ('u2', 'Else', 'x', 'o3')`)
+		exec(t, db, `INSERT INTO user_group_members (user_group_id, user_id) SELECT id, 1 FROM user_groups WHERE guid = 'u1'`)
+
+		got := w.As("viewer").Do("GET", "/api/panel/org/%20o1%20/device-groups", "")
+		body := regexp.MustCompile(`"created_at":"[^"]+"`).ReplaceAllString(got.Body, `"created_at":"T"`)
+		body = regexp.MustCompile(`"id":\d+`).ReplaceAllString(body, `"id":0`)
+		want(t, "linked groups", routetest.Answer{Status: got.Status, Body: body}, 200, `{"org_id":"o1","device_groups":[`+
+			`{"id":0,"guid":"g-tag","name":"Lab","note":"n","team_id":" o1 ","source_type":"tag","tag_filter":"LAB","created_at":"T","member_count":1,"allowed_users":[],"allowed_groups":[],"allowed_user_groups":[]},`+
+			`{"id":0,"guid":"g-manual","name":"Manual","note":null,"team_id":"o1","source_type":"manual","tag_filter":"","created_at":"T","member_count":1,"allowed_users":[],"allowed_groups":[],"allowed_user_groups":[]}],`+
+			`"user_groups":[{"guid":"u1","name":"Team","note":"","member_count":1}]}`)
+		want(t, "an odd org id", w.As("viewer").Do("GET", "/api/panel/org/o$/device-groups", ""), 400, `{"error":"Invalid orgId"}`)
+
+		exec(t, db, `DROP TABLE user_group_members`)
+		want(t, "a table that fails", w.As("viewer").Do("GET", "/api/panel/org/o1/device-groups", ""), 500, `{"error":"Failed to load organization groups"}`)
+	})
+}
+
+// The roster of an organization's users needs user.view on top of
+// org.manage_users.
+func TestRosterNeedsUserView(t *testing.T) {
+	api := routetest.NewAPI()
+	api.On("GET /api/org/org-1/users", 200, `[]`)
+	w := routetest.New(t, routetest.Options{API: api, Roles: routetest.Overrides{"operator": {"org.manage_users": true, "user.view": false}}})
+	if got := w.As("operator").Do("GET", "/api/panel/org/org-1/users", ""); got.Status != 403 || !strings.Contains(got.Body, "user.view") {
+		t.Errorf("roster without user.view: %d %s", got.Status, got.Body)
+	}
+	calls(t, "roster without user.view", api)
+	want(t, "roster as admin", w.As("admin").Do("GET", "/api/panel/org/org-1/users", ""), 200, `[]`)
+}

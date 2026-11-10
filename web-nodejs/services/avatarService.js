@@ -5,8 +5,8 @@
  *
  * The picture is stored as checked image bytes in auth.db (user_avatars) and
  * served by GET /api/users/:id/avatar. Where it comes from:
- *   - OIDC sign-in: the identity provider's "picture" claim, refreshed on
- *     every sign-in and removed when the claim is gone (source 'oidc')
+ *   - OIDC sign-in: the identity provider's "picture" claim (source 'oidc'),
+ *     stored by the Go console (console/avatars)
  *   - the profile's avatar URL field for local users (source 'profile')
  *
  * Fetching or decoding a picture can fail (IdP down, too large, wrong type);
@@ -23,9 +23,6 @@ const DIRECTORY_TTL_MS = 30 * 1000;
 let directoryCache = null;
 let directoryLoadedAt = 0;
 
-// Last sync per user, so tests (and callers that want to) can wait for it.
-const pending = new Map();
-
 function forget() {
     directoryCache = null;
 }
@@ -41,38 +38,6 @@ async function storePicture(userId, picture, source, options) {
     });
     forget(userId);
     return img.version;
-}
-
-/**
- * Apply the "picture" field of the OIDC exchange response.
- *   - field missing (older Go server): nothing changes
- *   - field empty: the picture from OIDC is removed
- *   - field set: fetched or decoded and stored; on failure the old one stays
- * Resolves to { action: 'skipped'|'cleared'|'stored'|'failed', code? }; never rejects.
- */
-function syncOidcPicture(userId, exchangeData, options = {}) {
-    const run = (async () => {
-        if (!userId || !exchangeData || !Object.prototype.hasOwnProperty.call(exchangeData, 'picture')) {
-            return { action: 'skipped' };
-        }
-        const picture = typeof exchangeData.picture === 'string' ? exchangeData.picture.trim() : '';
-        try {
-            if (!picture) {
-                await db.deleteUserAvatar(userId, 'oidc');
-                forget(userId);
-                return { action: 'cleared' };
-            }
-            await storePicture(userId, picture, 'oidc', options);
-            return { action: 'stored' };
-        } catch (err) {
-            const where = /^data:/i.test(picture) ? 'inline picture' : picture.slice(0, 200);
-            console.warn(`[Avatar] OIDC picture for user ${userId} not stored (${err.code || 'error'}): ${err.message}; ${where}`);
-            return { action: 'failed', code: err.code || 'error' };
-        }
-    })();
-    pending.set(Number(userId), run);
-    run.finally(() => { if (pending.get(Number(userId)) === run) pending.delete(Number(userId)); });
-    return run;
 }
 
 /**
@@ -136,22 +101,16 @@ function withAvatarFields(user, versionMap) {
     return { ...user, has_avatar: !!version, avatar_version: version };
 }
 
-function waitForSync(userId) {
-    return pending.get(Number(userId)) || Promise.resolve(null);
-}
-
 function resetCache() {
     directoryCache = null;
 }
 
 module.exports = {
-    syncOidcPicture,
     syncProfileAvatarUrl,
     getAvatar,
     getAvatarVersion,
     getVersionMap,
     listDirectory,
     withAvatarFields,
-    waitForSync,
     resetCache,
 };

@@ -38,3 +38,24 @@ The generators are seeded, so a second run writes the same files.
 - Node stores the tags of up to four devices at once. The Go code does one
   after the other. With the answers the oracle gives (each after one turn
   of the event loop) both make the calls in the order of the devices.
+
+## The store (`store.js`)
+
+`store.js` runs the folder, device group and user group methods of
+`services/dbAdapter.js` (both adapters) on a scratch database and records
+each result as JSON, or the message of the error it threw:
+`../store_sqlite.json` and `../store_postgres.json`, 86 calls each.
+`TestStoreAgainstNode` replays them on a database with the same rows and
+compares the JSON byte for byte, with the times the database fills in and
+random guids masked. Arguments are the values a request can carry: text,
+numbers, NaN, flags, null, undefined, and lists of those.
+
+    tools/dev.sh "cd betterdesk-server/console/devicegroups/testdata && node nodeoracle/store.js"
+    DEV_DOCKER_ARGS="--network bdgo" tools/dev.sh "cd betterdesk-server/console/devicegroups/testdata && \
+      ORACLE_PG_DSN='postgres://betterdesk:bdgo-local@bdgo-testpg:5432/betterdesk_test?sslmode=disable' node nodeoracle/store.js"
+
+Differences the test allows: on SQLite the Go driver's message carries the
+kind of failure and the code around the engine's text (`constraint failed:
+NOT NULL constraint failed: folders.name (1299)`); the test checks that
+Node's text is in it. `getUserById` is replayed through `UserIDByID`,
+which takes the id as a number, so the text `"2"` is read as 2.

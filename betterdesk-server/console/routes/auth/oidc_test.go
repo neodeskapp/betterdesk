@@ -1,6 +1,7 @@
 package auth_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,9 +10,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
-
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/routes/auth"
+	"time"
 )
 
 // provider makes the fake signal server speak single sign-on the way the
@@ -85,16 +84,22 @@ func (w *world) provider(user string) *provider {
 	return p
 }
 
-// pictures records what the profile picture sync was called with.
-type pictures struct {
-	mu    sync.Mutex
-	calls []string
-}
+// pngPicture is a PNG of one pixel as the data URL a provider can send as
+// "picture".
+const pngPicture = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC"
 
-func (p *pictures) sync(userID int64, exchange *goapi.Object) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	p.calls = append(p.calls, fmt.Sprintf("%d %s", userID, exchange.Str("picture")))
+// picture waits for the profile picture sync of an account and returns its
+// stored picture as "source|type|version", "" when it has none.
+func (w *world) picture(userID int64) string {
+	w.t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	w.s.Deps().Avatars.WaitForSync(ctx, userID)
+	rows := w.rows(`SELECT source, mime_type, version FROM user_avatars WHERE user_id = ?`, userID)
+	if len(rows) == 0 {
+		return ""
+	}
+	return rows[0]
 }
 
 // singleSignOn takes a browser through authorize, the provider and the
@@ -120,9 +125,7 @@ func singleSignOn(t *testing.T, a *agent, returnURL string) answer {
 
 func TestSingleSignOn(t *testing.T) {
 	eachWorld(t, setup{}, func(t *testing.T, w *world) {
-		seen := &pictures{}
-		auth.RegisterOIDCSession(w.s.Deps(), seen.sync)
-		w.provider(`"token":"go-jwt","username":"sso-user","role":"operator","picture":"https://idp.example/me.png"`)
+		w.provider(`"token":"go-jwt","username":"sso-user","role":"operator","picture":"` + pngPicture + `"`)
 		a := w.agent("X-Client-Fingerprint", "fp-of-the-browser")
 		a.setSession(`{"before":"sign-in"}`)
 		before := a.sessionID()
@@ -160,7 +163,10 @@ func TestSingleSignOn(t *testing.T) {
 		equal(t, "audit", w.audit(), []string{
 			fmt.Sprintf("login|User logged in via OIDC; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|%d", id),
 		})
-		equal(t, "picture sync", seen.calls, []string{fmt.Sprintf("%d https://idp.example/me.png", id)})
+		// The provider's picture became the account's
+		if got := w.picture(id); !strings.HasPrefix(got, "oidc|image/png|") {
+			t.Errorf("profile picture after the sign-on: %q", got)
+		}
 		// Single sign-on is no password attempt
 		if rows := w.attempts(); len(rows) != 0 {
 			t.Errorf("attempts: %v", rows)
@@ -194,7 +200,6 @@ func TestSingleSignOn(t *testing.T) {
 
 func TestSingleSignOnRolesAndWaysBack(t *testing.T) {
 	w := newWorld(t, nil, setup{})
-	auth.RegisterOIDCSession(w.s.Deps(), nil)
 	stored := w.addUser(user{name: "known", role: "global_admin", language: "fr"})
 	pro := w.addUser(user{name: "desk", role: "pro"})
 
@@ -242,7 +247,6 @@ func TestSingleSignOnRolesAndWaysBack(t *testing.T) {
 
 func TestSingleSignOnRefusals(t *testing.T) {
 	w := newWorld(t, nil, setup{})
-	auth.RegisterOIDCSession(w.s.Deps(), nil)
 	a := w.agent()
 	invalid := func(what string, res answer) {
 		t.Helper()
@@ -422,7 +426,6 @@ func TestOIDCStatus(t *testing.T) {
 
 func TestSingleSignOnWhenTheAccountCannotBeWritten(t *testing.T) {
 	w := newWorld(t, nil, setup{})
-	auth.RegisterOIDCSession(w.s.Deps(), nil)
 	known := w.addUser(user{name: "known", role: "viewer"})
 	blank := w.addUser(user{name: "blank"})
 	w.exec(`UPDATE users SET role = '' WHERE id = ?`, blank)
@@ -460,4 +463,44 @@ func TestSingleSignOnWhenTheAccountCannotBeWritten(t *testing.T) {
 	if n := w.int(`SELECT COUNT(*) FROM panel_sessions WHERE user_id IS NOT NULL`); n != 2 {
 		t.Errorf("%d signed-in sessions, want the two from before", n)
 	}
+}
+
+func TestSingleSignOnProfilePicture(t *testing.T) {
+	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+		signOn := func(picture string) (answer, int64) {
+			t.Helper()
+			w.api.json("POST /api/auth/oidc/exchange", 200, `{"token":"jwt","username":"alice","role":"operator","return_url":"/devices"`+picture+`}`)
+			res := w.agent().get("/api/auth/oidc/session?code=one-time")
+			if res.status != http.StatusFound || res.header.Get("Location") != "/devices" {
+				t.Fatalf("sign-on with picture %q: %d %q", picture, res.status, res.header.Get("Location"))
+			}
+			return res, w.int(`SELECT id FROM users WHERE username = 'alice'`)
+		}
+		// The first sign-on stores the provider's picture
+		_, id := signOn(`,"picture":"` + pngPicture + `"`)
+		first := w.picture(id)
+		if !strings.HasPrefix(first, "oidc|image/png|") {
+			t.Fatalf("picture after the first sign-on: %q", first)
+		}
+		// A server that sends no picture field leaves it alone
+		signOn("")
+		if got := w.picture(id); got != first {
+			t.Errorf("picture after a sign-on without the field: %q, want %q", got, first)
+		}
+		// A picture the console refuses keeps the old one, and the sign-on goes on
+		signOn(`,"picture":"data:image/png;base64,PHN2ZyBvbmxvYWQ9YWxlcnQoMSk+"`)
+		if got := w.picture(id); got != first {
+			t.Errorf("picture after a refused one: %q, want %q", got, first)
+		}
+		// An empty claim removes it
+		signOn(`,"picture":""`)
+		if got := w.picture(id); got != "" {
+			t.Errorf("picture after an empty claim: %q", got)
+		}
+		// A picture that cannot be fetched stops nothing
+		signOn(`,"picture":"http://127.0.0.1:9/a.png"`)
+		if got := w.picture(id); got != "" {
+			t.Errorf("picture after a failed fetch: %q", got)
+		}
+	})
 }

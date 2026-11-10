@@ -11,7 +11,6 @@ const devicesRoutes = require('./devices.routes');
 const settingsRoutes = require('./settings.routes');
 const generatorRoutes = require('./generator.routes');
 const usersRoutes = require('./users.routes');
-const foldersRoutes = require('./folders.routes');
 const remoteRoutes = require('./remote.routes');
 // bdApiRoutes mounted in server.js (before CSRF) for desktop client access
 const pagesRoutes = require('./pages.routes');
@@ -37,7 +36,6 @@ const automationRoutes = lazyRoute('./automation.routes');
 const fileTransferRoutes = lazyRoute('./fileTransfer.routes');
 const dataguardRoutes = lazyRoute('./dataguard.routes');
 const reportsRoutes = lazyRoute('./reports.routes');
-const organizationsRoutes = lazyRoute('./organizations.routes');
 const policiesRoutes = lazyRoute('./policies.routes');
 const fleetRoutes = lazyRoute('./fleet.routes');
 const commercializationRoutes = lazyRoute('./commercialization.routes');
@@ -60,7 +58,6 @@ router.use('/', settingsRoutes);
 router.use('/', generatorRoutes);
 router.use('/', require('./client-branding.routes'));
 router.use('/', usersRoutes);
-router.use('/', foldersRoutes);
 router.use('/', remoteRoutes);
 // bdApiRoutes now mounted in server.js (before CSRF) for desktop client access
 router.use('/api/bd', inventoryRoutes);     // device-facing: /api/bd/inventory, /api/bd/telemetry
@@ -78,7 +75,6 @@ router.use('/api/reports', reportsRoutes);       // admin-facing: /api/reports/*
 router.use('/', registrationRoutes);               // admin-facing: /registrations, /api/registrations/*
 router.use('/api/bd', registrationRoutes);          // device-facing: /api/bd/register-request, /api/bd/register-status
 router.use('/', pagesRoutes);                          // page routes: /inventory, /tickets, /automation, etc.
-router.use('/', organizationsRoutes);                    // admin-facing: /organizations, /api/panel/org/*
 router.use('/', policiesRoutes);                         // device-facing: /api/bd/device-policy, /api/bd/attestation
 router.use('/api/bd', policiesRoutes);                   // the same two under /api/bd/api/bd/
 router.use('/', fleetRoutes);                            // device-facing: /api/bd/fleet/task-result, /api/bd/fleet/software

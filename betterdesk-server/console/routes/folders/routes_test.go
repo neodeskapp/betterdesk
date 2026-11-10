@@ -1,0 +1,196 @@
+package folders_test
+
+import (
+	"context"
+	"net/http"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
+	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/unitronix/betterdesk-server/console/store/storetest"
+)
+
+// devices is what the made-up API server lists: A, B and C. Z is no
+// device.
+const devices = `{"peers":[{"id":"A","hostname":"a","online":true},{"id":"B","hostname":"b"},{"id":"C","hostname":"c","tags":"lab"}]}`
+
+func newWorld(t *testing.T, db *store.DB) *routetest.World {
+	t.Helper()
+	api := routetest.NewAPI()
+	api.Fallback = func(c routetest.Call) routetest.Reply {
+		switch {
+		case c.Target == "/api/peers":
+			return routetest.Reply{Status: 200, Body: devices}
+		case strings.HasPrefix(c.Target, "/api/peers/"):
+			id := strings.TrimPrefix(c.Target, "/api/peers/")
+			if strings.Contains("ABC", id) && len(id) == 1 {
+				return routetest.Reply{Status: 200, Body: `{"id":"` + id + `","hostname":"` + strings.ToLower(id) + `"}`}
+			}
+		case strings.HasPrefix(c.Target, "/api/remote-targets"):
+			return routetest.Reply{Status: 200, Body: `{"targets":[]}`}
+		}
+		return routetest.Reply{Status: 404, Body: `{"error":"not found"}`}
+	}
+	return routetest.New(t, routetest.Options{DB: db, API: api, Config: func(cfg *config.Config) {
+		cfg.LangDir = filepath.Join("..", "..", "..", "..", "web-nodejs", "lang")
+	}})
+}
+
+func want(t *testing.T, what string, got routetest.Answer, status int, body string) {
+	t.Helper()
+	if got.Status != status || got.Body != body {
+		t.Errorf("%s:\n got %d %s\nwant %d %s", what, got.Status, got.Body, status, body)
+	}
+}
+
+// rows reads one text column per row.
+func rows(t *testing.T, db *store.DB, query string) string {
+	t.Helper()
+	res, err := db.Query(context.Background(), query)
+	if err != nil {
+		t.Fatalf("%s: %v", query, err)
+	}
+	defer res.Close()
+	var out []string
+	for res.Next() {
+		var s string
+		if err := res.Scan(&s); err != nil {
+			t.Fatal(err)
+		}
+		out = append(out, s)
+	}
+	return strings.Join(out, ",")
+}
+
+const (
+	required    = `{"success":false,"error":"Folder name is required"}`
+	tooLong     = `{"success":false,"error":"Folder name is too long (max 50 characters)"}`
+	serverError = `{"success":false,"error":"Server error"}`
+	noFolder    = `{"success":false,"error":"Folder not found"}`
+	noDevice    = `{"success":false,"error":"Device not found"}`
+	forbidden   = `{"success":false,"error":"errors.forbidden"}`
+	ok          = `{"success":true}`
+)
+
+func TestFolderRoutes(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db)
+		admin, operator, viewer := w.As("admin"), w.As("operator"), w.As("viewer")
+
+		// Who may
+		if got := w.SignedOut().Do("GET", "/api/folders", ""); got.Status != http.StatusUnauthorized {
+			t.Errorf("signed out: %d %s", got.Status, got.Body)
+		}
+		if got := viewer.Do("POST", "/api/folders", `{"name":"x"}`); got.Status != http.StatusForbidden {
+			t.Errorf("a viewer creates: %d %s", got.Status, got.Body)
+		}
+
+		// Creating, and what a name must be
+		want(t, "no name", admin.Do("POST", "/api/folders", `{"color":"#fff"}`), 400, required)
+		want(t, "blank name", admin.Do("POST", "/api/folders", `{"name":" \t "}`), 400, required)
+		want(t, "long name", admin.Do("POST", "/api/folders", `{"name":" `+strings.Repeat("x", 50)+`"}`), 400, tooLong)
+		want(t, "name that is a number", admin.Do("POST", "/api/folders", `{"name":5}`), 500, serverError)
+		want(t, "name that is a list", admin.Do("POST", "/api/folders", `{"name":["x"]}`), 500, serverError)
+		want(t, "create", admin.Do("POST", "/api/folders", `{"name":"  Lab ","color":"#123","allowed_users":["e2e_viewer","ghost"," e2e_viewer"]}`),
+			200, `{"success":true,"data":{"id":1,"name":"Lab","color":"#123","icon":"folder","allowed_users":["e2e_viewer"],"allowed_groups":[]}}`)
+		want(t, "create with other types", admin.Do("POST", "/api/folders", `{"name":"Odd","color":5,"icon":""}`),
+			200, `{"success":true,"data":{"id":2,"name":"Odd","color":5,"icon":"folder","allowed_users":[],"allowed_groups":[]}}`)
+		if got := rows(t, db, `SELECT guid FROM device_groups WHERE guid LIKE 'folder_%' ORDER BY guid`); got != "folder_1" {
+			t.Errorf("folder groups after creating: %q", got)
+		}
+		odd := "5.0"
+		if db.IsPostgres() {
+			odd = "5"
+		}
+		if got := rows(t, db, `SELECT color FROM folders WHERE id = 2`); got != odd {
+			t.Errorf("stored color of a number: %q", got)
+		}
+
+		// Devices into the folder only e2e_viewer may see
+		want(t, "assign nothing", admin.Do("POST", "/api/folders/1/devices", `{"deviceIds":[]}`), 400, `{"success":false,"error":"No devices selected"}`)
+		want(t, "assign to no folder", admin.Do("POST", "/api/folders/99/devices", `{"deviceIds":["A"]}`), 404, noFolder)
+		want(t, "assign an unknown device", admin.Do("POST", "/api/folders/1/devices", `{"deviceIds":["A","Z"]}`), 404, `{"success":false,"error":"Device not found","id":"Z"}`)
+		want(t, "assign", admin.Do("POST", "/api/folders/1/devices", `{"deviceIds":["A","B"]}`), 200, `{"success":true,"data":{"count":2}}`)
+		want(t, "assign what the operator may not see", operator.Do("POST", "/api/folders/2/devices", `{"deviceIds":["C","A"]}`), 403, forbidden)
+
+		// The counts follow the scope of the account
+		count := func(a *routetest.Agent) string {
+			body := a.Do("GET", "/api/folders", "").Body
+			start := strings.Index(body, `"device_count":`)
+			if start < 0 {
+				return body
+			}
+			return body[start : start+len(`"device_count":`)+1]
+		}
+		for who, a := range map[string]*routetest.Agent{"admin": admin, "viewer": viewer, "operator": operator} {
+			wanted := map[string]string{"admin": `"device_count":2`, "viewer": `"device_count":2`, "operator": `"device_count":0`}[who]
+			if got := count(a); got != wanted {
+				t.Errorf("count of the first folder for %s: %s, want %s", who, got, wanted)
+			}
+		}
+		list := admin.Do("GET", "/api/folders", "").Body
+		if !strings.HasPrefix(list, `{"success":true,"data":{"folders":[{"id":1,"name":"Lab","color":"#123","icon":"folder","sort_order":0,"created_at":"`) ||
+			!strings.HasSuffix(list, `"device_count":0,"allowed_users":[],"allowed_groups":[]}],"total":2}}`) {
+			t.Errorf("list: %s", list)
+		}
+
+		// One device
+		want(t, "move an unknown device", admin.Do("PATCH", "/api/devices/Z/folder", `{"folderId":1}`), 404, noDevice)
+		want(t, "move what the operator may not see", operator.Do("PATCH", "/api/devices/A/folder", `{"folderId":null}`), 403, forbidden)
+		if db.IsPostgres() {
+			want(t, "move into a folder that is text", admin.Do("PATCH", "/api/devices/C/folder", `{"folderId":"abc"}`), 500, serverError)
+		} else {
+			want(t, "move into a folder that is text", admin.Do("PATCH", "/api/devices/C/folder", `{"folderId":"abc"}`), 404, noFolder)
+		}
+		want(t, "move into no folder", admin.Do("PATCH", "/api/devices/C/folder", `{"folderId":99}`), 404, noFolder)
+		want(t, "move", operator.Do("PATCH", "/api/devices/C/folder", `{"folderId":2}`), 200, ok)
+		want(t, "move out", admin.Do("PATCH", "/api/devices/A/folder", `{}`), 200, ok)
+		want(t, "out with folder 0", admin.Do("POST", "/api/folders/0/devices", `{"deviceIds":["B"]}`), 200, `{"success":true,"data":{"count":1}}`)
+		if got := rows(t, db, `SELECT device_id FROM device_folder_assignments ORDER BY device_id`); got != "C" {
+			t.Errorf("assignments: %q", got)
+		}
+
+		// Changing
+		want(t, "change an unknown folder", admin.Do("PATCH", "/api/folders/99", `{"name":"x"}`), 404, noFolder)
+		if db.IsPostgres() {
+			want(t, "change folder abc", admin.Do("PATCH", "/api/folders/abc", `{"name":"x"}`), 500, serverError)
+		} else {
+			want(t, "change folder abc", admin.Do("PATCH", "/api/folders/abc", `{"name":"x"}`), 404, noFolder)
+		}
+		want(t, "a null name", admin.Do("PATCH", "/api/folders/1", `{"name":null}`), 500, serverError)
+		want(t, "a blank name", admin.Do("PATCH", "/api/folders/1", `{"name":"  "}`), 400, required)
+		want(t, "change", admin.Do("PATCH", "/api/folders/1", `{"name":" Lab 2 ","icon":"box","allowed_users":[]}`), 200, ok)
+		want(t, "change the second", admin.Do("PATCH", "/api/folders/2", `{}`), 200, ok)
+		if got := rows(t, db, `SELECT name || '|' || note FROM device_groups WHERE guid LIKE 'folder_%' ORDER BY guid`); got != "Lab 2|BetterDesk folder access scope,Odd|BetterDesk folder access scope" {
+			t.Errorf("folder groups after changing: %q", got)
+		}
+
+		// Deleting
+		want(t, "delete an unknown folder", admin.Do("DELETE", "/api/folders/99", ""), 404, noFolder)
+		want(t, "delete", admin.Do("DELETE", "/api/folders/2", ""), 200, ok)
+		if got := rows(t, db, `SELECT guid FROM device_groups WHERE guid LIKE 'folder_%'`) + "|" + rows(t, db, `SELECT device_id FROM device_folder_assignments`); got != "folder_1|" {
+			t.Errorf("after deleting: %q", got)
+		}
+
+		var audit []string
+		for _, row := range w.AuditRows() {
+			if strings.HasPrefix(row, "folder_") || strings.HasPrefix(row, "devices_") {
+				audit = append(audit, row)
+			}
+		}
+		if got := strings.Join(audit, "\n"); got != strings.Join([]string{
+			"folder_created|Created folder:   Lab |127.0.0.1|1",
+			"folder_created|Created folder: Odd|127.0.0.1|1",
+			"devices_moved|Moved 2 device(s) to folder ID: 1|127.0.0.1|1",
+			"devices_moved|Moved 1 device(s) to folder ID: 0|127.0.0.1|1",
+			"folder_updated|Updated folder:  Lab 2 |127.0.0.1|1",
+			"folder_updated|Updated folder: Odd|127.0.0.1|1",
+			"folder_deleted|Deleted folder: Odd|127.0.0.1|1",
+		}, "\n") {
+			t.Errorf("audit:\n%s", got)
+		}
+	})
+}

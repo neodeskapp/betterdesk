@@ -1,0 +1,166 @@
+{
+ "id": "organizations/devices",
+ "request": {
+  "method": "GET",
+  "path": "/api/panel/org/{org}/devices"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "devices[*].org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "devices[0].assigned_user_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "devices[2].assigned_user_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "devices[4].assigned_user_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "devices": [
+      {
+       "assigned_user_id": "<volatile>",
+       "building": "Main building",
+       "department": "Reception",
+       "device_id": "900100001",
+       "location": "Front desk",
+       "org_id": "<volatile>",
+       "tags": "office,ground-floor"
+      },
+      {
+       "building": "Main building",
+       "department": "Reception",
+       "device_id": "900100002",
+       "location": "Front desk",
+       "org_id": "<volatile>",
+       "tags": "office,ground-floor"
+      },
+      {
+       "assigned_user_id": "<volatile>",
+       "building": "Main building",
+       "department": "Accounts",
+       "device_id": "900100003",
+       "location": "Room 1.04",
+       "org_id": "<volatile>",
+       "tags": "office,finance"
+      },
+      {
+       "building": "Main building",
+       "department": "Accounts",
+       "device_id": "900100004",
+       "location": "Room 1.04",
+       "org_id": "<volatile>",
+       "tags": "finance"
+      },
+      {
+       "assigned_user_id": "<volatile>",
+       "building": "Main building",
+       "department": "Management",
+       "device_id": "900100005",
+       "location": "Room 2.01",
+       "org_id": "<volatile>",
+       "tags": "vip"
+      },
+      {
+       "building": "Annex",
+       "department": "Marketing",
+       "device_id": "900100006",
+       "location": "Room 2.07",
+       "org_id": "<volatile>",
+       "tags": "design"
+      },
+      {
+       "building": "Main building",
+       "department": "Reception",
+       "device_id": "900100031",
+       "location": "Back office",
+       "org_id": "<volatile>",
+       "tags": "office"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

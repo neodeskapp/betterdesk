@@ -14,6 +14,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/desktop"
 	"github.com/unitronix/betterdesk-server/console/routes/filetransfer"
 	"github.com/unitronix/betterdesk-server/console/routes/fleet"
+	"github.com/unitronix/betterdesk-server/console/routes/folders"
 	"github.com/unitronix/betterdesk-server/console/routes/guest"
 	"github.com/unitronix/betterdesk-server/console/routes/health"
 	i18nroutes "github.com/unitronix/betterdesk-server/console/routes/i18n"
@@ -21,6 +22,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/languages"
 	"github.com/unitronix/betterdesk-server/console/routes/meshcentral"
 	"github.com/unitronix/betterdesk-server/console/routes/network"
+	"github.com/unitronix/betterdesk-server/console/routes/organizations"
 	"github.com/unitronix/betterdesk-server/console/routes/pairing"
 	"github.com/unitronix/betterdesk-server/console/routes/panelaccess"
 	"github.com/unitronix/betterdesk-server/console/routes/permissions"
@@ -53,6 +55,7 @@ func registerRoutes(d *kit.Deps) {
 	avatars.Register(d)       // routes/avatars.routes.js
 	panelaccess.Register(d)   // routes/panel-access.routes.js
 	uishell.Register(d)       // routes/ui-shell.routes.js
+	folders.Register(d)       // routes/folders.routes.js
 	guest.Register(d)         // routes/guest.routes.js
 	i18nroutes.Register(d)    // routes/i18n.routes.js at /api/i18n
 	// routes/tickets.routes.js at /api/tickets, without the device routes /api/tickets/bd
@@ -73,6 +76,7 @@ func registerRoutes(d *kit.Deps) {
 	chat.Register(d)                          // routes/chat.routes.js
 	tokens.Register(d)                        // routes/tokens.routes.js
 	desktop.Register(d.At("/api/desktop"))    // routes/desktop.routes.js at /api/desktop
+	organizations.Register(d)                 // routes/organizations.routes.js
 	policies.Register(d)                      // routes/policies.routes.js
 	policies.Register(d.At("/api/bd"))        // its second mount: /api/bd/api/panel/policies/...
 	fleet.Register(d)                         // routes/fleet.routes.js

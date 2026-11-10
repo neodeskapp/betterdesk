@@ -41,16 +41,18 @@ func newHandlers(d *kit.Deps) *handlers {
 	if d.Config.HTTPS {
 		h.guestCookie = "betterdesk.guest"
 	}
+	if d.Avatars != nil {
+		h.syncPicture = func(userID int64, exchange *goapi.Object) { d.Avatars.StartOIDCSync(userID, exchange) }
+	}
 	return h
 }
 
 // Register adds the group's routes, and the hourly clean-up of what
 // sign-in leaves behind.
 //
-// Two routes of the group are still answered by the Node console:
+// One route of the group is still answered by the Node console:
 // GET /api/auth/login-page, which needs the branding and the capacity
-// badge, and GET /api/auth/oidc/session, which needs the profile pictures
-// (oidcSession is its handler, for the day they are here).
+// badge.
 func Register(d *kit.Deps) {
 	h := newHandlers(d)
 	r := d.Router
@@ -64,6 +66,7 @@ func Register(d *kit.Deps) {
 	r.Get("/api/auth/oidc/authorize", h.oidcAuthorize)
 	r.Get("/api/auth/oidc/callback", h.oidcCallback)
 	r.Get("/api/oidc/callback", h.oidcCallback)
+	r.Get("/api/auth/oidc/session", h.oidcSession)
 	r.Post("/api/auth/totp/verify", h.totpVerify, d.Limits.Login.Middleware)
 	r.Post("/api/auth/totp/setup", h.totpSetup, d.RequireAuth)
 	r.Post("/api/auth/totp/enable", h.totpEnable, d.RequireAuth)

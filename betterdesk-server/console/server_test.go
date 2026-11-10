@@ -3,6 +3,7 @@ package console
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -13,7 +14,9 @@ import (
 
 	"github.com/coder/websocket"
 
+	"github.com/unitronix/betterdesk-server/console/avatars"
 	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
@@ -381,8 +384,12 @@ func TestStartAndStopLeaveNothingRunning(t *testing.T) {
 		<-ctx.Done()
 		close(ended)
 	})
-	if got := strings.Join(s.Jobs().Names(), ","); got != "file transfer cleanup,session cleanup,sign-in housekeeping,test job" {
-		t.Errorf("jobs = %q", got)
+	// The console's own jobs and the one added here; route groups add more
+	names := "," + strings.Join(s.Jobs().Names(), ",") + ","
+	for _, want := range []string{"session cleanup", "sign-in housekeeping", "test job"} {
+		if !strings.Contains(names, ","+want+",") {
+			t.Errorf("jobs = %q, without %q", names, want)
+		}
 	}
 	if err := s.Start(context.Background()); err != nil {
 		t.Fatal(err)
@@ -411,5 +418,59 @@ func TestStartAndStopLeaveNothingRunning(t *testing.T) {
 	if after := settle(); after > before {
 		buf := make([]byte, 1<<16)
 		t.Errorf("%d goroutines before Start, %d after Stop:\n%s", before, after, buf[:runtime.Stack(buf, true)])
+	}
+}
+
+// roundTripFunc is an http.RoundTripper made of a function.
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+
+func TestStopWaitsForPictureSyncs(t *testing.T) {
+	db := storetest.Migrated(t)
+	cfg := &config.Config{
+		Host: "127.0.0.1", DataDir: t.TempDir(), UploadsDir: t.TempDir(),
+		LangDir: "../../web-nodejs/lang", WebUIDir: t.TempDir(), DefaultLanguage: "en",
+		Getenv: func(key string) string {
+			if key == "SESSION_SECRET" {
+				return testSecret
+			}
+			return ""
+		},
+	}
+	s, err := New(context.Background(), Options{Config: cfg, Store: db, API: http.NotFoundHandler()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A picture fetch that hangs until the test lets it go
+	asked, release := make(chan struct{}), make(chan struct{})
+	s.Deps().Avatars = avatars.New(avatars.Options{DB: db, Fetch: avatars.FetchOptions{
+		Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+			close(asked)
+			select {
+			case <-release:
+			case <-r.Context().Done():
+			}
+			return nil, errors.New("no picture")
+		}),
+	}})
+	s.Deps().Avatars.StartOIDCSync(1, goapi.NewObject().Set("picture", "https://idp.example/me.png"))
+	<-asked
+
+	stopped := make(chan struct{})
+	go func() {
+		s.Stop()
+		close(stopped)
+	}()
+	select {
+	case <-stopped:
+		t.Fatal("Stop returned while a picture sync was running")
+	case <-time.After(300 * time.Millisecond):
+	}
+	close(release)
+	select {
+	case <-stopped:
+	case <-time.After(10 * time.Second):
+		t.Fatal("Stop did not return after the picture sync ended")
 	}
 }

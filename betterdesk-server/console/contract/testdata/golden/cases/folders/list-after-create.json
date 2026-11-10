@@ -1,0 +1,926 @@
+{
+ "id": "folders/list-after-create",
+ "request": {
+  "method": "GET",
+  "path": "/api/folders"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.folders[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "folders": [
+       {
+        "allowed_groups": [],
+        "allowed_users": [
+         "e2e_viewer"
+        ],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 0,
+        "icon": "folder",
+        "id": 7,
+        "name": "Contract restricted",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#64748b",
+        "created_at": "<volatile>",
+        "device_count": 4,
+        "icon": "folder",
+        "id": 4,
+        "name": "Lab",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#22c55e",
+        "created_at": "<volatile>",
+        "device_count": 8,
+        "icon": "folder",
+        "id": 1,
+        "name": "Office",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 5,
+        "icon": "folder",
+        "id": 3,
+        "name": "Servers",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#f59e0b",
+        "created_at": "<volatile>",
+        "device_count": 4,
+        "icon": "folder",
+        "id": 2,
+        "name": "Warehouse",
+        "sort_order": 0
+       }
+      ],
+      "total": 5
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.folders[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "folders": [
+       {
+        "allowed_groups": [],
+        "allowed_users": [
+         "e2e_viewer"
+        ],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 1,
+        "icon": "folder",
+        "id": 8,
+        "name": "Contract restricted",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#64748b",
+        "created_at": "<volatile>",
+        "device_count": 4,
+        "icon": "folder",
+        "id": 4,
+        "name": "Lab",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#22c55e",
+        "created_at": "<volatile>",
+        "device_count": 8,
+        "icon": "folder",
+        "id": 1,
+        "name": "Office",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 5,
+        "icon": "folder",
+        "id": 3,
+        "name": "Servers",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#f59e0b",
+        "created_at": "<volatile>",
+        "device_count": 4,
+        "icon": "folder",
+        "id": 2,
+        "name": "Warehouse",
+        "sort_order": 0
+       }
+      ],
+      "total": 5
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.folders[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "folders": [
+       {
+        "allowed_groups": [],
+        "allowed_users": [
+         "e2e_viewer"
+        ],
+        "color": "#123456",
+        "created_at": "<volatile>",
+        "device_count": 0,
+        "icon": "star",
+        "id": 10,
+        "name": "Contract folder",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [
+         "e2e_viewer"
+        ],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 0,
+        "icon": "folder",
+        "id": 9,
+        "name": "Contract restricted",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#64748b",
+        "created_at": "<volatile>",
+        "device_count": 4,
+        "icon": "folder",
+        "id": 4,
+        "name": "Lab",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [
+         "e2e_operator",
+         "e2e_viewer"
+        ],
+        "color": "5.0",
+        "created_at": "<volatile>",
+        "device_count": 0,
+        "icon": "folder",
+        "id": 12,
+        "name": "Odd",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#22c55e",
+        "created_at": "<volatile>",
+        "device_count": 8,
+        "icon": "folder",
+        "id": 1,
+        "name": "Office",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 5,
+        "icon": "folder",
+        "id": 3,
+        "name": "Servers",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#f59e0b",
+        "created_at": "<volatile>",
+        "device_count": 4,
+        "icon": "folder",
+        "id": 2,
+        "name": "Warehouse",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 0,
+        "icon": "folder",
+        "id": 11,
+        "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "sort_order": 0
+       }
+      ],
+      "total": 8
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.folders[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "folders": [
+       {
+        "allowed_groups": [],
+        "allowed_users": [
+         "e2e_viewer"
+        ],
+        "color": "#123456",
+        "created_at": "<volatile>",
+        "device_count": 0,
+        "icon": "star",
+        "id": 14,
+        "name": "Contract folder",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [
+         "e2e_viewer"
+        ],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 1,
+        "icon": "folder",
+        "id": 13,
+        "name": "Contract restricted",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#64748b",
+        "created_at": "<volatile>",
+        "device_count": 4,
+        "icon": "folder",
+        "id": 4,
+        "name": "Lab",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [
+         "e2e_operator",
+         "e2e_viewer"
+        ],
+        "color": "5.0",
+        "created_at": "<volatile>",
+        "device_count": 0,
+        "icon": "folder",
+        "id": 16,
+        "name": "Odd",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#22c55e",
+        "created_at": "<volatile>",
+        "device_count": 8,
+        "icon": "folder",
+        "id": 1,
+        "name": "Office",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 5,
+        "icon": "folder",
+        "id": 3,
+        "name": "Servers",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#f59e0b",
+        "created_at": "<volatile>",
+        "device_count": 4,
+        "icon": "folder",
+        "id": 2,
+        "name": "Warehouse",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 0,
+        "icon": "folder",
+        "id": 15,
+        "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "sort_order": 0
+       }
+      ],
+      "total": 8
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "server_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.folders[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "folders": [
+       {
+        "allowed_groups": [],
+        "allowed_users": [
+         "e2e_viewer"
+        ],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 1,
+        "icon": "folder",
+        "id": 17,
+        "name": "Contract restricted",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#64748b",
+        "created_at": "<volatile>",
+        "device_count": 4,
+        "icon": "folder",
+        "id": 4,
+        "name": "Lab",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#22c55e",
+        "created_at": "<volatile>",
+        "device_count": 8,
+        "icon": "folder",
+        "id": 1,
+        "name": "Office",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 5,
+        "icon": "folder",
+        "id": 3,
+        "name": "Servers",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#f59e0b",
+        "created_at": "<volatile>",
+        "device_count": 4,
+        "icon": "folder",
+        "id": 2,
+        "name": "Warehouse",
+        "sort_order": 0
+       }
+      ],
+      "total": 5
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.folders[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "folders": [
+       {
+        "allowed_groups": [],
+        "allowed_users": [
+         "e2e_viewer"
+        ],
+        "color": "#123456",
+        "created_at": "<volatile>",
+        "device_count": 0,
+        "icon": "star",
+        "id": 19,
+        "name": "Contract folder",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [
+         "e2e_viewer"
+        ],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 1,
+        "icon": "folder",
+        "id": 18,
+        "name": "Contract restricted",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#64748b",
+        "created_at": "<volatile>",
+        "device_count": 4,
+        "icon": "folder",
+        "id": 4,
+        "name": "Lab",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [
+         "e2e_operator",
+         "e2e_viewer"
+        ],
+        "color": "5.0",
+        "created_at": "<volatile>",
+        "device_count": 0,
+        "icon": "folder",
+        "id": 21,
+        "name": "Odd",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#22c55e",
+        "created_at": "<volatile>",
+        "device_count": 8,
+        "icon": "folder",
+        "id": 1,
+        "name": "Office",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 5,
+        "icon": "folder",
+        "id": 3,
+        "name": "Servers",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#f59e0b",
+        "created_at": "<volatile>",
+        "device_count": 4,
+        "icon": "folder",
+        "id": 2,
+        "name": "Warehouse",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 0,
+        "icon": "folder",
+        "id": 20,
+        "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "sort_order": 0
+       }
+      ],
+      "total": 8
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.folders[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "folders": [
+       {
+        "allowed_groups": [],
+        "allowed_users": [
+         "e2e_viewer"
+        ],
+        "color": "#123456",
+        "created_at": "<volatile>",
+        "device_count": 0,
+        "icon": "star",
+        "id": 23,
+        "name": "Contract folder",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [
+         "e2e_viewer"
+        ],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 1,
+        "icon": "folder",
+        "id": 22,
+        "name": "Contract restricted",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#64748b",
+        "created_at": "<volatile>",
+        "device_count": 4,
+        "icon": "folder",
+        "id": 4,
+        "name": "Lab",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [
+         "e2e_operator",
+         "e2e_viewer"
+        ],
+        "color": "5.0",
+        "created_at": "<volatile>",
+        "device_count": 0,
+        "icon": "folder",
+        "id": 25,
+        "name": "Odd",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#22c55e",
+        "created_at": "<volatile>",
+        "device_count": 8,
+        "icon": "folder",
+        "id": 1,
+        "name": "Office",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 5,
+        "icon": "folder",
+        "id": 3,
+        "name": "Servers",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#f59e0b",
+        "created_at": "<volatile>",
+        "device_count": 4,
+        "icon": "folder",
+        "id": 2,
+        "name": "Warehouse",
+        "sort_order": 0
+       },
+       {
+        "allowed_groups": [],
+        "allowed_users": [],
+        "color": "#6366f1",
+        "created_at": "<volatile>",
+        "device_count": 0,
+        "icon": "folder",
+        "id": 24,
+        "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "sort_order": 0
+       }
+      ],
+      "total": 8
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

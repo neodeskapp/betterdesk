@@ -3,6 +3,8 @@
 /**
  * Profile pictures stored by the profile route and the avatar service,
  * against a real SQLite database (user_avatars table, services/dbAdapter.js).
+ * A picture from single sign-on is written by the Go console
+ * (betterdesk-server/console/avatars); here it is a row the test writes.
  * The routes that serve the pictures are answered by the Go console
  * (betterdesk-server/console/routes/avatars) and tested there.
  */
@@ -87,12 +89,12 @@ describe('profile pictures', () => {
     });
 
     it('keeps an OIDC picture when a profile picture is cleared, and removes it with the user', async () => {
-        await avatarService.syncOidcPicture(alice.id, { picture: `data:image/png;base64,${PNG.toString('base64')}` });
+        await db.setUserAvatar(alice.id, { mimeType: 'image/png', data: PNG, version: 'v1', source: 'oidc', sourceUrl: null });
         await avatarService.syncProfileAvatarUrl(alice.id, '');
         expect((await db.getUserAvatar(alice.id)).source).toBe('oidc');
 
         const carol = await db.createUser('carol', 'x', 'viewer');
-        await avatarService.syncOidcPicture(carol.id, { picture: `data:image/png;base64,${PNG.toString('base64')}` });
+        await db.setUserAvatar(carol.id, { mimeType: 'image/png', data: PNG, version: 'v1', source: 'oidc', sourceUrl: null });
         expect(await db.getUserAvatar(carol.id)).toBeTruthy();
         await db.deleteUser(carol.id);
         expect(await db.getUserAvatar(carol.id)).toBeNull();
