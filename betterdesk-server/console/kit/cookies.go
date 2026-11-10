@@ -3,11 +3,9 @@ package kit
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/session/cookie"
 )
 
@@ -67,41 +65,16 @@ type CookieOptions struct {
 // options) wrote it: the value percent-encoded and the attributes in the
 // order Max-Age, Path, Expires, HttpOnly, Secure, SameSite.
 func SetCookie(w http.ResponseWriter, name, value string, o CookieOptions) {
-	var b strings.Builder
-	b.WriteString(name)
-	b.WriteByte('=')
-	b.WriteString(httpx.EncodeURIComponent(value))
-	if o.MaxAge != 0 {
-		b.WriteString("; Max-Age=")
-		b.WriteString(strconv.FormatInt(int64(o.MaxAge/time.Second), 10))
-	}
-	b.WriteString("; Path=")
-	if o.Path == "" {
-		b.WriteString("/")
-	} else {
-		b.WriteString(o.Path)
+	a := cookie.Attributes{MaxAge: o.MaxAge, Path: o.Path, HTTPOnly: o.HTTPOnly, Secure: o.Secure, SameSite: o.SameSite}
+	if a.Path == "" {
+		a.Path = "/"
 	}
 	if o.MaxAge != 0 {
 		now := o.Now
 		if now.IsZero() {
 			now = time.Now()
 		}
-		b.WriteString("; Expires=")
-		b.WriteString(now.Add(o.MaxAge).UTC().Format(http.TimeFormat))
+		a.Expires = now.Add(o.MaxAge)
 	}
-	if o.HTTPOnly {
-		b.WriteString("; HttpOnly")
-	}
-	if o.Secure {
-		b.WriteString("; Secure")
-	}
-	switch strings.ToLower(o.SameSite) {
-	case "lax":
-		b.WriteString("; SameSite=Lax")
-	case "strict":
-		b.WriteString("; SameSite=Strict")
-	case "none":
-		b.WriteString("; SameSite=None")
-	}
-	w.Header().Add("Set-Cookie", b.String())
+	cookie.Set(w, name, value, a)
 }

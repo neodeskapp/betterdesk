@@ -942,58 +942,9 @@ func uriKeeps(c byte) bool {
 	return strings.IndexByte(";,/?:@&=+$-_.!~*'()#", c) >= 0
 }
 
-// encodeURL percent-encodes what may not stand in a URL and leaves
-// existing %XX sequences alone. Bytes above 0x7f count as Latin-1 letters.
-func encodeURL(s string) string {
-	var b strings.Builder
-	escape := func(c byte) {
-		switch {
-		case uriKeeps(c):
-			b.WriteByte(c)
-		case c < 0x80:
-			fmt.Fprintf(&b, "%%%02X", c)
-		default:
-			var buf [4]byte
-			n := utf8.EncodeRune(buf[:], rune(c))
-			for _, x := range buf[:n] {
-				fmt.Fprintf(&b, "%%%02X", x)
-			}
-		}
-	}
-	isHex := func(i int) bool {
-		if i >= len(s) {
-			return false
-		}
-		_, ok := unhex(s[i])
-		return ok
-	}
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		switch {
-		case !urlSafe(c):
-			escape(c)
-		case c != '%':
-			b.WriteByte(c)
-		case i+1 >= len(s):
-			escape(c)
-		case !isHex(i + 1):
-			// a stray % takes the byte after it along
-			escape(c)
-			escape(s[i+1])
-			i++
-		case i+2 >= len(s):
-			b.WriteByte(c)
-		case !isHex(i + 2):
-			escape(c)
-			escape(s[i+1])
-			escape(s[i+2])
-			i += 2
-		default:
-			b.WriteByte(c)
-		}
-	}
-	return b.String()
-}
+// encodeURL is EncodeURL for a text whose bytes above 0x7f count as Latin-1
+// letters.
+func encodeURL(s string) string { return EncodeURL(Latin1(s)) }
 
 // staticTypes maps a media type to the file extensions that get it. Types
 // that are text carry charset=UTF-8.

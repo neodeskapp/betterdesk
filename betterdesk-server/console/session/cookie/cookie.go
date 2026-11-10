@@ -10,11 +10,12 @@
 //
 // Writing: the value is percent-encoded like JavaScript's
 // encodeURIComponent, and the attributes come in a fixed order and
-// spelling: Path, Expires, HttpOnly, Secure, SameSite.
+// spelling: Max-Age, Path, Expires, HttpOnly, Secure, SameSite.
 package cookie
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -159,6 +160,9 @@ func unhex(c byte) (byte, bool) {
 
 // Attributes are the attributes of a cookie the console sets.
 type Attributes struct {
+	// MaxAge is the cookie's lifetime, written as Max-Age in whole seconds
+	// (rounded down). It is left out when zero and does not set Expires.
+	MaxAge time.Duration
 	// Path is left out when empty.
 	Path string
 	// Expires is left out when zero.
@@ -177,6 +181,14 @@ func Format(name, value string, a Attributes) string {
 	b.WriteString(name)
 	b.WriteByte('=')
 	b.WriteString(httpx.EncodeURIComponent(value))
+	if a.MaxAge != 0 {
+		seconds := int64(a.MaxAge / time.Second)
+		if a.MaxAge < 0 && a.MaxAge%time.Second != 0 {
+			seconds--
+		}
+		b.WriteString("; Max-Age=")
+		b.WriteString(strconv.FormatInt(seconds, 10))
+	}
 	if a.Path != "" {
 		b.WriteString("; Path=")
 		b.WriteString(a.Path)

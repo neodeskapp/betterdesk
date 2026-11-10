@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -254,7 +253,7 @@ func (m *Manager) answerExpired(w http.ResponseWriter, r *http.Request, s *Sessi
 		}
 		httpx.WriteJSON(w, r, http.StatusUnauthorized, expiredAnswer{Error: "Session expired. Please log in again.", Code: code})
 	} else {
-		redirect(w, r, m.loginRedirect(r))
+		httpx.Redirect(w, r, http.StatusFound, m.loginRedirect(r))
 	}
 	if m.audit != nil {
 		m.audit(r.Context(), userID, "session_expired", "reason="+reason, m.trust.ClientIP(r))
@@ -265,93 +264,6 @@ type expiredAnswer struct {
 	Success bool   `json:"success"`
 	Error   string `json:"error"`
 	Code    string `json:"code"`
-}
-
-// redirect answers 302 with a short body in the type the client prefers:
-// plain text, HTML, or none when it accepts neither.
-func redirect(w http.ResponseWriter, r *http.Request, target string) {
-	h := w.Header()
-	h.Set("Location", target)
-	h.Add("Vary", "Accept")
-	body := ""
-	switch preferredText(strings.Join(r.Header.Values("Accept"), ", ")) {
-	case "text/plain":
-		h.Set("Content-Type", "text/plain; charset=utf-8")
-		body = "Found. Redirecting to " + target
-	case "text/html":
-		h.Set("Content-Type", "text/html; charset=utf-8")
-		body = "<p>Found. Redirecting to " + htmlEscaper.Replace(target) + "</p>"
-	}
-	h.Set("Content-Length", strconv.Itoa(len(body)))
-	w.WriteHeader(http.StatusFound)
-	if r.Method != http.MethodHead {
-		_, _ = io.WriteString(w, body)
-	}
-}
-
-var htmlEscaper = strings.NewReplacer(`"`, "&quot;", "&", "&amp;", "'", "&#39;", "<", "&lt;", ">", "&gt;")
-
-// preferredText picks text/plain or text/html by an Accept header: the one
-// with the higher quality, then the one named more exactly, then the one
-// named first, then text/plain. It answers "" when the header allows
-// neither. No header allows everything.
-func preferredText(accept string) string {
-	if strings.TrimSpace(accept) == "" {
-		return "text/plain"
-	}
-	type match struct {
-		mediaType           string
-		quality             float64
-		exactness, position int
-	}
-	var matches []match
-	for _, candidate := range []string{"text/plain", "text/html"} {
-		best := match{exactness: -1}
-		for position, part := range strings.Split(accept, ",") {
-			params := strings.Split(part, ";")
-			name := strings.ToLower(strings.TrimSpace(params[0]))
-			exactness := -1
-			switch name {
-			case candidate:
-				exactness = 6
-			case "text/*":
-				exactness = 4
-			case "*/*":
-				exactness = 0
-			}
-			if exactness < 0 {
-				continue
-			}
-			quality := 1.0
-			for _, param := range params[1:] {
-				if value, ok := strings.CutPrefix(strings.ToLower(strings.TrimSpace(param)), "q="); ok {
-					if q, err := strconv.ParseFloat(strings.TrimSpace(value), 64); err == nil {
-						quality = q
-					}
-				}
-			}
-			if exactness > best.exactness || (exactness == best.exactness && quality > best.quality) {
-				best = match{candidate, quality, exactness, position}
-			}
-		}
-		if best.exactness >= 0 && best.quality > 0 {
-			matches = append(matches, best)
-		}
-	}
-	if len(matches) == 0 {
-		return ""
-	}
-	sort.SliceStable(matches, func(i, j int) bool {
-		a, b := matches[i], matches[j]
-		if a.quality != b.quality {
-			return a.quality > b.quality
-		}
-		if a.exactness != b.exactness {
-			return a.exactness > b.exactness
-		}
-		return a.position < b.position
-	})
-	return matches[0].mediaType
 }
 
 // responseWriter commits the session before the first byte of the answer.

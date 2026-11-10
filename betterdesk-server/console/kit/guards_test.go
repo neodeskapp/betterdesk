@@ -12,6 +12,9 @@ import (
 	"github.com/unitronix/betterdesk-server/console/webui"
 )
 
+// htmlEscaper escapes an address the way a redirect's HTML body shows it.
+var htmlEscaper = strings.NewReplacer(`"`, "&quot;", "&", "&amp;", "'", "&#39;", "<", "&lt;", ">", "&gt;")
+
 // guarded runs a guard in front of a handler for a request by the given
 // account and returns the answer and whether the handler ran.
 func guarded(d *Deps, guard Middleware, who *access.Context, method, target string, header ...string) (*httptest.ResponseRecorder, bool) {

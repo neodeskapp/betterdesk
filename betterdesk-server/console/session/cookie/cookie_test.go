@@ -114,6 +114,12 @@ func TestFormat(t *testing.T) {
 		},
 		{"strict", Format("n", "v", Attributes{SameSite: "strict"}), "n=v; SameSite=Strict"},
 		{"none", Format("n", "v", Attributes{SameSite: "NONE"}), "n=v; SameSite=None"},
+		{"lifetime before the path", Format("n", "v", Attributes{MaxAge: 365 * 24 * time.Hour, Path: "/", Expires: expires, SameSite: "lax"}), "n=v; Max-Age=31536000; Path=/; Expires=Tue, 10 Nov 2026 00:33:06 GMT; SameSite=Lax"},
+		{"lifetime alone sets no Expires", Format("n", "v", Attributes{MaxAge: time.Minute}), "n=v; Max-Age=60"},
+		{"a part of a second is dropped", Format("n", "v", Attributes{MaxAge: 1999 * time.Millisecond}), "n=v; Max-Age=1"},
+		{"under a second", Format("n", "v", Attributes{MaxAge: 999 * time.Millisecond}), "n=v; Max-Age=0"},
+		{"a past lifetime is rounded down too", Format("n", "v", Attributes{MaxAge: -1500 * time.Millisecond}), "n=v; Max-Age=-2"},
+		{"a past lifetime in whole seconds", Format("n", "v", Attributes{MaxAge: -2 * time.Second}), "n=v; Max-Age=-2"},
 		{"unknown SameSite is left out", Format("n", "v", Attributes{SameSite: "sometimes"}), "n=v"},
 	}
 	for _, tc := range cases {

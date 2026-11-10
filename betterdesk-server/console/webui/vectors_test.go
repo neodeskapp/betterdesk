@@ -10,6 +10,8 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/unitronix/betterdesk-server/console/httpx"
 )
 
 // testdata/vectors.json.gz and routes_vectors.json.gz hold inputs with what
@@ -107,7 +109,7 @@ func TestAcceptsMatchesNode(t *testing.T) {
 		if v.Accept != nil {
 			r.Header.Set("Accept", latin1Bytes(*v.Accept))
 		}
-		got := accepts(r, v.Offers...)
+		got := httpx.Accepts(r, v.Offers...)
 		picked[got]++
 		if got != v.Pick {
 			t.Errorf("Accept %s, offers %v: %q, Node picks %q", show(v.Accept), v.Offers, got, v.Pick)
@@ -145,7 +147,7 @@ func TestEncodeURLMatchesNode(t *testing.T) {
 	vectors := loadHelperVectors(t).EncodeURL
 	atLeast(t, len(vectors), 1500)
 	for _, v := range vectors {
-		if got := encodeURL(v.In); got != v.Out {
+		if got := httpx.EncodeURL(v.In); got != v.Out {
 			t.Errorf("encodeURL(%q) = %q, Node gives %q", v.In, got, v.Out)
 		}
 	}

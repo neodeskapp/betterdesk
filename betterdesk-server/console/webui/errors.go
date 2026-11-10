@@ -23,7 +23,7 @@ func wantsJSON(r *http.Request, path string) bool {
 }
 
 func acceptsHTML(r *http.Request) bool {
-	return accepts(r, "text/html") != ""
+	return httpx.Accepts(r, "text/html") != ""
 }
 
 // NotFound answers what no route and no page of the app answered: other

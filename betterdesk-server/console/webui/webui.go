@@ -145,7 +145,7 @@ func (h *Host) Handle(w http.ResponseWriter, r *http.Request) bool {
 			if _, decodes := decodeURIComponent(rest); !decodes {
 				failure = decodeFailure(rest)
 			} else if read {
-				redirect(w, r, http.StatusMovedPermanently, withoutOldBase(req.original))
+				httpx.Redirect(w, r, http.StatusMovedPermanently, withoutOldBase(req.original))
 				return true
 			}
 		}
@@ -351,7 +351,7 @@ func (h *Host) servePage(w http.ResponseWriter, r *http.Request, req request) bo
 				target = safe
 			}
 		}
-		redirect(w, r, http.StatusFound, target)
+		httpx.Redirect(w, r, http.StatusFound, target)
 		return true
 	}
 	if !isPublicPage(sub) && (!signedIn || role == "pro") {
@@ -364,14 +364,14 @@ func (h *Host) servePage(w http.ResponseWriter, r *http.Request, req request) bo
 			if strings.HasPrefix(req.original, "/") && !strings.HasPrefix(req.original, "//") {
 				target = req.original
 			}
-			redirect(w, r, http.StatusFound, h.base+"/remote/login?return="+httpx.EncodeURIComponent(target))
+			httpx.Redirect(w, r, http.StatusFound, h.base+"/remote/login?return="+httpx.EncodeURIComponent(target))
 			return true
 		}
 		back, ok := httpx.SafeReturnPath(req.original)
 		if !ok {
 			back = home
 		}
-		redirect(w, r, http.StatusFound, httpx.LoginRedirectURL(r, &back))
+		httpx.Redirect(w, r, http.StatusFound, httpx.LoginRedirectURL(r, &back))
 		return true
 	}
 	h.sendPage(w, r, p, http.StatusOK, p.html)
