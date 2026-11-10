@@ -1,0 +1,79 @@
+{
+ "id": "scaling/relay-name-in-other-scripts",
+ "request": {
+  "method": "POST",
+  "path": "/api/panel/scaling/relays",
+  "body": {
+   "address": "10.9.8.7:1",
+   "location": "Lab 2",
+   "max_bandwidth_mbps": 20,
+   "max_sessions": 10,
+   "name": "中继 Rélais ١"
+  }
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "server_admin",
+    "admin"
+   ],
+   "status": 201,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "data.id",
+     "pattern": "^[9aA+/_=-]{18}$"
+    },
+    {
+     "path": "data.updated_at",
+     "format": "9999-99-99A99:99:99.999A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "active_sessions": 0,
+      "address": "10.9.8.7:1",
+      "bandwidth_mbps": 0,
+      "connected_devices": 0,
+      "cpu": 0,
+      "created_at": "<volatile>",
+      "id": "<volatile>",
+      "location": "Lab 2",
+      "max_bandwidth_mbps": 20,
+      "max_sessions": 10,
+      "memory": 0,
+      "name": "中继 Rélais ١",
+      "status": "unknown",
+      "updated_at": "<volatile>"
+     }
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,77 @@
+[
+ {
+  "name": "full",
+  "chain": [
+   "leaf-full",
+   "inter",
+   "root"
+  ]
+ },
+ {
+  "name": "no-root",
+  "chain": [
+   "leaf-full",
+   "inter"
+  ]
+ },
+ {
+  "name": "leaf-only",
+  "chain": [
+   "leaf-full"
+  ]
+ },
+ {
+  "name": "shuffled",
+  "chain": [
+   "leaf-full",
+   "root",
+   "inter"
+  ]
+ },
+ {
+  "name": "with-a-stranger",
+  "chain": [
+   "leaf-full",
+   "leaf-selfsigned",
+   "inter"
+  ]
+ },
+ {
+  "name": "selfsigned",
+  "chain": [
+   "leaf-selfsigned"
+  ]
+ },
+ {
+  "name": "multi-cn",
+  "chain": [
+   "leaf-multicn"
+  ]
+ },
+ {
+  "name": "expired",
+  "chain": [
+   "leaf-expired",
+   "inter",
+   "root"
+  ]
+ },
+ {
+  "name": "unknown-issuer",
+  "chain": [
+   "leaf-unknown"
+  ]
+ },
+ {
+  "name": "no-cert-sign",
+  "chain": [
+   "leaf-nocertsign"
+  ]
+ },
+ {
+  "name": "empty-cn",
+  "chain": [
+   "leaf-emptycn"
+  ]
+ }
+]

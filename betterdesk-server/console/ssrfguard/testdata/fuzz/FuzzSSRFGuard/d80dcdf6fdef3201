@@ -1,0 +1,5 @@
+go test fuzz v1
+byte('Z')
+string("ʕΣ")
+string("0")
+bool(true)

@@ -16,8 +16,11 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/pairing"
 	"github.com/unitronix/betterdesk-server/console/routes/policies"
 	"github.com/unitronix/betterdesk-server/console/routes/resourcecontrol"
+	"github.com/unitronix/betterdesk-server/console/routes/scaling"
+	"github.com/unitronix/betterdesk-server/console/routes/system"
 	"github.com/unitronix/betterdesk-server/console/routes/tenants"
 	"github.com/unitronix/betterdesk-server/console/routes/tickets"
+	"github.com/unitronix/betterdesk-server/console/routes/toolkit"
 	"github.com/unitronix/betterdesk-server/console/routes/uishell"
 )
 
@@ -48,9 +51,13 @@ func registerRoutes(d *kit.Deps) {
 	policies.Register(d.At("/api/bd"))        // its second mount: /api/bd/api/panel/policies/...
 	fleet.Register(d)                         // routes/fleet.routes.js
 	fleet.Register(d.At("/api/bd"))           // its second mount: /api/bd/api/panel/fleet/...
+	scaling.Register(d)                       // routes/scaling.routes.js
+	scaling.Register(d.At("/api/bd"))         // routes/scaling.routes.js at /api/bd
+	toolkit.Register(d)                       // routes/toolkit.routes.js
 	languages.Register(d)                     // routes/languages.routes.js
 	resourcecontrol.Register(d)               // routes/resource-control.routes.js
 	resourcecontrol.Register(d.At("/api/bd")) // its second mount: /api/bd/api/panel/resource-control/...
+	system.Register(d)                        // routes/system.routes.js
 	cdapstudio.Register(d)                    // routes/cdap-studio.routes.js
 	pairing.Register(d)                       // routes/pairing.routes.js
 }

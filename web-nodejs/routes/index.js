@@ -46,12 +46,9 @@ const organizationsRoutes = lazyRoute('./organizations.routes');
 const policiesRoutes = lazyRoute('./policies.routes');
 const fleetRoutes = lazyRoute('./fleet.routes');
 const commercializationRoutes = lazyRoute('./commercialization.routes');
-const scalingRoutes = lazyRoute('./scaling.routes');
 const crossPlatformRoutes = lazyRoute('./cross-platform.routes');
-const toolkitRoutes = lazyRoute('./toolkit.routes');
 const securityAuditRoutes = lazyRoute('./security-audit.routes');
 const resourceControlRoutes = lazyRoute('./resource-control.routes');
-const systemRoutes = lazyRoute('./system.routes');
 const permissionsRoutes = lazyRoute('./permissions.routes');
 const phase45Routes = lazyRoute('./phase4_5.routes');
 const serverManagementRoutes = lazyRoute('./server-management.routes');
@@ -103,14 +100,10 @@ router.use('/api/bd', policiesRoutes);                   // the same two under /
 router.use('/', fleetRoutes);                            // device-facing: /api/bd/fleet/task-result, /api/bd/fleet/software
 router.use('/', commercializationRoutes);                // admin-facing: /commercialization, /api/panel/billing/*
 router.use('/api/bd', fleetRoutes);                      // the same two under /api/bd/api/bd/fleet/
-router.use('/', scalingRoutes);                          // admin-facing: /scaling, /api/panel/scaling/*
-router.use('/api/bd', scalingRoutes);                    // device-facing: /api/bd/scaling/relay-heartbeat
 router.use('/', crossPlatformRoutes);                    // admin-facing: /cross-platform, /api/panel/cross-platform/*
-router.use('/', toolkitRoutes);                              // admin-facing: /toolkit, /api/toolkit/*
 router.use('/', securityAuditRoutes);                        // admin-facing: /security-audit, /api/panel/security-audit/*
 router.use('/', resourceControlRoutes);                      // device-facing: /api/bd/resource-policy
 router.use('/api/bd', resourceControlRoutes);                 // the same under /api/bd/api/bd/
-router.use('/', systemRoutes);                           // admin-facing: /api/system/*, /api/logs/*, /api/database/*, /api/docker/*, /api/speed-test
 router.use('/', permissionsRoutes);                      // admin-facing: /permissions, /api/panel/roles/*, /api/panel/role-permissions/*
 router.use('/', serverManagementRoutes);                 // admin-facing: /server-management, /api/server-management/* (BETA)
 router.use('/', serverAttestationRoutes);                // admin-facing: /server-attestation, /api/server-attestation/*
