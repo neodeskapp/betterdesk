@@ -16,7 +16,7 @@ import (
 // two list routes is read. The same routes answer under /api/bd.
 func init() {
 	body := map[string]any{"name": "contract", "device_id": "900100001", "command": "echo"}
-	contract.Group("fleet",
+	contract.Group("fleet", append([]contract.Case{
 		contract.Case{Name: "availability", Path: "/api/panel/fleet/availability"},
 		contract.Case{Name: "availability-head", Method: "HEAD", Path: "/api/panel/fleet/availability"},
 		contract.Case{Name: "availability-other-spelling", Path: "/API/Panel/Fleet/Availability/"},
@@ -123,5 +123,36 @@ func init() {
 		},
 		contract.Case{Name: "second-mount-resource-delete", Method: "DELETE", Path: "/api/bd/api/panel/fleet/resources/acme/bad%20res"},
 		contract.Case{Name: "second-mount-workflow-history", Path: "/api/bd/api/panel/fleet/workflows/wf-1/history"},
-	)
+	}, fleetDeviceCases()...)...)
+}
+
+// fleetDeviceCases are the two routes agents report to, at both mounts.
+// They take a device token, which the suite has none of: the headers of a
+// case are written into its golden. So the cases show what comes before
+// the route: no token, a token nobody issued, another scheme, a device id
+// that proves nothing, and the CSRF gate, which under /api/bd lets a write
+// without a session through and checks one with a session. The answers
+// with a token are pinned by routes/fleet/testdata/device_vectors.json.
+func fleetDeviceCases() []contract.Case {
+	report := map[string]any{"device_id": "900100001", "task_id": "contract", "status": "done", "output": "ok"}
+	unknown := map[string]string{"Authorization": "Bearer contract-no-such-token"}
+	var cases []contract.Case
+	for _, mount := range []struct{ name, prefix string }{{"device", ""}, {"second-mount-device", "/api/bd"}} {
+		for _, route := range []struct{ name, path string }{{"task-result", "/api/bd/fleet/task-result"}, {"software", "/api/bd/fleet/software"}} {
+			at := func(what string) string { return mount.name + "-" + route.name + "-" + what }
+			path := mount.prefix + route.path
+			cases = append(cases,
+				contract.Case{Name: at("without-token"), Method: "POST", Path: path, Body: report},
+				contract.Case{Name: at("unknown-token"), Method: "POST", Path: path, Body: report, Headers: unknown},
+				contract.Case{Name: at("other-scheme"), Method: "POST", Path: path, Body: report, Headers: map[string]string{"Authorization": "Basic contract"}},
+				contract.Case{Name: at("device-id-alone"), Method: "POST", Path: path, Body: report, Headers: map[string]string{"X-Device-Id": "900100001"}},
+				contract.Case{Name: at("without-csrf-token"), Method: "POST", Path: path, Body: report, Headers: unknown, NoCSRF: true},
+				contract.Case{
+					Name: at("as-a-device"), Method: "POST", Path: path, Body: report, Headers: unknown,
+					NoCSRF: true, NoCookies: true, Roles: contract.Roles("signed-out"),
+				},
+			)
+		}
+	}
+	return cases
 }

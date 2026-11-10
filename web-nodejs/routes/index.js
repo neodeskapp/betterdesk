@@ -30,16 +30,11 @@ function lazyRoute(modulePath) {
 
 // Lazy-loaded route modules (loaded on first request)
 const inventoryRoutes = lazyRoute('./inventory.routes');
-const ticketsRoutes = lazyRoute('./tickets.routes');
 const activityRoutes = lazyRoute('./activity.routes');
 const automationRoutes = lazyRoute('./automation.routes');
 const fileTransferRoutes = lazyRoute('./fileTransfer.routes');
-const dataguardRoutes = lazyRoute('./dataguard.routes');
 const reportsRoutes = lazyRoute('./reports.routes');
-const policiesRoutes = lazyRoute('./policies.routes');
-const fleetRoutes = lazyRoute('./fleet.routes');
 const commercializationRoutes = lazyRoute('./commercialization.routes');
-const resourceControlRoutes = lazyRoute('./resource-control.routes');
 const phase45Routes = lazyRoute('./phase4_5.routes');
 const serverManagementRoutes = lazyRoute('./server-management.routes');
 const serverAttestationRoutes = lazyRoute('./server-attestation.routes');
@@ -62,26 +57,17 @@ router.use('/', remoteRoutes);
 // bdApiRoutes now mounted in server.js (before CSRF) for desktop client access
 router.use('/api/bd', inventoryRoutes);     // device-facing: /api/bd/inventory, /api/bd/telemetry
 router.use('/api/inventory', inventoryRoutes); // admin-facing: /api/inventory, /api/inventory/:id
-router.use('/api/tickets', ticketsRoutes);      // device-facing /api/tickets/bd (the other ticket routes are in the Go console)
 router.use('/api/bd', activityRoutes);           // device-facing: /api/bd/activity
 router.use('/api/activity', activityRoutes);     // admin-facing: /api/activity
 router.use('/api/automation', automationRoutes); // admin-facing: /api/automation/*
 router.use('/api/bd', automationRoutes);         // device-facing: /api/bd/commands
 router.use('/api/files', fileTransferRoutes);    // device-facing, second address: /api/files/file-transfer (the routes for people are in the Go console)
 router.use('/api/bd', fileTransferRoutes);       // device-facing: /api/bd/file-transfer
-router.use('/api/dataguard', dataguardRoutes);   // device-facing, second address: /api/dataguard/dlp-policies, /api/dataguard/dlp-events (policies, events and stats are in the Go console)
-router.use('/api/bd', dataguardRoutes);          // device-facing: /api/bd/dlp-policies, /api/bd/dlp-events
 router.use('/api/reports', reportsRoutes);       // admin-facing: /api/reports/*
 router.use('/', registrationRoutes);               // admin-facing: /registrations, /api/registrations/*
 router.use('/api/bd', registrationRoutes);          // device-facing: /api/bd/register-request, /api/bd/register-status
 router.use('/', pagesRoutes);                          // page routes: /inventory, /tickets, /automation, etc.
-router.use('/', policiesRoutes);                         // device-facing: /api/bd/device-policy, /api/bd/attestation
-router.use('/api/bd', policiesRoutes);                   // the same two under /api/bd/api/bd/
-router.use('/', fleetRoutes);                            // device-facing: /api/bd/fleet/task-result, /api/bd/fleet/software
 router.use('/', commercializationRoutes);                // admin-facing: /commercialization, /api/panel/billing/*
-router.use('/api/bd', fleetRoutes);                      // the same two under /api/bd/api/bd/fleet/
-router.use('/', resourceControlRoutes);                      // device-facing: /api/bd/resource-policy
-router.use('/api/bd', resourceControlRoutes);                 // the same under /api/bd/api/bd/
 router.use('/', serverManagementRoutes);                 // admin-facing: /server-management, /api/server-management/* (BETA)
 router.use('/', serverAttestationRoutes);                // admin-facing: /server-attestation, /api/server-attestation/*
 router.use('/', phase45Routes);                          // Phase 4/5: /api/users/me/profile, /api/agent-templates, /portal

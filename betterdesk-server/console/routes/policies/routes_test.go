@@ -31,7 +31,7 @@ func TestRegisteredRoutes(t *testing.T) {
 		got = append(got, route.Method+" "+route.Path)
 	}
 	sort.Strings(got)
-	admin := []string{
+	routes := []string{
 		"GET /api/panel/policies/{orgId}",
 		"PUT /api/panel/policies/{orgId}/connection",
 		"PUT /api/panel/policies/{orgId}/features",
@@ -42,9 +42,11 @@ func TestRegisteredRoutes(t *testing.T) {
 		"GET /api/panel/policies/{orgId}/audit",
 		"GET /api/panel/attestation",
 		"GET /api/panel/attestation/{deviceId}",
+		"GET /api/bd/device-policy",
+		"POST /api/bd/attestation",
 	}
 	var want []string
-	for _, route := range admin {
+	for _, route := range routes {
 		method, pattern, _ := strings.Cut(route, " ")
 		want = append(want, route, method+" /api/bd"+pattern)
 	}

@@ -404,3 +404,92 @@ func countEvents(ctx context.Context, db *store.DB) (eventStats, error) {
 	}
 	return s, nil
 }
+
+// activePolicy is a policy as a device gets it.
+type activePolicy struct {
+	ID    jsbind.Cell     `json:"id"`
+	Name  jsbind.Cell     `json:"name"`
+	Rules json.RawMessage `json:"rules"`
+}
+
+// isOn is the test the device route made of a policy's enabled: a number
+// has to be 1, any other value has to be true for JavaScript. SQLite keeps
+// what it was given in the INTEGER column, so 2, 0.5 and a text such as
+// "yes" are there too.
+func isOn(enabled jsbind.Value) bool {
+	if enabled.IsNumber() {
+		return enabled.ToNumber() == 1
+	}
+	return enabled.Truthy()
+}
+
+// listActivePolicies returns the policies that are on, by id, with their
+// rules parsed. A policy that is off is passed over before its rules are
+// read, so rules that are no JSON fail the list only where the policy is
+// on.
+func listActivePolicies(ctx context.Context, db *store.DB) ([]activePolicy, error) {
+	rows, err := store.Select(ctx, db, "SELECT id, name, enabled, rules FROM dlp_policies ORDER BY id")
+	if err != nil {
+		return nil, fmt.Errorf("list the policies that are on: %w", err)
+	}
+	defer rows.Close()
+	type candidate struct {
+		policy activePolicy
+		rules  document
+	}
+	var on []candidate
+	for rows.Next() {
+		var id, name, enabled jsbind.Cell
+		var rules store.NullString
+		if err := rows.Scan(&id, &name, &enabled, &rules); err != nil {
+			return nil, fmt.Errorf("read a policy: %w", err)
+		}
+		if isOn(enabled.Value()) {
+			on = append(on, candidate{activePolicy{ID: id, Name: name}, document{text: rules.String, null: !rules.Valid, jsonb: db.IsPostgres()}})
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("list the policies that are on: %w", err)
+	}
+	out := make([]activePolicy, len(on))
+	for i, c := range on {
+		rules, err := c.rules.parsed("rules", "[]")
+		if err != nil {
+			return nil, fmt.Errorf("read the rules of a policy: %w", err)
+		}
+		out[i] = c.policy
+		out[i].Rules = rules
+	}
+	return out, nil
+}
+
+// newEvent is what an event is made from, with the defaults in place.
+type newEvent struct {
+	DeviceID, EventSource, EventType, PolicyID, PolicyName, Action, Details jsbind.Value
+}
+
+// insertEvent stores an event and returns its id as the old console's
+// driver gave it.
+func insertEvent(ctx context.Context, db *store.DB, e newEvent) (jsbind.Cell, error) {
+	const insert = "INSERT INTO dlp_events (device_id, event_source, event_type, policy_id, policy_name, action, details) VALUES (?, ?, ?, ?, ?, ?, ?)"
+	args, err := jsbind.Args(db.Dialect(), 7, e.DeviceID, e.EventSource, e.EventType, e.PolicyID, e.PolicyName, e.Action, e.Details)
+	if err != nil {
+		return jsbind.Cell{}, fmt.Errorf("store an event: %w", err)
+	}
+	if db.IsPostgres() {
+		var id jsbind.Cell
+		if err := store.SelectRow(ctx, db, insert+" RETURNING id", args...).Scan(&id); err != nil {
+			return jsbind.Cell{}, fmt.Errorf("store an event: %w", err)
+		}
+		return id, nil
+	}
+	res, err := db.Exec(ctx, insert, args...)
+	if err != nil {
+		return jsbind.Cell{}, fmt.Errorf("store an event: %w", err)
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return jsbind.Cell{}, fmt.Errorf("store an event: %w", err)
+	}
+	return jsbind.CellOf(id), nil
+}

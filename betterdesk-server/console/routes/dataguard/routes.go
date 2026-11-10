@@ -4,7 +4,7 @@
 // /api/dataguard and at /api/bd, and every route answers at both.
 //
 // The two routes for devices, GET dlp-policies and POST dlp-events, take
-// a device token and are not here.
+// a device token instead of a session (device.go).
 package dataguard
 
 import (
@@ -31,6 +31,8 @@ func Register(d *kit.Deps) {
 	r.Delete("/policies/{id}", h.remove, d.RequireAuth, d.RequirePermission("server.config"))
 	r.Get("/events", h.events, d.RequireAuth, d.RequirePermission("audit.view"))
 	r.Get("/stats", h.stats, d.RequireAuth, d.RequirePermission("audit.view"))
+	r.Get("/dlp-policies", h.activePolicies, d.RequireDeviceToken)
+	r.Post("/dlp-events", h.report, d.RequireDeviceToken)
 }
 
 // failure is the group's error answer: {"error":"..."}.

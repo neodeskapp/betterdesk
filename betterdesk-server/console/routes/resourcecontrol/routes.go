@@ -1,10 +1,8 @@
 // Package resourcecontrol holds the console's routes for what a device
 // may use: USB, optical drives, monitors, disks and quotas, per device
-// and as the default of the organization. The routes pass their calls on
-// to the API server.
-//
-// The route devices call (GET /api/bd/resource-policy) is not here: it
-// waits for the device token check.
+// and as the default of the organization, and the route devices fetch
+// their own policy from (GET /api/bd/resource-policy). The routes pass
+// their calls on to the API server.
 package resourcecontrol
 
 import (
@@ -45,6 +43,47 @@ func Register(d *kit.Deps) {
 	r.Get("/api/panel/resource-control/compliance", h.compliance, config...)
 	r.Get("/api/panel/resource-control/org-policy", h.orgPolicy, config...)
 	r.Put("/api/panel/resource-control/org-policy", h.orgPolicy, config...)
+
+	r.Get("/api/bd/resource-policy", h.resourcePolicy, d.RequireDeviceToken, d.RequireTokenDeviceMatch)
+}
+
+type noPolicy struct {
+	Policy any `json:"policy"`
+}
+
+// resourcePolicy answers GET /api/bd/resource-policy: what the API server
+// says a device may use. The device is the header X-Device-Id, else the
+// query's device_id, else the token's device. The match guard in front
+// looks at the query before the header, so a request that names its own
+// device in the query may name any other one in the header (BUGS DV1).
+//
+//	the device is no id                       400 {"error":"Invalid deviceId"}
+//	the device_id has no text, or the call    200 {"policy":null}
+//	fails in any way
+func (h *handlers) resourcePolicy(w http.ResponseWriter, r *http.Request) {
+	raw := kit.Device(r).DeviceID
+	if header, _ := kit.DeviceIDHeader(r); header != "" {
+		raw = header
+	} else if query := goapipath.Query(r, "device_id"); query.Truthy() {
+		text, err := query.Text()
+		if err != nil {
+			// The TypeError of String() is no "Invalid ..." refusal
+			kit.JSON(w, r, http.StatusOK, noPolicy{})
+			return
+		}
+		raw = text
+	}
+	id, err := goapipath.AssertSafeAPIID(raw, "deviceId")
+	if err != nil {
+		kit.JSON(w, r, http.StatusBadRequest, goapipath.ErrorBody{Error: err.Error()})
+		return
+	}
+	resp, err := h.api.Get(r.Context(), "/devices/"+goapi.EncodeURIComponent(id)+"/resources")
+	if err != nil {
+		kit.JSON(w, r, http.StatusOK, noPolicy{})
+		return
+	}
+	goapipath.WriteJSON(w, r, http.StatusOK, resp.Data())
 }
 
 // proxy calls the API server and answers with its status and body; a PUT

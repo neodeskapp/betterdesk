@@ -1,11 +1,8 @@
 // Package policies holds the console's routes for the policies of an
 // organization (connection, features, security, network, update) and for
-// the attestation records of devices. The routes pass their calls on to
-// the API server.
-//
-// The two routes devices call (GET /api/bd/device-policy and POST
-// /api/bd/attestation) are not here: they wait for the device token
-// check.
+// the attestation records of devices, with the two routes devices call:
+// GET /api/bd/device-policy and POST /api/bd/attestation. The routes pass
+// their calls on to the API server.
 package policies
 
 import (
@@ -43,8 +40,12 @@ func Register(d *kit.Deps) {
 	r.Get("/api/panel/policies/{orgId}/effective/{deviceId}", h.effective, d.RequireAuth, d.RequireAdmin)
 	r.Get("/api/panel/policies/{orgId}/audit", h.read("/audit"), d.RequireAuth, d.RequireAdmin)
 
+	r.Get("/api/bd/device-policy", h.devicePolicy, d.RequireDeviceToken, d.RequireTokenDeviceMatch)
+
 	r.Get("/api/panel/attestation", h.attestations, d.RequireAuth, d.RequireAdmin)
 	r.Get("/api/panel/attestation/{deviceId}", h.attestation, d.RequireAuth, d.RequireAdmin)
+
+	r.Post("/api/bd/attestation", h.report, d.RequireDeviceToken, d.RequireTokenDeviceMatch)
 }
 
 // policyPath is the API path of an organization's policies with a suffix.

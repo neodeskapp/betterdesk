@@ -1,11 +1,7 @@
 // Package fleet holds the fleet management routes of the console:
-// resource mapping, scheduled tasks, workflows and compliance. Every
-// route passes its call on to the API server and answers with what it
-// said.
-//
-// The two routes devices report to (POST /api/bd/fleet/task-result and
-// /api/bd/fleet/software) are not here: they wait for the device token
-// check.
+// resource mapping, scheduled tasks, workflows and compliance, and the two
+// routes agents report to. Every route passes its call on to the API
+// server and answers with what it said.
 package fleet
 
 import (
@@ -64,6 +60,11 @@ func Register(d *kit.Deps) {
 	r.Get("/api/panel/fleet/compliance/{deviceId}", h.pass("GET", "/fleet/compliance/{deviceId}"), manage...)
 	r.Post("/api/panel/fleet/compliance/{deviceId}/scan", h.pass("POST", "/fleet/compliance/{deviceId}/scan"), manage...)
 	r.Post("/api/panel/fleet/compliance/{deviceId}/remediate", h.passBody("POST", "/fleet/compliance/{deviceId}/remediate"), manage...)
+
+	// Agents report back with their device token; the body goes on as it came
+	device := []kit.Middleware{d.RequireDeviceToken, d.RequireTokenDeviceMatch}
+	r.Post("/api/bd/fleet/task-result", h.passBody("POST", "/fleet/task-result"), device...)
+	r.Post("/api/bd/fleet/software", h.passBody("POST", "/fleet/software"), device...)
 }
 
 type availability struct {

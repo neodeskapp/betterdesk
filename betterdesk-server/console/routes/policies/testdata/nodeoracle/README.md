@@ -9,3 +9,10 @@ The script needs `web-nodejs/routes/policies.routes.js` as it was before those
 routes moved to Go (commit 057d54d3). The README of
 `console/goapipath/testdata/nodeoracle` says how to run it with that file;
 `harness.js` there is what it runs on.
+
+`device.js` wrote `../device_vectors.json`, which `device_test.go` replays:
+the two routes devices call (`GET /api/bd/device-policy`, `POST /api/bd/attestation`) at both mounts, with the real device token checks of
+`middleware/deviceAuth.js` on a scratch SQLite database with four token
+rows (the Go test stores the same ones). It needs `web-nodejs/routes/policies.routes.js`
+as it was before these routes moved to Go too, and runs the same way, with
+`node device.js`.

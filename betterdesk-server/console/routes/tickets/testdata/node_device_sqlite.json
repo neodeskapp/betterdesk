@@ -1,0 +1,787 @@
+{
+ "dialect": "sqlite",
+ "seed": [
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-device-a",
+    "a70dc32ded6e642ec955672a88edb7cc9d6d9e2abb6bf78146a63491adb24155",
+    5,
+    "device-a",
+    "uuid-tok-device-a",
+    "2999-01-01 00:00:00",
+    0
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-device-b",
+    "638c3bcb28bd43d785bdb2b9555c0d22e2eb931e3a0298384de110a801b52b46",
+    6,
+    "device-b",
+    "uuid-tok-device-b",
+    "2999-01-01 00:00:00",
+    0
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-numeric",
+    "a514c7469f35b6ab81a6689db4fe6206829ef442c38996435ac01fb5c32f56be",
+    1,
+    "123",
+    "uuid-tok-numeric",
+    "2999-01-01 00:00:00",
+    0
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-unbound",
+    "75a5957ae0210565257405a18f88284d277cbfa871951062d1435fdc7f544474",
+    5,
+    "",
+    "uuid-tok-unbound",
+    "2999-01-01 00:00:00",
+    0
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-expired",
+    "604a8fed9a3501a46aef5dc1a55ead4decaa0041c450ea003637c00656761c34",
+    5,
+    "device-a",
+    "uuid-tok-expired",
+    "2001-01-01 00:00:00",
+    0
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-revoked",
+    "e721594b71155e7278c5e276710c1b271492d7165d3d13795c0b551b1c6dac25",
+    5,
+    "device-a",
+    "uuid-tok-revoked",
+    "2999-01-01 00:00:00",
+    1
+   ]
+  ],
+  [
+   "INSERT INTO tickets (title, description, status, priority, category, device_id, created_by, assigned_to, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+   [
+    "Screen flickers",
+    "seen by the help desk",
+    "in_progress",
+    "high",
+    "hardware",
+    "device-a",
+    "e2e_admin",
+    "e2e_operator",
+    "2001-01-01 00:01:00",
+    "2001-01-01 00:01:00"
+   ]
+  ],
+  [
+   "INSERT INTO tickets (title, description, status, priority, category, device_id, created_by, assigned_to, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+   [
+    "Other device",
+    null,
+    "open",
+    "low",
+    "other",
+    "device-z",
+    "e2e_admin",
+    null,
+    "2001-01-01 00:02:00",
+    "2001-01-01 00:02:00"
+   ]
+  ]
+ ],
+ "steps": [
+  {
+   "name": "1 GET /api/tickets/bd",
+   "role": "",
+   "method": "GET",
+   "path": "/api/tickets/bd",
+   "headers": {},
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "2 GET /api/tickets/bd",
+   "role": "",
+   "method": "GET",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "X-Device-Id": "device-a"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "3 GET /api/tickets/bd",
+   "role": "",
+   "method": "GET",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer nope"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "4 GET /api/tickets/bd",
+   "role": "",
+   "method": "GET",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-unbound"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "5 GET /api/tickets/bd",
+   "role": "",
+   "method": "GET",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-expired"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "6 GET /api/tickets/bd",
+   "role": "",
+   "method": "GET",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-revoked"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "7 GET /api/tickets/bd",
+   "role": "",
+   "method": "GET",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Basic tok-device-a"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "8 GET /api/tickets/bd",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/tickets/bd",
+   "headers": {},
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "9 POST /api/tickets/bd",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {},
+   "body": "{\"title\":\"From a session\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "10 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {},
+   "body": "{\"title\":\"From nobody\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "11 GET /api/tickets/bd",
+   "role": "",
+   "method": "GET",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "{\"tickets\":[{\"id\":1,\"title\":\"Screen flickers\",\"description\":\"seen by the help desk\",\"status\":\"in_progress\",\"priority\":\"high\",\"category\":\"hardware\",\"device_id\":\"device-a\",\"created_by\":\"e2e_admin\",\"assigned_to\":\"e2e_operator\",\"sla_due_at\":null,\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 00:01:00\",\"updated_at\":\"2001-01-01 00:01:00\"}],\"total\":1}"
+  },
+  {
+   "name": "12 GET /api/tickets/bd/",
+   "role": "",
+   "method": "GET",
+   "path": "/api/tickets/bd/",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "{\"tickets\":[{\"id\":1,\"title\":\"Screen flickers\",\"description\":\"seen by the help desk\",\"status\":\"in_progress\",\"priority\":\"high\",\"category\":\"hardware\",\"device_id\":\"device-a\",\"created_by\":\"e2e_admin\",\"assigned_to\":\"e2e_operator\",\"sla_due_at\":null,\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 00:01:00\",\"updated_at\":\"2001-01-01 00:01:00\"}],\"total\":1}"
+  },
+  {
+   "name": "13 GET /API/Tickets/BD",
+   "role": "",
+   "method": "GET",
+   "path": "/API/Tickets/BD",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "{\"tickets\":[{\"id\":1,\"title\":\"Screen flickers\",\"description\":\"seen by the help desk\",\"status\":\"in_progress\",\"priority\":\"high\",\"category\":\"hardware\",\"device_id\":\"device-a\",\"created_by\":\"e2e_admin\",\"assigned_to\":\"e2e_operator\",\"sla_due_at\":null,\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 00:01:00\",\"updated_at\":\"2001-01-01 00:01:00\"}],\"total\":1}"
+  },
+  {
+   "name": "14 GET /api/tickets/bd?device_id=device-z&status=open",
+   "role": "",
+   "method": "GET",
+   "path": "/api/tickets/bd?device_id=device-z&status=open",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "{\"tickets\":[{\"id\":1,\"title\":\"Screen flickers\",\"description\":\"seen by the help desk\",\"status\":\"in_progress\",\"priority\":\"high\",\"category\":\"hardware\",\"device_id\":\"device-a\",\"created_by\":\"e2e_admin\",\"assigned_to\":\"e2e_operator\",\"sla_due_at\":null,\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 00:01:00\",\"updated_at\":\"2001-01-01 00:01:00\"}],\"total\":1}"
+  },
+  {
+   "name": "15 GET /api/tickets/bd",
+   "role": "",
+   "method": "GET",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a",
+    "X-Device-Id": "device-z"
+   },
+   "status": 200,
+   "answer": "{\"tickets\":[{\"id\":1,\"title\":\"Screen flickers\",\"description\":\"seen by the help desk\",\"status\":\"in_progress\",\"priority\":\"high\",\"category\":\"hardware\",\"device_id\":\"device-a\",\"created_by\":\"e2e_admin\",\"assigned_to\":\"e2e_operator\",\"sla_due_at\":null,\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 00:01:00\",\"updated_at\":\"2001-01-01 00:01:00\"}],\"total\":1}"
+  },
+  {
+   "name": "16 GET /api/tickets/bd",
+   "role": "",
+   "method": "GET",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-b"
+   },
+   "status": 200,
+   "answer": "{\"tickets\":[],\"total\":0}"
+  },
+  {
+   "name": "17 GET /api/tickets/bd",
+   "role": "viewer",
+   "method": "GET",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "{\"tickets\":[{\"id\":1,\"title\":\"Screen flickers\",\"description\":\"seen by the help desk\",\"status\":\"in_progress\",\"priority\":\"high\",\"category\":\"hardware\",\"device_id\":\"device-a\",\"created_by\":\"e2e_admin\",\"assigned_to\":\"e2e_operator\",\"sla_due_at\":null,\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 00:01:00\",\"updated_at\":\"2001-01-01 00:01:00\"}],\"total\":1}"
+  },
+  {
+   "name": "18 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{}",
+   "status": 400,
+   "answer": "{\"error\":\"Title is required\"}"
+  },
+  {
+   "name": "19 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Title is required\"}"
+  },
+  {
+   "name": "20 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"   \"}",
+   "status": 400,
+   "answer": "{\"error\":\"Title is required\"}"
+  },
+  {
+   "name": "21 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":null}",
+   "status": 400,
+   "answer": "{\"error\":\"Title is required\"}"
+  },
+  {
+   "name": "22 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":0}",
+   "status": 400,
+   "answer": "{\"error\":\"Title is required\"}"
+  },
+  {
+   "name": "23 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":false}",
+   "status": 400,
+   "answer": "{\"error\":\"Title is required\"}"
+  },
+  {
+   "name": "24 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":5}",
+   "status": 500,
+   "answer": "{\"error\":\"Internal server error\"}"
+  },
+  {
+   "name": "25 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":true}",
+   "status": 500,
+   "answer": "{\"error\":\"Internal server error\"}"
+  },
+  {
+   "name": "26 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":[]}",
+   "status": 500,
+   "answer": "{\"error\":\"Internal server error\"}"
+  },
+  {
+   "name": "27 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":[\"a\"]}",
+   "status": 500,
+   "answer": "{\"error\":\"Internal server error\"}"
+  },
+  {
+   "name": "28 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":{}}",
+   "status": 500,
+   "answer": "{\"error\":\"Internal server error\"}"
+  },
+  {
+   "name": "29 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Printer offline\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":3}"
+  },
+  {
+   "name": "30 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"  Spaces around  \",\"description\":\"with a description\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":4}"
+  },
+  {
+   "name": "31 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Priority high\",\"priority\":\"high\",\"category\":\"network\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":5}"
+  },
+  {
+   "name": "32 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Priority critical\",\"priority\":\"critical\",\"category\":\"access\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":6}"
+  },
+  {
+   "name": "33 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Priority low\",\"priority\":\"low\",\"category\":\"software\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":7}"
+  },
+  {
+   "name": "34 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Priority odd\",\"priority\":\"urgent\",\"category\":\"printers\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":8}"
+  },
+  {
+   "name": "35 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Priority upper\",\"priority\":\"HIGH\",\"category\":\"Hardware\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":9}"
+  },
+  {
+   "name": "36 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Priority number\",\"priority\":1,\"category\":2}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":10}"
+  },
+  {
+   "name": "37 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Priority list\",\"priority\":[\"high\"],\"category\":[\"other\"]}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":11}"
+  },
+  {
+   "name": "38 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Description number\",\"description\":7}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":12}"
+  },
+  {
+   "name": "39 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Description zero\",\"description\":0}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":13}"
+  },
+  {
+   "name": "40 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Description false\",\"description\":false}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":14}"
+  },
+  {
+   "name": "41 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Description null\",\"description\":null}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":15}"
+  },
+  {
+   "name": "42 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Description list\",\"description\":[\"a\",\"b\"]}",
+   "status": 500,
+   "answer": "{\"error\":\"Internal server error\"}"
+  },
+  {
+   "name": "43 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Description object\",\"description\":{\"a\":1}}",
+   "status": 500,
+   "answer": "{\"error\":\"Internal server error\"}"
+  },
+  {
+   "name": "44 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Description true\",\"description\":true}",
+   "status": 500,
+   "answer": "{\"error\":\"Internal server error\"}"
+  },
+  {
+   "name": "45 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Fields that are not read\",\"status\":\"closed\",\"device_id\":\"device-z\",\"assigned_to\":\"e2e_admin\",\"created_by\":\"someone\",\"sla_due_at\":\"2000-01-01\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":16}"
+  },
+  {
+   "name": "46 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"Ünïcödé 🎫 title\",\"description\":\"line\\nbreak\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":17}"
+  },
+  {
+   "name": "47 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":18}"
+  },
+  {
+   "name": "48 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "[{\"title\":\"a list\"}]",
+   "status": 400,
+   "answer": "{\"error\":\"Title is required\"}"
+  },
+  {
+   "name": "49 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a",
+    "Content-Type": "application/x-www-form-urlencoded"
+   },
+   "body": "title=form",
+   "status": 415,
+   "answer": "{\"success\":false,\"error\":\"Content-Type must be application/json\"}"
+  },
+  {
+   "name": "50 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-b"
+   },
+   "body": "{\"title\":\"From device-b\",\"priority\":\"medium\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":19}"
+  },
+  {
+   "name": "51 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-numeric"
+   },
+   "body": "{\"title\":\"From a device with a number for an id\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":20}"
+  },
+  {
+   "name": "52 POST /api/tickets/bd",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"title\":\"With a session too\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":21}"
+  },
+  {
+   "name": "53 POST /api/tickets/bd",
+   "role": "",
+   "method": "POST",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a",
+    "X-Device-Id": "device-b"
+   },
+   "body": "{\"title\":\"Device named in the header\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"ticket_id\":22}"
+  },
+  {
+   "name": "the tickets",
+   "sql": "SELECT id, title, description, status, priority, category, device_id, created_by, assigned_to FROM tickets ORDER BY id",
+   "params": [],
+   "rows": "[{\"id\":1,\"title\":\"Screen flickers\",\"description\":\"seen by the help desk\",\"status\":\"in_progress\",\"priority\":\"high\",\"category\":\"hardware\",\"device_id\":\"device-a\",\"created_by\":\"e2e_admin\",\"assigned_to\":\"e2e_operator\"},{\"id\":2,\"title\":\"Other device\",\"description\":null,\"status\":\"open\",\"priority\":\"low\",\"category\":\"other\",\"device_id\":\"device-z\",\"created_by\":\"e2e_admin\",\"assigned_to\":null},{\"id\":3,\"title\":\"Printer offline\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":4,\"title\":\"Spaces around\",\"description\":\"with a description\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":5,\"title\":\"Priority high\",\"description\":\"\",\"status\":\"open\",\"priority\":\"high\",\"category\":\"network\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":6,\"title\":\"Priority critical\",\"description\":\"\",\"status\":\"open\",\"priority\":\"critical\",\"category\":\"access\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":7,\"title\":\"Priority low\",\"description\":\"\",\"status\":\"open\",\"priority\":\"low\",\"category\":\"software\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":8,\"title\":\"Priority odd\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":9,\"title\":\"Priority upper\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":10,\"title\":\"Priority number\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":11,\"title\":\"Priority list\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":12,\"title\":\"Description number\",\"description\":\"7.0\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":13,\"title\":\"Description zero\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":14,\"title\":\"Description false\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":15,\"title\":\"Description null\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":16,\"title\":\"Fields that are not read\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":17,\"title\":\"Ünïcödé 🎫 title\",\"description\":\"line\\nbreak\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":18,\"title\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":19,\"title\":\"From device-b\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-b\",\"created_by\":\"agent:device-b\",\"assigned_to\":null},{\"id\":20,\"title\":\"From a device with a number for an id\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"123\",\"created_by\":\"agent:123\",\"assigned_to\":null},{\"id\":21,\"title\":\"With a session too\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null},{\"id\":22,\"title\":\"Device named in the header\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null}]"
+  },
+  {
+   "name": "the time each new ticket is due, in hours after its creation",
+   "sql": "SELECT id, CAST(ROUND((julianday(sla_due_at) - julianday('now')) * 24) AS INTEGER) AS hours FROM tickets WHERE created_by LIKE 'agent:%' ORDER BY id",
+   "params": [],
+   "rows": "[{\"id\":3,\"hours\":24},{\"id\":4,\"hours\":24},{\"id\":5,\"hours\":8},{\"id\":6,\"hours\":4},{\"id\":7,\"hours\":72},{\"id\":8,\"hours\":24},{\"id\":9,\"hours\":24},{\"id\":10,\"hours\":24},{\"id\":11,\"hours\":24},{\"id\":12,\"hours\":24},{\"id\":13,\"hours\":24},{\"id\":14,\"hours\":24},{\"id\":15,\"hours\":24},{\"id\":16,\"hours\":24},{\"id\":17,\"hours\":24},{\"id\":18,\"hours\":24},{\"id\":19,\"hours\":24},{\"id\":20,\"hours\":24},{\"id\":21,\"hours\":24},{\"id\":22,\"hours\":24}]"
+  },
+  {
+   "name": "spread the new tickets out in time",
+   "sql": "UPDATE tickets SET created_at = datetime('2001-01-01 01:00:00', '+' || id || ' minutes'), updated_at = datetime('2001-01-01 01:00:00', '+' || id || ' minutes') WHERE created_by LIKE 'agent:%'",
+   "params": [],
+   "rows": "[]"
+  },
+  {
+   "name": "54 GET /api/tickets/bd",
+   "role": "",
+   "method": "GET",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "{\"tickets\":[{\"id\":22,\"title\":\"Device named in the header\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.111Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:22:00\",\"updated_at\":\"2001-01-01 01:22:00\"},{\"id\":21,\"title\":\"With a session too\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.106Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:21:00\",\"updated_at\":\"2001-01-01 01:21:00\"},{\"id\":18,\"title\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.089Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:18:00\",\"updated_at\":\"2001-01-01 01:18:00\"},{\"id\":17,\"title\":\"Ünïcödé 🎫 title\",\"description\":\"line\\nbreak\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.082Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:17:00\",\"updated_at\":\"2001-01-01 01:17:00\"},{\"id\":16,\"title\":\"Fields that are not read\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.077Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:16:00\",\"updated_at\":\"2001-01-01 01:16:00\"},{\"id\":15,\"title\":\"Description null\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.060Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:15:00\",\"updated_at\":\"2001-01-01 01:15:00\"},{\"id\":14,\"title\":\"Description false\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.057Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:14:00\",\"updated_at\":\"2001-01-01 01:14:00\"},{\"id\":13,\"title\":\"Description zero\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.053Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:13:00\",\"updated_at\":\"2001-01-01 01:13:00\"},{\"id\":12,\"title\":\"Description number\",\"description\":\"7.0\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.046Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:12:00\",\"updated_at\":\"2001-01-01 01:12:00\"},{\"id\":11,\"title\":\"Priority list\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.042Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:11:00\",\"updated_at\":\"2001-01-01 01:11:00\"},{\"id\":10,\"title\":\"Priority number\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.039Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:10:00\",\"updated_at\":\"2001-01-01 01:10:00\"},{\"id\":9,\"title\":\"Priority upper\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.033Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:09:00\",\"updated_at\":\"2001-01-01 01:09:00\"},{\"id\":8,\"title\":\"Priority odd\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.024Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:08:00\",\"updated_at\":\"2001-01-01 01:08:00\"},{\"id\":7,\"title\":\"Priority low\",\"description\":\"\",\"status\":\"open\",\"priority\":\"low\",\"category\":\"software\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-13T17:41:10.021Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:07:00\",\"updated_at\":\"2001-01-01 01:07:00\"},{\"id\":6,\"title\":\"Priority critical\",\"description\":\"\",\"status\":\"open\",\"priority\":\"critical\",\"category\":\"access\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-10T21:41:10.018Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:06:00\",\"updated_at\":\"2001-01-01 01:06:00\"},{\"id\":5,\"title\":\"Priority high\",\"description\":\"\",\"status\":\"open\",\"priority\":\"high\",\"category\":\"network\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T01:41:10.015Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:05:00\",\"updated_at\":\"2001-01-01 01:05:00\"},{\"id\":4,\"title\":\"Spaces around\",\"description\":\"with a description\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.012Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:04:00\",\"updated_at\":\"2001-01-01 01:04:00\"},{\"id\":3,\"title\":\"Printer offline\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-a\",\"created_by\":\"agent:device-a\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.009Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:03:00\",\"updated_at\":\"2001-01-01 01:03:00\"},{\"id\":1,\"title\":\"Screen flickers\",\"description\":\"seen by the help desk\",\"status\":\"in_progress\",\"priority\":\"high\",\"category\":\"hardware\",\"device_id\":\"device-a\",\"created_by\":\"e2e_admin\",\"assigned_to\":\"e2e_operator\",\"sla_due_at\":null,\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 00:01:00\",\"updated_at\":\"2001-01-01 00:01:00\"}],\"total\":19}"
+  },
+  {
+   "name": "55 GET /api/tickets/bd",
+   "role": "",
+   "method": "GET",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-b"
+   },
+   "status": 200,
+   "answer": "{\"tickets\":[{\"id\":19,\"title\":\"From device-b\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"device-b\",\"created_by\":\"agent:device-b\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.097Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:19:00\",\"updated_at\":\"2001-01-01 01:19:00\"}],\"total\":1}"
+  },
+  {
+   "name": "56 GET /api/tickets/bd",
+   "role": "",
+   "method": "GET",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-numeric"
+   },
+   "status": 200,
+   "answer": "{\"tickets\":[{\"id\":20,\"title\":\"From a device with a number for an id\",\"description\":\"\",\"status\":\"open\",\"priority\":\"medium\",\"category\":\"general\",\"device_id\":\"123\",\"created_by\":\"agent:123\",\"assigned_to\":null,\"sla_due_at\":\"2026-11-11T17:41:10.103Z\",\"resolved_at\":null,\"closed_at\":null,\"created_at\":\"2001-01-01 01:20:00\",\"updated_at\":\"2001-01-01 01:20:00\"}],\"total\":1}"
+  },
+  {
+   "name": "57 HEAD /api/tickets/bd",
+   "role": "",
+   "method": "HEAD",
+   "path": "/api/tickets/bd",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": ""
+  }
+ ]
+}

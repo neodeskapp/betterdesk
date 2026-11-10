@@ -5,7 +5,7 @@
 // A viewer sees the tickets assigned to it and no internal comments.
 //
 // The two routes for devices, POST and GET /api/tickets/bd, take a device
-// token and are not here.
+// token instead of a session (device.go).
 package tickets
 
 import (
@@ -58,6 +58,9 @@ func register(d *kit.Deps, h *handlers) {
 	r.Post("/{id}/attachments", h.attach, id, upload, requireAuth, canWrite, attachmentBody)
 	r.Get("/{id}/attachments", h.attachments, id, files, requireAuth, canRead)
 	r.Get("/attachments/{aid}", h.download, aid, files, requireAuth, canRead)
+
+	r.Post("/bd", h.createFromAgent, d.RequireDeviceToken)
+	r.Get("/bd", h.listForAgent, d.RequireDeviceToken)
 }
 
 // failure is the group's error answer: {"error":"..."}.

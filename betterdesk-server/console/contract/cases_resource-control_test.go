@@ -13,7 +13,7 @@ import (
 func init() {
 	const device = "/api/panel/resource-control/policies/900100001"
 	usb := map[string]any{"mode": "allowlist", "allowed": []map[string]string{{"vendor": "046d", "product": "c52b"}}}
-	contract.Group("resource-control",
+	contract.Group("resource-control", append([]contract.Case{
 		contract.Case{
 			// Whether a seeded device is online changes from second to
 			// second.
@@ -59,5 +59,27 @@ func init() {
 		},
 		contract.Case{Name: "second-mount-compliance", Path: "/api/bd/api/panel/resource-control/compliance"},
 		contract.Case{Name: "second-mount-org-policy-set", Method: "PUT", Path: "/api/bd/api/panel/resource-control/org-policy", Body: map[string]any{}},
-	)
+	}, resourceControlDeviceCases()...)...)
+}
+
+// resourceControlDeviceCases are the route devices fetch their resource
+// policy from, at both mounts. It takes a device token, which the suite
+// has none of: the headers of a case are written into its golden. So the
+// cases show what comes before the route. The answers with a token are
+// pinned by routes/resourcecontrol/testdata/device_vectors.json.
+func resourceControlDeviceCases() []contract.Case {
+	unknown := map[string]string{"Authorization": "Bearer contract-no-such-token"}
+	var cases []contract.Case
+	for _, mount := range []struct{ name, prefix string }{{"device", ""}, {"second-mount-device", "/api/bd"}} {
+		at := func(what string) string { return mount.name + "-policy-" + what }
+		path := mount.prefix + "/api/bd/resource-policy"
+		cases = append(cases,
+			contract.Case{Name: at("without-token"), Path: path},
+			contract.Case{Name: at("unknown-token"), Path: path, Headers: unknown},
+			contract.Case{Name: at("device-id-alone"), Path: path, Headers: map[string]string{"X-Device-Id": "900100001"}},
+			contract.Case{Name: at("other-scheme"), Path: path, Headers: map[string]string{"Authorization": "Basic contract"}},
+			contract.Case{Name: at("as-a-device"), Path: path, Headers: unknown, NoCookies: true, Roles: contract.Roles("signed-out")},
+		)
+	}
+	return cases
 }

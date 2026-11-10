@@ -38,3 +38,11 @@ From a worktree that still has the routes, in the dev image:
     tools/dev.sh "cd betterdesk-server/console/routes/dataguard/testdata && node nodeoracle/dataguard.js"
     DEV_DOCKER_ARGS="--network bdgo" tools/dev.sh "cd betterdesk-server/console/routes/dataguard/testdata && \
       ORACLE_PG_DSN='postgres://betterdesk:bdgo-local@bdgo-testpg:5432/betterdesk_test?sslmode=disable' node nodeoracle/dataguard.js"
+
+## The device routes
+
+`device.js` records the two device routes (`GET dlp-policies`, `POST dlp-events`) at both mounts in the same way, behind the real
+`requireDeviceToken` with token rows in every state in its seed, into
+`../node_device_sqlite.json` and `../node_device_postgres.json`.
+`TestNodeDeviceAnswers` replays them. It runs like `dataguard.js`, from a tree that
+still has the device routes in Node: `node nodeoracle/device.js`.

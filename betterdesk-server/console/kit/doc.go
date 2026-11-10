@@ -155,11 +155,49 @@
 // Inside a handler, kit.HasPermission(r, "device.edit") is
 // requestHasPermission(req, 'device.edit').
 //
+// # Device routes
+//
+// Routes that devices call (agents, the desktop client) take a device
+// token instead of a session: an access token bound to the device's id,
+// sent as "Authorization: Bearer <token>". The guards are the middleware
+// of middleware/deviceAuth.js:
+//
+//   - d.RequireDeviceToken is requireDeviceToken. It answers 401
+//     {"error":"Bearer access token required"} without a Bearer token,
+//     {"error":"Invalid or unbound access token"} for a token that is
+//     unknown, revoked, expired or bound to no device id, and
+//     {"error":"Invalid or expired access token"} when the lookup fails.
+//     It notes the use on the token's row and ignores a failure to.
+//   - d.RequireTokenDeviceMatch is requireTokenDeviceMatch, behind it. A
+//     request may name the device it speaks for in the body's device_id,
+//     the query's device_id or the header X-Device-Id; the first that is
+//     not empty for JavaScript counts, compared as String() made it. Another
+//     device than the token's is 403 {"error":"Device ID mismatch"}.
+//
+// Neither looks at the session. They go where Node had them in the list:
+//
+//	r.Post("/api/bd/fleet/task-result", h.taskResult, d.RequireDeviceToken, d.RequireTokenDeviceMatch)
+//
+//	func (h *handlers) taskResult(w http.ResponseWriter, r *http.Request) {
+//		device := kit.Device(r) // never nil behind RequireDeviceToken
+//		id := device.DeviceID   // req.deviceId
+//		_ = device.Token        // req.deviceToken, the token's row
+//		...
+//	}
+//
+// kit.DeviceIDHeader(r) is req.headers['x-device-id'] for a handler that
+// reads the header itself. The CSRF gate in front of Router lets a write
+// through without a token when its path starts with /api/bd/ and nobody is
+// signed in; a device route mounted elsewhere (/api/tickets/bd,
+// /api/dataguard/dlp-events) needs the CSRF token like any write, as it
+// did in Node.
+//
 // # What a handler reads and writes
 //
 //	kit.Session(r)            req.session        Get, Set, Delete, Destroy, Regenerate, Establish
 //	kit.User(r), kit.UserID(r) req.session.user, req.session.userId
 //	kit.Access(r)             the role's permissions, the panel access policy, the section
+//	kit.Device(r)             req.deviceId and req.deviceToken behind RequireDeviceToken
 //	kit.Lang(r), kit.T(r, key, kit.Vars("n", 3))   req.lang, req.t(key, {n: 3})
 //	kit.ClientIP(r)           req.ip
 //	kit.Secure(r)             req.secure

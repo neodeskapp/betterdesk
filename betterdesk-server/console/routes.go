@@ -58,14 +58,14 @@ func registerRoutes(d *kit.Deps) {
 	folders.Register(d)       // routes/folders.routes.js
 	guest.Register(d)         // routes/guest.routes.js
 	i18nroutes.Register(d)    // routes/i18n.routes.js at /api/i18n
-	// routes/tickets.routes.js at /api/tickets, without the device routes /api/tickets/bd
+	// routes/tickets.routes.js at /api/tickets
 	tickets.Register(d.At("/api/tickets"))
 	// routes/fileTransfer.routes.js at /api/files and at /api/bd, without the device routes file-transfer
 	filetransfer.Register(d.At("/api/files"))
 	filetransfer.Register(d.At("/api/bd"))
 	// routes/network.routes.js at /api/network
 	network.Register(d.At("/api/network"))
-	// routes/dataguard.routes.js at /api/dataguard and at /api/bd, without the device routes dlp-policies and dlp-events
+	// routes/dataguard.routes.js at /api/dataguard and at /api/bd
 	dataguard.Register(d.At("/api/dataguard"))
 	dataguard.Register(d.At("/api/bd"))
 	trends.Register(d) // routes/trends.routes.js, in front of the reports group

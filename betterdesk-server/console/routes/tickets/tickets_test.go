@@ -15,7 +15,9 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/auditlog"
+	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
@@ -54,8 +56,13 @@ func newGroup(t *testing.T, db *store.DB) *group {
 	if err != nil {
 		t.Fatal(err)
 	}
+	devices, err := authn.New(authn.Options{DB: db, GoAPI: goapi.New(http.NotFoundHandler())})
+	if err != nil {
+		t.Fatal(err)
+	}
 	dir := t.TempDir()
 	d := &kit.Deps{
+		Authn:    devices,
 		Router:   kit.NewRouter().Mount("/api/tickets"),
 		Config:   &config.Config{ConsoleDir: dir, Production: true},
 		Store:    db,
@@ -118,22 +125,26 @@ func (g *group) want(rec *httptest.ResponseRecorder, status int, body string) {
 	}
 }
 
-func TestTheGroupHasNoDeviceRoutes(t *testing.T) {
+// The device routes come last, as in the Node file: an address the
+// routes with a number pass on reaches them.
+func TestTheDeviceRoutesComeLast(t *testing.T) {
 	g := newGroup(t, storetest.Migrated(t))
 	var paths []string
 	for _, route := range g.router.Routes() {
 		paths = append(paths, route.Method+" "+route.Path)
-		if strings.Contains(route.Path, "/bd") {
-			t.Errorf("%s %s is registered: the device routes wait for the device token check", route.Method, route.Path)
-		}
 	}
 	want := "GET /api/tickets, GET /api/tickets/stats, POST /api/tickets, GET /api/tickets/{id}, PATCH /api/tickets/{id}, DELETE /api/tickets/{id}, " +
-		"POST /api/tickets/{id}/comments, GET /api/tickets/{id}/comments, POST /api/tickets/{id}/attachments, GET /api/tickets/{id}/attachments, GET /api/tickets/attachments/{aid}"
+		"POST /api/tickets/{id}/comments, GET /api/tickets/{id}/comments, POST /api/tickets/{id}/attachments, GET /api/tickets/{id}/attachments, GET /api/tickets/attachments/{aid}, " +
+		"POST /api/tickets/bd, GET /api/tickets/bd"
 	if got := strings.Join(paths, ", "); got != want {
 		t.Errorf("routes: %s\nwant:   %s", got, want)
 	}
-	// A request for them, and for an id that is no number, is passed on
-	for _, target := range []string{"/api/tickets/bd", "/api/tickets/abc", "/api/tickets/1x/comments", "/api/tickets/attachments/x"} {
+	// A session is no device token
+	for _, method := range []string{"GET", "POST"} {
+		g.want(g.do("admin", method, "/api/tickets/bd", `{"title":"x"}`), 401, `{"error":"Bearer access token required"}`)
+	}
+	// An id that is no number is passed on
+	for _, target := range []string{"/api/tickets/abc", "/api/tickets/1x/comments", "/api/tickets/attachments/x"} {
 		if rec := g.do("admin", "GET", target, ""); rec.Code != 404 || !strings.Contains(rec.Body.String(), "404 page not found") {
 			t.Errorf("GET %s: %d %s, want it left to the next route", target, rec.Code, rec.Body.String())
 		}

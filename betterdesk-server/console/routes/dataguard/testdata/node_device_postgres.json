@@ -1,0 +1,1116 @@
+{
+ "dialect": "postgres",
+ "seed": [
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-device-a",
+    "a70dc32ded6e642ec955672a88edb7cc9d6d9e2abb6bf78146a63491adb24155",
+    5,
+    "device-a",
+    "uuid-tok-device-a",
+    "2999-01-01 00:00:00",
+    false
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-device-b",
+    "638c3bcb28bd43d785bdb2b9555c0d22e2eb931e3a0298384de110a801b52b46",
+    6,
+    "device-b",
+    "uuid-tok-device-b",
+    "2999-01-01 00:00:00",
+    false
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-unbound",
+    "75a5957ae0210565257405a18f88284d277cbfa871951062d1435fdc7f544474",
+    5,
+    "",
+    "uuid-tok-unbound",
+    "2999-01-01 00:00:00",
+    false
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-expired",
+    "604a8fed9a3501a46aef5dc1a55ead4decaa0041c450ea003637c00656761c34",
+    5,
+    "device-a",
+    "uuid-tok-expired",
+    "2001-01-01 00:00:00",
+    false
+   ]
+  ],
+  [
+   "INSERT INTO dlp_policies (id, name, enabled, rules) VALUES (?, ?, ?, ?)",
+   [
+    1,
+    "usb block",
+    true,
+    "[{\"type\":\"usb\",\"action\":\"block\"}]"
+   ]
+  ],
+  [
+   "INSERT INTO dlp_policies (id, name, enabled, rules) VALUES (?, ?, ?, ?)",
+   [
+    2,
+    "off, rules no list",
+    false,
+    "\"not json\""
+   ]
+  ],
+  [
+   "INSERT INTO dlp_policies (id, name, enabled, rules) VALUES (?, ?, ?, ?)",
+   [
+    3,
+    "enabled null",
+    null,
+    "[]"
+   ]
+  ],
+  [
+   "INSERT INTO dlp_policies (id, name, enabled, rules) VALUES (?, ?, ?, ?)",
+   [
+    4,
+    "rules null",
+    true,
+    null
+   ]
+  ],
+  [
+   "INSERT INTO dlp_policies (id, name, enabled, rules) VALUES (?, ?, ?, ?)",
+   [
+    5,
+    "rules a JSON null",
+    true,
+    "null"
+   ]
+  ],
+  [
+   "INSERT INTO dlp_policies (id, name, enabled, rules) VALUES (?, ?, ?, ?)",
+   [
+    6,
+    "rules zero",
+    true,
+    "0"
+   ]
+  ],
+  [
+   "INSERT INTO dlp_policies (id, name, enabled, rules) VALUES (?, ?, ?, ?)",
+   [
+    7,
+    "rules a text of a list",
+    true,
+    "\"[1,2]\""
+   ]
+  ],
+  [
+   "INSERT INTO dlp_policies (id, name, enabled, rules) VALUES (?, ?, ?, ?)",
+   [
+    8,
+    "rules an object",
+    true,
+    "{\"zeta\":1,\"alpha\":{\"b\":2,\"a\":1}}"
+   ]
+  ],
+  [
+   "INSERT INTO dlp_policies (id, name, enabled, rules) VALUES (?, ?, ?, ?)",
+   [
+    9,
+    "off",
+    false,
+    "[{\"type\":\"file\"}]"
+   ]
+  ],
+  [
+   "INSERT INTO dlp_policies (id, name, enabled, rules) VALUES (?, ?, ?, ?)",
+   [
+    10,
+    "Ünïcödé",
+    true,
+    "[{\"path\":\"C:\\\\Users\",\"ext\":[\".docx\",\".xlsx\"]}]"
+   ]
+  ]
+ ],
+ "steps": [
+  {
+   "name": "1 GET /api/bd/dlp-policies",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/dlp-policies",
+   "headers": {},
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "2 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {},
+   "body": "{\"event_source\":\"usb\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "3 GET /api/bd/dlp-policies",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/dlp-policies",
+   "headers": {
+    "X-Device-Id": "device-a"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "4 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "X-Device-Id": "device-a"
+   },
+   "body": "{\"event_source\":\"usb\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "5 GET /api/bd/dlp-policies",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/dlp-policies",
+   "headers": {
+    "Authorization": "Bearer nope"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "6 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer nope"
+   },
+   "body": "{\"event_source\":\"usb\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "7 GET /api/bd/dlp-policies",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/dlp-policies",
+   "headers": {
+    "Authorization": "Bearer tok-unbound"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "8 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-unbound"
+   },
+   "body": "{\"event_source\":\"usb\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "9 GET /api/bd/dlp-policies",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/dlp-policies",
+   "headers": {
+    "Authorization": "Bearer tok-expired"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "10 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-expired"
+   },
+   "body": "{\"event_source\":\"usb\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "11 GET /api/bd/dlp-policies",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/dlp-policies",
+   "headers": {},
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "12 POST /api/bd/dlp-events",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {},
+   "body": "{\"event_source\":\"usb\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "13 GET /api/bd/dlp-policies",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/dlp-policies",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "[{\"id\":1,\"name\":\"usb block\",\"rules\":[{\"type\":\"usb\",\"action\":\"block\"}]},{\"id\":4,\"name\":\"rules null\",\"rules\":[]},{\"id\":5,\"name\":\"rules a JSON null\",\"rules\":[]},{\"id\":6,\"name\":\"rules zero\",\"rules\":[]},{\"id\":7,\"name\":\"rules a text of a list\",\"rules\":[1,2]},{\"id\":8,\"name\":\"rules an object\",\"rules\":{\"zeta\":1,\"alpha\":{\"a\":1,\"b\":2}}},{\"id\":10,\"name\":\"Ünïcödé\",\"rules\":[{\"ext\":[\".docx\",\".xlsx\"],\"path\":\"C:\\\\Users\"}]}]"
+  },
+  {
+   "name": "14 GET /api/bd/dlp-policies",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/dlp-policies",
+   "headers": {
+    "Authorization": "Bearer tok-device-b"
+   },
+   "status": 200,
+   "answer": "[{\"id\":1,\"name\":\"usb block\",\"rules\":[{\"type\":\"usb\",\"action\":\"block\"}]},{\"id\":4,\"name\":\"rules null\",\"rules\":[]},{\"id\":5,\"name\":\"rules a JSON null\",\"rules\":[]},{\"id\":6,\"name\":\"rules zero\",\"rules\":[]},{\"id\":7,\"name\":\"rules a text of a list\",\"rules\":[1,2]},{\"id\":8,\"name\":\"rules an object\",\"rules\":{\"zeta\":1,\"alpha\":{\"a\":1,\"b\":2}}},{\"id\":10,\"name\":\"Ünïcödé\",\"rules\":[{\"ext\":[\".docx\",\".xlsx\"],\"path\":\"C:\\\\Users\"}]}]"
+  },
+  {
+   "name": "15 GET /api/bd/dlp-policies?device_id=device-b",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/dlp-policies?device_id=device-b",
+   "headers": {
+    "Authorization": "Bearer tok-device-a",
+    "X-Device-Id": "device-b"
+   },
+   "status": 200,
+   "answer": "[{\"id\":1,\"name\":\"usb block\",\"rules\":[{\"type\":\"usb\",\"action\":\"block\"}]},{\"id\":4,\"name\":\"rules null\",\"rules\":[]},{\"id\":5,\"name\":\"rules a JSON null\",\"rules\":[]},{\"id\":6,\"name\":\"rules zero\",\"rules\":[]},{\"id\":7,\"name\":\"rules a text of a list\",\"rules\":[1,2]},{\"id\":8,\"name\":\"rules an object\",\"rules\":{\"zeta\":1,\"alpha\":{\"a\":1,\"b\":2}}},{\"id\":10,\"name\":\"Ünïcödé\",\"rules\":[{\"ext\":[\".docx\",\".xlsx\"],\"path\":\"C:\\\\Users\"}]}]"
+  },
+  {
+   "name": "16 GET /API/BD/DLP-POLICIES/",
+   "role": "",
+   "method": "GET",
+   "path": "/API/BD/DLP-POLICIES/",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "[{\"id\":1,\"name\":\"usb block\",\"rules\":[{\"type\":\"usb\",\"action\":\"block\"}]},{\"id\":4,\"name\":\"rules null\",\"rules\":[]},{\"id\":5,\"name\":\"rules a JSON null\",\"rules\":[]},{\"id\":6,\"name\":\"rules zero\",\"rules\":[]},{\"id\":7,\"name\":\"rules a text of a list\",\"rules\":[1,2]},{\"id\":8,\"name\":\"rules an object\",\"rules\":{\"zeta\":1,\"alpha\":{\"a\":1,\"b\":2}}},{\"id\":10,\"name\":\"Ünïcödé\",\"rules\":[{\"ext\":[\".docx\",\".xlsx\"],\"path\":\"C:\\\\Users\"}]}]"
+  },
+  {
+   "name": "17 HEAD /api/bd/dlp-policies",
+   "role": "",
+   "method": "HEAD",
+   "path": "/api/bd/dlp-policies",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": ""
+  },
+  {
+   "name": "18 GET /api/bd/dlp-policies",
+   "role": "operator",
+   "method": "GET",
+   "path": "/api/bd/dlp-policies",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "[{\"id\":1,\"name\":\"usb block\",\"rules\":[{\"type\":\"usb\",\"action\":\"block\"}]},{\"id\":4,\"name\":\"rules null\",\"rules\":[]},{\"id\":5,\"name\":\"rules a JSON null\",\"rules\":[]},{\"id\":6,\"name\":\"rules zero\",\"rules\":[]},{\"id\":7,\"name\":\"rules a text of a list\",\"rules\":[1,2]},{\"id\":8,\"name\":\"rules an object\",\"rules\":{\"zeta\":1,\"alpha\":{\"a\":1,\"b\":2}}},{\"id\":10,\"name\":\"Ünïcödé\",\"rules\":[{\"ext\":[\".docx\",\".xlsx\"],\"path\":\"C:\\\\Users\"}]}]"
+  },
+  {
+   "name": "19 GET /api/dataguard/dlp-policies",
+   "role": "",
+   "method": "GET",
+   "path": "/api/dataguard/dlp-policies",
+   "headers": {},
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "20 POST /api/dataguard/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/dataguard/dlp-events",
+   "headers": {},
+   "body": "{\"event_source\":\"usb\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "21 GET /api/dataguard/dlp-policies",
+   "role": "",
+   "method": "GET",
+   "path": "/api/dataguard/dlp-policies",
+   "headers": {
+    "X-Device-Id": "device-a"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "22 POST /api/dataguard/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/dataguard/dlp-events",
+   "headers": {
+    "X-Device-Id": "device-a"
+   },
+   "body": "{\"event_source\":\"usb\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "23 GET /api/dataguard/dlp-policies",
+   "role": "",
+   "method": "GET",
+   "path": "/api/dataguard/dlp-policies",
+   "headers": {
+    "Authorization": "Bearer nope"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "24 POST /api/dataguard/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/dataguard/dlp-events",
+   "headers": {
+    "Authorization": "Bearer nope"
+   },
+   "body": "{\"event_source\":\"usb\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "25 GET /api/dataguard/dlp-policies",
+   "role": "",
+   "method": "GET",
+   "path": "/api/dataguard/dlp-policies",
+   "headers": {
+    "Authorization": "Bearer tok-unbound"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "26 POST /api/dataguard/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/dataguard/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-unbound"
+   },
+   "body": "{\"event_source\":\"usb\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "27 GET /api/dataguard/dlp-policies",
+   "role": "",
+   "method": "GET",
+   "path": "/api/dataguard/dlp-policies",
+   "headers": {
+    "Authorization": "Bearer tok-expired"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "28 POST /api/dataguard/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/dataguard/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-expired"
+   },
+   "body": "{\"event_source\":\"usb\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "29 GET /api/dataguard/dlp-policies",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/dataguard/dlp-policies",
+   "headers": {},
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "30 POST /api/dataguard/dlp-events",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/dataguard/dlp-events",
+   "headers": {},
+   "body": "{\"event_source\":\"usb\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "31 GET /api/dataguard/dlp-policies",
+   "role": "",
+   "method": "GET",
+   "path": "/api/dataguard/dlp-policies",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "[{\"id\":1,\"name\":\"usb block\",\"rules\":[{\"type\":\"usb\",\"action\":\"block\"}]},{\"id\":4,\"name\":\"rules null\",\"rules\":[]},{\"id\":5,\"name\":\"rules a JSON null\",\"rules\":[]},{\"id\":6,\"name\":\"rules zero\",\"rules\":[]},{\"id\":7,\"name\":\"rules a text of a list\",\"rules\":[1,2]},{\"id\":8,\"name\":\"rules an object\",\"rules\":{\"zeta\":1,\"alpha\":{\"a\":1,\"b\":2}}},{\"id\":10,\"name\":\"Ünïcödé\",\"rules\":[{\"ext\":[\".docx\",\".xlsx\"],\"path\":\"C:\\\\Users\"}]}]"
+  },
+  {
+   "name": "32 GET /api/dataguard/dlp-policies",
+   "role": "",
+   "method": "GET",
+   "path": "/api/dataguard/dlp-policies",
+   "headers": {
+    "Authorization": "Bearer tok-device-b"
+   },
+   "status": 200,
+   "answer": "[{\"id\":1,\"name\":\"usb block\",\"rules\":[{\"type\":\"usb\",\"action\":\"block\"}]},{\"id\":4,\"name\":\"rules null\",\"rules\":[]},{\"id\":5,\"name\":\"rules a JSON null\",\"rules\":[]},{\"id\":6,\"name\":\"rules zero\",\"rules\":[]},{\"id\":7,\"name\":\"rules a text of a list\",\"rules\":[1,2]},{\"id\":8,\"name\":\"rules an object\",\"rules\":{\"zeta\":1,\"alpha\":{\"a\":1,\"b\":2}}},{\"id\":10,\"name\":\"Ünïcödé\",\"rules\":[{\"ext\":[\".docx\",\".xlsx\"],\"path\":\"C:\\\\Users\"}]}]"
+  },
+  {
+   "name": "33 GET /api/dataguard/dlp-policies?device_id=device-b",
+   "role": "",
+   "method": "GET",
+   "path": "/api/dataguard/dlp-policies?device_id=device-b",
+   "headers": {
+    "Authorization": "Bearer tok-device-a",
+    "X-Device-Id": "device-b"
+   },
+   "status": 200,
+   "answer": "[{\"id\":1,\"name\":\"usb block\",\"rules\":[{\"type\":\"usb\",\"action\":\"block\"}]},{\"id\":4,\"name\":\"rules null\",\"rules\":[]},{\"id\":5,\"name\":\"rules a JSON null\",\"rules\":[]},{\"id\":6,\"name\":\"rules zero\",\"rules\":[]},{\"id\":7,\"name\":\"rules a text of a list\",\"rules\":[1,2]},{\"id\":8,\"name\":\"rules an object\",\"rules\":{\"zeta\":1,\"alpha\":{\"a\":1,\"b\":2}}},{\"id\":10,\"name\":\"Ünïcödé\",\"rules\":[{\"ext\":[\".docx\",\".xlsx\"],\"path\":\"C:\\\\Users\"}]}]"
+  },
+  {
+   "name": "34 GET /API/DATAGUARD/DLP-POLICIES/",
+   "role": "",
+   "method": "GET",
+   "path": "/API/DATAGUARD/DLP-POLICIES/",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "[{\"id\":1,\"name\":\"usb block\",\"rules\":[{\"type\":\"usb\",\"action\":\"block\"}]},{\"id\":4,\"name\":\"rules null\",\"rules\":[]},{\"id\":5,\"name\":\"rules a JSON null\",\"rules\":[]},{\"id\":6,\"name\":\"rules zero\",\"rules\":[]},{\"id\":7,\"name\":\"rules a text of a list\",\"rules\":[1,2]},{\"id\":8,\"name\":\"rules an object\",\"rules\":{\"zeta\":1,\"alpha\":{\"a\":1,\"b\":2}}},{\"id\":10,\"name\":\"Ünïcödé\",\"rules\":[{\"ext\":[\".docx\",\".xlsx\"],\"path\":\"C:\\\\Users\"}]}]"
+  },
+  {
+   "name": "35 HEAD /api/dataguard/dlp-policies",
+   "role": "",
+   "method": "HEAD",
+   "path": "/api/dataguard/dlp-policies",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": ""
+  },
+  {
+   "name": "36 GET /api/dataguard/dlp-policies",
+   "role": "operator",
+   "method": "GET",
+   "path": "/api/dataguard/dlp-policies",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "[{\"id\":1,\"name\":\"usb block\",\"rules\":[{\"type\":\"usb\",\"action\":\"block\"}]},{\"id\":4,\"name\":\"rules null\",\"rules\":[]},{\"id\":5,\"name\":\"rules a JSON null\",\"rules\":[]},{\"id\":6,\"name\":\"rules zero\",\"rules\":[]},{\"id\":7,\"name\":\"rules a text of a list\",\"rules\":[1,2]},{\"id\":8,\"name\":\"rules an object\",\"rules\":{\"zeta\":1,\"alpha\":{\"a\":1,\"b\":2}}},{\"id\":10,\"name\":\"Ünïcödé\",\"rules\":[{\"ext\":[\".docx\",\".xlsx\"],\"path\":\"C:\\\\Users\"}]}]"
+  },
+  {
+   "name": "37 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{}",
+   "status": 400,
+   "answer": "{\"error\":\"event_source is required (usb | file)\"}"
+  },
+  {
+   "name": "38 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"\"}",
+   "status": 400,
+   "answer": "{\"error\":\"event_source is required (usb | file)\"}"
+  },
+  {
+   "name": "39 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":5}",
+   "status": 400,
+   "answer": "{\"error\":\"event_source is required (usb | file)\"}"
+  },
+  {
+   "name": "40 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":true}",
+   "status": 400,
+   "answer": "{\"error\":\"event_source is required (usb | file)\"}"
+  },
+  {
+   "name": "41 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":[\"usb\"]}",
+   "status": 400,
+   "answer": "{\"error\":\"event_source is required (usb | file)\"}"
+  },
+  {
+   "name": "42 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":{\"a\":1}}",
+   "status": 400,
+   "answer": "{\"error\":\"event_source is required (usb | file)\"}"
+  },
+  {
+   "name": "43 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":null}",
+   "status": 400,
+   "answer": "{\"error\":\"event_source is required (usb | file)\"}"
+  },
+  {
+   "name": "44 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\"}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":1}"
+  },
+  {
+   "name": "45 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"file\",\"event_type\":\"violation\",\"policy_id\":1,\"policy_name\":\"usb block\",\"action\":\"block\",\"details\":{\"path\":\"E:\\\\\",\"size\":12}}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":2}"
+  },
+  {
+   "name": "46 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"device_id\":\"device-z\"}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":3}"
+  },
+  {
+   "name": "47 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"event_type\":\"\"}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":4}"
+  },
+  {
+   "name": "48 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"event_type\":0}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":5}"
+  },
+  {
+   "name": "49 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"event_type\":7}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":6}"
+  },
+  {
+   "name": "50 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"event_type\":true}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":7}"
+  },
+  {
+   "name": "51 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"event_type\":[\"a\"]}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":8}"
+  },
+  {
+   "name": "52 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"event_type\":{\"a\":1}}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":9}"
+  },
+  {
+   "name": "53 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"policy_id\":0}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":10}"
+  },
+  {
+   "name": "54 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"policy_id\":\"1\"}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":11}"
+  },
+  {
+   "name": "55 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"policy_id\":\"abc\"}",
+   "status": 500,
+   "answer": "{\"error\":\"Failed to record event\"}"
+  },
+  {
+   "name": "56 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"policy_id\":999999}",
+   "status": 500,
+   "answer": "{\"error\":\"Failed to record event\"}"
+  },
+  {
+   "name": "57 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"policy_id\":1.5}",
+   "status": 500,
+   "answer": "{\"error\":\"Failed to record event\"}"
+  },
+  {
+   "name": "58 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"policy_id\":[1]}",
+   "status": 500,
+   "answer": "{\"error\":\"Failed to record event\"}"
+  },
+  {
+   "name": "59 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"policy_name\":12}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":13}"
+  },
+  {
+   "name": "60 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"policy_name\":false}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":14}"
+  },
+  {
+   "name": "61 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"action\":\"\"}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":15}"
+  },
+  {
+   "name": "62 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"action\":\"allow\"}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":16}"
+  },
+  {
+   "name": "63 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"action\":{\"a\":1}}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":17}"
+  },
+  {
+   "name": "64 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"details\":\"\"}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":18}"
+  },
+  {
+   "name": "65 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"details\":null}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":19}"
+  },
+  {
+   "name": "66 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"details\":0}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":20}"
+  },
+  {
+   "name": "67 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"details\":false}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":21}"
+  },
+  {
+   "name": "68 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"details\":\"plain text\"}",
+   "status": 500,
+   "answer": "{\"error\":\"Failed to record event\"}"
+  },
+  {
+   "name": "69 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"details\":\"{\\\"as\\\":\\\"text\\\"}\"}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":22}"
+  },
+  {
+   "name": "70 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"details\":42}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":23}"
+  },
+  {
+   "name": "71 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"details\":true}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":24}"
+  },
+  {
+   "name": "72 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"details\":[1,\"two\",null]}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":25}"
+  },
+  {
+   "name": "73 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"details\":{\"b\":1,\"a\":{\"d\":2,\"c\":\"é\"}}}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":26}"
+  },
+  {
+   "name": "74 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"details\":{\"__proto__x\":1,\"constructor\":2}}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":27}"
+  },
+  {
+   "name": "75 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"Ünïcödé 🎫\",\"event_type\":\"line\\nbreak\"}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":28}"
+  },
+  {
+   "name": "76 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "[{\"event_source\":\"usb\"}]",
+   "status": 400,
+   "answer": "{\"error\":\"event_source is required (usb | file)\"}"
+  },
+  {
+   "name": "77 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\",\"details\":{\"__proto__\":{\"x\":1}}}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":29}"
+  },
+  {
+   "name": "78 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a",
+    "Content-Type": "application/x-www-form-urlencoded"
+   },
+   "body": "event_source=usb",
+   "status": 415,
+   "answer": "{\"success\":false,\"error\":\"Content-Type must be application/json\"}"
+  },
+  {
+   "name": "79 POST /api/bd/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-b"
+   },
+   "body": "{\"event_source\":\"usb\"}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":30}"
+  },
+  {
+   "name": "80 POST /api/dataguard/dlp-events",
+   "role": "",
+   "method": "POST",
+   "path": "/api/dataguard/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"file\",\"details\":{\"at\":\"second mount\"}}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":31}"
+  },
+  {
+   "name": "81 POST /api/bd/dlp-events",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/bd/dlp-events",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"event_source\":\"usb\"}",
+   "status": 201,
+   "answer": "{\"ok\":true,\"id\":32}"
+  },
+  {
+   "name": "the events",
+   "sql": "SELECT id, device_id, event_source, event_type, policy_id, policy_name, action, details::text AS details FROM dlp_events ORDER BY id",
+   "params": [],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":2,\"device_id\":\"device-a\",\"event_source\":\"file\",\"event_type\":\"violation\",\"policy_id\":1,\"policy_name\":\"usb block\",\"action\":\"block\",\"details\":\"{\\\"path\\\": \\\"E:\\\\\\\\\\\", \\\"size\\\": 12}\"},{\"id\":3,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":4,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":5,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":6,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"7\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":7,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"true\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":8,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"{\\\"a\\\"}\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":9,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"{\\\"a\\\":1}\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":10,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":11,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":1,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":13,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"12\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":14,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":15,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":16,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"allow\",\"details\":\"{}\"},{\"id\":17,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"{\\\"a\\\":1}\",\"details\":\"{}\"},{\"id\":18,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":19,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":20,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":21,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":22,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{\\\"as\\\": \\\"text\\\"}\"},{\"id\":23,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"42\"},{\"id\":24,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"true\"},{\"id\":25,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"[1, \\\"two\\\", null]\"},{\"id\":26,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{\\\"a\\\": {\\\"c\\\": \\\"é\\\", \\\"d\\\": 2}, \\\"b\\\": 1}\"},{\"id\":27,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{\\\"__proto__x\\\": 1, \\\"constructor\\\": 2}\"},{\"id\":28,\"device_id\":\"device-a\",\"event_source\":\"Ünïcödé 🎫\",\"event_type\":\"line\\nbreak\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":29,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{\\\"__proto__\\\": {\\\"x\\\": 1}}\"},{\"id\":30,\"device_id\":\"device-b\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"},{\"id\":31,\"device_id\":\"device-a\",\"event_source\":\"file\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{\\\"at\\\": \\\"second mount\\\"}\"},{\"id\":32,\"device_id\":\"device-a\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{}\"}]"
+  },
+  {
+   "name": "turn the policy with broken rules on",
+   "sql": "UPDATE dlp_policies SET enabled = ? WHERE id = 2",
+   "params": [
+    true
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "82 GET /api/bd/dlp-policies",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/dlp-policies",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 500,
+   "answer": "{\"error\":\"Failed to fetch policies\"}"
+  },
+  {
+   "name": "83 GET /api/dataguard/dlp-policies",
+   "role": "",
+   "method": "GET",
+   "path": "/api/dataguard/dlp-policies",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 500,
+   "answer": "{\"error\":\"Failed to fetch policies\"}"
+  }
+ ]
+}

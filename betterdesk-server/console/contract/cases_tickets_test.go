@@ -11,8 +11,8 @@ import (
 	"github.com/unitronix/betterdesk-server/console/contract"
 )
 
-// Tickets: the routes people use (the two device routes under
-// /api/tickets/bd take device tokens and are not part of these cases).
+// Tickets: the routes people use, and at the end the two device routes
+// under /api/tickets/bd (ticketsDeviceCases).
 //
 // In every role's turn admin sets up one ticket, assigned to the viewer
 // account, with a public and an internal comment and an attachment. The
@@ -34,7 +34,7 @@ func init() {
 	}
 	gzipped := map[string]string{"Content-Encoding": "gzip"}
 
-	contract.Group("tickets",
+	contract.Group("tickets", append([]contract.Case{
 		// Setup
 		contract.Case{
 			Name: "setup-create", Method: "POST", Path: "/api/tickets", As: "admin",
@@ -202,5 +202,33 @@ func init() {
 		contract.Case{Name: "cleanup-own", Method: "DELETE", Path: "/api/tickets/{own}", As: "admin"},
 		contract.Case{Name: "cleanup", Method: "DELETE", Path: "/api/tickets/{ticket}", As: "admin"},
 		contract.Case{Name: "stats-after-cleanup", Path: "/api/tickets/stats"},
-	)
+	}, ticketsDeviceCases()...)...)
+}
+
+// ticketsDeviceCases are the two routes of the desktop agent,
+// /api/tickets/bd. They take a device token, which the suite has none of:
+// the headers of a case are written into its golden. So the cases show
+// what comes before the route: no token, a token nobody issued, a device
+// id that proves nothing, and the CSRF gate, which checks every write
+// here, also one without a session (the mount is not below /api/bd/), with
+// the panel access guard in front of it for the roles without
+// device.edit. The answers with a token are pinned by
+// routes/tickets/testdata/node_device_*.json.
+//
+// GET /api/tickets/bd has no cases here: the routing report counted it
+// as Go's before the move (GET /api/tickets/{id} fits the address and
+// passes it on), so a case for it could not be recorded from Node. Its
+// matrix golden and the Node recordings cover it.
+func ticketsDeviceCases() []contract.Case {
+	ticket := map[string]any{"title": "From the agent", "priority": "high"}
+	unknown := map[string]string{"Authorization": "Bearer contract-no-such-token"}
+	return []contract.Case{
+		{Name: "device-create-without-token", Method: "POST", Path: "/api/tickets/bd", Body: ticket},
+		{Name: "device-create-unknown-token", Method: "POST", Path: "/api/tickets/bd", Body: ticket, Headers: unknown},
+		{Name: "device-create-without-csrf-token", Method: "POST", Path: "/api/tickets/bd", Body: ticket, Headers: unknown, NoCSRF: true},
+		{
+			Name: "device-create-as-a-device", Method: "POST", Path: "/api/tickets/bd", Body: ticket, Headers: unknown,
+			NoCSRF: true, NoCookies: true, Roles: contract.Roles("signed-out"),
+		},
+	}
 }

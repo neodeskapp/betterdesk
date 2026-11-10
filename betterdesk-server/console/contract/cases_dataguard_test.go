@@ -9,14 +9,19 @@ import (
 )
 
 // Data guard: the policy and event routes people use, at both addresses
-// the group is mounted at, /api/dataguard and /api/bd. The two device
-// routes (dlp-policies, dlp-events) take device tokens and are not part
-// of these cases, so the event list stays empty here.
+// the group is mounted at, /api/dataguard and /api/bd, and at the end of
+// each the two device routes (dlp-policies, dlp-events). These take a
+// device token, which the suite has none of: the headers of a case are
+// written into its golden. So their cases show what comes before the
+// route, the event list stays empty, and the answers with a token are
+// pinned by routes/dataguard/testdata/node_device_*.json.
 //
 // A role's turn creates three policies under each address, works on the
 // first and deletes them.
 func init() {
 	var cases []contract.Case
+	event := map[string]any{"event_source": "usb", "event_type": "violation", "details": map[string]any{"path": "E:\\"}}
+	unknown := map[string]string{"Authorization": "Bearer contract-no-such-token"}
 	for _, mount := range []struct{ name, path string }{{"dataguard", "/api/dataguard"}, {"bd", "/api/bd"}} {
 		policy := "policy_" + mount.name
 		second := "second_" + mount.name
@@ -99,6 +104,20 @@ func init() {
 			contract.Case{Name: at("delete-second"), Method: "DELETE", Path: mount.path + "/policies/{" + second + "}"},
 			contract.Case{Name: at("delete-third"), Method: "DELETE", Path: mount.path + "/policies/{" + third + "}"},
 			contract.Case{Name: at("list-after-deletes"), Path: mount.path + "/policies"},
+
+			// The device routes. The CSRF gate lets a write without a session
+			// through below /api/bd/ and checks every other write.
+			contract.Case{Name: at("device-policies-without-token"), Path: mount.path + "/dlp-policies"},
+			contract.Case{Name: at("device-policies-unknown-token"), Path: mount.path + "/dlp-policies", Headers: unknown},
+			contract.Case{Name: at("device-policies-device-id-alone"), Path: mount.path + "/dlp-policies", Headers: map[string]string{"X-Device-Id": "900100001"}},
+			contract.Case{Name: at("device-policies-as-a-device"), Path: mount.path + "/dlp-policies", Headers: unknown, NoCookies: true, Roles: contract.Roles("signed-out")},
+			contract.Case{Name: at("device-event-without-token"), Method: "POST", Path: mount.path + "/dlp-events", Body: event},
+			contract.Case{Name: at("device-event-unknown-token"), Method: "POST", Path: mount.path + "/dlp-events", Body: event, Headers: unknown},
+			contract.Case{Name: at("device-event-without-csrf-token"), Method: "POST", Path: mount.path + "/dlp-events", Body: event, Headers: unknown, NoCSRF: true},
+			contract.Case{
+				Name: at("device-event-as-a-device"), Method: "POST", Path: mount.path + "/dlp-events", Body: event, Headers: unknown,
+				NoCSRF: true, NoCookies: true, Roles: contract.Roles("signed-out"),
+			},
 		)
 	}
 	contract.Group("dataguard", cases...)

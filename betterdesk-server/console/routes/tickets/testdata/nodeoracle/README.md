@@ -43,3 +43,11 @@ From a worktree that still has the routes, in the dev image:
     tools/dev.sh "cd betterdesk-server/console/routes/tickets/testdata && node nodeoracle/tickets.js"
     DEV_DOCKER_ARGS="--network bdgo" tools/dev.sh "cd betterdesk-server/console/routes/tickets/testdata && \
       ORACLE_PG_DSN='postgres://betterdesk:bdgo-local@bdgo-testpg:5432/betterdesk_test?sslmode=disable' node nodeoracle/tickets.js"
+
+## The device routes
+
+`device.js` records the two device routes (`POST` and `GET /api/tickets/bd`) in the same way, behind the real
+`requireDeviceToken` with token rows in every state in its seed, into
+`../node_device_sqlite.json` and `../node_device_postgres.json`.
+`TestNodeDeviceAnswers` replays them. It runs like `tickets.js`, from a tree that
+still has the device routes in Node: `node nodeoracle/device.js`.
