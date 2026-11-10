@@ -1,0 +1,22 @@
+﻿{
+  "meta": {"lang": "de", "name": "German", "native_name": "Deutsch"},
+  "_meta": {"name": "Deutsch-Name", "native": "Deutsch!", "flag": "DE", "rtl": 0},
+  "common": {
+    "cancel": "Abbrechen",
+    "hello": "Hallo {name} ({count})",
+    "nested": {"deep": {"extra": "E"}, "__proto__": {"x": 1}},
+    "list": ["z"],
+    "constructor": {"x": 1}
+  },
+  "mixed": "now a string",
+  "arr_vs_obj": [1, 2],
+  "str_vs_obj": {"k": "o"},
+  "obj_vs_str": "s",
+  "__proto__": {"evil": 1},
+  "constructor": {"x": 1},
+  "prototype": "p",
+  "only_de": "nur",
+  "_private": {"x": 1},
+  "3": "drei",
+  "b": "Biene"
+}

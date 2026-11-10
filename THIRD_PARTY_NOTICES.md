@@ -30,6 +30,17 @@ xdotool, and ydotool are not silently relicensed by BetterDesk. A package may
 only bundle one of them after its license, redistributability, provenance, and
 security-update path are recorded in the release SBOM.
 
+## Server code
+
+The Go server in `betterdesk-server/` links the modules in its `go.mod`. The
+console inside it uses one of them directly that the server did not use
+directly before:
+
+- `golang.org/x/text` (its `collate` package), copyright The Go Authors,
+  BSD 3-Clause License. It sorts the list of languages by name the way the
+  console always has, also for names that are not in Latin script. The module
+  was already part of the server through its database driver.
+
 ## Web console code
 
 The Svelte console in `web-ui/` bundles these npm packages into the code the

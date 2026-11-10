@@ -1,0 +1,29 @@
+{
+  "meta": {"lang": "en", "name": "English", "native_name": "English", "rtl": false},
+  "10": "ten",
+  "b": "bee",
+  "2": "two",
+  "common": {
+    "cancel": "Cancel", "save": "Save",
+    "hello": "Hello {name}, you have {count} items {name}",
+    "empty": "", "nothing": null, "num": 12.50, "big": 1e21, "small": 1e-7, "neg0": -0, "flag": true,
+    "list": ["a", {"x": 1}, [2, 3]],
+    "nested": {"deep": {"leaf": "Leaf {0} {a.b} {[} {b} {}"}}
+  },
+  "__proto__": {"polluted": "yes"},
+  "dup": "first",
+  "only_en": {"a": "A", "b": {"c": "C"}},
+  "html": "<b>&amp;</b> \u2028 \ud83d\ude00 \u00e9 \"q\" \\ \/ \u0001 \u007f",
+  "dup": "second",
+  "mixed": {"x": "en-x"},
+  "arr_vs_obj": {"k": "v"},
+  "str_vs_obj": "plain",
+  "obj_vs_str": {"k": "v"},
+  "lone": "\ud800 tail \udc00\ud800",
+  "4294967294": "max index",
+  "4294967295": "not an index",
+  "01": "leading zero",
+  "-1": "negative",
+  "1.5": "fraction",
+  "": {"": "empty keys"}
+}
