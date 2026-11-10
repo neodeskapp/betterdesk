@@ -40,7 +40,6 @@ const fileTransferRoutes = lazyRoute('./fileTransfer.routes');
 const networkRoutes = lazyRoute('./network.routes');
 const dataguardRoutes = lazyRoute('./dataguard.routes');
 const reportsRoutes = lazyRoute('./reports.routes');
-const tenantsRoutes = lazyRoute('./tenants.routes');
 const cdapRoutes = lazyRoute('./cdap.routes');
 const tokensRoutes = lazyRoute('./tokens.routes');
 const organizationsRoutes = lazyRoute('./organizations.routes');
@@ -80,7 +79,7 @@ router.use('/', require('./guest.routes'));
 // bdApiRoutes now mounted in server.js (before CSRF) for desktop client access
 router.use('/api/bd', inventoryRoutes);     // device-facing: /api/bd/inventory, /api/bd/telemetry
 router.use('/api/inventory', inventoryRoutes); // admin-facing: /api/inventory, /api/inventory/:id
-router.use('/api/tickets', ticketsRoutes);      // /api/tickets CRUD and device-facing /api/tickets/bd
+router.use('/api/tickets', ticketsRoutes);      // device-facing /api/tickets/bd (the other ticket routes are in the Go console)
 router.use('/api/bd', activityRoutes);           // device-facing: /api/bd/activity
 router.use('/api/activity', activityRoutes);     // admin-facing: /api/activity
 router.use('/api/automation', automationRoutes); // admin-facing: /api/automation/*
@@ -88,11 +87,10 @@ router.use('/api/bd', automationRoutes);         // device-facing: /api/bd/comma
 router.use('/api/files', fileTransferRoutes);    // admin-facing: /api/files/transfer(s)
 router.use('/api/bd', fileTransferRoutes);       // device-facing: /api/bd/file-transfer
 router.use('/api/network', networkRoutes);       // admin-facing: /api/network/*
-router.use('/api/dataguard', dataguardRoutes);   // admin-facing: /api/dataguard/*
+router.use('/api/dataguard', dataguardRoutes);   // device-facing, second address: /api/dataguard/dlp-policies, /api/dataguard/dlp-events (policies, events and stats are in the Go console)
 router.use('/api/bd', dataguardRoutes);          // device-facing: /api/bd/dlp-policies, /api/bd/dlp-events
 router.use('/', lazyRoute('./trends.routes'));   // admin-facing: /api/reports/trends (before the reports router)
 router.use('/api/reports', reportsRoutes);       // admin-facing: /api/reports/*
-router.use('/api/tenants', tenantsRoutes);       // admin-facing: /api/tenants/*
 router.use('/', registrationRoutes);               // admin-facing: /registrations, /api/registrations/*
 router.use('/api/bd', registrationRoutes);          // device-facing: /api/bd/register-request, /api/bd/register-status
 router.use('/', pagesRoutes);                          // page routes: /inventory, /tickets, /automation, etc.

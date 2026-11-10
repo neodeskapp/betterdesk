@@ -1,0 +1,476 @@
+{
+ "id": "tickets/read-own-after-odd-updates",
+ "request": {
+  "method": "GET",
+  "path": "/api/tickets/{own}"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Authentication required"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "server_admin"
+   ],
+   "status": 404,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Ticket not found"
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "attachments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "closed_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "resolved_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "assigned_to": null,
+     "attachments": [
+      {
+       "created_at": "<volatile>",
+       "filename": "role.bin",
+       "id": 6,
+       "mimetype": "application/octet-stream",
+       "size_bytes": 4,
+       "uploaded_by": "e2e_operator"
+      },
+      {
+       "created_at": "<volatile>",
+       "filename": "list.bin",
+       "id": 7,
+       "mimetype": "application/octet-stream",
+       "size_bytes": 5,
+       "uploaded_by": "e2e_operator"
+      },
+      {
+       "created_at": "<volatile>",
+       "filename": "odd.bin",
+       "id": 8,
+       "mimetype": "application/octet-stream",
+       "size_bytes": 3,
+       "uploaded_by": "e2e_operator"
+      }
+     ],
+     "category": "anything goes",
+     "closed_at": "<volatile>",
+     "comments": [],
+     "created_at": "<volatile>",
+     "created_by": "e2e_operator",
+     "description": "now with text",
+     "device_id": null,
+     "id": 15,
+     "priority": null,
+     "resolved_at": "<volatile>",
+     "sla_due_at": "2031-05-06T07:08:09.000Z",
+     "status": "",
+     "title": "Role ticket, renamed",
+     "updated_at": "<volatile>"
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "attachments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "closed_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "resolved_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "assigned_to": null,
+     "attachments": [
+      {
+       "created_at": "<volatile>",
+       "filename": "role.bin",
+       "id": 10,
+       "mimetype": "application/octet-stream",
+       "size_bytes": 4,
+       "uploaded_by": "e2e_global_admin"
+      },
+      {
+       "created_at": "<volatile>",
+       "filename": "list.bin",
+       "id": 11,
+       "mimetype": "application/octet-stream",
+       "size_bytes": 5,
+       "uploaded_by": "e2e_global_admin"
+      },
+      {
+       "created_at": "<volatile>",
+       "filename": "odd.bin",
+       "id": 12,
+       "mimetype": "application/octet-stream",
+       "size_bytes": 3,
+       "uploaded_by": "e2e_global_admin"
+      }
+     ],
+     "category": "anything goes",
+     "closed_at": "<volatile>",
+     "comments": [],
+     "created_at": "<volatile>",
+     "created_by": "e2e_global_admin",
+     "description": "now with text",
+     "device_id": null,
+     "id": 17,
+     "priority": null,
+     "resolved_at": "<volatile>",
+     "sla_due_at": "2031-05-06T07:08:09.000Z",
+     "status": "",
+     "title": "Role ticket, renamed",
+     "updated_at": "<volatile>"
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "attachments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "closed_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "resolved_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "assigned_to": null,
+     "attachments": [
+      {
+       "created_at": "<volatile>",
+       "filename": "role.bin",
+       "id": 15,
+       "mimetype": "application/octet-stream",
+       "size_bytes": 4,
+       "uploaded_by": "e2e_super_admin"
+      },
+      {
+       "created_at": "<volatile>",
+       "filename": "list.bin",
+       "id": 16,
+       "mimetype": "application/octet-stream",
+       "size_bytes": 5,
+       "uploaded_by": "e2e_super_admin"
+      },
+      {
+       "created_at": "<volatile>",
+       "filename": "odd.bin",
+       "id": 17,
+       "mimetype": "application/octet-stream",
+       "size_bytes": 3,
+       "uploaded_by": "e2e_super_admin"
+      }
+     ],
+     "category": "anything goes",
+     "closed_at": "<volatile>",
+     "comments": [],
+     "created_at": "<volatile>",
+     "created_by": "e2e_super_admin",
+     "description": "now with text",
+     "device_id": null,
+     "id": 20,
+     "priority": null,
+     "resolved_at": "<volatile>",
+     "sla_due_at": "2031-05-06T07:08:09.000Z",
+     "status": "",
+     "title": "Role ticket, renamed",
+     "updated_at": "<volatile>"
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "attachments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "closed_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "resolved_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "assigned_to": null,
+     "attachments": [
+      {
+       "created_at": "<volatile>",
+       "filename": "role.bin",
+       "id": 19,
+       "mimetype": "application/octet-stream",
+       "size_bytes": 4,
+       "uploaded_by": "e2e_admin"
+      },
+      {
+       "created_at": "<volatile>",
+       "filename": "list.bin",
+       "id": 20,
+       "mimetype": "application/octet-stream",
+       "size_bytes": 5,
+       "uploaded_by": "e2e_admin"
+      },
+      {
+       "created_at": "<volatile>",
+       "filename": "odd.bin",
+       "id": 21,
+       "mimetype": "application/octet-stream",
+       "size_bytes": 3,
+       "uploaded_by": "e2e_admin"
+      },
+      {
+       "created_at": "<volatile>",
+       "filename": "three.bin",
+       "id": 22,
+       "mimetype": "application/octet-stream",
+       "size_bytes": 2359296,
+       "uploaded_by": "e2e_admin"
+      }
+     ],
+     "category": "anything goes",
+     "closed_at": "<volatile>",
+     "comments": [],
+     "created_at": "<volatile>",
+     "created_by": "e2e_admin",
+     "description": "now with text",
+     "device_id": null,
+     "id": 22,
+     "priority": null,
+     "resolved_at": "<volatile>",
+     "sla_due_at": "2031-05-06T07:08:09.000Z",
+     "status": "",
+     "title": "Role ticket, renamed",
+     "updated_at": "<volatile>"
+    }
+   }
+  }
+ ]
+}

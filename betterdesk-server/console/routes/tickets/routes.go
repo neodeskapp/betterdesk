@@ -1,0 +1,432 @@
+// Package tickets holds the helpdesk routes under /api/tickets: tickets,
+// their comments and their attachments.
+//
+// Reading needs the permission device.view, changing a ticket device.edit.
+// A viewer sees the tickets assigned to it and no internal comments.
+//
+// The two routes for devices, POST and GET /api/tickets/bd, take a device
+// token and are not here.
+package tickets
+
+import (
+	"net/http"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/middleware"
+	"github.com/unitronix/betterdesk-server/console/store"
+)
+
+type handlers struct {
+	d   *kit.Deps
+	db  *store.DB
+	log *kit.Logger
+	// uploads is the folder of the attachment files.
+	uploads string
+	now     func() time.Time
+	// random fills b with random bytes, for the names of stored files.
+	random func(b []byte) (int, error)
+}
+
+// Register adds the group's routes below the mount (/api/tickets).
+func Register(d *kit.Deps) { register(d, newHandlers(d)) }
+
+func register(d *kit.Deps, h *handlers) {
+	r := d.Router
+	canRead := d.RequirePermission("device.view")
+	canWrite := d.RequirePermission("device.edit")
+	upload, files := d.Limits.Upload.Middleware, d.Limits.FileAccess.Middleware
+	id, aid := kit.Digits("id"), kit.Digits("aid")
+	attachmentBody := middleware.AttachmentBody(func(w http.ResponseWriter, r *http.Request, status int, err error) {
+		d.WebUI.ServerError(w, r, err, status)
+	})
+
+	r.Get("/", h.list, requireAuth, canRead)
+	r.Get("/stats", h.stats, requireAuth, canRead)
+	r.Post("/", h.create, upload, requireAuth, canWrite)
+	r.Get("/{id}", h.get, id, requireAuth, canRead)
+	r.Patch("/{id}", h.update, id, requireAuth, canWrite)
+	r.Delete("/{id}", h.remove, id, upload, requireAuth, canWrite)
+	r.Post("/{id}/comments", h.addComment, id, upload, requireAuth, canRead)
+	r.Get("/{id}/comments", h.comments, id, requireAuth, canRead)
+	// The body of an upload is read by this route, after the checks: up
+	// to 35 MB of JSON for a file of 25 MB
+	r.Post("/{id}/attachments", h.attach, id, upload, requireAuth, canWrite, attachmentBody)
+	r.Get("/{id}/attachments", h.attachments, id, files, requireAuth, canRead)
+	r.Get("/attachments/{aid}", h.download, aid, files, requireAuth, canRead)
+}
+
+// failure is the group's error answer: {"error":"..."}.
+type failure struct {
+	Error string `json:"error"`
+}
+
+func fail(w http.ResponseWriter, r *http.Request, status int, message string) {
+	kit.JSON(w, r, status, failure{Error: message})
+}
+
+// serverError answers what every route's catch block answered.
+func (h *handlers) serverError(w http.ResponseWriter, r *http.Request, what string, err error) {
+	h.log.Error(what+":", err)
+	fail(w, r, http.StatusInternalServerError, "Internal server error")
+}
+
+type done struct {
+	Success bool `json:"success"`
+}
+
+// requireAuth lets a signed-in account through and answers 401 otherwise.
+func requireAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if kit.User(r) == nil {
+			fail(w, r, http.StatusUnauthorized, "Authentication required")
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// The values a ticket's status, priority and category can have.
+var (
+	validStatuses   = []string{"open", "in_progress", "resolved", "closed"}
+	validPriorities = []string{"low", "medium", "high", "critical"}
+	validCategories = []string{"general", "hardware", "software", "network", "access", "other"}
+)
+
+// oneOf reports whether v is one of the texts.
+func oneOf(v jsbind.Value, texts []string) bool {
+	if !v.IsString() {
+		return false
+	}
+	for _, text := range texts {
+		if v.Str() == text {
+			return true
+		}
+	}
+	return false
+}
+
+// slaHours is the time a ticket of each priority may take.
+var slaHours = map[string]int{"critical": 4, "high": 8, "medium": 24, "low": 72}
+
+// slaDue is the time a ticket of the priority is due, as the text the
+// route stored: the hours are added to the local clock reading, and the
+// result is written in UTC with milliseconds.
+func (h *handlers) slaDue(priority string) string {
+	hours, known := slaHours[priority]
+	if !known {
+		hours = slaHours["medium"]
+	}
+	now := h.now().In(time.Local)
+	due := time.Date(now.Year(), now.Month(), now.Day(), now.Hour()+hours, now.Minute(), now.Second(), now.Nanosecond(), time.Local)
+	return store.ISOTime(due)
+}
+
+// ticketID is +req.params.id: the digits of the path as a number.
+func ticketID(r *http.Request, name string) jsbind.Value {
+	return jsbind.Number(jsbind.ParseNumber(r.PathValue(name)))
+}
+
+// number is `${n}` for a row id.
+func number(id jsbind.Cell) string { return id.Value().ToString() }
+
+// audit writes an audit log entry for the signed-in account. A failure
+// is ignored.
+func (h *handlers) audit(r *http.Request, action, details string) {
+	_ = h.d.Audit.Write(r.Context(), kit.User(r).ID, action, details, kit.ClientIP(r))
+}
+
+type ticketList struct {
+	Tickets []ticket `json:"tickets"`
+	Total   int      `json:"total"`
+}
+
+// filterKeys are the query parameters that filter the list, each on the
+// column of its name.
+var filterKeys = []string{"status", "priority", "category", "assigned_to", "device_id"}
+
+// list answers GET /api/tickets?status=&priority=&category=&assigned_to=
+// &device_id=&search=. A viewer gets the tickets assigned to it, whatever
+// assigned_to says.
+func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
+	user := kit.User(r)
+	var filters []filter
+	for _, key := range filterKeys {
+		value := jsbind.Query(r.URL.RawQuery, key)
+		if key == "assigned_to" && user.Role == "viewer" {
+			value = jsbind.String(user.Username)
+		}
+		if value.Truthy() {
+			filters = append(filters, filter{key, value})
+		}
+	}
+	search := jsbind.Query(r.URL.RawQuery, "search")
+	if !search.Truthy() {
+		search = jsbind.Undefined
+	}
+	tickets, err := listTickets(r.Context(), h.db, filters, search)
+	if err != nil {
+		h.serverError(w, r, "List error", err)
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, ticketList{Tickets: tickets, Total: len(tickets)})
+}
+
+// stats answers GET /api/tickets/stats.
+func (h *handlers) stats(w http.ResponseWriter, r *http.Request) {
+	stats, err := countTickets(r.Context(), h.db)
+	if err != nil {
+		h.serverError(w, r, "Stats error", err)
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, stats)
+}
+
+// text reads a body member the routes call .trim() on: the trimmed text
+// of a string. empty is true for a value that counts as missing
+// (!value || !value.trim()), and broken for a value that is neither empty
+// nor a text, on which .trim() threw.
+func text(v jsbind.Value) (trimmed string, empty, broken bool) {
+	switch {
+	case !v.Truthy():
+		return "", true, false
+	case !v.IsString():
+		return "", false, true
+	}
+	trimmed = jsbind.Trim(v.Str())
+	return trimmed, trimmed == "", false
+}
+
+type created struct {
+	Success bool          `json:"success"`
+	Ticket  createdTicket `json:"ticket"`
+}
+
+type createdTicket struct {
+	ID    jsbind.Cell `json:"id"`
+	Title string      `json:"title"`
+}
+
+// create answers POST /api/tickets with the body
+// {title, description?, priority?, category?, device_id?, assigned_to?}.
+func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
+	body := kit.Body(r)
+	rawTitle := jsbind.Of(body.Get("title"))
+	title, empty, broken := text(rawTitle)
+	if broken {
+		h.serverError(w, r, "Create error", errNotText("title"))
+		return
+	}
+	if empty {
+		fail(w, r, http.StatusBadRequest, "Title is required")
+		return
+	}
+	priority, category := jsbind.Of(body.Get("priority")), jsbind.Of(body.Get("category"))
+	if priority.Truthy() && !oneOf(priority, validPriorities) {
+		fail(w, r, http.StatusBadRequest, "Invalid priority. Valid: "+strings.Join(validPriorities, ", "))
+		return
+	}
+	if category.Truthy() && !oneOf(category, validCategories) {
+		fail(w, r, http.StatusBadRequest, "Invalid category. Valid: "+strings.Join(validCategories, ", "))
+		return
+	}
+	user := kit.User(r)
+	effective := priority.Or(jsbind.String("medium"))
+	id, err := createTicket(r.Context(), h.db, newTicket{
+		Title:       jsbind.String(title),
+		Description: jsbind.Of(body.Get("description")).Or(jsbind.String("")),
+		Priority:    effective,
+		Category:    category.Or(jsbind.String("general")),
+		DeviceID:    jsbind.Of(body.Get("device_id")).Or(jsbind.Null),
+		CreatedBy:   jsbind.String(user.Username),
+		AssignedTo:  jsbind.Of(body.Get("assigned_to")).Or(jsbind.Null),
+		SLADueAt:    jsbind.String(h.slaDue(effective.Str())),
+	})
+	if err != nil {
+		h.serverError(w, r, "Create error", err)
+		return
+	}
+	h.audit(r, "ticket_created", "Ticket #"+number(id)+": "+rawTitle.Str())
+	h.log.Info("#" + number(id) + " created by " + user.Username + ": " + rawTitle.Str())
+	kit.JSON(w, r, http.StatusCreated, created{Success: true, Ticket: createdTicket{ID: id, Title: title}})
+}
+
+// errNotText is the TypeError of .trim() on a value that is no text.
+type errNotText string
+
+func (e errNotText) Error() string { return string(e) + ".trim is not a function" }
+
+type ticketDetail struct {
+	ticket
+	Comments    []comment    `json:"comments"`
+	Attachments []attachment `json:"attachments"`
+}
+
+// visible drops the internal comments for a viewer.
+func visible(r *http.Request, comments []comment) []comment {
+	if kit.User(r).Role != "viewer" {
+		return comments
+	}
+	shown := []comment{}
+	for _, c := range comments {
+		if !c.IsInternal.True() {
+			shown = append(shown, c)
+		}
+	}
+	return shown
+}
+
+// get answers GET /api/tickets/{id}: the ticket with its comments and
+// attachments.
+func (h *handlers) get(w http.ResponseWriter, r *http.Request) {
+	t, err := ticketByID(r.Context(), h.db, ticketID(r, "id"))
+	if err == nil && t == nil {
+		fail(w, r, http.StatusNotFound, "Ticket not found")
+		return
+	}
+	var comments []comment
+	var attachments []attachment
+	if err == nil {
+		comments, err = ticketComments(r.Context(), h.db, t.id())
+	}
+	if err == nil {
+		attachments, err = ticketAttachments(r.Context(), h.db, t.id())
+	}
+	if err != nil {
+		h.serverError(w, r, "Detail error", err)
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, ticketDetail{ticket: *t, Comments: visible(r, comments), Attachments: attachments})
+}
+
+// update answers PATCH /api/tickets/{id}: every member of the body that
+// names one of title, description, status, priority, category,
+// assigned_to, sla_due_at and device_id is written. Only status,
+// priority and device_id are checked.
+func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
+	t, err := ticketByID(r.Context(), h.db, ticketID(r, "id"))
+	if err != nil {
+		h.serverError(w, r, "Update error", err)
+		return
+	}
+	if t == nil {
+		fail(w, r, http.StatusNotFound, "Ticket not found")
+		return
+	}
+	body := kit.Body(r)
+	status, priority, deviceID := jsbind.Of(body.Get("status")), jsbind.Of(body.Get("priority")), jsbind.Of(body.Get("device_id"))
+	if status.Truthy() && !oneOf(status, validStatuses) {
+		fail(w, r, http.StatusBadRequest, "Invalid status. Valid: "+strings.Join(validStatuses, ", "))
+		return
+	}
+	if priority.Truthy() && !oneOf(priority, validPriorities) {
+		fail(w, r, http.StatusBadRequest, "Invalid priority. Valid: "+strings.Join(validPriorities, ", "))
+		return
+	}
+	// The device a ticket is about: a device id, or empty or null for none
+	if !deviceID.IsUndefined() && !deviceID.IsNull() && (!deviceID.IsString() || utf16Length(jsbind.Trim(deviceID.Str())) > 64) {
+		fail(w, r, http.StatusBadRequest, "Invalid device_id")
+		return
+	}
+
+	var changes []change
+	for _, column := range []string{"title", "description", "status", "priority", "category", "assigned_to", "sla_due_at", "device_id"} {
+		if !body.Has(column) {
+			continue
+		}
+		value := jsbind.Of(body.Get(column))
+		switch column {
+		case "title":
+			if !value.IsString() {
+				h.serverError(w, r, "Update error", errNotText("title"))
+				return
+			}
+			value = jsbind.String(jsbind.Trim(value.Str()))
+		case "device_id":
+			if trimmed := jsbind.Trim(value.Str()); trimmed != "" {
+				value = jsbind.String(trimmed)
+			} else {
+				value = jsbind.Null
+			}
+		}
+		changes = append(changes, change{column, value})
+	}
+	if err := updateTicket(r.Context(), h.db, t.id(), changes); err != nil {
+		h.serverError(w, r, "Update error", err)
+		return
+	}
+	columns := make([]string, len(changes))
+	for i, c := range changes {
+		columns[i] = c.column
+	}
+	h.audit(r, "ticket_updated", "Ticket #"+number(t.ID)+" updated: "+strings.Join(columns, ", "))
+	h.log.Info("#" + number(t.ID) + " updated by " + kit.User(r).Username)
+	kit.JSON(w, r, http.StatusOK, done{Success: true})
+}
+
+// utf16Length is s.length in JavaScript: the number of UTF-16 units.
+func utf16Length(s string) int {
+	n := 0
+	for _, r := range s {
+		n++
+		if r > 0xFFFF {
+			n++
+		}
+	}
+	return n
+}
+
+// remove answers DELETE /api/tickets/{id}: the ticket goes with its
+// comments, its attachments and their files.
+func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
+	t, err := ticketByID(r.Context(), h.db, ticketID(r, "id"))
+	if err == nil && t == nil {
+		fail(w, r, http.StatusNotFound, "Ticket not found")
+		return
+	}
+	var attachments []attachment
+	if err == nil {
+		attachments, err = ticketAttachments(r.Context(), h.db, t.id())
+	}
+	if err == nil {
+		for _, a := range attachments {
+			h.removeFile(a.StoragePath)
+		}
+		err = deleteTicket(r.Context(), h.db, t.id())
+	}
+	if err != nil {
+		h.serverError(w, r, "Delete error", err)
+		return
+	}
+	h.audit(r, "ticket_deleted", "Ticket #"+number(t.ID)+": "+t.Title)
+	h.log.Info("#" + number(t.ID) + " deleted by " + kit.User(r).Username)
+	kit.JSON(w, r, http.StatusOK, done{Success: true})
+}
+
+// uploadsDir is the folder of the attachment files: data/attachments
+// beside the old console's files, where they always were, and where the
+// rows of existing attachments point. A console that has no such folder
+// keeps them in its data folder.
+func uploadsDir(cfg *config.Config) string {
+	if cfg.ConsoleDir != "" {
+		return filepath.Join(cfg.ConsoleDir, "data", "attachments")
+	}
+	return filepath.Join(cfg.DataDir, "attachments")
+}
+
+func newHandlers(d *kit.Deps) *handlers {
+	h := &handlers{
+		d:       d,
+		db:      d.Store,
+		log:     d.Log.Child("Tickets"),
+		uploads: uploadsDir(d.Config),
+		now:     time.Now,
+		random:  randomBytes,
+	}
+	h.makeUploads()
+	return h
+}

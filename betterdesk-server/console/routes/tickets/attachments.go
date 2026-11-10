@@ -1,0 +1,370 @@
+package tickets
+
+import (
+	"crypto/rand"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"math"
+	"mime"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"unicode/utf16"
+
+	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/safepath"
+)
+
+// maxAttachmentSize is the largest file a ticket takes: 25 MB.
+const maxAttachmentSize = 25 * 1024 * 1024
+
+func randomBytes(b []byte) (int, error) { return rand.Read(b) }
+
+// makeUploads creates the folder of the attachment files.
+func (h *handlers) makeUploads() {
+	if err := os.MkdirAll(h.uploads, 0o777); err != nil {
+		h.log.Error("Cannot create the attachment folder "+h.uploads+":", err)
+	}
+}
+
+// confined returns the path of a stored file after checking that it lies
+// in the attachment folder, also when it is reached through a link.
+func (h *handlers) confined(storagePath string) (string, error) {
+	return safepath.ResolveWithinRoot(storagePath, h.uploads)
+}
+
+// removeFile deletes the file of an attachment. A file that is gone, or a
+// path that is not in the attachment folder, is left alone.
+func (h *handlers) removeFile(storagePath string) {
+	if path, err := h.confined(storagePath); err == nil {
+		_ = os.Remove(path)
+	}
+}
+
+// errNoBuffer is the TypeError of Buffer.from for a value it cannot read.
+var errNoBuffer = errors.New("The first argument must be of type string or an instance of Buffer, ArrayBuffer, or Array or an Array-like Object.")
+
+// errTooLarge stands for a list-like object whose length alone is over
+// the limit: its bytes are not made.
+var errTooLarge = errors.New("attachment too large")
+
+// fileBytes is Buffer.from(data, 'base64'): the bytes of the uploaded
+// file. A text is base64, read leniently; a list is its numbers as
+// bytes; so is an object that looks like a list ({"length":2,"0":65,
+// "1":66}) or like a stored buffer ({"type":"Buffer","data":[...]}).
+// Every other value is an error.
+func fileBytes(data jsbind.Value) ([]byte, error) {
+	switch {
+	case data.IsString():
+		return decodeBase64(data.Str()), nil
+	case data.IsArray():
+		return byteList(data.Items()), nil
+	case data.IsObject():
+		if valueOf := data.Member("valueOf"); valueOf.Truthy() {
+			return nil, errors.New("value.valueOf is not a function")
+		}
+		if length := data.Member("length"); !length.IsUndefined() {
+			if !length.IsNumber() {
+				return []byte{}, nil
+			}
+			n := length.ToNumber()
+			switch {
+			case n <= 0:
+				return []byte{}, nil
+			case n >= maxAttachmentSize+1:
+				return nil, errTooLarge
+			}
+			items := make([]jsbind.Value, int(n))
+			for i := range items {
+				items[i] = data.Member(strconv.Itoa(i))
+			}
+			return byteList(items), nil
+		}
+		if list := data.Member("data"); data.Member("type").Str() == "Buffer" && list.IsArray() {
+			return byteList(list.Items()), nil
+		}
+	}
+	return nil, errNoBuffer
+}
+
+// byteList turns values into bytes the way a Uint8Array takes them: the
+// number of each value, cut to a whole number, modulo 256. What is no
+// number is 0.
+func byteList(items []jsbind.Value) []byte {
+	out := make([]byte, len(items))
+	for i, item := range items {
+		n := item.ToNumber()
+		if math.IsNaN(n) || math.IsInf(n, 0) {
+			continue
+		}
+		out[i] = byte(int64(math.Mod(math.Trunc(n), 256)))
+	}
+	return out
+}
+
+// decodeBase64 reads base64 the way Buffer.from(text, 'base64') does. It
+// takes the standard and the URL alphabet, skips every character that is
+// in neither, and stops at the first "=" that comes where a character of
+// the alphabet is looked for. A last group of two or three characters
+// gives one or two bytes, a single left-over character gives none. A
+// character outside Latin-1 counts by its low byte.
+func decodeBase64(text string) []byte {
+	units := utf16.Encode([]rune(text))
+	out := make([]byte, 0, len(units)/4*3+3)
+	i := 0
+	// next returns the value of the next character of the alphabet
+	next := func() (byte, bool) {
+		for i < len(units) {
+			c := byte(units[i])
+			i++
+			if v := base64Value[c]; v < 64 {
+				return v, true
+			}
+			if c == '=' {
+				return 0, false
+			}
+		}
+		return 0, false
+	}
+	for {
+		a, ok := next()
+		if !ok {
+			break
+		}
+		b, ok := next()
+		if !ok {
+			break
+		}
+		out = append(out, a<<2|b>>4)
+		c, ok := next()
+		if !ok {
+			break
+		}
+		out = append(out, b<<4|c>>2)
+		d, ok := next()
+		if !ok {
+			break
+		}
+		out = append(out, c<<6|d)
+	}
+	return out
+}
+
+// base64Value maps a character to its six bits, 64 for a character that
+// is not in the alphabet.
+var base64Value = func() (table [256]byte) {
+	for i := range table {
+		table[i] = 64
+	}
+	for i, c := range "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" {
+		table[c] = byte(i)
+	}
+	table['-'], table['_'] = 62, 63
+	return table
+}()
+
+// safeName replaces every character of a file name that is not a letter
+// of a to z, a digit, a dot, a dash or an underscore by an underscore. A
+// character outside the basic plane becomes two.
+func safeName(filename string) string {
+	var b strings.Builder
+	for _, r := range filename {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9', r == '.', r == '_', r == '-':
+			b.WriteRune(r)
+		case r > 0xFFFF:
+			b.WriteString("__")
+		default:
+			b.WriteByte('_')
+		}
+	}
+	return b.String()
+}
+
+type attached struct {
+	Success    bool           `json:"success"`
+	Attachment attachedDetail `json:"attachment"`
+}
+
+type attachedDetail struct {
+	ID        jsbind.Cell `json:"id"`
+	Filename  string      `json:"filename"`
+	SizeBytes int         `json:"size_bytes"`
+}
+
+// attach answers POST /api/tickets/{id}/attachments with the body
+// {filename, data, mimetype?}, data being the file in base64. The file is
+// written to the attachment folder under the ticket's id, 16 random hex
+// digits and the cleaned name; its row follows.
+func (h *handlers) attach(w http.ResponseWriter, r *http.Request) {
+	t, err := ticketByID(r.Context(), h.db, ticketID(r, "id"))
+	if err != nil {
+		h.serverError(w, r, "Attachment upload error", err)
+		return
+	}
+	if t == nil {
+		fail(w, r, http.StatusNotFound, "Ticket not found")
+		return
+	}
+	body := kit.Body(r)
+	filename, data := jsbind.Of(body.Get("filename")), jsbind.Of(body.Get("data"))
+	if !filename.Truthy() || !data.Truthy() {
+		fail(w, r, http.StatusBadRequest, "Filename and data (base64) are required")
+		return
+	}
+	file, err := fileBytes(data)
+	if errors.Is(err, errTooLarge) || len(file) > maxAttachmentSize {
+		fail(w, r, http.StatusRequestEntityTooLarge, "Attachment too large. Max 25 MB")
+		return
+	}
+	if err == nil && !filename.IsString() {
+		err = errors.New("filename.replace is not a function")
+	}
+	var storagePath string
+	name := safeName(filename.Str())
+	if err == nil {
+		random := make([]byte, 8)
+		if _, err = h.random(random); err == nil {
+			storagePath, err = safepath.ResolveChild(h.uploads, number(t.ID)+"_"+hex.EncodeToString(random)+"_"+name)
+		}
+	}
+	if err == nil {
+		err = os.WriteFile(storagePath, file, 0o666)
+	}
+	var id jsbind.Cell
+	if err == nil {
+		mimetype := jsbind.Of(body.Get("mimetype")).Or(jsbind.String("application/octet-stream"))
+		id, err = addAttachment(r.Context(), h.db, t.id(), name, mimetype, len(file), storagePath, kit.User(r).Username)
+	}
+	if err != nil {
+		h.serverError(w, r, "Attachment upload error", err)
+		return
+	}
+	h.log.Info("Attachment " + name + " uploaded to ticket #" + number(t.ID))
+	kit.JSON(w, r, http.StatusCreated, attached{Success: true, Attachment: attachedDetail{ID: id, Filename: name, SizeBytes: len(file)}})
+}
+
+type attachmentList struct {
+	Attachments []attachment `json:"attachments"`
+}
+
+// attachments answers GET /api/tickets/{id}/attachments.
+func (h *handlers) attachments(w http.ResponseWriter, r *http.Request) {
+	attachments, err := ticketAttachments(r.Context(), h.db, ticketID(r, "id"))
+	if err != nil {
+		h.serverError(w, r, "Attachments list error", err)
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, attachmentList{Attachments: attachments})
+}
+
+// download answers GET /api/tickets/attachments/{aid} with the file, as a
+// download under its stored name and with its stored type. Conditional
+// and range requests work as for any file the console serves.
+func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
+	a, err := attachmentByID(r.Context(), h.db, ticketID(r, "aid"))
+	if err == nil && a == nil {
+		fail(w, r, http.StatusNotFound, "Attachment not found")
+		return
+	}
+	var path string
+	if err == nil {
+		path, err = h.confined(a.StoragePath)
+	}
+	if err != nil {
+		h.serverError(w, r, "Attachment download error", err)
+		return
+	}
+	info, statErr := os.Stat(path)
+	if statErr != nil {
+		fail(w, r, http.StatusNotFound, "Attachment file missing")
+		return
+	}
+	// The two headers are set one after the other; a stored type that no
+	// header can carry fails after the first is in place.
+	disposition, okName := headerValue(`attachment; filename="` + a.Filename + `"`)
+	contentType, okType := headerValue(a.Mimetype.String)
+	if okName {
+		w.Header().Set("Content-Disposition", disposition)
+	}
+	if !okName || !okType || !a.Mimetype.Valid {
+		h.serverError(w, r, "Attachment download error", errors.New("invalid characters in a header of the stored attachment"))
+		return
+	}
+	w.Header()["Content-Type"] = []string{contentType}
+
+	failed := func(w http.ResponseWriter, r *http.Request, status int, err error) { h.fileError(w, r, status, err) }
+	if info.IsDir() || hasDotPart(path) {
+		// A folder is no file, and a path through a dot folder is hidden
+		failed(w, r, http.StatusNotFound, fmt.Errorf("cannot send %s", filepath.Base(path)))
+		return
+	}
+	files := httpx.NewStatic(filepath.Dir(path), httpx.StaticOptions{Dotfiles: "allow", NoIndex: true, NoRedirect: true, NoFallthrough: true, OnError: failed})
+	files.ServeName(w, r, filepath.Base(path), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		failed(w, r, http.StatusNotFound, errors.New("file not found"))
+	}))
+}
+
+// hasDotPart reports whether a part of the path starts with a dot. Such
+// a file is not sent.
+func hasDotPart(path string) bool {
+	for _, part := range strings.Split(filepath.ToSlash(path), "/") {
+		if len(part) > 1 && part[0] == '.' {
+			return true
+		}
+	}
+	return false
+}
+
+// headerValue returns text as the bytes of a header value: one byte per
+// character. ok is false for text a header cannot carry: a control
+// character other than tab, or a character outside Latin-1.
+func headerValue(text string) (value string, ok bool) {
+	out := make([]byte, 0, len(text))
+	for _, r := range text {
+		if r > 0xFF || (r < 0x20 && r != '\t') || r == 0x7F {
+			return "", false
+		}
+		out = append(out, byte(r))
+	}
+	return string(out), true
+}
+
+// fileError answers a download that failed after its headers were set:
+// the console's error answer as JSON, under the status of the failure.
+// The Content-Type of the attachment stays and gets the charset of the
+// answer, as it did.
+func (h *handlers) fileError(w http.ResponseWriter, r *http.Request, status int, err error) {
+	message := "Internal Server Error"
+	if !h.d.Config.Production {
+		switch status {
+		case http.StatusPreconditionFailed:
+			message = "Precondition Failed"
+		case http.StatusRequestedRangeNotSatisfiable:
+			message = "Range Not Satisfiable"
+		case http.StatusNotFound:
+			message = "Not Found"
+		default:
+			if err != nil {
+				message = err.Error()
+			}
+		}
+	}
+	body, _ := httpx.Marshal(struct {
+		Success bool   `json:"success"`
+		Error   string `json:"error"`
+	}{Error: message})
+	contentType := "application/json; charset=utf-8"
+	if mediaType, params, err := mime.ParseMediaType(httpx.Latin1(w.Header().Get("Content-Type"))); err == nil {
+		params["charset"] = "utf-8"
+		if formatted := mime.FormatMediaType(mediaType, params); formatted != "" {
+			contentType = formatted
+		}
+	}
+	httpx.WriteBody(w, r, status, contentType, body)
+}

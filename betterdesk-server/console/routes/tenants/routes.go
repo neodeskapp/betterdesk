@@ -1,0 +1,404 @@
+// Package tenants holds the tenant routes under /api/tenants: tenants,
+// and the devices and users assigned to them.
+//
+// The routes take what the request gives them without checking its type
+// and leave the rest to the database, so an answer can depend on the
+// database: an id that is not a whole number is "not found" on SQLite and
+// an error on PostgreSQL. Package jsbind keeps both behaviours.
+package tenants
+
+import (
+	"net/http"
+	"regexp"
+	"strings"
+
+	"github.com/unitronix/betterdesk-server/console/access"
+	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/middleware"
+	"github.com/unitronix/betterdesk-server/console/store"
+)
+
+type handlers struct {
+	db  *store.DB
+	log *kit.Logger
+}
+
+// Register adds the group's routes below the mount (/api/tenants).
+func Register(d *kit.Deps) {
+	h := &handlers{db: d.Store, log: d.Log.Child("Tenants")}
+	r := d.Router
+	r.Get("/", h.list, requireAdmin)
+	r.Get("/{id}", h.get, requireAdmin)
+	r.Post("/", h.create, requireAdmin)
+	r.Patch("/{id}", h.update, requireAdmin)
+	r.Delete("/{id}", h.remove, requireAdmin)
+	r.Get("/{id}/devices", h.devices, requireAdmin)
+	r.Post("/{id}/devices", h.assignDevices, requireAdmin)
+	r.Delete("/{id}/devices/{deviceId}", h.removeDevice, requireAdmin)
+	r.Get("/{id}/users", h.users, requireAdmin)
+	r.Post("/{id}/users", h.assignUser, requireAdmin)
+	r.Delete("/{id}/users/{userId}", h.removeUser, requireAdmin)
+	r.Get("/{id}/stats", h.stats, requireAdmin)
+}
+
+// failure is the group's error answer: {"error":"..."}.
+type failure struct {
+	Error string `json:"error"`
+}
+
+func fail(w http.ResponseWriter, r *http.Request, status int, message string) {
+	kit.JSON(w, r, status, failure{Error: message})
+}
+
+// done is {"ok":true} or {"ok":false}.
+type done struct {
+	OK bool `json:"ok"`
+}
+
+// requireAdmin lets super_admin, admin and global_admin through. Everyone
+// else gets 403, also someone who is not signed in.
+func requireAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		role := ""
+		if user := kit.User(r); user != nil {
+			role = user.Role
+		}
+		if access.IsSuperAdminRole(role) || role == "global_admin" {
+			next.ServeHTTP(w, r)
+			return
+		}
+		fail(w, r, http.StatusForbidden, "Admin access required")
+	})
+}
+
+// number is Number(req.params[name]).
+func number(r *http.Request, name string) jsbind.Value {
+	return jsbind.Number(jsbind.ParseNumber(r.PathValue(name)))
+}
+
+// list answers GET /api/tenants.
+func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
+	tenants, err := listTenants(r.Context(), h.db)
+	if err != nil {
+		h.log.Error("GET / error:", err)
+		fail(w, r, http.StatusInternalServerError, "Failed to fetch tenants")
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, tenants)
+}
+
+// get answers GET /api/tenants/{id}.
+func (h *handlers) get(w http.ResponseWriter, r *http.Request) {
+	t, err := tenantByID(r.Context(), h.db, number(r, "id"))
+	if err != nil {
+		h.log.Error("GET /:id error:", err)
+		fail(w, r, http.StatusInternalServerError, "Failed to fetch tenant")
+		return
+	}
+	if t == nil {
+		fail(w, r, http.StatusNotFound, "Tenant not found")
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, t)
+}
+
+var (
+	notSlugChars = regexp.MustCompile(`[^a-z0-9]+`)
+	slugEdges    = regexp.MustCompile(`^-|-$`)
+)
+
+// slugOf makes a slug from a tenant's name: lower case, every run of
+// other characters than a to z and 0 to 9 a dash, no dash at the ends.
+func slugOf(name string) string {
+	return slugEdges.ReplaceAllString(notSlugChars.ReplaceAllString(jsbind.ToLower(name), "-"), "")
+}
+
+// create answers POST /api/tenants with the body
+// {name, slug?, contact_name?, contact_email?, max_devices?, notes?}.
+// Only the name is checked. A slug that is taken is 409 on SQLite; on
+// PostgreSQL it is the 500 of every other failure, because the route
+// looked for "UNIQUE" in the error's text and PostgreSQL words it
+// differently.
+func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
+	body := kit.Body(r)
+	name, isText := body.String("name")
+	name = jsbind.Trim(name)
+	if !isText || name == "" {
+		fail(w, r, http.StatusBadRequest, "Tenant name is required")
+		return
+	}
+	empty := jsbind.String("")
+	t, err := createTenant(r.Context(), h.db, newTenant{
+		Name:         jsbind.String(name),
+		Slug:         jsbind.Of(body.Get("slug")).Or(jsbind.String(slugOf(name))),
+		ContactName:  jsbind.Of(body.Get("contact_name")).Or(empty),
+		ContactEmail: jsbind.Of(body.Get("contact_email")).Or(empty),
+		MaxDevices:   jsbind.Of(body.Get("max_devices")).Or(jsbind.Number(0)),
+		Notes:        jsbind.Of(body.Get("notes")).Or(empty),
+	})
+	if err != nil {
+		h.log.Error("POST / error:", err)
+		if strings.Contains(jsbind.Message(err), "UNIQUE") {
+			fail(w, r, http.StatusConflict, "Tenant slug already exists")
+			return
+		}
+		fail(w, r, http.StatusInternalServerError, "Failed to create tenant")
+		return
+	}
+	kit.JSON(w, r, http.StatusCreated, t)
+}
+
+// update answers PATCH /api/tenants/{id}: every member of the body that
+// names a column is written, null included. The answer is the row.
+func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
+	id := number(r, "id")
+	existing, err := tenantByID(r.Context(), h.db, id)
+	if err == nil && existing == nil {
+		fail(w, r, http.StatusNotFound, "Tenant not found")
+		return
+	}
+	var updated *tenant
+	if err == nil {
+		updated, err = updateTenant(r.Context(), h.db, id, h.changes(r))
+	}
+	if err != nil {
+		h.log.Error("PATCH /:id error:", err)
+		fail(w, r, http.StatusInternalServerError, "Failed to update tenant")
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, updated)
+}
+
+// changes lists the columns a PATCH body sets, in the order the update
+// statement names them. active is written by its truth: 1 or 0 on SQLite,
+// true or false on PostgreSQL.
+func (h *handlers) changes(r *http.Request) []tenantChange {
+	body := kit.Body(r)
+	var changes []tenantChange
+	for _, column := range []string{"name", "slug", "contact_name", "contact_email", "max_devices", "notes"} {
+		if body.Has(column) {
+			changes = append(changes, tenantChange{column, jsbind.Of(body.Get(column))})
+		}
+	}
+	if body.Has("active") {
+		active := body.Truthy("active")
+		value := jsbind.Bool(active)
+		if !h.db.IsPostgres() {
+			value = jsbind.Number(0)
+			if active {
+				value = jsbind.Number(1)
+			}
+		}
+		changes = append(changes, tenantChange{"active", value})
+	}
+	return changes
+}
+
+// remove answers DELETE /api/tenants/{id}.
+func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
+	ok, err := deleteTenant(r.Context(), h.db, number(r, "id"))
+	if err != nil {
+		h.log.Error("DELETE /:id error:", err)
+		fail(w, r, http.StatusInternalServerError, "Failed to delete tenant")
+		return
+	}
+	if !ok {
+		fail(w, r, http.StatusNotFound, "Tenant not found")
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, done{OK: true})
+}
+
+// devices answers GET /api/tenants/{id}/devices. A tenant that does not
+// exist has no devices.
+func (h *handlers) devices(w http.ResponseWriter, r *http.Request) {
+	devices, err := tenantDevices(r.Context(), h.db, number(r, "id"))
+	if err != nil {
+		h.log.Error("GET /:id/devices error:", err)
+		fail(w, r, http.StatusInternalServerError, "Failed to fetch tenant devices")
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, devices)
+}
+
+type assigned struct {
+	OK       bool `json:"ok"`
+	Assigned int  `json:"assigned"`
+}
+
+// assignDevices answers POST /api/tenants/{id}/devices with the body
+// {device_id} or {device_ids: [...]}. It counts the assignments that went
+// through, also those that were there before.
+func (h *handlers) assignDevices(w http.ResponseWriter, r *http.Request) {
+	tenantID := number(r, "id")
+	t, err := tenantByID(r.Context(), h.db, tenantID)
+	if err == nil && t == nil {
+		fail(w, r, http.StatusNotFound, "Tenant not found")
+		return
+	}
+	var ids []jsbind.Value
+	var none bool
+	if err == nil {
+		ids, none, err = deviceIDs(kit.Body(r).Get("device_ids"), kit.Body(r).Get("device_id"))
+	}
+	if err != nil {
+		h.log.Error("POST /:id/devices error:", err)
+		fail(w, r, http.StatusInternalServerError, "Failed to assign devices")
+		return
+	}
+	if none {
+		fail(w, r, http.StatusBadRequest, "device_id or device_ids required")
+		return
+	}
+	count := 0
+	for _, id := range ids {
+		if assignDevice(r.Context(), h.db, tenantID, id) {
+			count++
+		}
+	}
+	kit.JSON(w, r, http.StatusOK, assigned{OK: true, Assigned: count})
+}
+
+// errNotIterable is the TypeError of a for...of loop over a value that is
+// no list and no text.
+type errNotIterable struct{ value string }
+
+func (e errNotIterable) Error() string { return e.value + " is not iterable" }
+
+// deviceIDs is what the route loops over:
+//
+//	ids = body.device_ids || (body.device_id ? [body.device_id] : [])
+//
+// device_ids is taken when it is anything but empty. A list gives its
+// elements and a text its characters. none is true when ids.length is 0:
+// an empty list, or an object with a member "length" of 0. Any other
+// value cannot be looped over, which is an error.
+func deviceIDs(many, single middleware.Value) (ids []jsbind.Value, none bool, err error) {
+	list := jsbind.Of(many)
+	if !list.Truthy() {
+		if one := jsbind.Of(single); one.Truthy() {
+			return []jsbind.Value{one}, false, nil
+		}
+		return nil, true, nil
+	}
+	switch {
+	case list.IsArray():
+		return list.Items(), len(list.Items()) == 0, nil
+	case list.IsString():
+		for _, char := range list.Str() {
+			ids = append(ids, jsbind.String(string(char)))
+		}
+		return ids, false, nil
+	case list.IsObject():
+		if length := list.Member("length"); length.IsNumber() && length.ToNumber() == 0 {
+			return nil, true, nil
+		}
+	}
+	return nil, false, errNotIterable{list.ToString()}
+}
+
+// removeDevice answers DELETE /api/tenants/{id}/devices/{deviceId}.
+func (h *handlers) removeDevice(w http.ResponseWriter, r *http.Request) {
+	ok, err := removeDevice(r.Context(), h.db, number(r, "id"), r.PathValue("deviceId"))
+	if err != nil {
+		h.log.Error("DELETE /:id/devices/:deviceId error:", err)
+		fail(w, r, http.StatusInternalServerError, "Failed to remove device")
+		return
+	}
+	if !ok {
+		fail(w, r, http.StatusNotFound, "Assignment not found")
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, done{OK: true})
+}
+
+// users answers GET /api/tenants/{id}/users.
+func (h *handlers) users(w http.ResponseWriter, r *http.Request) {
+	users, err := tenantUsers(r.Context(), h.db, number(r, "id"))
+	if err != nil {
+		h.log.Error("GET /:id/users error:", err)
+		fail(w, r, http.StatusInternalServerError, "Failed to fetch tenant users")
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, users)
+}
+
+// assignUser answers POST /api/tenants/{id}/users with the body
+// {user_id}. The answer says whether the row was written: {"ok":false}
+// for a tenant that does not exist or an id the database does not take.
+func (h *handlers) assignUser(w http.ResponseWriter, r *http.Request) {
+	userID := jsbind.Of(kit.Body(r).Get("user_id"))
+	if !userID.Truthy() {
+		fail(w, r, http.StatusBadRequest, "user_id required")
+		return
+	}
+	ok := assignUser(r.Context(), h.db, number(r, "id"), jsbind.Number(userID.ToNumber()))
+	kit.JSON(w, r, http.StatusOK, done{OK: ok})
+}
+
+// removeUser answers DELETE /api/tenants/{id}/users/{userId}.
+func (h *handlers) removeUser(w http.ResponseWriter, r *http.Request) {
+	ok, err := removeUser(r.Context(), h.db, number(r, "id"), number(r, "userId"))
+	if err != nil {
+		h.log.Error("DELETE /:id/users/:userId error:", err)
+		fail(w, r, http.StatusInternalServerError, "Failed to remove user")
+		return
+	}
+	if !ok {
+		fail(w, r, http.StatusNotFound, "Assignment not found")
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, done{OK: true})
+}
+
+type stats struct {
+	TenantID      jsbind.Cell `json:"tenant_id"`
+	TenantName    string      `json:"tenant_name"`
+	TotalDevices  int         `json:"total_devices"`
+	OnlineDevices int         `json:"online_devices"`
+	TotalUsers    int         `json:"total_users"`
+	MaxDevices    jsbind.Cell `json:"max_devices"`
+}
+
+// stats answers GET /api/tenants/{id}/stats.
+func (h *handlers) stats(w http.ResponseWriter, r *http.Request) {
+	tenantID := number(r, "id")
+	t, err := tenantByID(r.Context(), h.db, tenantID)
+	if err == nil && t == nil {
+		fail(w, r, http.StatusNotFound, "Tenant not found")
+		return
+	}
+	var devices []tenantDevice
+	var users []tenantUser
+	if err == nil {
+		devices, err = tenantDevices(r.Context(), h.db, tenantID)
+	}
+	if err == nil {
+		users, err = tenantUsers(r.Context(), h.db, tenantID)
+	}
+	if err != nil {
+		h.log.Error("GET /:id/stats error:", err)
+		fail(w, r, http.StatusInternalServerError, "Failed to fetch tenant stats")
+		return
+	}
+	online := 0
+	for _, device := range devices {
+		if device.Online {
+			online++
+		}
+	}
+	// tenant.max_devices || 0
+	maxDevices := t.MaxDevices
+	if !maxDevices.Value().Truthy() {
+		maxDevices = jsbind.CellOf(int64(0))
+	}
+	kit.JSON(w, r, http.StatusOK, stats{
+		TenantID:      jsbind.CellOf(tenantID.ToNumber()),
+		TenantName:    t.Name,
+		TotalDevices:  len(devices),
+		OnlineDevices: online,
+		TotalUsers:    len(users),
+		MaxDevices:    maxDevices,
+	})
+}

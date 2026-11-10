@@ -6,6 +6,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/chat"
 	consoleroutes "github.com/unitronix/betterdesk-server/console/routes/console"
 	"github.com/unitronix/betterdesk-server/console/routes/dashboard"
+	"github.com/unitronix/betterdesk-server/console/routes/dataguard"
 	"github.com/unitronix/betterdesk-server/console/routes/fleet"
 	"github.com/unitronix/betterdesk-server/console/routes/health"
 	i18nroutes "github.com/unitronix/betterdesk-server/console/routes/i18n"
@@ -15,6 +16,8 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/pairing"
 	"github.com/unitronix/betterdesk-server/console/routes/policies"
 	"github.com/unitronix/betterdesk-server/console/routes/resourcecontrol"
+	"github.com/unitronix/betterdesk-server/console/routes/tenants"
+	"github.com/unitronix/betterdesk-server/console/routes/tickets"
 	"github.com/unitronix/betterdesk-server/console/routes/uishell"
 )
 
@@ -26,12 +29,19 @@ import (
 // Groups of the early stage (routes/rustdesk-api.routes.js, then
 // routes/bd-api.routes.js at /api/bd) register on d.Early and go first.
 func registerRoutes(d *kit.Deps) {
-	health.Register(d)                        // routes/index.js: GET /health
-	consoleroutes.Register(d)                 // routes/console.routes.js: the strings endpoint
-	dashboard.Register(d)                     // routes/dashboard.routes.js
-	keys.Register(d)                          // routes/keys.routes.js
-	uishell.Register(d)                       // routes/ui-shell.routes.js
-	i18nroutes.Register(d)                    // routes/i18n.routes.js at /api/i18n
+	health.Register(d)        // routes/index.js: GET /health
+	consoleroutes.Register(d) // routes/console.routes.js: the strings endpoint
+	dashboard.Register(d)     // routes/dashboard.routes.js
+	keys.Register(d)          // routes/keys.routes.js
+	uishell.Register(d)       // routes/ui-shell.routes.js
+	i18nroutes.Register(d)    // routes/i18n.routes.js at /api/i18n
+	// routes/tickets.routes.js at /api/tickets, without the device routes /api/tickets/bd
+	tickets.Register(d.At("/api/tickets"))
+	// routes/dataguard.routes.js at /api/dataguard and at /api/bd, without the device routes dlp-policies and dlp-events
+	dataguard.Register(d.At("/api/dataguard"))
+	dataguard.Register(d.At("/api/bd"))
+	// routes/tenants.routes.js at /api/tenants
+	tenants.Register(d.At("/api/tenants"))
 	meshcentral.Register(d)                   // routes/meshcentral.routes.js
 	chat.Register(d)                          // routes/chat.routes.js
 	policies.Register(d)                      // routes/policies.routes.js

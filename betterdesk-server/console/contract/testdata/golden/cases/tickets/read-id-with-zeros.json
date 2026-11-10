@@ -1,0 +1,721 @@
+{
+ "id": "tickets/read-id-with-zeros",
+ "request": {
+  "method": "GET",
+  "path": "/api/tickets/000{ticket}"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Authentication required"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "attachments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "comments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "sla_due_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "assigned_to": "e2e_viewer",
+     "attachments": [
+      {
+       "created_at": "<volatile>",
+       "filename": "re_port__.txt",
+       "id": 3,
+       "mimetype": "text/plain",
+       "size_bytes": 12,
+       "uploaded_by": "e2e_admin"
+      }
+     ],
+     "category": "network",
+     "closed_at": null,
+     "comments": [
+      {
+       "author": "e2e_admin",
+       "body": "A public note",
+       "created_at": "<volatile>",
+       "id": 12,
+       "is_internal": 0,
+       "ticket_id": 12
+      },
+      {
+       "author": "e2e_admin",
+       "body": "An internal note",
+       "created_at": "<volatile>",
+       "id": 13,
+       "is_internal": 1,
+       "ticket_id": 12
+      }
+     ],
+     "created_at": "<volatile>",
+     "created_by": "e2e_admin",
+     "description": "Made by the contract cases",
+     "device_id": "900100001",
+     "id": 12,
+     "priority": "high",
+     "resolved_at": null,
+     "sla_due_at": "<volatile>",
+     "status": "open",
+     "title": "Contract ticket",
+     "updated_at": "<volatile>"
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "attachments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "comments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "sla_due_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "assigned_to": "e2e_viewer",
+     "attachments": [
+      {
+       "created_at": "<volatile>",
+       "filename": "re_port__.txt",
+       "id": 4,
+       "mimetype": "text/plain",
+       "size_bytes": 12,
+       "uploaded_by": "e2e_admin"
+      }
+     ],
+     "category": "network",
+     "closed_at": null,
+     "comments": [
+      {
+       "author": "e2e_admin",
+       "body": "A public note",
+       "created_at": "<volatile>",
+       "id": 14,
+       "is_internal": 0,
+       "ticket_id": 13
+      }
+     ],
+     "created_at": "<volatile>",
+     "created_by": "e2e_admin",
+     "description": "Made by the contract cases",
+     "device_id": "900100001",
+     "id": 13,
+     "priority": "high",
+     "resolved_at": null,
+     "sla_due_at": "<volatile>",
+     "status": "open",
+     "title": "Contract ticket",
+     "updated_at": "<volatile>"
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "attachments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "comments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "sla_due_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "assigned_to": "e2e_viewer",
+     "attachments": [
+      {
+       "created_at": "<volatile>",
+       "filename": "re_port__.txt",
+       "id": 5,
+       "mimetype": "text/plain",
+       "size_bytes": 12,
+       "uploaded_by": "e2e_admin"
+      }
+     ],
+     "category": "network",
+     "closed_at": null,
+     "comments": [
+      {
+       "author": "e2e_admin",
+       "body": "A public note",
+       "created_at": "<volatile>",
+       "id": 16,
+       "is_internal": 0,
+       "ticket_id": 14
+      },
+      {
+       "author": "e2e_admin",
+       "body": "An internal note",
+       "created_at": "<volatile>",
+       "id": 17,
+       "is_internal": 1,
+       "ticket_id": 14
+      }
+     ],
+     "created_at": "<volatile>",
+     "created_by": "e2e_admin",
+     "description": "Made by the contract cases",
+     "device_id": "900100001",
+     "id": 14,
+     "priority": "high",
+     "resolved_at": null,
+     "sla_due_at": "<volatile>",
+     "status": "open",
+     "title": "Contract ticket",
+     "updated_at": "<volatile>"
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "attachments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "comments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "sla_due_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "assigned_to": "e2e_viewer",
+     "attachments": [
+      {
+       "created_at": "<volatile>",
+       "filename": "re_port__.txt",
+       "id": 9,
+       "mimetype": "text/plain",
+       "size_bytes": 12,
+       "uploaded_by": "e2e_admin"
+      }
+     ],
+     "category": "network",
+     "closed_at": null,
+     "comments": [
+      {
+       "author": "e2e_admin",
+       "body": "A public note",
+       "created_at": "<volatile>",
+       "id": 19,
+       "is_internal": 0,
+       "ticket_id": 16
+      },
+      {
+       "author": "e2e_admin",
+       "body": "An internal note",
+       "created_at": "<volatile>",
+       "id": 20,
+       "is_internal": 1,
+       "ticket_id": 16
+      }
+     ],
+     "created_at": "<volatile>",
+     "created_by": "e2e_admin",
+     "description": "Made by the contract cases",
+     "device_id": "900100001",
+     "id": 16,
+     "priority": "high",
+     "resolved_at": null,
+     "sla_due_at": "<volatile>",
+     "status": "open",
+     "title": "Contract ticket",
+     "updated_at": "<volatile>"
+    }
+   }
+  },
+  {
+   "roles": [
+    "server_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "attachments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "comments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "sla_due_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "assigned_to": "e2e_viewer",
+     "attachments": [
+      {
+       "created_at": "<volatile>",
+       "filename": "re_port__.txt",
+       "id": 13,
+       "mimetype": "text/plain",
+       "size_bytes": 12,
+       "uploaded_by": "e2e_admin"
+      }
+     ],
+     "category": "network",
+     "closed_at": null,
+     "comments": [
+      {
+       "author": "e2e_admin",
+       "body": "A public note",
+       "created_at": "<volatile>",
+       "id": 22,
+       "is_internal": 0,
+       "ticket_id": 18
+      },
+      {
+       "author": "e2e_admin",
+       "body": "An internal note",
+       "created_at": "<volatile>",
+       "id": 23,
+       "is_internal": 1,
+       "ticket_id": 18
+      }
+     ],
+     "created_at": "<volatile>",
+     "created_by": "e2e_admin",
+     "description": "Made by the contract cases",
+     "device_id": "900100001",
+     "id": 18,
+     "priority": "high",
+     "resolved_at": null,
+     "sla_due_at": "<volatile>",
+     "status": "open",
+     "title": "Contract ticket",
+     "updated_at": "<volatile>"
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "attachments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "comments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "sla_due_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "assigned_to": "e2e_viewer",
+     "attachments": [
+      {
+       "created_at": "<volatile>",
+       "filename": "re_port__.txt",
+       "id": 14,
+       "mimetype": "text/plain",
+       "size_bytes": 12,
+       "uploaded_by": "e2e_admin"
+      }
+     ],
+     "category": "network",
+     "closed_at": null,
+     "comments": [
+      {
+       "author": "e2e_admin",
+       "body": "A public note",
+       "created_at": "<volatile>",
+       "id": 24,
+       "is_internal": 0,
+       "ticket_id": 19
+      },
+      {
+       "author": "e2e_admin",
+       "body": "An internal note",
+       "created_at": "<volatile>",
+       "id": 25,
+       "is_internal": 1,
+       "ticket_id": 19
+      }
+     ],
+     "created_at": "<volatile>",
+     "created_by": "e2e_admin",
+     "description": "Made by the contract cases",
+     "device_id": "900100001",
+     "id": 19,
+     "priority": "high",
+     "resolved_at": null,
+     "sla_due_at": "<volatile>",
+     "status": "open",
+     "title": "Contract ticket",
+     "updated_at": "<volatile>"
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "attachments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "comments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "sla_due_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "assigned_to": "e2e_viewer",
+     "attachments": [
+      {
+       "created_at": "<volatile>",
+       "filename": "re_port__.txt",
+       "id": 18,
+       "mimetype": "text/plain",
+       "size_bytes": 12,
+       "uploaded_by": "e2e_admin"
+      }
+     ],
+     "category": "network",
+     "closed_at": null,
+     "comments": [
+      {
+       "author": "e2e_admin",
+       "body": "A public note",
+       "created_at": "<volatile>",
+       "id": 27,
+       "is_internal": 0,
+       "ticket_id": 21
+      },
+      {
+       "author": "e2e_admin",
+       "body": "An internal note",
+       "created_at": "<volatile>",
+       "id": 28,
+       "is_internal": 1,
+       "ticket_id": 21
+      }
+     ],
+     "created_at": "<volatile>",
+     "created_by": "e2e_admin",
+     "description": "Made by the contract cases",
+     "device_id": "900100001",
+     "id": 21,
+     "priority": "high",
+     "resolved_at": null,
+     "sla_due_at": "<volatile>",
+     "status": "open",
+     "title": "Contract ticket",
+     "updated_at": "<volatile>"
+    }
+   }
+  }
+ ]
+}
