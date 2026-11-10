@@ -1,0 +1,80 @@
+{
+ "id": "cross-platform/capabilities-id-with-spaces-around",
+ "request": {
+  "method": "GET",
+  "path": "/api/panel/cross-platform/capabilities/%20900100014%20"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "viewer",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "last_online",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "banned": false,
+     "cdap_connected": false,
+     "created_at": "<volatile>",
+     "device_type": "rustdesk",
+     "disabled": false,
+     "display_name": "",
+     "hostname": "demo-backup-nas",
+     "id": "900100014",
+     "ip": "10.0.2.33",
+     "last_online": "<volatile>",
+     "live_online": false,
+     "live_status": "OFFLINE",
+     "mesh_connected": false,
+     "nat_type": 0,
+     "os": "Linux 6.1",
+     "pk": null,
+     "platform": "Linux 6.1",
+     "signal_ready": false,
+     "soft_deleted": false,
+     "status": 1,
+     "status_text": "OFFLINE",
+     "tags": "server,storage",
+     "user": "demo.ops",
+     "uuid": "demo-uuid-900100014",
+     "version": "1.3.8"
+    }
+   }
+  }
+ ]
+}

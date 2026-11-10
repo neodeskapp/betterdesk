@@ -11,12 +11,10 @@ const devicesRoutes = require('./devices.routes');
 const settingsRoutes = require('./settings.routes');
 const generatorRoutes = require('./generator.routes');
 const usersRoutes = require('./users.routes');
-const panelAccessRoutes = require('./panel-access.routes');
 const foldersRoutes = require('./folders.routes');
 const remoteRoutes = require('./remote.routes');
 // bdApiRoutes mounted in server.js (before CSRF) for desktop client access
 const pagesRoutes = require('./pages.routes');
-const desktopRoutes = require('./desktop.routes');
 const registrationRoutes = require('./registration.routes');
 
 /**
@@ -41,15 +39,11 @@ const networkRoutes = lazyRoute('./network.routes');
 const dataguardRoutes = lazyRoute('./dataguard.routes');
 const reportsRoutes = lazyRoute('./reports.routes');
 const cdapRoutes = lazyRoute('./cdap.routes');
-const tokensRoutes = lazyRoute('./tokens.routes');
 const organizationsRoutes = lazyRoute('./organizations.routes');
 const policiesRoutes = lazyRoute('./policies.routes');
 const fleetRoutes = lazyRoute('./fleet.routes');
 const commercializationRoutes = lazyRoute('./commercialization.routes');
-const crossPlatformRoutes = lazyRoute('./cross-platform.routes');
-const securityAuditRoutes = lazyRoute('./security-audit.routes');
 const resourceControlRoutes = lazyRoute('./resource-control.routes');
-const permissionsRoutes = lazyRoute('./permissions.routes');
 const phase45Routes = lazyRoute('./phase4_5.routes');
 const serverManagementRoutes = lazyRoute('./server-management.routes');
 const serverAttestationRoutes = lazyRoute('./server-attestation.routes');
@@ -69,7 +63,6 @@ router.use('/', generatorRoutes);
 router.use('/', require('./client-branding.routes'));
 router.use('/', require('./avatars.routes'));    // profile pictures: /api/users/avatars, /api/users/:id/avatar
 router.use('/', usersRoutes);
-router.use('/', panelAccessRoutes);
 router.use('/', foldersRoutes);
 router.use('/', remoteRoutes);
 router.use('/', require('./guest.routes'));
@@ -86,25 +79,19 @@ router.use('/api/bd', fileTransferRoutes);       // device-facing: /api/bd/file-
 router.use('/api/network', networkRoutes);       // admin-facing: /api/network/*
 router.use('/api/dataguard', dataguardRoutes);   // device-facing, second address: /api/dataguard/dlp-policies, /api/dataguard/dlp-events (policies, events and stats are in the Go console)
 router.use('/api/bd', dataguardRoutes);          // device-facing: /api/bd/dlp-policies, /api/bd/dlp-events
-router.use('/', lazyRoute('./trends.routes'));   // admin-facing: /api/reports/trends (before the reports router)
 router.use('/api/reports', reportsRoutes);       // admin-facing: /api/reports/*
 router.use('/', registrationRoutes);               // admin-facing: /registrations, /api/registrations/*
 router.use('/api/bd', registrationRoutes);          // device-facing: /api/bd/register-request, /api/bd/register-status
 router.use('/', pagesRoutes);                          // page routes: /inventory, /tickets, /automation, etc.
 router.use('/', cdapRoutes);                            // admin-facing: /cdap/devices/:id, /api/cdap/*
-router.use('/', tokensRoutes);                          // admin-facing: /tokens, /api/panel/tokens/*
-router.use('/api/desktop', desktopRoutes);               // admin-facing: /api/desktop/layout, /api/desktop/wallpapers
 router.use('/', organizationsRoutes);                    // admin-facing: /organizations, /api/panel/org/*
 router.use('/', policiesRoutes);                         // device-facing: /api/bd/device-policy, /api/bd/attestation
 router.use('/api/bd', policiesRoutes);                   // the same two under /api/bd/api/bd/
 router.use('/', fleetRoutes);                            // device-facing: /api/bd/fleet/task-result, /api/bd/fleet/software
 router.use('/', commercializationRoutes);                // admin-facing: /commercialization, /api/panel/billing/*
 router.use('/api/bd', fleetRoutes);                      // the same two under /api/bd/api/bd/fleet/
-router.use('/', crossPlatformRoutes);                    // admin-facing: /cross-platform, /api/panel/cross-platform/*
-router.use('/', securityAuditRoutes);                        // admin-facing: /security-audit, /api/panel/security-audit/*
 router.use('/', resourceControlRoutes);                      // device-facing: /api/bd/resource-policy
 router.use('/api/bd', resourceControlRoutes);                 // the same under /api/bd/api/bd/
-router.use('/', permissionsRoutes);                      // admin-facing: /permissions, /api/panel/roles/*, /api/panel/role-permissions/*
 router.use('/', serverManagementRoutes);                 // admin-facing: /server-management, /api/server-management/* (BETA)
 router.use('/', serverAttestationRoutes);                // admin-facing: /server-attestation, /api/server-attestation/*
 router.use('/', phase45Routes);                          // Phase 4/5: /api/users/me/profile, /api/agent-templates, /portal

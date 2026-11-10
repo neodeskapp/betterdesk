@@ -1,0 +1,231 @@
+// Package panelaccess answers the panel access routes: the catalog of
+// sections and client features, the signed-in account's effective policy,
+// and the stored policy of an account or a user group, which user
+// managers read and replace. The rules live in console/access.
+package panelaccess
+
+import (
+	"math"
+	"net/http"
+
+	"github.com/unitronix/betterdesk-server/console/access"
+	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+)
+
+type handlers struct {
+	d   *kit.Deps
+	log *kit.Logger
+}
+
+// Register adds the group's routes.
+func Register(d *kit.Deps) {
+	h := &handlers{d: d, log: d.Log.Child("PANEL-ACCESS")}
+	r := d.Router
+	view, edit := d.RequirePermission("user.view"), d.RequirePermission("user.edit")
+	r.Get("/api/panel/access/catalog", h.catalog, d.RequireAuth, view)
+	r.Get("/api/panel/access/effective", h.effective, d.RequireAuth)
+	r.Get("/api/panel/access/users/{id}", h.user, d.RequireAuth, view)
+	r.Put("/api/panel/access/users/{id}", h.saveUser, d.RequireAuth, edit)
+	r.Get("/api/panel/access/groups/{guid}", h.group, d.RequireAuth, view)
+	r.Put("/api/panel/access/groups/{guid}", h.saveGroup, d.RequireAuth, edit)
+}
+
+// fail answers an error: one with a status of its own (not found, a
+// refused subject) with its text, everything else with 500 and the general
+// message. The cause of a 500 goes to the log.
+func (h *handlers) fail(w http.ResponseWriter, r *http.Request, err error) {
+	status := access.ErrorStatus(err)
+	if status == http.StatusInternalServerError {
+		h.log.Error("Panel access error:", err)
+		kit.Fail(w, r, status, kit.T(r, "errors.server_error", nil))
+		return
+	}
+	kit.Fail(w, r, status, err.Error())
+}
+
+// catalog answers GET /api/panel/access/catalog.
+func (h *handlers) catalog(w http.ResponseWriter, r *http.Request) {
+	kit.OK(w, r, access.GetCatalog())
+}
+
+// effective answers GET /api/panel/access/effective: what the signed-in
+// account may use, resolved now.
+func (h *handlers) effective(w http.ResponseWriter, r *http.Request) {
+	who := access.PolicyUser{ID: kit.UserID(r)}
+	if user := kit.User(r); user != nil {
+		who.Role = user.Role
+	}
+	policy, err := h.d.Access.ResolveForUser(r.Context(), who)
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
+	kit.OK(w, r, policy)
+}
+
+// userID is Number.parseInt(id, 10) of the id in the path. ok is false
+// for text that starts with no number and for a number no id can be.
+func userID(r *http.Request) (id int64, ok bool) {
+	n, isNumber := jsreq.ParseInt(r.PathValue("id"), 10)
+	if !isNumber || math.Abs(n) >= 1<<63 {
+		return 0, false
+	}
+	return int64(n), true
+}
+
+// findUser loads the account of the id in the path, and answers 404 when
+// there is none. An id that is no number finds no account on SQLite; on
+// PostgreSQL the query fails on it, which is a 500.
+func (h *handlers) findUser(w http.ResponseWriter, r *http.Request) (*access.PolicyUser, bool) {
+	id, ok := userID(r)
+	if !ok && h.d.Store.IsPostgres() {
+		kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
+		return nil, false
+	}
+	var user *access.PolicyUser
+	if ok {
+		var err error
+		if user, err = h.d.Access.PolicyUserByID(r.Context(), id); err != nil {
+			h.fail(w, r, err)
+			return nil, false
+		}
+	}
+	if user == nil {
+		kit.Fail(w, r, http.StatusNotFound, kit.T(r, "users.not_found", nil))
+		return nil, false
+	}
+	return user, true
+}
+
+type userPolicy struct {
+	UserID    int64               `json:"user_id"`
+	Sections  []access.SectionRow `json:"sections"`
+	Features  []access.FeatureRow `json:"features"`
+	Effective *access.Policy      `json:"effective"`
+}
+
+// user answers GET /api/panel/access/users/{id}: the rows stored for the
+// account and its effective policy.
+func (h *handlers) user(w http.ResponseWriter, r *http.Request) {
+	user, ok := h.findUser(w, r)
+	if !ok {
+		return
+	}
+	out := userPolicy{UserID: user.ID}
+	var err error
+	subject := jsreq.String(float64(user.ID))
+	if out.Sections, err = h.d.Access.PanelAccessPolicies(r.Context(), access.SubjectUser, subject); err == nil {
+		if out.Features, err = h.d.Access.ClientFeaturePolicies(r.Context(), access.SubjectUser, subject); err == nil {
+			out.Effective, err = h.d.Access.ResolveForUser(r.Context(), *user)
+		}
+	}
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
+	kit.OK(w, r, out)
+}
+
+// submitted is the "sections" and "features" of the body, as decoded JSON.
+// A body that is no object has neither.
+func submitted(r *http.Request) (sections, features any) {
+	var body map[string]any
+	if err := kit.Bind(r, &body); err != nil {
+		return nil, nil
+	}
+	return body["sections"], body["features"]
+}
+
+// saveUser answers PUT /api/panel/access/users/{id} with the body
+// {sections, features}: it replaces the account's stored rows. The answer
+// holds the rows as they were stored and the new effective policy.
+func (h *handlers) saveUser(w http.ResponseWriter, r *http.Request) {
+	user, ok := h.findUser(w, r)
+	if !ok {
+		return
+	}
+	subject := jsreq.String(float64(user.ID))
+	sections, features := submitted(r)
+	saved, err := h.d.Access.SavePolicy(r.Context(), access.SubjectUser, subject, sections, features)
+	if err == nil {
+		err = h.d.LogAction(r, "user_access_policy_updated", "Updated access policy for user "+subject)
+	}
+	out := userPolicy{UserID: user.ID, Sections: saved.Sections, Features: saved.Features}
+	if err == nil {
+		out.Effective, err = h.d.Access.ResolveForUser(r.Context(), *user)
+	}
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
+	kit.OK(w, r, out)
+}
+
+// findGroup loads the user group of the guid in the path, and answers 404
+// when there is none.
+func (h *handlers) findGroup(w http.ResponseWriter, r *http.Request) (*access.UserGroup, bool) {
+	group, err := h.d.Access.UserGroupByGUID(r.Context(), r.PathValue("guid"))
+	if err != nil {
+		h.fail(w, r, err)
+		return nil, false
+	}
+	if group == nil {
+		kit.Fail(w, r, http.StatusNotFound, kit.T(r, "users.user_group_not_found", nil))
+		return nil, false
+	}
+	return group, true
+}
+
+type groupPolicy struct {
+	GroupGUID string              `json:"group_guid"`
+	Sections  []access.SectionRow `json:"sections"`
+	Features  []access.FeatureRow `json:"features"`
+	Effective *access.Policy      `json:"effective"`
+}
+
+// group answers GET /api/panel/access/groups/{guid}: the rows stored for
+// the user group and its policy filled up with defaults.
+func (h *handlers) group(w http.ResponseWriter, r *http.Request) {
+	group, ok := h.findGroup(w, r)
+	if !ok {
+		return
+	}
+	guid := r.PathValue("guid")
+	out := groupPolicy{GroupGUID: guid}
+	var err error
+	if out.Sections, err = h.d.Access.PanelAccessPolicies(r.Context(), access.SubjectGroup, guid); err == nil {
+		if out.Features, err = h.d.Access.ClientFeaturePolicies(r.Context(), access.SubjectGroup, guid); err == nil {
+			out.Effective, err = h.d.Access.ResolveForGroup(r.Context(), group.GUID)
+		}
+	}
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
+	kit.OK(w, r, out)
+}
+
+// saveGroup answers PUT /api/panel/access/groups/{guid} with the body
+// {sections, features}: it replaces the user group's stored rows.
+func (h *handlers) saveGroup(w http.ResponseWriter, r *http.Request) {
+	group, ok := h.findGroup(w, r)
+	if !ok {
+		return
+	}
+	guid := r.PathValue("guid")
+	sections, features := submitted(r)
+	saved, err := h.d.Access.SavePolicy(r.Context(), access.SubjectGroup, guid, sections, features)
+	if err == nil {
+		err = h.d.LogAction(r, "user_group_access_policy_updated", "Updated access policy for group "+guid)
+	}
+	out := groupPolicy{GroupGUID: guid, Sections: saved.Sections, Features: saved.Features}
+	if err == nil {
+		out.Effective, err = h.d.Access.ResolveForGroup(r.Context(), group.GUID)
+	}
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
+	kit.OK(w, r, out)
+}

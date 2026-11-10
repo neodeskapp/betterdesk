@@ -1,0 +1,212 @@
+{
+ "id": "security-audit/hardening",
+ "request": {
+  "method": "GET",
+  "path": "/api/panel/security-audit/hardening"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Permission denied: audit.view",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "priorities": [
+      {
+       "category": "network",
+       "description": "Replace plain HTTP localhost with mutual TLS authentication between web console and Go server.",
+       "id": "mutual_tls",
+       "implemented": false,
+       "name": "Mutual TLS Console ↔ Go Server",
+       "severity": "high"
+      },
+      {
+       "category": "auth",
+       "description": "Automatically rotate API keys every 30 days with a grace period for old keys.",
+       "id": "api_key_rotation",
+       "implemented": false,
+       "name": "API Key Auto-Rotation",
+       "severity": "high"
+      },
+      {
+       "category": "audit",
+       "description": "HMAC chain where each audit entry signs the previous — detects log tampering.",
+       "id": "audit_tamper",
+       "implemented": false,
+       "name": "Audit Log Tamper Detection",
+       "severity": "medium"
+      },
+      {
+       "category": "auth",
+       "description": "Server-enforced idle timeout and absolute max age for console sessions (SESSION_IDLE_TIMEOUT / SESSION_MAX_AGE).",
+       "id": "session_timeout",
+       "implemented": true,
+       "name": "Panel Idle and Absolute Session Timeout",
+       "severity": "medium"
+      },
+      {
+       "category": "auth",
+       "description": "A new console login ends the least recently active sessions beyond SESSION_MAX_PER_USER (currently 1) and records IP/User-Agent for audit.",
+       "id": "single_session",
+       "implemented": true,
+       "name": "Concurrent Panel Session Limit per Account",
+       "severity": "high"
+      },
+      {
+       "category": "network",
+       "description": "Restrict console and API access to specific IP ranges per organization.",
+       "id": "ip_allowlist",
+       "implemented": false,
+       "name": "IP Allowlisting",
+       "severity": "medium"
+      },
+      {
+       "category": "network",
+       "description": "Pin TLS certificates in desktop client to prevent MITM attacks.",
+       "id": "cert_pinning",
+       "implemented": false,
+       "name": "Certificate Pinning",
+       "severity": "low"
+      },
+      {
+       "category": "crypto",
+       "description": "Zeroize secrets in memory after use to prevent memory dump attacks.",
+       "id": "mem_safe_creds",
+       "implemented": false,
+       "name": "Memory-Safe Credential Handling",
+       "severity": "medium"
+      },
+      {
+       "category": "web",
+       "description": "Content Security Policy headers to prevent XSS and code injection.",
+       "id": "csp_headers",
+       "implemented": true,
+       "name": "CSP Headers Hardening",
+       "severity": "high"
+      },
+      {
+       "category": "network",
+       "description": "Review and enforce rate limiting on all public-facing endpoints.",
+       "id": "rate_limit_review",
+       "implemented": true,
+       "name": "Rate Limiting Review",
+       "severity": "medium"
+      },
+      {
+       "category": "infra",
+       "description": "Automated vulnerability scanning of Docker images using Trivy in CI/CD pipeline.",
+       "id": "docker_scan",
+       "implemented": false,
+       "name": "Docker Image Scanning",
+       "severity": "medium"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

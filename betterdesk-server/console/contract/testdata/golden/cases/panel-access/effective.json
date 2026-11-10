@@ -1,0 +1,1384 @@
+{
+ "id": "panel-access/effective",
+ "request": {
+  "method": "GET",
+  "path": "/api/panel/access/effective"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "panel_access_denied",
+     "error": "Panel access denied: users",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "features": {
+       "audio": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "client_actions": {
+        "enabled": false,
+        "hard_lock": true,
+        "source": "default"
+       },
+       "clipboard": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "file_transfer": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "port_forwarding": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "privacy_mode": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "reboot": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "remote_control": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "terminal": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "tunnel": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       }
+      },
+      "groups": [],
+      "sections": {
+       "activity": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "agents": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "automation": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "cdap": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "chat": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "commercialization": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "cross-platform": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "dashboard": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "dataguard": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "devices": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "files": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "fleet": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "folders": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "guests": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "help-requests": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "languages": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "network": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "organizations": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "permissions": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "registrations": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "remote": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "reports": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "resource-control": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "scaling": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "security-audit": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "server-attestation": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "server-management": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "settings": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "strategies": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "system": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "tickets": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "toolkit": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "users": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       }
+      },
+      "subject_id": "9",
+      "subject_type": "user"
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "features": {
+       "audio": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "client_actions": {
+        "enabled": false,
+        "hard_lock": true,
+        "source": "default"
+       },
+       "clipboard": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "file_transfer": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "port_forwarding": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "privacy_mode": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "reboot": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "remote_control": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "terminal": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "tunnel": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       }
+      },
+      "groups": [],
+      "sections": {
+       "activity": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "agents": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "automation": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "cdap": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "chat": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "commercialization": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "cross-platform": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "dashboard": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "dataguard": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "devices": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "files": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "fleet": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "folders": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "guests": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "help-requests": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "languages": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "network": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "organizations": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "permissions": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "registrations": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "remote": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "reports": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "resource-control": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "scaling": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "security-audit": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "server-attestation": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "server-management": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "settings": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "strategies": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "system": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "tickets": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "toolkit": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "users": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       }
+      },
+      "subject_id": "8",
+      "subject_type": "user"
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "server_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "features": {
+       "audio": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "client_actions": {
+        "enabled": false,
+        "hard_lock": true,
+        "source": "default"
+       },
+       "clipboard": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "file_transfer": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "port_forwarding": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "privacy_mode": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "reboot": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "remote_control": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "terminal": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "tunnel": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       }
+      },
+      "groups": [],
+      "sections": {
+       "activity": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "agents": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "automation": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "cdap": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "chat": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "commercialization": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "cross-platform": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "dashboard": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "dataguard": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "devices": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "files": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "fleet": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "folders": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "guests": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "help-requests": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "languages": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "network": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "organizations": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "permissions": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "registrations": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "remote": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "reports": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "resource-control": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "scaling": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "security-audit": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "server-attestation": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "server-management": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "settings": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "strategies": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "system": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "tickets": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       },
+       "toolkit": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
+       "users": {
+        "access": "read",
+        "role_ceiling": "read",
+        "source": "role"
+       }
+      },
+      "subject_id": "7",
+      "subject_type": "user"
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "features": {
+       "audio": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "client_actions": {
+        "enabled": false,
+        "hard_lock": true,
+        "source": "default"
+       },
+       "clipboard": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "file_transfer": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "port_forwarding": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "privacy_mode": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "reboot": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "remote_control": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "terminal": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "tunnel": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       }
+      },
+      "groups": [],
+      "sections": {
+       "activity": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "agents": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "automation": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "cdap": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "chat": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "commercialization": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "cross-platform": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "dashboard": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "dataguard": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "devices": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "files": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "fleet": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "folders": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "guests": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "help-requests": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "languages": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "network": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "organizations": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "permissions": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "registrations": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "remote": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "reports": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "resource-control": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "scaling": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "security-audit": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "server-attestation": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "server-management": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "settings": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "strategies": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "system": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "tickets": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "toolkit": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "users": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       }
+      },
+      "subject_id": "6",
+      "subject_type": "user"
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "features": {
+       "audio": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "client_actions": {
+        "enabled": false,
+        "hard_lock": true,
+        "source": "default"
+       },
+       "clipboard": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "file_transfer": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "port_forwarding": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "privacy_mode": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "reboot": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "remote_control": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "terminal": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       },
+       "tunnel": {
+        "enabled": true,
+        "hard_lock": false,
+        "source": "default"
+       }
+      },
+      "groups": [],
+      "sections": {
+       "activity": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "agents": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "automation": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "cdap": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "chat": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "commercialization": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "cross-platform": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "dashboard": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "dataguard": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "devices": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "files": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "fleet": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "folders": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "guests": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "help-requests": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "languages": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "network": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "organizations": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "permissions": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "registrations": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "remote": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "reports": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "resource-control": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "scaling": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "security-audit": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "server-attestation": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "server-management": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "settings": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "strategies": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "system": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "tickets": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "toolkit": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "users": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       }
+      },
+      "subject_id": "5",
+      "subject_type": "user"
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

@@ -5,8 +5,10 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/cdapstudio"
 	"github.com/unitronix/betterdesk-server/console/routes/chat"
 	consoleroutes "github.com/unitronix/betterdesk-server/console/routes/console"
+	"github.com/unitronix/betterdesk-server/console/routes/crossplatform"
 	"github.com/unitronix/betterdesk-server/console/routes/dashboard"
 	"github.com/unitronix/betterdesk-server/console/routes/dataguard"
+	"github.com/unitronix/betterdesk-server/console/routes/desktop"
 	"github.com/unitronix/betterdesk-server/console/routes/fleet"
 	"github.com/unitronix/betterdesk-server/console/routes/health"
 	i18nroutes "github.com/unitronix/betterdesk-server/console/routes/i18n"
@@ -14,13 +16,18 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/languages"
 	"github.com/unitronix/betterdesk-server/console/routes/meshcentral"
 	"github.com/unitronix/betterdesk-server/console/routes/pairing"
+	"github.com/unitronix/betterdesk-server/console/routes/panelaccess"
+	"github.com/unitronix/betterdesk-server/console/routes/permissions"
 	"github.com/unitronix/betterdesk-server/console/routes/policies"
 	"github.com/unitronix/betterdesk-server/console/routes/resourcecontrol"
 	"github.com/unitronix/betterdesk-server/console/routes/scaling"
+	"github.com/unitronix/betterdesk-server/console/routes/securityaudit"
 	"github.com/unitronix/betterdesk-server/console/routes/system"
 	"github.com/unitronix/betterdesk-server/console/routes/tenants"
 	"github.com/unitronix/betterdesk-server/console/routes/tickets"
+	"github.com/unitronix/betterdesk-server/console/routes/tokens"
 	"github.com/unitronix/betterdesk-server/console/routes/toolkit"
+	"github.com/unitronix/betterdesk-server/console/routes/trends"
 	"github.com/unitronix/betterdesk-server/console/routes/uishell"
 )
 
@@ -36,6 +43,7 @@ func registerRoutes(d *kit.Deps) {
 	consoleroutes.Register(d) // routes/console.routes.js: the strings endpoint
 	dashboard.Register(d)     // routes/dashboard.routes.js
 	keys.Register(d)          // routes/keys.routes.js
+	panelaccess.Register(d)   // routes/panel-access.routes.js
 	uishell.Register(d)       // routes/ui-shell.routes.js
 	i18nroutes.Register(d)    // routes/i18n.routes.js at /api/i18n
 	// routes/tickets.routes.js at /api/tickets, without the device routes /api/tickets/bd
@@ -43,21 +51,27 @@ func registerRoutes(d *kit.Deps) {
 	// routes/dataguard.routes.js at /api/dataguard and at /api/bd, without the device routes dlp-policies and dlp-events
 	dataguard.Register(d.At("/api/dataguard"))
 	dataguard.Register(d.At("/api/bd"))
+	trends.Register(d) // routes/trends.routes.js, in front of the reports group
 	// routes/tenants.routes.js at /api/tenants
 	tenants.Register(d.At("/api/tenants"))
 	meshcentral.Register(d)                   // routes/meshcentral.routes.js
 	chat.Register(d)                          // routes/chat.routes.js
+	tokens.Register(d)                        // routes/tokens.routes.js
+	desktop.Register(d.At("/api/desktop"))    // routes/desktop.routes.js at /api/desktop
 	policies.Register(d)                      // routes/policies.routes.js
 	policies.Register(d.At("/api/bd"))        // its second mount: /api/bd/api/panel/policies/...
 	fleet.Register(d)                         // routes/fleet.routes.js
 	fleet.Register(d.At("/api/bd"))           // its second mount: /api/bd/api/panel/fleet/...
 	scaling.Register(d)                       // routes/scaling.routes.js
 	scaling.Register(d.At("/api/bd"))         // routes/scaling.routes.js at /api/bd
+	crossplatform.Register(d)                 // routes/cross-platform.routes.js
 	toolkit.Register(d)                       // routes/toolkit.routes.js
+	securityaudit.Register(d)                 // routes/security-audit.routes.js
 	languages.Register(d)                     // routes/languages.routes.js
 	resourcecontrol.Register(d)               // routes/resource-control.routes.js
 	resourcecontrol.Register(d.At("/api/bd")) // its second mount: /api/bd/api/panel/resource-control/...
 	system.Register(d)                        // routes/system.routes.js
 	cdapstudio.Register(d)                    // routes/cdap-studio.routes.js
+	permissions.Register(d)                   // routes/permissions.routes.js
 	pairing.Register(d)                       // routes/pairing.routes.js
 }

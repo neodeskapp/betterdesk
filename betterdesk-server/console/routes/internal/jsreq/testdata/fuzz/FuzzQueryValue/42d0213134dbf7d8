@@ -1,0 +1,2 @@
+go test fuzz v1
+string("a=%E0%A0\x80")

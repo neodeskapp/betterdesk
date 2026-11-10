@@ -1,0 +1,439 @@
+{
+ "id": "panel-access/group-save",
+ "request": {
+  "method": "PUT",
+  "path": "/api/panel/access/groups/{group}",
+  "body": {
+   "features": [
+    {
+     "enabled": false,
+     "feature_key": "file_transfer"
+    },
+    {
+     "enabled": "true",
+     "key": "clipboard"
+    },
+    {
+     "enabled": 1,
+     "feature_key": "audio"
+    },
+    {
+     "enabled": "yes",
+     "feature_key": "tunnel"
+    },
+    {
+     "enabled": true,
+     "feature_key": "client_actions"
+    },
+    {
+     "enabled": true,
+     "feature_key": "no-such-feature"
+    },
+    {
+     "enabled": true,
+     "feature_key": "file_transfer"
+    }
+   ],
+   "sections": [
+    {
+     "access_level": "write",
+     "resource_key": "devices"
+    },
+    {
+     "access": "read",
+     "key": "group:operations"
+    },
+    {
+     "access_level": "none",
+     "resource_key": "devices"
+    },
+    {
+     "access_level": "read",
+     "resource_key": "no-such-section"
+    },
+    {
+     "access_level": 2,
+     "resource_key": " users "
+    },
+    {
+     "resource_key": "tickets"
+    },
+    {
+     "access_level": "WRITE",
+     "resource_key": "reports"
+    },
+    {
+     "access": "read",
+     "access_level": null,
+     "resource_key": "chat"
+    },
+    {
+     "access_level": "everything",
+     "resource_key": "settings"
+    },
+    "not a row",
+    null
+   ]
+  }
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "server_admin"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "panel_access_denied",
+     "error": "Panel access denied: users",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.effective.subject_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.group_guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "effective": {
+       "features": {
+        "audio": {
+         "enabled": true,
+         "hard_lock": false,
+         "source": "group"
+        },
+        "client_actions": {
+         "enabled": false,
+         "hard_lock": true,
+         "source": "group"
+        },
+        "clipboard": {
+         "enabled": true,
+         "hard_lock": false,
+         "source": "group"
+        },
+        "file_transfer": {
+         "enabled": false,
+         "hard_lock": false,
+         "source": "group"
+        },
+        "port_forwarding": {
+         "enabled": true,
+         "hard_lock": false,
+         "source": "default"
+        },
+        "privacy_mode": {
+         "enabled": true,
+         "hard_lock": false,
+         "source": "default"
+        },
+        "reboot": {
+         "enabled": true,
+         "hard_lock": false,
+         "source": "default"
+        },
+        "remote_control": {
+         "enabled": true,
+         "hard_lock": false,
+         "source": "default"
+        },
+        "terminal": {
+         "enabled": true,
+         "hard_lock": false,
+         "source": "default"
+        },
+        "tunnel": {
+         "enabled": false,
+         "hard_lock": false,
+         "source": "group"
+        }
+       },
+       "sections": {
+        "activity": {
+         "access": "read",
+         "source": "group"
+        },
+        "agents": {
+         "access": "read",
+         "source": "group"
+        },
+        "automation": {
+         "access": "read",
+         "source": "group"
+        },
+        "cdap": {
+         "access": "read",
+         "source": "group"
+        },
+        "chat": {
+         "access": "read",
+         "source": "group"
+        },
+        "commercialization": {
+         "access": "none",
+         "source": "unset"
+        },
+        "cross-platform": {
+         "access": "none",
+         "source": "unset"
+        },
+        "dashboard": {
+         "access": "none",
+         "source": "unset"
+        },
+        "dataguard": {
+         "access": "read",
+         "source": "group"
+        },
+        "devices": {
+         "access": "write",
+         "source": "group"
+        },
+        "files": {
+         "access": "read",
+         "source": "group"
+        },
+        "fleet": {
+         "access": "read",
+         "source": "group"
+        },
+        "folders": {
+         "access": "none",
+         "source": "unset"
+        },
+        "guests": {
+         "access": "none",
+         "source": "unset"
+        },
+        "help-requests": {
+         "access": "read",
+         "source": "group"
+        },
+        "languages": {
+         "access": "none",
+         "source": "unset"
+        },
+        "network": {
+         "access": "read",
+         "source": "group"
+        },
+        "organizations": {
+         "access": "none",
+         "source": "unset"
+        },
+        "permissions": {
+         "access": "none",
+         "source": "unset"
+        },
+        "registrations": {
+         "access": "none",
+         "source": "unset"
+        },
+        "remote": {
+         "access": "none",
+         "source": "unset"
+        },
+        "reports": {
+         "access": "write",
+         "source": "group"
+        },
+        "resource-control": {
+         "access": "none",
+         "source": "unset"
+        },
+        "scaling": {
+         "access": "none",
+         "source": "unset"
+        },
+        "security-audit": {
+         "access": "none",
+         "source": "unset"
+        },
+        "server-attestation": {
+         "access": "none",
+         "source": "unset"
+        },
+        "server-management": {
+         "access": "none",
+         "source": "unset"
+        },
+        "settings": {
+         "access": "none",
+         "source": "group"
+        },
+        "strategies": {
+         "access": "none",
+         "source": "unset"
+        },
+        "system": {
+         "access": "none",
+         "source": "unset"
+        },
+        "tickets": {
+         "access": "none",
+         "source": "group"
+        },
+        "toolkit": {
+         "access": "none",
+         "source": "unset"
+        },
+        "users": {
+         "access": "write",
+         "source": "group"
+        }
+       },
+       "subject_id": "<volatile>",
+       "subject_type": "group"
+      },
+      "features": [
+       {
+        "enabled": false,
+        "feature_key": "file_transfer"
+       },
+       {
+        "enabled": true,
+        "feature_key": "clipboard"
+       },
+       {
+        "enabled": true,
+        "feature_key": "audio"
+       },
+       {
+        "enabled": false,
+        "feature_key": "tunnel"
+       },
+       {
+        "enabled": true,
+        "feature_key": "client_actions"
+       }
+      ],
+      "group_guid": "<volatile>",
+      "sections": [
+       {
+        "access_level": "write",
+        "resource_key": "devices"
+       },
+       {
+        "access_level": "read",
+        "resource_key": "group:operations"
+       },
+       {
+        "access_level": "write",
+        "resource_key": "users"
+       },
+       {
+        "access_level": "none",
+        "resource_key": "tickets"
+       },
+       {
+        "access_level": "write",
+        "resource_key": "reports"
+       },
+       {
+        "access_level": "read",
+        "resource_key": "chat"
+       },
+       {
+        "access_level": "none",
+        "resource_key": "settings"
+       }
+      ]
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}
