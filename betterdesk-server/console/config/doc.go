@@ -74,6 +74,13 @@
 //	...                                            WIDGET_RATE_LIMIT_MAX, PANEL_PREFERENCE_RATE_LIMIT_MAX,
 //	                                               RDCLIENT_PAGE_RATE_LIMIT_MAX, UPLOAD_RATE_LIMIT_MAX,
 //	                                               FILE_ACCESS_RATE_LIMIT_MAX.
+//	DEFAULT_ADMIN_USERNAME   admin                 authn.SettingsFromEnv lists the sign-in settings: the first account
+//	DEFAULT_ADMIN_PASSWORD   file or generated     (also FORCE_PASSWORD_UPDATE, DOCKER_ADMIN_BOOTSTRAP_WAIT_MS,
+//	...                                            AUTH_DB_PATH, DB_TYPE, DATABASE_URL, SQLITE_AUTH_DB_MODE), the
+//	                                               lockouts (API_MAX_FAILED_ATTEMPTS, API_LOCKOUT_MINUTES,
+//	                                               API_IP_RATE_LIMIT, API_ATTEMPT_WINDOW), API_TOKEN_EXPIRY_DAYS and
+//	                                               BETTERDESK_AUTH_AUTOCREATE. It gets DATA_DIR and the keys folder
+//	                                               from this package.
 //
 // # Not read yet
 //

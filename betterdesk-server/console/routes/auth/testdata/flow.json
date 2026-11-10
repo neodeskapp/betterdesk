@@ -1,0 +1,2119 @@
+[
+ {
+  "name": "sign-in",
+  "request": "POST /api/auth/login",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "bd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "redirect": "/",
+     "session": {
+      "idleTimeoutMs": 1800000,
+      "maxAgeMs": 86400000,
+      "replacedPriorSessions": 0
+     },
+     "success": true,
+     "user": {
+      "role": "operator",
+      "username": "flow_auth_tmp"
+     }
+    }
+   }
+  }
+ },
+ {
+  "name": "status-before",
+  "request": "GET /api/auth/totp/status",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "enabled": false,
+     "success": true
+    }
+   }
+  }
+ },
+ {
+  "name": "enable-before-setup",
+  "request": "POST /api/auth/totp/enable",
+  "answer": {
+   "roles": null,
+   "status": 400,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "TOTP not set up",
+     "success": false
+    }
+   }
+  }
+ },
+ {
+  "name": "setup",
+  "request": "POST /api/auth/totp/setup",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "qrCode",
+     "pattern": "^aaaa:aaaaa/aaa;aaaa99,[9aA+/_=-]+$"
+    },
+    {
+     "path": "secret",
+     "pattern": "^[9aA+/_=-]{32}$"
+    },
+    "otpauthUrl"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "otpauthUrl": "\u003cvolatile\u003e",
+     "qrCode": "\u003cvolatile\u003e",
+     "secret": "\u003cvolatile\u003e",
+     "success": true
+    }
+   }
+  }
+ },
+ {
+  "name": "enable-wrong-code",
+  "request": "POST /api/auth/totp/enable",
+  "answer": {
+   "roles": null,
+   "status": 400,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Invalid verification code",
+     "success": false
+    }
+   }
+  }
+ },
+ {
+  "name": "status-while-pending",
+  "request": "GET /api/auth/totp/status",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "enabled": false,
+     "success": true
+    }
+   }
+  }
+ },
+ {
+  "name": "enable",
+  "request": "POST /api/auth/totp/enable",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "recoveryCodes[*]",
+     "pattern": "^[9aA+/_=-]{9}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "recoveryCodes": [
+      "\u003cvolatile\u003e",
+      "\u003cvolatile\u003e",
+      "\u003cvolatile\u003e",
+      "\u003cvolatile\u003e",
+      "\u003cvolatile\u003e",
+      "\u003cvolatile\u003e",
+      "\u003cvolatile\u003e",
+      "\u003cvolatile\u003e"
+     ],
+     "success": true
+    }
+   }
+  }
+ },
+ {
+  "name": "status-enabled",
+  "request": "GET /api/auth/totp/status",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "enabled": true,
+     "success": true
+    }
+   }
+  }
+ },
+ {
+  "name": "setup-when-enabled",
+  "request": "POST /api/auth/totp/setup",
+  "answer": {
+   "roles": null,
+   "status": 400,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Two-factor authentication is already enabled",
+     "success": false
+    }
+   }
+  }
+ },
+ {
+  "name": "sign-out",
+  "request": "POST /api/auth/logout",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "bd.sid=; Path=/; Expires=\u003cpast\u003e",
+     "betterdesk.sid=; Path=/; Expires=\u003cpast\u003e",
+     "undefined=; Path=/; Expires=\u003cpast\u003e"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "success": true
+    }
+   }
+  }
+ },
+ {
+  "name": "password-step",
+  "request": "POST /api/auth/login",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "success": true,
+     "totpRequired": true
+    }
+   }
+  }
+ },
+ {
+  "name": "pending-is-not-signed-in",
+  "request": "GET /api/auth/verify",
+  "answer": {
+   "roles": null,
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  }
+ },
+ {
+  "name": "code-wrong",
+  "request": "POST /api/auth/totp/verify",
+  "answer": {
+   "roles": null,
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Invalid verification code. Please try again.",
+     "success": false
+    }
+   }
+  }
+ },
+ {
+  "name": "code-missing",
+  "request": "POST /api/auth/totp/verify",
+  "answer": {
+   "roles": null,
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Invalid verification code. Please try again.",
+     "success": false
+    }
+   }
+  }
+ },
+ {
+  "name": "code-right",
+  "request": "POST /api/auth/totp/verify",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "bd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "redirect": "/devices",
+     "session": {
+      "idleTimeoutMs": 1800000,
+      "maxAgeMs": 86400000,
+      "replacedPriorSessions": 0
+     },
+     "success": true,
+     "user": {
+      "role": "operator",
+      "username": "flow_auth_tmp"
+     }
+    }
+   }
+  }
+ },
+ {
+  "name": "verify-after-code",
+  "request": "GET /api/auth/verify",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "user.id",
+     "integer": true
+    },
+    {
+     "path": "session.createdAt",
+     "integer": true
+    },
+    {
+     "path": "session.lastActivityAt",
+     "integer": true
+    },
+    {
+     "path": "session.idleExpiresAt",
+     "integer": true
+    },
+    {
+     "path": "session.absoluteExpiresAt",
+     "integer": true
+    },
+    {
+     "path": "session.serverNow",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "session": {
+      "absoluteExpiresAt": 0,
+      "createdAt": 0,
+      "idleExpiresAt": 0,
+      "idleTimeoutMs": 1800000,
+      "lastActivityAt": 0,
+      "loginIp": "\u003cclient-ip\u003e",
+      "maxAgeMs": 86400000,
+      "serverNow": 0,
+      "warnBeforeMs": 60000
+     },
+     "success": true,
+     "user": {
+      "id": 0,
+      "preferred_language": null,
+      "role": "operator",
+      "username": "flow_auth_tmp"
+     }
+    }
+   }
+  }
+ },
+ {
+  "name": "code-after-sign-in",
+  "request": "POST /api/auth/totp/verify",
+  "answer": {
+   "roles": null,
+   "status": 400,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Session expired. Please log in again.",
+     "success": false
+    }
+   }
+  }
+ },
+ {
+  "name": "sessions-after-code",
+  "request": "GET /api/auth/sessions",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "data.sessions[*].id",
+    {
+     "path": "data.sessions[*].createdAt",
+     "integer": true
+    },
+    {
+     "path": "data.sessions[*].lastActivityAt",
+     "integer": true
+    },
+    {
+     "path": "data.sessions[*].endedAt",
+     "integer": true
+    },
+    {
+     "path": "data.sessions[*].expiresAt",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "policy": {
+       "idleTimeoutMs": 1800000,
+       "maxAgeMs": 86400000,
+       "maxSessionsPerUser": 1,
+       "warnBeforeMs": 60000
+      },
+      "sessions": [
+       {
+        "active": true,
+        "clientFingerprint": null,
+        "createdAt": 0,
+        "current": true,
+        "endReason": null,
+        "endedAt": null,
+        "expiresAt": 0,
+        "id": "\u003cvolatile\u003e",
+        "ipAddress": "\u003cclient-ip\u003e",
+        "lastActivityAt": 0,
+        "userAgent": "bd-contract/1",
+        "username": "flow_auth_tmp"
+       },
+       {
+        "active": false,
+        "clientFingerprint": null,
+        "createdAt": 0,
+        "current": false,
+        "endReason": "logout",
+        "endedAt": 0,
+        "expiresAt": 0,
+        "id": "\u003cvolatile\u003e",
+        "ipAddress": "\u003cclient-ip\u003e",
+        "lastActivityAt": 0,
+        "userAgent": "bd-contract/1",
+        "username": "flow_auth_tmp"
+       }
+      ]
+     },
+     "success": true
+    }
+   }
+  }
+ },
+ {
+  "name": "sign-out-2",
+  "request": "POST /api/auth/logout",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "bd.sid=; Path=/; Expires=\u003cpast\u003e",
+     "betterdesk.sid=; Path=/; Expires=\u003cpast\u003e",
+     "undefined=; Path=/; Expires=\u003cpast\u003e"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "success": true
+    }
+   }
+  }
+ },
+ {
+  "name": "password-step-2",
+  "request": "POST /api/auth/login",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "success": true,
+     "totpRequired": true
+    }
+   }
+  }
+ },
+ {
+  "name": "recovery-wrong",
+  "request": "POST /api/auth/totp/verify",
+  "answer": {
+   "roles": null,
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Invalid verification code. Please try again.",
+     "success": false
+    }
+   }
+  }
+ },
+ {
+  "name": "recovery-right",
+  "request": "POST /api/auth/totp/verify",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "bd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "redirect": "/",
+     "session": {
+      "idleTimeoutMs": 1800000,
+      "maxAgeMs": 86400000,
+      "replacedPriorSessions": 0
+     },
+     "success": true,
+     "user": {
+      "role": "operator",
+      "username": "flow_auth_tmp"
+     }
+    }
+   }
+  }
+ },
+ {
+  "name": "sign-out-3",
+  "request": "POST /api/auth/logout",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "bd.sid=; Path=/; Expires=\u003cpast\u003e",
+     "betterdesk.sid=; Path=/; Expires=\u003cpast\u003e",
+     "undefined=; Path=/; Expires=\u003cpast\u003e"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "success": true
+    }
+   }
+  }
+ },
+ {
+  "name": "password-step-3",
+  "request": "POST /api/auth/login",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "success": true,
+     "totpRequired": true
+    }
+   }
+  }
+ },
+ {
+  "name": "recovery-used",
+  "request": "POST /api/auth/totp/verify",
+  "answer": {
+   "roles": null,
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Invalid verification code. Please try again.",
+     "success": false
+    }
+   }
+  }
+ },
+ {
+  "name": "recovery-lower-case",
+  "request": "POST /api/auth/totp/verify",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "bd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "redirect": "/",
+     "session": {
+      "idleTimeoutMs": 1800000,
+      "maxAgeMs": 86400000,
+      "replacedPriorSessions": 0
+     },
+     "success": true,
+     "user": {
+      "role": "operator",
+      "username": "flow_auth_tmp"
+     }
+    }
+   }
+  }
+ },
+ {
+  "name": "disable-wrong-password",
+  "request": "POST /api/auth/totp/disable",
+  "answer": {
+   "roles": null,
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Invalid username or password.",
+     "success": false
+    }
+   }
+  }
+ },
+ {
+  "name": "disable",
+  "request": "POST /api/auth/totp/disable",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "success": true
+    }
+   }
+  }
+ },
+ {
+  "name": "status-disabled",
+  "request": "GET /api/auth/totp/status",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "enabled": false,
+     "success": true
+    }
+   }
+  }
+ },
+ {
+  "name": "password-mismatch",
+  "request": "POST /api/auth/password",
+  "answer": {
+   "roles": null,
+   "status": 400,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "3",
+    "ratelimit-policy": "3;w=300",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Passwords do not match",
+     "success": false
+    }
+   }
+  }
+ },
+ {
+  "name": "password-change",
+  "request": "POST /api/auth/password",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "3",
+    "ratelimit-policy": "3;w=300",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "success": true
+    }
+   }
+  }
+ },
+ {
+  "name": "sign-out-page",
+  "request": "GET /logout",
+  "answer": {
+   "roles": null,
+   "status": 302,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "text/html; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "location": "/login",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=; Path=/; Expires=\u003cpast\u003e",
+     "betterdesk.sid=; Path=/; Expires=\u003cpast\u003e"
+    ],
+    "vary": "Accept",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "bytes",
+    "type": "text/html",
+    "length": 35,
+    "sha256": "778a92858dd05faca43b0dea43460e2e19c95c3ad7080d6fc518010fbf2e9d64",
+    "head": "\u003cp\u003eFound. Redirecting to /login\u003c/p\u003e"
+   }
+  }
+ },
+ {
+  "name": "old-password",
+  "request": "POST /api/auth/login",
+  "answer": {
+   "roles": null,
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Invalid username or password.",
+     "success": false
+    }
+   }
+  }
+ },
+ {
+  "name": "new-password",
+  "request": "POST /api/auth/login",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "bd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "redirect": "/",
+     "session": {
+      "idleTimeoutMs": 1800000,
+      "maxAgeMs": 86400000,
+      "replacedPriorSessions": 0
+     },
+     "success": true,
+     "user": {
+      "role": "operator",
+      "username": "flow_auth_tmp"
+     }
+    }
+   }
+  }
+ },
+ {
+  "name": "second-browser",
+  "request": "POST /api/auth/login",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "bd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "redirect": "/",
+     "session": {
+      "idleTimeoutMs": 1800000,
+      "maxAgeMs": 86400000,
+      "replacedPriorSessions": 1
+     },
+     "success": true,
+     "user": {
+      "role": "operator",
+      "username": "flow_auth_tmp"
+     }
+    }
+   }
+  }
+ },
+ {
+  "name": "first-browser-ended",
+  "request": "GET /api/auth/verify",
+  "answer": {
+   "roles": null,
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  }
+ },
+ {
+  "name": "sessions-in-second",
+  "request": "GET /api/auth/sessions",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "data.sessions[*].id",
+    {
+     "path": "data.sessions[*].createdAt",
+     "integer": true
+    },
+    {
+     "path": "data.sessions[*].lastActivityAt",
+     "integer": true
+    },
+    {
+     "path": "data.sessions[*].endedAt",
+     "integer": true
+    },
+    {
+     "path": "data.sessions[*].expiresAt",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "policy": {
+       "idleTimeoutMs": 1800000,
+       "maxAgeMs": 86400000,
+       "maxSessionsPerUser": 1,
+       "warnBeforeMs": 60000
+      },
+      "sessions": [
+       {
+        "active": true,
+        "clientFingerprint": null,
+        "createdAt": 0,
+        "current": true,
+        "endReason": null,
+        "endedAt": null,
+        "expiresAt": 0,
+        "id": "\u003cvolatile\u003e",
+        "ipAddress": "\u003cclient-ip\u003e",
+        "lastActivityAt": 0,
+        "userAgent": "bd-contract/1",
+        "username": "flow_auth_tmp"
+       },
+       {
+        "active": false,
+        "clientFingerprint": null,
+        "createdAt": 0,
+        "current": false,
+        "endReason": "replaced",
+        "endedAt": 0,
+        "expiresAt": 0,
+        "id": "\u003cvolatile\u003e",
+        "ipAddress": "\u003cclient-ip\u003e",
+        "lastActivityAt": 0,
+        "userAgent": "bd-contract/1",
+        "username": "flow_auth_tmp"
+       },
+       {
+        "active": false,
+        "clientFingerprint": null,
+        "createdAt": 0,
+        "current": false,
+        "endReason": "logout",
+        "endedAt": 0,
+        "expiresAt": 0,
+        "id": "\u003cvolatile\u003e",
+        "ipAddress": "\u003cclient-ip\u003e",
+        "lastActivityAt": 0,
+        "userAgent": "bd-contract/1",
+        "username": "flow_auth_tmp"
+       },
+       {
+        "active": false,
+        "clientFingerprint": null,
+        "createdAt": 0,
+        "current": false,
+        "endReason": "logout",
+        "endedAt": 0,
+        "expiresAt": 0,
+        "id": "\u003cvolatile\u003e",
+        "ipAddress": "\u003cclient-ip\u003e",
+        "lastActivityAt": 0,
+        "userAgent": "bd-contract/1",
+        "username": "flow_auth_tmp"
+       },
+       {
+        "active": false,
+        "clientFingerprint": null,
+        "createdAt": 0,
+        "current": false,
+        "endReason": "logout",
+        "endedAt": 0,
+        "expiresAt": 0,
+        "id": "\u003cvolatile\u003e",
+        "ipAddress": "\u003cclient-ip\u003e",
+        "lastActivityAt": 0,
+        "userAgent": "bd-contract/1",
+        "username": "flow_auth_tmp"
+       },
+       {
+        "active": false,
+        "clientFingerprint": null,
+        "createdAt": 0,
+        "current": false,
+        "endReason": "logout",
+        "endedAt": 0,
+        "expiresAt": 0,
+        "id": "\u003cvolatile\u003e",
+        "ipAddress": "\u003cclient-ip\u003e",
+        "lastActivityAt": 0,
+        "userAgent": "bd-contract/1",
+        "username": "flow_auth_tmp"
+       }
+      ]
+     },
+     "success": true
+    }
+   }
+  }
+ },
+ {
+  "name": "second-sign-out",
+  "request": "POST /api/auth/logout",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "bd.sid=; Path=/; Expires=\u003cpast\u003e",
+     "betterdesk.sid=; Path=/; Expires=\u003cpast\u003e",
+     "undefined=; Path=/; Expires=\u003cpast\u003e"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "success": true
+    }
+   }
+  }
+ },
+ {
+  "name": "tenth-wrong-password",
+  "request": "POST /api/auth/login",
+  "answer": {
+   "roles": null,
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Invalid username or password.",
+     "success": false
+    }
+   }
+  }
+ },
+ {
+  "name": "client-api-locked",
+  "request": "POST /api/login",
+  "answer": {
+   "roles": null,
+   "status": 429,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "retry_after",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Account temporarily locked due to too many failed attempts",
+     "retry_after": 0
+    }
+   }
+  }
+ },
+ {
+  "name": "locked-account-signs-in",
+  "request": "POST /api/auth/login",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "bd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "redirect": "/",
+     "session": {
+      "idleTimeoutMs": 1800000,
+      "maxAgeMs": 86400000,
+      "replacedPriorSessions": 0
+     },
+     "success": true,
+     "user": {
+      "role": "operator",
+      "username": "flow_auth_tmp"
+     }
+    }
+   }
+  }
+ },
+ {
+  "name": "client-api-after-sign-in",
+  "request": "POST /api/login",
+  "answer": {
+   "roles": null,
+   "status": 401,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Invalid credentials"
+    }
+   }
+  }
+ },
+ {
+  "name": "sign-out-4",
+  "request": "POST /api/auth/logout",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "bd.sid=; Path=/; Expires=\u003cpast\u003e",
+     "betterdesk.sid=; Path=/; Expires=\u003cpast\u003e",
+     "undefined=; Path=/; Expires=\u003cpast\u003e"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "success": true
+    }
+   }
+  }
+ },
+ {
+  "name": "pro-account",
+  "request": "POST /api/auth/login",
+  "answer": {
+   "roles": null,
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Invalid username or password.",
+     "success": false
+    }
+   }
+  }
+ },
+ {
+  "name": "audit-entries",
+  "request": "GET /api/settings/audit",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "body": {
+    "kind": "json",
+    "json": [
+     {
+      "action": "login",
+      "details": "User logged in; ip=\u003cclient-ip\u003e; ua=bd-contract/1; fingerprint=none",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "totp_enabled",
+      "details": "2FA enabled",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "logout",
+      "details": "User logged out",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "totp_failed",
+      "details": "Method: totp",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "totp_failed",
+      "details": "Method: totp",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "login",
+      "details": "User logged in (2FA: totp (local)); ip=\u003cclient-ip\u003e; ua=bd-contract/1",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "logout",
+      "details": "User logged out",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "totp_failed",
+      "details": "Method: recovery",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "login",
+      "details": "User logged in (2FA: recovery (local)); ip=\u003cclient-ip\u003e; ua=bd-contract/1",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "logout",
+      "details": "User logged out",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "totp_failed",
+      "details": "Method: recovery",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "login",
+      "details": "User logged in (2FA: recovery (local)); ip=\u003cclient-ip\u003e; ua=bd-contract/1",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "totp_disabled",
+      "details": "2FA disabled",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "password_changed",
+      "details": "Password changed",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "logout",
+      "details": "User logged out",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "login_failed",
+      "details": "Username: f***; ip=\u003cclient-ip\u003e; ua=bd-contract/1",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "login",
+      "details": "User logged in; ip=\u003cclient-ip\u003e; ua=bd-contract/1; fingerprint=none",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "login",
+      "details": "User logged in; ip=\u003cclient-ip\u003e; ua=bd-contract/1; fingerprint=none; replaced=1 prior session(s)",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "session_replaced",
+      "details": "New login replaced 1 prior session(s); newIp=\u003cclient-ip\u003e",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "logout",
+      "details": "User logged out",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "login_failed",
+      "details": "Username: f***; ip=\u003cclient-ip\u003e; ua=bd-contract/1",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "login_failed",
+      "details": "Username: f***; ip=\u003cclient-ip\u003e; ua=bd-contract/1",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "login_failed",
+      "details": "Username: f***; ip=\u003cclient-ip\u003e; ua=bd-contract/1",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "login_failed",
+      "details": "Username: f***; ip=\u003cclient-ip\u003e; ua=bd-contract/1",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "login_failed",
+      "details": "Username: f***; ip=\u003cclient-ip\u003e; ua=bd-contract/1",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "login_failed",
+      "details": "Username: f***; ip=\u003cclient-ip\u003e; ua=bd-contract/1",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "login_failed",
+      "details": "Username: f***; ip=\u003cclient-ip\u003e; ua=bd-contract/1",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "login_failed",
+      "details": "Username: f***; ip=\u003cclient-ip\u003e; ua=bd-contract/1",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "login_failed",
+      "details": "Username: f***; ip=\u003cclient-ip\u003e; ua=bd-contract/1",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "login_failed",
+      "details": "Username: f***; ip=\u003cclient-ip\u003e; ua=bd-contract/1",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "login",
+      "details": "User logged in; ip=\u003cclient-ip\u003e; ua=bd-contract/1; fingerprint=none",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "logout",
+      "details": "User logged out",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "flow_auth_tmp"
+     },
+     {
+      "action": "login_failed",
+      "details": "Username: e***; ip=\u003cclient-ip\u003e; ua=bd-contract/1",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     }
+    ]
+   }
+  }
+ }
+]

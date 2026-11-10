@@ -381,7 +381,7 @@ func TestStartAndStopLeaveNothingRunning(t *testing.T) {
 		<-ctx.Done()
 		close(ended)
 	})
-	if got := strings.Join(s.Jobs().Names(), ","); got != "session cleanup,test job" {
+	if got := strings.Join(s.Jobs().Names(), ","); got != "session cleanup,sign-in housekeeping,test job" {
 		t.Errorf("jobs = %q", got)
 	}
 	if err := s.Start(context.Background()); err != nil {

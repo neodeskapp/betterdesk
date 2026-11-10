@@ -123,8 +123,8 @@ type Config struct {
 	ComposePath string
 
 	// Getenv reads the settings that packages parse themselves: the
-	// session secret and policy (package session) and the rate limits
-	// (package limits).
+	// session secret and policy (package session), the rate limits
+	// (package limits) and the sign-in settings (package authn).
 	Getenv func(string) string
 }
 

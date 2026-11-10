@@ -29,6 +29,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/auditlog"
+	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/csrf"
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -207,6 +208,19 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	s.early.OnBadParam(badParam)
 	s.router.OnBadParam(badParam)
 
+	s.deps.Authn, err = authn.New(authn.Options{
+		DB:       opts.Store,
+		GoAPI:    api,
+		Settings: authn.SettingsFromEnv(getenv, cfg.DataDir, cfg.KeysPath),
+		QR: func(text string) (string, error) {
+			return qr.PNGDataURL(text, qr.Options{Width: 256, Margin: 2})
+		},
+		Log: s.deps.Log.Child("AUTH"),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("sign-in service: %w", err)
+	}
+
 	s.jobs.Add("session cleanup", sessions.RunCleanup)
 	registerRoutes(s.deps)
 	s.pipeline = s.buildPipeline()
@@ -276,7 +290,20 @@ func isUpgrade(r *http.Request) bool {
 
 // Start opens the listener, starts the background jobs and serves until
 // ctx ends or Stop is called.
+//
+// Before it listens it looks after the first account (see
+// authn.Service.EnsureDefaultAdmin), unless the Node console is behind
+// this one: that console does the same at its own start, and the file by
+// which an installer asks for a new admin password works once, for
+// whichever of the two looks first. The Node console is the one that is
+// sure to know the password the installer set (web-nodejs/.env), so it is
+// left to it.
 func (s *Server) Start(ctx context.Context) error {
+	if s.cfg.NodeUpstream == nil {
+		if _, err := s.deps.Authn.EnsureDefaultAdmin(ctx); err != nil {
+			return fmt.Errorf("first account: %w", err)
+		}
+	}
 	ln, err := net.Listen("tcp", s.cfg.Addr())
 	if err != nil {
 		return fmt.Errorf("console listen on %s: %w", s.cfg.Addr(), err)

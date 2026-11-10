@@ -1,9 +1,9 @@
 /**
  * The sign-in page's server side (routes/auth.routes.js):
- * - R3: after sign-in (password, two-factor) the way back is the ?return=
- *   path when it is a console path;
- * - GET /api/auth/login-page: what the new sign-in page shows before
- *   anyone is signed in (no user data, so no list of accounts either: S4).
+ * GET /api/auth/login-page, what the new sign-in page shows before anyone
+ * is signed in (no user data, so no list of accounts either: S4).
+ * The way back after sign-in (R3) is answered by the Go console and tested
+ * there (console/routes/auth).
  */
 
 const request = require('supertest');
@@ -20,23 +20,8 @@ jest.mock('../services/database', () => ({
     ])
 }));
 
-jest.mock('../services/authService', () => ({
-    authenticate: jest.fn().mockResolvedValue(null),
-    isAuthFailure: jest.fn(() => false),
-    recordAttempt: jest.fn(),
-    verifyTotpViaGo: jest.fn().mockResolvedValue(null),
-    verifyTotpCode: jest.fn().mockResolvedValue(true),
-    verifyRecoveryCode: jest.fn().mockResolvedValue(false)
-}));
-
-jest.mock('../middleware/rateLimiter', () => ({
-    loginLimiter: (_req, _res, next) => next(),
-    passwordChangeLimiter: (_req, _res, next) => next()
-}));
-
 jest.mock('../services/betterdeskApi', () => ({
-    getOIDCStatus: jest.fn().mockResolvedValue({ success: true, data: { enabled: false } }),
-    startOIDCAuthorize: jest.fn().mockResolvedValue({ success: true, data: { auth_url: 'https://idp.example/auth' } })
+    exchangeOIDCCode: jest.fn()
 }));
 
 jest.mock('../services/panelSessionService', () => ({
@@ -50,8 +35,6 @@ jest.mock('../services/panelSessionService', () => ({
     endCurrentSession: jest.fn().mockResolvedValue(undefined)
 }));
 
-const authService = require('../services/authService');
-const betterdeskApi = require('../services/betterdeskApi');
 const authRoutes = require('../routes/auth.routes');
 
 function app(user) {
@@ -65,36 +48,6 @@ function app(user) {
     a.use('/', authRoutes);
     return a;
 }
-
-describe('POST /api/auth/login and /api/auth/totp/verify', () => {
-    beforeEach(() => jest.clearAllMocks());
-
-    test('a password sign-in answers the way back (R3)', async () => {
-        authService.authenticate.mockResolvedValueOnce({ id: 3, username: 'op', role: 'operator' });
-        const res = await request(app(null)).post('/api/auth/login')
-            .send({ username: 'op', password: 'pw', return: '/help-requests?id=4' });
-        expect(res.status).toBe(200);
-        expect(res.body.redirect).toBe('/help-requests?id=4');
-    });
-
-    test('an unsafe return path becomes the start page', async () => {
-        authService.authenticate.mockResolvedValueOnce({ id: 3, username: 'op', role: 'operator' });
-        const res = await request(app(null)).post('/api/auth/login')
-            .send({ username: 'op', password: 'pw', return: 'https://evil.example/' });
-        expect(res.body.redirect).toBe('/');
-    });
-
-    test('the two-factor step answers the way back too', async () => {
-        authService.authenticate.mockResolvedValueOnce({ id: 3, username: 'op', role: 'operator', totpRequired: true });
-        const agent = request.agent(app(null));
-        const first = await agent.post('/api/auth/login').send({ username: 'op', password: 'pw', return: '/tickets' });
-        expect(first.body.totpRequired).toBe(true);
-        expect(first.body.redirect).toBeUndefined();
-        const second = await agent.post('/api/auth/totp/verify').send({ code: '123456', return: '/tickets' });
-        expect(second.status).toBe(200);
-        expect(second.body.redirect).toBe('/tickets');
-    });
-});
 
 describe('GET /api/auth/login-page', () => {
     test('answers what the sign-in page shows, without a session', async () => {
@@ -132,11 +85,3 @@ describe('GET /api/auth/login-page signed in', () => {
     });
 });
 
-describe('GET /api/auth/oidc/authorize', () => {
-    test('passes a console return path on and drops anything else', async () => {
-        await request(app(null)).get('/api/auth/oidc/authorize?return_url=%2Fdevices');
-        expect(betterdeskApi.startOIDCAuthorize).toHaveBeenLastCalledWith('/devices');
-        await request(app(null)).get('/api/auth/oidc/authorize?return_url=%2F..%2F%2Fevil.example');
-        expect(betterdeskApi.startOIDCAuthorize).toHaveBeenLastCalledWith('/');
-    });
-});

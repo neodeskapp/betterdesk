@@ -65,10 +65,6 @@ describe('server routes before the console at the root', () => {
         expect(status.status).toBe(400);
         expect(status.body.success).toBe(false);
 
-        const logout = await request(app(admin)).get('/logout');
-        expect(logout.status).toBe(302);
-        expect(isApp(logout)).toBe(false);
-
         const download = await request(app(null)).get('/downloads/generic-agent/v1/agent.exe');
         expect(isApp(download)).toBe(false);
     });

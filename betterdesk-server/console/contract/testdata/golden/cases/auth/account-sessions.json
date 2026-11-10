@@ -1,0 +1,87 @@
+{
+ "id": "auth/account-sessions",
+ "request": {
+  "method": "GET",
+  "path": "/api/auth/sessions"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.sessions[*].createdAt",
+     "integer": true
+    },
+    {
+     "path": "data.sessions[*].expiresAt",
+     "integer": true
+    },
+    {
+     "path": "data.sessions[*].id",
+     "pattern": "^[9aA+/_=-]{32}$"
+    },
+    {
+     "path": "data.sessions[*].lastActivityAt",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "policy": {
+       "idleTimeoutMs": 1800000,
+       "maxAgeMs": 86400000,
+       "maxSessionsPerUser": 1,
+       "warnBeforeMs": 60000
+      },
+      "sessions": [
+       {
+        "active": true,
+        "clientFingerprint": "contract-fingerprint-01",
+        "createdAt": 0,
+        "current": true,
+        "endReason": null,
+        "endedAt": null,
+        "expiresAt": 0,
+        "id": "<volatile>",
+        "ipAddress": "<client-ip>",
+        "lastActivityAt": 0,
+        "userAgent": "bd-contract/1",
+        "username": "contract_auth_tmp"
+       }
+      ]
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

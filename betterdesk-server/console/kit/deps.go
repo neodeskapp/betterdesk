@@ -6,6 +6,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/auditlog"
+	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/csrf"
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -45,6 +46,9 @@ type Deps struct {
 	Store *store.DB
 	// Sessions is the session manager (sign-in, sign-out, session list).
 	Sessions *session.Manager
+	// Authn is the sign-in service: passwords, the second factor, lockouts,
+	// access tokens and device tokens (services/authService.js).
+	Authn *authn.Service
 	// CSRF hands out and checks CSRF tokens. The pipeline already checks
 	// every write that reaches Router.
 	CSRF *csrf.Protector

@@ -1,5 +1,9 @@
 /**
  * BetterDesk Console - Auth Routes Tests
+ *
+ * The route file holds the sign-in page's data (tests/auth.loginPage.test.js)
+ * and the last hop of a single sign-on. The other sign-in routes are
+ * answered by the Go console and tested there (console/routes/auth).
  */
 
 const request = require('supertest');
@@ -8,52 +12,17 @@ const { createTestApp } = require('./helpers');
 // Mock dependencies before requiring routes
 jest.mock('../services/database', () => ({
     logAction: jest.fn().mockResolvedValue(undefined),
-    getUser: jest.fn().mockResolvedValue(null),
-    getUserById: jest.fn().mockResolvedValue({ id: 1, username: 'admin', role: 'admin', password_hash: 'hash', totp_secret: 'SECRET' }),
     getUserByUsername: jest.fn().mockResolvedValue(null),
     createUser: jest.fn().mockResolvedValue(undefined),
     syncUserFromGo: jest.fn().mockResolvedValue(undefined),
-    updateLastLogin: jest.fn().mockResolvedValue(undefined),
-    enableTotp: jest.fn().mockResolvedValue(undefined),
-    disableTotp: jest.fn().mockResolvedValue(undefined)
-}));
-
-jest.mock('../services/authService', () => ({
-    authenticate: jest.fn().mockResolvedValue(null),
-    isAuthFailure: jest.fn((result) => !!(result && result.__authFailure)),
-    changePassword: jest.fn().mockResolvedValue({ success: true }),
-    hashPassword: jest.fn().mockResolvedValue('hashed'),
-    verifyPassword: jest.fn().mockResolvedValue(true),
-    verifyAndEnableTotp: jest.fn().mockResolvedValue({ success: true, recoveryCodes: ['CODE1', 'CODE2'] }),
-    disableTotp: jest.fn().mockResolvedValue({ success: true }),
-    isTotpEnabled: jest.fn().mockResolvedValue(false),
-    generateTotpSetup: jest.fn().mockResolvedValue({ success: true, qrCode: 'qr', secret: 'SECRET', otpauthUrl: 'otpauth://totp/test' }),
-    generateRecoveryCodes: jest.fn().mockReturnValue(['CODE1', 'CODE2']),
-    recordAttempt: jest.fn().mockResolvedValue(undefined)
-}));
-
-jest.mock('../services/userSync', () => ({
-    mirrorUpdate: jest.fn().mockResolvedValue(undefined),
-    mirrorTotpEnable: jest.fn().mockResolvedValue(undefined),
-    mirrorTotpDisable: jest.fn().mockResolvedValue(undefined),
-}));
-
-jest.mock('../middleware/rateLimiter', () => ({
-    loginLimiter: (_req, _res, next) => next(),
-    passwordChangeLimiter: (_req, _res, next) => next(),
-    apiLimiter: (_req, _res, next) => next()
+    updateLastLogin: jest.fn().mockResolvedValue(undefined)
 }));
 
 jest.mock('../services/betterdeskApi', () => ({
-    exchangeOIDCCode: jest.fn(),
-    getOIDCStatus: jest.fn().mockResolvedValue({ success: true, data: { enabled: false } }),
-    startOIDCAuthorize: jest.fn(),
-    proxyOIDCCallback: jest.fn(),
+    exchangeOIDCCode: jest.fn()
 }));
 
-const authService = require('../services/authService');
 const db = require('../services/database');
-const userSync = require('../services/userSync');
 const betterdeskApi = require('../services/betterdeskApi');
 const authRoutes = require('../routes/auth.routes');
 
@@ -63,342 +32,9 @@ describe('Auth Routes', () => {
     beforeEach(() => {
         app = createTestApp();
         app.use('/', authRoutes);
+        // What the session holds after the sign-on, for the test to look at
+        app.get('/__test/session-user', (req, res) => res.json({ userId: req.session.userId, user: req.session.user }));
         jest.clearAllMocks();
-    });
-
-    function authenticatedApp(user = { id: 1, username: 'admin', role: 'admin' }) {
-        const authed = createTestApp();
-        authed.use((req, _res, next) => {
-            req.session.userId = user.id;
-            req.session.user = user;
-            next();
-        });
-        authed.use('/', authRoutes);
-        return authed;
-    }
-
-    describe('POST /api/auth/login', () => {
-        it('should return 400 when username is missing', async () => {
-            const res = await request(app)
-                .post('/api/auth/login')
-                .send({ password: 'test123' });
-
-            expect(res.status).toBe(400);
-            expect(res.body.success).toBe(false);
-        });
-
-        it('should return 400 when password is missing', async () => {
-            const res = await request(app)
-                .post('/api/auth/login')
-                .send({ username: 'admin' });
-
-            expect(res.status).toBe(400);
-            expect(res.body.success).toBe(false);
-        });
-
-        it('should return 400 when username exceeds 128 chars', async () => {
-            const res = await request(app)
-                .post('/api/auth/login')
-                .send({ username: 'a'.repeat(129), password: 'test123' });
-
-            expect(res.status).toBe(400);
-            expect(res.body.success).toBe(false);
-        });
-
-        it('should return 401 when credentials are invalid', async () => {
-            authService.authenticate.mockResolvedValue(null);
-
-            const res = await request(app)
-                .post('/api/auth/login')
-                .send({ username: 'admin', password: 'wrong' });
-
-            expect(res.status).toBe(401);
-            expect(res.body.success).toBe(false);
-            expect(db.logAction).toHaveBeenCalledWith(
-                null, 'login_failed', expect.stringContaining('admin'), expect.anything()
-            );
-        });
-
-        it('should return 409 when local/SSO username collision is detected', async () => {
-            authService.authenticate.mockResolvedValue({ __authFailure: 'username_collision' });
-
-            const res = await request(app)
-                .post('/api/auth/login')
-                .send({ username: 'domainuser', password: 'ad-pass' });
-
-            expect(res.status).toBe(409);
-            expect(res.body.success).toBe(false);
-            expect(res.body.code).toBe('username_collision');
-            expect(db.logAction).toHaveBeenCalledWith(
-                null, 'login_failed', expect.stringContaining('collision'), expect.anything()
-            );
-        });
-
-        it('should return 200 with user on valid login', async () => {
-            authService.authenticate.mockResolvedValue({
-                id: 1,
-                username: 'admin',
-                role: 'admin'
-            });
-
-            const res = await request(app)
-                .post('/api/auth/login')
-                .send({ username: 'admin', password: 'correct', clientFingerprint: 'aabbccddeeff0011' });
-
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(res.body.user).toBeDefined();
-            expect(res.body.user.username).toBe('admin');
-            expect(res.body.session).toBeDefined();
-            expect(res.body.session.idleTimeoutMs).toBeGreaterThan(0);
-            expect(db.logAction).toHaveBeenCalledWith(
-                1, 'login', expect.stringContaining('ip='), expect.anything()
-            );
-        });
-
-        it('should return totpRequired when 2FA is enabled', async () => {
-            authService.authenticate.mockResolvedValue({
-                id: 1,
-                username: 'admin',
-                role: 'admin',
-                totpRequired: true
-            });
-
-            const res = await request(app)
-                .post('/api/auth/login')
-                .send({ username: 'admin', password: 'correct' });
-
-            expect(res.status).toBe(200);
-            expect(res.body.totpRequired).toBe(true);
-        });
-    });
-
-    describe('GET /api/auth/verify', () => {
-        it('returns session policy fields for authenticated users', async () => {
-            const res = await request(authenticatedApp())
-                .get('/api/auth/verify');
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(res.body.session).toBeDefined();
-            expect(res.body.session.idleTimeoutMs).toBeGreaterThan(0);
-            expect(res.body.session.maxAgeMs).toBeGreaterThan(0);
-        });
-    });
-
-    describe('GET /api/auth/sessions', () => {
-        it('returns session list payload for the current user', async () => {
-            const res = await request(authenticatedApp())
-                .get('/api/auth/sessions');
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(Array.isArray(res.body.data.sessions)).toBe(true);
-            expect(res.body.data.policy).toBeDefined();
-        });
-    });
-
-    describe('POST /api/auth/logout', () => {
-        it('should destroy session on logout', async () => {
-            // Set up auth
-            app.use((req, _res, next) => {
-                req.session.userId = 1;
-                req.session.user = { id: 1, username: 'admin', role: 'admin' };
-                next();
-            });
-            // Re-mount routes after auth middleware
-            const logoutApp = createTestApp();
-            logoutApp.use((req, _res, next) => {
-                req.session.userId = 1;
-                req.session.user = { id: 1, username: 'admin', role: 'admin' };
-                next();
-            });
-            logoutApp.use('/', authRoutes);
-
-            const res = await request(logoutApp)
-                .post('/api/auth/logout');
-
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-        });
-    });
-
-    describe('POST /api/auth/password', () => {
-        it('mirrors successful self-service password changes to Go', async () => {
-            const res = await request(authenticatedApp())
-                .post('/api/auth/password')
-                .send({
-                    currentPassword: 'old-password',
-                    newPassword: 'new-password-123',
-                    confirmPassword: 'new-password-123'
-                });
-
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(userSync.mirrorUpdate).toHaveBeenCalledWith('admin', { password: 'new-password-123' });
-        });
-
-        it('does not fail password changes when Go mirror is unavailable', async () => {
-            userSync.mirrorUpdate.mockRejectedValueOnce(new Error('go offline'));
-
-            const res = await request(authenticatedApp())
-                .post('/api/auth/password')
-                .send({
-                    currentPassword: 'old-password',
-                    newPassword: 'new-password-123',
-                    confirmPassword: 'new-password-123'
-                });
-
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-        });
-    });
-
-    describe('POST /api/auth/totp/enable', () => {
-        it('mirrors enabled TOTP state to Go without issuing tokens', async () => {
-            const res = await request(authenticatedApp())
-                .post('/api/auth/totp/enable')
-                .send({ code: '123456' });
-
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(userSync.mirrorTotpEnable).toHaveBeenCalledWith('admin', { secret: 'SECRET' });
-        });
-    });
-
-    describe('POST /api/auth/totp/disable', () => {
-        it('mirrors disabled TOTP state to Go after password verification', async () => {
-            const res = await request(authenticatedApp())
-                .post('/api/auth/totp/disable')
-                .send({ password: 'current-password' });
-
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(authService.verifyPassword).toHaveBeenCalledWith('current-password', expect.anything());
-            expect(userSync.mirrorTotpDisable).toHaveBeenCalledWith('admin');
-        });
-    });
-
-    describe('GET /api/auth/oidc/authorize', () => {
-        it('redirects the browser to the IdP URL from Go (not localhost API)', async () => {
-            const idpUrl = 'https://idp.example.com/oauth/authorize?client_id=abc&redirect_uri=https%3A%2F%2Fdomain.com%2Fapi%2Fauth%2Foidc%2Fcallback';
-            betterdeskApi.startOIDCAuthorize.mockResolvedValue({
-                success: true,
-                data: { auth_url: idpUrl },
-            });
-
-            const res = await request(app).get('/api/auth/oidc/authorize?return_url=%2Fdashboard');
-
-            expect(res.status).toBe(302);
-            expect(res.headers.location).toBe(idpUrl);
-            expect(res.headers.location).not.toMatch(/localhost|127\.0\.0\.1/);
-            expect(betterdeskApi.startOIDCAuthorize).toHaveBeenCalledWith('/dashboard');
-        });
-
-        it('sanitizes unsafe return_url before calling Go', async () => {
-            betterdeskApi.startOIDCAuthorize.mockResolvedValue({
-                success: true,
-                data: { auth_url: 'https://idp.example.com/auth' },
-            });
-
-            await request(app).get('/api/auth/oidc/authorize?return_url=https://evil.example');
-
-            expect(betterdeskApi.startOIDCAuthorize).toHaveBeenCalledWith('/');
-        });
-
-        it('redirects to oidc_error when Go authorize fails', async () => {
-            betterdeskApi.startOIDCAuthorize.mockResolvedValue({
-                success: false,
-                error: 'OIDC is not enabled',
-            });
-
-            const res = await request(app).get('/api/auth/oidc/authorize');
-
-            expect(res.status).toBe(302);
-            expect(res.headers.location).toBe('/login?error=oidc_error');
-        });
-
-        it('redirects to oidc_error when auth_url is missing', async () => {
-            betterdeskApi.startOIDCAuthorize.mockResolvedValue({ success: true, data: {} });
-
-            const res = await request(app).get('/api/auth/oidc/authorize');
-
-            expect(res.status).toBe(302);
-            expect(res.headers.location).toBe('/login?error=oidc_error');
-        });
-    });
-
-    describe('GET /api/auth/oidc/callback (panel → Go proxy, #304)', () => {
-        it('proxies IdP callback query to Go', async () => {
-            betterdeskApi.proxyOIDCCallback.mockImplementation(async (req, res) => {
-                res.status(200).type('html').send('<html>Sign-in successful</html>');
-            });
-
-            const res = await request(app).get('/api/auth/oidc/callback?code=abc&state=xyz');
-
-            expect(res.status).toBe(200);
-            expect(res.text).toContain('Sign-in successful');
-            expect(betterdeskApi.proxyOIDCCallback).toHaveBeenCalledTimes(1);
-            const proxiedReq = betterdeskApi.proxyOIDCCallback.mock.calls[0][0];
-            expect(proxiedReq.query).toEqual({ code: 'abc', state: 'xyz' });
-        });
-
-        it('also exposes /api/oidc/callback alias', async () => {
-            betterdeskApi.proxyOIDCCallback.mockImplementation(async (_req, res) => {
-                res.status(302).set('Location', '/api/auth/oidc/session?code=one-time').end();
-            });
-
-            const res = await request(app).get('/api/oidc/callback?code=c&state=s');
-
-            expect(res.status).toBe(302);
-            expect(res.headers.location).toBe('/api/auth/oidc/session?code=one-time');
-            expect(betterdeskApi.proxyOIDCCallback).toHaveBeenCalled();
-        });
-    });
-
-    describe('GET /api/auth/oidc/status', () => {
-        it('keeps the password fallback for direct private-network access', async () => {
-            betterdeskApi.getOIDCStatus.mockResolvedValue({
-                success: true,
-                data: { enabled: true, prefer_sso: true, display_name: 'Example IdP' },
-            });
-
-            const res = await request(app).get('/api/auth/oidc/status');
-
-            expect(res.status).toBe(200);
-            expect(res.body).toMatchObject({
-                enabled: true,
-                prefer_sso: true,
-                local_bypass: true,
-            });
-        });
-
-        it('does not classify a public client as local when the proxy is trusted', async () => {
-            app.set('trust proxy', 1);
-            betterdeskApi.getOIDCStatus.mockResolvedValue({
-                success: true,
-                data: { enabled: true, prefer_sso: true },
-            });
-
-            const res = await request(app)
-                .get('/api/auth/oidc/status')
-                .set('X-Forwarded-For', '203.0.113.25');
-
-            expect(res.status).toBe(200);
-            expect(res.body.local_bypass).toBe(false);
-        });
-
-        it('does not trust a forwarded public IP when the proxy is not trusted', async () => {
-            betterdeskApi.getOIDCStatus.mockResolvedValue({
-                success: true,
-                data: { enabled: true, prefer_sso: true },
-            });
-
-            const res = await request(app)
-                .get('/api/auth/oidc/status')
-                .set('X-Forwarded-For', '203.0.113.25');
-
-            expect(res.status).toBe(200);
-            expect(res.body.local_bypass).toBe(true);
-        });
     });
 
     describe('GET /api/auth/oidc/session', () => {
@@ -449,9 +85,9 @@ describe('Auth Routes', () => {
             });
             expect(db.updateLastLogin).toHaveBeenCalledWith(42);
 
-            const verify = await agent.get('/api/auth/verify');
+            const verify = await agent.get('/__test/session-user');
             expect(verify.status).toBe(200);
-            expect(verify.body.success).toBe(true);
+            expect(verify.body.userId).toBe(42);
             expect(verify.body.user).toEqual({
                 id: 42,
                 username: 'sso-user',

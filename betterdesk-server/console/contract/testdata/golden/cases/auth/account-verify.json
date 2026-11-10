@@ -1,0 +1,84 @@
+{
+ "id": "auth/account-verify",
+ "request": {
+  "method": "GET",
+  "path": "/api/auth/verify"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "session.absoluteExpiresAt",
+     "integer": true
+    },
+    {
+     "path": "session.createdAt",
+     "integer": true
+    },
+    {
+     "path": "session.idleExpiresAt",
+     "integer": true
+    },
+    {
+     "path": "session.lastActivityAt",
+     "integer": true
+    },
+    {
+     "path": "session.serverNow",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "session": {
+      "absoluteExpiresAt": 0,
+      "createdAt": 0,
+      "idleExpiresAt": 0,
+      "idleTimeoutMs": 1800000,
+      "lastActivityAt": 0,
+      "loginIp": "<client-ip>",
+      "maxAgeMs": 86400000,
+      "serverNow": 0,
+      "warnBeforeMs": 60000
+     },
+     "success": true,
+     "user": {
+      "id": 13,
+      "preferred_language": null,
+      "role": "operator",
+      "username": "contract_auth_tmp"
+     }
+    }
+   }
+  }
+ ]
+}

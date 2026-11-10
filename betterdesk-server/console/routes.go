@@ -2,6 +2,7 @@ package console
 
 import (
 	"github.com/unitronix/betterdesk-server/console/kit"
+	authroutes "github.com/unitronix/betterdesk-server/console/routes/auth"
 	"github.com/unitronix/betterdesk-server/console/routes/cdapstudio"
 	"github.com/unitronix/betterdesk-server/console/routes/chat"
 	consoleroutes "github.com/unitronix/betterdesk-server/console/routes/console"
@@ -40,6 +41,7 @@ import (
 // routes/bd-api.routes.js at /api/bd) register on d.Early and go first.
 func registerRoutes(d *kit.Deps) {
 	health.Register(d)        // routes/index.js: GET /health
+	authroutes.Register(d)    // routes/auth.routes.js
 	consoleroutes.Register(d) // routes/console.routes.js: the strings endpoint
 	dashboard.Register(d)     // routes/dashboard.routes.js
 	keys.Register(d)          // routes/keys.routes.js
