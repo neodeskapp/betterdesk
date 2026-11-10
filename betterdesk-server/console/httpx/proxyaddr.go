@@ -146,8 +146,9 @@ func (tp TrustProxy) ClientIP(r *http.Request) string {
 	return socket
 }
 
-// Scheme is "https" when the connection is TLS, or when the socket is a
-// trusted proxy that says so in X-Forwarded-Proto; "http" otherwise.
+// Scheme is "https" when the connection is TLS. Behind a trusted proxy it
+// is the first value of X-Forwarded-Proto exactly as sent, so only a
+// lower-case "https" counts as secure. "http" otherwise.
 func (tp TrustProxy) Scheme(r *http.Request) string {
 	if r.TLS != nil {
 		return "https"
@@ -160,7 +161,7 @@ func (tp TrustProxy) Scheme(r *http.Request) string {
 		proto = proto[:i]
 	}
 	if proto = strings.TrimSpace(proto); proto != "" {
-		return strings.ToLower(proto)
+		return proto
 	}
 	return "http"
 }

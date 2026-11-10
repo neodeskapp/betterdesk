@@ -74,6 +74,9 @@ func TestSchemeAndHost(t *testing.T) {
 	if got := loop.Scheme(request("198.51.100.1:1", forwarded)); got != "http" {
 		t.Errorf("public socket: scheme = %q, want http", got)
 	}
+	if got := loop.Scheme(request("127.0.0.1:1", map[string]string{"X-Forwarded-Proto": "HTTPS"})); got != "HTTPS" {
+		t.Errorf("upper-case proto: scheme = %q, want it unchanged", got)
+	}
 	secure := request("198.51.100.1:1", nil)
 	secure.TLS = &tls.ConnectionState{}
 	if got := off.Scheme(secure); got != "https" {
