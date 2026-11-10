@@ -34,10 +34,14 @@ func Register(d *kit.Deps) {
 
 func newHandlers(d *kit.Deps) *handlers {
 	dialer := &net.Dialer{}
+	counts := deviceCounts{db: d.Store}
+	if d.DeviceGroups != nil {
+		counts.sync = d.DeviceGroups.SyncServerPeers
+	}
 	return &handlers{
 		d:       d,
 		info:    d.ServerInfo,
-		backend: goapi.NewBackend(d.GoAPI, deviceCounts{db: d.Store}),
+		backend: goapi.NewBackend(d.GoAPI, counts),
 		log:     d.Log.Child("DASHBOARD"),
 		started: time.Now(),
 		now:     time.Now,

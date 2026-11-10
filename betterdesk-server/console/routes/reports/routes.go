@@ -32,7 +32,11 @@ type handlers struct {
 // Register adds the group's routes below the mount (/api/reports). The
 // engine writes times of PostgreSQL into a CSV in the zone of the process.
 func Register(d *kit.Deps) {
-	h := &handlers{db: d.Store, engine: engine.New(engine.Options{DB: d.Store}), log: d.Log.Child("Reports"), now: time.Now}
+	opts := engine.Options{DB: d.Store}
+	if d.DeviceGroups != nil {
+		opts.SyncPeers = d.DeviceGroups.SyncServerPeers
+	}
+	h := &handlers{db: d.Store, engine: engine.New(opts), log: d.Log.Child("Reports"), now: time.Now}
 	r := d.Router
 	r.Get("/types", h.types, requireSession)
 	r.Post("/generate", h.generate, requireSession)

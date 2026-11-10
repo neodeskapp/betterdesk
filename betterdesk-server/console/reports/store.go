@@ -17,8 +17,8 @@ import (
 // gave them (SelectRows).
 //
 // getAllPeers and getPeerStats first copied the signal server's devices
-// into the console's peer table (syncGoPeers). That copy is not done
-// here: the engine reads peer as it is.
+// into the console's peer table (syncGoPeers). Options.SyncPeers is that
+// copy.
 
 // errNullInfo is the TypeError parsePeer threw for a device whose info is
 // the JSON text null.
@@ -40,6 +40,7 @@ type peer struct {
 
 // allPeers is getAllPeers() without filters: the devices not deleted, by id.
 func (e *Engine) allPeers(ctx context.Context) ([]peer, error) {
+	e.sync(ctx)
 	rows, err := e.rows(ctx, e.db.Pick(
 		"SELECT * FROM peer WHERE is_deleted = 0 ORDER BY id",
 		"SELECT * FROM peer WHERE NOT is_deleted ORDER BY id",
@@ -109,6 +110,7 @@ func (e *Engine) parsePeer(row *goapi.Object) (peer, error) {
 
 // peerStats is getPeerStats(): {total, online, banned, offline}.
 func (e *Engine) peerStats(ctx context.Context) (*goapi.Object, error) {
+	e.sync(ctx)
 	var total, online, banned float64
 	if e.db.IsPostgres() {
 		rows, err := e.rows(ctx, `

@@ -34,6 +34,10 @@ type Options struct {
 	// does in Date.toString ("Coordinated Universal Time"). Default
 	// DefaultZoneName.
 	ZoneName func(time.Time) string
+	// SyncPeers brings the console's device table up to date with the
+	// server's before the engine reads it (syncGoPeers in getAllPeers and
+	// getPeerStats). Default: the table is read as it is.
+	SyncPeers func(context.Context)
 }
 
 // Engine makes reports.
@@ -41,6 +45,7 @@ type Engine struct {
 	db    *store.DB
 	now   func() time.Time
 	clock clock
+	sync  func(context.Context)
 }
 
 // New returns an engine.
@@ -54,7 +59,10 @@ func New(opts Options) *Engine {
 	if opts.ZoneName == nil {
 		opts.ZoneName = DefaultZoneName
 	}
-	return &Engine{db: opts.DB, now: opts.Now, clock: clock{loc: opts.Location, zoneName: opts.ZoneName}}
+	if opts.SyncPeers == nil {
+		opts.SyncPeers = func(context.Context) {}
+	}
+	return &Engine{db: opts.DB, now: opts.Now, clock: clock{loc: opts.Location, zoneName: opts.ZoneName}, sync: opts.SyncPeers}
 }
 
 // Filters are the options of a report as the request gave them. Only the

@@ -14,12 +14,18 @@ import (
 type deviceCounts struct {
 	goapi.Store
 	db *store.DB
+	// sync brings the table up to date with the server's first, as
+	// getPeerStats did (syncGoPeers); nil reads the table as it is.
+	sync func(context.Context)
 }
 
 // GetStats counts the devices in the console's table that are not
 // deleted: {total, online, banned, offline}. The device layer falls back
 // on it when the server gives no statistics.
 func (c deviceCounts) GetStats(ctx context.Context) (any, error) {
+	if c.sync != nil {
+		c.sync(ctx)
+	}
 	query := c.db.Pick(
 		`SELECT
 			(SELECT COUNT(*) FROM peer WHERE is_deleted = 0),
