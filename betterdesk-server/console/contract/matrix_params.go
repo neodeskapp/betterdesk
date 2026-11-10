@@ -66,7 +66,7 @@ var (
 		// which devices have summaries, and their numbers, change with the
 		// hour, and so does the saved report made from them.
 		"GET /api/activity":      {"~summaries", "total"},
-		"GET /api/reports/saved": {"~[*].payload"},
+		"GET /api/reports/saved": {"~[*]"},
 		// One entry holds the size of the backup the matrix downloads
 		// ("0.33 MB"), which changes with the instance.
 		"GET /api/settings/audit": {"~data[*].details"},
