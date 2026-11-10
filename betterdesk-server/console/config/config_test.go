@@ -11,7 +11,7 @@ func TestLoadDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.Port != 0 || cfg.Host != "0.0.0.0" || cfg.NodeUpstream != nil || cfg.TrustProxy.Enabled() {
+	if cfg.Port != 0 || cfg.Host != "0.0.0.0" || cfg.NodeUpstream != nil || cfg.TrustProxy.Enabled() || cfg.DebugRouting {
 		t.Errorf("defaults = %+v", cfg)
 	}
 }
@@ -45,6 +45,18 @@ func TestLoadRejectsBadValues(t *testing.T) {
 	} {
 		if _, err := Load(env(values)); err == nil {
 			t.Errorf("Load(%v) accepted a bad value", values)
+		}
+	}
+}
+
+func TestLoadDebugRouting(t *testing.T) {
+	for value, want := range map[string]bool{"1": true, " 1 ": true, "": false, "0": false, "true": false} {
+		cfg, err := Load(env(map[string]string{"CONSOLE_DEBUG_ROUTING": value}))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if cfg.DebugRouting != want {
+			t.Errorf("CONSOLE_DEBUG_ROUTING=%q gives DebugRouting %v, want %v", value, cfg.DebugRouting, want)
 		}
 	}
 }

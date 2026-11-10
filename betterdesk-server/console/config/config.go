@@ -26,6 +26,11 @@ type Config struct {
 	// move from Node to Go (CONSOLE_NODE_UPSTREAM). nil when Go serves
 	// everything.
 	NodeUpstream *url.URL
+
+	// DebugRouting adds GET /__bd/routing, where the contract suite asks
+	// whether Go or Node answers a route (CONSOLE_DEBUG_ROUTING=1). Test
+	// stacks set it; an install does not.
+	DebugRouting bool
 }
 
 // Load reads the configuration through getenv (os.Getenv in production).
@@ -56,6 +61,8 @@ func Load(getenv func(string) string) (*Config, error) {
 		}
 		cfg.NodeUpstream = u
 	}
+
+	cfg.DebugRouting = strings.TrimSpace(getenv("CONSOLE_DEBUG_ROUTING")) == "1"
 	return cfg, nil
 }
 

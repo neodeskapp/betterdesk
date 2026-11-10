@@ -37,6 +37,9 @@ func New(cfg *config.Config) *Server {
 	} else {
 		s.fallback = http.HandlerFunc(notFound)
 	}
+	if cfg.DebugRouting {
+		s.router.Get(proxy.RoutingPath, proxy.Routing(s.handles, cfg.NodeUpstream != nil))
+	}
 	return s
 }
 
@@ -51,6 +54,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.fallback.ServeHTTP(w, r)
+}
+
+// handles reports whether a Go route answers r, by the lookup ServeHTTP uses.
+func (s *Server) handles(r *http.Request) bool {
+	_, ok := s.router.Lookup(r)
+	return ok
 }
 
 // Start opens the listener and serves until ctx ends or Stop is called.

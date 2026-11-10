@@ -163,6 +163,73 @@ func TestGoRouteAnswersBeforeNode(t *testing.T) {
 	}
 }
 
+// routingFront is a front door with the routing report switched on or off
+// and one Go route, GET /api/ported/{id}.
+func routingFront(t *testing.T, upstream string, debug bool) *httptest.Server {
+	t.Helper()
+	cfg := &config.Config{Host: "127.0.0.1", DebugRouting: debug}
+	if upstream != "" {
+		u, err := url.Parse(upstream)
+		if err != nil {
+			t.Fatal(err)
+		}
+		cfg.NodeUpstream = u
+	}
+	s := New(cfg)
+	s.Router().Get("/api/ported/{id}", func(w http.ResponseWriter, r *http.Request) {})
+	front := httptest.NewServer(s)
+	t.Cleanup(front.Close)
+	return front
+}
+
+func whoAnswers(t *testing.T, front *httptest.Server, method, path string) (int, map[string]string) {
+	t.Helper()
+	q := url.Values{"method": {method}, "path": {path}}
+	req, _ := http.NewRequest("GET", front.URL+"/__bd/routing?"+q.Encode(), nil)
+	res, body := getJSON(t, req)
+	return res.StatusCode, body
+}
+
+func TestRoutingReportFollowsTheRouteTable(t *testing.T) {
+	node := fakeNode(t)
+	front := routingFront(t, node.URL, true)
+	for _, c := range []struct{ method, path, want string }{
+		{"GET", "/api/ported/7", "go"},
+		{"HEAD", "/API/Ported/7/", "go"},
+		{"DELETE", "/api/ported/7", "node"},
+		{"GET", "/api/ported", "node"},
+		{"GET", "/api/devices", "node"},
+		{"GET", "/__bd/routing", "go"},
+	} {
+		code, body := whoAnswers(t, front, c.method, c.path)
+		if code != http.StatusOK || body["handler"] != c.want {
+			t.Errorf("%s %s = %d %v, want handler %q", c.method, c.path, code, body, c.want)
+		}
+	}
+
+	goOnly := routingFront(t, "", true)
+	if _, body := whoAnswers(t, goOnly, "GET", "/api/devices"); body["handler"] != "none" {
+		t.Errorf("without Node: %v, want handler none", body)
+	}
+	if _, body := whoAnswers(t, goOnly, "GET", "/api/ported/7"); body["handler"] != "go" {
+		t.Errorf("without Node: %v, want handler go", body)
+	}
+}
+
+func TestRoutingReportIsOffByDefault(t *testing.T) {
+	node := fakeNode(t)
+	front := routingFront(t, node.URL, false)
+	code, body := whoAnswers(t, front, "GET", "/api/ported/7")
+	if code != http.StatusTeapot || body["server"] != "node" || body["handler"] != "" {
+		t.Errorf("status %d body %v, want the request passed to Node like any other path", code, body)
+	}
+
+	goOnly := routingFront(t, "", false)
+	if code, _ := whoAnswers(t, goOnly, "GET", "/api/ported/7"); code != http.StatusNotFound {
+		t.Errorf("without Node: status %d, want 404", code)
+	}
+}
+
 func TestWebsocketGoesToNode(t *testing.T) {
 	node := fakeNode(t)
 	_, front := frontDoor(t, node.URL, "")
