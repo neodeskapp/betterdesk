@@ -1,0 +1,229 @@
+// Package devicegroups holds what the console does with device groups,
+// tags and address books besides deciding who may see a device (that is
+// console/access): reading a submitted device group, renaming and
+// deleting tags across devices, and keeping RustDesk address books in
+// line with the devices' tags.
+//
+// A submitted device group reaches this package as decoded JSON (nil,
+// bool, float64, string, []any, map[string]any). Devices and address
+// book data are the values of console/goapi, whose objects keep their
+// keys in order. Both are read the way the Node console read them: what
+// counts as empty, how a value reads as text.
+package devicegroups
+
+import (
+	"math"
+	"strconv"
+	"strings"
+
+	"github.com/unitronix/betterdesk-server/console/access"
+)
+
+// GroupPayload is a submitted device group after normalising.
+type GroupPayload struct {
+	// GUID is at most 64 characters, empty when none was given.
+	GUID string
+	// Name is at most 80 characters.
+	Name string
+	// SourceType is "tag" for a group whose members are the devices with a
+	// tag, else "manual".
+	SourceType string
+	// TagFilter is the tag of a "tag" group, at most 50 characters, and
+	// empty for a manual group.
+	TagFilter string
+	// AllowedUsers and AllowedGroups are the access lists: usernames and
+	// user group guids.
+	AllowedUsers  []string
+	AllowedGroups []string
+	// Note and TeamID are set only when the body had the key.
+	Note   *string
+	TeamID *string
+}
+
+// NormalizeGroupPayload reads a submitted device group. A nil body reads
+// as an empty one.
+func NormalizeGroupPayload(body map[string]any) GroupPayload {
+	p := GroupPayload{SourceType: "manual"}
+	if s, ok := body["source_type"].(string); ok && s == "tag" || body["dynamic"] == true {
+		p.SourceType = "tag"
+		p.TagFilter = cut(jsTrim(text(or(body["tag_filter"], body["tag"]))), 50)
+	}
+	if truthy(body["guid"]) {
+		p.GUID = cut(jsTrim(jsString(body["guid"])), 64)
+	}
+	p.Name = cut(jsTrim(text(body["name"])), 80)
+	p.AllowedUsers = access.NormalizeUsernames(body["allowed_users"])
+	p.AllowedGroups = access.NormalizeGroupGUIDs(or(or(body["allowed_groups"], body["allowed_user_groups"]), body["user_group_guids"]))
+	if value, ok := body["note"]; ok {
+		note := cut(jsTrim(text(value)), 512)
+		p.Note = &note
+	}
+	if value, ok := body["team_id"]; ok {
+		team := cut(jsTrim(text(value)), 64)
+		p.TeamID = &team
+	}
+	return p
+}
+
+// GroupFields are the columns of a device group a write sets. A nil
+// field is left as it is by an update.
+type GroupFields struct {
+	GUID       string
+	Name       *string
+	Note       *string
+	TeamID     *string
+	SourceType *string
+	TagFilter  *string
+}
+
+// CreateFields are the columns a new device group gets from a payload: a
+// note and a team id that were not submitted are empty.
+func (p GroupPayload) CreateFields() GroupFields {
+	empty := ""
+	f := GroupFields{Name: &p.Name, Note: &empty, TeamID: &empty, SourceType: &p.SourceType, TagFilter: &p.TagFilter}
+	if p.Note != nil {
+		f.Note = p.Note
+	}
+	if p.TeamID != nil {
+		f.TeamID = p.TeamID
+	}
+	return f
+}
+
+// UpdateFields are the columns an update of a device group sets from a
+// payload: a note and a team id that were not submitted stay.
+func (p GroupPayload) UpdateFields() GroupFields {
+	return GroupFields{Name: &p.Name, Note: p.Note, TeamID: p.TeamID, SourceType: &p.SourceType, TagFilter: &p.TagFilter}
+}
+
+// truthy reports whether a decoded JSON value counts as set in
+// JavaScript: nil, false, 0, NaN and "" do not.
+func truthy(v any) bool {
+	switch x := v.(type) {
+	case nil:
+		return false
+	case bool:
+		return x
+	case string:
+		return x != ""
+	case float64:
+		return x != 0 && !math.IsNaN(x)
+	}
+	return true
+}
+
+// or is JavaScript's a || b.
+func or(a, b any) any {
+	if truthy(a) {
+		return a
+	}
+	return b
+}
+
+// text is JavaScript's String(v || ”).
+func text(v any) string {
+	if !truthy(v) {
+		return ""
+	}
+	return jsString(v)
+}
+
+// jsString is JavaScript's String(v) for a decoded JSON value: a list is
+// its items joined by commas (null items empty), an object is "[object
+// Object]".
+func jsString(v any) string {
+	switch x := v.(type) {
+	case nil:
+		return "null"
+	case string:
+		return x
+	case bool:
+		return strconv.FormatBool(x)
+	case float64:
+		return jsNumberString(x)
+	case []any:
+		parts := make([]string, len(x))
+		for i, item := range x {
+			if item != nil {
+				parts[i] = jsString(item)
+			}
+		}
+		return strings.Join(parts, ",")
+	case []string:
+		return strings.Join(x, ",")
+	}
+	return "[object Object]"
+}
+
+// jsNumberString writes a number as JavaScript does: the shortest digits
+// that read back as the same number, plain between 1e-7 and 1e21 and with
+// an exponent outside.
+func jsNumberString(f float64) string {
+	switch {
+	case math.IsNaN(f):
+		return "NaN"
+	case math.IsInf(f, 1):
+		return "Infinity"
+	case math.IsInf(f, -1):
+		return "-Infinity"
+	case f == 0:
+		return "0"
+	}
+	sign := ""
+	if f < 0 {
+		sign, f = "-", -f
+	}
+	mantissa, exponent, _ := strings.Cut(strconv.FormatFloat(f, 'e', -1, 64), "e")
+	digits := strings.Replace(mantissa, ".", "", 1)
+	e, _ := strconv.Atoi(exponent)
+	n, k := e+1, len(digits)
+	switch {
+	case k <= n && n <= 21:
+		return sign + digits + strings.Repeat("0", n-k)
+	case 0 < n && n <= 21:
+		return sign + digits[:n] + "." + digits[n:]
+	case -6 < n && n <= 0:
+		return sign + "0." + strings.Repeat("0", -n) + digits
+	}
+	out := sign + digits[:1]
+	if k > 1 {
+		out += "." + digits[1:]
+	}
+	if n-1 < 0 {
+		return out + "e-" + strconv.Itoa(1-n)
+	}
+	return out + "e+" + strconv.Itoa(n-1)
+}
+
+// jsTrim removes what JavaScript's trim removes.
+func jsTrim(s string) string { return strings.TrimFunc(s, isJSSpace) }
+
+func isJSSpace(r rune) bool {
+	switch r {
+	case '\t', '\n', '\v', '\f', '\r', ' ', 0xa0, 0x1680, 0x2028, 0x2029, 0x202f, 0x205f, 0x3000, 0xfeff:
+		return true
+	}
+	return r >= 0x2000 && r <= 0x200a
+}
+
+// cut returns the first n UTF-16 code units of s, as JavaScript's
+// slice(0, n) does. A character outside the Basic Multilingual Plane that
+// the cut falls into leaves its first half, which becomes U+FFFD in JSON
+// and in the database.
+func cut(s string, n int) string {
+	units := 0
+	for i, r := range s {
+		size := 1
+		if r > 0xffff {
+			size = 2
+		}
+		if units+size > n {
+			if units < n {
+				return s[:i] + "�"
+			}
+			return s[:i]
+		}
+		units += size
+	}
+	return s
+}

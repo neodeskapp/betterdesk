@@ -3,6 +3,7 @@ package console
 import (
 	"github.com/unitronix/betterdesk-server/console/kit"
 	authroutes "github.com/unitronix/betterdesk-server/console/routes/auth"
+	"github.com/unitronix/betterdesk-server/console/routes/avatars"
 	"github.com/unitronix/betterdesk-server/console/routes/cdapstudio"
 	"github.com/unitronix/betterdesk-server/console/routes/chat"
 	consoleroutes "github.com/unitronix/betterdesk-server/console/routes/console"
@@ -46,6 +47,7 @@ func registerRoutes(d *kit.Deps) {
 	consoleroutes.Register(d) // routes/console.routes.js: the strings endpoint
 	dashboard.Register(d)     // routes/dashboard.routes.js
 	keys.Register(d)          // routes/keys.routes.js
+	avatars.Register(d)       // routes/avatars.routes.js
 	panelaccess.Register(d)   // routes/panel-access.routes.js
 	uishell.Register(d)       // routes/ui-shell.routes.js
 	i18nroutes.Register(d)    // routes/i18n.routes.js at /api/i18n

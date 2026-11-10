@@ -30,6 +30,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/console/authn"
+	"github.com/unitronix/betterdesk-server/console/avatars"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/csrf"
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -202,6 +203,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		},
 		Logger: s.deps.Log,
 	})
+	s.deps.Avatars = avatars.New(avatars.Options{DB: opts.Store, Logger: s.deps.Log.Child("Avatar")})
 	badParam := func(w http.ResponseWriter, r *http.Request, err error) {
 		host.ServerError(w, r, err, http.StatusBadRequest)
 	}

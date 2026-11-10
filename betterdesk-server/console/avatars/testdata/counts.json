@@ -1,0 +1,12 @@
+{
+ "sniff": 1173,
+ "data_url": 2545,
+ "refused": 4213,
+ "fetch": 1446,
+ "load": 227,
+ "constants": {
+  "MAX_AVATAR_BYTES": 524288,
+  "FETCH_TIMEOUT_MS": 5000,
+  "MAX_REDIRECTS": 3
+ }
+}

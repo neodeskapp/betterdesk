@@ -1,0 +1,15 @@
+{
+ "payload": 1910,
+ "tags_sanitize": 71,
+ "tags_equal": 1444,
+ "tags_has": 801,
+ "tags_rename": 800,
+ "tags_remove": 800,
+ "tags_runs": 600,
+ "addressbook_normalize": 478,
+ "addressbook_parse": 1500,
+ "addressbook_merge": 1500,
+ "addressbook_filter": 1500,
+ "addressbook_visible": 1337,
+ "addressbook_updates": 1500
+}

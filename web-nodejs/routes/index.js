@@ -60,7 +60,6 @@ router.use('/', devicesRoutes);
 router.use('/', settingsRoutes);
 router.use('/', generatorRoutes);
 router.use('/', require('./client-branding.routes'));
-router.use('/', require('./avatars.routes'));    // profile pictures: /api/users/avatars, /api/users/:id/avatar
 router.use('/', usersRoutes);
 router.use('/', foldersRoutes);
 router.use('/', remoteRoutes);

@@ -7,6 +7,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/console/authn"
+	"github.com/unitronix/betterdesk-server/console/avatars"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/csrf"
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -68,6 +69,9 @@ type Deps struct {
 	// addresses, the client configuration (services/keyService.js,
 	// services/clientConfigHost.js and the services next to them).
 	ServerInfo *serverinfo.Service
+	// Avatars keeps the profile pictures of console users
+	// (services/avatarService.js, lib/avatarImage.js).
+	Avatars *avatars.Service
 	// Audit writes the audit log. LogAction is the usual way to it.
 	Audit *auditlog.Log
 	// Log is the console's logger; a group takes d.Log.Child("TICKETS").
