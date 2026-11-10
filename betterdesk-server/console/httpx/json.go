@@ -7,6 +7,7 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/json"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -96,9 +97,14 @@ func Fresh(r *http.Request, etag string, lastModified time.Time) bool {
 // WriteJSON answers with v as JSON and the given status.
 //
 // The answer carries a weak ETag, and a GET or HEAD whose If-None-Match
-// names it gets 304 without a body. When the request is marked with
-// WithJSONCompression, the client accepts gzip and the body is at least
-// CompressMinBytes long, the body goes out gzip-compressed.
+// names it gets 304 without a body.
+//
+// A request marked with WithJSONCompression whose answer is at least
+// CompressMinBytes long is answered by what its Accept-Encoding offers.
+// When that is gzip or brotli (with a q above zero), the answer says
+// Vary: Accept-Encoding and, to a write, carries no ETag. The body goes out
+// gzip-compressed when gzip is offered, and plain otherwise: a client that
+// offers brotli alone gets the plain body.
 func WriteJSON(w http.ResponseWriter, r *http.Request, status int, v any) {
 	body, err := Marshal(v)
 	if err != nil {
@@ -114,13 +120,18 @@ func WriteJSONBytes(w http.ResponseWriter, r *http.Request, status int, body []b
 	if h.Get("Content-Type") == "" {
 		h.Set("Content-Type", "application/json; charset=utf-8")
 	}
-	compress := len(body) >= CompressMinBytes && r.Context().Value(compressKey{}) == true &&
-		h.Get("Content-Encoding") == "" && AcceptsGzip(r.Header.Get("Accept-Encoding"))
-	safe := r.Method == http.MethodGet || r.Method == http.MethodHead
-	if compress {
-		h.Add("Vary", "Accept-Encoding")
+	// varies: the answer depends on Accept-Encoding. compress: it is gzip.
+	varies, compress := false, false
+	if len(body) >= CompressMinBytes && r.Context().Value(compressKey{}) == true && h.Get("Content-Encoding") == "" {
+		offered := strings.Join(r.Header.Values("Accept-Encoding"), ", ")
+		compress = AcceptsGzip(offered)
+		varies = compress || acceptsEncoding(offered, "br")
 	}
-	if h.Get("ETag") == "" && (safe || !compress) {
+	safe := r.Method == http.MethodGet || r.Method == http.MethodHead
+	if varies {
+		AddVary(h, "Accept-Encoding")
+	}
+	if h.Get("ETag") == "" && (safe || !varies) {
 		h.Set("ETag", ETag(body))
 	}
 	if status >= 200 && status < 300 && Fresh(r, h.Get("ETag"), time.Time{}) {
@@ -156,23 +167,48 @@ func AcceptsGzip(header string) bool {
 	return acceptsEncoding(header, "gzip")
 }
 
+// acceptsEncoding reads an Accept-Encoding header the way the old console
+// did. An entry is a name and parameters, split at ";". The name counts
+// as written in lower case, without white space around the entry. A
+// parameter q= followed by digits and dots sets the quality, the last one
+// wins, and one that is no number (1.2.3) refuses the encoding. Without a
+// q the quality is 1. When a name comes more than once, its last entry
+// counts. The encoding is accepted when its quality is above zero.
 func acceptsEncoding(header, encoding string) bool {
+	accepted := false
 	for _, part := range strings.Split(header, ",") {
-		fields := strings.Split(strings.ToLower(strings.TrimSpace(part)), ";")
-		if strings.TrimSpace(fields[0]) != encoding {
+		fields := strings.Split(lowerASCII(trimHeaderSpace(part)), ";")
+		if fields[0] != encoding {
 			continue
 		}
-		q := 1.0
+		accepted = true
 		for _, param := range fields[1:] {
-			if value, ok := strings.CutPrefix(strings.TrimSpace(param), "q="); ok {
-				if parsed, err := strconv.ParseFloat(value, 64); err == nil {
-					q = parsed
+			value, ok := strings.CutPrefix(trimHeaderSpace(param), "q=")
+			if !ok || value == "" || strings.Trim(value, "0123456789.") != "" {
+				continue
+			}
+			q, err := strconv.ParseFloat(value, 64)
+			accepted = q > 0 && (err == nil || math.IsInf(q, 1))
+		}
+	}
+	return accepted
+}
+
+// lowerASCII lowers the ASCII letters of a header value and leaves every
+// other byte as it is.
+func lowerASCII(s string) string {
+	for i := 0; i < len(s); i++ {
+		if c := s[i]; c >= 'A' && c <= 'Z' {
+			b := []byte(s)
+			for j := i; j < len(b); j++ {
+				if b[j] >= 'A' && b[j] <= 'Z' {
+					b[j] += 'a' - 'A'
 				}
 			}
+			return string(b)
 		}
-		return q > 0
 	}
-	return false
+	return s
 }
 
 // ISOTime formats t as JavaScript's Date.toISOString does: UTC with

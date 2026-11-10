@@ -2,9 +2,11 @@ package httpx
 
 import (
 	"compress/gzip"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -182,5 +184,117 @@ func TestWriteJSONHead(t *testing.T) {
 	body, _ := io.ReadAll(res.Body)
 	if len(body) != 0 || res.Header.Get("Content-Length") != "16" {
 		t.Errorf("HEAD: body %q, Content-Length %q", body, res.Header.Get("Content-Length"))
+	}
+}
+
+type jsonCompressionVector struct {
+	Name                string   `json:"name"`
+	Method              string   `json:"method"`
+	Size                string   `json:"size"`
+	AcceptEncoding      *string  `json:"acceptEncoding"`
+	AcceptEncodingLines []string `json:"acceptEncodingLines"`
+	Vary                *string  `json:"vary"`
+	Answer              struct {
+		Status           int      `json:"status"`
+		Vary             []string `json:"vary"`
+		ContentEncoding  []string `json:"contentEncoding"`
+		ETag             []string `json:"etag"`
+		ContentType      []string `json:"contentType"`
+		HasContentLength bool     `json:"hasContentLength"`
+	} `json:"answer"`
+}
+
+// Every recorded answer of res.json behind the old console's compression
+// (testdata/jsoncompress_vectors.json, written by
+// .ui-rework/go/tools/vectors/express-answers.js). Go answers with the same
+// headers. Where the old console compressed with brotli, Go sends gzip to a
+// client that offers gzip too and the plain body to one that does not.
+func TestWriteJSONMatchesNodePerAcceptEncoding(t *testing.T) {
+	raw, err := os.ReadFile("testdata/jsoncompress_vectors.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var file struct {
+		Big     json.RawMessage         `json:"big"`
+		Small   json.RawMessage         `json:"small"`
+		Vectors []jsonCompressionVector `json:"vectors"`
+	}
+	if err := json.Unmarshal(raw, &file); err != nil {
+		t.Fatal(err)
+	}
+	if len(file.Vectors) < 250 || len(file.Big) < CompressMinBytes || len(file.Small) >= CompressMinBytes {
+		t.Fatalf("%d vectors, bodies of %d and %d bytes", len(file.Vectors), len(file.Big), len(file.Small))
+	}
+	// The headers that offer gzip next to brotli
+	gzipNextToBrotli := map[string]bool{"gzip, deflate, br": true, "br, gzip": true, "gzip;q=0.5, br;q=0.1": true}
+	seen := map[string]int{}
+	for _, v := range file.Vectors {
+		body := file.Big
+		if v.Size == "small" {
+			body = file.Small
+		}
+		r := httptest.NewRequest(v.Method, "/api/json", nil)
+		if v.AcceptEncoding != nil {
+			r.Header.Set("Accept-Encoding", *v.AcceptEncoding)
+		}
+		for _, line := range v.AcceptEncodingLines {
+			r.Header.Add("Accept-Encoding", line)
+		}
+		r = r.WithContext(WithJSONCompression(r.Context()))
+		rec := httptest.NewRecorder()
+		if v.Vary != nil {
+			rec.Header().Set("Vary", *v.Vary)
+		}
+		WriteJSONBytes(rec, r, http.StatusOK, body)
+		res := rec.Result()
+
+		wantEncoding := v.Answer.ContentEncoding
+		brotli := len(wantEncoding) == 1 && wantEncoding[0] == "br"
+		if brotli {
+			wantEncoding = nil
+			if v.AcceptEncoding != nil && gzipNextToBrotli[*v.AcceptEncoding] {
+				wantEncoding = []string{"gzip"}
+			}
+			seen["brotli in Node, "+strings.Join(append(wantEncoding, "here"), " ")]++
+		}
+		if res.StatusCode != v.Answer.Status {
+			t.Errorf("%s: status %d, Node answers %d", v.Name, res.StatusCode, v.Answer.Status)
+		}
+		for name, node := range map[string][]string{
+			"Vary": v.Answer.Vary, "ETag": v.Answer.ETag, "Content-Type": v.Answer.ContentType, "Content-Encoding": wantEncoding,
+		} {
+			if got := res.Header.Values(name); strings.Join(got, "\n") != strings.Join(node, "\n") {
+				t.Errorf("%s: %s = %q, want %q as Node sends it", v.Name, name, got, node)
+			}
+		}
+		wantLength := v.Answer.HasContentLength
+		if brotli {
+			wantLength = len(wantEncoding) == 0
+		}
+		if got := res.Header.Get("Content-Length") != ""; got != wantLength {
+			t.Errorf("%s: Content-Length sent = %v, want %v", v.Name, got, wantLength)
+		}
+		sent, _ := io.ReadAll(res.Body)
+		if len(wantEncoding) == 1 && v.Method != http.MethodHead {
+			zr, err := gzip.NewReader(strings.NewReader(string(sent)))
+			if err != nil {
+				t.Errorf("%s: the body is not gzip: %v", v.Name, err)
+				continue
+			}
+			sent, _ = io.ReadAll(zr)
+		}
+		if want := string(body); v.Method != http.MethodHead && string(sent) != want {
+			t.Errorf("%s: body of %d bytes differs from the JSON", v.Name, len(sent))
+		}
+		if len(v.Answer.Vary) > 0 {
+			seen["varies"]++
+		} else {
+			seen["does not vary"]++
+		}
+	}
+	for kind, least := range map[string]int{"varies": 40, "does not vary": 100, "brotli in Node, gzip here": 9, "brotli in Node, here": 15} {
+		if seen[kind] < least {
+			t.Errorf("only %d vectors of the kind %q, want %d", seen[kind], kind, least)
+		}
 	}
 }
