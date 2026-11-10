@@ -539,8 +539,8 @@ func TestNodeClient(t *testing.T) {
 		len(functions), total, len(vectors.Down), len(vectors.Up), len(vectors.Hang), differing)
 }
 
-// TestNodeClientCollation compares localeCompare with JavaScript's for
-// every pair of the texts the script compared.
+// TestNodeClientCollation compares the collator with JavaScript's localeCompare
+// for every pair of the texts the script compared.
 func TestNodeClientCollation(t *testing.T) {
 	vectors := loadVectors(t)
 	items := vectors.Collation.Items

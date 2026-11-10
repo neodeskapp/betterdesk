@@ -191,12 +191,9 @@ function collation() {
     const items = [];
     for (let c = 0x20; c < 0x7f; c++) items.push(String.fromCharCode(c));
     items.push('', '\t', '\n', '\u0001', '\u007f', 'a\u0001b');
-    // The Latin letters with accents: Latin-1 and Latin Extended-A without
-    // the multiplication and division signs and the l with a middle dot,
-    // and the Romanian letters with a comma below.
-    for (let c = 0xc0; c <= 0x17f; c++) {
-        if (![0xd7, 0xf7, 0x13f, 0x140].includes(c)) items.push(String.fromCharCode(c));
-    }
+    // The Latin letters with accents (Latin-1 and Latin Extended-A) and the
+    // Romanian letters with a comma below.
+    for (let c = 0xc0; c <= 0x17f; c++) items.push(String.fromCharCode(c));
     for (const c of [0x218, 0x219, 0x21a, 0x21b]) items.push(String.fromCharCode(c));
     items.push('ab', 'aB', 'Ab', 'AB', 'a b', 'a_b', 'a-b', 'a.b', 'a1', '1a', '10', '9', '09', 'host-10', 'Host-9', 'host_9',
         'resume', 'résumé', 'Resume', 'RESUME', 'strasse', 'straße', 'Strasse', 'zebra', 'Zulu', 'ärger', 'arger', 'Ärger', 'azure',
@@ -204,6 +201,27 @@ function collation() {
         'łódź', 'lodz', 'lódz', 'lody', 'lodza', 'Łódź', 'żółw', 'zolw', 'zolx', 'ćma', 'cma', 'cmb', 'æon', 'aeon', 'aeoo', 'aen', 'Æon',
         'œuvre', 'oeuvre', 'oev', 'ij', 'ik', 'dz', 'tz', 'nz', 'kz', 'iz', 'qz', 'zz', 'čaj', 'caj', 'cz', 'şu', 'su', 'sz', 'İzmir', 'izmir', 'Izmir',
         '2026-11-10T01:05:50Z', '2026-11-10T01:05:50.5Z', '2026-11-10T01:05:51Z', '2020-01-01T00:00:00Z');
+    // Other scripts, with mixed case, digits and Latin letters next to them.
+    items.push(
+        // Cyrillic
+        'а', 'б', 'в', 'г', 'е', 'ж', 'и', 'й', 'А', 'Б', 'ё', 'Ё', 'ґ', 'є', 'іва', 'їжак',
+        'сервер', 'Сервер', 'СЕРВЕР', 'сервер-10', 'сервер-9', 'сервер2', 'Сервер 1', 'ёлка', 'елка', 'еж', 'ёж', 'Ёж',
+        'компьютер', 'Компьютер 1', 'пк', 'ПК1', 'пк2', 'ПК10',
+        // Greek
+        'α', 'β', 'ω', 'Α', 'Ω', 'ά', 'έ', 'σ', 'ς', 'Σ', 'άλφα', 'αλφα', 'Άλφα', 'ΑΛΦΑ', 'βήτα', 'ωμέγα',
+        'υπολογιστής', 'Υπολογιστής', 'σας', 'σασ', 'γραφείο 2', 'Γραφείο 10',
+        // Chinese, Japanese, Korean
+        '文', '日', '本', '語', '一', '二', '三', '服务器', '服務器', '电脑', '電腦', '主机1', '主机2', '主机10',
+        'サーバー', 'サーバ', 'さーばー', 'あ', 'ア', 'ぁ', 'か', 'が', 'カ', 'ガ', '서버', '컴퓨터', '가', '나', '한글', '한글2',
+        // Arabic and Hebrew
+        'ا', 'ب', 'ي', 'أ', 'إ', 'آ', 'ة', 'ه', 'خادم', 'حاسوب', 'خادم1', 'خادم2', 'خادم١', '١', '٢', 'مكتب', 'مَكتب',
+        'א', 'ב', 'שרת', 'מחשב', 'שרת2',
+        // Scripts next to each other
+        'PC-сервер', 'pc-Сервер', 'Büro-ПК', 'host-中', 'host-日', '中-host', '1中', '中1', 'Ωmega', 'omega', 'αlpha', 'alpha',
+        'server', 'Server2', 'я1', 'Я2', 'z1', 'ω1', '語2',
+        // Digits of other scripts, and punctuation outside ASCII
+        '۱', '१', '๑', '１', '𝟏', '٩', '١٠', 'a١', 'a２', 'a١b', 'a1b', 'a2',
+        '·', '–', '—', '«', '»', '€', '£', '©', '°', '№', ' ', 'a–b', 'a·b', 'col·lega', 'coŀlega', 'collega');
     const rows = items.map((a) => items.map((b) => {
         const c = a.localeCompare(b);
         return c < 0 ? '<' : c > 0 ? '>' : '=';

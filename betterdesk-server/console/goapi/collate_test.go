@@ -16,6 +16,9 @@ func sign(n int) int {
 	return 0
 }
 
+// localeCompare compares two texts with a new collator.
+func localeCompare(a, b string) int { return newCollator().compare(a, b) }
+
 func TestLocaleCompare(t *testing.T) {
 	cases := []struct {
 		a, b string
@@ -67,6 +70,35 @@ func TestLocaleCompare(t *testing.T) {
 		{"iz", "ı", -1},
 		{"ı", "j", -1},
 		{"zz", "þ", -1},
+		// Other scripts: after the Latin letters, each in its own order.
+		{"z", "α", -1},
+		{"ω", "а", -1},
+		{"я", "א", -1},
+		{"שרת", "ا", -1},
+		{"ي", "文", -1},
+		{"сервер", "Сервер", -1},
+		{"елка", "ёлка", -1},
+		{"еж", "ёлка", -1},
+		{"αλφα", "άλφα", -1},
+		{"άλφα", "Άλφα", -1},
+		{"сервер-10", "сервер-9", -1},
+		{"主机10", "主机2", -1},
+		{"あ", "ア", -1},
+		{"か", "が", -1},
+		{"가", "나", -1},
+		{"pc-Сервер", "PC-сервер", -1},
+		{"collega", "col·lega", -1},
+		{"col·lega", "coŀlega", 0},
+		// Punctuation and symbols outside ASCII sort before the digits.
+		{"—", "0", -1},
+		{"©", "0", -1},
+		// A digit of another script is the ASCII digit; a fullwidth one
+		// comes after it.
+		{"1", "١", 0},
+		{"a1b", "a١b", 0},
+		{"१", "۱", 0},
+		{"1", "１", -1},
+		{"١", "１", -1},
 	}
 	for _, c := range cases {
 		if got := sign(localeCompare(c.a, c.b)); got != c.want {

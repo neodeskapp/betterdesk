@@ -195,13 +195,14 @@ func (b *Backend) GetAllDevices(ctx context.Context, filters DeviceFilters) []*O
 		column = "last_online"
 	}
 	ascending := filters.SortOrder == "asc"
+	order := newCollator()
 	sort.SliceStable(peers, func(i, j int) bool {
 		a := jsString(or(peers[i].Get(column), ""))
 		z := jsString(or(peers[j].Get(column), ""))
 		if ascending {
-			return localeCompare(a, z) < 0
+			return order.compare(a, z) < 0
 		}
-		return localeCompare(z, a) < 0
+		return order.compare(z, a) < 0
 	})
 	return peers
 }
