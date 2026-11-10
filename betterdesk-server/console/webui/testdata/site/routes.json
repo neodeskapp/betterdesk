@@ -1,0 +1,54 @@
+[
+	{
+		"id": "/(console)",
+		"pattern": "^\\/$"
+	},
+	{
+		"id": "/(console)/devices",
+		"pattern": "^\\/devices\\/?$"
+	},
+	{
+		"id": "/(console)/settings",
+		"pattern": "^\\/settings\\/?$"
+	},
+	{
+		"id": "/(console)/policies/[[orgId]]",
+		"pattern": "^\\/policies(?:\\/([^/]+))?\\/?$"
+	},
+	{
+		"id": "/(console)/organizations/[id]",
+		"pattern": "^\\/organizations\\/([^/]+?)\\/?$"
+	},
+	{
+		"id": "/(console)/files/[...path]",
+		"pattern": "^\\/files(?:\\/([^]*))?\\/?$"
+	},
+	{
+		"id": "/(public)/login",
+		"pattern": "^\\/login\\/?$"
+	},
+	{
+		"id": "/(public)/portal",
+		"pattern": "^\\/portal\\/?$"
+	},
+	{
+		"id": "/(public)/d/[publicId]",
+		"pattern": "^\\/d\\/([^/]+?)\\/?$"
+	},
+	{
+		"id": "/(remote)/remote",
+		"pattern": "^\\/remote\\/?$"
+	},
+	{
+		"id": "/(remote)/remote/guest",
+		"pattern": "^\\/remote\\/guest\\/?$"
+	},
+	{
+		"id": "/(remote)/remote/login",
+		"pattern": "^\\/remote\\/login\\/?$"
+	},
+	{
+		"id": "/(remote)/remote/[deviceId]",
+		"pattern": "^\\/remote\\/([^/]+?)\\/?$"
+	}
+]

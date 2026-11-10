@@ -1,0 +1,211 @@
+package webui
+
+import (
+	"compress/gzip"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
+	"testing"
+
+	"github.com/unitronix/betterdesk-server/console/httpx"
+)
+
+// The goldens are what the Node console answered for a list of requests
+// against the build in testdata/site (recorded by
+// .ui-rework/go/tools/webui/gen-webui-golden.js, which runs the real
+// lib/webUi.js and lib/mountRoutes.js). Each file is one configuration,
+// compressed with gzip.
+
+type goldenFile struct {
+	Policy *string      `json:"policy"`
+	Cases  []goldenCase `json:"cases"`
+}
+
+type goldenCase struct {
+	Method  string            `json:"method"`
+	Target  string            `json:"target"`
+	Headers map[string]string `json:"headers"`
+	Status  int               `json:"status"`
+	Answer  map[string]string `json:"answer"`
+	// Page: the answer is the app's page with this text put after <head>.
+	Page       *string `json:"page"`
+	Body       *string `json:"body"`
+	BodyBase64 *string `json:"bodyBase64"`
+	// NamesDir: the answer names the build directory ({DIR} in the body),
+	// so its length and its tag depend on where the build is.
+	NamesDir bool `json:"namesDir"`
+}
+
+func loadGolden(t *testing.T, name string) goldenFile {
+	t.Helper()
+	file, err := os.Open("testdata/golden_" + name + ".json.gz")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+	unpacked, err := gzip.NewReader(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var golden goldenFile
+	if err := json.NewDecoder(unpacked).Decode(&golden); err != nil {
+		t.Fatal(err)
+	}
+	return golden
+}
+
+// replay answers a test request the way the recorded Node app was wired:
+// the routes (which fail on request of the X-Test-Op header), then the web
+// app, then the 404 handler.
+func replay(h *Host, w http.ResponseWriter, r *http.Request) {
+	if preset := r.Header.Get("X-Test-Preset"); preset != "" {
+		w.Header().Set("Cache-Control", preset)
+	}
+	number := func(name string) int {
+		n, _ := strconv.Atoi(r.Header.Get(name))
+		return n
+	}
+	switch r.Header.Get("X-Test-Op") {
+	case "csrf":
+		h.CSRFError(w, r)
+	case "error":
+		h.ServerError(w, r, errors.New(r.Header.Get("X-Test-Message")), number("X-Test-Status"))
+	case "errorpage":
+		kind, status := number("X-Test-Kind"), number("X-Test-Status")
+		if !h.ErrorPage(w, r, kind, ErrorOptions{Status: status, Title: r.Header.Get("X-Test-Title"), Message: r.Header.Get("X-Test-Message")}) {
+			if status == 0 {
+				status = kind
+			}
+			httpx.WriteBody(w, r, status, plainText, []byte("declined"))
+		}
+	default:
+		if !h.Handle(w, r) {
+			h.NotFound(w, r)
+		}
+	}
+}
+
+func TestAnswersMatchNode(t *testing.T) {
+	configs := []struct {
+		name    string
+		base    string
+		options Options
+		nobuild bool
+		atLeast int
+	}{
+		{name: "root", options: Options{Production: true}, atLeast: 2000},
+		{name: "dev", options: Options{}, atLeast: 700},
+		{name: "https", options: Options{Production: true, HTTPS: true}, atLeast: 700},
+		{name: "app2", base: "/app2", options: Options{Production: true}, atLeast: 2000},
+		{name: "nobuild", options: Options{Production: true}, nobuild: true, atLeast: 700},
+	}
+	for _, config := range configs {
+		t.Run(config.name, func(t *testing.T) {
+			golden := loadGolden(t, config.name)
+			if len(golden.Cases) < config.atLeast {
+				t.Fatalf("only %d recorded cases", len(golden.Cases))
+			}
+			dir := filepath.Join(t.TempDir(), "missing")
+			index := ""
+			if !config.nobuild {
+				dir = copySite(t, config.base)
+				index = readSite(t, dir, "index.html")
+			}
+			options := config.options
+			options.Dir = dir
+			options.Session = sessionFromHeader
+			h := New(options)
+			if h.Base() != config.base {
+				t.Fatalf("base %q, want %q", h.Base(), config.base)
+			}
+			if golden.Policy != nil && h.page.csp != *golden.Policy {
+				t.Fatalf("policy\n got %s\nwant %s", h.page.csp, *golden.Policy)
+			}
+
+			differences := 0
+			for _, c := range golden.Cases {
+				rec := httptest.NewRecorder()
+				replay(h, rec, rawRequest(c.Method, c.Target, c.Headers))
+				res := rec.Result()
+				var problems []string
+
+				if res.StatusCode != c.Status {
+					problems = append(problems, "status "+strconv.Itoa(res.StatusCode)+", Node "+strconv.Itoa(c.Status))
+				}
+				got := map[string]string{}
+				for name, values := range res.Header {
+					got[strings.ToLower(name)] = strings.Join(values, ", ")
+				}
+				names := map[string]bool{}
+				for name := range got {
+					names[name] = true
+				}
+				for name := range c.Answer {
+					names[name] = true
+				}
+				sorted := make([]string, 0, len(names))
+				for name := range names {
+					sorted = append(sorted, name)
+				}
+				sort.Strings(sorted)
+				for _, name := range sorted {
+					if c.NamesDir && (name == "content-length" || name == "etag") {
+						continue
+					}
+					want, wanted := c.Answer[name]
+					if want == "{POLICY}" {
+						want = *golden.Policy
+					}
+					have, has := got[name]
+					if has != wanted || have != want {
+						problems = append(problems, name+": "+strconv.Quote(have)+", Node "+strconv.Quote(want))
+					}
+				}
+
+				want := ""
+				switch {
+				case c.Page != nil:
+					at := strings.Index(index, "<head>") + len("<head>")
+					want = index[:at] + strings.ReplaceAll(*c.Page, "{DIR}", dir) + index[at:]
+				case c.Body != nil:
+					want = strings.ReplaceAll(*c.Body, "{DIR}", dir)
+				case c.BodyBase64 != nil:
+					raw, err := base64.StdEncoding.DecodeString(*c.BodyBase64)
+					if err != nil {
+						t.Fatal(err)
+					}
+					want = string(raw)
+				}
+				if body := rec.Body.String(); body != want {
+					problems = append(problems, "body "+strconv.Quote(clip(body))+", Node "+strconv.Quote(clip(want)))
+				}
+
+				if len(problems) > 0 {
+					differences++
+					if differences <= 12 {
+						t.Errorf("%s %q %v\n    %s", c.Method, c.Target, c.Headers, strings.Join(problems, "\n    "))
+					} else if differences <= 150 {
+						t.Errorf("%s %q %v: %s", c.Method, c.Target, c.Headers, clip(problems[0]))
+					}
+				}
+			}
+			if differences > 0 {
+				t.Errorf("%d of %d answers differ from Node", differences, len(golden.Cases))
+			}
+		})
+	}
+}
+
+func clip(s string) string {
+	if len(s) > 160 {
+		return s[:160] + "..."
+	}
+	return s
+}
