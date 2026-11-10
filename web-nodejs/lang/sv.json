@@ -109,7 +109,9 @@
         "server_status": "Serverstatus",
         "account_2fa": "Tvåstegsinloggning",
         "more": "Fler",
-        "fewer": "Färre"
+        "fewer": "Färre",
+        "label": "Huvudnavigering",
+        "section_devices": "Enheter"
     },
     "auth": {
         "login": "Logga in",
@@ -7680,5 +7682,19 @@
     "shell": {
         "skip_to_content": "Hoppa till huvudinnehållet",
         "start_failed": "Konsolen kunde inte starta."
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Ny grupperad layout inspirerad av communityns redesign. UX 3.5 förblir standard och du kan byta tillbaka när som helst.",
+        "switch_to_ux36": "Prova UX 3.6 (beta)",
+        "switch_to_ux35": "Byt tillbaka till UX 3.5",
+        "settings_title": "Konsolgränssnitt",
+        "settings_desc": "Välj konsollayout för den här webbläsaren.",
+        "active_shell": "Aktiv layout",
+        "credits": "Layouten bygger på redesignen av @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Konsollayouten kunde inte ändras. Försök igen.",
+        "switched_to_ux36": "UX 3.6 beta har aktiverats för den här webbläsaren.",
+        "switched_to_ux35": "UX 3.5 har återställts för den här webbläsaren.",
+        "default_hint": "Standardlayout. Stabil och fullt utrustad."
     }
 }

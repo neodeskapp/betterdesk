@@ -103,7 +103,9 @@
         "server_status": "Estado do servidor",
         "account_2fa": "Início de sessão em dois passos",
         "more": "Mais",
-        "fewer": "Menos"
+        "fewer": "Menos",
+        "label": "Navegação principal",
+        "section_devices": "Dispositivos"
     },
     "auth": {
         "login": "Entrar",
@@ -7674,5 +7676,19 @@
     "shell": {
         "skip_to_content": "Ir para o conteúdo principal",
         "start_failed": "Não foi possível iniciar a consola."
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Novo layout agrupado inspirado no redesenho da comunidade. O UX 3.5 continua a ser o padrão e pode voltar a qualquer momento.",
+        "switch_to_ux36": "Experimentar UX 3.6 (beta)",
+        "switch_to_ux35": "Voltar ao UX 3.5",
+        "settings_title": "Interface da consola",
+        "settings_desc": "Escolha o layout da consola para este navegador.",
+        "active_shell": "Layout ativo",
+        "credits": "Layout baseado no redesenho de @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Não foi possível alterar o layout da consola. Tente novamente.",
+        "switched_to_ux36": "UX 3.6 beta ativado para este navegador.",
+        "switched_to_ux35": "UX 3.5 restaurado para este navegador.",
+        "default_hint": "Layout predefinido. Estável e completo."
     }
 }

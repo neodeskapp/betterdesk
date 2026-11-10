@@ -103,7 +103,9 @@
         "server_status": "Stan serwera",
         "account_2fa": "Logowanie dwuskładnikowe",
         "more": "Więcej",
-        "fewer": "Mniej"
+        "fewer": "Mniej",
+        "label": "Nawigacja główna",
+        "section_devices": "Urządzenia"
     },
     "auth": {
         "login": "Zaloguj",
@@ -7709,5 +7711,19 @@
     "shell": {
         "skip_to_content": "Przejdź do głównej treści",
         "start_failed": "Nie udało się uruchomić konsoli."
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Nowy grupowany układ inspirowany redesignem społeczności. UX 3.5 pozostaje domyślny i możesz w każdej chwili wrócić.",
+        "switch_to_ux36": "Wypróbuj UX 3.6 (beta)",
+        "switch_to_ux35": "Wróć do UX 3.5",
+        "settings_title": "Interfejs konsoli",
+        "settings_desc": "Wybierz układ konsoli dla tej przeglądarki.",
+        "active_shell": "Aktywny układ",
+        "credits": "Układ oparty na redesignie @rathlinus (zgłoszenie #493, PR #495).",
+        "switch_failed": "Nie udało się zmienić układu konsoli. Spróbuj ponownie.",
+        "switched_to_ux36": "Włączono UX 3.6 beta dla tej przeglądarki.",
+        "switched_to_ux35": "Przywrócono UX 3.5 dla tej przeglądarki.",
+        "default_hint": "Układ domyślny. Stabilny, pełny zestaw funkcji."
     }
 }

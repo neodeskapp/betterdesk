@@ -103,7 +103,9 @@
         "server_status": "Server status",
         "account_2fa": "Two-factor sign-in",
         "more": "More",
-        "fewer": "Fewer"
+        "fewer": "Fewer",
+        "label": "Main navigation",
+        "section_devices": "Devices"
     },
     "mobile_nav": {
         "label": "Main navigation",
@@ -7709,5 +7711,19 @@
     "shell": {
         "skip_to_content": "Skip to main content",
         "start_failed": "The console could not start."
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "New grouped layout inspired by the community redesign. UX 3.5 stays the default and you can switch back at any time.",
+        "switch_to_ux36": "Try UX 3.6 (beta)",
+        "switch_to_ux35": "Switch back to UX 3.5",
+        "settings_title": "Console interface",
+        "settings_desc": "Choose the console layout for this browser.",
+        "active_shell": "Active layout",
+        "credits": "Layout modelled on the redesign by @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Could not change the console layout. Please try again.",
+        "switched_to_ux36": "UX 3.6 beta enabled for this browser.",
+        "switched_to_ux35": "UX 3.5 restored for this browser.",
+        "default_hint": "Default layout. Stable, fully featured."
     }
 }

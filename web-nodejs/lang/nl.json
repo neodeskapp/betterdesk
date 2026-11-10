@@ -103,7 +103,9 @@
         "server_status": "Serverstatus",
         "account_2fa": "Aanmelden in twee stappen",
         "more": "Meer",
-        "fewer": "Minder"
+        "fewer": "Minder",
+        "label": "Hoofdnavigatie",
+        "section_devices": "Apparaten"
     },
     "auth": {
         "login": "Inloggen",
@@ -7674,5 +7676,19 @@
     "shell": {
         "skip_to_content": "Naar de hoofdinhoud",
         "start_failed": "De console kon niet starten."
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Nieuwe gegroepeerde lay-out geïnspireerd op de herontwerp van de community. UX 3.5 blijft standaard en je kunt altijd terugschakelen.",
+        "switch_to_ux36": "UX 3.6 (bèta) proberen",
+        "switch_to_ux35": "Terug naar UX 3.5",
+        "settings_title": "Console-interface",
+        "settings_desc": "Kies de consolelay-out voor deze browser.",
+        "active_shell": "Actieve lay-out",
+        "credits": "Lay-out gebaseerd op het herontwerp van @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Consolelay-out kon niet worden gewijzigd. Probeer het opnieuw.",
+        "switched_to_ux36": "UX 3.6 bèta is ingeschakeld voor deze browser.",
+        "switched_to_ux35": "UX 3.5 is hersteld voor deze browser.",
+        "default_hint": "Standaardlay-out. Stabiel en volledig."
     }
 }

@@ -103,7 +103,9 @@
         "server_status": "服务器状态",
         "account_2fa": "两步登录",
         "more": "更多",
-        "fewer": "收起"
+        "fewer": "收起",
+        "label": "主导航",
+        "section_devices": "设备"
     },
     "auth": {
         "login": "登录",
@@ -7674,5 +7676,19 @@
     "shell": {
         "skip_to_content": "跳到主要内容",
         "start_failed": "控制台无法启动。"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "受社区重设计启发的新分组布局。UX 3.5 仍为默认，可随时切回。",
+        "switch_to_ux36": "试用 UX 3.6（测试版）",
+        "switch_to_ux35": "切换回 UX 3.5",
+        "settings_title": "控制台界面",
+        "settings_desc": "为此浏览器选择控制台布局。",
+        "active_shell": "当前布局",
+        "credits": "布局基于 @rathlinus 的重设计（issue #493，PR #495）。",
+        "switch_failed": "无法更改控制台布局，请重试。",
+        "switched_to_ux36": "已为此浏览器启用 UX 3.6 测试版。",
+        "switched_to_ux35": "已为此浏览器恢复 UX 3.5。",
+        "default_hint": "默认布局。稳定且功能完整。"
     }
 }

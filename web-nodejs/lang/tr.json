@@ -109,7 +109,9 @@
         "server_status": "Sunucu durumu",
         "account_2fa": "İki adımlı oturum açma",
         "more": "Daha fazla",
-        "fewer": "Daha az"
+        "fewer": "Daha az",
+        "label": "Ana gezinme",
+        "section_devices": "Cihazlar"
     },
     "auth": {
         "login": "Oturum aç",
@@ -7680,5 +7682,19 @@
     "shell": {
         "skip_to_content": "Ana içeriğe geç",
         "start_failed": "Konsol başlatılamadı."
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Topluluk yeniden tasarımından esinlenen yeni gruplanmış düzen. UX 3.5 varsayılan olarak kalır ve istediğiniz zaman geri dönebilirsiniz.",
+        "switch_to_ux36": "UX 3.6 (beta) deneyin",
+        "switch_to_ux35": "UX 3.5'e geri dön",
+        "settings_title": "Konsol arayüzü",
+        "settings_desc": "Bu tarayıcı için konsol düzenini seçin.",
+        "active_shell": "Etkin düzen",
+        "credits": "Düzen, @rathlinus tarafından yapılan yeniden tasarıma dayanır (issue #493, PR #495).",
+        "switch_failed": "Konsol düzeni değiştirilemedi. Lütfen tekrar deneyin.",
+        "switched_to_ux36": "Bu tarayıcı için UX 3.6 beta etkinleştirildi.",
+        "switched_to_ux35": "Bu tarayıcı için UX 3.5 geri yüklendi.",
+        "default_hint": "Varsayılan düzen. Kararlı ve tüm özelliklerle."
     }
 }

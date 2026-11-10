@@ -103,7 +103,9 @@
         "server_status": "서버 상태",
         "account_2fa": "2단계 로그인",
         "more": "더 보기",
-        "fewer": "접기"
+        "fewer": "접기",
+        "label": "주요 탐색",
+        "section_devices": "장치"
     },
     "auth": {
         "login": "로그인",
@@ -7674,5 +7676,19 @@
     "shell": {
         "skip_to_content": "본문으로 건너뛰기",
         "start_failed": "콘솔을 시작할 수 없습니다."
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "커뮤니티 재설계에서 영감을 받은 새로운 그룹 레이아웃입니다. UX 3.5가 기본으로 유지되며 언제든지 되돌릴 수 있습니다.",
+        "switch_to_ux36": "UX 3.6(베타) 사용해 보기",
+        "switch_to_ux35": "UX 3.5로 돌아가기",
+        "settings_title": "콘솔 인터페이스",
+        "settings_desc": "이 브라우저의 콘솔 레이아웃을 선택하세요.",
+        "active_shell": "활성 레이아웃",
+        "credits": "레이아웃은 @rathlinus의 재설계를 기반으로 합니다(issue #493, PR #495).",
+        "switch_failed": "콘솔 레이아웃을 변경할 수 없습니다. 다시 시도하세요.",
+        "switched_to_ux36": "이 브라우저에서 UX 3.6 베타를 사용 설정했습니다.",
+        "switched_to_ux35": "이 브라우저에서 UX 3.5를 복원했습니다.",
+        "default_hint": "기본 레이아웃입니다. 안정적이며 모든 기능을 제공합니다."
     }
 }

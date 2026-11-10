@@ -109,7 +109,9 @@
         "server_status": "Szerver állapota",
         "account_2fa": "Kétlépcsős bejelentkezés",
         "more": "Továbbiak",
-        "fewer": "Kevesebb"
+        "fewer": "Kevesebb",
+        "label": "Fő navigáció",
+        "section_devices": "Eszközök"
     },
     "auth": {
         "login": "Bejelentkezés",
@@ -7680,5 +7682,19 @@
     "shell": {
         "skip_to_content": "Ugrás a fő tartalomhoz",
         "start_failed": "A konzol nem tudott elindulni."
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Új csoportosított elrendezés a közösségi újratervezés ihletésére. Az UX 3.5 marad az alapértelmezett, bármikor visszaválthat.",
+        "switch_to_ux36": "UX 3.6 (béta) kipróbálása",
+        "switch_to_ux35": "Vissza az UX 3.5-höz",
+        "settings_title": "Konzol felület",
+        "settings_desc": "Válassza ki a konzol elrendezését ehhez a böngészőhöz.",
+        "active_shell": "Aktív elrendezés",
+        "credits": "Az elrendezés @rathlinus újratervezésén alapul (issue #493, PR #495).",
+        "switch_failed": "A konzol elrendezését nem sikerült módosítani. Próbálja újra.",
+        "switched_to_ux36": "Az UX 3.6 béta engedélyezve ehhez a böngészőhöz.",
+        "switched_to_ux35": "Az UX 3.5 visszaállítva ehhez a böngészőhöz.",
+        "default_hint": "Alapértelmezett elrendezés. Stabil, teljes funkciókészlet."
     }
 }

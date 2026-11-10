@@ -109,7 +109,9 @@
         "server_status": "Serverstatus",
         "account_2fa": "Totrinslogin",
         "more": "Flere",
-        "fewer": "Færre"
+        "fewer": "Færre",
+        "label": "Hovednavigation",
+        "section_devices": "Enheder"
     },
     "auth": {
         "login": "Log ind",
@@ -7680,5 +7682,19 @@
     "shell": {
         "skip_to_content": "Gå til hovedindholdet",
         "start_failed": "Konsollen kunne ikke starte."
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Ny grupperet layout inspireret af fællesskabets redesign. UX 3.5 forbliver standard, og du kan skifte tilbage når som helst.",
+        "switch_to_ux36": "Prøv UX 3.6 (beta)",
+        "switch_to_ux35": "Skift tilbage til UX 3.5",
+        "settings_title": "Konsolgrænseflade",
+        "settings_desc": "Vælg konsollayout til denne browser.",
+        "active_shell": "Aktivt layout",
+        "credits": "Layoutet er baseret på redesignet af @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Konsollayoutet kunne ikke ændres. Prøv igen.",
+        "switched_to_ux36": "UX 3.6 beta er aktiveret for denne browser.",
+        "switched_to_ux35": "UX 3.5 er gendannet for denne browser.",
+        "default_hint": "Standardlayout. Stabil og fuldt funktionsdygtigt."
     }
 }

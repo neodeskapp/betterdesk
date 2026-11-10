@@ -103,7 +103,9 @@
         "server_status": "サーバーの状態",
         "account_2fa": "2 段階サインイン",
         "more": "その他",
-        "fewer": "閉じる"
+        "fewer": "閉じる",
+        "label": "メインナビゲーション",
+        "section_devices": "デバイス"
     },
     "auth": {
         "login": "サインイン",
@@ -7674,5 +7676,19 @@
     "shell": {
         "skip_to_content": "メインコンテンツへ移動",
         "start_failed": "コンソールを起動できませんでした。"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "コミュニティの再設計に着想を得た新しいグループ化レイアウト。UX 3.5 が既定のままで、いつでも戻せます。",
+        "switch_to_ux36": "UX 3.6（ベータ）を試す",
+        "switch_to_ux35": "UX 3.5 に戻す",
+        "settings_title": "コンソールのインターフェース",
+        "settings_desc": "このブラウザーのコンソールレイアウトを選択します。",
+        "active_shell": "使用中のレイアウト",
+        "credits": "レイアウトは @rathlinus の再設計に基づいています（issue #493、PR #495）。",
+        "switch_failed": "コンソールレイアウトを変更できませんでした。もう一度お試しください。",
+        "switched_to_ux36": "このブラウザーで UX 3.6 ベータを有効にしました。",
+        "switched_to_ux35": "このブラウザーで UX 3.5 に戻しました。",
+        "default_hint": "既定のレイアウト。安定しており全機能を利用できます。"
     }
 }

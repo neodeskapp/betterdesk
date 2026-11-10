@@ -109,7 +109,9 @@
         "server_status": "Palvelimen tila",
         "account_2fa": "Kaksivaiheinen kirjautuminen",
         "more": "Lisää",
-        "fewer": "Vähemmän"
+        "fewer": "Vähemmän",
+        "label": "Päänavigointi",
+        "section_devices": "Laitteet"
     },
     "auth": {
         "login": "Kirjaudu sisään",
@@ -7680,5 +7682,19 @@
     "shell": {
         "skip_to_content": "Siirry pääsisältöön",
         "start_failed": "Konsolia ei voitu käynnistää."
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Uusi ryhmitelty asettelu yhteisön uudistuksen innoittamana. UX 3.5 on edelleen oletus ja voit palata milloin tahansa.",
+        "switch_to_ux36": "Kokeile UX 3.6 (beta)",
+        "switch_to_ux35": "Palaa UX 3.5:een",
+        "settings_title": "Konsolin käyttöliittymä",
+        "settings_desc": "Valitse konsolin asettelu tälle selaimelle.",
+        "active_shell": "Aktiivinen asettelu",
+        "credits": "Asettelu perustuu @rathlinusin uudistukseen (issue #493, PR #495).",
+        "switch_failed": "Konsolin asettelua ei voitu vaihtaa. Yritä uudelleen.",
+        "switched_to_ux36": "UX 3.6 beta on otettu käyttöön tässä selaimessa.",
+        "switched_to_ux35": "UX 3.5 on palautettu tähän selaimeen.",
+        "default_hint": "Oletusasettelu. vakaa ja täysin varustettu."
     }
 }

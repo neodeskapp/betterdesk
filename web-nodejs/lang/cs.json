@@ -103,7 +103,9 @@
         "server_status": "Stav serveru",
         "account_2fa": "Dvoufázové přihlášení",
         "more": "Další",
-        "fewer": "Méně"
+        "fewer": "Méně",
+        "label": "Hlavní navigace",
+        "section_devices": "Zařízení"
     },
     "auth": {
         "login": "Přihlášení",
@@ -7674,5 +7676,19 @@
     "shell": {
         "skip_to_content": "Přejít na hlavní obsah",
         "start_failed": "Konzoli se nepodařilo spustit."
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Nové seskupené rozvržení inspirované redesignem komunity. UX 3.5 zůstává výchozí a kdykoli se můžete vrátit.",
+        "switch_to_ux36": "Vyzkoušet UX 3.6 (beta)",
+        "switch_to_ux35": "Vrátit se na UX 3.5",
+        "settings_title": "Rozhraní konzole",
+        "settings_desc": "Vyberte rozvržení konzole pro tento prohlížeč.",
+        "active_shell": "Aktivní rozvržení",
+        "credits": "Rozvržení vychází z redesignu od @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Rozvržení konzole se nepodařilo změnit. Zkuste to znovu.",
+        "switched_to_ux36": "UX 3.6 beta je pro tento prohlížeč zapnuto.",
+        "switched_to_ux35": "UX 3.5 bylo pro tento prohlížeč obnoveno.",
+        "default_hint": "Výchozí rozvržení. Stabilní a plně vybavené."
     }
 }

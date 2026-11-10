@@ -109,7 +109,9 @@
         "server_status": "Status server",
         "account_2fa": "Masuk dua langkah",
         "more": "Lainnya",
-        "fewer": "Lebih sedikit"
+        "fewer": "Lebih sedikit",
+        "label": "Navigasi utama",
+        "section_devices": "Perangkat"
     },
     "auth": {
         "login": "Masuk",
@@ -7680,5 +7682,19 @@
     "shell": {
         "skip_to_content": "Langsung ke konten utama",
         "start_failed": "Konsol tidak dapat dimulai."
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Tata letak berkelompok baru yang terinspirasi dari redesain komunitas. UX 3.5 tetap default dan Anda dapat kembali kapan saja.",
+        "switch_to_ux36": "Coba UX 3.6 (beta)",
+        "switch_to_ux35": "Kembali ke UX 3.5",
+        "settings_title": "Antarmuka konsol",
+        "settings_desc": "Pilih tata letak konsol untuk peramban ini.",
+        "active_shell": "Tata letak aktif",
+        "credits": "Tata letak berdasarkan redesain oleh @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Tata letak konsol tidak dapat diubah. Silakan coba lagi.",
+        "switched_to_ux36": "UX 3.6 beta diaktifkan untuk peramban ini.",
+        "switched_to_ux35": "UX 3.5 dipulihkan untuk peramban ini.",
+        "default_hint": "Tata letak default. Stabil dan lengkap."
     }
 }

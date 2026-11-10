@@ -107,7 +107,9 @@
         "server_status": "État du serveur",
         "account_2fa": "Connexion à deux facteurs",
         "more": "Plus",
-        "fewer": "Moins"
+        "fewer": "Moins",
+        "label": "Navigation principale",
+        "section_devices": "Appareils"
     },
     "auth": {
         "login": "Connexion",
@@ -7678,5 +7680,19 @@
     "shell": {
         "skip_to_content": "Aller au contenu principal",
         "start_failed": "La console n’a pas pu démarrer."
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Nouvelle disposition regroupée inspirée de la refonte de la communauté. UX 3.5 reste par défaut et vous pouvez revenir à tout moment.",
+        "switch_to_ux36": "Essayer UX 3.6 (bêta)",
+        "switch_to_ux35": "Revenir à UX 3.5",
+        "settings_title": "Interface de la console",
+        "settings_desc": "Choisissez la disposition de la console pour ce navigateur.",
+        "active_shell": "Disposition active",
+        "credits": "Disposition basée sur la refonte de @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Impossible de changer la disposition de la console. Réessayez.",
+        "switched_to_ux36": "UX 3.6 bêta activée pour ce navigateur.",
+        "switched_to_ux35": "UX 3.5 restaurée pour ce navigateur.",
+        "default_hint": "Disposition par défaut. Stable et complète."
     }
 }
