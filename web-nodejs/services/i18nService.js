@@ -6,7 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const config = require('../config/config');
-const { resolveLangFilePath, readLangFileText, langFileExists } = require('../lib/safePath');
+const { readLangFileText, langFileExists } = require('../lib/safePath');
 
 // Supported languages metadata
 const LANGUAGE_META = {
@@ -218,13 +218,6 @@ class TranslationManager {
     }
     
     /**
-     * Get all available languages
-     */
-    getAvailable() {
-        return this.availableLanguages;
-    }
-
-    /**
      * Get available languages as a sorted list for UI rendering.
      */
     getAvailableList() {
@@ -263,111 +256,6 @@ class TranslationManager {
      */
     getLanguageMeta(code) {
         return this.availableLanguages[code] || null;
-    }
-    
-    /**
-     * Validate language file (compare keys with default language)
-     */
-    validateLanguage(code) {
-        if (!this.translations[code]) {
-            return { valid: false, error: 'Language not found' };
-        }
-        
-        if (code === this.defaultLang) {
-            return { valid: true, missing: [], extra: [] };
-        }
-        
-        const defaultKeys = this._getAllKeys(this.translations[this.defaultLang]);
-        const langKeys = this._getAllKeys(this.translations[code]);
-        
-        const missing = defaultKeys.filter(k => !langKeys.includes(k));
-        const extra = langKeys.filter(k => !defaultKeys.includes(k) && !k.startsWith('_'));
-        
-        return {
-            valid: missing.length === 0,
-            missing,
-            extra,
-            coverage: ((defaultKeys.length - missing.length) / defaultKeys.length * 100).toFixed(1)
-        };
-    }
-    
-    /**
-     * Get all keys from an object (flattened)
-     */
-    _getAllKeys(obj, prefix = '') {
-        const keys = [];
-        
-        for (const [key, value] of Object.entries(obj || {})) {
-            const fullKey = prefix ? `${prefix}.${key}` : key;
-            
-            if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-                keys.push(...this._getAllKeys(value, fullKey));
-            } else {
-                keys.push(fullKey);
-            }
-        }
-        
-        return keys;
-    }
-    
-    /**
-     * Add or update a language
-     */
-    saveLanguage(code, translations) {
-        // Security: Validate language code to prevent path traversal
-        if (!isValidLangCode(code)) {
-            return { success: false, error: 'Invalid language code format' };
-        }
-        
-        let filePath;
-        try {
-            filePath = resolveLangFilePath(config.langDir, code);
-        } catch (err) {
-            return { success: false, error: err.message };
-        }
-
-        try {
-            fs.writeFileSync(filePath, JSON.stringify(translations, null, 2), 'utf8');
-            this.loadLanguage(code);
-            return { success: true };
-        } catch (err) {
-            return { success: false, error: err.message };
-        }
-    }
-    
-    /**
-     * Delete a language file
-     */
-    deleteLanguage(code) {
-        // Security: Validate language code to prevent path traversal
-        if (!isValidLangCode(code)) {
-            return { success: false, error: 'Invalid language code format' };
-        }
-        
-        // Don't allow deleting default or core languages
-        if (code === 'en' || code === 'pl') {
-            return { success: false, error: 'Cannot delete core language' };
-        }
-        
-        let filePath;
-        try {
-            filePath = resolveLangFilePath(config.langDir, code);
-        } catch (err) {
-            return { success: false, error: err.message };
-        }
-
-        try {
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-            }
-            
-            delete this.translations[code];
-            delete this.availableLanguages[code];
-            
-            return { success: true };
-        } catch (err) {
-            return { success: false, error: err.message };
-        }
     }
 }
 

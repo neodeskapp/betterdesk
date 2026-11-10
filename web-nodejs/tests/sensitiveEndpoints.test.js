@@ -4,8 +4,6 @@
  *   admin role on the Go server, to any signed-in account. Now it needs
  *   server.keys; the masked key stays readable.
  * - GET /api/settings/audit needs audit.view, like the audit pages.
- * - Translation upload and delete need server.config, like the
- *   Translations page.
  * - Chat upload, file download and search need chat.access, like the chat
  *   WebSocket.
  */
@@ -27,10 +25,8 @@ jest.mock('../services/betterdeskApi', () => ({
     apiClient: { get: jest.fn().mockResolvedValue({ data: { messages: [{ id: 1 }] } }) }
 }));
 
-const i18nService = require('../services/i18nService');
 const keysRoutes = require('../routes/keys.routes');
 const settingsRoutes = require('../routes/settings.routes');
-const i18nRoutes = require('../routes/i18n.routes');
 const chatRoutes = require('../routes/chat.routes');
 
 function app(role) {
@@ -42,7 +38,6 @@ function app(role) {
     });
     a.use(keysRoutes);
     a.use(settingsRoutes);
-    a.use('/api/i18n', i18nRoutes);
     a.use(chatRoutes);
     return a;
 }
@@ -73,26 +68,6 @@ describe('settings audit log', () => {
         const ok = await request(app('viewer')).get('/api/settings/audit');
         expect(ok.status).toBe(200);
         expect(ok.body.data).toHaveLength(1);
-    });
-});
-
-describe('translation upload and delete', () => {
-    let del;
-    beforeEach(() => {
-        del = jest.spyOn(i18nService.manager, 'deleteLanguage').mockReturnValue({ success: true });
-    });
-
-    test.each(['operator', 'viewer', 'global_admin'])('%s cannot delete or upload', async (role) => {
-        expect((await request(app(role)).delete('/api/i18n/xx')).status).toBe(403);
-        expect(del).not.toHaveBeenCalled();
-        const up = await request(app(role)).post('/api/i18n/upload').attach('file', Buffer.from('{}'), 'xx.json');
-        expect(up.status).toBe(403);
-    });
-
-    test('server_admin can delete', async () => {
-        const res = await request(app('server_admin')).delete('/api/i18n/xx');
-        expect(res.status).not.toBe(403);
-        expect(del).toHaveBeenCalledWith('xx');
     });
 });
 

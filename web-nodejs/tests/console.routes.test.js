@@ -1,5 +1,5 @@
 /**
- * Endpoints for the Svelte console: bootstrap, strings, pre-paint script.
+ * Endpoints for the Svelte console: bootstrap, supporters, pre-paint script.
  */
 
 const request = require('supertest');
@@ -117,46 +117,6 @@ describe('GET /api/console/supporters', () => {
         expect(Array.isArray(res.body.honorary)).toBe(true);
         expect(Array.isArray(res.body.individuals)).toBe(true);
         expect(res.body.links.repo.startsWith('https://github.com/')).toBe(true);
-    });
-});
-
-describe('GET /api/console/strings/:code', () => {
-    test('returns merged strings and caches them for a year under the current revision', async () => {
-        const app = appWith(null);
-        const boot = consoleRoutes.publicBoot({ lang: 'de' });
-        const v = new URL(boot.stringsUrl, 'http://x').searchParams.get('v');
-        const res = await request(app).get(`/api/console/strings/de?v=${v}`);
-        expect(res.status).toBe(200);
-        expect(res.headers['cache-control']).toContain('immutable');
-        expect(res.body.meta.lang).toBe('de');
-        // English fills keys German lacks, so no raw key shows
-        expect(typeof res.body.common.cancel).toBe('string');
-        const stale = await request(app).get('/api/console/strings/de?v=old');
-        expect(stale.headers['cache-control']).toBe('no-cache');
-        const again = await request(app).get(`/api/console/strings/de?v=${v}`).set('If-None-Match', res.headers.etag);
-        expect(again.status).toBe(304);
-    });
-
-    test('sends the strings compressed when the browser accepts it', async () => {
-        const zlib = require('zlib');
-        const app = appWith(null);
-        const raw = await request(app).get('/api/console/strings/en').set('Accept-Encoding', 'identity');
-        const br = await request(app).get('/api/console/strings/en').set('Accept-Encoding', 'gzip, br')
-            .buffer(true).parse((res, cb) => { const c = []; res.on('data', (d) => c.push(d)); res.on('end', () => cb(null, Buffer.concat(c))); });
-        expect(raw.headers['content-encoding']).toBeUndefined();
-        expect(br.headers['content-encoding']).toBe('br');
-        expect(br.headers.vary).toContain('Accept-Encoding');
-        const bytes = Buffer.isBuffer(br.body) ? br.body : Buffer.from(br.text || '');
-        const decoded = (() => { try { return zlib.brotliDecompressSync(bytes).toString(); } catch { return bytes.toString(); } })();
-        expect(JSON.parse(decoded).common.cancel).toBe(raw.body.common.cancel);
-        expect(Number(br.headers['content-length'] || bytes.length)).toBeLessThan(raw.text.length / 3);
-    });
-
-    test('rejects unknown and malformed codes', async () => {
-        const app = appWith(null);
-        expect((await request(app).get('/api/console/strings/xx')).status).toBe(404);
-        expect((await request(app).get('/api/console/strings/..%2Fconfig')).status).toBe(404);
-        expect((await request(app).get('/api/console/strings/__proto__')).status).toBe(404);
     });
 });
 

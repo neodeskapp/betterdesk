@@ -3,7 +3,7 @@
  * (the root) unless the build says otherwise.
  *
  * - server.js mounts the router after the server's own routes (lib/mountRoutes.js),
- *   so /health, /logout, /console-boot.js, /css/branding.css and the other
+ *   so /logout, /console-boot.js, /css/branding.css and the other
  *   server addresses answer first. /api and /ws never get the app page.
  * - The console's old addresses under /app (while old and new pages ran
  *   side by side) answer 301 with the same address at the root.

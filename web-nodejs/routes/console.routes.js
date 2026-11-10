@@ -7,18 +7,15 @@
  *                              Holds only what the login page shows anyway.
  * GET /api/console/bootstrap   Signed in. Everything the console needs to
  *                              render for this person in one response.
- * GET /api/console/strings/:code
- *                              Public. One language's strings merged over
- *                              English, cached for a year under ?v=<revision>.
  * GET /api/console/supporters  Signed in. The Help panel's supporters and links.
  *
- * The old pages keep their own calls (window.BetterDesk, /api/i18n/*).
+ * The strings themselves (GET /api/console/strings/:code) come from the Go
+ * console; the address handed out here carries the revision it expects.
  */
 
 'use strict';
 
 const crypto = require('crypto');
-const zlib = require('zlib');
 const express = require('express');
 const config = require('../config/config');
 const { requireAuth, requestHasPermission, isSuperAdminRole } = require('../middleware/auth');
@@ -52,32 +49,17 @@ const UI_PERMISSIONS = Object.freeze([
     'mesh.terminal', 'mesh.power', 'mesh.files'
 ]);
 
-const LANG_CODE = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/;
-
 // Strings revision per language: a hash of the merged JSON, computed once per
 // process (language files are read at startup).
-const stringsCache = new Map();
-function stringsFor(code) {
-    let entry = stringsCache.get(code);
-    if (!entry) {
+const stringsRevisions = new Map();
+function stringsRevision(code) {
+    let revision = stringsRevisions.get(code);
+    if (!revision) {
         const body = JSON.stringify(manager.getMergedTranslations(code));
-        const revision = crypto.createHash('sha256').update(body).digest('hex').slice(0, 16);
-        entry = { body, revision, br: null, gzip: null };
-        stringsCache.set(code, entry);
+        revision = crypto.createHash('sha256').update(body).digest('hex').slice(0, 16);
+        stringsRevisions.set(code, revision);
     }
-    return entry;
-}
-
-/** The strings compressed once per language (about 423 KB of JSON for English) */
-function compressed(entry, encoding) {
-    if (encoding === 'br') {
-        entry.br = entry.br || zlib.brotliCompressSync(entry.body, {
-            params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 9 }
-        });
-        return entry.br;
-    }
-    entry.gzip = entry.gzip || zlib.gzipSync(entry.body, { level: 9 });
-    return entry.gzip;
+    return revision;
 }
 
 function languageList() {
@@ -102,7 +84,7 @@ function publicBoot(req) {
         themeMode: branding.themeMode || 'system',
         palettes: { light: palettes.light || null, dark: palettes.dark || null },
         brandingRevision: brandingService.getBrandingRevision(),
-        stringsUrl: `/api/console/strings/${encodeURIComponent(lang)}?v=${stringsFor(lang).revision}`
+        stringsUrl: `/api/console/strings/${encodeURIComponent(lang)}?v=${stringsRevision(lang)}`
     };
 }
 
@@ -190,29 +172,6 @@ router.get('/console-boot.js', (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     // JSON.stringify output is valid JS; escape "<" so a value can never close a tag
     res.send(BOOT_SCRIPT + JSON.stringify(boot).replace(/</g, '\\u003c') + ');\n');
-});
-
-router.get('/api/console/strings/:code', (req, res) => {
-    const { code } = req.params;
-    if (!LANG_CODE.test(code) || !manager.hasLanguage(code)) {
-        return res.status(404).json({ success: false, error: 'Language not found' });
-    }
-    const { body, revision } = stringsFor(code);
-    const etag = `"${revision}"`;
-    res.setHeader('ETag', etag);
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.setHeader('Cache-Control', req.query.v === revision
-        ? 'public, max-age=31536000, immutable'
-        : 'no-cache');
-    res.setHeader('Vary', 'Accept-Encoding');
-    if (req.headers['if-none-match'] === etag) return res.status(304).end();
-    const accept = String(req.headers['accept-encoding'] || '');
-    const encoding = /\bbr\b/.test(accept) ? 'br' : /\bgzip\b/.test(accept) ? 'gzip' : null;
-    if (encoding) {
-        res.setHeader('Content-Encoding', encoding);
-        return res.send(compressed(stringsFor(code), encoding));
-    }
-    return res.send(body);
 });
 
 // The panel access guard's page rules (middleware/panelAccess.js), for the browser

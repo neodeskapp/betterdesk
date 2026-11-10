@@ -1,17 +1,6 @@
 /**
- * BetterDesk Console - i18n Routes Tests
+ * BetterDesk Console - translation manager and language file tests
  */
-
-const request = require('supertest');
-const { createTestApp } = require('./helpers');
-
-// Check if i18n routes exist
-let i18nRoutes;
-try {
-    i18nRoutes = require('../routes/i18n.routes');
-} catch (e) {
-    // Skip if module load fails in test environment
-}
 
 const fs = require('fs');
 const path = require('path');

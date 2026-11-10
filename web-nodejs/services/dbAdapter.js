@@ -1696,9 +1696,6 @@ function createSqliteAdapter(config) {
         async updateUserRole(id, role) {
             openAuth().prepare('UPDATE users SET role = ? WHERE id = ?').run(role, id);
         },
-        async updateUserLanguage(id, lang) {
-            openAuth().prepare('UPDATE users SET preferred_language = ? WHERE id = ?').run(lang, id);
-        },
         // Phase 4: update operator identity profile (first_name, last_name, email, phone, role_display, avatar_url)
         async updateUserProfile(id, fields) {
             const allowed = ['first_name', 'last_name', 'email', 'phone', 'role_display', 'avatar_url'];
@@ -5446,7 +5443,6 @@ function createPostgresAdapter() {
         async hasUsers() { return +(await one('SELECT COUNT(*) as c FROM users')).c > 0; },
         async getAllUsers() { return all('SELECT id, username, role, auth_provider, created_at, last_login, preferred_language, totp_enabled, email FROM users ORDER BY id'); },
         async updateUserRole(id, role) { await q('UPDATE users SET role = $1 WHERE id = $2', [role, id]); },
-        async updateUserLanguage(id, lang) { await q('UPDATE users SET preferred_language = $1 WHERE id = $2', [lang, id]); },
         async updateUserProfile(id, fields) {
             const allowed = ['first_name', 'last_name', 'email', 'phone', 'role_display', 'avatar_url'];
             const sets = [];

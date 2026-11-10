@@ -55,10 +55,6 @@ const isApp = (res) => /console app/.test(res.text || '');
 
 describe('server routes before the console at the root', () => {
     test('the server answers its own addresses, not the app', async () => {
-        const health = await request(app(null)).get('/health');
-        expect(health.status).toBe(200);
-        expect(health.body.status).toBe('ok');
-
         const boot = await request(app(null)).get('/console-boot.js');
         expect(boot.headers['content-type']).toContain('javascript');
 
@@ -109,7 +105,7 @@ describe('server routes before the console at the root', () => {
     test('console pages carry the policy of their build; server answers keep the strict one', async () => {
         const page = await request(app(admin)).get('/devices');
         expect(page.headers['content-security-policy']).toContain("script-src 'self' 'sha256-boot='");
-        for (const p of ['/health', '/console-boot.js', '/api/no-such-endpoint']) {
+        for (const p of ['/console-boot.js', '/api/no-such-endpoint']) {
             const res = await request(app(admin)).get(p);
             const csp = res.headers['content-security-policy'];
             expect([p, /script-src 'self';/.test(csp), /sha256|nonce-/.test(csp)]).toEqual([p, true, false]);

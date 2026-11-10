@@ -12,7 +12,6 @@ const devicesRoutes = require('./devices.routes');
 const keysRoutes = require('./keys.routes');
 const settingsRoutes = require('./settings.routes');
 const generatorRoutes = require('./generator.routes');
-const i18nRoutes = require('./i18n.routes');
 const usersRoutes = require('./users.routes');
 const panelAccessRoutes = require('./panel-access.routes');
 const foldersRoutes = require('./folders.routes');
@@ -55,7 +54,6 @@ const scalingRoutes = lazyRoute('./scaling.routes');
 const crossPlatformRoutes = lazyRoute('./cross-platform.routes');
 const toolkitRoutes = lazyRoute('./toolkit.routes');
 const securityAuditRoutes = lazyRoute('./security-audit.routes');
-const languagesRoutes = lazyRoute('./languages.routes');
 const resourceControlRoutes = lazyRoute('./resource-control.routes');
 const systemRoutes = lazyRoute('./system.routes');
 const cdapStudioRoutes = lazyRoute('./cdap-studio.routes');
@@ -71,11 +69,6 @@ const { requireJsonContentType } = require('../lib/requireJsonContentType');
 // Apply JSON content type check middleware
 router.use(requireJsonContentType);
 
-// Health check (no auth required)
-router.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
 // Mount routes
 router.use('/', authRoutes);
 router.use('/', require('./console.routes'));   // Svelte console: /console-boot.js, /api/console/*
@@ -88,11 +81,9 @@ router.use('/', require('./client-branding.routes'));
 router.use('/', require('./avatars.routes'));    // profile pictures: /api/users/avatars, /api/users/:id/avatar
 router.use('/', usersRoutes);
 router.use('/', panelAccessRoutes);
-router.use('/', require('./ui-shell.routes'));      // admin-facing: /api/ui-shell (UX 3.5 / 3.6 beta toggle)
 router.use('/', foldersRoutes);
 router.use('/', remoteRoutes);
 router.use('/', require('./guest.routes'));
-router.use('/api/i18n', i18nRoutes);
 // bdApiRoutes now mounted in server.js (before CSRF) for desktop client access
 router.use('/api/bd', inventoryRoutes);     // device-facing: /api/bd/inventory, /api/bd/telemetry
 router.use('/api/inventory', inventoryRoutes); // admin-facing: /api/inventory, /api/inventory/:id
@@ -128,7 +119,6 @@ router.use('/api/bd', scalingRoutes);                    // device-facing: /api/
 router.use('/', crossPlatformRoutes);                    // admin-facing: /cross-platform, /api/panel/cross-platform/*
 router.use('/', toolkitRoutes);                              // admin-facing: /toolkit, /api/toolkit/*
 router.use('/', securityAuditRoutes);                        // admin-facing: /security-audit, /api/panel/security-audit/*
-router.use('/', languagesRoutes);                            // admin-facing: /languages, /api/panel/languages/*
 router.use('/', resourceControlRoutes);                      // admin-facing: /resource-control, /api/panel/resource-control/*
 router.use('/api/bd', resourceControlRoutes);                 // device-facing: /api/bd/resource-policy
 router.use('/', systemRoutes);                           // admin-facing: /api/system/*, /api/logs/*, /api/database/*, /api/docker/*, /api/speed-test

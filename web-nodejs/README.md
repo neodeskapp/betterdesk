@@ -88,7 +88,6 @@ web-nodejs/
 │   ├── dashboard.routes.js
 │   ├── devices.routes.js
 │   ├── generator.routes.js
-│   ├── i18n.routes.js
 │   ├── index.js         # Route mounting
 │   ├── keys.routes.js
 │   └── settings.routes.js

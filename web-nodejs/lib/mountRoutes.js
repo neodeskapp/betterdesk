@@ -3,7 +3,7 @@
  * console's pages, then the error handlers.
  *
  * The console lives at the root, and its page handler (lib/webUi.js) answers
- * every GET that is left, so it comes after the routes: /api, /health,
+ * every GET that is left, so it comes after the routes: /api,
  * /logout, /console-boot.js, /css/branding.css, the old addresses that
  * redirect (/tenants, /generator, /remote-dashboard, ...) and downloads
  * answer first. tests/serverRoutes.order.test.js goes through this order.

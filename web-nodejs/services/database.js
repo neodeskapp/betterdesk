@@ -88,9 +88,6 @@ const facade = {
     hasUsers:         () => adapter.hasUsers(),
     getAllUsers:       () => adapter.getAllUsers(),
     updateUserRole:   (id, role) => adapter.updateUserRole(id, role),
-    updateUserLanguage: (id, lang) => typeof adapter.updateUserLanguage === 'function'
-        ? adapter.updateUserLanguage(id, lang)
-        : Promise.resolve(),
     deleteUser:       (id) => adapter.deleteUser(id),
     updateUserProfile: (id, fields) => adapter.updateUserProfile(id, fields),
     // Profile pictures (services/avatarService.js)
