@@ -1,0 +1,310 @@
+package authn
+
+import (
+	"context"
+	"crypto/rand"
+	"errors"
+	"io"
+	"io/fs"
+	"os"
+	"regexp"
+	"runtime"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/store"
+)
+
+// Logger takes the service's log lines. The arguments of a call are the
+// parts of one line; *kit.Logger joins them with a space and shortens the
+// user names in them. The lines carry "[AUTH]" themselves, so under a
+// logger for the component AUTH they read
+// "[AUTH] [AUTH] Login successful for 'a***e'", which is the form tools
+// that read the console's log know.
+type Logger interface {
+	Info(args ...any)
+	Warn(args ...any)
+	Error(args ...any)
+}
+
+type discardLogger struct{}
+
+func (discardLogger) Info(...any)  {}
+func (discardLogger) Warn(...any)  {}
+func (discardLogger) Error(...any) {}
+
+// FS is the file access the default admin's set-up needs.
+type FS interface {
+	// Exists reports whether there is something at the path.
+	Exists(name string) bool
+	ReadFile(name string) ([]byte, error)
+	// WriteFile replaces the file's content. A file it creates gets perm
+	// (less the process's umask); an existing file keeps its mode.
+	WriteFile(name string, data []byte, perm fs.FileMode) error
+	Remove(name string) error
+}
+
+type osFS struct{}
+
+func (osFS) Exists(name string) bool {
+	_, err := os.Stat(name)
+	return err == nil
+}
+func (osFS) ReadFile(name string) ([]byte, error) { return os.ReadFile(name) }
+func (osFS) WriteFile(name string, data []byte, perm fs.FileMode) error {
+	return os.WriteFile(name, data, perm)
+}
+func (osFS) Remove(name string) error { return os.Remove(name) }
+
+// Settings are the values the service took from the environment. Each
+// field names its variable and what an unset variable means.
+type Settings struct {
+	// AutoCreate lets an unknown user sign in through the signal server
+	// and get a local account, also when no single sign-on is configured.
+	// BETTERDESK_AUTH_AUTOCREATE, on only for the exact value "true".
+	AutoCreate bool
+
+	// TokenExpiryDays is how long an access token lasts.
+	// API_TOKEN_EXPIRY_DAYS, 7.
+	TokenExpiryDays int
+	// MaxFailedAttempts is the number of failed sign-ins within the window
+	// that locks an account. API_MAX_FAILED_ATTEMPTS, 10.
+	MaxFailedAttempts int
+	// LockoutMinutes is how long a lockout lasts. API_LOCKOUT_MINUTES, 15.
+	LockoutMinutes int
+	// IPRateLimit is the number of failed sign-ins within the window that
+	// blocks an address. API_IP_RATE_LIMIT, 30.
+	IPRateLimit int
+	// AttemptWindowMinutes is the window both counts look back.
+	// API_ATTEMPT_WINDOW, 15.
+	AttemptWindowMinutes int
+
+	// DefaultAdminUsername is the name of the first account.
+	// DEFAULT_ADMIN_USERNAME, "admin".
+	DefaultAdminUsername string
+	// DefaultAdminPassword is its password. DEFAULT_ADMIN_PASSWORD; when
+	// empty the password comes from a .admin_credentials file or is made
+	// up.
+	DefaultAdminPassword string
+	// ForcePasswordUpdate makes the next EnsureDefaultAdmin overwrite the
+	// admin's password with the known one. FORCE_PASSWORD_UPDATE, on only
+	// for the exact value "true". It works once.
+	ForcePasswordUpdate bool
+
+	// DataDir is the console's data folder (DATA_DIR): the place of the
+	// .force_password_update file and a place for .admin_credentials.
+	DataDir string
+	// KeysPath is the signal server's key folder (KEYS_PATH, else
+	// RUSTDESK_DIR, else RUSTDESK_PATH, else what the console's
+	// configuration found): the first place for .admin_credentials.
+	KeysPath string
+	// AuthDBPath is where an install with a separate user database keeps
+	// it. AUTH_DB_PATH, <DataDir>/auth.db.
+	AuthDBPath string
+
+	// Docker is the raw DOCKER variable. "true" in any letter case makes
+	// EnsureDefaultAdmin wait for the signal server's admin; the exact
+	// "true" adds /app/data to the places for .admin_credentials.
+	Docker string
+	// DBType is DB_TYPE, else "postgres" when DATABASE_URL is a PostgreSQL
+	// address, else "sqlite".
+	DBType string
+	// SQLiteAuthDBMode is SQLITE_AUTH_DB_MODE: "legacy", "consolidated" or
+	// empty.
+	SQLiteAuthDBMode string
+	// DockerAdminBootstrapWait is how long EnsureDefaultAdmin waits for
+	// the signal server's admin. DOCKER_ADMIN_BOOTSTRAP_WAIT_MS, 30 s, at
+	// least 1 s.
+	DockerAdminBootstrapWait time.Duration
+}
+
+var postgresURL = regexp.MustCompile(`(?i)^postgres(ql)?://`)
+
+// SettingsFromEnv reads the settings the way the console read them from
+// its environment. dataDir and keysPath are the folders the console's
+// configuration resolved.
+func SettingsFromEnv(getenv func(string) string, dataDir, keysPath string) Settings {
+	s := Settings{
+		AutoCreate:           getenv("BETTERDESK_AUTH_AUTOCREATE") == "true",
+		TokenExpiryDays:      intOr(getenv("API_TOKEN_EXPIRY_DAYS"), 7),
+		MaxFailedAttempts:    intOr(getenv("API_MAX_FAILED_ATTEMPTS"), 10),
+		LockoutMinutes:       intOr(getenv("API_LOCKOUT_MINUTES"), 15),
+		IPRateLimit:          intOr(getenv("API_IP_RATE_LIMIT"), 30),
+		AttemptWindowMinutes: intOr(getenv("API_ATTEMPT_WINDOW"), 15),
+		DefaultAdminUsername: getenv("DEFAULT_ADMIN_USERNAME"),
+		DefaultAdminPassword: getenv("DEFAULT_ADMIN_PASSWORD"),
+		ForcePasswordUpdate:  getenv("FORCE_PASSWORD_UPDATE") == "true",
+		DataDir:              dataDir,
+		KeysPath:             keysPath,
+		AuthDBPath:           getenv("AUTH_DB_PATH"),
+		Docker:               getenv("DOCKER"),
+		DBType:               getenv("DB_TYPE"),
+		SQLiteAuthDBMode:     getenv("SQLITE_AUTH_DB_MODE"),
+	}
+	if s.DBType == "" {
+		s.DBType = "sqlite"
+		if postgresURL.MatchString(getenv("DATABASE_URL")) {
+			s.DBType = "postgres"
+		}
+	}
+	wait := getenv("DOCKER_ADMIN_BOOTSTRAP_WAIT_MS")
+	if wait == "" {
+		wait = "30000"
+	}
+	s.DockerAdminBootstrapWait = time.Duration(max(1000, intOr(wait, 30000))) * time.Millisecond
+	return s
+}
+
+// withDefaults fills what a zero Settings leaves open.
+func (s Settings) withDefaults() Settings {
+	fill := func(v *int, fallback int) {
+		if *v == 0 {
+			*v = fallback
+		}
+	}
+	fill(&s.TokenExpiryDays, 7)
+	fill(&s.MaxFailedAttempts, 10)
+	fill(&s.LockoutMinutes, 15)
+	fill(&s.IPRateLimit, 30)
+	fill(&s.AttemptWindowMinutes, 15)
+	if s.DefaultAdminUsername == "" {
+		s.DefaultAdminUsername = "admin"
+	}
+	if s.DBType == "" {
+		s.DBType = "sqlite"
+	}
+	if s.DockerAdminBootstrapWait < time.Second {
+		if s.DockerAdminBootstrapWait == 0 {
+			s.DockerAdminBootstrapWait = 30 * time.Second
+		} else {
+			s.DockerAdminBootstrapWait = time.Second
+		}
+	}
+	return s
+}
+
+// Options configure a Service.
+type Options struct {
+	// DB is the console's database, migrated.
+	DB *store.DB
+	// GoAPI is the client for the signal server's API. Sign-in asks it
+	// which single sign-on is on, lets it check directory accounts and
+	// falls back to it when the local password check fails.
+	GoAPI *goapi.Client
+	// Settings are the values from the environment.
+	Settings Settings
+	// QR draws a text as a PNG data URL, 256 pixels wide with a margin of
+	// 2 modules, black on white: qr.PNGDataURL with those options. The
+	// two-factor set-up needs it.
+	QR func(text string) (string, error)
+	// Log takes the service's lines. Nil drops them.
+	Log Logger
+	// Now is the clock. Nil means time.Now.
+	Now func() time.Time
+	// Rand is the source of secrets, codes, tokens and salts. Nil means
+	// crypto/rand.
+	Rand io.Reader
+	// FS is the file access of EnsureDefaultAdmin. Nil means the real
+	// files.
+	FS FS
+	// Sleep waits in EnsureDefaultAdmin. Nil means a real wait that ends
+	// early when ctx does.
+	Sleep func(ctx context.Context, d time.Duration) error
+}
+
+// Service is the console's sign-in service. It is safe for concurrent use.
+type Service struct {
+	db    *store.DB
+	goAPI *goapi.Client
+	set   Settings
+	qr    func(text string) (string, error)
+	log   Logger
+	now   func() time.Time
+	rand  io.Reader
+	fs    FS
+	sleep func(ctx context.Context, d time.Duration) error
+
+	// bcryptCost is the cost of new hashes and dummy the hash an unknown
+	// user's password is compared with. Tests lower both.
+	bcryptCost uint
+	dummy      string
+	// windows says the process runs on Windows, which adds places to look
+	// for .admin_credentials.
+	windows bool
+	// zone is the time zone of the process, which one answer depends on
+	// (lockoutEnd).
+	zone *time.Location
+
+	mu sync.Mutex
+	// forceUsed is set once ForcePasswordUpdate has had its one effect.
+	forceUsed bool
+}
+
+// New returns a service. DB and GoAPI are required.
+func New(opts Options) (*Service, error) {
+	if opts.DB == nil {
+		return nil, errors.New("authn: Options.DB is required")
+	}
+	if opts.GoAPI == nil {
+		return nil, errors.New("authn: Options.GoAPI is required")
+	}
+	s := &Service{
+		db:         opts.DB,
+		goAPI:      opts.GoAPI,
+		set:        opts.Settings.withDefaults(),
+		qr:         opts.QR,
+		log:        opts.Log,
+		now:        opts.Now,
+		rand:       opts.Rand,
+		fs:         opts.FS,
+		sleep:      opts.Sleep,
+		bcryptCost: saltRounds,
+		dummy:      dummyHash,
+		windows:    runtime.GOOS == "windows",
+		zone:       time.Local,
+	}
+	if s.log == nil {
+		s.log = discardLogger{}
+	}
+	if s.now == nil {
+		s.now = time.Now
+	}
+	if s.rand == nil {
+		s.rand = rand.Reader
+	}
+	if s.fs == nil {
+		s.fs = osFS{}
+	}
+	if s.sleep == nil {
+		s.sleep = sleepContext
+	}
+	return s, nil
+}
+
+func sleepContext(ctx context.Context, d time.Duration) error {
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+// randomHex returns n random bytes as lower-case hex.
+func (s *Service) randomHex(n int) (string, error) {
+	b := make([]byte, n)
+	if _, err := io.ReadFull(s.rand, b); err != nil {
+		return "", err
+	}
+	const digits = "0123456789abcdef"
+	var out strings.Builder
+	for _, c := range b {
+		out.WriteByte(digits[c>>4])
+		out.WriteByte(digits[c&15])
+	}
+	return out.String(), nil
+}
