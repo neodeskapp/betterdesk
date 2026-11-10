@@ -94,6 +94,7 @@ type Server struct {
 	peerVault         *peervault.Vault // AES-GCM for org peer credentials (#367)
 	remoteTargetVault *peervault.Vault // Dedicated AES-GCM vault for RDP/VNC credentials
 	httpSrv           *http.Server
+	mux               sharedMux // the route table, built once (internal_handler.go)
 	wg                sync.WaitGroup
 	version           string
 }
@@ -164,6 +165,10 @@ func (s *Server) metricsGuard(h http.HandlerFunc) http.HandlerFunc {
 			ip = r.RemoteAddr
 		}
 		if len(allowlist) > 0 && ipInAllowlist(ip, allowlist) {
+			h(w, r)
+			return
+		}
+		if arrivedInternally(r) {
 			h(w, r)
 			return
 		}
@@ -277,8 +282,9 @@ func (s *Server) InitOIDC() {
 	}
 }
 
-// Start launches the HTTP API server.
-func (s *Server) Start(ctx context.Context) error {
+// routes registers every route on a new mux. Start and InternalHandler share
+// the one that s.mux keeps.
+func (s *Server) routes() *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Health and public key are needed for client bootstrap. Detailed runtime
@@ -680,6 +686,12 @@ func (s *Server) Start(ctx context.Context) error {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(`{"error":"not found"}`))
 	})
+	return mux
+}
+
+// Start launches the HTTP API server.
+func (s *Server) Start(ctx context.Context) error {
+	mux := s.mux.get(s)
 
 	addr := fmt.Sprintf(":%d", s.cfg.APIPort)
 	s.httpSrv = &http.Server{
