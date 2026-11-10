@@ -37,7 +37,6 @@ const automationRoutes = lazyRoute('./automation.routes');
 const fileTransferRoutes = lazyRoute('./fileTransfer.routes');
 const dataguardRoutes = lazyRoute('./dataguard.routes');
 const reportsRoutes = lazyRoute('./reports.routes');
-const cdapRoutes = lazyRoute('./cdap.routes');
 const organizationsRoutes = lazyRoute('./organizations.routes');
 const policiesRoutes = lazyRoute('./policies.routes');
 const fleetRoutes = lazyRoute('./fleet.routes');
@@ -63,7 +62,6 @@ router.use('/', require('./client-branding.routes'));
 router.use('/', usersRoutes);
 router.use('/', foldersRoutes);
 router.use('/', remoteRoutes);
-router.use('/', require('./guest.routes'));
 // bdApiRoutes now mounted in server.js (before CSRF) for desktop client access
 router.use('/api/bd', inventoryRoutes);     // device-facing: /api/bd/inventory, /api/bd/telemetry
 router.use('/api/inventory', inventoryRoutes); // admin-facing: /api/inventory, /api/inventory/:id
@@ -72,7 +70,7 @@ router.use('/api/bd', activityRoutes);           // device-facing: /api/bd/activ
 router.use('/api/activity', activityRoutes);     // admin-facing: /api/activity
 router.use('/api/automation', automationRoutes); // admin-facing: /api/automation/*
 router.use('/api/bd', automationRoutes);         // device-facing: /api/bd/commands
-router.use('/api/files', fileTransferRoutes);    // admin-facing: /api/files/transfer(s)
+router.use('/api/files', fileTransferRoutes);    // device-facing, second address: /api/files/file-transfer (the routes for people are in the Go console)
 router.use('/api/bd', fileTransferRoutes);       // device-facing: /api/bd/file-transfer
 router.use('/api/dataguard', dataguardRoutes);   // device-facing, second address: /api/dataguard/dlp-policies, /api/dataguard/dlp-events (policies, events and stats are in the Go console)
 router.use('/api/bd', dataguardRoutes);          // device-facing: /api/bd/dlp-policies, /api/bd/dlp-events
@@ -80,7 +78,6 @@ router.use('/api/reports', reportsRoutes);       // admin-facing: /api/reports/*
 router.use('/', registrationRoutes);               // admin-facing: /registrations, /api/registrations/*
 router.use('/api/bd', registrationRoutes);          // device-facing: /api/bd/register-request, /api/bd/register-status
 router.use('/', pagesRoutes);                          // page routes: /inventory, /tickets, /automation, etc.
-router.use('/', cdapRoutes);                            // admin-facing: /cdap/devices/:id, /api/cdap/*
 router.use('/', organizationsRoutes);                    // admin-facing: /organizations, /api/panel/org/*
 router.use('/', policiesRoutes);                         // device-facing: /api/bd/device-policy, /api/bd/attestation
 router.use('/api/bd', policiesRoutes);                   // the same two under /api/bd/api/bd/

@@ -1,10 +1,10 @@
 'use strict';
 
 /**
- * A guest link from start to finish: an operator creates it, and the guest
- * page's data (GET /api/remote/guest-info, which the new console's
- * /remote/guest asks for) answers for the link's token, with or without a
- * console session, and keeps the token in the guest cookie.
+ * A guest link on the guest page: its data (GET /api/remote/guest-info,
+ * which the new console's /remote/guest asks for) answers for the link's
+ * token, with or without a console session, and keeps the token in the
+ * guest cookie. Making a link is a route of the Go console.
  */
 
 const express = require('express');
@@ -15,9 +15,6 @@ jest.mock('../services/betterdeskApi', () => ({
         get: jest.fn(),
         post: jest.fn(),
     }),
-}));
-jest.mock('../services/deviceGroupService', () => ({
-    getDeviceScopeForUser: jest.fn().mockResolvedValue(new Set(['TARGET01'])),
 }));
 jest.mock('../services/database', () => ({
     getDevice: jest.fn().mockResolvedValue(null),
@@ -31,7 +28,6 @@ jest.mock('../services/serverConnectionConfigService', () => ({
 
 const betterdeskApi = require('../services/betterdeskApi');
 const remoteRoutes = require('../routes/remote.routes');
-const guestRoutes = require('../routes/guest.routes');
 
 function buildApp({ signedIn = true } = {}) {
     const app = express();
@@ -44,7 +40,6 @@ function buildApp({ signedIn = true } = {}) {
     });
     app.use(express.json());
     app.use(remoteRoutes);
-    app.use(guestRoutes);
     return app;
 }
 
@@ -100,35 +95,5 @@ describe('Guest Access Link integration', () => {
         expect(response.status).toBe(403);
         expect(response.body).toMatchObject({ success: false, code: 'invalid', error: 'guest link expired' });
         expect(response.headers['set-cookie']).toBeUndefined();
-    });
-
-    test('creates an allowlisted link whose token the guest page accepts', async () => {
-        betterdeskApi.apiClient.mockResolvedValueOnce({
-            status: 201,
-            data: {
-                path: '/remote/guest?t=created-token',
-                token: 'created-token',
-                peer_ids: ['TARGET01'],
-            },
-        });
-        const create = await request(buildApp())
-            .post('/api/guest/access-links')
-            .send({ peer_ids: ['TARGET01'], ttl_minutes: 30, view_only: true });
-
-        expect(create.status).toBe(201);
-        expect(create.body.path).toBe('/remote/guest?t=created-token');
-        expect(betterdeskApi.apiClient).toHaveBeenCalledWith(expect.objectContaining({
-            method: 'POST',
-            url: '/guest/access-links',
-            data: expect.objectContaining({ peer_ids: ['TARGET01'] }),
-        }));
-
-        // The link's page asks guest-info with the link's own query
-        validLink([{ id: 'TARGET01', online: true }]);
-        const query = create.body.path.slice(create.body.path.indexOf('?'));
-        const page = await request(buildApp({ signedIn: false })).get('/api/remote/guest-info' + query);
-        expect(page.status).toBe(200);
-        expect(page.body.token).toBe('created-token');
-        expect(page.body.guest.devices).toEqual([{ id: 'TARGET01', online: true }]);
     });
 });

@@ -33,13 +33,16 @@ import (
 	"github.com/unitronix/betterdesk-server/console/avatars"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/csrf"
+	"github.com/unitronix/betterdesk-server/console/filetransfer"
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/guestaccess"
 	"github.com/unitronix/betterdesk-server/console/i18n"
 	"github.com/unitronix/betterdesk-server/console/jobs"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/limits"
 	"github.com/unitronix/betterdesk-server/console/proxy"
 	"github.com/unitronix/betterdesk-server/console/qr"
+	"github.com/unitronix/betterdesk-server/console/restart"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
 	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -204,6 +207,16 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		Logger: s.deps.Log,
 	})
 	s.deps.Avatars = avatars.New(avatars.Options{DB: opts.Store, Logger: s.deps.Log.Child("Avatar")})
+	s.deps.GuestAccess = guestaccess.New(guestaccess.Options{HTTPS: cfg.HTTPS, GoAPI: api})
+	s.deps.FileTransfer = filetransfer.New(filetransfer.Options{Dir: cfg.TransfersDir, Logger: s.deps.Log})
+	s.jobs.Add("file transfer cleanup", s.deps.FileTransfer.Run)
+	s.deps.Restart = restart.New(restart.Options{
+		DataDir:       cfg.DataDir,
+		GoAPI:         api,
+		RestartServer: s.deps.ServerInfo.RestartServer,
+		Rollbacks:     map[string]restart.Rollback{"connection-mode": restart.ConnectionModeRollback(s.deps.ServerInfo)},
+		Logger:        s.deps.Log,
+	})
 	badParam := func(w http.ResponseWriter, r *http.Request, err error) {
 		host.ServerError(w, r, err, http.StatusBadRequest)
 	}

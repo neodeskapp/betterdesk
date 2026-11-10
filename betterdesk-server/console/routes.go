@@ -4,6 +4,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/kit"
 	authroutes "github.com/unitronix/betterdesk-server/console/routes/auth"
 	"github.com/unitronix/betterdesk-server/console/routes/avatars"
+	"github.com/unitronix/betterdesk-server/console/routes/cdap"
 	"github.com/unitronix/betterdesk-server/console/routes/cdapstudio"
 	"github.com/unitronix/betterdesk-server/console/routes/chat"
 	consoleroutes "github.com/unitronix/betterdesk-server/console/routes/console"
@@ -11,7 +12,9 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/dashboard"
 	"github.com/unitronix/betterdesk-server/console/routes/dataguard"
 	"github.com/unitronix/betterdesk-server/console/routes/desktop"
+	"github.com/unitronix/betterdesk-server/console/routes/filetransfer"
 	"github.com/unitronix/betterdesk-server/console/routes/fleet"
+	"github.com/unitronix/betterdesk-server/console/routes/guest"
 	"github.com/unitronix/betterdesk-server/console/routes/health"
 	i18nroutes "github.com/unitronix/betterdesk-server/console/routes/i18n"
 	"github.com/unitronix/betterdesk-server/console/routes/keys"
@@ -50,9 +53,13 @@ func registerRoutes(d *kit.Deps) {
 	avatars.Register(d)       // routes/avatars.routes.js
 	panelaccess.Register(d)   // routes/panel-access.routes.js
 	uishell.Register(d)       // routes/ui-shell.routes.js
+	guest.Register(d)         // routes/guest.routes.js
 	i18nroutes.Register(d)    // routes/i18n.routes.js at /api/i18n
 	// routes/tickets.routes.js at /api/tickets, without the device routes /api/tickets/bd
 	tickets.Register(d.At("/api/tickets"))
+	// routes/fileTransfer.routes.js at /api/files and at /api/bd, without the device routes file-transfer
+	filetransfer.Register(d.At("/api/files"))
+	filetransfer.Register(d.At("/api/bd"))
 	// routes/network.routes.js at /api/network
 	network.Register(d.At("/api/network"))
 	// routes/dataguard.routes.js at /api/dataguard and at /api/bd, without the device routes dlp-policies and dlp-events
@@ -61,6 +68,7 @@ func registerRoutes(d *kit.Deps) {
 	trends.Register(d) // routes/trends.routes.js, in front of the reports group
 	// routes/tenants.routes.js at /api/tenants
 	tenants.Register(d.At("/api/tenants"))
+	cdap.Register(d)                          // routes/cdap.routes.js
 	meshcentral.Register(d)                   // routes/meshcentral.routes.js
 	chat.Register(d)                          // routes/chat.routes.js
 	tokens.Register(d)                        // routes/tokens.routes.js

@@ -58,7 +58,10 @@
 // The numbers are read as the old console read them: digits up to the
 // first other character, and the default for zero or no number. Two files
 // have fixed places: the old console's own .env in CONSOLE_DIR, and
-// docker-compose.yml in the folder above it.
+// docker-compose.yml in the folder above it. So has the folder for the
+// files of file transfers: CONSOLE_DIR/data/transfers, which is not below
+// DATA_DIR unless DATA_DIR is CONSOLE_DIR/data (the default outside a
+// container, and /app/data in the container images).
 //
 // Read by the packages that own them, through Config.Getenv:
 //

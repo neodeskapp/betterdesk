@@ -1,0 +1,80 @@
+{
+ "id": "guest/create-plain",
+ "request": {
+  "method": "POST",
+  "path": "/api/guest/access-links",
+  "body": {
+   "peer_ids": [
+    "900100004"
+   ]
+  }
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "guest_issuer",
+    "operator",
+    "admin"
+   ],
+   "status": 201,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "id",
+     "pattern": "^[9aA+/_=-]{16}$"
+    },
+    {
+     "path": "path",
+     "pattern": "^[9aA+/_=-]{13}\\?[9aA+/_=-]{50}$"
+    },
+    {
+     "path": "token",
+     "pattern": "^[9aA+/_=-]{48}$"
+    },
+    {
+     "path": "token_prefix",
+     "pattern": "^[9aA+/_=-]{8}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "expires_at": "<volatile>",
+     "id": "<volatile>",
+     "label": "",
+     "path": "<volatile>",
+     "peer_ids": [
+      "900100004"
+     ],
+     "token": "<volatile>",
+     "token_prefix": "<volatile>",
+     "view_only": false
+    }
+   }
+  }
+ ]
+}

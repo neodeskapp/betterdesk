@@ -61,6 +61,9 @@ type Config struct {
 	ProtosDir     string
 	WallpapersDir string
 	UploadsDir    string
+	// TransfersDir is where the files of file transfers are written:
+	// data/transfers in ConsoleDir, whatever DATA_DIR says.
+	TransfersDir string
 
 	// HTTPS is the console's HTTPS mode (HTTPS_ENABLED): it picks the
 	// names of the session and CSRF cookies, marks them Secure and
@@ -207,6 +210,7 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 	cfg.ProtosDir = filepath.Join(cfg.ConsoleDir, "protos")
 	cfg.WallpapersDir = filepath.Join(cfg.ConsoleDir, "wallpapers")
 	cfg.UploadsDir = filepath.Join(cfg.DataDir, "uploads")
+	cfg.TransfersDir = filepath.Join(cfg.ConsoleDir, "data", "transfers")
 
 	cfg.HTTPS = isTrue(getenv("HTTPS_ENABLED"))
 	cfg.HTTPSExact = getenv("HTTPS_ENABLED") == "true"

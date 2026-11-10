@@ -91,6 +91,10 @@ func TestLoadValues(t *testing.T) {
 		cfg.PublicDir != filepath.Join("/console", "public") || cfg.UploadsDir != filepath.Join("/data", "uploads") {
 		t.Errorf("folders = %+v", cfg)
 	}
+	// The transfers folder stays with the console's files, not with DATA_DIR
+	if cfg.TransfersDir != filepath.Join("/console", "data", "transfers") {
+		t.Errorf("TransfersDir = %q", cfg.TransfersDir)
+	}
 }
 
 func TestSwitchesReadAsTheOldConsoleDid(t *testing.T) {

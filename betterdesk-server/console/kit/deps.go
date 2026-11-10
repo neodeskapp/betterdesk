@@ -10,9 +10,12 @@ import (
 	"github.com/unitronix/betterdesk-server/console/avatars"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/csrf"
+	"github.com/unitronix/betterdesk-server/console/filetransfer"
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/guestaccess"
 	"github.com/unitronix/betterdesk-server/console/i18n"
 	"github.com/unitronix/betterdesk-server/console/limits"
+	"github.com/unitronix/betterdesk-server/console/restart"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
 	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -72,6 +75,15 @@ type Deps struct {
 	// Avatars keeps the profile pictures of console users
 	// (services/avatarService.js, lib/avatarImage.js).
 	Avatars *avatars.Service
+	// GuestAccess reads and checks the tokens of guest access links
+	// (middleware/guestAccess.js).
+	GuestAccess *guestaccess.Service
+	// FileTransfer keeps the file transfers between the console and
+	// devices (services/fileTransferService.js).
+	FileTransfer *filetransfer.Service
+	// Restart collects the saved settings that need a restart of the
+	// server and runs that restart (services/restartCoordinator.js).
+	Restart *restart.Service
 	// Audit writes the audit log. LogAction is the usual way to it.
 	Audit *auditlog.Log
 	// Log is the console's logger; a group takes d.Log.Child("TICKETS").

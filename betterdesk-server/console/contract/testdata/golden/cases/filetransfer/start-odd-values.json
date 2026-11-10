@@ -1,0 +1,182 @@
+{
+ "id": "filetransfer/start-odd-values",
+ "request": {
+  "method": "POST",
+  "path": "/api/files/transfer",
+  "body": {
+   "device_id": 5,
+   "direction": "upload",
+   "filename": [
+    "a",
+    "b c"
+   ],
+   "mime_type": {
+    "x": 1
+   },
+   "size": "12abc"
+  }
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "panel_access_denied",
+     "error": "Panel access denied: files",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator"
+   ],
+   "status": 201,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "createdAt",
+     "integer": true
+    },
+    {
+     "path": "id",
+     "pattern": "^[9aA+/_=-]{32}$"
+    },
+    {
+     "path": "tempPath",
+     "pattern": "^[9aA+/_=-]{70}$"
+    },
+    {
+     "path": "updatedAt",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "bytesTransferred": 0,
+     "chunksReceived": 0,
+     "createdAt": 0,
+     "createdBy": "e2e_operator",
+     "deviceId": 5,
+     "direction": "upload",
+     "filename": "a_b_c",
+     "id": "<volatile>",
+     "mimeType": {
+      "x": 1
+     },
+     "size": 12,
+     "status": "pending",
+     "tempPath": "<volatile>",
+     "totalChunks": 1,
+     "updatedAt": 0
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 201,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "createdAt",
+     "integer": true
+    },
+    {
+     "path": "id",
+     "pattern": "^[9aA+/_=-]{32}$"
+    },
+    {
+     "path": "tempPath",
+     "pattern": "^[9aA+/_=-]{70}$"
+    },
+    {
+     "path": "updatedAt",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "bytesTransferred": 0,
+     "chunksReceived": 0,
+     "createdAt": 0,
+     "createdBy": "e2e_admin",
+     "deviceId": 5,
+     "direction": "upload",
+     "filename": "a_b_c",
+     "id": "<volatile>",
+     "mimeType": {
+      "x": 1
+     },
+     "size": 12,
+     "status": "pending",
+     "tempPath": "<volatile>",
+     "totalChunks": 1,
+     "updatedAt": 0
+    }
+   }
+  }
+ ]
+}
