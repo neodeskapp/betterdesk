@@ -62,6 +62,14 @@ var (
 		// its history back from the moment it runs and follows working
 		// hours, so how many fall into the window changes with the hour.
 		"GET /api/reports/trends": {"data.sessions[#]", "data.help[#]"},
+		// The same for the activity the seed spreads over working hours:
+		// which devices have summaries, and their numbers, change with the
+		// hour, and so does the saved report made from them.
+		"GET /api/activity":      {"~summaries"},
+		"GET /api/reports/saved": {"~[*].payload"},
+		// One entry holds the size of the backup the matrix downloads
+		// ("0.33 MB"), which changes with the instance.
+		"GET /api/settings/audit": {"~data[*].details"},
 		// How long the Go server has been up, as Go prints a duration:
 		// "51.3s", "1m3.2s", "1h0m5s".
 		"GET /api/stats":         {"~data.hbbs.uptime"},
