@@ -70,6 +70,7 @@ func suiteFor(t *testing.T) *Suite {
 			sessions: map[Role]*Session{},
 			goldens:  map[string]*Golden{},
 		}
+		suite.Report.redact = client.secrets.mask
 		suite.Report.hasRouting = client.HasRouting()
 	})
 	if suiteErr != nil {
@@ -113,6 +114,10 @@ func (s *Suite) judge(t *testing.T, sl *slot, role Role, answer Answer) {
 
 	if s.Settings.Record != Compare {
 		record, problem := recordable(handler)
+		if !record && problem == "" && s.Settings.RecordNew && s.isNewGolden(sl) {
+			record = true
+			s.Report.recordedNew[sl.file(s.Settings.GoldenDir)] = true
+		}
 		switch {
 		case record:
 			sl.rec.Answers[role] = answer
@@ -155,8 +160,26 @@ func (s *Suite) judge(t *testing.T, sl *slot, role Role, answer Answer) {
 	}
 	s.Report.count(tally, len(lines) == 0)
 	if len(lines) > 0 {
-		t.Errorf("%s", formatMismatch(sl.rec.ID, role, file, lines))
+		t.Errorf("%s", s.redact(formatMismatch(sl.rec.ID, role, file, lines)))
 	}
+}
+
+// redact puts the placeholders of the run's secrets in place of their
+// values in a message.
+func (s *Suite) redact(text string) string {
+	return s.Client.secrets.mask(text)
+}
+
+// isNewGolden reports whether CONTRACT_RECORD_NEW may record a slot the Go
+// console answers: its golden does not exist yet, or holds the first of
+// the two recordings only, which is what the first half of the same
+// recording left. A golden that holds both recordings stays as it is.
+func (s *Suite) isNewGolden(sl *slot) bool {
+	golden, err := LoadGolden(sl.file(s.Settings.GoldenDir))
+	if err != nil {
+		return isNotExist(err)
+	}
+	return golden.Recordings < 2
 }
 
 // maxDiffLines is how many differences one answer prints.
@@ -234,7 +257,7 @@ func (s *Suite) requireRouting(t *testing.T) {
 // the first as volatile; a difference that is not a volatile value fails
 // the test and names the request. A slot without recorded answers, as a
 // frozen one, is neither read nor written.
-func (s *Suite) flush(t *testing.T, slots []*slot) {
+func (s *Suite) flush(t testing.TB, slots []*slot) {
 	t.Helper()
 	if s.Settings.Record == Compare {
 		return
@@ -267,7 +290,18 @@ func (s *Suite) flush(t *testing.T, slots []*slot) {
 					sl.rec.ID, strings.Join(problems, "\n    "))
 			}
 		}
-		if err := golden.Save(file); err != nil {
+		data, err := golden.encode()
+		if err != nil {
+			t.Errorf("encode golden %s: %v", file, err)
+			continue
+		}
+		if names := s.Client.secrets.foundIn(data); len(names) > 0 {
+			s.Report.problem("%s: not written, the golden would hold the value of the secret %s", sl.rec.ID, strings.Join(names, ", "))
+			t.Errorf("%s is not recorded: the golden would hold the value of the secret %s (the masking did not reach it); %s is left as it was",
+				sl.rec.ID, strings.Join(names, ", "), filepath.ToSlash(file))
+			continue
+		}
+		if err := writeGolden(file, data); err != nil {
 			t.Errorf("%v", err)
 			continue
 		}

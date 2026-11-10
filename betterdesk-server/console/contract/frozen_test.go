@@ -168,6 +168,55 @@ func TestRecordingWritesNoGoldenFromAGoAnswer(t *testing.T) {
 	}
 }
 
+// CONTRACT_RECORD_NEW=1 records a case the Go console answers when its
+// golden is new: none yet in the first recording, the first recording's
+// in the second. A golden that holds both recordings is never written, and
+// without the setting a Go answer is not recorded at all.
+func TestRecordNewWritesOnlyNewGoldens(t *testing.T) {
+	dir := t.TempDir()
+	makeFile := goldenFile(dir, "cases", "moved", "make")
+	for _, mode := range []RecordMode{RecordFirst, RecordMerge} {
+		s, _ := newMovedSuite(t, mode, dir, makeMovedToGo)
+		s.Settings.RecordNew = true
+		s.runGroup(t, movedGroup())
+		golden, err := LoadGolden(makeFile)
+		if err != nil {
+			t.Fatalf("mode %d: the new golden of the route Go answers was not written: %v", mode, err)
+		}
+		if golden.Recordings != int(mode) || !s.Report.recordedNew[makeFile] {
+			t.Errorf("mode %d: %d recordings, counted as new %v", mode, golden.Recordings, s.Report.recordedNew[makeFile])
+		}
+		var summary strings.Builder
+		s.Report.Print(&summary)
+		if !strings.Contains(summary.String(), "recorded new: 1 ") {
+			t.Errorf("mode %d: the summary does not count the new golden:\n%s", mode, summary.String())
+		}
+	}
+	merged, _ := os.ReadFile(makeFile)
+
+	// Once both recordings are in, the golden is frozen like any other
+	for _, mode := range []RecordMode{RecordFirst, RecordMerge} {
+		s, _ := newMovedSuite(t, mode, dir, makeMovedToGo)
+		s.Settings.RecordNew = true
+		s.runGroup(t, movedGroup())
+		if after, _ := os.ReadFile(makeFile); string(after) != string(merged) {
+			t.Fatalf("mode %d: a golden with two recordings was written again:\n%s", mode, after)
+		}
+		if len(s.Report.recordedNew) != 0 || !s.Report.frozen[makeFile] {
+			t.Errorf("mode %d: recorded new %v, frozen %v; want the golden frozen", mode, s.Report.recordedNew, s.Report.frozen)
+		}
+	}
+
+	// A Node golden that exists is recorded as always, and a Go route
+	// without the setting gets nothing
+	other := t.TempDir()
+	s, _ := newMovedSuite(t, RecordFirst, other, makeMovedToGo)
+	s.runGroup(t, movedGroup())
+	if _, err := os.Stat(goldenFile(other, "cases", "moved", "make")); !isNotExist(err) {
+		t.Errorf("without CONTRACT_RECORD_NEW a golden was written from a Go answer (stat: %v)", err)
+	}
+}
+
 func TestRecordableByHandler(t *testing.T) {
 	for handler, want := range map[string]struct{ record, problem bool }{
 		HandlerNode:    {true, false},

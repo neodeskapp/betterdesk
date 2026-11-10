@@ -1,0 +1,233 @@
+{
+ "id": "tickets/device-token-list",
+ "request": {
+  "method": "GET",
+  "path": "/api/tickets/bd",
+  "notes": [
+   "header Authorization: Bearer {secret:device_token}"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "tickets[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "tickets[*].sla_due_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "tickets[*].updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "tickets": [
+      {
+       "assigned_to": null,
+       "category": "hardware",
+       "closed_at": null,
+       "created_at": "<volatile>",
+       "created_by": "admin",
+       "description": "Since this morning every job from demo-reception-01 comes out blank. The test page from the printer menu is fine.",
+       "device_id": "900100001",
+       "id": 8,
+       "priority": "medium",
+       "resolved_at": null,
+       "sla_due_at": "<volatile>",
+       "status": "open",
+       "title": "Reception printer prints blank pages",
+       "updated_at": "<volatile>"
+      }
+     ],
+     "total": 1
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "tickets[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "tickets[*].sla_due_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "tickets[*].updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "tickets": [
+      {
+       "assigned_to": null,
+       "category": "hardware",
+       "closed_at": null,
+       "created_at": "<volatile>",
+       "created_by": "admin",
+       "description": "Since this morning every job from demo-reception-01 comes out blank. The test page from the printer menu is fine.",
+       "device_id": "900100001",
+       "id": 8,
+       "priority": "medium",
+       "resolved_at": null,
+       "sla_due_at": "<volatile>",
+       "status": "open",
+       "title": "Reception printer prints blank pages",
+       "updated_at": "<volatile>"
+      }
+     ],
+     "total": 1
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "tickets[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "tickets[*].sla_due_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "tickets[*].updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "tickets": [
+      {
+       "assigned_to": null,
+       "category": "network",
+       "closed_at": null,
+       "created_at": "<volatile>",
+       "created_by": "agent:900100001",
+       "description": "",
+       "device_id": "900100001",
+       "id": 23,
+       "priority": "high",
+       "resolved_at": null,
+       "sla_due_at": "<volatile>",
+       "status": "open",
+       "title": "Priority high",
+       "updated_at": "<volatile>"
+      },
+      {
+       "assigned_to": null,
+       "category": "hardware",
+       "closed_at": null,
+       "created_at": "<volatile>",
+       "created_by": "admin",
+       "description": "Since this morning every job from demo-reception-01 comes out blank. The test page from the printer menu is fine.",
+       "device_id": "900100001",
+       "id": 8,
+       "priority": "medium",
+       "resolved_at": null,
+       "sla_due_at": "<volatile>",
+       "status": "open",
+       "title": "Reception printer prints blank pages",
+       "updated_at": "<volatile>"
+      }
+     ],
+     "total": 2
+    }
+   }
+  }
+ ]
+}

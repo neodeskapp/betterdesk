@@ -32,7 +32,6 @@ function lazyRoute(modulePath) {
 const inventoryRoutes = lazyRoute('./inventory.routes');
 const activityRoutes = lazyRoute('./activity.routes');
 const automationRoutes = lazyRoute('./automation.routes');
-const fileTransferRoutes = lazyRoute('./fileTransfer.routes');
 const commercializationRoutes = lazyRoute('./commercialization.routes');
 const phase45Routes = lazyRoute('./phase4_5.routes');
 const serverManagementRoutes = lazyRoute('./server-management.routes');
@@ -60,8 +59,6 @@ router.use('/api/bd', activityRoutes);           // device-facing: /api/bd/activ
 router.use('/api/activity', activityRoutes);     // admin-facing: /api/activity
 router.use('/api/automation', automationRoutes); // admin-facing: /api/automation/*
 router.use('/api/bd', automationRoutes);         // device-facing: /api/bd/commands
-router.use('/api/files', fileTransferRoutes);    // device-facing, second address: /api/files/file-transfer (the routes for people are in the Go console)
-router.use('/api/bd', fileTransferRoutes);       // device-facing: /api/bd/file-transfer
 router.use('/', registrationRoutes);               // admin-facing: /registrations, /api/registrations/*
 router.use('/api/bd', registrationRoutes);          // device-facing: /api/bd/register-request, /api/bd/register-status
 router.use('/', pagesRoutes);                          // page routes: /inventory, /tickets, /automation, etc.

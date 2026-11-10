@@ -28,8 +28,17 @@ type Settings struct {
 	// PasswordFile holds the password of the e2e_<role> accounts
 	// (BD_PASSWORD_FILE).
 	PasswordFile string
+	// SecretsDir is the folder whose files are the secrets cases send as
+	// {secret:<file name>} (BD_SECRETS_DIR). A folder that does not exist
+	// holds none.
+	SecretsDir string
 	// Record is what to do with the answers (CONTRACT_RECORD).
 	Record RecordMode
+	// RecordNew lets a recording write the golden of a request the Go
+	// console answers when that golden is new: there is none yet, or it
+	// holds the first of the two recordings only (CONTRACT_RECORD_NEW=1).
+	// A golden that holds both recordings is never written.
+	RecordNew bool
 	// GoldenDir is where the goldens are (CONTRACT_GOLDEN).
 	GoldenDir string
 	// RoutesFile is the route list the matrix is generated from
@@ -46,6 +55,7 @@ type Settings struct {
 func LoadSettings(getenv func(string) string) (*Settings, error) {
 	s := &Settings{
 		PasswordFile: "/stack/secrets/e2e_password",
+		SecretsDir:   "/stack/secrets",
 		GoldenDir:    "testdata/golden",
 		RoutesFile:   "testdata/routes.json",
 		Timeout:      20 * time.Second,
@@ -63,6 +73,9 @@ func LoadSettings(getenv func(string) string) (*Settings, error) {
 	if v := strings.TrimSpace(getenv("BD_PASSWORD_FILE")); v != "" {
 		s.PasswordFile = v
 	}
+	if v := strings.TrimSpace(getenv("BD_SECRETS_DIR")); v != "" {
+		s.SecretsDir = v
+	}
 	if v := strings.TrimSpace(getenv("CONTRACT_GOLDEN")); v != "" {
 		s.GoldenDir = v
 	}
@@ -78,6 +91,16 @@ func LoadSettings(getenv func(string) string) (*Settings, error) {
 		s.Record = RecordMerge
 	default:
 		return nil, fmt.Errorf("CONTRACT_RECORD %q: use 1 (write goldens) or merge (mark what differs as volatile)", v)
+	}
+	switch v := strings.TrimSpace(getenv("CONTRACT_RECORD_NEW")); v {
+	case "", "0":
+	case "1":
+		if s.Record == Compare {
+			return nil, fmt.Errorf("CONTRACT_RECORD_NEW=1 is for recording: set CONTRACT_RECORD too")
+		}
+		s.RecordNew = true
+	default:
+		return nil, fmt.Errorf("CONTRACT_RECORD_NEW %q: use 1 (also record new goldens of requests the Go console answers)", v)
 	}
 	s.RequireGo = strings.TrimSpace(getenv("CONTRACT_REQUIRE_GO")) == "1"
 	if v := strings.TrimSpace(getenv("CONTRACT_TIMEOUT")); v != "" {

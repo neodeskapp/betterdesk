@@ -98,17 +98,30 @@ func LoadGolden(file string) (*Golden, error) {
 // Save writes the golden file, creating its folder. The same golden always
 // gives the same bytes.
 func (g *Golden) Save(file string) error {
+	data, err := g.encode()
+	if err != nil {
+		return fmt.Errorf("encode golden %s: %w", file, err)
+	}
+	return writeGolden(file, data)
+}
+
+// encode is the golden as its file holds it.
+func (g *Golden) encode() ([]byte, error) {
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", " ")
 	if err := enc.Encode(g); err != nil {
-		return fmt.Errorf("encode golden %s: %w", file, err)
+		return nil, err
 	}
+	return buf.Bytes(), nil
+}
+
+func writeGolden(file string, data []byte) error {
 	if err := os.MkdirAll(filepath.Dir(file), 0o755); err != nil {
 		return fmt.Errorf("create folder for golden: %w", err)
 	}
-	if err := os.WriteFile(file, buf.Bytes(), 0o644); err != nil {
+	if err := os.WriteFile(file, data, 0o644); err != nil {
 		return fmt.Errorf("write golden: %w", err)
 	}
 	return nil

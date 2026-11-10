@@ -31,6 +31,14 @@ type Report struct {
 	// first recording deleted: no route or case stands for them any more.
 	frozen  map[string]bool
 	removed int
+	// recordedNew are the golden files of requests the Go console answers
+	// that a recording with CONTRACT_RECORD_NEW=1 wrote, because they were
+	// new.
+	recordedNew map[string]bool
+
+	// redact puts placeholders in place of secret values in a line of the
+	// summary; nil leaves lines as they are.
+	redact func(string) string
 }
 
 type tally struct{ passed, failed int }
@@ -51,6 +59,8 @@ func newReport(settings *Settings) *Report {
 		handlers: map[string]map[string]string{},
 		seen:     map[string]bool{},
 		frozen:   map[string]bool{},
+
+		recordedNew: map[string]bool{},
 	}
 }
 
@@ -158,12 +168,15 @@ func (r *Report) Print(w io.Writer) {
 		}
 		fmt.Fprintln(w)
 		fmt.Fprintf(w, "  frozen: %d (goldens of requests the Go console answers, left as they are)\n", len(r.frozen))
+		if len(r.recordedNew) > 0 {
+			fmt.Fprintf(w, "  recorded new: %d (new goldens of requests the Go console answers, CONTRACT_RECORD_NEW=1)\n", len(r.recordedNew))
+		}
 		if r.removed > 0 {
 			fmt.Fprintf(w, "  removed %d golden files that no route or case stands for any more\n", r.removed)
 		}
 	}
-	printList(w, "answers that differ between two fresh instances in more than a value", r.problems)
-	printList(w, "findings", r.findings)
+	printList(w, "answers that differ between two fresh instances in more than a value", r.redacted(r.problems))
+	printList(w, "findings", r.redacted(r.findings))
 	if len(r.slow) > 0 {
 		sort.SliceStable(r.slow, func(i, j int) bool { return r.slow[i].took > r.slow[j].took })
 		lines := make([]string, 0, len(r.slow))
@@ -176,6 +189,18 @@ func (r *Report) Print(w io.Writer) {
 		}
 		printList(w, fmt.Sprintf("requests slower than %s", slowAfter), lines)
 	}
+}
+
+// redacted is lines with the secrets' values replaced.
+func (r *Report) redacted(lines []string) []string {
+	if r.redact == nil {
+		return lines
+	}
+	out := make([]string, len(lines))
+	for i, line := range lines {
+		out[i] = r.redact(line)
+	}
+	return out
 }
 
 func printList(w io.Writer, title string, lines []string) {

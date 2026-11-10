@@ -68,7 +68,9 @@ hides the summary of a passing run.
 |---|---|
 | `BD_URL` | The console to test. Required. |
 | `BD_PASSWORD_FILE` | File with the password of the `e2e_<role>` accounts. Default `/stack/secrets/e2e_password`. |
+| `BD_SECRETS_DIR` | Folder of the secrets cases send as `{secret:<file name>}` (see "Secrets"). Default `/stack/secrets`. |
 | `CONTRACT_RECORD` | `1` writes goldens from this run. `merge` adds a second run to them (see below). Unset compares. |
+| `CONTRACT_RECORD_NEW` | `1` with `CONTRACT_RECORD` also writes new goldens of requests the Go console answers (see "Recording a new case of a moved route"). |
 | `CONTRACT_GOLDEN` | Golden folder. Default `testdata/golden`. |
 | `CONTRACT_ROUTES` | Route list. Default `testdata/routes.json`. |
 | `CONTRACT_REQUIRE_GO` | `1` fails every route and case the Go console did not answer itself. |
@@ -159,6 +161,14 @@ Other fields of `Case`:
 | `FollowRedirects` | Follow redirects on the console and record the last answer with the list of redirects. Without it the redirect is the answer. |
 | `Volatile`, `VolatileHeaders` | Marks set by hand, see below. |
 | `Covers` | Route IDs this case stands for in the coverage check, when method and path do not say it: `Covers: []string{"POST /api/auth/logout"}`. |
+| `CaptureSecret` | `Capture` for a secret: see "Secrets" below. |
+| `Compute` | Variables computed from earlier values: see "Computed values" below. |
+
+`Capture` takes a value from a path of the JSON answer (`"data.id"`), from
+a header (`"header:<Name>"`) or from a cookie the answer sets
+(`"cookie:<name>"`). Headers and cookies are taken as the console sent
+them; JSON values after the instance's address was replaced. The session
+and CSRF cookies need no capture: each role's browser keeps them.
 
 Defaults of every request: `Accept: application/json` for paths under
 `/api/` and a browser's `Accept` for pages, `Accept-Encoding: gzip`,
@@ -174,6 +184,100 @@ Record a new group with `contract.sh record cases/<group>`, look at the
 goldens, then run `contract.sh check cases` once to see that the group also
 passes after the others. Write and record the cases of a group while Node
 still answers its routes: after the move their goldens are frozen.
+
+## Secrets
+
+A case can send a value that must never be written down: a device token,
+a client API token, a two-factor secret. It names the value as
+`{secret:<name>}`, in the path, a query value, a header or the body:
+
+```go
+contract.Case{
+	Name: "device-init", Method: "POST", Path: "/api/bd/file-transfer",
+	Headers: map[string]string{"Authorization": "Bearer {secret:device_token}"},
+	Body:    map[string]any{"action": "init", "filename": "report.pdf", "size": 12},
+	Capture: map[string]string{"transfer": "transfer_id"},
+	NoCSRF:  true, NoCookies: true, Roles: contract.Roles("signed-out"),
+},
+```
+
+The value comes from one of two places:
+
+- **A file of the secrets folder** (`BD_SECRETS_DIR`, default
+  `/stack/secrets`, which `stack.sh run` mounts from the instance). Every
+  file there is a secret named after the file, its content without white
+  space around it. A test instance has `device_token` (bound to device
+  `900100001`) and `device_token_other` (bound to `900100002`), made by
+  `stack/make-accounts.js`.
+- **An earlier answer of the same turn**, taken with `CaptureSecret`
+  (same sources as `Capture`). The value must be text, or a number, of at
+  least eight characters.
+
+The suite reads every file of the folder when it starts, and learns each
+captured secret when it is captured. From then on the value is masked as
+`{secret:<name>}` wherever it shows:
+
+- The golden's `request` keeps the placeholder as the case wrote it.
+- Every answer is masked before it is compared or recorded: the headers,
+  the JSON (also a value the console wrote with an escape in it) and a text
+  body before its length and hash are taken. The answer a secret was
+  captured from is masked too. So a route that echoes a token gives
+  `"secret": "{secret:totp}"` on every instance, and two recordings agree
+  there without a volatile mark.
+- Failure messages and the summary are masked.
+
+A recording that would write a known value anyway, one the masking cannot
+reach (a case that wrote a token into its own request, a token inside a
+binary body), does not write that golden, fails, and names the secret in
+the summary. A secret shorter than eight characters is refused: it could
+stand in an answer by chance. Short one-time codes are plain variables.
+
+## Computed values
+
+`Compute` sets variables from functions of earlier values, right before
+the request is sent: variable name to `function(variable)` or
+`function(secret:name)`. The list of functions is closed (`compute.go`):
+
+| Function | Value |
+|---|---|
+| `totp(x)` | The two-factor code of the base32 secret `x` for the current step of 30 seconds, as `console/authn` computes it (RFC 6238, HMAC-SHA1, 6 digits). With less than three seconds of the step left it waits for the next step, so the console still takes the code. |
+| `totp_next(x)` | The code for the first step after the step of the last code this turn computed for `x` (without one, the step after now), waiting for that step when it has not begun. For a case that must send a code the console has not seen. A case has at most one. |
+
+```go
+contract.Case{
+	Name: "totp-setup", Method: "POST", Path: "/api/auth/totp/setup", Body: map[string]any{},
+	CaptureSecret: map[string]string{"totp": "secret"},
+},
+contract.Case{
+	Name: "totp-enable", Method: "POST", Path: "/api/auth/totp/enable",
+	Compute: map[string]string{"code": "totp(secret:totp)"},
+	Body:    map[string]any{"code": "{code}"},
+},
+```
+
+A code is a plain variable: it is good for 30 seconds and tells nothing of
+the secret. The golden's request notes it as `computed: code = totp(secret:totp)`.
+
+## Recording a new case of a moved route
+
+The goldens of a route the Go console answers are frozen, so a case added
+after the route moved cannot be recorded the usual way. With
+`CONTRACT_RECORD_NEW=1` a recording also writes the golden of a request the
+Go console answers when that golden is new: it does not exist, or it holds
+only the first of the two recordings (`"recordings": 1`), which is what the
+first half of the same recording left. A golden with both recordings is
+never written; the summary counts the new ones (`recorded new: N`).
+
+Use it only for a case whose answers were checked against what Node
+answered (a recording of the Node routes the group's package replays), and
+say so in the case file. `contract.sh` does not pass the variable on; run
+the two halves by hand on two fresh instances:
+
+    stack.sh up ft1 STACK_MODE=front; stack.sh up ft2 STACK_MODE=front
+    DEV_DOCKER_ARGS="-e CONTRACT_RECORD=1 -e CONTRACT_RECORD_NEW=1" stack.sh run ft1 \
+      "cd betterdesk-server/console/contract && go test -tags contract -count=1 -run '^TestCases\$/^tickets\$'"
+    DEV_DOCKER_ARGS="-e CONTRACT_RECORD=merge -e CONTRACT_RECORD_NEW=1" stack.sh run ft2 \
+      "cd betterdesk-server/console/contract && go test -tags contract -count=1 -run '^TestCases\$/^tickets\$'"
 
 ## Frozen goldens
 

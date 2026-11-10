@@ -114,7 +114,7 @@ func TestCaseRequest(t *testing.T) {
 		},
 		NoCSRF: true, NoSession: true, FollowRedirects: true,
 	}
-	r, err := c.request(vars)
+	r, err := c.request(turnWith(vars))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -130,13 +130,13 @@ func TestCaseRequest(t *testing.T) {
 	}
 
 	raw := Case{Name: "x", Method: "POST", Path: "/x", RawBody: `{"cut": "{name}"`, ContentType: "application/json"}
-	r, _ = raw.request(vars)
+	r, _ = raw.request(turnWith(vars))
 	if string(r.Body) != `{"cut": "printer"` || r.ContentType != "application/json" {
 		t.Errorf("raw body = %s (%s)", r.Body, r.ContentType)
 	}
 
 	none := Case{Name: "x", Path: "/x"}
-	if r, _ = none.request(vars); r.Body != nil || r.ContentType != "" || r.Path != "/x" {
+	if r, _ = none.request(turnWith(vars)); r.Body != nil || r.ContentType != "" || r.Path != "/x" {
 		t.Errorf("a case without a body sends %q (%s) to %s", r.Body, r.ContentType, r.Path)
 	}
 }
@@ -146,11 +146,11 @@ func TestCaseRequestMultipart(t *testing.T) {
 		{Field: "note", Content: []byte("hello")},
 		{Field: "backup", FileName: "backup.zip", ContentType: "application/zip", Content: []byte{0x50, 0x4b, 0x03, 0x04}},
 	}}
-	first, err := c.request(nil)
+	first, err := c.request(turnWith(nil))
 	if err != nil {
 		t.Fatal(err)
 	}
-	second, _ := c.request(nil)
+	second, _ := c.request(turnWith(nil))
 	if !bytes.Equal(first.Body, second.Body) || first.ContentType != second.ContentType {
 		t.Error("the same multipart case gives different bytes each time")
 	}
@@ -180,13 +180,13 @@ func TestCaseRequestMultipart(t *testing.T) {
 func TestCaseCapture(t *testing.T) {
 	c := Case{Name: "x", Path: "/x", Capture: map[string]string{"ticket": "data.id", "first": "data.tags[0]", "gone": "data.nothing"}}
 	vars := variables{"gone": "kept"}
-	c.capture(jsonAnswer(200, `{"data": {"id": 42, "tags": ["a"]}}`), vars)
+	c.capture(jsonAnswer(200, `{"data": {"id": 42, "tags": ["a"]}}`), turnWith(vars))
 	want := variables{"ticket": json.Number("42"), "first": "a", "gone": "kept"}
 	if !reflect.DeepEqual(vars, want) {
 		t.Errorf("variables = %v, want %v", vars, want)
 	}
-	c.capture(Answer{Status: 200, Body: Body{Kind: BodyBytes, Type: "text/html"}}, vars)
-	c.capture(jsonAnswer(403, `{"error": "no"}`), vars)
+	c.capture(Answer{Status: 200, Body: Body{Kind: BodyBytes, Type: "text/html"}}, turnWith(vars))
+	c.capture(jsonAnswer(403, `{"error": "no"}`), turnWith(vars))
 	if !reflect.DeepEqual(vars, want) {
 		t.Errorf("an answer without the paths changed the variables: %v", vars)
 	}
@@ -280,17 +280,19 @@ func TestSettings(t *testing.T) {
 		t.Fatal(err)
 	}
 	if s.BaseURL.String() != "http://bdgo-c1:5000" || s.PasswordFile != "/stack/secrets/e2e_password" || s.GoldenDir != "testdata/golden" ||
-		s.RoutesFile != "testdata/routes.json" || s.Record != Compare || s.RequireGo || s.Timeout.Seconds() != 20 {
+		s.RoutesFile != "testdata/routes.json" || s.Record != Compare || s.RequireGo || s.Timeout.Seconds() != 20 ||
+		s.SecretsDir != "/stack/secrets" || s.RecordNew {
 		t.Errorf("defaults = %+v", s)
 	}
 	s, err = LoadSettings(env(map[string]string{
 		"BD_URL": "https://console.example", "BD_PASSWORD_FILE": "/p", "CONTRACT_GOLDEN": "/g", "CONTRACT_ROUTES": "/r",
-		"CONTRACT_RECORD": "merge", "CONTRACT_REQUIRE_GO": "1", "CONTRACT_TIMEOUT": "5s",
+		"CONTRACT_RECORD": "merge", "CONTRACT_REQUIRE_GO": "1", "CONTRACT_TIMEOUT": "5s", "BD_SECRETS_DIR": "/s", "CONTRACT_RECORD_NEW": "1",
 	}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if s.PasswordFile != "/p" || s.GoldenDir != "/g" || s.RoutesFile != "/r" || s.Record != RecordMerge || !s.RequireGo || s.Timeout.Seconds() != 5 {
+	if s.PasswordFile != "/p" || s.GoldenDir != "/g" || s.RoutesFile != "/r" || s.Record != RecordMerge || !s.RequireGo || s.Timeout.Seconds() != 5 ||
+		s.SecretsDir != "/s" || !s.RecordNew {
 		t.Errorf("settings = %+v", s)
 	}
 	if s, _ = LoadSettings(env(map[string]string{"BD_URL": "http://x", "CONTRACT_RECORD": "1"})); s == nil || s.Record != RecordFirst {
@@ -302,6 +304,8 @@ func TestSettings(t *testing.T) {
 		{"BD_URL": "ftp://x"},
 		{"BD_URL": "http://x", "CONTRACT_RECORD": "yes"},
 		{"BD_URL": "http://x", "CONTRACT_TIMEOUT": "soon"},
+		{"BD_URL": "http://x", "CONTRACT_RECORD_NEW": "1"},
+		{"BD_URL": "http://x", "CONTRACT_RECORD": "1", "CONTRACT_RECORD_NEW": "yes"},
 	} {
 		if _, err := LoadSettings(env(bad)); err == nil {
 			t.Errorf("LoadSettings(%v) accepted a bad value", bad)

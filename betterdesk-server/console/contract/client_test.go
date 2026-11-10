@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -26,6 +27,16 @@ type fakeConsole struct {
 	bodies []string
 	// routingAsked counts the questions to the routing report.
 	routingAsked int
+	// mu guards seen and bodies: a request that timed out on the client can
+	// still be running when the next one comes.
+	mu sync.Mutex
+}
+
+// lastBody is the body of the request that came last.
+func (f *fakeConsole) lastBody() string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.bodies[len(f.bodies)-1]
 }
 
 func (f *fakeConsole) handler() http.Handler {
@@ -65,7 +76,7 @@ func (f *fakeConsole) handler() http.Handler {
 	})
 	mux.HandleFunc("POST /api/auth/login", func(w http.ResponseWriter, r *http.Request) {
 		var body struct{ Username, Password string }
-		_ = json.Unmarshal([]byte(f.bodies[len(f.bodies)-1]), &body)
+		_ = json.Unmarshal([]byte(f.lastBody()), &body)
 		c, _ := r.Cookie("__csrf_h")
 		switch {
 		case c == nil || r.Header.Get("X-CSRF-Token") != "token-for-"+c.Value:
@@ -88,7 +99,7 @@ func (f *fakeConsole) handler() http.Handler {
 			"method": r.Method, "query": r.URL.RawQuery, "cookie": r.Header.Get("Cookie"), "csrf": r.Header.Get("X-CSRF-Token"),
 			"accept": r.Header.Get("Accept"), "contentType": r.Header.Get("Content-Type"), "agent": r.Header.Get("User-Agent"),
 			"encoding": strings.Join(r.Header.Values("Accept-Encoding"), ","), "language": r.Header.Get("Accept-Language"), "extra": r.Header.Get("X-Extra"),
-			"body": f.bodies[len(f.bodies)-1], "host": r.Host,
+			"body": f.lastBody(), "host": r.Host,
 		})
 	})
 	mux.HandleFunc("/api/echo", func(w http.ResponseWriter, r *http.Request) {
@@ -136,8 +147,10 @@ func (f *fakeConsole) handler() http.Handler {
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, 200, map[string]any{"status": "ok"}) })
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
+		f.mu.Lock()
 		f.seen = append(f.seen, r)
 		f.bodies = append(f.bodies, string(body))
+		f.mu.Unlock()
 		mux.ServeHTTP(w, r)
 	})
 }

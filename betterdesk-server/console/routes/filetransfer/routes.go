@@ -1,12 +1,12 @@
-// Package filetransfer holds the console's routes for file transfers as
-// people use them: start a transfer with a device, list the transfers,
-// watch one, cancel it, and download the file of a completed one. The old
-// console mounted the group at /api/files and at /api/bd; both are kept.
+// Package filetransfer holds the console's routes for file transfers:
+// people start a transfer with a device, list the transfers, watch one,
+// cancel it, and download the file of a completed one; a device, with its
+// token instead of a session, announces a transfer, sends its chunks and
+// reads how far its transfer is (device.go). The old console mounted the
+// group at /api/files and at /api/bd; both are kept.
 //
-// The transfers themselves are in package console/filetransfer. A device
-// sends its chunks through two more routes of the old route file, POST
-// /file-transfer and GET /file-transfer/{id}, which take a device token:
-// they are not registered here.
+// The transfers themselves are in package console/filetransfer, one
+// registry for both sides.
 package filetransfer
 
 import (
@@ -36,6 +36,9 @@ func Register(d *kit.Deps) {
 	r.Get("/transfers/{id}", h.progress, d.RequireAuth, connect)
 	r.Post("/transfers/{id}/cancel", h.cancel, d.RequireAuth, connect)
 	r.Get("/transfers/{id}/download", h.download, d.Limits.FileAccess.Middleware, d.RequireAuth, connect)
+
+	r.Post("/file-transfer", h.deviceMessage, d.RequireDeviceToken, d.RequireTokenDeviceMatch)
+	r.Get("/file-transfer/{id}", h.deviceTransfer, d.RequireDeviceToken)
 }
 
 // failure is the answer {"error": text} of this group.

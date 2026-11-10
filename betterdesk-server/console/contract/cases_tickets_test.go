@@ -206,22 +206,35 @@ func init() {
 }
 
 // ticketsDeviceCases are the two routes of the desktop agent,
-// /api/tickets/bd. They take a device token, which the suite has none of:
-// the headers of a case are written into its golden. So the cases show
-// what comes before the route: no token, a token nobody issued, a device
-// id that proves nothing, and the CSRF gate, which checks every write
-// here, also one without a session (the mount is not below /api/bd/), with
-// the panel access guard in front of it for the roles without
-// device.edit. The answers with a token are pinned by
-// routes/tickets/testdata/node_device_*.json.
+// /api/tickets/bd. First what comes before the route: no token, a token
+// nobody issued, and the CSRF gate, which checks every write here, also
+// one without a session (the mount is not below /api/bd/), with the panel
+// access guard in front of it for the roles without device.edit. Then the
+// instance's own device (the token of 900100001 in
+// /stack/secrets/device_token, of 900100002 in device_token_other) opens
+// a ticket and lists its tickets, and another device lists its own.
 //
-// GET /api/tickets/bd has no cases here: the routing report counted it
-// as Go's before the move (GET /api/tickets/{id} fits the address and
-// passes it on), so a case for it could not be recorded from Node. Its
-// matrix golden and the Node recordings cover it.
+// Only admin's turn, the last, opens a ticket, and admin deletes it at
+// the end: the goldens of the cases above hold the ids of the tickets each
+// turn makes, and a ticket made in an earlier turn would move them. The
+// roles the panel access guard refuses try too; nothing is written for
+// them.
+//
+// The cases with the instance's token were added after the routes had
+// moved to Go, so their goldens could not be recorded from Node. They were
+// recorded from Go with CONTRACT_RECORD_NEW=1, after their answers on a
+// front instance had been checked against the Node recordings that
+// routes/tickets replays (testdata/node_device_sqlite.json and
+// node_device_postgres.json) for the same requests with the same bodies
+// (the ticket "Priority high", the list of the device, the list of a
+// device without tickets, a title of blanks): the same status, the keys in
+// the same order, values of the same types and forms, and the same values
+// apart from ids, times, the device id and the rows the databases hold.
 func ticketsDeviceCases() []contract.Case {
 	ticket := map[string]any{"title": "From the agent", "priority": "high"}
 	unknown := map[string]string{"Authorization": "Bearer contract-no-such-token"}
+	device := map[string]string{"Authorization": "Bearer {secret:device_token}"}
+	other := map[string]string{"Authorization": "Bearer {secret:device_token_other}"}
 	return []contract.Case{
 		{Name: "device-create-without-token", Method: "POST", Path: "/api/tickets/bd", Body: ticket},
 		{Name: "device-create-unknown-token", Method: "POST", Path: "/api/tickets/bd", Body: ticket, Headers: unknown},
@@ -230,5 +243,25 @@ func ticketsDeviceCases() []contract.Case {
 			Name: "device-create-as-a-device", Method: "POST", Path: "/api/tickets/bd", Body: ticket, Headers: unknown,
 			NoCSRF: true, NoCookies: true, Roles: contract.Roles("signed-out"),
 		},
+
+		// The instance's device
+		{
+			Name: "device-token-create-as-a-device", Method: "POST", Path: "/api/tickets/bd", Body: ticket, Headers: device,
+			NoCSRF: true, NoCookies: true, Roles: contract.Roles("signed-out"),
+		},
+		{
+			Name: "device-token-create-without-title", Method: "POST", Path: "/api/tickets/bd", Headers: device,
+			Body: map[string]any{"title": "   "}, Roles: contract.Roles("signed-out", "admin"),
+		},
+		{
+			Name: "device-token-create", Method: "POST", Path: "/api/tickets/bd", Headers: device,
+			Body:    map[string]any{"title": "Priority high", "priority": "high", "category": "network"},
+			Capture: map[string]string{"agentTicket": "ticket_id"},
+			Roles:   contract.Roles("guest_issuer", "viewer", "server_admin", "admin"),
+		},
+		{Name: "device-token-list", Path: "/api/tickets/bd", Headers: device},
+		{Name: "device-token-list-other-device", Path: "/api/tickets/bd", Headers: other},
+		{Name: "device-token-list-without-token", Path: "/api/tickets/bd", Roles: contract.Roles("signed-out", "admin")},
+		{Name: "device-token-cleanup", Method: "DELETE", Path: "/api/tickets/{agentTicket}", As: "admin", Roles: contract.Roles("admin")},
 	}
 }

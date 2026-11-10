@@ -26,16 +26,21 @@ type Case struct {
 	Method string
 	// Path is the path to request. {name} is replaced by the variable of
 	// that name (see Capture); a variable nothing captured is MissingID.
+	// {secret:name} is replaced by the secret of that name (secrets.go).
 	Path string
-	// Query is added to the path. Values may hold {name} too.
+	// Query is added to the path. Values may hold {name} and
+	// {secret:name} too.
 	Query url.Values
 	// Headers are added to the request and replace the suite's own
 	// (Accept, Accept-Language, Accept-Encoding, User-Agent) by name.
+	// Values may hold {name} and {secret:name}:
+	// "Authorization": "Bearer {secret:device_token}".
 	Headers map[string]string
 
-	// Body is sent as JSON. Strings in it may hold {name}; a string that is
-	// only "{name}" is replaced by the captured value with its type, so an
-	// ID that came as a number is sent as a number.
+	// Body is sent as JSON. Strings in it may hold {name} and
+	// {secret:name}; a string that is only "{name}" is replaced by the
+	// captured value with its type, so an ID that came as a number is sent
+	// as a number.
 	Body any
 	// RawBody is sent as it is, with ContentType. Use it for malformed
 	// JSON, forms and other content types.
@@ -62,10 +67,25 @@ type Case struct {
 	// reads. The step still runs once for each role in Roles.
 	As Role
 
-	// Capture takes values out of the JSON answer into variables for the
-	// cases after it: variable name to path ("ticket": "data.id"). A path
-	// that is not in the answer leaves the variable as it was.
+	// Capture takes values out of the answer into variables for the cases
+	// after it: variable name to where the value is. That is a path of the
+	// JSON answer ("ticket": "data.id"), "header:<Name>" for a header or
+	// "cookie:<name>" for a cookie the answer sets. Headers and cookies are
+	// taken as the console sent them, JSON values after the instance's
+	// address was replaced (see Goldens in the README). A value that is not
+	// in the answer leaves the variable as it was.
 	Capture map[string]string
+	// CaptureSecret is Capture for values that are secrets: a token, a
+	// two-factor secret. Later cases of the turn send one as
+	// {secret:name}, and from now on it is masked wherever it shows, in
+	// this answer too. The value must be text (a number counts as its
+	// digits) of at least eight characters.
+	CaptureSecret map[string]string
+	// Compute sets variables from functions of earlier values, right before
+	// the request is sent: variable name to "function(variable)" or
+	// "function(secret:name)" ("code": "totp(secret:totp)"). The functions
+	// are listed in compute.go.
+	Compute map[string]string
 	// Volatile lists paths of the answer that change from run to run and
 	// that two recordings cannot find, because they differ in more than a
 	// value: "data.sessions" for a whole object, "data.items[#]" for the
@@ -101,9 +121,12 @@ type CaseGroup struct {
 var caseGroups = map[string]*CaseGroup{}
 
 var (
-	groupName = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)
-	caseName  = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]*$`)
-	variable  = regexp.MustCompile(`\{([A-Za-z0-9_]+)\}`)
+	groupName    = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)
+	caseName     = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]*$`)
+	variable     = regexp.MustCompile(`\{([A-Za-z0-9_]+)\}`)
+	variableName = regexp.MustCompile(`^[A-Za-z0-9_]+$`)
+	// reference is a variable or a secret in a case: {name}, {secret:name}.
+	reference = regexp.MustCompile(`\{(secret:)?([A-Za-z0-9_]+)\}`)
 )
 
 // Group registers the cases of a route group. Call it from an init function
@@ -190,15 +213,23 @@ func (c *Case) check() error {
 		}
 	}
 	for name, text := range c.Capture {
-		p, err := parsePath(text)
-		if err != nil {
+		if _, err := parseCaptureSource(text); err != nil {
 			return fmt.Errorf("capture %s: %w", name, err)
 		}
-		for _, s := range p {
-			if s.kind == stepEvery || s.kind == stepLength {
-				return fmt.Errorf("capture %s: %q must name one value, without [*] or [#]", name, text)
-			}
+	}
+	for name, text := range c.CaptureSecret {
+		if !variableName.MatchString(name) {
+			return fmt.Errorf("capture secret %q: a secret's name has letters, digits and _", name)
 		}
+		if _, both := c.Capture[name]; both {
+			return fmt.Errorf("capture secret %s: the name is in Capture too", name)
+		}
+		if _, err := parseCaptureSource(text); err != nil {
+			return fmt.Errorf("capture secret %s: %w", name, err)
+		}
+	}
+	if _, err := parseCompute(c.Compute); err != nil {
+		return err
 	}
 	byHand, _ := handMarks(c.Volatile)
 	if _, err := newVolatileSet(byHand); err != nil {
@@ -235,59 +266,136 @@ type variables map[string]any
 // fill replaces every {name} in text by the variable's value.
 func (v variables) fill(text string) string {
 	return variable.ReplaceAllStringFunc(text, func(match string) string {
-		value, ok := v[match[1:len(match)-1]]
-		if !ok {
-			return MissingID
-		}
-		switch value := value.(type) {
-		case string:
-			return value
-		case json.Number:
-			return string(value)
-		}
-		return string(encodeJSON(value))
+		return v.text(match[1 : len(match)-1])
 	})
 }
 
-// fillJSON replaces the variables in every string of a JSON value. A string
-// that is one variable and nothing else becomes the variable's value, with
-// its type.
-func (v variables) fillJSON(value any) any {
+// text is the value of a variable as it goes into text: MissingID for a
+// variable nothing captured.
+func (v variables) text(name string) string {
+	value, ok := v[name]
+	if !ok {
+		return MissingID
+	}
+	switch value := value.(type) {
+	case string:
+		return value
+	case json.Number:
+		return string(value)
+	}
+	return string(encodeJSON(value))
+}
+
+// turn is what one role's turn of a group has collected: the variables
+// the cases captured and computed, the secrets they captured, and for
+// each argument of a two-factor function the time step of its last code.
+type turn struct {
+	vars    variables
+	secrets map[string]string
+	steps   map[string]int64
+	// run is the run's secrets: the files of the secrets folder, and every
+	// captured secret, for masking.
+	run   *secretSet
+	clock clock
+}
+
+// clock is the time as the two-factor functions see it.
+type clock interface {
+	Now() time.Time
+	Sleep(d time.Duration)
+}
+
+type realClock struct{}
+
+func (realClock) Now() time.Time        { return time.Now() }
+func (realClock) Sleep(d time.Duration) { time.Sleep(d) }
+
+func newTurn(run *secretSet) *turn {
+	return &turn{vars: variables{}, secrets: map[string]string{}, steps: map[string]int64{}, run: run, clock: realClock{}}
+}
+
+// secret is the value of {secret:name}: captured in this turn, or the file
+// of the secrets folder.
+func (tn *turn) secret(name string) (string, error) {
+	if value, ok := tn.secrets[name]; ok {
+		return value, nil
+	}
+	return tn.run.file(name)
+}
+
+// fill replaces every {name} and {secret:name} in text by its value. It
+// fails for a secret that has no value.
+func (tn *turn) fill(text string) (string, error) {
+	var failed error
+	out := reference.ReplaceAllStringFunc(text, func(match string) string {
+		m := reference.FindStringSubmatch(match)
+		if m[1] == "" {
+			return tn.vars.text(m[2])
+		}
+		value, err := tn.secret(m[2])
+		if err != nil && failed == nil {
+			failed = err
+		}
+		return value
+	})
+	return out, failed
+}
+
+// fillJSON replaces the variables and secrets in every string of a JSON
+// value. A string that is one variable and nothing else becomes the
+// variable's value, with its type; a secret is always text.
+func (tn *turn) fillJSON(value any) (any, error) {
 	switch value := value.(type) {
 	case string:
 		if m := variable.FindStringSubmatch(value); m != nil && m[0] == value {
-			if captured, ok := v[m[1]]; ok {
-				return captured
+			if captured, ok := tn.vars[m[1]]; ok {
+				return captured, nil
 			}
 		}
-		return v.fill(value)
+		return tn.fill(value)
 	case map[string]any:
 		out := make(map[string]any, len(value))
 		for key, child := range value {
-			out[key] = v.fillJSON(child)
+			filled, err := tn.fillJSON(child)
+			if err != nil {
+				return nil, err
+			}
+			out[key] = filled
 		}
-		return out
+		return out, nil
 	case []any:
 		out := make([]any, len(value))
 		for i, child := range value {
-			out[i] = v.fillJSON(child)
+			filled, err := tn.fillJSON(child)
+			if err != nil {
+				return nil, err
+			}
+			out[i] = filled
 		}
-		return out
+		return out, nil
 	}
-	return value
+	return value, nil
 }
 
 // multipartBoundary is fixed, so the same case always sends the same bytes.
 const multipartBoundary = "bdcontract7d2c9a41e5b34f0c"
 
-// request builds the request of the case with the variables filled in.
-func (c *Case) request(vars variables) (Request, error) {
-	target := vars.fill(c.Path)
+// request builds the request of the case with the variables and secrets
+// filled in.
+func (c *Case) request(tn *turn) (Request, error) {
+	target, err := tn.fill(c.Path)
+	if err != nil {
+		return Request{}, err
+	}
 	if len(c.Query) > 0 {
 		query := url.Values{}
 		for key, values := range c.Query {
 			for _, value := range values {
-				query.Add(key, vars.fill(value))
+				filled, err := tn.fill(value)
+				if err != nil {
+					return Request{}, err
+				}
+				query.Add(key, filled)
 			}
 		}
 		target += "?" + query.Encode()
@@ -299,7 +407,11 @@ func (c *Case) request(vars variables) (Request, error) {
 	if len(c.Headers) > 0 {
 		r.Header = http.Header{}
 		for name, value := range c.Headers {
-			r.Header.Set(name, vars.fill(value))
+			filled, err := tn.fill(value)
+			if err != nil {
+				return r, err
+			}
+			r.Header.Set(name, filled)
 		}
 	}
 	switch {
@@ -314,9 +426,17 @@ func (c *Case) request(vars variables) (Request, error) {
 		if err != nil {
 			return r, fmt.Errorf("encode body: %w", err)
 		}
-		r.Body, r.ContentType = encodeJSON(vars.fillJSON(value)), "application/json"
+		filled, err := tn.fillJSON(value)
+		if err != nil {
+			return r, err
+		}
+		r.Body, r.ContentType = encodeJSON(filled), "application/json"
 	case c.RawBody != "":
-		r.Body, r.ContentType = []byte(vars.fill(c.RawBody)), c.ContentType
+		filled, err := tn.fill(c.RawBody)
+		if err != nil {
+			return r, err
+		}
+		r.Body, r.ContentType = []byte(filled), c.ContentType
 	case len(c.Multipart) > 0:
 		var buf bytes.Buffer
 		w := multipart.NewWriter(&buf)
@@ -396,27 +516,150 @@ func (c *Case) info() RequestInfo {
 	if c.As != "" {
 		info.Notes = append(info.Notes, fmt.Sprintf("sent as %s in every role's turn", c.As))
 	}
+	computed := make([]string, 0, len(c.Compute))
+	for name, expression := range c.Compute {
+		computed = append(computed, "computed: "+name+" = "+expression)
+	}
+	sort.Strings(computed)
+	info.Notes = append(info.Notes, computed...)
 	return info
 }
 
-// capture takes the case's Capture values out of an answer.
-func (c *Case) capture(answer Answer, vars variables) {
-	if len(c.Capture) == 0 || answer.Body.Kind != BodyJSON {
-		return
+// captureSource is where Capture and CaptureSecret take a value from: a
+// header, a cookie or a path of the JSON answer.
+type captureSource struct {
+	header, cookie string
+	path           path
+}
+
+func parseCaptureSource(text string) (captureSource, error) {
+	if name, ok := strings.CutPrefix(text, "header:"); ok {
+		if name == "" || strings.ContainsAny(name, " :") {
+			return captureSource{}, fmt.Errorf("%q: give the header's name after header:", text)
+		}
+		return captureSource{header: name}, nil
 	}
-	value, err := decodeJSON(answer.Body.JSON)
+	if name, ok := strings.CutPrefix(text, "cookie:"); ok {
+		if name == "" || strings.ContainsAny(name, " ;=") {
+			return captureSource{}, fmt.Errorf("%q: give the cookie's name after cookie:", text)
+		}
+		return captureSource{cookie: name}, nil
+	}
+	p, err := parsePath(text)
 	if err != nil {
-		return
+		return captureSource{}, err
 	}
-	for name, text := range c.Capture {
-		p, err := parsePath(text)
+	for _, s := range p {
+		if s.kind == stepEvery || s.kind == stepLength {
+			return captureSource{}, fmt.Errorf("%q must name one value, without [*] or [#]", text)
+		}
+	}
+	return captureSource{path: p}, nil
+}
+
+// from takes the value out of an answer. body is the decoded JSON answer
+// the paths are looked up in, nil when there is none. ok is false when the
+// answer does not have the value.
+func (src captureSource) from(answer Answer, body any, hasBody bool) (any, bool) {
+	switch {
+	case src.header != "":
+		if answer.raw == nil {
+			return nil, false
+		}
+		values := answer.raw.header.Values(src.header)
+		if len(values) == 0 {
+			return nil, false
+		}
+		return strings.Join(values, ", "), true
+	case src.cookie != "":
+		if answer.raw == nil {
+			return nil, false
+		}
+		var value string
+		found := false
+		for _, cookie := range (&http.Response{Header: answer.raw.header}).Cookies() {
+			if cookie.Name == src.cookie {
+				value, found = cookie.Value, true
+			}
+		}
+		return value, found
+	case hasBody:
+		return lookup(body, src.path)
+	}
+	return nil, false
+}
+
+// capture takes the case's Capture and CaptureSecret values out of an
+// answer. Capture reads JSON as the answer holds it, with the instance's
+// address replaced; CaptureSecret reads it as the console sent it. A
+// captured secret is made known to the run, so masking finds it from now
+// on. It fails for a secret value that is not text or too short.
+func (c *Case) capture(answer Answer, tn *turn) error {
+	if len(c.Capture) > 0 {
+		body, hasBody := answerJSON(answer, false)
+		for name, text := range c.Capture {
+			src, err := parseCaptureSource(text)
+			if err != nil {
+				continue
+			}
+			if found, ok := src.from(answer, body, hasBody); ok {
+				tn.vars[name] = found
+			}
+		}
+	}
+	if len(c.CaptureSecret) == 0 {
+		return nil
+	}
+	body, hasBody := answerJSON(answer, true)
+	names := make([]string, 0, len(c.CaptureSecret))
+	for name := range c.CaptureSecret {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		src, err := parseCaptureSource(c.CaptureSecret[name])
 		if err != nil {
 			continue
 		}
-		if found, ok := lookup(value, p); ok {
-			vars[name] = found
+		found, ok := src.from(answer, body, hasBody)
+		if !ok {
+			continue
 		}
+		var value string
+		switch v := found.(type) {
+		case string:
+			value = v
+		case json.Number:
+			value = string(v)
+		default:
+			return fmt.Errorf("capture secret %s: the value at %s is a %s, not text", name, c.CaptureSecret[name], jsonType(found))
+		}
+		if err := tn.run.add(name, value); err != nil {
+			return fmt.Errorf("capture %w", err)
+		}
+		tn.secrets[name] = value
 	}
+	return nil
+}
+
+// answerJSON is the decoded JSON body of an answer: as the suite keeps it
+// (with the instance's address and the known secrets masked), or as the
+// console sent it when raw is set and the answer has its raw form.
+func answerJSON(answer Answer, raw bool) (any, bool) {
+	text := answer.Body.JSON
+	if raw && answer.raw != nil {
+		if answer.Body.Kind != BodyJSON && !isJSONType(mediaTypeOf(answer.raw.header.Get("Content-Type"))) {
+			return nil, false
+		}
+		text = answer.raw.body
+	} else if answer.Body.Kind != BodyJSON {
+		return nil, false
+	}
+	value, err := decodeJSON(text)
+	if err != nil {
+		return nil, false
+	}
+	return value, true
 }
 
 // RunCases is the cases test: every registered group, each as its own
@@ -462,7 +705,7 @@ func (s *Suite) runGroup(t *testing.T, group *CaseGroup) {
 	}
 	for _, role := range sortRoles(roleKeys(turns)) {
 		t.Run(string(role), func(t *testing.T) {
-			vars := variables{}
+			tn := newTurn(s.Client.secrets)
 			for i := range group.Cases {
 				c := &group.Cases[i]
 				if !c.runsFor(role) {
@@ -474,16 +717,25 @@ func (s *Suite) runGroup(t *testing.T, group *CaseGroup) {
 						actor = c.As
 					}
 					sess := browser(t, actor)
-					request, err := c.request(vars)
+					if err := c.compute(tn); err != nil {
+						t.Fatalf("%s", s.redact(err.Error()))
+					}
+					request, err := c.request(tn)
 					if err != nil {
-						t.Fatalf("%v", err)
+						t.Fatalf("%s", s.redact(err.Error()))
 					}
 					id := group.Name + "/" + c.Name
 					s.note(role, id)
 					start := time.Now()
 					answer := sess.Do(request)
 					s.Report.took(fmt.Sprintf("%s as %s", id, role), time.Since(start))
-					c.capture(answer, vars)
+					if err := c.capture(answer, tn); err != nil {
+						t.Errorf("%s", s.redact(err.Error()))
+					}
+					if len(c.CaptureSecret) > 0 {
+						// The answer may hold the secret it gave
+						answer = s.Client.remask(answer)
+					}
 					s.judge(t, slots[i], role, answer)
 					if answer.Failed != "" && !s.consoleAnswers(90*time.Second) {
 						t.Fatalf("the console stopped answering. The last requests were: %s", strings.Join(s.recent, "; "))

@@ -26,6 +26,21 @@ type Answer struct {
 	Redirects []string            `json:"redirects,omitempty"`
 	Headers   map[string][]string `json:"headers,omitempty"`
 	Body      Body                `json:"body"`
+
+	// raw is the answer as the console sent it, for what normalizing takes
+	// out: a header off the allowlist or a cookie's value for a capture, a
+	// secret for a secret capture, and to normalize the answer again once
+	// a new secret is known. It is nil for an answer that did not come
+	// from a console, and it is never written.
+	raw *rawAnswer
+}
+
+// rawAnswer is an HTTP answer before normalizing.
+type rawAnswer struct {
+	status    int
+	header    http.Header
+	body      []byte
+	undecoded bool
 }
 
 // The kinds of body an answer has.
@@ -139,11 +154,13 @@ func headerRuleFor(name string) (headerRule, bool) {
 }
 
 // Normalizer takes what belongs to one instance out of an answer, so two
-// instances give the same answer: the console's own address and the address
-// the suite's requests come from.
+// instances give the same answer: the console's own address, the address
+// the suite's requests come from, and the values of the secrets the run
+// knows (secrets.go).
 type Normalizer struct {
 	replacer *strings.Replacer
 	clientIP *regexp.Regexp
+	secrets  *secretSet
 }
 
 // NewNormalizer returns a Normalizer for a console at origin (scheme and
@@ -165,11 +182,12 @@ func NewNormalizer(origin, clientIP string) *Normalizer {
 	return n
 }
 
-// Text replaces the instance's addresses in s.
+// Text replaces the known secrets and the instance's addresses in s.
 func (n *Normalizer) Text(s string) string {
 	if n == nil {
 		return s
 	}
+	s = n.secrets.mask(s)
 	s = n.replacer.Replace(s)
 	if n.clientIP != nil && n.clientIP.MatchString(s) {
 		// Twice, because two addresses in a row share the character between them.
@@ -177,6 +195,33 @@ func (n *Normalizer) Text(s string) string {
 		s = n.clientIP.ReplaceAllString(s, "${1}<client-ip>${2}")
 	}
 	return s
+}
+
+// maskJSON masks the known secrets in the texts and keys of a decoded JSON
+// value, where the text of the body could not show them: a secret the
+// console wrote with an escape in it ("\/" for "/").
+func (n *Normalizer) maskJSON(value any) any {
+	if n == nil || n.secrets == nil {
+		return value
+	}
+	switch v := value.(type) {
+	case string:
+		return n.secrets.mask(v)
+	case []any:
+		for i, element := range v {
+			v[i] = n.maskJSON(element)
+		}
+	case map[string]any:
+		for _, key := range sortedKeys(v) {
+			child := v[key]
+			masked := n.secrets.mask(key)
+			if masked != key {
+				delete(v, key)
+			}
+			v[masked] = n.maskJSON(child)
+		}
+	}
+	return value
 }
 
 // NewAnswer builds the Answer for a response. body is the body as sent,
@@ -202,7 +247,7 @@ func newBody(mediaType string, body []byte, n *Normalizer) Body {
 	if isJSONType(mediaType) {
 		text := []byte(n.Text(string(body)))
 		if value, err := decodeJSON(text); err == nil {
-			return Body{Kind: BodyJSON, JSON: encodeJSON(value)}
+			return Body{Kind: BodyJSON, JSON: encodeJSON(n.maskJSON(value))}
 		}
 	}
 	b := Body{Kind: BodyBytes, Type: mediaType}

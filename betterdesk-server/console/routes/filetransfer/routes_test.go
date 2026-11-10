@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -252,6 +251,7 @@ func TestRegisteredRoutes(t *testing.T) {
 	for _, route := range d.Router.Routes() {
 		got = append(got, route.Method+" "+route.Path)
 	}
+	// In the order of the Node file, once per mount
 	for _, mount := range []string{"/api/files", "/api/bd"} {
 		want = append(want,
 			"POST "+mount+"/transfer",
@@ -259,17 +259,11 @@ func TestRegisteredRoutes(t *testing.T) {
 			"GET "+mount+"/transfers/{id}",
 			"POST "+mount+"/transfers/{id}/cancel",
 			"GET "+mount+"/transfers/{id}/download",
+			"POST "+mount+"/file-transfer",
+			"GET "+mount+"/file-transfer/{id}",
 		)
 	}
-	sort.Strings(got)
-	sort.Strings(want)
 	if strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Errorf("registered routes:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
-	}
-	// The routes of a device stay with the old console
-	for _, route := range got {
-		if strings.Contains(route, "file-transfer") {
-			t.Errorf("a device route is registered: %s", route)
-		}
 	}
 }

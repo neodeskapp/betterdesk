@@ -34,6 +34,8 @@ type Client struct {
 	http     *http.Client
 	timeout  time.Duration
 	password string
+	// secrets are the secrets of the run, masked in every answer.
+	secrets *secretSet
 
 	mu         sync.Mutex
 	normalizer *Normalizer
@@ -42,14 +44,20 @@ type Client struct {
 }
 
 // NewClient returns a client for the console in the settings. The password
-// of the test accounts is read from the settings' file.
+// of the test accounts is read from the settings' file, the secrets from
+// the secrets folder.
 func NewClient(s *Settings) (*Client, error) {
 	password, err := os.ReadFile(s.PasswordFile)
 	if err != nil {
 		return nil, fmt.Errorf("read the test accounts' password: %w", err)
 	}
+	secrets, err := loadSecrets(s.SecretsDir)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
-		base: s.BaseURL,
+		secrets: secrets,
+		base:    s.BaseURL,
 		http: &http.Client{
 			Transport: &http.Transport{
 				// The suite asks for gzip itself, to see Content-Encoding.
@@ -251,8 +259,23 @@ func (s *Session) Do(r Request) Answer {
 		}
 		answer := NewAnswer(res.StatusCode, res.Header, raw, undecoded, c.norm())
 		answer.Redirects = redirects
+		answer.raw = &rawAnswer{status: res.StatusCode, header: res.Header.Clone(), body: raw, undecoded: undecoded}
 		return answer
 	}
+}
+
+// remask normalizes an answer again from what the console sent, so the
+// secrets that became known after it arrived are masked in it too.
+func (c *Client) remask(a Answer) Answer {
+	if a.raw == nil {
+		return a
+	}
+	again := NewAnswer(a.raw.status, a.raw.header, a.raw.body, a.raw.undecoded, c.norm())
+	for _, location := range a.Redirects {
+		again.Redirects = append(again.Redirects, c.secrets.mask(location))
+	}
+	again.raw = a.raw
+	return again
 }
 
 func isSafeMethod(method string) bool {
@@ -356,13 +379,16 @@ func (c *Client) noteLocalAddr(addr net.Addr) {
 		ip = tcp.IP.String()
 	}
 	c.normalizer = NewNormalizer(c.base.Scheme+"://"+c.base.Host, ip)
+	c.normalizer.secrets = c.secrets
 }
 
 func (c *Client) norm() *Normalizer {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.normalizer == nil {
-		return NewNormalizer(c.base.Scheme+"://"+c.base.Host, "")
+		n := NewNormalizer(c.base.Scheme+"://"+c.base.Host, "")
+		n.secrets = c.secrets
+		return n
 	}
 	return c.normalizer
 }

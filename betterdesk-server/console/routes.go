@@ -61,7 +61,7 @@ func registerRoutes(d *kit.Deps) {
 	i18nroutes.Register(d)    // routes/i18n.routes.js at /api/i18n
 	// routes/tickets.routes.js at /api/tickets
 	tickets.Register(d.At("/api/tickets"))
-	// routes/fileTransfer.routes.js at /api/files and at /api/bd, without the device routes file-transfer
+	// routes/fileTransfer.routes.js at /api/files and at /api/bd, with the device routes file-transfer
 	filetransfer.Register(d.At("/api/files"))
 	filetransfer.Register(d.At("/api/bd"))
 	// routes/network.routes.js at /api/network
