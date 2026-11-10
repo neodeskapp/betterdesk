@@ -100,18 +100,18 @@ router.use('/', cdapRoutes);                            // admin-facing: /cdap/d
 router.use('/', tokensRoutes);                          // admin-facing: /tokens, /api/panel/tokens/*
 router.use('/api/desktop', desktopRoutes);               // admin-facing: /api/desktop/layout, /api/desktop/wallpapers
 router.use('/', organizationsRoutes);                    // admin-facing: /organizations, /api/panel/org/*
-router.use('/', policiesRoutes);                         // admin-facing: /policies, /api/panel/policies/*, /api/bd/device-policy, /api/bd/attestation
-router.use('/api/bd', policiesRoutes);                   // device-facing: /api/bd/device-policy, /api/bd/attestation
-router.use('/', fleetRoutes);                            // admin-facing: /fleet, /api/panel/fleet/*
+router.use('/', policiesRoutes);                         // device-facing: /api/bd/device-policy, /api/bd/attestation
+router.use('/api/bd', policiesRoutes);                   // the same two under /api/bd/api/bd/
+router.use('/', fleetRoutes);                            // device-facing: /api/bd/fleet/task-result, /api/bd/fleet/software
 router.use('/', commercializationRoutes);                // admin-facing: /commercialization, /api/panel/billing/*
-router.use('/api/bd', fleetRoutes);                      // device-facing: /api/bd/fleet/task-result, /api/bd/fleet/software
+router.use('/api/bd', fleetRoutes);                      // the same two under /api/bd/api/bd/fleet/
 router.use('/', scalingRoutes);                          // admin-facing: /scaling, /api/panel/scaling/*
 router.use('/api/bd', scalingRoutes);                    // device-facing: /api/bd/scaling/relay-heartbeat
 router.use('/', crossPlatformRoutes);                    // admin-facing: /cross-platform, /api/panel/cross-platform/*
 router.use('/', toolkitRoutes);                              // admin-facing: /toolkit, /api/toolkit/*
 router.use('/', securityAuditRoutes);                        // admin-facing: /security-audit, /api/panel/security-audit/*
-router.use('/', resourceControlRoutes);                      // admin-facing: /resource-control, /api/panel/resource-control/*
-router.use('/api/bd', resourceControlRoutes);                 // device-facing: /api/bd/resource-policy
+router.use('/', resourceControlRoutes);                      // device-facing: /api/bd/resource-policy
+router.use('/api/bd', resourceControlRoutes);                 // the same under /api/bd/api/bd/
 router.use('/', systemRoutes);                           // admin-facing: /api/system/*, /api/logs/*, /api/database/*, /api/docker/*, /api/speed-test
 router.use('/', permissionsRoutes);                      // admin-facing: /permissions, /api/panel/roles/*, /api/panel/role-permissions/*
 router.use('/', serverManagementRoutes);                 // admin-facing: /server-management, /api/server-management/* (BETA)
