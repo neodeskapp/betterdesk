@@ -78,31 +78,6 @@ describe('Branding routes', () => {
         jest.clearAllMocks();
     });
 
-    describe('GET /css/branding.css', () => {
-        it('returns text/css with :root overrides when branding has colors', async () => {
-            const css = brandingService.generateThemeCss();
-            jest.spyOn(brandingService, 'generateThemeCss').mockReturnValue(css || ':root { --bg-primary: #111111; }\n');
-
-            const res = await request(app).get('/css/branding.css');
-
-            expect(res.status).toBe(200);
-            expect(res.headers['content-type']).toMatch(/text\/css/);
-            expect(res.text).toMatch(/:root/);
-            expect(res.text).toMatch(/--surface-glass-blur|--bg-primary/);
-
-            brandingService.generateThemeCss.mockRestore();
-        });
-    });
-
-    describe('GET /api/settings/branding/profiles', () => {
-        it('lists profiles for authenticated users', async () => {
-            const res = await request(app).get('/api/settings/branding/profiles');
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(Array.isArray(res.body.data)).toBe(true);
-        });
-    });
-
     describe('POST /api/settings/branding/profiles/:id/duplicate', () => {
         it('returns a new profile id and copies the saved profile data', async () => {
             const res = await request(app)
@@ -140,56 +115,7 @@ describe('Branding routes', () => {
         });
     });
 
-    describe('GET /api/settings/appearance', () => {
-        it('returns the versioned appearance model with readability status', async () => {
-            const res = await request(app).get('/api/settings/appearance');
-
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(res.body.data.type).toBe('betterdesk-appearance');
-            expect(res.body.data.version).toBe('2.0');
-            expect(res.body.data.identity.appName).toBeTruthy();
-            expect(res.body.readability).toHaveProperty('ok');
-        });
-    });
-
-    describe('GET /api/settings/themes', () => {
-        it('returns distinct display names for built-in presets', async () => {
-            const res = await request(app).get('/api/settings/themes');
-
-            expect(res.status).toBe(200);
-            expect(res.body.data.map(theme => theme.name)).toEqual(expect.arrayContaining([
-                'BetterDesk Dark',
-                'BetterDesk Light',
-                'insolve Core Server'
-            ]));
-        });
-    });
-
     describe('POST /api/settings/branding/upload-background', () => {
-        it('lists uploaded managed background images', async () => {
-            const uploadsDir = path.join(config.dataDir, 'uploads');
-            fs.mkdirSync(uploadsDir, { recursive: true });
-            const fileName = 'bg-0123456789abcdef.png';
-            const filePath = path.join(uploadsDir, fileName);
-            fs.writeFileSync(filePath, Buffer.from('managed-background'));
-
-            try {
-                const res = await request(app).get('/api/settings/branding/backgrounds');
-
-                expect(res.status).toBe(200);
-                expect(res.body.success).toBe(true);
-                expect(res.body.data).toEqual(expect.arrayContaining([
-                    expect.objectContaining({
-                        name: fileName,
-                        url: `/uploads/${fileName}`
-                    })
-                ]));
-            } finally {
-                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-            }
-        });
-
         it('accepts a multipart background image upload', async () => {
             const res = await request(app)
                 .post('/api/settings/branding/upload-background')
@@ -334,15 +260,6 @@ describe('BetterDesk favicon and logo', () => {
         const custom = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#ff0000"/></svg>';
         await loadWith([{ key: 'faviconSvg', value: custom }]);
         expect(brandingService.generateFavicon()).toBe(custom);
-    });
-
-    it('serves the favicon as SVG on /branding/favicon.svg', async () => {
-        const app = createTestApp();
-        app.use('/', settingsRoutes);
-        const res = await request(app).get('/branding/favicon.svg');
-        expect(res.status).toBe(200);
-        expect(res.headers['content-type']).toMatch(/image\/svg\+xml/);
-        expect(Buffer.from(res.body).toString('utf8')).toBe(faviconFile);
     });
 
     it('strips scripts and event handlers from a saved favicon', async () => {

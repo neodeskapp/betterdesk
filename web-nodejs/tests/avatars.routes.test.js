@@ -1,7 +1,8 @@
 'use strict';
 
 /**
- * Profile pictures stored by the profile route and the avatar service,
+ * Profile pictures stored by the avatar service (the profile route is
+ * answered by the Go console, betterdesk-server/console/routes/phase45),
  * against a real SQLite database (user_avatars table, services/dbAdapter.js).
  * A picture from single sign-on is written by the Go console
  * (betterdesk-server/console/avatars); here it is a row the test writes.
@@ -12,7 +13,6 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const request = require('supertest');
 
 // 1x1 PNG
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC', 'base64');
@@ -47,45 +47,6 @@ describe('profile pictures', () => {
     beforeEach(async () => {
         await db.deleteUserAvatar(alice.id);
         avatarService.resetCache();
-    });
-
-    it('fetches and stores an http(s) avatar URL saved in the profile instead of hotlinking it', async () => {
-        const os2 = require('os');
-        const lan = Object.values(os2.networkInterfaces()).flat().find((a) => a && a.family === 'IPv4' && !a.internal);
-        if (!lan) return; // no LAN address to serve from (outside Docker)
-        const http = require('http');
-        const server = http.createServer((req, res) => {
-            if (req.url === '/me.png') { res.writeHead(200, { 'Content-Type': 'image/png' }); return res.end(PNG); }
-            res.writeHead(404); res.end();
-        });
-        await new Promise((r) => server.listen(0, '0.0.0.0', r));
-        const url = `http://${lan.address}:${server.address().port}/me.png`;
-        try {
-            const profileRoutes = require('../routes/phase4_5.routes');
-            const express = require('express');
-            const papp = express();
-            papp.use(express.json());
-            papp.use((req, _res, next) => { req.session = { userId: alice.id, user: alice }; next(); });
-            papp.use('/', profileRoutes);
-
-            const saved = await request(papp).put('/api/users/me/profile').send({ first_name: 'Alice', avatar_url: url });
-            expect(saved.status).toBe(200);
-            expect(saved.body).toEqual(expect.objectContaining({ success: true, avatar: 'stored' }));
-            const row = await db.getUserAvatar(alice.id);
-            expect(row.source).toBe('profile');
-            expect(row.source_url).toBe(url);
-            expect(Buffer.compare(Buffer.from(row.data), PNG)).toBe(0);
-
-            const bad = await request(papp).put('/api/users/me/profile').send({ avatar_url: 'http://127.0.0.1/x.png' });
-            expect(bad.status).toBe(200);
-            expect(bad.body).toEqual(expect.objectContaining({ success: true, avatar: 'failed', avatar_error: 'address_refused' }));
-
-            const cleared = await request(papp).put('/api/users/me/profile').send({ avatar_url: '' });
-            expect(cleared.body.avatar).toBe('cleared');
-            expect(await db.getUserAvatar(alice.id)).toBeNull();
-        } finally {
-            await new Promise((r) => server.close(r));
-        }
     });
 
     it('keeps an OIDC picture when a profile picture is cleared, and removes it with the user', async () => {

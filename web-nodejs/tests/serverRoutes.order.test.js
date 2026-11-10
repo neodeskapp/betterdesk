@@ -55,18 +55,9 @@ const isApp = (res) => /console app/.test(res.text || '');
 
 describe('server routes before the console at the root', () => {
     test('the server answers its own addresses, not the app', async () => {
-        const boot = await request(app(null)).get('/console-boot.js');
-        expect(boot.headers['content-type']).toContain('javascript');
-
-        const branding = await request(app(null)).get('/css/branding.css');
-        expect(branding.headers['content-type']).toContain('text/css');
-
         const status = await request(app(null)).get('/register-status');
         expect(status.status).toBe(400);
         expect(status.body.success).toBe(false);
-
-        const download = await request(app(null)).get('/downloads/generic-agent/v1/agent.exe');
-        expect(isApp(download)).toBe(false);
     });
 
     test('old addresses that redirect still do', async () => {
@@ -101,7 +92,7 @@ describe('server routes before the console at the root', () => {
     test('console pages carry the policy of their build; server answers keep the strict one', async () => {
         const page = await request(app(admin)).get('/devices');
         expect(page.headers['content-security-policy']).toContain("script-src 'self' 'sha256-boot='");
-        for (const p of ['/console-boot.js', '/api/no-such-endpoint']) {
+        for (const p of ['/register-status', '/api/no-such-endpoint']) {
             const res = await request(app(admin)).get(p);
             const csp = res.headers['content-security-policy'];
             expect([p, /script-src 'self';/.test(csp), /sha256|nonce-/.test(csp)]).toEqual([p, true, false]);

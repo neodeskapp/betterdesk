@@ -31,6 +31,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/avatars"
+	"github.com/unitronix/betterdesk-server/console/branding"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/csrf"
 	"github.com/unitronix/betterdesk-server/console/devicegroups"
@@ -208,6 +209,16 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		Logger: s.deps.Log,
 	})
 	s.deps.Avatars = avatars.New(avatars.Options{DB: opts.Store, Logger: s.deps.Log.Child("Avatar")})
+	// With the Node console behind this one, both write branding_config:
+	// every read goes to the database (branding.Options.ReadThrough).
+	s.deps.Branding, err = branding.New(branding.Options{
+		DB: opts.Store, UploadsDir: cfg.UploadsDir, FontsDir: cfg.FontsDir, FontCacheFile: cfg.FontCacheFile,
+		TempDir: cfg.TempDir, ThemesDir: cfg.ThemesDir, PalettesFile: cfg.PalettesFile, FaviconFile: cfg.FaviconFile,
+		SupportersFile: cfg.SupportersFile, ReadThrough: cfg.NodeUpstream != nil,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("branding: %w", err)
+	}
 	s.deps.GuestAccess = guestaccess.New(guestaccess.Options{HTTPS: cfg.HTTPS, GoAPI: api})
 	s.deps.FileTransfer = filetransfer.New(filetransfer.Options{Dir: cfg.TransfersDir, Logger: s.deps.Log})
 	s.jobs.Add("file transfer cleanup", s.deps.FileTransfer.Run)
@@ -309,7 +320,8 @@ func isUpgrade(r *http.Request) bool {
 // Start opens the listener, starts the background jobs and serves until
 // ctx ends or Stop is called.
 //
-// Before it listens it looks after the first account (see
+// Before it listens it loads the branding settings into their cache. It
+// also looks after the first account (see
 // authn.Service.EnsureDefaultAdmin), unless the Node console is behind
 // this one: that console does the same at its own start, and the file by
 // which an installer asks for a new admin password works once, for
@@ -317,6 +329,7 @@ func isUpgrade(r *http.Request) bool {
 // sure to know the password the installer set (web-nodejs/.env), so it is
 // left to it.
 func (s *Server) Start(ctx context.Context) error {
+	s.deps.Branding.LoadBranding(ctx)
 	if s.cfg.NodeUpstream == nil {
 		if _, err := s.deps.Authn.EnsureDefaultAdmin(ctx); err != nil {
 			return fmt.Errorf("first account: %w", err)

@@ -8,7 +8,6 @@ const CONSOLE_SKIP_FILES = new Set(['package-lock.json']);
 const CONSOLE_INTEGRITY_SEEDS = [
     'server.js',
     'routes/index.js',
-    'routes/auth.routes.js',
     'routes/server-attestation.routes.js',
 ];
 

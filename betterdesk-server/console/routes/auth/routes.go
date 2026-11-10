@@ -23,6 +23,8 @@ type handlers struct {
 	// guestCookie is the cookie of a guest link. A sign-in clears it.
 	guestCookie string
 	now         func() time.Time
+	// appVersion is the product version, read once at start.
+	appVersion string
 	// syncPicture brings the account's profile picture in line with the
 	// "picture" of a single sign-on. It returns at once and works in the
 	// background. nil skips it.
@@ -37,6 +39,7 @@ func newHandlers(d *kit.Deps) *handlers {
 		sessions:    d.Sessions,
 		guestCookie: "bd.guest",
 		now:         time.Now,
+		appVersion:  productVersion(d),
 	}
 	if d.Config.HTTPS {
 		h.guestCookie = "betterdesk.guest"
@@ -49,10 +52,6 @@ func newHandlers(d *kit.Deps) *handlers {
 
 // Register adds the group's routes, and the hourly clean-up of what
 // sign-in leaves behind.
-//
-// One route of the group is still answered by the Node console:
-// GET /api/auth/login-page, which needs the branding and the capacity
-// badge.
 func Register(d *kit.Deps) {
 	h := newHandlers(d)
 	r := d.Router
@@ -72,6 +71,7 @@ func Register(d *kit.Deps) {
 	r.Post("/api/auth/totp/enable", h.totpEnable, d.RequireAuth)
 	r.Post("/api/auth/totp/disable", h.totpDisable, d.RequireAuth)
 	r.Get("/api/auth/totp/status", h.totpStatus, d.RequireAuth)
+	r.Get("/api/auth/login-page", h.loginPage)
 
 	// The Node console runs the same clean-up while it is still there. Both
 	// delete by a rule on time, so a second run finds nothing left to do.

@@ -1,0 +1,802 @@
+{
+ "id": "settings-branding/fonts-other-source",
+ "request": {
+  "method": "GET",
+  "path": "/api/settings/fonts?source=GOOGLE"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "panel_access_denied",
+     "error": "Panel access denied: settings",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": [
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Inter",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Roboto",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Open Sans",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Montserrat",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700",
+        "800"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Poppins",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Lato",
+       "variants": [
+        "300",
+        "400",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Nunito",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Nunito Sans",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Raleway",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Source Sans 3",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Work Sans",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "DM Sans",
+       "variants": [
+        "400",
+        "500",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Plus Jakarta Sans",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Manrope",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700",
+        "800"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Outfit",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Space Grotesk",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Sora",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Urbanist",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Figtree",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Geist",
+       "variants": [
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Rubik",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Barlow",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Barlow Condensed",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Archivo",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Lexend",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Mulish",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Quicksand",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Cabin",
+       "variants": [
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Exo 2",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Overpass",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Red Hat Display",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Albert Sans",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "IBM Plex Sans",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Noto Sans",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Josefin Sans",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Oswald",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Bebas Neue",
+       "variants": [
+        "400"
+       ]
+      },
+      {
+       "category": "serif",
+       "downloaded": false,
+       "family": "Playfair Display",
+       "variants": [
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "serif",
+       "downloaded": false,
+       "family": "Merriweather",
+       "variants": [
+        "300",
+        "400",
+        "700"
+       ]
+      },
+      {
+       "category": "serif",
+       "downloaded": false,
+       "family": "Lora",
+       "variants": [
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "serif",
+       "downloaded": false,
+       "family": "Libre Baskerville",
+       "variants": [
+        "400",
+        "700"
+       ]
+      },
+      {
+       "category": "serif",
+       "downloaded": false,
+       "family": "Crimson Text",
+       "variants": [
+        "400",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "serif",
+       "downloaded": false,
+       "family": "Source Serif 4",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "serif",
+       "downloaded": false,
+       "family": "IBM Plex Serif",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "monospace",
+       "downloaded": false,
+       "family": "JetBrains Mono",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "monospace",
+       "downloaded": false,
+       "family": "Fira Code",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "monospace",
+       "downloaded": false,
+       "family": "Source Code Pro",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "monospace",
+       "downloaded": false,
+       "family": "IBM Plex Mono",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "monospace",
+       "downloaded": false,
+       "family": "Roboto Mono",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "monospace",
+       "downloaded": false,
+       "family": "Space Mono",
+       "variants": [
+        "400",
+        "700"
+       ]
+      },
+      {
+       "category": "display",
+       "downloaded": false,
+       "family": "Righteous",
+       "variants": [
+        "400"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Orbitron",
+       "variants": [
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Syncopate",
+       "variants": [
+        "400",
+        "700"
+       ]
+      },
+      {
+       "category": "display",
+       "downloaded": false,
+       "family": "Audiowide",
+       "variants": [
+        "400"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Rajdhani",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Chakra Petch",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Saira",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Titillium Web",
+       "variants": [
+        "300",
+        "400",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Teko",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      },
+      {
+       "category": "sans-serif",
+       "downloaded": false,
+       "family": "Prompt",
+       "variants": [
+        "300",
+        "400",
+        "500",
+        "600",
+        "700"
+       ]
+      }
+     ],
+     "success": true
+    }
+   }
+  }
+ ]
+}

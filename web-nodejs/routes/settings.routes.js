@@ -314,44 +314,6 @@ router.get('/api/settings/audit', requireAuth, requirePermission('audit.view'), 
 // ==================== Branding / Theming API ====================
 
 /**
- * GET /api/settings/branding - Get current branding configuration
- */
-router.get('/api/settings/branding', requireAuth, (req, res) => {
-    try {
-        const branding = brandingService.getBranding();
-        res.json({
-            success: true,
-            data: branding,
-            appearance: brandingService.getAppearanceModel(branding),
-            readability: brandingService.assessAppearanceReadability(branding),
-            revision: brandingService.getBrandingRevision()
-        });
-    } catch (err) {
-        console.error('Get branding error:', err);
-        res.status(500).json({ success: false, error: req.t('errors.server_error') });
-    }
-});
-
-/**
- * GET /api/settings/appearance - Versioned appearance model for the settings UI
- */
-router.get('/api/settings/appearance', requireAuth, (req, res) => {
-    try {
-        const branding = brandingService.getBranding();
-        res.json({
-            success: true,
-            data: brandingService.getAppearanceModel(branding),
-            flat: branding,
-            readability: brandingService.assessAppearanceReadability(branding),
-            revision: brandingService.getBrandingRevision()
-        });
-    } catch (err) {
-        console.error('Get appearance error:', err);
-        res.status(500).json({ success: false, error: req.t('errors.server_error') });
-    }
-});
-
-/**
  * POST /api/settings/branding - Save branding configuration (admin only)
  */
 router.post('/api/settings/branding', requireAuth, requirePermission('branding.edit'), async (req, res) => {
@@ -479,37 +441,6 @@ const bgUpload = multer({
 });
 
 /**
- * GET /api/settings/branding/backgrounds - List uploaded background images.
- */
-router.get('/api/settings/branding/backgrounds', requireAuth, (req, res) => {
-    try {
-        const uploadsRoot = path.resolve(UPLOADS_DIR);
-        const managedPattern = /^bg-[0-9a-f]{16}\.(png|jpg|jpeg|gif|webp)$/i;
-        const files = fs.readdirSync(uploadsRoot)
-            .filter((name) => managedPattern.test(name))
-            .map((name) => {
-                const fullPath = path.resolve(uploadsRoot, name);
-                if (!fullPath.startsWith(uploadsRoot + path.sep)) return null;
-                const stat = fs.lstatSync(fullPath);
-                if (!stat.isFile() || stat.isSymbolicLink()) return null;
-                return {
-                    name,
-                    url: `/uploads/${name}`,
-                    size: stat.size,
-                    updatedAt: stat.mtime.toISOString()
-                };
-            })
-            .filter(Boolean)
-            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-
-        res.json({ success: true, data: files });
-    } catch (err) {
-        console.error('List branding backgrounds error:', err);
-        res.status(500).json({ success: false, error: req.t('errors.server_error') });
-    }
-});
-
-/**
  * POST /api/settings/branding/upload-background - Upload a background image.
  * Used by the console / login / agent-portal wallpaper pickers. Returns the
  * served URL; the caller decides which branding field to assign it to. Old
@@ -618,19 +549,6 @@ router.post('/api/settings/branding/import', requireAuth, requirePermission('bra
 // ==================== Branding Profiles ====================
 
 /**
- * GET /api/settings/branding/profiles - List saved appearance profiles
- */
-router.get('/api/settings/branding/profiles', requireAuth, async (req, res) => {
-    try {
-        const profiles = await brandingService.listProfiles();
-        res.json({ success: true, data: profiles });
-    } catch (err) {
-        console.error('List branding profiles error:', err);
-        res.status(500).json({ success: false, error: req.t('errors.server_error') });
-    }
-});
-
-/**
  * POST /api/settings/branding/profiles - Create profile from current branding
  */
 router.post('/api/settings/branding/profiles', requireAuth, requirePermission('branding.edit'), async (req, res) => {
@@ -733,40 +651,6 @@ router.delete('/api/settings/branding/profiles/:id', requireAuth, requirePermiss
 });
 
 /**
- * GET /api/settings/themes - List available theme presets
- */
-router.get('/api/settings/themes', requireAuth, (req, res) => {
-    try {
-        const fs = require('fs');
-        const path = require('path');
-        const themesDir = path.join(__dirname, '..', 'themes');
-        const themes = [];
-
-        if (fs.existsSync(themesDir)) {
-            for (const file of fs.readdirSync(themesDir)) {
-                if (!file.endsWith('.json')) continue;
-                try {
-                    const data = JSON.parse(fs.readFileSync(path.join(themesDir, file), 'utf8'));
-                    if (data.type === 'betterdesk-theme' && data.branding) {
-                        themes.push({
-                            id: file.replace('.json', ''),
-                            name: data.displayName || data.branding.appName || file.replace('.json', ''),
-                            description: data.branding.appDescription || '',
-                            colors: data.branding.colors || {}
-                        });
-                    }
-                } catch { /* skip invalid files */ }
-            }
-        }
-
-        res.json({ success: true, data: themes });
-    } catch (err) {
-        console.error('List themes error:', err);
-        res.status(500).json({ success: false, error: 'Failed to list themes' });
-    }
-});
-
-/**
  * POST /api/settings/themes/:id/apply - Apply a built-in theme preset (admin only)
  */
 router.post('/api/settings/themes/:id/apply', requireAuth, requirePermission('branding.edit'), async (req, res) => {
@@ -802,38 +686,6 @@ router.post('/api/settings/themes/:id/apply', requireAuth, requirePermission('br
 });
 
 // ==================== Font Management API ====================
-
-/**
- * GET /api/settings/fonts - Search available fonts
- * Query: ?q=inter&category=sans-serif
- */
-router.get('/api/settings/fonts', requireAuth, (req, res) => {
-    try {
-        const query = String(req.query.q || '').substring(0, 100);
-        const category = String(req.query.category || 'all').substring(0, 20);
-        const source = String(req.query.source || 'curated').substring(0, 20);
-        const fonts = source === 'google'
-            ? fontService.searchGoogleFonts(query, category)
-            : fontService.searchFonts(query, category);
-        res.json({ success: true, data: fonts });
-    } catch (err) {
-        console.error('Font search error:', err);
-        res.status(500).json({ success: false, error: 'Failed to search fonts' });
-    }
-});
-
-/**
- * GET /api/settings/fonts/local - List locally downloaded fonts
- */
-router.get('/api/settings/fonts/local', requireAuth, (req, res) => {
-    try {
-        const fonts = fontService.listLocalFonts();
-        res.json({ success: true, data: fonts });
-    } catch (err) {
-        console.error('List local fonts error:', err);
-        res.status(500).json({ success: false, error: 'Failed to list fonts' });
-    }
-});
 
 /**
  * POST /api/settings/fonts/download - Download a Google Font to server
@@ -917,51 +769,6 @@ router.post('/api/settings/fonts/upload', requireAuth, requirePermission('brandi
             res.status(400).json({ success: false, error: uploadErr.message || 'Upload failed' });
         }
     });
-});
-
-/**
- * GET /css/branding.css - Dynamic branding overrides (no auth required, short cache)
- */
-router.get('/css/branding.css', (req, res) => {
-    try {
-        const css = brandingService.generateThemeCss();
-        res.setHeader('Content-Type', 'text/css; charset=utf-8');
-        res.setHeader('Cache-Control', 'public, max-age=60');
-        res.setHeader('X-Branding-Revision', brandingService.getBrandingRevision());
-        res.send(css);
-    } catch (err) {
-        res.setHeader('Content-Type', 'text/css; charset=utf-8');
-        res.send('/* branding error */');
-    }
-});
-
-/**
- * GET /css/theme.css - Legacy alias (prefer /css/branding.css)
- */
-router.get('/css/theme.css', (req, res) => {
-    try {
-        const css = brandingService.generateThemeCss();
-        res.setHeader('Content-Type', 'text/css; charset=utf-8');
-        res.setHeader('Cache-Control', 'public, max-age=60');
-        res.send(css);
-    } catch (err) {
-        res.setHeader('Content-Type', 'text/css; charset=utf-8');
-        res.send('/* theme error */');
-    }
-});
-
-/**
- * GET /branding/favicon.svg - Dynamic favicon from branding (no auth required)
- */
-router.get('/branding/favicon.svg', (req, res) => {
-    try {
-        const svg = brandingService.generateFavicon();
-        res.setHeader('Content-Type', 'image/svg+xml');
-        res.setHeader('Cache-Control', 'public, max-age=300');
-        res.send(svg);
-    } catch (err) {
-        res.status(500).send('');
-    }
 });
 
 // ==================== Backup & Restore API ====================

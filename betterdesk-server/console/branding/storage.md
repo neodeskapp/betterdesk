@@ -54,9 +54,16 @@ The Go console keeps both as they are. Nothing in this package touches
 the next load. It runs at start and at the end of every `SaveBranding`
 and `ResetBranding`. `GetBranding` never reads the database.
 
-While Node still serves some routes, each process has its own cache: a
-save in one does not reach the other until that one loads again. Node
-loads only at its start and after its own saves.
+With `Options.ReadThrough` (set while the Node console runs behind the Go
+one) `Refresh` loads again before every read of a route: two queries per
+request. A load that finds no stored time keeps the revision of the load
+before when that one found none either, so the revision of an empty table
+stays the same from request to request.
+
+The Node console keeps its own cache and loads only at its start and
+after its own saves: what the Go console saves reaches it only after a
+restart. That is why the routes that save move last, once no route that
+reads the settings is left in Node.
 
 The revision is:
 

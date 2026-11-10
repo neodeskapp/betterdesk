@@ -66,6 +66,12 @@ loses. For what the routes did with body values themselves there are
 `branding.ToString` (`String(x)`) and `branding.Trim`. `branding.Message(err)`
 is the text a route sent as `err.message`.
 
+A route that reads the settings calls `s.Refresh(r.Context())` first. With
+the Node console behind the Go one (`Options.ReadThrough`), that reads the
+settings from the database, because the Node console saves into the same
+table without telling this service; without it, it does nothing and the
+cache answers.
+
 ## Read-only users of the settings
 
 | Route | Node | Go |

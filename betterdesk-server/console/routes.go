@@ -27,11 +27,13 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/pairing"
 	"github.com/unitronix/betterdesk-server/console/routes/panelaccess"
 	"github.com/unitronix/betterdesk-server/console/routes/permissions"
+	"github.com/unitronix/betterdesk-server/console/routes/phase45"
 	"github.com/unitronix/betterdesk-server/console/routes/policies"
 	"github.com/unitronix/betterdesk-server/console/routes/reports"
 	"github.com/unitronix/betterdesk-server/console/routes/resourcecontrol"
 	"github.com/unitronix/betterdesk-server/console/routes/scaling"
 	"github.com/unitronix/betterdesk-server/console/routes/securityaudit"
+	"github.com/unitronix/betterdesk-server/console/routes/settings"
 	"github.com/unitronix/betterdesk-server/console/routes/system"
 	"github.com/unitronix/betterdesk-server/console/routes/tenants"
 	"github.com/unitronix/betterdesk-server/console/routes/tickets"
@@ -51,10 +53,11 @@ import (
 func registerRoutes(d *kit.Deps) {
 	health.Register(d)        // routes/index.js: GET /health
 	authroutes.Register(d)    // routes/auth.routes.js
-	consoleroutes.Register(d) // routes/console.routes.js: the strings endpoint
+	consoleroutes.Register(d) // routes/console.routes.js
 	dashboard.Register(d)     // routes/dashboard.routes.js
 	devices.Register(d)       // routes/devices.routes.js, without the routes that reach into an agent (bdRelay)
 	keys.Register(d)          // routes/keys.routes.js
+	settings.Register(d)      // routes/settings.routes.js: the routes that only read the branding
 	avatars.Register(d)       // routes/avatars.routes.js
 	panelaccess.Register(d)   // routes/panel-access.routes.js
 	uishell.Register(d)       // routes/ui-shell.routes.js
@@ -97,5 +100,6 @@ func registerRoutes(d *kit.Deps) {
 	system.Register(d)                        // routes/system.routes.js
 	cdapstudio.Register(d)                    // routes/cdap-studio.routes.js
 	permissions.Register(d)                   // routes/permissions.routes.js
+	phase45.Register(d)                       // routes/phase4_5.routes.js
 	pairing.Register(d)                       // routes/pairing.routes.js
 }

@@ -6,7 +6,6 @@
 const express = require('express');
 const router = express.Router();
 
-const authRoutes = require('./auth.routes');
 const devicesRoutes = require('./devices.routes');
 const settingsRoutes = require('./settings.routes');
 const generatorRoutes = require('./generator.routes');
@@ -33,7 +32,6 @@ const inventoryRoutes = lazyRoute('./inventory.routes');
 const activityRoutes = lazyRoute('./activity.routes');
 const automationRoutes = lazyRoute('./automation.routes');
 const commercializationRoutes = lazyRoute('./commercialization.routes');
-const phase45Routes = lazyRoute('./phase4_5.routes');
 const serverManagementRoutes = lazyRoute('./server-management.routes');
 const serverAttestationRoutes = lazyRoute('./server-attestation.routes');
 
@@ -44,8 +42,6 @@ const { requireJsonContentType } = require('../lib/requireJsonContentType');
 router.use(requireJsonContentType);
 
 // Mount routes
-router.use('/', authRoutes);
-router.use('/', require('./console.routes'));   // Svelte console: /console-boot.js, /api/console/*
 router.use('/', devicesRoutes);  // the routes that reach into an agent over bdRelay (the other device routes are in the Go console)
 router.use('/', settingsRoutes);
 router.use('/', generatorRoutes);
@@ -65,6 +61,5 @@ router.use('/', pagesRoutes);                          // page routes: /inventor
 router.use('/', commercializationRoutes);                // admin-facing: /commercialization, /api/panel/billing/*
 router.use('/', serverManagementRoutes);                 // admin-facing: /server-management, /api/server-management/* (BETA)
 router.use('/', serverAttestationRoutes);                // admin-facing: /server-attestation, /api/server-attestation/*
-router.use('/', phase45Routes);                          // Phase 4/5: /api/users/me/profile, /api/agent-templates, /portal
 
 module.exports = router;

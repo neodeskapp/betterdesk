@@ -95,6 +95,21 @@ func TestLoadValues(t *testing.T) {
 	if cfg.TransfersDir != filepath.Join("/console", "data", "transfers") {
 		t.Errorf("TransfersDir = %q", cfg.TransfersDir)
 	}
+	// So do the branding's files
+	branding := map[string][2]string{
+		"FontsDir":       {cfg.FontsDir, filepath.Join("/console", "public", "fonts")},
+		"FontCacheFile":  {cfg.FontCacheFile, filepath.Join("/console", "data", "google-fonts-cache.json")},
+		"TempDir":        {cfg.TempDir, filepath.Join("/console", "data", "tmp")},
+		"ThemesDir":      {cfg.ThemesDir, filepath.Join("/console", "themes")},
+		"PalettesFile":   {cfg.PalettesFile, filepath.Join("/console", "config", "theme-palettes.json")},
+		"FaviconFile":    {cfg.FaviconFile, filepath.Join("/console", "public", "favicon.svg")},
+		"SupportersFile": {cfg.SupportersFile, filepath.Join("/console", "config", "supporters.json")},
+	}
+	for name, pair := range branding {
+		if pair[0] != pair[1] {
+			t.Errorf("%s = %q, want %q", name, pair[0], pair[1])
+		}
+	}
 }
 
 func TestSwitchesReadAsTheOldConsoleDid(t *testing.T) {

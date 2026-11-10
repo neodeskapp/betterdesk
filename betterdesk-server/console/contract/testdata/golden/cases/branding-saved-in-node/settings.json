@@ -1,0 +1,398 @@
+{
+ "id": "branding-saved-in-node/settings",
+ "request": {
+  "method": "GET",
+  "path": "/api/settings/branding"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "panel_access_denied",
+     "error": "Panel access denied: settings",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "appearance.revision",
+     "format": "9999-99-99999999"
+    },
+    {
+     "path": "revision",
+     "format": "9999-99-99999999"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "appearance": {
+      "advanced": {
+       "customCssEnabled": true
+      },
+      "backgrounds": {
+       "agent": {
+        "color": "",
+        "gradient": "",
+        "imageUrl": "",
+        "overlay": "",
+        "size": "cover",
+        "type": "none"
+       },
+       "console": {
+        "blur": "",
+        "color": "",
+        "gradient": "linear-gradient(90deg, #111111 0%, #222222 100%)",
+        "imageUrl": "",
+        "overlay": "",
+        "size": "cover",
+        "type": "gradient"
+       },
+       "login": {
+        "color": "",
+        "gradient": "",
+        "imageUrl": "",
+        "overlay": "",
+        "size": "cover",
+        "type": "inherit"
+       },
+       "rdclient": {
+        "color": "",
+        "gradient": "",
+        "imageUrl": "",
+        "overlay": "",
+        "size": "cover",
+        "type": "inherit"
+       }
+      },
+      "footer": {
+       "agentShowPoweredBy": true,
+       "showPoweredBy": false,
+       "text": "Contract footer"
+      },
+      "identity": {
+       "appDescription": "Saved by the settings route",
+       "appName": "Contract Console",
+       "faviconSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 4 4\"><circle cx=\"2\" cy=\"2\" r=\"2\"/></svg>",
+       "logoIcon": "hub",
+       "logoSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 4 4\"><rect width=\"4\" height=\"4\"/></svg>",
+       "logoText": "Contract",
+       "logoTextAccent": "Co",
+       "logoType": "text",
+       "logoUrl": ""
+      },
+      "login": {
+       "promoMode": "slides",
+       "slides": [
+        {
+         "body": "Body one",
+         "id": "s1",
+         "imageUrl": "/wallpapers/a.jpg",
+         "order": 0,
+         "overlay": "0.4",
+         "slideKey": "one",
+         "title": "First"
+        },
+        {
+         "body": "",
+         "id": "s2",
+         "imageUrl": "",
+         "order": 1,
+         "overlay": "0.7",
+         "slideKey": "",
+         "title": "Second"
+        },
+        {
+         "body": "",
+         "id": "slide-3",
+         "imageUrl": "",
+         "order": 2,
+         "overlay": "null",
+         "slideKey": "",
+         "title": "Third"
+        }
+       ],
+       "subtitle": "Sign in to the contract console",
+       "title": "Welcome back"
+      },
+      "palette": {
+       "colors": {
+        "accentBlue": "#ff5500",
+        "accentBlueHover": "",
+        "accentBlueMuted": "",
+        "accentGreen": "",
+        "accentGreenHover": "",
+        "accentGreenMuted": "",
+        "accentPurple": "",
+        "accentPurpleHover": "",
+        "accentPurpleMuted": "",
+        "accentRed": "",
+        "accentRedHover": "",
+        "accentRedMuted": "",
+        "accentYellow": "",
+        "accentYellowHover": "",
+        "accentYellowMuted": "",
+        "bgElevated": "",
+        "bgPrimary": "#101010",
+        "bgSecondary": "",
+        "bgTertiary": "",
+        "borderPrimary": "",
+        "borderSecondary": "",
+        "textPrimary": "",
+        "textSecondary": ""
+       },
+       "mode": "dark",
+       "semantic": {
+        "border": "",
+        "danger": "",
+        "dangerHover": "",
+        "dangerMuted": "",
+        "info": "",
+        "infoHover": "",
+        "infoMuted": "",
+        "primary": "#ff5500",
+        "primaryHover": "",
+        "primaryMuted": "",
+        "success": "",
+        "successHover": "",
+        "successMuted": "",
+        "surface": "",
+        "surfaceElevated": "",
+        "surfaceRaised": "",
+        "textMuted": "",
+        "textPrimary": "",
+        "warning": "",
+        "warningHover": "",
+        "warningMuted": ""
+       }
+      },
+      "revision": "<volatile>",
+      "surfaces": {
+       "glassBlur": "16",
+       "glassColor": "#161b22",
+       "glassEnabled": true,
+       "glassOpacity": "55"
+      },
+      "type": "betterdesk-appearance",
+      "typography": {
+       "fontBody": "",
+       "fontHeading": ""
+      },
+      "version": "2.0"
+     },
+     "data": {
+      "agentBgColor": "",
+      "agentBgGradient": "",
+      "agentBgImageUrl": "",
+      "agentBgType": "none",
+      "agentShowPoweredBy": "true",
+      "appDescription": "Saved by the settings route",
+      "appName": "Contract Console",
+      "appearanceSchemaVersion": "2",
+      "bgBlur": "",
+      "bgColor": "",
+      "bgGradient": "linear-gradient(90deg, #111111 0%, #222222 100%)",
+      "bgImageUrl": "",
+      "bgOverlay": "",
+      "bgSize": "cover",
+      "bgType": "gradient",
+      "colors": {
+       "accentBlue": "#ff5500",
+       "accentBlueHover": "",
+       "accentBlueMuted": "",
+       "accentGreen": "",
+       "accentGreenHover": "",
+       "accentGreenMuted": "",
+       "accentPurple": "",
+       "accentPurpleHover": "",
+       "accentPurpleMuted": "",
+       "accentRed": "",
+       "accentRedHover": "",
+       "accentRedMuted": "",
+       "accentYellow": "",
+       "accentYellowHover": "",
+       "accentYellowMuted": "",
+       "bgElevated": "",
+       "bgPrimary": "#101010",
+       "bgSecondary": "",
+       "bgTertiary": "",
+       "borderPrimary": "",
+       "borderSecondary": "",
+       "textPrimary": "",
+       "textSecondary": ""
+      },
+      "customCss": ".contract-note { color: #c00; }",
+      "faviconSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 4 4\"><circle cx=\"2\" cy=\"2\" r=\"2\"/></svg>",
+      "fontBody": "",
+      "fontHeading": "",
+      "footerText": "Contract footer",
+      "glassBlur": "16",
+      "glassColor": "#161b22",
+      "glassEnabled": "true",
+      "glassOpacity": "55",
+      "loginBgColor": "",
+      "loginBgGradient": "",
+      "loginBgImageUrl": "",
+      "loginBgOverlay": "",
+      "loginBgType": "inherit",
+      "loginPromoMode": "slides",
+      "loginSlides": [
+       {
+        "body": "Body one",
+        "id": "s1",
+        "imageUrl": "/wallpapers/a.jpg",
+        "order": 0,
+        "overlay": "0.4",
+        "slideKey": "one",
+        "title": "First"
+       },
+       {
+        "body": "",
+        "id": "s2",
+        "imageUrl": "",
+        "order": 1,
+        "overlay": "0.7",
+        "slideKey": "",
+        "title": "Second"
+       },
+       {
+        "body": "",
+        "id": "slide-3",
+        "imageUrl": "",
+        "order": 2,
+        "overlay": "null",
+        "slideKey": "",
+        "title": "Third"
+       }
+      ],
+      "loginSubtitle": "Sign in to the contract console",
+      "loginTitle": "Welcome back",
+      "logoIcon": "hub",
+      "logoSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 4 4\"><rect width=\"4\" height=\"4\"/></svg>",
+      "logoText": "Contract",
+      "logoTextAccent": "Co",
+      "logoType": "text",
+      "logoUrl": "",
+      "rdclientBgColor": "",
+      "rdclientBgGradient": "",
+      "rdclientBgImageUrl": "",
+      "rdclientBgOverlay": "",
+      "rdclientBgSize": "cover",
+      "rdclientBgType": "inherit",
+      "showPoweredBy": "false",
+      "themeMode": "dark"
+     },
+     "readability": {
+      "issues": [
+       {
+        "id": "console-background",
+        "message": "console-background uses gradient with a low overlay; text may be hard to read.",
+        "messageKey": "branding.readability_background",
+        "messageParams": {
+         "item": "console-background",
+         "type": "gradient"
+        },
+        "severity": "warning"
+       }
+      ],
+      "ok": true
+     },
+     "revision": "<volatile>",
+     "success": true
+    }
+   }
+  }
+ ]
+}

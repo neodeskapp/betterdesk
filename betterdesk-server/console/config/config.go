@@ -64,6 +64,19 @@ type Config struct {
 	// TransfersDir is where the files of file transfers are written:
 	// data/transfers in ConsoleDir, whatever DATA_DIR says.
 	TransfersDir string
+	// The branding's files, in ConsoleDir whatever DATA_DIR says: the
+	// installed fonts (public/fonts), the optional font list
+	// (data/google-fonts-cache.json), uploaded fonts before they are
+	// installed (data/tmp), the built-in themes (themes), the built-in
+	// palettes (config/theme-palettes.json), the default favicon
+	// (public/favicon.svg) and the supporters list (config/supporters.json).
+	FontsDir       string
+	FontCacheFile  string
+	TempDir        string
+	ThemesDir      string
+	PalettesFile   string
+	FaviconFile    string
+	SupportersFile string
 
 	// HTTPS is the console's HTTPS mode (HTTPS_ENABLED): it picks the
 	// names of the session and CSRF cookies, marks them Secure and
@@ -211,6 +224,13 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 	cfg.WallpapersDir = filepath.Join(cfg.ConsoleDir, "wallpapers")
 	cfg.UploadsDir = filepath.Join(cfg.DataDir, "uploads")
 	cfg.TransfersDir = filepath.Join(cfg.ConsoleDir, "data", "transfers")
+	cfg.FontsDir = filepath.Join(cfg.ConsoleDir, "public", "fonts")
+	cfg.FontCacheFile = filepath.Join(cfg.ConsoleDir, "data", "google-fonts-cache.json")
+	cfg.TempDir = filepath.Join(cfg.ConsoleDir, "data", "tmp")
+	cfg.ThemesDir = filepath.Join(cfg.ConsoleDir, "themes")
+	cfg.PalettesFile = filepath.Join(cfg.ConsoleDir, "config", "theme-palettes.json")
+	cfg.FaviconFile = filepath.Join(cfg.ConsoleDir, "public", "favicon.svg")
+	cfg.SupportersFile = filepath.Join(cfg.ConsoleDir, "config", "supporters.json")
 
 	cfg.HTTPS = isTrue(getenv("HTTPS_ENABLED"))
 	cfg.HTTPSExact = getenv("HTTPS_ENABLED") == "true"

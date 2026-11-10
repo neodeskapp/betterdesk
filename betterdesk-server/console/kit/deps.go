@@ -8,6 +8,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/avatars"
+	"github.com/unitronix/betterdesk-server/console/branding"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/csrf"
 	"github.com/unitronix/betterdesk-server/console/devicegroups"
@@ -92,6 +93,12 @@ type Deps struct {
 	// Backend is the device layer: the API server's devices with what the
 	// console's tables add to them (services/serverBackend.js).
 	Backend *goapi.Backend
+	// Branding is the console's own look: the appearance settings, the
+	// stylesheet made from them, profiles, themes, fonts and the supporters
+	// list (services/brandingService.js, fontService.js,
+	// supportersService.js). A route that reads the settings calls
+	// Branding.Refresh first.
+	Branding *branding.Service
 	// Audit writes the audit log. LogAction is the usual way to it.
 	Audit *auditlog.Log
 	// Log is the console's logger; a group takes d.Log.Child("TICKETS").

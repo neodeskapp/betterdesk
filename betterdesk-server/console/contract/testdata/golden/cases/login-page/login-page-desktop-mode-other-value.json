@@ -1,0 +1,256 @@
+{
+ "id": "login-page/login-page-desktop-mode-other-value",
+ "request": {
+  "method": "GET",
+  "path": "/api/auth/login-page",
+  "notes": [
+   "header Cookie: betterdesk_desktop_mode=TRUE"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-store",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "csrfToken",
+     "pattern": "^[9aA+/_=-]{128}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "appName": "BetterDesk",
+     "appVersion": "3.5.224",
+     "attestation": null,
+     "branding": {
+      "footerText": "",
+      "loginPromoMode": "classic",
+      "loginSlides": [],
+      "loginSubtitle": "",
+      "loginTitle": "",
+      "logoSvg": "",
+      "logoText": "",
+      "logoTextAccent": "",
+      "logoType": "default",
+      "logoUrl": "",
+      "showPoweredBy": true
+     },
+     "csrfToken": "<volatile>",
+     "desktopMode": false,
+     "languages": [
+      {
+       "code": "id",
+       "flag": "🇮🇩",
+       "name": "Indonesian",
+       "native": "Bahasa Indonesia",
+       "rtl": false
+      },
+      {
+       "code": "cs",
+       "flag": "🇨🇿",
+       "name": "Czech",
+       "native": "Čeština",
+       "rtl": false
+      },
+      {
+       "code": "da",
+       "flag": "🇩🇰",
+       "name": "Danish",
+       "native": "Dansk",
+       "rtl": false
+      },
+      {
+       "code": "de",
+       "flag": "🇩🇪",
+       "name": "German",
+       "native": "Deutsch",
+       "rtl": false
+      },
+      {
+       "code": "en",
+       "flag": "🇬🇧",
+       "name": "English",
+       "native": "English",
+       "rtl": false
+      },
+      {
+       "code": "es",
+       "flag": "🇪🇸",
+       "name": "Spanish",
+       "native": "Español",
+       "rtl": false
+      },
+      {
+       "code": "fr",
+       "flag": "🇫🇷",
+       "name": "French",
+       "native": "Français",
+       "rtl": false
+      },
+      {
+       "code": "it",
+       "flag": "🇮🇹",
+       "name": "Italian",
+       "native": "Italiano",
+       "rtl": false
+      },
+      {
+       "code": "hu",
+       "flag": "🇭🇺",
+       "name": "Hungarian",
+       "native": "Magyar",
+       "rtl": false
+      },
+      {
+       "code": "nl",
+       "flag": "🇳🇱",
+       "name": "Dutch",
+       "native": "Nederlands",
+       "rtl": false
+      },
+      {
+       "code": "nb",
+       "flag": "🇳🇴",
+       "name": "Norwegian",
+       "native": "Norsk",
+       "rtl": false
+      },
+      {
+       "code": "pl",
+       "flag": "🇵🇱",
+       "name": "Polish",
+       "native": "Polski",
+       "rtl": false
+      },
+      {
+       "code": "pt",
+       "flag": "🇵🇹",
+       "name": "Portuguese",
+       "native": "Português",
+       "rtl": false
+      },
+      {
+       "code": "ro",
+       "flag": "🇷🇴",
+       "name": "Romanian",
+       "native": "Română",
+       "rtl": false
+      },
+      {
+       "code": "fi",
+       "flag": "🇫🇮",
+       "name": "Finnish",
+       "native": "Suomi",
+       "rtl": false
+      },
+      {
+       "code": "sv",
+       "flag": "🇸🇪",
+       "name": "Swedish",
+       "native": "Svenska",
+       "rtl": false
+      },
+      {
+       "code": "vi",
+       "flag": "🇻🇳",
+       "name": "Vietnamese",
+       "native": "Tiếng Việt",
+       "rtl": false
+      },
+      {
+       "code": "tr",
+       "flag": "🇹🇷",
+       "name": "Turkish",
+       "native": "Türkçe",
+       "rtl": false
+      },
+      {
+       "code": "uk",
+       "flag": "🇺🇦",
+       "name": "Ukrainian",
+       "native": "Українська",
+       "rtl": false
+      },
+      {
+       "code": "ar",
+       "flag": "🇸🇦",
+       "name": "Arabic",
+       "native": "العربية",
+       "rtl": true
+      },
+      {
+       "code": "hi",
+       "flag": "🇮🇳",
+       "name": "Hindi",
+       "native": "हिन्दी",
+       "rtl": false
+      },
+      {
+       "code": "th",
+       "flag": "🇹🇭",
+       "name": "Thai",
+       "native": "ไทย",
+       "rtl": false
+      },
+      {
+       "code": "ko",
+       "flag": "🇰🇷",
+       "name": "Korean",
+       "native": "한국어",
+       "rtl": false
+      },
+      {
+       "code": "zh",
+       "flag": "🇨🇳",
+       "name": "中文",
+       "native": "中文",
+       "rtl": false
+      },
+      {
+       "code": "ja",
+       "flag": "🇯🇵",
+       "name": "Japanese",
+       "native": "日本語",
+       "rtl": false
+      },
+      {
+       "code": "zh-TW",
+       "flag": "🇹🇼",
+       "name": "Chinese (Traditional)",
+       "native": "繁體中文",
+       "rtl": false
+      }
+     ],
+     "signedIn": false,
+     "success": true
+    }
+   }
+  }
+ ]
+}

@@ -41,7 +41,8 @@ type Options struct {
 	ThemesDir string
 	// PalettesFile is the JSON file with the built-in dark and light
 	// palettes. Node: <console>/config/theme-palettes.json. New fails
-	// when it cannot be read.
+	// when it cannot be read. Empty means no built-in palettes: both are
+	// empty objects.
 	PalettesFile string
 	// FaviconFile is the default favicon. Node: <console>/public/favicon.svg.
 	// A built-in mark is used when it cannot be read.
@@ -69,6 +70,13 @@ type Options struct {
 	ZoneName func(t time.Time) string
 	// Logf writes the service's warnings. Nil means the server's log.
 	Logf func(format string, args ...any)
+
+	// ReadThrough makes Refresh read the settings from the database. It is
+	// for the time another process writes branding_config as well (the
+	// Node console behind this one): this service hears nothing of its
+	// saves. Off, Refresh does nothing and the cache holds what the last
+	// LoadBranding read, as in the Node console.
+	ReadThrough bool
 }
 
 // Service is the console's branding: the appearance settings with their
@@ -82,6 +90,9 @@ type Service struct {
 	mu       sync.RWMutex
 	cache    *Object
 	revision string
+	// timeless is set when the revision is the time of a load that found
+	// no stored time.
+	timeless bool
 
 	faviconOnce sync.Once
 	favicon     string
@@ -121,16 +132,18 @@ func New(opts Options) (*Service, error) {
 			return nil, fmt.Errorf("create the uploads folder: %w", err)
 		}
 	}
-	raw, err := os.ReadFile(opts.PalettesFile)
-	if err != nil {
-		return nil, fmt.Errorf("read the theme palettes: %w", err)
-	}
-	parsed, err := parseJSON(decodeUTF8(raw))
-	if err != nil {
-		return nil, fmt.Errorf("read the theme palettes %s: %w", opts.PalettesFile, err)
-	}
-	if parsed == nil {
-		return nil, fmt.Errorf("read the theme palettes %s: the file holds null", opts.PalettesFile)
+	var parsed any = NewObject()
+	if opts.PalettesFile != "" {
+		raw, err := os.ReadFile(opts.PalettesFile)
+		if err != nil {
+			return nil, fmt.Errorf("read the theme palettes: %w", err)
+		}
+		if parsed, err = parseJSON(decodeUTF8(raw)); err != nil {
+			return nil, fmt.Errorf("read the theme palettes %s: %w", opts.PalettesFile, err)
+		}
+		if parsed == nil {
+			return nil, fmt.Errorf("read the theme palettes %s: the file holds null", opts.PalettesFile)
+		}
 	}
 	palettes := NewObject()
 	for _, mode := range []string{"dark", "light"} {
@@ -162,6 +175,28 @@ var reRevisionJunk = regexp.MustCompile(`[^a-zA-Z0-9._-]`)
 // cache and sets the revision. It runs at start and after every change.
 // When the database cannot be read the cache holds the defaults.
 func (s *Service) LoadBranding(ctx context.Context) *Object {
+	return s.load(ctx, false)
+}
+
+// Refresh brings the cache in line with the database before a route reads
+// the settings, when ReadThrough is set: every route that reads them calls
+// it first. It then costs what LoadBranding costs, two queries on
+// branding_config (all rows, and the newest time) and laying the rows
+// over the defaults. Without ReadThrough it does nothing.
+//
+// A load that finds no stored time takes the current time as the
+// revision. Refresh keeps the revision instead when the load before found
+// no stored time either, so that the revision changes when the settings
+// do and not with every request.
+func (s *Service) Refresh(ctx context.Context) {
+	if s.opts.ReadThrough {
+		s.load(ctx, true)
+	}
+}
+
+// load is LoadBranding. keep says to leave a revision taken from the
+// clock as it is when the database still has no time to give.
+func (s *Service) load(ctx context.Context, keep bool) *Object {
 	var branding *Object
 	rows, err := getBrandingConfig(ctx, s.opts.DB)
 	if err == nil {
@@ -171,19 +206,22 @@ func (s *Service) LoadBranding(ctx context.Context) *Object {
 		s.opts.Logf("[Branding] Failed to load from DB, using defaults: %v", err)
 		fallback := DefaultBranding()
 		s.mu.Lock()
-		s.cache, s.revision = fallback, s.bumpRevision()
+		s.cache, s.revision, s.timeless = fallback, s.bumpRevision(), false
 		s.mu.Unlock()
 		return fallback
 	}
 
-	revision := ""
+	revision, timeless := "", false
 	if rev, ok, err := getBrandingConfigRevision(ctx, s.opts.DB, s.opts.Location, s.opts.ZoneName); err == nil && ok {
 		revision = reRevisionJunk.ReplaceAllLiteralString(rev, "")
 	} else {
-		revision = s.bumpRevision()
+		revision, timeless = s.bumpRevision(), err == nil
 	}
 	s.mu.Lock()
-	s.cache, s.revision = branding, revision
+	if keep && timeless && s.timeless {
+		revision = s.revision
+	}
+	s.cache, s.revision, s.timeless = branding, revision, timeless
 	s.mu.Unlock()
 	return branding
 }

@@ -1,0 +1,2054 @@
+{
+ "id": "console/bootstrap-right-to-left",
+ "request": {
+  "method": "GET",
+  "path": "/api/console/bootstrap",
+  "notes": [
+   "header Accept-Language: ar"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-store",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "branding.revision",
+     "pattern": "^[9aA+/_=-]{8}$"
+    },
+    {
+     "path": "csrfToken",
+     "pattern": "^[9aA+/_=-]{128}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "access": {
+      "catalog": [
+       {
+        "key": "dashboard",
+        "read": "device.view",
+        "write": null
+       },
+       {
+        "key": "devices",
+        "read": "device.view",
+        "write": "device.edit"
+       },
+       {
+        "key": "registrations",
+        "read": "enrollment.approve",
+        "write": "enrollment.manage"
+       },
+       {
+        "key": "remote",
+        "read": "remote_target.view",
+        "write": "remote_target.connect"
+       },
+       {
+        "key": "users",
+        "read": "user.view",
+        "write": "user.edit"
+       },
+       {
+        "key": "organizations",
+        "read": "user.view",
+        "write": "org.edit"
+       },
+       {
+        "key": "folders",
+        "read": "device.view",
+        "write": "device.edit"
+       },
+       {
+        "key": "strategies",
+        "read": "device.view",
+        "write": "device.edit"
+       },
+       {
+        "key": "guests",
+        "read": "guest.create",
+        "write": "guest.create"
+       },
+       {
+        "key": "tickets",
+        "read": "device.view",
+        "write": "device.edit"
+       },
+       {
+        "key": "help-requests",
+        "read": "device.view",
+        "write": "device.edit"
+       },
+       {
+        "key": "cdap",
+        "read": "cdap.view",
+        "write": "cdap.command"
+       },
+       {
+        "key": "fleet",
+        "read": "org.manage_devices",
+        "write": "org.manage_devices"
+       },
+       {
+        "key": "chat",
+        "read": "chat.access",
+        "write": "chat.access"
+       },
+       {
+        "key": "activity",
+        "read": "audit.view",
+        "write": null
+       },
+       {
+        "key": "automation",
+        "read": "device.view",
+        "write": "device.edit"
+       },
+       {
+        "key": "files",
+        "read": "device.view",
+        "write": "device.edit"
+       },
+       {
+        "key": "network",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "dataguard",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "reports",
+        "read": "metrics.view",
+        "write": null
+       },
+       {
+        "key": "agents",
+        "read": "device.view",
+        "write": "device.edit"
+       },
+       {
+        "key": "toolkit",
+        "read": "device.connect",
+        "write": "device.edit"
+       },
+       {
+        "key": "commercialization",
+        "read": "billing.view",
+        "write": "billing.manage"
+       },
+       {
+        "key": "scaling",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "cross-platform",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "toolkit",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "security-audit",
+        "read": "audit.view",
+        "write": "server.config"
+       },
+       {
+        "key": "languages",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "resource-control",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "system",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "permissions",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "server-management",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "settings",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "server-attestation",
+        "read": "server.attestation",
+        "write": "branding.edit"
+       }
+      ],
+      "pages": [
+       {
+        "path": "/",
+        "section": "dashboard"
+       },
+       {
+        "prefix": "/inventory",
+        "section": "devices"
+       },
+       {
+        "prefix": "/tickets",
+        "section": "tickets"
+       },
+       {
+        "prefix": "/help-requests",
+        "section": "help-requests"
+       },
+       {
+        "prefix": "/automation",
+        "section": "automation"
+       },
+       {
+        "prefix": "/network",
+        "section": "network"
+       },
+       {
+        "prefix": "/registrations",
+        "section": "registrations"
+       },
+       {
+        "prefix": "/cdap",
+        "section": "cdap"
+       },
+       {
+        "prefix": "/fleet",
+        "section": "fleet"
+       },
+       {
+        "prefix": "/chat",
+        "section": "chat"
+       },
+       {
+        "prefix": "/scaling",
+        "section": "scaling"
+       },
+       {
+        "prefix": "/cross-platform",
+        "section": "cross-platform"
+       },
+       {
+        "prefix": "/reports",
+        "section": "reports"
+       },
+       {
+        "prefix": "/agents",
+        "section": "agents"
+       },
+       {
+        "prefix": "/toolkit",
+        "section": "toolkit"
+       },
+       {
+        "prefix": "/keys",
+        "section": "settings"
+       },
+       {
+        "prefix": "/tokens",
+        "section": "settings"
+       },
+       {
+        "prefix": "/policies",
+        "section": "settings"
+       },
+       {
+        "prefix": "/attestation",
+        "section": "server-attestation"
+       },
+       {
+        "prefix": "/dataguard",
+        "section": "dataguard"
+       },
+       {
+        "prefix": "/security-audit",
+        "section": "security-audit"
+       },
+       {
+        "prefix": "/permissions",
+        "section": "permissions"
+       },
+       {
+        "prefix": "/languages",
+        "section": "languages"
+       },
+       {
+        "prefix": "/resource-control",
+        "section": "resource-control"
+       },
+       {
+        "prefix": "/server-management",
+        "section": "server-management"
+       },
+       {
+        "prefix": "/client-branding",
+        "section": "settings"
+       },
+       {
+        "prefix": "/cdap-studio",
+        "section": "cdap"
+       },
+       {
+        "prefix": "/users",
+        "section": "users"
+       },
+       {
+        "prefix": "/organizations",
+        "section": "organizations"
+       },
+       {
+        "prefix": "/devices",
+        "section": "devices"
+       },
+       {
+        "prefix": "/folders",
+        "section": "folders"
+       },
+       {
+        "prefix": "/remote",
+        "section": "remote"
+       },
+       {
+        "prefix": "/settings",
+        "section": "settings"
+       },
+       {
+        "prefix": "/commercialization",
+        "section": "commercialization"
+       },
+       {
+        "prefix": "/reports",
+        "section": "reports"
+       },
+       {
+        "prefix": "/activity",
+        "section": "activity"
+       }
+      ],
+      "sections": {
+       "activity": "read",
+       "agents": "read",
+       "automation": "read",
+       "cdap": "read",
+       "chat": "write",
+       "commercialization": "none",
+       "cross-platform": "none",
+       "dashboard": "read",
+       "dataguard": "none",
+       "devices": "read",
+       "files": "read",
+       "fleet": "none",
+       "folders": "read",
+       "guests": "none",
+       "help-requests": "read",
+       "languages": "none",
+       "network": "none",
+       "organizations": "none",
+       "permissions": "none",
+       "registrations": "none",
+       "remote": "read",
+       "reports": "read",
+       "resource-control": "none",
+       "scaling": "none",
+       "security-audit": "read",
+       "server-attestation": "none",
+       "server-management": "none",
+       "settings": "none",
+       "strategies": "read",
+       "system": "none",
+       "tickets": "read",
+       "toolkit": "none",
+       "users": "none"
+      }
+     },
+     "appVersion": "3.5.224",
+     "branding": {
+      "appDescription": "BetterDesk Server Management",
+      "appName": "BetterDesk",
+      "footerText": "",
+      "logoIcon": "dns",
+      "logoSvg": "",
+      "logoText": "",
+      "logoTextAccent": "",
+      "logoType": "default",
+      "logoUrl": "",
+      "revision": "<volatile>",
+      "showPoweredBy": true,
+      "themeMode": "system"
+     },
+     "csrfToken": "<volatile>",
+     "emergencyMode": false,
+     "isSuperAdmin": false,
+     "lang": {
+      "available": [
+       {
+        "code": "id",
+        "flag": "🇮🇩",
+        "name": "Indonesian",
+        "native": "Bahasa Indonesia",
+        "rtl": false
+       },
+       {
+        "code": "cs",
+        "flag": "🇨🇿",
+        "name": "Czech",
+        "native": "Čeština",
+        "rtl": false
+       },
+       {
+        "code": "da",
+        "flag": "🇩🇰",
+        "name": "Danish",
+        "native": "Dansk",
+        "rtl": false
+       },
+       {
+        "code": "de",
+        "flag": "🇩🇪",
+        "name": "German",
+        "native": "Deutsch",
+        "rtl": false
+       },
+       {
+        "code": "en",
+        "flag": "🇬🇧",
+        "name": "English",
+        "native": "English",
+        "rtl": false
+       },
+       {
+        "code": "es",
+        "flag": "🇪🇸",
+        "name": "Spanish",
+        "native": "Español",
+        "rtl": false
+       },
+       {
+        "code": "fr",
+        "flag": "🇫🇷",
+        "name": "French",
+        "native": "Français",
+        "rtl": false
+       },
+       {
+        "code": "it",
+        "flag": "🇮🇹",
+        "name": "Italian",
+        "native": "Italiano",
+        "rtl": false
+       },
+       {
+        "code": "hu",
+        "flag": "🇭🇺",
+        "name": "Hungarian",
+        "native": "Magyar",
+        "rtl": false
+       },
+       {
+        "code": "nl",
+        "flag": "🇳🇱",
+        "name": "Dutch",
+        "native": "Nederlands",
+        "rtl": false
+       },
+       {
+        "code": "nb",
+        "flag": "🇳🇴",
+        "name": "Norwegian",
+        "native": "Norsk",
+        "rtl": false
+       },
+       {
+        "code": "pl",
+        "flag": "🇵🇱",
+        "name": "Polish",
+        "native": "Polski",
+        "rtl": false
+       },
+       {
+        "code": "pt",
+        "flag": "🇵🇹",
+        "name": "Portuguese",
+        "native": "Português",
+        "rtl": false
+       },
+       {
+        "code": "ro",
+        "flag": "🇷🇴",
+        "name": "Romanian",
+        "native": "Română",
+        "rtl": false
+       },
+       {
+        "code": "fi",
+        "flag": "🇫🇮",
+        "name": "Finnish",
+        "native": "Suomi",
+        "rtl": false
+       },
+       {
+        "code": "sv",
+        "flag": "🇸🇪",
+        "name": "Swedish",
+        "native": "Svenska",
+        "rtl": false
+       },
+       {
+        "code": "vi",
+        "flag": "🇻🇳",
+        "name": "Vietnamese",
+        "native": "Tiếng Việt",
+        "rtl": false
+       },
+       {
+        "code": "tr",
+        "flag": "🇹🇷",
+        "name": "Turkish",
+        "native": "Türkçe",
+        "rtl": false
+       },
+       {
+        "code": "uk",
+        "flag": "🇺🇦",
+        "name": "Ukrainian",
+        "native": "Українська",
+        "rtl": false
+       },
+       {
+        "code": "ar",
+        "flag": "🇸🇦",
+        "name": "Arabic",
+        "native": "العربية",
+        "rtl": true
+       },
+       {
+        "code": "hi",
+        "flag": "🇮🇳",
+        "name": "Hindi",
+        "native": "हिन्दी",
+        "rtl": false
+       },
+       {
+        "code": "th",
+        "flag": "🇹🇭",
+        "name": "Thai",
+        "native": "ไทย",
+        "rtl": false
+       },
+       {
+        "code": "ko",
+        "flag": "🇰🇷",
+        "name": "Korean",
+        "native": "한국어",
+        "rtl": false
+       },
+       {
+        "code": "zh",
+        "flag": "🇨🇳",
+        "name": "中文",
+        "native": "中文",
+        "rtl": false
+       },
+       {
+        "code": "ja",
+        "flag": "🇯🇵",
+        "name": "Japanese",
+        "native": "日本語",
+        "rtl": false
+       },
+       {
+        "code": "zh-TW",
+        "flag": "🇹🇼",
+        "name": "Chinese (Traditional)",
+        "native": "繁體中文",
+        "rtl": false
+       }
+      ],
+      "code": "ar",
+      "dir": "rtl",
+      "stringsUrl": "/api/console/strings/ar?v=2baa6903945d1527"
+     },
+     "nav": [
+      {
+       "icon": "devices",
+       "id": "devices",
+       "pages": [
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/",
+         "keywords": "home dashboard start",
+         "page": "dashboard",
+         "text": "لوحة القيادة"
+        },
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/devices",
+         "keywords": "computers peers machines connect",
+         "page": "devices",
+         "text": "جميع الأجهزة"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/inventory",
+         "keywords": "hardware software",
+         "page": "inventory",
+         "text": "الجرد"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/cdap",
+         "keywords": "cdap iot scada sensors gateway",
+         "page": "cdap",
+         "text": "أجهزة إنترنت الأشياء (CDAP)"
+        }
+       ],
+       "text": "الأجهزة"
+      },
+      {
+       "icon": "support_agent",
+       "id": "support",
+       "pages": [
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/help-requests",
+         "keywords": "help support requests",
+         "page": "help-requests",
+         "text": "طلبات المساعدة"
+        },
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/tickets",
+         "keywords": "issues",
+         "page": "tickets",
+         "text": "Tickets"
+        },
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/chat",
+         "keywords": "messages",
+         "page": "chat",
+         "text": "Chat"
+        }
+       ],
+       "text": "الدعم"
+      },
+      {
+       "icon": "history",
+       "id": "activity",
+       "pages": [
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/security-audit",
+         "keywords": "audit log who banned security events",
+         "page": "security-audit",
+         "text": "التدقيق الأمني"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/activity",
+         "keywords": "app usage activity monitoring",
+         "page": "activity",
+         "text": "مراقبة النشاط"
+        },
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/reports",
+         "keywords": "reports export trends",
+         "page": "reports",
+         "text": "التقارير"
+        }
+       ],
+       "text": "النشاط"
+      }
+     ],
+     "palettes": {
+      "dark": {
+       "accentBlue": "#58a6ff",
+       "accentBlueHover": "#79b8ff",
+       "accentBlueMuted": "rgba(88, 166, 255, 0.15)",
+       "accentGreen": "#72c98c",
+       "accentGreenHover": "#8fd6a4",
+       "accentGreenMuted": "rgba(114, 201, 140, 0.15)",
+       "accentPurple": "#a9bcc4",
+       "accentPurpleHover": "#c2d1d7",
+       "accentPurpleMuted": "rgba(169, 188, 196, 0.15)",
+       "accentRed": "#ff8f80",
+       "accentRedHover": "#ffaba0",
+       "accentRedMuted": "rgba(255, 143, 128, 0.15)",
+       "accentYellow": "#e3b85a",
+       "accentYellowHover": "#ecc97c",
+       "accentYellowMuted": "rgba(227, 184, 90, 0.15)",
+       "bgElevated": "#1f2323",
+       "bgPrimary": "#141616",
+       "bgSecondary": "#1b1e1e",
+       "bgTertiary": "#262a2a",
+       "borderPrimary": "#6a7474",
+       "borderSecondary": "#2c3131",
+       "textPrimary": "#e4e7e7",
+       "textSecondary": "#a3abad"
+      },
+      "light": {
+       "accentBlue": "#1b62cf",
+       "accentBlueHover": "#1854b3",
+       "accentBlueMuted": "rgba(27, 98, 207, 0.15)",
+       "accentGreen": "#1c7a3b",
+       "accentGreenHover": "#135c2b",
+       "accentGreenMuted": "rgba(28, 122, 59, 0.15)",
+       "accentPurple": "#4a5a62",
+       "accentPurpleHover": "#36444b",
+       "accentPurpleMuted": "rgba(74, 90, 98, 0.15)",
+       "accentRed": "#b3261e",
+       "accentRedHover": "#8c1d17",
+       "accentRedMuted": "rgba(179, 38, 30, 0.15)",
+       "accentYellow": "#875b00",
+       "accentYellowHover": "#6b4800",
+       "accentYellowMuted": "rgba(135, 91, 0, 0.15)",
+       "bgElevated": "#ffffff",
+       "bgPrimary": "#ffffff",
+       "bgSecondary": "#f3f4f4",
+       "bgTertiary": "#e8ebeb",
+       "borderPrimary": "#7e888b",
+       "borderSecondary": "#dde1e2",
+       "textPrimary": "#1b1e1f",
+       "textSecondary": "#566064"
+      }
+     },
+     "permissions": [
+      "device.view",
+      "audit.view",
+      "metrics.view",
+      "remote_target.view",
+      "chat.access",
+      "cdap.view"
+     ],
+     "sessionPolicy": {
+      "idleTimeoutMs": 1800000,
+      "maxAgeMs": 86400000,
+      "maxSessionsPerUser": 1,
+      "warnBeforeMs": 60000
+     },
+     "success": true,
+     "user": {
+      "avatarVersion": null,
+      "id": 10,
+      "preferredLanguage": null,
+      "role": "viewer",
+      "username": "e2e_viewer"
+     }
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-store",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "branding.revision",
+     "pattern": "^[9aA+/_=-]{8}$"
+    },
+    {
+     "path": "csrfToken",
+     "pattern": "^[9aA+/_=-]{128}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "access": {
+      "catalog": [
+       {
+        "key": "dashboard",
+        "read": "device.view",
+        "write": null
+       },
+       {
+        "key": "devices",
+        "read": "device.view",
+        "write": "device.edit"
+       },
+       {
+        "key": "registrations",
+        "read": "enrollment.approve",
+        "write": "enrollment.manage"
+       },
+       {
+        "key": "remote",
+        "read": "remote_target.view",
+        "write": "remote_target.connect"
+       },
+       {
+        "key": "users",
+        "read": "user.view",
+        "write": "user.edit"
+       },
+       {
+        "key": "organizations",
+        "read": "user.view",
+        "write": "org.edit"
+       },
+       {
+        "key": "folders",
+        "read": "device.view",
+        "write": "device.edit"
+       },
+       {
+        "key": "strategies",
+        "read": "device.view",
+        "write": "device.edit"
+       },
+       {
+        "key": "guests",
+        "read": "guest.create",
+        "write": "guest.create"
+       },
+       {
+        "key": "tickets",
+        "read": "device.view",
+        "write": "device.edit"
+       },
+       {
+        "key": "help-requests",
+        "read": "device.view",
+        "write": "device.edit"
+       },
+       {
+        "key": "cdap",
+        "read": "cdap.view",
+        "write": "cdap.command"
+       },
+       {
+        "key": "fleet",
+        "read": "org.manage_devices",
+        "write": "org.manage_devices"
+       },
+       {
+        "key": "chat",
+        "read": "chat.access",
+        "write": "chat.access"
+       },
+       {
+        "key": "activity",
+        "read": "audit.view",
+        "write": null
+       },
+       {
+        "key": "automation",
+        "read": "device.view",
+        "write": "device.edit"
+       },
+       {
+        "key": "files",
+        "read": "device.view",
+        "write": "device.edit"
+       },
+       {
+        "key": "network",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "dataguard",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "reports",
+        "read": "metrics.view",
+        "write": null
+       },
+       {
+        "key": "agents",
+        "read": "device.view",
+        "write": "device.edit"
+       },
+       {
+        "key": "toolkit",
+        "read": "device.connect",
+        "write": "device.edit"
+       },
+       {
+        "key": "commercialization",
+        "read": "billing.view",
+        "write": "billing.manage"
+       },
+       {
+        "key": "scaling",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "cross-platform",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "toolkit",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "security-audit",
+        "read": "audit.view",
+        "write": "server.config"
+       },
+       {
+        "key": "languages",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "resource-control",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "system",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "permissions",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "server-management",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "settings",
+        "read": "server.config",
+        "write": "server.config"
+       },
+       {
+        "key": "server-attestation",
+        "read": "server.attestation",
+        "write": "branding.edit"
+       }
+      ],
+      "pages": [
+       {
+        "path": "/",
+        "section": "dashboard"
+       },
+       {
+        "prefix": "/inventory",
+        "section": "devices"
+       },
+       {
+        "prefix": "/tickets",
+        "section": "tickets"
+       },
+       {
+        "prefix": "/help-requests",
+        "section": "help-requests"
+       },
+       {
+        "prefix": "/automation",
+        "section": "automation"
+       },
+       {
+        "prefix": "/network",
+        "section": "network"
+       },
+       {
+        "prefix": "/registrations",
+        "section": "registrations"
+       },
+       {
+        "prefix": "/cdap",
+        "section": "cdap"
+       },
+       {
+        "prefix": "/fleet",
+        "section": "fleet"
+       },
+       {
+        "prefix": "/chat",
+        "section": "chat"
+       },
+       {
+        "prefix": "/scaling",
+        "section": "scaling"
+       },
+       {
+        "prefix": "/cross-platform",
+        "section": "cross-platform"
+       },
+       {
+        "prefix": "/reports",
+        "section": "reports"
+       },
+       {
+        "prefix": "/agents",
+        "section": "agents"
+       },
+       {
+        "prefix": "/toolkit",
+        "section": "toolkit"
+       },
+       {
+        "prefix": "/keys",
+        "section": "settings"
+       },
+       {
+        "prefix": "/tokens",
+        "section": "settings"
+       },
+       {
+        "prefix": "/policies",
+        "section": "settings"
+       },
+       {
+        "prefix": "/attestation",
+        "section": "server-attestation"
+       },
+       {
+        "prefix": "/dataguard",
+        "section": "dataguard"
+       },
+       {
+        "prefix": "/security-audit",
+        "section": "security-audit"
+       },
+       {
+        "prefix": "/permissions",
+        "section": "permissions"
+       },
+       {
+        "prefix": "/languages",
+        "section": "languages"
+       },
+       {
+        "prefix": "/resource-control",
+        "section": "resource-control"
+       },
+       {
+        "prefix": "/server-management",
+        "section": "server-management"
+       },
+       {
+        "prefix": "/client-branding",
+        "section": "settings"
+       },
+       {
+        "prefix": "/cdap-studio",
+        "section": "cdap"
+       },
+       {
+        "prefix": "/users",
+        "section": "users"
+       },
+       {
+        "prefix": "/organizations",
+        "section": "organizations"
+       },
+       {
+        "prefix": "/devices",
+        "section": "devices"
+       },
+       {
+        "prefix": "/folders",
+        "section": "folders"
+       },
+       {
+        "prefix": "/remote",
+        "section": "remote"
+       },
+       {
+        "prefix": "/settings",
+        "section": "settings"
+       },
+       {
+        "prefix": "/commercialization",
+        "section": "commercialization"
+       },
+       {
+        "prefix": "/reports",
+        "section": "reports"
+       },
+       {
+        "prefix": "/activity",
+        "section": "activity"
+       }
+      ],
+      "sections": {
+       "activity": "write",
+       "agents": "write",
+       "automation": "write",
+       "cdap": "write",
+       "chat": "write",
+       "commercialization": "write",
+       "cross-platform": "write",
+       "dashboard": "write",
+       "dataguard": "write",
+       "devices": "write",
+       "files": "write",
+       "fleet": "write",
+       "folders": "write",
+       "guests": "write",
+       "help-requests": "write",
+       "languages": "write",
+       "network": "write",
+       "organizations": "write",
+       "permissions": "write",
+       "registrations": "write",
+       "remote": "write",
+       "reports": "write",
+       "resource-control": "write",
+       "scaling": "write",
+       "security-audit": "write",
+       "server-attestation": "write",
+       "server-management": "write",
+       "settings": "write",
+       "strategies": "write",
+       "system": "write",
+       "tickets": "write",
+       "toolkit": "write",
+       "users": "write"
+      }
+     },
+     "appVersion": "3.5.224",
+     "branding": {
+      "appDescription": "BetterDesk Server Management",
+      "appName": "BetterDesk",
+      "footerText": "",
+      "logoIcon": "dns",
+      "logoSvg": "",
+      "logoText": "",
+      "logoTextAccent": "",
+      "logoType": "default",
+      "logoUrl": "",
+      "revision": "<volatile>",
+      "showPoweredBy": true,
+      "themeMode": "system"
+     },
+     "csrfToken": "<volatile>",
+     "emergencyMode": false,
+     "isSuperAdmin": true,
+     "lang": {
+      "available": [
+       {
+        "code": "id",
+        "flag": "🇮🇩",
+        "name": "Indonesian",
+        "native": "Bahasa Indonesia",
+        "rtl": false
+       },
+       {
+        "code": "cs",
+        "flag": "🇨🇿",
+        "name": "Czech",
+        "native": "Čeština",
+        "rtl": false
+       },
+       {
+        "code": "da",
+        "flag": "🇩🇰",
+        "name": "Danish",
+        "native": "Dansk",
+        "rtl": false
+       },
+       {
+        "code": "de",
+        "flag": "🇩🇪",
+        "name": "German",
+        "native": "Deutsch",
+        "rtl": false
+       },
+       {
+        "code": "en",
+        "flag": "🇬🇧",
+        "name": "English",
+        "native": "English",
+        "rtl": false
+       },
+       {
+        "code": "es",
+        "flag": "🇪🇸",
+        "name": "Spanish",
+        "native": "Español",
+        "rtl": false
+       },
+       {
+        "code": "fr",
+        "flag": "🇫🇷",
+        "name": "French",
+        "native": "Français",
+        "rtl": false
+       },
+       {
+        "code": "it",
+        "flag": "🇮🇹",
+        "name": "Italian",
+        "native": "Italiano",
+        "rtl": false
+       },
+       {
+        "code": "hu",
+        "flag": "🇭🇺",
+        "name": "Hungarian",
+        "native": "Magyar",
+        "rtl": false
+       },
+       {
+        "code": "nl",
+        "flag": "🇳🇱",
+        "name": "Dutch",
+        "native": "Nederlands",
+        "rtl": false
+       },
+       {
+        "code": "nb",
+        "flag": "🇳🇴",
+        "name": "Norwegian",
+        "native": "Norsk",
+        "rtl": false
+       },
+       {
+        "code": "pl",
+        "flag": "🇵🇱",
+        "name": "Polish",
+        "native": "Polski",
+        "rtl": false
+       },
+       {
+        "code": "pt",
+        "flag": "🇵🇹",
+        "name": "Portuguese",
+        "native": "Português",
+        "rtl": false
+       },
+       {
+        "code": "ro",
+        "flag": "🇷🇴",
+        "name": "Romanian",
+        "native": "Română",
+        "rtl": false
+       },
+       {
+        "code": "fi",
+        "flag": "🇫🇮",
+        "name": "Finnish",
+        "native": "Suomi",
+        "rtl": false
+       },
+       {
+        "code": "sv",
+        "flag": "🇸🇪",
+        "name": "Swedish",
+        "native": "Svenska",
+        "rtl": false
+       },
+       {
+        "code": "vi",
+        "flag": "🇻🇳",
+        "name": "Vietnamese",
+        "native": "Tiếng Việt",
+        "rtl": false
+       },
+       {
+        "code": "tr",
+        "flag": "🇹🇷",
+        "name": "Turkish",
+        "native": "Türkçe",
+        "rtl": false
+       },
+       {
+        "code": "uk",
+        "flag": "🇺🇦",
+        "name": "Ukrainian",
+        "native": "Українська",
+        "rtl": false
+       },
+       {
+        "code": "ar",
+        "flag": "🇸🇦",
+        "name": "Arabic",
+        "native": "العربية",
+        "rtl": true
+       },
+       {
+        "code": "hi",
+        "flag": "🇮🇳",
+        "name": "Hindi",
+        "native": "हिन्दी",
+        "rtl": false
+       },
+       {
+        "code": "th",
+        "flag": "🇹🇭",
+        "name": "Thai",
+        "native": "ไทย",
+        "rtl": false
+       },
+       {
+        "code": "ko",
+        "flag": "🇰🇷",
+        "name": "Korean",
+        "native": "한국어",
+        "rtl": false
+       },
+       {
+        "code": "zh",
+        "flag": "🇨🇳",
+        "name": "中文",
+        "native": "中文",
+        "rtl": false
+       },
+       {
+        "code": "ja",
+        "flag": "🇯🇵",
+        "name": "Japanese",
+        "native": "日本語",
+        "rtl": false
+       },
+       {
+        "code": "zh-TW",
+        "flag": "🇹🇼",
+        "name": "Chinese (Traditional)",
+        "native": "繁體中文",
+        "rtl": false
+       }
+      ],
+      "code": "ar",
+      "dir": "rtl",
+      "stringsUrl": "/api/console/strings/ar?v=2baa6903945d1527"
+     },
+     "nav": [
+      {
+       "icon": "devices",
+       "id": "devices",
+       "pages": [
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/",
+         "keywords": "home dashboard start",
+         "page": "dashboard",
+         "text": "لوحة القيادة"
+        },
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/devices",
+         "keywords": "computers peers machines connect",
+         "page": "devices",
+         "text": "جميع الأجهزة"
+        },
+        {
+         "core": true,
+         "countId": "reg-sidebar-badge",
+         "external": false,
+         "group": "",
+         "href": "/registrations",
+         "keywords": "enrollment approve new device registration pending",
+         "page": "registrations",
+         "text": "طلبات التسجيل"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/?activateAgent=1",
+         "keywords": "pair agent code activation",
+         "page": "activate-agent",
+         "text": "اقتران الوكيل"
+        },
+        {
+         "core": true,
+         "countId": null,
+         "external": true,
+         "group": "",
+         "href": "/remote",
+         "keywords": "web client browser remote control",
+         "page": "remote",
+         "text": "سطح المكتب البعيد في المتصفح"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/inventory",
+         "keywords": "hardware software",
+         "page": "inventory",
+         "text": "الجرد"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/network",
+         "keywords": "ping monitor latency targets",
+         "page": "network",
+         "text": "مراقبة الشبكة"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/fleet",
+         "keywords": "fleet bulk tasks workflows compliance",
+         "page": "fleet",
+         "text": "مهام الأسطول"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/cross-platform",
+         "keywords": "cross-platform matrix features os",
+         "page": "cross-platform",
+         "text": "دعم الأنظمة"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/cdap",
+         "keywords": "cdap iot scada sensors gateway",
+         "page": "cdap",
+         "text": "أجهزة إنترنت الأشياء (CDAP)"
+        }
+       ],
+       "text": "الأجهزة"
+      },
+      {
+       "icon": "support_agent",
+       "id": "support",
+       "pages": [
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/help-requests",
+         "keywords": "help support requests",
+         "page": "help-requests",
+         "text": "طلبات المساعدة"
+        },
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/tickets",
+         "keywords": "issues",
+         "page": "tickets",
+         "text": "Tickets"
+        },
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/chat",
+         "keywords": "messages",
+         "page": "chat",
+         "text": "Chat"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/toolkit",
+         "keywords": "toolkit ping dns port ssl diagnostics",
+         "page": "toolkit",
+         "text": "أدوات الشبكة"
+        }
+       ],
+       "text": "الدعم"
+      },
+      {
+       "icon": "group",
+       "id": "people",
+       "pages": [
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/users",
+         "keywords": "accounts people operators",
+         "page": "users",
+         "text": "المستخدمون"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/organizations",
+         "keywords": "tenants customers",
+         "page": "organizations",
+         "text": "المنظمات"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/permissions",
+         "keywords": "roles rights access",
+         "page": "permissions",
+         "text": "الأدوار والصلاحيات"
+        }
+       ],
+       "text": "الأشخاص"
+      },
+      {
+       "icon": "history",
+       "id": "activity",
+       "pages": [
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/security-audit",
+         "keywords": "audit log who banned security events",
+         "page": "security-audit",
+         "text": "التدقيق الأمني"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/activity",
+         "keywords": "app usage activity monitoring",
+         "page": "activity",
+         "text": "مراقبة النشاط"
+        },
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/reports",
+         "keywords": "reports export trends",
+         "page": "reports",
+         "text": "التقارير"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/commercialization?tab=sessions",
+         "keywords": "sessions billing minutes work reports",
+         "page": "commercialization:sessions",
+         "text": "الجلسات القابلة للفوترة"
+        }
+       ],
+       "text": "النشاط"
+      },
+      {
+       "icon": "settings",
+       "id": "settings",
+       "pages": [
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "وحدة التحكم",
+         "href": "/settings",
+         "keywords": "settings relay address public endpoints connection strategy meshcentral",
+         "page": "settings:general",
+         "text": "عام"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "وحدة التحكم",
+         "href": "/settings?tab=branding",
+         "keywords": "branding theme colours colors logo dark mode",
+         "page": "settings:branding",
+         "text": "المظهر"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "وحدة التحكم",
+         "href": "/settings?tab=auth",
+         "keywords": "authentication 2fa two-factor totp password ldap sso oidc",
+         "page": "settings:auth",
+         "text": "تسجيل الدخول"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "وحدة التحكم",
+         "href": "/settings?tab=backup",
+         "keywords": "backup restore",
+         "page": "settings:backup",
+         "text": "Backup"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "وحدة التحكم",
+         "href": "/settings?tab=updates",
+         "keywords": "updates version upgrade",
+         "page": "settings:updates",
+         "text": "Updates"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "وحدة التحكم",
+         "href": "/settings?tab=email",
+         "keywords": "email smtp mail",
+         "page": "settings:email",
+         "text": "Email"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "وحدة التحكم",
+         "href": "/settings?tab=time",
+         "keywords": "time zone timezone ntp clock",
+         "page": "settings:time",
+         "text": "المناطق الزمنية"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "وحدة التحكم",
+         "href": "/settings?tab=advanced",
+         "keywords": "advanced config files restart",
+         "page": "settings:advanced",
+         "text": "متقدم"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "وحدة التحكم",
+         "href": "/languages",
+         "keywords": "languages translations i18n",
+         "page": "languages",
+         "text": "الترجمات"
+        },
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "العملاء والتسجيل",
+         "href": "/keys",
+         "keywords": "keys public key qr client setup rustdesk config",
+         "page": "keys",
+         "text": "إعداد العميل"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "العملاء والتسجيل",
+         "href": "/tokens",
+         "keywords": "tokens enrollment mode",
+         "page": "tokens",
+         "text": "رموز الجهاز"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "العملاء والتسجيل",
+         "href": "/pairing",
+         "keywords": "pairing code",
+         "page": "pairing",
+         "text": "رموز الإقران"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "العملاء والتسجيل",
+         "href": "/agents",
+         "keywords": "agents installers generator",
+         "page": "agents",
+         "text": "وكلاء الدعم"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "العملاء والتسجيل",
+         "href": "/client-branding",
+         "keywords": "client branding white label",
+         "page": "client-branding",
+         "text": "علامة تطبيق العميل"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "القواعد",
+         "href": "/policies",
+         "keywords": "policies rules",
+         "page": "policies",
+         "text": "السياسات"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "القواعد",
+         "href": "/automation",
+         "keywords": "automation alerts commands",
+         "page": "automation",
+         "text": "التنبيهات والأتمتة"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "القواعد",
+         "href": "/resource-control",
+         "keywords": "resource control usb drives disks",
+         "page": "resource-control",
+         "text": "الوصول إلى USB والأقراص"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "القواعد",
+         "href": "/dataguard",
+         "keywords": "dataguard dlp data loss",
+         "page": "dataguard",
+         "text": "منع فقدان البيانات"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "القواعد",
+         "href": "/attestation",
+         "keywords": "attestation fingerprint hardware identity",
+         "page": "attestation",
+         "text": "هوية الجهاز"
+        },
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "الخادم",
+         "href": "/server-management?tab=overview",
+         "keywords": "server management status health cpu memory uptime",
+         "page": "server-management:overview",
+         "text": "حالة الخادم"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "الخادم",
+         "href": "/server-management?tab=terminal",
+         "keywords": "shell console ssh",
+         "page": "server-management:terminal",
+         "text": "الطرفية"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "الخادم",
+         "href": "/server-management?tab=files",
+         "keywords": "file browser",
+         "page": "server-management:files",
+         "text": "الملفات"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "الخادم",
+         "href": "/server-management?tab=services",
+         "keywords": "systemd services",
+         "page": "server-management:services",
+         "text": "الخدمات"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "الخادم",
+         "href": "/scaling",
+         "keywords": "scaling relays",
+         "page": "scaling",
+         "text": "خوادم الترحيل"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "الخادم",
+         "href": "/server-attestation",
+         "keywords": "server attestation benchmark load test badge",
+         "page": "server-attestation",
+         "text": "اختبار السعة"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "الفوترة",
+         "href": "/commercialization?tab=packages",
+         "keywords": "packages contracts billing",
+         "page": "commercialization:packages",
+         "text": "باقات الفوترة"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "أدوات المطورين",
+         "href": "/cdap-studio",
+         "keywords": "sdk studio flows widgets",
+         "page": "cdap-studio",
+         "text": "محرر التدفقات (SDK)"
+        }
+       ],
+       "text": "إعدادات"
+      }
+     ],
+     "palettes": {
+      "dark": {
+       "accentBlue": "#58a6ff",
+       "accentBlueHover": "#79b8ff",
+       "accentBlueMuted": "rgba(88, 166, 255, 0.15)",
+       "accentGreen": "#72c98c",
+       "accentGreenHover": "#8fd6a4",
+       "accentGreenMuted": "rgba(114, 201, 140, 0.15)",
+       "accentPurple": "#a9bcc4",
+       "accentPurpleHover": "#c2d1d7",
+       "accentPurpleMuted": "rgba(169, 188, 196, 0.15)",
+       "accentRed": "#ff8f80",
+       "accentRedHover": "#ffaba0",
+       "accentRedMuted": "rgba(255, 143, 128, 0.15)",
+       "accentYellow": "#e3b85a",
+       "accentYellowHover": "#ecc97c",
+       "accentYellowMuted": "rgba(227, 184, 90, 0.15)",
+       "bgElevated": "#1f2323",
+       "bgPrimary": "#141616",
+       "bgSecondary": "#1b1e1e",
+       "bgTertiary": "#262a2a",
+       "borderPrimary": "#6a7474",
+       "borderSecondary": "#2c3131",
+       "textPrimary": "#e4e7e7",
+       "textSecondary": "#a3abad"
+      },
+      "light": {
+       "accentBlue": "#1b62cf",
+       "accentBlueHover": "#1854b3",
+       "accentBlueMuted": "rgba(27, 98, 207, 0.15)",
+       "accentGreen": "#1c7a3b",
+       "accentGreenHover": "#135c2b",
+       "accentGreenMuted": "rgba(28, 122, 59, 0.15)",
+       "accentPurple": "#4a5a62",
+       "accentPurpleHover": "#36444b",
+       "accentPurpleMuted": "rgba(74, 90, 98, 0.15)",
+       "accentRed": "#b3261e",
+       "accentRedHover": "#8c1d17",
+       "accentRedMuted": "rgba(179, 38, 30, 0.15)",
+       "accentYellow": "#875b00",
+       "accentYellowHover": "#6b4800",
+       "accentYellowMuted": "rgba(135, 91, 0, 0.15)",
+       "bgElevated": "#ffffff",
+       "bgPrimary": "#ffffff",
+       "bgSecondary": "#f3f4f4",
+       "bgTertiary": "#e8ebeb",
+       "borderPrimary": "#7e888b",
+       "borderSecondary": "#dde1e2",
+       "textPrimary": "#1b1e1f",
+       "textSecondary": "#566064"
+      }
+     },
+     "permissions": [
+      "server.config",
+      "server.keys",
+      "server.attestation",
+      "blocklist.edit",
+      "device.edit",
+      "device.view",
+      "device.connect",
+      "device.ban",
+      "device.delete",
+      "device.connection_mode",
+      "device.change_id",
+      "org.manage_devices",
+      "org.manage_users",
+      "org.create",
+      "org.edit",
+      "org.delete",
+      "branding.edit",
+      "enrollment.approve",
+      "enrollment.manage",
+      "billing.view",
+      "billing.manage",
+      "billing.reports",
+      "billing.export",
+      "audit.view",
+      "user.view",
+      "user.create",
+      "user.edit",
+      "user.delete",
+      "metrics.view",
+      "remote_target.view",
+      "remote_target.edit",
+      "remote_target.delete",
+      "remote_target.connect",
+      "remote_target.test",
+      "guest.create",
+      "chat.access",
+      "cdap.view",
+      "cdap.command",
+      "cdap.terminal",
+      "cdap.files",
+      "mesh.terminal",
+      "mesh.power",
+      "mesh.files"
+     ],
+     "sessionPolicy": {
+      "idleTimeoutMs": 1800000,
+      "maxAgeMs": 86400000,
+      "maxSessionsPerUser": 1,
+      "warnBeforeMs": 60000
+     },
+     "success": true,
+     "user": {
+      "avatarVersion": null,
+      "id": 5,
+      "preferredLanguage": null,
+      "role": "admin",
+      "username": "e2e_admin"
+     }
+    }
+   }
+  }
+ ]
+}

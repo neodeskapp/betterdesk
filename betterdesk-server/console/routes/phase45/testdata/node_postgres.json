@@ -1,0 +1,2917 @@
+{
+ "dialect": "postgres",
+ "seed": [
+  [
+   "UPDATE users SET first_name = ?, last_name = ?, email = ?, phone = ?, role_display = ?, avatar_url = ? WHERE id = ?",
+   [
+    "Grace",
+    "Hopper",
+    "grace@example.test",
+    "+1 555",
+    "Rear admiral",
+    "",
+    1
+   ]
+  ],
+  [
+   "UPDATE users SET first_name = ?, last_name = ?, email = ?, phone = ?, role_display = ?, avatar_url = ? WHERE id = ?",
+   [
+    "",
+    "Only",
+    "",
+    "",
+    "",
+    "https://pictures.example.test/a.png",
+    2
+   ]
+  ],
+  [
+   "UPDATE users SET first_name = NULL, last_name = NULL, email = NULL, phone = NULL, role_display = NULL, avatar_url = NULL WHERE id = ?",
+   [
+    4
+   ]
+  ],
+  [
+   "UPDATE users SET first_name = ?, last_name = ?, phone = ? WHERE id = ?",
+   [
+    "42",
+    "1.5",
+    "0",
+    5
+   ]
+  ]
+ ],
+ "steps": [
+  {
+   "name": "1 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"Grace\",\"last_name\":\"Hopper\",\"email\":\"grace@example.test\",\"phone\":\"+1 555\",\"role_display\":\"Rear admiral\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "2 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"Grace Hopper\",\"username\":\"e2e_admin\",\"role_display\":\"Rear admiral\",\"email\":\"grace@example.test\",\"phone\":\"+1 555\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "3 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"\",\"last_name\":\"Only\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"https://pictures.example.test/a.png\"}}",
+   "extra": {}
+  },
+  {
+   "name": "4 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"Only\",\"username\":\"e2e_super_admin\",\"role_display\":\"super_admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"https://pictures.example.test/a.png\"}}",
+   "extra": {}
+  },
+  {
+   "name": "5 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "6 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_global_admin\",\"username\":\"e2e_global_admin\",\"role_display\":\"global_admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "7 GET /api/users/me/profile",
+   "role": "operator",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":5,\"username\":\"e2e_operator\",\"role\":\"operator\",\"first_name\":\"42\",\"last_name\":\"1.5\",\"email\":\"\",\"phone\":\"0\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "8 GET /api/bd/operator-info",
+   "role": "operator",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"42 1.5\",\"username\":\"e2e_operator\",\"role_display\":\"operator\",\"email\":\"\",\"phone\":\"0\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "9 GET /api/users/me/profile",
+   "role": "",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 401,
+   "answer": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}",
+   "extra": {}
+  },
+  {
+   "name": "10 GET /api/bd/operator-info",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 401,
+   "answer": "{\"success\":false,\"error\":\"unauthorized\"}",
+   "extra": {}
+  },
+  {
+   "name": "11 GET /api/bd/operator-info?session_id=abc",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info?session_id=abc",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"abc\",\"operator\":{\"display_name\":\"Grace Hopper\",\"username\":\"e2e_admin\",\"role_display\":\"Rear admiral\",\"email\":\"grace@example.test\",\"phone\":\"+1 555\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "12 GET /api/bd/operator-info?session_id=ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info?session_id=ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"operator\":{\"display_name\":\"Grace Hopper\",\"username\":\"e2e_admin\",\"role_display\":\"Rear admiral\",\"email\":\"grace@example.test\",\"phone\":\"+1 555\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "13 GET /api/bd/operator-info?session_id=a&session_id=b",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info?session_id=a&session_id=b",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"a,b\",\"operator\":{\"display_name\":\"Grace Hopper\",\"username\":\"e2e_admin\",\"role_display\":\"Rear admiral\",\"email\":\"grace@example.test\",\"phone\":\"+1 555\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "14 GET /api/bd/operator-info?session_id[x]=1",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info?session_id[x]=1",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"[object Object]\",\"operator\":{\"display_name\":\"Grace Hopper\",\"username\":\"e2e_admin\",\"role_display\":\"Rear admiral\",\"email\":\"grace@example.test\",\"phone\":\"+1 555\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "15 GET /api/bd/operator-info?session_id[toString]=1",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/operator-info?session_id[toString]=1",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 500,
+   "answer": "{\"success\":false,\"error\":\"Cannot convert object to primitive value\"}",
+   "extra": {}
+  },
+  {
+   "name": "16 GET /api/bd/operator-info?session_id=",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/operator-info?session_id=",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 401,
+   "answer": "{\"success\":false,\"error\":\"unauthorized\"}",
+   "extra": {}
+  },
+  {
+   "name": "17 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "18 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "19 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_admin\",\"username\":\"e2e_admin\",\"role_display\":\"admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "20 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"first_name\":\"Ada\",\"last_name\":\"Lovelace\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"role_display\":\"Eng\",\"avatar_url\":\"not-an-address\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"failed\",\"avatar_error\":\"invalid_url\"}",
+   "extra": {}
+  },
+  {
+   "name": "21 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"Ada\",\"last_name\":\"Lovelace\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"role_display\":\"Eng\",\"avatar_url\":\"not-an-address\"}}",
+   "extra": {}
+  },
+  {
+   "name": "22 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"Ada Lovelace\",\"username\":\"e2e_admin\",\"role_display\":\"Eng\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"avatar_url\":\"not-an-address\"}}",
+   "extra": {}
+  },
+  {
+   "name": "23 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"first_name\":\"Ada\",\"last_name\":\"Lovelace\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"role_display\":\"Eng\",\"avatar_url\":\"not-an-address\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"failed\",\"avatar_error\":\"invalid_url\"}",
+   "extra": {}
+  },
+  {
+   "name": "24 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"Ada\",\"last_name\":\"Lovelace\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"role_display\":\"Eng\",\"avatar_url\":\"not-an-address\"}}",
+   "extra": {}
+  },
+  {
+   "name": "25 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"Ada Lovelace\",\"username\":\"e2e_admin\",\"role_display\":\"Eng\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"avatar_url\":\"not-an-address\"}}",
+   "extra": {}
+  },
+  {
+   "name": "26 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"phone\":\"555\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "27 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"555\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "28 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_admin\",\"username\":\"e2e_admin\",\"role_display\":\"admin\",\"email\":\"\",\"phone\":\"555\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "29 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"first_name\":42,\"last_name\":true,\"email\":1e+21,\"phone\":null,\"role_display\":[\"a\",1,null],\"avatar_url\":\"\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "30 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"42\",\"last_name\":\"true\",\"email\":\"1e+21\",\"phone\":\"\",\"role_display\":\"a,1,\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "31 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"42 true\",\"username\":\"e2e_admin\",\"role_display\":\"a,1,\",\"email\":\"1e+21\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "32 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"first_name\":{\"a\":1},\"role_display\":[]}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "33 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"[object Object]\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "34 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"[object Object]\",\"username\":\"e2e_admin\",\"role_display\":\"admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "35 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"first_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"last_name\":\"üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü😀\",\"phone\":\"  padded  \",\"avatar_url\":\"  uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu  \"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"failed\",\"avatar_error\":\"invalid_url\"}",
+   "extra": {}
+  },
+  {
+   "name": "36 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"last_name\":\"üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü�\",\"email\":\"\",\"phone\":\"  padded  \",\"role_display\":\"\",\"avatar_url\":\"  uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\"}}",
+   "extra": {}
+  },
+  {
+   "name": "37 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü�\",\"username\":\"e2e_admin\",\"role_display\":\"admin\",\"email\":\"\",\"phone\":\"  padded  \",\"avatar_url\":\"  uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\"}}",
+   "extra": {}
+  },
+  {
+   "name": "38 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"email_too_long\"}",
+   "extra": {}
+  },
+  {
+   "name": "39 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"last_name\":\"üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü�\",\"email\":\"\",\"phone\":\"  padded  \",\"role_display\":\"\",\"avatar_url\":\"  uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\"}}",
+   "extra": {}
+  },
+  {
+   "name": "40 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü�\",\"username\":\"e2e_admin\",\"role_display\":\"admin\",\"email\":\"\",\"phone\":\"  padded  \",\"avatar_url\":\"  uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\"}}",
+   "extra": {}
+  },
+  {
+   "name": "41 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "42 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "43 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_admin\",\"username\":\"e2e_admin\",\"role_display\":\"admin\",\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "44 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\"}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"email_too_long\"}",
+   "extra": {}
+  },
+  {
+   "name": "45 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "46 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_admin\",\"username\":\"e2e_admin\",\"role_display\":\"admin\",\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "47 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":123456}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "48 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"123456\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "49 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_admin\",\"username\":\"e2e_admin\",\"role_display\":\"admin\",\"email\":\"123456\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "50 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":{\"toString\":1}}",
+   "status": 500,
+   "answer": "{\"success\":false,\"error\":\"Cannot convert object to primitive value\"}",
+   "extra": {}
+  },
+  {
+   "name": "51 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"123456\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "52 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_admin\",\"username\":\"e2e_admin\",\"role_display\":\"admin\",\"email\":\"123456\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "53 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"last_name\":{\"toString\":1}}",
+   "status": 500,
+   "answer": "{\"success\":false,\"error\":\"Cannot convert object to primitive value\"}",
+   "extra": {}
+  },
+  {
+   "name": "54 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"123456\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "55 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_admin\",\"username\":\"e2e_admin\",\"role_display\":\"admin\",\"email\":\"123456\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "56 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"avatar_url\":{\"toString\":1}}",
+   "status": 500,
+   "answer": "{\"success\":false,\"error\":\"Cannot convert object to primitive value\"}",
+   "extra": {}
+  },
+  {
+   "name": "57 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"123456\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "58 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_admin\",\"username\":\"e2e_admin\",\"role_display\":\"admin\",\"email\":\"123456\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "59 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":\"\",\"avatar_url\":null}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "60 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "61 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_admin\",\"username\":\"e2e_admin\",\"role_display\":\"admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "62 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"avatar_url\":\"ftp://example.test/a.png\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"failed\",\"avatar_error\":\"invalid_url\"}",
+   "extra": {}
+  },
+  {
+   "name": "63 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"ftp://example.test/a.png\"}}",
+   "extra": {}
+  },
+  {
+   "name": "64 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_admin\",\"username\":\"e2e_admin\",\"role_display\":\"admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"ftp://example.test/a.png\"}}",
+   "extra": {}
+  },
+  {
+   "name": "65 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"avatar_url\":\"ftp://example.test/a.png\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"failed\",\"avatar_error\":\"invalid_url\"}",
+   "extra": {}
+  },
+  {
+   "name": "66 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"ftp://example.test/a.png\"}}",
+   "extra": {}
+  },
+  {
+   "name": "67 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_admin\",\"username\":\"e2e_admin\",\"role_display\":\"admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"ftp://example.test/a.png\"}}",
+   "extra": {}
+  },
+  {
+   "name": "68 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"avatar_url\":\"\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"skipped\"}",
+   "extra": {}
+  },
+  {
+   "name": "69 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "70 GET /api/bd/operator-info",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_admin\",\"username\":\"e2e_admin\",\"role_display\":\"admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "71 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "72 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "73 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_super_admin\",\"username\":\"e2e_super_admin\",\"role_display\":\"super_admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "74 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"first_name\":\"Ada\",\"last_name\":\"Lovelace\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"role_display\":\"Eng\",\"avatar_url\":\"not-an-address\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"failed\",\"avatar_error\":\"invalid_url\"}",
+   "extra": {}
+  },
+  {
+   "name": "75 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"Ada\",\"last_name\":\"Lovelace\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"role_display\":\"Eng\",\"avatar_url\":\"not-an-address\"}}",
+   "extra": {}
+  },
+  {
+   "name": "76 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"Ada Lovelace\",\"username\":\"e2e_super_admin\",\"role_display\":\"Eng\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"avatar_url\":\"not-an-address\"}}",
+   "extra": {}
+  },
+  {
+   "name": "77 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"first_name\":\"Ada\",\"last_name\":\"Lovelace\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"role_display\":\"Eng\",\"avatar_url\":\"not-an-address\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"failed\",\"avatar_error\":\"invalid_url\"}",
+   "extra": {}
+  },
+  {
+   "name": "78 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"Ada\",\"last_name\":\"Lovelace\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"role_display\":\"Eng\",\"avatar_url\":\"not-an-address\"}}",
+   "extra": {}
+  },
+  {
+   "name": "79 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"Ada Lovelace\",\"username\":\"e2e_super_admin\",\"role_display\":\"Eng\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"avatar_url\":\"not-an-address\"}}",
+   "extra": {}
+  },
+  {
+   "name": "80 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"phone\":\"555\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "81 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"555\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "82 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_super_admin\",\"username\":\"e2e_super_admin\",\"role_display\":\"super_admin\",\"email\":\"\",\"phone\":\"555\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "83 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"first_name\":42,\"last_name\":true,\"email\":1e+21,\"phone\":null,\"role_display\":[\"a\",1,null],\"avatar_url\":\"\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "84 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"42\",\"last_name\":\"true\",\"email\":\"1e+21\",\"phone\":\"\",\"role_display\":\"a,1,\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "85 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"42 true\",\"username\":\"e2e_super_admin\",\"role_display\":\"a,1,\",\"email\":\"1e+21\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "86 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"first_name\":{\"a\":1},\"role_display\":[]}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "87 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"[object Object]\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "88 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"[object Object]\",\"username\":\"e2e_super_admin\",\"role_display\":\"super_admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "89 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"first_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"last_name\":\"üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü😀\",\"phone\":\"  padded  \",\"avatar_url\":\"  uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu  \"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"failed\",\"avatar_error\":\"invalid_url\"}",
+   "extra": {}
+  },
+  {
+   "name": "90 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"last_name\":\"üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü�\",\"email\":\"\",\"phone\":\"  padded  \",\"role_display\":\"\",\"avatar_url\":\"  uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\"}}",
+   "extra": {}
+  },
+  {
+   "name": "91 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü�\",\"username\":\"e2e_super_admin\",\"role_display\":\"super_admin\",\"email\":\"\",\"phone\":\"  padded  \",\"avatar_url\":\"  uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\"}}",
+   "extra": {}
+  },
+  {
+   "name": "92 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"email_too_long\"}",
+   "extra": {}
+  },
+  {
+   "name": "93 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"last_name\":\"üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü�\",\"email\":\"\",\"phone\":\"  padded  \",\"role_display\":\"\",\"avatar_url\":\"  uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\"}}",
+   "extra": {}
+  },
+  {
+   "name": "94 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü�\",\"username\":\"e2e_super_admin\",\"role_display\":\"super_admin\",\"email\":\"\",\"phone\":\"  padded  \",\"avatar_url\":\"  uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\"}}",
+   "extra": {}
+  },
+  {
+   "name": "95 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "96 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "97 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_super_admin\",\"username\":\"e2e_super_admin\",\"role_display\":\"super_admin\",\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "98 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\"}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"email_too_long\"}",
+   "extra": {}
+  },
+  {
+   "name": "99 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "100 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_super_admin\",\"username\":\"e2e_super_admin\",\"role_display\":\"super_admin\",\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "101 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":123456}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "102 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"123456\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "103 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_super_admin\",\"username\":\"e2e_super_admin\",\"role_display\":\"super_admin\",\"email\":\"123456\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "104 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":{\"toString\":1}}",
+   "status": 500,
+   "answer": "{\"success\":false,\"error\":\"Cannot convert object to primitive value\"}",
+   "extra": {}
+  },
+  {
+   "name": "105 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"123456\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "106 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_super_admin\",\"username\":\"e2e_super_admin\",\"role_display\":\"super_admin\",\"email\":\"123456\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "107 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"last_name\":{\"toString\":1}}",
+   "status": 500,
+   "answer": "{\"success\":false,\"error\":\"Cannot convert object to primitive value\"}",
+   "extra": {}
+  },
+  {
+   "name": "108 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"123456\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "109 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_super_admin\",\"username\":\"e2e_super_admin\",\"role_display\":\"super_admin\",\"email\":\"123456\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "110 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"avatar_url\":{\"toString\":1}}",
+   "status": 500,
+   "answer": "{\"success\":false,\"error\":\"Cannot convert object to primitive value\"}",
+   "extra": {}
+  },
+  {
+   "name": "111 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"123456\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "112 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_super_admin\",\"username\":\"e2e_super_admin\",\"role_display\":\"super_admin\",\"email\":\"123456\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "113 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":\"\",\"avatar_url\":null}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "114 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "115 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_super_admin\",\"username\":\"e2e_super_admin\",\"role_display\":\"super_admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "116 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"avatar_url\":\"ftp://example.test/a.png\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"failed\",\"avatar_error\":\"invalid_url\"}",
+   "extra": {}
+  },
+  {
+   "name": "117 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"ftp://example.test/a.png\"}}",
+   "extra": {}
+  },
+  {
+   "name": "118 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_super_admin\",\"username\":\"e2e_super_admin\",\"role_display\":\"super_admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"ftp://example.test/a.png\"}}",
+   "extra": {}
+  },
+  {
+   "name": "119 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"avatar_url\":\"ftp://example.test/a.png\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"failed\",\"avatar_error\":\"invalid_url\"}",
+   "extra": {}
+  },
+  {
+   "name": "120 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"ftp://example.test/a.png\"}}",
+   "extra": {}
+  },
+  {
+   "name": "121 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_super_admin\",\"username\":\"e2e_super_admin\",\"role_display\":\"super_admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"ftp://example.test/a.png\"}}",
+   "extra": {}
+  },
+  {
+   "name": "122 PUT /api/users/me/profile",
+   "role": "super_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"avatar_url\":\"\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"skipped\"}",
+   "extra": {}
+  },
+  {
+   "name": "123 GET /api/users/me/profile",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":2,\"username\":\"e2e_super_admin\",\"role\":\"super_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "124 GET /api/bd/operator-info",
+   "role": "super_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_super_admin\",\"username\":\"e2e_super_admin\",\"role_display\":\"super_admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "125 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "126 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "127 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_global_admin\",\"username\":\"e2e_global_admin\",\"role_display\":\"global_admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "128 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"first_name\":\"Ada\",\"last_name\":\"Lovelace\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"role_display\":\"Eng\",\"avatar_url\":\"not-an-address\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"failed\",\"avatar_error\":\"invalid_url\"}",
+   "extra": {}
+  },
+  {
+   "name": "129 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"Ada\",\"last_name\":\"Lovelace\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"role_display\":\"Eng\",\"avatar_url\":\"not-an-address\"}}",
+   "extra": {}
+  },
+  {
+   "name": "130 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"Ada Lovelace\",\"username\":\"e2e_global_admin\",\"role_display\":\"Eng\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"avatar_url\":\"not-an-address\"}}",
+   "extra": {}
+  },
+  {
+   "name": "131 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"first_name\":\"Ada\",\"last_name\":\"Lovelace\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"role_display\":\"Eng\",\"avatar_url\":\"not-an-address\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"failed\",\"avatar_error\":\"invalid_url\"}",
+   "extra": {}
+  },
+  {
+   "name": "132 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"Ada\",\"last_name\":\"Lovelace\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"role_display\":\"Eng\",\"avatar_url\":\"not-an-address\"}}",
+   "extra": {}
+  },
+  {
+   "name": "133 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"Ada Lovelace\",\"username\":\"e2e_global_admin\",\"role_display\":\"Eng\",\"email\":\"ada@example.test\",\"phone\":\"1\",\"avatar_url\":\"not-an-address\"}}",
+   "extra": {}
+  },
+  {
+   "name": "134 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"phone\":\"555\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "135 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"555\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "136 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_global_admin\",\"username\":\"e2e_global_admin\",\"role_display\":\"global_admin\",\"email\":\"\",\"phone\":\"555\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "137 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"first_name\":42,\"last_name\":true,\"email\":1e+21,\"phone\":null,\"role_display\":[\"a\",1,null],\"avatar_url\":\"\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "138 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"42\",\"last_name\":\"true\",\"email\":\"1e+21\",\"phone\":\"\",\"role_display\":\"a,1,\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "139 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"42 true\",\"username\":\"e2e_global_admin\",\"role_display\":\"a,1,\",\"email\":\"1e+21\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "140 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"first_name\":{\"a\":1},\"role_display\":[]}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "141 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"[object Object]\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "142 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"[object Object]\",\"username\":\"e2e_global_admin\",\"role_display\":\"global_admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "143 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"first_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"last_name\":\"üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü😀\",\"phone\":\"  padded  \",\"avatar_url\":\"  uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu  \"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"failed\",\"avatar_error\":\"invalid_url\"}",
+   "extra": {}
+  },
+  {
+   "name": "144 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"last_name\":\"üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü�\",\"email\":\"\",\"phone\":\"  padded  \",\"role_display\":\"\",\"avatar_url\":\"  uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\"}}",
+   "extra": {}
+  },
+  {
+   "name": "145 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü�\",\"username\":\"e2e_global_admin\",\"role_display\":\"global_admin\",\"email\":\"\",\"phone\":\"  padded  \",\"avatar_url\":\"  uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\"}}",
+   "extra": {}
+  },
+  {
+   "name": "146 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"email_too_long\"}",
+   "extra": {}
+  },
+  {
+   "name": "147 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"last_name\":\"üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü�\",\"email\":\"\",\"phone\":\"  padded  \",\"role_display\":\"\",\"avatar_url\":\"  uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\"}}",
+   "extra": {}
+  },
+  {
+   "name": "148 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü�\",\"username\":\"e2e_global_admin\",\"role_display\":\"global_admin\",\"email\":\"\",\"phone\":\"  padded  \",\"avatar_url\":\"  uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\"}}",
+   "extra": {}
+  },
+  {
+   "name": "149 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "150 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "151 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_global_admin\",\"username\":\"e2e_global_admin\",\"role_display\":\"global_admin\",\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "152 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\"}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"email_too_long\"}",
+   "extra": {}
+  },
+  {
+   "name": "153 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "154 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_global_admin\",\"username\":\"e2e_global_admin\",\"role_display\":\"global_admin\",\"email\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "155 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":123456}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "156 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"123456\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "157 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_global_admin\",\"username\":\"e2e_global_admin\",\"role_display\":\"global_admin\",\"email\":\"123456\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "158 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":{\"toString\":1}}",
+   "status": 500,
+   "answer": "{\"success\":false,\"error\":\"Cannot convert object to primitive value\"}",
+   "extra": {}
+  },
+  {
+   "name": "159 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"123456\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "160 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_global_admin\",\"username\":\"e2e_global_admin\",\"role_display\":\"global_admin\",\"email\":\"123456\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "161 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"last_name\":{\"toString\":1}}",
+   "status": 500,
+   "answer": "{\"success\":false,\"error\":\"Cannot convert object to primitive value\"}",
+   "extra": {}
+  },
+  {
+   "name": "162 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"123456\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "163 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_global_admin\",\"username\":\"e2e_global_admin\",\"role_display\":\"global_admin\",\"email\":\"123456\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "164 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"avatar_url\":{\"toString\":1}}",
+   "status": 500,
+   "answer": "{\"success\":false,\"error\":\"Cannot convert object to primitive value\"}",
+   "extra": {}
+  },
+  {
+   "name": "165 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"123456\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "166 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_global_admin\",\"username\":\"e2e_global_admin\",\"role_display\":\"global_admin\",\"email\":\"123456\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "167 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"email\":\"\",\"avatar_url\":null}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "168 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "169 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_global_admin\",\"username\":\"e2e_global_admin\",\"role_display\":\"global_admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "170 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"avatar_url\":\"ftp://example.test/a.png\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"failed\",\"avatar_error\":\"invalid_url\"}",
+   "extra": {}
+  },
+  {
+   "name": "171 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"ftp://example.test/a.png\"}}",
+   "extra": {}
+  },
+  {
+   "name": "172 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_global_admin\",\"username\":\"e2e_global_admin\",\"role_display\":\"global_admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"ftp://example.test/a.png\"}}",
+   "extra": {}
+  },
+  {
+   "name": "173 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"avatar_url\":\"ftp://example.test/a.png\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"failed\",\"avatar_error\":\"invalid_url\"}",
+   "extra": {}
+  },
+  {
+   "name": "174 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"ftp://example.test/a.png\"}}",
+   "extra": {}
+  },
+  {
+   "name": "175 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_global_admin\",\"username\":\"e2e_global_admin\",\"role_display\":\"global_admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"ftp://example.test/a.png\"}}",
+   "extra": {}
+  },
+  {
+   "name": "176 PUT /api/users/me/profile",
+   "role": "global_admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"avatar_url\":\"\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"skipped\"}",
+   "extra": {}
+  },
+  {
+   "name": "177 GET /api/users/me/profile",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":4,\"username\":\"e2e_global_admin\",\"role\":\"global_admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "178 GET /api/bd/operator-info",
+   "role": "global_admin",
+   "method": "GET",
+   "path": "/api/bd/operator-info",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"\",\"operator\":{\"display_name\":\"e2e_global_admin\",\"username\":\"e2e_global_admin\",\"role_display\":\"global_admin\",\"email\":\"\",\"phone\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "179 PUT /api/users/me/profile",
+   "role": "admin",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "[\"first_name\"]",
+   "status": 200,
+   "answer": "{\"success\":true,\"avatar\":\"unchanged\"}",
+   "extra": {}
+  },
+  {
+   "name": "180 GET /api/users/me/profile",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"profile\":{\"id\":1,\"username\":\"e2e_admin\",\"role\":\"admin\",\"first_name\":\"\",\"last_name\":\"\",\"email\":\"\",\"phone\":\"\",\"role_display\":\"\",\"avatar_url\":\"\"}}",
+   "extra": {}
+  },
+  {
+   "name": "181 PUT /api/users/me/profile",
+   "role": "",
+   "method": "PUT",
+   "path": "/api/users/me/profile",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"first_name\":\"x\"}",
+   "status": 401,
+   "answer": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}",
+   "extra": {}
+  },
+  {
+   "name": "audit",
+   "sql": "SELECT action, details, user_id FROM audit_log ORDER BY id",
+   "params": [],
+   "rows": "[{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":1},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":1},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":1},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":1},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":1},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":1},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":1},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":1},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":1},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":1},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":1},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":1},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":1},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":2},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":2},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":2},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":2},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":2},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":2},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":2},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":2},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":2},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":2},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":2},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":2},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":2},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":4},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":4},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":4},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":4},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":4},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":4},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":4},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":4},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":4},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":4},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":4},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":4},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":4},{\"action\":\"profile_updated\",\"details\":\"Updated operator profile\",\"user_id\":1}]"
+  },
+  {
+   "name": "pictures",
+   "sql": "SELECT user_id, source FROM user_avatars ORDER BY user_id",
+   "params": [],
+   "rows": "[]"
+  },
+  {
+   "name": "182 GET /api/agent-templates",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"templates\":[]}",
+   "extra": {}
+  },
+  {
+   "name": "183 POST /api/agent-templates",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"name_required\"}",
+   "extra": {}
+  },
+  {
+   "name": "184 POST /api/agent-templates",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"name\":\"\"}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"name_required\"}",
+   "extra": {}
+  },
+  {
+   "name": "185 POST /api/agent-templates",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"name\":\" \\t \"}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"name_required\"}",
+   "extra": {}
+  },
+  {
+   "name": "186 POST /api/agent-templates",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"name\":\"Kiosk\",\"description\":\"front desk\",\"config\":{\"tags\":[\"k\"]}}",
+   "status": 501,
+   "answer": "{\"success\":false,\"error\":\"db_backend_missing_run\"}",
+   "extra": {}
+  },
+  {
+   "name": "187 POST /api/agent-templates",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"name\":7}",
+   "status": 501,
+   "answer": "{\"success\":false,\"error\":\"db_backend_missing_run\"}",
+   "extra": {}
+  },
+  {
+   "name": "188 POST /api/agent-templates",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"name\":0}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"name_required\"}",
+   "extra": {}
+  },
+  {
+   "name": "189 POST /api/agent-templates",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"name\":[\"a\",\"b\"]}",
+   "status": 501,
+   "answer": "{\"success\":false,\"error\":\"db_backend_missing_run\"}",
+   "extra": {}
+  },
+  {
+   "name": "190 POST /api/agent-templates",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"name\":{\"toString\":1}}",
+   "status": 500,
+   "answer": "{\"success\":false,\"error\":\"Cannot convert object to primitive value\"}",
+   "extra": {}
+  },
+  {
+   "name": "191 POST /api/agent-templates",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"name\":\"x\",\"description\":{\"toString\":1}}",
+   "status": 500,
+   "answer": "{\"success\":false,\"error\":\"Cannot convert object to primitive value\"}",
+   "extra": {}
+  },
+  {
+   "name": "192 POST /api/agent-templates",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+   "status": 501,
+   "answer": "{\"success\":false,\"error\":\"db_backend_missing_run\"}",
+   "extra": {}
+  },
+  {
+   "name": "193 POST /api/agent-templates",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"name\":null}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"name_required\"}",
+   "extra": {}
+  },
+  {
+   "name": "194 POST /api/agent-templates",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"name\":false}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"name_required\"}",
+   "extra": {}
+  },
+  {
+   "name": "195 POST /api/agent-templates",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "[1,2]",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"name_required\"}",
+   "extra": {}
+  },
+  {
+   "name": "196 DELETE /api/agent-templates/1",
+   "role": "admin",
+   "method": "DELETE",
+   "path": "/api/agent-templates/1",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 501,
+   "answer": "{\"success\":false,\"error\":\"db_backend_missing_run\"}",
+   "extra": {}
+  },
+  {
+   "name": "197 DELETE /api/agent-templates/0",
+   "role": "admin",
+   "method": "DELETE",
+   "path": "/api/agent-templates/0",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"invalid_id\"}",
+   "extra": {}
+  },
+  {
+   "name": "198 DELETE /api/agent-templates/-1",
+   "role": "admin",
+   "method": "DELETE",
+   "path": "/api/agent-templates/-1",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"invalid_id\"}",
+   "extra": {}
+  },
+  {
+   "name": "199 DELETE /api/agent-templates/abc",
+   "role": "admin",
+   "method": "DELETE",
+   "path": "/api/agent-templates/abc",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"invalid_id\"}",
+   "extra": {}
+  },
+  {
+   "name": "200 DELETE /api/agent-templates/12abc",
+   "role": "admin",
+   "method": "DELETE",
+   "path": "/api/agent-templates/12abc",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 501,
+   "answer": "{\"success\":false,\"error\":\"db_backend_missing_run\"}",
+   "extra": {}
+  },
+  {
+   "name": "201 DELETE /api/agent-templates/0x10",
+   "role": "admin",
+   "method": "DELETE",
+   "path": "/api/agent-templates/0x10",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"invalid_id\"}",
+   "extra": {}
+  },
+  {
+   "name": "202 DELETE /api/agent-templates/99999999999999999999999",
+   "role": "admin",
+   "method": "DELETE",
+   "path": "/api/agent-templates/99999999999999999999999",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 501,
+   "answer": "{\"success\":false,\"error\":\"db_backend_missing_run\"}",
+   "extra": {}
+  },
+  {
+   "name": "203 DELETE /api/agent-templates/%205",
+   "role": "admin",
+   "method": "DELETE",
+   "path": "/api/agent-templates/%205",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 501,
+   "answer": "{\"success\":false,\"error\":\"db_backend_missing_run\"}",
+   "extra": {}
+  },
+  {
+   "name": "204 DELETE /api/agent-templates/0.5",
+   "role": "admin",
+   "method": "DELETE",
+   "path": "/api/agent-templates/0.5",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"invalid_id\"}",
+   "extra": {}
+  },
+  {
+   "name": "205 DELETE /api/agent-templates/1e3",
+   "role": "admin",
+   "method": "DELETE",
+   "path": "/api/agent-templates/1e3",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 501,
+   "answer": "{\"success\":false,\"error\":\"db_backend_missing_run\"}",
+   "extra": {}
+  },
+  {
+   "name": "206 DELETE /api/agent-templates/%2B7",
+   "role": "admin",
+   "method": "DELETE",
+   "path": "/api/agent-templates/%2B7",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 501,
+   "answer": "{\"success\":false,\"error\":\"db_backend_missing_run\"}",
+   "extra": {}
+  },
+  {
+   "name": "207 DELETE /api/agent-templates/Infinity",
+   "role": "admin",
+   "method": "DELETE",
+   "path": "/api/agent-templates/Infinity",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"invalid_id\"}",
+   "extra": {}
+  },
+  {
+   "name": "208 POST /api/bd/enroll",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/enroll",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"missing_fields\"}",
+   "extra": {}
+  },
+  {
+   "name": "209 POST /api/bd/enroll",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/enroll",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"enrollment_token\":\"t\"}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"missing_fields\"}",
+   "extra": {}
+  },
+  {
+   "name": "210 POST /api/bd/enroll",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/enroll",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"device_id\":\"d\"}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"missing_fields\"}",
+   "extra": {}
+  },
+  {
+   "name": "211 POST /api/bd/enroll",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/enroll",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"enrollment_token\":\"t\",\"device_id\":\"d\"}",
+   "status": 401,
+   "answer": "{\"success\":false,\"error\":\"invalid_token\"}",
+   "extra": {}
+  },
+  {
+   "name": "212 POST /api/bd/enroll",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/enroll",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"enrollment_token\":1,\"device_id\":2}",
+   "status": 401,
+   "answer": "{\"success\":false,\"error\":\"invalid_token\"}",
+   "extra": {}
+  },
+  {
+   "name": "213 POST /api/bd/enroll",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/enroll",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"enrollment_token\":0,\"device_id\":\"d\"}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"missing_fields\"}",
+   "extra": {}
+  },
+  {
+   "name": "214 POST /api/bd/enroll",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/enroll",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"enrollment_token\":{\"toString\":1},\"device_id\":\"d\"}",
+   "status": 500,
+   "answer": "{\"success\":false,\"error\":\"Cannot convert object to primitive value\"}",
+   "extra": {}
+  },
+  {
+   "name": "215 POST /api/bd/enroll",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/enroll",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"enrollment_token\":\"t\",\"device_id\":{\"toString\":1}}",
+   "status": 500,
+   "answer": "{\"success\":false,\"error\":\"Cannot convert object to primitive value\"}",
+   "extra": {}
+  },
+  {
+   "name": "216 POST /api/bd/enroll",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/enroll",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"enrollment_token\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"device_id\":\"yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\"}",
+   "status": 401,
+   "answer": "{\"success\":false,\"error\":\"invalid_token\"}",
+   "extra": {}
+  },
+  {
+   "name": "217 POST /api/bd/enroll",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/enroll",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"enrollment_token\":[\"a\"],\"device_id\":[[]]}",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"missing_fields\"}",
+   "extra": {}
+  },
+  {
+   "name": "218 GET /api/agent-releases",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/agent-releases",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"releases\":[{\"tag\":\"support-v1.2.0-rc\",\"imported_at\":null,\"manifest\":{\"imported_at\":null,\"assets\":[{\"name\":\"x\"}]}},{\"tag\":\"support-v1.2.0\",\"imported_at\":\"2026-11-01T10:00:00.000Z\",\"manifest\":{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"generic\":true,\"external_config\":false,\"version\":\"1.2.0\",\"assets\":[{\"name\":\"agent-windows.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"size\":7},{\"name\":\"agent-linux.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"sha256\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"size\":7},{\"name\":\"odd name & more\",\"platform\":null,\"format\":\"\"},{\"platform\":\"macos\",\"arch\":\"arm64\",\"format\":\"dmg\"},\"a string\",7,[],{\"name\":12}],\"release_tag\":\"support-v1.2.0\",\"imported_at\":\"2026-11-01T10:00:00.000Z\"}},{\"tag\":\"support-v1.10.0\",\"imported_at\":5,\"manifest\":{\"imported_at\":5,\"assets\":[]}},{\"tag\":\"Support-V0.9\",\"manifest\":[1,2]}]}",
+   "extra": {}
+  },
+  {
+   "name": "219 GET /api/agent-releases/signing-status",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/agent-releases/signing-status",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"fingerprint\":\"ea2b916f457871f0\",\"source\":\"bundled\"}",
+   "extra": {}
+  },
+  {
+   "name": "220 GET /api/portal/installers",
+   "role": "",
+   "method": "GET",
+   "path": "/api/portal/installers",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"release\":\"support-v1.2.0-rc\",\"reason\":null,\"installers\":[{\"url\":\"http://console.test/downloads/generic-agent/support-v1.2.0-rc/x\",\"format\":\"portable\",\"release\":\"support-v1.2.0-rc\"}]}",
+   "extra": {}
+  },
+  {
+   "name": "221 GET /downloads/generic-agent/support-v1.2.0/agent-windows.zip",
+   "role": "",
+   "method": "GET",
+   "path": "/downloads/generic-agent/support-v1.2.0/agent-windows.zip",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "zipdata",
+   "extra": {
+    "headers": "{\"content-type\":\"application/zip\",\"content-disposition\":\"attachment; filename=\\\"agent-windows.zip\\\"\",\"accept-ranges\":\"bytes\"}"
+   }
+  },
+  {
+   "name": "222 GET /downloads/generic-agent/support-v1.2.0/agent%2Dlinux.tar.gz",
+   "role": "",
+   "method": "GET",
+   "path": "/downloads/generic-agent/support-v1.2.0/agent%2Dlinux.tar.gz",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "tardata",
+   "extra": {
+    "headers": "{\"content-type\":\"application/gzip\",\"content-disposition\":\"attachment; filename=\\\"agent-linux.tar.gz\\\"\",\"accept-ranges\":\"bytes\"}"
+   }
+  },
+  {
+   "name": "223 GET /downloads/generic-agent/support-v1.2.0/missing.zip",
+   "role": "",
+   "method": "GET",
+   "path": "/downloads/generic-agent/support-v1.2.0/missing.zip",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 404,
+   "answer": "Agent release asset not found",
+   "extra": {
+    "headers": "{\"content-type\":\"text/html; charset=utf-8\",\"content-disposition\":null,\"accept-ranges\":null}"
+   }
+  },
+  {
+   "name": "224 GET /downloads/generic-agent/support-v1.2.0/..",
+   "role": "",
+   "method": "GET",
+   "path": "/downloads/generic-agent/support-v1.2.0/..",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 404,
+   "answer": "Agent release asset not found",
+   "extra": {
+    "headers": "{\"content-type\":\"text/html; charset=utf-8\",\"content-disposition\":null,\"accept-ranges\":null}"
+   }
+  },
+  {
+   "name": "225 GET /downloads/generic-agent/support-v1.2.0/.",
+   "role": "",
+   "method": "GET",
+   "path": "/downloads/generic-agent/support-v1.2.0/.",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 404,
+   "answer": "Agent release asset not found",
+   "extra": {
+    "headers": "{\"content-type\":\"text/html; charset=utf-8\",\"content-disposition\":null,\"accept-ranges\":null}"
+   }
+  },
+  {
+   "name": "226 GET /downloads/generic-agent/./top.txt",
+   "role": "",
+   "method": "GET",
+   "path": "/downloads/generic-agent/./top.txt",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "at the top",
+   "extra": {
+    "headers": "{\"content-type\":\"text/plain; charset=UTF-8\",\"content-disposition\":\"attachment; filename=\\\"top.txt\\\"\",\"accept-ranges\":\"bytes\"}"
+   }
+  },
+  {
+   "name": "227 GET /downloads/generic-agent/support-v1.2.0/manifest.json",
+   "role": "",
+   "method": "GET",
+   "path": "/downloads/generic-agent/support-v1.2.0/manifest.json",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\n  \"schema_version\": 1,\n  \"sku\": \"betterdesk-support\",\n  \"generic\": true,\n  \"external_config\": false,\n  \"version\": \"1.2.0\",\n  \"assets\": [\n    {\n      \"name\": \"agent-windows.zip\",\n      \"platform\": \"windows\",\n      \"arch\": \"x86_64\",\n      \"format\": \"portable\",\n      \"sha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n      \"size\": 7\n    },\n    {\n      \"name\": \"agent-linux.tar.gz\",\n      \"platform\": \"linux\",\n      \"arch\": \"x86_64\",\n      \"sha256\": \"1111111111111111111111111111111111111111111111111111111111111111\",\n      \"size\": 7\n    },\n    {\n      \"name\": \"odd name & more\",\n      \"platform\": null,\n      \"format\": \"\"\n    },\n    {\n      \"platform\": \"macos\",\n      \"arch\": \"arm64\",\n      \"format\": \"dmg\"\n    },\n    \"a string\",\n    7,\n    [],\n    {\n      \"name\": 12\n    }\n  ],\n  \"release_tag\": \"support-v1.2.0\",\n  \"imported_at\": \"2026-11-01T10:00:00.000Z\"\n}\n",
+   "extra": {
+    "headers": "{\"content-type\":\"application/json; charset=UTF-8\",\"content-disposition\":\"attachment; filename=\\\"manifest.json\\\"\",\"accept-ranges\":\"bytes\"}"
+   }
+  },
+  {
+   "name": "228 GET /downloads/generic-agent/support-v1.2.0/a%20b.zip",
+   "role": "",
+   "method": "GET",
+   "path": "/downloads/generic-agent/support-v1.2.0/a%20b.zip",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 404,
+   "answer": "Agent release asset not found",
+   "extra": {
+    "headers": "{\"content-type\":\"text/html; charset=utf-8\",\"content-disposition\":null,\"accept-ranges\":null}"
+   }
+  },
+  {
+   "name": "229 GET /downloads/generic-agent/support-v1.2.0/sub",
+   "role": "",
+   "method": "GET",
+   "path": "/downloads/generic-agent/support-v1.2.0/sub",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 404,
+   "answer": "Agent release asset not found",
+   "extra": {
+    "headers": "{\"content-type\":\"text/html; charset=utf-8\",\"content-disposition\":null,\"accept-ranges\":null}"
+   }
+  },
+  {
+   "name": "230 GET /downloads/generic-agent/no-manifest/file.bin",
+   "role": "",
+   "method": "GET",
+   "path": "/downloads/generic-agent/no-manifest/file.bin",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "bin",
+   "extra": {
+    "headers": "{\"content-type\":\"application/octet-stream\",\"content-disposition\":\"attachment; filename=\\\"file.bin\\\"\",\"accept-ranges\":\"bytes\"}"
+   }
+  }
+ ]
+}

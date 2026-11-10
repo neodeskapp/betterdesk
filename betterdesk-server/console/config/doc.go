@@ -63,6 +63,17 @@
 // DATA_DIR unless DATA_DIR is CONSOLE_DIR/data (the default outside a
 // container, and /app/data in the container images).
 //
+// The branding's files have fixed places in CONSOLE_DIR as well, whatever
+// DATA_DIR says (only its uploaded pictures go to DATA_DIR/uploads):
+//
+//	CONSOLE_DIR/public/fonts                   installed fonts, served as /fonts/
+//	CONSOLE_DIR/data/google-fonts-cache.json   optional list of more font families for the search
+//	CONSOLE_DIR/data/tmp                       an uploaded font before it is installed
+//	CONSOLE_DIR/themes                         the built-in themes (*.json)
+//	CONSOLE_DIR/config/theme-palettes.json     the built-in palettes; the console does not start without it
+//	CONSOLE_DIR/public/favicon.svg             the default favicon
+//	CONSOLE_DIR/config/supporters.json         the supporters list of the Help panel
+//
 // Read by the packages that own them, through Config.Getenv:
 //
 //	SESSION_SECRET           file or generated     Signs the session cookie and the CSRF token. Without it the secret
