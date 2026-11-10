@@ -27,6 +27,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/panelaccess"
 	"github.com/unitronix/betterdesk-server/console/routes/permissions"
 	"github.com/unitronix/betterdesk-server/console/routes/policies"
+	"github.com/unitronix/betterdesk-server/console/routes/reports"
 	"github.com/unitronix/betterdesk-server/console/routes/resourcecontrol"
 	"github.com/unitronix/betterdesk-server/console/routes/scaling"
 	"github.com/unitronix/betterdesk-server/console/routes/securityaudit"
@@ -69,6 +70,8 @@ func registerRoutes(d *kit.Deps) {
 	dataguard.Register(d.At("/api/dataguard"))
 	dataguard.Register(d.At("/api/bd"))
 	trends.Register(d) // routes/trends.routes.js, in front of the reports group
+	// routes/reports.routes.js at /api/reports
+	reports.Register(d.At("/api/reports"))
 	// routes/tenants.routes.js at /api/tenants
 	tenants.Register(d.At("/api/tenants"))
 	cdap.Register(d)                          // routes/cdap.routes.js

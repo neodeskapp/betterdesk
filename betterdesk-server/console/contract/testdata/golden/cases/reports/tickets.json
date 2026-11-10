@@ -1,0 +1,138 @@
+{
+ "id": "reports/tickets",
+ "request": {
+  "method": "POST",
+  "path": "/api/reports/generate",
+  "body": {
+   "type": "tickets"
+  }
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Authentication required"
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "panel_access_denied",
+     "error": "Panel access denied: reports",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "generated_at",
+     "format": "9999-99-99A99:99:99.999A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "category_distribution": {
+       "access": 1,
+       "hardware": 3,
+       "network": 2,
+       "software": 3
+      },
+      "priority_distribution": {
+       "critical": 2,
+       "high": 2,
+       "low": 3,
+       "medium": 2
+      },
+      "stats": {
+       "closed": 2,
+       "in_progress": 2,
+       "open": 4,
+       "resolved": 1,
+       "total": 9
+      },
+      "total_tickets": 9
+     },
+     "filters": {},
+     "generated_at": "<volatile>",
+     "label": "Ticket Report",
+     "type": "tickets"
+    }
+   }
+  }
+ ]
+}
