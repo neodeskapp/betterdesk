@@ -41,6 +41,11 @@ directly before:
   console always has, also for names that are not in Latin script. The module
   was already part of the server through its database driver.
 
+`betterdesk-server/console/branding/idna_table.go` holds a table of how
+host names outside ASCII are mapped (Unicode 17.0 IDNA mapping, as Node.js
+22 applies it). It is data derived from the Unicode Character Database,
+copyright Unicode, Inc., under the Unicode License v3.
+
 ## Web console code
 
 The Svelte console in `web-ui/` bundles these npm packages into the code the

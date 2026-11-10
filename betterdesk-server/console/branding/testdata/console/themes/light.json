@@ -1,0 +1,39 @@
+{
+  "version": "1.0",
+  "type": "betterdesk-theme",
+  "displayName": "BetterDesk Light",
+  "branding": {
+    "appName": "BetterDesk",
+    "appDescription": "BetterDesk Server Management",
+    "logoType": "default",
+    "logoIcon": "dns",
+    "logoSvg": "",
+    "logoUrl": "",
+    "faviconSvg": "",
+    "colors": {
+      "bgPrimary": "#ffffff",
+      "bgSecondary": "#f6f8fa",
+      "bgTertiary": "#eaeef2",
+      "bgElevated": "#ffffff",
+      "textPrimary": "#1f2328",
+      "textSecondary": "#656d76",
+      "accentBlue": "#1b62cf",
+      "accentBlueHover": "#1854b3",
+      "accentBlueMuted": "rgba(27, 98, 207, 0.15)",
+      "accentGreen": "#1a7f37",
+      "accentGreenHover": "#116329",
+      "accentGreenMuted": "#dafbe1",
+      "accentRed": "#cf222e",
+      "accentRedHover": "#a40e26",
+      "accentRedMuted": "#ffebe9",
+      "accentYellow": "#9a6700",
+      "accentYellowHover": "#7d4e00",
+      "accentYellowMuted": "#fff8c5",
+      "accentPurple": "#8250df",
+      "accentPurpleHover": "#6639ba",
+      "accentPurpleMuted": "#fbefff",
+      "borderPrimary": "#828990",
+      "borderSecondary": "#eaeef2"
+    }
+  }
+}
