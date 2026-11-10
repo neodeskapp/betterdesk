@@ -111,10 +111,6 @@
    },
    "volatile": [
     {
-     "path": "data[0].mtime",
-     "format": "9999-99-99A99:99:99.999A"
-    },
-    {
      "path": "data[8].mtime",
      "format": "9999-99-99A99:99:99.999A"
     },
@@ -130,14 +126,14 @@
       {
        "canCreate": false,
        "category": "console",
-       "exists": true,
+       "exists": false,
        "id": "console-env",
-       "mtime": "<volatile>",
+       "mtime": null,
        "path": "/repo/web-nodejs/.env",
-       "readable": true,
+       "readable": false,
        "requiresRestart": "console",
-       "size": 135,
-       "writable": true
+       "size": 0,
+       "writable": false
       },
       {
        "canCreate": true,

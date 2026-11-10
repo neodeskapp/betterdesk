@@ -32,6 +32,9 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "data[*].details"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -68,6 +71,9 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "data[*].details"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -112,24 +118,7 @@
      "path": "data[*].created_at",
      "format": "9999-99-99 99:99:99"
     },
-    "data[15].details",
-    "data[16].details",
-    "data[17].details",
-    "data[18].details",
-    "data[19].details",
-    "data[20].details",
-    "data[21].details",
-    "data[22].details",
-    "data[23].details",
-    "data[24].details",
-    "data[25].details",
-    "data[26].details",
-    "data[27].details",
-    "data[28].details",
-    "data[29].details",
-    "data[30].details",
-    "data[31].details",
-    "data[6].details"
+    "data[*].details"
    ],
    "body": {
     "kind": "json",
@@ -138,7 +127,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 89,
        "ip_address": "<client-ip>",
        "user_id": 7,
@@ -147,7 +136,7 @@
       {
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
-       "details": "Updated Server Attestation badge labels",
+       "details": "<volatile>",
        "id": 88,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -156,7 +145,7 @@
       {
        "action": "enrollment_rejected",
        "created_at": "<volatile>",
-       "details": "Rejected enrollment for device 999999999",
+       "details": "<volatile>",
        "id": 87,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -165,7 +154,7 @@
       {
        "action": "enrollment_rejection_cleared",
        "created_at": "<volatile>",
-       "details": "Cleared enrollment rejection for device 999999999",
+       "details": "<volatile>",
        "id": 86,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -174,7 +163,7 @@
       {
        "action": "enrollment_rejected",
        "created_at": "<volatile>",
-       "details": "Rejected enrollment for device 999999999",
+       "details": "<volatile>",
        "id": 85,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -183,7 +172,7 @@
       {
        "action": "profile_updated",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
+       "details": "<volatile>",
        "id": 84,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -201,7 +190,7 @@
       {
        "action": "clipboard.set",
        "created_at": "<volatile>",
-       "details": "Clipboard set on 999999999 (0 chars)",
+       "details": "<volatile>",
        "id": 82,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -210,7 +199,7 @@
       {
        "action": "commercialization_email_config_updated",
        "created_at": "<volatile>",
-       "details": "Updated commercialization email notifications",
+       "details": "<volatile>",
        "id": 81,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -219,7 +208,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 80,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -228,7 +217,7 @@
       {
        "action": "clipboard.set",
        "created_at": "<volatile>",
-       "details": "Clipboard set on 999999999 (0 chars)",
+       "details": "<volatile>",
        "id": 79,
        "ip_address": "<client-ip>",
        "user_id": 9,
@@ -237,7 +226,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 78,
        "ip_address": "<client-ip>",
        "user_id": 9,
@@ -246,7 +235,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 77,
        "ip_address": "<client-ip>",
        "user_id": 10,
@@ -255,7 +244,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 76,
        "ip_address": "<client-ip>",
        "user_id": 11,
@@ -264,7 +253,7 @@
       {
        "action": "login_failed",
        "created_at": "<volatile>",
-       "details": "Username: e***; ip=<client-ip>; ua=bd-contract/1",
+       "details": "<volatile>",
        "id": 75,
        "ip_address": "<client-ip>",
        "user_id": null,
@@ -426,7 +415,7 @@
       {
        "action": "device_group_saved",
        "created_at": "<volatile>",
-       "details": "Device group Support team devices saved",
+       "details": "<volatile>",
        "id": 57,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -435,7 +424,7 @@
       {
        "action": "device_group_saved",
        "created_at": "<volatile>",
-       "details": "Device group Critical servers saved",
+       "details": "<volatile>",
        "id": 56,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -444,7 +433,7 @@
       {
        "action": "device_group_saved",
        "created_at": "<volatile>",
-       "details": "Device group All laptops saved",
+       "details": "<volatile>",
        "id": 55,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -453,7 +442,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100031 tags set to [office]",
+       "details": "<volatile>",
        "id": 54,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -462,7 +451,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100028 tags set to [laptop]",
+       "details": "<volatile>",
        "id": 53,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -471,7 +460,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100027 tags set to [legacy]",
+       "details": "<volatile>",
        "id": 52,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -480,7 +469,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100026 tags set to [lab, vm]",
+       "details": "<volatile>",
        "id": 51,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -489,7 +478,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100025 tags set to [lab, iot]",
+       "details": "<volatile>",
        "id": 50,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -498,7 +487,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100024 tags set to [lab, iot]",
+       "details": "<volatile>",
        "id": 49,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -507,7 +496,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100023 tags set to [mobile]",
+       "details": "<volatile>",
        "id": 48,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -516,7 +505,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100022 tags set to [mobile]",
+       "details": "<volatile>",
        "id": 47,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -525,7 +514,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100021 tags set to [kiosk]",
+       "details": "<volatile>",
        "id": 46,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -534,7 +523,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100020 tags set to [kiosk]",
+       "details": "<volatile>",
        "id": 45,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -543,7 +532,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100019 tags set to [laptop, sales]",
+       "details": "<volatile>",
        "id": 44,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -552,7 +541,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100018 tags set to [laptop, sales]",
+       "details": "<volatile>",
        "id": 43,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -561,7 +550,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100017 tags set to [laptop, sales]",
+       "details": "<volatile>",
        "id": 42,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -570,7 +559,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100016 tags set to [server, linux]",
+       "details": "<volatile>",
        "id": 41,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -579,7 +568,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100015 tags set to [server, linux, critical]",
+       "details": "<volatile>",
        "id": 40,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -588,7 +577,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100014 tags set to [server, storage]",
+       "details": "<volatile>",
        "id": 39,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -597,7 +586,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100013 tags set to [server, linux]",
+       "details": "<volatile>",
        "id": 38,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -606,7 +595,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100012 tags set to [server, linux]",
+       "details": "<volatile>",
        "id": 37,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -615,7 +604,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100011 tags set to [warehouse, scanner]",
+       "details": "<volatile>",
        "id": 36,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -624,7 +613,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100010 tags set to [warehouse, scanner]",
+       "details": "<volatile>",
        "id": 35,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -633,7 +622,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100009 tags set to [warehouse, scanner]",
+       "details": "<volatile>",
        "id": 34,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -642,7 +631,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100008 tags set to [warehouse]",
+       "details": "<volatile>",
        "id": 33,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -651,7 +640,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100007 tags set to [design, laptop]",
+       "details": "<volatile>",
        "id": 32,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -660,7 +649,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100006 tags set to [design]",
+       "details": "<volatile>",
        "id": 31,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -669,7 +658,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100005 tags set to [vip]",
+       "details": "<volatile>",
        "id": 30,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -678,7 +667,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100004 tags set to [finance]",
+       "details": "<volatile>",
        "id": 29,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -687,7 +676,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100003 tags set to [office, finance]",
+       "details": "<volatile>",
        "id": 28,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -696,7 +685,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100002 tags set to [office, ground-floor]",
+       "details": "<volatile>",
        "id": 27,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -705,7 +694,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100001 tags set to [office, ground-floor]",
+       "details": "<volatile>",
        "id": 26,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -714,7 +703,7 @@
       {
        "action": "folder_created",
        "created_at": "<volatile>",
-       "details": "Created folder: Lab",
+       "details": "<volatile>",
        "id": 25,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -723,7 +712,7 @@
       {
        "action": "folder_created",
        "created_at": "<volatile>",
-       "details": "Created folder: Servers",
+       "details": "<volatile>",
        "id": 24,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -732,7 +721,7 @@
       {
        "action": "folder_created",
        "created_at": "<volatile>",
-       "details": "Created folder: Warehouse",
+       "details": "<volatile>",
        "id": 23,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -741,7 +730,7 @@
       {
        "action": "folder_created",
        "created_at": "<volatile>",
-       "details": "Created folder: Office",
+       "details": "<volatile>",
        "id": 22,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -750,7 +739,7 @@
       {
        "action": "user_created",
        "created_at": "<volatile>",
-       "details": "Created user: d***n (server_admin)",
+       "details": "<volatile>",
        "id": 21,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -759,7 +748,7 @@
       {
        "action": "user_created",
        "created_at": "<volatile>",
-       "details": "Created user: d***r (viewer)",
+       "details": "<volatile>",
        "id": 20,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -768,7 +757,7 @@
       {
        "action": "user_created",
        "created_at": "<volatile>",
-       "details": "Created user: d***r (operator)",
+       "details": "<volatile>",
        "id": 19,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -777,7 +766,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=127.0.0.1; ua=node; fingerprint=none",
+       "details": "<volatile>",
        "id": 18,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -786,7 +775,7 @@
       {
        "action": "device_ban",
        "created_at": "<volatile>",
-       "details": "Banned 900100028 (Reported stolen)",
+       "details": "<volatile>",
        "id": 1,
        "ip_address": "10.0.0.2",
        "user_id": 1,
@@ -795,7 +784,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=10.0.2.41; ua=Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) Firefox/132.0",
+       "details": "<volatile>",
        "id": 13,
        "ip_address": "10.0.2.41",
        "user_id": null,
@@ -804,7 +793,7 @@
       {
        "action": "login_failed",
        "created_at": "<volatile>",
-       "details": "Username: demo_viewer; ip=10.0.2.41; ua=Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) Firefox/132.0",
+       "details": "<volatile>",
        "id": 12,
        "ip_address": "10.0.2.41",
        "user_id": null,
@@ -813,7 +802,7 @@
       {
        "action": "device_ban",
        "created_at": "<volatile>",
-       "details": "Banned 900100029 (Unknown device, blocked)",
+       "details": "<volatile>",
        "id": 2,
        "ip_address": "10.0.0.3",
        "user_id": 1,
@@ -822,7 +811,7 @@
       {
        "action": "login_failed",
        "created_at": "<volatile>",
-       "details": "Username: root; ip=203.0.113.45; ua=curl/8.5.0",
+       "details": "<volatile>",
        "id": 10,
        "ip_address": "203.0.113.45",
        "user_id": null,
@@ -831,7 +820,7 @@
       {
        "action": "login_failed",
        "created_at": "<volatile>",
-       "details": "Username: root; ip=203.0.113.45; ua=curl/8.5.0",
+       "details": "<volatile>",
        "id": 9,
        "ip_address": "203.0.113.45",
        "user_id": null,
@@ -840,7 +829,7 @@
       {
        "action": "device_delete",
        "created_at": "<volatile>",
-       "details": "Deleted 900100030",
+       "details": "<volatile>",
        "id": 3,
        "ip_address": "10.0.0.4",
        "user_id": 1,
@@ -849,7 +838,7 @@
       {
        "action": "settings_change",
        "created_at": "<volatile>",
-       "details": "Changed relay server",
+       "details": "<volatile>",
        "id": 4,
        "ip_address": "10.0.0.5",
        "user_id": 1,
@@ -858,7 +847,7 @@
       {
        "action": "user_create",
        "created_at": "<volatile>",
-       "details": "Created user demo_viewer",
+       "details": "<volatile>",
        "id": 5,
        "ip_address": "10.0.0.6",
        "user_id": 1,
@@ -867,7 +856,7 @@
       {
        "action": "login_failed",
        "created_at": "<volatile>",
-       "details": "Username: administrator; ip=198.51.100.7; ua=python-requests/2.32.3",
+       "details": "<volatile>",
        "id": 11,
        "ip_address": "198.51.100.7",
        "user_id": null,
@@ -876,7 +865,7 @@
       {
        "action": "remote_connect",
        "created_at": "<volatile>",
-       "details": "Connected to 900100012",
+       "details": "<volatile>",
        "id": 6,
        "ip_address": "10.0.0.7",
        "user_id": 1,
@@ -885,7 +874,7 @@
       {
        "action": "remote_connect",
        "created_at": "<volatile>",
-       "details": "Connected to 900100005",
+       "details": "<volatile>",
        "id": 7,
        "ip_address": "10.0.0.8",
        "user_id": 1,
@@ -894,7 +883,7 @@
       {
        "action": "folder_create",
        "created_at": "<volatile>",
-       "details": "Created folder Lab",
+       "details": "<volatile>",
        "id": 8,
        "ip_address": "10.0.0.9",
        "user_id": 1,
@@ -903,7 +892,7 @@
       {
        "action": "session_expired",
        "created_at": "<volatile>",
-       "details": "reason=idle",
+       "details": "<volatile>",
        "id": 17,
        "ip_address": "10.0.3.12",
        "user_id": null,
@@ -912,7 +901,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=10.0.3.12; ua=Mozilla/5.0 (X11; Linux x86_64) Firefox/132.0",
+       "details": "<volatile>",
        "id": 16,
        "ip_address": "10.0.3.12",
        "user_id": null,
@@ -921,7 +910,7 @@
       {
        "action": "logout",
        "created_at": "<volatile>",
-       "details": "User logged out",
+       "details": "<volatile>",
        "id": 15,
        "ip_address": "10.0.1.33",
        "user_id": null,
@@ -930,7 +919,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=10.0.1.33; ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) Edg/130.0",
+       "details": "<volatile>",
        "id": 14,
        "ip_address": "10.0.1.33",
        "user_id": null,
@@ -976,25 +965,7 @@
      "path": "data[*].created_at",
      "format": "9999-99-99 99:99:99"
     },
-    "data[14].details",
-    "data[23].details",
-    "data[24].details",
-    "data[25].details",
-    "data[26].details",
-    "data[27].details",
-    "data[28].details",
-    "data[29].details",
-    "data[30].details",
-    "data[31].details",
-    "data[32].details",
-    "data[33].details",
-    "data[34].details",
-    "data[35].details",
-    "data[36].details",
-    "data[37].details",
-    "data[38].details",
-    "data[39].details",
-    "data[5].details"
+    "data[*].details"
    ],
    "body": {
     "kind": "json",
@@ -1003,7 +974,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 97,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -1012,7 +983,7 @@
       {
        "action": "oidc_config_updated",
        "created_at": "<volatile>",
-       "details": "Updated OIDC configuration",
+       "details": "<volatile>",
        "id": 96,
        "ip_address": "<client-ip>",
        "user_id": 7,
@@ -1021,7 +992,7 @@
       {
        "action": "ldap_config_updated",
        "created_at": "<volatile>",
-       "details": "Updated LDAP configuration",
+       "details": "<volatile>",
        "id": 95,
        "ip_address": "<client-ip>",
        "user_id": 7,
@@ -1030,7 +1001,7 @@
       {
        "action": "enrollment_settings_changed",
        "created_at": "<volatile>",
-       "details": "Enrollment settings updated (mode=unchanged)",
+       "details": "<volatile>",
        "id": 94,
        "ip_address": "<client-ip>",
        "user_id": 7,
@@ -1039,7 +1010,7 @@
       {
        "action": "device_scope_default_updated",
        "created_at": "<volatile>",
-       "details": "Device scope default: open",
+       "details": "<volatile>",
        "id": 93,
        "ip_address": "<client-ip>",
        "user_id": 7,
@@ -1057,7 +1028,7 @@
       {
        "action": "availability_history_updated",
        "created_at": "<volatile>",
-       "details": "Availability history: enabled=false, retention_days=30",
+       "details": "<volatile>",
        "id": 91,
        "ip_address": "<client-ip>",
        "user_id": 7,
@@ -1066,7 +1037,7 @@
       {
        "action": "backup_created",
        "created_at": "<volatile>",
-       "details": "Full backup downloaded (0.33 MB)",
+       "details": "<volatile>",
        "id": 90,
        "ip_address": "<client-ip>",
        "user_id": 7,
@@ -1075,7 +1046,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 89,
        "ip_address": "<client-ip>",
        "user_id": 7,
@@ -1084,7 +1055,7 @@
       {
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
-       "details": "Updated Server Attestation badge labels",
+       "details": "<volatile>",
        "id": 88,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -1093,7 +1064,7 @@
       {
        "action": "enrollment_rejected",
        "created_at": "<volatile>",
-       "details": "Rejected enrollment for device 999999999",
+       "details": "<volatile>",
        "id": 87,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -1102,7 +1073,7 @@
       {
        "action": "enrollment_rejection_cleared",
        "created_at": "<volatile>",
-       "details": "Cleared enrollment rejection for device 999999999",
+       "details": "<volatile>",
        "id": 86,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -1111,7 +1082,7 @@
       {
        "action": "enrollment_rejected",
        "created_at": "<volatile>",
-       "details": "Rejected enrollment for device 999999999",
+       "details": "<volatile>",
        "id": 85,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -1120,7 +1091,7 @@
       {
        "action": "profile_updated",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
+       "details": "<volatile>",
        "id": 84,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -1138,7 +1109,7 @@
       {
        "action": "clipboard.set",
        "created_at": "<volatile>",
-       "details": "Clipboard set on 999999999 (0 chars)",
+       "details": "<volatile>",
        "id": 82,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -1147,7 +1118,7 @@
       {
        "action": "commercialization_email_config_updated",
        "created_at": "<volatile>",
-       "details": "Updated commercialization email notifications",
+       "details": "<volatile>",
        "id": 81,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -1156,7 +1127,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 80,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -1165,7 +1136,7 @@
       {
        "action": "clipboard.set",
        "created_at": "<volatile>",
-       "details": "Clipboard set on 999999999 (0 chars)",
+       "details": "<volatile>",
        "id": 79,
        "ip_address": "<client-ip>",
        "user_id": 9,
@@ -1174,7 +1145,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 78,
        "ip_address": "<client-ip>",
        "user_id": 9,
@@ -1183,7 +1154,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 77,
        "ip_address": "<client-ip>",
        "user_id": 10,
@@ -1192,7 +1163,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 76,
        "ip_address": "<client-ip>",
        "user_id": 11,
@@ -1201,7 +1172,7 @@
       {
        "action": "login_failed",
        "created_at": "<volatile>",
-       "details": "Username: e***; ip=<client-ip>; ua=bd-contract/1",
+       "details": "<volatile>",
        "id": 75,
        "ip_address": "<client-ip>",
        "user_id": null,
@@ -1363,7 +1334,7 @@
       {
        "action": "device_group_saved",
        "created_at": "<volatile>",
-       "details": "Device group Support team devices saved",
+       "details": "<volatile>",
        "id": 57,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1372,7 +1343,7 @@
       {
        "action": "device_group_saved",
        "created_at": "<volatile>",
-       "details": "Device group Critical servers saved",
+       "details": "<volatile>",
        "id": 56,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1381,7 +1352,7 @@
       {
        "action": "device_group_saved",
        "created_at": "<volatile>",
-       "details": "Device group All laptops saved",
+       "details": "<volatile>",
        "id": 55,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1390,7 +1361,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100031 tags set to [office]",
+       "details": "<volatile>",
        "id": 54,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1399,7 +1370,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100028 tags set to [laptop]",
+       "details": "<volatile>",
        "id": 53,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1408,7 +1379,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100027 tags set to [legacy]",
+       "details": "<volatile>",
        "id": 52,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1417,7 +1388,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100026 tags set to [lab, vm]",
+       "details": "<volatile>",
        "id": 51,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1426,7 +1397,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100025 tags set to [lab, iot]",
+       "details": "<volatile>",
        "id": 50,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1435,7 +1406,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100024 tags set to [lab, iot]",
+       "details": "<volatile>",
        "id": 49,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1444,7 +1415,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100023 tags set to [mobile]",
+       "details": "<volatile>",
        "id": 48,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1453,7 +1424,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100022 tags set to [mobile]",
+       "details": "<volatile>",
        "id": 47,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1462,7 +1433,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100021 tags set to [kiosk]",
+       "details": "<volatile>",
        "id": 46,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1471,7 +1442,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100020 tags set to [kiosk]",
+       "details": "<volatile>",
        "id": 45,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1480,7 +1451,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100019 tags set to [laptop, sales]",
+       "details": "<volatile>",
        "id": 44,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1489,7 +1460,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100018 tags set to [laptop, sales]",
+       "details": "<volatile>",
        "id": 43,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1498,7 +1469,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100017 tags set to [laptop, sales]",
+       "details": "<volatile>",
        "id": 42,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1507,7 +1478,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100016 tags set to [server, linux]",
+       "details": "<volatile>",
        "id": 41,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1516,7 +1487,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100015 tags set to [server, linux, critical]",
+       "details": "<volatile>",
        "id": 40,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1525,7 +1496,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100014 tags set to [server, storage]",
+       "details": "<volatile>",
        "id": 39,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1534,7 +1505,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100013 tags set to [server, linux]",
+       "details": "<volatile>",
        "id": 38,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1543,7 +1514,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100012 tags set to [server, linux]",
+       "details": "<volatile>",
        "id": 37,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1552,7 +1523,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100011 tags set to [warehouse, scanner]",
+       "details": "<volatile>",
        "id": 36,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1561,7 +1532,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100010 tags set to [warehouse, scanner]",
+       "details": "<volatile>",
        "id": 35,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1570,7 +1541,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100009 tags set to [warehouse, scanner]",
+       "details": "<volatile>",
        "id": 34,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1579,7 +1550,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100008 tags set to [warehouse]",
+       "details": "<volatile>",
        "id": 33,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1588,7 +1559,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100007 tags set to [design, laptop]",
+       "details": "<volatile>",
        "id": 32,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1597,7 +1568,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100006 tags set to [design]",
+       "details": "<volatile>",
        "id": 31,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1606,7 +1577,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100005 tags set to [vip]",
+       "details": "<volatile>",
        "id": 30,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1615,7 +1586,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100004 tags set to [finance]",
+       "details": "<volatile>",
        "id": 29,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1624,7 +1595,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100003 tags set to [office, finance]",
+       "details": "<volatile>",
        "id": 28,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1633,7 +1604,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100002 tags set to [office, ground-floor]",
+       "details": "<volatile>",
        "id": 27,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1642,7 +1613,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100001 tags set to [office, ground-floor]",
+       "details": "<volatile>",
        "id": 26,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1651,7 +1622,7 @@
       {
        "action": "folder_created",
        "created_at": "<volatile>",
-       "details": "Created folder: Lab",
+       "details": "<volatile>",
        "id": 25,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1660,7 +1631,7 @@
       {
        "action": "folder_created",
        "created_at": "<volatile>",
-       "details": "Created folder: Servers",
+       "details": "<volatile>",
        "id": 24,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1669,7 +1640,7 @@
       {
        "action": "folder_created",
        "created_at": "<volatile>",
-       "details": "Created folder: Warehouse",
+       "details": "<volatile>",
        "id": 23,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1678,7 +1649,7 @@
       {
        "action": "folder_created",
        "created_at": "<volatile>",
-       "details": "Created folder: Office",
+       "details": "<volatile>",
        "id": 22,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1687,7 +1658,7 @@
       {
        "action": "user_created",
        "created_at": "<volatile>",
-       "details": "Created user: d***n (server_admin)",
+       "details": "<volatile>",
        "id": 21,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1696,7 +1667,7 @@
       {
        "action": "user_created",
        "created_at": "<volatile>",
-       "details": "Created user: d***r (viewer)",
+       "details": "<volatile>",
        "id": 20,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1705,7 +1676,7 @@
       {
        "action": "user_created",
        "created_at": "<volatile>",
-       "details": "Created user: d***r (operator)",
+       "details": "<volatile>",
        "id": 19,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1714,7 +1685,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=127.0.0.1; ua=node; fingerprint=none",
+       "details": "<volatile>",
        "id": 18,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -1723,7 +1694,7 @@
       {
        "action": "device_ban",
        "created_at": "<volatile>",
-       "details": "Banned 900100028 (Reported stolen)",
+       "details": "<volatile>",
        "id": 1,
        "ip_address": "10.0.0.2",
        "user_id": 1,
@@ -1732,7 +1703,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=10.0.2.41; ua=Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) Firefox/132.0",
+       "details": "<volatile>",
        "id": 13,
        "ip_address": "10.0.2.41",
        "user_id": null,
@@ -1741,7 +1712,7 @@
       {
        "action": "login_failed",
        "created_at": "<volatile>",
-       "details": "Username: demo_viewer; ip=10.0.2.41; ua=Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) Firefox/132.0",
+       "details": "<volatile>",
        "id": 12,
        "ip_address": "10.0.2.41",
        "user_id": null,
@@ -1750,7 +1721,7 @@
       {
        "action": "device_ban",
        "created_at": "<volatile>",
-       "details": "Banned 900100029 (Unknown device, blocked)",
+       "details": "<volatile>",
        "id": 2,
        "ip_address": "10.0.0.3",
        "user_id": 1,
@@ -1759,7 +1730,7 @@
       {
        "action": "login_failed",
        "created_at": "<volatile>",
-       "details": "Username: root; ip=203.0.113.45; ua=curl/8.5.0",
+       "details": "<volatile>",
        "id": 10,
        "ip_address": "203.0.113.45",
        "user_id": null,
@@ -1768,7 +1739,7 @@
       {
        "action": "login_failed",
        "created_at": "<volatile>",
-       "details": "Username: root; ip=203.0.113.45; ua=curl/8.5.0",
+       "details": "<volatile>",
        "id": 9,
        "ip_address": "203.0.113.45",
        "user_id": null,
@@ -1777,7 +1748,7 @@
       {
        "action": "device_delete",
        "created_at": "<volatile>",
-       "details": "Deleted 900100030",
+       "details": "<volatile>",
        "id": 3,
        "ip_address": "10.0.0.4",
        "user_id": 1,
@@ -1786,7 +1757,7 @@
       {
        "action": "settings_change",
        "created_at": "<volatile>",
-       "details": "Changed relay server",
+       "details": "<volatile>",
        "id": 4,
        "ip_address": "10.0.0.5",
        "user_id": 1,
@@ -1795,7 +1766,7 @@
       {
        "action": "user_create",
        "created_at": "<volatile>",
-       "details": "Created user demo_viewer",
+       "details": "<volatile>",
        "id": 5,
        "ip_address": "10.0.0.6",
        "user_id": 1,
@@ -1804,7 +1775,7 @@
       {
        "action": "login_failed",
        "created_at": "<volatile>",
-       "details": "Username: administrator; ip=198.51.100.7; ua=python-requests/2.32.3",
+       "details": "<volatile>",
        "id": 11,
        "ip_address": "198.51.100.7",
        "user_id": null,
@@ -1813,7 +1784,7 @@
       {
        "action": "remote_connect",
        "created_at": "<volatile>",
-       "details": "Connected to 900100012",
+       "details": "<volatile>",
        "id": 6,
        "ip_address": "10.0.0.7",
        "user_id": 1,
@@ -1822,7 +1793,7 @@
       {
        "action": "remote_connect",
        "created_at": "<volatile>",
-       "details": "Connected to 900100005",
+       "details": "<volatile>",
        "id": 7,
        "ip_address": "10.0.0.8",
        "user_id": 1,
@@ -1831,7 +1802,7 @@
       {
        "action": "folder_create",
        "created_at": "<volatile>",
-       "details": "Created folder Lab",
+       "details": "<volatile>",
        "id": 8,
        "ip_address": "10.0.0.9",
        "user_id": 1,
@@ -1840,7 +1811,7 @@
       {
        "action": "session_expired",
        "created_at": "<volatile>",
-       "details": "reason=idle",
+       "details": "<volatile>",
        "id": 17,
        "ip_address": "10.0.3.12",
        "user_id": null,
@@ -1849,7 +1820,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=10.0.3.12; ua=Mozilla/5.0 (X11; Linux x86_64) Firefox/132.0",
+       "details": "<volatile>",
        "id": 16,
        "ip_address": "10.0.3.12",
        "user_id": null,
@@ -1858,7 +1829,7 @@
       {
        "action": "logout",
        "created_at": "<volatile>",
-       "details": "User logged out",
+       "details": "<volatile>",
        "id": 15,
        "ip_address": "10.0.1.33",
        "user_id": null,
@@ -1867,7 +1838,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=10.0.1.33; ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) Edg/130.0",
+       "details": "<volatile>",
        "id": 14,
        "ip_address": "10.0.1.33",
        "user_id": null,
@@ -1913,33 +1884,7 @@
      "path": "data[*].created_at",
      "format": "9999-99-99 99:99:99"
     },
-    "data[16].details",
-    "data[25].details",
-    "data[34].details",
-    {
-     "path": "data[43].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]+ [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]+\\]$"
-    },
-    {
-     "path": "data[44].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]+ [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]+\\]$"
-    },
-    "data[45].details",
-    "data[46].details",
-    "data[47].details",
-    "data[48].details",
-    "data[49].details",
-    "data[50].details",
-    "data[51].details",
-    "data[52].details",
-    "data[53].details",
-    "data[54].details",
-    "data[55].details",
-    "data[56].details",
-    "data[57].details",
-    "data[58].details",
-    "data[59].details",
-    "data[8].details"
+    "data[*].details"
    ],
    "body": {
     "kind": "json",
@@ -1948,7 +1893,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 117,
        "ip_address": "<client-ip>",
        "user_id": 5,
@@ -1957,7 +1902,7 @@
       {
        "action": "oidc_config_updated",
        "created_at": "<volatile>",
-       "details": "Updated OIDC configuration",
+       "details": "<volatile>",
        "id": 116,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -1966,7 +1911,7 @@
       {
        "action": "ldap_config_updated",
        "created_at": "<volatile>",
-       "details": "Updated LDAP configuration",
+       "details": "<volatile>",
        "id": 115,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -1975,7 +1920,7 @@
       {
        "action": "enrollment_settings_changed",
        "created_at": "<volatile>",
-       "details": "Enrollment settings updated (mode=unchanged)",
+       "details": "<volatile>",
        "id": 114,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -1984,7 +1929,7 @@
       {
        "action": "device_scope_default_updated",
        "created_at": "<volatile>",
-       "details": "Device scope default: open",
+       "details": "<volatile>",
        "id": 113,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -1993,7 +1938,7 @@
       {
        "action": "branding_reset",
        "created_at": "<volatile>",
-       "details": "Reset branding to defaults",
+       "details": "<volatile>",
        "id": 112,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -2002,7 +1947,7 @@
       {
        "action": "branding_profile_delete",
        "created_at": "<volatile>",
-       "details": "Deleted profile #999999999",
+       "details": "<volatile>",
        "id": 111,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -2011,7 +1956,7 @@
       {
        "action": "branding_update",
        "created_at": "<volatile>",
-       "details": "Updated branding configuration",
+       "details": "<volatile>",
        "id": 110,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -2029,7 +1974,7 @@
       {
        "action": "availability_history_updated",
        "created_at": "<volatile>",
-       "details": "Availability history: enabled=false, retention_days=30",
+       "details": "<volatile>",
        "id": 108,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -2038,7 +1983,7 @@
       {
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
-       "details": "Updated Server Attestation badge labels",
+       "details": "<volatile>",
        "id": 107,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -2047,7 +1992,7 @@
       {
        "action": "enrollment_rejected",
        "created_at": "<volatile>",
-       "details": "Rejected enrollment for device 999999999",
+       "details": "<volatile>",
        "id": 106,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -2056,7 +2001,7 @@
       {
        "action": "enrollment_rejection_cleared",
        "created_at": "<volatile>",
-       "details": "Cleared enrollment rejection for device 999999999",
+       "details": "<volatile>",
        "id": 105,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -2065,7 +2010,7 @@
       {
        "action": "enrollment_rejected",
        "created_at": "<volatile>",
-       "details": "Rejected enrollment for device 999999999",
+       "details": "<volatile>",
        "id": 104,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -2074,7 +2019,7 @@
       {
        "action": "enrollment_rejection_cleared",
        "created_at": "<volatile>",
-       "details": "Cleared enrollment rejection for device 999999999",
+       "details": "<volatile>",
        "id": 103,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -2083,7 +2028,7 @@
       {
        "action": "profile_updated",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
+       "details": "<volatile>",
        "id": 102,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -2101,7 +2046,7 @@
       {
        "action": "clipboard.set",
        "created_at": "<volatile>",
-       "details": "Clipboard set on 999999999 (0 chars)",
+       "details": "<volatile>",
        "id": 100,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -2110,7 +2055,7 @@
       {
        "action": "commercialization_email_config_updated",
        "created_at": "<volatile>",
-       "details": "Updated commercialization email notifications",
+       "details": "<volatile>",
        "id": 99,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -2119,7 +2064,7 @@
       {
        "action": "backup_created",
        "created_at": "<volatile>",
-       "details": "Full backup downloaded (0.33 MB)",
+       "details": "<volatile>",
        "id": 98,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -2128,7 +2073,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 97,
        "ip_address": "<client-ip>",
        "user_id": 6,
@@ -2137,7 +2082,7 @@
       {
        "action": "oidc_config_updated",
        "created_at": "<volatile>",
-       "details": "Updated OIDC configuration",
+       "details": "<volatile>",
        "id": 96,
        "ip_address": "<client-ip>",
        "user_id": 7,
@@ -2146,7 +2091,7 @@
       {
        "action": "ldap_config_updated",
        "created_at": "<volatile>",
-       "details": "Updated LDAP configuration",
+       "details": "<volatile>",
        "id": 95,
        "ip_address": "<client-ip>",
        "user_id": 7,
@@ -2155,7 +2100,7 @@
       {
        "action": "enrollment_settings_changed",
        "created_at": "<volatile>",
-       "details": "Enrollment settings updated (mode=unchanged)",
+       "details": "<volatile>",
        "id": 94,
        "ip_address": "<client-ip>",
        "user_id": 7,
@@ -2164,7 +2109,7 @@
       {
        "action": "device_scope_default_updated",
        "created_at": "<volatile>",
-       "details": "Device scope default: open",
+       "details": "<volatile>",
        "id": 93,
        "ip_address": "<client-ip>",
        "user_id": 7,
@@ -2182,7 +2127,7 @@
       {
        "action": "availability_history_updated",
        "created_at": "<volatile>",
-       "details": "Availability history: enabled=false, retention_days=30",
+       "details": "<volatile>",
        "id": 91,
        "ip_address": "<client-ip>",
        "user_id": 7,
@@ -2191,7 +2136,7 @@
       {
        "action": "backup_created",
        "created_at": "<volatile>",
-       "details": "Full backup downloaded (0.33 MB)",
+       "details": "<volatile>",
        "id": 90,
        "ip_address": "<client-ip>",
        "user_id": 7,
@@ -2200,7 +2145,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 89,
        "ip_address": "<client-ip>",
        "user_id": 7,
@@ -2209,7 +2154,7 @@
       {
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
-       "details": "Updated Server Attestation badge labels",
+       "details": "<volatile>",
        "id": 88,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -2218,7 +2163,7 @@
       {
        "action": "enrollment_rejected",
        "created_at": "<volatile>",
-       "details": "Rejected enrollment for device 999999999",
+       "details": "<volatile>",
        "id": 87,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -2227,7 +2172,7 @@
       {
        "action": "enrollment_rejection_cleared",
        "created_at": "<volatile>",
-       "details": "Cleared enrollment rejection for device 999999999",
+       "details": "<volatile>",
        "id": 86,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -2236,7 +2181,7 @@
       {
        "action": "enrollment_rejected",
        "created_at": "<volatile>",
-       "details": "Rejected enrollment for device 999999999",
+       "details": "<volatile>",
        "id": 85,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -2245,7 +2190,7 @@
       {
        "action": "profile_updated",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
+       "details": "<volatile>",
        "id": 84,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -2263,7 +2208,7 @@
       {
        "action": "clipboard.set",
        "created_at": "<volatile>",
-       "details": "Clipboard set on 999999999 (0 chars)",
+       "details": "<volatile>",
        "id": 82,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -2272,7 +2217,7 @@
       {
        "action": "commercialization_email_config_updated",
        "created_at": "<volatile>",
-       "details": "Updated commercialization email notifications",
+       "details": "<volatile>",
        "id": 81,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -2281,7 +2226,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 80,
        "ip_address": "<client-ip>",
        "user_id": 8,
@@ -2290,7 +2235,7 @@
       {
        "action": "clipboard.set",
        "created_at": "<volatile>",
-       "details": "Clipboard set on 999999999 (0 chars)",
+       "details": "<volatile>",
        "id": 79,
        "ip_address": "<client-ip>",
        "user_id": 9,
@@ -2299,7 +2244,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 78,
        "ip_address": "<client-ip>",
        "user_id": 9,
@@ -2308,7 +2253,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 77,
        "ip_address": "<client-ip>",
        "user_id": 10,
@@ -2317,7 +2262,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "details": "<volatile>",
        "id": 76,
        "ip_address": "<client-ip>",
        "user_id": 11,
@@ -2326,7 +2271,7 @@
       {
        "action": "login_failed",
        "created_at": "<volatile>",
-       "details": "Username: e***; ip=<client-ip>; ua=bd-contract/1",
+       "details": "<volatile>",
        "id": 75,
        "ip_address": "<client-ip>",
        "user_id": null,
@@ -2488,7 +2433,7 @@
       {
        "action": "device_group_saved",
        "created_at": "<volatile>",
-       "details": "Device group Support team devices saved",
+       "details": "<volatile>",
        "id": 57,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2497,7 +2442,7 @@
       {
        "action": "device_group_saved",
        "created_at": "<volatile>",
-       "details": "Device group Critical servers saved",
+       "details": "<volatile>",
        "id": 56,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2506,7 +2451,7 @@
       {
        "action": "device_group_saved",
        "created_at": "<volatile>",
-       "details": "Device group All laptops saved",
+       "details": "<volatile>",
        "id": 55,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2515,7 +2460,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100031 tags set to [office]",
+       "details": "<volatile>",
        "id": 54,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2524,7 +2469,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100028 tags set to [laptop]",
+       "details": "<volatile>",
        "id": 53,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2533,7 +2478,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100027 tags set to [legacy]",
+       "details": "<volatile>",
        "id": 52,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2542,7 +2487,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100026 tags set to [lab, vm]",
+       "details": "<volatile>",
        "id": 51,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2551,7 +2496,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100025 tags set to [lab, iot]",
+       "details": "<volatile>",
        "id": 50,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2560,7 +2505,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100024 tags set to [lab, iot]",
+       "details": "<volatile>",
        "id": 49,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2569,7 +2514,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100023 tags set to [mobile]",
+       "details": "<volatile>",
        "id": 48,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2578,7 +2523,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100022 tags set to [mobile]",
+       "details": "<volatile>",
        "id": 47,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2587,7 +2532,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100021 tags set to [kiosk]",
+       "details": "<volatile>",
        "id": 46,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2596,7 +2541,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100020 tags set to [kiosk]",
+       "details": "<volatile>",
        "id": 45,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2605,7 +2550,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100019 tags set to [laptop, sales]",
+       "details": "<volatile>",
        "id": 44,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2614,7 +2559,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100018 tags set to [laptop, sales]",
+       "details": "<volatile>",
        "id": 43,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2623,7 +2568,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100017 tags set to [laptop, sales]",
+       "details": "<volatile>",
        "id": 42,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2632,7 +2577,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100016 tags set to [server, linux]",
+       "details": "<volatile>",
        "id": 41,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2641,7 +2586,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100015 tags set to [server, linux, critical]",
+       "details": "<volatile>",
        "id": 40,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2650,7 +2595,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100014 tags set to [server, storage]",
+       "details": "<volatile>",
        "id": 39,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2659,7 +2604,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100013 tags set to [server, linux]",
+       "details": "<volatile>",
        "id": 38,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2668,7 +2613,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100012 tags set to [server, linux]",
+       "details": "<volatile>",
        "id": 37,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2677,7 +2622,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100011 tags set to [warehouse, scanner]",
+       "details": "<volatile>",
        "id": 36,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2686,7 +2631,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100010 tags set to [warehouse, scanner]",
+       "details": "<volatile>",
        "id": 35,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2695,7 +2640,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100009 tags set to [warehouse, scanner]",
+       "details": "<volatile>",
        "id": 34,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2704,7 +2649,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100008 tags set to [warehouse]",
+       "details": "<volatile>",
        "id": 33,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2713,7 +2658,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100007 tags set to [design, laptop]",
+       "details": "<volatile>",
        "id": 32,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2722,7 +2667,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100006 tags set to [design]",
+       "details": "<volatile>",
        "id": 31,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2731,7 +2676,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100005 tags set to [vip]",
+       "details": "<volatile>",
        "id": 30,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2740,7 +2685,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100004 tags set to [finance]",
+       "details": "<volatile>",
        "id": 29,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2749,7 +2694,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100003 tags set to [office, finance]",
+       "details": "<volatile>",
        "id": 28,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2758,7 +2703,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100002 tags set to [office, ground-floor]",
+       "details": "<volatile>",
        "id": 27,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2767,7 +2712,7 @@
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100001 tags set to [office, ground-floor]",
+       "details": "<volatile>",
        "id": 26,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2776,7 +2721,7 @@
       {
        "action": "folder_created",
        "created_at": "<volatile>",
-       "details": "Created folder: Lab",
+       "details": "<volatile>",
        "id": 25,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2785,7 +2730,7 @@
       {
        "action": "folder_created",
        "created_at": "<volatile>",
-       "details": "Created folder: Servers",
+       "details": "<volatile>",
        "id": 24,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2794,7 +2739,7 @@
       {
        "action": "folder_created",
        "created_at": "<volatile>",
-       "details": "Created folder: Warehouse",
+       "details": "<volatile>",
        "id": 23,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2803,7 +2748,7 @@
       {
        "action": "folder_created",
        "created_at": "<volatile>",
-       "details": "Created folder: Office",
+       "details": "<volatile>",
        "id": 22,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2812,7 +2757,7 @@
       {
        "action": "user_created",
        "created_at": "<volatile>",
-       "details": "Created user: d***n (server_admin)",
+       "details": "<volatile>",
        "id": 21,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2821,7 +2766,7 @@
       {
        "action": "user_created",
        "created_at": "<volatile>",
-       "details": "Created user: d***r (viewer)",
+       "details": "<volatile>",
        "id": 20,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2830,7 +2775,7 @@
       {
        "action": "user_created",
        "created_at": "<volatile>",
-       "details": "Created user: d***r (operator)",
+       "details": "<volatile>",
        "id": 19,
        "ip_address": "127.0.0.1",
        "user_id": 1,
@@ -2839,7 +2784,7 @@
       {
        "action": "login",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=127.0.0.1; ua=node; fingerprint=none",
+       "details": "<volatile>",
        "id": 18,
        "ip_address": "127.0.0.1",
        "user_id": 1,

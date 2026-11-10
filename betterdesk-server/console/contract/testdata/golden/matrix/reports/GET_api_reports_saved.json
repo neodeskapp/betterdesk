@@ -32,6 +32,9 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "[*].payload"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -63,6 +66,9 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "[*].payload"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -111,7 +117,8 @@
     {
      "path": "[*].created_at",
      "format": "9999-99-99 99:99:99"
-    }
+    },
+    "[*].payload"
    ],
    "body": {
     "kind": "json",
@@ -121,7 +128,7 @@
       "created_by": "admin",
       "filters": "{}",
       "id": 1,
-      "payload": "{\"total_devices\":30,\"online\":0,\"offline\":30,\"banned\":2,\"platform_distribution\":{\"Windows 11 Pro\":5,\"Windows 10 Pro\":2,\"macOS 15.1\":1,\"macOS 14.6\":1,\"macOS 15.0\":1,\"Windows 10 IoT\":3,\"Android 14\":2,\"Android 13\":1,\"Ubuntu 24.04\":1,\"Debian 12\":1,\"Linux 6.1\":1,\"Ubuntu 22.04\":2,\"Windows 11 Home\":2,\"iOS 18.1\":1,\"Android 15\":1,\"Linux 6.6 (Raspberry Pi)\":2,\"Windows Server 2022\":1,\"Windows 7\":1,\"Linux 5.15\":1},\"stats\":{\"total\":30,\"online\":0,\"banned\":2,\"offline\":30}}",
+      "payload": "<volatile>",
       "report_type": "devices",
       "title": "Demo weekly device summary"
      },
@@ -130,7 +137,7 @@
       "created_by": "admin",
       "filters": "{}",
       "id": 2,
-      "payload": "{\"stats\":{\"total\":9,\"open\":4,\"in_progress\":2,\"resolved\":1,\"closed\":2},\"total_tickets\":9,\"category_distribution\":{\"network\":2,\"hardware\":3,\"software\":3,\"access\":1},\"priority_distribution\":{\"high\":2,\"medium\":2,\"critical\":2,\"low\":3}}",
+      "payload": "<volatile>",
       "report_type": "tickets",
       "title": "Demo open tickets"
      },
@@ -139,7 +146,7 @@
       "created_by": "admin",
       "filters": "{}",
       "id": 3,
-      "payload": "{\"total_inventoried\":14,\"os_distribution\":{\"Windows 11 Pro\":2,\"Windows 10 Pro\":2,\"macOS 15.1\":1,\"macOS 14.6\":1,\"Windows 10 IoT\":1,\"Ubuntu 24.04\":1,\"Debian 12\":1,\"Ubuntu 22.04\":2,\"Windows 11 Home\":1,\"Linux 6.6 (Raspberry Pi)\":1,\"Windows Server 2022\":1},\"avg_ram_mb\":37595}",
+      "payload": "<volatile>",
       "report_type": "inventory",
       "title": "Demo hardware inventory"
      },
@@ -148,7 +155,7 @@
       "created_by": "admin",
       "filters": "{}",
       "id": 4,
-      "payload": "{\"devices_with_activity\":6,\"daily_reports\":28,\"total_active_secs\":637475,\"total_idle_secs\":221460,\"top_applications\":[{\"name\":\"Microsoft Excel\",\"category\":\"productivity\",\"total_secs\":80942,\"sessions\":45,\"devices\":6},{\"name\":\"Microsoft Word\",\"category\":\"productivity\",\"total_secs\":79837,\"sessions\":46,\"devices\":6},{\"name\":\"Spotify\",\"category\":\"media\",\"total_secs\":78220,\"sessions\":44,\"devices\":6},{\"name\":\"Visual Studio Code\",\"category\":\"development\",\"total_secs\":69625,\"sessions\":46,\"devices\":6},{\"name\":\"Demo Accounting Suite\",\"category\":\"productivity\",\"total_secs\":62358,\"sessions\":40,\"devices\":6},{\"name\":\"Microsoft Outlook\",\"category\":\"communication\",\"total_secs\":56597,\"sessions\":36,\"devices\":6},{\"name\":\"Microsoft Edge\",\"category\":\"browser\",\"total_secs\":55670,\"sessions\":37,\"devices\":6},{\"name\":\"Microsoft Teams\",\"category\":\"communication\",\"total_secs\":55388,\"sessions\":37,\"devices\":6},{\"name\":\"Windows Explorer\",\"category\":\"system\",\"total_secs\":54141,\"sessions\":39,\"devices\":6},{\"name\":\"Google Chrome\",\"category\":\"browser\",\"total_secs\":44697,\"sessions\":27,\"devices\":6}]}",
+      "payload": "<volatile>",
       "report_type": "activity",
       "title": "Demo app usage this week"
      }

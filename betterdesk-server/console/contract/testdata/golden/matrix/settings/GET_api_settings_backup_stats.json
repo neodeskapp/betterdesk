@@ -113,7 +113,7 @@
       "backend": "betterdesk",
       "components": {
        "consoleDb": true,
-       "env": true,
+       "env": false,
        "goApiKey": true,
        "goDb": true,
        "goPrivKey": true,
@@ -170,7 +170,7 @@
       "backend": "betterdesk",
       "components": {
        "consoleDb": true,
-       "env": true,
+       "env": false,
        "goApiKey": true,
        "goDb": true,
        "goPrivKey": true,
@@ -227,7 +227,7 @@
       "backend": "betterdesk",
       "components": {
        "consoleDb": true,
-       "env": true,
+       "env": false,
        "goApiKey": true,
        "goDb": true,
        "goPrivKey": true,

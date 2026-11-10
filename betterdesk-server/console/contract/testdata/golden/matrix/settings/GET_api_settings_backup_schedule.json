@@ -190,7 +190,6 @@
         "components": [
          "console/data.json",
          "goserver/data.json",
-         "console/.env",
          "console/auth.db",
          "goserver/id_ed25519",
          "goserver/id_ed25519.pub",

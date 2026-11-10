@@ -21,7 +21,7 @@
     "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-    "x-branding-revision": "mwa6raug",
+    "x-branding-revision": "mwb1fhy3",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -62,7 +62,7 @@
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
      "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
-    "x-branding-revision": "mwa6raug",
+    "x-branding-revision": "mwb1fhy3",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -98,7 +98,7 @@
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
      "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
-    "x-branding-revision": "mwa6sk84",
+    "x-branding-revision": "mwb1pcbu",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",

@@ -206,12 +206,7 @@
        "WEB_UI_DIR",
        "WS_ALLOWED_ORIGINS"
       ],
-      "values": {
-       "BILLING_MAX_CLOCK_SKEW_MS": "3500",
-       "BILLING_REQUIRE_SYNCED_CLOCK": "0",
-       "BILLING_TRUST_OS_NTP": "0",
-       "NTP_SERVERS": "time.example.com"
-      }
+      "values": {}
      },
      "success": true
     }
