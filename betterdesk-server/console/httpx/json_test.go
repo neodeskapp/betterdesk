@@ -38,6 +38,27 @@ func TestMarshalLooksLikeJSONStringify(t *testing.T) {
 	}
 }
 
+// JSON.stringify leaves U+2028 and U+2029 as characters. A backslash in
+// the text followed by "u2028" stays an escaped backslash and those letters.
+func TestMarshalKeepsLineSeparators(t *testing.T) {
+	ls, ps := string(rune(0x2028)), string(rune(0x2029))
+	backslash := string(rune(0x5c))
+	got, err := Marshal(map[string]any{
+		"a": "x" + ls + "y" + ps + "z",
+		"b": backslash + "u2028",
+		"c": string(rune(0x2027)),
+		"d": backslash + backslash + "u2029",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	esc := backslash + backslash // a backslash as JSON writes it
+	want := `{"a":"x` + ls + `y` + ps + `z","b":"` + esc + `u2028","c":"` + string(rune(0x2027)) + `","d":"` + esc + esc + `u2029"}`
+	if string(got) != want {
+		t.Errorf("Marshal = %q, want %q", got, want)
+	}
+}
+
 func TestISOTime(t *testing.T) {
 	at := time.Date(2026, 1, 2, 4, 4, 5, 60_000_000, time.FixedZone("CET", 3600))
 	if got := ISOTime(at); got != "2026-01-02T03:04:05.060Z" {

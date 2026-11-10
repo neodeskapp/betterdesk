@@ -26,7 +26,8 @@ func WithJSONCompression(ctx context.Context) context.Context {
 }
 
 // Marshal encodes v as JSON the way the console always has: no escaping of
-// <, > and &, no trailing newline.
+// <, > and &, the line separators U+2028 and U+2029 as characters, no
+// trailing newline.
 func Marshal(v any) ([]byte, error) {
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
@@ -34,7 +35,40 @@ func Marshal(v any) ([]byte, error) {
 	if err := enc.Encode(v); err != nil {
 		return nil, err
 	}
-	return bytes.TrimSuffix(buf.Bytes(), []byte("\n")), nil
+	return unescapeLineSeparators(bytes.TrimSuffix(buf.Bytes(), []byte("\n"))), nil
+}
+
+// unescapeLineSeparators puts U+2028 and U+2029 back as characters.
+// encoding/json writes them as six-character escapes; JSON.stringify does
+// not, and the bytes of an answer count (length, ETag).
+func unescapeLineSeparators(b []byte) []byte {
+	if !bytes.Contains(b, []byte(`\u202`)) {
+		return b
+	}
+	out := make([]byte, 0, len(b))
+	for i := 0; i < len(b); i++ {
+		if b[i] != '\\' || i+1 >= len(b) {
+			out = append(out, b[i])
+			continue
+		}
+		// Inside a JSON string a backslash starts an escape. Each escape is
+		// taken whole, so an escaped backslash never starts another one.
+		if b[i+1] == 'u' && i+5 < len(b) {
+			switch string(b[i+2 : i+6]) {
+			case "2028":
+				out = append(out, 0xE2, 0x80, 0xA8)
+				i += 5
+				continue
+			case "2029":
+				out = append(out, 0xE2, 0x80, 0xA9)
+				i += 5
+				continue
+			}
+		}
+		out = append(out, b[i], b[i+1])
+		i++
+	}
+	return out
 }
 
 // ETag is the weak entity tag for a body: its length in hex and the first
