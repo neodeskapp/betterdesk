@@ -54,7 +54,6 @@ const { initDeviceStatusPush } = require('./services/deviceStatusPush');
 const { initHelpRequestEmailService } = require('./services/helpRequestEmailService');
 const routes = require('./routes');
 const { mountRoutes } = require('./lib/mountRoutes');
-const rustdeskApiRoutes = require('./routes/rustdesk-api.routes');
 const bdApiRoutes = require('./routes/bd-api.routes');
 const { getWanMiddlewareStack } = require('./middleware/wanSecurity');
 const { parseTrustProxy } = require('./lib/parseTrustProxy');
@@ -251,10 +250,6 @@ app.use('/api/panel', widgetLimiter);
 app.use('/api/desktop/layout', panelPreferenceLimiter);
 app.use('/api/', apiLimiter);
 
-// RustDesk Client API — mounted BEFORE CSRF because desktop clients use Bearer
-// token auth, not cookie-based CSRF.  These routes are also served on the
-// dedicated WAN-facing port (21121) with additional hardening.
-app.use(rustdeskApiRoutes);
 
 // BetterDesk Desktop Client API — device-facing endpoints use Bearer tokens
 // (the initial registration endpoint is the only X-Device-Id compatibility
@@ -703,9 +698,8 @@ function startRustDeskApiServer() {
         // /api/group* → Go (JWT from /api/login). Node requireAuth only accepts 64-char auth.db tokens.
         apiApp.use(goApiProxy);
     } else {
-        // Legacy: Node implements RustDesk API locally (SQLite-era deployments)
+        // Legacy: the RustDesk client API routes moved to the Go console
         apiApp.use(express.json({ limit: '64kb', strict: true }));
-        apiApp.use('/', rustdeskApiRoutes);
         const registrationRoutes = require('./routes/registration.routes');
         apiApp.use('/api/bd', registrationRoutes);
     }

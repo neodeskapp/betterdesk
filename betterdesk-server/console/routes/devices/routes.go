@@ -44,7 +44,7 @@ func Register(d *kit.Deps) {
 	r := d.Router
 	view, edit := d.RequirePermission("device.view"), d.RequirePermission("device.edit")
 
-	r.Get("/api/devices", h.list, clientAPIRequest, d.RequireAuth, view)
+	r.Get("/api/devices", h.list, d.RequireAuth, view)
 
 	r.Get("/api/remote-targets", h.remoteTargets, d.RequireAuth, d.RequirePermission("remote_target.view"))
 	r.Post("/api/remote-targets", h.createRemoteTarget, d.RequireAuth, d.RequirePermission("remote_target.edit"))

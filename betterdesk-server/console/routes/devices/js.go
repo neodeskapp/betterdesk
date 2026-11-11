@@ -126,35 +126,6 @@ func idText(device *goapi.Object) string {
 	return jsreq.String(device.Get("id"))
 }
 
-// clientAPIRequest passes a request with a bearer token on: the RustDesk
-// client API answers it (fallthroughUnlessBearer of
-// routes/rustdesk-api.routes.js).
-func clientAPIRequest(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if hasBearerToken(r.Header.Get("Authorization")) {
-			kit.PassOn(w, r)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
-
-// hasBearerToken is the client API's test of the header: it starts with
-// "Bearer " and a token is left after JavaScript trimmed the rest, which
-// Node read as Latin-1, so the white space is the ASCII one and U+00A0.
-func hasBearerToken(header string) bool {
-	rest, ok := strings.CutPrefix(header, "Bearer ")
-	if !ok {
-		return false
-	}
-	for i := 0; i < len(rest); i++ {
-		if c := rest[i]; c != ' ' && (c < '\t' || c > '\r') && c != 0xa0 {
-			return true
-		}
-	}
-	return false
-}
-
 // storedClock is a time as the database or the API server writes it
 // without a zone: read as UTC.
 var storedClock = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$`)

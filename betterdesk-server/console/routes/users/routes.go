@@ -17,10 +17,8 @@ package users
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/goapipath"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 )
 
@@ -33,7 +31,7 @@ type handlers struct {
 func Register(d *kit.Deps) {
 	h := &handlers{d: d, log: d.Log}
 	r := d.Router
-	r.Get("/api/users", h.list, leaveBearerToClientAPI, d.RequireAuth, d.RequirePermission("user.view"))
+	r.Get("/api/users", h.list, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Get("/api/panel/user-groups", h.userGroups, d.RequireAuth, d.RequireAnyPermission("user.view", "device.edit"))
 	r.Post("/api/panel/user-groups", h.createUserGroup, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Patch("/api/panel/user-groups/{guid}", h.updateUserGroup, d.RequireAuth, d.RequirePermission("user.edit"))
@@ -45,21 +43,6 @@ func Register(d *kit.Deps) {
 	r.Post("/api/users/{id}/reset-password", h.resetPassword, d.RequireAuth, d.RequirePermission("user.edit"), d.Limits.PasswordChange.Middleware)
 	r.Get("/api/users/{id}/organizations", h.organizations, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Post("/api/users/{id}/organizations", h.assignOrganization, d.RequireAuth, d.RequirePermission("org.manage_users"))
-}
-
-// leaveBearerToClientAPI passes on a request with a bearer token. The
-// RustDesk client API answers GET /api/users for those in front of this
-// route and leaves the rest to it; while that API is still served by the
-// Node console, the request has to reach it there.
-func leaveBearerToClientAPI(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		auth := r.Header.Get("Authorization")
-		if token, ok := strings.CutPrefix(auth, "Bearer "); ok && jsbind.Trim(token) != "" {
-			kit.PassOn(w, r)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
 }
 
 // answer sends a JSON answer written as JSON.stringify writes it.

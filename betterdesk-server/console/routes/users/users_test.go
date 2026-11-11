@@ -226,15 +226,3 @@ func TestProviderAccountsGetTheirGroups(t *testing.T) {
 		t.Errorf("%d members, want 2: a refused change must not write the groups", members)
 	}
 }
-
-// The RustDesk client API answers the list for a bearer token; this route
-// leaves such a request to it.
-func TestBearerTokenIsLeftToTheClientAPI(t *testing.T) {
-	w := world(t, nil, routetest.Options{})
-	admin := w.As("admin")
-	if got := admin.Do("GET", "/api/users", "", "Authorization", "Bearer abc"); got.Status == http.StatusOK && strings.Contains(got.Body, `"users"`) {
-		t.Errorf("a bearer token got the account list: %d", got.Status)
-	}
-	expect(t, "an empty token", admin.Do("GET", "/api/users", "", "Authorization", "Bearer   "), 200, "")
-	expect(t, "another scheme", admin.Do("GET", "/api/users", "", "Authorization", "Basic abc"), 200, "")
-}

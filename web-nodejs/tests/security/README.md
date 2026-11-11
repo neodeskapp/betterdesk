@@ -9,7 +9,6 @@ Defensive Jest modules for the BetterDesk console and RustDesk Client API.
 | `03-auth-bypass` | Unauthenticated API + RBAC |
 | `04-brute-force` | Login rate limit |
 | `05-csrf-cors-ssrf` | CSRF, CORS allowlist, SSRF |
-| `06-rustdesk-client-api` | Client API auth, heartbeat spoof, server-key |
 | `07-connection-ws` | WS Origin / CSWSH, BD Bearer |
 | `08-path-redirect` | Path traversal, open redirect |
 | `09-deps-audit` | Min versions for axios / proxy-addr / brace-expansion / multer |

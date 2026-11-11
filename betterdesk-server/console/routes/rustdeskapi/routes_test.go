@@ -1,0 +1,570 @@
+package rustdeskapi_test
+
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"sync"
+	"testing"
+
+	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/devicegroups"
+	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
+	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/unitronix/betterdesk-server/console/store/storetest"
+)
+
+// What the Node recordings cannot pin down by themselves: which requests
+// the client API leaves to the console routes, the second step of the
+// sign-in, the TOTP bypass, the pass-through of the telemetry key, the key
+// fingerprint and the audit lists the API server holds.
+
+const viewerToken = "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+
+func world(t *testing.T, db *store.DB, configure func(cfg *config.Config)) *replay.World {
+	t.Helper()
+	w := replay.NewWorld(t, db, configure)
+	tokenFor(w, db, 6, viewerToken)
+	return w
+}
+
+// tokenFor stores an access token of the user that does not run out.
+func tokenFor(w *replay.World, db *store.DB, userID int, token string) {
+	sum := sha256.Sum256([]byte(token))
+	revoked := any(0)
+	if db.IsPostgres() {
+		revoked = false
+	}
+	w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, 'c', 'u', '2999-01-01 00:00:00', ?)",
+		[]any{token, string(hexOf(sum[:])), userID, revoked})
+}
+
+func hexOf(b []byte) []byte {
+	const digits = "0123456789abcdef"
+	out := make([]byte, 0, len(b)*2)
+	for _, c := range b {
+		out = append(out, digits[c>>4], digits[c&15])
+	}
+	return out
+}
+
+func bearer(token string) map[string]string {
+	return map[string]string{"Authorization": "Bearer " + token}
+}
+
+// Without a bearer token the five routes step aside: the console's route
+// at that address answers, or the console's 404 where it has none. With a
+// token they answer themselves.
+func TestTheFiveRoutesLeaveRequestsWithoutABearerToken(t *testing.T) {
+	const signedOut = `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`
+	// The console has routes of its own at two of the five addresses
+	own := map[string]bool{"/api/users": true, "/api/devices": true}
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db, nil)
+		for _, path := range []string{"/api/users", "/api/peers", "/api/strategies", "/api/strategies/x", "/api/devices"} {
+			for _, headers := range []map[string]string{nil, {"Authorization": "Basic eDp5"}, {"Authorization": "Bearer    "}, {"Authorization": "bearer x"}} {
+				got := w.Do(replay.Request{Path: path, Headers: headers})
+				if own[path] && (got.Status != http.StatusUnauthorized || got.Body != signedOut) {
+					t.Errorf("%s with %v: %d %s, want the console route's 401", path, headers, got.Status, got.Body)
+				}
+				if !own[path] && got.Status != http.StatusNotFound {
+					t.Errorf("%s with %v: status %d, want the console's 404: %s", path, headers, got.Status, got.Body)
+				}
+			}
+			if got := w.Do(replay.Request{Path: path, Headers: bearer("contract-no-such-token")}); got.Status != http.StatusUnauthorized || got.Body == signedOut {
+				t.Errorf("%s with an unknown token: %d %s, want the client API's 401", path, got.Status, got.Body)
+			}
+		}
+		// A console route at one of the other three addresses gets the
+		// browser's request too, and the client API keeps the client's
+		for _, path := range []string{"/api/peers", "/api/strategies", "/api/strategies/{guid}"} {
+			w.Server.Router().Get(path, func(rw http.ResponseWriter, r *http.Request) {
+				rw.Header().Set("Content-Type", "application/json")
+				_, _ = io.WriteString(rw, `{"console":true}`)
+			})
+		}
+		for _, path := range []string{"/api/users", "/api/peers", "/api/strategies", "/api/strategies/x", "/api/devices"} {
+			got := w.Do(replay.Request{Role: "admin", Path: path})
+			if own[path] && (got.Status != http.StatusOK || !strings.HasPrefix(got.Body, `{"success":true,"data":{`)) {
+				t.Errorf("%s from a browser: %d %s, want the console route", path, got.Status, got.Body)
+			}
+			if !own[path] && (got.Status != http.StatusOK || got.Body != `{"console":true}`) {
+				t.Errorf("%s from a browser: %d %s, want the console route", path, got.Status, got.Body)
+			}
+			if got := w.Do(replay.Request{Role: "admin", Path: path, Headers: bearer("contract-no-such-token")}); got.Status != http.StatusUnauthorized {
+				t.Errorf("%s from a client with a session: %d %s, want the client API's 401", path, got.Status, got.Body)
+			}
+		}
+		if got := w.Do(replay.Request{Path: "/api/devices", Headers: bearer(viewerToken)}); got.Status != http.StatusOK || got.Body != `{"total":0,"data":[]}` {
+			t.Errorf("GET /api/devices with a token: %d %s", got.Status, got.Body)
+		}
+		// The token is what follows "Bearer " with the spaces around it
+		// trimmed; without the space after "Bearer" there is no token
+		if got := w.Do(replay.Request{Path: "/api/devices", Headers: map[string]string{"Authorization": "Bearer   " + viewerToken + "  "}}); got.Status != http.StatusOK || got.Body != `{"total":0,"data":[]}` {
+			t.Errorf("GET /api/devices with spaces around the token: %d %s", got.Status, got.Body)
+		}
+		if got := w.Do(replay.Request{Path: "/api/devices", Headers: map[string]string{"Authorization": "Bearer" + viewerToken}}); got.Body != signedOut {
+			t.Errorf("GET /api/devices with no space after Bearer: %d %s, want the console route", got.Status, got.Body)
+		}
+	})
+}
+
+var secretField = regexp.MustCompile(`"secret":"([0-9a-f]{32})"`)
+
+// The second step takes any code (BUGS S5), works once, and only for a
+// secret that is text.
+func TestTheSecondStepTakesAnyCode(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db, nil)
+		setTOTP(t, w, db)
+		first := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"username":"e2e_viewer","password":"Rd-Test-1!x","id":"c1","uuid":"u1"}`)})
+		m := secretField.FindStringSubmatch(first.Body)
+		if first.Status != http.StatusOK || m == nil || !strings.Contains(first.Body, `"type":"email_check","tfa_type":"tfa_check"`) {
+			t.Fatalf("password step: %d %s", first.Status, first.Body)
+		}
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"tfaCode":"000000","secret":5}`)}); got.Status != http.StatusUnauthorized {
+			t.Errorf("a secret that is no text: %d %s", got.Status, got.Body)
+		}
+		second := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"verificationCode":"not a code","secret":"` + m[1] + `"}`)})
+		if second.Status != http.StatusOK || !strings.Contains(second.Body, `"type":"access_token"`) || !strings.Contains(second.Body, `"name":"e2e_viewer"`) {
+			t.Fatalf("second step with a wrong code: %d %s", second.Status, second.Body)
+		}
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"tfaCode":"000000","secret":"` + m[1] + `"}`)}); got.Status != http.StatusUnauthorized || got.Body != `{"error":"TFA session expired or invalid"}` {
+			t.Errorf("a used secret: %d %s", got.Status, got.Body)
+		}
+		// The token of the second step names the client of the first
+		var client string
+		if err := db.QueryRow(context.Background(), "SELECT client_id || '/' || client_uuid FROM access_tokens WHERE user_id = 6 AND client_id = 'c1'").Scan(&client); err != nil || client != "c1/u1" {
+			t.Errorf("the token's client: %q, %v", client, err)
+		}
+	})
+}
+
+func setTOTP(t *testing.T, w *replay.World, db *store.DB) {
+	t.Helper()
+	hash, err := w.Server.Deps().Authn.HashPassword(context.Background(), "Rd-Test-1!x")
+	if err != nil {
+		t.Fatal(err)
+	}
+	enabled := any(1)
+	if db.IsPostgres() {
+		enabled = true
+	}
+	w.Exec("UPDATE users SET password_hash = ?, totp_enabled = ?, totp_secret = 'JBSWY3DPEHPK3PXP' WHERE id = 6", []any{hash, enabled})
+}
+
+// RUSTDESK_API_DISABLE_TOTP skips the second factor only together with its
+// acknowledgement.
+func TestTheTOTPBypassNeedsItsAcknowledgement(t *testing.T) {
+	for _, c := range []struct {
+		name   string
+		env    map[string]string
+		bypass bool
+	}{
+		{"without-acknowledgement", map[string]string{"RUSTDESK_API_DISABLE_TOTP": "TRUE"}, false},
+		{"acknowledgement-alone", map[string]string{"RUSTDESK_API_DISABLE_TOTP_ACKNOWLEDGED": "true"}, false},
+		{"both", map[string]string{"RUSTDESK_API_DISABLE_TOTP": "true", "RUSTDESK_API_DISABLE_TOTP_ACKNOWLEDGED": "True"}, true},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			db := storetest.Migrated(t)
+			w := world(t, db, func(cfg *config.Config) {
+				getenv := cfg.Getenv
+				cfg.Getenv = func(key string) string {
+					if v, ok := c.env[key]; ok {
+						return v
+					}
+					return getenv(key)
+				}
+			})
+			setTOTP(t, w, db)
+			got := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"username":"e2e_viewer","password":"Rd-Test-1!x","id":"c9"}`)})
+			if bypassed := strings.Contains(got.Body, `"type":"access_token"`); bypassed != c.bypass {
+				t.Errorf("%v: %d %s", c.env, got.Status, got.Body)
+			}
+			var action string
+			_ = db.QueryRow(context.Background(), "SELECT action FROM audit_log ORDER BY id DESC LIMIT 1").Scan(&action)
+			want := "api_login_tfa_required"
+			if c.bypass {
+				want = "api_login_success_totp_bypassed"
+			}
+			if action != want {
+				t.Errorf("%v: audit action %q, want %q", c.env, action, want)
+			}
+		})
+	}
+}
+
+// fakeAPI answers what a test sets and keeps what it was asked.
+type fakeAPI struct {
+	mu     sync.Mutex
+	asked  []string
+	answer func(w http.ResponseWriter, r *http.Request)
+}
+
+func (f *fakeAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	_, _ = io.Copy(io.Discard, r.Body)
+	f.mu.Lock()
+	f.asked = append(f.asked, r.Method+" "+r.URL.RequestURI())
+	f.mu.Unlock()
+	f.answer(w, r)
+}
+
+func useAPI(w *replay.World, api http.Handler) {
+	d := w.Server.Deps()
+	d.GoAPI = goapi.New(api)
+	d.Backend = goapi.NewBackend(d.GoAPI, devicegroups.DeviceStore{Groups: d.DeviceGroups})
+}
+
+// GET /api/telemetry/key is the API server's answer: its status, headers
+// and body, without the console's cache header and ETag.
+func TestTheTelemetryKeyIsTheAPIServersAnswer(t *testing.T) {
+	db := storetest.Migrated(t)
+	w := world(t, db, nil)
+	api := &fakeAPI{answer: func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-Real-Ip") != "203.0.113.7" || r.Header.Get("X-Forwarded-For") != "203.0.113.7" {
+			w.WriteHeader(http.StatusTeapot)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("X-Key-Version", "1")
+		w.WriteHeader(http.StatusCreated)
+		_, _ = io.WriteString(w, `{"key_id":"k","version":1}`)
+	}}
+	useAPI(w, api)
+	got := w.Do(replay.Request{Path: "/api/telemetry/key?v=1"})
+	if got.Status != http.StatusCreated || got.Body != `{"key_id":"k","version":1}` || got.Header.Get("X-Key-Version") != "1" ||
+		got.Header.Get("Cache-Control") != "no-store" || got.Header.Get("ETag") != "" {
+		t.Errorf("telemetry key: %d %v %s", got.Status, got.Header, got.Body)
+	}
+	if len(api.asked) != 1 || api.asked[0] != "GET /api/telemetry/key?v=1" {
+		t.Errorf("the API server was asked %v", api.asked)
+	}
+}
+
+// The fingerprint is the SHA-256 of the key's bytes in pairs of upper-case
+// hex digits.
+func TestTheKeyFingerprint(t *testing.T) {
+	db := storetest.Migrated(t)
+	dir := t.TempDir()
+	file := filepath.Join(dir, "id_ed25519.pub")
+	if err := os.WriteFile(file, []byte("9rVmB1qx9o6SbZGnm4FyF417DnTbJ0SjnnnRHQ2X+3Q=\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	w := world(t, db, func(cfg *config.Config) { cfg.PubKeyPath = file })
+	if got := w.Do(replay.Request{Path: "/api/server-key"}); got.Body != `{"key":"9rVmB1qx9o6SbZGnm4FyF417DnTbJ0SjnnnRHQ2X+3Q="}` {
+		t.Errorf("server key: %s", got.Body)
+	}
+	got := w.Do(replay.Request{Path: "/api/server-key/fingerprint"})
+	want := `{"fingerprint":"53:C9:9B:3F:10:AE:8F:05:00:CA:07:58:D7:96:09:3D:1B:C4:F0:A9:2E:A0:4B:4F:17:F0:DA:FE:0E:D1:17:73","algorithm":"SHA-256"}`
+	if got.Body != want {
+		t.Errorf("fingerprint: %s\n want %s", got.Body, want)
+	}
+}
+
+// Without its own client API port the console reads the audit lists from
+// the API server, and from its own tables when that call fails.
+func TestTheAuditListsComeFromTheAPIServer(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db, func(cfg *config.Config) { cfg.APIEnabled = false })
+		answer := `{"data":[{"z":1,"a":2}],"total":7}`
+		api := &fakeAPI{answer: func(w http.ResponseWriter, r *http.Request) {
+			if answer == "" {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			_, _ = io.WriteString(w, answer)
+		}}
+		useAPI(w, api)
+		got := w.Do(replay.Request{Path: "/api/audit/conn?host_id=h1&limit=5&offset=2", Headers: bearer(viewerToken)})
+		if got.Body != `{"data":[{"z":1,"a":2}],"total":7}` {
+			t.Errorf("from the API server: %s", got.Body)
+		}
+		if len(api.asked) != 1 || api.asked[0] != "GET /api/audit/conn?host_id=h1&peer_id=&action=&limit=5&offset=2" {
+			t.Errorf("the API server was asked %v", api.asked)
+		}
+		got = w.Do(replay.Request{Path: "/api/audit", Headers: bearer(viewerToken)})
+		if got.Body != `{"data":{"connections":[{"z":1,"a":2}],"files":[{"z":1,"a":2}],"alarms":[{"z":1,"a":2}]}}` {
+			t.Errorf("the summary from the API server: %s", got.Body)
+		}
+		answer = ""
+		w.Exec("INSERT INTO audit_alarms (alarm_type, alarm_name, host_id) VALUES (3, 'n', 'h')", nil)
+		got = w.Do(replay.Request{Path: "/api/audit/alarm?alarm_type=3", Headers: bearer(viewerToken)})
+		var list struct {
+			Data  []map[string]any `json:"data"`
+			Total float64          `json:"total"`
+		}
+		if err := json.Unmarshal([]byte(got.Body), &list); err != nil || list.Total != 1 || len(list.Data) != 1 || list.Data[0]["alarm_name"] != "n" {
+			t.Errorf("from the console's table when the API server fails: %s", got.Body)
+		}
+	})
+}
+
+// A sign-in without a user name or without a password is refused before
+// anything else, and a locked account gets 429 with the lockout's end.
+func TestTheSignInRefusals(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db, nil)
+		for _, body := range []string{`{"username":"e2e_viewer","password":""}`, `{"username":"  ","password":"x"}`, `{"username":"e2e_viewer"}`} {
+			if got := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(body)}); got.Status != http.StatusBadRequest || got.Body != `{"error":"Missing credentials"}` {
+				t.Errorf("%s: %d %s", body, got.Status, got.Body)
+			}
+		}
+		w.Exec("INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES ('e2e_viewer', '2999-01-01 00:00:00', 5)", nil)
+		got := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"username":"e2e_viewer","password":"x"}`)})
+		if got.Status != http.StatusTooManyRequests || !strings.HasPrefix(got.Body, `{"error":"`) || !strings.Contains(got.Body, `"retry_after":`) {
+			t.Errorf("a locked account: %d %s", got.Status, got.Body)
+		}
+		var action string
+		_ = db.QueryRow(context.Background(), "SELECT action FROM audit_log ORDER BY id DESC LIMIT 1").Scan(&action)
+		if action != "api_login_blocked" {
+			t.Errorf("audit action %q, want api_login_blocked", action)
+		}
+	})
+}
+
+// An account whose role may not see the device list by the built-in role
+// map (an old "user" account) gets only the devices of its address book; a
+// viewer gets them all.
+func TestAnAccountWithoutTheDeviceListSeesItsAddressBook(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db, nil)
+		const guestToken = "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+		w.Exec("INSERT INTO users (id, username, password_hash, role) VALUES (20, 'rd_old_user', 'x', 'user')", nil)
+		tokenFor(w, db, 20, guestToken)
+		useAPI(w, &fakeAPI{answer: func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			switch r.URL.Path {
+			case "/api/peers":
+				_, _ = io.WriteString(w, `[{"id":"900200001","hostname":"a"},{"id":"900200002","hostname":"b"}]`)
+			case "/api/remote-targets":
+				_, _ = io.WriteString(w, `[]`)
+			default:
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}})
+		ids := func(token string) string {
+			got := w.Do(replay.Request{Path: "/api/peers", Headers: bearer(token)})
+			var list struct {
+				Data []struct {
+					ID string `json:"id"`
+				} `json:"data"`
+			}
+			if err := json.Unmarshal([]byte(got.Body), &list); err != nil {
+				t.Fatalf("GET /api/peers: %d %s", got.Status, got.Body)
+			}
+			var out []string
+			for _, d := range list.Data {
+				out = append(out, d.ID)
+			}
+			return strings.Join(out, ",")
+		}
+		if got := ids(viewerToken); got != "900200001,900200002" {
+			t.Errorf("a viewer sees %q", got)
+		}
+		if got := ids(guestToken); got != "" {
+			t.Errorf("without an address book the account sees %q", got)
+		}
+		w.Do(replay.Request{Method: "POST", Path: "/api/ab", Headers: bearer(guestToken), Body: replay.Text(`{"data":"{\"tags\":[],\"peers\":[{\"id\":\"900200002\"}]}"}`)})
+		if got := ids(guestToken); got != "900200002" {
+			t.Errorf("with one device in the address book the account sees %q", got)
+		}
+	})
+}
+
+// A folder lists its devices in the order of the keys of a JavaScript
+// object: ids that are array indexes by value, then the others as stored.
+func TestAFolderListsItsDevicesInObjectKeyOrder(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db, nil)
+		w.Exec("INSERT INTO folders (id, name) VALUES (1, 'F')", nil)
+		for _, id := range []string{"abc", "900100009", "x1", "900100002"} {
+			w.Exec("INSERT INTO device_folder_assignments (device_id, folder_id) VALUES (?, 1)", []any{id})
+		}
+		got := w.Do(replay.Request{Path: "/api/device-group", Headers: bearer(viewerToken)})
+		var list struct {
+			Data []struct {
+				GUID string `json:"guid"`
+				Team struct {
+					Peers []struct {
+						ID string `json:"id"`
+					} `json:"peers"`
+				} `json:"team"`
+			} `json:"data"`
+		}
+		if err := json.Unmarshal([]byte(got.Body), &list); err != nil {
+			t.Fatalf("GET /api/device-group: %d %s", got.Status, got.Body)
+		}
+		var ids []string
+		for _, g := range list.Data {
+			if g.GUID == "folder_1" {
+				for _, p := range g.Team.Peers {
+					ids = append(ids, p.ID)
+				}
+			}
+		}
+		if strings.Join(ids, ",") != "900100002,900100009,abc,x1" {
+			t.Errorf("the folder's devices: %v in %s", ids, got.Body)
+		}
+	})
+}
+
+// System information over the size limits is cut: more than 4096 UTF-16
+// units of displays keeps four, of encodings five, and features that long
+// are dropped. Short lists are kept whole.
+func TestTheSystemInformationLimits(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db, nil)
+		w.Exec("INSERT INTO peer (id) VALUES ('900300002')", nil)
+		long := func(n int) string {
+			items := make([]string, n)
+			for i := range items {
+				items[i] = `"` + strings.Repeat("d", 1000) + `"`
+			}
+			return "[" + strings.Join(items, ",") + "]"
+		}
+		stored := func() (displays, encoding int, features string) {
+			var d, e string
+			if err := db.QueryRow(context.Background(), "SELECT displays, encoding, features FROM peer_sysinfo WHERE peer_id = '900300002'").Scan(&d, &e, &features); err != nil {
+				t.Fatal(err)
+			}
+			var dl, el []any
+			if json.Unmarshal([]byte(d), &dl) != nil || json.Unmarshal([]byte(e), &el) != nil {
+				t.Fatalf("stored lists %q %q", d, e)
+			}
+			return len(dl), len(el), strings.ReplaceAll(features, " ", "") // jsonb adds a space
+		}
+		body := `{"id":"900300002","hostname":"h","displays":` + long(5) + `,"encoding":` + long(6) + `,"features":{"a":"` + strings.Repeat("f", 5000) + `"}}`
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/sysinfo", Body: replay.Text(body)}); got.Body != "SYSINFO_UPDATED" {
+			t.Fatalf("sysinfo: %d %s", got.Status, got.Body)
+		}
+		if d, e, f := stored(); d != 4 || e != 5 || f != "{}" {
+			t.Errorf("over the limits: %d displays, %d encodings, features %.40q", d, e, f)
+		}
+		body = `{"id":"900300002","hostname":"h","displays":["a","b","c","d","e"],"encoding":["a","b","c","d","e","f"],"features":{"a":1}}`
+		w.Do(replay.Request{Method: "POST", Path: "/api/sysinfo", Body: replay.Text(body)})
+		if d, e, f := stored(); d != 5 || e != 6 || f != `{"a":1}` {
+			t.Errorf("under the limits: %d displays, %d encodings, features %q", d, e, f)
+		}
+	})
+}
+
+// The device list has at most 200 devices a page, and a device in folder
+// 0 is listed with its device group (0 is no folder).
+func TestThePeerList(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db, nil)
+		const adminToken = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+		tokenFor(w, db, 1, adminToken)
+		devices := []string{`{"id":"900200001","tags":"lab"}`}
+		for i := 2; i <= 250; i++ {
+			devices = append(devices, fmt.Sprintf(`{"id":"9002%05d"}`, i))
+		}
+		useAPI(w, &fakeAPI{answer: func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			switch r.URL.Path {
+			case "/api/peers":
+				_, _ = io.WriteString(w, "["+strings.Join(devices, ",")+"]")
+			case "/api/remote-targets":
+				_, _ = io.WriteString(w, `[]`)
+			default:
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}})
+		w.Exec("INSERT INTO folders (id, name) VALUES (0, 'Zero')", nil)
+		w.Exec("INSERT INTO device_folder_assignments (device_id, folder_id) VALUES ('900200001', 0)", nil)
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/device-group", Headers: bearer(adminToken), Body: replay.Text(`{"name":"Lab","source_type":"tag","tag_filter":"lab"}`)}); got.Status != http.StatusOK {
+			t.Fatalf("create the group: %d %s", got.Status, got.Body)
+		}
+		got := w.Do(replay.Request{Path: "/api/peers?pageSize=500", Headers: bearer(viewerToken)})
+		var list struct {
+			Total int `json:"total"`
+			Data  []struct {
+				ID    string `json:"id"`
+				Group string `json:"device_group_name"`
+			} `json:"data"`
+		}
+		if err := json.Unmarshal([]byte(got.Body), &list); err != nil {
+			t.Fatalf("GET /api/peers: %d %.200s", got.Status, got.Body)
+		}
+		if list.Total != 250 || len(list.Data) != 200 {
+			t.Errorf("total %d with %d on the page, want 250 and 200", list.Total, len(list.Data))
+		}
+		group := "(not on the page)"
+		for _, d := range list.Data {
+			if d.ID == "900200001" {
+				group = d.Group
+			}
+		}
+		if group != "Lab" {
+			t.Errorf("the device in folder 0 is listed with group %q, want Lab", group)
+		}
+	})
+}
+
+// The audit uploads take connection types 0 to 4 and alarm types 0 to 6.
+func TestTheAuditTypes(t *testing.T) {
+	db := storetest.Migrated(t)
+	w := world(t, db, nil)
+	for _, c := range []struct {
+		path, body string
+		ok         bool
+	}{
+		{"/api/audit/conn", `{"host_id":"h","conn_type":0}`, true},
+		{"/api/audit/conn", `{"host_id":"h","conn_type":4}`, true},
+		{"/api/audit/conn", `{"host_id":"h","conn_type":5}`, false},
+		{"/api/audit/conn", `{"host_id":"h","conn_type":-1}`, false},
+		{"/api/audit/alarm", `{"alarm_type":0}`, true},
+		{"/api/audit/alarm", `{"alarm_type":6}`, true},
+		{"/api/audit/alarm", `{"alarm_type":7}`, false},
+	} {
+		got := w.Do(replay.Request{Method: "POST", Path: c.path, Body: replay.Text(c.body)})
+		if ok := got.Status == http.StatusOK && got.Body == "{}"; ok != c.ok {
+			t.Errorf("%s %s: %d %s", c.path, c.body, got.Status, got.Body)
+		}
+	}
+}
+
+// A pro account gets no device's key; other accounts get the stored one.
+func TestAProAccountGetsNoDeviceKey(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db, nil)
+		const proToken = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+		tokenFor(w, db, 8, proToken)
+		w.Exec("INSERT INTO peer (id, pk) VALUES ('900300001', ?)", []any{[]byte{1, 2, 3}})
+		if got := w.Do(replay.Request{Path: "/api/peer-key/900300001", Headers: bearer(viewerToken)}); got.Body != `{"id":"900300001","pk":{"type":"Buffer","data":[1,2,3]}}` {
+			t.Errorf("as a viewer: %d %s", got.Status, got.Body)
+		}
+		if got := w.Do(replay.Request{Path: "/api/peer-key/900300001", Headers: bearer(proToken)}); got.Body != `{"id":"900300001","pk":""}` {
+			t.Errorf("as a pro account: %d %s", got.Status, got.Body)
+		}
+	})
+}
+
+// The guards: no token is 401, a token of another role than an admin's is
+// 403 on the writes, and the check comes before the body is read.
+func TestTheGuardsOfTheWrites(t *testing.T) {
+	db := storetest.Migrated(t)
+	w := world(t, db, nil)
+	for _, path := range []string{"/api/device-group", "/api/user-groups", "/api/strategies", "/api/strategies/assign"} {
+		if got := w.Do(replay.Request{Method: "POST", Path: path, Body: replay.Text(`{}`)}); got.Status != 401 || got.Body != `{"error":"Authorization required"}` {
+			t.Errorf("%s without a token: %d %s", path, got.Status, got.Body)
+		}
+		if got := w.Do(replay.Request{Method: "POST", Path: path, Body: replay.Text(`{}`), Headers: bearer(viewerToken)}); got.Status != 403 || got.Body != `{"error":"Admin privileges required"}` {
+			t.Errorf("%s as a viewer: %d %s", path, got.Status, got.Body)
+		}
+	}
+	for _, c := range []struct{ method, path string }{{"DELETE", "/api/strategies/x"}, {"PUT", "/api/strategies/x/status"}} {
+		if got := w.Do(replay.Request{Method: c.method, Path: c.path, Headers: bearer(viewerToken)}); got.Status != 403 {
+			t.Errorf("%s %s as a viewer: %d %s", c.method, c.path, got.Status, got.Body)
+		}
+	}
+}

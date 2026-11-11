@@ -94,6 +94,13 @@ func (s *Service) RevokeClientTokens(ctx context.Context, userID int64, clientID
 	return revokeAllUserTokens(ctx, s.db, userID)
 }
 
+// RevokeClientUUIDTokens revokes the user's tokens with this client UUID,
+// an empty one included. The client API's sign-in revokes this way for a
+// UUID the request names in any form (db.revokeUserClientTokens).
+func (s *Service) RevokeClientUUIDTokens(ctx context.Context, userID int64, clientUUID string) error {
+	return revokeUserClientTokens(ctx, s.db, userID, clientUUID)
+}
+
 // LookupAccessToken returns the row of a live access token, or nil: first
 // by the token's hash, then by the token itself for rows from before the
 // hash column. The device routes that check tokens themselves use it.

@@ -31,6 +31,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/policies"
 	"github.com/unitronix/betterdesk-server/console/routes/reports"
 	"github.com/unitronix/betterdesk-server/console/routes/resourcecontrol"
+	"github.com/unitronix/betterdesk-server/console/routes/rustdeskapi"
 	"github.com/unitronix/betterdesk-server/console/routes/scaling"
 	"github.com/unitronix/betterdesk-server/console/routes/securityaudit"
 	"github.com/unitronix/betterdesk-server/console/routes/settings"
@@ -52,6 +53,7 @@ import (
 // Groups of the early stage (routes/rustdesk-api.routes.js, then
 // routes/bd-api.routes.js at /api/bd) register on d.Early and go first.
 func registerRoutes(d *kit.Deps) {
+	rustdeskapi.Register(d)   // routes/rustdesk-api.routes.js (server.js), early stage
 	health.Register(d)        // routes/index.js: GET /health
 	authroutes.Register(d)    // routes/auth.routes.js
 	consoleroutes.Register(d) // routes/console.routes.js

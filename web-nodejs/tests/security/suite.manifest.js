@@ -24,7 +24,6 @@ module.exports = {
         { id: '03', file: '03-auth-bypass.test.js', covers: ['RBAC', 'unauthenticated API'] },
         { id: '04', file: '04-brute-force.test.js', covers: ['login rate limit'] },
         { id: '05', file: '05-csrf-cors-ssrf.test.js', covers: ['CSRF', 'CORS', 'SSRF'] },
-        { id: '06', file: '06-rustdesk-client-api.test.js', covers: ['RustDesk Client API 21121', 'session leak'] },
         { id: '07', file: '07-connection-ws.test.js', covers: ['WS CSWSH', 'relay upgrade auth', 'BD Bearer'] },
         { id: '08', file: '08-path-redirect.test.js', covers: ['path traversal', 'open redirect'] },
         { id: '09', file: '09-deps-audit.test.js', covers: ['DEP-01 proxy-addr', 'DEP-02 axios', 'DEP-03 brace-expansion', 'DEP-04 multer'] },

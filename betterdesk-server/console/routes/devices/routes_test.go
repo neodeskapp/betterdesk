@@ -3,8 +3,6 @@ package devices_test
 import (
 	"context"
 	"net/http"
-	"net/http/httptest"
-	"net/url"
 	"strings"
 	"testing"
 
@@ -116,22 +114,15 @@ func TestEveryRouteChecksTheScope(t *testing.T) {
 }
 
 // TestBearerRequestsGoToTheClientAPI checks the address GET /api/devices
-// shares with the RustDesk client API: a request with a bearer token goes
-// to the Node console as it arrived, with a session or without; one with
-// a blank token, another scheme or none is the console's.
+// shares with the RustDesk client API: a request with a bearer token is
+// the client API's, with a session or without; one with a blank token,
+// another scheme or none is the console's.
 func TestBearerRequestsGoToTheClientAPI(t *testing.T) {
-	var node []string
-	upstream := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		node = append(node, r.Method+" "+r.URL.RequestURI()+" "+r.Header.Get("Authorization"))
-		rw.Header().Set("Content-Type", "application/json")
-		_, _ = rw.Write([]byte(`{"total":0,"data":[]}`))
-	}))
-	t.Cleanup(upstream.Close)
-	target, _ := url.Parse(upstream.URL)
-	w, _ := world(t, storetest.Migrated(t), nil, func(cfg *config.Config) { cfg.NodeUpstream = target })
+	w, _ := world(t, storetest.Migrated(t), nil, nil)
 	admin, out := w.As("admin"), w.SignedOut()
 
-	client := `{"total":0,"data":[]}`
+	const client = `{"error":"Authorization required"}`
+	const console = `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`
 	for _, c := range []struct {
 		who    *routetest.Agent
 		header string
@@ -140,28 +131,17 @@ func TestBearerRequestsGoToTheClientAPI(t *testing.T) {
 		{out, "Bearer abc", client},
 		{admin, "Bearer abc", client},
 		{admin, "Bearer  \t abc  ", client},
-		{out, "Bearer ", `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`},
-		{out, "bearer abc", `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`},
-		{out, "Bearerabc", `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`},
-		{out, "Bearer  \xa0", `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`},
-		{out, "Basic YTpi", `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`},
+		{out, "Bearer ", console},
+		{out, "bearer abc", console},
+		{out, "Bearerabc", console},
+		{out, "Bearer  \xa0", console},
+		{out, "Basic YTpi", console},
 		{admin, "", `{"success":true,"data":{"devices":[`},
 	} {
-		node = nil
 		got := c.who.Do("GET", "/api/devices?pageSize=5", "", "Authorization", c.header)
 		if !strings.HasPrefix(got.Body, c.want) {
 			t.Errorf("Authorization %q: %d %s, want %s", c.header, got.Status, got.Body, c.want)
 		}
-		if reached := len(node) == 1; reached != (c.want == client) {
-			t.Errorf("Authorization %q: the Node console saw %q", c.header, node)
-		}
-	}
-	if len(node) != 0 {
-		t.Errorf("node saw %q", node)
-	}
-	node = nil
-	if out.Do("GET", "/api/devices?pageSize=5", "", "Authorization", "Bearer abc"); len(node) != 1 || node[0] != "GET /api/devices?pageSize=5 Bearer abc" {
-		t.Errorf("the Node console got %q, want the request as it arrived", node)
 	}
 }
 
