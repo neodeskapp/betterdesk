@@ -80,6 +80,8 @@ var (
 	matrixVolatileHeaders = map[string][]string{
 		// The file name holds the time of the backup.
 		"GET /api/settings/backup": {"content-disposition"},
+		// The file name holds the day of the export.
+		"GET /api/panel/billing/reports/export": {"content-disposition"},
 		// The revision is the time the branding was last saved, in base 36.
 		"GET /css/branding.css": {"x-branding-revision"},
 	}

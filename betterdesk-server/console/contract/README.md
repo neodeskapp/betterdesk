@@ -75,7 +75,7 @@ hides the summary of a passing run.
 | `CONTRACT_ROUTES` | Route list. Default `testdata/routes.json`. |
 | `CONTRACT_REQUIRE_GO` | `1` fails every route and case the Go console did not answer itself. |
 | `CONTRACT_COVERAGE` | `report` lists uncovered routes without failing. `contract.sh` sets it until the cases exist. |
-| `CONTRACT_TIMEOUT` | Limit for one request. Default `20s`. |
+| `CONTRACT_TIMEOUT` | Limit for one request. Default `60s`: a 50 MB upload takes 20 seconds on a loaded machine. |
 
 Subtests are named `TestMatrix/<role>/<group>.<METHOD>_<path>` and
 `TestCases/<group>/<role>/<case>`, so `-run` can pick a role, a group or one

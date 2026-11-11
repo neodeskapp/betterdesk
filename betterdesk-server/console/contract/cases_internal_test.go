@@ -280,7 +280,7 @@ func TestSettings(t *testing.T) {
 		t.Fatal(err)
 	}
 	if s.BaseURL.String() != "http://bdgo-c1:5000" || s.PasswordFile != "/stack/secrets/e2e_password" || s.GoldenDir != "testdata/golden" ||
-		s.RoutesFile != "testdata/routes.json" || s.Record != Compare || s.RequireGo || s.Timeout.Seconds() != 20 ||
+		s.RoutesFile != "testdata/routes.json" || s.Record != Compare || s.RequireGo || s.Timeout.Seconds() != 60 ||
 		s.SecretsDir != "/stack/secrets" || s.RecordNew {
 		t.Errorf("defaults = %+v", s)
 	}

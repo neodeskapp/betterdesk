@@ -58,7 +58,7 @@ func LoadSettings(getenv func(string) string) (*Settings, error) {
 		SecretsDir:   "/stack/secrets",
 		GoldenDir:    "testdata/golden",
 		RoutesFile:   "testdata/routes.json",
-		Timeout:      20 * time.Second,
+		Timeout:      60 * time.Second,
 	}
 	raw := strings.TrimSpace(getenv("BD_URL"))
 	if raw == "" {
