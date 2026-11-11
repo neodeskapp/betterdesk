@@ -25,12 +25,22 @@ func HashAccessToken(token string) string {
 // GenerateAccessToken issues a token for the user and the client. It first
 // revokes the user's tokens with the same client UUID (the client id plays
 // no part in that; an empty UUID revokes the tokens that have none). The
-// token lasts Settings.TokenExpiryDays days.
+// token lasts TokenExpiryDays days.
 func (s *Service) GenerateAccessToken(ctx context.Context, userID int64, clientID, clientUUID, ip string) (string, error) {
 	if err := revokeUserClientTokens(ctx, s.db, userID, clientUUID); err != nil {
 		return "", err
 	}
 	return s.IssueAccessToken(ctx, userID, clientID, clientUUID, ip)
+}
+
+// TokenExpiryDays is how many days a new access token lasts.
+func (s *Service) TokenExpiryDays() int { return int(s.tokenDays.Load()) }
+
+// SetTokenExpiryDays changes how long new access tokens last, from the
+// text of the setting as API_TOKEN_EXPIRY_DAYS is read: its whole number,
+// or 7 when it has none or the number is 0.
+func (s *Service) SetTokenExpiryDays(text string) {
+	s.tokenDays.Store(int64(intOr(text, 7)))
 }
 
 // IssueAccessToken issues a token and revokes none. It is for a sign-in
@@ -41,7 +51,7 @@ func (s *Service) IssueAccessToken(ctx context.Context, userID int64, clientID, 
 	if err != nil {
 		return "", fmt.Errorf("access token: %w", err)
 	}
-	expires := s.now().Add(time.Duration(s.set.TokenExpiryDays) * 24 * time.Hour)
+	expires := s.now().Add(time.Duration(s.tokenDays.Load()) * 24 * time.Hour)
 	if err := createAccessToken(ctx, s.db, token, userID, clientID, clientUUID, store.DateTimeMillis(expires), ip); err != nil {
 		return "", err
 	}

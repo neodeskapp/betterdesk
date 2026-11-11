@@ -327,8 +327,9 @@ func (g *general) getClientSessions(w http.ResponseWriter, r *http.Request) {
 
 // setClientSessions answers PUT /api/settings/client-sessions with
 // {expiry_days, sliding, max_days}. The server keeps the values; the
-// expiry is also written into the console's .env when that file exists,
-// and a .env that cannot be written is only logged.
+// expiry is also written into the console's .env when that file exists
+// (a .env that cannot be written is only logged), and the next client
+// token lasts that long.
 func (g *general) setClientSessions(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
 	expiryDays := clampSessionDays(jsreq.Prop(body, "expiry_days"), 7)
@@ -346,6 +347,9 @@ func (g *general) setClientSessions(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	g.writeExpiryToEnv(jsreq.String(expiryDays))
+	if g.d.Authn != nil {
+		g.d.Authn.SetTokenExpiryDays(jsreq.String(expiryDays))
+	}
 	details := "RustDesk client sessions: " + jsreq.String(expiryDays) + "d sliding=" + strconv.FormatBool(sliding) + " max=" + jsreq.String(maxDays) + "d"
 	if err := g.d.LogAction(r, "client_session_settings_changed", details); err != nil {
 		g.serverError(w, r, "Save client session settings error", err)

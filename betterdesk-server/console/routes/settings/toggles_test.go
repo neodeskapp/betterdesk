@@ -310,6 +310,10 @@ func TestClientSessions(t *testing.T) {
 	if _, err := os.Stat(envPath); err == nil {
 		t.Error("a .env was created")
 	}
+	// The next client token lasts as long as was just saved
+	if days := s.Server.Deps().Authn.TokenExpiryDays(); days != 12 {
+		t.Errorf("client tokens last %d days after the save, want 12", days)
+	}
 	if row := lastAudit(t, s.World); row != "client_session_settings_changed|RustDesk client sessions: 12d sliding=true max=365d|127.0.0.1|1" {
 		t.Errorf("audit %s", row)
 	}

@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -219,12 +220,15 @@ type Service struct {
 	db    *store.DB
 	goAPI *goapi.Client
 	set   Settings
-	qr    func(text string) (string, error)
-	log   Logger
-	now   func() time.Time
-	rand  io.Reader
-	fs    FS
-	sleep func(ctx context.Context, d time.Duration) error
+	// tokenDays is how many days a new access token lasts. It starts as
+	// Settings.TokenExpiryDays and follows the client session settings.
+	tokenDays atomic.Int64
+	qr        func(text string) (string, error)
+	log       Logger
+	now       func() time.Time
+	rand      io.Reader
+	fs        FS
+	sleep     func(ctx context.Context, d time.Duration) error
 
 	// bcryptCost is the cost of new hashes and dummy the hash an unknown
 	// user's password is compared with. Tests lower both.
@@ -265,6 +269,7 @@ func New(opts Options) (*Service, error) {
 		windows:    runtime.GOOS == "windows",
 		zone:       time.Local,
 	}
+	s.tokenDays.Store(int64(s.set.TokenExpiryDays))
 	if s.log == nil {
 		s.log = discardLogger{}
 	}
