@@ -101,6 +101,21 @@ func groupArg(t *testing.T, raw json.RawMessage) devicegroups.GroupData {
 	return devicegroups.GroupData{GUID: get("guid"), Name: get("name"), Note: get("note"), TeamID: get("team_id"), SourceType: get("source_type"), TagFilter: get("tag_filter")}
 }
 
+func userGroupArg(t *testing.T, raw json.RawMessage) devicegroups.UserGroupData {
+	t.Helper()
+	var fields map[string]any
+	if err := json.Unmarshal(raw, &fields); err != nil {
+		t.Fatal(err)
+	}
+	get := func(key string) jsbind.Value {
+		if v, ok := fields[key]; ok {
+			return valueOfAny(t, v)
+		}
+		return jsbind.Undefined
+	}
+	return devicegroups.UserGroupData{GUID: get("guid"), Name: get("name"), Note: get("note"), TeamID: get("team_id")}
+}
+
 func textArg(t *testing.T, raw json.RawMessage) string {
 	t.Helper()
 	var s string
@@ -195,6 +210,18 @@ func TestStoreAgainstNode(t *testing.T) {
 				if found {
 					result = userID
 				}
+			case "createUserGroup":
+				result, err = s.CreateUserGroup(ctx, userGroupArg(t, a[0]))
+			case "getUserGroupByGuid":
+				result, err = s.UserGroupByGUID(ctx, textArg(t, a[0]))
+			case "updateUserGroup":
+				result, err = s.UpdateUserGroup(ctx, textArg(t, a[0]), userGroupArg(t, a[1]))
+			case "deleteUserGroup":
+				err = s.DeleteUserGroup(ctx, textArg(t, a[0]))
+			case "getUserGroupsForUser":
+				result, err = s.UserGroupsForUser(ctx, int64(argValue(t, a[0]).ToNumber()))
+			case "setUserGroupMemberships":
+				result, err = s.SetUserGroupMemberships(ctx, int64(argValue(t, a[0]).ToNumber()), textsArg(t, a[1]))
 			default:
 				t.Fatalf("step %d: unknown op %s", i, step.Op)
 			}

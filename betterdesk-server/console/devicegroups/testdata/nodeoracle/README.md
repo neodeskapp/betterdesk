@@ -42,9 +42,10 @@ The generators are seeded, so a second run writes the same files.
 ## The store (`store.js`)
 
 `store.js` runs the folder, device group and user group methods of
-`services/dbAdapter.js` (both adapters) on a scratch database and records
-each result as JSON, or the message of the error it threw:
-`../store_sqlite.json` and `../store_postgres.json`, 86 calls each.
+`services/dbAdapter.js` (both adapters), user group memberships included,
+on a scratch database and records each result as JSON, or the message of
+the error it threw: `../store_sqlite.json` and `../store_postgres.json`,
+118 calls each.
 `TestStoreAgainstNode` replays them on a database with the same rows and
 compares the JSON byte for byte, with the times the database fills in and
 random guids masked. Arguments are the values a request can carry: text,

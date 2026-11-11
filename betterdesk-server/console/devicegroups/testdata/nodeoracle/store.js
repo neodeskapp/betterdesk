@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Runs the folder, device group and user group methods of the Node
+ * Runs the folder, device group, user group and membership methods of the Node
  * console's database adapter (web-nodejs/services/dbAdapter.js) on a
  * scratch database and records every result, for the Go store of
  * console/devicegroups to replay (store_oracle_test.go). See README.md.
@@ -165,6 +165,40 @@ step('getAllDeviceGroups');
 step('getAllUserGroups');
 for (const id of [1, 3, 4, 0, NAN, '2', 2.5]) step('getUserById', id);
 
+// User groups and their members
+step('createUserGroup', { guid: 'ug-new', name: 'New', note: 'n', team_id: 't' });
+step('createUserGroup', { name: 'Random guid', note: U, team_id: null });
+step('createUserGroup', { guid: 'ug-num', name: 5, note: 1.5, team_id: 7 });
+step('createUserGroup', { guid: 'ug-flag', name: 'Flag', team_id: true });
+step('createUserGroup', { guid: 'ug-new', name: 'Again' });
+step('createUserGroup', { guid: 'ug-noname', name: null });
+step('createUserGroup', { guid: '', name: 'Empty guid', note: '', team_id: 0 });
+step('getUserGroupByGuid', 'ug-new');
+step('getUserGroupByGuid', 'nothing');
+step('updateUserGroup', 'ug-new', { name: 'New 2', note: '', team_id: 'x' });
+step('updateUserGroup', 'ug-new', {});
+step('updateUserGroup', 'nothing', { name: 'x' });
+step('updateUserGroup', 'ug-new', { name: true });
+step('updateUserGroup', 'ug-new', { name: null });
+step('updateUserGroup', 'ug-num', { note: 7, team_id: U });
+step('updateUserGroup', 'ug-num', { team_id: null });
+step('setUserGroupMemberships', 1, ['ug-new', ' ug-a ', 'missing', 'ug-new', '']);
+step('setUserGroupMemberships', 2, ['ug-b']);
+step('setUserGroupMemberships', 99, ['ug-b']);
+step('getUserGroupsForUser', 1);
+step('getUserGroupsForUser', 2);
+step('getUserGroupsForUser', 99);
+step('getAllUserGroups');
+step('setUserGroupMemberships', 1, []);
+step('getUserGroupsForUser', 1);
+step('setUserGroupMemberships', 2, ['ug-a', 'ug-b', 'ug-num']);
+step('setDeviceGroupUserGroupAccess', 'g-tag', ['ug-a', 'ug-b']);
+step('deleteUserGroup', 'ug-a');
+step('deleteUserGroup', 'nothing');
+step('getUserGroupsForUser', 2);
+step('getDeviceGroupByGuid', 'g-tag');
+step('getAllUserGroups');
+
 // What a step records: what the Go store returns for it
 async function run(db, s) {
     const a = s.args.map((v) => (Array.isArray(v) ? v.map(decode) : (v && typeof v === 'object' && !('$' in v))
@@ -189,6 +223,12 @@ async function run(db, s) {
         case 'getAllDeviceGroups': return ad.getAllDeviceGroups();
         case 'getAllUserGroups': return ad.getAllUserGroups();
         case 'getUserById': { const u = await ad.getUserById(a[0]); return u ? u.id : null; }
+        case 'createUserGroup': return ad.createUserGroup(a[0]);
+        case 'getUserGroupByGuid': return ad.getUserGroupByGuid(a[0]);
+        case 'updateUserGroup': return ad.updateUserGroup(a[0], a[1]);
+        case 'deleteUserGroup': await ad.deleteUserGroup(a[0]); return null;
+        case 'getUserGroupsForUser': return ad.getUserGroupsForUser(a[0]);
+        case 'setUserGroupMemberships': return ad.setUserGroupMemberships(a[0], a[1]);
     }
     throw new Error(`unknown op ${s.op}`);
 }

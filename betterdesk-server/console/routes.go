@@ -41,6 +41,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/toolkit"
 	"github.com/unitronix/betterdesk-server/console/routes/trends"
 	"github.com/unitronix/betterdesk-server/console/routes/uishell"
+	"github.com/unitronix/betterdesk-server/console/routes/users"
 )
 
 // registerRoutes adds the route groups that have moved to Go, one line
@@ -59,6 +60,7 @@ func registerRoutes(d *kit.Deps) {
 	keys.Register(d)          // routes/keys.routes.js
 	settings.Register(d)      // routes/settings.routes.js: the routes that only read the branding
 	avatars.Register(d)       // routes/avatars.routes.js
+	users.Register(d)         // routes/users.routes.js
 	panelaccess.Register(d)   // routes/panel-access.routes.js
 	uishell.Register(d)       // routes/ui-shell.routes.js
 	folders.Register(d)       // routes/folders.routes.js

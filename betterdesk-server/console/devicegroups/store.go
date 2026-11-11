@@ -519,6 +519,166 @@ func (s *Service) AllUserGroups(ctx context.Context) ([]*goapi.Object, error) {
 	return groups, nil
 }
 
+// UserGroupByGUID returns the user group with the guid, or nil.
+func (s *Service) UserGroupByGUID(ctx context.Context, guid string) (*goapi.Object, error) {
+	row, err := readRow(ctx, s.db, `SELECT * FROM user_groups WHERE guid = ?`, guid)
+	if err != nil {
+		return nil, fmt.Errorf("load user group %q: %w", guid, err)
+	}
+	return row, nil
+}
+
+// UserGroupData are the fields of a user group to write. An undefined field
+// is not written by UpdateUserGroup.
+type UserGroupData struct {
+	GUID, Name, Note, TeamID jsbind.Value
+}
+
+// CreateUserGroup stores a user group and returns its row. Without a guid
+// it gets a random one; a note or team id that is empty is stored as "".
+func (s *Service) CreateUserGroup(ctx context.Context, data UserGroupData) (*goapi.Object, error) {
+	guid := data.GUID
+	if !guid.Truthy() {
+		random, err := newGUID()
+		if err != nil {
+			return nil, fmt.Errorf("make a guid: %w", err)
+		}
+		guid = jsbind.String(random)
+	}
+	args, err := s.args(4, guid, data.Name, data.Note.Or(jsbind.String("")), data.TeamID.Or(jsbind.String("")))
+	if err != nil {
+		return nil, err
+	}
+	const insert = `INSERT INTO user_groups (guid, name, note, team_id) VALUES (?, ?, ?, ?)`
+	if s.db.IsPostgres() {
+		row, err := readRow(ctx, s.db, insert+` RETURNING *`, args...)
+		if err != nil {
+			return nil, fmt.Errorf("create user group: %w", err)
+		}
+		return row, nil
+	}
+	if _, err := s.db.Exec(ctx, insert, args...); err != nil {
+		return nil, fmt.Errorf("create user group: %w", err)
+	}
+	return readRow(ctx, s.db, `SELECT * FROM user_groups WHERE guid = ?`, args[0])
+}
+
+// UpdateUserGroup writes the fields of data that are not undefined and
+// returns the group's row; nil when no field was given or the group is
+// gone.
+func (s *Service) UpdateUserGroup(ctx context.Context, guid string, data UserGroupData) (*goapi.Object, error) {
+	var sets []string
+	var values []jsbind.Value
+	for _, field := range []struct {
+		column string
+		value  jsbind.Value
+	}{{"name", data.Name}, {"note", data.Note}, {"team_id", data.TeamID}} {
+		if !field.value.IsUndefined() {
+			sets = append(sets, field.column+" = ?")
+			values = append(values, field.value)
+		}
+	}
+	if len(sets) == 0 {
+		return nil, nil
+	}
+	args, err := s.args(len(values)+1, append(values, jsbind.String(guid))...)
+	if err != nil {
+		return nil, err
+	}
+	update := `UPDATE user_groups SET ` + strings.Join(sets, ", ") + ` WHERE guid = ?`
+	if s.db.IsPostgres() {
+		row, err := readRow(ctx, s.db, update+` RETURNING *`, args...)
+		if err != nil {
+			return nil, fmt.Errorf("update user group %q: %w", guid, err)
+		}
+		return row, nil
+	}
+	if _, err := s.db.Exec(ctx, update, args...); err != nil {
+		return nil, fmt.Errorf("update user group %q: %w", guid, err)
+	}
+	return readRow(ctx, s.db, `SELECT * FROM user_groups WHERE guid = ?`, guid)
+}
+
+// DeleteUserGroup deletes a user group with its members and the device
+// group access lists that name it. An unknown guid is no error.
+func (s *Service) DeleteUserGroup(ctx context.Context, guid string) error {
+	id, ok, err := s.groupID(ctx, s.db, "user_groups", guid)
+	if err != nil {
+		return fmt.Errorf("load user group %q: %w", guid, err)
+	}
+	if !ok {
+		return nil
+	}
+	for _, query := range []string{
+		`DELETE FROM user_group_members WHERE user_group_id = ?`,
+		`DELETE FROM device_group_user_group_access WHERE user_group_id = ?`,
+	} {
+		if _, err := s.db.Exec(ctx, query, id); err != nil {
+			return fmt.Errorf("delete user group %q: %w", guid, err)
+		}
+	}
+	if _, err := s.db.Exec(ctx, `DELETE FROM user_groups WHERE guid = ?`, guid); err != nil {
+		return fmt.Errorf("delete user group %q: %w", guid, err)
+	}
+	return nil
+}
+
+// UserGroupsForUser returns the rows of the user groups an account is a
+// member of, ordered by name.
+func (s *Service) UserGroupsForUser(ctx context.Context, userID int64) ([]*goapi.Object, error) {
+	rows, err := readRows(ctx, s.db, `
+		SELECT ug.* FROM user_groups ug
+		INNER JOIN user_group_members ugm ON ug.id = ugm.user_group_id
+		WHERE ugm.user_id = ?
+		ORDER BY ug.name ASC`, userID)
+	if err != nil {
+		return nil, fmt.Errorf("load user groups of user %d: %w", userID, err)
+	}
+	return rows, nil
+}
+
+// SetUserGroupMemberships makes an account a member of exactly the user
+// groups with the guids, in one transaction, and returns its groups. Guids
+// are trimmed, without empty ones and repeats, at most 100; guids of no
+// user group are left out. An unknown account is left alone and has no
+// groups.
+func (s *Service) SetUserGroupMemberships(ctx context.Context, userID int64, groupGUIDs []string) ([]*goapi.Object, error) {
+	var id int64
+	err := s.db.QueryRow(ctx, `SELECT id FROM users WHERE id = ?`, userID).Scan(&id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return []*goapi.Object{}, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("load user %d: %w", userID, err)
+	}
+	unique := uniqueTrimmed(groupGUIDs, 100)
+	err = s.db.InTx(ctx, func(tx *store.Tx) error {
+		if _, err := tx.Exec(ctx, `DELETE FROM user_group_members WHERE user_id = ?`, id); err != nil {
+			return err
+		}
+		insert := tx.Pick(
+			`INSERT OR IGNORE INTO user_group_members (user_group_id, user_id) VALUES (?, ?)`,
+			`INSERT INTO user_group_members (user_group_id, user_id) VALUES (?, ?) ON CONFLICT DO NOTHING`)
+		for _, guid := range unique {
+			group, found, err := s.groupID(ctx, tx, "user_groups", guid)
+			if err != nil {
+				return err
+			}
+			if !found {
+				continue
+			}
+			if _, err := tx.Exec(ctx, insert, group, id); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("set user groups of user %d: %w", userID, err)
+	}
+	return s.UserGroupsForUser(ctx, id)
+}
+
 // ---- Accounts ----
 
 // UserIDByID returns the id of the account with the id, which the caller

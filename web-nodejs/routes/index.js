@@ -9,7 +9,6 @@ const router = express.Router();
 const devicesRoutes = require('./devices.routes');
 const settingsRoutes = require('./settings.routes');
 const generatorRoutes = require('./generator.routes');
-const usersRoutes = require('./users.routes');
 const remoteRoutes = require('./remote.routes');
 // bdApiRoutes mounted in server.js (before CSRF) for desktop client access
 const pagesRoutes = require('./pages.routes');
@@ -46,7 +45,6 @@ router.use('/', devicesRoutes);  // the routes that reach into an agent over bdR
 router.use('/', settingsRoutes);
 router.use('/', generatorRoutes);
 router.use('/', require('./client-branding.routes'));
-router.use('/', usersRoutes);
 router.use('/', remoteRoutes);
 // bdApiRoutes now mounted in server.js (before CSRF) for desktop client access
 router.use('/api/bd', inventoryRoutes);     // device-facing: /api/bd/inventory, /api/bd/telemetry

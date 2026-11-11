@@ -1,0 +1,25 @@
+{
+ "meta": {
+  "lang": "en",
+  "name": "English",
+  "native_name": "English",
+  "direction": "ltr"
+ },
+ "errors": {
+  "server_error": "Server error"
+ },
+ "users": {
+  "fill_required": "Please fill in all required fields",
+  "invalid_username": "A username has 3 to 32 characters: letters, numbers and underscores only.",
+  "username_exists": "Username already exists",
+  "weak_password": "Password is too weak",
+  "not_found": "User not found",
+  "provider_managed_hint": "This account comes from LDAP/AD or single sign-on. Its password is managed there, and for LDAP accounts the role too.",
+  "cannot_demote_self": "You cannot demote yourself",
+  "invalid_role": "Invalid role",
+  "cannot_delete_self": "You cannot delete your own account",
+  "last_admin": "Cannot delete the last administrator",
+  "password_required": "Enter a password.",
+  "user_group_not_found": "User group not found"
+ }
+}

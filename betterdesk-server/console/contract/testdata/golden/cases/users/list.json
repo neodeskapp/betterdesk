@@ -1,0 +1,330 @@
+{
+ "id": "users/list",
+ "request": {
+  "method": "GET",
+  "path": "/api/users"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "data.users[*].last_login"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "data.users[*].last_login"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "panel_access_denied",
+     "error": "Panel access denied: users",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.users[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    "data.users[*].last_login"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "total": 12,
+      "users": [
+       {
+        "auth_provider": "local",
+        "avatar_version": null,
+        "created_at": "<volatile>",
+        "email": "",
+        "folder_ids": [],
+        "has_avatar": false,
+        "id": 1,
+        "last_login": "<volatile>",
+        "peer_grants": [],
+        "role": "admin",
+        "strategy_guid": "",
+        "totp_enabled": false,
+        "user_groups": [],
+        "username": "admin"
+       },
+       {
+        "auth_provider": "local",
+        "avatar_version": null,
+        "created_at": "<volatile>",
+        "email": "operator@example.invalid",
+        "folder_ids": [],
+        "has_avatar": false,
+        "id": 2,
+        "last_login": "<volatile>",
+        "peer_grants": [],
+        "role": "operator",
+        "strategy_guid": "",
+        "totp_enabled": false,
+        "user_groups": [],
+        "username": "demo_operator"
+       },
+       {
+        "auth_provider": "local",
+        "avatar_version": null,
+        "created_at": "<volatile>",
+        "email": "viewer@example.invalid",
+        "folder_ids": [],
+        "has_avatar": false,
+        "id": 3,
+        "last_login": "<volatile>",
+        "peer_grants": [],
+        "role": "viewer",
+        "strategy_guid": "",
+        "totp_enabled": false,
+        "user_groups": [],
+        "username": "demo_viewer"
+       },
+       {
+        "auth_provider": "local",
+        "avatar_version": null,
+        "created_at": "<volatile>",
+        "email": "serveradmin@example.invalid",
+        "folder_ids": [],
+        "has_avatar": false,
+        "id": 4,
+        "last_login": "<volatile>",
+        "peer_grants": [],
+        "role": "server_admin",
+        "strategy_guid": "",
+        "totp_enabled": false,
+        "user_groups": [],
+        "username": "demo_serveradmin"
+       },
+       {
+        "auth_provider": "local",
+        "avatar_version": null,
+        "created_at": "<volatile>",
+        "email": "",
+        "folder_ids": [],
+        "has_avatar": false,
+        "id": 5,
+        "last_login": "<volatile>",
+        "peer_grants": [],
+        "role": "admin",
+        "strategy_guid": "",
+        "totp_enabled": false,
+        "user_groups": [],
+        "username": "e2e_admin"
+       },
+       {
+        "auth_provider": "local",
+        "avatar_version": null,
+        "created_at": "<volatile>",
+        "email": "",
+        "folder_ids": [],
+        "has_avatar": false,
+        "id": 6,
+        "last_login": "<volatile>",
+        "peer_grants": [],
+        "role": "super_admin",
+        "strategy_guid": "",
+        "totp_enabled": false,
+        "user_groups": [],
+        "username": "e2e_super_admin"
+       },
+       {
+        "auth_provider": "local",
+        "avatar_version": null,
+        "created_at": "<volatile>",
+        "email": "",
+        "folder_ids": [],
+        "has_avatar": false,
+        "id": 7,
+        "last_login": "<volatile>",
+        "peer_grants": [],
+        "role": "server_admin",
+        "strategy_guid": "",
+        "totp_enabled": false,
+        "user_groups": [],
+        "username": "e2e_server_admin"
+       },
+       {
+        "auth_provider": "local",
+        "avatar_version": null,
+        "created_at": "<volatile>",
+        "email": "",
+        "folder_ids": [],
+        "has_avatar": false,
+        "id": 8,
+        "last_login": "<volatile>",
+        "peer_grants": [],
+        "role": "global_admin",
+        "strategy_guid": "",
+        "totp_enabled": false,
+        "user_groups": [],
+        "username": "e2e_global_admin"
+       },
+       {
+        "auth_provider": "local",
+        "avatar_version": null,
+        "created_at": "<volatile>",
+        "email": "",
+        "folder_ids": [],
+        "has_avatar": false,
+        "id": 9,
+        "last_login": "<volatile>",
+        "peer_grants": [],
+        "role": "operator",
+        "strategy_guid": "",
+        "totp_enabled": false,
+        "user_groups": [],
+        "username": "e2e_operator"
+       },
+       {
+        "auth_provider": "local",
+        "avatar_version": null,
+        "created_at": "<volatile>",
+        "email": "",
+        "folder_ids": [],
+        "has_avatar": false,
+        "id": 10,
+        "last_login": "<volatile>",
+        "peer_grants": [],
+        "role": "viewer",
+        "strategy_guid": "",
+        "totp_enabled": false,
+        "user_groups": [],
+        "username": "e2e_viewer"
+       },
+       {
+        "auth_provider": "local",
+        "avatar_version": null,
+        "created_at": "<volatile>",
+        "email": "",
+        "folder_ids": [],
+        "has_avatar": false,
+        "id": 11,
+        "last_login": "<volatile>",
+        "peer_grants": [],
+        "role": "guest_issuer",
+        "strategy_guid": "",
+        "totp_enabled": false,
+        "user_groups": [],
+        "username": "e2e_guest_issuer"
+       },
+       {
+        "auth_provider": "local",
+        "avatar_version": null,
+        "created_at": "<volatile>",
+        "email": "",
+        "folder_ids": [],
+        "has_avatar": false,
+        "id": 12,
+        "last_login": "<volatile>",
+        "peer_grants": [],
+        "role": "pro",
+        "strategy_guid": "",
+        "totp_enabled": false,
+        "user_groups": [],
+        "username": "e2e_pro"
+       }
+      ]
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

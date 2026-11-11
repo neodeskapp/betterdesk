@@ -125,42 +125,42 @@
   {
    "op": "getAllFolders",
    "args": [],
-   "result": "[{\"id\":5,\"name\":\"7.0\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"},{\"id\":2,\"name\":\"Annex\",\"color\":\"#6366f1\",\"icon\":\"box\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"},{\"id\":4,\"name\":\"Nulls\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"},{\"id\":3,\"name\":\"Odd\",\"color\":\"5.0\",\"icon\":\"1.5\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"},{\"id\":1,\"name\":\"Office\",\"color\":\"#22c55e\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"}]"
+   "result": "[{\"id\":5,\"name\":\"7.0\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"},{\"id\":2,\"name\":\"Annex\",\"color\":\"#6366f1\",\"icon\":\"box\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"},{\"id\":4,\"name\":\"Nulls\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"},{\"id\":3,\"name\":\"Odd\",\"color\":\"5.0\",\"icon\":\"1.5\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"},{\"id\":1,\"name\":\"Office\",\"color\":\"#22c55e\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"}]"
   },
   {
    "op": "getFolderById",
    "args": [
     1
    ],
-   "result": "{\"id\":1,\"name\":\"Office\",\"color\":\"#22c55e\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"}"
+   "result": "{\"id\":1,\"name\":\"Office\",\"color\":\"#22c55e\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"}"
   },
   {
    "op": "getFolderById",
    "args": [
     2
    ],
-   "result": "{\"id\":2,\"name\":\"Annex\",\"color\":\"#6366f1\",\"icon\":\"box\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"}"
+   "result": "{\"id\":2,\"name\":\"Annex\",\"color\":\"#6366f1\",\"icon\":\"box\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"}"
   },
   {
    "op": "getFolderById",
    "args": [
     3
    ],
-   "result": "{\"id\":3,\"name\":\"Odd\",\"color\":\"5.0\",\"icon\":\"1.5\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"}"
+   "result": "{\"id\":3,\"name\":\"Odd\",\"color\":\"5.0\",\"icon\":\"1.5\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"}"
   },
   {
    "op": "getFolderById",
    "args": [
     "1"
    ],
-   "result": "{\"id\":1,\"name\":\"Office\",\"color\":\"#22c55e\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"}"
+   "result": "{\"id\":1,\"name\":\"Office\",\"color\":\"#22c55e\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"}"
   },
   {
    "op": "getFolderById",
    "args": [
     " 2 "
    ],
-   "result": "{\"id\":2,\"name\":\"Annex\",\"color\":\"#6366f1\",\"icon\":\"box\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"}"
+   "result": "{\"id\":2,\"name\":\"Annex\",\"color\":\"#6366f1\",\"icon\":\"box\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"}"
   },
   {
    "op": "getFolderById",
@@ -353,7 +353,7 @@
   {
    "op": "getAllFolders",
    "args": [],
-   "result": "[{\"id\":5,\"name\":\"7.0\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"},{\"id\":1,\"name\":\"77.0\",\"color\":\"#22c55e\",\"icon\":\"star\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"},{\"id\":2,\"name\":\"Annex\",\"color\":null,\"icon\":\"box\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"},{\"id\":4,\"name\":\"Nulls\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"},{\"id\":3,\"name\":\"Odd\",\"color\":\"5.0\",\"icon\":\"1.5\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"}]"
+   "result": "[{\"id\":5,\"name\":\"7.0\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"},{\"id\":1,\"name\":\"77.0\",\"color\":\"#22c55e\",\"icon\":\"star\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"},{\"id\":2,\"name\":\"Annex\",\"color\":null,\"icon\":\"box\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"},{\"id\":4,\"name\":\"Nulls\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"},{\"id\":3,\"name\":\"Odd\",\"color\":\"5.0\",\"icon\":\"1.5\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"}]"
   },
   {
    "op": "assignDevicesToFolder",
@@ -503,7 +503,7 @@
   {
    "op": "getAllFolders",
    "args": [],
-   "result": "[{\"id\":5,\"name\":\"7.0\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"},{\"id\":2,\"name\":\"Annex\",\"color\":null,\"icon\":\"box\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"},{\"id\":4,\"name\":\"Nulls\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"},{\"id\":3,\"name\":\"Odd\",\"color\":\"5.0\",\"icon\":\"1.5\",\"sort_order\":0,\"created_at\":\"2026-11-10 19:01:50\"}]"
+   "result": "[{\"id\":5,\"name\":\"7.0\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"},{\"id\":2,\"name\":\"Annex\",\"color\":null,\"icon\":\"box\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"},{\"id\":4,\"name\":\"Nulls\",\"color\":\"#6366f1\",\"icon\":\"folder\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"},{\"id\":3,\"name\":\"Odd\",\"color\":\"5.0\",\"icon\":\"1.5\",\"sort_order\":0,\"created_at\":\"2026-11-10 20:31:09\"}]"
   },
   {
    "op": "getAllFolderAssignments",
@@ -522,7 +522,7 @@
      "note": "n"
     }
    ],
-   "result": "{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops\",\"note\":\"n\",\"team_id\":\"org-1\",\"source_type\":\"tag\",\"tag_filter\":\"laptop\",\"created_at\":\"2026-11-10 19:01:50\"}"
+   "result": "{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops\",\"note\":\"n\",\"team_id\":\"org-1\",\"source_type\":\"tag\",\"tag_filter\":\"laptop\",\"created_at\":\"2026-11-10 20:31:09\"}"
   },
   {
    "op": "createDeviceGroup",
@@ -534,7 +534,7 @@
      "tag_filter": "dropped"
     }
    ],
-   "result": "{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 19:01:50\"}"
+   "result": "{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 20:31:09\"}"
   },
   {
    "op": "createDeviceGroup",
@@ -549,7 +549,7 @@
      "tag_filter": ""
     }
    ],
-   "result": "{\"id\":4,\"guid\":\"15538616-b9d5-427a-9fc4-b1137ea8ede9\",\"name\":\"Random guid\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 19:01:50\"}"
+   "result": "{\"id\":4,\"guid\":\"81571638-1699-41a0-84ec-4a3a2d72068f\",\"name\":\"Random guid\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 20:31:09\"}"
   },
   {
    "op": "createDeviceGroup",
@@ -561,7 +561,7 @@
      "team_id": 7
     }
    ],
-   "result": "{\"id\":5,\"guid\":\"g-num\",\"name\":\"5.0\",\"note\":\"1.5\",\"team_id\":\"7.0\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 19:01:50\"}"
+   "result": "{\"id\":5,\"guid\":\"g-num\",\"name\":\"5.0\",\"note\":\"1.5\",\"team_id\":\"7.0\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 20:31:09\"}"
   },
   {
    "op": "createDeviceGroup",
@@ -606,7 +606,7 @@
      ""
     ]
    ],
-   "result": "{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 19:01:50\",\"allowed_users\":[\"alice\",\"carol\"],\"allowed_groups\":[],\"allowed_user_groups\":[]}"
+   "result": "{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"allowed_users\":[\"alice\",\"carol\"],\"allowed_groups\":[],\"allowed_user_groups\":[]}"
   },
   {
    "op": "setDeviceGroupUserAccess",
@@ -630,7 +630,7 @@
      ""
     ]
    ],
-   "result": "{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 19:01:50\",\"allowed_users\":[\"alice\",\"carol\"],\"allowed_groups\":[\"ug-a\",\"ug-b\"],\"allowed_user_groups\":[{\"guid\":\"ug-a\",\"name\":\"Alpha\"},{\"guid\":\"ug-b\",\"name\":\"Beta\"}]}"
+   "result": "{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"allowed_users\":[\"alice\",\"carol\"],\"allowed_groups\":[\"ug-a\",\"ug-b\"],\"allowed_user_groups\":[{\"guid\":\"ug-a\",\"name\":\"Alpha\"},{\"guid\":\"ug-b\",\"name\":\"Beta\"}]}"
   },
   {
    "op": "setDeviceGroupUserGroupAccess",
@@ -647,7 +647,7 @@
    "args": [
     "folder_3"
    ],
-   "result": "{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 19:01:50\",\"allowed_users\":[\"alice\",\"carol\"],\"allowed_groups\":[\"ug-a\",\"ug-b\"],\"allowed_user_groups\":[{\"guid\":\"ug-a\",\"name\":\"Alpha\"},{\"guid\":\"ug-b\",\"name\":\"Beta\"}]}"
+   "result": "{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"allowed_users\":[\"alice\",\"carol\"],\"allowed_groups\":[\"ug-a\",\"ug-b\"],\"allowed_user_groups\":[{\"guid\":\"ug-a\",\"name\":\"Alpha\"},{\"guid\":\"ug-b\",\"name\":\"Beta\"}]}"
   },
   {
    "op": "getDeviceGroupByGuid",
@@ -659,7 +659,7 @@
   {
    "op": "getAllDeviceGroups",
    "args": [],
-   "result": "[{\"id\":5,\"guid\":\"g-num\",\"name\":\"5.0\",\"note\":\"1.5\",\"team_id\":\"7.0\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 19:01:50\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 19:01:50\",\"member_count\":0,\"allowed_users\":[\"alice\",\"carol\"],\"allowed_groups\":[\"ug-a\",\"ug-b\"],\"allowed_user_groups\":[{\"guid\":\"ug-a\",\"name\":\"Alpha\"},{\"guid\":\"ug-b\",\"name\":\"Beta\"}]},{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops\",\"note\":\"n\",\"team_id\":\"org-1\",\"source_type\":\"tag\",\"tag_filter\":\"laptop\",\"created_at\":\"2026-11-10 19:01:50\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":4,\"guid\":\"15538616-b9d5-427a-9fc4-b1137ea8ede9\",\"name\":\"Random guid\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 19:01:50\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]}]"
+   "result": "[{\"id\":5,\"guid\":\"g-num\",\"name\":\"5.0\",\"note\":\"1.5\",\"team_id\":\"7.0\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0,\"allowed_users\":[\"alice\",\"carol\"],\"allowed_groups\":[\"ug-a\",\"ug-b\"],\"allowed_user_groups\":[{\"guid\":\"ug-a\",\"name\":\"Alpha\"},{\"guid\":\"ug-b\",\"name\":\"Beta\"}]},{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops\",\"note\":\"n\",\"team_id\":\"org-1\",\"source_type\":\"tag\",\"tag_filter\":\"laptop\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":4,\"guid\":\"81571638-1699-41a0-84ec-4a3a2d72068f\",\"name\":\"Random guid\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]}]"
   },
   {
    "op": "updateDeviceGroup",
@@ -670,7 +670,7 @@
      "tag_filter": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     }
    ],
-   "result": "{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops 2\",\"note\":\"n\",\"team_id\":\"org-1\",\"source_type\":\"tag\",\"tag_filter\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"created_at\":\"2026-11-10 19:01:50\"}"
+   "result": "{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops 2\",\"note\":\"n\",\"team_id\":\"org-1\",\"source_type\":\"tag\",\"tag_filter\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"created_at\":\"2026-11-10 20:31:09\"}"
   },
   {
    "op": "updateDeviceGroup",
@@ -682,7 +682,7 @@
      "note": null
     }
    ],
-   "result": "{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops 2\",\"note\":null,\"team_id\":\"org-1\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 19:01:50\"}"
+   "result": "{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops 2\",\"note\":null,\"team_id\":\"org-1\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 20:31:09\"}"
   },
   {
    "op": "updateDeviceGroup",
@@ -694,7 +694,7 @@
      "team_id": ""
     }
    ],
-   "result": "{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops 2\",\"note\":null,\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"12\",\"created_at\":\"2026-11-10 19:01:50\"}"
+   "result": "{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops 2\",\"note\":null,\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"12\",\"created_at\":\"2026-11-10 20:31:09\"}"
   },
   {
    "op": "updateDeviceGroup",
@@ -737,7 +737,7 @@
   {
    "op": "getAllDeviceGroups",
    "args": [],
-   "result": "[{\"id\":5,\"guid\":\"g-num\",\"name\":\"5.0\",\"note\":\"1.5\",\"team_id\":\"7.0\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 19:01:50\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 19:01:50\",\"member_count\":0,\"allowed_users\":[\"alice\",\"carol\"],\"allowed_groups\":[\"ug-a\",\"ug-b\"],\"allowed_user_groups\":[{\"guid\":\"ug-a\",\"name\":\"Alpha\"},{\"guid\":\"ug-b\",\"name\":\"Beta\"}]},{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops 2\",\"note\":null,\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"12\",\"created_at\":\"2026-11-10 19:01:50\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":4,\"guid\":\"15538616-b9d5-427a-9fc4-b1137ea8ede9\",\"name\":\"Random guid\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 19:01:50\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]}]"
+   "result": "[{\"id\":5,\"guid\":\"g-num\",\"name\":\"5.0\",\"note\":\"1.5\",\"team_id\":\"7.0\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":3,\"guid\":\"folder_3\",\"name\":\"Annex\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0,\"allowed_users\":[\"alice\",\"carol\"],\"allowed_groups\":[\"ug-a\",\"ug-b\"],\"allowed_user_groups\":[{\"guid\":\"ug-a\",\"name\":\"Alpha\"},{\"guid\":\"ug-b\",\"name\":\"Beta\"}]},{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops 2\",\"note\":null,\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"12\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":4,\"guid\":\"81571638-1699-41a0-84ec-4a3a2d72068f\",\"name\":\"Random guid\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]}]"
   },
   {
    "op": "deleteDeviceGroup",
@@ -756,12 +756,12 @@
   {
    "op": "getAllDeviceGroups",
    "args": [],
-   "result": "[{\"id\":5,\"guid\":\"g-num\",\"name\":\"5.0\",\"note\":\"1.5\",\"team_id\":\"7.0\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 19:01:50\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops 2\",\"note\":null,\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"12\",\"created_at\":\"2026-11-10 19:01:50\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":4,\"guid\":\"15538616-b9d5-427a-9fc4-b1137ea8ede9\",\"name\":\"Random guid\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 19:01:50\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]}]"
+   "result": "[{\"id\":5,\"guid\":\"g-num\",\"name\":\"5.0\",\"note\":\"1.5\",\"team_id\":\"7.0\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops 2\",\"note\":null,\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"12\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":4,\"guid\":\"81571638-1699-41a0-84ec-4a3a2d72068f\",\"name\":\"Random guid\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]}]"
   },
   {
    "op": "getAllUserGroups",
    "args": [],
-   "result": "[{\"id\":3,\"guid\":\"ug-a\",\"name\":\"Alpha\",\"note\":null,\"team_id\":\"\",\"created_at\":\"2026-11-10 19:01:50\",\"member_count\":0},{\"id\":2,\"guid\":\"ug-b\",\"name\":\"Beta\",\"note\":\"\",\"team_id\":\"org-1\",\"created_at\":\"2026-11-10 19:01:50\",\"member_count\":0}]"
+   "result": "[{\"id\":3,\"guid\":\"ug-a\",\"name\":\"Alpha\",\"note\":null,\"team_id\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0},{\"id\":2,\"guid\":\"ug-b\",\"name\":\"Beta\",\"note\":\"\",\"team_id\":\"org-1\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0}]"
   },
   {
    "op": "getUserById",
@@ -813,6 +813,304 @@
     2.5
    ],
    "result": "null"
+  },
+  {
+   "op": "createUserGroup",
+   "args": [
+    {
+     "guid": "ug-new",
+     "name": "New",
+     "note": "n",
+     "team_id": "t"
+    }
+   ],
+   "result": "{\"id\":4,\"guid\":\"ug-new\",\"name\":\"New\",\"note\":\"n\",\"team_id\":\"t\",\"created_at\":\"2026-11-10 20:31:09\"}"
+  },
+  {
+   "op": "createUserGroup",
+   "args": [
+    {
+     "name": "Random guid",
+     "note": {
+      "$": "undefined"
+     },
+     "team_id": null
+    }
+   ],
+   "result": "{\"id\":5,\"guid\":\"8e643121-c390-491e-897f-c0f928bf84e3\",\"name\":\"Random guid\",\"note\":\"\",\"team_id\":\"\",\"created_at\":\"2026-11-10 20:31:09\"}"
+  },
+  {
+   "op": "createUserGroup",
+   "args": [
+    {
+     "guid": "ug-num",
+     "name": 5,
+     "note": 1.5,
+     "team_id": 7
+    }
+   ],
+   "result": "{\"id\":6,\"guid\":\"ug-num\",\"name\":\"5.0\",\"note\":\"1.5\",\"team_id\":\"7.0\",\"created_at\":\"2026-11-10 20:31:09\"}"
+  },
+  {
+   "op": "createUserGroup",
+   "args": [
+    {
+     "guid": "ug-flag",
+     "name": "Flag",
+     "team_id": true
+    }
+   ],
+   "error": "SQLite3 can only bind numbers, strings, bigints, buffers, and null"
+  },
+  {
+   "op": "createUserGroup",
+   "args": [
+    {
+     "guid": "ug-new",
+     "name": "Again"
+    }
+   ],
+   "error": "UNIQUE constraint failed: user_groups.guid"
+  },
+  {
+   "op": "createUserGroup",
+   "args": [
+    {
+     "guid": "ug-noname",
+     "name": null
+    }
+   ],
+   "error": "NOT NULL constraint failed: user_groups.name"
+  },
+  {
+   "op": "createUserGroup",
+   "args": [
+    {
+     "guid": "",
+     "name": "Empty guid",
+     "note": "",
+     "team_id": 0
+    }
+   ],
+   "result": "{\"id\":7,\"guid\":\"4ce97887-08bb-4f3f-9439-a8386b678002\",\"name\":\"Empty guid\",\"note\":\"\",\"team_id\":\"\",\"created_at\":\"2026-11-10 20:31:09\"}"
+  },
+  {
+   "op": "getUserGroupByGuid",
+   "args": [
+    "ug-new"
+   ],
+   "result": "{\"id\":4,\"guid\":\"ug-new\",\"name\":\"New\",\"note\":\"n\",\"team_id\":\"t\",\"created_at\":\"2026-11-10 20:31:09\"}"
+  },
+  {
+   "op": "getUserGroupByGuid",
+   "args": [
+    "nothing"
+   ],
+   "result": "null"
+  },
+  {
+   "op": "updateUserGroup",
+   "args": [
+    "ug-new",
+    {
+     "name": "New 2",
+     "note": "",
+     "team_id": "x"
+    }
+   ],
+   "result": "{\"id\":4,\"guid\":\"ug-new\",\"name\":\"New 2\",\"note\":\"\",\"team_id\":\"x\",\"created_at\":\"2026-11-10 20:31:09\"}"
+  },
+  {
+   "op": "updateUserGroup",
+   "args": [
+    "ug-new",
+    {}
+   ],
+   "result": "null"
+  },
+  {
+   "op": "updateUserGroup",
+   "args": [
+    "nothing",
+    {
+     "name": "x"
+    }
+   ],
+   "result": "null"
+  },
+  {
+   "op": "updateUserGroup",
+   "args": [
+    "ug-new",
+    {
+     "name": true
+    }
+   ],
+   "error": "SQLite3 can only bind numbers, strings, bigints, buffers, and null"
+  },
+  {
+   "op": "updateUserGroup",
+   "args": [
+    "ug-new",
+    {
+     "name": null
+    }
+   ],
+   "error": "NOT NULL constraint failed: user_groups.name"
+  },
+  {
+   "op": "updateUserGroup",
+   "args": [
+    "ug-num",
+    {
+     "note": 7,
+     "team_id": {
+      "$": "undefined"
+     }
+    }
+   ],
+   "result": "{\"id\":6,\"guid\":\"ug-num\",\"name\":\"5.0\",\"note\":\"7.0\",\"team_id\":\"7.0\",\"created_at\":\"2026-11-10 20:31:09\"}"
+  },
+  {
+   "op": "updateUserGroup",
+   "args": [
+    "ug-num",
+    {
+     "team_id": null
+    }
+   ],
+   "result": "{\"id\":6,\"guid\":\"ug-num\",\"name\":\"5.0\",\"note\":\"7.0\",\"team_id\":null,\"created_at\":\"2026-11-10 20:31:09\"}"
+  },
+  {
+   "op": "setUserGroupMemberships",
+   "args": [
+    1,
+    [
+     "ug-new",
+     " ug-a ",
+     "missing",
+     "ug-new",
+     ""
+    ]
+   ],
+   "result": "[{\"id\":3,\"guid\":\"ug-a\",\"name\":\"Alpha\",\"note\":null,\"team_id\":\"\",\"created_at\":\"2026-11-10 20:31:09\"},{\"id\":4,\"guid\":\"ug-new\",\"name\":\"New 2\",\"note\":\"\",\"team_id\":\"x\",\"created_at\":\"2026-11-10 20:31:09\"}]"
+  },
+  {
+   "op": "setUserGroupMemberships",
+   "args": [
+    2,
+    [
+     "ug-b"
+    ]
+   ],
+   "result": "[{\"id\":2,\"guid\":\"ug-b\",\"name\":\"Beta\",\"note\":\"\",\"team_id\":\"org-1\",\"created_at\":\"2026-11-10 20:31:09\"}]"
+  },
+  {
+   "op": "setUserGroupMemberships",
+   "args": [
+    99,
+    [
+     "ug-b"
+    ]
+   ],
+   "result": "[]"
+  },
+  {
+   "op": "getUserGroupsForUser",
+   "args": [
+    1
+   ],
+   "result": "[{\"id\":3,\"guid\":\"ug-a\",\"name\":\"Alpha\",\"note\":null,\"team_id\":\"\",\"created_at\":\"2026-11-10 20:31:09\"},{\"id\":4,\"guid\":\"ug-new\",\"name\":\"New 2\",\"note\":\"\",\"team_id\":\"x\",\"created_at\":\"2026-11-10 20:31:09\"}]"
+  },
+  {
+   "op": "getUserGroupsForUser",
+   "args": [
+    2
+   ],
+   "result": "[{\"id\":2,\"guid\":\"ug-b\",\"name\":\"Beta\",\"note\":\"\",\"team_id\":\"org-1\",\"created_at\":\"2026-11-10 20:31:09\"}]"
+  },
+  {
+   "op": "getUserGroupsForUser",
+   "args": [
+    99
+   ],
+   "result": "[]"
+  },
+  {
+   "op": "getAllUserGroups",
+   "args": [],
+   "result": "[{\"id\":6,\"guid\":\"ug-num\",\"name\":\"5.0\",\"note\":\"7.0\",\"team_id\":null,\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0},{\"id\":3,\"guid\":\"ug-a\",\"name\":\"Alpha\",\"note\":null,\"team_id\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":1},{\"id\":2,\"guid\":\"ug-b\",\"name\":\"Beta\",\"note\":\"\",\"team_id\":\"org-1\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":1},{\"id\":7,\"guid\":\"4ce97887-08bb-4f3f-9439-a8386b678002\",\"name\":\"Empty guid\",\"note\":\"\",\"team_id\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0},{\"id\":4,\"guid\":\"ug-new\",\"name\":\"New 2\",\"note\":\"\",\"team_id\":\"x\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":1},{\"id\":5,\"guid\":\"8e643121-c390-491e-897f-c0f928bf84e3\",\"name\":\"Random guid\",\"note\":\"\",\"team_id\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0}]"
+  },
+  {
+   "op": "setUserGroupMemberships",
+   "args": [
+    1,
+    []
+   ],
+   "result": "[]"
+  },
+  {
+   "op": "getUserGroupsForUser",
+   "args": [
+    1
+   ],
+   "result": "[]"
+  },
+  {
+   "op": "setUserGroupMemberships",
+   "args": [
+    2,
+    [
+     "ug-a",
+     "ug-b",
+     "ug-num"
+    ]
+   ],
+   "result": "[{\"id\":6,\"guid\":\"ug-num\",\"name\":\"5.0\",\"note\":\"7.0\",\"team_id\":null,\"created_at\":\"2026-11-10 20:31:09\"},{\"id\":3,\"guid\":\"ug-a\",\"name\":\"Alpha\",\"note\":null,\"team_id\":\"\",\"created_at\":\"2026-11-10 20:31:09\"},{\"id\":2,\"guid\":\"ug-b\",\"name\":\"Beta\",\"note\":\"\",\"team_id\":\"org-1\",\"created_at\":\"2026-11-10 20:31:09\"}]"
+  },
+  {
+   "op": "setDeviceGroupUserGroupAccess",
+   "args": [
+    "g-tag",
+    [
+     "ug-a",
+     "ug-b"
+    ]
+   ],
+   "result": "{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops 2\",\"note\":null,\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"12\",\"created_at\":\"2026-11-10 20:31:09\",\"allowed_users\":[],\"allowed_groups\":[\"ug-a\",\"ug-b\"],\"allowed_user_groups\":[{\"guid\":\"ug-a\",\"name\":\"Alpha\"},{\"guid\":\"ug-b\",\"name\":\"Beta\"}]}"
+  },
+  {
+   "op": "deleteUserGroup",
+   "args": [
+    "ug-a"
+   ],
+   "result": "null"
+  },
+  {
+   "op": "deleteUserGroup",
+   "args": [
+    "nothing"
+   ],
+   "result": "null"
+  },
+  {
+   "op": "getUserGroupsForUser",
+   "args": [
+    2
+   ],
+   "result": "[{\"id\":6,\"guid\":\"ug-num\",\"name\":\"5.0\",\"note\":\"7.0\",\"team_id\":null,\"created_at\":\"2026-11-10 20:31:09\"},{\"id\":2,\"guid\":\"ug-b\",\"name\":\"Beta\",\"note\":\"\",\"team_id\":\"org-1\",\"created_at\":\"2026-11-10 20:31:09\"}]"
+  },
+  {
+   "op": "getDeviceGroupByGuid",
+   "args": [
+    "g-tag"
+   ],
+   "result": "{\"id\":2,\"guid\":\"g-tag\",\"name\":\"Laptops 2\",\"note\":null,\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"12\",\"created_at\":\"2026-11-10 20:31:09\",\"allowed_users\":[],\"allowed_groups\":[\"ug-b\"],\"allowed_user_groups\":[{\"guid\":\"ug-b\",\"name\":\"Beta\"}]}"
+  },
+  {
+   "op": "getAllUserGroups",
+   "args": [],
+   "result": "[{\"id\":6,\"guid\":\"ug-num\",\"name\":\"5.0\",\"note\":\"7.0\",\"team_id\":null,\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":1},{\"id\":2,\"guid\":\"ug-b\",\"name\":\"Beta\",\"note\":\"\",\"team_id\":\"org-1\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":1},{\"id\":7,\"guid\":\"4ce97887-08bb-4f3f-9439-a8386b678002\",\"name\":\"Empty guid\",\"note\":\"\",\"team_id\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0},{\"id\":4,\"guid\":\"ug-new\",\"name\":\"New 2\",\"note\":\"\",\"team_id\":\"x\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0},{\"id\":5,\"guid\":\"8e643121-c390-491e-897f-c0f928bf84e3\",\"name\":\"Random guid\",\"note\":\"\",\"team_id\":\"\",\"created_at\":\"2026-11-10 20:31:09\",\"member_count\":0}]"
   }
  ]
 }
