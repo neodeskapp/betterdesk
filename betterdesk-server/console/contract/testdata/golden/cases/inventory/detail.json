@@ -1,0 +1,226 @@
+{
+ "id": "inventory/detail",
+ "request": {
+  "method": "GET",
+  "path": "/api/inventory/900100001"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "collected_at",
+    "received_at",
+    "software.apps[*].installed_at",
+    "telemetry.received_at",
+    "telemetry.timestamp"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "collected_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "received_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "software.apps[*].installed_at",
+     "format": "9999-99-99"
+    },
+    {
+     "path": "telemetry.received_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "telemetry.timestamp",
+     "format": "9999-99-99A99:99:99.999A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "collected_at": "<volatile>",
+     "device_id": "900100001",
+     "hardware": {
+      "architecture": "x86_64",
+      "cpu": {
+       "brand": "Intel(R) Core(TM) i5-12500",
+       "logical_cores": 8,
+       "usage_percent": 10.4
+      },
+      "disks": [
+       {
+        "device": "C:",
+        "filesystem": "NTFS",
+        "mount_point": "C:\\",
+        "total_gb": 951.6,
+        "used_gb": 890.7
+       }
+      ],
+      "hostname": "demo-reception-01",
+      "kernel": "10.0.22631",
+      "memory": {
+       "total_bytes": 34359738368,
+       "used_bytes": 14317376441
+      },
+      "network_interfaces": [
+       {
+        "ip_addresses": [
+         "10.0.1.20"
+        ],
+        "mac": "02:00:5e:10:00:01",
+        "name": "Ethernet"
+       }
+      ],
+      "os_name": "Windows 11 Pro",
+      "os_version": "23H2 (22631.4460)"
+     },
+     "received_at": "<volatile>",
+     "software": {
+      "apps": [
+       {
+        "installed_at": "<volatile>",
+        "name": "Microsoft Edge",
+        "publisher": "Microsoft Corporation",
+        "version": "130.0.2849.68"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "Google Chrome",
+        "publisher": "Google LLC",
+        "version": "130.0.6723.117"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "Microsoft 365 Apps for business",
+        "publisher": "Microsoft Corporation",
+        "version": "16.0.18129.20116"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "Adobe Acrobat Reader",
+        "publisher": "Adobe",
+        "version": "24.004.20243"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "7-Zip 24.08 (x64)",
+        "publisher": "Igor Pavlov",
+        "version": "24.08"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "Notepad++ (64-bit x64)",
+        "publisher": "Notepad++ Team",
+        "version": "8.7.1"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "VLC media player",
+        "publisher": "VideoLAN",
+        "version": "3.0.21"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "BetterDesk",
+        "publisher": "BetterDesk (demo)",
+        "version": "1.4.2"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "Demo Label Studio",
+        "publisher": "Example Software GmbH",
+        "version": "5.2.0"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "Demo Accounting Suite",
+        "publisher": "Example Ledger Ltd",
+        "version": "2024.3"
+       }
+      ]
+     },
+     "telemetry": {
+      "cpu_usage_percent": 10.4,
+      "device_id": "900100001",
+      "memory_total_bytes": 34359738368,
+      "memory_used_bytes": 14317376441,
+      "received_at": "<volatile>",
+      "timestamp": "<volatile>",
+      "uptime_secs": 26400
+     }
+    }
+   }
+  }
+ ]
+}

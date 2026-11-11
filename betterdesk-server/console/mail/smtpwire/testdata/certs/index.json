@@ -1,0 +1,163 @@
+{
+  "ca": {
+    "chain": [
+      "ca"
+    ],
+    "trusted": true
+  },
+  "ca-expired": {
+    "chain": [
+      "ca-expired"
+    ],
+    "trusted": false
+  },
+  "ca-future": {
+    "chain": [
+      "ca-future"
+    ],
+    "trusted": false
+  },
+  "ca-leaf": {
+    "chain": [
+      "ca-leaf"
+    ],
+    "trusted": false
+  },
+  "client-only": {
+    "chain": [
+      "client-only"
+    ],
+    "trusted": false
+  },
+  "cn-only": {
+    "chain": [
+      "cn-only"
+    ],
+    "trusted": true
+  },
+  "cn-other": {
+    "chain": [
+      "cn-other"
+    ],
+    "trusted": true
+  },
+  "expired-trusted": {
+    "chain": [
+      "expired-trusted"
+    ],
+    "trusted": true
+  },
+  "expired-untrusted": {
+    "chain": [
+      "expired-untrusted"
+    ],
+    "trusted": false
+  },
+  "ip-only": {
+    "chain": [
+      "ip-only"
+    ],
+    "trusted": true
+  },
+  "ip-other": {
+    "chain": [
+      "ip-other"
+    ],
+    "trusted": true
+  },
+  "issued-by-leaf": {
+    "chain": [
+      "issued-by-leaf",
+      "ca-leaf"
+    ],
+    "trusted": false
+  },
+  "localhost": {
+    "chain": [
+      "localhost"
+    ],
+    "trusted": true
+  },
+  "mixed-san": {
+    "chain": [
+      "mixed-san"
+    ],
+    "trusted": true
+  },
+  "multi-cn": {
+    "chain": [
+      "multi-cn"
+    ],
+    "trusted": true
+  },
+  "no-names": {
+    "chain": [
+      "no-names"
+    ],
+    "trusted": true
+  },
+  "odd-san": {
+    "chain": [
+      "odd-san"
+    ],
+    "trusted": true
+  },
+  "other": {
+    "chain": [
+      "other"
+    ],
+    "trusted": true
+  },
+  "rogue-ca": {
+    "chain": [
+      "rogue-ca"
+    ],
+    "trusted": false
+  },
+  "rogue-inter": {
+    "chain": [
+      "rogue-inter"
+    ],
+    "trusted": false
+  },
+  "rogue-inter-leaf": {
+    "chain": [
+      "rogue-inter-leaf",
+      "rogue-inter"
+    ],
+    "trusted": false
+  },
+  "rogue-inter-leaf-root": {
+    "chain": [
+      "rogue-inter-leaf-root",
+      "rogue-inter",
+      "rogue-ca"
+    ],
+    "trusted": false
+  },
+  "rogue-leaf": {
+    "chain": [
+      "rogue-leaf"
+    ],
+    "trusted": false
+  },
+  "rogue-leaf-root": {
+    "chain": [
+      "rogue-leaf-root",
+      "rogue-ca"
+    ],
+    "trusted": false
+  },
+  "untrusted": {
+    "chain": [
+      "untrusted"
+    ],
+    "trusted": false
+  },
+  "wildcard": {
+    "chain": [
+      "wildcard"
+    ],
+    "trusted": true
+  }
+}

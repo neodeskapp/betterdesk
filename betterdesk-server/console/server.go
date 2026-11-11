@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/access"
+	"github.com/unitronix/betterdesk-server/console/alerts"
 	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/avatars"
@@ -42,6 +43,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/jobs"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/limits"
+	"github.com/unitronix/betterdesk-server/console/mail"
 	"github.com/unitronix/betterdesk-server/console/proxy"
 	"github.com/unitronix/betterdesk-server/console/qr"
 	"github.com/unitronix/betterdesk-server/console/restart"
@@ -231,6 +233,39 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	})
 	s.deps.DeviceGroups = devicegroups.New(devicegroups.Options{DB: opts.Store, Access: s.deps.Access})
 	s.deps.Backend = goapi.NewBackend(api, devicegroups.DeviceStore{Groups: s.deps.DeviceGroups})
+	s.deps.Mail = mail.New(mail.Options{
+		DB:           opts.Store,
+		Transport:    &mail.SMTP{},
+		Getenv:       getenv,
+		TLSVerify:    cfg.SMTPTLSVerify,
+		Host:         cfg.Host,
+		Port:         cfg.Port,
+		HTTPRedirect: cfg.HTTPRedirect,
+		Logger:       s.deps.Log.Child("Email"),
+	})
+	// Alert mails and evaluations beside a request end with the console:
+	// the job below cancels them and waits for them when the jobs stop.
+	alertWork, stopAlertWork := context.WithCancel(context.Background())
+	s.deps.Alerts = alerts.New(alerts.Options{
+		DB:   opts.Store,
+		Mail: s.deps.Mail,
+		Devices: func(ctx context.Context) ([]*goapi.Object, error) {
+			return append(api.GetAllPeers(ctx, false), api.GetAllRemoteTargets(ctx, "", false)...), nil
+		},
+		Logger:  s.deps.Log.Child("AlertEngine"),
+		Context: alertWork,
+	})
+	s.jobs.Add("alert engine", func(ctx context.Context) {
+		<-ctx.Done()
+		stopAlertWork()
+		s.deps.Alerts.Wait()
+	})
+	// While a Node console is behind this one it runs the offline sweep
+	// itself, so this one must not: every alert would be raised and
+	// mailed twice.
+	if cfg.NodeUpstream == nil {
+		s.jobs.Add("alert sweep", s.deps.Alerts.Run)
+	}
 	badParam := func(w http.ResponseWriter, r *http.Request, err error) {
 		host.ServerError(w, r, err, http.StatusBadRequest)
 	}

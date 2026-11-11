@@ -1,0 +1,203 @@
+package inventory
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"strings"
+
+	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
+	"github.com/unitronix/betterdesk-server/console/store"
+)
+
+// inventory is a device's last report as the old console read it from
+// device_inventory: the hardware and software documents parsed, the
+// times as the database gives them (text on SQLite, an instant on
+// PostgreSQL).
+type inventory struct {
+	deviceID    jsbind.Cell
+	hardware    jsjson.Value
+	software    jsjson.Value
+	collectedAt any
+	receivedAt  any
+}
+
+// timeDest is where a time column is read into: on SQLite whatever the
+// column holds, on PostgreSQL the instant, which goes out in ISO form.
+func timeDest(db *store.DB) any {
+	if db.IsPostgres() {
+		return new(store.Time)
+	}
+	return new(jsbind.Cell)
+}
+
+// parseDocument reads a hardware or software column as the old console
+// did. It fails where JSON.parse threw.
+//
+// A text column (SQLite) holds text that is parsed, and NULL or the
+// empty text count as an empty object. A JSON column (PostgreSQL) holds
+// a value: null is null, and so is NULL; 0, false and the empty text
+// count as an empty object; other text is parsed; and every other value
+// (an object, a list, a number, true) is itself.
+func parseDocument(column sql.NullString, document bool) (jsjson.Value, error) {
+	text := column.String
+	if document {
+		if !column.Valid {
+			return jsjson.NullValue, nil
+		}
+		value, err := jsjson.Parse(text)
+		if err != nil {
+			return jsjson.Value{}, fmt.Errorf("read the document: %w", err)
+		}
+		switch {
+		case value.Kind() == jsjson.Null:
+			return value, nil
+		case !value.Truthy():
+			text = ""
+		case value.Kind() == jsjson.String:
+			text = value.Str()
+		default:
+			return value, nil
+		}
+	}
+	if text == "" {
+		text = "{}"
+	}
+	return jsjson.Parse(text)
+}
+
+// scanInventories reads the rows of a SELECT of the five inventory
+// columns.
+func scanInventories(db *store.DB, rows *store.Rows) ([]inventory, error) {
+	types, err := rows.ColumnTypes()
+	if err != nil {
+		return nil, err
+	}
+	isDocument := func(i int) bool { return strings.HasPrefix(strings.ToUpper(types[i].DatabaseTypeName()), "JSON") }
+	out := []inventory{}
+	for rows.Next() {
+		inv := inventory{collectedAt: timeDest(db), receivedAt: timeDest(db)}
+		var hardware, software sql.NullString
+		if err := rows.Scan(&inv.deviceID, &hardware, &software, inv.collectedAt, inv.receivedAt); err != nil {
+			return nil, err
+		}
+		if inv.hardware, err = parseDocument(hardware, isDocument(1)); err != nil {
+			return nil, fmt.Errorf("hardware of device %s: %w", inv.deviceID.Value().ToString(), err)
+		}
+		if inv.software, err = parseDocument(software, isDocument(2)); err != nil {
+			return nil, fmt.Errorf("software of device %s: %w", inv.deviceID.Value().ToString(), err)
+		}
+		out = append(out, inv)
+	}
+	return out, rows.Err()
+}
+
+const inventoryColumns = "device_id, hardware, software, collected_at, received_at"
+
+// allInventories returns the last report of every device, the one
+// received last first.
+func allInventories(ctx context.Context, db *store.DB) ([]inventory, error) {
+	rows, err := store.Select(ctx, db, "SELECT "+inventoryColumns+" FROM device_inventory ORDER BY received_at DESC")
+	if err != nil {
+		return nil, fmt.Errorf("list inventories: %w", err)
+	}
+	defer rows.Close()
+	inventories, err := scanInventories(db, rows)
+	if err != nil {
+		return nil, fmt.Errorf("list inventories: %w", err)
+	}
+	return inventories, nil
+}
+
+// inventoryOf returns the last report of a device, nil when it has sent
+// none.
+func inventoryOf(ctx context.Context, db *store.DB, id string) (*inventory, error) {
+	rows, err := store.Select(ctx, db, "SELECT "+inventoryColumns+" FROM device_inventory WHERE device_id = ?", id)
+	if err != nil {
+		return nil, fmt.Errorf("load the inventory of device %s: %w", id, err)
+	}
+	defer rows.Close()
+	inventories, err := scanInventories(db, rows)
+	if err != nil {
+		return nil, fmt.Errorf("load the inventory of device %s: %w", id, err)
+	}
+	if len(inventories) == 0 {
+		return nil, nil
+	}
+	return &inventories[0], nil
+}
+
+// telemetry is a device's last telemetry.
+//
+// On SQLite every column goes out with whatever it holds. On PostgreSQL
+// the four numbers are numbers also where the driver handed over text (a
+// bigint), and 0 where the column is NULL.
+type telemetry struct {
+	DeviceID         jsbind.Cell `json:"device_id"`
+	CPUUsagePercent  any         `json:"cpu_usage_percent"`
+	MemoryUsedBytes  any         `json:"memory_used_bytes"`
+	MemoryTotalBytes any         `json:"memory_total_bytes"`
+	UptimeSecs       any         `json:"uptime_secs"`
+	Timestamp        any         `json:"timestamp"`
+	ReceivedAt       any         `json:"received_at"`
+}
+
+// plus is "+value" for a number column of PostgreSQL: the number, and 0
+// for NULL. A real goes out with the digits of a four-byte number.
+type plus struct {
+	real  store.Float
+	whole jsbind.Cell
+	// isReal says which of the two the column was read into.
+	isReal bool
+}
+
+// MarshalJSON implements json.Marshaler.
+func (p *plus) MarshalJSON() ([]byte, error) {
+	if p.isReal {
+		if !p.real.Valid {
+			return []byte("0"), nil
+		}
+		return p.real.MarshalJSON()
+	}
+	return number(p.whole.Value().ToNumber()).MarshalJSON()
+}
+
+// telemetryOf returns the last telemetry of a device, nil when it has
+// sent none.
+func telemetryOf(ctx context.Context, db *store.DB, id string) (*telemetry, error) {
+	t := telemetry{Timestamp: timeDest(db), ReceivedAt: timeDest(db)}
+	numbers := []*any{&t.CPUUsagePercent, &t.MemoryUsedBytes, &t.MemoryTotalBytes, &t.UptimeSecs}
+	dest := []any{&t.DeviceID}
+	for i, field := range numbers {
+		if !db.IsPostgres() {
+			*field = new(jsbind.Cell)
+			dest = append(dest, *field)
+			continue
+		}
+		p := &plus{isReal: i == 0}
+		*field = p
+		if p.isReal {
+			dest = append(dest, &p.real)
+		} else {
+			dest = append(dest, &p.whole)
+		}
+	}
+	dest = append(dest, t.Timestamp, t.ReceivedAt)
+	rows, err := store.Select(ctx, db,
+		`SELECT device_id, cpu_usage_percent, memory_used_bytes, memory_total_bytes, uptime_secs, "timestamp", received_at FROM device_telemetry WHERE device_id = ?`, id)
+	if err != nil {
+		return nil, fmt.Errorf("load the telemetry of device %s: %w", id, err)
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		if err := rows.Err(); err != nil {
+			return nil, fmt.Errorf("load the telemetry of device %s: %w", id, err)
+		}
+		return nil, nil
+	}
+	if err := rows.Scan(dest...); err != nil {
+		return nil, fmt.Errorf("load the telemetry of device %s: %w", id, err)
+	}
+	return &t, rows.Close()
+}

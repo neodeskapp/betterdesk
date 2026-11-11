@@ -46,6 +46,22 @@ host names outside ASCII are mapped (Unicode 17.0 IDNA mapping, as Node.js
 22 applies it). It is data derived from the Unicode Character Database,
 copyright Unicode, Inc., under the Unicode License v3.
 
+The console's mail code in `betterdesk-server/console/mail/` follows other
+projects closely, so that mails and SMTP conversations stay what they were:
+
+- Nodemailer 10.4.0 (address parser, MIME message builder, SMTP client),
+  copyright Andris Reinman, MIT No Attribution License. The Go code is a
+  port of the parts the console used.
+- The domain handling in `mail/message` (`idna.go`, `host.go`) follows the
+  URL library inside Node.js 22 (ada 2.9.2), copyright the Ada authors,
+  Apache License 2.0 or MIT License. Its file `tables.bin.gz` is data
+  derived from the Unicode Character Database (Unicode 15.0 and 17.0),
+  copyright Unicode, Inc., under the Unicode License v3.
+
+`betterdesk-server/console/alerts/jsdate.go` reads dates the way
+JavaScript's `Date.parse` does in Node.js. It follows the date parser of the
+V8 engine, copyright the V8 project authors, BSD 3-Clause License.
+
 ## Web console code
 
 The Svelte console in `web-ui/` bundles these npm packages into the code the

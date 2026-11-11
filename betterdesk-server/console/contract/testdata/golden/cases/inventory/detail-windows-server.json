@@ -1,0 +1,198 @@
+{
+ "id": "inventory/detail-windows-server",
+ "request": {
+  "method": "GET",
+  "path": "/api/inventory/900100026"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "collected_at",
+    "received_at",
+    "software.apps[*].installed_at",
+    "telemetry.received_at",
+    "telemetry.timestamp"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "collected_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "received_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "software.apps[*].installed_at",
+     "format": "9999-99-99"
+    },
+    {
+     "path": "telemetry.received_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "telemetry.timestamp",
+     "format": "9999-99-99A99:99:99.999A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "collected_at": "<volatile>",
+     "device_id": "900100026",
+     "hardware": {
+      "architecture": "x86_64",
+      "cpu": {
+       "brand": "Intel(R) Xeon(R) Silver 4310 CPU @ 2.10GHz",
+       "logical_cores": 8,
+       "usage_percent": 33.8
+      },
+      "disks": [
+       {
+        "device": "C:",
+        "filesystem": "NTFS",
+        "mount_point": "C:\\",
+        "total_gb": 126.4,
+        "used_gb": 49.1
+       },
+       {
+        "device": "D:",
+        "filesystem": "NTFS",
+        "mount_point": "D:\\",
+        "total_gb": 511.9,
+        "used_gb": 136
+       }
+      ],
+      "hostname": "demo-lab-win-vm",
+      "kernel": "10.0.20348",
+      "memory": {
+       "total_bytes": 34359738368,
+       "used_bytes": 18486419662
+      },
+      "network_interfaces": [
+       {
+        "ip_addresses": [
+         "10.0.2.45"
+        ],
+        "mac": "02:00:5e:10:00:26",
+        "name": "Ethernet"
+       }
+      ],
+      "os_name": "Windows Server 2022",
+      "os_version": "21H2 (20348.2849)"
+     },
+     "received_at": "<volatile>",
+     "software": {
+      "apps": [
+       {
+        "installed_at": "<volatile>",
+        "name": "Microsoft Edge",
+        "publisher": "Microsoft Corporation",
+        "version": "130.0.2849.68"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "Windows Admin Center",
+        "publisher": "Microsoft Corporation",
+        "version": "2410"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "Microsoft SQL Server 2022 (64-bit)",
+        "publisher": "Microsoft Corporation",
+        "version": "16.0.4135.4"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "PowerShell 7-x64",
+        "publisher": "Microsoft Corporation",
+        "version": "7.4.6"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "BetterDesk",
+        "publisher": "BetterDesk (demo)",
+        "version": "1.4.1"
+       }
+      ]
+     },
+     "telemetry": {
+      "cpu_usage_percent": 33.8,
+      "device_id": "900100026",
+      "memory_total_bytes": 34359738368,
+      "memory_used_bytes": 18486419662,
+      "received_at": "<volatile>",
+      "timestamp": "<volatile>",
+      "uptime_secs": 26400
+     }
+    }
+   }
+  }
+ ]
+}

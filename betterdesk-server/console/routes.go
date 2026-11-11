@@ -2,7 +2,9 @@ package console
 
 import (
 	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/routes/activity"
 	authroutes "github.com/unitronix/betterdesk-server/console/routes/auth"
+	"github.com/unitronix/betterdesk-server/console/routes/automation"
 	"github.com/unitronix/betterdesk-server/console/routes/avatars"
 	"github.com/unitronix/betterdesk-server/console/routes/cdap"
 	"github.com/unitronix/betterdesk-server/console/routes/cdapstudio"
@@ -19,6 +21,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/guest"
 	"github.com/unitronix/betterdesk-server/console/routes/health"
 	i18nroutes "github.com/unitronix/betterdesk-server/console/routes/i18n"
+	"github.com/unitronix/betterdesk-server/console/routes/inventory"
 	"github.com/unitronix/betterdesk-server/console/routes/keys"
 	"github.com/unitronix/betterdesk-server/console/routes/languages"
 	"github.com/unitronix/betterdesk-server/console/routes/meshcentral"
@@ -68,14 +71,21 @@ func registerRoutes(d *kit.Deps) {
 	folders.Register(d)       // routes/folders.routes.js
 	guest.Register(d)         // routes/guest.routes.js
 	i18nroutes.Register(d)    // routes/i18n.routes.js at /api/i18n
+	// routes/dataguard.routes.js at /api/dataguard and at /api/bd
+	// routes/inventory.routes.js at /api/inventory, without the device routes (inventory, telemetry, inventory/:id), which are all the group answers at /api/bd
+	inventory.Register(d.At("/api/inventory"))
 	// routes/tickets.routes.js at /api/tickets
 	tickets.Register(d.At("/api/tickets"))
+	// routes/activity.routes.js at /api/activity, without the device route /activity, which is all the group answers at /api/bd
+	activity.Register(d.At("/api/activity"))
+	// routes/automation.routes.js at /api/automation, without the device routes (commands, commands/:id/result), which are all the group answers at /api/bd
+	automation.Register(d.At("/api/automation"))
 	// routes/fileTransfer.routes.js at /api/files and at /api/bd, with the device routes file-transfer
 	filetransfer.Register(d.At("/api/files"))
 	filetransfer.Register(d.At("/api/bd"))
 	// routes/network.routes.js at /api/network
 	network.Register(d.At("/api/network"))
-	// routes/dataguard.routes.js at /api/dataguard and at /api/bd
+	// routes/dataguard.routes.js at /api/dataguard and at /api/bd, without the device routes dlp-policies and dlp-events
 	dataguard.Register(d.At("/api/dataguard"))
 	dataguard.Register(d.At("/api/bd"))
 	trends.Register(d) // routes/trends.routes.js, in front of the reports group

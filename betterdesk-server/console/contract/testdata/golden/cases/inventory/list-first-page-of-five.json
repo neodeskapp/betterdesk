@@ -1,0 +1,197 @@
+{
+ "id": "inventory/list-first-page-of-five",
+ "request": {
+  "method": "GET",
+  "path": "/api/inventory?limit=5&page=1"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "devices[*].collected_at",
+    "devices[*].last_seen"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "devices[*].collected_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "devices[*].last_seen",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "devices": [
+      {
+       "collected_at": "<volatile>",
+       "cpu": "Intel(R) Core(TM) i5-12500",
+       "cpu_cores": 8,
+       "cpu_usage": 10.4,
+       "device_id": "900100001",
+       "disk_count": 1,
+       "disk_max_free_bytes": 65390877082,
+       "disk_max_mount": "C:\\",
+       "disk_max_used_percent": 93.6,
+       "hostname": "demo-reception-01",
+       "last_seen": "<volatile>",
+       "memory_total_mb": 32768,
+       "memory_used_mb": 13654,
+       "os": "Windows 11 Pro 23H2 (22631.4460)",
+       "os_name": "Windows 11 Pro",
+       "software_count": 10
+      },
+      {
+       "collected_at": "<volatile>",
+       "cpu": "Intel(R) Core(TM) i5-12500",
+       "cpu_cores": 12,
+       "cpu_usage": 49.6,
+       "device_id": "900100003",
+       "disk_count": 1,
+       "disk_max_free_bytes": 73551314944,
+       "disk_max_mount": "C:\\",
+       "disk_max_used_percent": 85.6,
+       "hostname": "demo-accounts-01",
+       "last_seen": "<volatile>",
+       "memory_total_mb": 32768,
+       "memory_used_mb": 22050,
+       "os": "Windows 10 Pro 22H2 (19045.5131)",
+       "os_name": "Windows 10 Pro",
+       "software_count": 10
+      },
+      {
+       "collected_at": "<volatile>",
+       "cpu": "Apple M3 Pro",
+       "cpu_cores": 10,
+       "cpu_usage": 24.3,
+       "device_id": "900100005",
+       "disk_count": 1,
+       "disk_max_free_bytes": 395888610509,
+       "disk_max_mount": "/",
+       "disk_max_used_percent": 25.4,
+       "hostname": "demo-ceo-macbook",
+       "last_seen": "<volatile>",
+       "memory_total_mb": 16384,
+       "memory_used_mb": 11509,
+       "os": "macOS 15.1 15.1",
+       "os_name": "macOS 15.1",
+       "software_count": 7
+      },
+      {
+       "collected_at": "<volatile>",
+       "cpu": "Apple M1 Max",
+       "cpu_cores": 10,
+       "cpu_usage": 36.1,
+       "device_id": "900100006",
+       "disk_count": 1,
+       "disk_max_free_bytes": 129171141427,
+       "disk_max_mount": "/",
+       "disk_max_used_percent": 87.9,
+       "hostname": "demo-design-imac",
+       "last_seen": "<volatile>",
+       "memory_total_mb": 18432,
+       "memory_used_mb": 8417,
+       "os": "macOS 14.6 14.6",
+       "os_name": "macOS 14.6",
+       "software_count": 7
+      },
+      {
+       "collected_at": "<volatile>",
+       "cpu": "AMD Ryzen 7 PRO 7840U",
+       "cpu_cores": 12,
+       "cpu_usage": 21.7,
+       "device_id": "900100008",
+       "disk_count": 1,
+       "disk_max_free_bytes": 335759068365,
+       "disk_max_mount": "C:\\",
+       "disk_max_used_percent": 67.1,
+       "hostname": "demo-warehouse-pc",
+       "last_seen": "<volatile>",
+       "memory_total_mb": 32768,
+       "memory_used_mb": 26228,
+       "os": "Windows 10 IoT 22H2 (19045.5131)",
+       "os_name": "Windows 10 IoT",
+       "software_count": 10
+      }
+     ],
+     "limit": 5,
+     "page": 1,
+     "total": 14,
+     "total_pages": 3
+    }
+   }
+  }
+ ]
+}

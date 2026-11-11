@@ -1,0 +1,185 @@
+{
+ "id": "inventory/detail-small-computer",
+ "request": {
+  "method": "GET",
+  "path": "/api/inventory/900100024"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "collected_at",
+    "received_at",
+    "software.apps[*].installed_at",
+    "telemetry.received_at",
+    "telemetry.timestamp"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "collected_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "received_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "software.apps[*].installed_at",
+     "format": "9999-99-99"
+    },
+    {
+     "path": "telemetry.received_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "telemetry.timestamp",
+     "format": "9999-99-99A99:99:99.999A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "collected_at": "<volatile>",
+     "device_id": "900100024",
+     "hardware": {
+      "architecture": "arm64",
+      "cpu": {
+       "brand": "Broadcom BCM2712 (Cortex-A76)",
+       "logical_cores": 4,
+       "usage_percent": 23.3
+      },
+      "disks": [
+       {
+        "device": "/dev/mmcblk0p2",
+        "filesystem": "ext4",
+        "mount_point": "/",
+        "total_gb": 58.2,
+        "used_gb": 44.9
+       }
+      ],
+      "hostname": "demo-lab-rpi-01",
+      "kernel": "6.6.51+rpt-rpi-2712",
+      "memory": {
+       "total_bytes": 8589934592,
+       "used_bytes": 4204211753
+      },
+      "network_interfaces": [
+       {
+        "ip_addresses": [
+         "10.0.4.43"
+        ],
+        "mac": "02:00:5e:10:00:24",
+        "name": "eth0"
+       }
+      ],
+      "os_name": "Linux 6.6 (Raspberry Pi)",
+      "os_version": "Debian 12 (bookworm)"
+     },
+     "received_at": "<volatile>",
+     "software": {
+      "apps": [
+       {
+        "installed_at": "<volatile>",
+        "name": "raspi-config",
+        "publisher": "Raspberry Pi Ltd",
+        "version": "20240617"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "python3",
+        "publisher": "Debian",
+        "version": "3.11.2-1+b1"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "mosquitto",
+        "publisher": "Debian",
+        "version": "2.0.11-1.2"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "betterdesk",
+        "publisher": "BetterDesk (demo)",
+        "version": "1.3.9"
+       }
+      ]
+     },
+     "telemetry": {
+      "cpu_usage_percent": 23.3,
+      "device_id": "900100024",
+      "memory_total_bytes": 8589934592,
+      "memory_used_bytes": 4204211753,
+      "received_at": "<volatile>",
+      "timestamp": "<volatile>",
+      "uptime_secs": 26400
+     }
+    }
+   }
+  }
+ ]
+}

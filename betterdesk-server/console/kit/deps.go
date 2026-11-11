@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/unitronix/betterdesk-server/console/access"
+	"github.com/unitronix/betterdesk-server/console/alerts"
 	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/avatars"
@@ -17,6 +18,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/guestaccess"
 	"github.com/unitronix/betterdesk-server/console/i18n"
 	"github.com/unitronix/betterdesk-server/console/limits"
+	"github.com/unitronix/betterdesk-server/console/mail"
 	"github.com/unitronix/betterdesk-server/console/restart"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
 	"github.com/unitronix/betterdesk-server/console/session"
@@ -99,6 +101,12 @@ type Deps struct {
 	// supportersService.js). A route that reads the settings calls
 	// Branding.Refresh first.
 	Branding *branding.Service
+	// Mail is the mail service: the SMTP settings, the alert and help
+	// request mails, the log of notifications sent
+	// (services/emailService.js, lib/smtpSettingsHandlers.js).
+	Mail *mail.Service
+	// Alerts is the alert rules engine (services/alertRulesEngine.js).
+	Alerts *alerts.Engine
 	// Audit writes the audit log. LogAction is the usual way to it.
 	Audit *auditlog.Log
 	// Log is the console's logger; a group takes d.Log.Child("TICKETS").

@@ -90,6 +90,12 @@ type Config struct {
 	// Strict-Transport-Security is sent (middleware.HSTSEnabled).
 	HSTSEnabled          string
 	AllowSelfSignedCerts bool
+	// SMTPTLSVerify says whether the mail server's certificate is checked
+	// when the saved SMTP settings do not say (SMTP_TLS_VERIFY).
+	SMTPTLSVerify bool
+	// HTTPRedirect is HTTP_REDIRECT_HTTPS. The Go console redirects
+	// nothing by it; links in mails start with https when it is on.
+	HTTPRedirect bool
 
 	// DefaultLanguage is the language of a request that names none
 	// (DEFAULT_LANGUAGE).
@@ -236,6 +242,8 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 	cfg.HTTPSExact = getenv("HTTPS_ENABLED") == "true"
 	cfg.HSTSEnabled = getenv("HSTS_ENABLED")
 	cfg.AllowSelfSignedCerts = isTrue(getenv("ALLOW_SELF_SIGNED_CERTS"))
+	cfg.SMTPTLSVerify = isTrue(getenv("SMTP_TLS_VERIFY"))
+	cfg.HTTPRedirect = isTrue(orDefault(getenv("HTTP_REDIRECT_HTTPS"), "true"))
 
 	cfg.DefaultLanguage = orDefault(getenv("DEFAULT_LANGUAGE"), "en")
 	cfg.DeviceScopeDefault = strings.ToLower(orDefault(getenv("DEVICE_SCOPE_DEFAULT"), "open"))

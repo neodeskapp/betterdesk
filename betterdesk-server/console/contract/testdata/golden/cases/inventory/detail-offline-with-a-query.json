@@ -1,0 +1,204 @@
+{
+ "id": "inventory/detail-offline-with-a-query",
+ "request": {
+  "method": "GET",
+  "path": "/api/inventory/900100016?limit=0&page=x"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "collected_at",
+    "received_at",
+    "software.apps[*].installed_at",
+    "telemetry.received_at",
+    "telemetry.timestamp"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "collected_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "received_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "software.apps[*].installed_at",
+     "format": "9999-99-99"
+    },
+    {
+     "path": "telemetry.received_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "telemetry.timestamp",
+     "format": "9999-99-99A99:99:99.999A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "collected_at": "<volatile>",
+     "device_id": "900100016",
+     "hardware": {
+      "architecture": "x86_64",
+      "cpu": {
+       "brand": "AMD EPYC 7313P 16-Core Processor",
+       "logical_cores": 32,
+       "usage_percent": 0
+      },
+      "disks": [
+       {
+        "device": "/dev/nvme0n1p2",
+        "filesystem": "ext4",
+        "mount_point": "/",
+        "total_gb": 233.7,
+        "used_gb": 65.4
+       },
+       {
+        "device": "/dev/md0",
+        "filesystem": "xfs",
+        "mount_point": "/srv",
+        "total_gb": 3725.3,
+        "used_gb": 2248.5
+       }
+      ],
+      "hostname": "demo-db-replica",
+      "kernel": "5.15.0-125-generic",
+      "memory": {
+       "total_bytes": 137438953472,
+       "used_bytes": 47634751616
+      },
+      "network_interfaces": [
+       {
+        "ip_addresses": [
+         "10.0.4.35"
+        ],
+        "mac": "02:00:5e:10:00:16",
+        "name": "eth0"
+       }
+      ],
+      "os_name": "Ubuntu 22.04",
+      "os_version": "22.04"
+     },
+     "received_at": "<volatile>",
+     "software": {
+      "apps": [
+       {
+        "installed_at": "<volatile>",
+        "name": "openssh-server",
+        "publisher": "Ubuntu Developers",
+        "version": "1:9.6p1-3ubuntu13.5"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "postgresql-16",
+        "publisher": "Ubuntu Developers",
+        "version": "16.4-0ubuntu0.24.04.2"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "docker-ce",
+        "publisher": "Docker Inc.",
+        "version": "5:27.3.1-1~ubuntu.24.04~noble"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "nginx",
+        "publisher": "Ubuntu Developers",
+        "version": "1.24.0-2ubuntu7.1"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "prometheus-node-exporter",
+        "publisher": "Ubuntu Developers",
+        "version": "1.7.0-1ubuntu0.2"
+       },
+       {
+        "installed_at": "<volatile>",
+        "name": "betterdesk",
+        "publisher": "BetterDesk (demo)",
+        "version": "1.4.2"
+       }
+      ]
+     },
+     "telemetry": {
+      "cpu_usage_percent": 0,
+      "device_id": "900100016",
+      "memory_total_bytes": 137438953472,
+      "memory_used_bytes": 47634751616,
+      "received_at": "<volatile>",
+      "timestamp": "<volatile>",
+      "uptime_secs": 1645200
+     }
+    }
+   }
+  }
+ ]
+}

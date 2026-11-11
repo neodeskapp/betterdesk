@@ -1,21 +1,16 @@
 /**
- * Alerts and automation follow the menu: reading rules, alerts and remote
- * commands (whose payloads and results come from scripts run on devices)
- * and acknowledging alerts need server.config, like the writes. The device
- * routes on /api/bd keep working: an agent polling GET /api/bd/commands
- * with its token reaches the device handler (the admin routes of the
- * routers mounted at /api/bd before it used to answer 401).
+ * The device routes of automation on /api/bd keep working: an agent
+ * polling GET /api/bd/commands with its token reaches the device handler
+ * (the admin routes of the routers mounted at /api/bd before it used to
+ * answer 401). The panel routes for rules, alerts, commands and the SMTP
+ * settings, which need server.config, are served by the Go console and
+ * tested there.
  */
 
 const request = require('supertest');
 const { createTestApp, withAuth } = require('./helpers');
 
 const mockAdapter = {
-    getAlertRules: jest.fn().mockResolvedValue([]),
-    getAlertRuleById: jest.fn().mockResolvedValue({ id: 1, name: 'r' }),
-    getAlertHistory: jest.fn().mockResolvedValue([]),
-    acknowledgeAlert: jest.fn().mockResolvedValue(undefined),
-    getRemoteCommands: jest.fn().mockResolvedValue([]),
     getRemoteCommandById: jest.fn(),
     getPendingCommands: jest.fn(),
     updateRemoteCommand: jest.fn().mockResolvedValue(undefined),
@@ -31,11 +26,6 @@ const mockDb = {
 jest.mock('../services/database', () => mockDb);
 jest.mock('../services/dbAdapter', () => ({ getAdapter: jest.fn(() => mockAdapter) }));
 jest.mock('../services/betterdeskApi', () => ({ getAllPeers: jest.fn().mockResolvedValue([]) }));
-jest.mock('../lib/smtpSettingsHandlers', () => ({
-    getSmtpSettings: (req, res) => res.json({}),
-    putSmtpSettings: (req, res) => res.json({}),
-    testSmtpSettings: (req, res) => res.json({}),
-}));
 
 const automationRoutes = require('../routes/automation.routes');
 const inventoryRoutes = require('../routes/inventory.routes');
@@ -47,53 +37,14 @@ beforeEach(() => {
     mockAdapter.getPendingCommands.mockResolvedValue([{ id: 5, command_type: 'shell', payload: 'whoami' }]);
 });
 
-function panel(role) {
-    const app = createTestApp();
-    withAuth(app, { id: 2, username: role, role });
-    app.use('/api/automation', automationRoutes);
-    return app;
-}
-
-const READS = [
-    ['get', '/api/automation/rules'],
-    ['get', '/api/automation/rules/1'],
-    ['get', '/api/automation/alerts'],
-    ['post', '/api/automation/alerts/1/ack'],
-    ['get', '/api/automation/commands'],
-    ['get', '/api/automation/commands/5'],
-];
-
-describe('panel routes need server.config', () => {
-    it.each(['viewer', 'operator', 'global_admin'])('refuses %s and reads nothing', async (role) => {
-        const app = panel(role);
-        for (const [method, path] of READS) {
-            const res = await request(app)[method](path).send({});
-            expect([method, path, res.status]).toEqual([method, path, 403]);
-        }
-        expect(mockAdapter.getAlertRules).not.toHaveBeenCalled();
-        expect(mockAdapter.getAlertRuleById).not.toHaveBeenCalled();
-        expect(mockAdapter.getAlertHistory).not.toHaveBeenCalled();
-        expect(mockAdapter.acknowledgeAlert).not.toHaveBeenCalled();
-        expect(mockAdapter.getRemoteCommands).not.toHaveBeenCalled();
-        expect(mockAdapter.getRemoteCommandById).not.toHaveBeenCalled();
-    });
-
-    it.each(['server_admin', 'admin'])('lets %s read and acknowledge', async (role) => {
-        const app = panel(role);
-        for (const [method, path] of READS) {
-            const res = await request(app)[method](path).send({});
-            expect([method, path, res.status]).toEqual([method, path, 200]);
-        }
-        expect(mockAdapter.acknowledgeAlert).toHaveBeenCalledWith(1, role);
-    });
-});
-
 /** The device side as routes/index.js mounts it: inventory, activity, then automation at /api/bd */
-function deviceApp() {
+function deviceApp(user) {
     const app = createTestApp();
+    if (user) withAuth(app, user);
     app.use('/api/bd', inventoryRoutes);
     app.use('/api/bd', activityRoutes);
     app.use('/api/bd', automationRoutes);
+    app.use('/api/automation', automationRoutes);
     return app;
 }
 
@@ -120,10 +71,11 @@ describe('device routes on /api/bd', () => {
 
     it('a request without a token still gets 401, and no admin route answers on /api/bd', async () => {
         mockDb.getAccessToken.mockResolvedValue(null);
-        const app = deviceApp();
-        expect((await request(app).get('/api/bd/commands')).status).toBe(401);
-        const rules = await request(app).get('/api/bd/rules');
-        expect(rules.status).not.toBe(200);
-        expect(mockAdapter.getAlertRules).not.toHaveBeenCalled();
+        expect((await request(deviceApp()).get('/api/bd/commands')).status).toBe(401);
+        // This router has no admin route left
+        const app = deviceApp({ id: 1, username: 'admin', role: 'admin' });
+        expect((await request(app).get('/api/automation/smtp')).status).toBe(404);
+        expect((await request(app).get('/api/bd/smtp')).status).toBe(404);
+        expect((await request(app).get('/api/bd/rules')).status).toBe(404);
     });
 });

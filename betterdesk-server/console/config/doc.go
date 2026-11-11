@@ -29,7 +29,11 @@
 //	                                               and are Secure, the security headers are those of HTTPS.
 //	HSTS_ENABLED             (auto)                true, 1, on: always send Strict-Transport-Security in HTTPS mode.
 //	                                               false, 0, off: never. Otherwise only without self-signed certificates.
-//	ALLOW_SELF_SIGNED_CERTS  false                 "true" turns the automatic HSTS off.
+//	ALLOW_SELF_SIGNED_CERTS  false                 "true" turns the automatic HSTS off. It does not touch mail.
+//	SMTP_TLS_VERIFY          false                 "true" in any letter case: the mail server's certificate is checked
+//	                                               when the saved SMTP settings have no tlsVerify of their own.
+//	HTTP_REDIRECT_HTTPS      true                  "true" in any letter case: the link to the console in a mail
+//	                                               starts with https, else with http. Nothing is redirected by it.
 //	DEFAULT_LANGUAGE         en                    Language of a request that names none.
 //	DEVICE_SCOPE_DEFAULT     open                  "restricted" hides devices nobody was given from non-admin roles.
 //	LOG_LEVEL                warn in production,   error, warn, info or debug.
@@ -95,6 +99,11 @@
 //	                                               API_IP_RATE_LIMIT, API_ATTEMPT_WINDOW), API_TOKEN_EXPIRY_DAYS and
 //	                                               BETTERDESK_AUTH_AUTOCREATE. It gets DATA_DIR and the keys folder
 //	                                               from this package.
+//	SMTP_HOST                (none)                The mail server when no SMTP settings are saved (package mail),
+//	SMTP_PORT                587                   read at every use: SMTP_PORT, SMTP_SECURE ("true"), SMTP_USER,
+//	...                                            SMTP_PASS, SMTP_FROM (betterdesk@localhost), SMTP_ALERT_EMAIL.
+//	PANEL_PUBLIC_URL         (none)                The console's address in mails. Without both: http or https,
+//	(or PUBLIC_URL)                                HOST (127.0.0.1 for 0.0.0.0) and the console's port.
 //
 // # Not read yet
 //
@@ -102,6 +111,6 @@
 // installers write the console's settings there. The Go console reads the
 // server's environment only, so an install has to hand these settings to
 // the server's service until the installers are changed. The certificate
-// paths (SSL_CERT_PATH, SSL_KEY_PATH, HTTPS_PORT, HTTP_REDIRECT_HTTPS) are
-// not read either: the Go console listens on plain HTTP on one port.
+// paths (SSL_CERT_PATH, SSL_KEY_PATH, HTTPS_PORT) are not read either: the
+// Go console listens on plain HTTP on one port.
 package config

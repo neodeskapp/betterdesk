@@ -1,16 +1,15 @@
 /**
- * BetterDesk Console — Inventory & Telemetry API Routes
+ * BetterDesk Console — Inventory & Telemetry API Routes (device-facing)
  *
- * Receives hardware/software inventory and lightweight telemetry
- * data from BetterDesk desktop agents.  Data is persisted to the
- * database via dbAdapter (SQLite or PostgreSQL).
+ * The routes people read inventory with (GET /api/inventory and
+ * /api/inventory/:id) are answered by the Go console
+ * (betterdesk-server/console/routes/inventory). What is left here are the
+ * routes of the desktop agent, which take a device token. The router is
+ * mounted at /api/bd and at /api/inventory, so each answers at both:
  *
- * Endpoints:
  *   POST   /api/bd/inventory   — Full inventory upload (HW + SW)
  *   POST   /api/bd/telemetry   — Lightweight telemetry (CPU/RAM)
  *   GET    /api/bd/inventory/:id — Get last inventory for a device
- *   GET    /api/inventory       — Admin endpoint: list all device inventories
- *   GET    /api/inventory/:id   — Admin endpoint: single device inventory
  *
  * @author UNITRONIX
  * @version 2.0.0
@@ -22,11 +21,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../services/database');
 const { getAdapter } = require('../services/dbAdapter');
-const betterdeskApi = require('../services/betterdeskApi');
 const alertRulesEngine = require('../services/alertRulesEngine');
-const { requireAuth, requirePermission } = require('../middleware/auth');
-// Also mounted at /api/bd: the admin routes leave device paths to the device routes
-const { notOnDeviceMount } = require('../lib/adminMount');
 
 // ---------------------------------------------------------------------------
 //  Helpers (shared with bd-api.routes.js)
@@ -85,7 +80,7 @@ function requireTokenDeviceMatch(req, res, deviceId) {
 }
 
 /**
- * The fullest disk of a report, for the list's "disks almost full" summary.
+ * The fullest disk of a report, for the disk alert rules.
  * Agents send sizes in bytes or in GB, and used space directly or as
  * free/available space. Returns {} when no disk has a usable size.
  */
@@ -113,21 +108,6 @@ function fullestDisk(disks) {
         disk_max_mount: best.mount,
         disk_max_free_bytes: Math.round(best.free),
     };
-}
-
-function parsePagination(req) {
-    const parsePositiveInteger = (value, fallback, max) => {
-        if (value === undefined) return fallback;
-        if (typeof value !== 'string' || !/^\d+$/.test(value)) return null;
-        const parsed = Number(value);
-        if (!Number.isSafeInteger(parsed) || parsed < 1) return null;
-        return Math.min(parsed, max);
-    };
-
-    const page = parsePositiveInteger(req.query.page, 1, Number.MAX_SAFE_INTEGER);
-    const limit = parsePositiveInteger(req.query.limit, 50, 100);
-    if (!page || !limit) return null;
-    return { page, limit };
 }
 
 // ---------------------------------------------------------------------------
@@ -250,118 +230,6 @@ router.get('/inventory/:id', requireDeviceToken, async (req, res) => {
         res.json(entry);
     } catch (err) {
         console.error('[Inventory] Get error:', err.message);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// ---------------------------------------------------------------------------
-//  Admin-facing endpoints (web console)
-// ---------------------------------------------------------------------------
-
-/**
- * GET /api/inventory — List all device inventories (admin only).
- */
-router.get('/', notOnDeviceMount, requireAuth, requirePermission('device.view'), async (req, res) => {
-    try {
-        const pagination = parsePagination(req);
-        if (!pagination) {
-            return res.status(400).json({ error: 'Invalid pagination parameters' });
-        }
-
-        const adapter = getAdapter();
-        const inventories = await adapter.getAllInventories();
-        let devices = [];
-
-        if (inventories.length > 0) {
-            // Inventory includes the most recent collected hardware data. Do
-            // not issue a per-device telemetry query here: that was an N+1
-            // database pattern on this list endpoint.
-            devices = inventories.map(inv => ({
-                device_id: inv.device_id,
-                hostname: inv.hardware?.hostname || inv.device_id,
-                os: `${inv.hardware?.os_name || ''} ${inv.hardware?.os_version || ''}`.trim(),
-                os_name: inv.hardware?.os_name || '',
-                ...fullestDisk(inv.hardware?.disks),
-                cpu: inv.hardware?.cpu?.brand || 'Unknown',
-                cpu_cores: inv.hardware?.cpu?.logical_cores || 0,
-                cpu_usage: inv.hardware?.cpu?.usage_percent ?? null,
-                memory_total_mb: inv.hardware?.memory?.total_bytes
-                    ? Math.round(inv.hardware.memory.total_bytes / 1048576)
-                    : 0,
-                memory_used_mb: inv.hardware?.memory?.used_bytes
-                    ? Math.round(inv.hardware.memory.used_bytes / 1048576)
-                    : 0,
-                disk_count: inv.hardware?.disks?.length || 0,
-                software_count: inv.software?.apps?.length || 0,
-                last_seen: inv.received_at,
-                collected_at: inv.collected_at,
-            }));
-        } else {
-            // Fallback: populate from Go server peer list when no agent inventory exists
-            try {
-                const peers = await betterdeskApi.getAllPeers();
-                const peerList = Array.isArray(peers) ? peers : (peers?.data || []);
-                devices = peerList.map(p => ({
-                    device_id: p.id,
-                    hostname: p.hostname || p.id,
-                    os: p.platform || p.os || '',
-                    cpu: '',
-                    cpu_cores: 0,
-                    cpu_usage: null,
-                    memory_total_mb: 0,
-                    memory_used_mb: 0,
-                    disk_count: 0,
-                    software_count: 0,
-                    last_seen: p.last_online || null,
-                    collected_at: null,
-                    source: 'peer_list',
-                }));
-            } catch (fallbackErr) {
-                console.warn('[Inventory] Peer list fallback failed:', fallbackErr.message);
-            }
-        }
-
-        const total = devices.length;
-        const totalPages = Math.ceil(total / pagination.limit);
-        // Avoid multiplying an unbounded client-supplied page value.
-        const start = pagination.page > totalPages
-            ? total
-            : (pagination.page - 1) * pagination.limit;
-        const pagedDevices = devices.slice(start, start + pagination.limit);
-
-        res.json({
-            devices: pagedDevices,
-            total,
-            page: pagination.page,
-            limit: pagination.limit,
-            total_pages: totalPages,
-        });
-    } catch (err) {
-        console.error('[Inventory] List error:', err.message);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-/**
- * GET /api/inventory/:id — Full inventory detail for one device (admin only).
- */
-router.get('/:id', notOnDeviceMount, requireAuth, requirePermission('device.view'), async (req, res) => {
-    try {
-        const deviceId = req.params.id;
-        const adapter = getAdapter();
-        const inv = await adapter.getInventory(deviceId);
-        const telemetry = await adapter.getTelemetry(deviceId);
-
-        if (!inv) {
-            return res.status(404).json({ error: 'No inventory data for this device' });
-        }
-
-        res.json({
-            ...inv,
-            telemetry,
-        });
-    } catch (err) {
-        console.error('[Inventory] Detail error:', err.message);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
