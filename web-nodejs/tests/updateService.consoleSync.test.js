@@ -25,8 +25,8 @@ describe('updateService console sync helpers', () => {
 
     test('resolves relative console require paths', () => {
         const graph = createConsoleDeployGraph(require('path').join(__dirname, '..'));
-        expect(graph.resolveConsoleRequire('routes/server-attestation.routes.js', '../services/serverAttestation'))
-            .toBe('services/serverAttestation.js');
+        expect(graph.resolveConsoleRequire('routes/registration.routes.js', '../services/deviceGroupService'))
+            .toBe('services/deviceGroupService.js');
         expect(graph.resolveConsoleRequire('services/brandingService.js', '../config/theme-palettes.json'))
             .toBe('config/theme-palettes.json');
         expect(graph.resolveConsoleRequire('routes/index.js', './devices.routes'))
@@ -39,7 +39,7 @@ describe('updateService console sync helpers', () => {
     test('skips phantom routes.js when routes/index.js exists during repair scan', () => {
         const graph = createConsoleDeployGraph(require('path').join(__dirname, '..'));
         expect(graph.isResolvedByIndexModule('routes.js')).toBe(true);
-        expect(graph.isResolvedByIndexModule('routes/server-attestation.routes.js')).toBe(false);
+        expect(graph.isResolvedByIndexModule('routes/registration.routes.js')).toBe(false);
     });
 
     test('ignores require examples inside comments when scanning dependencies', () => {
@@ -53,13 +53,13 @@ describe('updateService console sync helpers', () => {
         expect(required.has('routes/index.js')).toBe(true);
     });
 
-    test('collects serverAttestation from server-attestation.routes integrity seeds', () => {
+    test('collects deviceGroupService from a changed registration.routes', () => {
         const graph = createConsoleDeployGraph(require('path').join(__dirname, '..'));
         const required = graph.collectConsoleRequiredFiles([
-            { localPath: 'routes/server-attestation.routes.js' },
+            { localPath: 'routes/registration.routes.js' },
         ]);
-        expect(required.has('routes/server-attestation.routes.js')).toBe(true);
-        expect(required.has('services/serverAttestation.js')).toBe(true);
+        expect(required.has('routes/registration.routes.js')).toBe(true);
+        expect(required.has('services/deviceGroupService.js')).toBe(true);
     });
 
     test('retries GitHub raw downloads on rate limit status codes', () => {

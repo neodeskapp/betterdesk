@@ -27,6 +27,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/meshcentral"
 	"github.com/unitronix/betterdesk-server/console/routes/network"
 	"github.com/unitronix/betterdesk-server/console/routes/organizations"
+	"github.com/unitronix/betterdesk-server/console/routes/pages"
 	"github.com/unitronix/betterdesk-server/console/routes/pairing"
 	"github.com/unitronix/betterdesk-server/console/routes/panelaccess"
 	"github.com/unitronix/betterdesk-server/console/routes/permissions"
@@ -37,6 +38,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/rustdeskapi"
 	"github.com/unitronix/betterdesk-server/console/routes/scaling"
 	"github.com/unitronix/betterdesk-server/console/routes/securityaudit"
+	"github.com/unitronix/betterdesk-server/console/routes/serverattestation"
 	"github.com/unitronix/betterdesk-server/console/routes/settings"
 	"github.com/unitronix/betterdesk-server/console/routes/system"
 	"github.com/unitronix/betterdesk-server/console/routes/tenants"
@@ -93,6 +95,7 @@ func registerRoutes(d *kit.Deps) {
 	reports.Register(d.At("/api/reports"))
 	// routes/tenants.routes.js at /api/tenants
 	tenants.Register(d.At("/api/tenants"))
+	pages.Register(d)                         // routes/pages.routes.js
 	cdap.Register(d)                          // routes/cdap.routes.js
 	meshcentral.Register(d)                   // routes/meshcentral.routes.js
 	chat.Register(d)                          // routes/chat.routes.js
@@ -114,6 +117,7 @@ func registerRoutes(d *kit.Deps) {
 	system.Register(d)                        // routes/system.routes.js
 	cdapstudio.Register(d)                    // routes/cdap-studio.routes.js
 	permissions.Register(d)                   // routes/permissions.routes.js
+	serverattestation.Register(d)             // routes/server-attestation.routes.js, with the job that runs the capacity tests
 	phase45.Register(d)                       // routes/phase4_5.routes.js
 	pairing.Register(d)                       // routes/pairing.routes.js
 }

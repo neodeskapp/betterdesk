@@ -11,7 +11,6 @@ const settingsRoutes = require('./settings.routes');
 const generatorRoutes = require('./generator.routes');
 const remoteRoutes = require('./remote.routes');
 // bdApiRoutes mounted in server.js (before CSRF) for desktop client access
-const pagesRoutes = require('./pages.routes');
 const registrationRoutes = require('./registration.routes');
 
 /**
@@ -32,7 +31,6 @@ const activityRoutes = lazyRoute('./activity.routes');
 const automationRoutes = lazyRoute('./automation.routes');
 const commercializationRoutes = lazyRoute('./commercialization.routes');
 const serverManagementRoutes = lazyRoute('./server-management.routes');
-const serverAttestationRoutes = lazyRoute('./server-attestation.routes');
 
 // JSON-only writes to /api/* (lib/requireJsonContentType.js)
 const { requireJsonContentType } = require('../lib/requireJsonContentType');
@@ -55,9 +53,7 @@ router.use('/api/automation', automationRoutes); // admin-facing: /api/automatio
 router.use('/api/bd', automationRoutes);         // device-facing: /api/bd/commands
 router.use('/', registrationRoutes);               // admin-facing: /registrations, /api/registrations/*
 router.use('/api/bd', registrationRoutes);          // device-facing: /api/bd/register-request, /api/bd/register-status
-router.use('/', pagesRoutes);                          // page routes: /inventory, /tickets, /automation, etc.
 router.use('/', commercializationRoutes);                // admin-facing: /commercialization, /api/panel/billing/*
 router.use('/', serverManagementRoutes);                 // admin-facing: /server-management, /api/server-management/* (BETA)
-router.use('/', serverAttestationRoutes);                // admin-facing: /server-attestation, /api/server-attestation/*
 
 module.exports = router;
