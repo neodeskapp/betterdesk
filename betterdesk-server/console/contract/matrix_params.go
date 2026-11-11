@@ -71,9 +71,10 @@ var (
 		// ("0.33 MB"), which changes with the instance.
 		"GET /api/settings/audit": {"~data[*].details"},
 		// How long the Go server has been up, as Go prints a duration:
-		// "51.3s", "1m3.2s", "1h0m5s".
+		// "51.3s", "1m3.2s", "1h0m5s". nodeVersion names the runtime of
+		// the console that answers: Node's version, Go's in the Go console.
 		"GET /api/stats":         {"~data.hbbs.uptime"},
-		"GET /api/settings/info": {"~data.goServer.uptime", "data.server.uptime", "data.server.memoryUsage"},
+		"GET /api/settings/info": {"~data.goServer.uptime", "data.server.uptime", "data.server.memoryUsage", "~data.app.nodeVersion"},
 	}
 
 	matrixVolatileHeaders = map[string][]string{

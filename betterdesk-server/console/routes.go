@@ -60,7 +60,7 @@ func registerRoutes(d *kit.Deps) {
 	dashboard.Register(d)     // routes/dashboard.routes.js
 	devices.Register(d)       // routes/devices.routes.js, without the routes that reach into an agent (bdRelay)
 	keys.Register(d)          // routes/keys.routes.js
-	settings.Register(d)      // routes/settings.routes.js: the routes that only read the branding
+	settings.Register(d)      // routes/settings.routes.js: the general settings and the branding reads
 	avatars.Register(d)       // routes/avatars.routes.js
 	users.Register(d)         // routes/users.routes.js
 	panelaccess.Register(d)   // routes/panel-access.routes.js

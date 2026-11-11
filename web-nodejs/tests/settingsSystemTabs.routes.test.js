@@ -1,9 +1,8 @@
 /**
  * Server fixes for the system settings tabs (Svelte rewrite, Settings B):
  *
- * - BUGS.md A6: GET /api/settings/info sent `backend: {}` because the
- *   async getActiveBackend() was not awaited; the backup stats and the
- *   JSON settings snapshot had the same slip.
+ * - BUGS.md A6: the backup stats and the JSON settings snapshot sent
+ *   `backend: {}` because the async getActiveBackend() was not awaited.
  * - The Time zones tab saves the billing time zone and the clock settings
  *   with server.config, but reading them needed billing.view, which
  *   server_admin does not have: the tab showed defaults and a save
@@ -64,12 +63,6 @@ function app(role) {
 }
 
 describe('A6: the backend name is awaited', () => {
-    test('GET /api/settings/info names the backend', async () => {
-        const res = await request(app('admin')).get('/api/settings/info');
-        expect(res.status).toBe(200);
-        expect(res.body.data.backend).toBe('betterdesk');
-    });
-
     test('backup stats and the JSON settings snapshot name the backend', async () => {
         expect((await backupService.getBackupStats()).backend).toBe('betterdesk');
         expect((await backupService.createBackup())._backend).toBe('betterdesk');

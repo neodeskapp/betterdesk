@@ -1,0 +1,185 @@
+{
+ "id": "settings/advanced-files-after",
+ "request": {
+  "method": "GET",
+  "path": "/api/settings/advanced/files"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data[2].mtime",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "data[8].mtime",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "data[9].mtime",
+     "format": "9999-99-99A99:99:99.999A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": [
+      {
+       "canCreate": false,
+       "category": "console",
+       "exists": false,
+       "id": "console-env",
+       "mtime": null,
+       "path": "/repo/web-nodejs/.env",
+       "readable": false,
+       "requiresRestart": "console",
+       "size": 0,
+       "writable": false
+      },
+      {
+       "canCreate": true,
+       "category": "console",
+       "exists": false,
+       "id": "console-env-local",
+       "mtime": null,
+       "path": "/repo/web-nodejs/.env.local",
+       "readable": false,
+       "requiresRestart": "console",
+       "size": 0,
+       "writable": true
+      },
+      {
+       "canCreate": true,
+       "category": "console",
+       "exists": true,
+       "id": "console-session-secret",
+       "mtime": "<volatile>",
+       "path": "/app/data/.session_secret",
+       "readable": true,
+       "requiresRestart": "console",
+       "size": 24,
+       "writable": true
+      },
+      {
+       "canCreate": true,
+       "category": "goserver",
+       "exists": false,
+       "id": "go-blocklist",
+       "mtime": null,
+       "path": "/opt/rustdesk/blocklist.txt",
+       "readable": false,
+       "requiresRestart": "goserver",
+       "size": 0,
+       "writable": true
+      },
+      {
+       "canCreate": true,
+       "category": "goserver",
+       "exists": false,
+       "id": "go-audit-log",
+       "mtime": null,
+       "path": "/var/log/betterdesk/audit.jsonl",
+       "readable": false,
+       "requiresRestart": "goserver",
+       "size": 0,
+       "writable": true
+      },
+      {
+       "canCreate": false,
+       "category": "system",
+       "exists": false,
+       "id": "systemd-console",
+       "mtime": null,
+       "path": "/etc/systemd/system/betterdesk-console.service",
+       "readable": false,
+       "requiresRestart": "systemd",
+       "size": 0,
+       "writable": false
+      },
+      {
+       "canCreate": false,
+       "category": "system",
+       "exists": false,
+       "id": "systemd-server",
+       "mtime": null,
+       "path": "/etc/systemd/system/betterdesk-server.service",
+       "readable": false,
+       "requiresRestart": "systemd",
+       "size": 0,
+       "writable": false
+      },
+      {
+       "canCreate": true,
+       "category": "system",
+       "exists": false,
+       "id": "build-env",
+       "mtime": null,
+       "path": "/etc/betterdesk/build.env",
+       "readable": false,
+       "requiresRestart": "none",
+       "size": 0,
+       "writable": true
+      },
+      {
+       "canCreate": false,
+       "category": "console",
+       "exists": true,
+       "id": "docker-supervisord",
+       "mtime": "<volatile>",
+       "path": "/repo/docker/supervisord.conf",
+       "readable": true,
+       "requiresRestart": "console",
+       "size": 2964,
+       "writable": true
+      },
+      {
+       "canCreate": false,
+       "category": "console",
+       "exists": true,
+       "id": "docker-compose",
+       "mtime": "<volatile>",
+       "path": "/repo/docker-compose.yml",
+       "readable": true,
+       "requiresRestart": "console",
+       "size": 8726,
+       "writable": true
+      }
+     ],
+     "success": true
+    }
+   }
+  }
+ ]
+}
