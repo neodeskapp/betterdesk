@@ -5,6 +5,528 @@
 
 ---
 
+## [3.5.264] — 2026-11-18
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.263] — 2026-11-18
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.262] — 2026-11-18
+
+### Security
+
+- **Relay WebSocket DoS (GHSA-98mc-f6p7-gj85, high).** `crypto.timingSafeEqual`
+  was called with attacker-supplied relay tokens without a length check. It throws
+  `RangeError` on mismatched lengths, the `'connection'` listener had no try/catch,
+  and the process has no `uncaughtException` handler — so one enrolled device
+  could terminate the console and drop every relayed session by sending a token of
+  the wrong length. Lengths are now compared first, values are `String()`-coerced,
+  and the listener keeps a failure local to the socket.
+- **CDAP API key expiry bypass (GHSA-7j6j-h4qf-86mq, high).** The CDAP agent
+  authentication path looked keys up without checking `expires_at`, so an expired
+  key authenticated agent connections indefinitely while the REST API correctly
+  rejected it. Expiry is now enforced on both paths.
+- **Remote-viewer device scope (GHSA-22mg-g52q-x75c).** `/ws/remote-viewer/:device_id`
+  verified `device.connect` but never checked that the user may access *that*
+  device, so an operator whose device scope or group ACL excluded a device could
+  still watch its screen and inject input. The upgrade now runs the same
+  `userCanAccessDevice` check as `remoteTargetGateway`; an out-of-scope device
+  answers 404, identical to a device that does not exist.
+- **Database password in startup log (GHSA-qxwx-jg77-5v67, moderate).** The
+  banner printed the PostgreSQL DSN verbatim, writing the database password to
+  container logs on every start. Credentials are now redacted; SQLite paths are
+  unchanged.
+
+### Fixed
+
+- **Web Console CI and Installer CI no longer fail on every push.** Both ran
+  `tests/updateService.channel.test.js`, which spied on the exported
+  `updateService.checkGoAvailable` while `runUpdatePreflight` called the module-local
+  function directly. The mock never applied, so the result depended on the runner's
+  Go version: it passed on older Go and failed on CI. The function now calls through
+  `module.exports`, making the seam spy-able and the test deterministic.
+- Translated the 58 `users.access_*` / `users.client_features` keys introduced with
+  panel access policies into all 24 non-English locales, and removed four legacy
+  `meta.*` keys from `fr` and `zh-TW` that fell outside the EN/PL baseline.
+
+### CI
+
+- Added a blocking i18n parity gate to Web Console CI. Hard failures (missing,
+  extra, or empty keys) stop the build; the pre-existing English fallback backlog is
+  reported without failing.
+- Upgraded all GitHub Actions to their Node 24 major versions (checkout v7,
+  setup-node v7, setup-go v7, upload-artifact v7, download-artifact v8,
+  setup-python v7, build-push-action v7, codeql-action v4), still pinned to commit
+  SHAs. This clears the Node 20 deprecation warning on every run.
+- Added `concurrency` groups and `timeout-minutes` to every workflow and job;
+  duplicate pushes now cancel superseded runs instead of queueing.
+- Added a GHCR preflight to the Docker publish workflow. The 2026-11-18 failure was
+  `permission_denied ... circuit breaker is open` from GitHub's registry
+  authorization service, not a build error. The preflight retries briefly and then
+  reports an infrastructure failure instead of a false red build.
+
+---
+
+## [3.5.260] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.259] — 2026-11-17
+
+### Changed
+- Web RdClient now provides a shared bidirectional clipboard bridge for text, HTML, and PNG images across the operator and multiple remote sessions. Browser permission failures retain the content in the session hub and expose a user-gesture copy action; Explorer file clipboard remains desktop-only.
+
+---
+
+## [3.5.258] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.257] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.256] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.255] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.254] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.253] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.252] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.251] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.250] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.249] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.248] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.247] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.246] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.245] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.244] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.243] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.242] — 2026-11-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.241] — 2026-11-15
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.240] — 2026-11-13
+
+### Fixed
+- **Enrollment tokens were ignored in `managed` mode.** The most common
+  operator-facing enrollment mode queued every registration for manual approval,
+  including devices presenting a valid token — an unattended install (Docker
+  image, MDM script, golden image) therefore waited for a human click forever,
+  and nothing in the answer said why. A valid unbound token now admits the device
+  immediately and issues its device credential; an invalid or already-bound token
+  is refused with `403 enrollment_token_rejected` instead of being queued as if
+  it were fine. The queue path is unchanged for devices without a token.
+- Both `managed` and `locked` now share one redemption helper, so the token rules
+  (exists, active, unbound or bound to this exact device, uses remaining) apply
+  identically in each mode.
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.239] — 2026-11-13
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.238] — 2026-11-13
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.237] — 2026-11-13
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.236] — 2026-11-13
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.235] — 2026-11-13
+
+### Security
+- **Device registration is authenticated (C1).** `POST /api/bd/register` now
+  needs proof that the device was admitted: operator approval in the
+  **Registrations** tab, a single-use enrollment token from
+  `POST /api/bd/enroll`, or an Ed25519 proof of possession
+  (`bd-enrollment-v1` headers). Banned and soft-deleted device ids are rejected
+  before anything is written, and the endpoint is rate limited to 20
+  requests/min per IP (`BD_REGISTER_RATE_LIMIT_MAX`). Stock RustDesk clients and
+  Support Agents keep working unchanged — they were always admitted through
+  approval or a token, and that path is preserved.
+  `BD_REGISTER_ALLOW_OPEN=true` restores the old unauthenticated behaviour for
+  integrators that cannot sign.
+- **Enrollment actually works (fixed alongside C1).** `POST /api/bd/enroll` and
+  the agent-template tab called `db.get()` / `db.query()`, which the database
+  facade never exposed, so every enrollment token answered `401`; PostgreSQL
+  installs had no `agent_templates` table at all. The template store now lives in
+  `lib/agentTemplates.js` with adapter methods for both backends, tokens are
+  single-use and bound to one `device_id` (`enrolled_device_id`), and the table is
+  created by the adapter schema on SQLite and PostgreSQL alike.
+- **Signal ID change requires identity proof (C2).** A `RegisterPk` carrying
+  `old_id` is applied only when the supplied key or the machine UUID matches the
+  stored peer, so knowing a device id is no longer enough to move or delete it.
+  Stock RustDesk change-ID (no `pk`, matching UUID) keeps working.
+- **Panel can no longer escalate to root (C3, H10).** The Go server runs as
+  `betterdesk` from `/usr/local/bin/betterdesk-server`; `/opt/rustdesk` is no
+  longer group-writable at the directory level, so the console user cannot
+  replace the server binary. The privileged broker no longer manages
+  `DATABASE_URL`, `SESSION_SECRET`, `DEFAULT_ADMIN_PASSWORD`,
+  `UPDATE_GITHUB_TOKEN`, `API_KEY_PATH`, `ORG_PEER_VAULT_KEY`, `SMTP_PASS` or
+  `API_TOKEN_EXPIRY_DAYS`, and reports a protocol `version` so a stale broker is
+  detectable.
+- **Go API surface (H1, M5-M8).** `/metrics` and the detailed health payload
+  (`/api/health/detail`) require the metrics allowlist or an API key; public
+  `/api/health` returns only `{status, version}`. Peer status / online / metrics
+  / linked / policy endpoints now require `device.view` and enforce organisation
+  scope. Audit write endpoints are rate limited. `limit`/`offset` are clamped to
+  500/10000 on both sides.
+- **Panel authentication (H4, M1-M3).** Panel login consults the shared
+  account-lockout tracker and returns `429` with `Retry-After`; delegated 2FA
+  fails closed (`503`) when the Go server is unreachable; the pending-2FA state
+  is written after session regeneration; `GET /logout` no longer destroys the
+  session (use the POST endpoint).
+- **Host and secrets (H2, H3).** Database DSNs and the bootstrap admin password
+  are no longer written into systemd units; plaintext `admin_credentials.txt`
+  files are moved out of the application directory and created `0600 root` only
+  when `STORE_ADMIN_CREDENTIALS=true` (now off by default and no longer settable
+  from the panel).
+- **Redirect and enumeration (H5, H6).** The HTTP→HTTPS redirect builds its
+  `Location` from configuration or the bound listener address instead of the
+  `Host` header, and refuses absolute request targets. The desktop login no
+  longer pre-renders the account list; a rate-limited `/login/lookup` returns at
+  most 8 prefix matches.
+- **Authorisation (H7, H9).** Panel section overrides are clamped to the role
+  ceiling, so a per-user policy cannot grant a permission the role lacks.
+  `/api/devices/:id/*` is covered by one scope guard, closing the gap on tags,
+  rename, change-id, restore and access-policy deletion.
+- **Update integrity (H8).** `applyUpdate` verifies an optional Ed25519-signed
+  manifest (`UPDATE_MANIFEST_PUBLIC_KEY`); `UPDATE_REQUIRE_SIGNED_MANIFEST=true`
+  makes an unsigned update fail closed.
+- **Archive extraction (M4).** Backup restore enforces a decompressed-size and
+  entry-count budget (`BACKUP_MAX_DECOMPRESSED_BYTES`, `BACKUP_MAX_ENTRIES`)
+  instead of expanding the whole upload into memory.
+- **Template escaping (M11).** All data embedded in inline `<script>` blocks is
+  serialised through `lib/safeJsonScript.js`, and the pairing page escapes the
+  suggested host.
+- **Toolchain (M14).** Go toolchain and builder images bumped to `go1.26.11`
+  (GO-2026-6859, `net/http`); the console requires at least that version to
+  rebuild the server. Workflow Actions are pinned to commit SHAs.
+
+### Added
+- **Administrator username can be changed (issue #498).** `PATCH /api/users/:id`
+  accepts `username` for local accounts: the rename cascades to the address book,
+  organisation membership, strategy assignments and lockout history in one
+  transaction, and the panel unlocks the field in the edit dialog with a warning.
+  LDAP/OIDC accounts keep the name their provider issues. Account names now allow
+  `A-Z a-z 0-9 . _ @ -` (3-64 characters).
+- `lib/enrollmentProof.js`, `lib/redirectHost.js`, `lib/safeJsonScript.js`,
+  `lib/updateManifestSignature.js`, `lib/renameUserCascade.js`.
+- `scripts/security/pentest-local.sh` / `.ps1` local security gate and
+  `scripts/check-security-regressions.sh` CI gate.
+- `docs/security/AUDIT_2026-11-13.md` with the full report and fix status.
+- Regression tests: device registration, signal ID change, broker manifest,
+  panel auth, redirect host, login enumeration, device scope, panel access
+  ceiling, update signature, archive limits, Go audit limits, template escaping.
+
+### Fixed
+- Two long-standing red tests (`devices.routes`, `users.routes`) caused by a
+  platform-specific loopback address and a missing `panelAccessPolicyService`
+  mock.
+
+---
+
+## [3.5.234] — 2026-11-12
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.233] — 2026-11-11
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.232] — 2026-11-11
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.231] — 2026-11-11
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.230] — 2026-11-11
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.229] — 2026-11-11
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.228] — 2026-11-11
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.227] — 2026-11-11
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.226] — 2026-11-11
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.225] — 2026-11-11
+
+### Added
+- **UX 3.6 beta: global search, section "More" rows, and the beta rhythm on every page.**
+  Continues the EJS port of the redesign by
+  [@rathlinus](https://github.com/rathlinus)
+  ([issue #493](https://github.com/UNITRONIX/BetterDesk/issues/493),
+  [PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495)).
+  **Ctrl+K** (or **/** when no field has focus) opens one dialog that searches
+  pages, devices and people (`web-nodejs/public/js/ui-search.js`). Pages come
+  from `buildSearchPages()` in `web-nodejs/lib/consoleNav.js`, built per request
+  and filtered by panel access and RBAC, so the index only lists pages the
+  role may open; entries carry extra search words so old names ("Keys",
+  "DataGuard", "Fleet") still find the page. Devices and people load on first
+  use from `/api/devices` and `/api/users`, and only when the new
+  `window.BetterDesk.searchCaps` flags allow those calls.
+  Long sidebar sections keep their daily pages visible and fold the rest into a
+  section-level **More** row (count badge, remembered per browser in
+  `bd_ux36_nav_more_open`); the menu filter now exists in the beta sidebar too,
+  matches inside "More" rows and opens them. Width, collapsed groups, "More"
+  rows and the scroll position are restored by an inline script before the
+  first paint, so the menu never jumps. Settings search reports when the typed
+  words name another topic (`settings.ui.search_topic`).
+  The remaining pages keep their markup and take the beta rhythm from
+  `web-nodejs/public/css/ux36/pages.css` — one content column, ruled sections
+  instead of floating cards, stat numbers in one ruled row, page tabs as a
+  ruled row, hairline tables; Chat and Remote stay full-bleed workspaces.
+  `tokens.css` gains `--radius-full`, the icon subset gains `more_horiz`, and
+  `nav.more` / `nav.fewer` / `search.*` / `settings.ui.search_topic` exist in
+  all 26 locales. UX 3.5 markup, routes, permissions and branding are
+  unchanged. Covered by the new `tests/ux36-all-pages.render.test.js` (every
+  main-layout view in both shells) plus the existing UX 3.6 suites.
+  Ships via panel update.
+
+### Changed
+- **Console backend moves toward the Go server, stage by stage.**
+  Implements P1–P3 of [docs/important/console-backend-strangler.md](docs/important/console-backend-strangler.md)
+  (follow-up to the architecture question in
+  [discussion #496](https://github.com/UNITRONIX/BetterDesk/discussions/496)).
+  - **Panel trust bridge (P1).** `X-BetterDesk-Panel` carries a short-lived
+    HMAC-SHA256 statement (method, path, subject, role, org, issue/expiry,
+    nonce) signed by the console with `PANEL_TRUST_SECRET`. Go verifies the
+    signature, the window, the replay nonce and the endpoint, accepts it only
+    from loopback or `PANEL_TRUST_ALLOWED_HOSTS`, and takes the role from the
+    database when the account still exists. With no secret the bridge is off
+    and authentication is exactly as before. `api/panel_trust_test.go` covers
+    thirteen rejection paths including cross-endpoint and cross-method replay
+    and role escalation.
+  - **Panel grouping (P2).** Go now owns the writes for device groups, their
+    members and ACL, folders, device→folder assignment and per-user device
+    grants (`api/panel_groups_handlers.go`, `db/panel_groups*.go`), and creates
+    the tables on SQLite that it previously only read. The console keeps its
+    screens and response shapes through `services/panelGrouping.js`;
+    `BACKEND_PANEL_GROUPING=node` restores the old writer without a redeploy,
+    and a 404/501/503 falls back automatically while a 400/403 is final.
+  - **Panel catalog (P3, definition half).** `GET /api/panel/catalog` serves
+    the section list, groups, permission vocabulary and built-in role defaults;
+    the console loads it at startup and keeps its bundled copy only as the
+    fallback. `tests/panelCatalogParity.test.js` fails if the two definitions
+    drift apart. This also removed a duplicate `toolkit` catalog entry.
+  No behavioural change without the new `.env` keys; both are appended by the
+  updater when missing and never overwritten. Ships via panel update (Go
+  server restart).
+- **Access control strategies moved off the Devices page to their own page.**
+  The RustDesk Pro strategy list was a card halfway down the device list, below
+  the folder rail and above the table — nobody found it there.
+  It is now **`/strategies`**, listed in the sidebar with the other security
+  rules (group *Rules & policies*, next to Policies, Automation, DataGuard and
+  Attestation) in both shell layouts, and in the Ctrl+K search index.
+  The list, the edit and assign dialogs, the permission grid and every endpoint
+  (`/api/panel/strategies`, `/api/panel/user-groups`, `/api/device-groups`,
+  `/api/devices`) are unchanged — the code moved from `devices.js` to its own
+  `public/js/strategies.js` and `views/strategies.ejs`, and the row styles stay
+  in `devices.css` where the markup still uses them.
+  Access is gated by the existing `strategies` panel section (read
+  `device.view`, write `device.edit`), so a role that could manage strategies
+  before still can and nobody else gains access. The Devices page keeps one
+  quiet link to the new page, so the old location still leads somewhere.
+  Covered by `tests/strategies-page.test.js`, which also fails if the card is
+  ever rendered on the Devices page again.
+  Ships via panel update.
+
+### Fixed
+- **UX 3.6: the page column scrolls again; Devices no longer traps its list.**
+  The beta shell declared only `min-height` for the shell and set
+  `overflow: visible` on the content column while telling the document to
+  scroll — but `body.app-page` (main.css) clips overflow, so nothing scrolled at
+  all. A long table grew the shell past the viewport instead of scrolling, which
+  made the Devices list impossible to scroll vertically and left the floating
+  horizontal scrollbar at the bottom of the list instead of the bottom of the
+  screen.
+  The beta shell now mirrors the UX 3.5 chain: `.ux35-shell` fills `100dvh` and
+  clips, `.ux35-main` clips, and `.ux35-content.main-content` is the single
+  scrollport (`flex: 1; min-height: 0; overflow-y: auto`). Embedded windows keep
+  sizing to their content. The sidebar is no longer `position: sticky` (it would
+  be offset by the top bar inside a shell that does not scroll) and simply fills
+  its column; the drawer below 1100 px stays fixed with `height: auto`. The
+  device-rail sticky offset in `ux36/pages.css` is measured from the scrollport
+  instead of the document. The floating horizontal scrollbar now also sits above
+  the docked mobile bottom navigation instead of behind it.
+  Guarded by `tests/ux36-scroll-chain.test.js`, which pins the scroll chain, the
+  sidebar rule and the scrollbar anchoring, because all three are easy to break
+  by removing one `overflow` in isolation.
+  Ships via panel update.
+
+---
+
 ## [3.5.224] — 2026-11-10
 
 ### Changed
@@ -4751,3 +5273,43 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.222]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.221...v3.5.222
 [3.5.223]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.222...v3.5.223
 [3.5.224]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.223...v3.5.224
+[3.5.225]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.224...v3.5.225
+[3.5.226]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.225...v3.5.226
+[3.5.227]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.226...v3.5.227
+[3.5.228]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.227...v3.5.228
+[3.5.229]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.228...v3.5.229
+[3.5.230]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.229...v3.5.230
+[3.5.231]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.230...v3.5.231
+[3.5.232]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.231...v3.5.232
+[3.5.233]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.232...v3.5.233
+[3.5.234]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.233...v3.5.234
+[3.5.235]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.234...v3.5.235
+[3.5.236]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.235...v3.5.236
+[3.5.237]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.236...v3.5.237
+[3.5.238]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.237...v3.5.238
+[3.5.239]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.238...v3.5.239
+[3.5.240]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.239...v3.5.240
+[3.5.241]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.240...v3.5.241
+[3.5.242]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.241...v3.5.242
+[3.5.243]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.242...v3.5.243
+[3.5.244]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.243...v3.5.244
+[3.5.245]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.244...v3.5.245
+[3.5.246]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.245...v3.5.246
+[3.5.247]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.246...v3.5.247
+[3.5.248]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.247...v3.5.248
+[3.5.249]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.248...v3.5.249
+[3.5.250]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.249...v3.5.250
+[3.5.251]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.250...v3.5.251
+[3.5.252]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.251...v3.5.252
+[3.5.253]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.252...v3.5.253
+[3.5.254]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.253...v3.5.254
+[3.5.255]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.254...v3.5.255
+[3.5.256]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.255...v3.5.256
+[3.5.257]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.256...v3.5.257
+[3.5.258]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.257...v3.5.258
+[3.5.259]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.258...v3.5.259
+[3.5.260]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.259...v3.5.260
+[3.5.261]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.260...v3.5.261
+[3.5.262]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.261...v3.5.262
+[3.5.263]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.262...v3.5.263
+[3.5.264]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.263...v3.5.264

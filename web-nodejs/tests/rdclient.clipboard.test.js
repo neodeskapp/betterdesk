@@ -45,6 +45,11 @@ function loadRdclientModules() {
         sandbox,
         { filename: 'clipboard.js' }
     );
+    vm.runInNewContext(
+        fs.readFileSync(path.join(base, 'protocol.js'), 'utf8') + '\nglobalThis.RDProtocol = RDProtocol;',
+        sandbox,
+        { filename: 'protocol.js' }
+    );
     return sandbox;
 }
 
@@ -173,5 +178,26 @@ describe('RDClient clipboard protobuf field', () => {
         const decoded = Message.decode(Message.encode(msg).finish());
         expect(decoded.multiClipboards.clipboards).toHaveLength(1);
         expect(Buffer.from(decoded.multiClipboards.clipboards[0].content).toString('utf8')).toBe('hello');
+    });
+});
+
+describe('RDProtocol clipboard builder', () => {
+    it('builds text and HTML entries in a multi clipboard message', async () => {
+        const sandbox = loadRdclientModules();
+        const protocol = new sandbox.RDProtocol();
+        protocol.enums = {
+            ClipboardFormat: {
+                values: { Text: 0, Html: 2 }
+            }
+        };
+
+        const message = await protocol.buildMultiClipboards({
+            text: 'plain',
+            html: '<b>rich</b>'
+        });
+
+        expect(message.multiClipboards.clipboards).toHaveLength(2);
+        expect(message.multiClipboards.clipboards.map((e) => e.format)).toEqual([0, 2]);
+        expect(new TextDecoder().decode(message.multiClipboards.clipboards[0].content)).toBe('plain');
     });
 });

@@ -56,9 +56,9 @@ const { getWanMiddlewareStack } = require('./middleware/wanSecurity');
 const { parseTrustProxy } = require('./lib/parseTrustProxy');
 const {
     resolvePortForCurrentUser,
-    formatHttpsRedirectUrl,
     attachPrivilegedPortErrorHandler,
 } = require('./lib/privilegedPorts');
+const { resolveRedirectHost, buildSafeRedirectUrl } = require('./lib/redirectHost');
 
 // Create Express app
 const app = express();
@@ -403,11 +403,32 @@ function shouldUseRustDeskApiTls(sslOptions) {
 
 /**
  * Create HTTP redirect server (redirects all HTTP to HTTPS)
+ *
+ * SECURITY (audit H5, 2026-11-13): the Location header must not be derived from
+ * the request `Host` header. See `lib/redirectHost.js` for the reasoning; this
+ * function only ever redirects to a configured host or the bound listener
+ * address.
  */
-function createHttpRedirectServer(httpsPort) {
+function createHttpRedirectServer(httpsPort, options = {}) {
     const redirectApp = express();
+    const publicHost = (() => {
+        try {
+            return require('./services/rustDeskPublicEndpointsService').readPanelPublicHostValue();
+        } catch (_) {
+            return '';
+        }
+    })();
+    const target = resolveRedirectHost({
+        configuredHost: options.configuredHost || publicHost || process.env.PANEL_PUBLIC_HOST || '',
+        listenHost: options.listenHost || config.host,
+    });
+
     redirectApp.use((req, res) => {
-        const httpsUrl = formatHttpsRedirectUrl(req.hostname, httpsPort, req.url);
+        const httpsUrl = buildSafeRedirectUrl({
+            host: target.host,
+            port: httpsPort,
+            urlPath: req.url,
+        });
         res.setHeader('Cache-Control', 'no-store');
         res.redirect(307, httpsUrl);
     });
@@ -460,7 +481,9 @@ async function startServer() {
                 
                 // Optionally start HTTP redirect server
                 if (config.httpRedirect) {
-                    const redirectServer = createHttpRedirectServer(listenHttpsPort);
+                    const redirectServer = createHttpRedirectServer(listenHttpsPort, {
+                        listenHost: config.host,
+                    });
                     attachPrivilegedPortErrorHandler(redirectServer, { port: listenPort, label: 'HTTP redirect' });
                     redirectServer.listen(listenPort, config.host, () => {
                         console.log(`  HTTP -> HTTPS redirect active on port ${listenPort}`);
@@ -531,6 +554,19 @@ async function startServer() {
         initRemoteTargetGateway(server, sessionMiddleware);
 
         initHelpRequestEmailService(config.betterdeskApiUrl, config.betterdeskApiKey);
+
+        // Panel section catalog: Go is the source of truth (strangler stage P3).
+        // The bundled copy in lib/panelAccessCatalog.js stays as the fallback
+        // for an older server binary; a failure here must never block startup.
+        require('./lib/panelAccessCatalog').refreshPanelCatalog({ force: true })
+            .then((catalog) => {
+                if (catalog) {
+                    console.log(`[panel] authorization catalog loaded from Go (${catalog.sections.length} sections)`);
+                }
+            })
+            .catch((err) => {
+                console.warn('[panel] catalog refresh failed, using the bundled copy:', err.message);
+            });
 
         // Start LAN Discovery UDP service
         startDiscoveryService();

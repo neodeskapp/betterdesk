@@ -308,6 +308,7 @@ var adminSample = []sampleCall{
 	{method: "GET", path: "/api/auth/me", wantStatus: 401},
 	{method: "GET", path: "/api/server/stats", wantStatus: 200},
 	{method: "GET", path: "/metrics", wantStatus: 200, anyBody: true},
+	{method: "GET", path: "/api/health/detail", wantStatus: 200, anyBody: true},
 	{method: "GET", path: "/api/no/such/route", wantStatus: 404},
 	{method: "GET", path: "/no-api-prefix", wantStatus: 404},
 	{method: "POST", path: "/api/help/requests", body: `{}`, wantStatus: 404},
@@ -423,10 +424,13 @@ func listenerStillAsksForCredentials(t *testing.T, f *internalFixture) {
 	if got := f.overListener(t, "GET", "/api/health", "", ""); got.status != http.StatusOK {
 		t.Errorf("GET /api/health without a key: status = %d, want 200", got.status)
 	}
-	// authMiddleware lists /metrics among the paths without a credential,
-	// so the fallback of the metrics guard serves it to everyone.
-	if got := f.overListener(t, "GET", "/metrics", "", ""); got.status != http.StatusOK {
-		t.Errorf("GET /metrics without a key: status = %d, want 200", got.status)
+	// The fallback of the metrics guard asks for a credential like any
+	// other path: /metrics is not among the paths authMiddleware serves
+	// without one.
+	for _, path := range []string{"/metrics", "/api/health/detail"} {
+		if got := f.overListener(t, "GET", path, "", ""); got.status != http.StatusUnauthorized {
+			t.Errorf("GET %s without a key: status = %d, want 401", path, got.status)
+		}
 	}
 }
 
