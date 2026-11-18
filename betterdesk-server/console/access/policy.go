@@ -331,9 +331,11 @@ type SavedPolicy struct {
 }
 
 // SavePolicy replaces every stored row of a subject with the normalised
-// "sections" and "features" of a submitted policy (decoded JSON). The two
-// lists are written one after the other, each in its own transaction, and
-// the second is written even when the first fails.
+// "sections" and "features" of a submitted policy (decoded JSON). Each
+// section row is capped at the subject's role ceiling first (see
+// subjectCeiling); when the ceiling cannot be worked out nothing is
+// written. The two lists are written one after the other, each in its own
+// transaction, and the second is written even when the first fails.
 func (s *Service) SavePolicy(ctx context.Context, subjectType, subjectID string, sections, features any) (SavedPolicy, error) {
 	id, err := ValidateSubject(subjectType, subjectID)
 	if err != nil {
@@ -342,6 +344,13 @@ func (s *Service) SavePolicy(ctx context.Context, subjectType, subjectID string,
 	saved := SavedPolicy{
 		Sections: NormalizeSectionPolicies(sections),
 		Features: NormalizeFeaturePolicies(features),
+	}
+	ceiling, err := s.subjectCeiling(ctx, subjectType, id)
+	if err != nil {
+		return SavedPolicy{}, err
+	}
+	for i, row := range saved.Sections {
+		saved.Sections[i].AccessLevel = string(clampToCeiling(row.AccessLevel, ceiling[ceilingKey(row.ResourceKey)]))
 	}
 	sectionErr := s.setPanelAccessPolicies(ctx, subjectType, id, saved.Sections)
 	featureErr := s.setClientFeaturePolicies(ctx, subjectType, id, saved.Features)

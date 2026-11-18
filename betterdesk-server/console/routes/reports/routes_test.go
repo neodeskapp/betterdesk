@@ -110,10 +110,12 @@ func TestSaveAndDeleteCheckTheRoleOnly(t *testing.T) {
 	}
 }
 
-// TestTheRoleDecidesForSaving: with a panel access policy that lets them
-// write in the reports section, global_admin may save and delete reports
-// and server_admin may not, whatever its permissions.
-func TestTheRoleDecidesForSaving(t *testing.T) {
+// TestNoPolicyOpensReportWritesBelowTheSuperAdmins: a panel access row
+// that sets the reports section to write is capped at the role's level,
+// and reports has no write permission, so the role reaches read at most.
+// The panel guard refuses every write for global_admin and server_admin,
+// before the route's own role check; the super admins save and delete.
+func TestNoPolicyOpensReportWritesBelowTheSuperAdmins(t *testing.T) {
 	w := routetest.New(t, routetest.Options{})
 	for _, id := range []string{"3", "4"} {
 		if _, err := w.DB.Exec(context.Background(), `INSERT INTO panel_access_policies (subject_type, subject_id, resource_key, access_level, updated_at)
@@ -121,9 +123,9 @@ func TestTheRoleDecidesForSaving(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	got := w.As("global_admin").Do("POST", "/api/reports/save", `{"type":"alerts","title":"By the global admin"}`)
-	if got.Status != 201 || !strings.Contains(got.Body, `"created_by":"e2e_global_admin"`) {
-		t.Fatalf("save as global_admin: %d %s", got.Status, got.Body)
+	got := w.As("admin").Do("POST", "/api/reports/save", `{"type":"alerts","title":"By the admin"}`)
+	if got.Status != 201 || !strings.Contains(got.Body, `"created_by":"e2e_admin"`) {
+		t.Fatalf("save as admin: %d %s", got.Status, got.Body)
 	}
 	var saved struct {
 		ID int `json:"id"`
@@ -132,14 +134,17 @@ func TestTheRoleDecidesForSaving(t *testing.T) {
 		t.Fatal(err)
 	}
 	path := "/api/reports/saved/" + jsonNumber(saved.ID)
-	if got := w.As("server_admin").Do("POST", "/api/reports/save", `{"type":"alerts"}`); got.Status != 403 || got.Body != `{"error":"Admin access required"}` {
-		t.Errorf("save as server_admin: %d %s", got.Status, got.Body)
+	denied := `{"success":false,"error":"Panel access denied: reports","code":"panel_access_denied"}`
+	for _, role := range []string{"global_admin", "server_admin"} {
+		if got := w.As(role).Do("POST", "/api/reports/save", `{"type":"alerts"}`); got.Status != 403 || got.Body != denied {
+			t.Errorf("save as %s: %d %s", role, got.Status, got.Body)
+		}
+		if got := w.As(role).Do("DELETE", path, ""); got.Status != 403 || got.Body != denied {
+			t.Errorf("delete as %s: %d %s", role, got.Status, got.Body)
+		}
 	}
-	if got := w.As("server_admin").Do("DELETE", path, ""); got.Status != 403 || got.Body != `{"error":"Admin access required"}` {
-		t.Errorf("delete as server_admin: %d %s", got.Status, got.Body)
-	}
-	if got := w.As("global_admin").Do("DELETE", path, ""); got.Status != 200 || got.Body != `{"ok":true}` {
-		t.Errorf("delete as global_admin: %d %s", got.Status, got.Body)
+	if got := w.As("super_admin").Do("DELETE", path, ""); got.Status != 200 || got.Body != `{"ok":true}` {
+		t.Errorf("delete as super_admin: %d %s", got.Status, got.Body)
 	}
 }
 

@@ -69,6 +69,7 @@ var RouteRules = []Rule{
 	{Prefix: "/api/device-groups", Section: "devices"},
 	{Prefix: "/api/tags", Section: "devices"},
 	{Prefix: "/api/panel/strategies", Section: "strategies"},
+	{Prefix: "/strategies", Section: "strategies"},
 	{Prefix: "/folders", Section: "folders"},
 	{Prefix: "/remote", Section: "remote"},
 	{Prefix: "/api/remote", Section: "remote"},

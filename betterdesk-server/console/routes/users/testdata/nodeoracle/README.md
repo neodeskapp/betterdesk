@@ -70,3 +70,12 @@ From a worktree that still has the route file, in the dev image:
 On PostgreSQL the script creates a database of its own and drops it at the
 end: the Node console looks for existing columns in every schema of a
 database, so a schema next to other tests' tables would miss columns.
+
+`WEB_NODEJS` names another tree. The recordings in `..` were made from the
+tree before the move with the panel access files of upstream 3.5.264 laid
+over it (`middleware/auth.js`, `middleware/panelAccess.js`,
+`lib/panelAccessCatalog.js`, `services/panelAccessPolicyService.js`,
+mounted file by file into the container): the route file itself is still
+the one before the upstream merge. Recorded from the whole 3.5.264 tree,
+the account routes' own upstream changes (username format, renaming) come
+along too.

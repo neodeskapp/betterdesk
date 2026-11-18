@@ -95,24 +95,27 @@ func (c *Context) permissionLookupFailed() bool {
 }
 
 // HasPermission reports whether the request's account has the permission.
-// The rules, first match wins:
+// The role decides first, and the panel section can only take away:
 //
 //  1. A pro account never has a device permission.
 //  2. Super admins have every permission.
-//  3. On a path with a panel section, the section's own two permissions
-//     follow the account's level there: the write permission needs write,
-//     the read permission needs read. The write permission is looked at
-//     first, so a section whose two permissions are the same needs write
-//     for both, and a level can grant a permission the role lacks.
-//  4. The role's effective permissions, when they were loaded.
-//  5. Nothing, when loading them failed.
-//  6. The built-in role map.
+//  3. The role must hold the permission: in its effective permissions when
+//     they were loaded, never when loading them failed, else in the
+//     built-in role map.
+//  4. On a path with a panel section, the section's own two permissions
+//     also need the account's level there: the write permission needs
+//     write, the read permission needs read. The write permission is
+//     looked at first, so a section whose two permissions are the same
+//     needs write for both.
 func (c *Context) HasPermission(permission string) bool {
 	if ProRoleBlocksPermission(c.Role, permission) {
 		return false
 	}
 	if IsSuperAdminRole(c.Role) {
 		return true
+	}
+	if !c.roleHolds(permission) {
+		return false
 	}
 	if level, ok := c.sectionLevel(); ok {
 		if entry, known := CatalogEntry(c.Section); known {
@@ -124,6 +127,13 @@ func (c *Context) HasPermission(permission string) bool {
 			}
 		}
 	}
+	return true
+}
+
+// roleHolds reports whether the account's role has the permission: by its
+// effective permissions when they were loaded, not at all when loading
+// them failed, else by the built-in role map.
+func (c *Context) roleHolds(permission string) bool {
 	if c.Permissions != nil {
 		return c.Permissions.Has(permission)
 	}

@@ -2,7 +2,9 @@ package access
 
 import (
 	"context"
+	"errors"
 	"strconv"
+	"strings"
 )
 
 // PolicyUser is the account a policy is resolved for.
@@ -45,6 +47,55 @@ func (s *Service) roleCeiling(ctx context.Context, role string) (map[string]Leve
 		return nil, err
 	}
 	return ceilingFor(permissions), nil
+}
+
+// errGroupCeiling is why a user group's policy cannot be saved: its
+// ceiling would come from its members' roles, and the members are not
+// looked up.
+var errGroupCeiling = errors.New("role ceiling of a user group: its members cannot be looked up")
+
+// subjectCeiling returns the ceiling a saved policy is capped at. An
+// account's is its role's (an id that names no account counts as a
+// viewer). A user group's always fails.
+func (s *Service) subjectCeiling(ctx context.Context, subjectType, subjectID string) (map[string]Level, error) {
+	if subjectType != SubjectUser {
+		return nil, errGroupCeiling
+	}
+	user, err := s.subjectUser(ctx, subjectID)
+	if err != nil {
+		return nil, err
+	}
+	role := ""
+	if user != nil {
+		role = user.Role
+	}
+	return s.roleCeiling(ctx, role)
+}
+
+// ceilingKey is the catalog section whose ceiling caps a stored row: the
+// row's own key, or for a "group:<key>" row the first section of that
+// catalog group ("" when there is none).
+func ceilingKey(resourceKey string) string {
+	group, isGroup := strings.CutPrefix(resourceKey, groupKeyPrefix)
+	if !isGroup {
+		return resourceKey
+	}
+	for _, entry := range Catalog {
+		if entry.Group == group {
+			return entry.Key
+		}
+	}
+	return ""
+}
+
+// clampToCeiling returns the lower of a level and a ceiling, both read with
+// NormalizeLevel.
+func clampToCeiling(level, ceiling any) Level {
+	l, c := NormalizeLevel(level), NormalizeLevel(ceiling)
+	if rank(l) <= rank(c) {
+		return l
+	}
+	return c
 }
 
 // highestGroupLevel returns the highest level the group rows give for a
@@ -109,6 +160,7 @@ func mergeUserPolicy(subjectID string, ceiling map[string]Level, rows userPolicy
 		case hasInherited:
 			resolved.Access, resolved.Source = inherited, SourceGroup
 		}
+		resolved.Access = clampToCeiling(resolved.Access, roleLevel)
 		policy.Sections.Set(entry.Key, resolved)
 	}
 	for _, feature := range ClientFeatures {
@@ -169,7 +221,8 @@ func mergeGroupPolicy(groupGUID string, sectionRows []SectionRow, featureRows []
 // section, the first of these that exists decides: the account's own row
 // for the section, its row for the section's catalog group, the highest row
 // among its user groups (for the section or its catalog group), the role's
-// ceiling. An account's or group's row may give more than the role does.
+// ceiling. The level is then capped at the role's ceiling: a row can lower
+// what the role gives, never raise it.
 // Client features: the account's row, else on when any of its groups turns
 // the feature on, else on; a hard locked feature is always off.
 func (s *Service) ResolveForUser(ctx context.Context, user PolicyUser) (*Policy, error) {

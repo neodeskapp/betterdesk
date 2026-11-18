@@ -89,9 +89,8 @@ type ClientFeature struct {
 }
 
 // Catalog is the list of panel sections, in the order the policy editors
-// and the resolved policy use. "toolkit" is listed twice: lookups by key
-// find the first entry, and a resolved policy carries the result computed
-// for the second entry's group.
+// and the resolved policy use. It is the same list the Go API serves at
+// GET /api/panel/catalog (package api, panelSectionCatalog).
 var Catalog = []Section{
 	{"dashboard", "Dashboard", "core", "device.view", ""},
 	{"devices", "Devices", "core", "device.view", "device.edit"},
@@ -118,7 +117,6 @@ var Catalog = []Section{
 	{"commercialization", "Commercialization", "commercialization", "billing.view", "billing.manage"},
 	{"scaling", "Scaling", "commercialization", "server.config", "server.config"},
 	{"cross-platform", "Cross-platform", "commercialization", "server.config", "server.config"},
-	{"toolkit", "Toolkit", "commercialization", "server.config", "server.config"},
 	{"security-audit", "Security audit", "security", "audit.view", "server.config"},
 	{"languages", "Languages", "system", "server.config", "server.config"},
 	{"resource-control", "Resource control", "system", "server.config", "server.config"},

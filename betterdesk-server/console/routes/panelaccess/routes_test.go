@@ -32,11 +32,14 @@ const policy = `{
 	]
 }`
 
+// What the policy stores for the viewer: each level capped at the viewer
+// role's level (devices read, users none; group:operations at the level
+// of tickets, the group's first section).
 const (
-	storedSections = `[{"resource_key":"devices","access_level":"write"},{"resource_key":"group:operations","access_level":"read"},{"resource_key":"users","access_level":"write"},{"resource_key":"tickets","access_level":"none"}]`
+	storedSections = `[{"resource_key":"devices","access_level":"read"},{"resource_key":"group:operations","access_level":"read"},{"resource_key":"users","access_level":"none"},{"resource_key":"tickets","access_level":"none"}]`
 	storedFeatures = `[{"feature_key":"file_transfer","enabled":false},{"feature_key":"clipboard","enabled":true},{"feature_key":"tunnel","enabled":false}]`
 	// Rows come back ordered by their key
-	readSections = `[{"resource_key":"devices","access_level":"write"},{"resource_key":"group:operations","access_level":"read"},{"resource_key":"tickets","access_level":"none"},{"resource_key":"users","access_level":"write"}]`
+	readSections = `[{"resource_key":"devices","access_level":"read"},{"resource_key":"group:operations","access_level":"read"},{"resource_key":"tickets","access_level":"none"},{"resource_key":"users","access_level":"none"}]`
 	readFeatures = `[{"feature_key":"clipboard","enabled":true},{"feature_key":"file_transfer","enabled":false},{"feature_key":"tunnel","enabled":false}]`
 )
 
@@ -125,11 +128,19 @@ func TestUserPolicy(t *testing.T) {
 			t.Fatalf("save: %d %s", got.Status, got.Body)
 		}
 		eff := a.Data.Effective
-		if eff.Sections["devices"].Access != "write" || eff.Sections["devices"].Source != "user" ||
+		if eff.Sections["devices"].Access != "read" || eff.Sections["devices"].Source != "user" ||
 			eff.Sections["tickets"].Access != "none" || eff.Sections["chat"].Access != "read" || eff.Sections["chat"].Source != "user" ||
 			eff.Features["file_transfer"].Enabled || eff.Features["file_transfer"].Source != "user" || !eff.Features["audio"].Enabled {
 			t.Errorf("effective policy after the save: %s", got.Body)
 		}
+
+		// A row written above the role's level is capped when it is read.
+		exec(t, w.DB, "UPDATE panel_access_policies SET access_level = 'write' WHERE subject_id = '6' AND resource_key = 'devices'")
+		got = admin.Do("GET", "/api/panel/access/users/6", "")
+		if a = decode(t, got); a.Data.Effective.Sections["devices"].Access != "read" || !strings.Contains(string(a.Data.Sections), `{"resource_key":"devices","access_level":"write"}`) {
+			t.Errorf("a stored row above the role: %d %s", got.Status, got.Body)
+		}
+		exec(t, w.DB, "UPDATE panel_access_policies SET access_level = 'read' WHERE subject_id = '6' AND resource_key = 'devices'")
 		if rows := w.AuditRows(); len(rows) != 1 || rows[0] != "user_access_policy_updated|Updated access policy for user 6|"+routetest.ClientIP+"|1" {
 			t.Errorf("audit log: %q", rows)
 		}
@@ -208,18 +219,27 @@ func TestGroupPolicy(t *testing.T) {
 			t.Errorf("order of the answer: %s", got.Body)
 		}
 
-		got = admin.Do("PUT", "/api/panel/access/groups/team-1", policy)
-		a = decode(t, got)
-		if got.Status != 200 || string(a.Data.Sections) != storedSections || string(a.Data.Features) != storedFeatures ||
-			a.Data.Effective.Sections["devices"].Access != "write" || a.Data.Effective.Sections["devices"].Source != "group" || a.Data.Effective.Features["file_transfer"].Enabled {
-			t.Fatalf("save: %d %s", got.Status, got.Body)
+		// A group's policy cannot be saved (BUGS UM2): the save fails after
+		// the group was found and the subject checked, and stores nothing.
+		serverError := `{"success":false,"error":"Server error"}`
+		for _, body := range []string{policy, `{}`} {
+			if got = admin.Do("PUT", "/api/panel/access/groups/team-1", body); got.Status != 500 || got.Body != serverError {
+				t.Errorf("save %s: %d %s", body, got.Status, got.Body)
+			}
 		}
-		if rows := w.AuditRows(); len(rows) != 1 || rows[0] != "user_group_access_policy_updated|Updated access policy for group team-1|"+routetest.ClientIP+"|1" {
-			t.Errorf("audit log: %q", rows)
+		if rows := w.AuditRows(); len(rows) != 0 {
+			t.Errorf("audit log after failed saves: %q", rows)
 		}
 		got = admin.Do("GET", "/api/panel/access/groups/team-1", "")
-		if a = decode(t, got); got.Status != 200 || string(a.Data.Sections) != readSections || string(a.Data.Features) != readFeatures {
+		if a = decode(t, got); got.Status != 200 || string(a.Data.Sections) != "[]" || string(a.Data.Features) != "[]" {
 			t.Errorf("after: %d %s", got.Status, got.Body)
+		}
+
+		// Stored rows are read as they are: a group has no ceiling.
+		exec(t, w.DB, "INSERT INTO panel_access_policies (subject_type, subject_id, resource_key, access_level) VALUES ('group', 'team-1', 'settings', 'write')")
+		got = admin.Do("GET", "/api/panel/access/groups/team-1", "")
+		if a = decode(t, got); a.Data.Effective.Sections["settings"].Access != "write" || a.Data.Effective.Sections["settings"].Source != "group" {
+			t.Errorf("a stored group row: %d %s", got.Status, got.Body)
 		}
 
 		notFound := `{"success":false,"error":"User group not found"}`
@@ -240,7 +260,7 @@ func TestGroupPolicy(t *testing.T) {
 		if got := admin.Do("PUT", "/api/panel/access/groups/odd%20guid", policy); got.Status != 400 || got.Body != `{"success":false,"error":"Invalid policy subject"}` {
 			t.Errorf("save for a guid with a space: %d %s", got.Status, got.Body)
 		}
-		if rows := w.AuditRows(); len(rows) != 1 {
+		if rows := w.AuditRows(); len(rows) != 0 {
 			t.Errorf("audit log after refused saves: %q", rows)
 		}
 	})

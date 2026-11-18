@@ -204,8 +204,8 @@ func TestAccessFor(t *testing.T) {
 	if !strings.Contains(body, `"catalog":[{"key":"dashboard","read":"device.view","write":null},{"key":"devices","read":"device.view","write":"device.edit"},`) {
 		t.Errorf("catalog: %s", body)
 	}
-	if strings.Count(body, `{"key":"toolkit",`) != 2 || len(access.Catalog) != len(Catalog) || strings.Contains(body, `"prefix":"/api/`) {
-		t.Error("the catalog is sent as it is, toolkit twice; the pages hold no API rule")
+	if strings.Count(body, `{"key":"toolkit",`) != 1 || len(access.Catalog) != len(Catalog) || strings.Contains(body, `"prefix":"/api/`) {
+		t.Error("the catalog is sent as it is, toolkit once; the pages hold no API rule")
 	}
 	if level, ok := access.Sections.Get("dashboard"); !ok || level != LevelWrite {
 		t.Errorf("dashboard level: %q", level)

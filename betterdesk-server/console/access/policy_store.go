@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"math"
 
 	"github.com/unitronix/betterdesk-server/console/store"
 )
@@ -203,4 +204,19 @@ func (s *Service) PolicyUserByID(ctx context.Context, id int64) (*PolicyUser, er
 	}
 	user.Role = role.String
 	return &user, nil
+}
+
+// subjectUser returns the account a user policy subject names, read the
+// way Number.parseInt reads it: the whole number at the start of the id.
+// An id that starts with no number, or with one no account id can be,
+// finds no account on SQLite; on PostgreSQL the lookup fails on it.
+func (s *Service) subjectUser(ctx context.Context, subjectID string) (*PolicyUser, error) {
+	n, ok := jsParseInt(subjectID)
+	if !ok || math.Abs(n) >= 1<<63 {
+		if s.db.IsPostgres() {
+			return nil, fmt.Errorf("load user %q: not a whole number", subjectID)
+		}
+		return nil, nil
+	}
+	return s.PolicyUserByID(ctx, int64(n))
 }

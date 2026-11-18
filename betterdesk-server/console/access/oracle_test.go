@@ -431,6 +431,11 @@ func TestOracleNormalize(t *testing.T) {
 			Error  string  `json:"error"`
 			Status int     `json:"status"`
 		} `json:"subjects"`
+		Clamp []struct {
+			Level   any   `json:"level"`
+			Ceiling any   `json:"ceiling"`
+			Result  Level `json:"result"`
+		} `json:"clamp"`
 		Catalog json.RawMessage `json:"catalog"`
 	}
 	loadVectors(t, "normalize", &v)
@@ -479,6 +484,21 @@ func TestOracleNormalize(t *testing.T) {
 		if !errors.As(err, &se) || se.Status != c.Status || se.Message != c.Error {
 			t.Errorf("ValidateSubject(%q, %q) = %q, %v; Node refuses with %d %q", c.Type, c.ID, got, err, c.Status, c.Error)
 		}
+	}
+	// The recording writes a missing value as "undefined".
+	missing := func(v any) any {
+		if v == "undefined" {
+			return nil
+		}
+		return v
+	}
+	for _, c := range v.Clamp {
+		if got := clampToCeiling(missing(c.Level), missing(c.Ceiling)); got != c.Result {
+			t.Errorf("clampToCeiling(%#v, %#v) = %q, Node says %q", c.Level, c.Ceiling, got, c.Result)
+		}
+	}
+	if len(v.Clamp) < 400 {
+		t.Errorf("only %d clamp vectors", len(v.Clamp))
 	}
 	if got := jsJSON(t, GetCatalog()); got != string(v.Catalog) {
 		t.Errorf("GetCatalog()\n got  %s\n want %s", got, v.Catalog)

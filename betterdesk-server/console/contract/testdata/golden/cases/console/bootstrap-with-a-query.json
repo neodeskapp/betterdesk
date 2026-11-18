@@ -211,11 +211,6 @@
         "write": "server.config"
        },
        {
-        "key": "toolkit",
-        "read": "server.config",
-        "write": "server.config"
-       },
-       {
         "key": "security-audit",
         "read": "audit.view",
         "write": "server.config"
@@ -378,6 +373,10 @@
         "section": "devices"
        },
        {
+        "prefix": "/strategies",
+        "section": "strategies"
+       },
+       {
         "prefix": "/folders",
         "section": "folders"
        },
@@ -438,7 +437,7 @@
        "users": "none"
       }
      },
-     "appVersion": "3.5.224",
+     "appVersion": "3.5.264",
      "branding": {
       "appDescription": "BetterDesk Server Management",
       "appName": "BetterDesk",
@@ -643,7 +642,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=2e97f4344a8f700b"
+      "stringsUrl": "/api/console/strings/en?v=deeda6e49b76b7cb"
      },
      "nav": [
       {
@@ -1016,11 +1015,6 @@
         "write": "server.config"
        },
        {
-        "key": "toolkit",
-        "read": "server.config",
-        "write": "server.config"
-       },
-       {
         "key": "security-audit",
         "read": "audit.view",
         "write": "server.config"
@@ -1183,6 +1177,10 @@
         "section": "devices"
        },
        {
+        "prefix": "/strategies",
+        "section": "strategies"
+       },
+       {
         "prefix": "/folders",
         "section": "folders"
        },
@@ -1243,7 +1241,7 @@
        "users": "write"
       }
      },
-     "appVersion": "3.5.224",
+     "appVersion": "3.5.264",
      "branding": {
       "appDescription": "BetterDesk Server Management",
       "appName": "BetterDesk",
@@ -1448,7 +1446,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=2e97f4344a8f700b"
+      "stringsUrl": "/api/console/strings/en?v=deeda6e49b76b7cb"
      },
      "nav": [
       {

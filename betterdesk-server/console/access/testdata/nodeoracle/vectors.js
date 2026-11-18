@@ -77,6 +77,23 @@ const consoleRoutes = require(path.join(WEB, 'routes/console.routes'));
 const deviceGroupService = require(path.join(WEB, 'services/deviceGroupService'));
 const userScopeService = require(path.join(WEB, 'services/userScopeService'));
 
+/**
+ * A second copy of a module with some of its private functions exported.
+ * The copy shares the stubs above, because its requires go through the same
+ * module cache.
+ */
+function internals(rel, names) {
+    const Module = require('module');
+    const file = require.resolve(path.join(WEB, rel));
+    const copy = new Module(file, module);
+    copy.filename = file;
+    copy.paths = Module._nodeModulePaths(path.dirname(file));
+    copy._compile(`${fs.readFileSync(file, 'utf8')}\nmodule.exports.__internals = { ${names.join(', ')} };\n`, file);
+    return copy.exports.__internals;
+}
+
+const policyInternals = internals('services/panelAccessPolicyService.js', ['clampToCeiling']);
+
 // ---------------------------------------------------------------- helpers
 
 function write(name, data) {
@@ -325,11 +342,11 @@ function policyFor(state, section) {
 {
     const roles = ['super_admin', 'admin', 'server_admin', 'global_admin', 'operator', 'viewer', 'guest_issuer', 'pro', 'unknown', null];
     const sections = [null, 'devices', 'dashboard', 'guests', 'fleet', 'toolkit', 'reports', 'network', 'security-audit',
-        'server-attestation', 'users', 'nope'];
+        'server-attestation', 'users', 'registrations', 'settings', 'nope'];
     const policyStates = ['no policy', 'section missing', 'none', 'read', 'write', 'READ', ' write ', 'bogus', 'no access value'];
     const permissions = ['device.view', 'device.edit', 'device.connect', 'guest.create', 'org.manage_devices',
         'server.config', 'audit.view', 'metrics.view', 'user.view', 'user.edit', 'branding.edit',
-        'server.attestation', 'remote_target.view', 'nothing.at_all'];
+        'server.attestation', 'remote_target.view', 'enrollment.approve', 'enrollment.manage', 'nothing.at_all'];
     const effectiveStates = ['not loaded', 'empty', 'has it', 'has others'];
     const loadStates = [
         { loaded: false, error: false }, { loaded: true, error: false },
@@ -454,8 +471,22 @@ function policyFor(state, section) {
         }
     });
 
-    write('normalize.json', { levels, compare, ceilingKeys: keys, ceilings, sections, features, subjects, catalog: policyService.getCatalog() });
-    counts.normalize = levels.length + compare.length + ceilings.length * keys.length * 2 + sections.length + features.length + subjects.length;
+    // clampToCeiling is not exported; "undefined" stands for a missing value
+    const clampInputs = ['none', 'read', 'write', 'WRITE', ' read ', 'bogus', '', 'undefined', null,
+        0, 1, 2, 3, -1, 1.5, true, false, '2', {}, ['write']];
+    const clamp = [];
+    for (const level of clampInputs) {
+        for (const ceiling of clampInputs) {
+            const arg = (v) => (v === 'undefined' ? undefined : v);
+            clamp.push({ level, ceiling, result: policyInternals.clampToCeiling(arg(level), arg(ceiling)) });
+        }
+    }
+
+    write('normalize.json', {
+        levels, compare, ceilingKeys: keys, ceilings, sections, features, subjects, clamp, catalog: policyService.getCatalog(),
+    });
+    counts.normalize = levels.length + compare.length + ceilings.length * keys.length * 2 + sections.length + features.length
+        + subjects.length + clamp.length;
 }
 
 // ---------------------------------------------------------------- 6. accessAllows

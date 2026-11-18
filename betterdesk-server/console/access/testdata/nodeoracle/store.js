@@ -106,6 +106,10 @@ const SEED = [
     // stored policies: a row with a level nobody would write through the API
     ['INSERT INTO panel_access_policies (subject_type, subject_id, resource_key, access_level) VALUES (?, ?, ?, ?)', ['group', 'ug-lab', 'reports', 'WRITE']],
     ['INSERT INTO panel_access_policies (subject_type, subject_id, resource_key, access_level) VALUES (?, ?, ?, ?)', ['group', 'ug-lab', 'group:system', 'read']],
+    // group rows above what the members' roles reach
+    ...[['group:operations', 'write'], ['users', 'write'], ['settings', 'write'], ['registrations', 'write']]
+        .map(([key, level]) => ['INSERT INTO panel_access_policies (subject_type, subject_id, resource_key, access_level) VALUES (?, ?, ?, ?)',
+            ['group', 'ug-ops', key, level]]),
     ['INSERT INTO panel_access_policies (subject_type, subject_id, resource_key, access_level) VALUES (?, ?, ?, ?)', ['user', '4', 'chat', 'bogus']],
 ];
 
@@ -143,6 +147,35 @@ function scopeSteps() {
     steps.push({ op: 'scope', user: { ...USERS.op1, user_groups: [] }, devices: DEVICES });
     steps.push({ op: 'scope', user: { ...USERS.view1, user_groups: ['ug-ops'] }, devices: DEVICES });
     steps.push({ op: 'enrich', devices: DEVICES });
+    return steps;
+}
+
+/**
+ * A save of every section and group key at write (and every feature on) for
+ * each account, then a save of every key at read, each followed by what was
+ * stored and what the account resolves to.
+ */
+function saveEverySubject() {
+    const keys = [...new Set(require(path.join(WEB, 'lib/panelAccessCatalog')).PANEL_ACCESS_CATALOG.map((e) => e.key)),
+        'group:core', 'group:administration', 'group:operations', 'group:commercialization', 'group:security', 'group:system'];
+    const features = ['remote_control', 'clipboard', 'client_actions'];
+    const steps = [];
+    const ids = ['1', '2', '4', '5', '6', '7', '8', '9', '10', '99', '0', '-3', '6abc', '7.9', 'abc', '0x7',
+        '5000000000', '99999999999999999999'];
+    for (const id of ids) {
+        for (const level of ['write', 'read']) {
+            steps.push({ op: 'savePolicy', type: 'user', id, body: {
+                sections: keys.map((key) => ({ resource_key: key, access_level: level })),
+                features: features.map((key) => ({ feature_key: key, enabled: level === 'write' })),
+            } });
+            steps.push({ op: 'rawPolicies', type: 'user', id });
+        }
+        if (/^\d+$/.test(id) && id.length < 4) steps.push({ op: 'resolveUser', id: Number(id) });
+    }
+    // only the group rows, the account's own the role level
+    steps.push({ op: 'savePolicy', type: 'user', id: '4', body: { sections: [] } });
+    steps.push({ op: 'resolveUser', id: 4 });
+    steps.push({ op: 'resolveUser', id: 2 });
     return steps;
 }
 
@@ -192,6 +225,16 @@ const STEPS = [
     { op: 'savePolicy', type: 'user', id: '2', body: null },
     { op: 'rawPolicies', type: 'user', id: '2' },
     { op: 'resolveUser', id: 2 },
+
+    // what a write may store: every key at write, for every account and for
+    // ids that name no account or no number; groups fail after validation
+    ...saveEverySubject(),
+    { op: 'savePolicy', type: 'group', id: 'ug-empty', body: {} },
+    { op: 'savePolicy', type: 'group', id: 'missing', body: { sections: [{ resource_key: 'users', access_level: 'read' }] } },
+    { op: 'savePolicy', type: 'group', id: 'a b', body: {} },
+    { op: 'savePolicy', type: 'group', id: '', body: {} },
+    { op: 'rawPolicies', type: 'group', id: 'ug-empty' },
+    { op: 'rawPolicies', type: 'group', id: 'ug-lab' },
 
     // device scope, default open
     ...scopeSteps(),

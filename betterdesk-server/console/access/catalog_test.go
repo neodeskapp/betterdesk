@@ -2,8 +2,47 @@ package access
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
+	"reflect"
+	"regexp"
 	"testing"
 )
+
+// The Go API serves the same section list at GET /api/panel/catalog
+// (package api, panelSectionCatalog); the Node console loaded it at start
+// and looked sections up in it. The two lists must stay the same, in the
+// same order, with the same permissions. Jest: panelCatalogParity.test.js.
+func TestCatalogMatchesTheAPI(t *testing.T) {
+	read := func(parts ...string) string {
+		t.Helper()
+		body, err := os.ReadFile(filepath.Join(append([]string{"..", ".."}, parts...)...))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return string(body)
+	}
+	constants := map[string]string{}
+	for _, m := range regexp.MustCompile(`(Perm\w+)\s*=\s*"([^"]+)"`).FindAllStringSubmatch(read("auth", "permissions.go"), -1) {
+		constants[m[1]] = m[2]
+	}
+	api := read("api", "panel_catalog.go")
+	line := regexp.MustCompile(`\{Key: "([^"]+)", Label: "([^"]+)", Group: "([^"]+)"(?:, ReadPermission: auth\.(\w+))?(?:, WritePermission: auth\.(\w+))?\}`)
+	var fromAPI []Section
+	for _, m := range line.FindAllStringSubmatch(api, -1) {
+		fromAPI = append(fromAPI, Section{m[1], m[2], m[3], Permission(constants[m[4]]), Permission(constants[m[5]])})
+	}
+	if len(fromAPI) < 20 || !reflect.DeepEqual(fromAPI, Catalog) {
+		t.Errorf("the API's catalog differs:\n api     %v\n console %v", fromAPI, Catalog)
+	}
+	var groups []SectionGroup
+	for _, m := range regexp.MustCompile(`\{"key": "([^"]+)", "label": "([^"]+)"\}`).FindAllStringSubmatch(api, -1) {
+		groups = append(groups, SectionGroup{m[1], m[2]})
+	}
+	if !reflect.DeepEqual(groups, SectionGroups) {
+		t.Errorf("the API's groups differ: %v", groups)
+	}
+}
 
 func TestNormalizeLevel(t *testing.T) {
 	cases := []struct {
@@ -49,11 +88,11 @@ func TestLegacySectionCeiling(t *testing.T) {
 		{"devices", has, false, LevelWrite},
 		{"activity", has, false, LevelNone},
 		{"devices", never, true, LevelWrite},
-		{"dashboard", has, false, LevelRead},                                           // no write permission exists
-		{"reports", newPermissionSet([]string{"metrics.view"}).Has, false, LevelRead},  // no write permission exists
-		{"devices", newPermissionSet([]string{"device.view"}).Has, false, LevelRead},   // read only
-		{"devices", newPermissionSet([]string{"device.edit"}).Has, false, LevelWrite},  // write does not need read
-		{"toolkit", newPermissionSet([]string{"server.config"}).Has, false, LevelNone}, // the first toolkit entry decides
+		{"dashboard", has, false, LevelRead},                                          // no write permission exists
+		{"reports", newPermissionSet([]string{"metrics.view"}).Has, false, LevelRead}, // no write permission exists
+		{"devices", newPermissionSet([]string{"device.view"}).Has, false, LevelRead},  // read only
+		{"devices", newPermissionSet([]string{"device.edit"}).Has, false, LevelWrite}, // write does not need read
+		{"toolkit", newPermissionSet([]string{"server.config"}).Has, false, LevelNone},
 		{"toolkit", newPermissionSet([]string{"device.connect"}).Has, false, LevelRead},
 		{"nope", has, false, LevelNone},
 		{"nope", never, true, LevelWrite},
@@ -85,18 +124,12 @@ func TestCatalogContents(t *testing.T) {
 		t.Error("client_actions must be hard locked")
 	}
 
-	// "toolkit" is listed twice; lookups find the first entry.
-	count := 0
-	for _, entry := range Catalog {
-		if entry.Key == "toolkit" {
-			count++
-		}
+	// Every key is listed once; toolkit is in the operations group.
+	toolkit, _ := CatalogEntry("toolkit")
+	if toolkit.Group != "operations" || toolkit.ReadPermission != "device.connect" || toolkit.WritePermission != "device.edit" {
+		t.Errorf("toolkit: lookup finds %+v", toolkit)
 	}
-	first, _ := CatalogEntry("toolkit")
-	if count != 2 || first.Group != "operations" || first.ReadPermission != "device.connect" || first.WritePermission != "device.edit" {
-		t.Errorf("toolkit: %d entries, lookup finds %+v", count, first)
-	}
-	if len(Catalog) != 34 || len(catalogKeys()) != 33 {
+	if len(Catalog) != 33 || len(catalogKeys()) != 33 {
 		t.Errorf("catalog has %d entries and %d keys", len(Catalog), len(catalogKeys()))
 	}
 
@@ -138,17 +171,27 @@ func TestEverySectionAtEveryLevel(t *testing.T) {
 				t.Errorf("%s at %s: a section with a level must satisfy none", key, level)
 			}
 
-			// The section's own permissions follow the level on its paths.
+			// The section's own permissions follow the level on its paths
+			// when the role holds them, and are never granted when it
+			// does not.
 			entry, _ := CatalogEntry(key)
-			c := &Context{UserID: 1, HasUser: true, Role: "nobody", Section: key, Policy: policy, Loaded: true, Permissions: PermissionSet{}}
+			holds := newPermissionSet([]string{string(entry.ReadPermission), string(entry.WritePermission)})
+			c := &Context{UserID: 1, HasUser: true, Role: "nobody", Section: key, Policy: policy, Loaded: true, Permissions: holds}
+			lacks := &Context{UserID: 1, HasUser: true, Role: "nobody", Section: key, Policy: policy, Loaded: true, Permissions: PermissionSet{}}
 			if entry.WritePermission != "" {
 				if got := c.HasPermission(string(entry.WritePermission)); got != wantWrite {
 					t.Errorf("%s at %s: write permission %s granted %v, want %v", key, level, entry.WritePermission, got, wantWrite)
+				}
+				if lacks.HasPermission(string(entry.WritePermission)) {
+					t.Errorf("%s at %s: write permission %s granted to a role without it", key, level, entry.WritePermission)
 				}
 			}
 			if entry.ReadPermission != entry.WritePermission {
 				if got := c.HasPermission(string(entry.ReadPermission)); got != wantRead {
 					t.Errorf("%s at %s: read permission %s granted %v, want %v", key, level, entry.ReadPermission, got, wantRead)
+				}
+				if lacks.HasPermission(string(entry.ReadPermission)) {
+					t.Errorf("%s at %s: read permission %s granted to a role without it", key, level, entry.ReadPermission)
 				}
 			}
 		}

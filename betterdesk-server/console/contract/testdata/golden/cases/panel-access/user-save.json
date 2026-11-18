@@ -273,12 +273,12 @@
          "source": "role"
         },
         "dataguard": {
-         "access": "read",
+         "access": "none",
          "role_ceiling": "none",
          "source": "user"
         },
         "devices": {
-         "access": "write",
+         "access": "read",
          "role_ceiling": "read",
          "source": "user"
         },
@@ -288,7 +288,7 @@
          "source": "user"
         },
         "fleet": {
-         "access": "read",
+         "access": "none",
          "role_ceiling": "none",
          "source": "user"
         },
@@ -313,7 +313,7 @@
          "source": "role"
         },
         "network": {
-         "access": "read",
+         "access": "none",
          "role_ceiling": "none",
          "source": "user"
         },
@@ -338,7 +338,7 @@
          "source": "role"
         },
         "reports": {
-         "access": "write",
+         "access": "read",
          "role_ceiling": "read",
          "source": "user"
         },
@@ -390,10 +390,10 @@
         "toolkit": {
          "access": "none",
          "role_ceiling": "none",
-         "source": "role"
+         "source": "user"
         },
         "users": {
-         "access": "write",
+         "access": "none",
          "role_ceiling": "none",
          "source": "user"
         }
@@ -425,7 +425,7 @@
       ],
       "sections": [
        {
-        "access_level": "write",
+        "access_level": "read",
         "resource_key": "devices"
        },
        {
@@ -433,7 +433,7 @@
         "resource_key": "group:operations"
        },
        {
-        "access_level": "write",
+        "access_level": "none",
         "resource_key": "users"
        },
        {
@@ -441,7 +441,7 @@
         "resource_key": "tickets"
        },
        {
-        "access_level": "write",
+        "access_level": "read",
         "resource_key": "reports"
        },
        {

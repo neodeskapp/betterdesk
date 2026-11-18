@@ -24,7 +24,8 @@ var guardPaths = []struct {
 	{"/api/panel/user-groups", "users"}, {"/api/panel/access", "users"}, {"/api/guest", "guests"},
 	{"/api/folders", "folders"}, {"/organizations", "organizations"}, {"/api/organizations", "organizations"},
 	{"/devices", "devices"}, {"/api/devices", "devices"}, {"/api/device-groups", "devices"}, {"/api/tags", "devices"},
-	{"/api/panel/strategies", "strategies"}, {"/folders", "folders"}, {"/remote", "remote"}, {"/api/remote", "remote"},
+	{"/api/panel/strategies", "strategies"}, {"/strategies", "strategies"}, {"/folders", "folders"}, {"/remote", "remote"},
+	{"/api/remote", "remote"},
 	{"/api/tickets", "tickets"}, {"/api/automation", "automation"}, {"/api/network", "network"},
 	{"/api/dataguard", "dataguard"}, {"/api/reports", "reports"}, {"/api/activity", "activity"},
 	{"/api/files", "files"}, {"/api/scaling", "scaling"}, {"/api/cross-platform", "cross-platform"},
@@ -36,6 +37,7 @@ var guardPaths = []struct {
 
 	// below a prefix, and with a trailing slash
 	{"/users/", "users"}, {"/users/42", "users"}, {"/api/users/42", "users"}, {"/api/users/42/avatar", "users"},
+	{"/strategies/new", "strategies"}, {"/strategiesx", ""},
 	{"/api/panel/access/users/1", "users"}, {"/api/panel/user-groups/abc/members", "users"},
 	{"/api/settings/server-info", "settings"}, {"/api/settings/audit", "settings"}, {"/api/reports/generate", "reports"},
 	{"/api/devices/ABC/rename", "devices"}, {"/api/guest/links", "guests"}, {"/devices//x", "devices"},
@@ -120,8 +122,8 @@ func TestFindRuleLongestMatch(t *testing.T) {
 
 func TestPageRules(t *testing.T) {
 	pages := PageRules()
-	if len(pages) != 36 {
-		t.Fatalf("%d page rules, want 36", len(pages))
+	if len(pages) != 37 {
+		t.Fatalf("%d page rules, want 37", len(pages))
 	}
 	if pages[0] != (Rule{Path: "/", Section: "dashboard"}) {
 		t.Errorf("first page rule is %+v", pages[0])

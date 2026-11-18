@@ -8,14 +8,22 @@ to left, every theme mode, and values that must be escaped (`</script>`,
 outside the basic plane). `TestBootScriptAsNodeSentIt` builds the script
 from the same boot object and compares it byte for byte.
 
-`../bootstrap_with_policy.json` is not made by a script: it is the access
-and navigation part of what the Node console answered to
-`GET /api/console/bootstrap` under an account policy, taken from a contract
-recording (see the file's note). `TestBootstrapUnderAPolicyAsNodeAnswered`
-compares the Go console's answer under the same policy with it.
+`bootstrap_policy.js` writes `../bootstrap_with_policy.json`: the access,
+navigation and permissions parts of what the Node console answers to
+`GET /api/console/bootstrap` under an account policy, for four roles. It
+saves the policy with `savePolicy` and resolves it with `resolveForUser`,
+as the routes do, on an in-memory database; a role's permissions are the
+built-in role map. Run on the tree before the upstream 3.5.264 merge, it
+gave the file that was first taken from a contract recording, unchanged.
+`TestBootstrapUnderAPolicyAsNodeAnswered` compares the Go console's answer
+under the same policy with it.
 
 These are fixtures for the time both servers exist. The route file is gone
-from `web-nodejs` since the routes moved to Go, so the script runs only on a
-tree that still has it. The recorded files stay.
+from `web-nodejs` since the routes moved to Go, so the scripts run only on a
+tree that still has it (`WEB_NODEJS`, and `GO_AUTH` for the Go server's
+`auth` folder). The recorded files stay.
 
     tools/dev.sh "cd betterdesk-server/console/routes/console/testdata/nodeoracle && node bootscript.js"
+    DEV_DOCKER_ARGS="-v <tree>:/spec:ro -v bdgo-node-nm:/spec/web-nodejs/node_modules \
+      -e WEB_NODEJS=/spec/web-nodejs -e GO_AUTH=/spec/betterdesk-server/auth" \
+      tools/dev.sh "cd betterdesk-server/console/routes/console/testdata/nodeoracle && node bootstrap_policy.js"

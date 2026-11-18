@@ -11,6 +11,98 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
+// Jest: panel-access.ceiling.test.js, "requestHasPermission (audit H7)" and
+// "clamps resolved sections to the role ceiling". The save half is in
+// TestPolicyStore.
+func TestRoleCeilingH7(t *testing.T) {
+	gaPermissions := newPermissionSet([]string{"user.view", "user.edit", "user.create"})
+	for _, c := range []struct {
+		name       string
+		ctx        Context
+		permission string
+		want       bool
+	}{
+		{"global_admin gets no server.config from settings at write",
+			Context{Role: "global_admin", Section: "settings", Policy: policyWith("settings", LevelWrite), Loaded: true, Permissions: gaPermissions}, "server.config", false},
+		{"a permission the role holds still passes",
+			Context{Role: "global_admin", Section: "users", Policy: policyWith("users", LevelWrite), Loaded: true, Permissions: gaPermissions}, "user.edit", true},
+		{"the section narrows: read refuses the write permission",
+			Context{Role: "operator", Section: "devices", Policy: policyWith("devices", LevelRead), Loaded: true, Permissions: newPermissionSet([]string{"device.view", "device.edit"})}, "device.edit", false},
+		{"and lets the read permission through",
+			Context{Role: "operator", Section: "devices", Policy: policyWith("devices", LevelRead), Loaded: true, Permissions: newPermissionSet([]string{"device.view", "device.edit"})}, "device.view", true},
+		{"super admins pass at none",
+			Context{Role: "super_admin", Section: "settings", Policy: policyWith("settings", LevelNone), Loaded: true, Permissions: PermissionSet{}}, "server.config", true},
+		{"without a loaded context the built-in map decides: viewer has device.view",
+			Context{Role: "viewer"}, "device.view", true},
+		{"and not server.config", Context{Role: "viewer"}, "server.config", false},
+	} {
+		ctx := c.ctx
+		ctx.UserID, ctx.HasUser = 1, true
+		if got := ctx.HasPermission(c.permission); got != c.want {
+			t.Errorf("%s: HasPermission(%q) = %v, want %v", c.name, c.permission, got, c.want)
+		}
+	}
+
+	data := &fakeData{sections: map[string][]SectionRow{
+		"user:5": {{ResourceKey: "settings", AccessLevel: "write"}, {ResourceKey: "users", AccessLevel: "write"}},
+	}}
+	s := fakeService(data, &fakeRoles{permissions: map[string][]string{"global_admin": {"user.view", "user.edit", "device.view"}}})
+	policy, err := s.ResolveForUser(context.Background(), PolicyUser{ID: 5, Role: "global_admin"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := policy.Sections.Get("settings"); got != (SectionAccess{LevelNone, SourceUser, LevelNone}) {
+		t.Errorf("settings: %+v", got)
+	}
+	if got, _ := policy.Sections.Get("users"); got != (SectionAccess{LevelWrite, SourceUser, LevelWrite}) {
+		t.Errorf("users: %+v", got)
+	}
+}
+
+// A saved "group:<key>" row is capped at the ceiling of the first section of
+// that catalog group (BUGS UM10). dashboard comes first in core and has no
+// write permission, so core at write is stored as read for every role but
+// the super admins, and devices then resolves to read although the role
+// reaches write there.
+func TestSavedGroupRowTakesTheFirstSectionsCeiling(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		createSchema(t, db)
+		ctx := context.Background()
+		mustExec(t, db, `INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)`, "op1", "x", "operator")
+		mustExec(t, db, `INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)`, "ga1", "x", "global_admin")
+		s := New(db, &fakeRoles{permissions: map[string][]string{
+			"operator":     {"device.view", "device.edit"},
+			"global_admin": {"user.view", "branding.edit", "server.attestation"},
+		}}, Options{})
+		write := func(key string) []any { return []any{map[string]any{"resource_key": key, "access_level": "write"}} }
+
+		saved, err := s.SavePolicy(ctx, "user", "1", write("group:core"), nil)
+		if err != nil || jsJSON(t, saved.Sections) != `[{"resource_key":"group:core","access_level":"read"}]` {
+			t.Fatalf("operator, core at write: %s, %v", jsJSON(t, saved.Sections), err)
+		}
+		policy, err := s.ResolveForUser(ctx, PolicyUser{ID: 1, Role: "operator"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got, _ := policy.Sections.Get("devices"); got != (SectionAccess{LevelRead, SourceUser, LevelWrite}) {
+			t.Errorf("operator devices: %+v", got)
+		}
+
+		// system starts with languages (server.config): a role that reaches
+		// server-attestation only gets none for the whole group.
+		if saved, err = s.SavePolicy(ctx, "user", "2", write("group:system"), nil); err != nil ||
+			jsJSON(t, saved.Sections) != `[{"resource_key":"group:system","access_level":"none"}]` {
+			t.Fatalf("global_admin, system at write: %s, %v", jsJSON(t, saved.Sections), err)
+		}
+		if policy, err = s.ResolveForUser(ctx, PolicyUser{ID: 2, Role: "global_admin"}); err != nil {
+			t.Fatal(err)
+		}
+		if got, _ := policy.Sections.Get("server-attestation"); got != (SectionAccess{LevelNone, SourceUser, LevelWrite}) {
+			t.Errorf("global_admin server-attestation: %+v", got)
+		}
+	})
+}
+
 // Jest: panelAccessPolicyService.test.js, "applies user overrides over group
 // and role defaults".
 func TestResolveForUserPrecedence(t *testing.T) {
@@ -88,30 +180,33 @@ func TestMergeUserPolicyRules(t *testing.T) {
 		{"a group's none is a row too and beats the role",
 			userPolicyRows{groupSections: []SectionRow{{"users", "none"}}},
 			"users", SectionAccess{LevelNone, SourceGroup, LevelWrite}},
-		{"a row may give more than the role",
+		{"a row cannot give more than the role",
 			userPolicyRows{sections: []SectionRow{{"settings", "write"}}},
-			"settings", SectionAccess{LevelWrite, SourceUser, LevelNone}},
-		{"a group row may give more than the role",
+			"settings", SectionAccess{LevelNone, SourceUser, LevelNone}},
+		{"a row is capped at the role's level",
+			userPolicyRows{sections: []SectionRow{{"devices", "write"}}},
+			"devices", SectionAccess{LevelRead, SourceUser, LevelRead}},
+		{"a group row cannot give more than the role",
 			userPolicyRows{groupSections: []SectionRow{{"group:system", "read"}}},
-			"permissions", SectionAccess{LevelRead, SourceGroup, LevelNone}},
+			"permissions", SectionAccess{LevelNone, SourceGroup, LevelNone}},
+		{"the highest group row is capped too",
+			userPolicyRows{groupSections: []SectionRow{{"devices", "write"}, {"devices", "none"}}},
+			"devices", SectionAccess{LevelRead, SourceGroup, LevelRead}},
 		{"a stored level that is none of the three is none",
 			userPolicyRows{sections: []SectionRow{{"users", "admin"}}},
 			"users", SectionAccess{LevelNone, SourceUser, LevelWrite}},
 		{"a stored level in odd spelling counts",
 			userPolicyRows{groupSections: []SectionRow{{"users", " READ "}}},
 			"users", SectionAccess{LevelRead, SourceGroup, LevelWrite}},
-		// toolkit is in the catalog twice. The entry that is resolved last
-		// belongs to the commercialization group; the ceiling comes from the
-		// first entry (device.connect reads it).
-		{"toolkit ignores a row for its first catalog group",
-			userPolicyRows{sections: []SectionRow{{"group:operations", "write"}}},
-			"toolkit", SectionAccess{LevelRead, SourceRole, LevelRead}},
-		{"toolkit follows a row for its second catalog group",
-			userPolicyRows{sections: []SectionRow{{"group:commercialization", "none"}}},
+		{"toolkit follows a row for its catalog group",
+			userPolicyRows{sections: []SectionRow{{"group:operations", "none"}}},
 			"toolkit", SectionAccess{LevelNone, SourceUser, LevelRead}},
-		{"toolkit's own row still wins",
-			userPolicyRows{sections: []SectionRow{{"toolkit", "write"}, {"group:commercialization", "none"}}},
-			"toolkit", SectionAccess{LevelWrite, SourceUser, LevelRead}},
+		{"toolkit ignores a row for the commercialization group",
+			userPolicyRows{sections: []SectionRow{{"group:commercialization", "none"}}},
+			"toolkit", SectionAccess{LevelRead, SourceRole, LevelRead}},
+		{"toolkit's own row wins and is capped",
+			userPolicyRows{sections: []SectionRow{{"toolkit", "write"}, {"group:operations", "none"}}},
+			"toolkit", SectionAccess{LevelRead, SourceUser, LevelRead}},
 	}
 	for _, c := range cases {
 		policy := mergeUserPolicy("1", ceiling, c.rows)
@@ -329,17 +424,25 @@ func TestPolicyStore(t *testing.T) {
 		mustExec(t, db, `INSERT INTO user_groups (guid, name) VALUES (?, ?)`, "lab", "Lab")
 		mustExec(t, db, `INSERT INTO user_group_members (user_group_id, user_id) VALUES (?, ?)`, 1, 1)
 		mustExec(t, db, `INSERT INTO user_group_members (user_group_id, user_id) VALUES (?, ?)`, 2, 1)
-		s := New(db, &fakeRoles{permissions: map[string][]string{"operator": {"device.view", "device.edit"}, "viewer": {}}}, Options{})
+		mustExec(t, db, `INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)`, "odd", "x", "made_up")
+		s := New(db, &fakeRoles{permissions: map[string][]string{
+			"operator": {"device.view", "device.edit", "user.view", "user.edit"}, "viewer": {"device.view"},
+		}}, Options{})
 
 		// Nothing stored yet.
 		if rows, err := s.PanelAccessPolicies(ctx, "user", "1"); err != nil || rows == nil || len(rows) != 0 {
 			t.Fatalf("no rows: %v, %v", rows, err)
 		}
 
+		// A row above the role's level is stored at the role's level; a
+		// "group:" row is capped at the first section of its catalog group.
 		saved, err := s.SavePolicy(ctx, "user", " 1 ",
 			[]any{
 				map[string]any{"resource_key": "users", "access_level": "write"},
 				map[string]any{"resource_key": "devices", "access_level": "read"},
+				map[string]any{"resource_key": "settings", "access_level": "write"},
+				map[string]any{"resource_key": "group:operations", "access_level": "write"},
+				map[string]any{"resource_key": "group:system", "access_level": "read"},
 				map[string]any{"resource_key": "nope", "access_level": "write"},
 			},
 			[]any{
@@ -349,21 +452,52 @@ func TestPolicyStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if got := jsJSON(t, saved); got != `{"sections":[{"resource_key":"users","access_level":"write"},{"resource_key":"devices","access_level":"read"}],"features":[{"feature_key":"tunnel","enabled":true},{"feature_key":"audio","enabled":false}]}` {
+		if got := jsJSON(t, saved); got != `{"sections":[{"resource_key":"users","access_level":"write"},{"resource_key":"devices","access_level":"read"},`+
+			`{"resource_key":"settings","access_level":"none"},{"resource_key":"group:operations","access_level":"write"},{"resource_key":"group:system","access_level":"none"}],`+
+			`"features":[{"feature_key":"tunnel","enabled":true},{"feature_key":"audio","enabled":false}]}` {
 			t.Errorf("saved: %s", got)
 		}
 		// Read back ordered by key, under the trimmed subject id.
 		sections, _ := s.PanelAccessPolicies(ctx, "user", "1")
 		features, _ := s.ClientFeaturePolicies(ctx, "user", "1")
-		if got := jsJSON(t, sections); got != `[{"resource_key":"devices","access_level":"read"},{"resource_key":"users","access_level":"write"}]` {
+		if got := jsJSON(t, sections); got != `[{"resource_key":"devices","access_level":"read"},{"resource_key":"group:operations","access_level":"write"},`+
+			`{"resource_key":"group:system","access_level":"none"},{"resource_key":"settings","access_level":"none"},{"resource_key":"users","access_level":"write"}]` {
 			t.Errorf("stored sections: %s", got)
 		}
 		if got := jsJSON(t, features); got != `[{"feature_key":"audio","enabled":false},{"feature_key":"tunnel","enabled":true}]` {
 			t.Errorf("stored features: %s", got)
 		}
 		var stamped int
-		if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM panel_access_policies WHERE updated_at IS NOT NULL`).Scan(&stamped); err != nil || stamped != 2 {
+		if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM panel_access_policies WHERE updated_at IS NOT NULL`).Scan(&stamped); err != nil || stamped != 5 {
 			t.Errorf("rows with a write time: %d, %v", stamped, err)
+		}
+
+		// The subject id is read as Number.parseInt reads it. An account
+		// without a role, and an id that names no account, count as viewers.
+		viewerSave := []any{map[string]any{"resource_key": "devices", "access_level": "write"}}
+		for _, id := range []string{"2", "2abc", "99", "-1"} {
+			saved, err := s.SavePolicy(ctx, "user", id, viewerSave, nil)
+			if err != nil || jsJSON(t, saved.Sections) != `[{"resource_key":"devices","access_level":"read"}]` {
+				t.Errorf("save for %q: %s, %v", id, jsJSON(t, saved.Sections), err)
+			}
+		}
+		if saved, err := s.SavePolicy(ctx, "user", "1.9xyz", viewerSave, nil); err != nil || jsJSON(t, saved.Sections) != `[{"resource_key":"devices","access_level":"write"}]` {
+			t.Errorf(`save for "1.9xyz" (account 1, an operator): %s, %v`, jsJSON(t, saved.Sections), err)
+		}
+		mustExec(t, db, `DELETE FROM panel_access_policies WHERE subject_id <> ?`, "1")
+		_, err = s.SavePolicy(ctx, "user", "abc", viewerSave, nil)
+		if db.IsPostgres() != (err != nil) {
+			t.Errorf("save for an id that is no number: %v (an error only on PostgreSQL)", err)
+		}
+		// A role whose permissions cannot be looked up stores nothing.
+		if _, err := s.SavePolicy(ctx, "user", "3", viewerSave, []any{map[string]any{"feature_key": "audio", "enabled": true}}); err == nil || ErrorStatus(err) != 500 {
+			t.Errorf("save for an account with an unknown role: %v", err)
+		}
+		if rows, _ := s.PanelAccessPolicies(ctx, "user", "3"); len(rows) != 0 {
+			t.Errorf("rows stored for an account with an unknown role: %v", rows)
+		}
+		if rows, _ := s.ClientFeaturePolicies(ctx, "user", "3"); len(rows) != 0 {
+			t.Errorf("features stored for an account with an unknown role: %v", rows)
 		}
 
 		// A flag is stored as each database's Node adapter stored it.
@@ -386,10 +520,21 @@ func TestPolicyStore(t *testing.T) {
 			}
 		}
 
-		// Another subject's rows are its own; a write replaces all rows of its subject.
-		if _, err := s.SavePolicy(ctx, "group", "ops", []any{map[string]any{"resource_key": "chat", "access_level": "write"}}, nil); err != nil {
-			t.Fatal(err)
+		// A user group's policy cannot be saved: its ceiling is never worked
+		// out, so the save fails with a 500 and writes nothing (BUGS UM2).
+		mustExec(t, db, `INSERT INTO panel_access_policies (subject_type, subject_id, resource_key, access_level) VALUES (?, ?, ?, ?)`,
+			"group", "ops", "chat", "write")
+		for _, guid := range []string{"ops", "no-such-group"} {
+			_, err := s.SavePolicy(ctx, "group", guid, []any{map[string]any{"resource_key": "users", "access_level": "read"}}, nil)
+			if !errors.Is(err, errGroupCeiling) || ErrorStatus(err) != 500 {
+				t.Errorf("save for group %q: %v", guid, err)
+			}
 		}
+		if rows, _ := s.PanelAccessPolicies(ctx, "group", "ops"); jsJSON(t, rows) != `[{"resource_key":"chat","access_level":"write"}]` {
+			t.Errorf("the group's rows after a failed save: %v", rows)
+		}
+
+		// A write replaces all rows of its subject.
 		if _, err := s.SavePolicy(ctx, "user", "1", []any{map[string]any{"resource_key": "folders", "access_level": "none"}}, nil); err != nil {
 			t.Fatal(err)
 		}
@@ -398,17 +543,17 @@ func TestPolicyStore(t *testing.T) {
 		if jsJSON(t, sections) != `[{"resource_key":"folders","access_level":"none"}]` || len(features) != 0 {
 			t.Errorf("after the second write: %s %s", jsJSON(t, sections), jsJSON(t, features))
 		}
-		if rows, _ := s.PanelAccessPolicies(ctx, "group", "ops"); len(rows) != 1 {
-			t.Errorf("the group's rows: %v", rows)
-		}
 
-		// Refused subjects write nothing.
+		// Refused subjects write nothing, and are refused before the ceiling.
 		var se *StatusError
 		if _, err := s.SavePolicy(ctx, "team", "1", nil, nil); !errors.As(err, &se) || se.Status != 400 {
 			t.Errorf("bad subject type: %v", err)
 		}
 		if _, err := s.SavePolicy(ctx, "user", "a b", nil, nil); !errors.As(err, &se) || se.Status != 400 {
 			t.Errorf("bad subject id: %v", err)
+		}
+		if _, err := s.SavePolicy(ctx, "group", "a b", nil, nil); !errors.As(err, &se) || se.Status != 400 {
+			t.Errorf("bad group subject id: %v", err)
 		}
 
 		// The resolved policy reads the rows of the account and of its groups.
@@ -419,7 +564,7 @@ func TestPolicyStore(t *testing.T) {
 		if got, _ := policy.Sections.Get("folders"); got != (SectionAccess{LevelNone, SourceUser, LevelWrite}) {
 			t.Errorf("folders: %+v", got)
 		}
-		if got, _ := policy.Sections.Get("chat"); got != (SectionAccess{LevelWrite, SourceGroup, LevelNone}) {
+		if got, _ := policy.Sections.Get("chat"); got != (SectionAccess{LevelNone, SourceGroup, LevelNone}) {
 			t.Errorf("chat: %+v", got)
 		}
 		if got := jsJSON(t, policy.Groups); got != `[{"guid":"lab","name":"Lab"},{"guid":"ops","name":"Operators"}]` {

@@ -1,10 +1,10 @@
 {
   "counts": {
     "roleHasPermission": 702,
-    "findRule": 1154,
-    "guard": 430164,
-    "requestHasPermission": 241920,
-    "normalize": 4618,
+    "findRule": 1172,
+    "guard": 436968,
+    "requestHasPermission": 322560,
+    "normalize": 5018,
     "accessAllows": 216,
     "rdClient": 130,
     "policyMerge": 1518,
@@ -13,5 +13,5 @@
     "scope": 7348,
     "roleService": 23
   },
-  "total": 802863
+  "total": 890725
 }

@@ -373,13 +373,6 @@
         "writePermission": "server.config"
        },
        {
-        "group": "commercialization",
-        "key": "toolkit",
-        "label": "Toolkit",
-        "readPermission": "server.config",
-        "writePermission": "server.config"
-       },
-       {
         "group": "security",
         "key": "security-audit",
         "label": "Security audit",

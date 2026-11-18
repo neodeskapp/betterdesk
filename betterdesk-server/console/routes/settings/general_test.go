@@ -76,14 +76,18 @@ func lastAudit(t *testing.T, w *routetest.World) string {
 
 // Every route but the liveness probe needs a session; the routes of the
 // settings need server.config, the audit log audit.view, and the server's
-// facts and addresses only a session.
+// facts and addresses only a session. All of them are in the panel section
+// settings, whose read and write permission is server.config: a role
+// without it is refused by the panel guard first, also when a panel access
+// row sets the section to read (the row is capped at the role's level).
+// A role with server.config passes the guard, and the audit log still asks
+// audit.view.
 func TestGuards(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		s := newSite(t, db, routetest.Overrides{"viewer": {"audit.view": false}}, nil)
-		// The panel guard lets the viewer read the settings area, so the
-		// permission guards of the reads decide; server.config is the
-		// area's write permission, which reading does not give. Writes stay
-		// with the panel guard (TestPermissionGuardsOfWrites checks theirs).
+		s := newSite(t, db, routetest.Overrides{
+			"viewer":       {"audit.view": false},
+			"global_admin": {"server.config": true, "audit.view": false},
+		}, nil)
 		exec(t, db, "INSERT INTO panel_access_policies (subject_type, subject_id, resource_key, access_level) VALUES ('user', '6', 'settings', 'read')")
 		serverConfig := []string{
 			"GET /api/settings/restart/pending", "POST /api/settings/restart/cancel", "POST /api/settings/restart/confirm",
@@ -100,6 +104,7 @@ func TestGuards(t *testing.T) {
 		}
 		denied := s.As("viewer")
 		admin := s.As("admin")
+		sectionDenied := `{"success":false,"error":"Panel access denied: settings","code":"panel_access_denied"}`
 		for _, route := range append(serverConfig, "GET /api/settings/audit", "GET /api/settings/info", "GET /api/settings/server-info") {
 			method, path, _ := strings.Cut(route, " ")
 			body := ""
@@ -110,21 +115,23 @@ func TestGuards(t *testing.T) {
 				res.Body != `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}` {
 				t.Errorf("%s signed out: %d %s", route, res.Status, res.Body)
 			}
-			want := http.StatusForbidden
-			if path == "/api/settings/info" || path == "/api/settings/server-info" {
-				want = http.StatusOK
-			}
-			if method == http.MethodGet && want == http.StatusForbidden {
+			if method == http.MethodGet {
 				if res := admin.Do(method, path, ""); res.Status == http.StatusForbidden || res.Status == http.StatusUnauthorized {
 					t.Errorf("%s as admin: %d %s", route, res.Status, res.Body)
 				}
 			}
-			res := denied.Do(method, path, body)
-			if res.Status != want {
-				t.Errorf("%s without its permission: %d %s", route, res.Status, res.Body)
+			if res := denied.Do(method, path, body); res.Status != http.StatusForbidden || res.Body != sectionDenied {
+				t.Errorf("%s without server.config: %d %s, want the panel guard's refusal", route, res.Status, res.Body)
 			}
-			if want == http.StatusForbidden && method == http.MethodGet && !strings.Contains(res.Body, "Permission denied") {
-				t.Errorf("%s: refused by %s, want the permission guard", route, res.Body)
+		}
+		allowed := s.As("global_admin")
+		if res := allowed.Do("GET", "/api/settings/audit", ""); res.Status != http.StatusForbidden ||
+			res.Body != `{"success":false,"error":"Permission denied: audit.view"}` {
+			t.Errorf("audit without audit.view: %d %s", res.Status, res.Body)
+		}
+		for _, path := range []string{"/api/settings/info", "/api/settings/server-info"} {
+			if res := allowed.Do("GET", path, ""); res.Status != http.StatusOK {
+				t.Errorf("%s with a session: %d %s", path, res.Status, res.Body)
 			}
 		}
 		if res := s.SignedOut().Do("GET", "/api/settings/restart-status", ""); res.Status != http.StatusOK ||

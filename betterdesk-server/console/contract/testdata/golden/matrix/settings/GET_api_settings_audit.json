@@ -128,19 +128,10 @@
        "action": "login",
        "created_at": "<volatile>",
        "details": "<volatile>",
-       "id": 89,
+       "id": 88,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
-      },
-      {
-       "action": "server_attestation_badge_updated",
-       "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 88,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
       },
       {
        "action": "enrollment_rejected",
@@ -975,7 +966,7 @@
        "action": "login",
        "created_at": "<volatile>",
        "details": "<volatile>",
-       "id": 97,
+       "id": 96,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
@@ -984,7 +975,7 @@
        "action": "oidc_config_updated",
        "created_at": "<volatile>",
        "details": "<volatile>",
-       "id": 96,
+       "id": 95,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
@@ -993,7 +984,7 @@
        "action": "ldap_config_updated",
        "created_at": "<volatile>",
        "details": "<volatile>",
-       "id": 95,
+       "id": 94,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
@@ -1002,7 +993,7 @@
        "action": "enrollment_settings_changed",
        "created_at": "<volatile>",
        "details": "<volatile>",
-       "id": 94,
+       "id": 93,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
@@ -1011,22 +1002,13 @@
        "action": "device_scope_default_updated",
        "created_at": "<volatile>",
        "details": "<volatile>",
-       "id": 93,
-       "ip_address": "<client-ip>",
-       "user_id": 7,
-       "username": "e2e_server_admin"
-      },
-      {
-       "action": "backup_created",
-       "created_at": "<volatile>",
-       "details": "<volatile>",
        "id": 92,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
       },
       {
-       "action": "availability_history_updated",
+       "action": "backup_created",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 91,
@@ -1035,7 +1017,7 @@
        "username": "e2e_server_admin"
       },
       {
-       "action": "backup_created",
+       "action": "availability_history_updated",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 90,
@@ -1044,7 +1026,7 @@
        "username": "e2e_server_admin"
       },
       {
-       "action": "login",
+       "action": "backup_created",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 89,
@@ -1053,13 +1035,13 @@
        "username": "e2e_server_admin"
       },
       {
-       "action": "server_attestation_badge_updated",
+       "action": "login",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 88,
        "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
+       "user_id": 7,
+       "username": "e2e_server_admin"
       },
       {
        "action": "enrollment_rejected",
@@ -1894,7 +1876,7 @@
        "action": "login",
        "created_at": "<volatile>",
        "details": "<volatile>",
-       "id": 117,
+       "id": 116,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -1903,22 +1885,13 @@
        "action": "oidc_config_updated",
        "created_at": "<volatile>",
        "details": "<volatile>",
-       "id": 116,
-       "ip_address": "<client-ip>",
-       "user_id": 6,
-       "username": "e2e_super_admin"
-      },
-      {
-       "action": "ldap_config_updated",
-       "created_at": "<volatile>",
-       "details": "<volatile>",
        "id": 115,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
       },
       {
-       "action": "enrollment_settings_changed",
+       "action": "ldap_config_updated",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 114,
@@ -1927,7 +1900,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "device_scope_default_updated",
+       "action": "enrollment_settings_changed",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 113,
@@ -1936,7 +1909,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "branding_reset",
+       "action": "device_scope_default_updated",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 112,
@@ -1945,7 +1918,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "branding_profile_delete",
+       "action": "branding_reset",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 111,
@@ -1954,7 +1927,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "branding_update",
+       "action": "branding_profile_delete",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 110,
@@ -1963,7 +1936,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "backup_created",
+       "action": "branding_update",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 109,
@@ -1972,7 +1945,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "availability_history_updated",
+       "action": "backup_created",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 108,
@@ -1981,7 +1954,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "server_attestation_badge_updated",
+       "action": "availability_history_updated",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 107,
@@ -1990,7 +1963,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "enrollment_rejected",
+       "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 106,
@@ -1999,7 +1972,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "enrollment_rejection_cleared",
+       "action": "enrollment_rejected",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 105,
@@ -2008,7 +1981,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "enrollment_rejected",
+       "action": "enrollment_rejection_cleared",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 104,
@@ -2017,7 +1990,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "enrollment_rejection_cleared",
+       "action": "enrollment_rejected",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 103,
@@ -2026,7 +1999,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "profile_updated",
+       "action": "enrollment_rejection_cleared",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 102,
@@ -2035,7 +2008,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "pairing_code_created",
+       "action": "profile_updated",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 101,
@@ -2044,7 +2017,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "clipboard.set",
+       "action": "pairing_code_created",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 100,
@@ -2053,7 +2026,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "commercialization_email_config_updated",
+       "action": "clipboard.set",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 99,
@@ -2062,7 +2035,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "backup_created",
+       "action": "commercialization_email_config_updated",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 98,
@@ -2071,7 +2044,7 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "login",
+       "action": "backup_created",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 97,
@@ -2080,16 +2053,16 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "oidc_config_updated",
+       "action": "login",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 96,
        "ip_address": "<client-ip>",
-       "user_id": 7,
-       "username": "e2e_server_admin"
+       "user_id": 6,
+       "username": "e2e_super_admin"
       },
       {
-       "action": "ldap_config_updated",
+       "action": "oidc_config_updated",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 95,
@@ -2098,7 +2071,7 @@
        "username": "e2e_server_admin"
       },
       {
-       "action": "enrollment_settings_changed",
+       "action": "ldap_config_updated",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 94,
@@ -2107,7 +2080,7 @@
        "username": "e2e_server_admin"
       },
       {
-       "action": "device_scope_default_updated",
+       "action": "enrollment_settings_changed",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 93,
@@ -2116,7 +2089,7 @@
        "username": "e2e_server_admin"
       },
       {
-       "action": "backup_created",
+       "action": "device_scope_default_updated",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 92,
@@ -2125,7 +2098,7 @@
        "username": "e2e_server_admin"
       },
       {
-       "action": "availability_history_updated",
+       "action": "backup_created",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 91,
@@ -2134,7 +2107,7 @@
        "username": "e2e_server_admin"
       },
       {
-       "action": "backup_created",
+       "action": "availability_history_updated",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 90,
@@ -2143,7 +2116,7 @@
        "username": "e2e_server_admin"
       },
       {
-       "action": "login",
+       "action": "backup_created",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 89,
@@ -2152,13 +2125,13 @@
        "username": "e2e_server_admin"
       },
       {
-       "action": "server_attestation_badge_updated",
+       "action": "login",
        "created_at": "<volatile>",
        "details": "<volatile>",
        "id": 88,
        "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
+       "user_id": 7,
+       "username": "e2e_server_admin"
       },
       {
        "action": "enrollment_rejected",
@@ -2787,6 +2760,15 @@
        "details": "<volatile>",
        "id": 18,
        "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_ban",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 1,
+       "ip_address": "10.0.0.2",
        "user_id": 1,
        "username": "admin"
       }

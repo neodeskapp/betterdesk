@@ -49,6 +49,21 @@ func TestGuards(t *testing.T) {
 		if got := w.As("server_admin").Do(http.MethodGet, path, ""); got.Status != http.StatusOK {
 			t.Errorf("server_admin GET %s = %d %s", path, got.Status, got.Body)
 		}
+		// global_admin reaches write in the section through branding.edit,
+		// but the role decides first and lacks server.attestation
+		if got := w.As("global_admin").Do(http.MethodGet, path, ""); got.Status != http.StatusForbidden ||
+			got.Body != `{"success":false,"error":"Permission denied: server.attestation"}` {
+			t.Errorf("global_admin GET %s = %d %s", path, got.Status, got.Body)
+		}
+	}
+	for _, c := range []struct{ method, path, body string }{
+		{http.MethodPost, "/api/server-attestation/abort", "{}"},
+		{http.MethodPut, "/api/server-attestation/badge-config", `{"badgeTitle":"x"}`},
+	} {
+		if got := w.As("global_admin").Do(c.method, c.path, c.body); got.Status != http.StatusForbidden ||
+			got.Body != `{"success":false,"error":"Permission denied: server.attestation"}` {
+			t.Errorf("global_admin %s %s = %d %s", c.method, c.path, got.Status, got.Body)
+		}
 	}
 	for _, path := range []string{"/api/server-attestation/run", "/api/server-attestation/abort"} {
 		if got := out.Do(http.MethodPost, path, "{}"); got.Status != http.StatusUnauthorized {

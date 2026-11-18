@@ -129,35 +129,37 @@ func TestHasPermissionRules(t *testing.T) {
 		{"admin passes with a failed lookup", Context{Role: "admin", Loaded: true, PermissionErr: boom}, "server.config", true},
 		{"admin passes in a section at none", Context{Role: "super_admin", Section: "devices", Policy: policyWith("devices", LevelNone)}, "device.edit", true},
 
-		// 3. the section's own permissions follow the level
-		{"read level grants the read permission", Context{Role: "viewer", Section: "devices", Policy: policyWith("devices", LevelRead), Permissions: set()}, "device.view", true},
-		{"read level refuses the write permission", Context{Role: "operator", Section: "devices", Policy: policyWith("devices", LevelRead), Permissions: set("device.edit")}, "device.edit", false},
-		{"write level grants a permission the role lacks", Context{Role: "viewer", Section: "devices", Policy: policyWith("devices", LevelWrite), Permissions: set("device.view")}, "device.edit", true},
-		{"none refuses the read permission the role has", Context{Role: "operator", Section: "devices", Policy: policyWith("devices", LevelNone), Permissions: set("device.view")}, "device.view", false},
-		{"a section with one permission for both needs write", Context{Role: "operator", Section: "guests", Policy: policyWith("guests", LevelRead), Permissions: set("guest.create")}, "guest.create", false},
-		{"and gets it at write", Context{Role: "viewer", Section: "guests", Policy: policyWith("guests", LevelWrite), Permissions: set()}, "guest.create", true},
-		{"other permissions are not the section's business", Context{Role: "operator", Section: "devices", Policy: policyWith("devices", LevelNone), Permissions: set("user.view")}, "user.view", true},
-		{"a section without a write permission", Context{Role: "viewer", Section: "reports", Policy: policyWith("reports", LevelWrite), Permissions: set()}, "metrics.view", true},
-		{"toolkit uses its first catalog entry", Context{Role: "viewer", Section: "toolkit", Policy: policyWith("toolkit", LevelRead), Permissions: set()}, "device.connect", true},
-		{"toolkit's second entry grants nothing", Context{Role: "viewer", Section: "toolkit", Policy: policyWith("toolkit", LevelWrite), Permissions: set()}, "server.config", false},
-		{"a level in odd spelling counts", Context{Role: "viewer", Section: "devices", Policy: policyWith("devices", " WRITE "), Permissions: set()}, "device.edit", true},
-		{"a section the policy lacks falls through", Context{Role: "viewer", Section: "devices", Policy: &Policy{}, Permissions: set("device.edit")}, "device.edit", true},
-		{"a section the catalog lacks falls through", Context{Role: "viewer", Section: "nope", Policy: policyWith("nope", LevelNone), Permissions: set("device.view")}, "device.view", true},
-		{"without a section the policy is not asked", Context{Role: "viewer", Policy: policyWith("devices", LevelNone), Permissions: set("device.view")}, "device.view", true},
-
-		// 4. the effective set wins over the built-in map
+		// 3. the role decides first: the effective set wins over the built-in map
 		{"an override grants", Context{Role: "viewer", Loaded: true, Permissions: set("server.config")}, "server.config", true},
 		{"an override takes away", Context{Role: "operator", Loaded: true, Permissions: set("device.view")}, "device.connect", false},
 		{"an empty set grants nothing", Context{Role: "global_admin", Loaded: true, Permissions: set()}, "user.view", false},
-
-		// 5. a failed lookup refuses
 		{"failed lookup refuses what the role has by default", Context{Role: "operator", Loaded: true, PermissionErr: boom}, "device.view", false},
-
-		// 6. the built-in map, when nothing was loaded
+		{"failed lookup refuses also at write in the section", Context{Role: "operator", Loaded: true, PermissionErr: boom, Section: "devices", Policy: policyWith("devices", LevelWrite)}, "device.view", false},
 		{"not loaded: built-in map grants", Context{Role: "operator"}, "device.view", true},
 		{"not loaded: built-in map refuses", Context{Role: "viewer"}, "device.edit", false},
 		{"an error on a context that was never loaded is ignored", Context{Role: "operator", PermissionErr: boom}, "device.view", true},
 		{"no role has nothing", Context{}, "device.view", false},
+
+		// a section level never grants what the role lacks
+		{"write level does not grant a permission the role lacks", Context{Role: "viewer", Section: "devices", Policy: policyWith("devices", LevelWrite), Permissions: set("device.view")}, "device.edit", false},
+		{"read level does not grant the read permission the role lacks", Context{Role: "viewer", Section: "devices", Policy: policyWith("devices", LevelRead), Permissions: set()}, "device.view", false},
+		{"write level does not grant from the built-in map either", Context{Role: "viewer", Section: "devices", Policy: policyWith("devices", LevelWrite)}, "device.edit", false},
+		{"global_admin gets no server.attestation from branding.edit", Context{Role: "global_admin", Section: "server-attestation", Policy: policyWith("server-attestation", LevelWrite), Permissions: set("branding.edit")}, "server.attestation", false},
+		{"server_admin gets no enrollment.approve from enrollment.manage", Context{Role: "server_admin", Section: "registrations", Policy: policyWith("registrations", LevelWrite), Permissions: set("enrollment.manage")}, "enrollment.approve", false},
+
+		// 4. the section's own permissions the role holds follow the level
+		{"read level lets the read permission through", Context{Role: "viewer", Section: "devices", Policy: policyWith("devices", LevelRead), Permissions: set("device.view")}, "device.view", true},
+		{"read level refuses the write permission", Context{Role: "operator", Section: "devices", Policy: policyWith("devices", LevelRead), Permissions: set("device.edit")}, "device.edit", false},
+		{"none refuses the read permission the role has", Context{Role: "operator", Section: "devices", Policy: policyWith("devices", LevelNone), Permissions: set("device.view")}, "device.view", false},
+		{"a section with one permission for both needs write", Context{Role: "operator", Section: "guests", Policy: policyWith("guests", LevelRead), Permissions: set("guest.create")}, "guest.create", false},
+		{"and gets it at write", Context{Role: "operator", Section: "guests", Policy: policyWith("guests", LevelWrite), Permissions: set("guest.create")}, "guest.create", true},
+		{"other permissions are not the section's business", Context{Role: "operator", Section: "devices", Policy: policyWith("devices", LevelNone), Permissions: set("user.view")}, "user.view", true},
+		{"a section without a write permission", Context{Role: "viewer", Section: "reports", Policy: policyWith("reports", LevelRead), Permissions: set("metrics.view")}, "metrics.view", true},
+		{"toolkit's permissions", Context{Role: "viewer", Section: "toolkit", Policy: policyWith("toolkit", LevelRead), Permissions: set("device.connect", "device.edit")}, "device.edit", false},
+		{"a level in odd spelling counts", Context{Role: "viewer", Section: "devices", Policy: policyWith("devices", " WRITE "), Permissions: set("device.edit")}, "device.edit", true},
+		{"a section the policy lacks falls through", Context{Role: "viewer", Section: "devices", Policy: &Policy{}, Permissions: set("device.edit")}, "device.edit", true},
+		{"a section the catalog lacks falls through", Context{Role: "viewer", Section: "nope", Policy: policyWith("nope", LevelNone), Permissions: set("device.view")}, "device.view", true},
+		{"without a section the policy is not asked", Context{Role: "viewer", Policy: policyWith("devices", LevelNone), Permissions: set("device.view")}, "device.view", true},
 	}
 	for _, c := range cases {
 		ctx := c.ctx
