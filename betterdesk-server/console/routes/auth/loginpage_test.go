@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/console/branding"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -100,17 +101,21 @@ func TestLoginPage(t *testing.T) {
 	})
 }
 
-// With the Node console behind this one the sign-in page shows what was
-// saved into the branding table at once, without a load.
-func TestLoginPageReadsThrough(t *testing.T) {
+// The sign-in page shows a save of the branding at once, also with the
+// Node console behind this one: it reads the cache every save reloads.
+func TestLoginPageShowsASaveAtOnce(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := routetest.New(t, routetest.Options{DB: db, Config: func(cfg *config.Config) {
 			cfg.NodeUpstream = &url.URL{Scheme: "http", Host: "127.0.0.1:9"}
 		}})
-		if _, err := db.Exec(context.Background(), "INSERT INTO branding_config (key, value, updated_at) VALUES ('appName', 'Saved by Node', '2026-01-02 03:04:05')"); err != nil {
+		updates, err := branding.ParseJSON([]byte(`{"appName":"Saved"}`))
+		if err != nil {
 			t.Fatal(err)
 		}
-		if _, page := loginPage(t, w.SignedOut()); page["appName"] != "Saved by Node" {
+		if err := w.Server.Deps().Branding.SaveBranding(context.Background(), updates); err != nil {
+			t.Fatal(err)
+		}
+		if _, page := loginPage(t, w.SignedOut()); page["appName"] != "Saved" {
 			t.Errorf("appName = %v", page["appName"])
 		}
 	})

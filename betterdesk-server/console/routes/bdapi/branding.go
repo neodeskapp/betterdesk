@@ -9,8 +9,7 @@ import (
 )
 
 // What a client may read of the panel without signing in: who it is and
-// how it looks. The routes read the branding through Refresh, so they
-// see what was saved last, by whichever console.
+// how it looks, as the branding was saved last.
 
 type appearanceContract struct {
 	Version  string `json:"version"`
@@ -29,7 +28,6 @@ type serverInfoAnswer struct {
 // serverInfo answers GET /api/bd/server-info: the panel's identity, which
 // the remote viewer checks a panel address with.
 func (h *handlers) serverInfo(w http.ResponseWriter, r *http.Request) {
-	h.d.Branding.Refresh(r.Context())
 	b := h.d.Branding.GetBranding()
 	kit.JSON(w, r, http.StatusOK, serverInfoAnswer{
 		OK: true, Product: "betterdesk-panel", Version: h.version,
@@ -53,7 +51,6 @@ type brandingAnswer struct {
 // contact for the desktop client, with the public appearance. When the
 // appearance cannot be made the defaults go out, never an error.
 func (h *handlers) branding(w http.ResponseWriter, r *http.Request) {
-	h.d.Branding.Refresh(r.Context())
 	b := h.d.Branding.GetBranding()
 	appearance, err := h.d.Branding.GetPublicAppearance()
 	if err != nil {
@@ -74,7 +71,6 @@ func (h *handlers) branding(w http.ResponseWriter, r *http.Request) {
 // cached; a fixed dark appearance when it cannot be made.
 func (h *handlers) appearance(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, private")
-	h.d.Branding.Refresh(r.Context())
 	appearance, err := h.d.Branding.GetPublicAppearance()
 	if err != nil {
 		h.log.Error("Appearance error:", err)

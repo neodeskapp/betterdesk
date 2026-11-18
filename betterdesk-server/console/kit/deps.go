@@ -103,8 +103,8 @@ type Deps struct {
 	// Branding is the console's own look: the appearance settings, the
 	// stylesheet made from them, profiles, themes, fonts and the supporters
 	// list (services/brandingService.js, fontService.js,
-	// supportersService.js). A route that reads the settings calls
-	// Branding.Refresh first.
+	// supportersService.js). Its cache is what every route reads; the
+	// writes reload it.
 	Branding *branding.Service
 	// Mail is the mail service: the SMTP settings, the alert and help
 	// request mails, the log of notifications sent

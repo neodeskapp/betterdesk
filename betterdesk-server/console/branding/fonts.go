@@ -2,8 +2,10 @@ package branding
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
+	neturl "net/url"
 	"os"
 	"regexp"
 	"strconv"
@@ -556,6 +558,12 @@ func fetchOnce(ctx context.Context, client *http.Client, url string) (data []byt
 	if err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
 			return nil, "", &Error{Name: "Error", Message: "Request timeout", Err: err}
+		}
+		// the connection's own error, as Node's request reported it:
+		// "getaddrinfo ENOTFOUND fonts.googleapis.com", not "Get ...: ..."
+		var urlErr *neturl.Error
+		if errors.As(err, &urlErr) {
+			err = urlErr.Err
 		}
 		return nil, "", err
 	}

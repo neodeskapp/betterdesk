@@ -54,7 +54,6 @@ type bootstrapLang struct {
 // request is still checked on its own.
 func (h *handlers) bootstrap(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	h.d.Branding.Refresh(ctx)
 	languages, err := languageList(h.d.I18n.Bundle)
 	if err != nil {
 		h.d.WebUI.ServerError(w, r, err, http.StatusInternalServerError)

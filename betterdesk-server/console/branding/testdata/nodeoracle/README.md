@@ -11,6 +11,11 @@ folder (`*.json.gz`) and the copies of the console's own files in
 `../console` stay: they are plain data and keep pinning the Go code to
 what Node did. `idna.js` also writes the Go source file `../../idna_table.go`.
 
+`files.js` loads `routes/settings.routes.js` for its uploads, and that file
+is gone: the routes are answered by `console/routes/settings`, whose test
+`TestUploadsLikeNode` replays the recorded uploads through the Go routes.
+The script runs again only on a checkout from before that move.
+
 Every script works on a copy of the console's code in a temp folder
 (`lib.js`, `scratchConsole`), because the font service and the upload
 routes write below their own folder.

@@ -50,7 +50,6 @@ func (h *handlers) publicBoot(r *http.Request) *branding.Object {
 // width the browser keeps, and starts the strings and bootstrap requests.
 // What it carries is what the sign-in page shows anyway.
 func (h *handlers) bootScript(w http.ResponseWriter, r *http.Request) {
-	h.d.Branding.Refresh(r.Context())
 	boot := h.publicBoot(r)
 	boot.Set("publicPaths", publicPaths)
 	w.Header().Set("Content-Type", "application/javascript; charset=utf-8")

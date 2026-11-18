@@ -238,12 +238,13 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		Logger: s.deps.Log,
 	})
 	s.deps.Avatars = avatars.New(avatars.Options{DB: opts.Store, Logger: s.deps.Log.Child("Avatar")})
-	// With the Node console behind this one, both write branding_config:
-	// every read goes to the database (branding.Options.ReadThrough).
+	// The branding's cache is the one copy of the settings: every write
+	// goes through this service. Font downloads go through its outbound
+	// guard.
 	s.deps.Branding, err = branding.New(branding.Options{
 		DB: opts.Store, UploadsDir: cfg.UploadsDir, FontsDir: cfg.FontsDir, FontCacheFile: cfg.FontCacheFile,
 		TempDir: cfg.TempDir, ThemesDir: cfg.ThemesDir, PalettesFile: cfg.PalettesFile, FaviconFile: cfg.FaviconFile,
-		SupportersFile: cfg.SupportersFile, ReadThrough: cfg.NodeUpstream != nil,
+		SupportersFile: cfg.SupportersFile,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("branding: %w", err)

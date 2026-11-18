@@ -201,6 +201,66 @@ func encodeURIComponent(s string) string {
 	return b.String()
 }
 
+// DecodeURIComponent is the global function of that name: %XX escapes are
+// decoded, and a % without two hex digits after it, or escaped bytes that
+// are not one well-formed UTF-8 character, fail with the URIError "URI
+// malformed".
+func DecodeURIComponent(s string) (string, error) {
+	malformed := &Error{Name: "URIError", Message: "URI malformed"}
+	escaped := func(i int) (byte, bool) {
+		if i+2 >= len(s) || s[i] != '%' || !isHex(s[i+1]) || !isHex(s[i+2]) {
+			return 0, false
+		}
+		v, _ := strconv.ParseUint(s[i+1:i+3], 16, 8)
+		return byte(v), true
+	}
+	var b strings.Builder
+	for i := 0; i < len(s); i++ {
+		if s[i] != '%' {
+			b.WriteByte(s[i])
+			continue
+		}
+		first, ok := escaped(i)
+		if !ok {
+			return "", malformed
+		}
+		i += 2
+		size := 1
+		switch {
+		case first < 0x80:
+		case first&0xE0 == 0xC0:
+			size = 2
+		case first&0xF0 == 0xE0:
+			size = 3
+		case first&0xF8 == 0xF0:
+			size = 4
+		default:
+			return "", malformed
+		}
+		seq := []byte{first}
+		for len(seq) < size {
+			if i+1 >= len(s) {
+				return "", malformed
+			}
+			next, ok := escaped(i + 1)
+			if !ok || next&0xC0 != 0x80 {
+				return "", malformed
+			}
+			seq = append(seq, next)
+			i += 3
+		}
+		if size > 1 && !utf8.Valid(seq) {
+			return "", malformed
+		}
+		b.Write(seq)
+	}
+	return b.String(), nil
+}
+
+func isHex(c byte) bool {
+	return c >= '0' && c <= '9' || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F'
+}
+
 // posixBasename is path.basename on POSIX: the last part of a path, without
 // trailing slashes.
 func posixBasename(p string) string {

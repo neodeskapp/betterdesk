@@ -1,11 +1,9 @@
 /**
- * BetterDesk Console - Branding CSS & Profiles Tests
+ * BetterDesk Console - Branding service tests: stylesheet, public appearance, favicon and logo
  */
 
-const request = require('supertest');
 const fs = require('fs');
 const path = require('path');
-const { createTestApp } = require('./helpers');
 
 const mockBranding = {
     appName: 'TestDesk',
@@ -39,10 +37,6 @@ jest.mock('../services/database', () => ({
     deleteBrandingProfile: jest.fn().mockResolvedValue(undefined)
 }));
 
-jest.mock('../middleware/rateLimiter', () => ({
-    apiLimiter: (_req, _res, next) => next()
-}));
-
 jest.mock('../services/fontService', () => ({
     searchFonts: jest.fn(() => []),
     searchGoogleFonts: jest.fn(() => []),
@@ -56,104 +50,6 @@ jest.mock('../services/fontService', () => ({
 
 const brandingService = require('../services/brandingService');
 const database = require('../services/database');
-const config = require('../config/config');
-const settingsRoutes = require('../routes/settings.routes');
-
-describe('Branding routes', () => {
-    let app;
-
-    beforeAll(async () => {
-        brandingService.invalidateCache();
-        await brandingService.loadBranding();
-    });
-
-    beforeEach(() => {
-        app = createTestApp();
-        app.use((req, _res, next) => {
-            req.session.userId = 1;
-            req.session.user = { id: 1, username: 'admin', role: 'admin' };
-            next();
-        });
-        app.use('/', settingsRoutes);
-        jest.clearAllMocks();
-    });
-
-    describe('POST /api/settings/branding/profiles/:id/duplicate', () => {
-        it('returns a new profile id and copies the saved profile data', async () => {
-            const res = await request(app)
-                .post('/api/settings/branding/profiles/1/duplicate')
-                .send({});
-
-            expect(res.status).toBe(200);
-            expect(res.body).toEqual({ success: true, data: { id: 2 } });
-            expect(database.createBrandingProfile).toHaveBeenCalledWith(
-                'Default (copy)',
-                '',
-                expect.objectContaining({
-                    type: 'betterdesk-theme',
-                    branding: mockBranding
-                })
-            );
-        });
-
-        it('suffixes the duplicate name when the default copy already exists', async () => {
-            database.listBrandingProfiles.mockResolvedValueOnce([
-                { id: 1, name: 'Default', is_active: 1 },
-                { id: 2, name: 'Default (copy)', is_active: 0 }
-            ]);
-
-            const res = await request(app)
-                .post('/api/settings/branding/profiles/1/duplicate')
-                .send({});
-
-            expect(res.status).toBe(200);
-            expect(database.createBrandingProfile).toHaveBeenCalledWith(
-                'Default (copy) 2',
-                '',
-                expect.any(Object)
-            );
-        });
-    });
-
-    describe('POST /api/settings/branding/upload-background', () => {
-        it('accepts a multipart background image upload', async () => {
-            const res = await request(app)
-                .post('/api/settings/branding/upload-background')
-                .attach('background', Buffer.from('not-a-real-png-but-valid-route-test'), {
-                    filename: 'wallpaper.png',
-                    contentType: 'image/png'
-                });
-
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(res.body.url).toMatch(/^\/uploads\/bg-[0-9a-f]{16}\.png$/);
-
-            const uploaded = path.join(config.dataDir, 'uploads', path.basename(res.body.url));
-            if (fs.existsSync(uploaded)) fs.unlinkSync(uploaded);
-        });
-
-        it('applies uploaded console background atomically when target is provided', async () => {
-            const res = await request(app)
-                .post('/api/settings/branding/upload-background')
-                .field('target', 'bgImageUrl')
-                .attach('background', Buffer.from('new-wallpaper-content'), {
-                    filename: 'new-wallpaper.png',
-                    contentType: 'image/png'
-                });
-
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(res.body.applied).toBe(true);
-            expect(database.saveBrandingConfigBatch).toHaveBeenCalledWith(expect.arrayContaining([
-                expect.objectContaining({ key: 'bgImageUrl', value: res.body.url }),
-                expect.objectContaining({ key: 'bgType', value: 'image' })
-            ]));
-
-            const uploaded = path.join(config.dataDir, 'uploads', path.basename(res.body.url));
-            if (fs.existsSync(uploaded)) fs.unlinkSync(uploaded);
-        });
-    });
-});
 
 describe('brandingService.generateThemeCss', () => {
     it('returns a CSS string', () => {

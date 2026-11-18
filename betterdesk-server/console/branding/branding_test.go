@@ -794,7 +794,10 @@ func TestExportAndImport(t *testing.T) {
 		if err := s.SaveBranding(ctx, object("appName", "Exported", "themeMode", "custom", "colors", object("bgPrimary", "#010203"), "bgType", "color", "bgColor", "#040506", "customCss", ".a{}")); err != nil {
 			t.Fatal(err)
 		}
-		preset := s.ExportPreset()
+		preset, err := s.ExportPreset()
+		if err != nil {
+			t.Fatal(err)
+		}
 		if got := keyList(preset); got != `["version","type","appearance","branding"]` || preset.Text("version") != "2.0" || preset.Text("type") != "betterdesk-theme" {
 			t.Errorf("export: keys %s", got)
 		}
@@ -839,7 +842,7 @@ func TestExportAndImport(t *testing.T) {
 				t.Errorf("ImportPreset(%s) = %v, %v; want false", Stringify(bad), ok, err)
 			}
 		}
-		_, err := s.ImportPreset(ctx, mustParse(t, `{"type":"betterdesk-theme","branding":{"colors":"red"}}`))
+		_, err = s.ImportPreset(ctx, mustParse(t, `{"type":"betterdesk-theme","branding":{"colors":"red"}}`))
 		if Message(err) != "Cannot use 'in' operator to search for 'bgPrimary' in red" {
 			t.Errorf("import with colours that are text: %v", err)
 		}
@@ -1468,7 +1471,11 @@ func TestConcurrentUse(t *testing.T) {
 					if _, err := s.GetPublicAppearance(); err != nil {
 						t.Error(err)
 					}
-					_ = Stringify(s.ExportPreset())
+					if preset, err := s.ExportPreset(); err != nil {
+						t.Error(err)
+					} else {
+						_ = Stringify(preset)
+					}
 					_ = s.Revision()
 					_ = s.LoadSupporters()
 				}

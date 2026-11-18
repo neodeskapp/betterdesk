@@ -17,8 +17,9 @@ import (
 // runs on two fresh installs, one restored by Node and one by Go, and the
 // tables it touches must end up the same.
 
-// withServices gives the service of an install the branding and group
-// services of the console.
+// fullService gives the service of an install the branding and group
+// services of the console. The branding is loaded from the install's
+// database as the console loads it at start.
 func (in *install) fullService(t *testing.T) *Service {
 	t.Helper()
 	b, err := branding.New(branding.Options{
@@ -27,11 +28,11 @@ func (in *install) fullService(t *testing.T) *Service {
 		PalettesFile: filepath.Join(webNodeJS, "config", "theme-palettes.json"),
 		FaviconFile:  filepath.Join(webNodeJS, "public", "favicon.svg"),
 		ThemesDir:    filepath.Join(webNodeJS, "themes"),
-		ReadThrough:  true,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
+	b.LoadBranding(context.Background())
 	s := in.service(t, "0.0.0")
 	s.o.Branding = b
 	s.o.Groups = devicegroups.New(devicegroups.Options{DB: in.db})

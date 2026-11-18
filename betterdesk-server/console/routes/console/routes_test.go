@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/console/branding"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
@@ -303,21 +304,30 @@ func keyOrder(t *testing.T, body string) string {
 	return strings.Join(keys, ",")
 }
 
-// With the Node console behind this one, a setting saved behind the Go
-// console's back shows in the next answer; without it the cache keeps
-// what it loaded, as the Node console did.
-func TestBrandingSavedElsewhere(t *testing.T) {
+// The boot script and the bootstrap read the branding service's cache,
+// with or without the Node console behind this one: a save through the
+// service shows in the next answer, a row written past it only after the
+// next load, as in the Node console.
+func TestBrandingSavedShowsAtOnce(t *testing.T) {
 	for _, nodeBehind := range []bool{true, false} {
 		storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 			w := world(t, db, nodeBehind)
-			w.Server.Deps().Branding.LoadBranding(context.Background())
+			ctx := context.Background()
+			w.Server.Deps().Branding.LoadBranding(ctx)
 			viewer := w.As("viewer")
+			appName := func() any {
+				return decode(t, viewer.Do("GET", "/api/console/bootstrap", "").Body)["branding"].(map[string]any)["appName"]
+			}
 			before := bootRevision(t, viewer.Do("GET", "/console-boot.js", "").Body)
-			exec(t, db, "INSERT INTO branding_config (key, value, updated_at) VALUES ('appName', 'Saved by Node', '2026-01-02 03:04:05')")
-			name := decode(t, viewer.Do("GET", "/api/console/bootstrap", "").Body)["branding"].(map[string]any)["appName"]
-			after := bootRevision(t, viewer.Do("GET", "/console-boot.js", "").Body)
-			if (name == "Saved by Node") != nodeBehind || (after != before) != nodeBehind {
-				t.Errorf("Node behind %v: appName %v, revision %q before and %q after the save", nodeBehind, name, before, after)
+			exec(t, db, "INSERT INTO branding_config (key, value, updated_at) VALUES ('appName', 'Written past it', '2026-01-02 03:04:05')")
+			if name, after := appName(), bootRevision(t, viewer.Do("GET", "/console-boot.js", "").Body); name != "BetterDesk" || after != before {
+				t.Errorf("Node behind %v: a row written past the service shows: appName %v, revision %q before and %q after", nodeBehind, name, before, after)
+			}
+			if err := w.Server.Deps().Branding.SaveBranding(ctx, branding.NewObject()); err != nil {
+				t.Fatal(err)
+			}
+			if name, after := appName(), bootRevision(t, viewer.Do("GET", "/console-boot.js", "").Body); name != "Written past it" || after == before {
+				t.Errorf("Node behind %v: after a save: appName %v, revision %q before and %q after", nodeBehind, name, before, after)
 			}
 		})
 	}

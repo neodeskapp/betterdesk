@@ -6,7 +6,6 @@
 const express = require('express');
 const router = express.Router();
 
-const settingsRoutes = require('./settings.routes');
 const remoteRoutes = require('./remote.routes');
 
 /**
@@ -31,8 +30,6 @@ const { requireJsonContentType } = require('../lib/requireJsonContentType');
 router.use(requireJsonContentType);
 
 // Mount routes
-router.use('/', settingsRoutes);
-router.use('/', require('./client-branding.routes'));
 router.use('/', remoteRoutes);
 router.use('/', serverManagementRoutes);                 // admin-facing: /server-management, /api/server-management/* (BETA)
 

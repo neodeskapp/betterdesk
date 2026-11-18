@@ -34,7 +34,7 @@ func (s *Service) CreateProfile(ctx context.Context, name, description string, b
 	}
 	preset := brandingData
 	if !Truthy(brandingData) || property(brandingData, "type") != "betterdesk-theme" {
-		preset = s.ExportPreset()
+		preset = s.exportPreset()
 	}
 	id, err = createBrandingProfile(ctx, s.opts.DB, trimmed, substring(description, 200), profileData(preset))
 	return id, wrap("create the branding profile", err)
@@ -177,7 +177,7 @@ func (s *Service) DuplicateProfile(ctx context.Context, id int64, newName any) (
 	}
 	data, err := parseJSON(profile.Data)
 	if err != nil {
-		data = s.ExportPreset()
+		data = s.exportPreset()
 	}
 	newID, err = createBrandingProfile(ctx, s.opts.DB, name, profile.Description.String, profileData(data))
 	return newID, wrap("create the branding profile", err)

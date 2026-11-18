@@ -243,7 +243,7 @@ func TestOracleStore(t *testing.T) {
 				text(model, modelErr),
 				text(readability, readErr),
 				text(s.GetPublicAppearance()),
-				text(s.ExportPreset(), nil),
+				text(s.ExportPreset()),
 				text(favicon, nil),
 			}, "\n")
 			switch recorded := property(state, "derived").(type) {

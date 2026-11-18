@@ -213,7 +213,7 @@ func (s *Service) ApplyBackground(ctx context.Context, target, url string) (bran
 // name that does not end in .ttf is stored as .woff2.
 func (s *Service) UploadFont(family any, originalName string, content []byte) (font *Object, err error) {
 	defer catch(&err)
-	name := trim(toString(or(family, basenameWithout(originalName, posixExtname(originalName)))))
+	name := fontUploadFamily(family, originalName)
 	ext := ".woff2"
 	if toLower(posixExtname(originalName)) == ".ttf" {
 		ext = ".ttf"
@@ -228,4 +228,17 @@ func (s *Service) UploadFont(family any, originalName string, content []byte) (f
 		return nil, err
 	}
 	return s.RegisterUploadedFont(name, tmpPath, posixBasename(filepath.ToSlash(tmpPath)))
+}
+
+// FontUploadFamily is the name UploadFont gives a font: the family the
+// form sent, or the file name without its extension when that is empty
+// in JavaScript's eyes, as text and trimmed. It fails where the family
+// cannot be made text.
+func FontUploadFamily(family any, originalName string) (name string, err error) {
+	defer catch(&err)
+	return fontUploadFamily(family, originalName), nil
+}
+
+func fontUploadFamily(family any, originalName string) string {
+	return trim(toString(or(family, basenameWithout(originalName, posixExtname(originalName)))))
 }

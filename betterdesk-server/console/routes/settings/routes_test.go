@@ -17,13 +17,41 @@ import (
 
 var fixtures = filepath.Join("..", "..", "branding", "testdata", "console")
 
+// world is a console with the branding files of the fixtures. The themes
+// are copied into a folder of the test, which a test may add to; fonts and
+// the temporary folder of font uploads are folders of the test too.
 func world(t *testing.T, db *store.DB) *routetest.World {
 	t.Helper()
-	return routetest.New(t, routetest.Options{DB: db, Config: func(cfg *config.Config) {
+	return worldWith(t, db, nil)
+}
+
+// worldWith is world with more environment variables.
+func worldWith(t *testing.T, db *store.DB, env map[string]string) *routetest.World {
+	t.Helper()
+	themes := filepath.Join(t.TempDir(), "themes")
+	if err := os.MkdirAll(themes, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	list, err := os.ReadDir(filepath.Join(fixtures, "themes"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, entry := range list {
+		raw, err := os.ReadFile(filepath.Join(fixtures, "themes", entry.Name()))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(themes, entry.Name()), raw, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	scratch := t.TempDir()
+	return routetest.New(t, routetest.Options{DB: db, Env: env, Config: func(cfg *config.Config) {
 		cfg.PalettesFile = filepath.Join(fixtures, "config", "theme-palettes.json")
 		cfg.FaviconFile = filepath.Join(fixtures, "public", "favicon.svg")
-		cfg.ThemesDir = filepath.Join(fixtures, "themes")
-		cfg.FontsDir = filepath.Join(t.TempDir(), "fonts")
+		cfg.ThemesDir = themes
+		cfg.FontsDir = filepath.Join(scratch, "fonts")
+		cfg.TempDir = filepath.Join(scratch, "tmp")
 	}})
 }
 

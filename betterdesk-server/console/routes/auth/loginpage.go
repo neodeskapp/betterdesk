@@ -41,7 +41,6 @@ type loginPageAnswer struct {
 func (h *handlers) loginPage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	s := h.d.Branding
-	s.Refresh(ctx)
 	badge := attestation.SignInBadge(ctx, attestation.StoreSettings(h.d.Store), s.GetBranding().Text("appName"), func(key string) string { return kit.T(r, key, nil) })
 	languages, err := languageList(h.d.I18n.Bundle)
 	if err != nil {

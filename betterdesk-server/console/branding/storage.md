@@ -54,16 +54,15 @@ The Go console keeps both as they are. Nothing in this package touches
 the next load. It runs at start and at the end of every `SaveBranding`
 and `ResetBranding`. `GetBranding` never reads the database.
 
-With `Options.ReadThrough` (set while the Node console runs behind the Go
-one) `Refresh` loads again before every read of a route: two queries per
-request. A load that finds no stored time keeps the revision of the load
-before when that one found none either, so the revision of an empty table
-stays the same from request to request.
+The cache is the one copy every route reads; every write of the
+settings goes through this service and reloads it. Rows written into
+`branding_config` past the service show at the next write or start. The
+restore of a full backup is such a writer (BUGS BR14), as it was in Node.
 
-The Node console keeps its own cache and loads only at its start and
-after its own saves: what the Go console saves reaches it only after a
-restart. That is why the routes that save move last, once no route that
-reads the settings is left in Node.
+While the Node console still runs behind the Go one, it keeps its own
+cache, filled once at its start. The routes it still answers that read
+the branding (`GET /api/remote/login-info`, `guest-info`) show the
+settings of that moment until the remote routes move (BUGS BR17).
 
 The revision is:
 

@@ -3,27 +3,28 @@
 // availability history, the audit log, enrollment, the directory and
 // single sign-on settings, client sessions, the configuration file
 // editor, the connection mode, the public endpoints, the SMTP settings,
-// and the routes that only read the branding (the settings and the
-// appearance model, the profiles, the uploaded backgrounds, the built-in
-// themes and the fonts for anyone signed in, and the stylesheet and
-// favicon for everyone). The branding writes, backup and restore, updates
-// and server management are still answered by the Node console.
+// and the console's branding: the settings and the appearance model, the
+// profiles, the uploaded backgrounds, the built-in themes and the fonts
+// for anyone signed in, the stylesheet and favicon for everyone, and
+// saving, importing, uploading and the font downloads for branding.edit.
+// Backup and restore are in routes/settingsbackup, updates and the
+// management settings in routes/settingsupdates.
+//
+// The branding handlers use d.Branding at every request.
 package settings
 
 import (
-	"github.com/unitronix/betterdesk-server/console/branding"
 	"github.com/unitronix/betterdesk-server/console/kit"
 )
 
 type handlers struct {
-	d        *kit.Deps
-	log      *kit.Logger
-	branding *branding.Service
+	d   *kit.Deps
+	log *kit.Logger
 }
 
 // Register adds the group's routes, in the order of the Node file.
 func Register(d *kit.Deps) {
-	h := &handlers{d: d, log: d.Log.Child("SETTINGS"), branding: d.Branding}
+	h := &handlers{d: d, log: d.Log.Child("SETTINGS")}
 	g := newGeneral(d, h.log)
 	r := d.Router
 	server := d.RequirePermission("server.config")
@@ -39,13 +40,29 @@ func Register(d *kit.Deps) {
 	r.Get("/api/settings/availability-history", g.getAvailabilityHistory, d.RequireAuth, server)
 	r.Post("/api/settings/availability-history", g.setAvailabilityHistory, d.RequireAuth, server)
 	r.Get("/api/settings/audit", g.audit, d.RequireAuth, d.RequirePermission("audit.view"))
+	edit := d.RequirePermission("branding.edit")
 	r.Get("/api/settings/branding", h.getBranding, d.RequireAuth)
 	r.Get("/api/settings/appearance", h.getAppearance, d.RequireAuth)
+	r.Post("/api/settings/branding", h.saveBranding, d.RequireAuth, edit)
+	r.Post("/api/settings/branding/upload-logo", h.uploadLogo, d.RequireAuth, edit)
 	r.Get("/api/settings/branding/backgrounds", h.listBackgrounds, d.RequireAuth)
+	r.Post("/api/settings/branding/upload-background", h.uploadBackground, d.RequireAuth, edit)
+	r.Post("/api/settings/branding/reset", h.resetBranding, d.RequireAuth, edit)
+	r.Get("/api/settings/branding/export", h.exportBranding, d.RequireAuth, edit)
+	r.Post("/api/settings/branding/import", h.importBranding, d.RequireAuth, edit)
 	r.Get("/api/settings/branding/profiles", h.listProfiles, d.RequireAuth)
+	r.Post("/api/settings/branding/profiles", h.createProfile, d.RequireAuth, edit)
+	r.Put("/api/settings/branding/profiles/{id}", h.updateProfile, d.RequireAuth, edit)
+	r.Post("/api/settings/branding/profiles/{id}/apply", h.applyProfile, d.RequireAuth, edit)
+	r.Post("/api/settings/branding/profiles/{id}/duplicate", h.duplicateProfile, d.RequireAuth, edit)
+	r.Delete("/api/settings/branding/profiles/{id}", h.deleteProfile, d.RequireAuth, edit)
 	r.Get("/api/settings/themes", h.listThemes, d.RequireAuth)
+	r.Post("/api/settings/themes/{id}/apply", h.applyTheme, d.RequireAuth, edit)
 	r.Get("/api/settings/fonts", h.searchFonts, d.RequireAuth)
 	r.Get("/api/settings/fonts/local", h.localFonts, d.RequireAuth)
+	r.Post("/api/settings/fonts/download", h.downloadFont, d.RequireAuth, edit)
+	r.Delete("/api/settings/fonts/{family}", h.deleteFont, d.RequireAuth, edit)
+	r.Post("/api/settings/fonts/upload", h.uploadFont, d.RequireAuth, edit)
 	r.Get("/css/branding.css", h.brandingCSS)
 	r.Get("/css/theme.css", h.themeCSS)
 	r.Get("/branding/favicon.svg", h.favicon)

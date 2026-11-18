@@ -11,10 +11,9 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// The console loads the stored branding at start, before it listens, and
-// reads it from the database at every route read while the Node console
-// runs behind it. A palettes file that cannot be read stops the start, as
-// it stopped the Node console.
+// The console loads the stored branding at start, before it listens,
+// with or without the Node console behind it. A palettes file that cannot
+// be read stops the start, as it stopped the Node console.
 func TestBrandingAtStart(t *testing.T) {
 	for _, nodeBehind := range []bool{false, true} {
 		db := storetest.Migrated(t)

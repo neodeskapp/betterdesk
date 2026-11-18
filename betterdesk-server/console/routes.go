@@ -10,6 +10,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/cdap"
 	"github.com/unitronix/betterdesk-server/console/routes/cdapstudio"
 	"github.com/unitronix/betterdesk-server/console/routes/chat"
+	"github.com/unitronix/betterdesk-server/console/routes/clientbranding"
 	"github.com/unitronix/betterdesk-server/console/routes/commercialization"
 	consoleroutes "github.com/unitronix/betterdesk-server/console/routes/console"
 	"github.com/unitronix/betterdesk-server/console/routes/crossplatform"
@@ -85,18 +86,19 @@ func registerRoutes(d *kit.Deps) {
 	dashboard.Register(d)           // routes/dashboard.routes.js
 	devices.Register(d)             // routes/devices.routes.js, without the routes that reach into an agent (bdRelay)
 	keys.Register(d)                // routes/keys.routes.js
-	settings.Register(d)            // routes/settings.routes.js: the general settings and the branding reads
+	settings.Register(d)            // routes/settings.routes.js: the general settings and the branding
 	settingsbackup.Register(d)      // routes/settings.routes.js: backup, restore and the scheduled backups
 	// routes/settings.routes.js: the update and management routes
 	settingsupdates.Register(d)
-	generator.Register(d)   // routes/generator.routes.js
-	avatars.Register(d)     // routes/avatars.routes.js
-	users.Register(d)       // routes/users.routes.js
-	panelaccess.Register(d) // routes/panel-access.routes.js
-	uishell.Register(d)     // routes/ui-shell.routes.js
-	folders.Register(d)     // routes/folders.routes.js
-	guest.Register(d)       // routes/guest.routes.js
-	i18nroutes.Register(d)  // routes/i18n.routes.js at /api/i18n
+	generator.Register(d)      // routes/generator.routes.js
+	clientbranding.Register(d) // routes/client-branding.routes.js
+	avatars.Register(d)        // routes/avatars.routes.js
+	users.Register(d)          // routes/users.routes.js
+	panelaccess.Register(d)    // routes/panel-access.routes.js
+	uishell.Register(d)        // routes/ui-shell.routes.js
+	folders.Register(d)        // routes/folders.routes.js
+	guest.Register(d)          // routes/guest.routes.js
+	i18nroutes.Register(d)     // routes/i18n.routes.js at /api/i18n
 	// routes/dataguard.routes.js at /api/dataguard and at /api/bd
 	// routes/inventory.routes.js at /api/bd (the device routes inventory, telemetry and inventory/:id; the read routes step aside there) and at /api/inventory
 	inventory.Register(d.At("/api/bd"))

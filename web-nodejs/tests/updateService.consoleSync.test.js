@@ -53,12 +53,12 @@ describe('updateService console sync helpers', () => {
         expect(required.has('routes/index.js')).toBe(true);
     });
 
-    test('collects fontService from a changed settings.routes', () => {
+    test('collects fontService from a changed brandingService', () => {
         const graph = createConsoleDeployGraph(require('path').join(__dirname, '..'));
         const required = graph.collectConsoleRequiredFiles([
-            { localPath: 'routes/settings.routes.js' },
+            { localPath: 'services/brandingService.js' },
         ]);
-        expect(required.has('routes/settings.routes.js')).toBe(true);
+        expect(required.has('services/brandingService.js')).toBe(true);
         expect(required.has('services/fontService.js')).toBe(true);
     });
 

@@ -25,7 +25,6 @@ func (s *Service) CreateBackup(ctx context.Context) (*goapi.Object, error) {
 	}
 	var brand any = branding.NewObject()
 	if s.o.Branding != nil {
-		s.o.Branding.Refresh(ctx)
 		brand = s.o.Branding.GetBranding()
 	}
 	users, err := usersForBackup(ctx, db)

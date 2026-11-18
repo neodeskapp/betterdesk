@@ -157,14 +157,11 @@ func (h *handlers) page(w http.ResponseWriter, r *http.Request) {
 	))
 }
 
-// currentBranding is the console's appearance settings. While a Node
-// console behind this one saves them, Refresh reads them from the
-// database first (branding.Options.ReadThrough).
+// currentBranding is the console's appearance settings as last saved.
 func (h *handlers) currentBranding(r *http.Request) *branding.Object {
 	if h.branding == nil {
 		return branding.DefaultBranding()
 	}
-	h.branding.Refresh(r.Context())
 	return h.branding.GetBranding()
 }
 

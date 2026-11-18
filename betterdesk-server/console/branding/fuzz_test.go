@@ -338,7 +338,7 @@ func FuzzBrandingSettings(f *testing.F) {
 			"GetAppearanceModel":          func() (any, error) { return s.GetAppearanceModel(nil) },
 			"AssessAppearanceReadability": func() (any, error) { return s.AssessAppearanceReadability(nil) },
 			"GetPublicAppearance":         func() (any, error) { return s.GetPublicAppearance() },
-			"ExportPreset":                func() (any, error) { return s.ExportPreset(), nil },
+			"ExportPreset":                func() (any, error) { return s.ExportPreset() },
 			"GetBranding":                 func() (any, error) { return branding, nil },
 		} {
 			value, err := call()

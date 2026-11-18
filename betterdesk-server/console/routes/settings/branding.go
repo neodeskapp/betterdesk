@@ -39,12 +39,11 @@ func (h *handlers) serverError(w http.ResponseWriter, r *http.Request, what stri
 
 // model returns the settings with their appearance model and readability.
 func (h *handlers) model(r *http.Request) (flat, model, readability *branding.Object, err error) {
-	h.branding.Refresh(r.Context())
-	flat = h.branding.GetBranding()
-	if model, err = h.branding.GetAppearanceModel(flat); err != nil {
+	flat = h.d.Branding.GetBranding()
+	if model, err = h.d.Branding.GetAppearanceModel(flat); err != nil {
 		return nil, nil, nil, err
 	}
-	if readability, err = h.branding.AssessAppearanceReadability(flat); err != nil {
+	if readability, err = h.d.Branding.AssessAppearanceReadability(flat); err != nil {
 		return nil, nil, nil, err
 	}
 	return flat, model, readability, nil
@@ -57,7 +56,7 @@ func (h *handlers) getBranding(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Get branding", err)
 		return
 	}
-	kit.JSON(w, r, http.StatusOK, brandingAnswer{Success: true, Data: flat, Appearance: model, Readability: readability, Revision: h.branding.Revision()})
+	kit.JSON(w, r, http.StatusOK, brandingAnswer{Success: true, Data: flat, Appearance: model, Readability: readability, Revision: h.d.Branding.Revision()})
 }
 
 // getAppearance answers GET /api/settings/appearance, the versioned
@@ -68,13 +67,13 @@ func (h *handlers) getAppearance(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Get appearance", err)
 		return
 	}
-	kit.JSON(w, r, http.StatusOK, appearanceAnswer{Success: true, Data: model, Flat: flat, Readability: readability, Revision: h.branding.Revision()})
+	kit.JSON(w, r, http.StatusOK, appearanceAnswer{Success: true, Data: model, Flat: flat, Readability: readability, Revision: h.d.Branding.Revision()})
 }
 
 // listBackgrounds answers GET /api/settings/branding/backgrounds: the
 // uploaded background pictures, newest first.
 func (h *handlers) listBackgrounds(w http.ResponseWriter, r *http.Request) {
-	list, err := h.branding.ListBackgrounds()
+	list, err := h.d.Branding.ListBackgrounds()
 	if err != nil {
 		h.serverError(w, r, "List branding backgrounds", err)
 		return
@@ -85,7 +84,7 @@ func (h *handlers) listBackgrounds(w http.ResponseWriter, r *http.Request) {
 // listProfiles answers GET /api/settings/branding/profiles: the saved
 // appearance profiles by name, without their settings.
 func (h *handlers) listProfiles(w http.ResponseWriter, r *http.Request) {
-	profiles, err := h.branding.ListProfiles(r.Context())
+	profiles, err := h.d.Branding.ListProfiles(r.Context())
 	if err != nil {
 		h.serverError(w, r, "List branding profiles", err)
 		return
@@ -95,7 +94,7 @@ func (h *handlers) listProfiles(w http.ResponseWriter, r *http.Request) {
 
 // listThemes answers GET /api/settings/themes: the built-in theme presets.
 func (h *handlers) listThemes(w http.ResponseWriter, r *http.Request) {
-	themes, err := h.branding.ListThemes()
+	themes, err := h.d.Branding.ListThemes()
 	if err != nil {
 		h.log.Error("List themes error:", err)
 		kit.Fail(w, r, http.StatusInternalServerError, "Failed to list themes")
@@ -116,9 +115,9 @@ func (h *handlers) searchFonts(w http.ResponseWriter, r *http.Request) {
 	err := firstError(err1, err2, err3)
 	if err == nil {
 		if source == "google" {
-			fonts, err = h.branding.SearchGoogleFonts(query, category)
+			fonts, err = h.d.Branding.SearchGoogleFonts(query, category)
 		} else {
-			fonts, err = h.branding.SearchFonts(query, category)
+			fonts, err = h.d.Branding.SearchFonts(query, category)
 		}
 	}
 	if err != nil {
@@ -155,7 +154,7 @@ func firstError(errs ...error) error {
 // localFonts answers GET /api/settings/fonts/local: the fonts installed on
 // this server.
 func (h *handlers) localFonts(w http.ResponseWriter, r *http.Request) {
-	fonts, err := h.branding.ListLocalFonts()
+	fonts, err := h.d.Branding.ListLocalFonts()
 	if err != nil {
 		h.log.Error("List local fonts error:", err)
 		kit.Fail(w, r, http.StatusInternalServerError, "Failed to list fonts")
@@ -169,23 +168,21 @@ func (h *handlers) localFonts(w http.ResponseWriter, r *http.Request) {
 // the settings it was made from. When it cannot be made the answer is
 // still 200, with a comment as the body.
 func (h *handlers) brandingCSS(w http.ResponseWriter, r *http.Request) {
-	h.branding.Refresh(r.Context())
-	css, err := h.branding.GenerateThemeCSS()
+	css, err := h.d.Branding.GenerateThemeCSS()
 	w.Header().Set("Content-Type", "text/css; charset=utf-8")
 	if err != nil {
 		httpx.WriteBody(w, r, http.StatusOK, "", []byte("/* branding error */"))
 		return
 	}
 	w.Header().Set("Cache-Control", "public, max-age=60")
-	w.Header().Set("X-Branding-Revision", h.branding.Revision())
+	w.Header().Set("X-Branding-Revision", h.d.Branding.Revision())
 	httpx.WriteBody(w, r, http.StatusOK, "", []byte(css))
 }
 
 // themeCSS answers GET /css/theme.css, the older address of the same
 // stylesheet, without the revision.
 func (h *handlers) themeCSS(w http.ResponseWriter, r *http.Request) {
-	h.branding.Refresh(r.Context())
-	css, err := h.branding.GenerateThemeCSS()
+	css, err := h.d.Branding.GenerateThemeCSS()
 	w.Header().Set("Content-Type", "text/css; charset=utf-8")
 	if err != nil {
 		httpx.WriteBody(w, r, http.StatusOK, "", []byte("/* theme error */"))
@@ -198,7 +195,6 @@ func (h *handlers) themeCSS(w http.ResponseWriter, r *http.Request) {
 // favicon answers GET /branding/favicon.svg: the administrator's own
 // favicon, else the BetterDesk mark, cached for five minutes.
 func (h *handlers) favicon(w http.ResponseWriter, r *http.Request) {
-	h.branding.Refresh(r.Context())
 	w.Header().Set("Cache-Control", "public, max-age=300")
-	httpx.WriteBody(w, r, http.StatusOK, "image/svg+xml; charset=utf-8", []byte(h.branding.GenerateFavicon()))
+	httpx.WriteBody(w, r, http.StatusOK, "image/svg+xml; charset=utf-8", []byte(h.d.Branding.GenerateFavicon()))
 }

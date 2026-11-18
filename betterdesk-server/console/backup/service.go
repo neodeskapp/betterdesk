@@ -31,7 +31,6 @@ const DefaultMaxArchiveBytes = min(2<<30, math.MaxInt)
 
 // Branding is the part of the branding service a backup reads and writes.
 type Branding interface {
-	Refresh(ctx context.Context)
 	GetBranding() *branding.Object
 	SaveBranding(ctx context.Context, updates any) error
 }

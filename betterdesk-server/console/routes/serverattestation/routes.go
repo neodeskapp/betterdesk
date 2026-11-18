@@ -50,7 +50,6 @@ func RegisterWith(d *kit.Deps, svc *attestation.Service) {
 			return func(key string) string { return kit.T(r, key, nil) }
 		},
 		brand: func(r *http.Request) any {
-			d.Branding.Refresh(r.Context())
 			return branding.Field(d.Branding.GetBranding(), "appName")
 		},
 		logAction: d.LogAction,
