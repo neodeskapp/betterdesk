@@ -170,6 +170,38 @@ var dispatch = map[string]func(c *Client, ctx context.Context, a []any) any{
 	},
 	"listProDevices": func(c *Client, ctx context.Context, a []any) any { return c.ListProDevices(ctx, arg(a, 0)) },
 
+	"getPanelCatalog":       func(c *Client, ctx context.Context, a []any) any { return c.GetPanelCatalog(ctx) },
+	"listPanelDeviceGroups": func(c *Client, ctx context.Context, a []any) any { return c.ListPanelDeviceGroups(ctx) },
+	"savePanelDeviceGroup":  func(c *Client, ctx context.Context, a []any) any { return c.SavePanelDeviceGroup(ctx, arg(a, 0)) },
+	"deletePanelDeviceGroup": func(c *Client, ctx context.Context, a []any) any {
+		return c.DeletePanelDeviceGroup(ctx, id(a, 0))
+	},
+	"getPanelDeviceGroupPeers": func(c *Client, ctx context.Context, a []any) any {
+		return c.GetPanelDeviceGroupPeers(ctx, id(a, 0))
+	},
+	"setPanelDeviceGroupPeers": func(c *Client, ctx context.Context, a []any) any {
+		return c.SetPanelDeviceGroupPeers(ctx, id(a, 0), arg(a, 1))
+	},
+	"getPanelDeviceGroupAcl": func(c *Client, ctx context.Context, a []any) any {
+		return c.GetPanelDeviceGroupACL(ctx, id(a, 0))
+	},
+	"setPanelDeviceGroupAcl": func(c *Client, ctx context.Context, a []any) any {
+		return c.SetPanelDeviceGroupACL(ctx, id(a, 0), arg(a, 1))
+	},
+	"listPanelFolders":  func(c *Client, ctx context.Context, a []any) any { return c.ListPanelFolders(ctx) },
+	"createPanelFolder": func(c *Client, ctx context.Context, a []any) any { return c.CreatePanelFolder(ctx, arg(a, 0)) },
+	"updatePanelFolder": func(c *Client, ctx context.Context, a []any) any {
+		return c.UpdatePanelFolder(ctx, arg(a, 0), arg(a, 1))
+	},
+	"deletePanelFolder": func(c *Client, ctx context.Context, a []any) any { return c.DeletePanelFolder(ctx, arg(a, 0)) },
+	"setPanelDeviceFolder": func(c *Client, ctx context.Context, a []any) any {
+		return c.SetPanelDeviceFolder(ctx, id(a, 0), arg(a, 1))
+	},
+	"listPanelUserGrants": func(c *Client, ctx context.Context, a []any) any { return c.ListPanelUserGrants(ctx, arg(a, 0)) },
+	"setPanelUserGrants": func(c *Client, ctx context.Context, a []any) any {
+		return c.SetPanelUserGrants(ctx, arg(a, 0), arg(a, 1))
+	},
+
 	"authService.checkGoServerHealth": func(c *Client, ctx context.Context, a []any) any { return c.CheckGoServerHealth(ctx) },
 	"authService.authenticateViaGo": func(c *Client, ctx context.Context, a []any) any {
 		return c.AuthenticateViaGo(ctx, str(a, 0), str(a, 1))
@@ -239,11 +271,15 @@ var exportedFunctions = []string{
 	"getOIDCConfig", "saveOIDCConfig", "testOIDCDiscovery", "getOIDCStatus", "exchangeOIDCCode", "startOIDCAuthorize",
 	"assignStrategy", "getStrategy", "deleteStrategy", "setStrategyStatus", "listProDevices",
 	"listHelpRequests", "acknowledgeHelpRequest", "resolveHelpRequest",
+	"getPanelCatalog", "listPanelDeviceGroups", "savePanelDeviceGroup", "deletePanelDeviceGroup",
+	"getPanelDeviceGroupPeers", "setPanelDeviceGroupPeers", "getPanelDeviceGroupAcl", "setPanelDeviceGroupAcl",
+	"listPanelFolders", "createPanelFolder", "updatePanelFolder", "deletePanelFolder", "setPanelDeviceFolder",
+	"listPanelUserGrants", "setPanelUserGrants",
 }
 
 func TestDispatchCoversEveryExportedFunction(t *testing.T) {
-	if len(exportedFunctions) != 99 {
-		t.Errorf("the list holds %d functions, the Node client exports 99 besides normalisePeer and proxyOIDCCallback", len(exportedFunctions))
+	if len(exportedFunctions) != 114 {
+		t.Errorf("the list holds %d functions, the Node client exports 114 besides normalisePeer and proxyOIDCCallback", len(exportedFunctions))
 	}
 	for _, name := range exportedFunctions {
 		if dispatch[name] == nil {

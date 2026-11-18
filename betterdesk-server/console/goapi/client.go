@@ -216,6 +216,7 @@ type call struct {
 	noRedirects    bool
 	validateStatus func(int) bool
 	outsideAPI     bool
+	identity       *api.Identity
 	err            error
 }
 
@@ -281,6 +282,15 @@ func NoRedirects() CallOption {
 // validateStatus). Without it 200 to 299 are.
 func ValidateStatus(ok func(status int) bool) CallOption {
 	return func(c *call) { c.validateStatus = ok }
+}
+
+// As makes the call as id instead of the console's API key. The device
+// group writes use it while the panel trust bridge is on
+// (PANEL_TRUST_SECRET): the API server then decides with the operator's
+// identity, the one it took from the operator's signed statement when the
+// Node console sent one.
+func As(id api.Identity) CallOption {
+	return func(c *call) { c.identity = &id }
 }
 
 // outsideAPI makes the path absolute on the API server instead of relative
@@ -419,7 +429,7 @@ func (c *Client) send(ctx context.Context, method, target string, cl *call) (*Re
 	body, hasBody := cl.body, cl.hasBody
 	header := cl.header
 	for hop := 0; ; hop++ {
-		resp, err := c.roundTrip(ctx, method, target, header, body, hasBody)
+		resp, err := c.roundTrip(ctx, method, target, header, body, hasBody, cl.identity)
 		if err != nil {
 			return nil, err
 		}
@@ -442,9 +452,14 @@ func (c *Client) send(ctx context.Context, method, target string, cl *call) (*Re
 	}
 }
 
-// roundTrip runs the handler once. The handler runs on its own goroutine,
-// so that a handler that does not return in time cannot hold the caller.
-func (c *Client) roundTrip(ctx context.Context, method, target string, header http.Header, body []byte, hasBody bool) (*Response, error) {
+// roundTrip runs the handler once, as the client's identity or as as when
+// it is set. The handler runs on its own goroutine, so that a handler that
+// does not return in time cannot hold the caller.
+func (c *Client) roundTrip(ctx context.Context, method, target string, header http.Header, body []byte, hasBody bool, as *api.Identity) (*Response, error) {
+	identity := c.identity
+	if as != nil {
+		identity = *as
+	}
 	u, err := url.ParseRequestURI(target)
 	if err != nil {
 		// The listener answers a request line it cannot parse like this.
@@ -465,7 +480,7 @@ func (c *Client) roundTrip(ctx context.Context, method, target string, header ht
 		Host:       c.host,
 		RemoteAddr: c.remoteAddr,
 		RequestURI: target,
-	}).WithContext(api.WithIdentity(ctx, c.identity))
+	}).WithContext(api.WithIdentity(ctx, identity))
 	if hasBody {
 		req.Body = io.NopCloser(bytes.NewReader(body))
 		req.ContentLength = int64(len(body))

@@ -67,6 +67,48 @@ func TestRequestCarriesWhatTheAPIServerSaw(t *testing.T) {
 	}
 }
 
+// TestAsActsAsAnotherIdentityForOneCall checks the As option: the call
+// carries the identity it names, a redirect it follows too, and the calls
+// before and after it carry the console's API key.
+func TestAsActsAsAnotherIdentityForOneCall(t *testing.T) {
+	var seen []api.Identity
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id, _ := api.IdentityFromContext(r.Context())
+		seen = append(seen, id)
+		if r.URL.Path == "/api/old" {
+			http.Redirect(w, r, "/api/new", http.StatusFound)
+			return
+		}
+		io.WriteString(w, `{}`)
+	})
+	c := New(handler)
+	operator := api.Identity{Username: "e2e_operator", Role: "operator"}
+	ctx := context.Background()
+	for _, call := range []func() error{
+		func() error { _, err := c.Get(ctx, "/peers"); return err },
+		func() error {
+			_, err := c.Put(ctx, "/panel/device-groups/g1/peers", Body(map[string]any{}), As(operator))
+			return err
+		},
+		func() error { _, err := c.Get(ctx, "/old", As(operator)); return err },
+		func() error { _, err := c.Get(ctx, "/peers"); return err },
+	} {
+		if err := call(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	bridge := api.Identity{Username: BridgeUsername, Role: BridgeRole}
+	want := []api.Identity{bridge, operator, operator, operator, bridge}
+	if len(seen) != len(want) {
+		t.Fatalf("the handler ran %d times: %+v", len(seen), seen)
+	}
+	for i := range want {
+		if seen[i] != want[i] {
+			t.Errorf("call %d acted as %+v, want %+v", i, seen[i], want[i])
+		}
+	}
+}
+
 func TestClientDefaultsAndOptions(t *testing.T) {
 	var got *http.Request
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { got = r })

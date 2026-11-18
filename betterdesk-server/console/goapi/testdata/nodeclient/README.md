@@ -30,5 +30,10 @@ Run it in the dev image, from the repository root:
 
     bash betterdesk-server/console/goapi/testdata/nodeclient/run.sh
 
+`GOAPI_NODE_WEB` names another tree's `web-nodejs` to take the Node code
+from, such as the specification tree of an upstream merge mounted into the
+container (`-v <spec tree>/web-nodejs:/spec/web-nodejs -v
+bdgo-node-nm:/spec/web-nodejs/node_modules -e GOAPI_NODE_WEB=/spec/web-nodejs`).
+
 Values that cannot be equal in two runs are masked before the comparison.
 The list is in `nodeclient_test.go` (`maskRules`).

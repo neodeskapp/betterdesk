@@ -107,7 +107,7 @@ func (c methodCase) want(mode string) string {
 		return explicit
 	}
 	switch mode + " " + c.kind {
-	case "ok f1", "ok f2", "ok f3":
+	case "ok f1", "ok f2", "ok f3", "ok f4":
 		return okW
 	case "failed f1":
 		return `{"success":false,"error":"` + notFound + `"}`
@@ -115,7 +115,9 @@ func (c methodCase) want(mode string) string {
 		return `{"success":false,"error":"nope"}`
 	case "failed f3":
 		return `{"success":false,"error":"nope","status":404}`
-	case "down f1", "down f2":
+	case "failed f4":
+		return `{"success":false,"error":"` + notFound + `","status":404}`
+	case "down f1", "down f2", "down f4":
 		return `{"success":false,"error":"` + hangUp + `"}`
 	case "down f3":
 		return `{"success":false,"error":"` + hangUp + `","status":502}`
@@ -303,6 +305,35 @@ var methodCases = []methodCase{
 		failed: fellBack(notFound, `,"data":{"total":0,"data":[]}`), down: fellBack(hangUp, `,"data":{"total":0,"data":[]}`)},
 	{fn: "listProDevices", request: "GET /api/devices", ok: okW,
 		failed: fellBack(notFound, `,"data":{"total":0,"data":[]}`), down: fellBack(hangUp, `,"data":{"total":0,"data":[]}`)},
+	{fn: "getPanelCatalog", request: "GET /api/panel/catalog", kind: "f1"},
+	{fn: "listPanelDeviceGroups", request: "GET /api/panel/device-groups", kind: "f1"},
+	{fn: "savePanelDeviceGroup", args: `[{"name":"G","allowed_users":["u"]}]`, request: "POST /api/panel/device-groups",
+		body: `{"name":"G","allowed_users":["u"]}`, kind: "f4"},
+	{fn: "deletePanelDeviceGroup", args: `["g1"]`, request: "DELETE /api/panel/device-groups/g1", kind: "f4"},
+	{fn: "deletePanelDeviceGroup", args: `[" a:b "]`, request: "DELETE /api/panel/device-groups/a%3Ab", kind: "f4"},
+	{fn: "deletePanelDeviceGroup", args: `["g 1"]`, ok: fellBack("Invalid guid", ""), failed: fellBack("Invalid guid", ""), down: fellBack("Invalid guid", "")},
+	{fn: "getPanelDeviceGroupPeers", args: `["g1"]`, request: "GET /api/panel/device-groups/g1/peers", kind: "f1"},
+	{fn: "getPanelDeviceGroupPeers", args: `[".."]`, ok: fellBack("Invalid guid", ""), failed: fellBack("Invalid guid", ""), down: fellBack("Invalid guid", "")},
+	{fn: "setPanelDeviceGroupPeers", args: `["g1",["A","B"]]`, request: "PUT /api/panel/device-groups/g1/peers", body: `{"peers":["A","B"]}`, kind: "f4"},
+	{fn: "setPanelDeviceGroupPeers", args: `["g1","A"]`, request: "PUT /api/panel/device-groups/g1/peers", body: `{"peers":[]}`, kind: "f4"},
+	{fn: "setPanelDeviceGroupPeers", args: `["g/1",["A"]]`, ok: fellBack("Invalid guid", ""), failed: fellBack("Invalid guid", ""), down: fellBack("Invalid guid", "")},
+	{fn: "getPanelDeviceGroupAcl", args: `["g1"]`, request: "GET /api/panel/device-groups/g1/acl", kind: "f1"},
+	{fn: "setPanelDeviceGroupAcl", args: `["g1",{"allowed_user_groups":["ug"],"allowed_users":"u","x":1}]`, request: "PUT /api/panel/device-groups/g1/acl",
+		body: `{"allowed_users":[],"allowed_user_groups":["ug"]}`, kind: "f4"},
+	{fn: "setPanelDeviceGroupAcl", args: `["g1",null]`, request: "PUT /api/panel/device-groups/g1/acl", body: `{"allowed_users":[],"allowed_user_groups":[]}`, kind: "f4"},
+	{fn: "listPanelFolders", request: "GET /api/panel/folders", kind: "f1"},
+	{fn: "createPanelFolder", args: `[{"name":"F","color":"#fff"}]`, request: "POST /api/panel/folders", body: `{"name":"F","color":"#fff"}`, kind: "f4"},
+	{fn: "updatePanelFolder", args: `[" 7 ",{"name":"F"}]`, request: "PUT /api/panel/folders/7", body: `{"name":"F"}`, kind: "f4"},
+	{fn: "updatePanelFolder", args: `["abc",{}]`, request: "PUT /api/panel/folders/NaN", body: `{}`, kind: "f4"},
+	{fn: "deletePanelFolder", args: `[7]`, request: "DELETE /api/panel/folders/7", kind: "f4"},
+	{fn: "deletePanelFolder", args: `["1e3"]`, request: "DELETE /api/panel/folders/1000", kind: "f4"},
+	{fn: "setPanelDeviceFolder", args: `["P1","3"]`, request: "PUT /api/panel/devices/P1/folder", body: `{"folder_id":3}`, kind: "f4"},
+	{fn: "setPanelDeviceFolder", args: `["P1","x"]`, request: "PUT /api/panel/devices/P1/folder", body: `{"folder_id":0}`, kind: "f4"},
+	{fn: "setPanelDeviceFolder", args: `["P1",null]`, request: "PUT /api/panel/devices/P1/folder", body: `{"folder_id":0}`, kind: "f4"},
+	{fn: "setPanelDeviceFolder", args: `["bad id",1]`, ok: fellBack("Invalid device id", ""), failed: fellBack("Invalid device id", ""), down: fellBack("Invalid device id", "")},
+	{fn: "listPanelUserGrants", args: `[5]`, request: "GET /api/panel/users/5/grants", kind: "f1"},
+	{fn: "setPanelUserGrants", args: `["5",["A"]]`, request: "PUT /api/panel/users/5/grants", body: `{"peers":["A"]}`, kind: "f4"},
+	{fn: "setPanelUserGrants", args: `[5,{"0":"A"}]`, request: "PUT /api/panel/users/5/grants", body: `{"peers":[]}`, kind: "f4"},
 }
 
 // TestMethodsCallTheirRoutes pins, for every function of the Node client,

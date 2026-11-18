@@ -37,7 +37,9 @@ Object.assign(process.env, {
     BETTERDESK_API_KEY: API_KEY,
 });
 
-const web = path.resolve(__dirname, '../../../../..', 'web-nodejs');
+// The Node console's folder: this tree's, or another one's (GOAPI_NODE_WEB,
+// such as the specification tree of an upstream merge)
+const web = process.env.GOAPI_NODE_WEB || path.resolve(__dirname, '../../../../..', 'web-nodejs');
 const config = require(path.join(web, 'config/config'));
 const api = require(path.join(web, 'services/betterdeskApi'));
 // loadWithInternals loads a module and also hands out functions it does

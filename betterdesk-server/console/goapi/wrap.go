@@ -15,6 +15,8 @@ import (
 //	    API server sent is not in it.
 //	F2  W of the error body when the API server sent one, else F1.
 //	F3  F2 plus "status": the HTTP status, or 502 when there was no answer.
+//	F4  F1 plus "status": the HTTP status when the API server answered;
+//	    the key is missing when it did not, or when no call was made.
 //
 // The doc comment of each method names its route and which of these it
 // gives on failure.
@@ -26,6 +28,7 @@ const (
 	f1 failKind = iota + 1
 	f2
 	f3
+	f4
 )
 
 // do is Request with the concrete error type.
@@ -56,7 +59,7 @@ func wrap(data any) *Object {
 
 // fail builds the failure object of the given kind for a failed call.
 func fail(kind failKind, e *Error) *Object {
-	if kind != f1 && e.Response != nil {
+	if (kind == f2 || kind == f3) && e.Response != nil {
 		if body := e.Response.Data(); Truthy(body) {
 			o := wrap(body)
 			if kind == f3 {
@@ -72,6 +75,9 @@ func fail(kind failKind, e *Error) *Object {
 			status = e.Response.Status
 		}
 		o.Set("status", float64(status))
+	}
+	if kind == f4 && e.Response != nil {
+		o.Set("status", float64(e.Response.Status))
 	}
 	return o
 }

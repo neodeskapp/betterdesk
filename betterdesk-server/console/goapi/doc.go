@@ -7,7 +7,9 @@
 // # Who the API server sees
 //
 // Every call acts as the console's API key: user "apikey:console-bridge",
-// role "admin". The caller address is loopback and the Host is the API
+// role "admin", unless the call names another identity with As (the device
+// group writes do so while the panel trust bridge is on). The caller
+// address is loopback and the Host is the API
 // address the console is configured with (WithHost). The API server puts
 // these into audit entries, pairing codes and its per-address limits, so
 // they are the same as for a call over the network.
