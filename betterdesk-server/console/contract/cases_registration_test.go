@@ -118,8 +118,8 @@ func init() {
 		},
 		contract.Case{
 			Name: "setup-group", Method: "POST", Path: "/api/device-groups", As: "admin",
-			Body:     map[string]any{"name": "Contract registration group"},
-			Capture:  map[string]string{"group": "data.guid"},
+			Body:    map[string]any{"name": "Contract registration group"},
+			Capture: map[string]string{"group": "data.guid"},
 			// A set-up step: the device group answer is the API server's since
 			// upstream 3.5.264 and is checked by the devices cases
 			Volatile: []string{"~data"},
