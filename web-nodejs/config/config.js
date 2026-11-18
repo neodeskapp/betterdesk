@@ -147,10 +147,7 @@ module.exports = {
     // Compatibility listener :21121 — reverse-proxy to Go (no business logic in Node).
     // Keeps existing RustDesk client configs on http://host:21121 unchanged.
     apiPort: parseInt(process.env.API_PORT, 10) || CLIENT_API_PORT_DEFAULT,
-    apiHost: process.env.API_HOST || '0.0.0.0',
     apiEnabled: (process.env.API_ENABLED ?? 'true').toLowerCase() === 'true',
-    apiProxyToGo: (process.env.RUSTDESK_API_PROXY ?? 'true').toLowerCase() === 'true',
-    rustdeskApiTls: (process.env.RUSTDESK_API_TLS || 'auto').toLowerCase(),
 
     // Issue #104 mitigation:
     // Stock RustDesk OSS clients (e.g. v1.4.6) do not implement the

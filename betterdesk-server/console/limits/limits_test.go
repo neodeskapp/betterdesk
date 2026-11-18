@@ -2,7 +2,6 @@ package limits
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -856,56 +855,6 @@ func TestClientAPILimiters(t *testing.T) {
 	s = statuses(h, 61, func() *http.Request { return from("GET", "/api/peers", "203.0.113.9") })
 	if indexOf(s, 429) != 60 {
 		t.Errorf("without an address: first 429 at %d", indexOf(s, 429))
-	}
-}
-
-func TestClientAPITimeout(t *testing.T) {
-	release := make(chan struct{})
-	var lateWrite error
-	var cancelled bool
-	done := make(chan struct{})
-	h := wanHandler(WANOptions{Timeout: 30 * time.Millisecond}, func(w http.ResponseWriter, r *http.Request) {
-		defer close(done)
-		<-release
-		cancelled = r.Context().Err() != nil
-		w.Header().Set("X-Late", "1")
-		w.WriteHeader(http.StatusOK)
-		_, lateWrite = w.Write([]byte("late"))
-	})
-	server := httptest.NewServer(h)
-	defer server.Close()
-	req, _ := http.NewRequest("GET", server.URL+"/api/peers", nil)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-	body, _ := io.ReadAll(resp.Body)
-	resp.Body.Close()
-	if resp.StatusCode != http.StatusRequestTimeout || len(body) != 0 {
-		t.Errorf("slow handler: %d %q, want 408 without a body", resp.StatusCode, body)
-	}
-	if resp.Header.Get("X-Frame-Options") != "DENY" || resp.Header.Get("X-Late") != "" {
-		t.Errorf("the 408 carries the port's headers and none of the handler's: %v", resp.Header)
-	}
-	close(release)
-	<-done
-	if !errors.Is(lateWrite, http.ErrHandlerTimeout) || !cancelled {
-		t.Errorf("after the timeout: write error %v, context cancelled %v", lateWrite, cancelled)
-	}
-
-	// A handler that answers in time is not disturbed
-	fast := wanHandler(WANOptions{Timeout: time.Second}, func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-Fast", "1")
-		w.WriteHeader(http.StatusAccepted)
-		_, _ = w.Write([]byte("fast"))
-	})
-	rec := hit(fast, wanRequest("GET", "/api/peers", -1))
-	if rec.Code != http.StatusAccepted || rec.Body.String() != "fast" || rec.Header().Get("X-Fast") != "1" || rec.Header().Get("Pragma") != "no-cache" {
-		t.Errorf("fast handler: %d %q %v", rec.Code, rec.Body.String(), rec.Header())
-	}
-	// The default is ten seconds
-	if WANRequestTimeout != 10*time.Second || WANKeepAliveTimeout != 5*time.Second {
-		t.Error("the port's timeouts changed")
 	}
 }
 

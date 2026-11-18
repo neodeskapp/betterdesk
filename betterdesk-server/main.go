@@ -133,6 +133,9 @@ func init() {
 }
 
 func main() {
+	// BETTERDESK_ENV_FILE first: the flags and every setting read the
+	// environment it fills
+	loadEnvFileFromOS()
 	cfg := parseFlags()
 
 	// Configure log format (must be before any log output)

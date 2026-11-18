@@ -81,8 +81,23 @@ type Config struct {
 
 	// HTTPS is the console's HTTPS mode (HTTPS_ENABLED): it picks the
 	// names of the session and CSRF cookies, marks them Secure and
-	// tightens the security headers.
+	// tightens the security headers. With a certificate the console then
+	// listens with TLS on HTTPSPort.
 	HTTPS bool
+	// HTTPSPort is the port of the TLS listener in HTTPS mode (HTTPS_PORT,
+	// default 5443). Port is then the port of the redirect to it.
+	HTTPSPort int
+	// HTTPRedirect says whether Port redirects to HTTPSPort in HTTPS mode
+	// (HTTP_REDIRECT_HTTPS, default true); links in mails start with https
+	// when it is on.
+	HTTPRedirect bool
+	// CertFile, KeyFile and CAFile are the certificate, its private key and
+	// an optional bundle of the certificates that issued it
+	// (SSL_CERT_PATH, SSL_KEY_PATH, SSL_CA_PATH). The console and the
+	// client API port use them.
+	CertFile string
+	KeyFile  string
+	CAFile   string
 	// HTTPSExact is true when HTTPS_ENABLED is "true" letter for letter,
 	// which is what the language cookie's Secure attribute looks at.
 	HTTPSExact bool
@@ -94,9 +109,6 @@ type Config struct {
 	// SMTPTLSVerify says whether the mail server's certificate is checked
 	// when the saved SMTP settings do not say (SMTP_TLS_VERIFY).
 	SMTPTLSVerify bool
-	// HTTPRedirect is HTTP_REDIRECT_HTTPS. The Go console redirects
-	// nothing by it; links in mails start with https when it is on.
-	HTTPRedirect bool
 
 	// DefaultLanguage is the language of a request that names none
 	// (DEFAULT_LANGUAGE).
@@ -129,10 +141,21 @@ type Config struct {
 	// port of APIURL, else 21114.
 	GoAPIPort int
 	// APIPort is the client API port (API_PORT, default 21121), and
-	// APIEnabled says whether the old console listened on it
-	// (API_ENABLED).
+	// APIEnabled says whether the console listens on it (API_ENABLED,
+	// default true).
 	APIPort    int
 	APIEnabled bool
+	// ClientAPIHost is the address the client API port listens on
+	// (API_HOST, default 0.0.0.0).
+	ClientAPIHost string
+	// ClientAPIProxy says whether the client API port passes the client
+	// API on to the server's API (RUSTDESK_API_PROXY, default true) or
+	// answers it from the console's own routes.
+	ClientAPIProxy bool
+	// ClientAPITLS is RUSTDESK_API_TLS in lower case, "auto" when unset:
+	// false, 0, off and http keep the client API port on plain HTTP;
+	// anything else gives it TLS when the certificate loads.
+	ClientAPITLS string
 	// SignalHost and SignalPort are where the console reaches the signal
 	// server, RelayHost and RelayPort the relay (WS_HBBS_HOST,
 	// WS_HBBS_PORT, WS_HBBR_HOST, WS_HBBR_PORT).
@@ -174,6 +197,9 @@ type probe struct {
 	// directory; "" when unknown.
 	exeDir, cwd string
 	windows     bool
+	// isSet reports whether a variable is set, also to the empty text.
+	// nil counts a variable as set when getenv gives more than "".
+	isSet func(name string) bool
 }
 
 func systemProbe() probe {
@@ -193,15 +219,28 @@ func systemProbe() probe {
 	return p
 }
 
-// Load reads the configuration through getenv (os.Getenv in production).
+// Load reads the configuration through getenv. A variable set to the
+// empty text counts as unset.
 func Load(getenv func(string) string) (*Config, error) {
 	return load(getenv, systemProbe())
+}
+
+// LoadEnv reads the configuration from the process environment. It tells
+// a variable set to the empty text from an unset one, as the old console
+// did for API_ENABLED and RUSTDESK_API_PROXY.
+func LoadEnv() (*Config, error) {
+	p := systemProbe()
+	p.isSet = func(name string) bool {
+		_, ok := os.LookupEnv(name)
+		return ok
+	}
+	return load(os.Getenv, p)
 }
 
 func load(getenv func(string) string, p probe) (*Config, error) {
 	cfg := &Config{Host: strings.TrimSpace(getenv("HOST")), Getenv: getenv}
 	if cfg.Host == "" {
-		cfg.Host = "0.0.0.0"
+		cfg.Host = "127.0.0.1"
 	}
 
 	if raw := strings.TrimSpace(getenv("CONSOLE_PORT")); raw != "" {
@@ -257,10 +296,14 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 
 	cfg.HTTPS = isTrue(getenv("HTTPS_ENABLED"))
 	cfg.HTTPSExact = getenv("HTTPS_ENABLED") == "true"
+	cfg.HTTPSPort = parseIntOr(getenv("HTTPS_PORT"), 5443)
+	cfg.HTTPRedirect = isTrue(orDefault(getenv("HTTP_REDIRECT_HTTPS"), "true"))
+	cfg.CertFile = getenv("SSL_CERT_PATH")
+	cfg.KeyFile = getenv("SSL_KEY_PATH")
+	cfg.CAFile = getenv("SSL_CA_PATH")
 	cfg.HSTSEnabled = getenv("HSTS_ENABLED")
 	cfg.AllowSelfSignedCerts = isTrue(getenv("ALLOW_SELF_SIGNED_CERTS"))
 	cfg.SMTPTLSVerify = isTrue(getenv("SMTP_TLS_VERIFY"))
-	cfg.HTTPRedirect = isTrue(orDefault(getenv("HTTP_REDIRECT_HTTPS"), "true"))
 
 	cfg.DefaultLanguage = orDefault(getenv("DEFAULT_LANGUAGE"), "en")
 	cfg.DeviceScopeDefault = strings.ToLower(orDefault(getenv("DEVICE_SCOPE_DEFAULT"), "open"))
@@ -274,7 +317,10 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 	cfg.APIURL = orDefault(orDefault(getenv("BETTERDESK_API_URL"), getenv("HBBS_API_URL")), defaultAPIURL)
 	cfg.GoAPIPort = parseIntOr(getenv("GO_API_PORT"), apiURLPort(cfg.APIURL, defaultGoAPIPort))
 	cfg.APIPort = parseIntOr(getenv("API_PORT"), 21121)
-	cfg.APIEnabled = isTrue(orDefault(getenv("API_ENABLED"), "true"))
+	cfg.APIEnabled = isTrue(nullish(getenv, p, "API_ENABLED", "true"))
+	cfg.ClientAPIHost = orDefault(getenv("API_HOST"), "0.0.0.0")
+	cfg.ClientAPIProxy = isTrue(nullish(getenv, p, "RUSTDESK_API_PROXY", "true"))
+	cfg.ClientAPITLS = strings.ToLower(orDefault(getenv("RUSTDESK_API_TLS"), "auto"))
 	cfg.SignalHost = orDefault(getenv("WS_HBBS_HOST"), "localhost")
 	cfg.SignalPort = parseIntOr(getenv("WS_HBBS_PORT"), 21116)
 	cfg.RelayHost = orDefault(getenv("WS_HBBR_HOST"), "localhost")
@@ -336,6 +382,19 @@ func orDefault(value, fallback string) string {
 		return fallback
 	}
 	return value
+}
+
+// nullish is process.env[name] ?? fallback: the fallback only for a
+// variable that is not set at all.
+func nullish(getenv func(string) string, p probe, name, fallback string) string {
+	value := getenv(name)
+	if value != "" {
+		return value
+	}
+	if p.isSet != nil && p.isSet(name) {
+		return ""
+	}
+	return fallback
 }
 
 // isTrue is the old console's reading of a switch: "true" in any letter

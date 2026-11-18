@@ -3,6 +3,7 @@ package limits
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"regexp"
@@ -17,8 +18,7 @@ import (
 
 // The client API port's connection timeouts. The listener's http.Server
 // gets them: ReadHeaderTimeout and ReadTimeout from WANRequestTimeout,
-// IdleTimeout from WANKeepAliveTimeout. A connection whose request does
-// not arrive in time is closed without an answer.
+// IdleTimeout from WANKeepAliveTimeout (package listen).
 const (
 	WANRequestTimeout   = 10 * time.Second
 	WANKeepAliveTimeout = 5 * time.Second
@@ -118,6 +118,11 @@ type WANOptions struct {
 	// Log gets one line per request; warn is true for a status of 400 and
 	// above. nil writes through the logging package.
 	Log func(warn bool, line string)
+	// BeforeBody answers a request before its body is read and reports
+	// whether it did. The registration route of the port in proxy mode
+	// answered without waiting for the body, so a body over the limit got
+	// that answer and not 413. nil answers nothing.
+	BeforeBody func(w http.ResponseWriter, r *http.Request) bool
 }
 
 type wanMessage struct {
@@ -127,7 +132,9 @@ type wanMessage struct {
 // WANStack is what every request on the client API port passes, in this
 // order:
 //
-//  1. A timeout: a request not answered in time gets 408.
+//  1. A timeout: a request not answered in time gets 408 while its body
+//     is still arriving, and is closed without an answer once it has
+//     arrived whole.
 //  2. Headers: no caching, no framing, no content types to sniff, and the
 //     CORS headers for GET and POST. OPTIONS ends here with 204.
 //  3. A log line when the answer is out.
@@ -139,7 +146,8 @@ type wanMessage struct {
 //     gets 415.
 //  7. The body limit: 1024 bytes, or the path's own. A larger body gets
 //     413 and the connection is closed. The body is read here and handed
-//     on whole.
+//     on whole. A body that stops before its end gets 408 when the
+//     listener's read deadline passed, 400 otherwise.
 func WANStack(opts WANOptions) func(http.Handler) http.Handler {
 	if opts.Now == nil {
 		opts.Now = time.Now
@@ -192,19 +200,34 @@ func WANStack(opts WANOptions) func(http.Handler) http.Handler {
 				httpx.WriteJSON(w, r, http.StatusUnsupportedMediaType, wanMessage{"Content-Type must be application/json"})
 				return
 			}
+			if opts.BeforeBody != nil && opts.BeforeBody(w, r) {
+				return
+			}
 			limit, ok := wanBodyLimits[p]
 			if !ok {
 				limit = wanDefaultBodyLimit
 			}
 			body, err := io.ReadAll(io.LimitReader(r.Body, limit+1))
 			if err != nil {
-				// The client went away before its body was complete
+				// The body did not arrive: in time (the listener's read
+				// deadline) it is 408, else the connection broke or the
+				// framing was wrong and it is 400; the connection closes
+				w.Header().Set("Connection", "close")
+				status := http.StatusBadRequest
+				var timeout interface{ Timeout() bool }
+				if errors.As(err, &timeout) && timeout.Timeout() {
+					status = http.StatusRequestTimeout
+				}
+				w.WriteHeader(status)
 				return
 			}
 			if int64(len(body)) > limit {
 				w.Header().Set("Connection", "close")
 				httpx.WriteJSON(w, r, http.StatusRequestEntityTooLarge, wanMessage{"Request too large"})
 				return
+			}
+			if tw, ok := w.(*timeoutWriter); ok {
+				tw.arrived()
 			}
 			r.Body = io.NopCloser(bytes.NewReader(body))
 			next.ServeHTTP(w, r)
@@ -262,9 +285,14 @@ func WANStack(opts WANOptions) func(http.Handler) http.Handler {
 			case p := <-panicked:
 				panic(p)
 			case <-timer.C:
-				if tw.timeout() {
+				switch tw.timeout() {
+				case timedOutAnswered:
 					status = http.StatusRequestTimeout
 					return
+				case timedOutDropped:
+					// The request had arrived whole: the connection ends
+					// without an answer
+					panic(http.ErrAbortHandler)
 				}
 				// An answer is on its way out: let it finish
 				select {
@@ -323,7 +351,7 @@ func wanLogAddress(r *http.Request) string {
 	return "unknown"
 }
 
-// timeoutWriter lets the timeout answer 408 from its timer while the
+// timeoutWriter lets the timeout end a request from its timer while the
 // handler is still at work: whoever writes the status first wins, and
 // after the timeout the handler's writes go nowhere. The handler sets
 // its headers on a map of its own, so the timer never reads a map the
@@ -336,6 +364,25 @@ type timeoutWriter struct {
 	code     int
 	timedOut bool
 	finished bool
+	// whole says the request, body included, has arrived
+	whole bool
+}
+
+// What the timeout did.
+const (
+	// timedOutLate: the handler had started its answer
+	timedOutLate = iota
+	// timedOutAnswered: 408 went out
+	timedOutAnswered
+	// timedOutDropped: nothing went out, the connection is to be closed
+	timedOutDropped
+)
+
+// arrived records that the request has arrived whole.
+func (t *timeoutWriter) arrived() {
+	t.mu.Lock()
+	t.whole = true
+	t.mu.Unlock()
 }
 
 func (t *timeoutWriter) Header() http.Header { return t.header }
@@ -375,18 +422,25 @@ func (t *timeoutWriter) Write(p []byte) (int, error) {
 	return t.ResponseWriter.Write(p)
 }
 
-// timeout answers 408 and reports true, unless the handler has started
-// its answer.
-func (t *timeoutWriter) timeout() bool {
+// timeout ends the request unless the handler has started its answer: a
+// request still arriving gets 408, as Node's request timeout answered;
+// one that arrived whole gets nothing, as Node destroyed the socket of a
+// complete request that timed out.
+func (t *timeoutWriter) timeout() int {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.finished || t.code != 0 {
-		return false
+		return timedOutLate
 	}
 	t.timedOut = true
+	if t.whole {
+		return timedOutDropped
+	}
 	t.code = http.StatusRequestTimeout
+	// The rest of the body is not waited for
+	t.ResponseWriter.Header().Set("Connection", "close")
 	t.ResponseWriter.WriteHeader(http.StatusRequestTimeout)
-	return true
+	return timedOutAnswered
 }
 
 // finish ends the handler's turn and returns the status that went out. A

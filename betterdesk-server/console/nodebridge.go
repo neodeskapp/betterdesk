@@ -53,13 +53,14 @@ func newNodeBridge(s *Server) *nodeBridge {
 // header is the value of X-BD-Bridge: "<url> <token>", or "" before the
 // console listens.
 func (b *nodeBridge) header() string {
-	if b.s.listener == nil {
+	if b.s.net.addr == "" {
 		return ""
 	}
-	addr, ok := b.s.listener.Addr().(*net.TCPAddr)
-	if !ok {
+	bound, err := net.ResolveTCPAddr("tcp", b.s.net.addr)
+	if err != nil {
 		return ""
 	}
+	addr := bound
 	host := "127.0.0.1"
 	switch {
 	case addr.IP.IsLoopback() && addr.IP.To4() == nil:

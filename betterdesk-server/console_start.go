@@ -21,7 +21,7 @@ import (
 // server's pool, SQLite through its own connections to the same file. The
 // returned function stops the console and everything it started.
 func startConsole(ctx context.Context, cfg *config.Config, database db.Database, apiSrv *api.Server, bus *events.Bus) (func(), error) {
-	ccfg, err := consoleconfig.Load(os.Getenv)
+	ccfg, err := consoleconfig.LoadEnv()
 	if err != nil {
 		return nil, fmt.Errorf("console configuration: %w", err)
 	}

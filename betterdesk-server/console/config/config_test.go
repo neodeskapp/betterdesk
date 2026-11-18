@@ -26,7 +26,7 @@ func TestLoadDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.Port != 0 || cfg.Host != "0.0.0.0" || cfg.NodeUpstream != nil || cfg.TrustProxy.Enabled() || cfg.DebugRouting {
+	if cfg.Port != 0 || cfg.Host != "127.0.0.1" || cfg.NodeUpstream != nil || cfg.TrustProxy.Enabled() || cfg.DebugRouting {
 		t.Errorf("defaults = %+v", cfg)
 	}
 	if cfg.NodeEnv != "development" || cfg.Production || cfg.Docker || cfg.HTTPS || cfg.HTTPSExact || cfg.AllowSelfSignedCerts {
@@ -424,4 +424,24 @@ func FuzzAPIURLPort(f *testing.F) {
 			t.Fatalf("parseIntOr(%q) = %d", " +"+strconv.Itoa(port)+raw, got)
 		}
 	})
+}
+
+// TestHostDefaultsToLoopback: without HOST the console listens on
+// 127.0.0.1 only, as the old console did (config.js: HOST || '127.0.0.1').
+func TestHostDefaultsToLoopback(t *testing.T) {
+	for _, c := range []struct{ host, want string }{
+		{"", "127.0.0.1"},
+		{"  ", "127.0.0.1"},
+		{"0.0.0.0", "0.0.0.0"},
+		{"::", "::"},
+		{" 10.0.0.5 ", "10.0.0.5"},
+	} {
+		cfg, err := load(env(map[string]string{"HOST": c.host}), machine("/srv/bin", "/srv/run"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if cfg.Host != c.want {
+			t.Errorf("HOST %q: Host %q, want %q", c.host, cfg.Host, c.want)
+		}
+	}
 }

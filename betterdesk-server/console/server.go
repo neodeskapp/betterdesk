@@ -22,13 +22,10 @@ package console
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/alerts"
@@ -94,8 +91,8 @@ type Server struct {
 	routing  http.Handler
 	pipeline http.Handler
 	jobs     *jobs.Registry
-	httpSrv  *http.Server
-	listener net.Listener
+	// net are the listeners (listeners.go)
+	net listeners
 	// authImport says where the old console's auth.db is (Start imports
 	// it).
 	authImport authimport.Options
@@ -120,6 +117,9 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 
 	if err := os.MkdirAll(cfg.UploadsDir, 0o755); err != nil {
 		logging.Logf("console", "WARN: cannot create the uploads folder %s: %v", cfg.UploadsDir, err)
+	}
+	if err := s.loadCertificates(); err != nil {
+		return nil, err
 	}
 	secret, err := session.LoadSecret(getenv, cfg.DataDir)
 	if err != nil {
@@ -339,6 +339,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	}
 	registerRoutes(s.deps)
 	registerSockets(s.deps)
+	s.newClientAPI()
 	s.pipeline = s.buildPipeline()
 	return s, nil
 }
@@ -402,8 +403,8 @@ func (s *Server) handles(r *http.Request) bool {
 	return s.early.Match(r) || s.router.Match(r)
 }
 
-// Start opens the listener, starts the background jobs and serves until
-// ctx ends or Stop is called.
+// Start opens the listeners (listeners.go), starts the background jobs and
+// serves until ctx ends or Stop is called.
 //
 // Before it listens it imports the old console's auth.db when there is
 // one that was never imported (package authimport; not while the Node
@@ -428,50 +429,35 @@ func (s *Server) Start(ctx context.Context) error {
 			return fmt.Errorf("first account: %w", err)
 		}
 	}
-	ln, err := net.Listen("tcp", s.cfg.Addr())
-	if err != nil {
-		return fmt.Errorf("console listen on %s: %w", s.cfg.Addr(), err)
+	err := s.openListeners(ctx)
+	if err == nil {
+		err = s.startClientAPI(ctx)
 	}
-	s.listener = ln
-	s.httpSrv = &http.Server{
-		Handler:           s,
-		ReadHeaderTimeout: 15 * time.Second,
-		BaseContext:       func(net.Listener) context.Context { return ctx },
+	if err != nil {
+		s.closeListeners()
+		s.net.addr = ""
+		return err
 	}
 	s.jobs.Start(ctx)
-	go func() {
-		if err := s.httpSrv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logging.Logf("console", "server stopped: %v", err)
-		}
-	}()
 	target := "Go only"
 	if s.cfg.NodeUpstream != nil {
 		target = "unported routes go to " + s.cfg.NodeUpstream.Host
 	}
-	logging.Logf("console", "listening on %s (%s), %d Go routes", ln.Addr(), target, len(s.early.Routes())+len(s.router.Routes()))
+	logging.Logf("console", "listening on %s (%s), %d Go routes", s.net.addr, target, len(s.early.Routes())+len(s.router.Routes()))
 	return nil
 }
 
 // Addr is the address the server listens on, once started.
 func (s *Server) Addr() string {
-	if s.listener == nil {
-		return ""
-	}
-	return s.listener.Addr().String()
+	return s.net.addr
 }
 
-// Stop closes the listener, gives open requests ten seconds to finish,
+// Stop closes the listeners, gives open requests ten seconds to finish,
 // ends the open websockets and the background jobs and waits for the
 // profile picture syncs that sign-ins started. When it returns, nothing
 // the server started is still running.
 func (s *Server) Stop() {
-	if s.httpSrv != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		if err := s.httpSrv.Shutdown(ctx); err != nil {
-			_ = s.httpSrv.Close()
-		}
-	}
+	s.closeListeners()
 	s.deps.Sockets.Close()
 	s.jobs.Stop()
 	s.deps.Avatars.Wait()

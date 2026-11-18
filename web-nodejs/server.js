@@ -51,7 +51,6 @@ const { initHelpRequestEmailService } = require('./services/helpRequestEmailServ
 const routes = require('./routes');
 const { mountRoutes } = require('./lib/mountRoutes');
 const bdApiRoutes = require('./routes/bd-api.routes');
-const { getWanMiddlewareStack } = require('./middleware/wanSecurity');
 const { parseTrustProxy } = require('./lib/parseTrustProxy');
 const {
     resolvePortForCurrentUser,
@@ -365,41 +364,6 @@ function loadSslCertificates() {
     }
 }
 
-function attachPlainHttpTlsHint(server, port) {
-    server.on('tlsClientError', (err, socket) => {
-        const message = String(err && err.message || '');
-        const looksLikePlainHttp = /wrong version number|http request|unknown protocol|packet length/i.test(message);
-        if (!looksLikePlainHttp || !socket || socket.destroyed) return;
-
-        const body = JSON.stringify({
-            error: `RustDesk Client API on port ${port} requires HTTPS. Use https://<server>:${port}.`
-        });
-        const response = [
-            'HTTP/1.1 400 Bad Request',
-            'Content-Type: application/json; charset=utf-8',
-            'Cache-Control: no-store',
-            'Connection: close',
-            `Content-Length: ${Buffer.byteLength(body)}`,
-            '',
-            body
-        ].join('\r\n');
-
-        try {
-            socket.end(response);
-        } catch (_) {
-            socket.destroy();
-        }
-        console.warn(`RustDesk API: rejected plain HTTP on HTTPS port ${port}`);
-    });
-}
-
-function shouldUseRustDeskApiTls(sslOptions) {
-    const mode = String(config.rustdeskApiTls || 'auto').toLowerCase();
-    if (mode === 'false' || mode === '0' || mode === 'off' || mode === 'http') return false;
-    if (mode === 'true' || mode === '1' || mode === 'on' || mode === 'https') return !!sslOptions;
-    return !!sslOptions;
-}
-
 /**
  * Create HTTP redirect server (redirects all HTTP to HTTPS)
  *
@@ -608,14 +572,6 @@ async function startServer() {
             }
         });
         
-        // ============ RustDesk Client API (WAN :21121 → Go :21114 proxy) ============
-        let apiServer = null;
-        if (config.apiEnabled) {
-            apiServer = startRustDeskApiServer();
-        } else if (config.serverBackend === 'betterdesk') {
-            console.log(`  ║   Client API: disabled — use :${config.apiPort} proxy or Go :${config.goApiPort}`.padEnd(53) + '║');
-        }
-        
         // ============ Periodic Housekeeping ============
         // Old metrics, client audit rows and stale device states are
         // cleaned up by the Go console in front of this one.
@@ -632,9 +588,6 @@ async function startServer() {
             stopAlertSweep();
 
             const closePromises = [new Promise(r => server.close(r))];
-            if (apiServer) {
-                closePromises.push(new Promise(r => apiServer.close(r)));
-            }
             
             Promise.all(closePromises).then(() => {
                 console.log('All servers closed.');
@@ -658,128 +611,10 @@ async function startServer() {
 }
 
 /**
- * Start the dedicated RustDesk Client API server on a separate port.
- * This is a minimal, hardened Express app with only 4 endpoints.
- * Designed for WAN/internet exposure with aggressive security.
- */
-function startRustDeskApiServer() {
-    const apiApp = express();
-    const { goApiProxy, getGoApiOrigin } = require('./middleware/goApiProxy');
-    const useGoProxy = config.apiProxyToGo && config.serverBackend === 'betterdesk';
-
-    // Trust proxy (use same configuration as main app — TRUST_PROXY env var)
-    apiApp.set('trust proxy', trustProxy);
-
-    // Apply WAN security middleware stack
-    const wanMiddleware = getWanMiddlewareStack();
-    for (const mw of wanMiddleware) {
-        apiApp.use(mw);
-    }
-
-    if (useGoProxy) {
-        // LAN registration is still handled in Node (not on Go API)
-        const registrationRoutes = require('./routes/registration.routes');
-        apiApp.use('/api/bd', registrationRoutes);
-        // /api/group* → Go (JWT from /api/login). Node requireAuth only accepts 64-char auth.db tokens.
-        apiApp.use(goApiProxy);
-    } else {
-        // Legacy: the RustDesk client API routes moved to the Go console
-        apiApp.use(express.json({ limit: '64kb', strict: true }));
-        const registrationRoutes = require('./routes/registration.routes');
-        apiApp.use('/api/bd', registrationRoutes);
-    }
-
-    // Catch-all for any unmatched routes (should not reach here due to pathWhitelist).
-    // We log every miss so missing RustDesk client compatibility endpoints are
-    // easy to spot in operations.  Diagnostics suggestion credit:
-    // progloto (PR #81).
-    apiApp.use((req, res) => {
-        const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
-        const ua = String(req.headers['user-agent'] || '').slice(0, 80);
-        console.warn(`[rustdesk-api] 404 ${req.method} ${req.originalUrl} from ${ip} ua="${ua}"`);
-        res.status(404).end();
-    });
-
-    // Error handler — never leak internal errors
-    apiApp.use((err, req, res, next) => {
-        if (err.type === 'entity.parse.failed') {
-            console.warn('RustDesk API: JSON parse error from', req.socket?.remoteAddress);
-            return res.status(400).json({ error: 'Invalid JSON' });
-        }
-        if (err.type === 'entity.too.large') {
-            return res.status(413).json({ error: 'Request too large' });
-        }
-        console.error('RustDesk API error:', err.message);
-        res.status(500).json({ error: 'Server error' });
-    });
-
-    // Start HTTP or HTTPS server for RustDesk Client API. By default TLS is used
-    // when certs are available, but self-signed deployments may set
-    // RUSTDESK_API_TLS=false because stock RustDesk clients cannot trust a
-    // private CA here. Keep that exception explicit: it affects only :21121.
-    let apiServerInstance;
-    const sslOptions = loadSslCertificates();
-    const useApiTls = shouldUseRustDeskApiTls(sslOptions);
-    if (useApiTls) {
-        apiServerInstance = https.createServer(sslOptions, apiApp);
-        attachPlainHttpTlsHint(apiServerInstance, config.apiPort);
-        console.log(`  ║   API TLS:   Enabled (HTTPS on :${config.apiPort})`.padEnd(53) + '║');
-    } else {
-        if ((config.sslCertPath || config.sslKeyPath) && config.rustdeskApiTls !== 'false') {
-            console.warn(`WARNING: SSL certs configured but invalid — API running insecure HTTP on :${config.apiPort}`);
-        }
-        if (sslOptions && String(config.rustdeskApiTls || '').toLowerCase() === 'false') {
-            console.warn(`WARNING: RUSTDESK_API_TLS=false — RustDesk Client API is HTTP on :${config.apiPort}. Use only behind a trusted network/VPN or with a low-privilege account.`);
-        }
-        apiServerInstance = http.createServer(apiApp);
-    }
-    
-    apiServerInstance.on('error', (err) => {
-        if (err.code === 'EADDRINUSE') {
-            console.error(`  ║   API Port:  ${config.apiPort} FAILED (port in use)`.padEnd(53) + '║');
-            console.error(`  ║   Hint: Check if hbbs uses the same port, or`.padEnd(53) + '║');
-            console.error(`  ║   set API_PORT env var (default: 21121)`.padEnd(53) + '║');
-            console.log('  ║                                                  ║');
-            console.error(`WARNING: RustDesk Client API could not start on port ${config.apiPort}`);
-            console.error('Likely cause: hbbs API is on the same port. Client API default is 21121.');
-            console.error('The admin panel continues to run normally on port ' + config.port);
-            return; // Don't crash — let the panel continue running
-        }
-        if (err.code === 'EACCES') {
-            console.error(`WARNING: RustDesk Client API could not bind port ${config.apiPort} (permission denied)`);
-            console.error('Ports below 1024 require root or CAP_NET_BIND_SERVICE — set API_PORT to a high port.');
-            return;
-        }
-        throw err;
-    });
-    
-    apiServerInstance.listen(config.apiPort, config.apiHost, () => {
-        if (useGoProxy) {
-            console.log(`  ║   Client API:  :${config.apiPort} → Go ${getGoApiOrigin()}`.padEnd(53) + '║');
-        } else {
-            console.log(`  ║   Client API:  :${config.apiPort} (Node local handlers)`.padEnd(53) + '║');
-        }
-        console.log('  ║                                                  ║');
-    });
-
-    // Set connection timeout (prevent slow loris)
-    apiServerInstance.headersTimeout = 15000;
-    apiServerInstance.requestTimeout = 10000;
-    apiServerInstance.keepAliveTimeout = 5000;
-
-    return apiServerInstance;
-}
-
-/**
  * Print startup banner with server info
  */
 function printStartupBanner(protocol, port) {
     const sslStatus = config.httpsEnabled ? '🔒 HTTPS' : '🔓 HTTP';
-    // API port 21121 can use a separate TLS mode for RustDesk client compatibility.
-    const apiHasCerts = config.sslCertPath && config.sslKeyPath && 
-                        fs.existsSync(config.sslCertPath) && fs.existsSync(config.sslKeyPath);
-    const apiProtocol = shouldUseRustDeskApiTls(apiHasCerts ? {} : null) ? 'HTTPS' : 'HTTP';
-    const apiStatus = config.apiEnabled ? `✅ Port ${config.apiPort} (${apiProtocol})` : '❌ Disabled';
     const panelUrl = `${protocol}://${config.host}:${port}`;
     const goApiUrl = redactUrlForLog(config.betterdeskApiUrl || process.env.BETTERDESK_API_URL || 'http://localhost:21114/api');
     console.log('');
@@ -793,7 +628,6 @@ function printStartupBanner(protocol, port) {
     if (config.httpsEnabled && config.httpRedirect) {
         console.log(`  ║   Redirect:   http://${config.host}:${config.port} → :${config.httpsPort}`.padEnd(53) + '║');
     }
-    console.log(`  ║   Client API: ${apiStatus}`.padEnd(53) + '║');
     console.log(`  ║   Go API:     ${goApiUrl}`.padEnd(53) + '║');
     console.log(`  ║   Mode:       ${config.nodeEnv}`.padEnd(53) + '║');
     console.log(`  ║   Security:   ${sslStatus}`.padEnd(53) + '║');

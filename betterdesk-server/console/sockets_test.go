@@ -3,7 +3,6 @@ package console
 import (
 	"context"
 	"encoding/json"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -148,13 +147,9 @@ func TestBridgeCalls(t *testing.T) {
 // name.
 func TestBridgeIsNamedToNode(t *testing.T) {
 	w := mixed(t, setup{})
-	ln, err := net.Listen("tcp", "0.0.0.0:0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer ln.Close()
-	w.s.listener = ln
-	port := ln.Addr().(*net.TCPAddr).Port
+	// the address the console bound, on every interface
+	w.s.net.addr = "0.0.0.0:43210"
+	port := 43210
 	res := w.agent().get("/unported", "X-BD-Bridge", "http://evil.example:1 "+strings.Repeat("a", 64))
 	got, ok := res.node()
 	if !ok {

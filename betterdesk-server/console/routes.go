@@ -52,6 +52,20 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/users"
 )
 
+// The route groups of the client API port (API_PORT), on a router of its
+// own (listen.ClientAPI). clientAPILocalRoutes answer there only with
+// RUSTDESK_API_PROXY=false, where the old port answered the client API
+// itself; clientAPISharedRoutes answer in both modes. The registration
+// routes (routes/registration.routes.js at /api/bd) go to the Node console
+// until they move: then their Register line goes into
+// clientAPISharedRoutes and listen.ClientAPIOptions.Node goes.
+var (
+	clientAPILocalRoutes = []func(d *kit.Deps){
+		rustdeskapi.Register, // routes/rustdesk-api.routes.js (server.js startRustDeskApiServer)
+	}
+	clientAPISharedRoutes []func(d *kit.Deps)
+)
+
 // registerRoutes adds the route groups that have moved to Go, one line
 // per group and mount, in the order of web-nodejs/routes/index.js: the
 // tables answer with the first route that fits, so the order of the

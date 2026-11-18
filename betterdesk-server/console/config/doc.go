@@ -5,7 +5,7 @@
 //
 //	Variable                 Default               Meaning
 //	CONSOLE_PORT             (off)                 Port the Go console listens on. Unset or 0: the Go console does not start.
-//	HOST                     0.0.0.0               Address the console listens on.
+//	HOST                     127.0.0.1             Address the console listens on.
 //	CONSOLE_NODE_UPSTREAM    (none)                http(s) address of the Node console while routes move. With it, Go
 //	                                               answers only the routes it has and forwards everything else.
 //	CONSOLE_DEBUG_ROUTING    (off)                 "1" adds GET /__bd/routing for the contract suite.
@@ -26,7 +26,16 @@
 //	WEB_UI_DIR               web-ui/build beside   Build of the web app. Without it: CONSOLE_DIR/../web-ui/build, or
 //	                         CONSOLE_DIR           CONSOLE_DIR/web-ui/build when only that one has an index.html.
 //	HTTPS_ENABLED            false                 "true" in any letter case: cookies are called betterdesk.sid and __csrf
-//	                                               and are Secure, the security headers are those of HTTPS.
+//	                                               and are Secure, the security headers are those of HTTPS. With a
+//	                                               certificate the console listens with TLS on HTTPS_PORT; without one
+//	                                               it stays on plain HTTP and keeps all of that (package listen).
+//	HTTPS_PORT               5443                  Port of the TLS listener in HTTPS mode. Below 1024 without the right
+//	                                               to bind it: 5443 (CONSOLE_PORT likewise becomes 5000).
+//	HTTP_REDIRECT_HTTPS      true                  "true" in any letter case: in HTTPS mode CONSOLE_PORT answers every
+//	                                               request with 307 to the same target on HTTPS_PORT.
+//	SSL_CERT_PATH            (none)                Certificate (PEM) of the console and the client API port.
+//	SSL_KEY_PATH             (none)                Its private key. Both or neither.
+//	SSL_CA_PATH              (none)                Optional bundle of the certificates that issued it, for the chain.
 //	HSTS_ENABLED             (auto)                true, 1, on: always send Strict-Transport-Security in HTTPS mode.
 //	                                               false, 0, off: never. Otherwise only without self-signed certificates.
 //	ALLOW_SELF_SIGNED_CERTS  false                 "true" turns the automatic HSTS off. It does not touch mail.
@@ -45,8 +54,15 @@
 //	GO_API_PORT              port of the API       Port of the server's API in the API address given to clients. Without
 //	                         address, else 21114   a port in the address: 443 for https, 80 for any other scheme.
 //	API_PORT                 21121                 The client API port.
-//	API_ENABLED              true                  "true" in any letter case: the client API port is reported as the
-//	                                               port clients sign in on. Empty counts as not set.
+//	API_ENABLED              true                  "true" in any letter case: the console listens on the client API port
+//	                                               and reports it as the port clients sign in on. Set to the empty text
+//	                                               it is off (LoadEnv; Load counts empty as unset).
+//	API_HOST                 0.0.0.0               Address of the client API port.
+//	RUSTDESK_API_PROXY       true                  "true" in any letter case: the client API port passes the client API
+//	                                               on to the server's API; otherwise it answers it from the console's
+//	                                               routes. Set to the empty text it is off, as API_ENABLED.
+//	RUSTDESK_API_TLS         auto                  false, 0, off, http: the client API port stays on plain HTTP. Any other
+//	                                               value: TLS when the certificate loads, whatever HTTPS_ENABLED says.
 //	KEYS_PATH                (searched)            Folder the server writes its keys to. Else RUSTDESK_DIR, else
 //	(or RUSTDESK_DIR,                              RUSTDESK_PATH, else /opt/rustdesk in a container, else the first of
 //	RUSTDESK_PATH)                                 /opt/betterdesk and /opt/rustdesk that has id_ed25519 (C:\BetterDesk
@@ -124,12 +140,10 @@
 //	PANEL_PUBLIC_URL         (none)                The console's address in mails. Without both: http or https,
 //	(or PUBLIC_URL)                                HOST (127.0.0.1 for 0.0.0.0) and the console's port.
 //
-// # Not read yet
+// # The env file
 //
-// The old console loaded web-nodejs/.env before anything else, and the
-// installers write the console's settings there. The Go console reads the
-// server's environment only, so an install has to hand these settings to
-// the server's service until the installers are changed. The certificate
-// paths (SSL_CERT_PATH, SSL_KEY_PATH, HTTPS_PORT) are not read either: the
-// Go console listens on plain HTTP on one port.
+// The old console loaded web-nodejs/.env before anything else. The server
+// loads the file BETTERDESK_ENV_FILE names as the first step of main, with
+// the same rule: a variable that is set to more than "" keeps its value
+// (envfile.go). PORT is not read for the console: CONSOLE_PORT is.
 package config
