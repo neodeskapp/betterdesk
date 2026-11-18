@@ -3,6 +3,7 @@ package contract
 import (
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -39,6 +40,14 @@ type Settings struct {
 	// holds the first of the two recordings only (CONTRACT_RECORD_NEW=1).
 	// A golden that holds both recordings is never written.
 	RecordNew bool
+	// Rewrite names goldens a recording writes although the Go console
+	// answers their requests (CONTRACT_REWRITE): a regular expression
+	// that must match the golden's whole name, "<layer>/<group>/<name>" as
+	// under GoldenDir without ".json" ("cases/devices/list",
+	// "matrix/devices/GET_api_devices"). It is for a bug fix that changes
+	// what Go answers on purpose; every other golden of a Go route stays
+	// frozen. nil rewrites nothing.
+	Rewrite *regexp.Regexp
 	// GoldenDir is where the goldens are (CONTRACT_GOLDEN).
 	GoldenDir string
 	// RoutesFile is the route list the matrix is generated from
@@ -101,6 +110,16 @@ func LoadSettings(getenv func(string) string) (*Settings, error) {
 		s.RecordNew = true
 	default:
 		return nil, fmt.Errorf("CONTRACT_RECORD_NEW %q: use 1 (also record new goldens of requests the Go console answers)", v)
+	}
+	if v := strings.TrimSpace(getenv("CONTRACT_REWRITE")); v != "" {
+		if s.Record == Compare {
+			return nil, fmt.Errorf("CONTRACT_REWRITE is for recording: set CONTRACT_RECORD too")
+		}
+		re, err := regexp.Compile("^(?:" + v + ")$")
+		if err != nil {
+			return nil, fmt.Errorf("CONTRACT_REWRITE %q is not a regular expression: %w", v, err)
+		}
+		s.Rewrite = re
 	}
 	s.RequireGo = strings.TrimSpace(getenv("CONTRACT_REQUIRE_GO")) == "1"
 	if v := strings.TrimSpace(getenv("CONTRACT_TIMEOUT")); v != "" {

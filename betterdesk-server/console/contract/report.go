@@ -35,6 +35,9 @@ type Report struct {
 	// that a recording with CONTRACT_RECORD_NEW=1 wrote, because they were
 	// new.
 	recordedNew map[string]bool
+	// rewritten are the golden files of requests the Go console answers
+	// that a recording wrote because CONTRACT_REWRITE names them.
+	rewritten map[string]bool
 
 	// redact puts placeholders in place of secret values in a line of the
 	// summary; nil leaves lines as they are.
@@ -61,6 +64,7 @@ func newReport(settings *Settings) *Report {
 		frozen:   map[string]bool{},
 
 		recordedNew: map[string]bool{},
+		rewritten:   map[string]bool{},
 	}
 }
 
@@ -170,6 +174,9 @@ func (r *Report) Print(w io.Writer) {
 		fmt.Fprintf(w, "  frozen: %d (goldens of requests the Go console answers, left as they are)\n", len(r.frozen))
 		if len(r.recordedNew) > 0 {
 			fmt.Fprintf(w, "  recorded new: %d (new goldens of requests the Go console answers, CONTRACT_RECORD_NEW=1)\n", len(r.recordedNew))
+		}
+		if len(r.rewritten) > 0 {
+			fmt.Fprintf(w, "  rewritten: %d (goldens of requests the Go console answers that CONTRACT_REWRITE names)\n", len(r.rewritten))
 		}
 		if r.removed > 0 {
 			fmt.Fprintf(w, "  removed %d golden files that no route or case stands for any more\n", r.removed)

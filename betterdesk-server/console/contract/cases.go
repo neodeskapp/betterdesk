@@ -740,6 +740,10 @@ func (s *Suite) runGroup(t *testing.T, group *CaseGroup) {
 					if err != nil {
 						t.Fatalf("%s", s.redact(err.Error()))
 					}
+					// The routing report is asked about the path this
+					// request went to: a route may answer only for the
+					// values an earlier case captured
+					slots[i].target, _, _ = strings.Cut(request.Path, "?")
 					id := group.Name + "/" + c.Name
 					s.note(role, id)
 					start := time.Now()

@@ -295,8 +295,21 @@ func TestSettings(t *testing.T) {
 		s.SecretsDir != "/s" || !s.RecordNew {
 		t.Errorf("settings = %+v", s)
 	}
-	if s, _ = LoadSettings(env(map[string]string{"BD_URL": "http://x", "CONTRACT_RECORD": "1"})); s == nil || s.Record != RecordFirst {
+	if s, _ = LoadSettings(env(map[string]string{"BD_URL": "http://x", "CONTRACT_RECORD": "1"})); s == nil || s.Record != RecordFirst || s.Rewrite != nil {
 		t.Errorf("CONTRACT_RECORD=1 gives %+v", s)
+	}
+	// CONTRACT_REWRITE matches a golden's whole name
+	s, err = LoadSettings(env(map[string]string{"BD_URL": "http://x", "CONTRACT_RECORD": "1", "CONTRACT_REWRITE": "cases/devices/list|matrix/devices/GET_api_devices"}))
+	if err != nil || s.Rewrite == nil {
+		t.Fatalf("CONTRACT_REWRITE: %v, %+v", err, s)
+	}
+	for name, want := range map[string]bool{
+		"cases/devices/list": true, "matrix/devices/GET_api_devices": true,
+		"cases/devices/list-all": false, "xcases/devices/list": false, "matrix/devices/GET_api_devices_id": false,
+	} {
+		if got := s.Rewrite.MatchString(name); got != want {
+			t.Errorf("CONTRACT_REWRITE matches %q: %v, want %v", name, got, want)
+		}
 	}
 	for _, bad := range []map[string]string{
 		{},
@@ -306,6 +319,8 @@ func TestSettings(t *testing.T) {
 		{"BD_URL": "http://x", "CONTRACT_TIMEOUT": "soon"},
 		{"BD_URL": "http://x", "CONTRACT_RECORD_NEW": "1"},
 		{"BD_URL": "http://x", "CONTRACT_RECORD": "1", "CONTRACT_RECORD_NEW": "yes"},
+		{"BD_URL": "http://x", "CONTRACT_REWRITE": "cases/devices/list"},
+		{"BD_URL": "http://x", "CONTRACT_RECORD": "1", "CONTRACT_REWRITE": "cases/(devices"},
 	} {
 		if _, err := LoadSettings(env(bad)); err == nil {
 			t.Errorf("LoadSettings(%v) accepted a bad value", bad)

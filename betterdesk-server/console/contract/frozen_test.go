@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -289,5 +290,70 @@ func TestPruneKeepsFrozenGoldens(t *testing.T) {
 		if wantGone && (s.Report.removed != 1 || len(s.Report.frozen) != 2) {
 			t.Errorf("mode %d: removed %d, frozen %d; want 1 and 2", mode, s.Report.removed, len(s.Report.frozen))
 		}
+	}
+}
+
+// CONTRACT_REWRITE records the golden of a route the Go console answers
+// when it names that golden, for a fix that changes Go's answer on
+// purpose. A golden it does not name stays frozen.
+func TestRewriteWritesOnlyTheNamedGoldens(t *testing.T) {
+	dir := t.TempDir()
+	makeFile := goldenFile(dir, "cases", "moved", "make")
+	before := nodeGolden(t, makeFile, "moved/make", "POST", "/api/make")
+
+	s, _ := newMovedSuite(t, RecordFirst, dir, makeMovedToGo)
+	s.Settings.Rewrite = regexp.MustCompile(`^(?:cases/moved/other)$`)
+	s.runGroup(t, movedGroup())
+	if after, _ := os.ReadFile(makeFile); string(after) != string(before) {
+		t.Fatalf("a golden CONTRACT_REWRITE does not name was written:\n%s", after)
+	}
+	if !s.Report.frozen[makeFile] || len(s.Report.rewritten) != 0 {
+		t.Errorf("frozen %v, rewritten %v; want the golden frozen", s.Report.frozen, s.Report.rewritten)
+	}
+
+	for _, mode := range []RecordMode{RecordFirst, RecordMerge} {
+		s, _ := newMovedSuite(t, mode, dir, makeMovedToGo)
+		s.Settings.Rewrite = regexp.MustCompile(`^(?:cases/moved/make)$`)
+		s.runGroup(t, movedGroup())
+		golden, err := LoadGolden(makeFile)
+		if err != nil {
+			t.Fatalf("mode %d: %v", mode, err)
+		}
+		var made struct{ Data struct{ ID string } }
+		answer, _ := golden.For("admin")
+		if err := json.Unmarshal(answer.Body.JSON, &made); err != nil || made.Data.ID != "item-1" {
+			t.Fatalf("mode %d: the golden does not hold the Go answer: %s (%v)", mode, answer.Body.JSON, err)
+		}
+		if golden.Recordings != int(mode) || !s.Report.rewritten[makeFile] || s.Report.frozen[makeFile] {
+			t.Errorf("mode %d: %d recordings, rewritten %v, frozen %v", mode, golden.Recordings, s.Report.rewritten, s.Report.frozen)
+		}
+		var summary strings.Builder
+		s.Report.Print(&summary)
+		if !strings.Contains(summary.String(), "rewritten: 1 ") {
+			t.Errorf("mode %d: the summary does not count the rewritten golden:\n%s", mode, summary.String())
+		}
+	}
+}
+
+// The routing report is asked about the path a case's request went to,
+// with the values earlier cases captured, not with the placeholder: a
+// route may answer only for real ids.
+func TestRoutingIsAskedAboutTheFilledPath(t *testing.T) {
+	dir := t.TempDir()
+	readFile := goldenFile(dir, "cases", "moved", "read")
+	before := nodeGolden(t, readFile, "moved/read", "GET", "/api/item/{item}")
+	readMovedToGo := func(method, path string) string {
+		if method == "GET" && path == "/api/item/item-1" {
+			return HandlerGo
+		}
+		return HandlerNode
+	}
+	s, _ := newMovedSuite(t, RecordFirst, dir, readMovedToGo)
+	s.runGroup(t, movedGroup())
+	if after, _ := os.ReadFile(readFile); string(after) != string(before) {
+		t.Fatalf("the golden of the step Go answers for the captured id was written:\n%s", after)
+	}
+	if !s.Report.frozen[readFile] {
+		t.Errorf("frozen %v; want the read step frozen", s.Report.frozen)
 	}
 }

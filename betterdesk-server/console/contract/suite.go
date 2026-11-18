@@ -95,6 +95,12 @@ func (sl *slot) file(dir string) string {
 	return goldenFile(dir, sl.layer, sl.group, sl.name)
 }
 
+// goldenName is the golden's name under the golden folder without ".json",
+// as CONTRACT_REWRITE matches it: "cases/devices/list".
+func (sl *slot) goldenName() string {
+	return sl.layer + "/" + safeName(sl.group) + "/" + safeName(sl.name)
+}
+
 func newSlot(layer, group, name, id string, request RequestInfo) *slot {
 	return &slot{layer: layer, group: group, name: name, rec: recording{ID: id, Request: request, Answers: map[Role]Answer{}}}
 }
@@ -119,6 +125,10 @@ func (s *Suite) judge(t *testing.T, sl *slot, role Role, answer Answer) {
 		if !record && problem == "" && s.Settings.RecordNew && s.isNewGolden(sl) {
 			record = true
 			s.Report.recordedNew[sl.file(s.Settings.GoldenDir)] = true
+		}
+		if !record && handler == HandlerGo && s.Settings.Rewrite != nil && s.Settings.Rewrite.MatchString(sl.goldenName()) {
+			record = true
+			s.Report.rewritten[sl.file(s.Settings.GoldenDir)] = true
 		}
 		switch {
 		case record:

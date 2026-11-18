@@ -71,6 +71,7 @@ hides the summary of a passing run.
 | `BD_SECRETS_DIR` | Folder of the secrets cases send as `{secret:<file name>}` (see "Secrets"). Default `/stack/secrets`. |
 | `CONTRACT_RECORD` | `1` writes goldens from this run. `merge` adds a second run to them (see below). Unset compares. |
 | `CONTRACT_RECORD_NEW` | `1` with `CONTRACT_RECORD` also writes new goldens of requests the Go console answers (see "Recording a new case of a moved route"). |
+| `CONTRACT_REWRITE` | With `CONTRACT_RECORD`, a regular expression of golden names (`cases/devices/list`, `matrix/devices/GET_api_devices`) that a recording writes although the Go console answers them (see "Rewriting goldens for a bug fix"). |
 | `CONTRACT_GOLDEN` | Golden folder. Default `testdata/golden`. |
 | `CONTRACT_ROUTES` | Route list. Default `testdata/routes.json`. |
 | `CONTRACT_REQUIRE_GO` | `1` fails every route and case the Go console did not answer itself. |
@@ -323,6 +324,22 @@ the two halves by hand on two fresh instances:
       "cd betterdesk-server/console/contract && go test -tags contract -count=1 -run '^TestCases\$/^tickets\$'"
     DEV_DOCKER_ARGS="-e CONTRACT_RECORD=merge -e CONTRACT_RECORD_NEW=1" stack.sh run ft2 \
       "cd betterdesk-server/console/contract && go test -tags contract -count=1 -run '^TestCases\$/^tickets\$'"
+
+## Rewriting goldens for a bug fix
+
+A bug fix changes what Go answers on purpose, so the goldens of the routes
+it touches have to change with it, and only those. `CONTRACT_REWRITE` names
+them: a regular expression that must match a golden's whole name, its path
+under the golden folder without `.json` (`cases/devices/list`,
+`matrix/devices/GET_api_devices`, `cases/devices/(list|list-all)`). A
+recording then writes those goldens from Go's answers, merging the two
+recordings as for any golden; every other golden of a Go route stays frozen.
+The summary counts them (`rewritten: N`). It needs `CONTRACT_RECORD`:
+
+    CONTRACT_REWRITE='cases/devices/(list|list-all)' contract.sh record cases/devices
+
+Look at the diff of the rewritten files before committing: only what the
+fix changes may differ. The commit of the fix carries them.
 
 ## Frozen goldens
 
