@@ -181,11 +181,6 @@ async function rollbackChange(change) {
         await service.restoreBackup(descriptor.fileId, descriptor.backupPath);
         return;
     }
-    case 'billing-clock': {
-        const service = require('./billingClockConfigService');
-        service.restoreClockSettings(descriptor.settings);
-        return;
-    }
     case 'go-config': {
         const api = require('./betterdeskApi');
         const result = await api.setConfig(descriptor.key, descriptor.value);

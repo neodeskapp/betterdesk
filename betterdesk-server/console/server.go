@@ -43,6 +43,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/generator"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/guestaccess"
+	"github.com/unitronix/betterdesk-server/console/helpmail"
 	"github.com/unitronix/betterdesk-server/console/housekeeping"
 	"github.com/unitronix/betterdesk-server/console/i18n"
 	"github.com/unitronix/betterdesk-server/console/jobs"
@@ -285,6 +286,12 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	// mailed twice.
 	if cfg.NodeUpstream == nil {
 		s.jobs.Add("alert sweep", s.deps.Alerts.Run)
+	}
+	// The same holds for the mail of a help request.
+	if cfg.NodeUpstream == nil {
+		s.jobs.Add("help request mail", helpmail.New(helpmail.Options{
+			DB: opts.Store, Mail: s.deps.Mail, Events: api.Events, Logger: s.deps.Log.Child("HelpRequestEmail"),
+		}).Run)
 	}
 	badParam := func(w http.ResponseWriter, r *http.Request, err error) {
 		host.ServerError(w, r, err, http.StatusBadRequest)

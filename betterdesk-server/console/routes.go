@@ -9,6 +9,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/cdap"
 	"github.com/unitronix/betterdesk-server/console/routes/cdapstudio"
 	"github.com/unitronix/betterdesk-server/console/routes/chat"
+	"github.com/unitronix/betterdesk-server/console/routes/commercialization"
 	consoleroutes "github.com/unitronix/betterdesk-server/console/routes/console"
 	"github.com/unitronix/betterdesk-server/console/routes/crossplatform"
 	"github.com/unitronix/betterdesk-server/console/routes/dashboard"
@@ -123,6 +124,7 @@ func registerRoutes(d *kit.Deps) {
 	policies.Register(d)                      // routes/policies.routes.js
 	policies.Register(d.At("/api/bd"))        // its second mount: /api/bd/api/panel/policies/...
 	fleet.Register(d)                         // routes/fleet.routes.js
+	commercialization.Register(d)             // routes/commercialization.routes.js
 	fleet.Register(d.At("/api/bd"))           // its second mount: /api/bd/api/panel/fleet/...
 	scaling.Register(d)                       // routes/scaling.routes.js
 	scaling.Register(d.At("/api/bd"))         // routes/scaling.routes.js at /api/bd

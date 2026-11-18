@@ -27,7 +27,6 @@ function lazyRoute(modulePath) {
 const inventoryRoutes = lazyRoute('./inventory.routes');
 const activityRoutes = lazyRoute('./activity.routes');
 const automationRoutes = lazyRoute('./automation.routes');
-const commercializationRoutes = lazyRoute('./commercialization.routes');
 const serverManagementRoutes = lazyRoute('./server-management.routes');
 
 // JSON-only writes to /api/* (lib/requireJsonContentType.js)
@@ -49,7 +48,6 @@ router.use('/api/automation', automationRoutes); // admin-facing: /api/automatio
 router.use('/api/bd', automationRoutes);         // device-facing: /api/bd/commands
 router.use('/', registrationRoutes);               // admin-facing: /registrations, /api/registrations/*
 router.use('/api/bd', registrationRoutes);          // device-facing: /api/bd/register-request, /api/bd/register-status
-router.use('/', commercializationRoutes);                // admin-facing: /commercialization, /api/panel/billing/*
 router.use('/', serverManagementRoutes);                 // admin-facing: /server-management, /api/server-management/* (BETA)
 
 module.exports = router;

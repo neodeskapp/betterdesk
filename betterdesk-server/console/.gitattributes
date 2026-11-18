@@ -1,2 +1,4 @@
 # Test data is compared byte for byte: no line ending conversion
 **/testdata/** -text
+# Text the console embeds and parses line by line
+**/*.txt -text

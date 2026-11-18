@@ -96,6 +96,7 @@ func TestGuards(t *testing.T) {
 			"PUT /api/settings/advanced/files/console-env", "POST /api/settings/advanced/restart",
 			"GET /api/settings/connection-mode", "PUT /api/settings/connection-mode", "POST /api/settings/connection-mode/restart",
 			"GET /api/settings/public-endpoints", "PUT /api/settings/public-endpoints",
+			"GET /api/settings/email/smtp", "PUT /api/settings/email/smtp", "POST /api/settings/email/smtp/test",
 		}
 		denied := s.As("viewer")
 		admin := s.As("admin")
@@ -422,6 +423,7 @@ func TestPermissionGuardsOfWrites(t *testing.T) {
 		"PUT /api/settings/oidc", "POST /api/settings/oidc/test", "PUT /api/settings/advanced/files/console-env",
 		"POST /api/settings/advanced/restart", "PUT /api/settings/connection-mode",
 		"POST /api/settings/connection-mode/restart", "PUT /api/settings/public-endpoints",
+		"PUT /api/settings/email/smtp", "POST /api/settings/email/smtp/test",
 	} {
 		method, path, _ := strings.Cut(route, " ")
 		r := httptest.NewRequest(method, path, strings.NewReader("{}"))

@@ -1,0 +1,181 @@
+{
+ "id": "commercialization/package-preview-year-border",
+ "request": {
+  "method": "GET",
+  "path": "/api/panel/billing/packages/{busy}/preview?period=2025-12"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "available_periods"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "available_periods"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "panel_access_denied",
+     "error": "Panel access denied: commercialization",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "available_periods",
+    {
+     "path": "groups[*].contract_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "groups[*].org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "package.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "package.id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "package.updated_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "amount_overage": 0,
+     "available_periods": [],
+     "companies": [
+      "Demo Harbor Logistics"
+     ],
+     "currency": "EUR",
+     "device_count": 5,
+     "groups": [
+      {
+       "contract_id": "<volatile>",
+       "device_count": 5,
+       "guid": "<volatile>",
+       "name": "Demo Harbor Logistics",
+       "org_id": "<volatile>",
+       "org_name": "Demo Harbor Logistics",
+       "remaining_minutes": 0,
+       "status": "active"
+      }
+     ],
+     "included_limit": 300,
+     "included_minutes_used": 0,
+     "overage_minutes": 0,
+     "package": {
+      "created_at": "<volatile>",
+      "currency": "EUR",
+      "description": "5 hours a month, billed in 15 minute steps",
+      "id": "<volatile>",
+      "included_minutes": 300,
+      "name": "Demo Basic Support",
+      "overage_rate": 60,
+      "rounding_minutes": 15,
+      "updated_at": "<volatile>"
+     },
+     "period_ym": "2025-12",
+     "remaining_minutes": 300,
+     "timezone": "UTC"
+    }
+   }
+  }
+ ]
+}

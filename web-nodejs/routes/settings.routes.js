@@ -22,7 +22,6 @@ const {
 } = require('../lib/updateResultStore');
 const { splitUpdateFailures } = require('../lib/updateFailurePolicy');
 const restartCoordinator = require('../services/restartCoordinator');
-const { getSmtpSettings, putSmtpSettings, testSmtpSettings } = require('../lib/smtpSettingsHandlers');
 const { canUsePrivilegedUpdate, invokePrivilegedUpdate } = require('../lib/privilegedUpdateHelper');
 const { requireAuth, requirePermission } = require('../middleware/auth');
 const managementCapabilities = require('../lib/managementCapabilities');
@@ -1065,20 +1064,5 @@ router.post('/api/settings/updates/backups/prune', requireAuth, requirePermissio
         res.status(500).json({ success: false, error: err.message });
     }
 });
-
-/**
- * GET /api/settings/email/smtp — SMTP configuration (masked secrets).
- */
-router.get('/api/settings/email/smtp', requireAuth, requirePermission('server.config'), getSmtpSettings);
-
-/**
- * PUT /api/settings/email/smtp — Update SMTP configuration.
- */
-router.put('/api/settings/email/smtp', requireAuth, requirePermission('server.config'), putSmtpSettings);
-
-/**
- * POST /api/settings/email/smtp/test — Test SMTP connection.
- */
-router.post('/api/settings/email/smtp/test', requireAuth, requirePermission('server.config'), testSmtpSettings);
 
 module.exports = router;

@@ -1,0 +1,122 @@
+{
+ "id": "commercialization/package-preview",
+ "request": {
+  "method": "GET",
+  "path": "/api/panel/billing/packages/{package}/preview?period=2026-03"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "operator"
+   ],
+   "status": 404,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "available_periods"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "package not found"
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "available_periods",
+    {
+     "path": "package.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "package.id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "package.updated_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "amount_overage": 0,
+     "available_periods": [],
+     "companies": [],
+     "currency": "EUR",
+     "device_count": 0,
+     "groups": null,
+     "included_limit": 90,
+     "included_minutes_used": 0,
+     "overage_minutes": 0,
+     "package": {
+      "created_at": "<volatile>",
+      "currency": "EUR",
+      "description": "Created by the contract cases",
+      "id": "<volatile>",
+      "included_minutes": 90,
+      "name": "Contract test package",
+      "overage_rate": 12.345,
+      "rounding_minutes": 15,
+      "updated_at": "<volatile>"
+     },
+     "period_ym": "2026-03",
+     "remaining_minutes": 90,
+     "timezone": "UTC"
+    }
+   }
+  }
+ ]
+}

@@ -2,12 +2,12 @@
 // transaction, the server's facts and addresses, device scope,
 // availability history, the audit log, enrollment, the directory and
 // single sign-on settings, client sessions, the configuration file
-// editor, the connection mode, the public endpoints, and the routes that
-// only read the branding (the settings and the appearance model, the
-// profiles, the uploaded backgrounds, the built-in themes and the fonts
-// for anyone signed in, and the stylesheet and favicon for everyone). The
-// branding writes, backup and restore, updates and server management and
-// the mail settings are still answered by the Node console.
+// editor, the connection mode, the public endpoints, the SMTP settings,
+// and the routes that only read the branding (the settings and the
+// appearance model, the profiles, the uploaded backgrounds, the built-in
+// themes and the fonts for anyone signed in, and the stylesheet and
+// favicon for everyone). The branding writes, backup and restore, updates
+// and server management are still answered by the Node console.
 package settings
 
 import (
@@ -68,4 +68,7 @@ func Register(d *kit.Deps) {
 	r.Post("/api/settings/connection-mode/restart", g.connectionModeRestart, d.RequireAuth, server)
 	r.Get("/api/settings/public-endpoints", g.getPublicEndpoints, d.RequireAuth, server)
 	r.Put("/api/settings/public-endpoints", g.setPublicEndpoints, d.RequireAuth, server)
+	r.Get("/api/settings/email/smtp", h.getSMTP, d.RequireAuth, server)
+	r.Put("/api/settings/email/smtp", h.saveSMTP, d.RequireAuth, server)
+	r.Post("/api/settings/email/smtp/test", h.testSMTP, d.RequireAuth, server)
 }
