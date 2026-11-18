@@ -799,6 +799,7 @@
                     this._monitors = list.map((m, idx) => ({
                         idx: typeof m.idx === 'number' ? m.idx : idx,
                         name: m.name || `Monitor ${idx + 1}`,
+                        osName: m.name || '',
                         primary: !!m.primary,
                         width: m.width | 0,
                         height: m.height | 0,

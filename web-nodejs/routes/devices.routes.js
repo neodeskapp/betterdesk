@@ -21,6 +21,53 @@ async function rejectIfDeviceOutOfScope(req, res, device) {
     return true;
 }
 
+/**
+ * Scope guard as middleware for every `/api/devices/:id/*` route.
+ *
+ * SECURITY (audit H9, 2026-11-13): the guard was copied into individual
+ * handlers, and several of them (tags, rename, change-id, restore,
+ * access-policy delete, strategies) were missed — an operator with a restricted
+ * device scope could mutate metadata of out-of-scope devices by id. Registering
+ * the check once at mount time makes new routes safe by default.
+ *
+ * Deleted peers are allowed through so `POST /:id/restore` keeps working;
+ * scope membership is evaluated against the stored row.
+ */
+async function requireDeviceInScope(req, res, next) {
+    const id = req.params.id;
+    if (!id) return next();
+    // Authentication is enforced by the route's own requireAuth; skip the extra
+    // lookup for anonymous callers so the 401 path stays cheap.
+    if (!req.session || !req.session.userId || !req.session.user) return next();
+    // Unrestricted roles never need the per-device lookups: the scope resolver
+    // returns `null` (meaning "everything") for them, so checking here would only
+    // add a Go API round trip to every admin request.
+    const role = req.session.user.role;
+    if (role === 'super_admin' || role === 'admin' || role === 'global_admin' || role === 'server_admin') {
+        return next();
+    }
+    try {
+        const device = await serverBackend.getDeviceById(id, { includeDeleted: true });
+        if (!device) {
+            // Let the handler decide between 404 and restore semantics; a
+            // nonexistent device is not an out-of-scope disclosure.
+            return next();
+        }
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
+        req.scopedDevice = device;
+        return next();
+    } catch (err) {
+        console.error('Device scope guard error:', err.message);
+        return res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+}
+
+/**
+ * Scope guard for every `/api/devices/:id/*` route (audit H9, 2026-11-13).
+ * Mounted before the device handlers so new routes cannot forget it.
+ */
+router.use('/api/devices/:id', requireDeviceInScope);
+
 // ===========================================================================
 //  Phase 2 — Live agent introspection (services, processes, events, files,
 //  terminal, screenshot, activity). All endpoints proxy a command request to
