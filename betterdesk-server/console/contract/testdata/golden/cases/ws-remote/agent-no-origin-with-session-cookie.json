@@ -1,0 +1,24 @@
+{
+ "id": "ws-remote/agent-no-origin-with-session-cookie",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-agent/900100001?token=%7Bsecret%3Adevice_token%7D",
+  "notes": [
+   "header Cookie: bd.sid=s%3Anot-a-session",
+   "no cookies",
+   "websocket a2, no Origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

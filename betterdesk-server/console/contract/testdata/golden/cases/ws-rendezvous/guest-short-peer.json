@@ -1,0 +1,23 @@
+{
+ "id": "ws-rendezvous/guest-short-peer",
+ "request": {
+  "method": "GET",
+  "path": "/ws/rendezvous?guest=%7Bsecret%3Aglink%7D&guest_session=contract-session&peer_id=ab",
+  "notes": [
+   "no cookies",
+   "websocket g3, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

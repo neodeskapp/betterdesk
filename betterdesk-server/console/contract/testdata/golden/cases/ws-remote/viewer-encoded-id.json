@@ -1,0 +1,47 @@
+{
+ "id": "ws-remote/viewer-encoded-id",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-viewer/9001%300001",
+  "notes": [
+   "websocket v3, own origin",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 404,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

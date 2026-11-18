@@ -1,0 +1,32 @@
+{
+ "id": "ws-rendezvous/guest-not-a-frame",
+ "request": {
+  "method": "GET",
+  "path": "/ws/rendezvous?guest=%7Bsecret%3Aglink%7D&guest_session=contract-other&peer_id=900100001",
+  "notes": [
+   "no cookies",
+   "websocket gx, own origin",
+   "websocket send 2 binary bytes",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

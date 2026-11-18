@@ -1,0 +1,3334 @@
+{
+ "start": 1700000000000,
+ "scenarios": [
+  {
+   "name": "agent checks",
+   "clock": 1700000000000,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/remote-agent/dev1?token=tok-dev1-good",
+      "headers": {
+       "Origin": "https://evil.example"
+      }
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/remote-agent/dev1?token=tok-dev1-good",
+      "headers": {
+       "Cookie": "bd.sid=s%3Ax"
+      }
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/remote-agent/ab?token=tok-ab-good"
+     },
+     "events": [
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 400 Bad Request\r\n\r\n"
+      },
+      {
+       "socket": "c",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/remote-agent/a%20b1?token=tok-a%20b1-good"
+     },
+     "events": [
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 400 Bad Request\r\n\r\n"
+      },
+      {
+       "socket": "d",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/ws/remote-agent/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?token=x"
+     },
+     "events": [
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 400 Bad Request\r\n\r\n"
+      },
+      {
+       "socket": "e",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "f",
+      "path": "/ws/remote-agent/dev1"
+     },
+     "events": [
+      {
+       "socket": "f",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "f",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "g",
+      "path": "/ws/remote-agent/dev1?token="
+     },
+     "events": [
+      {
+       "socket": "g",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "g",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "h",
+      "path": "/ws/remote-agent/dev1?token=tok-throw"
+     },
+     "events": [
+      {
+       "socket": "h",
+       "head": "HTTP/1.1 500 Internal Server Error\r\n\r\n"
+      },
+      {
+       "socket": "h",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev1",
+        "tok-throw"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "i",
+      "path": "/ws/remote-agent/dev1?token=wrong"
+     },
+     "events": [
+      {
+       "socket": "i",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "i",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev1",
+        "wrong"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "j",
+      "path": "/ws/remote-agent/dev1?token=tok-dev2-good"
+     },
+     "events": [
+      {
+       "socket": "j",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "j",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev1",
+        "tok-dev2-good"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "k",
+      "path": "/ws/remote-agent/dev1?token=wrong&token=tok-dev1-good"
+     },
+     "events": [
+      {
+       "socket": "k",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "k",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev1",
+        "wrong"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "l",
+      "path": "/ws/remote-agent/%64ev1?token=tok-dev1-good"
+     },
+     "events": [
+      {
+       "socket": "l",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev1",
+        "tok-dev1-good"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "active"
+     },
+     "result": [
+      "dev1"
+     ],
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": {
+      "agentConnected": true,
+      "viewerCount": 0,
+      "streaming": false
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "m",
+      "path": "/ws/remote-agent/dev1?token=tok-dev1-good",
+      "headers": {
+       "Origin": "http://console.test"
+      }
+     },
+     "events": [
+      {
+       "socket": "m",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "l",
+       "close": 1001,
+       "reason": "New agent connected"
+      },
+      {
+       "socket": "l",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev1",
+        "tok-dev1-good"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "n",
+      "path": "/ws/remote-agent/a_b-9?token=tok-a_b-9-good",
+      "headers": {
+       "Origin": "https://console.test",
+       "Cookie": "bd.sid=s%3Ax"
+      }
+     },
+     "events": [
+      {
+       "socket": "n",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "a_b-9",
+        "tok-a_b-9-good"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "o",
+      "path": "/ws/remote-agent/dev%2D9?token=tok-dev-9-good"
+     },
+     "events": [
+      {
+       "socket": "o",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev-9",
+        "tok-dev-9-good"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "p",
+      "path": "/ws/remote-agent/dev1?token=tok%2Ddev1%2Dgood"
+     },
+     "events": [
+      {
+       "socket": "p",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "m",
+       "close": 1001,
+       "reason": "New agent connected"
+      },
+      {
+       "socket": "m",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev1",
+        "tok-dev1-good"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "active"
+     },
+     "result": [
+      "dev1",
+      "a_b-9",
+      "dev-9"
+     ],
+     "events": [],
+     "calls": []
+    }
+   ]
+  },
+  {
+   "name": "single-use token",
+   "clock": 1700000000000,
+   "steps": [
+    {
+     "step": {
+      "call": "issue",
+      "args": [
+       "dev1"
+      ],
+      "as": "t1"
+     },
+     "result": {
+      "token": "3aabac26af231a716c915d31183ebcd2ef51229d724fdbd96f396eae2bc8222f",
+      "expires_in": 60
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/remote-agent/dev1?token={t1.token}"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/remote-agent/dev1?token={t1.token}"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev1",
+        "3aabac26af231a716c915d31183ebcd2ef51229d724fdbd96f396eae2bc8222f"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "issue",
+      "args": [
+       "dev1"
+      ],
+      "as": "t2"
+     },
+     "result": {
+      "token": "0ce3ed8c687ba28999d639a79ff255fe9115b820aa7a948aa04dc09dfe494cdc",
+      "expires_in": 60
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "issue",
+      "args": [
+       "dev1"
+      ],
+      "as": "t3"
+     },
+     "result": {
+      "token": "8ee0b906b230294a601cdf3cb762cf4205190c4bb3dfe17c45fb5051677078c9",
+      "expires_in": 60
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/remote-agent/dev1?token={t2.token}"
+     },
+     "events": [
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "c",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev1",
+        "0ce3ed8c687ba28999d639a79ff255fe9115b820aa7a948aa04dc09dfe494cdc"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/remote-agent/dev1?token={t3.token}"
+     },
+     "events": [
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "a",
+       "close": 1001,
+       "reason": "New agent connected"
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "issue",
+      "args": [
+       "dev2"
+      ],
+      "as": "t4"
+     },
+     "result": {
+      "token": "04f8430cb44873cbc605d89f58f06dd7e538aceeefedfcef97fe1637bc03e7aa",
+      "expires_in": 60
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/ws/remote-agent/dev1?token={t4.token}"
+     },
+     "events": [
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "e",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev1",
+        "04f8430cb44873cbc605d89f58f06dd7e538aceeefedfcef97fe1637bc03e7aa"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "f",
+      "path": "/ws/remote-agent/dev2?token={t4.token}x"
+     },
+     "events": [
+      {
+       "socket": "f",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "f",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev2",
+        "04f8430cb44873cbc605d89f58f06dd7e538aceeefedfcef97fe1637bc03e7aax"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "g",
+      "path": "/ws/remote-agent/dev2?token=short"
+     },
+     "events": [
+      {
+       "socket": "g",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "g",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev2",
+        "short"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "h",
+      "path": "/ws/remote-agent/dev2?token={t4.token}"
+     },
+     "events": [
+      {
+       "socket": "h",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "issue",
+      "args": [
+       "dev2"
+      ],
+      "as": "t5"
+     },
+     "result": {
+      "token": "b065384349d7593be07f7fe2a3c9d6ae2a6766edabb54d73ff968a23320b97ef",
+      "expires_in": 60
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "advance": 60000
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "i",
+      "path": "/ws/remote-agent/dev2?token={t5.token}"
+     },
+     "events": [
+      {
+       "socket": "i",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "h",
+       "close": 1001,
+       "reason": "New agent connected"
+      },
+      {
+       "socket": "h",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "issue",
+      "args": [
+       "dev2"
+      ],
+      "as": "t6"
+     },
+     "result": {
+      "token": "1c7dba419678f9d2693cb36fcbdb4274e1815f22d71b25a7cef6cb80a11eaaad",
+      "expires_in": 60
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "advance": 60001
+     },
+     "events": [
+      {
+       "socket": "d",
+       "close": 1000,
+       "reason": "Idle timeout"
+      },
+      {
+       "socket": "d",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "j",
+      "path": "/ws/remote-agent/dev2?token={t6.token}"
+     },
+     "events": [
+      {
+       "socket": "j",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "j",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev2",
+        "1c7dba419678f9d2693cb36fcbdb4274e1815f22d71b25a7cef6cb80a11eaaad"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "k",
+      "path": "/ws/remote-agent/dev2?token={t6.token}"
+     },
+     "events": [
+      {
+       "socket": "k",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "k",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev2",
+        "1c7dba419678f9d2693cb36fcbdb4274e1815f22d71b25a7cef6cb80a11eaaad"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "issue",
+      "args": [
+       "dev-3"
+      ],
+      "as": "t7"
+     },
+     "result": {
+      "token": "df1db0e822d15e042a2070631f88baad836a925bdbdbc7ef87fb15eca5b8969f",
+      "expires_in": 60
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "l",
+      "path": "/ws/remote-agent/dev-3?token=tok-dev-3-good"
+     },
+     "events": [
+      {
+       "socket": "l",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev-3",
+        "tok-dev-3-good"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "m",
+      "path": "/ws/remote-agent/dev-3?token={t7.token}"
+     },
+     "events": [
+      {
+       "socket": "m",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "l",
+       "close": 1001,
+       "reason": "New agent connected"
+      },
+      {
+       "socket": "l",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev2"
+      ]
+     },
+     "result": {
+      "agentConnected": true,
+      "viewerCount": 0,
+      "streaming": false
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "active"
+     },
+     "result": [
+      "dev1",
+      "dev2",
+      "dev-3"
+     ],
+     "events": [],
+     "calls": []
+    }
+   ]
+  },
+  {
+   "name": "viewer checks",
+   "clock": 1700000120001,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/remote-viewer/dev1"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"user\":{\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":0,\"user\":{\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "c",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"vic\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "d",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "viewer",
+        "device.connect"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"thor\",\"role\":\"throw\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "e",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "throw",
+        "device.connect"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "f",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":3,\"role\":\"admin\"}"
+      }
+     },
+     "events": [
+      {
+       "socket": "f",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "f",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "<undefined>",
+        "device.connect"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "g",
+      "path": "/ws/remote-viewer/nodev",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "g",
+       "head": "HTTP/1.1 404 Not Found\r\n\r\n"
+      },
+      {
+       "socket": "g",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "nodev"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "h",
+      "path": "/ws/remote-viewer/dev2",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"scoped\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "h",
+       "head": "HTTP/1.1 404 Not Found\r\n\r\n"
+      },
+      {
+       "socket": "h",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev2"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "scoped",
+         "role": "operator"
+        },
+        "dev2"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "i",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"scopethrow\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "i",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "i",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev1"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "scopethrow",
+         "role": "operator"
+        },
+        "dev1"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "j",
+      "path": "/ws/remote-viewer/dev-throw",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "j",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "j",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev-throw"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "k",
+      "path": "/ws/remote-viewer/%64ev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "k",
+       "head": "HTTP/1.1 404 Not Found\r\n\r\n"
+      },
+      {
+       "socket": "k",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "%64ev1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "l",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}",
+       "Origin": "https://evil.example"
+      }
+     },
+     "events": [
+      {
+       "socket": "l",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "l",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "m",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"scoped\",\"role\":\"operator\"}}",
+       "Origin": "http://console.test"
+      }
+     },
+     "events": [
+      {
+       "socket": "m",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "m",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":false,\"streaming\":false}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev1"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "scoped",
+         "role": "operator"
+        },
+        "dev1"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "n",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":9,\"user\":{\"id\":9,\"username\":\"root\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "n",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "n",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":false,\"streaming\":false}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "admin",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev1"
+      },
+      {
+       "scope": [
+        {
+         "id": 9,
+         "username": "root",
+         "role": "admin"
+        },
+        "dev1"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "o",
+      "path": "/ws/remote-viewer/dev2",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":\"12\",\"username\":\"sso\",\"role\":\"operator\",\"user\":{\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "o",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "o",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":false,\"streaming\":false}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev2"
+      },
+      {
+       "scope": [
+        {
+         "role": "operator"
+        },
+        "dev2"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": {
+      "agentConnected": false,
+      "viewerCount": 2,
+      "streaming": false
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "nodev"
+      ]
+     },
+     "result": null,
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "active"
+     },
+     "result": [
+      "dev1",
+      "dev2"
+     ],
+     "events": [],
+     "calls": []
+    }
+   ]
+  },
+  {
+   "name": "streaming",
+   "clock": 1700000120001,
+   "steps": [
+    {
+     "step": {
+      "open": "agent",
+      "path": "/ws/remote-agent/dev1?token=tok-dev1-good"
+     },
+     "events": [
+      {
+       "socket": "agent",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev1",
+        "tok-dev1-good"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": {
+      "agentConnected": true,
+      "viewerCount": 0,
+      "streaming": false
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "v1",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":true,\"streaming\":false}"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"stream-started\"}"
+      },
+      {
+       "socket": "agent",
+       "text": "{\"type\":\"start\"}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev1"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev1"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": {
+      "agentConnected": true,
+      "viewerCount": 1,
+      "streaming": true
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "binary": "w7/DmCBmcmFtZSBvbmU="
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "binary": "w7/DmCBmcmFtZSBvbmU="
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "repeat": 2097152
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "binary": "\u0001RUN:699050:eHh4\u0001eHg="
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "repeat": 2097153
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "text": "{\"type\":\"status\",\"fps\":30}"
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"status\",\"fps\":30}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "text": "{\"type\":\"pong\"}"
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"pong\"}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "text": "{\"type\":\"other\"}"
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "text": "not json"
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "text": "5"
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "text": "\"status\""
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "text": "[{\"type\":\"status\"}]"
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "text": " {\"type\" : \"status\", \"n\": 1.0, \"m\": -0, \"e\": 1E400, \"f\": -1e-400, \"g\": 0.1, \"h\": 123456789012345678901234567890, \"i\": 1e21, \"j\": 1e-7, \"k\": 0.000001} "
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"status\",\"n\":1,\"m\":0,\"e\":null,\"f\":0,\"g\":0.1,\"h\":1.2345678901234568e+29,\"i\":1e+21,\"j\":1e-7,\"k\":0.000001}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "text": "{\"type\":\"status\",\"s\":\"\\u2028\\u2029\\ud800 \\udfff x\\ud83d\\ude00\\u0000\\u001f\\\"\\\\\\/\",\"t\":\" é\"}"
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"status\",\"s\":\"  \\ud800 \\udfff x😀\\u0000\\u001f\\\"\\\\/\",\"t\":\" é\"}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "text": "{\"b\":1,\"type\":\"status\",\"2\":\"x\",\"1\":\"y\",\"__proto__\":{\"type\":\"stop\"},\"a\":[],\"type\":\"status\",\"b\":2,\"4294967295\":0,\"4294967294\":1,\"01\":2}"
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "text": "{\"1\":\"y\",\"2\":\"x\",\"4294967294\":1,\"b\":2,\"type\":\"status\",\"__proto__\":{\"type\":\"stop\"},\"a\":[],\"4294967295\":0,\"01\":2}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "text": "{\"type\":\"status\",\"nested\":{\"z\":1,\"a\":[true,false,null,{\"1\":0,\"0\":1}]}}"
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"status\",\"nested\":{\"z\":1,\"a\":[true,false,null,{\"0\":1,\"1\":0}]}}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "text": "{\"type\":\"status\"}x"
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "text": "{\"type\":\"STATUS\"}"
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "{\"type\":\"input\",\"event_type\":\"mouse_move\",\"x\":5,\"y\":7}"
+     },
+     "events": [
+      {
+       "socket": "agent",
+       "text": "{\"type\":\"mouse_move\",\"x\":5,\"y\":7}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "{\"x\":1,\"type\":\"input\",\"kind\":\"key\",\"event_type\":\"\"}"
+     },
+     "events": [
+      {
+       "socket": "agent",
+       "text": "{\"x\":1,\"type\":\"key\",\"kind\":\"key\"}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "{\"type\":\"input\"}"
+     },
+     "events": [
+      {
+       "socket": "agent",
+       "text": "{\"type\":\"unknown\"}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "{\"type\":\"input\",\"event_type\":7,\"kind\":\"k\"}"
+     },
+     "events": [
+      {
+       "socket": "agent",
+       "text": "{\"type\":7,\"kind\":\"k\"}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "{\"type\":\"input\",\"event_type\":{\"a\":1},\"z\":[1]}"
+     },
+     "events": [
+      {
+       "socket": "agent",
+       "text": "{\"type\":{\"a\":1},\"z\":[1]}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "{\"type\":\"input\",\"event_type\":0,\"kind\":false}"
+     },
+     "events": [
+      {
+       "socket": "agent",
+       "text": "{\"type\":\"unknown\",\"kind\":false}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "{\"2\":2,\"type\":\"input\",\"event_type\":\"key\",\"1\":1,\"__proto__\":{\"x\":1},\"type\":\"input\"}"
+     },
+     "events": [
+      {
+       "socket": "agent",
+       "text": "{\"1\":1,\"2\":2,\"type\":\"key\",\"__proto__\":{\"x\":1}}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "{\"type\":\"input\",\"event_type\":\"\\ud800\",\"n\":-0,\"big\":1e400}"
+     },
+     "events": [
+      {
+       "socket": "agent",
+       "text": "{\"type\":\"\\ud800\",\"n\":0,\"big\":null}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "binary": "eyJ0eXBlIjoic3RvcCJ9"
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "nope"
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "{\"type\":\"other\"}"
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "[1]"
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "{\"__proto__\":{\"type\":\"stop\"}}"
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "{\"type\":\"stop\"}"
+     },
+     "events": [
+      {
+       "socket": "agent",
+       "text": "{\"type\":\"stop\"}"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"stream-stopped\",\"reason\":\"operator requested stop\"}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": {
+      "agentConnected": true,
+      "viewerCount": 1,
+      "streaming": false
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "{\"type\":\"stop\"}"
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "{\"type\":\"input\",\"event_type\":\"after_stop\"}"
+     },
+     "events": [
+      {
+       "socket": "agent",
+       "text": "{\"type\":\"after_stop\"}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "v2",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"root\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "v2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "v2",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":true,\"streaming\":false}"
+      },
+      {
+       "socket": "v2",
+       "text": "{\"type\":\"stream-started\"}"
+      },
+      {
+       "socket": "agent",
+       "text": "{\"type\":\"start\"}"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"stream-started\"}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "admin",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev1"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "root",
+         "role": "admin"
+        },
+        "dev1"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": {
+      "agentConnected": true,
+      "viewerCount": 2,
+      "streaming": true
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "v1",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": {
+      "agentConnected": true,
+      "viewerCount": 1,
+      "streaming": true
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v2",
+      "drop": true
+     },
+     "events": [
+      {
+       "socket": "v2",
+       "end": true
+      },
+      {
+       "socket": "agent",
+       "text": "{\"type\":\"stop\"}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": {
+      "agentConnected": true,
+      "viewerCount": 0,
+      "streaming": false
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "advance": 89999
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "advance": 1
+     },
+     "events": [
+      {
+       "socket": "agent",
+       "close": 1000,
+       "reason": "Idle timeout"
+      },
+      {
+       "socket": "agent",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": {
+      "agentConnected": false,
+      "viewerCount": 0,
+      "streaming": false
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "active"
+     },
+     "result": [
+      "dev1"
+     ],
+     "events": [],
+     "calls": []
+    }
+   ]
+  },
+  {
+   "name": "viewer first",
+   "clock": 1700000210001,
+   "steps": [
+    {
+     "step": {
+      "open": "v1",
+      "path": "/ws/remote-viewer/dev2",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":false,\"streaming\":false}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev2"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev2"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev2"
+      ]
+     },
+     "result": {
+      "agentConnected": false,
+      "viewerCount": 1,
+      "streaming": false
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "{\"type\":\"input\",\"event_type\":\"lost\"}"
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "{\"type\":\"stop\"}"
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "a1",
+      "path": "/ws/remote-agent/dev2?token=tok-dev2-good"
+     },
+     "events": [
+      {
+       "socket": "a1",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "a1",
+       "text": "{\"type\":\"start\"}"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"agent-ready\",\"device_id\":\"dev2\"}"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"stream-started\"}"
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev2",
+        "tok-dev2-good"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a1",
+      "text": "{\"type\":\"status\",\"n\":1}"
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"status\",\"n\":1}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "a2",
+      "path": "/ws/remote-agent/dev2?token=tok-dev2-good"
+     },
+     "events": [
+      {
+       "socket": "a2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "a2",
+       "text": "{\"type\":\"start\"}"
+      },
+      {
+       "socket": "a1",
+       "close": 1001,
+       "reason": "New agent connected"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"agent-ready\",\"device_id\":\"dev2\"}"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"stream-started\"}"
+      },
+      {
+       "socket": "a1",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev2",
+        "tok-dev2-good"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a1",
+      "text": "{\"type\":\"status\",\"from\":\"a1\"}"
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "a2",
+      "text": "{\"type\":\"status\",\"from\":\"a2\"}"
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"status\",\"from\":\"a2\"}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "text": "{\"type\":\"input\",\"event_type\":\"to_a2\"}"
+     },
+     "events": [
+      {
+       "socket": "a2",
+       "text": "{\"type\":\"to_a2\"}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev2"
+      ]
+     },
+     "result": {
+      "agentConnected": true,
+      "viewerCount": 1,
+      "streaming": true
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "a2",
+      "drop": true
+     },
+     "events": [
+      {
+       "socket": "a2",
+       "end": true
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"agent-disconnected\"}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev2"
+      ]
+     },
+     "result": {
+      "agentConnected": false,
+      "viewerCount": 1,
+      "streaming": false
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "a3",
+      "path": "/ws/remote-agent/dev2?token=tok-dev2-good"
+     },
+     "events": [
+      {
+       "socket": "a3",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "a3",
+       "text": "{\"type\":\"start\"}"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"agent-ready\",\"device_id\":\"dev2\"}"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"stream-started\"}"
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev2",
+        "tok-dev2-good"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a3",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "a3",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "a3",
+       "end": true
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"agent-disconnected\"}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev2"
+      ]
+     },
+     "result": {
+      "agentConnected": false,
+      "viewerCount": 1,
+      "streaming": false
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "advance": 90000
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "a4",
+      "path": "/ws/remote-agent/dev2?token=tok-dev2-good"
+     },
+     "events": [
+      {
+       "socket": "a4",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "a4",
+       "text": "{\"type\":\"start\"}"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"agent-ready\",\"device_id\":\"dev2\"}"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"stream-started\"}"
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev2",
+        "tok-dev2-good"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "v1",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "v1",
+       "end": true
+      },
+      {
+       "socket": "a4",
+       "text": "{\"type\":\"stop\"}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "advance": 30000
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "v2",
+      "path": "/ws/remote-viewer/dev2",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "v2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "v2",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":true,\"streaming\":false}"
+      },
+      {
+       "socket": "v2",
+       "text": "{\"type\":\"stream-started\"}"
+      },
+      {
+       "socket": "a4",
+       "text": "{\"type\":\"start\"}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev2"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev2"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 90000
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev2"
+      ]
+     },
+     "result": {
+      "agentConnected": true,
+      "viewerCount": 1,
+      "streaming": true
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v2",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "v2",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "v2",
+       "end": true
+      },
+      {
+       "socket": "a4",
+       "text": "{\"type\":\"stop\"}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "advance": 89000
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "v3",
+      "path": "/ws/remote-viewer/dev2",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "v3",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "v3",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":true,\"streaming\":false}"
+      },
+      {
+       "socket": "v3",
+       "text": "{\"type\":\"stream-started\"}"
+      },
+      {
+       "socket": "a4",
+       "text": "{\"type\":\"start\"}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev2"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev2"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 5000
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v3",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "v3",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "v3",
+       "end": true
+      },
+      {
+       "socket": "a4",
+       "text": "{\"type\":\"stop\"}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "advance": 90000
+     },
+     "events": [
+      {
+       "socket": "a4",
+       "close": 1000,
+       "reason": "Idle timeout"
+      },
+      {
+       "socket": "a4",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev2"
+      ]
+     },
+     "result": {
+      "agentConnected": false,
+      "viewerCount": 0,
+      "streaming": false
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "active"
+     },
+     "result": [
+      "dev2"
+     ],
+     "events": [],
+     "calls": []
+    }
+   ]
+  },
+  {
+   "name": "max viewers",
+   "clock": 1700000604001,
+   "steps": [
+    {
+     "step": {
+      "open": "agent",
+      "path": "/ws/remote-agent/dev1?token=tok-dev1-good"
+     },
+     "events": [
+      {
+       "socket": "agent",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev1",
+        "tok-dev1-good"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "v1",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":true,\"streaming\":false}"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"stream-started\"}"
+      },
+      {
+       "socket": "agent",
+       "text": "{\"type\":\"start\"}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev1"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev1"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "v2",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "v2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "v2",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":true,\"streaming\":true}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev1"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev1"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "v3",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "v3",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "v3",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":true,\"streaming\":true}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev1"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev1"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "v4",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "v4",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "v4",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":true,\"streaming\":true}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev1"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev1"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "v5",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "v5",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "v5",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":true,\"streaming\":true}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev1"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev1"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "v6",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "v6",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "v6",
+       "close": 1008,
+       "reason": "Max viewers reached"
+      },
+      {
+       "socket": "v6",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev1"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev1"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "v6",
+      "text": "{\"type\":\"stop\"}"
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "text": "{\"type\":\"status\",\"to\":\"five\"}"
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"status\",\"to\":\"five\"}"
+      },
+      {
+       "socket": "v2",
+       "text": "{\"type\":\"status\",\"to\":\"five\"}"
+      },
+      {
+       "socket": "v3",
+       "text": "{\"type\":\"status\",\"to\":\"five\"}"
+      },
+      {
+       "socket": "v4",
+       "text": "{\"type\":\"status\",\"to\":\"five\"}"
+      },
+      {
+       "socket": "v5",
+       "text": "{\"type\":\"status\",\"to\":\"five\"}"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": {
+      "agentConnected": true,
+      "viewerCount": 5,
+      "streaming": true
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "v1",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "v1",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "v7",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "v7",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "v7",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":true,\"streaming\":true}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev1"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev1"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": {
+      "agentConnected": true,
+      "viewerCount": 5,
+      "streaming": true
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "w1",
+      "path": "/ws/remote-viewer/dev-3",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "w1",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "w1",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":false,\"streaming\":false}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev-3"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev-3"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "w2",
+      "path": "/ws/remote-viewer/dev-3",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "w2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "w2",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":false,\"streaming\":false}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev-3"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev-3"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "w3",
+      "path": "/ws/remote-viewer/dev-3",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "w3",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "w3",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":false,\"streaming\":false}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev-3"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev-3"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "w4",
+      "path": "/ws/remote-viewer/dev-3",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "w4",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "w4",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":false,\"streaming\":false}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev-3"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev-3"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "w5",
+      "path": "/ws/remote-viewer/dev-3",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "w5",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "w5",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":false,\"streaming\":false}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev-3"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev-3"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "w6",
+      "path": "/ws/remote-viewer/dev-3",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "w6",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "w6",
+       "close": 1008,
+       "reason": "Max viewers reached"
+      },
+      {
+       "socket": "w6",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev-3"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev-3"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "state",
+      "args": [
+       "dev-3"
+      ]
+     },
+     "result": {
+      "agentConnected": false,
+      "viewerCount": 5,
+      "streaming": false
+     },
+     "events": [],
+     "calls": []
+    },
+    {
+     "step": {
+      "call": "active"
+     },
+     "result": [
+      "dev1",
+      "dev-3"
+     ],
+     "events": [],
+     "calls": []
+    }
+   ]
+  }
+ ],
+ "crash": {
+  "cases": [
+   {
+    "name": "agent path with a broken escape",
+    "ended": true,
+    "status": 1,
+    "error": "URIError: URI malformed"
+   },
+   {
+    "name": "agent path with a bad escape",
+    "ended": true,
+    "status": 1,
+    "error": "URIError: URI malformed"
+   },
+   {
+    "name": "agent path with a lone surrogate escape",
+    "ended": true,
+    "status": 1,
+    "error": "URIError: URI malformed"
+   },
+   {
+    "name": "agent text null",
+    "ended": true,
+    "status": 1,
+    "error": "TypeError: Cannot read properties of null (reading 'type')"
+   },
+   {
+    "name": "agent text 5",
+    "ended": false,
+    "status": 0,
+    "error": ""
+   },
+   {
+    "name": "viewer text null",
+    "ended": true,
+    "status": 1,
+    "error": "TypeError: Cannot read properties of null (reading 'type')"
+   },
+   {
+    "name": "viewer text null without agent",
+    "ended": true,
+    "status": 1,
+    "error": "TypeError: Cannot read properties of null (reading 'type')"
+   },
+   {
+    "name": "agent status nested 5000",
+    "ended": true,
+    "status": 1,
+    "error": "RangeError: Maximum call stack size exceeded"
+   },
+   {
+    "name": "agent other nested 5000",
+    "ended": false,
+    "status": 0,
+    "error": ""
+   },
+   {
+    "name": "agent status nested 100000",
+    "ended": true,
+    "status": 1,
+    "error": "RangeError: Maximum call stack size exceeded"
+   },
+   {
+    "name": "viewer input nested 5000 with agent",
+    "ended": true,
+    "status": 1,
+    "error": "RangeError: Maximum call stack size exceeded"
+   },
+   {
+    "name": "viewer input nested 5000 without agent",
+    "ended": false,
+    "status": 0,
+    "error": ""
+   },
+   {
+    "name": "viewer stop nested 5000",
+    "ended": false,
+    "status": 0,
+    "error": ""
+   }
+  ],
+  "deepestStatus": 4097
+ }
+}

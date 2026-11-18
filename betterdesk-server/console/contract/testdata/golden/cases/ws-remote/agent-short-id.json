@@ -1,0 +1,23 @@
+{
+ "id": "ws-remote/agent-short-id",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-agent/ab?token=%7Bsecret%3Adevice_token%7D",
+  "notes": [
+   "no cookies",
+   "websocket a3, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 400,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

@@ -1,0 +1,144 @@
+{
+ "id": "ws-remote-target/viewer-data-cdap",
+ "request": {
+  "method": "GET",
+  "path": "/api/remote/viewer/{target}?transport=cdap"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-store",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "capabilities.remote_target_config.id",
+     "pattern": "^[9aA+/_=-]{35}$"
+    },
+    {
+     "path": "csrfToken",
+     "pattern": "^[9aA+/_=-]{128}$"
+    },
+    {
+     "path": "deviceId",
+     "pattern": "^[9aA+/_=-]{35}$"
+    },
+    {
+     "path": "serverPubKey",
+     "pattern": "^[9aA+/_=-]{44}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "capabilities": {
+      "cdap_connected": false,
+      "device_type": "vnc",
+      "guest_access": false,
+      "guest_peer_ids": [],
+      "guest_view_only": false,
+      "mesh_connected": false,
+      "mesh_share": false,
+      "mesh_view_only": false,
+      "os_agent": false,
+      "remote_protocol": "vnc",
+      "remote_target": true,
+      "remote_target_config": {
+       "cert_fingerprint": "",
+       "credential_mode": "prompt",
+       "id": "<volatile>",
+       "name": "Contract gateway",
+       "tls_mode": "preferred",
+       "username": "contract-user"
+      },
+      "transport": "vnc"
+     },
+     "connection": {
+      "allow_shared_nat_initiator": false,
+      "always_use_relay": false,
+      "logged_in_only_initiator": false,
+      "operator_only_outbound": false,
+      "p2p_fallback_ms": 2000,
+      "p2p_first": true,
+      "relay_servers": "",
+      "same_nat_relay": true
+     },
+     "csrfToken": "<volatile>",
+     "device": {
+      "name": "Contract gateway",
+      "platform": ""
+     },
+     "deviceId": "<volatile>",
+     "guestToken": "",
+     "mockRemote": null,
+     "serverPubKey": "<volatile>",
+     "success": true,
+     "user": {
+      "id": 5,
+      "name": "e2e_admin"
+     },
+     "workReports": true
+    }
+   }
+  }
+ ]
+}

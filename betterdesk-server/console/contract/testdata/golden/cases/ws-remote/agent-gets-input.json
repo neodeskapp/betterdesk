@@ -1,0 +1,84 @@
+{
+ "id": "ws-remote/agent-gets-input",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-agent/900100001?token=%7Bsecret%3Adevice_token%7D",
+  "notes": [
+   "no cookies",
+   "websocket agent, own origin",
+   "websocket expect 5 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro",
+    "guest_issuer",
+    "viewer",
+    "server_admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": []
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "buttons": [
+         1
+        ],
+        "type": "mouse_move",
+        "x": 10,
+        "y": 20
+       },
+       "order": "buttons[] type x y"
+      },
+      {
+       "json": {
+        "key": "a",
+        "kind": "key",
+        "type": "key"
+       },
+       "order": "key kind type"
+      },
+      {
+       "json": {
+        "type": "unknown"
+       },
+       "order": "type"
+      },
+      {
+       "json": {
+        "type": "click"
+       },
+       "order": "type"
+      },
+      {
+       "json": {
+        "type": 5
+       },
+       "order": "type"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

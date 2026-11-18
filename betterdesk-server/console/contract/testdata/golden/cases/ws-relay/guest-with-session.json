@@ -1,0 +1,54 @@
+{
+ "id": "ws-relay/guest-with-session",
+ "request": {
+  "method": "GET",
+  "path": "/ws/relay?guest=%7Bsecret%3Aglink%7D&guest_session=contract-f&peer_id=900100001&transport=message",
+  "notes": [
+   "websocket gs, own origin",
+   "websocket send 13 binary bytes",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": []
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "binary": {
+        "length": 13,
+        "sha256": "5a87f3bf7025904f48ef24ad00ffb8136ba053ee9318b15e4e001361cea2719f"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,31 @@
+{
+ "id": "ws-rendezvous/not-a-frame",
+ "request": {
+  "method": "GET",
+  "path": "/ws/rendezvous",
+  "notes": [
+   "websocket x, own origin",
+   "websocket send text \"not a frame\"",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

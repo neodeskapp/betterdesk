@@ -1,0 +1,24 @@
+{
+ "id": "remote-agent-token/agent-with-token-again",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-agent/900100001?token=%7Bsecret%3Aagent_token%7D",
+  "notes": [
+   "no cookies",
+   "websocket b, own origin",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

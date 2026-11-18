@@ -1,0 +1,6152 @@
+{
+ "start": 1700000000000,
+ "relayHost": "127.0.0.2",
+ "hosts": [
+  {
+   "host": "localhost",
+   "ifaces": {
+    "lo": [
+     {
+      "family": "IPv4",
+      "address": "127.0.0.1",
+      "internal": true
+     }
+    ],
+    "eth0": [
+     {
+      "family": "IPv6",
+      "address": "fe80::1",
+      "internal": false
+     },
+     {
+      "family": "IPv4",
+      "address": "10.1.2.3",
+      "internal": false
+     }
+    ]
+   },
+   "lines": [
+    "  WebSocket proxy: hbbr host changed from 'localhost' to '10.1.2.3' (avoiding loopback command mode)",
+    "  WebSocket proxy: /ws/rendezvous -> sig.example:21116",
+    "  WebSocket proxy: /ws/relay -> 10.1.2.3:21117"
+   ]
+  },
+  {
+   "host": "LocalHost",
+   "ifaces": {
+    "eth0": [
+     {
+      "family": "IPv4",
+      "address": "10.1.2.3",
+      "internal": false
+     }
+    ],
+    "eth1": [
+     {
+      "family": "IPv4",
+      "address": "10.9.9.9",
+      "internal": false
+     }
+    ]
+   },
+   "lines": [
+    "  WebSocket proxy: hbbr host changed from 'LocalHost' to '10.1.2.3' (avoiding loopback command mode)",
+    "  WebSocket proxy: /ws/rendezvous -> sig.example:21116",
+    "  WebSocket proxy: /ws/relay -> 10.1.2.3:21117"
+   ]
+  },
+  {
+   "host": "127.0.0.1",
+   "ifaces": {
+    "lo": [
+     {
+      "family": "IPv4",
+      "address": "127.0.0.1",
+      "internal": true
+     }
+    ]
+   },
+   "lines": [
+    "  WebSocket proxy: WARNING - could not find non-loopback IP for hbbr, relay connections may fail!",
+    "  WebSocket proxy: /ws/rendezvous -> sig.example:21116",
+    "  WebSocket proxy: /ws/relay -> 127.0.0.1:21117"
+   ]
+  },
+  {
+   "host": "127.5.6.7",
+   "ifaces": {
+    "docker0": [
+     {
+      "family": "IPv4",
+      "address": "172.17.0.1",
+      "internal": false
+     }
+    ]
+   },
+   "lines": [
+    "  WebSocket proxy: hbbr host changed from '127.5.6.7' to '172.17.0.1' (avoiding loopback command mode)",
+    "  WebSocket proxy: /ws/rendezvous -> sig.example:21116",
+    "  WebSocket proxy: /ws/relay -> 172.17.0.1:21117"
+   ]
+  },
+  {
+   "host": "::1",
+   "ifaces": {
+    "eth0": [
+     {
+      "family": "IPv4",
+      "address": "192.168.1.5",
+      "internal": false
+     }
+    ]
+   },
+   "lines": [
+    "  WebSocket proxy: hbbr host changed from '::1' to '192.168.1.5' (avoiding loopback command mode)",
+    "  WebSocket proxy: /ws/rendezvous -> sig.example:21116",
+    "  WebSocket proxy: /ws/relay -> 192.168.1.5:21117"
+   ]
+  },
+  {
+   "host": "[::1]",
+   "ifaces": {
+    "eth0": [
+     {
+      "family": "IPv4",
+      "address": "192.168.1.5",
+      "internal": false
+     }
+    ]
+   },
+   "lines": [
+    "  WebSocket proxy: /ws/rendezvous -> sig.example:21116",
+    "  WebSocket proxy: /ws/relay -> [::1]:21117"
+   ]
+  },
+  {
+   "host": "0:0:0:0:0:0:0:1",
+   "ifaces": {
+    "eth0": [
+     {
+      "family": "IPv4",
+      "address": "192.168.1.5",
+      "internal": false
+     }
+    ]
+   },
+   "lines": [
+    "  WebSocket proxy: /ws/rendezvous -> sig.example:21116",
+    "  WebSocket proxy: /ws/relay -> 0:0:0:0:0:0:0:1:21117"
+   ]
+  },
+  {
+   "host": "127example",
+   "ifaces": {
+    "eth0": [
+     {
+      "family": "IPv4",
+      "address": "192.168.1.5",
+      "internal": false
+     }
+    ]
+   },
+   "lines": [
+    "  WebSocket proxy: /ws/rendezvous -> sig.example:21116",
+    "  WebSocket proxy: /ws/relay -> 127example:21117"
+   ]
+  },
+  {
+   "host": "relay.example",
+   "ifaces": {
+    "eth0": [
+     {
+      "family": "IPv4",
+      "address": "192.168.1.5",
+      "internal": false
+     }
+    ]
+   },
+   "lines": [
+    "  WebSocket proxy: /ws/rendezvous -> sig.example:21116",
+    "  WebSocket proxy: /ws/relay -> relay.example:21117"
+   ]
+  },
+  {
+   "host": "10.0.0.7",
+   "ifaces": {},
+   "lines": [
+    "  WebSocket proxy: /ws/rendezvous -> sig.example:21116",
+    "  WebSocket proxy: /ws/relay -> 10.0.0.7:21117"
+   ]
+  },
+  {
+   "host": "",
+   "ifaces": {
+    "eth0": [
+     {
+      "family": "IPv4",
+      "address": "192.168.1.5",
+      "internal": false
+     }
+    ]
+   },
+   "lines": [
+    "  WebSocket proxy: hbbr host changed from 'localhost' to '192.168.1.5' (avoiding loopback command mode)",
+    "  WebSocket proxy: /ws/rendezvous -> sig.example:21116",
+    "  WebSocket proxy: /ws/relay -> 192.168.1.5:21117"
+   ]
+  },
+  {
+   "host": "localhost",
+   "ifaces": {},
+   "lines": [
+    "  WebSocket proxy: WARNING - could not find non-loopback IP for hbbr, relay connections may fail!",
+    "  WebSocket proxy: /ws/rendezvous -> sig.example:21116",
+    "  WebSocket proxy: /ws/relay -> localhost:21117"
+   ]
+  }
+ ],
+ "scenarios": [
+  {
+   "name": "checks",
+   "differs": false,
+   "signalClosed": false,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/rendezvous"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/relay"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/rendezvous",
+      "session": {}
+     },
+     "events": [
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "c",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 3,
+       "user": {
+        "role": "viewer"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "d",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/ws/relay",
+      "session": {
+       "userId": 3,
+       "user": {
+        "role": "viewer"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "e",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "f",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 3,
+       "user": {
+        "role": "throw"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "f",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "f",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "g",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      },
+      "headers": {
+       "Origin": "https://evil.example",
+       "Cookie": "bd.sid=x"
+      }
+     },
+     "events": [
+      {
+       "socket": "g",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "g",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "h",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      },
+      "headers": {
+       "Cookie": "bd.sid=x"
+      }
+     },
+     "events": [
+      {
+       "socket": "h",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "h",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "i",
+      "path": "/ws/rendezvous?guest=tok-valid"
+     },
+     "events": [
+      {
+       "socket": "i",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "i",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "j",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=ab&guest_session=s"
+     },
+     "events": [
+      {
+       "socket": "j",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "j",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "k",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET01"
+     },
+     "events": [
+      {
+       "socket": "k",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "k",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "l",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET01&guest_session=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+     },
+     "events": [
+      {
+       "socket": "l",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "l",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "m",
+      "path": "/ws/rendezvous?guest=tok-invalid&peer_id=TARGET01&guest_session=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-invalid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": false,
+         "error": "guest link not found"
+        }
+       }
+      },
+      {
+       "socket": "m",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "m",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "n",
+      "path": "/ws/relay?guest=tok-throw&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-throw\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 502,
+        "error": "Request failed with status code 502"
+       }
+      },
+      {
+       "socket": "n",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "n",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "o",
+      "path": "/ws/rendezvous?t=tok-invalid&peer_id=TARGET01&guest_session=s"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-invalid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": false,
+         "error": "guest link not found"
+        }
+       }
+      },
+      {
+       "socket": "o",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "o",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "p",
+      "path": "/ws/rendezvous?guest=&t=tok-invalid&peer_id=TARGET01&guest_session=s"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-invalid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": false,
+         "error": "guest link not found"
+        }
+       }
+      },
+      {
+       "socket": "p",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "p",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "q",
+      "path": "/ws/rendezvous?guest=%20%20&t=tok-invalid&peer_id=TARGET01&guest_session=s"
+     },
+     "events": [
+      {
+       "socket": "q",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "q",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "r",
+      "path": "/ws/rendezvous?peer_id=TARGET01&guest_session=s",
+      "headers": {
+       "Cookie": "bd.guest=tok-invalid"
+      }
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-invalid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": false,
+         "error": "guest link not found"
+        }
+       }
+      },
+      {
+       "socket": "r",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "r",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s",
+      "path": "/ws/rendezvous?peer_id=TARGET01&guest_session=s",
+      "headers": {
+       "Cookie": "bd.guest=%E0%A4%A; betterdesk.guest=tok-invalid"
+      }
+     },
+     "events": [
+      {
+       "socket": "s",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "s",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "t",
+      "path": "/ws/rendezvous?peer_id=TARGET01&guest_session=s",
+      "headers": {
+       "Cookie": "bd.guest=; betterdesk.guest=tok-invalid"
+      }
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-invalid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": false,
+         "error": "guest link not found"
+        }
+       }
+      },
+      {
+       "socket": "t",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "t",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "u",
+      "path": "/ws/rendezvous?peer_id=%20TARGET01%20&guest_session=s",
+      "headers": {
+       "Cookie": "x=1;  bd.guest=%20tok-invalid%20 "
+      }
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-invalid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": false,
+         "error": "guest link not found"
+        }
+       }
+      },
+      {
+       "socket": "u",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "u",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "v",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 0,
+       "user": {
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "v",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "v",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "w",
+      "path": "/ws/rendezvous?guest=tok-invalid&peer_id=TARGET01&guest_session=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80"
+     },
+     "events": [
+      {
+       "socket": "w",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "w",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "w2",
+      "path": "/ws/rendezvous?guest=tok-invalid&peer_id=TARGET01&guest_session=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-invalid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": false,
+         "error": "guest link not found"
+        }
+       }
+      },
+      {
+       "socket": "w2",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "w2",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "x",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      },
+      "headers": {
+       "Sec-WebSocket-Version": "12"
+      }
+     },
+     "events": [
+      {
+       "socket": "x",
+       "head": "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 47\r\nSec-WebSocket-Version: 13, 8\r\n\r\n"
+      },
+      {
+       "socket": "x",
+       "body": "Missing or invalid Sec-WebSocket-Version header"
+      },
+      {
+       "socket": "x",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "y",
+      "path": "/ws/relay",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      },
+      "headers": {
+       "Sec-WebSocket-Key": null
+      }
+     },
+     "events": [
+      {
+       "socket": "y",
+       "head": "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 43\r\n\r\n"
+      },
+      {
+       "socket": "y",
+       "body": "Missing or invalid Sec-WebSocket-Key header"
+      },
+      {
+       "socket": "y",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "z",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET%2001&guest_session=s"
+     },
+     "events": [
+      {
+       "socket": "z",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "z",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "aa",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 3,
+       "user": {
+        "role": "admin"
+       }
+      },
+      "headers": {
+       "Origin": "http://console.test"
+      }
+     },
+     "events": [
+      {
+       "socket": "aa",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#1",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "ab",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 3,
+       "role": "admin"
+      }
+     },
+     "events": [
+      {
+       "socket": "ab",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "ab",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "signal bridge",
+   "differs": false,
+   "signalClosed": false,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 2,
+       "user": {
+        "id": 2,
+        "username": "op",
+        "role": "operator"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#1",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbs",
+      "hex": "0a0b0c"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "binary": "CgsM"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "hex": "010203"
+     },
+     "events": [
+      {
+       "tcp": "hbbs#1",
+       "data": "AQID"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "text goes on as bytes"
+     },
+     "events": [
+      {
+       "tcp": "hbbs#1",
+       "data": "dGV4dCBnb2VzIG9uIGFzIGJ5dGVz"
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbs",
+      "hex": "00"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "binary": "AA=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbs",
+      "end": true
+     },
+     "events": [
+      {
+       "socket": "a",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbs#1",
+       "closed": true
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET01&guest_session=s1",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#2",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "hex": "2c42090a074f544845523031"
+     },
+     "events": [
+      {
+       "tcp": "hbbs#2",
+       "data": "LEIJCgdPVEhFUjAx"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "b",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      },
+      {
+       "tcp": "hbbs#2",
+       "closed": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#3",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbs",
+      "destroy": true
+     },
+     "events": [
+      {
+       "tcp": "hbbs#3",
+       "closed": true
+      },
+      {
+       "socket": "c",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "c",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#4",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "d",
+      "drop": true
+     },
+     "events": [
+      {
+       "socket": "d",
+       "end": true
+      },
+      {
+       "tcp": "hbbs#4",
+       "closed": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/ws/relay",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#1",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "e",
+      "hex": "3892010b0a01581206757569642d31"
+     },
+     "events": [
+      {
+       "tcp": "hbbr#1",
+       "data": "OJIBCwoBWBIGdXVpZC0x"
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "2cd201080a066f7261636c6505"
+     },
+     "events": [
+      {
+       "socket": "e",
+       "binary": "LNIBCAoGb3JhY2xlBQ=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "e",
+      "close": 4000
+     },
+     "events": [
+      {
+       "socket": "e",
+       "close": 4000,
+       "reason": ""
+      },
+      {
+       "socket": "e",
+       "end": true
+      },
+      {
+       "tcp": "hbbr#1",
+       "closed": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "relay messages",
+   "differs": false,
+   "signalClosed": false,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/relay?transport=message",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#1",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "hex": "010203"
+     },
+     "events": [
+      {
+       "tcp": "hbbr#1",
+       "data": "DAECAw=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "hex": ""
+     },
+     "events": [
+      {
+       "tcp": "hbbr#1",
+       "data": "AA=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "repeat": 100,
+      "byte": 65
+     },
+     "events": [
+      {
+       "tcp": "hbbr#1",
+       "data": "kQFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "repeat": 20000,
+      "byte": 66
+     },
+     "events": [
+      {
+       "tcp": "hbbr#1",
+       "data": {
+        "length": 20003,
+        "sha256": "fb02d87884ea14075ae794dd9424a7684610646602d6b4849909a094064ff49a"
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "hi"
+     },
+     "events": [
+      {
+       "tcp": "hbbr#1",
+       "data": "CGhp"
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "0c4142430008ffff"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "binary": "QUJD"
+      },
+      {
+       "socket": "a",
+       "binary": ""
+      },
+      {
+       "socket": "a",
+       "binary": "//8="
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "0d01"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "5a"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "0e"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "000001"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "0d"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "0d05414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "binary": "Wg4AAAENDQVBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "07000001"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/relay?transport=message&transport=raw",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#2",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "0d05"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/relay?transport=raw&transport=message",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#3",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "0d05"
+     },
+     "events": [
+      {
+       "socket": "c",
+       "binary": "DQU="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "c",
+      "hex": "0d05"
+     },
+     "events": [
+      {
+       "tcp": "hbbr#3",
+       "data": "DQU="
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/relay?transport=Message",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#4",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "d",
+      "hex": "0d05"
+     },
+     "events": [
+      {
+       "tcp": "hbbr#4",
+       "data": "DQU="
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/ws/rendezvous?transport=message",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#1",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "e",
+      "hex": "0d05"
+     },
+     "events": [
+      {
+       "tcp": "hbbs#1",
+       "data": "DQU="
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "relay frame limits",
+   "differs": false,
+   "signalClosed": false,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/relay?transport=message",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#1",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "repeat": 67108864,
+      "byte": 97
+     },
+     "events": [
+      {
+       "tcp": "hbbr#1",
+       "data": {
+        "length": 67108868,
+        "sha256": "1a0bd969554a40c259ad4325a7f0824b85d0733a654d71039076fddd5c6a69ad"
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "repeat": 67108865,
+      "byte": 98
+     },
+     "events": [
+      {
+       "socket": "a",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbr#1",
+       "closed": true
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/relay?transport=message",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#2",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "07000010"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbr#2",
+       "closed": true
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/relay?transport=message",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#3",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "03000010"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "repeat": 4194304,
+      "byte": 99
+     },
+     "events": []
+    }
+   ]
+  },
+  {
+   "name": "per-address limit",
+   "differs": false,
+   "signalClosed": false,
+   "steps": [
+    {
+     "step": {
+      "open": "s1",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      },
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "s1",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#1",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s2",
+      "path": "/ws/relay",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      },
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "s2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#1",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s3",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      },
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "s3",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#2",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s4",
+      "path": "/ws/relay",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      },
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "s4",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#2",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s5",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      },
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "s5",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#3",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "over",
+      "path": "/ws/relay",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      },
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "over",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "over",
+       "close": 1008,
+       "reason": "Too many connections"
+      },
+      {
+       "socket": "over",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "other",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      },
+      "headers": {
+       "X-Forwarded-For": "10.0.0.2"
+      }
+     },
+     "events": [
+      {
+       "socket": "other",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#4",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "list",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      },
+      "headers": {
+       "X-Forwarded-For": " 10.0.0.1 , 10.0.0.9"
+      }
+     },
+     "events": [
+      {
+       "socket": "list",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "list",
+       "close": 1008,
+       "reason": "Too many connections"
+      },
+      {
+       "socket": "list",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "s1",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "s1",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "s1",
+       "end": true
+      },
+      {
+       "tcp": "hbbs#1",
+       "closed": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "again",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      },
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "again",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#5",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "again2",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      },
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "again2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "again2",
+       "close": 1008,
+       "reason": "Too many connections"
+      },
+      {
+       "socket": "again2",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "socket1",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "socket1",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#6",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "socket2",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      },
+      "headers": {
+       "X-Forwarded-For": ""
+      }
+     },
+     "events": [
+      {
+       "socket": "socket2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#7",
+       "accept": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "idle",
+   "differs": false,
+   "signalClosed": false,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#1",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 119999
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "advance": 1
+     },
+     "events": [
+      {
+       "socket": "a",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbs#1",
+       "closed": true
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/relay",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#1",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 100000
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "hex": "01"
+     },
+     "events": [
+      {
+       "tcp": "hbbr#1",
+       "data": "AQ=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 100000
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "02"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "binary": "Ag=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 119999
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "advance": 1
+     },
+     "events": [
+      {
+       "socket": "b",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbr#1",
+       "closed": true
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "guest signal",
+   "differs": false,
+   "signalClosed": false,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#1",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "hex": "2cd201080a066f7261636c65"
+     },
+     "events": [
+      {
+       "tcp": "hbbs#1",
+       "data": "LNIBCAoGb3JhY2xl"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#1",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "hex": "30420a0a0854415247455430312cd201080a066f7261636c65"
+     },
+     "events": [
+      {
+       "tcp": "hbbs#1",
+       "data": "MEIKCghUQVJHRVQwMSzSAQgKBm9yYWNsZQ=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbs",
+      "hex": "0a0b"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "binary": "Cgs="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "hex": "2c42090a074f544845523031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"closed\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"guest-target-mismatch\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      },
+      {
+       "socket": "a",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbs#1",
+       "closed": true
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET01&guest_session=s2"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#2",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "hex": "549201120a"
+     },
+     "events": [
+      {
+       "tcp": "hbbs#2",
+       "data": "VJIBEgo="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "hex": "0854415247455430311206757569642d31"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#2",
+       "data": "CFRBUkdFVDAxEgZ1dWlkLTE="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s2\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "hex": "04ff"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"closed\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s2\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"guest-target-mismatch\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      },
+      {
+       "socket": "b",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbs#2",
+       "closed": true
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET01&guest_session=s3"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#3",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "c",
+      "hex": "80420a0a0854415247455430319201110a074f5448455230311206757569642d31"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#3",
+       "data": "gEIKCghUQVJHRVQwMZIBEQoHT1RIRVIwMRIGdXVpZC0x"
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s3\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "c",
+      "hex": "809201110a074f5448455230311206757569642d31420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "tcp": "hbbs#3",
+       "data": "gJIBEQoHT1RIRVIwMRIGdXVpZC0xQgoKCFRBUkdFVDAx"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "c",
+      "hex": "6040160a0854415247455430319201090a074f544845523031"
+     },
+     "events": [
+      {
+       "tcp": "hbbs#3",
+       "data": "YEAWCghUQVJHRVQwMZIBCQoHT1RIRVIwMQ=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "c",
+      "hex": "509201110a074f5448455230311206757569642d31"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"closed\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s3\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"guest-target-mismatch\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      },
+      {
+       "socket": "c",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbs#3",
+       "closed": true
+      },
+      {
+       "socket": "c",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET01&guest_session=s4"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#4",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "d",
+      "hex": "07000010"
+     },
+     "events": [
+      {
+       "socket": "d",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbs#4",
+       "closed": true
+      },
+      {
+       "socket": "d",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET01&guest_session=s5"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#5",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "e",
+      "hex": "420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "tcp": "hbbs#5",
+       "data": "QgoKCFRBUkdFVDAx"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "f",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET01&guest_session=s6"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "f",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#6",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "f",
+      "hex": "2cd201080a066f7261636c65"
+     },
+     "events": [
+      {
+       "tcp": "hbbs#6",
+       "data": "LNIBCAoGb3JhY2xl"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "f",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "f",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "f",
+       "end": true
+      },
+      {
+       "tcp": "hbbs#6",
+       "closed": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "g",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET01&guest_session=s7"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "g",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#7",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "g",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#7",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s7\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbs",
+      "end": true
+     },
+     "events": [
+      {
+       "socket": "g",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"closed\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s7\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"tcp-close\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#7",
+       "closed": true
+      },
+      {
+       "socket": "g",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "guest relay",
+   "differs": false,
+   "signalClosed": false,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/relay?transport=message&guest=tok-valid&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#1",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "hex": "9201120a0854415247455430311206757569642d31"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbr#1",
+       "data": "VJIBEgoIVEFSR0VUMDESBnV1aWQtMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"relay\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "hex": "9201110a074f5448455230311206757569642d31"
+     },
+     "events": [
+      {
+       "tcp": "hbbr#1",
+       "data": "UJIBEQoHT1RIRVIwMRIGdXVpZC0x"
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "2cd201080a066f7261636c65"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "binary": "0gEICgZvcmFjbGU="
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/relay?transport=message&guest=tok-valid&peer_id=TARGET01&guest_session=s2"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#2",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "hex": "9201110a074f5448455230311206757569642d31"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbr#2",
+       "closed": true
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/relay?guest=tok-valid&peer_id=TARGET01&guest_session=s3"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#3",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "c",
+      "hex": "549201120a0854415247455430311206757569642d31"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "c",
+      "repeat": 1048476,
+      "byte": 255
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "c",
+      "repeat": 100,
+      "byte": 255
+     },
+     "events": [
+      {
+       "socket": "c",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbr#3",
+       "closed": true
+      },
+      {
+       "socket": "c",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/relay?transport=message&guest=tok-valid&peer_id=TARGET01&guest_session=s4"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#4",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "d",
+      "hex": "9201120a0854"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "d",
+      "hex": "415247455430311206757569642d31"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbr#4",
+       "data": "PEFSR0VUMDESBnV1aWQtMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s4\",\"transport\":\"relay\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "d",
+      "hex": "0102"
+     },
+     "events": [
+      {
+       "tcp": "hbbr#4",
+       "data": "CAEC"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/ws/relay?guest=tok-valid&peer_id=TARGET01&guest_session=s5"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#5",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "e",
+      "hex": "9201120a0854415247455430311206757569642d31"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbr#5",
+       "data": "kgESCghUQVJHRVQwMRIGdXVpZC0x"
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s5\",\"transport\":\"relay\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "f",
+      "path": "/ws/relay?transport=message&guest=tok-valid&peer_id=TARGET01&guest_session=s6"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "f",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#6",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "f",
+      "hex": ""
+     },
+     "events": [
+      {
+       "socket": "f",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbr#6",
+       "closed": true
+      },
+      {
+       "socket": "f",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "g",
+      "path": "/ws/relay?transport=message&guest=tok-valid&peer_id=TARGET01&guest_session=s7"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "g",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#7",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "g",
+      "hex": "9201120a0854415247455430311206757569642d3142090a074f544845523031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbr#7",
+       "data": "gJIBEgoIVEFSR0VUMDESBnV1aWQtMUIJCgdPVEhFUjAx"
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s7\",\"transport\":\"relay\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "guest uses",
+   "differs": false,
+   "signalClosed": false,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#1",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#1",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/relay?transport=message&guest=tok-valid&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#1",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "hex": "9201120a0854415247455430311206757569642d31"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"relay\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      },
+      {
+       "tcp": "hbbr#1",
+       "data": "VJIBEgoIVEFSR0VUMDESBnV1aWQtMQ=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/rendezvous?guest=tok-second&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-second\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#2",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-second\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "c",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#2",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET01&guest_session=other"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#3",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "d",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#3",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"other\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/ws/rendezvous?guest=tok-consume-fail&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-consume-fail\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g7",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#4",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-consume-fail\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g7",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "e",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-consume-fail\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 403,
+        "error": "Request failed with status code 403"
+       }
+      },
+      {
+       "socket": "e",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbs#4",
+       "closed": true
+      },
+      {
+       "socket": "e",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "f",
+      "path": "/ws/rendezvous?guest=tok-consume-fail&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-consume-fail\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g7",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "f",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#5",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-consume-fail\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g7",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "f",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-consume-fail\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 403,
+        "error": "Request failed with status code 403"
+       }
+      },
+      {
+       "socket": "f",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbs#5",
+       "closed": true
+      },
+      {
+       "socket": "f",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "g",
+      "path": "/ws/rendezvous?guest=tok-num&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-num\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": 5,
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "g",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#6",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-num\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": 5,
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "g",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-num\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": 5,
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#6",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":5,\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "h",
+      "path": "/ws/rendezvous?guest=tok-noid&peer_id=TARGET01&guest_session=s1",
+      "headers": {
+       "X-Forwarded-For": "10.9.9.7"
+      }
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-noid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "h",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#7",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-noid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "h",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-noid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#7",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"10.9.9.7\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "i",
+      "path": "/ws/rendezvous?guest=tok-noid&peer_id=TARGET01&guest_session=s2",
+      "headers": {
+       "X-Forwarded-For": "10.9.9.8"
+      }
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-noid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "i",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#8",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-noid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "i",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-noid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#8",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"\",\"peer_id\":\"TARGET01\",\"session_id\":\"s2\",\"transport\":\"rendezvous\",\"source_ip\":\"10.9.9.8\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "invalidate",
+      "args": [
+       "unknown"
+      ]
+     },
+     "result": 0,
+     "events": []
+    },
+    {
+     "step": {
+      "open": "j",
+      "path": "/ws/rendezvous?guest=tok-noid&peer_id=TARGET01&guest_session=s2",
+      "headers": {
+       "X-Forwarded-For": "10.9.9.9"
+      }
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-noid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "j",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#9",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-noid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "j",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-noid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#9",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"\",\"peer_id\":\"TARGET01\",\"session_id\":\"s2\",\"transport\":\"rendezvous\",\"source_ip\":\"10.9.9.9\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "guest use expires",
+   "differs": false,
+   "signalClosed": false,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/rendezvous?guest=tok-short&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-short\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g3",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:13:40.000Z"
+        }
+       }
+      },
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#1",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-short\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g3",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:13:40.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-short\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g3",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:13:40.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#1",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g3\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 15000
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-short\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g3",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:13:40.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/rendezvous?guest=tok-short-long&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-short-long\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g3",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#2",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-short-long\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g3",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g3\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#2",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 5000
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-short\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g3",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:13:40.000Z"
+        }
+       }
+      },
+      {
+       "socket": "a",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"closed\",\"grant_id\":\"g3\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":20000,\"reason\":\"guest-grant-expired\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#1",
+       "closed": true
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "tcp": "hbbs#2",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/rendezvous?guest=tok-short-long&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-short-long\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g3",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#3",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-short-long\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g3",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "c",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-short-long\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g3",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#3",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g3\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "guest revalidation",
+   "differs": false,
+   "signalClosed": false,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#1",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#1",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/rendezvous?guest=tok-short&peer_id=TARGET01&guest_session=s2"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-short\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g3",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:13:40.000Z"
+        }
+       }
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#2",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-short\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g3",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:13:40.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/rendezvous?guest=tok-other&peer_id=TARGET01&guest_session=s3"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-other\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g2",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#3",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-other\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g2",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 14999
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "advance": 1
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-short\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g3",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:13:40.000Z"
+        }
+       }
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-other\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g2",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "down": true
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "advance": 5000
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-short\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 502,
+        "error": "Request failed with status code 502"
+       }
+      },
+      {
+       "socket": "b",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbs#2",
+       "closed": true
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 10000
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 502,
+        "error": "Request failed with status code 502"
+       }
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-other\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 502,
+        "error": "Request failed with status code 502"
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "down": false
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "revoke": "tok-valid"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "advance": 14999
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "advance": 1
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": false,
+         "error": "guest link revoked"
+        }
+       }
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-other\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g2",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "a",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"closed\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":45000,\"reason\":\"guest-grant-invalid\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#1",
+       "closed": true
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/rendezvous?guest=tok-noexp&peer_id=TARGET01&guest_session=s4"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-noexp\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g4",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle"
+        }
+       }
+      },
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#4",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-noexp\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g4",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle"
+        }
+       }
+      },
+      {
+       "socket": "d",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbs#4",
+       "closed": true
+      },
+      {
+       "socket": "d",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/ws/rendezvous?guest=tok-null&peer_id=TARGET01&guest_session=s5"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-null\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g6",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": null
+        }
+       }
+      },
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#5",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-null\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g6",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": null
+        }
+       }
+      },
+      {
+       "socket": "e",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "tcp": "hbbs#5",
+       "closed": true
+      },
+      {
+       "socket": "e",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 15000
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-other\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g2",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "guest revoked",
+   "differs": false,
+   "signalClosed": false,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#1",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#1",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/relay?transport=message&guest=tok-second&peer_id=TARGET01&guest_session=s2"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-second\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#1",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-second\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/rendezvous?guest=tok-other&peer_id=TARGET01&guest_session=s3"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-other\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g2",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#2",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-other\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g2",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/rendezvous?guest=tok-num&peer_id=TARGET01&guest_session=s4"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-num\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": 5,
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#3",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-num\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": 5,
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "invalidate",
+      "args": [
+       "g1"
+      ]
+     },
+     "result": 0,
+     "events": [
+      {
+       "socket": "a",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"closed\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"guest-grant-revoked\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      },
+      {
+       "tcp": "hbbr#1",
+       "closed": true
+      },
+      {
+       "tcp": "hbbs#1",
+       "closed": true
+      },
+      {
+       "socket": "b",
+       "end": true
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "invalidate",
+      "args": [
+       "g1"
+      ]
+     },
+     "result": 0,
+     "events": []
+    },
+    {
+     "step": {
+      "call": "invalidate",
+      "args": [
+       "nope"
+      ]
+     },
+     "result": 0,
+     "events": []
+    },
+    {
+     "step": {
+      "call": "invalidate",
+      "args": [
+       "5"
+      ]
+     },
+     "result": 0,
+     "events": []
+    },
+    {
+     "step": {
+      "call": "invalidate",
+      "args": [
+       ""
+      ]
+     },
+     "result": 0,
+     "events": []
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#4",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "e",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#4",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "invalidate",
+      "args": [
+       "g1"
+      ]
+     },
+     "result": 0,
+     "events": [
+      {
+       "socket": "e",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"closed\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"guest-grant-revoked\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#4",
+       "closed": true
+      },
+      {
+       "socket": "e",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "f",
+      "path": "/ws/rendezvous?guest=tok-valid&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "f",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#5",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "f",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g1",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "tcp": "hbbs#5",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "signal refused",
+   "differs": false,
+   "signalClosed": true,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "a",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/relay",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#1",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "hex": "01"
+     },
+     "events": [
+      {
+       "tcp": "hbbr#1",
+       "data": "AQ=="
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "guest ordering",
+   "differs": true,
+   "signalClosed": false,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/rendezvous?guest=tok-hold&peer_id=TARGET01&guest_session=s1"
+     },
+     "events": [
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-hold\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g8",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      },
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#1",
+       "accept": true
+      },
+      {
+       "api": "GET /guest/access-links/validate",
+       "params": "{\"token\":\"tok-hold\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g8",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "hex": "30420a0a085441524745543031"
+     },
+     "events": [
+      {
+       "api": "POST /guest/access-links/consume",
+       "body": "{\"token\":\"tok-hold\",\"peer_id\":\"TARGET01\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "valid": true,
+         "id": "g8",
+         "token_prefix": "tok-",
+         "peer_ids": [
+          "TARGET01"
+         ],
+         "view_only": false,
+         "label": "oracle",
+         "expires_at": "2023-11-14T22:23:20.000Z"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "hex": "2cd201080a066f7261636c65"
+     },
+     "events": [
+      {
+       "tcp": "hbbs#1",
+       "data": "LNIBCAoGb3JhY2xl"
+      }
+     ]
+    },
+    {
+     "step": {
+      "release": true
+     },
+     "events": [
+      {
+       "tcp": "hbbs#1",
+       "data": "MEIKCghUQVJHRVQwMQ=="
+      },
+      {
+       "api": "POST /guest/access-links/events",
+       "body": "{\"event\":\"opened\",\"grant_id\":\"g8\",\"peer_id\":\"TARGET01\",\"session_id\":\"s1\",\"transport\":\"rendezvous\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}",
+       "answer": {
+        "status": 200,
+        "data": {
+         "success": true
+        }
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

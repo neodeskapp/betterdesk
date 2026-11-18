@@ -1,0 +1,31 @@
+{
+ "id": "ws-remote/agent-no-origin",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-agent/900100001?token=%7Bsecret%3Adevice_token%7D",
+  "notes": [
+   "no cookies",
+   "websocket a9, no Origin",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

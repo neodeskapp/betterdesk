@@ -1,0 +1,247 @@
+{
+ "id": "remote/viewer-transport-unknown",
+ "request": {
+  "method": "GET",
+  "path": "/api/remote/viewer/900100001?transport=vnc"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Permission denied: device.connect",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "csrfToken",
+     "pattern": "^[9aA+/_=-]{128}$"
+    },
+    {
+     "path": "serverPubKey",
+     "pattern": "^[9aA+/_=-]{44}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "capabilities": {
+      "cdap_connected": false,
+      "device_type": "rustdesk",
+      "guest_access": false,
+      "guest_peer_ids": [],
+      "guest_view_only": false,
+      "mesh_connected": false,
+      "mesh_share": false,
+      "mesh_view_only": false,
+      "os_agent": false,
+      "remote_protocol": "",
+      "remote_target": false,
+      "remote_target_config": null,
+      "transport": "rd"
+     },
+     "connection": {
+      "allow_shared_nat_initiator": false,
+      "always_use_relay": false,
+      "logged_in_only_initiator": false,
+      "operator_only_outbound": false,
+      "p2p_fallback_ms": 2000,
+      "p2p_first": true,
+      "relay_servers": "",
+      "same_nat_relay": true
+     },
+     "csrfToken": "<volatile>",
+     "device": {
+      "name": "demo-reception-01",
+      "platform": "Windows 11 Pro"
+     },
+     "deviceId": "900100001",
+     "guestToken": "",
+     "mockRemote": null,
+     "serverPubKey": "<volatile>",
+     "success": true,
+     "user": {
+      "id": 9,
+      "name": "e2e_operator"
+     },
+     "workReports": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "csrfToken",
+     "pattern": "^[9aA+/_=-]{128}$"
+    },
+    {
+     "path": "serverPubKey",
+     "pattern": "^[9aA+/_=-]{44}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "capabilities": {
+      "cdap_connected": false,
+      "device_type": "rustdesk",
+      "guest_access": false,
+      "guest_peer_ids": [],
+      "guest_view_only": false,
+      "mesh_connected": false,
+      "mesh_share": false,
+      "mesh_view_only": false,
+      "os_agent": false,
+      "remote_protocol": "",
+      "remote_target": false,
+      "remote_target_config": null,
+      "transport": "rd"
+     },
+     "connection": {
+      "allow_shared_nat_initiator": false,
+      "always_use_relay": false,
+      "logged_in_only_initiator": false,
+      "operator_only_outbound": false,
+      "p2p_fallback_ms": 2000,
+      "p2p_first": true,
+      "relay_servers": "",
+      "same_nat_relay": true
+     },
+     "csrfToken": "<volatile>",
+     "device": {
+      "name": "demo-reception-01",
+      "platform": "Windows 11 Pro"
+     },
+     "deviceId": "900100001",
+     "guestToken": "",
+     "mockRemote": null,
+     "serverPubKey": "<volatile>",
+     "success": true,
+     "user": {
+      "id": 5,
+      "name": "e2e_admin"
+     },
+     "workReports": true
+    }
+   }
+  }
+ ]
+}

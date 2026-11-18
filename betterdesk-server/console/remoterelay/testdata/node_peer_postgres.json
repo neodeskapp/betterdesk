@@ -1,0 +1,555 @@
+{
+ "rows": [
+  [
+   "P1",
+   {
+    "note": "note one",
+    "info": "{\"hostname\":\"host one\",\"os\":\"Linux\",\"ip\":\"10.0.0.1\"}",
+    "folder_id": 4,
+    "status_online": true,
+    "is_banned": false,
+    "user": "alice",
+    "uuid": "u-1",
+    "ip": "1.2.3.4"
+   }
+  ],
+  [
+   "P2",
+   {
+    "note": "",
+    "info": "{\"hostname\":\"host two\",\"platform\":\"Windows\"}",
+    "folder_id": 0
+   }
+  ],
+  [
+   "P3",
+   {
+    "info": "{\"hostname\":5,\"os\":{\"x\":1}}"
+   }
+  ],
+  [
+   "P4",
+   {
+    "note": "n4",
+    "info": "[1]"
+   }
+  ],
+  [
+   "P5",
+   {
+    "info": "\"text\""
+   }
+  ],
+  [
+   "P6",
+   {
+    "info": "\"{\\\"hostname\\\":\\\"in a text\\\"}\""
+   }
+  ],
+  [
+   "P7",
+   {
+    "info": "5"
+   }
+  ],
+  [
+   "P8",
+   {
+    "info": "null",
+    "note": "note over null"
+   }
+  ],
+  [
+   "P9",
+   {
+    "info": "\"null\""
+   }
+  ],
+  [
+   "P10",
+   {
+    "info": null,
+    "note": null
+   }
+  ],
+  [
+   "P11",
+   {
+    "info": "{\"hostname\":\"\",\"os\":0,\"platform\":false,\"ip\":\"\"}",
+    "ip": ""
+   }
+  ],
+  [
+   "P12",
+   {
+    "info": "{\"hostname\":\"deleted\"}",
+    "is_deleted": true
+   }
+  ],
+  [
+   "P14",
+   {
+    "info": "{\"hostname\":\"first\",\"hostname\":\"last\"}"
+   }
+  ],
+  [
+   "P15",
+   {
+    "info": "true"
+   }
+  ]
+ ],
+ "steps": [
+  {
+   "name": "no peers table NOPE",
+   "id": "NOPE",
+   "device": null
+  },
+  {
+   "name": "no peers table S1",
+   "id": "S1",
+   "device": null
+  },
+  {
+   "name": "P1",
+   "id": "P1",
+   "device": {
+    "id": "P1",
+    "uuid": "u-1",
+    "hostname": "note one",
+    "username": "alice",
+    "platform": "Linux",
+    "ip": "10.0.0.1",
+    "note": "note one",
+    "online": true,
+    "banned": false,
+    "ban_reason": "",
+    "folder_id": 4,
+    "tags": [],
+    "pk": null
+   }
+  },
+  {
+   "name": "P2",
+   "id": "P2",
+   "device": {
+    "id": "P2",
+    "uuid": "",
+    "hostname": "host two",
+    "username": "",
+    "platform": "Windows",
+    "ip": "",
+    "note": "",
+    "online": false,
+    "banned": false,
+    "ban_reason": "",
+    "folder_id": null,
+    "tags": [],
+    "pk": null
+   }
+  },
+  {
+   "name": "P3",
+   "id": "P3",
+   "device": {
+    "id": "P3",
+    "uuid": "",
+    "hostname": 5,
+    "username": "",
+    "platform": {
+     "x": 1
+    },
+    "ip": "",
+    "note": "",
+    "online": false,
+    "banned": false,
+    "ban_reason": "",
+    "folder_id": null,
+    "tags": [],
+    "pk": null
+   }
+  },
+  {
+   "name": "P4",
+   "id": "P4",
+   "device": {
+    "id": "P4",
+    "uuid": "",
+    "hostname": "n4",
+    "username": "",
+    "platform": "",
+    "ip": "",
+    "note": "n4",
+    "online": false,
+    "banned": false,
+    "ban_reason": "",
+    "folder_id": null,
+    "tags": [],
+    "pk": null
+   }
+  },
+  {
+   "name": "P5",
+   "id": "P5",
+   "device": {
+    "id": "P5",
+    "uuid": "",
+    "hostname": "",
+    "username": "",
+    "platform": "",
+    "ip": "",
+    "note": "",
+    "online": false,
+    "banned": false,
+    "ban_reason": "",
+    "folder_id": null,
+    "tags": [],
+    "pk": null
+   }
+  },
+  {
+   "name": "P6",
+   "id": "P6",
+   "device": {
+    "id": "P6",
+    "uuid": "",
+    "hostname": "in a text",
+    "username": "",
+    "platform": "",
+    "ip": "",
+    "note": "",
+    "online": false,
+    "banned": false,
+    "ban_reason": "",
+    "folder_id": null,
+    "tags": [],
+    "pk": null
+   }
+  },
+  {
+   "name": "P7",
+   "id": "P7",
+   "device": {
+    "id": "P7",
+    "uuid": "",
+    "hostname": "",
+    "username": "",
+    "platform": "",
+    "ip": "",
+    "note": "",
+    "online": false,
+    "banned": false,
+    "ban_reason": "",
+    "folder_id": null,
+    "tags": [],
+    "pk": null
+   }
+  },
+  {
+   "name": "P8",
+   "id": "P8",
+   "device": {
+    "id": "P8",
+    "uuid": "",
+    "hostname": "note over null",
+    "username": "",
+    "platform": "",
+    "ip": "",
+    "note": "note over null",
+    "online": false,
+    "banned": false,
+    "ban_reason": "",
+    "folder_id": null,
+    "tags": [],
+    "pk": null
+   }
+  },
+  {
+   "name": "P9",
+   "id": "P9",
+   "error": "Cannot read properties of null (reading 'hostname')"
+  },
+  {
+   "name": "P10",
+   "id": "P10",
+   "device": {
+    "id": "P10",
+    "uuid": "",
+    "hostname": "",
+    "username": "",
+    "platform": "",
+    "ip": "",
+    "note": "",
+    "online": false,
+    "banned": false,
+    "ban_reason": "",
+    "folder_id": null,
+    "tags": [],
+    "pk": null
+   }
+  },
+  {
+   "name": "P11",
+   "id": "P11",
+   "device": {
+    "id": "P11",
+    "uuid": "",
+    "hostname": "",
+    "username": "",
+    "platform": "",
+    "ip": "",
+    "note": "",
+    "online": false,
+    "banned": false,
+    "ban_reason": "",
+    "folder_id": null,
+    "tags": [],
+    "pk": null
+   }
+  },
+  {
+   "name": "P12",
+   "id": "P12",
+   "device": {
+    "id": "P12",
+    "uuid": "",
+    "hostname": "back from deleted",
+    "username": "",
+    "platform": "BSD",
+    "ip": "",
+    "note": "",
+    "online": false,
+    "banned": false,
+    "ban_reason": "",
+    "folder_id": null,
+    "tags": [],
+    "pk": null
+   }
+  },
+  {
+   "name": "P14",
+   "id": "P14",
+   "device": {
+    "id": "P14",
+    "uuid": "",
+    "hostname": "last",
+    "username": "",
+    "platform": "",
+    "ip": "",
+    "note": "",
+    "online": false,
+    "banned": false,
+    "ban_reason": "",
+    "folder_id": null,
+    "tags": [],
+    "pk": null
+   }
+  },
+  {
+   "name": "P15",
+   "id": "P15",
+   "device": {
+    "id": "P15",
+    "uuid": "",
+    "hostname": "",
+    "username": "",
+    "platform": "",
+    "ip": "",
+    "note": "",
+    "online": false,
+    "banned": false,
+    "ban_reason": "",
+    "folder_id": null,
+    "tags": [],
+    "pk": null
+   }
+  },
+  {
+   "name": "NOPE",
+   "id": "NOPE",
+   "device": null
+  },
+  {
+   "name": "S1",
+   "id": "S1",
+   "device": {
+    "id": "S1",
+    "uuid": "su-1",
+    "hostname": "from-signal",
+    "username": "bob",
+    "platform": "Linux",
+    "ip": "9.9.9.9",
+    "note": "",
+    "online": true,
+    "banned": false,
+    "ban_reason": "r",
+    "folder_id": null,
+    "tags": [],
+    "pk": null
+   }
+  },
+  {
+   "name": "S2",
+   "id": "S2",
+   "device": null
+  },
+  {
+   "name": "S3",
+   "id": "S3",
+   "device": null
+  }
+ ],
+ "table": [
+  {
+   "id": "P1",
+   "note": "note one",
+   "info": "{\"ip\": \"10.0.0.1\", \"os\": \"Linux\", \"hostname\": \"host one\"}",
+   "status_online": true,
+   "is_banned": false,
+   "is_deleted": false,
+   "user": "alice",
+   "uuid": "u-1"
+  },
+  {
+   "id": "P10",
+   "note": null,
+   "info": null,
+   "status_online": false,
+   "is_banned": false,
+   "is_deleted": false,
+   "user": "",
+   "uuid": ""
+  },
+  {
+   "id": "P11",
+   "note": "",
+   "info": "{\"ip\": \"\", \"os\": 0, \"hostname\": \"\", \"platform\": false}",
+   "status_online": false,
+   "is_banned": false,
+   "is_deleted": false,
+   "user": "",
+   "uuid": ""
+  },
+  {
+   "id": "P12",
+   "note": "",
+   "info": "{\"os\": \"BSD\", \"version\": \"\", \"hostname\": \"back from deleted\", \"platform\": \"BSD\"}",
+   "status_online": false,
+   "is_banned": false,
+   "is_deleted": false,
+   "user": "",
+   "uuid": ""
+  },
+  {
+   "id": "P14",
+   "note": "",
+   "info": "{\"hostname\": \"last\"}",
+   "status_online": false,
+   "is_banned": false,
+   "is_deleted": false,
+   "user": "",
+   "uuid": ""
+  },
+  {
+   "id": "P15",
+   "note": "",
+   "info": "true",
+   "status_online": false,
+   "is_banned": false,
+   "is_deleted": false,
+   "user": "",
+   "uuid": ""
+  },
+  {
+   "id": "P2",
+   "note": "",
+   "info": "{\"hostname\": \"host two\", \"platform\": \"Windows\"}",
+   "status_online": false,
+   "is_banned": false,
+   "is_deleted": false,
+   "user": "",
+   "uuid": ""
+  },
+  {
+   "id": "P3",
+   "note": "",
+   "info": "{\"os\": {\"x\": 1}, \"hostname\": 5}",
+   "status_online": false,
+   "is_banned": false,
+   "is_deleted": false,
+   "user": "",
+   "uuid": ""
+  },
+  {
+   "id": "P4",
+   "note": "n4",
+   "info": "[1]",
+   "status_online": false,
+   "is_banned": false,
+   "is_deleted": false,
+   "user": "",
+   "uuid": ""
+  },
+  {
+   "id": "P5",
+   "note": "",
+   "info": "\"text\"",
+   "status_online": false,
+   "is_banned": false,
+   "is_deleted": false,
+   "user": "",
+   "uuid": ""
+  },
+  {
+   "id": "P6",
+   "note": "",
+   "info": "\"{\\\"hostname\\\":\\\"in a text\\\"}\"",
+   "status_online": false,
+   "is_banned": false,
+   "is_deleted": false,
+   "user": "",
+   "uuid": ""
+  },
+  {
+   "id": "P7",
+   "note": "",
+   "info": "5",
+   "status_online": false,
+   "is_banned": false,
+   "is_deleted": false,
+   "user": "",
+   "uuid": ""
+  },
+  {
+   "id": "P8",
+   "note": "note over null",
+   "info": "null",
+   "status_online": false,
+   "is_banned": false,
+   "is_deleted": false,
+   "user": "",
+   "uuid": ""
+  },
+  {
+   "id": "P9",
+   "note": "",
+   "info": "\"null\"",
+   "status_online": false,
+   "is_banned": false,
+   "is_deleted": false,
+   "user": "",
+   "uuid": ""
+  },
+  {
+   "id": "S1",
+   "note": "",
+   "info": "{\"os\": \"Linux\", \"version\": \"1.4\", \"hostname\": \"from-signal\", \"platform\": \"Linux\"}",
+   "status_online": true,
+   "is_banned": false,
+   "is_deleted": false,
+   "user": "bob",
+   "uuid": "su-1"
+  }
+ ],
+ "warnings": []
+}

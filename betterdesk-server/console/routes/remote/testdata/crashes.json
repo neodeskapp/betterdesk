@@ -1,0 +1,114 @@
+[
+ {
+  "path": "/api/remote/viewer/dev-1?guest[toString]=1",
+  "signedIn": false,
+  "ended": true,
+  "status": 0,
+  "exit": 1
+ },
+ {
+  "path": "/api/remote/viewer/dev-1?guest[toString]=1",
+  "signedIn": true,
+  "ended": true,
+  "status": 0,
+  "exit": 1
+ },
+ {
+  "path": "/api/remote/viewer/dev-1?t[toString]=1",
+  "signedIn": false,
+  "ended": true,
+  "status": 0,
+  "exit": 1
+ },
+ {
+  "path": "/api/remote/viewer/dev-1?t[toString]=1",
+  "signedIn": true,
+  "ended": true,
+  "status": 0,
+  "exit": 1
+ },
+ {
+  "path": "/api/remote/viewer/dev-1?mesh_share[toString]=1",
+  "signedIn": false,
+  "ended": true,
+  "status": 0,
+  "exit": 1
+ },
+ {
+  "path": "/api/remote/viewer/dev-1?mesh_share[toString]=1",
+  "signedIn": true,
+  "ended": false,
+  "status": 200,
+  "exit": 0
+ },
+ {
+  "path": "/api/remote/viewer/dev-1?transport[toString]=1",
+  "signedIn": false,
+  "ended": false,
+  "status": 401,
+  "exit": 0
+ },
+ {
+  "path": "/api/remote/viewer/dev-1?transport[toString]=1",
+  "signedIn": true,
+  "ended": true,
+  "status": 0,
+  "exit": 1
+ },
+ {
+  "path": "/api/remote/viewer/dev-1?guest[a][toString]=1",
+  "signedIn": false,
+  "ended": false,
+  "status": 403,
+  "exit": 0
+ },
+ {
+  "path": "/api/remote/viewer/dev-1?guest[a][toString]=1",
+  "signedIn": true,
+  "ended": false,
+  "status": 200,
+  "exit": 0
+ },
+ {
+  "path": "/api/remote/guest-info?t[toString]=1",
+  "signedIn": false,
+  "ended": true,
+  "status": 0,
+  "exit": 1
+ },
+ {
+  "path": "/api/remote/guest-info?t[toString]=1",
+  "signedIn": true,
+  "ended": true,
+  "status": 0,
+  "exit": 1
+ },
+ {
+  "path": "/api/remote/guest-info?guest[toString]=1",
+  "signedIn": false,
+  "ended": true,
+  "status": 0,
+  "exit": 1
+ },
+ {
+  "path": "/api/remote/guest-info?guest[toString]=1",
+  "signedIn": true,
+  "ended": true,
+  "status": 0,
+  "exit": 1
+ },
+ {
+  "path": "/api/remote/login-info?return[toString]=1",
+  "signedIn": false,
+  "ended": false,
+  "status": 200,
+  "exit": 0
+ },
+ {
+  "path": "/api/remote/login-info?return[toString]=1",
+  "signedIn": true,
+  "ended": false,
+  "status": 200,
+  "exit": 0
+ }
+]

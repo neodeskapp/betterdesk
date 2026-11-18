@@ -1,0 +1,23 @@
+{
+ "id": "ws-rendezvous/guest-other-device",
+ "request": {
+  "method": "GET",
+  "path": "/ws/rendezvous?guest=%7Bsecret%3Aglink%7D&guest_session=contract-session&peer_id=900100002",
+  "notes": [
+   "no cookies",
+   "websocket g7, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

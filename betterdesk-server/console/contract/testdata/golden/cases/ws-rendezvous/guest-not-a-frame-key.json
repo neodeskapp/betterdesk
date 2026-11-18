@@ -1,0 +1,40 @@
+{
+ "id": "ws-rendezvous/guest-not-a-frame-key",
+ "request": {
+  "method": "GET",
+  "path": "/ws/rendezvous?guest=%7Bsecret%3Aglink%7D&guest_session=contract-other&peer_id=900100001",
+  "notes": [
+   "no cookies",
+   "websocket gx, own origin",
+   "websocket expect 1 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].binary.sha256",
+     "pattern": "^[9aA+/_=-]{64}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "binary": {
+        "length": 103,
+        "sha256": "<volatile>"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

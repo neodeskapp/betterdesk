@@ -1,0 +1,69 @@
+{
+ "id": "ws-rendezvous/punch-unknown-device",
+ "request": {
+  "method": "GET",
+  "path": "/ws/rendezvous",
+  "notes": [
+   "websocket p, own origin",
+   "websocket send 14 binary bytes",
+   "websocket expect 1 messages",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "binary": {
+        "length": 26,
+        "sha256": "3cca40086c24fca47b6f0cb95d638a6f0aa55785e7f1ab53002a1a316f586e08"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

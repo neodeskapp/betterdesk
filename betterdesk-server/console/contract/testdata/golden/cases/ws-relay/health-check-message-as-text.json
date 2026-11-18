@@ -1,0 +1,31 @@
+{
+ "id": "ws-relay/health-check-message-as-text",
+ "request": {
+  "method": "GET",
+  "path": "/ws/relay?transport=message",
+  "notes": [
+   "websocket mt, own origin",
+   "websocket send text \"\\xd2\\x01\\x0f\\n\\rcontract-text\"",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1007,
+      "reason": ""
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

@@ -13,6 +13,9 @@ to the Node console while it runs behind this one. Sockets that live here:
 | `/api/cdap/devices/<id>/terminal`, `desktop`, `video`, `files`, `audio` | `console/cdapproxy` | `services/cdapTerminalProxy.js`, `services/cdapMediaProxy.js` |
 | `/agent.ashx`, `/meshrelay.ashx`, `/control.ashx` | `console/meshproxy` | `services/meshAshxProxy.js` |
 | `/ws/device-status`, `/ws/panel-events` | `console/statuspush` | `services/deviceStatusPush.js` |
+| `/ws/rendezvous`, `/ws/relay` | `console/wsrelay` | `services/wsRelay.js` |
+| `/ws/remote-agent/<id>`, `/ws/remote-viewer/<id>` | `console/remoterelay` | `services/remoteRelay.js` |
+| `/ws/remote-target/<id>` | `console/remotetarget` | `services/remoteTargetGateway.js` |
 
 The CDAP and MeshCentral sockets pass what they get on to a socket of
 the API server. The old console opened that socket over the network
@@ -62,6 +65,9 @@ a marker; the tests read recordings through `wstest.Expand`.
 | `routes/chat` | `relay.js` | `node_relay.json` | 19 scenarios, 235 steps: the checks of both sockets in their order (origin, token in the query or a bearer header, session, permission, the handshake), every message type of agents and operators with odd values, the routing between rooms and the inbox, history, contacts and groups with the API server's answers and failures, the room's memory of 500, replacement, the limits; with every call to the API server (path and body), token check and permission lookup; ten messages that ended the Node process |
 | `cdapproxy` | `proxy.js` | `node_proxy.json` | 15 scenarios, 180 steps: who may open which of the five sockets, the order of the checks, what reaches the API server's socket (path, subprotocol, user headers) and comes back, messages that wait for the handshake, closes and failures on either side, user names that ended the Node process |
 | `meshproxy` | `proxy.js` | `node_proxy.json` | 9 scenarios, 102 steps: the checks, path and query and X-Forwarded-For as the gateway gets them, messages both ways, those lost before the gateway answers, closes and failures |
+| `wsrelay` | `codec.js`, `relay.js` | `node_codec.json`, `node_relay.json` | 7,515 rendezvous payloads and 202 frame streams through the guest check and the codec; 14 scenarios, 213 steps: every check, the dialing of the signal server and the relay, bytes both ways, message transport, the per-address limit, idle timeout, guest links (validate, consume, recheck, expiry, revocation) |
+| `remoterelay` | `remote.js`, `peer.js` | `node_remote.json`, `node_peer_*.json` | 6 scenarios, 160 steps of agents and viewers, 13 cases that ended Node; the device lookup on SQLite and PostgreSQL |
+| `remotetarget` | `gateway.js` | `node_gateway.json` | 5 scenarios, 52 steps: every check, messages both ways, the tunnel's answers and sizes, names that cannot be a header |
 
 `wstest.Player` plays these recordings with raw sockets, `wstest.PlayProxy`
 the two proxy recordings against a made-up API server (`wstest.FakeAPI`).
@@ -83,8 +89,8 @@ id, a LAN registration). The cases run for every role of
 `contract/roles.go` and signed out, were recorded from Node behind the
 front door, and are checked through the front door and with
 `STACK_MODE=go`. The groups are `ws-device-status`, `ws-panel-events`,
-`ws-bd-signal`, `ws-bd-relay`, `ws-chat`, `ws-cdap` and `ws-mesh`; their
-names start with `ws-` so they run
+`ws-bd-signal`, `ws-bd-relay`, `ws-chat`, `ws-cdap`, `ws-mesh`, `ws-rendezvous`,
+`ws-relay`, `ws-remote` and `ws-remote-target`; their names start with `ws-` so they run
 after the route groups, whose answers they would otherwise change (audit
 entries, a device's id history). The answers of an agent that is connected
 are pinned by the package recordings: a test instance has no agent, so the

@@ -1,0 +1,32 @@
+{
+ "id": "ws-remote/viewer-without-session",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-viewer/900100001",
+  "notes": [
+   "no session cookie",
+   "websocket v4, own origin",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro",
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

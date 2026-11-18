@@ -1,0 +1,23 @@
+{
+ "id": "ws-rendezvous/guest-without-session",
+ "request": {
+  "method": "GET",
+  "path": "/ws/rendezvous?guest=%7Bsecret%3Aglink%7D&peer_id=900100001",
+  "notes": [
+   "no cookies",
+   "websocket g4, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

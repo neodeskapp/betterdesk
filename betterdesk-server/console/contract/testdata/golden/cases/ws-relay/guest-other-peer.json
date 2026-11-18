@@ -1,0 +1,23 @@
+{
+ "id": "ws-relay/guest-other-peer",
+ "request": {
+  "method": "GET",
+  "path": "/ws/relay?guest=%7Bsecret%3Aglink%7D&guest_session=contract-a&peer_id=900100002",
+  "notes": [
+   "no cookies",
+   "websocket g2, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

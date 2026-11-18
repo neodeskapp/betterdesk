@@ -1,0 +1,62 @@
+{
+ "id": "ws-relay/health-check-message",
+ "request": {
+  "method": "GET",
+  "path": "/ws/relay?transport=message",
+  "notes": [
+   "websocket m, own origin",
+   "websocket send 13 binary bytes",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "binary": {
+        "length": 13,
+        "sha256": "5a87f3bf7025904f48ef24ad00ffb8136ba053ee9318b15e4e001361cea2719f"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

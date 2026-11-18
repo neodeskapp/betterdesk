@@ -1,0 +1,38 @@
+{
+ "id": "ws-relay/health-check-transport-other",
+ "request": {
+  "method": "GET",
+  "path": "/ws/relay?transport=Message",
+  "notes": [
+   "websocket m3, own origin",
+   "websocket send 14 binary bytes",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "binary": {
+        "length": 14,
+        "sha256": "97b3b88feacf611e52eff3ed939b0c76d9e6408fc937e4efc4c574b619060fcb"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

@@ -38,6 +38,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/phase45"
 	"github.com/unitronix/betterdesk-server/console/routes/policies"
 	"github.com/unitronix/betterdesk-server/console/routes/registration"
+	"github.com/unitronix/betterdesk-server/console/routes/remote"
 	"github.com/unitronix/betterdesk-server/console/routes/reports"
 	"github.com/unitronix/betterdesk-server/console/routes/resourcecontrol"
 	"github.com/unitronix/betterdesk-server/console/routes/rustdeskapi"
@@ -80,6 +81,7 @@ var (
 func registerRoutes(d *kit.Deps) {
 	rustdeskapi.Register(d)         // routes/rustdesk-api.routes.js (server.js), early stage
 	bdapi.Register(d.At("/api/bd")) // routes/bd-api.routes.js at /api/bd (server.js), early stage
+	remote.RegisterAgentToken(d)    // routes/bd-api.routes.js at /api/bd (server.js): POST /remote-agent-token, early stage
 	health.Register(d)              // routes/index.js: GET /health
 	authroutes.Register(d)          // routes/auth.routes.js
 	consoleroutes.Register(d)       // routes/console.routes.js
@@ -97,6 +99,7 @@ func registerRoutes(d *kit.Deps) {
 	panelaccess.Register(d)    // routes/panel-access.routes.js
 	uishell.Register(d)        // routes/ui-shell.routes.js
 	folders.Register(d)        // routes/folders.routes.js
+	remote.Register(d)         // routes/remote.routes.js, with the dev mock of lib/devMockRemote
 	guest.Register(d)          // routes/guest.routes.js
 	i18nroutes.Register(d)     // routes/i18n.routes.js at /api/i18n
 	// routes/dataguard.routes.js at /api/dataguard and at /api/bd

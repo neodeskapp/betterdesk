@@ -1,0 +1,30 @@
+{
+ "id": "ws-rendezvous/limit-l4-closed",
+ "request": {
+  "method": "GET",
+  "path": "/ws/rendezvous",
+  "notes": [
+   "websocket l4, own origin",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

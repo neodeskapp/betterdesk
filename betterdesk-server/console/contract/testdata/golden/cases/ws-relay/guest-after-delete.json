@@ -1,0 +1,23 @@
+{
+ "id": "ws-relay/guest-after-delete",
+ "request": {
+  "method": "GET",
+  "path": "/ws/relay?guest=%7Bsecret%3Aglink%7D&guest_session=contract-g&peer_id=900100001&transport=message",
+  "notes": [
+   "no cookies",
+   "websocket g7, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

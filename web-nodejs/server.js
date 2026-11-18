@@ -35,17 +35,13 @@ const authService = require('./services/authService');
 const db = require('./services/database');
 const { DatabaseSessionStore } = require('./services/databaseSessionStore');
 const userSync = require('./services/userSync');
-const { initWsProxy } = require('./services/wsRelay');
-const { initRemoteRelay } = require('./services/remoteRelay');
 const { initServerTerminalProxy } = require('./services/serverTerminalProxy');
-const { initRemoteTargetGateway } = require('./services/remoteTargetGateway');
 const { loadEffectivePolicy } = require('./services/panelAccessPolicyService');
 const { panelAccessGuard } = require('./middleware/panelAccess');
 const { startDiscoveryService } = require('./services/lanDiscovery');
 const { initHelpRequestEmailService } = require('./services/helpRequestEmailService');
 const routes = require('./routes');
 const { mountRoutes } = require('./lib/mountRoutes');
-const bdApiRoutes = require('./routes/bd-api.routes');
 const { parseTrustProxy } = require('./lib/parseTrustProxy');
 const {
     resolvePortForCurrentUser,
@@ -239,11 +235,6 @@ for (const p of getPanelReadMountPaths()) {
 app.use('/api/panel', widgetLimiter);
 app.use('/api/desktop/layout', panelPreferenceLimiter);
 app.use('/api/', apiLimiter);
-
-
-// The token for the remote agent socket (POST /api/bd/remote-agent-token),
-// before the CSRF gate; the rest of the device API is in the Go console
-app.use('/api/bd', bdApiRoutes);
 
 // i18n middleware
 app.use(initI18n());
@@ -479,11 +470,6 @@ async function startServer() {
             });
         }
         
-        // Initialize WebSocket proxy for remote desktop client
-        initWsProxy(server, sessionMiddleware);
-
-        // Initialize Remote Desktop relay (WebSocket — agent JPEG ↔ browser viewer)
-        initRemoteRelay(server, sessionMiddleware);
 
         // Initialize Server Management terminal WebSocket (browser ↔ host shell)
         initServerTerminalProxy(server, sessionMiddleware, {
@@ -494,7 +480,6 @@ async function startServer() {
             }
         });
 
-        initRemoteTargetGateway(server, sessionMiddleware);
 
         initHelpRequestEmailService(config.betterdeskApiUrl, config.betterdeskApiKey);
 

@@ -1,0 +1,39 @@
+{
+ "id": "ws-relay/health-check-in-two-parts",
+ "request": {
+  "method": "GET",
+  "path": "/ws/relay",
+  "notes": [
+   "websocket h2, own origin",
+   "websocket send 3 binary bytes",
+   "websocket send 17 binary bytes",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "binary": {
+        "length": 20,
+        "sha256": "dacc2283de776fd53cc0fd49a67e1f80df061ac6847561d9677d0a08b8cfd6e5"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

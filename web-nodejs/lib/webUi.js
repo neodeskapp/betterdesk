@@ -41,7 +41,7 @@ const PUBLIC_PATHS = [/^\/login(\/|$)/, /^\/portal(\/|$)/, /^\/d\//, /^\/remote\
 // The remote viewer (/remote/<device id>) also opens for guest links and mesh
 // shares, which have no console session. The page holds no data: it asks
 // /api/remote/viewer/<id>, which applies the viewer's access rules
-// (routes/remote.routes.js requireRemoteAccess) and answers 401 otherwise.
+// (the Go console's requireRemoteAccess, console/routes/remote) and answers 401 otherwise.
 const VIEWER_PATH = /^\/remote\/(?!login(\/|$)|guest(\/|$))[A-Za-z0-9_-]{3,64}$/;
 
 // Remote client pages send signed-out people to the remote client's own

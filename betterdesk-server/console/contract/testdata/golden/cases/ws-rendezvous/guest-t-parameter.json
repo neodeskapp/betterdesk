@@ -1,0 +1,45 @@
+{
+ "id": "ws-rendezvous/guest-t-parameter",
+ "request": {
+  "method": "GET",
+  "path": "/ws/rendezvous?guest_session=contract-t&peer_id=900100001&t=%7Bsecret%3Aglink%7D",
+  "notes": [
+   "no cookies",
+   "websocket g8, own origin",
+   "websocket expect 1 messages",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].binary.sha256",
+     "pattern": "^[9aA+/_=-]{64}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "binary": {
+        "length": 103,
+        "sha256": "<volatile>"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

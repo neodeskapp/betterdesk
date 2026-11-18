@@ -6,7 +6,6 @@
 const express = require('express');
 const router = express.Router();
 
-const remoteRoutes = require('./remote.routes');
 
 /**
  * Lazy-load wrapper — defers require() until first request.
@@ -30,7 +29,6 @@ const { requireJsonContentType } = require('../lib/requireJsonContentType');
 router.use(requireJsonContentType);
 
 // Mount routes
-router.use('/', remoteRoutes);
 router.use('/', serverManagementRoutes);                 // admin-facing: /server-management, /api/server-management/* (BETA)
 
 module.exports = router;

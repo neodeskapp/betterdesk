@@ -1,0 +1,31 @@
+{
+ "id": "ws-remote-target/after-delete",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-target/{target}",
+  "notes": [
+   "websocket d, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 404,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

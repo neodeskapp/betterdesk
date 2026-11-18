@@ -42,6 +42,10 @@ type Session interface {
 	Role() string
 	// Username is session.user.username, else session.username.
 	Username() string
+	// User is the account as the session store reads req.session.user
+	// (session.Session.User), for the device scope; nil when nobody is
+	// signed in.
+	User() *session.User
 }
 
 // SessionOf adapts the session store: it loads the session of r as the

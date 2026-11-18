@@ -111,6 +111,10 @@ type setup struct {
 	langDir string
 	// db is the migrated database to run on; nil means a new SQLite one.
 	db *store.DB
+	// api is the API server's handler; nil answers 404 to everything.
+	api http.Handler
+	// configure changes the configuration before the console is built.
+	configure func(*config.Config)
 }
 
 // world is a console server on a fresh database with a test client.
@@ -174,12 +178,19 @@ func newWorld(t *testing.T, o setup) *world {
 	if o.build {
 		cfg.WebUIDir = filepath.Join("webui", "testdata", "site")
 	}
+	if o.configure != nil {
+		o.configure(cfg)
+	}
+	apiHandler := o.api
+	if apiHandler == nil {
+		apiHandler = http.NotFoundHandler()
+	}
 	w := &world{t: t, db: db}
 	if o.node {
 		w.node = newFakeNode(t)
 		cfg.NodeUpstream, _ = url.Parse(w.node.URL)
 	}
-	s, err := New(context.Background(), Options{Config: cfg, Store: db, API: http.NotFoundHandler()})
+	s, err := New(context.Background(), Options{Config: cfg, Store: db, API: apiHandler})
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}

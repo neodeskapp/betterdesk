@@ -1,0 +1,35 @@
+{
+ "id": "ws-remote/viewer-m4",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-viewer/900100001",
+  "notes": [
+   "websocket m4, own origin",
+   "websocket expect 1 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "agent_ready": false,
+        "streaming": false,
+        "type": "session-info"
+       },
+       "order": "type agent_ready streaming"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,23 @@
+{
+ "id": "ws-remote/agent-no-token",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-agent/900100001",
+  "notes": [
+   "no cookies",
+   "websocket a5, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

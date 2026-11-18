@@ -1,0 +1,65 @@
+{
+ "id": "ws-remote/viewer-stops",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-viewer/900100001",
+  "notes": [
+   "websocket viewer, own origin",
+   "websocket send {\"type\":\"stop\"}",
+   "websocket expect 1 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "reason": "operator requested stop",
+        "type": "stream-stopped"
+       },
+       "order": "type reason"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

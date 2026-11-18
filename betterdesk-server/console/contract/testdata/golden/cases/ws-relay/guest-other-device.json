@@ -1,0 +1,32 @@
+{
+ "id": "ws-relay/guest-other-device",
+ "request": {
+  "method": "GET",
+  "path": "/ws/relay?guest=%7Bsecret%3Aglink%7D&guest_session=contract-b&peer_id=900100001&transport=message",
+  "notes": [
+   "no cookies",
+   "websocket g3, own origin",
+   "websocket send 37 binary bytes",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

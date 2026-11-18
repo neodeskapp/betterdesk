@@ -1,0 +1,23 @@
+{
+ "id": "ws-rendezvous/guest-unknown-link",
+ "request": {
+  "method": "GET",
+  "path": "/ws/rendezvous?guest=contract-no-such-link&guest_session=contract-session&peer_id=900100001",
+  "notes": [
+   "no cookies",
+   "websocket g6, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

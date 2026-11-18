@@ -5,7 +5,7 @@
 'use strict';
 
 const { validateOrigin } = require('../../middleware/wsOrigin');
-const { createTestApp, rawUpgrade, listenLoopback, closeServer, http } = require('./helpers');
+const { createTestApp } = require('./helpers');
 const request = require('supertest');
 const { EVIL_ORIGINS } = require('./payloads');
 
@@ -47,50 +47,6 @@ describe('[sec/07] Connection WebSocket / BD relay auth', () => {
             expect(validateOrigin({
                 headers: { host: 'panel.local:5000' },
             }).ok).toBe(true);
-        });
-    });
-
-    describe('WS upgrade session gate (loopback)', () => {
-        let server;
-
-        afterEach(async () => {
-            await closeServer(server);
-            server = null;
-        });
-
-        it('rejects unauthenticated /ws/rendezvous upgrade', async () => {
-            jest.resetModules();
-            const { initWsProxy } = require('../../services/wsRelay');
-            server = http.createServer((_req, res) => { res.writeHead(404); res.end(); });
-            initWsProxy(server, (req, _res, next) => {
-                req.session = null;
-                next();
-            });
-            const { port } = await listenLoopback(server);
-            const result = await rawUpgrade(port, '/ws/rendezvous', {
-                Origin: `http://127.0.0.1:${port}`,
-            });
-            expect(result.statusLine).toMatch(/401|403/);
-        });
-
-        it('rejects evil Origin on authenticated session cookie upgrade', async () => {
-            jest.resetModules();
-            const { initWsProxy } = require('../../services/wsRelay');
-            server = http.createServer((_req, res) => { res.writeHead(404); res.end(); });
-            initWsProxy(server, (req, _res, next) => {
-                req.session = {
-                    userId: 1,
-                    user: { id: 1, role: 'admin', username: 'admin' },
-                };
-                next();
-            });
-            const { port } = await listenLoopback(server);
-            const result = await rawUpgrade(port, '/ws/rendezvous', {
-                Origin: 'https://evil.example.com',
-                Cookie: 'bd.sid=fake',
-            });
-            // Origin enforce may 403 before or with session — either is secure
-            expect(result.statusLine).toMatch(/401|403/);
         });
     });
 

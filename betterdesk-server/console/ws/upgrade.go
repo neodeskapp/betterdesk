@@ -114,6 +114,13 @@ func (i storedSession) Role() string {
 	return ""
 }
 
+func (i storedSession) User() *session.User {
+	if i.s == nil {
+		return nil
+	}
+	return i.s.User()
+}
+
 func (i storedSession) Username() string {
 	if i.s == nil {
 		return ""

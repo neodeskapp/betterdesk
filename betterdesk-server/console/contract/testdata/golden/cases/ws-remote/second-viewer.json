@@ -1,0 +1,65 @@
+{
+ "id": "ws-remote/second-viewer",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-viewer/900100001",
+  "notes": [
+   "websocket viewer2, own origin",
+   "websocket expect 2 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "agent_ready": true,
+        "streaming": false,
+        "type": "session-info"
+       },
+       "order": "type agent_ready streaming"
+      },
+      {
+       "json": {
+        "type": "stream-started"
+       },
+       "order": "type"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

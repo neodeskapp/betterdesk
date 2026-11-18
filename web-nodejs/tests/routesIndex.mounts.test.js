@@ -16,6 +16,6 @@ test('no router is mounted twice at the same path', () => {
         if (seen.has(key)) twice.push(key);
         seen.set(key, true);
     }
-    expect(seen.size).toBeGreaterThan(1);
+    expect(seen.size).toBeGreaterThan(0);
     expect(twice).toEqual([]);
 });

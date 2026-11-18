@@ -1,0 +1,1819 @@
+{
+ "scenarios": [
+  {
+   "name": "checks",
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}",
+       "Origin": "https://evil.example"
+      }
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "Cookie": "bd.sid=s%3Ax"
+      }
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/remote-target/rt_echo-0001"
+     },
+     "events": [
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n"
+      },
+      {
+       "socket": "c",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"user\":{\"username\":\"x\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n"
+      },
+      {
+       "socket": "d",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"vic\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n"
+      },
+      {
+       "socket": "e",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "viewer",
+        "remote_target.connect"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "f",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"thor\",\"role\":\"throw\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "f",
+       "head": "HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n"
+      },
+      {
+       "socket": "f",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "throw",
+        "remote_target.connect"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "g",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":3,\"role\":\"admin\"}"
+      }
+     },
+     "events": [
+      {
+       "socket": "g",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up1",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_echo-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "user#3",
+         "x-role": "admin",
+         "sec-websocket-version": "13"
+        }
+       }
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "admin",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {},
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "h",
+      "path": "/ws/remote-target/rt_missing1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "h",
+       "head": "HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n"
+      },
+      {
+       "socket": "h",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_missing1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "i",
+      "path": "/ws/remote-target/rt_scoped-01",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"scoped\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "i",
+       "head": "HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n"
+      },
+      {
+       "socket": "i",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_scoped-01"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "scoped",
+         "role": "operator"
+        },
+        "rt_scoped-01"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "j",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"scopethrow\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "j",
+       "head": "HTTP/1.1 502 Bad Gateway\r\nConnection: close\r\n\r\n"
+      },
+      {
+       "socket": "j",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "scopethrow",
+         "role": "operator"
+        },
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "k",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"scoped\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "k",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up2",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_echo-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "scoped",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "scoped",
+         "role": "operator"
+        },
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "l",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":9,\"user\":{\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "l",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up3",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_echo-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "user#9",
+         "x-role": "admin",
+         "sec-websocket-version": "13"
+        }
+       }
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "admin",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {
+         "role": "admin"
+        },
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "m",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":12,\"role\":\"operator\",\"username\":\"sso\"}",
+       "Origin": "http://console.test"
+      }
+     },
+     "events": [
+      {
+       "socket": "m",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up4",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_echo-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "user#12",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {},
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "n",
+      "path": "/ws/remote-target/rt_echo-0001?x=1"
+     },
+     "events": [
+      {
+       "socket": "n",
+       "head": "HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n"
+      },
+      {
+       "socket": "n",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "o",
+      "path": "/ws/remote-target/rt_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "o",
+       "head": "HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n"
+      },
+      {
+       "socket": "o",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "passing messages",
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"root\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up1",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_echo-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "root",
+         "x-role": "admin",
+         "sec-websocket-version": "13"
+        }
+       }
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "admin",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "root",
+         "role": "admin"
+        },
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "hello there"
+     },
+     "events": [
+      {
+       "socket": "up1",
+       "text": "hello there"
+      },
+      {
+       "socket": "a",
+       "text": "echo:hello there"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "binary": "AAFiaW5hcnnDvw=="
+     },
+     "events": [
+      {
+       "socket": "up1",
+       "binary": "AAFiaW5hcnnDvw=="
+      },
+      {
+       "socket": "a",
+       "binary": "AAFiaW5hcnnDvw=="
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": ""
+     },
+     "events": [
+      {
+       "socket": "up1",
+       "text": ""
+      },
+      {
+       "socket": "a",
+       "text": "echo:"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "at-limit",
+      "wait": 40
+     },
+     "events": [
+      {
+       "socket": "up1",
+       "text": "at-limit"
+      },
+      {
+       "socket": "a",
+       "binary": "big 16777216 b667ebbe6ef1aff2d81566dbff8b3b76de952bcd6506c054d807426d20ca0184"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "repeat": 16777216,
+      "wait": 40
+     },
+     "events": [
+      {
+       "socket": "up1",
+       "binary": "big 16777216 a06c26cbac8b80704f420222dae5658b88ff2da96702d12ef7a4223e9361f7c1"
+      },
+      {
+       "socket": "a",
+       "binary": "big 16777216 a06c26cbac8b80704f420222dae5658b88ff2da96702d12ef7a4223e9361f7c1"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "close-1000"
+     },
+     "events": [
+      {
+       "socket": "up1",
+       "text": "close-1000"
+      },
+      {
+       "socket": "up1",
+       "close": 1000,
+       "reason": "session ended"
+      },
+      {
+       "socket": "a",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up2",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_echo-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "olga",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "b",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      },
+      {
+       "socket": "up2",
+       "close": 1005,
+       "reason": ""
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up3",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_echo-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "olga",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "c",
+      "close": 4001
+     },
+     "events": [
+      {
+       "socket": "c",
+       "close": 4001,
+       "reason": ""
+      },
+      {
+       "socket": "c",
+       "end": true
+      },
+      {
+       "socket": "up3",
+       "close": 1005,
+       "reason": ""
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up4",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_echo-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "olga",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "d",
+      "drop": true
+     },
+     "events": [
+      {
+       "socket": "d",
+       "end": true
+      },
+      {
+       "socket": "up4",
+       "close": 1005,
+       "reason": ""
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up5",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_echo-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "olga",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "e",
+      "text": "close-1011"
+     },
+     "events": [
+      {
+       "socket": "up5",
+       "text": "close-1011"
+      },
+      {
+       "socket": "up5",
+       "close": 1011,
+       "reason": "gateway unavailable"
+      },
+      {
+       "socket": "e",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "e",
+       "end": true
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "f",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "f",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up6",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_echo-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "olga",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "f",
+      "text": "drop"
+     },
+     "events": [
+      {
+       "socket": "up6",
+       "text": "drop"
+      },
+      {
+       "socket": "up6",
+       "close": 1006,
+       "reason": ""
+      },
+      {
+       "socket": "f",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "f",
+       "end": true
+      }
+     ],
+     "calls": []
+    }
+   ]
+  },
+  {
+   "name": "the upstream side",
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/remote-target/rt_refuse-01",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up1",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_refuse-01/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "olga",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      },
+      {
+       "socket": "a",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_refuse-01"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "rt_refuse-01"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/remote-target/rt_hello-001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up2",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_hello-001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "olga",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      },
+      {
+       "socket": "b",
+       "text": "hello"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_hello-001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "rt_hello-001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/remote-target/rt_close1000",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up3",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_close1000/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "olga",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      },
+      {
+       "socket": "up3",
+       "close": 1000,
+       "reason": "session ended"
+      },
+      {
+       "socket": "c",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "c",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_close1000"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "rt_close1000"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/remote-target/rt_close1011",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up4",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_close1011/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "olga",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      },
+      {
+       "socket": "up4",
+       "close": 1011,
+       "reason": "gateway unavailable"
+      },
+      {
+       "socket": "d",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "d",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_close1011"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "rt_close1011"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/ws/remote-target/rt_drop-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up5",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_drop-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "olga",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      },
+      {
+       "socket": "up5",
+       "close": 1006,
+       "reason": ""
+      },
+      {
+       "socket": "e",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "e",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_drop-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "rt_drop-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "f",
+      "path": "/ws/remote-target/rt_slow-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "f",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up6",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_slow-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "olga",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_slow-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "rt_slow-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "f",
+      "text": "queued one"
+     },
+     "events": [
+      {
+       "socket": "up6",
+       "text": "queued one"
+      },
+      {
+       "socket": "f",
+       "text": "echo:queued one"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "f",
+      "binary": "cXVldWVkIHR3bw=="
+     },
+     "events": [
+      {
+       "socket": "up6",
+       "binary": "cXVldWVkIHR3bw=="
+      },
+      {
+       "socket": "f",
+       "binary": "cXVldWVkIHR3bw=="
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "f",
+      "text": "queued three",
+      "wait": 40
+     },
+     "events": [
+      {
+       "socket": "up6",
+       "text": "queued three"
+      },
+      {
+       "socket": "f",
+       "text": "echo:queued three"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "g",
+      "path": "/ws/remote-target/rt_slow-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "g",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up7",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_slow-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "olga",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_slow-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "rt_slow-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "g",
+      "text": "never sent"
+     },
+     "events": [
+      {
+       "socket": "up7",
+       "text": "never sent"
+      },
+      {
+       "socket": "g",
+       "text": "echo:never sent"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "g",
+      "close": 1000,
+      "wait": 40
+     },
+     "events": [
+      {
+       "socket": "g",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "g",
+       "end": true
+      },
+      {
+       "socket": "up7",
+       "close": 1005,
+       "reason": ""
+      }
+     ],
+     "calls": []
+    }
+   ]
+  },
+  {
+   "name": "sizes",
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up1",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_echo-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "olga",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "big",
+      "wait": 40
+     },
+     "events": [
+      {
+       "socket": "up1",
+       "text": "big"
+      },
+      {
+       "socket": "a",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "a",
+       "end": true
+      },
+      {
+       "socket": "up1",
+       "close": 1009,
+       "reason": ""
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up2",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_echo-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "olga",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "repeat": 16777217,
+      "wait": 40
+     },
+     "events": [
+      {
+       "socket": "b",
+       "close": 1009,
+       "reason": ""
+      },
+      {
+       "socket": "up2",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ],
+     "calls": []
+    }
+   ]
+  },
+  {
+   "name": "names in headers",
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"\\u0141ukasz\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "Łukasz",
+         "role": "operator"
+        },
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"tab\\tname\\u0007\",\"role\":\"operator\"}}",
+       "Sec-WebSocket-Protocol": "guacamole, other"
+      }
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: guacamole\r\n\r\n"
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "tab\tname\u0007",
+         "role": "operator"
+        },
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"tab\\tname\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up1",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_echo-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "tab\tname",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "tab\tname",
+         "role": "operator"
+        },
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "c",
+      "text": "still works"
+     },
+     "events": [
+      {
+       "socket": "up1",
+       "text": "still works"
+      },
+      {
+       "socket": "c",
+       "text": "echo:still works"
+      }
+     ],
+     "calls": []
+    }
+   ]
+  }
+ ]
+}

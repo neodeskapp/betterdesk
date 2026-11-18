@@ -1,0 +1,23 @@
+{
+ "id": "ws-rendezvous/guest-after-delete",
+ "request": {
+  "method": "GET",
+  "path": "/ws/rendezvous?guest=%7Bsecret%3Aglink%7D&guest_session=contract-after&peer_id=900100001",
+  "notes": [
+   "no cookies",
+   "websocket ga, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

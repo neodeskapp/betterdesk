@@ -54,18 +54,6 @@ const admin = { id: 1, username: 'admin', role: 'admin' };
 const isApp = (res) => /console app/.test(res.text || '');
 
 describe('server routes before the console at the root', () => {
-    test('the server answers its own addresses, not the app', async () => {
-        const res = await request(app(admin)).get('/remote-dashboard');
-        expect(res.status).toBe(301);
-        expect(isApp(res)).toBe(false);
-    });
-
-    test('old addresses that redirect still do', async () => {
-        expect((await request(app(admin)).get('/remote-dashboard')).headers.location).toBe('/remote');
-        expect((await request(app(admin)).get('/remote-desktop/900100001')).headers.location).toBe('/remote/900100001');
-        expect((await request(app(admin)).get('/remote-cdap/900100001')).headers.location).toBe('/remote/900100001?transport=cdap');
-    });
-
     test('the API and sockets never get the app page', async () => {
         for (const p of ['/api/no-such-endpoint', '/api', '/ws/nothing']) {
             const res = await request(app(admin)).get(p).set('Accept', 'application/json');
@@ -90,7 +78,7 @@ describe('server routes before the console at the root', () => {
     test('console pages carry the policy of their build; server answers keep the strict one', async () => {
         const page = await request(app(admin)).get('/devices');
         expect(page.headers['content-security-policy']).toContain("script-src 'self' 'sha256-boot='");
-        for (const p of ['/remote-dashboard', '/api/no-such-endpoint']) {
+        for (const p of ['/api/no-such-endpoint']) {
             const res = await request(app(admin)).get(p);
             const csp = res.headers['content-security-policy'];
             expect([p, /script-src 'self';/.test(csp), /sha256|nonce-/.test(csp)]).toEqual([p, true, false]);

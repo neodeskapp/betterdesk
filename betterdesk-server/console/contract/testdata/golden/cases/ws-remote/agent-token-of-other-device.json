@@ -1,0 +1,23 @@
+{
+ "id": "ws-remote/agent-token-of-other-device",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-agent/900100001?token=%7Bsecret%3Adevice_token_other%7D",
+  "notes": [
+   "no cookies",
+   "websocket a7, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

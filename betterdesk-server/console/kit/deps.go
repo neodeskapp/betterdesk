@@ -21,6 +21,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/i18n"
 	"github.com/unitronix/betterdesk-server/console/limits"
 	"github.com/unitronix/betterdesk-server/console/mail"
+	"github.com/unitronix/betterdesk-server/console/remoterelay"
 	"github.com/unitronix/betterdesk-server/console/restart"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
 	"github.com/unitronix/betterdesk-server/console/session"
@@ -139,6 +140,10 @@ type Deps struct {
 	// Relay is the agents' signal and relay sockets (services/bdRelay.js);
 	// d.Relay.RequestFromDevice asks a connected agent for something.
 	Relay *bdrelay.Service
+	// RemoteRelay is the remote desktop relay between agents and viewers
+	// (services/remoteRelay.js): its sessions and the agents' single-use
+	// tokens.
+	RemoteRelay *remoterelay.Service
 }
 
 // At returns the same Deps with both route tables mounted at prefix, for

@@ -1,0 +1,32 @@
+{
+ "id": "ws-relay/guest-framed-request",
+ "request": {
+  "method": "GET",
+  "path": "/ws/relay?guest=%7Bsecret%3Aglink%7D&guest_session=contract-e&peer_id=900100001",
+  "notes": [
+   "no cookies",
+   "websocket g6, own origin",
+   "websocket send 38 binary bytes",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

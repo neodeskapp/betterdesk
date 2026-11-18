@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/ws"
 )
 
@@ -441,6 +442,21 @@ func (s oracleSession) Username() string {
 		return name
 	}
 	return s.o.Str("username")
+}
+
+// User is the session's user as session.Session.User reads it: the id,
+// name and role of the "user" object, the name and role at the top as a
+// fallback, nil when nobody is signed in.
+func (s oracleSession) User() *session.User {
+	if !s.SignedIn() {
+		return nil
+	}
+	u := &session.User{ID: s.UserID(), Username: s.Username(), Role: s.Role()}
+	if n, ok := s.o.Object("user").Number("id"); ok && n == float64(int64(n)) && n != 0 {
+		u.ID = int64(n)
+	}
+	u.PreferredLanguage = s.o.Object("user").Str("preferred_language")
+	return u
 }
 
 // squeezed is a run that squeeze.js put into a recording, as it stands in

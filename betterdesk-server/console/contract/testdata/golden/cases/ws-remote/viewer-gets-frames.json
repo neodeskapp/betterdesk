@@ -1,0 +1,78 @@
+{
+ "id": "ws-remote/viewer-gets-frames",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-viewer/900100001",
+  "notes": [
+   "websocket viewer, own origin",
+   "websocket expect 3 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "binary": {
+        "length": 7,
+        "sha256": "474ebe266cd7f9ed28807fa3fdfe0c04cdb3cef9313cdda5c08b15910fcc8184"
+       }
+      },
+      {
+       "json": {
+        "fps": 12,
+        "quality": "high",
+        "type": "status"
+       },
+       "order": "fps quality type"
+      },
+      {
+       "json": {
+        "ts": 1,
+        "type": "pong"
+       },
+       "order": "ts type"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

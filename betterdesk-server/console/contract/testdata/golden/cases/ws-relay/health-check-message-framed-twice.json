@@ -1,0 +1,31 @@
+{
+ "id": "ws-relay/health-check-message-framed-twice",
+ "request": {
+  "method": "GET",
+  "path": "/ws/relay?transport=message",
+  "notes": [
+   "websocket m2, own origin",
+   "websocket send 14 binary bytes",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

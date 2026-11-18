@@ -1,0 +1,30 @@
+{
+ "id": "ws-remote/viewer-over-the-limit",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-viewer/900100001",
+  "notes": [
+   "websocket m6, own origin",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1008,
+      "reason": "Max viewers reached"
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

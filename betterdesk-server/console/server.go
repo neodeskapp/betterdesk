@@ -52,6 +52,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/mail"
 	"github.com/unitronix/betterdesk-server/console/proxy"
 	"github.com/unitronix/betterdesk-server/console/qr"
+	"github.com/unitronix/betterdesk-server/console/remoterelay"
 	"github.com/unitronix/betterdesk-server/console/restart"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
 	"github.com/unitronix/betterdesk-server/console/session"
@@ -358,6 +359,11 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	s.jobs.Add("device status push", s.deps.StatusPush.Run)
 	s.deps.Relay = bdrelay.New(bdrelay.Options{VerifyDevice: s.deps.Authn.VerifyDeviceWSAuth})
 	s.jobs.Add("bd-relay session cleanup", s.deps.Relay.Run)
+	s.deps.RemoteRelay = remoterelay.New(remoterelay.Options{
+		VerifyDevice: s.deps.Authn.VerifyDeviceWSAuth,
+		DB:           opts.Store,
+		CanAccess:    s.deps.DeviceGroups.UserCanAccessDevice,
+	})
 	// The rest of the old console's start sequence: the hourly clean-up,
 	// the stale device sweep, and, unless a Node console behind this one
 	// binds their ports itself, LAN discovery and the mDNS announcement.

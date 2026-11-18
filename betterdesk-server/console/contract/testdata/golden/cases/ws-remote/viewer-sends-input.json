@@ -1,0 +1,63 @@
+{
+ "id": "ws-remote/viewer-sends-input",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-viewer/900100001",
+  "notes": [
+   "websocket viewer, own origin",
+   "websocket send {\"buttons\":[1],\"event_type\":\"mouse_move\",\"type\":\"input\",\"x\":10,\"y\":20}",
+   "websocket send {\"event_type\":\"\",\"key\":\"a\",\"kind\":\"key\",\"type\":\"input\"}",
+   "websocket send {\"type\":\"input\"}",
+   "websocket send {\"event_type\":\"click\",\"type\":\"input\"}",
+   "websocket send {\"event_type\":5,\"type\":\"input\"}",
+   "websocket send {\"type\":\"other\"}",
+   "websocket send 3 binary bytes",
+   "websocket send text \"not json\""
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": []
+    }
+   }
+  }
+ ]
+}

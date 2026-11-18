@@ -1,0 +1,68 @@
+{
+ "id": "ws-rendezvous/open",
+ "request": {
+  "method": "GET",
+  "path": "/ws/rendezvous",
+  "notes": [
+   "websocket r, own origin",
+   "websocket expect 1 messages",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].binary.sha256",
+     "pattern": "^[9aA+/_=-]{64}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "binary": {
+        "length": 103,
+        "sha256": "<volatile>"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

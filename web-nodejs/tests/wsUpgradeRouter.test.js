@@ -62,8 +62,7 @@ describe('wsUpgradeRouter', () => {
             next();
         };
 
-        const { initWsProxy } = require('../services/wsRelay');
-        const { initRemoteRelay } = require('../services/remoteRelay');
+        const { initServerTerminalProxy } = require('../services/serverTerminalProxy');
         const { registerUpgradeHandler, registeredRouteCount } = require('../services/wsUpgradeRouter');
 
         const server = http.createServer((req, res) => {
@@ -71,14 +70,12 @@ describe('wsUpgradeRouter', () => {
             res.end();
         });
 
-        initWsProxy(server, sessionStub);
-        initRemoteRelay(server, sessionStub);
+        initServerTerminalProxy(server, sessionStub, { logAction: () => {} });
         registerUpgradeHandler(server, (pathname) => pathname === '/ws/other', () => {});
 
-        // 1 wsRelay + 1 remote + 1 more = 3 routes, 1 listener (the agent
-        // relay, the status push, the chat relay and the CDAP and
-        // MeshCentral proxies are in the Go console)
+        // 1 server terminal + 1 more = 2 routes, 1 listener (every other
+        // websocket is in the Go console)
         expect(server.listenerCount('upgrade')).toBe(1);
-        expect(registeredRouteCount(server)).toBe(3);
+        expect(registeredRouteCount(server)).toBe(2);
     });
 });

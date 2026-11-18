@@ -1,0 +1,63 @@
+{
+ "id": "ws-rendezvous/health-check-key",
+ "request": {
+  "method": "GET",
+  "path": "/ws/rendezvous",
+  "notes": [
+   "websocket h, own origin",
+   "websocket expect 1 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].binary.sha256",
+     "pattern": "^[9aA+/_=-]{64}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "binary": {
+        "length": 103,
+        "sha256": "<volatile>"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

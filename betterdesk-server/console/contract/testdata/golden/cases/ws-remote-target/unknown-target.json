@@ -1,0 +1,38 @@
+{
+ "id": "ws-remote-target/unknown-target",
+ "request": {
+  "method": "GET",
+  "path": "/ws/remote-target/rt_contract-none-0000",
+  "notes": [
+   "websocket u, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro",
+    "guest_issuer",
+    "viewer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 404,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

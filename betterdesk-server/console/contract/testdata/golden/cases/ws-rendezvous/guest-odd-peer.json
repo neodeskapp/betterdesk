@@ -1,0 +1,23 @@
+{
+ "id": "ws-rendezvous/guest-odd-peer",
+ "request": {
+  "method": "GET",
+  "path": "/ws/rendezvous?guest=%7Bsecret%3Aglink%7D&guest_session=contract-session&peer_id=9001+00001",
+  "notes": [
+   "no cookies",
+   "websocket g2, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

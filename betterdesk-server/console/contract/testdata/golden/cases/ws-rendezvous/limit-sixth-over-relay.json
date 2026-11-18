@@ -1,0 +1,30 @@
+{
+ "id": "ws-rendezvous/limit-sixth-over-relay",
+ "request": {
+  "method": "GET",
+  "path": "/ws/relay",
+  "notes": [
+   "websocket l6, own origin",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1008,
+      "reason": "Too many connections"
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}
