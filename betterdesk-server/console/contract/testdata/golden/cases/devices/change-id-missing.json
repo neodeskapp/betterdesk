@@ -101,7 +101,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Permission denied: device.change_id",
+     "error": "errors.forbidden",
      "success": false
     }
    }

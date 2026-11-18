@@ -158,3 +158,16 @@ func latestAuditEntry(ctx context.Context, db *store.DB, action, prefix string) 
 	}
 	return &e, nil
 }
+
+// accountRole is the role of the users row named username, read the way
+// the API server's db.GetUser reads it for the panel trust bridge: found
+// is false when there is no such row, when its role is NULL, and when the
+// query fails, which the API server all took as an account it does not
+// have.
+func accountRole(ctx context.Context, db *store.DB, username string) (role string, found bool) {
+	var value sql.NullString
+	if err := db.QueryRow(ctx, `SELECT role FROM users WHERE username = ?`, username).Scan(&value); err != nil || !value.Valid {
+		return "", false
+	}
+	return value.String, true
+}

@@ -155,6 +155,14 @@
 // Inside a handler, kit.HasPermission(r, "device.edit") is
 // requestHasPermission(req, 'device.edit').
 //
+// A middleware Node mounted with router.use(path, fn) goes into the table
+// with Router.Use at the same place: it runs for every method and every
+// path below its pattern, in front of the routes added after it, of its
+// own group and of later ones, and lets the request go on by calling the
+// handler it wraps. The device scope check is one:
+//
+//	r.Use("/api/devices/{id}", d.RequireDeviceInScope) // router.use('/api/devices/:id', requireDeviceInScope)
+//
 // # Device routes
 //
 // Routes that devices call (agents, the desktop client) take a device

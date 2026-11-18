@@ -466,6 +466,41 @@ func init() {
 		contract.Case{Name: "agent-terminal", Method: "POST", Path: "/api/devices/900100018/terminal/execute", Body: map[string]any{"command": "uptime"}},
 		contract.Case{Name: "agent-terminal-unknown", Method: "POST", Path: "/api/devices/999999999/terminal/execute", Body: map[string]any{"command": "uptime"}},
 
+		// The device scope check in front of every address below
+		// /api/devices/{id} (audit H9), for the routes that had no case of
+		// a device the account may not see: it answers before the route's
+		// sign-in and permission checks, so operator, who may not see
+		// 900100019, gets the scope refusal also where it lacks the
+		// permission. Recorded from the specification tree's Node console
+		// (upstream 3.5.264); the writes run as operator only.
+		contract.Case{Name: "connection-sessions-restricted", Path: "/api/devices/900100019/connection-sessions", Query: map[string][]string{"limit": {"5"}}},
+		contract.Case{Name: "telemetry-command-restricted", Method: "POST", Path: "/api/devices/900100019/telemetry/command", Body: map[string]any{"command": "collect.services"}, Roles: contract.Roles("operator")},
+		contract.Case{Name: "connection-mode-restricted", Method: "POST", Path: "/api/devices/900100019/connection-mode", Body: map[string]any{"mode": "normal", "reason": "x"}, Roles: contract.Roles("operator")},
+		contract.Case{Name: "unban-restricted", Method: "POST", Path: "/api/devices/900100019/unban", Body: map[string]any{}, Roles: contract.Roles("operator")},
+		contract.Case{Name: "access-policy-save-restricted", Method: "PUT", Path: "/api/devices/900100019/access-policy", Body: map[string]any{}, Roles: contract.Roles("operator")},
+		contract.Case{Name: "access-policy-delete-restricted", Method: "DELETE", Path: "/api/devices/900100019/access-policy", Roles: contract.Roles("operator")},
+		contract.Case{Name: "connect-password-restricted", Path: "/api/devices/900100019/connect-password"},
+		contract.Case{Name: "rename-restricted", Method: "POST", Path: "/api/devices/900100019/rename", Body: map[string]any{"display_name": "x"}, Roles: contract.Roles("operator")},
+		contract.Case{Name: "memberships-other-spelling-restricted", Path: "/API/Devices/900100019/Groups", Volatile: []string{"data.groups[*].id", "data.memberships[*].id"}},
+		contract.Case{Name: "agent-processes-restricted", Path: "/api/devices/900100019/processes"},
+		contract.Case{Name: "agent-events-restricted", Path: "/api/devices/900100019/events"},
+		contract.Case{Name: "agent-activity-restricted", Path: "/api/devices/900100019/activity"},
+		contract.Case{Name: "agent-clipboard-restricted", Path: "/api/devices/900100019/clipboard"},
+		contract.Case{Name: "agent-screenshot-restricted", Method: "POST", Path: "/api/devices/900100019/screenshot", Body: map[string]any{}, Roles: contract.Roles("operator")},
+		contract.Case{Name: "agent-clipboard-set-restricted", Method: "POST", Path: "/api/devices/900100019/clipboard", Body: map[string]any{"text": "x"}, Roles: contract.Roles("operator")},
+		contract.Case{Name: "agent-input-key-restricted", Method: "POST", Path: "/api/devices/900100019/input/key", Body: map[string]any{"key": "Enter"}, Roles: contract.Roles("operator")},
+		contract.Case{Name: "agent-terminal-restricted", Method: "POST", Path: "/api/devices/900100019/terminal/execute", Body: map[string]any{"command": "uptime"}, Roles: contract.Roles("operator")},
+		// The number of sessions the server is asked for is held to 1..200
+		// (audit M5); the routes/devices replay pins the limit it sends.
+		// 900100018 has no sessions: up to 200 sessions of a device the
+		// seed gives some would make the answer's size, and so its
+		// compression, depend on the hour
+		contract.Case{
+			Name: "connection-sessions-limit-negative", Path: "/api/devices/900100001/connection-sessions", Query: map[string][]string{"limit": {"-5"}},
+			Volatile: []string{"data.sessions[*].duration_seconds", "~data.sessions", "~data.count"},
+		},
+		contract.Case{Name: "connection-sessions-limit-huge", Path: "/api/devices/900100018/connection-sessions", Query: map[string][]string{"limit": {"100000"}}},
+
 		// Cleanup
 		contract.Case{
 			Name: "cleanup-restricted-member", Method: "PUT", Path: "/api/devices/900100019/groups", As: "admin",

@@ -8,6 +8,10 @@
 // The routes hand ids and fields to the database as the request gave
 // them, so an answer can depend on the database: a folder id that is no
 // number is "not found" on SQLite and a server error on PostgreSQL.
+//
+// PATCH /api/devices/{id}/folder is behind the device scope check the
+// device group puts in front of every address below /api/devices/{id}
+// (kit.RequireDeviceInScope); the device group comes first in the table.
 package folders
 
 import (

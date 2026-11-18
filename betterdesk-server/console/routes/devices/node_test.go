@@ -39,17 +39,22 @@ type recording struct {
 		Status int              `json:"status"`
 		Answer string           `json:"answer"`
 		Rows   string           `json:"rows"`
-		Extra  struct {
+		// StatusOnly marks a request that reached the end of the oracle's
+		// app, whose 404 is its own: the status and the calls are compared.
+		StatusOnly bool `json:"statusOnly"`
+		Extra      struct {
 			Calls []string `json:"calls"`
 		} `json:"extra"`
 	} `json:"steps"`
 }
 
-// reply is one answer of the made-up API server: JSON, text, or no body.
+// reply is one answer of the made-up API server: JSON, text, no body, or
+// a connection closed without an answer.
 type reply struct {
 	Status int             `json:"status"`
 	Body   json.RawMessage `json:"body"`
 	Text   *string         `json:"text"`
+	Hangup bool            `json:"hangup"`
 }
 
 // fakeAPI answers from the table of a recording, with the answers of the
@@ -89,6 +94,9 @@ func (a *fakeAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	a.mu.Unlock()
 	if !ok {
 		answer = reply{Status: http.StatusNotFound, Body: json.RawMessage(`{"error":"not found"}`)}
+	}
+	if answer.Hangup {
+		panic(http.ErrAbortHandler)
 	}
 	if answer.Text != nil {
 		w.Header().Set("Content-Type", "text/plain")
@@ -184,6 +192,12 @@ func TestNodeAnswers(t *testing.T) {
 		agents := map[string]*routetest.Agent{}
 		failed := 0
 		for i, step := range rec.Steps {
+			if step.SQL != "" && !strings.HasPrefix(step.SQL, "SELECT") {
+				if _, err := db.Exec(ctx, step.SQL); err != nil {
+					t.Fatalf("step %d %s: %v", i, step.Name, err)
+				}
+				continue
+			}
 			if step.SQL != "" {
 				if got := rows(t, db, step.SQL); normalize(got) != normalize(step.Rows) {
 					t.Errorf("step %d %s:\n node: %s\n   go: %s", i, step.Name, step.Rows, got)
@@ -192,7 +206,11 @@ func TestNodeAnswers(t *testing.T) {
 			}
 			a := agents[step.Role]
 			if a == nil {
-				a = w.As(step.Role)
+				if step.Role == "signed-out" {
+					a = w.SignedOut()
+				} else {
+					a = w.As(step.Role)
+				}
 				agents[step.Role] = a
 			}
 			api.step(step.API)
@@ -202,7 +220,7 @@ func TestNodeAnswers(t *testing.T) {
 			}
 			got := a.Do(step.Method, step.Path, body, "Accept", "application/json")
 			calls := api.taken()
-			same := got.Status == step.Status && normalize(got.Body) == normalize(step.Answer) &&
+			same := got.Status == step.Status && (step.StatusOnly || normalize(got.Body) == normalize(step.Answer)) &&
 				normalize(strings.Join(calls, "\n")) == normalize(strings.Join(step.Extra.Calls, "\n"))
 			if same {
 				continue

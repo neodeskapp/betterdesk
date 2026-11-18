@@ -147,7 +147,6 @@
        ],
        "permissions": {
         "disable-clipboard": "N",
-        "enable-audio": "custom",
         "enable-file-transfer": "Y"
        },
        "updated_at": "<volatile>",

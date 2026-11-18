@@ -60,6 +60,38 @@ func TestLoadDefaults(t *testing.T) {
 	}
 }
 
+// TestPanelGroupingSettings reads BACKEND_PANEL_GROUPING and
+// PANEL_TRUST_SECRET the way services/panelGrouping.js and panelTrust.js
+// did: String(value).trim() with JavaScript's white space (U+FEFF is
+// trimmed, U+0085 is not), the owner in lower case. The bridge is on only
+// where the API server's TrimSpace leaves something too (it trims U+0085,
+// so a secret of that alone was ignored there).
+func TestPanelGroupingSettings(t *testing.T) {
+	for _, c := range []struct {
+		grouping, secret string
+		node, trust      bool
+	}{
+		{"", "", false, false},
+		{"node", "s", true, true},
+		{" NODE\t", "  ", true, false},
+		{"\xef\xbb\xbfNode\xe3\x80\x80", "\xef\xbb\xbf", true, false},
+		{"\u0085node", "\u0085", false, false},
+		{"node", "\u0085x\xef\xbb\xbf", true, true},
+		{"go", "a b", false, true},
+		{"nodes", "\n", false, false},
+		{"nod", "0", false, true},
+	} {
+		cfg, err := load(env(map[string]string{"BACKEND_PANEL_GROUPING": c.grouping, "PANEL_TRUST_SECRET": c.secret}), machine("/srv/bin", "/srv/run"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if cfg.PanelGroupingNode != c.node || cfg.PanelTrust != c.trust {
+			t.Errorf("BACKEND_PANEL_GROUPING %q, PANEL_TRUST_SECRET %q: node %v trust %v, want %v %v",
+				c.grouping, c.secret, cfg.PanelGroupingNode, cfg.PanelTrust, c.node, c.trust)
+		}
+	}
+}
+
 func TestLoadValues(t *testing.T) {
 	cfg, err := load(env(map[string]string{
 		"HOST": "127.0.0.1", "CONSOLE_PORT": "5000", "TRUST_PROXY": "loopback",

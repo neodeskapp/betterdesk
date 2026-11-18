@@ -214,33 +214,24 @@
    },
    "volatile": [
     {
-     "path": "data.created_at",
-     "format": "9999-99-99 99:99:99"
-    },
-    {
      "path": "data.guid",
      "pattern": "^[9aA+/_=-]{36}$"
     },
-    {
-     "path": "data.id",
-     "integer": true
-    }
+    "data.id"
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "allowed_groups": [],
-      "allowed_user_groups": [],
+      "allowed_groups": [
+       "g"
+      ],
       "allowed_users": [],
-      "created_at": "<volatile>",
+      "created": true,
       "guid": "<volatile>",
-      "id": 0,
       "name": "Contract many",
-      "note": "",
       "source_type": "manual",
-      "tag_filter": "",
-      "team_id": ""
+      "tag_filter": ""
      },
      "success": true
     }

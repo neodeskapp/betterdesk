@@ -84,7 +84,7 @@ func registerRoutes(d *kit.Deps) {
 	authroutes.Register(d)          // routes/auth.routes.js
 	consoleroutes.Register(d)       // routes/console.routes.js
 	dashboard.Register(d)           // routes/dashboard.routes.js
-	devices.Register(d)             // routes/devices.routes.js, without the routes that reach into an agent (bdRelay)
+	devices.Register(d)             // routes/devices.routes.js; its scope check (Use) also guards the folder group's /api/devices/{id}/folder
 	keys.Register(d)                // routes/keys.routes.js
 	settings.Register(d)            // routes/settings.routes.js: the general settings and the branding
 	settingsbackup.Register(d)      // routes/settings.routes.js: backup, restore and the scheduled backups

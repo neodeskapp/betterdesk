@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -44,9 +45,9 @@ type strategyPayload struct {
 	Permissions                          *goapi.Object
 }
 
-// normalizeStrategyPermissions keeps the members of an object that read
-// as a setting: true, "Y" and "y" are "Y", false, "N" and "n" are "N",
-// other text that is not blank is kept trimmed.
+// normalizeStrategyPermissions keeps the members of an object that are
+// one of strategyPermissionKeys and read as a setting: true, "Y" and "y"
+// are "Y", false, "N" and "n" are "N". Every other member is left out.
 func normalizeStrategyPermissions(raw any) *goapi.Object {
 	out := goapi.NewObject()
 	o, ok := raw.(*goapi.Object)
@@ -54,22 +55,14 @@ func normalizeStrategyPermissions(raw any) *goapi.Object {
 		return out
 	}
 	for _, key := range o.Keys() {
-		switch v := o.Get(key).(type) {
-		case bool:
-			if v {
-				out.Set(key, "Y")
-			} else {
-				out.Set(key, "N")
-			}
-		case string:
-			switch {
-			case v == "Y" || v == "y":
-				out.Set(key, "Y")
-			case v == "N" || v == "n":
-				out.Set(key, "N")
-			case jsTrim(v) != "":
-				out.Set(key, jsTrim(v))
-			}
+		if !slices.Contains(strategyPermissionKeys, key) {
+			continue
+		}
+		switch v := o.Get(key); v {
+		case true, "Y", "y":
+			out.Set(key, "Y")
+		case false, "N", "n":
+			out.Set(key, "N")
 		}
 	}
 	return out

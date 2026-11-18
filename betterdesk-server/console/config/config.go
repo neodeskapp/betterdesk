@@ -117,6 +117,19 @@ type Config struct {
 	// DeviceScopeDefault is DEVICE_SCOPE_DEFAULT in lower case: "open" or
 	// "restricted".
 	DeviceScopeDefault string
+	// PanelGroupingNode is BACKEND_PANEL_GROUPING=node (any letter case,
+	// space around it): the device group writes go to the console's own
+	// tables. With any other value, or none, the API server writes them
+	// (its /api/panel/device-groups routes), and the console's own writer
+	// is the fallback for an API server without those routes.
+	PanelGroupingNode bool
+	// PanelTrust says PANEL_TRUST_SECRET holds more than white space, both
+	// as JavaScript trims it (where the Node console signed) and as Go
+	// trims it (where the API server checks, api.Server.SetPanelTrustSecret):
+	// the device group writes then reach the API server as the signed-in
+	// operator instead of as the console's API key. The console signs
+	// nothing, since it calls the API server in process.
+	PanelTrust bool
 	// LogLevel is the raw LOG_LEVEL value (kit.NewLogger reads it).
 	LogLevel string
 	// APIHost is the host and port the console knows the API server by
@@ -308,6 +321,9 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 
 	cfg.DefaultLanguage = orDefault(getenv("DEFAULT_LANGUAGE"), "en")
 	cfg.DeviceScopeDefault = strings.ToLower(orDefault(getenv("DEVICE_SCOPE_DEFAULT"), "open"))
+	cfg.PanelGroupingNode = strings.ToLower(jsTrim(getenv("BACKEND_PANEL_GROUPING"))) == "node"
+	secret := getenv("PANEL_TRUST_SECRET")
+	cfg.PanelTrust = jsTrim(secret) != "" && strings.TrimSpace(secret) != ""
 	cfg.LogLevel = getenv("LOG_LEVEL")
 	cfg.APIHost = apiHost(getenv)
 
@@ -557,3 +573,15 @@ func apiURLPort(raw string, fallback int) int {
 
 // schemePorts are the ports an address of these schemes need not name.
 var schemePorts = map[string]int{"ftp": 21, "http": 80, "https": 443, "ws": 80, "wss": 443}
+
+// jsTrim is String.prototype.trim: it removes JavaScript's white space and
+// line terminators from both ends.
+func jsTrim(s string) string {
+	return strings.TrimFunc(s, func(r rune) bool {
+		switch r {
+		case '\t', '\n', '\v', '\f', '\r', ' ', 0xA0, 0x1680, 0x2028, 0x2029, 0x202F, 0x205F, 0x3000, 0xFEFF:
+			return true
+		}
+		return r >= 0x2000 && r <= 0x200A
+	})
+}

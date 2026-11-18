@@ -271,6 +271,7 @@
    "answer": "{\"success\":true,\"data\":[1,\"two\",null,true,{\"x\":{}}]}",
    "extra": {
     "calls": [
+     "GET /api/peers/A1001",
      "GET /api/peers/A1001"
     ],
     "agent": [
@@ -924,6 +925,7 @@
    "extra": {
     "calls": [
      "GET /api/peers/C1003",
+     "GET /api/peers/C1003",
      "GET /api/peers/C1003/telemetry",
      "POST /api/peers/C1003/telemetry/command {\"command\":\"collect.services\",\"args\":{}}"
     ],
@@ -943,6 +945,7 @@
    "answer": "{\"success\":true,\"data\":1}",
    "extra": {
     "calls": [
+     "GET /api/peers/A1001",
      "GET /api/peers/A1001"
     ],
     "agent": [
@@ -2402,6 +2405,7 @@
    "answer": "{\"success\":true,\"data\":{\"image\":\"\"}}",
    "extra": {
     "calls": [
+     "GET /api/peers/A1001",
      "GET /api/peers/A1001"
     ],
     "agent": [
@@ -2900,6 +2904,7 @@
    "answer": "{\"success\":false,\"error\":\"denied\"}",
    "extra": {
     "calls": [
+     "GET /api/peers/A1001",
      "GET /api/peers/A1001"
     ],
     "agent": [
@@ -2926,10 +2931,362 @@
    }
   },
   {
+   "name": "GET /api/devices/C1003/services as operator",
+   "role": "operator",
+   "method": "GET",
+   "path": "/api/devices/C1003/services",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/C1003/processes as operator",
+   "role": "operator",
+   "method": "GET",
+   "path": "/api/devices/C1003/processes",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/C1003/events as operator",
+   "role": "operator",
+   "method": "GET",
+   "path": "/api/devices/C1003/events",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/C1003/activity as operator",
+   "role": "operator",
+   "method": "GET",
+   "path": "/api/devices/C1003/activity",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/C1003/clipboard as operator",
+   "role": "operator",
+   "method": "GET",
+   "path": "/api/devices/C1003/clipboard",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/C1003/files/browse {\"path\":\"/\"} as operator",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/devices/C1003/files/browse",
+   "body": "{\"path\":\"/\"}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/C1003/files/read {\"path\":\"/a\"} as operator",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/devices/C1003/files/read",
+   "body": "{\"path\":\"/a\"}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/C1003/files/write {\"path\":\"/a\",\"data\":\"eA==\"} as operator",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/devices/C1003/files/write",
+   "body": "{\"path\":\"/a\",\"data\":\"eA==\"}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/C1003/files/delete {\"path\":\"/a\"} as operator",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/devices/C1003/files/delete",
+   "body": "{\"path\":\"/a\"}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/C1003/files/rename {\"from\":\"/a\",\"to\":\"/b\"} as operator",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/devices/C1003/files/rename",
+   "body": "{\"from\":\"/a\",\"to\":\"/b\"}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/C1003/files/mkdir {\"path\":\"/d\"} as operator",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/devices/C1003/files/mkdir",
+   "body": "{\"path\":\"/d\"}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/C1003/clipboard {\"text\":\"x\"} as operator",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/devices/C1003/clipboard",
+   "body": "{\"text\":\"x\"}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/C1003/screenshot {} as operator",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/devices/C1003/screenshot",
+   "body": "{}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/C1003/input/mouse {\"action\":\"click\"} as operator",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/devices/C1003/input/mouse",
+   "body": "{\"action\":\"click\"}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/C1003/input/key {\"key\":\"a\"} as operator",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/devices/C1003/input/key",
+   "body": "{\"key\":\"a\"}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/C1003/input/text {\"text\":\"a\"} as operator",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/devices/C1003/input/text",
+   "body": "{\"text\":\"a\"}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/C1003/terminal/execute {\"command\":\"id\"} as operator",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/devices/C1003/terminal/execute",
+   "body": "{\"command\":\"id\"}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/C1003/files/no-such-route {} as operator",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/devices/C1003/files/no-such-route",
+   "body": "{}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/C1003/processes as viewer",
+   "role": "viewer",
+   "method": "GET",
+   "path": "/api/devices/C1003/processes",
+   "status": 503,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003",
+     "GET /api/peers/C1003",
+     "GET /api/peers/C1003/telemetry",
+     "POST /api/peers/C1003/telemetry/command {\"command\":\"collect.processes\",\"args\":{}}"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/C1003/events as viewer",
+   "role": "viewer",
+   "method": "GET",
+   "path": "/api/devices/C1003/events",
+   "status": 503,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003",
+     "GET /api/peers/C1003",
+     "GET /api/peers/C1003/telemetry",
+     "POST /api/peers/C1003/telemetry/command {\"command\":\"collect.events\",\"args\":{\"limit\":100}}"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/C1003/activity as viewer",
+   "role": "viewer",
+   "method": "GET",
+   "path": "/api/devices/C1003/activity",
+   "status": 503,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003",
+     "GET /api/peers/C1003",
+     "GET /api/peers/C1003/telemetry",
+     "POST /api/peers/C1003/telemetry/command {\"command\":\"collect.activity\",\"args\":{}}"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/C1003/clipboard as viewer",
+   "role": "viewer",
+   "method": "GET",
+   "path": "/api/devices/C1003/clipboard",
+   "status": 503,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003",
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/processes as operator agent {\"ok\":true,\"data\":[]}",
+   "role": "operator",
+   "method": "GET",
+   "path": "/api/devices/A1001/processes",
+   "agent": {
+    "ok": true,
+    "data": []
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":[]}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001",
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"processes.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
    "name": "audit",
    "sql": "SELECT user_id, action, details, ip_address FROM audit_log ORDER BY id",
    "params": [],
-   "rows": "[{\"user_id\":1,\"action\":\"terminal.execute\",\"details\":\"Terminal command on B1002: ls\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write create on A1001: /tmp/f\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write overwrite on A1001: /tmp/f\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write overwrite on A1001: /tmp/f\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write append on A1001: a,b\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write overwrite on A1001: \u0001RUN:4096:p\u0001\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.delete\",\"details\":\"Delete (recursive) on A1001: /tmp/x\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.delete\",\"details\":\"Delete on A1001: /tmp/x\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.rename\",\"details\":\"Rename on A1001: /a -> /b\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.rename\",\"details\":\"Rename on A1001: 1 -> 2\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.mkdir\",\"details\":\"Mkdir on A1001: /tmp/d\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.mkdir\",\"details\":\"Mkdir on A1001: /tmp/d\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.mkdir\",\"details\":\"Mkdir on A1001: /tmp/d\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write overwrite on B1002: /x\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write overwrite on ZZ9: /x\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"files.delete\",\"details\":\"Delete on C1003: /x\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"clipboard.set\",\"details\":\"Clipboard set on A1001 (4 chars)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"clipboard.set\",\"details\":\"Clipboard set on A1001 (0 chars)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"clipboard.set\",\"details\":\"Clipboard set on A1001 (0 chars)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"clipboard.set\",\"details\":\"Clipboard set on A1001 (0 chars)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"clipboard.set\",\"details\":\"Clipboard set on A1001 (1048576 chars)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"terminal.execute\",\"details\":\"Terminal command on A1001: uptime\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"terminal.execute\",\"details\":\"Terminal command on A1001: echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"terminal.execute\",\"details\":\"Terminal command on A1001: 42\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"terminal.execute\",\"details\":\"Terminal command on A1001: id\",\"ip_address\":\"127.0.0.1\"}]"
+   "rows": "[{\"user_id\":1,\"action\":\"terminal.execute\",\"details\":\"Terminal command on B1002: ls\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write create on A1001: /tmp/f\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write overwrite on A1001: /tmp/f\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write overwrite on A1001: /tmp/f\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write append on A1001: a,b\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write overwrite on A1001: \u0001RUN:4096:p\u0001\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.delete\",\"details\":\"Delete (recursive) on A1001: /tmp/x\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.delete\",\"details\":\"Delete on A1001: /tmp/x\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.rename\",\"details\":\"Rename on A1001: /a -> /b\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.rename\",\"details\":\"Rename on A1001: 1 -> 2\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.mkdir\",\"details\":\"Mkdir on A1001: /tmp/d\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.mkdir\",\"details\":\"Mkdir on A1001: /tmp/d\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.mkdir\",\"details\":\"Mkdir on A1001: /tmp/d\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write overwrite on B1002: /x\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write overwrite on ZZ9: /x\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"clipboard.set\",\"details\":\"Clipboard set on A1001 (4 chars)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"clipboard.set\",\"details\":\"Clipboard set on A1001 (0 chars)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"clipboard.set\",\"details\":\"Clipboard set on A1001 (0 chars)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"clipboard.set\",\"details\":\"Clipboard set on A1001 (0 chars)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"clipboard.set\",\"details\":\"Clipboard set on A1001 (1048576 chars)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"terminal.execute\",\"details\":\"Terminal command on A1001: uptime\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"terminal.execute\",\"details\":\"Terminal command on A1001: echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"terminal.execute\",\"details\":\"Terminal command on A1001: 42\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"terminal.execute\",\"details\":\"Terminal command on A1001: id\",\"ip_address\":\"127.0.0.1\"}]"
   }
  ]
 }

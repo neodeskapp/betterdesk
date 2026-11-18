@@ -194,3 +194,43 @@ func TestFolderRoutes(t *testing.T) {
 		}
 	})
 }
+
+// TestTheDeviceScopeCheckComesFirst checks that PATCH /api/devices/{id}/folder
+// is behind the device group's scope check, which looks for deleted
+// devices too: for E, a deleted device in a group only e2e_viewer may see,
+// the operator gets the check's 403 where the route alone, which finds no
+// active E, would answer 404.
+func TestTheDeviceScopeCheckComesFirst(t *testing.T) {
+	db := storetest.Migrated(t)
+	api := routetest.NewAPI()
+	api.Fallback = func(c routetest.Call) routetest.Reply {
+		switch c.Target {
+		case "/api/peers?include_deleted=true":
+			return routetest.Reply{Status: 200, Body: `{"peers":[{"id":"A","hostname":"a"},{"id":"E","hostname":"e","soft_deleted":true}]}`}
+		case "/api/peers/A":
+			return routetest.Reply{Status: 200, Body: `{"id":"A","hostname":"a"}`}
+		}
+		return routetest.Reply{Status: 404, Body: `{"error":"not found"}`}
+	}
+	w := routetest.New(t, routetest.Options{DB: db, API: api, Config: func(cfg *config.Config) {
+		cfg.LangDir = filepath.Join("..", "..", "..", "..", "web-nodejs", "lang")
+	}})
+	ctx := context.Background()
+	for _, q := range []string{
+		`INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-viewer', 'Viewer only', '', '', 'manual', '')`,
+		`INSERT INTO device_group_user_access (device_group_id, user_id) SELECT id, 6 FROM device_groups WHERE guid = 'g-viewer'`,
+		`INSERT INTO device_group_members (device_group_id, peer_id) SELECT id, 'E' FROM device_groups WHERE guid = 'g-viewer'`,
+	} {
+		if _, err := db.Exec(ctx, q); err != nil {
+			t.Fatal(err)
+		}
+	}
+	operator, admin := w.As("operator"), w.As("admin")
+	api.Calls()
+	want(t, "operator, deleted E", operator.Do("PATCH", "/api/devices/E/folder", `{"folderId":null}`), http.StatusForbidden, `{"success":false,"error":"errors.forbidden"}`)
+	if calls := strings.Join(api.Calls(), ","); calls != "GET /api/peers/E,GET /api/peers?include_deleted=true" {
+		t.Errorf("operator, deleted E: calls %s", calls)
+	}
+	want(t, "admin, deleted E", admin.Do("PATCH", "/api/devices/E/folder", `{"folderId":null}`), http.StatusNotFound, `{"success":false,"error":"Device not found"}`)
+	want(t, "operator, A", operator.Do("PATCH", "/api/devices/A/folder", `{"folderId":null}`), http.StatusOK, `{"success":true}`)
+}

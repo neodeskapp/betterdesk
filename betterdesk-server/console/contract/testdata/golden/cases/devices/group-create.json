@@ -121,35 +121,27 @@
    },
    "volatile": [
     {
-     "path": "data.created_at",
-     "format": "9999-99-99 99:99:99"
-    },
-    {
      "path": "data.guid",
      "pattern": "^[9aA+/_=-]{36}$"
     },
-    {
-     "path": "data.id",
-     "integer": true
-    }
+    "data.id"
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "allowed_groups": [],
-      "allowed_user_groups": [],
-      "allowed_users": [
-       "e2e_operator"
+      "allowed_groups": [
+       "contract-no-such-user-group"
       ],
-      "created_at": "<volatile>",
+      "allowed_users": [
+       "e2e_operator",
+       "nobody-has-this-name"
+      ],
+      "created": true,
       "guid": "<volatile>",
-      "id": 0,
       "name": "Contract group",
-      "note": "A note",
       "source_type": "manual",
-      "tag_filter": "",
-      "team_id": "contract-team"
+      "tag_filter": ""
      },
      "success": true
     }

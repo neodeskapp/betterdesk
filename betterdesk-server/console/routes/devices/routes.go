@@ -5,9 +5,18 @@
 // policy and the stored connect password, RDP and VNC remote targets,
 // bulk deletion, and the access rules RustDesk clients get (strategies).
 //
-// Every route that names a device checks first that it exists and that
-// the account may see it (the device scope of console/access), and
-// answers 404 and 403 in that order.
+// In front of every address below /api/devices/{id}, the scope check
+// (kit.RequireDeviceInScope, added with Use where the old console mounted
+// it) refuses a device the account may not see with 403, before the
+// route's own sign-in and permission checks; a device that does not exist
+// goes on. The check covers the routes added after it, in this group and
+// in the folder group (PATCH /api/devices/{id}/folder). Every route that
+// names a device then checks again that it exists and that the account
+// may see it (the device scope of console/access), and answers 404 and
+// 403 in that order.
+//
+// The device group writes go to the API server unless
+// BACKEND_PANEL_GROUPING is node (panelgrouping.go).
 //
 // The routes that reach into a running agent (its services, processes,
 // event log, activity, files, clipboard, screen, keyboard, mouse and
@@ -62,6 +71,8 @@ func Register(d *kit.Deps) {
 	r.Get("/api/device-groups", h.deviceGroups, d.RequireAuth, view)
 	r.Post("/api/device-groups", h.saveDeviceGroup, d.RequireAuth, edit)
 	r.Delete("/api/device-groups/{guid}", h.deleteDeviceGroup, d.RequireAuth, edit)
+
+	r.Use("/api/devices/{id}", d.RequireDeviceInScope)
 	r.Get("/api/devices/{id}/groups", h.memberships, d.RequireAuth, view)
 	r.Put("/api/devices/{id}/groups", h.setMemberships, d.RequireAuth, edit)
 

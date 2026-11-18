@@ -49,6 +49,7 @@ const B = {
 };
 const C = { id: 'C1003', hostname: '', os: '', version: '', note: 'fan loud', tags: [], last_online: '' };
 const D = { id: 'D1004', hostname: 'delta', soft_deleted: true, deleted_at: '2020-03-03T00:00:00Z' };
+const E = { id: 'E1005', hostname: 'echo', soft_deleted: true, deleted_at: '2020-04-04T00:00:00Z' };
 const RT1 = {
     id: 'rt_1', name: 'VNC box', protocol: 'vnc', host: 'vnc.example.invalid', port: 5900, credential_mode: 'prompt',
     tls_mode: 'preferred', enabled: true, created_by: 'apikey:console-bridge', created_at: '2020-01-01T00:00:00Z',
@@ -74,6 +75,8 @@ const TABLE = {
     'GET /api/peers/A1001/availability?tz_offset=0': ok({ peer_id: 'A1001', day: 'today', events: [{ to: 'ONLINE' }] }),
     'GET /api/peers/A1001/connection-sessions?limit=3': ok({ peer_id: 'A1001', sessions: [{ id: 1 }], count: 1 }),
     'GET /api/peers/A1001/connection-sessions?limit=50': ok({ peer_id: 'A1001', sessions: [], count: 0 }),
+    'GET /api/peers/A1001/connection-sessions?limit=1': ok({ peer_id: 'A1001', sessions: [{ id: 1 }], count: 1 }),
+    'GET /api/peers/A1001/connection-sessions?limit=200': ok({ peer_id: 'A1001', sessions: [{ id: 2 }], count: 1 }),
     'POST /api/peers/A1001/telemetry/refresh': ok({ accepted: true, command_id: 7, device_id: 'A1001' }, 202),
     'POST /api/peers/C1003/telemetry/refresh': ok({ error: 'hardware refresh is rate limited' }, 429),
     'POST /api/peers/A1001/telemetry/command': ok({ accepted: true, command_id: 8 }, 202),
@@ -126,6 +129,10 @@ function startAPI() {
             const key = `${req.method} ${req.url}`;
             apiState.calls.push(key + (chunks.length ? ' ' + Buffer.concat(chunks).toString('utf8') : ''));
             const a = apiState.override[key] || TABLE[key] || notFound;
+            if (a.hangup) {
+                req.socket.destroy();
+                return;
+            }
             res.writeHead(a.status, a.text === undefined ? { 'Content-Type': 'application/json' } : { 'Content-Type': 'text/plain' });
             res.end(a.text !== undefined ? a.text : JSON.stringify(a.body));
         });
@@ -200,8 +207,11 @@ const seed = [
     ["INSERT INTO peers (id, uuid, guid) VALUES ('A1001', 'FFFFFFFF-FFFF-4FFF-BFFF-FFFFFFFFFFFF', '')", []],
     ["INSERT INTO peers (id, uuid, guid) VALUES ('B1002', 'not-a-uuid', '')", []],
     ["INSERT INTO peers (id, uuid, guid) VALUES ('C1003', '', 'guid-c')", []],
-    // Groups: one open, one only e2e_viewer may see, a tag group, one of a
-    // user group with e2e_operator in it, and a folder's group
+    // Groups: the default group the database starts with (under a fixed
+    // guid, so the made-up server can answer for it), one open, one only
+    // e2e_viewer may see, a tag group, one of a user group with
+    // e2e_operator in it, and a folder's group
+    ["UPDATE device_groups SET guid = 'g-default'", []],
     ["INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-open', 'Open group', '', '', 'manual', '')", []],
     ["INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-viewer', 'Viewer only', 'n', 'team-1', 'manual', '')", []],
     ["INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-lab', 'Lab tag', '', '', 'tag', 'LAB')", []],
@@ -212,6 +222,9 @@ const seed = [
     ["INSERT INTO user_group_members (user_group_id, user_id) SELECT id, 5 FROM user_groups WHERE guid = 'ug-ops'", []],
     ["INSERT INTO device_group_user_group_access (device_group_id, user_group_id) SELECT d.id, u.id FROM device_groups d, user_groups u WHERE d.guid = 'g-ops' AND u.guid = 'ug-ops'", []],
     ["INSERT INTO device_group_members (device_group_id, peer_id) SELECT id, 'C1003' FROM device_groups WHERE guid = 'g-viewer'", []],
+    // E1005 is a deleted device in the viewer's group (the server lists it
+    // with the deleted ones where a step says so)
+    ["INSERT INTO device_group_members (device_group_id, peer_id) SELECT id, 'E1005' FROM device_groups WHERE guid = 'g-viewer'", []],
     ["INSERT INTO device_group_members (device_group_id, peer_id) SELECT id, 'A1001' FROM device_groups WHERE guid = 'g-ops'", []],
     ["INSERT INTO device_group_members (device_group_id, peer_id) SELECT id, 'A1001' FROM device_groups WHERE guid = 'g-open'", []],
     ["INSERT INTO folders (id, name, color, icon, sort_order) VALUES (5, 'Five', '#fff', 'folder', 0)", []],
@@ -243,8 +256,18 @@ const step = (role, method, p, body, api) => steps.push({
 const get = (role, p, api) => step(role, 'GET', p, undefined, api);
 const send = (role, method, p, body, api) => step(role, method, p, JSON.stringify(body === undefined ? {} : body), api);
 const sql = (name, query) => steps.push({ name, sql: query, params: [] });
+// A request that may reach the end of the app: its 404 is the oracle's own,
+// so only the status and the calls are compared
+const loose = (role, method, p, body) => {
+    step(role, method, p, body === undefined ? undefined : JSON.stringify(body));
+    steps[steps.length - 1].statusOnly = true;
+};
 const long = 'x'.repeat(600);
 const readers = ['admin', 'operator', 'viewer', 'guest_issuer'];
+// The answers of the API server's panel grouping (/api/panel/...)
+const panel = (status, body) => ({ status, body });
+const hangup = { hangup: true };
+const peersOf = (guid, peers) => ok({ guid, peers, total: peers.length });
 
 // The list
 for (const role of readers) get(role, '/api/devices?sortBy=id&sortOrder=asc');
@@ -287,7 +310,11 @@ get('admin', '/api/devices/A1001/availability?day=x', { 'GET /api/peers/A1001/av
 get('admin', '/api/devices/A1001/availability?day=null', { 'GET /api/peers/A1001/availability?day=null&tz_offset=0': ok(null) });
 get('admin', '/api/devices/ZZ9/availability');
 get('operator', '/api/devices/C1003/availability');
-for (const q of ['?limit=3', '', '?limit=abc', '?limit=0', '?limit=-2', '?limit[]=3', '?limit=3x']) get('admin', '/api/devices/A1001/connection-sessions' + q);
+for (const q of ['?limit=3', '', '?limit=abc', '?limit=0', '?limit=-2', '?limit[]=3', '?limit=3x', '?limit=1', '?limit=200', '?limit=201',
+    '?limit=99999', '?limit=1e3', '?limit=' + '9'.repeat(400), '?limit=%207', '?limit=0x10', '?limit=-0', '?limit=2.9', '?limit[a]=5',
+    '?limit=7&limit=500', '?limit=', '?limit=Infinity']) {
+    get('admin', '/api/devices/A1001/connection-sessions' + q);
+}
 get('admin', '/api/devices/A1001/connection-sessions?limit=9', { 'GET /api/peers/A1001/connection-sessions?limit=9': ok({ error: 'no sessions table' }) });
 send('admin', 'POST', '/api/devices/A1001/telemetry/refresh');
 send('admin', 'POST', '/api/devices/C1003/telemetry/refresh');
@@ -341,6 +368,79 @@ send('admin', 'PUT', '/api/devices/A1001/tags', { tags: ['x'] }, { 'PUT /api/pee
 
 // Device groups
 for (const role of readers) get(role, '/api/device-groups');
+
+// Members through the API server's panel grouping: the route reads the
+// members of every manual group the account may see, then writes each one
+// back with the device in the selected group only. Where a read gives no
+// list, or a write gets 404, 501, 503 or no answer, the console's own
+// writer takes over (B1002 is in no manual group, so its writes change
+// nothing); any other refusal is the answer.
+const membersRead = (extra = {}) => ({
+    'GET /api/panel/device-groups/g-default/peers': peersOf('g-default', []),
+    'PUT /api/panel/device-groups/g-default/peers': peersOf('g-default', []),
+    'GET /api/panel/device-groups/g-open/peers': peersOf('g-open', ['A1001', 'B1002', 'A1001']),
+    'GET /api/panel/device-groups/g-viewer/peers': peersOf('g-viewer', ['C1003']),
+    'GET /api/panel/device-groups/g-ops/peers': peersOf('g-ops', []),
+    'PUT /api/panel/device-groups/g-open/peers': peersOf('g-open', ['B1002']),
+    'PUT /api/panel/device-groups/g-viewer/peers': peersOf('g-viewer', ['C1003']),
+    'PUT /api/panel/device-groups/g-ops/peers': peersOf('g-ops', ['A1001']),
+    ...extra,
+});
+send('admin', 'PUT', '/api/devices/A1001/groups', { groupGuids: ['g-ops'] }, membersRead());
+send('operator', 'PUT', '/api/devices/A1001/groups', { groupGuids: ['g-open'] }, membersRead());
+send('admin', 'PUT', '/api/devices/A1001/groups', { groupGuids: ['g-viewer'] }, membersRead({
+    'GET /api/panel/device-groups/g-open/peers': peersOf('g-open', [5, 'A1001', 5, null, { a: 1 }, 'B1002', 'A1001']),
+    'GET /api/panel/device-groups/g-viewer/peers': peersOf('g-viewer', []),
+}));
+for (const extra of [
+    { 'GET /api/panel/device-groups/g-ops/peers': panel(404, { error: 'not found' }) },
+    { 'GET /api/panel/device-groups/g-viewer/peers': panel(501, { error: 'not implemented' }) },
+    { 'GET /api/panel/device-groups/g-open/peers': hangup },
+    { 'GET /api/panel/device-groups/g-open/peers': ok({ guid: 'g-open', peers: 'B1002' }) },
+    { 'GET /api/panel/device-groups/g-open/peers': ok(null) },
+    { 'GET /api/panel/device-groups/g-open/peers': panel(500, { error: 'boom' }) },
+    { 'GET /api/panel/device-groups/g-viewer/peers': panel(401, { error: 'Invalid or missing credentials' }) },
+    { 'PUT /api/panel/device-groups/g-viewer/peers': panel(503, { error: 'unavailable' }) },
+    { 'PUT /api/panel/device-groups/g-open/peers': panel(400, { error: 'invalid JSON' }) },
+    { 'PUT /api/panel/device-groups/g-viewer/peers': panel(500, { error: 'SetDeviceGroupPeers' }) },
+    { 'PUT /api/panel/device-groups/g-open/peers': ok(null) },
+    { 'PUT /api/panel/device-groups/g-ops/peers': ok({ error: 'locked' }) },
+    { 'PUT /api/panel/device-groups/g-ops/peers': ok({ error: 0 }) },
+    { 'PUT /api/panel/device-groups/g-ops/peers': ok({ error: 'request timeout' }) },
+    { 'PUT /api/panel/device-groups/g-ops/peers': ok({ error: { toString: 1 } }) },
+    { 'PUT /api/panel/device-groups/g-open/peers': panel(403, { error: 'Forbidden' }) },
+    { 'PUT /api/panel/device-groups/g-viewer/peers': hangup },
+    { 'PUT /api/panel/device-groups/g-open/peers': { status: 200, text: 'saved' } },
+]) {
+    send('admin', 'PUT', '/api/devices/B1002/groups', { groupGuids: [] }, membersRead(extra));
+}
+sql('members after the panel writes', 'SELECT g.guid, m.peer_id FROM device_group_members m JOIN device_groups g ON g.id = m.device_group_id ORDER BY g.guid, m.peer_id');
+
+// Deleting through the API server; the made-up server leaves the row, so
+// g-ops stays for the steps after these
+for (const answer of [ok({ guid: 'g-ops', deleted: true }), panel(400, { error: 'guid is required' }), panel(403, { error: 'Forbidden' }),
+    panel(500, { error: 'DeleteDeviceGroup' }), ok({ error: 'locked' }), ok({ error: '' }), ok(null), { status: 200, text: '' }]) {
+    send('admin', 'DELETE', '/api/device-groups/g-ops', undefined, { 'DELETE /api/panel/device-groups/g-ops': answer });
+}
+send('operator', 'DELETE', '/api/device-groups/g-ops', undefined, { 'DELETE /api/panel/device-groups/g-ops': ok({ guid: 'g-ops', deleted: true }) });
+
+// Saving through the API server: its answer is the route's, with the
+// API server's status for a refusal (502 without one)
+const goGroup = { name: 'Go group', note: ' n ', team_id: 't', allowed_users: ['e2e_viewer', 'e2e_viewer'], allowed_groups: ['ug-ops'] };
+const saved = { guid: 'g-go', name: 'Go group', source_type: 'manual', tag_filter: '', allowed_users: ['e2e_viewer'], allowed_groups: ['ug-ops'], created: true };
+for (const answer of [panel(201, saved), panel(400, { error: 'name is required' }), panel(403, { error: 'Forbidden' }), panel(500, { error: 'boom' }),
+    ok({ error: 'name is required' }), ok({ error: 0 }), ok({ error: { toString: 1 } }), ok([1]), { status: 200, text: 'saved' },
+    ok({ name: 5 }), ok({}), ok({ name: { toString: 1 } }), panel(409, null), { status: 500 }]) {
+    send('admin', 'POST', '/api/device-groups', goGroup, { 'POST /api/panel/device-groups': answer });
+}
+send('operator', 'POST', '/api/device-groups', { name: 'By operator via Go' }, { 'POST /api/panel/device-groups': panel(201, { ...saved, name: 'By operator via Go' }) });
+send('admin', 'POST', '/api/device-groups', { guid: 'g-open', name: 'Open via Go', source_type: 'tag', tag: 'lab' },
+    { 'POST /api/panel/device-groups': ok({ guid: 'g-open', name: 'Open via Go', source_type: 'tag', tag_filter: 'lab', allowed_users: [], allowed_groups: [], created: false }) });
+// These fall back to the console's own writer, which creates the group
+for (const answer of [ok({ error: 'socket timeout' }), panel(501, { error: 'x' }), panel(503, { error: 'x' }), ok(null), hangup, { status: 200, text: '' }]) {
+    send('admin', 'POST', '/api/device-groups', { name: 'Fallback group' }, { 'POST /api/panel/device-groups': answer });
+}
+
 for (const body of [{}, { name: '  ' }, { name: 'T', dynamic: true }, { name: 'T', source_type: 'tag', tag: ' kiosk ' }, { name: 'G', allowed_groups: ['bad guid!'] },
     { name: 'G', guid: 'bad guid!' }, { name: 'G', guid: 'FOLDER_5' }, { name: 'G', guid: 'no-such' }, [1],
     { name: ['a', 'b'], note: 5, team_id: null, allowed_users: 'e2e_viewer, e2e_operator ,x', allowed_groups: [{ guid: 'ug-ops' }, 'ug-ops', 'missing'] },
@@ -436,16 +536,83 @@ send('admin', 'POST', '/api/devices/A1001/connection-mode', { mode: 'normal', re
 send('admin', 'POST', '/api/devices/A1001/connection-mode', { mode: 'normal', reason: 'x' }, { 'POST /api/peers/A1001/connection-mode': { status: 503 } });
 send('admin', 'POST', '/api/devices/A1001/connection-mode', { mode: 'normal', reason: 'x' }, { 'POST /api/peers/A1001/connection-mode': ok({ error: 'refused' }) });
 
+// The device scope check in front of every address below /api/devices/:id,
+// before the route's own sign-in and permission checks: e2e_operator may
+// not see C1003, B1002 and the deleted E1005, may see A1001 and lacks the
+// permissions to ban, delete, change ids and connection modes; e2e_viewer
+// may see C1003; ZZ9 does not exist. The panel access guard of the console
+// lets viewer and guest_issuer read the device section only, so their
+// steps are reads.
+const withDeleted = { 'GET /api/peers?include_deleted=true': ok({ peers: [A, B, C, D, E] }) };
+const everyRoute = (id) => [
+    ['GET', `/api/devices/${id}`], ['GET', `/api/devices/${id}/groups`], ['PUT', `/api/devices/${id}/groups`, { groupGuids: [] }],
+    ['GET', `/api/devices/${id}/availability`], ['GET', `/api/devices/${id}/connection-sessions`],
+    ['POST', `/api/devices/${id}/telemetry/refresh`, {}], ['POST', `/api/devices/${id}/telemetry/command`, { command: 'collect.services' }],
+    ['PATCH', `/api/devices/${id}`, { note: 'x' }], ['DELETE', `/api/devices/${id}`], ['POST', `/api/devices/${id}/restore`, {}],
+    ['POST', `/api/devices/${id}/connection-mode`, { mode: 'normal', reason: 'x' }], ['POST', `/api/devices/${id}/ban`, {}],
+    ['POST', `/api/devices/${id}/unban`, {}], ['POST', `/api/devices/${id}/change-id`, { newId: 'NEWID9' }],
+    ['PUT', `/api/devices/${id}/tags`, { tags: ['x'] }], ['GET', `/api/devices/${id}/access-policy`],
+    ['PUT', `/api/devices/${id}/access-policy`, {}], ['DELETE', `/api/devices/${id}/access-policy`],
+    ['GET', `/api/devices/${id}/connect-password`], ['POST', `/api/devices/${id}/rename`, { display_name: 'x' }],
+    ['PATCH', `/api/devices/${id}/folder`, { folderId: 5 }],
+];
+const call = (role, [method, p, body], api) => (method === 'GET' ? get(role, p, api) : send(role, method, p, body, api));
+for (const route of everyRoute('C1003')) call('operator', route);
+for (const route of everyRoute('C1003').filter(([method]) => method === 'GET')) call('viewer', route);
+for (const route of everyRoute('B1002').filter(([method]) => method === 'GET')) call('guest_issuer', route);
+send('operator', 'POST', '/api/devices/B1002/ban', {});
+send('operator', 'PATCH', '/api/devices/B1002/folder', { folderId: null });
+for (const route of [['POST', '/api/devices/A1001/ban', {}], ['POST', '/api/devices/A1001/unban', {}], ['POST', '/api/devices/A1001/change-id', { newId: 'NEWID9' }],
+    ['DELETE', '/api/devices/A1001'], ['POST', '/api/devices/A1001/restore', {}], ['POST', '/api/devices/A1001/connection-mode', { mode: 'normal', reason: 'x' }]]) {
+    call('operator', route);
+}
+for (const route of [['POST', '/api/devices/ZZ9/ban', {}], ['POST', '/api/devices/ZZ9/restore', {}], ['GET', '/api/devices/ZZ9'], ['PATCH', '/api/devices/ZZ9/folder', {}]]) {
+    call('operator', route);
+}
+// The deleted E1005: the check finds it in the list with the deleted ones
+for (const role of ['operator', 'admin']) send(role, 'POST', '/api/devices/E1005/restore', {}, withDeleted);
+get('viewer', '/api/devices/E1005', withDeleted);
+get('operator', '/api/devices/E1005', withDeleted);
+send('operator', 'DELETE', '/api/devices/E1005?hard=true', undefined, withDeleted);
+// bulk-delete is an id to the check: it finds no device and goes on
+send('operator', 'POST', '/api/devices/bulk-delete', { ids: ['A1001'] });
+send('operator', 'POST', '/api/devices/bulk-delete', { ids: ['C1003'] }, { 'GET /api/peers/bulk-delete': ok(C) });
+// Other spellings, other methods and addresses no route has
+get('operator', '/API/Devices/C1003/Groups');
+get('operator', '/api/devices/C1003/');
+send('operator', 'PUT', '/api/devices/C1003', { note: 'x' });
+get('operator', '/api/devices/C1003/no/such/route');
+send('operator', 'POST', '/api/devices/C1003/groups/extra', {});
+loose('operator', 'GET', '/api/devices/A1001/no-such-route');
+loose('admin', 'GET', '/api/devices/C1003/no-such-route');
+loose('operator', 'PUT', '/api/devices/A1001', { note: 'x' });
+loose('viewer', 'GET', '/api/devices/C1003/no-such-route');
+loose('signed-out', 'GET', '/api/devices/C1003/no-such-route');
+get('signed-out', '/api/devices/C1003');
+send('signed-out', 'PATCH', '/api/devices/C1003/folder', { folderId: 5 });
+// The roles that see every device skip the check and its lookup
+for (const role of ['super_admin', 'global_admin', 'server_admin']) get(role, '/api/devices/C1003/access-policy');
+// Devices the operator may see go through to the route
+send('operator', 'PATCH', '/api/devices/A1001/folder', { folderId: null });
+send('operator', 'PATCH', '/api/devices/A1001/folder', { folderId: 5 });
+send('operator', 'PATCH', '/api/devices/A1001/folder', { folderId: 999 });
+send('admin', 'PATCH', '/api/devices/A1001/folder', {});
+get('operator', '/api/devices/D1004');
+sql('folders after the scope steps', 'SELECT device_id, folder_id FROM device_folder_assignments ORDER BY device_id');
+
 // Rules for RustDesk clients
 for (const role of ['admin', 'viewer']) get(role, '/api/panel/strategies');
 for (const body of [{}, { name: '  ' }, { name: 'R', user_group_guid: 'bad guid!' }, { name: 'R', device_group_guid: 'bad guid!' }, [1], { name: { toString: 1 } },
     { name: ' New rule ' + 'r'.repeat(90), enabled: 0, permissions: { 'enable-audio': true, x: 'n', y: ' v ', z: 5, w: '', '2': 'Y' } },
-    { name: 'Off rule', enabled: false, permissions: [1] }]) {
+    { name: 'Off rule', enabled: false, permissions: [1] },
+    { name: 'RustDesk keys', permissions: { 'enable-tunnel': 'y', 'enable-camera': 'N', 'disable-clipboard': ' Y ', 'enable-file-transfer': false,
+        'Enable-Audio': true, 'enable-block-input': 1, 'enable-remote-restart': null, 'enable-clipboard': 'custom', '3': 'Y', 'enable-audio': 'n' } }]) {
     send('admin', 'POST', '/api/panel/strategies', body);
 }
 get('admin', '/api/panel/strategies');
 for (const g of ['s-one', 's-two', 'remote-only', 'no-such', 'bad$guid', '%20s-one']) get('admin', '/api/panel/strategies/' + g);
-for (const body of [{}, { name: '' }, { enabled: false }, { permissions: { 'enable-tunnel': 'N' } }, { name: 'Rule one!', user_group_guid: 'ug-ops' }]) {
+for (const body of [{}, { name: '' }, { enabled: false }, { permissions: { 'enable-tunnel': 'N' } }, { name: 'Rule one!', user_group_guid: 'ug-ops' },
+    { permissions: { 'enable-audio': 'custom', 'enable-camera': true, other: 'Y' } }]) {
     send('admin', 'PATCH', '/api/panel/strategies/s-one', body);
 }
 send('admin', 'PATCH', '/api/panel/strategies/no-such', { name: 'x' });
@@ -472,6 +639,13 @@ sql('peer guids', "SELECT id, CASE WHEN guid = '' THEN 'none' WHEN guid LIKE '%-
 sql('user guids', "SELECT username, CASE WHEN guid = '' THEN 'none' WHEN guid LIKE '%-%-%-%-%' AND guid <> 'guid-viewer' THEN 'uuid' ELSE guid END AS guid FROM users ORDER BY id");
 sql('audit', 'SELECT user_id, action, details, ip_address FROM audit_log ORDER BY id');
 
+// A failing scope check answers 500: without the table of the accounts a
+// group allows, the device groups cannot be read
+sql('drop the access lists of the device groups', 'DROP TABLE device_group_user_access');
+get('operator', '/api/devices/C1003');
+send('operator', 'PATCH', '/api/devices/A1001/folder', { folderId: null });
+get('admin', '/api/devices/A1001/access-policy');
+
 (async () => {
     const api = await startAPI();
     process.env.BETTERDESK_API_URL = `http://127.0.0.1:${api.address().port}/api`;
@@ -490,6 +664,9 @@ sql('audit', 'SELECT user_id, action, details, ip_address FROM audit_log ORDER B
     });
     app.use(web('middleware/i18n').initI18n());
     app.use('/', web('routes/devices.routes'));
+    // The folder routes come after the device routes, as in routes/index.js:
+    // PATCH /api/devices/:id/folder is behind the device routes' scope check
+    app.use('/', web('routes/folders.routes'));
     app.use((req, res) => res.status(404).json({ oracle: 'no route' }));
     // eslint-disable-next-line no-unused-vars
     app.use((err, req, res, _next) => res.status(err.status || 500).json({ success: false, error: 'Internal Server Error' }));

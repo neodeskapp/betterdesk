@@ -49,30 +49,22 @@
    },
    "volatile": [
     {
-     "path": "data.created_at",
-     "format": "9999-99-99 99:99:99"
-    },
-    {
      "path": "data.guid",
      "pattern": "^[9aA+/_=-]{36}$"
     },
-    {
-     "path": "data.id",
-     "integer": true
-    }
+    "data.id"
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "created_at": "<volatile>",
+      "allowed_groups": [],
+      "allowed_users": [],
+      "created": true,
       "guid": "<volatile>",
-      "id": 0,
       "name": "Contract tag group",
-      "note": "",
       "source_type": "tag",
-      "tag_filter": "contract-tag",
-      "team_id": ""
+      "tag_filter": "contract-tag"
      },
      "success": true
     }

@@ -34,7 +34,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Permission denied: device.delete",
+     "error": "errors.forbidden",
      "success": false
     }
    }

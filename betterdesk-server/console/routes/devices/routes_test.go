@@ -170,7 +170,10 @@ func TestAuditFailures(t *testing.T) {
 
 // TestPermissions sends each route as an account whose role lacks the
 // route's permission (and passes the panel access guard): the guard of
-// the route answers, naming the permission.
+// the route answers, naming the permission. Below /api/devices/{id} the
+// device scope check comes first and looks the device up (including the
+// deleted ones, where the id is none of an active device); nothing else
+// reaches the server.
 func TestPermissions(t *testing.T) {
 	w, api := world(t, storetest.Migrated(t), nil, nil)
 	agents := map[string]*routetest.Agent{}
@@ -211,8 +214,16 @@ func TestPermissions(t *testing.T) {
 		if got.Status != status || got.Body != want {
 			t.Errorf("%s %s as %s: %d %s, want %d %s", c.method, c.path, c.role, got.Status, got.Body, status, want)
 		}
-		if calls := api.Calls(); len(calls) > 0 {
-			t.Errorf("%s %s as %s called the server behind the refusal: %q", c.method, c.path, c.role, calls)
+		var lookups []string
+		if id, below := strings.CutPrefix(c.path, "/api/devices/"); below {
+			id, _, _ = strings.Cut(id, "/")
+			lookups = append(lookups, "GET /api/peers/"+id)
+			if id == "bulk-delete" {
+				lookups = append(lookups, "GET /api/peers?include_deleted=true")
+			}
+		}
+		if calls := api.Calls(); strings.Join(calls, "\n") != strings.Join(lookups, "\n") {
+			t.Errorf("%s %s as %s called the server %q behind the refusal, want only the scope check's %q", c.method, c.path, c.role, calls, lookups)
 		}
 	}
 }

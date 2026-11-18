@@ -1,0 +1,314 @@
+{
+ "id": "devices/memberships-other-spelling-restricted",
+ "request": {
+  "method": "GET",
+  "path": "/API/Devices/900100019/Groups"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 302,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "cross-origin-resource-policy": "same-origin",
+    "location": "/login",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "vary": "Accept",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "data.groups[*].id",
+    "data.memberships[*].id"
+   ],
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "operator"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "data.groups[*].id",
+    "data.memberships[*].id"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "errors.forbidden",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.groups[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.groups[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.groups[*].id",
+     "integer": true
+    },
+    {
+     "path": "data.groups[4].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.groups[5].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.groups[6].team_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.memberships[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.memberships[*].guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.memberships[*].id",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "groups": [
+       {
+        "allowed_groups": [],
+        "allowed_user_groups": [],
+        "allowed_users": [],
+        "created_at": "<volatile>",
+        "guid": "<volatile>",
+        "id": 0,
+        "member_count": 5,
+        "name": "All laptops",
+        "note": "",
+        "source_type": "tag",
+        "tag_filter": "laptop",
+        "team_id": ""
+       },
+       {
+        "allowed_groups": [],
+        "allowed_user_groups": [],
+        "allowed_users": [
+         "e2e_viewer"
+        ],
+        "created_at": "<volatile>",
+        "guid": "<volatile>",
+        "id": 0,
+        "member_count": 1,
+        "name": "Contract restricted",
+        "note": "",
+        "source_type": "manual",
+        "tag_filter": "",
+        "team_id": ""
+       },
+       {
+        "allowed_groups": [],
+        "allowed_user_groups": [],
+        "allowed_users": [],
+        "created_at": "<volatile>",
+        "guid": "<volatile>",
+        "id": 0,
+        "member_count": 1,
+        "name": "Critical servers",
+        "note": "",
+        "source_type": "tag",
+        "tag_filter": "critical",
+        "team_id": ""
+       },
+       {
+        "allowed_groups": [],
+        "allowed_user_groups": [],
+        "allowed_users": [],
+        "created_at": "<volatile>",
+        "guid": "<volatile>",
+        "id": 0,
+        "member_count": 0,
+        "name": "Default",
+        "note": "Default device group",
+        "source_type": "manual",
+        "tag_filter": "",
+        "team_id": ""
+       },
+       {
+        "allowed_groups": [],
+        "allowed_user_groups": [],
+        "allowed_users": [],
+        "created_at": "<volatile>",
+        "guid": "<volatile>",
+        "id": 0,
+        "member_count": 5,
+        "name": "Demo Harbor Logistics",
+        "note": "Default group created with organization (commercialization)",
+        "source_type": "manual",
+        "tag_filter": "",
+        "team_id": "<volatile>"
+       },
+       {
+        "allowed_groups": [],
+        "allowed_user_groups": [],
+        "allowed_users": [],
+        "created_at": "<volatile>",
+        "guid": "<volatile>",
+        "id": 0,
+        "member_count": 3,
+        "name": "Demo Lab Collective",
+        "note": "Default group created with organization (commercialization)",
+        "source_type": "manual",
+        "tag_filter": "",
+        "team_id": "<volatile>"
+       },
+       {
+        "allowed_groups": [],
+        "allowed_user_groups": [],
+        "allowed_users": [],
+        "created_at": "<volatile>",
+        "guid": "<volatile>",
+        "id": 0,
+        "member_count": 7,
+        "name": "Demo Northwind Clinic",
+        "note": "Default group created with organization (commercialization)",
+        "source_type": "manual",
+        "tag_filter": "",
+        "team_id": "<volatile>"
+       },
+       {
+        "allowed_groups": [],
+        "allowed_user_groups": [],
+        "allowed_users": [],
+        "created_at": "<volatile>",
+        "guid": "<volatile>",
+        "id": 0,
+        "member_count": 2,
+        "name": "Support team devices",
+        "note": "",
+        "source_type": "manual",
+        "tag_filter": "",
+        "team_id": ""
+       }
+      ],
+      "memberships": [
+       {
+        "allowed_groups": [],
+        "allowed_user_groups": [],
+        "allowed_users": [],
+        "created_at": "<volatile>",
+        "guid": "<volatile>",
+        "id": 0,
+        "member_count": 5,
+        "name": "All laptops",
+        "note": "",
+        "source_type": "tag",
+        "tag_filter": "laptop",
+        "team_id": ""
+       },
+       {
+        "allowed_groups": [],
+        "allowed_user_groups": [],
+        "allowed_users": [
+         "e2e_viewer"
+        ],
+        "created_at": "<volatile>",
+        "guid": "<volatile>",
+        "id": 0,
+        "member_count": 1,
+        "name": "Contract restricted",
+        "note": "",
+        "source_type": "manual",
+        "tag_filter": "",
+        "team_id": ""
+       }
+      ]
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

@@ -453,10 +453,10 @@
         "id": 0,
         "member_count": 0,
         "name": "Contract group renamed",
-        "note": "A note",
+        "note": "",
         "source_type": "manual",
         "tag_filter": "",
-        "team_id": "contract-team"
+        "team_id": ""
        },
        {
         "allowed_groups": [],
@@ -643,10 +643,10 @@
         "id": 0,
         "member_count": 0,
         "name": "Contract group renamed",
-        "note": "A note",
+        "note": "",
         "source_type": "manual",
         "tag_filter": "",
-        "team_id": "contract-team"
+        "team_id": ""
        },
        {
         "allowed_groups": [],

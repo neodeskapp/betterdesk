@@ -23,15 +23,25 @@ func TestParseStoredTime(t *testing.T) {
 }
 
 // TestNormalizeStrategyPermissions reads the permissions of a submitted
-// rule: flags and Y/N in either case become "Y" and "N", other text is
-// trimmed, empty text and other values are dropped.
+// rule: only RustDesk's keys, letter for letter; flags and Y/N in either
+// case become "Y" and "N"; every other key and value is dropped, custom
+// text included.
 func TestNormalizeStrategyPermissions(t *testing.T) {
-	in, err := goapi.Parse([]byte(`{"a":true,"b":false,"c":"Y","d":"y","e":"N","f":"n","g":" v ","h":5,"i":"","j":"  ","k":null,"l":[1]}`))
+	in, err := goapi.Parse([]byte(`{"enable-audio":true,"enable-tunnel":false,"enable-camera":"Y","enable-clipboard":"y",` +
+		`"disable-clipboard":"N","enable-file-transfer":"n","enable-block-input":" Y ","enable-remote-restart":5,` +
+		`"a":true,"b":"N","Enable-Audio":"Y","2":"Y","enable-audio ":"Y"}`))
 	if err != nil {
 		t.Fatal(err)
 	}
 	got, _ := json.Marshal(normalizeStrategyPermissions(in))
-	if want := `{"a":"Y","b":"N","c":"Y","d":"Y","e":"N","f":"N","g":"v"}`; string(got) != want {
+	want := `{"enable-audio":"Y","enable-tunnel":"N","enable-camera":"Y","enable-clipboard":"Y","disable-clipboard":"N","enable-file-transfer":"N"}`
+	if string(got) != want {
 		t.Errorf("got %s, want %s", got, want)
+	}
+	for _, raw := range []string{`{"enable-audio":" custom "}`, `{"enable-tunnel":null}`, `{"enable-camera":[1]}`, `["Y"]`, `"Y"`} {
+		v, _ := goapi.Parse([]byte(raw))
+		if got, _ := json.Marshal(normalizeStrategyPermissions(v)); string(got) != `{}` {
+			t.Errorf("%s: got %s, want {}", raw, got)
+		}
 	}
 }

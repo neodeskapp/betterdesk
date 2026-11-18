@@ -234,10 +234,10 @@
         "guid": "<volatile>",
         "id": 0,
         "name": "Contract group renamed",
-        "note": "A note",
+        "note": "",
         "source_type": "manual",
         "tag_filter": "",
-        "team_id": "contract-team"
+        "team_id": ""
        }
       ],
       "hostname": "demo-sales-laptop-02",

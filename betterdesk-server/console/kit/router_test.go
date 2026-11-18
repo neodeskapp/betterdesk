@@ -280,3 +280,110 @@ func TestMountRefusesBadPrefixes(t *testing.T) {
 		}()
 	}
 }
+
+// guardFor is a Use middleware that refuses the id "no" and lets every
+// other request go on, noting what it saw.
+func guardFor(seen *[]string) Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			*seen = append(*seen, r.Method+" "+r.URL.Path+" id="+r.PathValue("id"))
+			if r.PathValue("id") == "no" {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// TestUseRunsInFrontOfTheRoutesAfterIt checks Use the way router.use(path,
+// fn) worked: every method and every path below the pattern, at its place
+// in the order, also for a path no route answers.
+func TestUseRunsInFrontOfTheRoutesAfterIt(t *testing.T) {
+	var seen []string
+	rt := NewRouter()
+	rt.Get("/api/devices/{id}/before", echo("before"))
+	rt.Use("/api/devices/{id}", guardFor(&seen))
+	rt.Get("/api/devices/{id}", echo("one"))
+	rt.Post("/api/devices/{id}/ban", echo("ban"))
+	later := rt.Mount("/later")
+	later.Patch("/api/devices/{id}/folder", echo("folder"))
+	rt.Patch("/api/devices/{id}/folder", echo("folder"))
+
+	for _, c := range []struct {
+		method, target string
+		answered       bool
+		status         int
+		route          string
+		seen           string
+	}{
+		// A route in front of it answers without it
+		{"GET", "/api/devices/no/before", true, 200, "before", ""},
+		{"GET", "/api/devices/A1", true, 200, "one", "GET /api/devices/A1 id=A1"},
+		{"GET", "/API/Devices/A1/", true, 200, "one", "GET /API/Devices/A1/ id=A1"},
+		{"HEAD", "/api/devices/A1", true, 200, "one", "HEAD /api/devices/A1 id=A1"},
+		{"POST", "/api/devices/a%2Fb/ban", true, 200, "ban", "POST /api/devices/a/b/ban id=a/b"},
+		{"PATCH", "/api/devices/A1/folder", true, 200, "folder", "PATCH /api/devices/A1/folder id=A1"},
+		// It refuses for every method and every path below the pattern
+		{"GET", "/api/devices/no", true, 403, "", "GET /api/devices/no id=no"},
+		{"PATCH", "/api/devices/no/folder", true, 403, "", "PATCH /api/devices/no/folder id=no"},
+		{"PUT", "/api/devices/no/nothing/here", true, 403, "", "PUT /api/devices/no/nothing/here id=no"},
+		{"OPTIONS", "/api/devices/no/ban", true, 403, "", "OPTIONS /api/devices/no/ban id=no"},
+		// A path it lets through that no route answers stays unanswered
+		{"PUT", "/api/devices/A1/nothing", false, 200, "", "PUT /api/devices/A1/nothing id=A1"},
+		// A path shorter than the pattern is none of its
+		{"GET", "/api/devices", false, 200, "", ""},
+		{"GET", "/api/devices/", false, 200, "", ""},
+	} {
+		seen = nil
+		rec, ok := serve(rt, c.method, c.target)
+		if ok != c.answered || rec.Code != c.status || rec.Header().Get("X-Route") != c.route || strings.Join(seen, ",") != c.seen {
+			t.Errorf("%s %s: answered=%v status=%d route=%q guard saw %q; want %v %d %q %q",
+				c.method, c.target, ok, rec.Code, rec.Header().Get("X-Route"), seen, c.answered, c.status, c.route, c.seen)
+		}
+	}
+
+	// OPTIONS it lets through gets the methods of the routes
+	seen = nil
+	rec, ok := serve(rt, "OPTIONS", "/api/devices/A1/ban")
+	if !ok || rec.Header().Get("Allow") != "POST" || len(seen) != 1 {
+		t.Errorf("OPTIONS: answered=%v Allow=%q guard saw %q", ok, rec.Header().Get("Allow"), seen)
+	}
+	// A parameter that does not decode is the 400 also where no route follows
+	rec, ok = serve(rt, "GET", "/api/devices/%ff/nothing")
+	if !ok || rec.Code != http.StatusBadRequest {
+		t.Errorf("a bad parameter: answered=%v status=%d", ok, rec.Code)
+	}
+}
+
+// TestUseIsNoRoute checks that what Use adds does not count as a route:
+// the table matches only the paths its routes have, and lists only them.
+func TestUseIsNoRoute(t *testing.T) {
+	var seen []string
+	rt := NewRouter()
+	rt.Use("/api/devices/{id}", guardFor(&seen))
+	rt.Get("/api/devices/{id}", echo("one"))
+	for _, c := range []struct {
+		method, target string
+		match          bool
+	}{
+		{"GET", "/api/devices/A1", true},
+		{"OPTIONS", "/api/devices/A1", true},
+		{"POST", "/api/devices/A1", false},
+		{"GET", "/api/devices/A1/nothing", false},
+		{"OPTIONS", "/api/devices/A1/nothing", false},
+	} {
+		if got := rt.Match(httptest.NewRequest(c.method, c.target, nil)); got != c.match {
+			t.Errorf("Match(%s %s) = %v, want %v", c.method, c.target, got, c.match)
+		}
+	}
+	if routes := rt.Routes(); len(routes) != 1 || routes[0].Path != "/api/devices/{id}" {
+		t.Errorf("Routes() = %+v, want the one route", routes)
+	}
+	defer func() {
+		if recover() == nil {
+			t.Error("Use with {rest...} did not panic")
+		}
+	}()
+	rt.Use("/files/{rest...}", guardFor(&seen))
+}

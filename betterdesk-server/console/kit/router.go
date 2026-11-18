@@ -31,7 +31,10 @@ type route struct {
 	Route
 	segments []string
 	wildcard bool
-	handler  http.Handler
+	// prefix marks a middleware added with Use: it fits every path that
+	// starts with its segments.
+	prefix  bool
+	handler http.Handler
 }
 
 // table is the list of routes a Router and its mounts share.
@@ -54,6 +57,8 @@ type table struct {
 //   - A GET route also answers HEAD.
 //   - An OPTIONS request to a path that only has routes for other methods
 //     is answered with the list of those methods.
+//   - A middleware added with Use runs at its place in the order for every
+//     method and every path below its pattern.
 //
 // A handler, or a middleware in front of it, can decline a request with
 // PassOn. The router then tries the next route that fits, and reports the
@@ -89,17 +94,36 @@ func (rt *Router) Mount(prefix string) *Router {
 // Handle adds a route. The middleware runs in the order given, before h.
 // method is "" for every method.
 func (rt *Router) Handle(method, pattern string, h http.Handler, mw ...Middleware) {
-	if !strings.HasPrefix(pattern, "/") {
-		panic(fmt.Sprintf("kit: route %q must start with /", pattern))
-	}
 	for i := len(mw) - 1; i >= 0; i-- {
 		h = mw[i](h)
+	}
+	rt.add(method, pattern, h, false)
+}
+
+// Use adds mw at this place of the table, for every method and every path
+// that starts with pattern, the way router.use(path, fn) did:
+// Use("/api/devices/{id}", mw) runs for /api/devices/A1001 and for
+// /api/devices/A1001/groups, in front of the routes added after it, also
+// when none of them answers the path. mw lets the request go on to those
+// routes by calling the handler it wraps, or answers it. A Use entry is no
+// route: Match and Routes leave it out, so a path that only it fits is
+// still one the table does not have.
+func (rt *Router) Use(pattern string, mw Middleware) {
+	if strings.HasSuffix(pattern, "...}") {
+		panic(fmt.Sprintf("kit: Use %q covers the rest of the path already; leave out {name...}", pattern))
+	}
+	rt.add("", pattern, mw(http.HandlerFunc(PassOn)), true)
+}
+
+func (rt *Router) add(method, pattern string, h http.Handler, prefix bool) {
+	if !strings.HasPrefix(pattern, "/") {
+		panic(fmt.Sprintf("kit: route %q must start with /", pattern))
 	}
 	full := rt.prefix + pattern
 	if pattern == "/" && rt.prefix != "" {
 		full = rt.prefix
 	}
-	entry := &route{Route: Route{Method: method, Path: full, Mount: rt.prefix}, handler: h}
+	entry := &route{Route: Route{Method: method, Path: full, Mount: rt.prefix}, handler: h, prefix: prefix}
 	if full != "/" {
 		entry.segments = strings.Split(strings.TrimPrefix(full, "/"), "/")
 	}
@@ -143,11 +167,13 @@ func (rt *Router) All(pattern string, h http.HandlerFunc, mw ...Middleware) {
 	rt.Handle("", pattern, h, mw...)
 }
 
-// Routes lists what was added to the table, in order.
+// Routes lists the routes of the table, in order, without what Use added.
 func (rt *Router) Routes() []Route {
-	out := make([]Route, len(rt.table.routes))
-	for i, r := range rt.table.routes {
-		out[i] = r.Route
+	out := make([]Route, 0, len(rt.table.routes))
+	for _, r := range rt.table.routes {
+		if !r.prefix {
+			out = append(out, r.Route)
+		}
 	}
 	return out
 }
@@ -160,7 +186,7 @@ func (rt *Router) Match(r *http.Request) bool {
 		return false
 	}
 	for _, entry := range rt.table.routes {
-		if entry.matches(parts, trailing) && (entry.allows(r.Method) || r.Method == http.MethodOptions) {
+		if !entry.prefix && entry.matches(parts, trailing) && (entry.allows(r.Method) || r.Method == http.MethodOptions) {
 			return true
 		}
 	}
@@ -342,13 +368,19 @@ func (entry *route) addMethods(list []string) []string {
 // path ended with a slash: "/files/" fits "/files/{rest...}" with an empty
 // rest, "/files" does not.
 func (entry *route) matches(parts []string, trailing bool) bool {
-	if entry.wildcard {
+	switch {
+	case entry.prefix:
+		if len(parts) < len(entry.segments) {
+			return false
+		}
+		parts = parts[:len(entry.segments)]
+	case entry.wildcard:
 		fixed := len(entry.segments) - 1
 		if len(parts) < fixed || (len(parts) == fixed && !trailing) {
 			return false
 		}
 		parts = parts[:fixed]
-	} else if len(parts) != len(entry.segments) {
+	case len(parts) != len(entry.segments):
 		return false
 	}
 	for i, part := range parts {

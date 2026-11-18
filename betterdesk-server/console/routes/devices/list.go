@@ -273,16 +273,15 @@ func (h *handlers) availability(w http.ResponseWriter, r *http.Request) {
 }
 
 // connectionSessions answers GET /api/devices/{id}/connection-sessions?limit=:
-// the remote sessions the server saw, 50 when limit is no number.
+// the remote sessions the server saw. limit is parseInt of the query, held
+// to 1 to 200, and 50 when it is no number.
 func (h *handlers) connectionSessions(w http.ResponseWriter, r *http.Request) {
 	if _, ok := h.found(w, r, "Get device connection sessions error:"); !ok {
 		return
 	}
 	limit := float64(50)
-	if q := jsreq.Query(r, "limit"); goapi.Truthy(q) {
-		if n, ok := jsreq.ParseInt(jsreq.String(q), 10); ok && !math.IsInf(n, 0) {
-			limit = n
-		}
+	if n, ok := jsreq.ParseInt(jsreq.Query(r, "limit"), 10); ok && !math.IsInf(n, 0) {
+		limit = math.Min(math.Max(n, 1), 200)
 	}
 	viaAPI(w, r, h.api.GetPeerConnectionSessions(r.Context(), r.PathValue("id"), limit))
 }

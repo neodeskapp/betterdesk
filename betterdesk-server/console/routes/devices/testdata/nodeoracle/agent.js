@@ -252,6 +252,18 @@ for (const body of [{ command: 'uptime' }, {}, { command: '  \t ' }, { command: 
 }
 post('operator', '/api/devices/A1001/terminal/execute', { command: 'id' }, no('denied'));
 post('admin', '/api/devices/A1001/input/key', { key: 'a' }, 'silent');
+// The device scope check of the device routes is in front of every one of
+// these, before its sign-in and permission checks: e2e_operator may not
+// see C1003, e2e_viewer may
+for (const p of ['services', 'processes', 'events', 'activity', 'clipboard']) get('operator', `/api/devices/C1003/${p}`);
+for (const [p, body] of [['files/browse', { path: '/' }], ['files/read', { path: '/a' }], ['files/write', { path: '/a', data: 'eA==' }],
+    ['files/delete', { path: '/a' }], ['files/rename', { from: '/a', to: '/b' }], ['files/mkdir', { path: '/d' }], ['clipboard', { text: 'x' }],
+    ['screenshot', {}], ['input/mouse', { action: 'click' }], ['input/key', { key: 'a' }], ['input/text', { text: 'a' }],
+    ['terminal/execute', { command: 'id' }], ['files/no-such-route', {}]]) {
+    post('operator', `/api/devices/C1003/${p}`, body);
+}
+for (const p of ['processes', 'events', 'activity', 'clipboard']) get('viewer', `/api/devices/C1003/${p}`);
+get('operator', '/api/devices/A1001/processes', yes([]));
 sql('audit', 'SELECT user_id, action, details, ip_address FROM audit_log ORDER BY id');
 
 // ---- The run ----

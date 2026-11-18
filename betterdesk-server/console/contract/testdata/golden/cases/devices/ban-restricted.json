@@ -35,7 +35,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Permission denied: device.ban",
+     "error": "errors.forbidden",
      "success": false
     }
    }
