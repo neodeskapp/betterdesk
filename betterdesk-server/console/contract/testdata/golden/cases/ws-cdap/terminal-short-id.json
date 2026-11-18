@@ -1,0 +1,64 @@
+{
+ "id": "ws-cdap/terminal-short-id",
+ "request": {
+  "method": "GET",
+  "path": "/api/cdap/devices/a/terminal",
+  "notes": [
+   "websocket t_short, own origin",
+   "websocket protocols cdap-terminal",
+   "websocket send {\"cols\":80,\"rows\":24}",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "binary": {
+        "length": 75,
+        "sha256": "2763c3577e8ecb975ef1667cb1da4784b0979ab87c04abebc56d51633613faab"
+       }
+      }
+     ],
+     "protocol": "cdap-terminal"
+    }
+   }
+  }
+ ]
+}

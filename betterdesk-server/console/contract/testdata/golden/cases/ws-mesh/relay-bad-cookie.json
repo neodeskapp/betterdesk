@@ -1,0 +1,32 @@
+{
+ "id": "ws-mesh/relay-bad-cookie",
+ "request": {
+  "method": "GET",
+  "path": "/meshrelay.ashx?auth=bad&id=contract",
+  "notes": [
+   "no cookies",
+   "websocket r2, no Origin",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

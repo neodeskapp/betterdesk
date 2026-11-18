@@ -1,0 +1,80 @@
+{
+ "id": "ws-chat/panel-groups",
+ "request": {
+  "method": "GET",
+  "path": "/ws/chat-operator/panel",
+  "notes": [
+   "websocket panel, own origin",
+   "websocket send {\"type\":\"get_groups\"}",
+   "websocket expect 1 messages",
+   "websocket keep only type=groups"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer",
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.groups[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "groups": [
+         {
+          "created_at": "<volatile>",
+          "created_by": "admin",
+          "id": "group:demo0001",
+          "members": "panel,operator:admin,operator:demo_operator,operator:demo_serveradmin",
+          "name": "Demo on-call"
+         }
+        ],
+        "type": "groups"
+       },
+       "order": "type groups[{id name members created_by created_at}]"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

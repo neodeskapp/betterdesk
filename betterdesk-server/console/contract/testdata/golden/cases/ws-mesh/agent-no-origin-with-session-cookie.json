@@ -1,0 +1,41 @@
+{
+ "id": "ws-mesh/agent-no-origin-with-session-cookie",
+ "request": {
+  "method": "GET",
+  "path": "/agent.ashx",
+  "notes": [
+   "websocket a_cookie, no Origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": []
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

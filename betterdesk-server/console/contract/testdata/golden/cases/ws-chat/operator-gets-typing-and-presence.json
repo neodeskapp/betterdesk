@@ -1,0 +1,108 @@
+{
+ "id": "ws-chat/operator-gets-typing-and-presence",
+ "request": {
+  "method": "GET",
+  "path": "/ws/chat-operator/900100001",
+  "notes": [
+   "websocket op, own origin",
+   "websocket expect 4 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer",
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[1].json.timestamp",
+     "integer": true
+    },
+    {
+     "path": "messages[3].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "from": "900100001",
+        "type": "typing"
+       },
+       "order": "type from conversation_id"
+      },
+      {
+       "json": {
+        "device_id": "900100001",
+        "online": false,
+        "status": "busy",
+        "timestamp": 0,
+        "type": "presence"
+       },
+       "order": "type device_id online status timestamp"
+      },
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "from": "900100001",
+        "public_key": "contract-key",
+        "type": "key_exchange"
+       },
+       "order": "type from public_key conversation_id"
+      },
+      {
+       "json": {
+        "conversation_id": "operator",
+        "encrypted_metadata": "",
+        "file_id": "contract-file",
+        "file_name_encrypted": "",
+        "file_size": 12,
+        "from": "900100001",
+        "from_name": "900100001",
+        "timestamp": 0,
+        "type": "file_share"
+       },
+       "order": "type from from_name conversation_id file_id file_name_encrypted file_size encrypted_metadata timestamp"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

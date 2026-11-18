@@ -37,13 +37,11 @@ func (h *handlers) search(w http.ResponseWriter, r *http.Request) {
 	case len(ids) > 1:
 		conversation = ids
 	}
-	resp, err := h.api.Get(r.Context(), "/api/chat/search",
-		goapi.Query("q", text), goapi.Query("conversation_id", conversation), goapi.Query("limit", 50))
-	if err != nil {
+	messages, ok := searchMessages(r.Context(), h.api, text, conversation)
+	if !ok {
 		kit.JSON(w, r, http.StatusOK, nothing)
 		return
 	}
-	messages := goapi.Dig(resp.Data(), "messages")
 	if !goapi.Truthy(messages) {
 		messages = []any{}
 	}

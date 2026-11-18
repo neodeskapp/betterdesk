@@ -1,0 +1,33 @@
+{
+ "id": "ws-mesh/agent-junk",
+ "request": {
+  "method": "GET",
+  "path": "/agent.ashx",
+  "notes": [
+   "no cookies",
+   "websocket a, no Origin",
+   "websocket send 2 binary bytes",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

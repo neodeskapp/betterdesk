@@ -1,0 +1,201 @@
+{
+ "id": "ws-chat/agent-gets-panel-message",
+ "request": {
+  "method": "GET",
+  "path": "/ws/chat/900100001?token=%7Bsecret%3Adevice_token%7D",
+  "notes": [
+   "no cookies",
+   "websocket agent, no Origin",
+   "websocket expect 1 messages",
+   "websocket keep only type=message"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.id",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "from": "operator",
+        "from_name": "e2e_viewer",
+        "id": 0,
+        "operator": "e2e_viewer",
+        "text": "contract from the panel",
+        "timestamp": 0,
+        "to_id": "900100001",
+        "type": "message"
+       },
+       "order": "type id from from_name conversation_id operator to_id text timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.id",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "from": "operator",
+        "from_name": "e2e_operator",
+        "id": 0,
+        "operator": "e2e_operator",
+        "text": "contract from the panel",
+        "timestamp": 0,
+        "to_id": "900100001",
+        "type": "message"
+       },
+       "order": "type id from from_name conversation_id operator to_id text timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.id",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "from": "operator",
+        "from_name": "e2e_global_admin",
+        "id": 0,
+        "operator": "e2e_global_admin",
+        "text": "contract from the panel",
+        "timestamp": 0,
+        "to_id": "900100001",
+        "type": "message"
+       },
+       "order": "type id from from_name conversation_id operator to_id text timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.id",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "from": "operator",
+        "from_name": "e2e_super_admin",
+        "id": 0,
+        "operator": "e2e_super_admin",
+        "text": "contract from the panel",
+        "timestamp": 0,
+        "to_id": "900100001",
+        "type": "message"
+       },
+       "order": "type id from from_name conversation_id operator to_id text timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.id",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "from": "operator",
+        "from_name": "e2e_admin",
+        "id": 0,
+        "operator": "e2e_admin",
+        "text": "contract from the panel",
+        "timestamp": 0,
+        "to_id": "900100001",
+        "type": "message"
+       },
+       "order": "type id from from_name conversation_id operator to_id text timestamp"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

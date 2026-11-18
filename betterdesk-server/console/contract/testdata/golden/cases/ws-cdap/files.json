@@ -1,0 +1,64 @@
+{
+ "id": "ws-cdap/files",
+ "request": {
+  "method": "GET",
+  "path": "/api/cdap/devices/900100001/files",
+  "notes": [
+   "websocket f, own origin",
+   "websocket protocols cdap-filebrowser",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "error": "Failed to start file browser: device 900100001 not connected",
+        "type": "error"
+       },
+       "order": "error type"
+      }
+     ],
+     "protocol": "cdap-filebrowser"
+    }
+   }
+  }
+ ]
+}

@@ -36,13 +36,8 @@ const db = require('./services/database');
 const { DatabaseSessionStore } = require('./services/databaseSessionStore');
 const userSync = require('./services/userSync');
 const { initWsProxy } = require('./services/wsRelay');
-const { initChatRelay } = require('./services/chatRelay');
-const { apiClient: goApiClient } = require('./services/betterdeskApi');
 const { initRemoteRelay } = require('./services/remoteRelay');
-const { initCdapTerminalProxy } = require('./services/cdapTerminalProxy');
 const { initServerTerminalProxy } = require('./services/serverTerminalProxy');
-const { initCdapMediaProxies } = require('./services/cdapMediaProxy');
-const { initMeshAshxProxy } = require('./services/meshAshxProxy');
 const { initRemoteTargetGateway } = require('./services/remoteTargetGateway');
 const { loadEffectivePolicy } = require('./services/panelAccessPolicyService');
 const { panelAccessGuard } = require('./middleware/panelAccess');
@@ -487,14 +482,8 @@ async function startServer() {
         // Initialize WebSocket proxy for remote desktop client
         initWsProxy(server, sessionMiddleware);
 
-        // Initialize Chat relay (WebSocket — agent ↔ operator, persistent via Go API)
-        initChatRelay(server, sessionMiddleware, goApiClient);
-
         // Initialize Remote Desktop relay (WebSocket — agent JPEG ↔ browser viewer)
         initRemoteRelay(server, sessionMiddleware);
-
-        // Initialize CDAP Terminal WebSocket proxy (browser ↔ Go server)
-        initCdapTerminalProxy(server, sessionMiddleware);
 
         // Initialize Server Management terminal WebSocket (browser ↔ host shell)
         initServerTerminalProxy(server, sessionMiddleware, {
@@ -505,10 +494,6 @@ async function startServer() {
             }
         });
 
-        // Initialize CDAP Media WebSocket proxies (desktop, video, file browser)
-        initCdapMediaProxies(server, sessionMiddleware);
-
-        initMeshAshxProxy(server, sessionMiddleware);
         initRemoteTargetGateway(server, sessionMiddleware);
 
         initHelpRequestEmailService(config.betterdeskApiUrl, config.betterdeskApiKey);

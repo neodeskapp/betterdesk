@@ -1,0 +1,65 @@
+{
+ "id": "ws-cdap/audio",
+ "request": {
+  "method": "GET",
+  "path": "/api/cdap/devices/900100001/audio",
+  "notes": [
+   "websocket a, own origin",
+   "websocket protocols cdap-audio",
+   "websocket send {\"sample_rate\":16000}",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "error": "Failed to start audio: device 900100001 not connected",
+        "type": "error"
+       },
+       "order": "error type"
+      }
+     ],
+     "protocol": "cdap-audio"
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,1207 @@
+{
+ "id": "ws-chat/agent-bearer",
+ "request": {
+  "method": "GET",
+  "path": "/ws/chat/900100001",
+  "notes": [
+   "header Authorization: Bearer {secret:device_token}",
+   "no cookies",
+   "websocket a_bearer, no Origin",
+   "websocket expect 1 messages",
+   "websocket keep only type=history",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "messages": [],
+        "type": "history"
+       },
+       "order": "type conversation_id messages[]"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "pro"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.messages[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "messages": [
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 16,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 17,
+          "read": false,
+          "text": "contract to the panel"
+         }
+        ],
+        "type": "history"
+       },
+       "order": "type conversation_id messages[{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}]"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.messages[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "messages": [
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 16,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 17,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 18,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 19,
+          "read": false,
+          "text": "contract to the panel"
+         }
+        ],
+        "type": "history"
+       },
+       "order": "type conversation_id messages[{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}]"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.messages[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "messages": [
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 16,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 17,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 18,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 19,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 20,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 21,
+          "read": false,
+          "text": "contract to the panel"
+         }
+        ],
+        "type": "history"
+       },
+       "order": "type conversation_id messages[{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}]"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.messages[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "messages": [
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 16,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 17,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 18,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 19,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 20,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 21,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 22,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_viewer",
+          "id": 23,
+          "read": false,
+          "text": "contract operator message",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 24,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_viewer",
+          "id": 25,
+          "read": false,
+          "text": "contract from the panel",
+          "to_id": "900100001"
+         }
+        ],
+        "type": "history"
+       },
+       "order": "type conversation_id messages[{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}]"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.messages[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "messages": [
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 16,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 17,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 18,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 19,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 20,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 21,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 22,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_viewer",
+          "id": 23,
+          "read": false,
+          "text": "contract operator message",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 24,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_viewer",
+          "id": 25,
+          "read": false,
+          "text": "contract from the panel",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 27,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_operator",
+          "id": 28,
+          "read": false,
+          "text": "contract operator message",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 29,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_operator",
+          "id": 30,
+          "read": false,
+          "text": "contract from the panel",
+          "to_id": "900100001"
+         }
+        ],
+        "type": "history"
+       },
+       "order": "type conversation_id messages[{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}]"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "server_admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.messages[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "messages": [
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 16,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 17,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 18,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 19,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 20,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 21,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 22,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_viewer",
+          "id": 23,
+          "read": false,
+          "text": "contract operator message",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 24,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_viewer",
+          "id": 25,
+          "read": false,
+          "text": "contract from the panel",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 27,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_operator",
+          "id": 28,
+          "read": false,
+          "text": "contract operator message",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 29,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_operator",
+          "id": 30,
+          "read": false,
+          "text": "contract from the panel",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 32,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_global_admin",
+          "id": 33,
+          "read": false,
+          "text": "contract operator message",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 34,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_global_admin",
+          "id": 35,
+          "read": false,
+          "text": "contract from the panel",
+          "to_id": "900100001"
+         }
+        ],
+        "type": "history"
+       },
+       "order": "type conversation_id messages[{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}]"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.messages[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "messages": [
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 16,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 17,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 18,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 19,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 20,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 21,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 22,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_viewer",
+          "id": 23,
+          "read": false,
+          "text": "contract operator message",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 24,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_viewer",
+          "id": 25,
+          "read": false,
+          "text": "contract from the panel",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 27,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_operator",
+          "id": 28,
+          "read": false,
+          "text": "contract operator message",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 29,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_operator",
+          "id": 30,
+          "read": false,
+          "text": "contract from the panel",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 32,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_global_admin",
+          "id": 33,
+          "read": false,
+          "text": "contract operator message",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 34,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_global_admin",
+          "id": 35,
+          "read": false,
+          "text": "contract from the panel",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 37,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 38,
+          "read": false,
+          "text": "contract to the panel"
+         }
+        ],
+        "type": "history"
+       },
+       "order": "type conversation_id messages[{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}]"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.messages[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "messages": [
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 16,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 17,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 18,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 19,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 20,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 21,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 22,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_viewer",
+          "id": 23,
+          "read": false,
+          "text": "contract operator message",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 24,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_viewer",
+          "id": 25,
+          "read": false,
+          "text": "contract from the panel",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 27,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_operator",
+          "id": 28,
+          "read": false,
+          "text": "contract operator message",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 29,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_operator",
+          "id": 30,
+          "read": false,
+          "text": "contract from the panel",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 32,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_global_admin",
+          "id": 33,
+          "read": false,
+          "text": "contract operator message",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 34,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_global_admin",
+          "id": 35,
+          "read": false,
+          "text": "contract from the panel",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 37,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 38,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 39,
+          "read": false,
+          "text": "contract agent message"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_super_admin",
+          "id": 40,
+          "read": false,
+          "text": "contract operator message",
+          "to_id": "900100001"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "900100001",
+          "from_name": "900100001",
+          "id": 41,
+          "read": false,
+          "text": "contract to the panel"
+         },
+         {
+          "conversation_id": "900100001",
+          "created_at": "<volatile>",
+          "from_id": "operator",
+          "from_name": "e2e_super_admin",
+          "id": 42,
+          "read": false,
+          "text": "contract from the panel",
+          "to_id": "900100001"
+         }
+        ],
+        "type": "history"
+       },
+       "order": "type conversation_id messages[{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}{id conversation_id from_id from_name text read created_at}{id conversation_id from_id from_name to_id text read created_at}]"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

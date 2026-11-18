@@ -1,0 +1,31 @@
+{
+ "id": "ws-chat/agent-foreign-origin",
+ "request": {
+  "method": "GET",
+  "path": "/ws/chat/900100001?token=%7Bsecret%3Adevice_token%7D",
+  "notes": [
+   "no cookies",
+   "websocket a_foreign, Origin https://evil.example"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro",
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

@@ -1,0 +1,59 @@
+{
+ "id": "ws-chat/panel-open",
+ "request": {
+  "method": "GET",
+  "path": "/ws/chat-operator/panel",
+  "notes": [
+   "websocket panel, own origin",
+   "websocket expect 1 messages",
+   "websocket keep only type=status"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "viewer",
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "agent_connected": false,
+        "type": "status"
+       },
+       "order": "type agent_connected"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

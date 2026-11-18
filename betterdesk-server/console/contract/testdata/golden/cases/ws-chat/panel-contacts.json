@@ -1,0 +1,569 @@
+{
+ "id": "ws-chat/panel-contacts",
+ "request": {
+  "method": "GET",
+  "path": "/ws/chat-operator/panel",
+  "notes": [
+   "websocket panel, own origin",
+   "websocket send {\"type\":\"get_contacts\"}",
+   "websocket expect 1 messages",
+   "websocket keep only type=contacts"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer",
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.contacts[0].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[10].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[11].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[12].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[13].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[14].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[15].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[16].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[17].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[18].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[19].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[1].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[20].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[21].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[22].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[23].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[24].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[25].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[26].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[27].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[28].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[29].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[2].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[3].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[4].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[5].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[6].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[7].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[8].last_seen",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.contacts[9].last_seen",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "contacts": [
+         {
+          "avatar_color": "hsl(57, 65%, 55%)",
+          "hostname": "demo-reception-01",
+          "id": "900100001",
+          "last_seen": 0,
+          "name": "demo-reception-01",
+          "online": true,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(58, 65%, 55%)",
+          "hostname": "demo-reception-02",
+          "id": "900100002",
+          "last_seen": 0,
+          "name": "demo-reception-02",
+          "online": false,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(59, 65%, 55%)",
+          "hostname": "demo-accounts-01",
+          "id": "900100003",
+          "last_seen": 0,
+          "name": "demo-accounts-01",
+          "online": true,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(60, 65%, 55%)",
+          "hostname": "demo-accounts-02",
+          "id": "900100004",
+          "last_seen": 0,
+          "name": "demo-accounts-02",
+          "online": false,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(61, 65%, 55%)",
+          "hostname": "demo-ceo-macbook",
+          "id": "900100005",
+          "last_seen": 0,
+          "name": "demo-ceo-macbook",
+          "online": true,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(62, 65%, 55%)",
+          "hostname": "demo-design-imac",
+          "id": "900100006",
+          "last_seen": 0,
+          "name": "demo-design-imac",
+          "online": true,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(63, 65%, 55%)",
+          "hostname": "demo-design-mbp",
+          "id": "900100007",
+          "last_seen": 0,
+          "name": "demo-design-mbp",
+          "online": false,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(64, 65%, 55%)",
+          "hostname": "demo-warehouse-pc",
+          "id": "900100008",
+          "last_seen": 0,
+          "name": "demo-warehouse-pc",
+          "online": true,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(65, 65%, 55%)",
+          "hostname": "demo-warehouse-scan-1",
+          "id": "900100009",
+          "last_seen": 0,
+          "name": "demo-warehouse-scan-1",
+          "online": true,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(87, 65%, 55%)",
+          "hostname": "demo-warehouse-scan-2",
+          "id": "900100010",
+          "last_seen": 0,
+          "name": "demo-warehouse-scan-2",
+          "online": false,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(88, 65%, 55%)",
+          "hostname": "demo-warehouse-scan-3",
+          "id": "900100011",
+          "last_seen": 0,
+          "name": "demo-warehouse-scan-3",
+          "online": false,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(89, 65%, 55%)",
+          "hostname": "demo-build-server",
+          "id": "900100012",
+          "last_seen": 0,
+          "name": "demo-build-server",
+          "online": true,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(90, 65%, 55%)",
+          "hostname": "demo-file-server",
+          "id": "900100013",
+          "last_seen": 0,
+          "name": "demo-file-server",
+          "online": true,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(91, 65%, 55%)",
+          "hostname": "demo-backup-nas",
+          "id": "900100014",
+          "last_seen": 0,
+          "name": "demo-backup-nas",
+          "online": false,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(92, 65%, 55%)",
+          "hostname": "demo-db-primary",
+          "id": "900100015",
+          "last_seen": 0,
+          "name": "demo-db-primary",
+          "online": true,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(93, 65%, 55%)",
+          "hostname": "demo-db-replica",
+          "id": "900100016",
+          "last_seen": 0,
+          "name": "demo-db-replica",
+          "online": false,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(94, 65%, 55%)",
+          "hostname": "demo-sales-laptop-01",
+          "id": "900100017",
+          "last_seen": 0,
+          "name": "demo-sales-laptop-01",
+          "online": true,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(95, 65%, 55%)",
+          "hostname": "demo-sales-laptop-02",
+          "id": "900100018",
+          "last_seen": 0,
+          "name": "demo-sales-laptop-02",
+          "online": false,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(96, 65%, 55%)",
+          "hostname": "demo-sales-laptop-03",
+          "id": "900100019",
+          "last_seen": 0,
+          "name": "demo-sales-laptop-03",
+          "online": false,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(118, 65%, 55%)",
+          "hostname": "demo-kiosk-lobby",
+          "id": "900100020",
+          "last_seen": 0,
+          "name": "demo-kiosk-lobby",
+          "online": true,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(119, 65%, 55%)",
+          "hostname": "demo-kiosk-canteen",
+          "id": "900100021",
+          "last_seen": 0,
+          "name": "demo-kiosk-canteen",
+          "online": false,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(120, 65%, 55%)",
+          "hostname": "demo-support-ipad",
+          "id": "900100022",
+          "last_seen": 0,
+          "name": "demo-support-ipad",
+          "online": false,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(121, 65%, 55%)",
+          "hostname": "demo-support-pixel",
+          "id": "900100023",
+          "last_seen": 0,
+          "name": "demo-support-pixel",
+          "online": true,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(122, 65%, 55%)",
+          "hostname": "demo-lab-rpi-01",
+          "id": "900100024",
+          "last_seen": 0,
+          "name": "demo-lab-rpi-01",
+          "online": true,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(123, 65%, 55%)",
+          "hostname": "demo-lab-rpi-02",
+          "id": "900100025",
+          "last_seen": 0,
+          "name": "demo-lab-rpi-02",
+          "online": false,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(124, 65%, 55%)",
+          "hostname": "demo-lab-win-vm",
+          "id": "900100026",
+          "last_seen": 0,
+          "name": "demo-lab-win-vm",
+          "online": true,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(125, 65%, 55%)",
+          "hostname": "demo-old-xp-box",
+          "id": "900100027",
+          "last_seen": 0,
+          "name": "demo-old-xp-box",
+          "online": false,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(126, 65%, 55%)",
+          "hostname": "demo-stolen-laptop",
+          "id": "900100028",
+          "last_seen": 0,
+          "name": "demo-stolen-laptop",
+          "online": false,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(127, 65%, 55%)",
+          "hostname": "demo-unknown-box",
+          "id": "900100029",
+          "last_seen": 0,
+          "name": "demo-unknown-box",
+          "online": false,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(150, 65%, 55%)",
+          "hostname": "demo-noted-pc",
+          "id": "900100031",
+          "last_seen": 0,
+          "name": "demo-noted-pc",
+          "online": false,
+          "role": "device",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(71, 65%, 55%)",
+          "hostname": "Console",
+          "id": "operator:admin",
+          "last_seen": 0,
+          "name": "admin",
+          "online": true,
+          "role": "operator",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(144, 65%, 55%)",
+          "hostname": "Console",
+          "id": "operator:demo_operator",
+          "last_seen": 0,
+          "name": "demo_operator",
+          "online": true,
+          "role": "operator",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(118, 65%, 55%)",
+          "hostname": "Console",
+          "id": "operator:demo_viewer",
+          "last_seen": 0,
+          "name": "demo_viewer",
+          "online": true,
+          "role": "operator",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(0, 65%, 55%)",
+          "hostname": "Console",
+          "id": "operator:e2e_admin",
+          "last_seen": 0,
+          "name": "e2e_admin",
+          "online": true,
+          "role": "operator",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(196, 65%, 55%)",
+          "hostname": "Console",
+          "id": "operator:e2e_super_admin",
+          "last_seen": 0,
+          "name": "e2e_super_admin",
+          "online": true,
+          "role": "operator",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(42, 65%, 55%)",
+          "hostname": "Console",
+          "id": "operator:e2e_global_admin",
+          "last_seen": 0,
+          "name": "e2e_global_admin",
+          "online": true,
+          "role": "operator",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(3, 65%, 55%)",
+          "hostname": "Console",
+          "id": "operator:e2e_operator",
+          "last_seen": 0,
+          "name": "e2e_operator",
+          "online": true,
+          "role": "operator",
+          "unread": 0
+         },
+         {
+          "avatar_color": "hsl(353, 65%, 55%)",
+          "hostname": "Console",
+          "id": "operator:e2e_viewer",
+          "last_seen": 0,
+          "name": "e2e_viewer",
+          "online": true,
+          "role": "operator",
+          "unread": 0
+         }
+        ],
+        "type": "contacts"
+       },
+       "order": "type contacts[{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}{id name hostname online last_seen unread avatar_color role}]"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

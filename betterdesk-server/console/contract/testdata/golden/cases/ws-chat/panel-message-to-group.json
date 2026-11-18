@@ -1,0 +1,226 @@
+{
+ "id": "ws-chat/panel-message-to-group",
+ "request": {
+  "method": "GET",
+  "path": "/ws/chat-operator/panel",
+  "notes": [
+   "websocket panel, own origin",
+   "websocket send {\"conversation_id\":\"group:contract\",\"text\":\"contract to a group\",\"type\":\"message\"}",
+   "websocket expect 1 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.id",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "group:contract",
+        "from": "operator",
+        "from_name": "e2e_viewer",
+        "id": 0,
+        "operator": "e2e_viewer",
+        "text": "contract to a group",
+        "timestamp": 0,
+        "to_id": "group:contract",
+        "type": "message"
+       },
+       "order": "type id from from_name conversation_id operator to_id text timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.id",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "group:contract",
+        "from": "operator",
+        "from_name": "e2e_operator",
+        "id": 0,
+        "operator": "e2e_operator",
+        "text": "contract to a group",
+        "timestamp": 0,
+        "to_id": "group:contract",
+        "type": "message"
+       },
+       "order": "type id from from_name conversation_id operator to_id text timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.id",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "group:contract",
+        "from": "operator",
+        "from_name": "e2e_global_admin",
+        "id": 0,
+        "operator": "e2e_global_admin",
+        "text": "contract to a group",
+        "timestamp": 0,
+        "to_id": "group:contract",
+        "type": "message"
+       },
+       "order": "type id from from_name conversation_id operator to_id text timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.id",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "group:contract",
+        "from": "operator",
+        "from_name": "e2e_super_admin",
+        "id": 0,
+        "operator": "e2e_super_admin",
+        "text": "contract to a group",
+        "timestamp": 0,
+        "to_id": "group:contract",
+        "type": "message"
+       },
+       "order": "type id from from_name conversation_id operator to_id text timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.id",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "group:contract",
+        "from": "operator",
+        "from_name": "e2e_admin",
+        "id": 0,
+        "operator": "e2e_admin",
+        "text": "contract to a group",
+        "timestamp": 0,
+        "to_id": "group:contract",
+        "type": "message"
+       },
+       "order": "type id from from_name conversation_id operator to_id text timestamp"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

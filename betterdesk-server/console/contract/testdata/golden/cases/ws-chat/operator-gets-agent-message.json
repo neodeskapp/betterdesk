@@ -1,0 +1,79 @@
+{
+ "id": "ws-chat/operator-gets-agent-message",
+ "request": {
+  "method": "GET",
+  "path": "/ws/chat-operator/900100001",
+  "notes": [
+   "websocket op, own origin",
+   "websocket expect 1 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer",
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.id",
+     "integer": true
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "from": "900100001",
+        "from_name": "900100001",
+        "id": 0,
+        "text": "contract agent message",
+        "timestamp": 0,
+        "type": "message"
+       },
+       "order": "type id from from_name conversation_id text timestamp"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

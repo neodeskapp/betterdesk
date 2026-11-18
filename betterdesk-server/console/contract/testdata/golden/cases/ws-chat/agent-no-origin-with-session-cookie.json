@@ -1,0 +1,32 @@
+{
+ "id": "ws-chat/agent-no-origin-with-session-cookie",
+ "request": {
+  "method": "GET",
+  "path": "/ws/chat/900100001?token=%7Bsecret%3Adevice_token%7D",
+  "notes": [
+   "header Cookie: bd.sid=s%3Anot-a-session",
+   "no cookies",
+   "websocket a_cookie, no Origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro",
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

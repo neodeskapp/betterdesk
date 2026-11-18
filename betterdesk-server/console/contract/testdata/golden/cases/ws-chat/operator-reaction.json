@@ -1,0 +1,196 @@
+{
+ "id": "ws-chat/operator-reaction",
+ "request": {
+  "method": "GET",
+  "path": "/ws/chat-operator/900100001",
+  "notes": [
+   "websocket op, own origin",
+   "websocket send {\"emoji\":\"+1\",\"message_id\":\"1\",\"type\":\"reaction\"}",
+   "websocket expect 1 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "emoji": "+1",
+        "from": "e2e_viewer",
+        "message_id": "1",
+        "operator": "e2e_viewer",
+        "timestamp": 0,
+        "type": "reaction"
+       },
+       "order": "type from operator conversation_id message_id emoji timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "emoji": "+1",
+        "from": "e2e_operator",
+        "message_id": "1",
+        "operator": "e2e_operator",
+        "timestamp": 0,
+        "type": "reaction"
+       },
+       "order": "type from operator conversation_id message_id emoji timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "emoji": "+1",
+        "from": "e2e_global_admin",
+        "message_id": "1",
+        "operator": "e2e_global_admin",
+        "timestamp": 0,
+        "type": "reaction"
+       },
+       "order": "type from operator conversation_id message_id emoji timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "emoji": "+1",
+        "from": "e2e_super_admin",
+        "message_id": "1",
+        "operator": "e2e_super_admin",
+        "timestamp": 0,
+        "type": "reaction"
+       },
+       "order": "type from operator conversation_id message_id emoji timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "emoji": "+1",
+        "from": "e2e_admin",
+        "message_id": "1",
+        "operator": "e2e_admin",
+        "timestamp": 0,
+        "type": "reaction"
+       },
+       "order": "type from operator conversation_id message_id emoji timestamp"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

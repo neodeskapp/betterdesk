@@ -1,0 +1,39 @@
+{
+ "id": "ws-cdap/terminal-no-origin",
+ "request": {
+  "method": "GET",
+  "path": "/api/cdap/devices/900100001/terminal",
+  "notes": [
+   "websocket t_bare, no Origin",
+   "websocket protocols cdap-terminal"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

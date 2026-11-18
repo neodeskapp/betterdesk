@@ -1,0 +1,1714 @@
+{
+ "scenarios": [
+  {
+   "name": "checks",
+   "steps": [
+    {
+     "step": {
+      "plan": {}
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "agent-bare",
+      "path": "/agent.ashx"
+     },
+     "events": [
+      {
+       "socket": "agent-bare",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/agent.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "agent-foreign",
+      "path": "/agent.ashx",
+      "headers": {
+       "Origin": "https://evil.example"
+      }
+     },
+     "events": [
+      {
+       "socket": "agent-foreign",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "agent-foreign",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "agent-cookie",
+      "path": "/agent.ashx",
+      "headers": {
+       "Cookie": "bd.sid=x"
+      }
+     },
+     "events": [
+      {
+       "socket": "agent-cookie",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "agent-cookie",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "agent-own",
+      "path": "/agent.ashx",
+      "headers": {
+       "Origin": "http://console.test",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "agent-own",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u2",
+       "open": "/agent.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "agent-zero",
+      "path": "/agent.ashx",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":0}"
+      }
+     },
+     "events": [
+      {
+       "socket": "agent-zero",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u3",
+       "open": "/agent.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "agent-key",
+      "path": "/agent.ashx",
+      "headers": {
+       "Sec-WebSocket-Key": "short"
+      }
+     },
+     "events": [
+      {
+       "socket": "agent-key",
+       "head": "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 43\r\n\r\n"
+      },
+      {
+       "socket": "agent-key",
+       "body": "Missing or invalid Sec-WebSocket-Key header"
+      },
+      {
+       "socket": "agent-key",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "agent-key-signed-in",
+      "path": "/agent.ashx",
+      "headers": {
+       "Sec-WebSocket-Key": "short",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "agent-key-signed-in",
+       "head": "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 43\r\n\r\n"
+      },
+      {
+       "socket": "agent-key-signed-in",
+       "body": "Missing or invalid Sec-WebSocket-Key header"
+      },
+      {
+       "socket": "agent-key-signed-in",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "agent-protocol",
+      "path": "/agent.ashx",
+      "headers": {
+       "Sec-WebSocket-Protocol": "mesh, other",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "agent-protocol",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: mesh\r\n\r\n"
+      },
+      {
+       "upstream": "u4",
+       "open": "/agent.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "meshrelay-bare",
+      "path": "/meshrelay.ashx"
+     },
+     "events": [
+      {
+       "socket": "meshrelay-bare",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u5",
+       "open": "/meshrelay.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "meshrelay-foreign",
+      "path": "/meshrelay.ashx",
+      "headers": {
+       "Origin": "https://evil.example"
+      }
+     },
+     "events": [
+      {
+       "socket": "meshrelay-foreign",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "meshrelay-foreign",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "meshrelay-cookie",
+      "path": "/meshrelay.ashx",
+      "headers": {
+       "Cookie": "bd.sid=x"
+      }
+     },
+     "events": [
+      {
+       "socket": "meshrelay-cookie",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "meshrelay-cookie",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "meshrelay-own",
+      "path": "/meshrelay.ashx",
+      "headers": {
+       "Origin": "http://console.test",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "meshrelay-own",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u6",
+       "open": "/meshrelay.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "meshrelay-zero",
+      "path": "/meshrelay.ashx",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":0}"
+      }
+     },
+     "events": [
+      {
+       "socket": "meshrelay-zero",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u7",
+       "open": "/meshrelay.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "meshrelay-key",
+      "path": "/meshrelay.ashx",
+      "headers": {
+       "Sec-WebSocket-Key": "short"
+      }
+     },
+     "events": [
+      {
+       "socket": "meshrelay-key",
+       "head": "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 43\r\n\r\n"
+      },
+      {
+       "socket": "meshrelay-key",
+       "body": "Missing or invalid Sec-WebSocket-Key header"
+      },
+      {
+       "socket": "meshrelay-key",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "meshrelay-key-signed-in",
+      "path": "/meshrelay.ashx",
+      "headers": {
+       "Sec-WebSocket-Key": "short",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "meshrelay-key-signed-in",
+       "head": "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 43\r\n\r\n"
+      },
+      {
+       "socket": "meshrelay-key-signed-in",
+       "body": "Missing or invalid Sec-WebSocket-Key header"
+      },
+      {
+       "socket": "meshrelay-key-signed-in",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "meshrelay-protocol",
+      "path": "/meshrelay.ashx",
+      "headers": {
+       "Sec-WebSocket-Protocol": "mesh, other",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "meshrelay-protocol",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: mesh\r\n\r\n"
+      },
+      {
+       "upstream": "u8",
+       "open": "/meshrelay.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "control-bare",
+      "path": "/control.ashx"
+     },
+     "events": [
+      {
+       "socket": "control-bare",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "control-bare",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "control-foreign",
+      "path": "/control.ashx",
+      "headers": {
+       "Origin": "https://evil.example"
+      }
+     },
+     "events": [
+      {
+       "socket": "control-foreign",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "control-foreign",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "control-cookie",
+      "path": "/control.ashx",
+      "headers": {
+       "Cookie": "bd.sid=x"
+      }
+     },
+     "events": [
+      {
+       "socket": "control-cookie",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "control-cookie",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "control-own",
+      "path": "/control.ashx",
+      "headers": {
+       "Origin": "http://console.test",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "control-own",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u9",
+       "open": "/control.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "control-zero",
+      "path": "/control.ashx",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":0}"
+      }
+     },
+     "events": [
+      {
+       "socket": "control-zero",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "control-zero",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "control-key",
+      "path": "/control.ashx",
+      "headers": {
+       "Sec-WebSocket-Key": "short"
+      }
+     },
+     "events": [
+      {
+       "socket": "control-key",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "control-key",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "control-key-signed-in",
+      "path": "/control.ashx",
+      "headers": {
+       "Sec-WebSocket-Key": "short",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "control-key-signed-in",
+       "head": "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 43\r\n\r\n"
+      },
+      {
+       "socket": "control-key-signed-in",
+       "body": "Missing or invalid Sec-WebSocket-Key header"
+      },
+      {
+       "socket": "control-key-signed-in",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "control-protocol",
+      "path": "/control.ashx",
+      "headers": {
+       "Sec-WebSocket-Protocol": "mesh, other",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "control-protocol",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: mesh\r\n\r\n"
+      },
+      {
+       "upstream": "u10",
+       "open": "/control.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "paths and queries",
+   "steps": [
+    {
+     "step": {
+      "plan": {}
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "a",
+      "path": "/agent.ashx?id=1&auth=x%20y&z"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/agent.ashx?id=1&auth=x%20y&z",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/meshrelay.ashx?"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u2",
+       "open": "/meshrelay.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/control.ashx?a=%zz&b=%27x+y",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u3",
+       "open": "/control.ashx?a=%zz&b=%27x+y",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/x/../agent.ashx?p=2#frag"
+     },
+     "events": [
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u4",
+       "open": "/agent.ashx?p=2",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/meshrelay.ashx?id=r1&browser=1&p=2&nodeid=n&auth=a",
+      "headers": {
+       "X-Forwarded-For": "10.9.8.7"
+      }
+     },
+     "events": [
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u5",
+       "open": "/meshrelay.ashx?id=r1&browser=1&p=2&nodeid=n&auth=a",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "/agent.ashx: messages both ways",
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "echo": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/agent.ashx",
+      "headers": {}
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/agent.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "{\"action\":\"hello\"}"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "{\"action\":\"hello\"}"
+      },
+      {
+       "socket": "b",
+       "text": "{\"action\":\"hello\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "binary": "AAFiaW4="
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "binary": "AAFiaW4="
+      },
+      {
+       "socket": "b",
+       "binary": "AAFiaW4="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": ""
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": ""
+      },
+      {
+       "socket": "b",
+       "text": ""
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "text": "from the server"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "text": "from the server"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "binary": "AP8H"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "binary": "AP8H"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "b",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      },
+      {
+       "upstream": "u1",
+       "close": 1005,
+       "reason": ""
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "/agent.ashx: messages before the API server answers",
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "hold": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/agent.ashx",
+      "headers": {}
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/agent.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "lost"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "binary": "bG9zdCB0b28="
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "release": true
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "kept"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "kept"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "close": 4001,
+      "reason": "bye"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "close": 4001,
+       "reason": "bye"
+      },
+      {
+       "socket": "b",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "/meshrelay.ashx: messages both ways",
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "echo": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/meshrelay.ashx",
+      "headers": {}
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/meshrelay.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "{\"action\":\"hello\"}"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "{\"action\":\"hello\"}"
+      },
+      {
+       "socket": "b",
+       "text": "{\"action\":\"hello\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "binary": "AAFiaW4="
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "binary": "AAFiaW4="
+      },
+      {
+       "socket": "b",
+       "binary": "AAFiaW4="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": ""
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": ""
+      },
+      {
+       "socket": "b",
+       "text": ""
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "text": "from the server"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "text": "from the server"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "binary": "AP8H"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "binary": "AP8H"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "b",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      },
+      {
+       "upstream": "u1",
+       "close": 1005,
+       "reason": ""
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "/meshrelay.ashx: messages before the API server answers",
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "hold": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/meshrelay.ashx",
+      "headers": {}
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/meshrelay.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "lost"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "binary": "bG9zdCB0b28="
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "release": true
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "kept"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "kept"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "close": 4001,
+      "reason": "bye"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "close": 4001,
+       "reason": "bye"
+      },
+      {
+       "socket": "b",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "/control.ashx: messages both ways",
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "echo": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/control.ashx",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/control.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "{\"action\":\"hello\"}"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "{\"action\":\"hello\"}"
+      },
+      {
+       "socket": "b",
+       "text": "{\"action\":\"hello\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "binary": "AAFiaW4="
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "binary": "AAFiaW4="
+      },
+      {
+       "socket": "b",
+       "binary": "AAFiaW4="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": ""
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": ""
+      },
+      {
+       "socket": "b",
+       "text": ""
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "text": "from the server"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "text": "from the server"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "binary": "AP8H"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "binary": "AP8H"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "b",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      },
+      {
+       "upstream": "u1",
+       "close": 1005,
+       "reason": ""
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "/control.ashx: messages before the API server answers",
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "hold": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/control.ashx",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/control.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "lost"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "binary": "bG9zdCB0b28="
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "release": true
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "kept"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "kept"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "close": 4001,
+      "reason": "bye"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "close": 4001,
+       "reason": "bye"
+      },
+      {
+       "socket": "b",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "closes and failures",
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "greet": "hi"
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b1",
+      "path": "/agent.ashx"
+     },
+     "events": [
+      {
+       "socket": "b1",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/agent.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      },
+      {
+       "socket": "b1",
+       "binary": "aGk="
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "close": 1011,
+      "reason": "agent error"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "close": 1011,
+       "reason": "agent error"
+      },
+      {
+       "socket": "b1",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b1",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b1",
+      "text": "too late"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b2",
+      "path": "/meshrelay.ashx?id=x"
+     },
+     "events": [
+      {
+       "socket": "b2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u2",
+       "open": "/meshrelay.ashx?id=x",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      },
+      {
+       "socket": "b2",
+       "binary": "aGk="
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u2",
+      "drop": true
+     },
+     "events": [
+      {
+       "upstream": "u2",
+       "close": 1006,
+       "reason": ""
+      },
+      {
+       "socket": "b2",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b2",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b3",
+      "path": "/agent.ashx"
+     },
+     "events": [
+      {
+       "socket": "b3",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u3",
+       "open": "/agent.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      },
+      {
+       "socket": "b3",
+       "binary": "aGk="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b3",
+      "drop": true
+     },
+     "events": [
+      {
+       "socket": "b3",
+       "end": true
+      },
+      {
+       "upstream": "u3",
+       "close": 1005,
+       "reason": ""
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b4",
+      "path": "/control.ashx",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "b4",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u4",
+       "open": "/control.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      },
+      {
+       "socket": "b4",
+       "binary": "aGk="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b4",
+      "close": 4000
+     },
+     "events": [
+      {
+       "socket": "b4",
+       "close": 4000,
+       "reason": ""
+      },
+      {
+       "socket": "b4",
+       "end": true
+      },
+      {
+       "upstream": "u4",
+       "close": 1005,
+       "reason": ""
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b5",
+      "path": "/agent.ashx"
+     },
+     "events": [
+      {
+       "socket": "b5",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u5",
+       "open": "/agent.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      },
+      {
+       "socket": "b5",
+       "binary": "aGk="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b5",
+      "bytes": "IsMoIg=="
+     },
+     "events": [
+      {
+       "socket": "b5",
+       "close": 1007,
+       "reason": ""
+      },
+      {
+       "socket": "b5",
+       "end": true
+      },
+      {
+       "upstream": "u5",
+       "close": 1005,
+       "reason": ""
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b6",
+      "path": "/agent.ashx"
+     },
+     "events": [
+      {
+       "socket": "b6",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u6",
+       "open": "/agent.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      },
+      {
+       "socket": "b6",
+       "binary": "aGk="
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u6",
+      "bytes": "IsMoIg=="
+     },
+     "events": [
+      {
+       "socket": "b6",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "upstream": "u6",
+       "close": 1007,
+       "reason": ""
+      },
+      {
+       "socket": "b6",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b6",
+      "text": "after the error"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "plan": {
+       "refuse": 401
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b7",
+      "path": "/control.ashx",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "b7",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u7",
+       "open": "/control.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      },
+      {
+       "socket": "b7",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b7",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "plan": {
+       "refuse": 400
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b8",
+      "path": "/meshrelay.ashx"
+     },
+     "events": [
+      {
+       "socket": "b8",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u8",
+       "open": "/meshrelay.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      },
+      {
+       "socket": "b8",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b8",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "plan": {
+       "hold": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b9",
+      "path": "/agent.ashx"
+     },
+     "events": [
+      {
+       "socket": "b9",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u9",
+       "open": "/agent.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b9",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "b9",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b9",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "release": true
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b10",
+      "path": "/agent.ashx"
+     },
+     "events": [
+      {
+       "socket": "b10",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u10",
+       "open": "/agent.ashx",
+       "protocol": "<none>",
+       "forwarded": "127.0.0.1"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b10",
+      "bytes": "IsMoIg=="
+     },
+     "events": [
+      {
+       "socket": "b10",
+       "close": 1007,
+       "reason": ""
+      },
+      {
+       "socket": "b10",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "release": true
+     },
+     "events": []
+    }
+   ]
+  }
+ ]
+}

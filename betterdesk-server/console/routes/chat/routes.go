@@ -1,6 +1,8 @@
-// Package chat holds the HTTP routes of the console's chat: uploading a
-// file that a message links to, downloading it, and searching messages.
-// The chat itself runs over a websocket and is not part of this package.
+// Package chat holds the console's chat: the HTTP routes (uploading a
+// file that a message links to, downloading it, searching messages) and
+// the relay, the websockets of devices and operators (relay.go). The
+// messages, contacts, groups and read marks are kept by the API server;
+// both reach them through api.go.
 //
 // Files are kept in <console folder>/data/chat-files as
 // <32 hex digits><extension>, where the extension is the first ten

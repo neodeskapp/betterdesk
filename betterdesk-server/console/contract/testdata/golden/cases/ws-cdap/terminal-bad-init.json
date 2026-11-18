@@ -1,0 +1,57 @@
+{
+ "id": "ws-cdap/terminal-bad-init",
+ "request": {
+  "method": "GET",
+  "path": "/api/cdap/devices/900100001/terminal",
+  "notes": [
+   "websocket t2, own origin",
+   "websocket protocols cdap-terminal",
+   "websocket send text \"not json\"",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": [],
+     "protocol": "cdap-terminal"
+    }
+   }
+  }
+ ]
+}

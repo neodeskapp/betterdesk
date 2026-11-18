@@ -1,0 +1,72 @@
+{
+ "id": "ws-chat/operator-sees-second-agent",
+ "request": {
+  "method": "GET",
+  "path": "/ws/chat-operator/900100001",
+  "notes": [
+   "websocket op, own origin",
+   "websocket expect 2 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer",
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "agent_connected": true,
+        "type": "status"
+       },
+       "order": "type agent_connected"
+      },
+      {
+       "json": {
+        "device_id": "900100001",
+        "online": true,
+        "type": "presence"
+       },
+       "order": "type device_id online"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

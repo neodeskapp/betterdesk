@@ -1,0 +1,126 @@
+{
+ "id": "ws-chat/agent-gets-typing",
+ "request": {
+  "method": "GET",
+  "path": "/ws/chat/900100001?token=%7Bsecret%3Adevice_token%7D",
+  "notes": [
+   "no cookies",
+   "websocket agent, no Origin",
+   "websocket expect 1 messages",
+   "websocket keep only type=typing"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "from": "operator",
+        "operator": "e2e_viewer",
+        "type": "typing"
+       },
+       "order": "type from operator conversation_id"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "from": "operator",
+        "operator": "e2e_operator",
+        "type": "typing"
+       },
+       "order": "type from operator conversation_id"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "from": "operator",
+        "operator": "e2e_global_admin",
+        "type": "typing"
+       },
+       "order": "type from operator conversation_id"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "from": "operator",
+        "operator": "e2e_super_admin",
+        "type": "typing"
+       },
+       "order": "type from operator conversation_id"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "conversation_id": "900100001",
+        "from": "operator",
+        "operator": "e2e_admin",
+        "type": "typing"
+       },
+       "order": "type from operator conversation_id"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

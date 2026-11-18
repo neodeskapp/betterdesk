@@ -45,7 +45,9 @@ func TestUpgradeGoesToTheGoSocketOrToNode(t *testing.T) {
 		t.Errorf("Node socket answered %+v", c.Frames())
 	}
 	c.Close(1000)
-	for path, want := range map[string]string{"/ws/device-status": "go", "/ws/bd-signal": "go", "/ws/echo": "node", "/ws/chat/1": "node"} {
+	for path, want := range map[string]string{"/ws/device-status": "go", "/ws/bd-signal": "go", "/ws/echo": "node", "/ws/chat/1": "go",
+		"/ws/chat-operator/panel": "go", "/api/cdap/devices/1/terminal": "go", "/api/cdap/devices/1/audio": "go", "/control.ashx": "go",
+		"/api/cdap/devices/1/other": "node", "/api/cdap/devices/./terminal": "node", "/ws/chat/a/b": "node"} {
 		res := w.agent().get("/__bd/routing?method=GET&upgrade=websocket&path=" + url.QueryEscape(path))
 		if res.json(t)["handler"] != want {
 			t.Errorf("routing report for an upgrade to %s: %s", path, res.body)

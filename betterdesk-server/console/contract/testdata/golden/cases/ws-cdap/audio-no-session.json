@@ -1,0 +1,32 @@
+{
+ "id": "ws-cdap/audio-no-session",
+ "request": {
+  "method": "GET",
+  "path": "/api/cdap/devices/900100001/audio",
+  "notes": [
+   "no session cookie",
+   "websocket a_nosession, own origin",
+   "websocket protocols cdap-audio"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro",
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

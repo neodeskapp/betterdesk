@@ -1,0 +1,39 @@
+{
+ "id": "ws-chat/agent-typing-and-presence",
+ "request": {
+  "method": "GET",
+  "path": "/ws/chat/900100001?token=%7Bsecret%3Adevice_token%7D",
+  "notes": [
+   "no cookies",
+   "websocket agent, no Origin",
+   "websocket send {\"conversation_id\":\"900100001\",\"type\":\"typing\"}",
+   "websocket send {\"online\":false,\"status\":\"busy\",\"type\":\"presence_update\"}",
+   "websocket send {\"public_key\":\"contract-key\",\"type\":\"key_exchange\"}",
+   "websocket send {\"file_id\":\"contract-file\",\"file_size\":12,\"type\":\"file_share\"}",
+   "websocket keep only type=typing"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro",
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": []
+    }
+   }
+  }
+ ]
+}

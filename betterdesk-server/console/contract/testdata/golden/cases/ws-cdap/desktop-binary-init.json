@@ -1,0 +1,65 @@
+{
+ "id": "ws-cdap/desktop-binary-init",
+ "request": {
+  "method": "GET",
+  "path": "/api/cdap/devices/900100001/desktop",
+  "notes": [
+   "websocket d2, own origin",
+   "websocket protocols cdap-desktop",
+   "websocket send 26 binary bytes",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "error": "Failed to start desktop: device 900100001 not connected",
+        "type": "error"
+       },
+       "order": "error type"
+      }
+     ],
+     "protocol": "cdap-desktop"
+    }
+   }
+  }
+ ]
+}

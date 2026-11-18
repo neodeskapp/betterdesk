@@ -1,0 +1,30 @@
+{
+ "id": "ws-mesh/control-foreign-origin",
+ "request": {
+  "method": "GET",
+  "path": "/control.ashx",
+  "notes": [
+   "websocket c_foreign, Origin https://evil.example"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro",
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

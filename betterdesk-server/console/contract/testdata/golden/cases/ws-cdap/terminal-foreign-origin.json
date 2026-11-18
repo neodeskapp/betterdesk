@@ -1,0 +1,31 @@
+{
+ "id": "ws-cdap/terminal-foreign-origin",
+ "request": {
+  "method": "GET",
+  "path": "/api/cdap/devices/900100001/terminal",
+  "notes": [
+   "websocket t_foreign, Origin https://evil.example",
+   "websocket protocols cdap-terminal"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro",
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

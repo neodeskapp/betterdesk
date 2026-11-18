@@ -63,11 +63,7 @@ describe('wsUpgradeRouter', () => {
         };
 
         const { initWsProxy } = require('../services/wsRelay');
-        const { initChatRelay } = require('../services/chatRelay');
         const { initRemoteRelay } = require('../services/remoteRelay');
-        const { initCdapTerminalProxy } = require('../services/cdapTerminalProxy');
-        const { initCdapMediaProxies } = require('../services/cdapMediaProxy');
-        const { initMeshAshxProxy } = require('../services/meshAshxProxy');
         const { registerUpgradeHandler, registeredRouteCount } = require('../services/wsUpgradeRouter');
 
         const server = http.createServer((req, res) => {
@@ -76,17 +72,13 @@ describe('wsUpgradeRouter', () => {
         });
 
         initWsProxy(server, sessionStub);
-        initChatRelay(server, sessionStub, null);
         initRemoteRelay(server, sessionStub);
-        initCdapTerminalProxy(server, sessionStub);
-        initCdapMediaProxies(server, sessionStub);
-        initMeshAshxProxy(server, sessionStub);
         registerUpgradeHandler(server, (pathname) => pathname === '/ws/other', () => {});
 
-        // 1 wsRelay + 1 chat + 1 remote + 1 cdap terminal + 4 cdap media
-        // + 1 mesh + 1 more = 10 routes, 1 listener (the agent relay and the
-        // status push are in the Go console)
+        // 1 wsRelay + 1 remote + 1 more = 3 routes, 1 listener (the agent
+        // relay, the status push, the chat relay and the CDAP and
+        // MeshCentral proxies are in the Go console)
         expect(server.listenerCount('upgrade')).toBe(1);
-        expect(registeredRouteCount(server)).toBe(10);
+        expect(registeredRouteCount(server)).toBe(3);
     });
 });

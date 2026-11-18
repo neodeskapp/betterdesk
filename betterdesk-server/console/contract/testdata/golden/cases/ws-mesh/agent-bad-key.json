@@ -1,0 +1,39 @@
+{
+ "id": "ws-mesh/agent-bad-key",
+ "request": {
+  "method": "GET",
+  "path": "/agent.ashx",
+  "notes": [
+   "header Sec-WebSocket-Key: short",
+   "no cookies",
+   "websocket a_key, no Origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro",
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 400,
+   "headers": {
+    "content-type": "text/html"
+   },
+   "body": {
+    "kind": "bytes",
+    "type": "text/html",
+    "length": 43,
+    "sha256": "7e8cd58042e512bc9dbe9aa3e80a2a816cfac7f4777ca273fda5650f161410d0",
+    "head": "Missing or invalid Sec-WebSocket-Key header"
+   }
+  }
+ ]
+}

@@ -1,0 +1,68 @@
+{
+ "id": "ws-cdap/terminal-init",
+ "request": {
+  "method": "GET",
+  "path": "/api/cdap/devices/900100001/terminal",
+  "notes": [
+   "websocket t, own origin",
+   "websocket send {\"cols\":80,\"rows\":24}",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "binary": {
+        "length": 83,
+        "sha256": "93b62279298fbb91e42f90c6aeae9ed824d25d20573eb682d5703019db2e2c75"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,265 @@
+package chat
+
+import (
+	"bytes"
+	"context"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/ws"
+	"github.com/unitronix/betterdesk-server/console/ws/wstest"
+)
+
+// relayRecording is what testdata/nodeoracle/relay.js wrote.
+type relayRecording struct {
+	Scenarios []struct {
+		Name    string                     `json:"name"`
+		Clock   int64                      `json:"clock"`
+		Answers map[string]json.RawMessage `json:"answers"`
+		Crash   bool                       `json:"crash"`
+		Steps   []wstest.Step              `json:"steps"`
+	} `json:"scenarios"`
+}
+
+type relayStep struct {
+	Answers map[string]json.RawMessage `json:"answers"`
+	Open    string                     `json:"open"`
+	Path    string                     `json:"path"`
+	Method  string                     `json:"method"`
+	Headers map[string]string          `json:"headers"`
+	Send    string                     `json:"send"`
+	Text    *string                    `json:"text"`
+	Texts   []string                   `json:"texts"`
+	Binary  *string                    `json:"binary"`
+	Bytes   *string                    `json:"bytes"`
+	Repeat  int                        `json:"repeat"`
+	Opcode  byte                       `json:"opcode"`
+	Close   *int                       `json:"close"`
+	Drop    bool                       `json:"drop"`
+	Advance int64                      `json:"advance"`
+}
+
+// apiAnswer is one answer of the made-up API server.
+type apiAnswer struct {
+	Status int    `json:"status"`
+	Body   string `json:"body"`
+}
+
+// fakeChatAPI is the oracle's API server: the scenario's answers by
+// "METHOD path" (a list is used up in order, its last answer stays), 500
+// for anything else, and every call noted.
+type fakeChatAPI struct {
+	mu      sync.Mutex
+	answers map[string][]apiAnswer
+	note    func(wstest.Event)
+}
+
+func (f *fakeChatAPI) set(t *testing.T, raw map[string]json.RawMessage) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	for key, r := range raw {
+		var list []apiAnswer
+		if bytes.HasPrefix(bytes.TrimSpace(r), []byte("[")) {
+			if err := json.Unmarshal(r, &list); err != nil {
+				t.Fatal(err)
+			}
+		} else {
+			var one apiAnswer
+			if err := json.Unmarshal(r, &one); err != nil {
+				t.Fatal(err)
+			}
+			list = []apiAnswer{one}
+		}
+		f.answers[key] = list
+	}
+}
+
+func (f *fakeChatAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.RequestURI, "/api")
+	call := map[string]any{"method": r.Method, "path": path}
+	if r.Method != http.MethodGet {
+		body, _ := io.ReadAll(r.Body)
+		call["body"] = string(body)
+	}
+	f.note(wstest.Event{"api": call})
+	f.mu.Lock()
+	answer := apiAnswer{Status: 500, Body: `{"error":"internal"}`}
+	if list := f.answers[r.Method+" "+path]; len(list) > 0 {
+		answer = list[0]
+		if len(list) > 1 {
+			f.answers[r.Method+" "+path] = list[1:]
+		}
+	}
+	f.mu.Unlock()
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(answer.Status)
+	_, _ = io.WriteString(w, answer.Body)
+}
+
+// oracleChat are the roles with chat.access in the oracle.
+var oracleChat = map[string]bool{"admin": true, "super_admin": true, "operator": true}
+
+// TestNodeScenarios plays every scenario the Node oracle recorded
+// (testdata/node_relay.json) on the Go relay with the same clock and the
+// same answers of the API server, and compares each step: what every
+// socket saw (the answer to its handshake, each message, the close, the
+// end), every call to the API server (path and body), every token check
+// and permission lookup. Where Node's process ended ({crash}), the socket
+// that sent the message ends without an answer and nothing else ends
+// (DECISIONS A19).
+func TestNodeScenarios(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("testdata", "node_relay.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var rec relayRecording
+	if err := json.Unmarshal(raw, &rec); err != nil {
+		t.Fatal(err)
+	}
+	for _, sc := range rec.Scenarios {
+		t.Run(sc.Name, func(t *testing.T) {
+			check := wstest.Goroutines(t)
+			p := wstest.NewPlayer(t, "")
+			note := p.Note
+			api := &fakeChatAPI{answers: map[string][]apiAnswer{}, note: note}
+			api.set(t, sc.Answers)
+			var clockMu sync.Mutex
+			clock := sc.Clock
+			now := func() time.Time {
+				clockMu.Lock()
+				defer clockMu.Unlock()
+				return time.UnixMilli(clock)
+			}
+			relay := NewRelay(RelayOptions{
+				API: goapi.New(api, goapi.WithTimeout(5*time.Second)),
+				VerifyDevice: func(_ context.Context, deviceID, token string) (bool, error) {
+					note(wstest.Event{"verify": []any{deviceID, token}})
+					if token == "tok-throw" {
+						return false, errors.New("database down")
+					}
+					return token == "tok-"+deviceID+"-good", nil
+				},
+				Now: now,
+			})
+			reg := ws.New(ws.Options{
+				Session: wstest.OracleSession,
+				Permission: func(_ context.Context, role, permission string) (bool, error) {
+					note(wstest.Event{"permission": []any{role, permission}})
+					if role == "throw" {
+						return false, errors.New("lookup failed")
+					}
+					return permission == "chat.access" && oracleChat[role], nil
+				},
+			})
+			relay.Register(reg)
+			srv := httptest.NewServer(reg)
+			p.SetAddr(strings.TrimPrefix(srv.URL, "http://"))
+			for i, s := range sc.Steps {
+				var st relayStep
+				if err := json.Unmarshal(s.Step, &st); err != nil {
+					t.Fatal(err)
+				}
+				if st.Answers != nil {
+					api.set(t, st.Answers)
+				}
+				if st.Open != "" {
+					p.Open(st.Open, st.Method, st.Path, st.Headers)
+				}
+				if st.Send != "" {
+					sendStep(p, st)
+				}
+				if st.Advance > 0 {
+					clockMu.Lock()
+					clock += st.Advance
+					clockMu.Unlock()
+				}
+				if len(st.Texts) > 0 {
+					p.Quiet(50)
+				} else {
+					p.Quiet(10)
+				}
+				got := p.Take()
+				node := wstest.RecordedEvents(t, s.Events)
+				if sc.Crash && hasCrash(node) {
+					checkDropped(t, i, st.Send, got)
+					continue
+				}
+				if diffs := wstest.SameStreams(node, got); diffs != nil {
+					t.Errorf("step %d %s:\n%s", i, s.Step, strings.Join(diffs, "\n"))
+				}
+			}
+			p.CloseAll()
+			srv.Close()
+			reg.Close()
+			check()
+		})
+	}
+}
+
+func sendStep(p *wstest.Player, st relayStep) {
+	switch {
+	case st.Text != nil:
+		p.Write(st.Send, 1, []byte(*st.Text))
+	case len(st.Texts) > 0:
+		for _, text := range st.Texts {
+			p.Write(st.Send, 1, []byte(text))
+		}
+	case st.Binary != nil:
+		b, _ := base64.StdEncoding.DecodeString(*st.Binary)
+		p.Write(st.Send, 2, b)
+	case st.Bytes != nil:
+		b, _ := base64.StdEncoding.DecodeString(*st.Bytes)
+		p.Write(st.Send, 1, b)
+	case st.Repeat > 0:
+		op := st.Opcode
+		if op == 0 {
+			op = 1
+		}
+		p.Write(st.Send, op, bytes.Repeat([]byte{'x'}, st.Repeat))
+	case st.Close != nil:
+		p.Write(st.Send, 8, []byte{byte(*st.Close >> 8), byte(*st.Close)})
+	case st.Drop:
+		p.Drop(st.Send)
+	}
+}
+
+func hasCrash(events []wstest.Event) bool {
+	for _, e := range events {
+		if _, ok := e["crash"]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+// checkDropped checks a step whose message ended Node's process: the
+// sender's connection ended without a close frame or any message, and no
+// other socket ended.
+func checkDropped(t *testing.T, step int, sender string, got []wstest.Event) {
+	t.Helper()
+	ended := false
+	for _, e := range got {
+		switch {
+		case e["socket"] == sender && e["end"] == true:
+			ended = true
+		case e["socket"] == sender:
+			t.Errorf("step %d: the sender got %v", step, e)
+		case e["end"] == true:
+			t.Errorf("step %d: another socket ended: %v", step, e)
+		}
+	}
+	if !ended {
+		t.Errorf("step %d: the connection of %s did not end", step, sender)
+	}
+}

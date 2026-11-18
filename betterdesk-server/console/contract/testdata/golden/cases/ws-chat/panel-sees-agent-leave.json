@@ -1,0 +1,94 @@
+{
+ "id": "ws-chat/panel-sees-agent-leave",
+ "request": {
+  "method": "GET",
+  "path": "/ws/chat-operator/panel",
+  "notes": [
+   "websocket panel, own origin",
+   "websocket expect 4 messages",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer",
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "agent_connected": true,
+        "device_id": "900100001",
+        "type": "status"
+       },
+       "order": "type device_id agent_connected"
+      },
+      {
+       "json": {
+        "device_id": "900100001",
+        "online": true,
+        "type": "presence"
+       },
+       "order": "type device_id online"
+      },
+      {
+       "json": {
+        "agent_connected": false,
+        "device_id": "900100001",
+        "type": "status"
+       },
+       "order": "type device_id agent_connected"
+      },
+      {
+       "json": {
+        "device_id": "900100001",
+        "online": false,
+        "type": "presence"
+       },
+       "order": "type device_id online"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

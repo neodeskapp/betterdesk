@@ -1,0 +1,57 @@
+{
+ "id": "ws-cdap/video-bad-init",
+ "request": {
+  "method": "GET",
+  "path": "/api/cdap/devices/900100001/video",
+  "notes": [
+   "websocket v2, own origin",
+   "websocket protocols cdap-video",
+   "websocket send text \"[1\"",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "operator",
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1005,
+      "reason": ""
+     },
+     "messages": [],
+     "protocol": "cdap-video"
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,3683 @@
+{
+ "scenarios": [
+  {
+   "name": "checks",
+   "crash": false,
+   "steps": [
+    {
+     "step": {
+      "plan": {}
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "terminal-none",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-terminal"
+      }
+     },
+     "events": [
+      {
+       "socket": "terminal-none",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "terminal-none",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "terminal-zero",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-terminal",
+       "X-Oracle-Session": "{\"userId\":0,\"user\":{\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "terminal-zero",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "terminal-zero",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "terminal-foreign",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-terminal",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}",
+       "Origin": "https://evil.example"
+      }
+     },
+     "events": [
+      {
+       "socket": "terminal-foreign",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "terminal-foreign",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "terminal-cookie",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-terminal",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}",
+       "Cookie": "bd.sid=x"
+      }
+     },
+     "events": [
+      {
+       "socket": "terminal-cookie",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "terminal-cookie",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "terminal-viewer",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-terminal",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "viewer",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "terminal-viewer",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "terminal-viewer",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "terminal-operator",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-terminal",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"op\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "operator",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "terminal-operator",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "terminal-operator",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "terminal-throw",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-terminal",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"throw\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "throw",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "terminal-throw",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "terminal-throw",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "terminal-global",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-terminal",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"ga\",\"role\":\"global_admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "global_admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "terminal-global",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-terminal\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/api/cdap/devices/CDAP-1/terminal",
+       "protocol": "cdap-terminal",
+       "user": "ga",
+       "role": "global_admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "terminal-flat",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-terminal",
+       "X-Oracle-Session": "{\"userId\":9,\"role\":\"admin\",\"username\":\"flat\"}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "terminal-flat",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-terminal\r\n\r\n"
+      },
+      {
+       "upstream": "u2",
+       "open": "/api/cdap/devices/CDAP-1/terminal",
+       "protocol": "cdap-terminal",
+       "user": "flat",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "terminal-key",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-terminal",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}",
+       "Sec-WebSocket-Key": "short"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "terminal-key",
+       "head": "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 43\r\n\r\n"
+      },
+      {
+       "socket": "terminal-key",
+       "body": "Missing or invalid Sec-WebSocket-Key header"
+      },
+      {
+       "socket": "terminal-key",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "terminal-nokey-viewer",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-terminal",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}",
+       "Sec-WebSocket-Key": "short"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "viewer",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "terminal-nokey-viewer",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "terminal-nokey-viewer",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "desktop-none",
+      "path": "/api/cdap/devices/CDAP-1/desktop",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-desktop"
+      }
+     },
+     "events": [
+      {
+       "socket": "desktop-none",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "desktop-none",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "desktop-zero",
+      "path": "/api/cdap/devices/CDAP-1/desktop",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-desktop",
+       "X-Oracle-Session": "{\"userId\":0,\"user\":{\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "desktop-zero",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "desktop-zero",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "desktop-foreign",
+      "path": "/api/cdap/devices/CDAP-1/desktop",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-desktop",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}",
+       "Origin": "https://evil.example"
+      }
+     },
+     "events": [
+      {
+       "socket": "desktop-foreign",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "desktop-foreign",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "desktop-cookie",
+      "path": "/api/cdap/devices/CDAP-1/desktop",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-desktop",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}",
+       "Cookie": "bd.sid=x"
+      }
+     },
+     "events": [
+      {
+       "socket": "desktop-cookie",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "desktop-cookie",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "desktop-viewer",
+      "path": "/api/cdap/devices/CDAP-1/desktop",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-desktop",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "viewer",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "desktop-viewer",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "desktop-viewer",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "desktop-operator",
+      "path": "/api/cdap/devices/CDAP-1/desktop",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-desktop",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"op\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "operator",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "desktop-operator",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "desktop-operator",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "desktop-throw",
+      "path": "/api/cdap/devices/CDAP-1/desktop",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-desktop",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"throw\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "throw",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "desktop-throw",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "desktop-throw",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "desktop-global",
+      "path": "/api/cdap/devices/CDAP-1/desktop",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-desktop",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"ga\",\"role\":\"global_admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "global_admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "desktop-global",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-desktop\r\n\r\n"
+      },
+      {
+       "upstream": "u3",
+       "open": "/api/cdap/devices/CDAP-1/desktop",
+       "protocol": "cdap-desktop",
+       "user": "ga",
+       "role": "global_admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "desktop-flat",
+      "path": "/api/cdap/devices/CDAP-1/desktop",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-desktop",
+       "X-Oracle-Session": "{\"userId\":9,\"role\":\"admin\",\"username\":\"flat\"}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "desktop-flat",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-desktop\r\n\r\n"
+      },
+      {
+       "upstream": "u4",
+       "open": "/api/cdap/devices/CDAP-1/desktop",
+       "protocol": "cdap-desktop",
+       "user": "flat",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "desktop-key",
+      "path": "/api/cdap/devices/CDAP-1/desktop",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-desktop",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}",
+       "Sec-WebSocket-Key": "short"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "desktop-key",
+       "head": "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 43\r\n\r\n"
+      },
+      {
+       "socket": "desktop-key",
+       "body": "Missing or invalid Sec-WebSocket-Key header"
+      },
+      {
+       "socket": "desktop-key",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "desktop-nokey-viewer",
+      "path": "/api/cdap/devices/CDAP-1/desktop",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-desktop",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}",
+       "Sec-WebSocket-Key": "short"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "viewer",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "desktop-nokey-viewer",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "desktop-nokey-viewer",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "video-none",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-video"
+      }
+     },
+     "events": [
+      {
+       "socket": "video-none",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "video-none",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "video-zero",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-video",
+       "X-Oracle-Session": "{\"userId\":0,\"user\":{\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "video-zero",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "video-zero",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "video-foreign",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-video",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}",
+       "Origin": "https://evil.example"
+      }
+     },
+     "events": [
+      {
+       "socket": "video-foreign",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "video-foreign",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "video-cookie",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-video",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}",
+       "Cookie": "bd.sid=x"
+      }
+     },
+     "events": [
+      {
+       "socket": "video-cookie",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "video-cookie",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "video-viewer",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-video",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "viewer",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "video-viewer",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "video-viewer",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "video-operator",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-video",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"op\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "operator",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "video-operator",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-video\r\n\r\n"
+      },
+      {
+       "upstream": "u5",
+       "open": "/api/cdap/devices/CDAP-1/video",
+       "protocol": "cdap-video",
+       "user": "op",
+       "role": "operator"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "video-throw",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-video",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"throw\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "throw",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "video-throw",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "video-throw",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "video-global",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-video",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"ga\",\"role\":\"global_admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "global_admin",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "video-global",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-video\r\n\r\n"
+      },
+      {
+       "upstream": "u6",
+       "open": "/api/cdap/devices/CDAP-1/video",
+       "protocol": "cdap-video",
+       "user": "ga",
+       "role": "global_admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "video-flat",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-video",
+       "X-Oracle-Session": "{\"userId\":9,\"role\":\"admin\",\"username\":\"flat\"}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "video-flat",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-video\r\n\r\n"
+      },
+      {
+       "upstream": "u7",
+       "open": "/api/cdap/devices/CDAP-1/video",
+       "protocol": "cdap-video",
+       "user": "flat",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "video-key",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-video",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}",
+       "Sec-WebSocket-Key": "short"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "video-key",
+       "head": "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 43\r\n\r\n"
+      },
+      {
+       "socket": "video-key",
+       "body": "Missing or invalid Sec-WebSocket-Key header"
+      },
+      {
+       "socket": "video-key",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "video-nokey-viewer",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-video",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}",
+       "Sec-WebSocket-Key": "short"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "viewer",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "video-nokey-viewer",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "video-nokey-viewer",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "files-none",
+      "path": "/api/cdap/devices/CDAP-1/files",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-filebrowser"
+      }
+     },
+     "events": [
+      {
+       "socket": "files-none",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "files-none",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "files-zero",
+      "path": "/api/cdap/devices/CDAP-1/files",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-filebrowser",
+       "X-Oracle-Session": "{\"userId\":0,\"user\":{\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "files-zero",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "files-zero",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "files-foreign",
+      "path": "/api/cdap/devices/CDAP-1/files",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-filebrowser",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}",
+       "Origin": "https://evil.example"
+      }
+     },
+     "events": [
+      {
+       "socket": "files-foreign",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "files-foreign",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "files-cookie",
+      "path": "/api/cdap/devices/CDAP-1/files",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-filebrowser",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}",
+       "Cookie": "bd.sid=x"
+      }
+     },
+     "events": [
+      {
+       "socket": "files-cookie",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "files-cookie",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "files-viewer",
+      "path": "/api/cdap/devices/CDAP-1/files",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-filebrowser",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "viewer",
+        "cdap.files"
+       ]
+      },
+      {
+       "socket": "files-viewer",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "files-viewer",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "files-operator",
+      "path": "/api/cdap/devices/CDAP-1/files",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-filebrowser",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"op\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "operator",
+        "cdap.files"
+       ]
+      },
+      {
+       "socket": "files-operator",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "files-operator",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "files-throw",
+      "path": "/api/cdap/devices/CDAP-1/files",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-filebrowser",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"throw\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "throw",
+        "cdap.files"
+       ]
+      },
+      {
+       "socket": "files-throw",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "files-throw",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "files-global",
+      "path": "/api/cdap/devices/CDAP-1/files",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-filebrowser",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"ga\",\"role\":\"global_admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "global_admin",
+        "cdap.files"
+       ]
+      },
+      {
+       "socket": "files-global",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-filebrowser\r\n\r\n"
+      },
+      {
+       "upstream": "u8",
+       "open": "/api/cdap/devices/CDAP-1/files",
+       "protocol": "cdap-filebrowser",
+       "user": "ga",
+       "role": "global_admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "files-flat",
+      "path": "/api/cdap/devices/CDAP-1/files",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-filebrowser",
+       "X-Oracle-Session": "{\"userId\":9,\"role\":\"admin\",\"username\":\"flat\"}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.files"
+       ]
+      },
+      {
+       "socket": "files-flat",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-filebrowser\r\n\r\n"
+      },
+      {
+       "upstream": "u9",
+       "open": "/api/cdap/devices/CDAP-1/files",
+       "protocol": "cdap-filebrowser",
+       "user": "flat",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "files-key",
+      "path": "/api/cdap/devices/CDAP-1/files",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-filebrowser",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}",
+       "Sec-WebSocket-Key": "short"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.files"
+       ]
+      },
+      {
+       "socket": "files-key",
+       "head": "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 43\r\n\r\n"
+      },
+      {
+       "socket": "files-key",
+       "body": "Missing or invalid Sec-WebSocket-Key header"
+      },
+      {
+       "socket": "files-key",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "files-nokey-viewer",
+      "path": "/api/cdap/devices/CDAP-1/files",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-filebrowser",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}",
+       "Sec-WebSocket-Key": "short"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "viewer",
+        "cdap.files"
+       ]
+      },
+      {
+       "socket": "files-nokey-viewer",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "files-nokey-viewer",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "audio-none",
+      "path": "/api/cdap/devices/CDAP-1/audio",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-audio"
+      }
+     },
+     "events": [
+      {
+       "socket": "audio-none",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "audio-none",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "audio-zero",
+      "path": "/api/cdap/devices/CDAP-1/audio",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-audio",
+       "X-Oracle-Session": "{\"userId\":0,\"user\":{\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "audio-zero",
+       "head": "HTTP/1.1 401 Unauthorized\r\n\r\n"
+      },
+      {
+       "socket": "audio-zero",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "audio-foreign",
+      "path": "/api/cdap/devices/CDAP-1/audio",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-audio",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}",
+       "Origin": "https://evil.example"
+      }
+     },
+     "events": [
+      {
+       "socket": "audio-foreign",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "audio-foreign",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "audio-cookie",
+      "path": "/api/cdap/devices/CDAP-1/audio",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-audio",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}",
+       "Cookie": "bd.sid=x"
+      }
+     },
+     "events": [
+      {
+       "socket": "audio-cookie",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "audio-cookie",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "audio-viewer",
+      "path": "/api/cdap/devices/CDAP-1/audio",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-audio",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "viewer",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "audio-viewer",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "audio-viewer",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "audio-operator",
+      "path": "/api/cdap/devices/CDAP-1/audio",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-audio",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"op\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "operator",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "audio-operator",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-audio\r\n\r\n"
+      },
+      {
+       "upstream": "u10",
+       "open": "/api/cdap/devices/CDAP-1/audio",
+       "protocol": "cdap-audio",
+       "user": "op",
+       "role": "operator"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "audio-throw",
+      "path": "/api/cdap/devices/CDAP-1/audio",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-audio",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"throw\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "throw",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "audio-throw",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "audio-throw",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "audio-global",
+      "path": "/api/cdap/devices/CDAP-1/audio",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-audio",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"ga\",\"role\":\"global_admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "global_admin",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "audio-global",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-audio\r\n\r\n"
+      },
+      {
+       "upstream": "u11",
+       "open": "/api/cdap/devices/CDAP-1/audio",
+       "protocol": "cdap-audio",
+       "user": "ga",
+       "role": "global_admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "audio-flat",
+      "path": "/api/cdap/devices/CDAP-1/audio",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-audio",
+       "X-Oracle-Session": "{\"userId\":9,\"role\":\"admin\",\"username\":\"flat\"}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "audio-flat",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-audio\r\n\r\n"
+      },
+      {
+       "upstream": "u12",
+       "open": "/api/cdap/devices/CDAP-1/audio",
+       "protocol": "cdap-audio",
+       "user": "flat",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "audio-key",
+      "path": "/api/cdap/devices/CDAP-1/audio",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-audio",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}",
+       "Sec-WebSocket-Key": "short"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "audio-key",
+       "head": "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 43\r\n\r\n"
+      },
+      {
+       "socket": "audio-key",
+       "body": "Missing or invalid Sec-WebSocket-Key header"
+      },
+      {
+       "socket": "audio-key",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "audio-nokey-viewer",
+      "path": "/api/cdap/devices/CDAP-1/audio",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-audio",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"viewer\"}}",
+       "Sec-WebSocket-Key": "short"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "viewer",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "audio-nokey-viewer",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "audio-nokey-viewer",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "ids and names",
+   "crash": false,
+   "steps": [
+    {
+     "step": {
+      "plan": {}
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "a",
+      "path": "/api/cdap/devices/a/terminal",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"x y\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/api/cdap/devices/a/terminal",
+       "protocol": "cdap-terminal",
+       "user": "x y",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/api/cdap/devices/A_b-9A_b-9A_b-9A_b-9A_b-9A_b-9A_b-9A_b-9A_b-9A_b-9A_b-9A_b-9abcd/desktop",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u2",
+       "open": "/api/cdap/devices/A_b-9A_b-9A_b-9A_b-9A_b-9A_b-9A_b-9A_b-9A_b-9A_b-9A_b-9A_b-9abcd/desktop",
+       "protocol": "cdap-desktop",
+       "user": "u",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/api/cdap/devices/Ab9/files",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":4,\"user\":{\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.files"
+       ]
+      },
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u3",
+       "open": "/api/cdap/devices/Ab9/files",
+       "protocol": "cdap-filebrowser",
+       "user": "user#4",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/api/cdap/devices/dev/audio",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":\"12\",\"user\":{\"role\":\"admin\",\"username\":\"\"},\"username\":\"flatname\"}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u4",
+       "open": "/api/cdap/devices/dev/audio",
+       "protocol": "cdap-audio",
+       "user": "flatname",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "f",
+      "path": "/api/cdap/devices/x/terminal?a=1&b",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}",
+       "Sec-WebSocket-Protocol": "one, two"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "f",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: one\r\n\r\n"
+      },
+      {
+       "upstream": "u5",
+       "open": "/api/cdap/devices/x/terminal",
+       "protocol": "cdap-terminal",
+       "user": "u",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "g",
+      "path": "/api/cdap/devices/./x/../t/terminal",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "g",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u6",
+       "open": "/api/cdap/devices/t/terminal",
+       "protocol": "cdap-terminal",
+       "user": "u",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "h",
+      "path": "/api/cdap/devices/h/desktop",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"Jos\\u00e9 \\u00ff\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "h",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u7",
+       "open": "/api/cdap/devices/h/desktop",
+       "protocol": "cdap-desktop",
+       "user": "José ÿ",
+       "role": "admin"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "crash: a user name outside Latin-1",
+   "crash": true,
+   "steps": [
+    {
+     "step": {
+      "plan": {}
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "other",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"fine\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "other",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/api/cdap/devices/CDAP-1/video",
+       "protocol": "cdap-video",
+       "user": "fine",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"Zh\\u4e2d\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "b",
+       "end": true
+      },
+      {
+       "socket": "other",
+       "end": true
+      },
+      {
+       "upstream": "u1",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "crash": "Invalid character in header content [\"X-Username\"]"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "crash: a user name with a control character",
+   "crash": true,
+   "steps": [
+    {
+     "step": {
+      "plan": {}
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "other",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"fine\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "other",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/api/cdap/devices/CDAP-1/video",
+       "protocol": "cdap-video",
+       "user": "fine",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/api/cdap/devices/CDAP-1/files",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"a\\u0001b\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.files"
+       ]
+      },
+      {
+       "socket": "b",
+       "end": true
+      },
+      {
+       "socket": "other",
+       "end": true
+      },
+      {
+       "upstream": "u1",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "crash": "Invalid character in header content [\"X-Username\"]"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "terminal: messages both ways",
+   "crash": false,
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "echo": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-terminal",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"anna\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-terminal\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/api/cdap/devices/CDAP-1/terminal",
+       "protocol": "cdap-terminal",
+       "user": "anna",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "{\"type\":\"init\",\"cols\":80}"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "binary": "eyJ0eXBlIjoiaW5pdCIsImNvbHMiOjgwfQ=="
+      },
+      {
+       "socket": "b",
+       "binary": "eyJ0eXBlIjoiaW5pdCIsImNvbHMiOjgwfQ=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "binary": "AAFiaW5hcnk="
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "binary": "AAFiaW5hcnk="
+      },
+      {
+       "socket": "b",
+       "binary": "AAFiaW5hcnk="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": ""
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "binary": ""
+      },
+      {
+       "socket": "b",
+       "binary": ""
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "text": "{\"type\":\"ready\"}"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "binary": "eyJ0eXBlIjoicmVhZHkifQ=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "binary": "AP8H"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "binary": "AP8H"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "b",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      },
+      {
+       "upstream": "u1",
+       "close": 1005,
+       "reason": ""
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "terminal: messages before the API server answers",
+   "crash": false,
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "hold": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-terminal",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"anna\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-terminal\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/api/cdap/devices/CDAP-1/terminal",
+       "protocol": "cdap-terminal",
+       "user": "anna",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "first"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "binary": "c2Vjb25k"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "third"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "release": true
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "binary": "Zmlyc3Q="
+      },
+      {
+       "upstream": "u1",
+       "binary": "c2Vjb25k"
+      },
+      {
+       "upstream": "u1",
+       "binary": "dGhpcmQ="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "fourth"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "binary": "Zm91cnRo"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "close": 1000
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "desktop: messages both ways",
+   "crash": false,
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "echo": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/api/cdap/devices/CDAP-1/desktop",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-desktop",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"anna\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-desktop\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/api/cdap/devices/CDAP-1/desktop",
+       "protocol": "cdap-desktop",
+       "user": "anna",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "{\"type\":\"init\",\"cols\":80}"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "{\"type\":\"init\",\"cols\":80}"
+      },
+      {
+       "socket": "b",
+       "text": "{\"type\":\"init\",\"cols\":80}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "binary": "AAFiaW5hcnk="
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "binary": "AAFiaW5hcnk="
+      },
+      {
+       "socket": "b",
+       "binary": "AAFiaW5hcnk="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": ""
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": ""
+      },
+      {
+       "socket": "b",
+       "text": ""
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "text": "{\"type\":\"ready\"}"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "text": "{\"type\":\"ready\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "binary": "AP8H"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "binary": "AP8H"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "b",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      },
+      {
+       "upstream": "u1",
+       "close": 1005,
+       "reason": ""
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "desktop: messages before the API server answers",
+   "crash": false,
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "hold": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/api/cdap/devices/CDAP-1/desktop",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-desktop",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"anna\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-desktop\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/api/cdap/devices/CDAP-1/desktop",
+       "protocol": "cdap-desktop",
+       "user": "anna",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "first"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "binary": "c2Vjb25k"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "third"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "release": true
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "first"
+      },
+      {
+       "upstream": "u1",
+       "binary": "c2Vjb25k"
+      },
+      {
+       "upstream": "u1",
+       "text": "third"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "fourth"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "fourth"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "close": 1000
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "video: messages both ways",
+   "crash": false,
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "echo": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-video",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"anna\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-video\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/api/cdap/devices/CDAP-1/video",
+       "protocol": "cdap-video",
+       "user": "anna",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "{\"type\":\"init\",\"cols\":80}"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "{\"type\":\"init\",\"cols\":80}"
+      },
+      {
+       "socket": "b",
+       "text": "{\"type\":\"init\",\"cols\":80}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "binary": "AAFiaW5hcnk="
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "binary": "AAFiaW5hcnk="
+      },
+      {
+       "socket": "b",
+       "binary": "AAFiaW5hcnk="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": ""
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": ""
+      },
+      {
+       "socket": "b",
+       "text": ""
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "text": "{\"type\":\"ready\"}"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "text": "{\"type\":\"ready\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "binary": "AP8H"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "binary": "AP8H"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "b",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      },
+      {
+       "upstream": "u1",
+       "close": 1005,
+       "reason": ""
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "video: messages before the API server answers",
+   "crash": false,
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "hold": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-video",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"anna\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-video\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/api/cdap/devices/CDAP-1/video",
+       "protocol": "cdap-video",
+       "user": "anna",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "first"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "binary": "c2Vjb25k"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "third"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "release": true
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "first"
+      },
+      {
+       "upstream": "u1",
+       "binary": "c2Vjb25k"
+      },
+      {
+       "upstream": "u1",
+       "text": "third"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "fourth"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "fourth"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "close": 1000
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "files: messages both ways",
+   "crash": false,
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "echo": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/api/cdap/devices/CDAP-1/files",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-filebrowser",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"anna\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.files"
+       ]
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-filebrowser\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/api/cdap/devices/CDAP-1/files",
+       "protocol": "cdap-filebrowser",
+       "user": "anna",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "{\"type\":\"init\",\"cols\":80}"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "{\"type\":\"init\",\"cols\":80}"
+      },
+      {
+       "socket": "b",
+       "text": "{\"type\":\"init\",\"cols\":80}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "binary": "AAFiaW5hcnk="
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "binary": "AAFiaW5hcnk="
+      },
+      {
+       "socket": "b",
+       "binary": "AAFiaW5hcnk="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": ""
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": ""
+      },
+      {
+       "socket": "b",
+       "text": ""
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "text": "{\"type\":\"ready\"}"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "text": "{\"type\":\"ready\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "binary": "AP8H"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "binary": "AP8H"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "b",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      },
+      {
+       "upstream": "u1",
+       "close": 1005,
+       "reason": ""
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "files: messages before the API server answers",
+   "crash": false,
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "hold": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/api/cdap/devices/CDAP-1/files",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-filebrowser",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"anna\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.files"
+       ]
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-filebrowser\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/api/cdap/devices/CDAP-1/files",
+       "protocol": "cdap-filebrowser",
+       "user": "anna",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "first"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "binary": "c2Vjb25k"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "third"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "release": true
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "first"
+      },
+      {
+       "upstream": "u1",
+       "binary": "c2Vjb25k"
+      },
+      {
+       "upstream": "u1",
+       "text": "third"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "fourth"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "fourth"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "close": 1000
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "audio: messages both ways",
+   "crash": false,
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "echo": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/api/cdap/devices/CDAP-1/audio",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-audio",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"anna\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-audio\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/api/cdap/devices/CDAP-1/audio",
+       "protocol": "cdap-audio",
+       "user": "anna",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "{\"type\":\"init\",\"cols\":80}"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "{\"type\":\"init\",\"cols\":80}"
+      },
+      {
+       "socket": "b",
+       "text": "{\"type\":\"init\",\"cols\":80}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "binary": "AAFiaW5hcnk="
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "binary": "AAFiaW5hcnk="
+      },
+      {
+       "socket": "b",
+       "binary": "AAFiaW5hcnk="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": ""
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": ""
+      },
+      {
+       "socket": "b",
+       "text": ""
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "text": "{\"type\":\"ready\"}"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "text": "{\"type\":\"ready\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "binary": "AP8H"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "binary": "AP8H"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "b",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      },
+      {
+       "upstream": "u1",
+       "close": 1005,
+       "reason": ""
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "audio: messages before the API server answers",
+   "crash": false,
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "hold": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/api/cdap/devices/CDAP-1/audio",
+      "headers": {
+       "Sec-WebSocket-Protocol": "cdap-audio",
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"anna\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: cdap-audio\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/api/cdap/devices/CDAP-1/audio",
+       "protocol": "cdap-audio",
+       "user": "anna",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "first"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "binary": "c2Vjb25k"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "third"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "release": true
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "first"
+      },
+      {
+       "upstream": "u1",
+       "binary": "c2Vjb25k"
+      },
+      {
+       "upstream": "u1",
+       "text": "third"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "fourth"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "text": "fourth"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "close": 1000
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "closes and failures",
+   "crash": false,
+   "steps": [
+    {
+     "step": {
+      "plan": {
+       "greet": "hello"
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b1",
+      "path": "/api/cdap/devices/CDAP-1/desktop",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "b1",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u1",
+       "open": "/api/cdap/devices/CDAP-1/desktop",
+       "protocol": "cdap-desktop",
+       "user": "u",
+       "role": "admin"
+      },
+      {
+       "socket": "b1",
+       "text": "hello"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u1",
+      "close": 1011,
+      "reason": "desktop start failed"
+     },
+     "events": [
+      {
+       "upstream": "u1",
+       "close": 1011,
+       "reason": "desktop start failed"
+      },
+      {
+       "socket": "b1",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b1",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b1",
+      "text": "too late"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b2",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "b2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u2",
+       "open": "/api/cdap/devices/CDAP-1/terminal",
+       "protocol": "cdap-terminal",
+       "user": "u",
+       "role": "admin"
+      },
+      {
+       "socket": "b2",
+       "binary": "aGVsbG8="
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u2",
+      "drop": true
+     },
+     "events": [
+      {
+       "upstream": "u2",
+       "close": 1006,
+       "reason": ""
+      },
+      {
+       "socket": "b2",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b2",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b3",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "operator",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "b3",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u3",
+       "open": "/api/cdap/devices/CDAP-1/video",
+       "protocol": "cdap-video",
+       "user": "u",
+       "role": "operator"
+      },
+      {
+       "socket": "b3",
+       "text": "hello"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b3",
+      "drop": true
+     },
+     "events": [
+      {
+       "socket": "b3",
+       "end": true
+      },
+      {
+       "upstream": "u3",
+       "close": 1005,
+       "reason": ""
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b4",
+      "path": "/api/cdap/devices/CDAP-1/files",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.files"
+       ]
+      },
+      {
+       "socket": "b4",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u4",
+       "open": "/api/cdap/devices/CDAP-1/files",
+       "protocol": "cdap-filebrowser",
+       "user": "u",
+       "role": "admin"
+      },
+      {
+       "socket": "b4",
+       "text": "hello"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b4",
+      "close": 4000
+     },
+     "events": [
+      {
+       "socket": "b4",
+       "close": 4000,
+       "reason": ""
+      },
+      {
+       "socket": "b4",
+       "end": true
+      },
+      {
+       "upstream": "u4",
+       "close": 1005,
+       "reason": ""
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b5",
+      "path": "/api/cdap/devices/CDAP-1/audio",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "b5",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u5",
+       "open": "/api/cdap/devices/CDAP-1/audio",
+       "protocol": "cdap-audio",
+       "user": "u",
+       "role": "admin"
+      },
+      {
+       "socket": "b5",
+       "text": "hello"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b5",
+      "bytes": "IsMoIg=="
+     },
+     "events": [
+      {
+       "socket": "b5",
+       "close": 1007,
+       "reason": ""
+      },
+      {
+       "socket": "b5",
+       "end": true
+      },
+      {
+       "upstream": "u5",
+       "close": 1005,
+       "reason": ""
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b6",
+      "path": "/api/cdap/devices/CDAP-1/desktop",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "b6",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u6",
+       "open": "/api/cdap/devices/CDAP-1/desktop",
+       "protocol": "cdap-desktop",
+       "user": "u",
+       "role": "admin"
+      },
+      {
+       "socket": "b6",
+       "text": "hello"
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u6",
+      "bytes": "IsMoIg=="
+     },
+     "events": [
+      {
+       "socket": "b6",
+       "text": "{\"type\":\"error\",\"error\":\"Server connection failed\"}"
+      },
+      {
+       "socket": "b6",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "upstream": "u6",
+       "close": 1007,
+       "reason": ""
+      },
+      {
+       "socket": "b6",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b6",
+      "text": "after the error"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b7",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "b7",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u7",
+       "open": "/api/cdap/devices/CDAP-1/terminal",
+       "protocol": "cdap-terminal",
+       "user": "u",
+       "role": "admin"
+      },
+      {
+       "socket": "b7",
+       "binary": "aGVsbG8="
+      }
+     ]
+    },
+    {
+     "step": {
+      "up": "u7",
+      "bytes": "IsMoIg=="
+     },
+     "events": [
+      {
+       "socket": "b7",
+       "text": "{\"type\":\"error\",\"error\":\"Server connection failed\"}"
+      },
+      {
+       "socket": "b7",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "upstream": "u7",
+       "close": 1007,
+       "reason": ""
+      },
+      {
+       "socket": "b7",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "plan": {
+       "refuse": 403
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b8",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "b8",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u8",
+       "open": "/api/cdap/devices/CDAP-1/terminal",
+       "protocol": "cdap-terminal",
+       "user": "u",
+       "role": "admin"
+      },
+      {
+       "socket": "b8",
+       "text": "{\"type\":\"error\",\"error\":\"Server connection failed\"}"
+      },
+      {
+       "socket": "b8",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b8",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b9",
+      "path": "/api/cdap/devices/CDAP-1/video",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "operator",
+        "cdap.command"
+       ]
+      },
+      {
+       "socket": "b9",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u9",
+       "open": "/api/cdap/devices/CDAP-1/video",
+       "protocol": "cdap-video",
+       "user": "u",
+       "role": "operator"
+      },
+      {
+       "socket": "b9",
+       "text": "{\"type\":\"error\",\"error\":\"Server connection failed\"}"
+      },
+      {
+       "socket": "b9",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b9",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "plan": {
+       "refuse": 503
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b10",
+      "path": "/api/cdap/devices/CDAP-1/files",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.files"
+       ]
+      },
+      {
+       "socket": "b10",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u10",
+       "open": "/api/cdap/devices/CDAP-1/files",
+       "protocol": "cdap-filebrowser",
+       "user": "u",
+       "role": "admin"
+      },
+      {
+       "socket": "b10",
+       "text": "{\"type\":\"error\",\"error\":\"Server connection failed\"}"
+      },
+      {
+       "socket": "b10",
+       "close": 1005,
+       "reason": ""
+      },
+      {
+       "socket": "b10",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "plan": {
+       "hold": true
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b11",
+      "path": "/api/cdap/devices/CDAP-1/desktop",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "b11",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u11",
+       "open": "/api/cdap/devices/CDAP-1/desktop",
+       "protocol": "cdap-desktop",
+       "user": "u",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b11",
+      "text": "queued"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "b11",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "b11",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "b11",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "release": true
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b12",
+      "path": "/api/cdap/devices/CDAP-1/terminal",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"u\",\"role\":\"admin\"}}"
+      }
+     },
+     "events": [
+      {
+       "permission": [
+        "admin",
+        "cdap.terminal"
+       ]
+      },
+      {
+       "socket": "b12",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "upstream": "u12",
+       "open": "/api/cdap/devices/CDAP-1/terminal",
+       "protocol": "cdap-terminal",
+       "user": "u",
+       "role": "admin"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b12",
+      "drop": true
+     },
+     "events": [
+      {
+       "socket": "b12",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "release": true
+     },
+     "events": []
+    }
+   ]
+  }
+ ]
+}
