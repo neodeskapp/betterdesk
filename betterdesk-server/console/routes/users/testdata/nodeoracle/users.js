@@ -20,7 +20,7 @@ const http = require('http');
 const os = require('os');
 const path = require('path');
 
-const WEB = process.env.WEB_NODEJS || '/repo/web-nodejs';
+const WEB = process.env.WEB_NODEJS || '/spec/web-nodejs';
 const DUMPS = process.env.ORACLE_DUMPS || '/repo/betterdesk-server/console/store/testdata/dumps';
 const PG_DSN = process.env.ORACLE_PG_DSN || '';
 const SHAPE = process.env.ORACLE_SHAPE === 'go' ? 'go' : 'node';
@@ -401,6 +401,9 @@ const creates = [
     { username: 'scope_nostrategy', password: strong, strategyGuid: '' },
     { username: 'scope_missing', password: strong, strategyGuid: 'missing' },
     { username: 'scope_all', password: strong, folderIds: [2], peerIds: ['D2'], strategyGuid: ' st-1 ', groupGuids: ['ug-beta'], email: 'all@example.invalid' },
+    { username: 'mail.like@example.com', password: strong }, { username: long('y', 64), password: strong },
+    { username: long('y', 65), password: strong }, { username: '.-@', password: strong }, { username: 'a/b', password: strong },
+    { username: 'a:b', password: strong }, { username: 'ab.', password: strong },
 ];
 creates.forEach((body) => req('admin', 'POST', '/api/users', body));
 req('admin', 'POST', '/api/users', '[{"username":"in_a_list"}]', { raw: true });
@@ -547,7 +550,125 @@ req('global_admin', 'DELETE', '/api/users/16');
 usersTable();
 audit();
 
+// 9. Renaming accounts (issue #498): the checks in their order, the rows
+// keyed by the name, and the rest of the request under the new name.
+const abByName = pg || SHAPE === 'go';
+const renameRows = () => {
+    if (abByName) sql('address books', 'SELECT username, ab_type, data FROM address_books ORDER BY username, ab_type');
+    if (SHAPE === 'go') sql('organization members', 'SELECT id, username FROM org_users ORDER BY id');
+    sql('strategy assignments by name', 'SELECT target_type, target_key, strategy_guid FROM strategy_assignments ORDER BY target_type, target_key');
+    sql('lockouts', 'SELECT username, attempt_count FROM account_lockouts ORDER BY username');
+    sql('sign-in attempts', 'SELECT username, ip_address FROM login_attempts ORDER BY id');
+    sql('folder access', 'SELECT d.guid, u.username FROM device_group_user_access a INNER JOIN device_groups d ON d.id = a.device_group_id INNER JOIN users u ON u.id = a.user_id ORDER BY d.guid, u.username');
+};
+// The accounts of the admin and super_admin sessions were deleted above
+sql('the session accounts again', 'INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)', [1, 'e2e_admin', 'x', 'admin']);
+sql('the session accounts again', 'INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)', [2, 'e2e_super_admin', 'x', 'super_admin']);
+req('admin', 'POST', '/api/users', { username: 'rn_alpha', password: strong, role: 'operator' }, { capture: { rnAlpha: 'data.id' } });
+req('admin', 'POST', '/api/users', { username: 'rn_beta', password: strong, role: 'viewer' }, { capture: { rnBeta: 'data.id' } });
+req('admin', 'POST', '/api/users', { username: 'rn_gamma', password: strong, role: 'operator' }, { capture: { rnGamma: 'data.id' } });
+sql('rename: strategy by name', "INSERT INTO strategy_assignments (target_type, target_key, strategy_guid) VALUES ('user', 'rn_alpha', 'st-1')");
+sql('rename: group strategy', "INSERT INTO strategy_assignments (target_type, target_key, strategy_guid) VALUES ('group', 'rn_alpha', 'st-1')");
+sql('rename: lockout of the new name', "INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES ('rn_renamed', '2099-01-01 00:00:00', 10)");
+sql('rename: lockout of the old name', "INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES ('rn_alpha', '2099-01-01 00:00:00', 3)");
+for (const name of ['rn_alpha', 'rn_alpha', 'rn_renamed', 'rn_beta', ' rn_alpha ']) {
+    sql('rename: attempt', 'INSERT INTO login_attempts (username, ip_address, success) VALUES (?, ?, ?)', [name, '10.77.0.1', off]);
+}
+if (abByName) {
+    sql('rename: address book', "INSERT INTO address_books (username, ab_type, data) VALUES ('rn_alpha', 'legacy', '{\"a\":1}')");
+    sql('rename: second address book', "INSERT INTO address_books (username, ab_type, data) VALUES ('rn_alpha', 'personal', '{\"b\":2}')");
+    sql('rename: stale book of the new name', "INSERT INTO address_books (username, ab_type, data) VALUES ('rn_renamed', 'legacy', '{\"stale\":1}')");
+}
+if (SHAPE === 'go') {
+    sql('rename: organization', "INSERT INTO organizations (id, name, slug) VALUES ('org-rn', 'Renames', 'org-rn')");
+    sql('rename: member', "INSERT INTO org_users (id, org_id, username, password_hash) VALUES ('ou-1', 'org-rn', 'rn_alpha', 'x')");
+    sql('rename: other member', "INSERT INTO org_users (id, org_id, username, password_hash) VALUES ('ou-2', 'org-rn', 'rn_beta', 'x')");
+}
+renameRows();
+// Accounts whose name comes from a directory or single sign-on
+req('admin', 'PATCH', '/api/users/17', { username: 'srv_renamed', role: 'nonsense' });
+req('admin', 'PATCH', '/api/users/10', { username: 'oidc_renamed' });
+req('admin', 'PATCH', '/api/users/15', { username: 'mixed_renamed' });
+req('admin', 'PATCH', '/api/users/15', { username: ' mixed_ldap ' });
+req('admin', 'PATCH', '/api/users/10', { username: 'oidc_renamed', password: strong });
+req('admin', 'PATCH', '/api/users/999999', { username: 'nobody_x' });
+for (const username of ['ab', 'bad name', long('x', 65), 'ümlaut', 'a/b', 'a\\b', 'tab\tx', 'a:b', '<x>', 'a\nb', 'rn x']) {
+    req('admin', 'PATCH', '/api/users/{rnAlpha}', { username, role: 'viewer' });
+}
+for (const username of [12345, true, ['rn_list'], {}, null, '', '   ', ' rn_alpha ', 'rn_alpha']) {
+    req('admin', 'PATCH', '/api/users/{rnAlpha}', { username });
+}
+req('admin', 'PATCH', '/api/users/{rnAlpha}', { username: 'e2e_admin' });
+req('admin', 'PATCH', '/api/users/{rnAlpha}', '[{"username":"in_a_list"}]', { raw: true });
+req('operator', 'PATCH', '/api/users/{rnAlpha}', { username: 'by_operator' });
+req('admin', 'PATCH', '/api/users/{rnAlpha}', { username: 'rn_renamed' });
+renameRows();
+req('admin', 'PATCH', '/api/users/{rnAlpha}', { username: 'rn_renamed', role: 'viewer' });
+req('admin', 'PATCH', '/api/users/{rnAlpha}', { username: '  rn.renamed@example-2  ', folderIds: [1], strategyGuid: 'st-1' });
+renameRows();
+req('admin', 'PATCH', '/api/users/{rnAlpha}', { username: long('x', 64) });
+req('admin', 'PATCH', '/api/users/{rnAlpha}', { username: 'rn_final', role: 'nonsense' });
+// A name the cascade cannot take counts as taken, and nothing changes
+sql('rename: strategies of both names', "INSERT INTO strategy_assignments (target_type, target_key, strategy_guid) VALUES ('user', 'rn_gamma', 'st-1')");
+sql('rename: strategies of both names', "INSERT INTO strategy_assignments (target_type, target_key, strategy_guid) VALUES ('user', 'rn_gclash', 'st-1')");
+req('admin', 'PATCH', '/api/users/{rnGamma}', { username: 'rn_gclash' });
+if (SHAPE === 'go') {
+    sql('rename: member under the new name', "INSERT INTO org_users (id, org_id, username, password_hash) VALUES ('ou-3', 'org-rn', 'rn_clash', 'x')");
+    req('admin', 'PATCH', '/api/users/{rnBeta}', { username: 'rn_clash' });
+}
+renameRows();
+usersTable();
+req('admin', 'PATCH', '/api/users/{rnBeta}', { username: 'RN_FINAL' });
+req('admin', 'PATCH', '/api/users/{rnBeta}', { username: 'rn_final' });
+req('global_admin', 'PATCH', '/api/users/{rnGamma}', { username: 'rn_by_global' });
+req('global_admin', 'PATCH', '/api/users/12', { username: 'super_renamed' });
+req('super_admin', 'PATCH', '/api/users/2', { username: 'super_self', role: 'operator' });
+req('admin', 'PATCH', '/api/users/{rnGamma}', { username: 'rn_text_id' }, { stringId: true, label: 'text id' });
+renameRows();
+usersTable();
+req('admin', 'GET', '/api/users');
+req('admin', 'DELETE', '/api/users/{rnAlpha}');
+usersTable();
+audit();
+
 // ---- Running ----
+
+/**
+ * On PostgreSQL the spec tree's cascade does not work: it hands its
+ * statements to the pool without waiting for them, and it numbers the
+ * placeholders on from one statement to the next, so the second statement
+ * fails, the transaction is rolled back at COMMIT, the rename answers
+ * success without renaming anything, and the rejected promises end the
+ * process (BUGS.md UM22). A process that ends is no answer to compare
+ * with; the recording on PostgreSQL is made with the cascade done the way
+ * it is meant, which is what the Go console does: each statement awaited,
+ * behind a savepoint, a missing table skipped.
+ */
+function fixCascadeOnPostgres() {
+    const mod = web('lib/renameUserCascade');
+    mod.renameUserCascade = async (tx, oldUsername, newUsername) => {
+        const oldName = String(oldUsername || '').trim();
+        const newName = String(newUsername || '').trim();
+        if (!oldName || !newName || oldName === newName) return;
+        for (const [statement, params] of [
+            ['DELETE FROM address_books WHERE username = $1', [newName]],
+            ['UPDATE address_books SET username = $1 WHERE username = $2', [newName, oldName]],
+            ['UPDATE org_users SET username = $1 WHERE username = $2', [newName, oldName]],
+            ["UPDATE strategy_assignments SET target_key = $1 WHERE target_key = $2 AND target_type = 'user'", [newName, oldName]],
+            ['DELETE FROM account_lockouts WHERE username = $1', [newName]],
+            ['UPDATE login_attempts SET username = $1 WHERE username = $2', [newName, oldName]],
+        ]) {
+            await tx.run('SAVEPOINT rename_cascade');
+            try {
+                await tx.run(statement, params);
+                await tx.run('RELEASE SAVEPOINT rename_cascade');
+            } catch (err) {
+                await tx.run('ROLLBACK TO SAVEPOINT rename_cascade');
+                if (!/no such table|does not exist/i.test(String(err.message || ''))) throw err;
+            }
+        }
+    };
+}
 
 function pick(value, dotted) {
     return dotted.split('.').reduce((v, key) => (v && typeof v === 'object' ? v[key] : undefined), value);
@@ -584,6 +705,7 @@ function send(port, step, vars) {
     process.env.API_KEY_PATH = path.join(scratch, '.api_key');
     fs.writeFileSync(process.env.API_KEY_PATH, 'oracle-api-key');
     const db = await openDatabase();
+    if (pg) fixCascadeOnPostgres();
     for (const [query, params] of seed) await db.exec(query, params);
 
     const express = web('node_modules/express');

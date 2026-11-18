@@ -12,7 +12,7 @@
 // Creating an account and resetting a password count against the limit
 // of password changes (three in five minutes per address), which the
 // password change of the sign-in routes shares. A role change, a new
-// password and a deleted account end no session.
+// password, a new name and a deleted account end no session.
 package users
 
 import (

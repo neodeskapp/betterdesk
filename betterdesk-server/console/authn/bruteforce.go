@@ -48,8 +48,23 @@ func (b BruteForce) MarshalJSON() ([]byte, error) {
 // many failed attempts from the address within the window. An empty
 // username or address skips that check.
 func (s *Service) CheckBruteForce(ctx context.Context, username, ip string) (BruteForce, error) {
+	var name any
 	if username != "" {
-		lockedUntil, found, err := getAccountLockout(ctx, s.db, username)
+		name = username
+	}
+	return s.CheckBruteForceFor(ctx, name, ip)
+}
+
+// CheckBruteForceFor is CheckBruteForce for a user name a request gave as
+// a JSON value of any type. name is the statement parameter the old
+// console's database driver made of that value (console/jsbind): a text, a
+// double on SQLite, the text form of a list or an object on PostgreSQL.
+// The lockout is looked up for that parameter as it is, so a number finds
+// the lockout its own failed attempts wrote. nil skips the account's
+// lockout, as a NULL finds none.
+func (s *Service) CheckBruteForceFor(ctx context.Context, name any, ip string) (BruteForce, error) {
+	if name != nil {
+		lockedUntil, found, err := getAccountLockout(ctx, s.db, name)
 		if err != nil {
 			return BruteForce{}, err
 		}
@@ -108,19 +123,27 @@ func lockoutEnd(lockedUntil store.Time, postgres bool, zone *time.Location) (tim
 // its failed attempts within the window reach Settings.MaxFailedAttempts;
 // every further failure moves the end of the lockout.
 func (s *Service) RecordAttempt(ctx context.Context, username, ip string, success bool) error {
-	if err := recordLoginAttempt(ctx, s.db, username, ip, success); err != nil {
+	return s.RecordAttemptFor(ctx, username, ip, success)
+}
+
+// RecordAttemptFor is RecordAttempt for a user name a request gave as a
+// JSON value of any type, passed as the statement parameter the old
+// console's database driver made of it (see CheckBruteForceFor). A nil
+// name fails like the NULL it stands for.
+func (s *Service) RecordAttemptFor(ctx context.Context, name any, ip string, success bool) error {
+	if err := recordLoginAttempt(ctx, s.db, name, ip, success); err != nil {
 		return err
 	}
 	if success {
-		return clearAccountLockout(ctx, s.db, username)
+		return clearAccountLockout(ctx, s.db, name)
 	}
-	failed, err := countRecentFailed(ctx, s.db, "username", username, s.set.AttemptWindowMinutes)
+	failed, err := countRecentFailed(ctx, s.db, "username", name, s.set.AttemptWindowMinutes)
 	if err != nil {
 		return err
 	}
 	if failed >= int64(s.set.MaxFailedAttempts) {
 		until := s.now().Add(time.Duration(s.set.LockoutMinutes) * time.Minute)
-		return lockAccount(ctx, s.db, username, store.DateTimeMillis(until), failed)
+		return lockAccount(ctx, s.db, name, store.DateTimeMillis(until), failed)
 	}
 	return nil
 }

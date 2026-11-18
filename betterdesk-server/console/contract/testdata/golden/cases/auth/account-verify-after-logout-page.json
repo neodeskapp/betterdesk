@@ -10,7 +10,7 @@
    "roles": [
     "signed-out"
    ],
-   "status": 401,
+   "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -23,7 +23,10 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -31,12 +34,49 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "session.absoluteExpiresAt",
+     "integer": true
+    },
+    {
+     "path": "session.createdAt",
+     "integer": true
+    },
+    {
+     "path": "session.idleExpiresAt",
+     "integer": true
+    },
+    {
+     "path": "session.lastActivityAt",
+     "integer": true
+    },
+    {
+     "path": "session.serverNow",
+     "integer": true
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "code": "session_required",
-     "error": "Unauthorized. Please log in.",
-     "success": false
+     "session": {
+      "absoluteExpiresAt": 0,
+      "createdAt": 0,
+      "idleExpiresAt": 0,
+      "idleTimeoutMs": 1800000,
+      "lastActivityAt": 0,
+      "loginIp": "<client-ip>",
+      "maxAgeMs": 86400000,
+      "serverNow": 0,
+      "warnBeforeMs": 60000
+     },
+     "success": true,
+     "user": {
+      "id": 13,
+      "preferred_language": null,
+      "role": "operator",
+      "username": "contract_auth_tmp"
+     }
     }
    }
   }

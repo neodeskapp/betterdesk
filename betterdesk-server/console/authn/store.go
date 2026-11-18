@@ -271,7 +271,7 @@ func cleanupExpiredTokens(ctx context.Context, q store.Querier) error {
 
 // ---- Sign-in attempts and lockouts ----
 
-func recordLoginAttempt(ctx context.Context, q store.Querier, username, ip string, success bool) error {
+func recordLoginAttempt(ctx context.Context, q store.Querier, username any, ip string, success bool) error {
 	var flag any = success
 	if q.Dialect() == store.SQLite {
 		flag = 0
@@ -288,7 +288,7 @@ func recordLoginAttempt(ctx context.Context, q store.Querier, username, ip strin
 
 // countRecentFailed counts the failed attempts of the last windowMinutes
 // minutes whose column (username or ip_address) has the value.
-func countRecentFailed(ctx context.Context, q store.Querier, column, value string, windowMinutes int) (int64, error) {
+func countRecentFailed(ctx context.Context, q store.Querier, column string, value any, windowMinutes int) (int64, error) {
 	query := q.Pick(
 		`SELECT COUNT(*) FROM login_attempts WHERE `+column+` = ? AND success = 0
 			AND created_at > datetime('now', '-' || ? || ' minutes')`,
@@ -301,7 +301,7 @@ func countRecentFailed(ctx context.Context, q store.Querier, column, value strin
 	return n, nil
 }
 
-func lockAccount(ctx context.Context, q store.Querier, username, lockedUntil string, attemptCount int64) error {
+func lockAccount(ctx context.Context, q store.Querier, username any, lockedUntil string, attemptCount int64) error {
 	_, err := q.Exec(ctx, `INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES (?, ?, ?)
 		ON CONFLICT(username) DO UPDATE SET locked_until = excluded.locked_until, attempt_count = excluded.attempt_count`,
 		username, lockedUntil, attemptCount)
@@ -313,7 +313,7 @@ func lockAccount(ctx context.Context, q store.Querier, username, lockedUntil str
 
 // getAccountLockout returns the end of the account's lockout when it is
 // still in the future by the database's clock. found is false otherwise.
-func getAccountLockout(ctx context.Context, q store.Querier, username string) (lockedUntil store.Time, found bool, err error) {
+func getAccountLockout(ctx context.Context, q store.Querier, username any) (lockedUntil store.Time, found bool, err error) {
 	query := `SELECT locked_until FROM account_lockouts WHERE username = ? AND locked_until > ` + store.NowSQL(q.Dialect())
 	err = store.SelectRow(ctx, q, query, username).Scan(&lockedUntil)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -325,7 +325,7 @@ func getAccountLockout(ctx context.Context, q store.Querier, username string) (l
 	return lockedUntil, true, nil
 }
 
-func clearAccountLockout(ctx context.Context, q store.Querier, username string) error {
+func clearAccountLockout(ctx context.Context, q store.Querier, username any) error {
 	if _, err := q.Exec(ctx, `DELETE FROM account_lockouts WHERE username = ?`, username); err != nil {
 		return fmt.Errorf("clear an account lockout: %w", err)
 	}

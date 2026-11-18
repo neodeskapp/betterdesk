@@ -9,8 +9,8 @@ import (
 )
 
 // The account routes (routes/users.routes.js): the account list, user
-// groups, creating, changing and deleting accounts, password resets, the
-// device scope of an account and its organizations.
+// groups, creating, changing, renaming and deleting accounts, password
+// resets, the device scope of an account and its organizations.
 //
 // Creating an account and resetting a password count against a limit of
 // three in five minutes per address, which they share with the password
@@ -67,6 +67,9 @@ func init() {
 
 		// Changes on demo_viewer that are refused before anything is written
 		contract.Case{Name: "update-unknown", Method: "PATCH", Path: "/api/users/999999999", Body: map[string]any{"role": "viewer"}},
+		contract.Case{Name: "rename-unknown", Method: "PATCH", Path: "/api/users/999999999", Body: map[string]any{"username": "contract_nobody"}, Roles: some},
+		contract.Case{Name: "rename-invalid", Method: "PATCH", Path: "/api/users/3", Body: map[string]any{"username": "no spaces"}, Roles: some},
+		contract.Case{Name: "rename-taken", Method: "PATCH", Path: "/api/users/3", Body: map[string]any{"username": "e2e_viewer"}, Roles: some},
 		contract.Case{Name: "update-id-not-a-number", Method: "PATCH", Path: "/api/users/abc", Body: map[string]any{}, Roles: some},
 		contract.Case{Name: "update-invalid-role", Method: "PATCH", Path: "/api/users/3", Body: map[string]any{"role": "nonsense"}},
 		contract.Case{Name: "update-role-guest-issuer", Method: "PATCH", Path: "/api/users/3", Body: map[string]any{"role": "guest_issuer"}, Roles: some},
@@ -180,6 +183,39 @@ func init() {
 		},
 		contract.Case{
 			Name: "account-unchanged", Method: "PATCH", Path: "/api/users/{account}", As: "admin", Roles: signedOut,
+			Body: map[string]any{}, Volatile: []string{"data.id", "data.created_at"},
+		},
+		// A new name: refused when malformed or taken, then given, with the
+		// rows that hang on the name; the rest of the request goes on under
+		// the new name.
+		contract.Case{
+			Name: "account-rename-too-short", Method: "PATCH", Path: "/api/users/{account}", As: "admin", Roles: signedOut,
+			Body: map[string]any{"username": "ab"},
+		},
+		contract.Case{
+			Name: "account-rename-taken", Method: "PATCH", Path: "/api/users/{account}", As: "admin", Roles: signedOut,
+			Body: map[string]any{"username": "e2e_operator"},
+		},
+		contract.Case{
+			Name: "account-rename-by-operator", Method: "PATCH", Path: "/api/users/{account}", As: "operator", Roles: signedOut,
+			Body: map[string]any{"username": "contract.renamed@tmp"},
+		},
+		contract.Case{
+			Name: "account-rename", Method: "PATCH", Path: "/api/users/{account}", As: "admin", Roles: signedOut,
+			Body:     map[string]any{"username": "  contract.renamed@tmp  ", "role": "operator"},
+			Volatile: []string{"data.id", "data.created_at"},
+		},
+		contract.Case{
+			Name: "account-rename-same-name", Method: "PATCH", Path: "/api/users/{account}", As: "global_admin", Roles: signedOut,
+			Body:     map[string]any{"username": "contract.renamed@tmp"},
+			Volatile: []string{"data.id", "data.created_at"},
+		},
+		contract.Case{
+			Name: "account-rename-then-invalid-role", Method: "PATCH", Path: "/api/users/{account}", As: "admin", Roles: signedOut,
+			Body: map[string]any{"username": "contract_renamed_tmp", "role": "nonsense"},
+		},
+		contract.Case{
+			Name: "account-after-rename", Method: "PATCH", Path: "/api/users/{account}", As: "admin", Roles: signedOut,
 			Body: map[string]any{}, Volatile: []string{"data.id", "data.created_at"},
 		},
 		contract.Case{Name: "account-delete-by-operator", Method: "DELETE", Path: "/api/users/{account}", As: "operator", Roles: signedOut},

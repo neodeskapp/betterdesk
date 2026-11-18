@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"regexp"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -162,6 +163,131 @@ func deleteAccount(ctx context.Context, db *store.DB, id int64) error {
 		if _, err := db.Exec(ctx, query, id); err != nil {
 			return fmt.Errorf("delete user %d: %w", id, err)
 		}
+	}
+	return nil
+}
+
+// renameOutcome is how a rename ended when no error stopped it.
+type renameOutcome int
+
+const (
+	renamed renameOutcome = iota
+	// renameMissing: no account has the id.
+	renameMissing
+	// renameTaken: another account has the name.
+	renameTaken
+)
+
+var (
+	// renameConflictSQLite and renameConflictPostgres are the messages of a
+	// failed rename that count as a name taken in the meantime.
+	renameConflictSQLite   = regexp.MustCompile(`(?i)unique|constraint`)
+	renameConflictPostgres = regexp.MustCompile(`(?i)unique|duplicate key`)
+	// missingTable is the message of a statement on a table that an older
+	// database does not have.
+	missingTable = regexp.MustCompile(`(?i)no such table|does not exist`)
+)
+
+// renameAccount gives an account a new username in one transaction,
+// together with what is keyed by the name (renameUser and
+// renameUserCascade). The name is not checked here.
+func renameAccount(ctx context.Context, db *store.DB, id int64, newName string) (renameOutcome, error) {
+	outcome := renamed
+	err := db.InTx(ctx, func(tx *store.Tx) error {
+		var old jsbind.Cell
+		err := tx.QueryRow(ctx, `SELECT username FROM users WHERE id = ?`, id).Scan(&old)
+		if errors.Is(err, sql.ErrNoRows) {
+			outcome = renameMissing
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if v := old.Value(); v.IsString() && v.Str() == newName {
+			return nil
+		}
+		var others int64
+		if err := tx.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE username = ? AND id <> ?`, newName, id).Scan(&others); err != nil {
+			return err
+		}
+		if others > 0 {
+			outcome = renameTaken
+			return nil
+		}
+		if _, err := tx.Exec(ctx, `UPDATE users SET username = ? WHERE id = ?`, newName, id); err != nil {
+			return err
+		}
+		return renameCascade(ctx, tx, old.Value(), newName)
+	})
+	if err == nil {
+		return outcome, nil
+	}
+	conflict := renameConflictSQLite
+	if db.IsPostgres() {
+		conflict = renameConflictPostgres
+	}
+	if conflict.MatchString(jsbind.Message(err)) {
+		return renameTaken, nil
+	}
+	return renamed, fmt.Errorf("rename user %d: %w", id, err)
+}
+
+// renameCascade moves what is keyed by an account's name to its new name:
+// its address books (a stale book under the new name goes first), its
+// organization memberships, the strategy assignments made for the name,
+// and its sign-in attempts. A lockout of the new name is removed. Both
+// names are trimmed first; nothing happens when one is empty or they are
+// the same. A table the database does not have is skipped.
+func renameCascade(ctx context.Context, tx *store.Tx, oldValue jsbind.Value, newUsername string) error {
+	oldName := ""
+	if oldValue.Truthy() {
+		oldName = jsbind.Trim(oldValue.ToString())
+	}
+	newName := jsbind.Trim(newUsername)
+	if oldName == "" || newName == "" || oldName == newName {
+		return nil
+	}
+	for _, step := range []struct {
+		query string
+		args  []any
+	}{
+		{`DELETE FROM address_books WHERE username = ?`, []any{newName}},
+		{`UPDATE address_books SET username = ? WHERE username = ?`, []any{newName, oldName}},
+		{`UPDATE org_users SET username = ? WHERE username = ?`, []any{newName, oldName}},
+		{`UPDATE strategy_assignments SET target_key = ? WHERE target_key = ? AND target_type = 'user'`, []any{newName, oldName}},
+		{`DELETE FROM account_lockouts WHERE username = ?`, []any{newName}},
+		{`UPDATE login_attempts SET username = ? WHERE username = ?`, []any{newName, oldName}},
+	} {
+		if err := cascadeStep(ctx, tx, step.query, step.args...); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// cascadeStep runs one statement of the cascade. A missing table is no
+// error. On PostgreSQL a failed statement would end the transaction, so
+// there the statement runs behind a savepoint that a missing table rolls
+// back to.
+func cascadeStep(ctx context.Context, tx *store.Tx, query string, args ...any) error {
+	postgres := tx.Dialect() == store.Postgres
+	if postgres {
+		if _, err := tx.Exec(ctx, `SAVEPOINT rename_cascade`); err != nil {
+			return err
+		}
+	}
+	_, err := tx.Exec(ctx, query, args...)
+	if postgres {
+		end := `RELEASE SAVEPOINT rename_cascade`
+		if err != nil {
+			end = `ROLLBACK TO SAVEPOINT rename_cascade`
+		}
+		if _, endErr := tx.Exec(ctx, end); endErr != nil {
+			return endErr
+		}
+	}
+	if err != nil && !missingTable.MatchString(jsbind.Message(err)) {
+		return err
 	}
 	return nil
 }

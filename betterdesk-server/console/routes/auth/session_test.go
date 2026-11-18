@@ -49,6 +49,21 @@ func TestLogout(t *testing.T) {
 	})
 }
 
+// logoutGetText is what GET /logout tells a signed-in browser.
+const logoutGetText = "Signing out changed to a POST request for CSRF protection. Use the sign-out button in the panel."
+
+// cookiesBut are the Set-Cookie lines of an answer without the CSRF
+// cookie, which every page answer may set.
+func cookiesBut(res answer) []string {
+	var out []string
+	for _, line := range res.cookies() {
+		if !strings.HasPrefix(line, "__csrf_h=") {
+			out = append(out, line)
+		}
+	}
+	return out
+}
+
 func TestLogoutPage(t *testing.T) {
 	eachWorld(t, setup{}, func(t *testing.T, w *world) {
 		alice := w.addUser(user{name: "alice"})
@@ -57,26 +72,93 @@ func TestLogoutPage(t *testing.T) {
 		sid := a.sessionID()
 		w.exec(`DELETE FROM audit_log`)
 
+		// Signed in: refused, and the session goes on. Without a build of
+		// the web app the answer is plain text.
 		res := a.get("/logout", "Accept", "text/html")
-		if res.status != http.StatusFound || res.header.Get("Location") != "/login" || res.body != `<p>Found. Redirecting to /login</p>` {
-			t.Errorf("sign-out page: %d %q %s", res.status, res.header.Get("Location"), res.body)
+		if res.status != http.StatusMethodNotAllowed || res.body != logoutGetText || res.header.Get("Content-Type") != "text/plain; charset=utf-8" {
+			t.Errorf("sign-out page: %d %q %s", res.status, res.header.Get("Content-Type"), res.body)
 		}
-		var cleared []string
-		for _, line := range res.cookies() {
-			if !strings.HasPrefix(line, "__csrf_h=") {
-				cleared = append(cleared, line)
+		for _, line := range cookiesBut(res) {
+			if strings.Contains(line, "=;") {
+				t.Errorf("the sign-out page clears a cookie: %s", line)
 			}
 		}
-		equal(t, "cookies", cleared, clearedAfterSignOut[1:])
+		if row := w.rows(`SELECT end_reason FROM panel_sessions WHERE sid = ?`, sid); len(row) != 1 || row[0] != "" {
+			t.Errorf("the session row after the sign-out page: %v", row)
+		}
+		if res := a.get("/api/auth/verify"); res.status != http.StatusOK {
+			t.Errorf("the sign-out page ended the session: %d %s", res.status, res.body)
+		}
+		if rows := w.audit(); len(rows) != 0 {
+			t.Errorf("the sign-out page wrote audit entries: %v", rows)
+		}
+		equal(t, "session rows", w.sessions(alice), []string{"|1"})
+
+		// Signed out: to the sign-in page, with no cookie cleared
+		res = w.agent().get("/logout", "Accept", "text/html")
+		if res.status != http.StatusFound || res.header.Get("Location") != "/login" || res.body != `<p>Found. Redirecting to /login</p>` {
+			t.Errorf("sign-out page without a session: %d %q %s", res.status, res.header.Get("Location"), res.body)
+		}
+		equal(t, "cookies without a session", cookiesBut(res), nil)
+		if rows := w.audit(); len(rows) != 0 {
+			t.Errorf("the sign-out page wrote audit entries: %v", rows)
+		}
+	})
+}
+
+// With a build of the web app, a signed-in browser gets the app's error
+// page with the status 405 and the words of the refusal.
+func TestLogoutPageWithTheWebApp(t *testing.T) {
+	w := newWorld(t, nil, setup{build: true})
+	w.addUser(user{name: "alice"})
+	a := w.agent()
+	a.signIn("alice")
+	res := a.get("/logout", "Accept", "text/html")
+	meta := `<meta name="bd-error" content="500" data-title="Logout requires POST" data-message="` + logoutGetText + `">`
+	if res.status != http.StatusMethodNotAllowed || !strings.Contains(res.body, "<head>"+meta) || res.header.Get("Content-Type") != "text/html; charset=utf-8" {
+		t.Errorf("sign-out page: %d %q %s", res.status, res.header.Get("Content-Type"), res.body)
+	}
+	if res.header.Get("Cache-Control") != "no-store" || res.header.Get("Content-Security-Policy") == "" {
+		t.Errorf("headers of the error page: %v", res.header)
+	}
+	if res := a.get("/api/auth/verify"); res.status != http.StatusOK {
+		t.Errorf("the sign-out page ended the session: %d %s", res.status, res.body)
+	}
+}
+
+func TestLogoutForm(t *testing.T) {
+	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+		alice := w.addUser(user{name: "alice"})
+		a := w.agent()
+		a.signIn("alice")
+		sid := a.sessionID()
+		w.exec(`DELETE FROM audit_log`)
+
+		// Without the CSRF token nothing happens
+		res := a.do("POST", "/logout", "", "Accept", "text/html")
+		if res.status != http.StatusForbidden {
+			t.Errorf("sign-out form without a CSRF token: %d %s", res.status, res.body)
+		}
+		if res := a.get("/api/auth/verify"); res.status != http.StatusOK {
+			t.Errorf("a refused sign-out form ended the session: %d %s", res.status, res.body)
+		}
+
+		res = a.do("POST", "/logout", "", "Accept", "text/html", "X-CSRF-Token", a.csrf())
+		if res.status != http.StatusFound || res.header.Get("Location") != "/login" || res.body != `<p>Found. Redirecting to /login</p>` {
+			t.Errorf("sign-out form: %d %q %s", res.status, res.header.Get("Location"), res.body)
+		}
+		equal(t, "cookies", cookiesBut(res), clearedAfterSignOut[1:])
 		if row := w.rows(`SELECT session_json, end_reason FROM panel_sessions WHERE sid = ?`, sid); len(row) != 1 || row[0] != "{}|logout" {
 			t.Errorf("the session row after sign-out: %v", row)
 		}
 		equal(t, "audit", w.audit(), []string{fmt.Sprintf("logout|User logged out|127.0.0.1|%d", alice)})
+		want(t, "after sign-out", a.get("/api/auth/verify"), http.StatusUnauthorized, notSignedIn)
 
 		// Signed out: the same answer, no entry
-		res = w.agent().get("/logout")
+		b := w.agent()
+		res = b.do("POST", "/logout", "", "X-CSRF-Token", b.csrf())
 		if res.status != http.StatusFound || res.header.Get("Location") != "/login" {
-			t.Errorf("sign-out page without a session: %d %q", res.status, res.header.Get("Location"))
+			t.Errorf("sign-out form without a session: %d %q", res.status, res.header.Get("Location"))
 		}
 		if n := len(w.audit()); n != 1 {
 			t.Errorf("%d audit entries after a sign-out without a session", n)
@@ -89,7 +171,7 @@ func TestLogoutWhenTheAuditLogFails(t *testing.T) {
 	alice := w.addUser(user{name: "alice"})
 	for _, signOut := range []func(a *agent) answer{
 		func(a *agent) answer { return a.post("/api/auth/logout", `{}`) },
-		func(a *agent) answer { return a.get("/logout") },
+		func(a *agent) answer { return a.do("POST", "/logout", "", "X-CSRF-Token", a.csrf()) },
 	} {
 		a := w.agent()
 		a.signIn("alice")

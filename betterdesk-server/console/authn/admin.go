@@ -347,7 +347,11 @@ func (s *Service) writeCredentials(username, password string) {
 		s.log.Warn(fmt.Sprintf("[AUTH] Could not write .admin_credentials to %s: %s", path, err.Error()))
 		return
 	}
-	s.log.Info("[AUTH] Wrote generated admin credentials to " + path)
+	// A file that was there already keeps its mode through WriteFile, so
+	// the mode is set afterwards. A file system without modes stays as it
+	// is.
+	_ = s.fs.Chmod(path, 0o600)
+	s.log.Info("[AUTH] Wrote generated admin credentials to " + path + " (mode 0600)")
 }
 
 // verifyAdminPasswordHash tries the password on the stored hash of the new

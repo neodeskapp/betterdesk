@@ -8,7 +8,7 @@ const path = require('path');
 
 const os = require('os');
 
-const WEB = process.env.BETTERDESK_NODE_ROOT || '/repo/web-nodejs';
+const WEB = process.env.BETTERDESK_NODE_ROOT || '/spec/web-nodejs';
 const OUT = process.env.AUTHN_VECTORS_DIR || path.resolve(__dirname, '..', 'vectors');
 
 // The console's configuration reads the environment when it is loaded and

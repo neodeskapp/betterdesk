@@ -55,12 +55,14 @@ func newHandlers(d *kit.Deps) *handlers {
 func Register(d *kit.Deps) {
 	h := newHandlers(d)
 	r := d.Router
+	r.Get("/login/lookup", h.loginLookup, d.Limits.Login.Middleware)
 	r.Post("/api/auth/login", h.login, d.Limits.Login.Middleware)
 	r.Post("/api/auth/logout", h.logout)
 	r.Get("/api/auth/verify", h.verify, d.RequireAuth)
 	r.Get("/api/auth/sessions", h.sessionList, d.RequireAuth)
 	r.Post("/api/auth/password", h.changePassword, d.RequireAuth, d.Limits.PasswordChange.Middleware)
 	r.Get("/logout", h.logoutPage)
+	r.Post("/logout", h.logoutForm)
 	r.Get("/api/auth/oidc/status", h.oidcStatus)
 	r.Get("/api/auth/oidc/authorize", h.oidcAuthorize)
 	r.Get("/api/auth/oidc/callback", h.oidcCallback)

@@ -11,6 +11,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/session"
@@ -180,8 +181,9 @@ func (h *handlers) sessionFailure(w http.ResponseWriter, r *http.Request, what s
 // login answers POST /api/auth/login with the body {username, password,
 // return?, clientFingerprint? or fingerprint?}.
 //
-// A sign-in neither asks whether the account or the address is locked
-// out; it only records the attempt.
+// Before the password is looked at, a lockout of the account and too many
+// failed attempts from the address refuse the sign-in (429). Every
+// attempt that reaches the password check is recorded.
 func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	username, password := body.Get("username"), body.Get("password")
@@ -189,6 +191,21 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 
 	if !username.Truthy() || !password.Truthy() || tooLong(username) || tooLong(password) {
 		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "auth.invalid_credentials", nil))
+		return
+	}
+
+	name, ok := h.boundName(username)
+	if !ok {
+		h.serverError(w, r, "Login error:", errUnboundName)
+		return
+	}
+	lockout, err := h.authn.CheckBruteForceFor(r.Context(), name, kit.ClientIP(r))
+	if err != nil {
+		h.serverError(w, r, "Login error:", err)
+		return
+	}
+	if lockout.Blocked {
+		h.refuseLockedOut(w, r, lockout, meta)
 		return
 	}
 
@@ -228,7 +245,13 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user.TOTPRequired {
+		// The pending account goes into a new session: a session id that
+		// someone planted before the sign-in must not carry it.
 		sess := kit.Session(r)
+		if err := sess.Regenerate(); err != nil {
+			h.sessionFailure(w, r, "Session regeneration error (2FA):", err)
+			return
+		}
 		sess.Set(pendingUserID, user.ID)
 		sess.Set(pendingUser, user)
 		sess.Set(pendingMeta, meta)
@@ -299,30 +322,62 @@ func (h *handlers) authenticate(r *http.Request, username, password middleware.V
 // failure to note it changes no answer.
 //
 // The name is recorded as the database took the value from the old
-// console: a text as it is and a number as its digits. Any other value
-// SQLite refused, and PostgreSQL stored its text form.
+// console (boundName). Where SQLite refused it, nothing is recorded.
 func (h *handlers) recordAttempt(r *http.Request, username middleware.Value, success bool) {
-	name, ok := attemptName(username, h.d.Store.IsPostgres())
+	name, ok := h.boundName(username)
 	if !ok {
 		return
 	}
-	if err := h.authn.RecordAttempt(r.Context(), name, kit.ClientIP(r), success); err != nil {
+	if err := h.authn.RecordAttemptFor(r.Context(), name, kit.ClientIP(r), success); err != nil {
 		h.log.Warn("Recording the sign-in attempt failed:", err)
 	}
 }
 
-// attemptName is the text a database stored for a user name of any JSON
-// type, and false where it refused the value.
-func attemptName(username middleware.Value, postgres bool) (string, bool) {
-	switch username.Kind() {
-	case middleware.KindString, middleware.KindNumber:
-		return jsString(username), true
-	case middleware.KindBool:
-		return jsString(username), postgres
-	case middleware.KindObject:
-		return string(username.Raw()), postgres
+// errUnboundName stands for the error the old console's SQLite driver
+// threw for a user name it could not bind: true or false, an empty list or
+// one of several values, a list that holds a list or an object, an object.
+var errUnboundName = errors.New("the database cannot take the user name as a parameter")
+
+// boundName is the statement parameter the old console's database driver
+// made of a user name of any JSON type (console/jsbind), and false where
+// it refused the value. SQLite took a text as it is, a number as a double
+// (stored in a text column as "12345.0") and a list of one value as that
+// value; PostgreSQL took the text form of anything.
+func (h *handlers) boundName(username middleware.Value) (any, bool) {
+	args, err := jsbind.Args(h.d.Store.Dialect(), 1, jsbind.Of(username))
+	if err != nil {
+		return nil, false
 	}
-	return "", false
+	return args[0], true
+}
+
+// accountLocked is the answer to a sign-in that a lockout refused.
+type accountLocked struct {
+	Success    bool   `json:"success"`
+	Error      string `json:"error"`
+	Code       string `json:"code"`
+	RetryAfter int64  `json:"retry_after"`
+}
+
+// lockoutRetryFallback is the wait in seconds for a lockout whose end
+// could not be read as a time.
+const lockoutRetryFallback = 60
+
+// refuseLockedOut answers a sign-in that a lockout of the account or of
+// the address refused: an audit entry, the seconds to wait in Retry-After
+// and in the body, and 429.
+func (h *handlers) refuseLockedOut(w http.ResponseWriter, r *http.Request, lockout authn.BruteForce, meta session.Meta) {
+	if err := h.audit(r, 0, "login_blocked", "Account/IP locked; ip="+meta.IP); err != nil {
+		h.log.Warn("Audit entry of a blocked sign-in failed:", err)
+	}
+	retry := int64(lockoutRetryFallback)
+	if !lockout.RetryUnknown {
+		retry = lockout.RetryAfter
+	}
+	w.Header().Set("Retry-After", strconv.FormatInt(retry, 10))
+	kit.JSON(w, r, http.StatusTooManyRequests, accountLocked{
+		Error: kit.T(r, "auth.too_many_attempts", nil), Code: "account_locked", RetryAfter: retry,
+	})
 }
 
 // totpVerify answers POST /api/auth/totp/verify with the body {code?,
@@ -359,7 +414,14 @@ func (h *handlers) totpVerify(w http.ResponseWriter, r *http.Request) {
 		answer, _ := h.d.GoAPI.VerifyTOTPViaGo(r.Context(), partial, given).(*goapi.Object)
 		switch {
 		case answer == nil:
-			h.log.Warn("Go server unreachable during 2FA — falling back to local verification")
+			// No local check instead: it would skip the signal server's
+			// two-factor policy and its limits whenever the server is down.
+			h.log.Error("Go server unreachable during delegated 2FA, refusing the local check")
+			if err := h.audit(r, userID, "totp_unavailable", "Delegated 2FA unavailable (Go unreachable)"); err != nil {
+				h.log.Warn("Audit entry of an unavailable 2FA check failed:", err)
+			}
+			kit.FailCode(w, r, http.StatusServiceUnavailable, kit.T(r, "auth.totp_temporarily_unavailable", nil), "totp_backend_unavailable")
+			return
 		case answer.Bool("rejected") && answer.Bool("rateLimited"):
 			kit.Fail(w, r, http.StatusTooManyRequests, kit.T(r, "auth.totp_rate_limited", nil))
 			return

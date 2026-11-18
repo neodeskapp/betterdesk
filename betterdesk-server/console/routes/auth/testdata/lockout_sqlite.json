@@ -1,0 +1,1832 @@
+{
+ "dialect": "sqlite",
+ "seed": [
+  [
+   "DELETE FROM audit_log",
+   []
+  ],
+  [
+   "DELETE FROM login_attempts",
+   []
+  ],
+  [
+   "DELETE FROM account_lockouts",
+   []
+  ],
+  [
+   "DELETE FROM users",
+   []
+  ],
+  [
+   "INSERT INTO users (id, username, password_hash, role) VALUES (1, 'alice', ?, 'operator')",
+   [
+    "$2b$04$dc.l7nhzKvP8b8PwtYT8l.FDZS7Yuc7QUJEihx.CgXH6mUu3MnMBy"
+   ]
+  ],
+  [
+   "INSERT INTO users (id, username, password_hash, role) VALUES (2, 'bob', ?, 'operator')",
+   [
+    "$2b$04$dc.l7nhzKvP8b8PwtYT8l.FDZS7Yuc7QUJEihx.CgXH6mUu3MnMBy"
+   ]
+  ],
+  [
+   "INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES (?, strftime('%Y-%m-%d %H:%M:%f', 'now', '+600 seconds'), 10)",
+   [
+    "alice"
+   ]
+  ],
+  [
+   "INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES (?, strftime('%Y-%m-%d %H:%M:%f', 'now', '+600 seconds'), 10)",
+   [
+    "12345.0"
+   ]
+  ],
+  [
+   "INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES (?, strftime('%Y-%m-%d %H:%M:%f', 'now', '+600 seconds'), 10)",
+   [
+    "abc"
+   ]
+  ],
+  [
+   "INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES (?, strftime('%Y-%m-%d %H:%M:%f', 'now', '+600 seconds'), 10)",
+   [
+    "{\"abc\"}"
+   ]
+  ],
+  [
+   "INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES (?, strftime('%Y-%m-%d %H:%M:%f', 'now', '+600 seconds'), 10)",
+   [
+    "true"
+   ]
+  ],
+  [
+   "INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES (?, strftime('%Y-%m-%d %H:%M:%f', 'now', '+600 seconds'), 10)",
+   [
+    "{\"a\":1}"
+   ]
+  ],
+  [
+   "INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES (?, strftime('%Y-%m-%d %H:%M:%f', 'now', '+600 seconds'), 10)",
+   [
+    " "
+   ]
+  ],
+  [
+   "INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES (?, strftime('%Y-%m-%d %H:%M:%f', 'now', '+600 seconds'), 10)",
+   [
+    "ΟΔΟΣ"
+   ]
+  ],
+  [
+   "INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES (?, strftime('%Y-%m-%d %H:%M:%f', 'now', '+600 seconds'), 10)",
+   [
+    "0.1"
+   ]
+  ],
+  [
+   "INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES ('expired', strftime('%Y-%m-%d %H:%M:%f', 'now', '-60 seconds'), 10)",
+   []
+  ],
+  [
+   "INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES ('soon', 'soon', 10)",
+   []
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-0"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-1"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-2"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-3"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-4"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-5"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-6"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-7"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-8"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-9"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-10"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-11"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-12"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-13"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-14"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-15"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-16"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-17"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-18"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-19"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-20"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-21"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-22"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-23"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-24"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-25"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-26"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-27"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-28"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.7', 0)",
+   [
+    "guess-29"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-0"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-1"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-2"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-3"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-4"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-5"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-6"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-7"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-8"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-9"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-10"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-11"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-12"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-13"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-14"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-15"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-16"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-17"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-18"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-19"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-20"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-21"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-22"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-23"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-24"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-25"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-26"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-27"
+   ]
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, '198.51.100.8', 0)",
+   [
+    "guess-28"
+   ]
+  ],
+  [
+   "UPDATE login_attempts SET created_at = strftime('%Y-%m-%d %H:%M:%f', 'now', '-960 seconds') WHERE username = 'guess-0' AND ip_address = '198.51.100.8'",
+   []
+  ],
+  [
+   "INSERT INTO login_attempts (username, ip_address, success) VALUES ('old', '198.51.100.8', 0)",
+   []
+  ]
+ ],
+ "steps": [
+  {
+   "label": "locked account, right password",
+   "ip": "10.30.0.2",
+   "body": "{\"username\":\"alice\",\"password\":\"Auth-Test-1!pass\"}",
+   "status": 429,
+   "retryAfter": "600",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":600}",
+   "rejections": []
+  },
+  {
+   "label": "locked account, wrong password",
+   "ip": "10.30.0.3",
+   "body": "{\"username\":\"alice\",\"password\":\"not-the-password\"}",
+   "status": 429,
+   "retryAfter": "600",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":600}",
+   "rejections": []
+  },
+  {
+   "label": "other letter case",
+   "ip": "10.30.0.4",
+   "body": "{\"username\":\"Alice\",\"password\":\"not-the-password\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "locked account, no password",
+   "ip": "10.30.0.5",
+   "body": "{\"username\":\"alice\"}",
+   "status": 400,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "locked account, long password",
+   "ip": "10.30.0.6",
+   "body": "{\"username\":\"alice\",\"password\":\"ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp\"}",
+   "status": 400,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "unlocked account",
+   "ip": "10.30.0.7",
+   "body": "{\"username\":\"bob\",\"password\":\"not-the-password\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "lockout that ended",
+   "ip": "10.30.0.8",
+   "body": "{\"username\":\"expired\",\"password\":\"x\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "end that is no time",
+   "ip": "10.30.0.9",
+   "body": "{\"username\":\"soon\",\"password\":\"x\"}",
+   "status": 429,
+   "retryAfter": "60",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":60}",
+   "rejections": []
+  },
+  {
+   "label": "name 12345",
+   "ip": "10.30.0.10",
+   "body": "{\"username\":12345,\"password\":\"x\"}",
+   "status": 429,
+   "retryAfter": "600",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":600}",
+   "rejections": []
+  },
+  {
+   "label": "name 1.5",
+   "ip": "10.30.0.11",
+   "body": "{\"username\":1.5,\"password\":\"x\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "name 0.1",
+   "ip": "10.30.0.12",
+   "body": "{\"username\":0.1,\"password\":\"x\"}",
+   "status": 429,
+   "retryAfter": "600",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":600}",
+   "rejections": []
+  },
+  {
+   "label": "name 1e+21",
+   "ip": "10.30.0.13",
+   "body": "{\"username\":1e+21,\"password\":\"x\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "name 0",
+   "ip": "10.30.0.14",
+   "body": "{\"username\":0,\"password\":\"x\"}",
+   "status": 400,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "name true",
+   "ip": "10.30.0.15",
+   "body": "{\"username\":true,\"password\":\"x\"}",
+   "status": 500,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Server error\"}",
+   "rejections": []
+  },
+  {
+   "label": "name false",
+   "ip": "10.30.0.16",
+   "body": "{\"username\":false,\"password\":\"x\"}",
+   "status": 400,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "name [\"abc\"]",
+   "ip": "10.30.0.17",
+   "body": "{\"username\":[\"abc\"],\"password\":\"x\"}",
+   "status": 429,
+   "retryAfter": "600",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":600}",
+   "rejections": []
+  },
+  {
+   "label": "name [\"zzz\"]",
+   "ip": "10.30.0.18",
+   "body": "{\"username\":[\"zzz\"],\"password\":\"x\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "name []",
+   "ip": "10.30.0.19",
+   "body": "{\"username\":[],\"password\":\"x\"}",
+   "status": 500,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Server error\"}",
+   "rejections": []
+  },
+  {
+   "label": "name [\"a\",\"b\"]",
+   "ip": "10.30.0.20",
+   "body": "{\"username\":[\"a\",\"b\"],\"password\":\"x\"}",
+   "status": 500,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Server error\"}",
+   "rejections": []
+  },
+  {
+   "label": "name [null]",
+   "ip": "10.30.0.21",
+   "body": "{\"username\":[null],\"password\":\"x\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": [
+    "NOT NULL constraint failed: login_attempts.username"
+   ]
+  },
+  {
+   "label": "name [5]",
+   "ip": "10.30.0.22",
+   "body": "{\"username\":[5],\"password\":\"x\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "name [[\"x\"]]",
+   "ip": "10.30.0.23",
+   "body": "{\"username\":[[\"x\"]],\"password\":\"x\"}",
+   "status": 500,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Server error\"}",
+   "rejections": []
+  },
+  {
+   "label": "name [{}]",
+   "ip": "10.30.0.24",
+   "body": "{\"username\":[{}],\"password\":\"x\"}",
+   "status": 500,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Server error\"}",
+   "rejections": []
+  },
+  {
+   "label": "name {}",
+   "ip": "10.30.0.25",
+   "body": "{\"username\":{},\"password\":\"x\"}",
+   "status": 500,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Server error\"}",
+   "rejections": []
+  },
+  {
+   "label": "name {\"a\":1}",
+   "ip": "10.30.0.26",
+   "body": "{\"username\":{\"a\":1},\"password\":\"x\"}",
+   "status": 500,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Server error\"}",
+   "rejections": []
+  },
+  {
+   "label": "name {\"length\":3}",
+   "ip": "10.30.0.27",
+   "body": "{\"username\":{\"length\":3},\"password\":\"x\"}",
+   "status": 500,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Server error\"}",
+   "rejections": []
+  },
+  {
+   "label": "name {\"length\":200}",
+   "ip": "10.30.0.28",
+   "body": "{\"username\":{\"length\":200},\"password\":\"x\"}",
+   "status": 400,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "name \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+   "ip": "10.30.0.29",
+   "body": "{\"username\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"password\":\"x\"}",
+   "status": 400,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "name \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+   "ip": "10.30.0.30",
+   "body": "{\"username\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"password\":\"x\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "name \" \"",
+   "ip": "10.30.0.31",
+   "body": "{\"username\":\" \",\"password\":\"x\"}",
+   "status": 429,
+   "retryAfter": "599",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":599}",
+   "rejections": []
+  },
+  {
+   "label": "name \"İ\"",
+   "ip": "10.30.0.32",
+   "body": "{\"username\":\"İ\",\"password\":\"x\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "name \"ΟΔΟΣ\"",
+   "ip": "10.30.0.33",
+   "body": "{\"username\":\"ΟΔΟΣ\",\"password\":\"x\"}",
+   "status": 429,
+   "retryAfter": "599",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":599}",
+   "rejections": []
+  },
+  {
+   "label": "locked account, password 12345",
+   "ip": "10.30.0.34",
+   "body": "{\"username\":\"alice\",\"password\":12345}",
+   "status": 429,
+   "retryAfter": "599",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":599}",
+   "rejections": []
+  },
+  {
+   "label": "unlocked account, password 12345",
+   "ip": "10.30.0.35",
+   "body": "{\"username\":\"bob\",\"password\":12345}",
+   "status": 500,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Server error\"}",
+   "rejections": []
+  },
+  {
+   "label": "locked account, password true",
+   "ip": "10.30.0.36",
+   "body": "{\"username\":\"alice\",\"password\":true}",
+   "status": 429,
+   "retryAfter": "599",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":599}",
+   "rejections": []
+  },
+  {
+   "label": "unlocked account, password true",
+   "ip": "10.30.0.37",
+   "body": "{\"username\":\"bob\",\"password\":true}",
+   "status": 500,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Server error\"}",
+   "rejections": []
+  },
+  {
+   "label": "locked account, password [\"x\"]",
+   "ip": "10.30.0.38",
+   "body": "{\"username\":\"alice\",\"password\":[\"x\"]}",
+   "status": 429,
+   "retryAfter": "599",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":599}",
+   "rejections": []
+  },
+  {
+   "label": "unlocked account, password [\"x\"]",
+   "ip": "10.30.0.39",
+   "body": "{\"username\":\"bob\",\"password\":[\"x\"]}",
+   "status": 500,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Server error\"}",
+   "rejections": []
+  },
+  {
+   "label": "locked account, password {}",
+   "ip": "10.30.0.40",
+   "body": "{\"username\":\"alice\",\"password\":{}}",
+   "status": 429,
+   "retryAfter": "598",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":598}",
+   "rejections": []
+  },
+  {
+   "label": "unlocked account, password {}",
+   "ip": "10.30.0.41",
+   "body": "{\"username\":\"bob\",\"password\":{}}",
+   "status": 500,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Server error\"}",
+   "rejections": []
+  },
+  {
+   "label": "address with 30 failures",
+   "ip": "198.51.100.7",
+   "body": "{\"username\":\"bob\",\"password\":\"Auth-Test-1!pass\"}",
+   "status": 429,
+   "retryAfter": "900",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":900}",
+   "rejections": []
+  },
+  {
+   "label": "address with 30 failures, unknown name",
+   "ip": "198.51.100.7",
+   "body": "{\"username\":\"nobody\",\"password\":\"x\"}",
+   "status": 429,
+   "retryAfter": "900",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":900}",
+   "rejections": []
+  },
+  {
+   "label": "address with 29 failures",
+   "ip": "198.51.100.8",
+   "body": "{\"username\":\"bob\",\"password\":\"x\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "address with 30 failures now",
+   "ip": "198.51.100.8",
+   "body": "{\"username\":\"bob\",\"password\":\"x\"}",
+   "status": 429,
+   "retryAfter": "900",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":900}",
+   "rejections": []
+  },
+  {
+   "label": "carol guess 1",
+   "ip": "10.30.0.42",
+   "body": "{\"username\":\"carol\",\"password\":\"guess-1\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "carol guess 2",
+   "ip": "10.30.0.43",
+   "body": "{\"username\":\"carol\",\"password\":\"guess-2\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "carol guess 3",
+   "ip": "10.30.0.44",
+   "body": "{\"username\":\"carol\",\"password\":\"guess-3\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "carol guess 4",
+   "ip": "10.30.0.45",
+   "body": "{\"username\":\"carol\",\"password\":\"guess-4\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "carol guess 5",
+   "ip": "10.30.0.46",
+   "body": "{\"username\":\"carol\",\"password\":\"guess-5\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "carol guess 6",
+   "ip": "10.30.0.47",
+   "body": "{\"username\":\"carol\",\"password\":\"guess-6\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "carol guess 7",
+   "ip": "10.30.0.48",
+   "body": "{\"username\":\"carol\",\"password\":\"guess-7\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "carol guess 8",
+   "ip": "10.30.0.49",
+   "body": "{\"username\":\"carol\",\"password\":\"guess-8\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "carol guess 9",
+   "ip": "10.30.0.50",
+   "body": "{\"username\":\"carol\",\"password\":\"guess-9\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "carol guess 10",
+   "ip": "10.30.0.51",
+   "body": "{\"username\":\"carol\",\"password\":\"guess-10\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "carol guess 11",
+   "ip": "10.30.0.52",
+   "body": "{\"username\":\"carol\",\"password\":\"guess-11\"}",
+   "status": 429,
+   "retryAfter": "900",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":900}",
+   "rejections": []
+  },
+  {
+   "label": "number guess 1",
+   "ip": "10.30.0.53",
+   "body": "{\"username\":12345.5,\"password\":\"guess-1\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "number guess 2",
+   "ip": "10.30.0.54",
+   "body": "{\"username\":12345.5,\"password\":\"guess-2\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "number guess 3",
+   "ip": "10.30.0.55",
+   "body": "{\"username\":12345.5,\"password\":\"guess-3\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "number guess 4",
+   "ip": "10.30.0.56",
+   "body": "{\"username\":12345.5,\"password\":\"guess-4\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "number guess 5",
+   "ip": "10.30.0.57",
+   "body": "{\"username\":12345.5,\"password\":\"guess-5\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "number guess 6",
+   "ip": "10.30.0.58",
+   "body": "{\"username\":12345.5,\"password\":\"guess-6\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "number guess 7",
+   "ip": "10.30.0.59",
+   "body": "{\"username\":12345.5,\"password\":\"guess-7\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "number guess 8",
+   "ip": "10.30.0.60",
+   "body": "{\"username\":12345.5,\"password\":\"guess-8\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "number guess 9",
+   "ip": "10.30.0.61",
+   "body": "{\"username\":12345.5,\"password\":\"guess-9\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "number guess 10",
+   "ip": "10.30.0.62",
+   "body": "{\"username\":12345.5,\"password\":\"guess-10\"}",
+   "status": 401,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "number guess 11",
+   "ip": "10.30.0.63",
+   "body": "{\"username\":12345.5,\"password\":\"guess-11\"}",
+   "status": 429,
+   "retryAfter": "900",
+   "answer": "{\"success\":false,\"error\":\"Too many sign-in attempts. Please try again later.\",\"code\":\"account_locked\",\"retry_after\":900}",
+   "rejections": []
+  },
+  {
+   "label": "list as body",
+   "ip": "10.30.0.64",
+   "body": "[1,2]",
+   "status": 400,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Invalid username or password.\"}",
+   "rejections": []
+  },
+  {
+   "label": "text as body",
+   "ip": "10.30.0.65",
+   "body": "\"text\"",
+   "status": 400,
+   "retryAfter": "",
+   "answer": "{\"success\":false,\"error\":\"Internal Server Error\"}",
+   "rejections": []
+  }
+ ],
+ "selects": {
+  "attempts": {
+   "sql": "SELECT username, ip_address, CASE WHEN success = 1 THEN 1 ELSE 0 END AS success FROM login_attempts ORDER BY id",
+   "rows": [
+    {
+     "username": "guess-0",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-1",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-2",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-3",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-4",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-5",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-6",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-7",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-8",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-9",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-10",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-11",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-12",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-13",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-14",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-15",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-16",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-17",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-18",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-19",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-20",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-21",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-22",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-23",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-24",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-25",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-26",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-27",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-28",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-29",
+     "ip_address": "198.51.100.7",
+     "success": 0
+    },
+    {
+     "username": "guess-0",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-1",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-2",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-3",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-4",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-5",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-6",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-7",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-8",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-9",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-10",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-11",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-12",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-13",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-14",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-15",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-16",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-17",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-18",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-19",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-20",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-21",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-22",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-23",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-24",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-25",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-26",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-27",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "guess-28",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "old",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "Alice",
+     "ip_address": "10.30.0.4",
+     "success": 0
+    },
+    {
+     "username": "bob",
+     "ip_address": "10.30.0.7",
+     "success": 0
+    },
+    {
+     "username": "expired",
+     "ip_address": "10.30.0.8",
+     "success": 0
+    },
+    {
+     "username": "1.5",
+     "ip_address": "10.30.0.11",
+     "success": 0
+    },
+    {
+     "username": "1.0e+21",
+     "ip_address": "10.30.0.13",
+     "success": 0
+    },
+    {
+     "username": "zzz",
+     "ip_address": "10.30.0.18",
+     "success": 0
+    },
+    {
+     "username": "5.0",
+     "ip_address": "10.30.0.22",
+     "success": 0
+    },
+    {
+     "username": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "ip_address": "10.30.0.30",
+     "success": 0
+    },
+    {
+     "username": "İ",
+     "ip_address": "10.30.0.32",
+     "success": 0
+    },
+    {
+     "username": "bob",
+     "ip_address": "198.51.100.8",
+     "success": 0
+    },
+    {
+     "username": "carol",
+     "ip_address": "10.30.0.42",
+     "success": 0
+    },
+    {
+     "username": "carol",
+     "ip_address": "10.30.0.43",
+     "success": 0
+    },
+    {
+     "username": "carol",
+     "ip_address": "10.30.0.44",
+     "success": 0
+    },
+    {
+     "username": "carol",
+     "ip_address": "10.30.0.45",
+     "success": 0
+    },
+    {
+     "username": "carol",
+     "ip_address": "10.30.0.46",
+     "success": 0
+    },
+    {
+     "username": "carol",
+     "ip_address": "10.30.0.47",
+     "success": 0
+    },
+    {
+     "username": "carol",
+     "ip_address": "10.30.0.48",
+     "success": 0
+    },
+    {
+     "username": "carol",
+     "ip_address": "10.30.0.49",
+     "success": 0
+    },
+    {
+     "username": "carol",
+     "ip_address": "10.30.0.50",
+     "success": 0
+    },
+    {
+     "username": "carol",
+     "ip_address": "10.30.0.51",
+     "success": 0
+    },
+    {
+     "username": "12345.5",
+     "ip_address": "10.30.0.53",
+     "success": 0
+    },
+    {
+     "username": "12345.5",
+     "ip_address": "10.30.0.54",
+     "success": 0
+    },
+    {
+     "username": "12345.5",
+     "ip_address": "10.30.0.55",
+     "success": 0
+    },
+    {
+     "username": "12345.5",
+     "ip_address": "10.30.0.56",
+     "success": 0
+    },
+    {
+     "username": "12345.5",
+     "ip_address": "10.30.0.57",
+     "success": 0
+    },
+    {
+     "username": "12345.5",
+     "ip_address": "10.30.0.58",
+     "success": 0
+    },
+    {
+     "username": "12345.5",
+     "ip_address": "10.30.0.59",
+     "success": 0
+    },
+    {
+     "username": "12345.5",
+     "ip_address": "10.30.0.60",
+     "success": 0
+    },
+    {
+     "username": "12345.5",
+     "ip_address": "10.30.0.61",
+     "success": 0
+    },
+    {
+     "username": "12345.5",
+     "ip_address": "10.30.0.62",
+     "success": 0
+    }
+   ]
+  },
+  "lockouts": {
+   "sql": "SELECT username, attempt_count FROM account_lockouts ORDER BY username",
+   "rows": [
+    {
+     "username": " ",
+     "attempt_count": 10
+    },
+    {
+     "username": "0.1",
+     "attempt_count": 10
+    },
+    {
+     "username": "12345.0",
+     "attempt_count": 10
+    },
+    {
+     "username": "12345.5",
+     "attempt_count": 10
+    },
+    {
+     "username": "abc",
+     "attempt_count": 10
+    },
+    {
+     "username": "alice",
+     "attempt_count": 10
+    },
+    {
+     "username": "carol",
+     "attempt_count": 10
+    },
+    {
+     "username": "expired",
+     "attempt_count": 10
+    },
+    {
+     "username": "soon",
+     "attempt_count": 10
+    },
+    {
+     "username": "true",
+     "attempt_count": 10
+    },
+    {
+     "username": "{\"a\":1}",
+     "attempt_count": 10
+    },
+    {
+     "username": "{\"abc\"}",
+     "attempt_count": 10
+    },
+    {
+     "username": "ΟΔΟΣ",
+     "attempt_count": 10
+    }
+   ]
+  },
+  "audit": {
+   "sql": "SELECT action, details, ip_address FROM audit_log ORDER BY id",
+   "rows": [
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=10.30.0.2",
+     "ip_address": "10.30.0.2"
+    },
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=10.30.0.3",
+     "ip_address": "10.30.0.3"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: A***; ip=10.30.0.4; ua=auth-test/1",
+     "ip_address": "10.30.0.4"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: b***; ip=10.30.0.7; ua=auth-test/1",
+     "ip_address": "10.30.0.7"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: e***; ip=10.30.0.8; ua=auth-test/1",
+     "ip_address": "10.30.0.8"
+    },
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=10.30.0.9",
+     "ip_address": "10.30.0.9"
+    },
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=10.30.0.10",
+     "ip_address": "10.30.0.10"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: 1***; ip=10.30.0.11; ua=auth-test/1",
+     "ip_address": "10.30.0.11"
+    },
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=10.30.0.12",
+     "ip_address": "10.30.0.12"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: 1***; ip=10.30.0.13; ua=auth-test/1",
+     "ip_address": "10.30.0.13"
+    },
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=10.30.0.17",
+     "ip_address": "10.30.0.17"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: z***; ip=10.30.0.18; ua=auth-test/1",
+     "ip_address": "10.30.0.18"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: *** ip=10.30.0.21; ua=auth-test/1",
+     "ip_address": "10.30.0.21"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: *** ip=10.30.0.22; ua=auth-test/1",
+     "ip_address": "10.30.0.22"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: x***; ip=10.30.0.30; ua=auth-test/1",
+     "ip_address": "10.30.0.30"
+    },
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=10.30.0.31",
+     "ip_address": "10.30.0.31"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: *** ip=10.30.0.32; ua=auth-test/1",
+     "ip_address": "10.30.0.32"
+    },
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=10.30.0.33",
+     "ip_address": "10.30.0.33"
+    },
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=10.30.0.34",
+     "ip_address": "10.30.0.34"
+    },
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=10.30.0.36",
+     "ip_address": "10.30.0.36"
+    },
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=10.30.0.38",
+     "ip_address": "10.30.0.38"
+    },
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=10.30.0.40",
+     "ip_address": "10.30.0.40"
+    },
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=198.51.100.7",
+     "ip_address": "198.51.100.7"
+    },
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=198.51.100.7",
+     "ip_address": "198.51.100.7"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: b***; ip=198.51.100.8; ua=auth-test/1",
+     "ip_address": "198.51.100.8"
+    },
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=198.51.100.8",
+     "ip_address": "198.51.100.8"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: c***; ip=10.30.0.42; ua=auth-test/1",
+     "ip_address": "10.30.0.42"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: c***; ip=10.30.0.43; ua=auth-test/1",
+     "ip_address": "10.30.0.43"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: c***; ip=10.30.0.44; ua=auth-test/1",
+     "ip_address": "10.30.0.44"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: c***; ip=10.30.0.45; ua=auth-test/1",
+     "ip_address": "10.30.0.45"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: c***; ip=10.30.0.46; ua=auth-test/1",
+     "ip_address": "10.30.0.46"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: c***; ip=10.30.0.47; ua=auth-test/1",
+     "ip_address": "10.30.0.47"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: c***; ip=10.30.0.48; ua=auth-test/1",
+     "ip_address": "10.30.0.48"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: c***; ip=10.30.0.49; ua=auth-test/1",
+     "ip_address": "10.30.0.49"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: c***; ip=10.30.0.50; ua=auth-test/1",
+     "ip_address": "10.30.0.50"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: c***; ip=10.30.0.51; ua=auth-test/1",
+     "ip_address": "10.30.0.51"
+    },
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=10.30.0.52",
+     "ip_address": "10.30.0.52"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: 1***; ip=10.30.0.53; ua=auth-test/1",
+     "ip_address": "10.30.0.53"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: 1***; ip=10.30.0.54; ua=auth-test/1",
+     "ip_address": "10.30.0.54"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: 1***; ip=10.30.0.55; ua=auth-test/1",
+     "ip_address": "10.30.0.55"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: 1***; ip=10.30.0.56; ua=auth-test/1",
+     "ip_address": "10.30.0.56"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: 1***; ip=10.30.0.57; ua=auth-test/1",
+     "ip_address": "10.30.0.57"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: 1***; ip=10.30.0.58; ua=auth-test/1",
+     "ip_address": "10.30.0.58"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: 1***; ip=10.30.0.59; ua=auth-test/1",
+     "ip_address": "10.30.0.59"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: 1***; ip=10.30.0.60; ua=auth-test/1",
+     "ip_address": "10.30.0.60"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: 1***; ip=10.30.0.61; ua=auth-test/1",
+     "ip_address": "10.30.0.61"
+    },
+    {
+     "action": "login_failed",
+     "details": "Username: 1***; ip=10.30.0.62; ua=auth-test/1",
+     "ip_address": "10.30.0.62"
+    },
+    {
+     "action": "login_blocked",
+     "details": "Account/IP locked; ip=10.30.0.63",
+     "ip_address": "10.30.0.63"
+    }
+   ]
+  }
+ }
+}

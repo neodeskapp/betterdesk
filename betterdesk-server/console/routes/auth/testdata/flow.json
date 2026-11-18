@@ -1293,6 +1293,120 @@
   "request": "GET /logout",
   "answer": {
    "roles": null,
+   "status": 405,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self'; frame-src 'none'; worker-src 'self' blob:; connect-src 'self'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; script-src 'self' 'sha256-xTQM7V4ywctaWeIGqiJ1amibCKKSO4IoqejxLuLjYYc='; style-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+    "content-type": "text/html; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "bytes",
+    "type": "text/html",
+    "length": 3244,
+    "sha256": "6e32ba7c966a79d591cfd5badf03cce6f8df001f8ae60db34f6b96c2b516bdf8",
+    "head": "\u003c!doctype html\u003e\n\u003chtml lang=\"en\" dir=\"ltr\" data-theme=\"light\" data-theme-mode=\"system\"\u003e\n\t\u003chead\u003e\u003cmeta name=\"bd-error\" content=\"500\" data-title=\"Logout requires POST\" data-message=\"Signing out changed to a POST request for CSRF protection. Use the sign-out button in the panel.\"\u003e\n\t\t\u003cmeta charset=\"utf-8\""
+   }
+  }
+ },
+ {
+  "name": "verify-after-sign-out-page",
+  "request": "GET /api/auth/verify",
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "user.id",
+     "integer": true
+    },
+    {
+     "path": "session.createdAt",
+     "integer": true
+    },
+    {
+     "path": "session.lastActivityAt",
+     "integer": true
+    },
+    {
+     "path": "session.idleExpiresAt",
+     "integer": true
+    },
+    {
+     "path": "session.absoluteExpiresAt",
+     "integer": true
+    },
+    {
+     "path": "session.serverNow",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "session": {
+      "absoluteExpiresAt": 0,
+      "createdAt": 0,
+      "idleExpiresAt": 0,
+      "idleTimeoutMs": 1800000,
+      "lastActivityAt": 0,
+      "loginIp": "\u003cclient-ip\u003e",
+      "maxAgeMs": 86400000,
+      "serverNow": 0,
+      "warnBeforeMs": 60000
+     },
+     "success": true,
+     "user": {
+      "id": 0,
+      "preferred_language": null,
+      "role": "operator",
+      "username": "flow_auth_tmp"
+     }
+    }
+   }
+  }
+ },
+ {
+  "name": "sign-out-form",
+  "request": "POST /logout",
+  "answer": {
+   "roles": null,
    "status": 302,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
@@ -1303,7 +1417,6 @@
     "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
-     "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
      "bd.sid=; Path=/; Expires=\u003cpast\u003e",
      "betterdesk.sid=; Path=/; Expires=\u003cpast\u003e"
     ],
@@ -1321,6 +1434,42 @@
     "length": 35,
     "sha256": "778a92858dd05faca43b0dea43460e2e19c95c3ad7080d6fc518010fbf2e9d64",
     "head": "\u003cp\u003eFound. Redirecting to /login\u003c/p\u003e"
+   }
+  }
+ },
+ {
+  "name": "verify-after-sign-out-form",
+  "request": "GET /api/auth/verify",
+  "answer": {
+   "roles": null,
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "\u003cpresent\u003e",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "\u003cn\u003e",
+    "ratelimit-reset": "\u003cn\u003e",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
    }
   }
  },
@@ -1753,11 +1902,11 @@
   }
  },
  {
-  "name": "locked-account-signs-in",
+  "name": "locked-account-refused",
   "request": "POST /api/auth/login",
   "answer": {
    "roles": null,
-   "status": 200,
+   "status": 429,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -1770,10 +1919,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": [
-     "bd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
-    ],
+    "retry-after": "\u003cn\u003e",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -1781,30 +1927,29 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "retry_after",
+     "integer": true
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "redirect": "/",
-     "session": {
-      "idleTimeoutMs": 1800000,
-      "maxAgeMs": 86400000,
-      "replacedPriorSessions": 0
-     },
-     "success": true,
-     "user": {
-      "role": "operator",
-      "username": "flow_auth_tmp"
-     }
+     "code": "account_locked",
+     "error": "Too many sign-in attempts. Please try again later.",
+     "retry_after": 0,
+     "success": false
     }
    }
   }
  },
  {
-  "name": "client-api-after-sign-in",
+  "name": "client-api-still-locked",
   "request": "POST /api/login",
   "answer": {
    "roles": null,
-   "status": 401,
+   "status": 429,
    "headers": {
     "cache-control": "no-store",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -1817,7 +1962,6 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -1825,10 +1969,17 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "retry_after",
+     "integer": true
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "error": "Invalid credentials"
+     "error": "Account temporarily locked due to too many failed attempts",
+     "retry_after": 0
     }
    }
   }
@@ -2087,24 +2238,6 @@
       "details": "Username: f***; ip=\u003cclient-ip\u003e; ua=bd-contract/1",
       "ip_address": "\u003cclient-ip\u003e",
       "username": null
-     },
-     {
-      "action": "login_failed",
-      "details": "Username: f***; ip=\u003cclient-ip\u003e; ua=bd-contract/1",
-      "ip_address": "\u003cclient-ip\u003e",
-      "username": null
-     },
-     {
-      "action": "login",
-      "details": "User logged in; ip=\u003cclient-ip\u003e; ua=bd-contract/1; fingerprint=none",
-      "ip_address": "\u003cclient-ip\u003e",
-      "username": "flow_auth_tmp"
-     },
-     {
-      "action": "logout",
-      "details": "User logged out",
-      "ip_address": "\u003cclient-ip\u003e",
-      "username": "flow_auth_tmp"
      },
      {
       "action": "login_failed",

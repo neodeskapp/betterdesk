@@ -9,11 +9,7 @@
   {
    "roles": [
     "signed-out",
-    "pro",
-    "guest_issuer",
-    "global_admin",
-    "server_admin",
-    "super_admin"
+    "pro"
    ],
    "status": 302,
    "headers": {
@@ -24,11 +20,7 @@
     "location": "/login",
     "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": [
-     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=; Path=/; Expires=<past>",
-     "betterdesk.sid=; Path=/; Expires=<past>"
-    ],
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
     "vary": "Accept",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -43,6 +35,41 @@
     "length": 35,
     "sha256": "778a92858dd05faca43b0dea43460e2e19c95c3ad7080d6fc518010fbf2e9d64",
     "head": "<p>Found. Redirecting to /login</p>"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "global_admin",
+    "server_admin",
+    "super_admin"
+   ],
+   "status": 405,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self'; frame-src 'none'; worker-src 'self' blob:; connect-src 'self'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; script-src 'self' 'sha256-xTQM7V4ywctaWeIGqiJ1amibCKKSO4IoqejxLuLjYYc='; style-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+    "content-type": "text/html; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "bytes",
+    "type": "text/html",
+    "length": 3244,
+    "sha256": "6e32ba7c966a79d591cfd5badf03cce6f8df001f8ae60db34f6b96c2b516bdf8",
+    "head": "<!doctype html>\n<html lang=\"en\" dir=\"ltr\" data-theme=\"light\" data-theme-mode=\"system\">\n\t<head><meta name=\"bd-error\" content=\"500\" data-title=\"Logout requires POST\" data-message=\"Signing out changed to a POST request for CSRF protection. Use the sign-out button in the panel.\">\n\t\t<meta charset=\"utf-8\""
    }
   }
  ]

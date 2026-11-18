@@ -10,9 +10,16 @@ import (
 )
 
 // The sign-in routes (routes/auth.routes.js): what a sign-in refuses, the
-// session of every role, sign-out both ways, single sign-on without a
-// provider, and one account of its own that signs in, is signed in a second
-// time, changes its password and signs out.
+// account typeahead, the session of every role, sign-out through the API
+// and the page (GET /logout only explains that a POST is needed), single
+// sign-on without a provider, and one account of its own that signs in, is
+// signed in a second time, changes its password and signs out.
+//
+// No case locks an account. A lockout takes ten failed sign-ins, and every
+// failed sign-in of the run counts against the limit of 30 per address in
+// 15 minutes, which then refuses every sign-in of the suite, the roles'
+// own included. The lockout is in the flow test of console/routes/auth and
+// in the recorded Node answers there (testdata/lockout_*.json).
 //
 // The two-factor routes change the caller's account, so the roles only send
 // what is refused before anything is written. The whole enrolment, the
@@ -41,6 +48,18 @@ func init() {
 		contract.Case{Name: "verify", Path: "/api/auth/verify"},
 		contract.Case{Name: "sessions", Path: "/api/auth/sessions"},
 		contract.Case{Name: "totp-status", Path: "/api/auth/totp/status"},
+
+		// The account typeahead of the sign-in page: at most eight accounts
+		// whose name starts with a prefix of 2 to 64 characters, in lower
+		// case. The instance has the e2e accounts of eight roles.
+		contract.Case{Name: "lookup", Path: "/login/lookup", Query: url.Values{"q": {"e2e_"}}, Roles: some},
+		contract.Case{Name: "lookup-letter-case", Path: "/login/lookup", Query: url.Values{"q": {" E2E_V "}}, Roles: signedOut},
+		contract.Case{Name: "lookup-one-letter", Path: "/login/lookup", Query: url.Values{"q": {"e"}}, Roles: signedOut},
+		contract.Case{Name: "lookup-too-long", Path: "/login/lookup", Query: url.Values{"q": {strings.Repeat("e", 65)}}, Roles: signedOut},
+		contract.Case{Name: "lookup-without-prefix", Path: "/login/lookup", Roles: signedOut},
+		contract.Case{Name: "lookup-prefix-twice", Path: "/login/lookup", Query: url.Values{"q": {"e2e_", "adm"}}, Roles: signedOut},
+		contract.Case{Name: "lookup-prefix-in-brackets", Path: "/login/lookup", Query: url.Values{"q[]": {"e2e_"}}, Roles: signedOut},
+		contract.Case{Name: "lookup-no-match", Path: "/login/lookup", Query: url.Values{"q": {"contract-nobody"}}, Roles: signedOut},
 
 		// A sign-in that is refused before or by the password check.
 		login("login-empty-body", map[string]any{}),
@@ -169,10 +188,16 @@ func init() {
 		login("account-new-password", map[string]any{"username": authTmpUser, "password": authTmpNewPassword}),
 		contract.Case{Name: "account-logout-page", Path: "/logout", Roles: signedOut},
 		contract.Case{Name: "account-verify-after-logout-page", Path: "/api/auth/verify", Roles: signedOut},
+		// Signing out through the page is a POST with the CSRF token.
+		contract.Case{Name: "account-logout-form-without-csrf", Method: "POST", Path: "/logout", NoCSRF: true, Roles: signedOut},
+		contract.Case{Name: "account-verify-after-refused-logout-form", Path: "/api/auth/verify", Roles: signedOut},
+		contract.Case{Name: "account-logout-form", Method: "POST", Path: "/logout", Roles: signedOut},
+		contract.Case{Name: "account-verify-after-logout-form", Path: "/api/auth/verify", Roles: signedOut},
 		contract.Case{Name: "account-delete", Method: "DELETE", Path: "/api/users/{account}", As: "admin", Roles: signedOut},
 
 		// Sign-out, at the end: it ends the role's session. Half the roles
-		// sign out through the API, the others through the page.
+		// sign out through the API, the others through the page: the page
+		// refuses a GET and keeps the session, the form's POST signs out.
 		contract.Case{
 			Name: "logout-without-csrf", Method: "POST", Path: "/api/auth/logout", Body: map[string]any{},
 			NoCSRF: true, Roles: contract.Roles("signed-out", "viewer"),
@@ -188,6 +213,14 @@ func init() {
 			Roles: contract.Roles("signed-out", "pro", "guest_issuer", "global_admin", "server_admin", "super_admin"),
 		},
 		contract.Case{Name: "verify-after-logout", Path: "/api/auth/verify"},
+		contract.Case{
+			Name: "logout-form", Method: "POST", Path: "/logout",
+			Roles: contract.Roles("signed-out", "pro", "guest_issuer", "global_admin", "server_admin", "super_admin"),
+		},
+		contract.Case{
+			Name: "verify-after-logout-form", Path: "/api/auth/verify",
+			Roles: contract.Roles("signed-out", "pro", "guest_issuer", "global_admin", "server_admin", "super_admin"),
+		},
 		contract.Case{Name: "logout-again", Method: "POST", Path: "/api/auth/logout", Body: map[string]any{}, Roles: contract.Roles("viewer", "admin")},
 	)
 

@@ -4,6 +4,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"unicode"
 	"unicode/utf16"
 
 	"github.com/unitronix/betterdesk-server/console/middleware"
@@ -180,4 +181,66 @@ func hasLength(v middleware.Value, n int) bool {
 		return isNumber && f == float64(n)
 	}
 	return false
+}
+
+// jsLower is s.toLowerCase(): every character's own lower case, with the
+// two rules JavaScript applies on top in any language. The dotted capital
+// I becomes an i and a combining dot above, and a capital sigma at the end
+// of a word becomes the final sigma.
+func jsLower(s string) string {
+	if !strings.ContainsAny(s, "\u0130\u03a3") {
+		return strings.ToLower(s)
+	}
+	runes := []rune(s)
+	var b strings.Builder
+	for i, r := range runes {
+		switch {
+		case r == 0x130:
+			b.WriteString("i\u0307")
+		case r == 0x3a3 && finalSigma(runes, i):
+			b.WriteRune(0x3c2)
+		default:
+			b.WriteRune(unicode.ToLower(r))
+		}
+	}
+	return b.String()
+}
+
+// finalSigma is Unicode's Final_Sigma condition for the sigma at i: a
+// cased letter before it and none after it, with case-ignorable characters
+// in between skipped.
+func finalSigma(runes []rune, i int) bool {
+	before := false
+	for j := i - 1; j >= 0; j-- {
+		if !caseIgnorable(runes[j]) {
+			before = cased(runes[j])
+			break
+		}
+	}
+	if !before {
+		return false
+	}
+	for j := i + 1; j < len(runes); j++ {
+		if !caseIgnorable(runes[j]) {
+			return !cased(runes[j])
+		}
+	}
+	return true
+}
+
+// cased is Unicode's Cased property: upper, lower and title case letters
+// and the other letters that have a case.
+func cased(r rune) bool {
+	return unicode.In(r, unicode.Lu, unicode.Ll, unicode.Lt, unicode.Other_Lowercase, unicode.Other_Uppercase)
+}
+
+// caseIgnorable is Unicode's Case_Ignorable property: marks, format
+// characters, modifier letters and symbols, and the apostrophes, periods
+// and colons that may stand inside a word.
+func caseIgnorable(r rune) bool {
+	switch r {
+	case '\'', '.', ':', 0xb7, 0x387, 0x55f, 0x5f4, 0x2018, 0x2019, 0x2024, 0x2027, 0xfe13, 0xfe52, 0xfe55, 0xff07, 0xff0e, 0xff1a:
+		return true
+	}
+	return unicode.In(r, unicode.Mn, unicode.Me, unicode.Cf, unicode.Lm, unicode.Sk)
 }

@@ -44,6 +44,8 @@ type FS interface {
 	// WriteFile replaces the file's content. A file it creates gets perm
 	// (less the process's umask); an existing file keeps its mode.
 	WriteFile(name string, data []byte, perm fs.FileMode) error
+	// Chmod sets the file's mode, whatever the umask.
+	Chmod(name string, mode fs.FileMode) error
 	Remove(name string) error
 }
 
@@ -57,7 +59,8 @@ func (osFS) ReadFile(name string) ([]byte, error) { return os.ReadFile(name) }
 func (osFS) WriteFile(name string, data []byte, perm fs.FileMode) error {
 	return os.WriteFile(name, data, perm)
 }
-func (osFS) Remove(name string) error { return os.Remove(name) }
+func (osFS) Chmod(name string, mode fs.FileMode) error { return os.Chmod(name, mode) }
+func (osFS) Remove(name string) error                  { return os.Remove(name) }
 
 // Settings are the values the service took from the environment. Each
 // field names its variable and what an unset variable means.

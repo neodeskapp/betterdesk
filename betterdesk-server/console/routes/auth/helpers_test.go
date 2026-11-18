@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -97,7 +98,12 @@ type setup struct {
 	env        map[string]string
 	trustProxy string
 	https      bool
+	// build gives the console a build of the web app: one page.
+	build bool
 }
+
+// testPage is the page of the web app build a test console gets.
+const testPage = "<!doctype html>\n<html><head><title>BetterDesk</title></head><body></body></html>\n"
 
 // world is a console on a database with a fake signal server behind it.
 type world struct {
@@ -122,6 +128,16 @@ func newWorld(t *testing.T, db *store.DB, o setup) *world {
 	if err != nil {
 		t.Fatal(err)
 	}
+	webUI := filepath.Join(data, "no-build")
+	if o.build {
+		webUI = filepath.Join(data, "build")
+		if err := os.MkdirAll(webUI, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(webUI, "index.html"), []byte(testPage), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
 	cfg := &config.Config{
 		Host:            "127.0.0.1",
 		TrustProxy:      trust,
@@ -131,7 +147,7 @@ func newWorld(t *testing.T, db *store.DB, o setup) *world {
 		KeysPath:        data,
 		UploadsDir:      filepath.Join(data, "uploads"),
 		LangDir:         filepath.Join("..", "..", "..", "..", "web-nodejs", "lang"),
-		WebUIDir:        filepath.Join(data, "no-build"),
+		WebUIDir:        webUI,
 		HTTPS:           o.https,
 		DefaultLanguage: "en",
 		Getenv:          func(key string) string { return env[key] },

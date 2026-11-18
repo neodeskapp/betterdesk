@@ -20,8 +20,9 @@ import (
 // The flow test signs in the way a person does, on an account of its own:
 // two-factor enrolment with codes computed from the secret the console
 // hands out, recovery codes, a password change, a second sign-in that ends
-// the first session, the lockout after ten wrong passwords, the pro
-// account, and the audit entries all of that leaves.
+// the first session, sign-out through the page, the lockout after ten
+// wrong passwords, the pro account, and the audit entries all of that
+// leaves.
 //
 // The contract suite cannot do this: its cases send fixed bodies. So this
 // test keeps its own recording, testdata/flow.json, made from the Node
@@ -242,7 +243,13 @@ func TestSignInFlow(t *testing.T) {
 		map[string]any{"currentPassword": flowPassword, "newPassword": flowNewPassword, "confirmPassword": flowPassword})
 	f.do("password-change", browser, "POST", "/api/auth/password",
 		map[string]any{"currentPassword": flowPassword, "newPassword": flowNewPassword, "confirmPassword": flowNewPassword})
+	// The sign-out page refuses a GET and keeps the session; its form posts
 	f.do("sign-out-page", browser, "GET", "/logout", nil)
+	f.do("verify-after-sign-out-page", browser, "GET", "/api/auth/verify", nil,
+		"user.id integer", "session.createdAt integer", "session.lastActivityAt integer",
+		"session.idleExpiresAt integer", "session.absoluteExpiresAt integer", "session.serverNow integer")
+	f.do("sign-out-form", browser, "POST", "/logout", nil)
+	f.do("verify-after-sign-out-form", browser, "GET", "/api/auth/verify", nil)
 	f.do("old-password", browser, "POST", "/api/auth/login", credentials(flowPassword))
 	f.do("new-password", browser, "POST", "/api/auth/login", credentials(flowNewPassword))
 
@@ -252,17 +259,19 @@ func TestSignInFlow(t *testing.T) {
 	f.do("sessions-in-second", second, "GET", "/api/auth/sessions", nil, sessionTimes...)
 	f.do("second-sign-out", second, "POST", "/api/auth/logout", map[string]any{})
 
-	// Ten wrong passwords lock the account for the client API. The console
-	// sign-in writes the lockout and never reads it.
-	for i := 1; i <= 9; i++ {
+	// Ten wrong passwords lock the account: the console's sign-in and the
+	// client API refuse it before they look at the password, the right one
+	// included, so the lockout stays.
+	// The old password above was the first failure
+	for i := 1; i <= 8; i++ {
 		browser.Do(jsonRequest(t, http.MethodPost, "/api/auth/login", credentials("not-the-password")))
 	}
 	f.do("tenth-wrong-password", browser, "POST", "/api/auth/login", credentials("not-the-password"))
 	time.Sleep(500 * time.Millisecond)
 	f.do("client-api-locked", browser, "POST", "/api/login", credentials("not-the-password"), "retry_after integer")
-	f.do("locked-account-signs-in", browser, "POST", "/api/auth/login", credentials(flowNewPassword))
+	f.do("locked-account-refused", browser, "POST", "/api/auth/login", credentials(flowNewPassword), "retry_after integer")
 	time.Sleep(500 * time.Millisecond)
-	f.do("client-api-after-sign-in", browser, "POST", "/api/login", credentials("not-the-password"))
+	f.do("client-api-still-locked", browser, "POST", "/api/login", credentials("not-the-password"), "retry_after integer")
 	f.do("sign-out-4", browser, "POST", "/api/auth/logout", map[string]any{})
 
 	// A pro account is for the desktop client only.

@@ -4,11 +4,13 @@ This folder is a test fixture. It goes away together with `web-nodejs`:
 once the Node console is deleted there is nothing left to compare with,
 and the vectors under `../vectors` stay as the record of what it did.
 
-The scripts load the Node console's real code from `/repo/web-nodejs`
-(`services/authService.js`, `lib/tokenHash.js`, `lib/deviceTokenAuth.js`,
-`middleware/deviceAuth.js`, `lib/oidcRedirectUrl.js` and the database
-adapter), call it with many inputs and write down what it answered. The Go
-tests replay the files.
+The scripts load the Node console's real code (`services/authService.js`,
+`lib/tokenHash.js`, `lib/deviceTokenAuth.js`, `middleware/deviceAuth.js`,
+`lib/oidcRedirectUrl.js` and the database adapter), call it with many
+inputs and write down what it answered. The Go tests replay the files. The
+code is the spec tree of upstream 3.5.264, mounted into the container at
+`/spec/web-nodejs` (`BETTERDESK_NODE_ROOT` names another place);
+`interop.js` reads `/repo/web-nodejs`.
 
 | Script | Writes | Replayed by |
 |---|---|---|

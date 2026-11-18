@@ -106,22 +106,17 @@ func TestStrictEqual(t *testing.T) {
 	}
 }
 
-func TestAttemptName(t *testing.T) {
-	for _, c := range []struct {
-		text             string
-		sqlite, postgres string
-	}{
-		{`"alice"`, "alice", "alice"}, {`12345`, "12345", "12345"}, {`1.50`, "1.5", "1.5"},
-		{`true`, "-", "true"}, {`{"a":1}`, "-", `{"a":1}`}, {`["a"]`, "-", "-"},
+// The answers of "...".toLowerCase() in Node 22. The lookup vectors
+// (testdata/lookup_*.json) hold many more.
+func TestJSLower(t *testing.T) {
+	for _, c := range []struct{ in, want string }{
+		{"Alice", "alice"}, {"ÄÖÜ", "äöü"}, {"İstanbul", "i̇stanbul"},
+		{"ΟΔΟΣ", "οδος"}, {"ΣΑ", "σα"}, {"Σ", "σ"}, {"ΑΣ ΒΣ", "ας βς"}, {"ΑΣΑ", "ασα"},
+		{"ΑΣ.", "ας."}, {"ΑΣ.Α", "ασ.α"}, {"Α.Σ", "α.ς"}, {"ΆΣ", "άς"}, {"ΣΣ", "σς"},
+		{"1Σ", "1σ"}, {"K", "k"}, {"ẞ", "ß"},
 	} {
-		for postgres, want := range map[bool]string{false: c.sqlite, true: c.postgres} {
-			got, ok := attemptName(value(t, c.text), postgres)
-			if !ok {
-				got = "-"
-			}
-			if got != want {
-				t.Errorf("attemptName(%s, postgres %v) = %q, want %q", c.text, postgres, got, want)
-			}
+		if got := jsLower(c.in); got != c.want {
+			t.Errorf("jsLower(%q) = %q, want %q", c.in, got, c.want)
 		}
 	}
 }

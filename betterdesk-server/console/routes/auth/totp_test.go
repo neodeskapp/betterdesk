@@ -20,10 +20,20 @@ func TestPasswordStepOfATwoFactorAccount(t *testing.T) {
 	eachWorld(t, setup{}, func(t *testing.T, w *world) {
 		alice := w.addUser(user{name: "alice", totpEnabled: true, totpSecret: totpSecret, language: "pl"})
 		a := w.agent("X-Client-Fingerprint", "fp-of-the-password-step")
+		// A session from before the password step, as one someone planted
+		a.setSession(`{"before":"sign-in"}`)
+		before := a.sessionID()
 		res := a.post("/api/auth/login", login("alice", password))
 		want(t, "password step", res, http.StatusOK, secondFactorDue)
 		if len(res.cookies()) != 1 || res.cookie("bd.sid") == "" {
 			t.Errorf("cookies of the password step: %q", res.cookies())
+		}
+		// The pending account is in a new session; the old one is empty
+		if after := a.sessionID(); after == before || after == "" {
+			t.Errorf("the password step kept the session id")
+		}
+		if left := w.text(`SELECT COALESCE(MAX(session_json), '') FROM panel_sessions WHERE sid = ?`, before); left != "{}" && left != "" {
+			t.Errorf("the session from before the password step still holds %s", left)
 		}
 		// The session waits for the code and is not signed in
 		wantStored := regexp.MustCompile(`^\{"cookie":\{[^}]+\},` +
@@ -194,20 +204,42 @@ func TestSecondFactorCheckedByTheSignalServer(t *testing.T) {
 	w.api.json("POST /api/auth/login/2fa", 429, `{"error":"slow down"}`)
 	want(t, "limited", b.post("/api/auth/totp/verify", `{"code":"654321"}`), http.StatusTooManyRequests, `{"success":false,"error":"Too many attempts. Please try again later."}`)
 
-	// It does not answer: the console checks the code itself
+	// It does not answer: the console does not check the code itself, a
+	// right code included, and the session keeps waiting
 	w.api.json("POST /api/auth/login/2fa", 500, `{"error":"down"}`)
-	want(t, "no answer, wrong code", b.post("/api/auth/totp/verify", fmt.Sprintf(`{"code":%q}`, wrongCode(t, totpSecret))), http.StatusUnauthorized, invalidCode)
-	res = b.post("/api/auth/totp/verify", fmt.Sprintf(`{"code":%q}`, currentCode(t, totpSecret)))
-	if res.status != http.StatusOK {
-		t.Errorf("no answer, right code: %d %s", res.status, res.body)
+	const unavailable = `{"success":false,"error":"Two-factor verification is temporarily unavailable. Please try again shortly.","code":"totp_backend_unavailable"}`
+	want(t, "no answer, wrong code", b.post("/api/auth/totp/verify", fmt.Sprintf(`{"code":%q}`, wrongCode(t, totpSecret))), http.StatusServiceUnavailable, unavailable)
+	want(t, "no answer, right code", b.post("/api/auth/totp/verify", fmt.Sprintf(`{"code":%q}`, currentCode(t, totpSecret))), http.StatusServiceUnavailable, unavailable)
+	want(t, "no answer, recovery code", b.post("/api/auth/totp/verify", `{"recoveryCode":"AAAA-BBBB"}`), http.StatusServiceUnavailable, unavailable)
+	want(t, "still waiting", b.get("/api/auth/verify"), http.StatusUnauthorized, notSignedIn)
+	if calls := w.api.seen("POST /api/auth/login/2fa"); len(calls) != 6 {
+		t.Errorf("%d calls to the signal server, want 6", len(calls))
 	}
+	// Once it answers again, the waiting session finishes there
+	w.api.json("POST /api/auth/login/2fa", 200, `{"token":"jwt"}`)
+	want(t, "back again", b.post("/api/auth/totp/verify", `{"code":"654321"}`), http.StatusOK, strings.Replace(signedInAlice, `"replacedPriorSessions":0`, `"replacedPriorSessions":1`, 1))
+
+	unavailableEntry := fmt.Sprintf("totp_unavailable|Delegated 2FA unavailable (Go unreachable)|127.0.0.1|%d", alice)
 	equal(t, "audit", w.audit(), []string{
 		fmt.Sprintf("login|User logged in (2FA: totp (Go delegated)); ip=127.0.0.1; ua=auth-test/1|127.0.0.1|%d", alice),
 		fmt.Sprintf("totp_failed|Go server rejected TOTP|127.0.0.1|%d", alice),
-		fmt.Sprintf("totp_failed|Method: totp|127.0.0.1|%d", alice),
-		fmt.Sprintf("login|User logged in (2FA: totp (local)); ip=127.0.0.1; ua=auth-test/1; replaced=1 prior session(s)|127.0.0.1|%d", alice),
+		unavailableEntry, unavailableEntry, unavailableEntry,
+		fmt.Sprintf("login|User logged in (2FA: totp (Go delegated)); ip=127.0.0.1; ua=auth-test/1; replaced=1 prior session(s)|127.0.0.1|%d", alice),
 		fmt.Sprintf("session_replaced|2FA login replaced 1 prior session(s); newIp=127.0.0.1|127.0.0.1|%d", alice),
 	})
+}
+
+func TestSecondFactorUnavailableWhenTheAuditLogFails(t *testing.T) {
+	w := newWorld(t, nil, setup{})
+	alice := w.addUser(user{name: "alice", totpEnabled: true, totpSecret: totpSecret})
+	a := w.agent()
+	a.setSession(fmt.Sprintf(`{"pendingTotpUserId":%d,"pendingTotpUser":{"id":%d,"username":"alice"},"goPartialToken":"partial-1"}`, alice, alice))
+	w.exec(`ALTER TABLE audit_log RENAME TO audit_log_away`)
+	res := a.post("/api/auth/totp/verify", `{"code":"654321"}`)
+	w.exec(`ALTER TABLE audit_log_away RENAME TO audit_log`)
+	if res.status != http.StatusServiceUnavailable {
+		t.Errorf("without an audit log: %d %s", res.status, res.body)
+	}
 }
 
 func TestTwoFactorEnrolment(t *testing.T) {

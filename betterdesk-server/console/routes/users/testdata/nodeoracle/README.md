@@ -11,13 +11,14 @@ the API server.
 
 This folder is a test fixture for the time both servers exist. The route
 file it loads is gone from `web-nodejs` since the routes moved to Go, so the
-script runs only on a tree that still has it (the commit before the move).
+script runs on a tree that still has it: by default the spec tree of
+upstream 3.5.264 mounted at `/spec/web-nodejs`.
 The recorded files stay: `../node_*.json` are plain data and keep pinning
 the Go code to what Node answered.
 
 ## What is recorded
 
-About 470 requests and statements per database shape:
+About 570 requests and statements per database shape:
 
 - every route as every role and signed out, with what is refused after the
   guards;
@@ -42,7 +43,15 @@ About 470 requests and statements per database shape:
   answer of the API server;
 - resetting passwords, deleting accounts, deleting oneself, the last
   administrator, and a session whose userId is text (the form the sign-in
-  writes for 64-bit ids), which never counts as the caller's own account.
+  writes for 64-bit ids), which never counts as the caller's own account;
+- the username rule of new accounts (3 to 64 of `A-Za-z0-9_.@-`);
+- renaming accounts (`PATCH /api/users/:id {username}`): directory and
+  single sign-on accounts, names that are no text, empty, the same after
+  trimming, malformed, taken, missing accounts, the rows keyed by the name
+  (address books, organization members, strategy assignments, lockouts,
+  sign-in attempts), a name the cascade cannot take, and the rest of the
+  request (role, folders, strategy, the caller's own demotion) under the
+  new name.
 
 The four shapes: `sqlite` and `postgres` are databases the Node console set
 up itself; `sqlite-go` and `postgres-go` start from the schema the signal
@@ -72,10 +81,16 @@ end: the Node console looks for existing columns in every schema of a
 database, so a schema next to other tests' tables would miss columns.
 
 `WEB_NODEJS` names another tree. The recordings in `..` were made from the
-tree before the move with the panel access files of upstream 3.5.264 laid
-over it (`middleware/auth.js`, `middleware/panelAccess.js`,
-`lib/panelAccessCatalog.js`, `services/panelAccessPolicyService.js`,
-mounted file by file into the container): the route file itself is still
-the one before the upstream merge. Recorded from the whole 3.5.264 tree,
-the account routes' own upstream changes (username format, renaming) come
-along too.
+spec tree (`C:\Users\info\worktrees\betterdesk-go-spec264\web-nodejs`):
+
+    DEV_DOCKER_ARGS="--network bdgo -v <spec tree>/web-nodejs:/spec/web-nodejs -v bdgo-node-nm:/spec/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/console/routes/users/testdata && node nodeoracle/users.js"
+
+On PostgreSQL the spec tree's rename cascade sends its statements without
+waiting for them and numbers their placeholders on from one statement to
+the next: the rename answers success, changes nothing, and the rejected
+promises end the process (BUGS.md UM22). The script records PostgreSQL
+with the cascade done as meant (`fixCascadeOnPostgres`), which is what the
+Go console does. On SQLite the real cascade runs: where the Node console
+made `address_books` (keyed by user id) every rename answers 500, as it
+does in Node.

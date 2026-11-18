@@ -14,6 +14,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
@@ -212,7 +213,9 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 
 // ---- Creating ----
 
-var usernamePattern = regexp.MustCompile(`^[a-zA-Z0-9_]{3,32}$`)
+// usernamePattern is the form of a new account's name, the one the signal server
+// checks too: 3 to 64 letters, digits and the characters _ . @ -.
+var usernamePattern = regexp.MustCompile(`^[A-Za-z0-9_.@-]{3,64}$`)
 
 // createdAccount is the answer to a new account.
 type createdAccount struct {
@@ -376,13 +379,13 @@ func (h *handlers) clientError(w http.ResponseWriter, r *http.Request, err error
 
 // ---- Changing ----
 
-// update answers PATCH /api/users/{id} with the body {"role", "password",
-// "email", "groupGuids", "folderIds", "peerIds", "strategyGuid"}. Checks
-// and writes go in this order, and what was written before a refusal
-// stays: the id, the account, the password and role of a directory or
-// single sign-on account, the caller's own demotion, the role, the
-// password, the user groups, the device scope, the email. The answer is
-// the account as the list has it.
+// update answers PATCH /api/users/{id} with the body {"username", "role",
+// "password", "email", "groupGuids", "folderIds", "peerIds",
+// "strategyGuid"}. Checks and writes go in this order, and what was
+// written before a refusal stays: the id, the account, the password and
+// role of a directory or single sign-on account, the new username, the
+// caller's own demotion, the role, the password, the user groups, the
+// device scope, the email. The answer is the account as the list has it.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	userID, ok := pathID(r)
 	if !ok {
@@ -422,6 +425,11 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	external := provider == "ldap" || provider == "oidc"
 	if external && password.Truthy() || provider == "ldap" && role.Truthy() {
 		return nil, sayKey(r, http.StatusBadRequest, "users.provider_managed_hint")
+	}
+	if next, ok := newUsername(body, user); ok {
+		if err := h.rename(r, user, next, external); err != nil {
+			return nil, err
+		}
 	}
 	if isSessionAccount(r, userID) && role.Truthy() && access.IsSuperAdminRole(callerRole(r)) && !(role.IsString() && access.IsSuperAdminRole(role.Str())) {
 		return nil, sayKey(r, http.StatusBadRequest, "users.cannot_demote_self")
@@ -487,6 +495,49 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	}
 	out := h.serialize(ctx, updated)
 	return &out, nil
+}
+
+// newUsername is the body's username, trimmed, when it is text and names
+// the account differently. A username that is no text, or is empty after
+// trimming, changes nothing.
+func newUsername(body middleware.JSONObject, user *account) (string, bool) {
+	given := member(body, "username")
+	if !given.IsString() {
+		return "", false
+	}
+	next := jsbind.Trim(given.Str())
+	if current := user.Username.Value(); next == "" || current.IsString() && current.Str() == next {
+		return "", false
+	}
+	return next, true
+}
+
+// rename gives the account the new username, with what is keyed by the
+// name, and notes it in the audit log. A directory or single sign-on
+// account keeps the name its provider gives it. Afterwards the account
+// goes by the new name for the rest of the request. Its sessions and
+// access tokens go on.
+func (h *handlers) rename(r *http.Request, user *account, next string, external bool) error {
+	if external {
+		return sayKey(r, http.StatusBadRequest, "users.provider_managed_hint")
+	}
+	if !usernamePattern.MatchString(next) {
+		return sayKey(r, http.StatusBadRequest, "users.invalid_username")
+	}
+	outcome, err := renameAccount(r.Context(), h.d.Store, user.ID.V, next)
+	switch {
+	case err != nil:
+		return err
+	case outcome == renameTaken:
+		return sayKey(r, http.StatusConflict, "users.username_exists")
+	case outcome == renameMissing:
+		return sayKey(r, http.StatusNotFound, "users.not_found")
+	}
+	if err := h.d.LogAction(r, "user_renamed", "Renamed user "+user.username()+" -> "+next); err != nil {
+		return err
+	}
+	user.Username = jsbind.CellOf(next)
+	return nil
 }
 
 // providerOf is String(user.auth_provider || 'local').trim().toLowerCase().

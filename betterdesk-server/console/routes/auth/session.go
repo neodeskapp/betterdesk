@@ -7,8 +7,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/session"
+	"github.com/unitronix/betterdesk-server/console/webui"
 )
 
 // logout answers POST /api/auth/logout: it ends the session, signed in or
@@ -19,9 +21,30 @@ func (h *handlers) logout(w http.ResponseWriter, r *http.Request) {
 	kit.OK(w, r, nil)
 }
 
-// logoutPage answers GET /logout the same way and sends the browser to the
-// sign-in page.
+// logoutGetMessage is what GET /logout tells a signed-in browser.
+const logoutGetMessage = "Signing out changed to a POST request for CSRF protection. Use the sign-out button in the panel."
+
+// logoutPage answers GET /logout. It signs nobody out: a link or an image
+// on another site could send it. A signed-in browser gets 405 with the
+// console's error page (plain text without a build) and keeps its session;
+// any other goes to the sign-in page.
 func (h *handlers) logoutPage(w http.ResponseWriter, r *http.Request) {
+	var userID json.RawMessage
+	if kit.Session(r).Get("userId", &userID); !jsonTruthy(userID) {
+		kit.Redirect(w, r, "/login")
+		return
+	}
+	options := webui.ErrorOptions{Status: http.StatusMethodNotAllowed, Title: "Logout requires POST", Message: logoutGetMessage}
+	if h.d.WebUI != nil && h.d.WebUI.ErrorPage(w, r, http.StatusInternalServerError, options) {
+		return
+	}
+	httpx.WriteBody(w, r, http.StatusMethodNotAllowed, "text/plain; charset=utf-8", []byte(logoutGetMessage))
+}
+
+// logoutForm answers POST /logout, which passed the CSRF check: it ends
+// the session the way POST /api/auth/logout does and sends the browser to
+// the sign-in page.
+func (h *handlers) logoutForm(w http.ResponseWriter, r *http.Request) {
 	h.signOut(r)
 	kit.Session(r).ClearCookies(w)
 	kit.Redirect(w, r, "/login")

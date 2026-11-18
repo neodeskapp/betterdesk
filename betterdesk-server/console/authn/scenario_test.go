@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -199,6 +200,17 @@ func (m *memFS) WriteFile(name string, data []byte, perm fs.FileMode) error {
 		return nil
 	}
 	m.files[name] = &memFile{content: data, mode: perm}
+	return nil
+}
+
+func (m *memFS) Chmod(name string, mode fs.FileMode) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	f, ok := m.files[name]
+	if !ok || f.dir {
+		return &fs.PathError{Op: "chmod", Path: name, Err: fs.ErrNotExist}
+	}
+	f.mode = mode
 	return nil
 }
 
@@ -631,9 +643,35 @@ func runScenario(t *testing.T, db *store.DB, sc *scenarioVector) {
 	}
 	got := dumpTables(t, db)
 	want := sc.Tables
+	alignTimes(got, want)
 	if len(got) != 0 || len(want) != 0 {
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("rows at the end:\n got %s\nwant %s", toJSON(got), toJSON(want))
+		}
+	}
+}
+
+// timeColumns are the columns dumpTables writes as seconds from the
+// database's clock.
+var timeColumns = []string{"last_login", "created_at", "locked_until", "expires_at", "last_used"}
+
+// alignTimes takes the recorded time where the run's own is one rounding
+// step (ten seconds) away from it: a scenario on a busy machine can take
+// long enough between writing a row and reading it back to round to the
+// next step, which is no difference in what the code wrote.
+func alignTimes(got, want map[string][]map[string]any) {
+	for table, rows := range got {
+		for i, row := range rows {
+			if i >= len(want[table]) {
+				break
+			}
+			for _, column := range timeColumns {
+				g, gok := row[column].(float64)
+				w, wok := want[table][i][column].(float64)
+				if gok && wok && math.Abs(g-w) <= 10 {
+					row[column] = w
+				}
+			}
 		}
 	}
 }

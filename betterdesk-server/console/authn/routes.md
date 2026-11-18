@@ -39,7 +39,16 @@ attestation.
 2. `username` or `password` falsy: `400 <auth.invalid_credentials>`.
    `username.length > 128 || password.length > 128`: the same 400. (A
    number or an object has no length and passes this check.)
-3. `outcome, err := s.Authenticate(ctx, username, password)`.
+3. `lockout, err := s.CheckBruteForceFor(ctx, name, req.ip)`, where `name` is
+   the statement parameter the driver made of `username` (console/jsbind):
+   SQLite refused a boolean, an empty list, a list of several values or of
+   a list or an object, and an object, which answers 500
+   `<errors.server_error>` (UM20). Blocked: audit `login_blocked` /
+   `Account/IP locked; ip=<meta.IP>`, `Retry-After` and
+   `429 {success:false, error:<auth.too_many_attempts>, code:"account_locked", retry_after}`
+   with `lockout.RetryAfter`, or 60 when the end of the lockout could not
+   be read.
+4. `outcome, err := s.Authenticate(ctx, username, password)`.
    Values that are not text: a `username` that is not text is refused by
    `Authenticate` in Node (answer as for step 5, and the attempt is
    recorded with that value as the name). A `password` that is not text
@@ -47,36 +56,38 @@ attestation.
    account and for an unknown user alike. Two exceptions: an account with
    provider `oidc` is refused before the password is looked at (step 5),
    and for an `ldap` account the value went to the Go server as it was.
-4. `outcome.IsFailure()`: `s.RecordAttempt(ctx, username, req.ip, false)`,
+5. `outcome.IsFailure()`: `s.RecordAttemptFor(ctx, name, req.ip, false)`,
    audit `login_failed` /
    `Username collision: <username>; ip=<meta.IP>; ua=<meta.UserAgent, 160>`,
    then `409 {success:false, error:<auth.username_collision>, code:"username_collision"}`
    for `authn.FailureUsernameCollision`, `401 <auth.invalid_credentials>`
    for any other code.
-5. `outcome.User == nil`: `s.RecordAttempt(..., false)`, audit
+6. `outcome.User == nil`: `s.RecordAttemptFor(..., false)`, audit
    `login_failed` / `Username: <username>; ip=...; ua=...`,
    `401 <auth.invalid_credentials>`.
-6. `s.RecordAttempt(ctx, username, req.ip, true)`.
-7. `outcome.User.Role` is `pro`: `403 <auth.pro_only_account>`. Not
+7. `s.RecordAttemptFor(ctx, name, req.ip, true)`.
+8. `outcome.User.Role` is `pro`: `403 <auth.pro_only_account>`. Not
    reachable: `Authenticate` refuses `pro` (kept defect S11).
-8. `outcome.User.TOTPRequired`: `sess.Set("pendingTotpUserId", user.ID)`,
+9. `outcome.User.TOTPRequired`: `sess.Regenerate()` (500 `Server error` when it
+   fails), then `sess.Set("pendingTotpUserId", user.ID)`,
    `sess.Set("pendingTotpUser", user)` (the `authn.User` marshals to what
    Node stored), `sess.Set("pendingClientMeta", meta)`, answer
    `200 {success:true, totpRequired:true}`. Node also stored
    `goPartialToken` when the user object had one; it never has (kept
    defect S10).
-9. Else `sess.Regenerate()`, `sess.Establish(session.User{...}, meta)`,
+10. Else `sess.Regenerate()`, `sess.Establish(session.User{...}, meta)`,
    clear the guest cookie, audit `login` (and `session_replaced`), answer
    with `user`, `redirect` (`httpx.SafeReturnPath(body.return)` or `/`) and
    `session`. `last_login` was already written by `Authenticate`.
 
-The console sign-in never calls `s.CheckBruteForce` (kept defect S6).
 
-### `POST /api/auth/logout` (302-319), `GET /logout` (427-440)
+### `POST /api/auth/logout`, `POST /logout`, `GET /logout`
 
 No service call: audit `logout`, `sess.End(session.ReasonLogout)`,
-`sess.Destroy()`, `sess.ClearCookiesAfterSignOut(w)` for the POST and
-`sess.ClearCookies(w)` for the GET.
+`sess.Destroy()`, `sess.ClearCookiesAfterSignOut(w)` for the API and
+`sess.ClearCookies(w)` and a redirect to `/login` for `POST /logout`.
+`GET /logout` signs nobody out: 405 with the console's error page for a
+signed-in session, a redirect to `/login` otherwise.
 
 ### `GET /api/auth/verify` (324-344), `GET /api/auth/sessions` (349-367)
 
@@ -137,7 +148,9 @@ No second factor and no `pro` check on this path (kept defect S11).
    `400 <auth.totp_session_expired>`.
 2. If the session has `goPartialToken`:
    `api.VerifyTOTPViaGo(ctx, token, code || recoveryCode || "")`; nil
-   falls through to step 3, `rejected` with `rateLimited` is
+   (no answer) is audit `totp_unavailable` / `Delegated 2FA unavailable (Go
+   unreachable)` and `503 {success:false, error:<auth.totp_temporarily_unavailable>, code:"totp_backend_unavailable"}`
+   with no local check, `rejected` with `rateLimited` is
    `429 <auth.totp_rate_limited>`, `rejected` is audit `totp_failed` /
    `Go server rejected TOTP` and `401 <auth.totp_invalid_code>`, a `token`
    finishes the sign-in with the method `totp (Go delegated)`. Never
