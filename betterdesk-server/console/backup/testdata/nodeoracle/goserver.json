@@ -1,0 +1,9 @@
+{
+  "peers": [
+    {"id": "900100001", "hostname": "lab-pc <1> & \"two\"", "online": true, "last_online": "2026-11-10T08:00:00.000Z", "tags": ["lab", "Büro"], "note": "line sep", "cpu": 12.5},
+    {"id": "900100002", "hostname": "nas-😀", "online": false, "last_online": null, "tags": [], "note": "", "cpu": 0}
+  ],
+  "blocklist": {"success": true, "data": {"entries": null, "count": 0}},
+  "auditEvents": {"success": true, "data": [{"id": 1, "action": "login", "time": "2026-11-10 01:02:03", "1": "index key", "b": 2}]},
+  "serverHealth": {"status": "running", "backend": "betterdesk", "uptime": "1h0m5s", "version": "3.5.224"}
+}

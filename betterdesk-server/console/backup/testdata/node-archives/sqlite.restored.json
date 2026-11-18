@@ -1,0 +1,135 @@
+{
+ "result": {
+  "restored": [
+   "database (86 tables)",
+   "uploads (3 files)",
+   "secrets/keys",
+   ".env"
+  ],
+  "skipped": [
+   "goserver-db"
+  ],
+  "warnings": [],
+  "requiresRestart": true
+ },
+ "tables": {
+  "access_policies": null,
+  "access_tokens": null,
+  "account_lockouts": null,
+  "activity_sessions": null,
+  "activity_summaries": null,
+  "address_books": null,
+  "agent_bundle_builds": null,
+  "agent_bundles": null,
+  "alert_history": null,
+  "alert_rules": null,
+  "api_keys": null,
+  "audit_alarms": null,
+  "audit_connections": null,
+  "audit_files": null,
+  "audit_log": [
+   "1|50|'login'|'tab\\there'|'127.0.0.1'|'2026-11-11 00:36:52'"
+  ],
+  "billing_contracts": null,
+  "billing_currencies": null,
+  "billing_packages": null,
+  "billing_period_totals": null,
+  "billing_session_ledger": null,
+  "billing_sessions": null,
+  "billing_work_reports": null,
+  "branding_config": null,
+  "branding_profiles": null,
+  "chat_groups": null,
+  "chat_messages": null,
+  "client_feature_policies": null,
+  "client_sessions": null,
+  "device_connection_mode_commands": null,
+  "device_connection_policies": null,
+  "device_folder_assignments": null,
+  "device_group_members": null,
+  "device_group_user_access": null,
+  "device_group_user_group_access": null,
+  "device_groups": [
+   "1|'8436a41a-7fff-4620-8cc0-5639fd7cc8cc'|'Default'|'Default device group'|''|'manual'|''|'2026-11-11 00:36:52'"
+  ],
+  "device_inventory": null,
+  "device_telemetry": [
+   "1|'900100001'|0.1|0|9007199254740992|0|NULL|'2026-11-11 00:36:52'"
+  ],
+  "device_telemetry_commands": null,
+  "device_telemetry_snapshots": null,
+  "device_tokens": null,
+  "dlp_events": null,
+  "dlp_policies": [
+   "1|'p1'|''|''|'log'|''|1|'[{\"a\":1}]'|'2026-11-10T01:05:50.930Z'|'2026-11-11 00:36:52'"
+  ],
+  "email_notification_log": null,
+  "folders": [
+   "1|'Büro 😀'|'#ffffff'|'folder'|3|'2026-11-11 00:36:52'"
+  ],
+  "help_requests": null,
+  "id_change_history": null,
+  "login_attempts": null,
+  "network_checks": null,
+  "network_targets": null,
+  "notification_reads": null,
+  "org_address_books": null,
+  "org_devices": null,
+  "org_invitations": null,
+  "org_peer_credentials": null,
+  "org_settings": null,
+  "org_users": null,
+  "organizations": null,
+  "panel_access_policies": null,
+  "peer": [
+   "'900100001'|'u-1'|X'090800'|''|'2026-11-11 00:36:52'|0|NULL|0|'{\"hostname\":\"h\",\"2\":\"two\",\"os\":\"linux\"}'|''|''|0|NULL|''|NULL|''"
+  ],
+  "peer_availability_events": null,
+  "peer_connection_sessions": null,
+  "peer_metrics": null,
+  "peer_sysinfo": [
+   "'900100001'|'h'|''|''|''|''|0|3.3|15.6|''|'[{\"w\":1920}]'|'[]'|'{}'|'{}'|'{}'|'2026-11-11 00:36:52'"
+  ],
+  "peers": [
+   "'900100001'|'u-1'|X'000102FFFE'|''|''|'host \u003ca\u003e'|''|''|'OFFLINE'|0|''|'2026-11-11 00:36:52'|0|0|''|NULL|0|NULL|''|''|0|''|''|''|''"
+  ],
+  "pending_registrations": null,
+  "relay_sessions": null,
+  "remote_commands": null,
+  "remote_targets": null,
+  "role_permissions": null,
+  "saved_reports": null,
+  "server_config": null,
+  "settings": [
+   "'backup_retention_count'|'5'|'2026-11-11 00:36:52'",
+   "'broken_utf8'|'a�b'|'2026-11-11 00:36:52'",
+   "'ctl'|'a\u0001b\tc\u2028d\u003c\u003e\u0026\"q\"'|'2026-11-11 00:36:52'",
+   "'desktop_layout_1'|'{\"b\":1,\"2\":2,\"a\":[1,2]}'|'2026-11-11 00:36:52'",
+   "'scheduled_backup_smb'|'{\"host\":\"nas\",\"share\":\"s\",\"password\":\"hunter2\"}'|'2026-11-11 00:36:52'",
+   "'typed'|'7'|'2026-11-11 00:36:52'"
+  ],
+  "strategies": [
+   "1|'g-1'|'rule'|''|''|1|'{\"view\":true}'|'2026-11-11 00:36:52'|'2026-11-11 00:36:52'"
+  ],
+  "strategy_assignments": null,
+  "studio_flows": null,
+  "tenant_devices": null,
+  "tenant_users": null,
+  "tenants": null,
+  "ticket_attachments": null,
+  "ticket_comments": null,
+  "tickets": null,
+  "user_avatars": [
+   "50|'image/png'|X'89504E470D0A1A0A0000'|'v1'|'profile'|''|'2026-11-11 00:36:52'"
+  ],
+  "user_group_members": null,
+  "user_groups": [
+   "1|'f00f4e25-748e-4e7d-9d89-26a33953584a'|'Default'|'Default user group'|''|'2026-11-11 00:36:52'"
+  ],
+  "user_peer_grants": null,
+  "users": [
+   "50|'seed_admin'|'$2b$10$abcdefghijklmnopqrstuv'|'admin'|'local'|'JBSWY3DPEHPK3PXP'|1|'[\"AAAA-BBBB\",\"CCCC-DDDD\"]'|'2026-11-10 01:05:50'|''|0|''|NULL|''|''|'säd😀@example.org'|''|''|''",
+   "51|'second'|'pbkdf2-sha256$600000$s$h'|'viewer'|'local'|''|0|NULL|'2026-11-11 00:36:52'|''|0|''|NULL|''|''|''|''|''|''"
+  ]
+ }
+}

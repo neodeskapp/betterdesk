@@ -34,7 +34,6 @@ const { loadEffectivePermissions } = require('./middleware/auth');
 const authService = require('./services/authService');
 const serverBackend = require('./services/serverBackend');
 const db = require('./services/database');
-const scheduledBackupService = require('./services/scheduledBackupService');
 const { DatabaseSessionStore } = require('./services/databaseSessionStore');
 const userSync = require('./services/userSync');
 const { initWsProxy } = require('./services/wsRelay');
@@ -603,7 +602,6 @@ async function startServer() {
                 // Silent fail
             }
         }, 60 * 60 * 1000); // Every hour
-        scheduledBackupService.start();
         // Offline-time alert rules, checked once a minute
         const stopAlertSweep = require('./services/alertRulesEngine').start();
 
@@ -643,7 +641,6 @@ async function startServer() {
             console.log(`\n${signal} received. Shutting down gracefully...`);
             clearInterval(housekeepingInterval);
             clearInterval(statusSyncInterval);
-            scheduledBackupService.stop();
             stopAlertSweep();
 
             const closePromises = [new Promise(r => server.close(r))];

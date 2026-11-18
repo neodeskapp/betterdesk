@@ -1,0 +1,98 @@
+{
+ "id": "settings-backup/schedule-after-path",
+ "request": {
+  "method": "GET",
+  "path": "/api/settings/backup/schedule"
+ },
+ "recordings": 3,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.status.lastAttemptAt",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "data.status.lastFile",
+     "format": "/aaa/aaaa/aaaaaaaaa-aaaaaaa/aaaaaaaaaa-aaaaaa-9999-99-99-99-99-99.aaa.aa"
+    },
+    {
+     "path": "data.status.lastSha256",
+     "pattern": "^[9aA+/_=-]{64}$"
+    },
+    {
+     "path": "data.status.lastSuccessAt",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "data.status.lastValidation.sizeBytes",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "schedule": {
+       "destinationPath": "/tmp/bk-contract/../bk-contract-dest/",
+       "destinationType": "path",
+       "enabled": false,
+       "intervalHours": 24,
+       "retentionCount": 7
+      },
+      "status": {
+       "lastAttemptAt": "<volatile>",
+       "lastError": null,
+       "lastFile": "<volatile>",
+       "lastPruned": 0,
+       "lastSha256": "<volatile>",
+       "lastSuccessAt": "<volatile>",
+       "lastValidation": {
+        "components": [
+         "console/data.json",
+         "goserver/data.json",
+         "console/auth.db",
+         "goserver/id_ed25519",
+         "goserver/id_ed25519.pub",
+         "goserver/.api_key",
+         "goserver/db_v2.sqlite3",
+         "goserver/mesh_agent_server.pem"
+        ],
+        "sizeBytes": 0,
+        "valid": true
+       }
+      }
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,3 @@
+# Packages and goldens whose names contain "backup" (the root .gitignore
+# leaves out folders named like backups)
+!*backup*/

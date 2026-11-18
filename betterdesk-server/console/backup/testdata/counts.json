@@ -1,0 +1,15 @@
+{
+  "tar": 400,
+  "extract": 2500,
+  "gunzip": 4000,
+  "validateFull": 27,
+  "validateSnapshot": 18,
+  "toFixed": 3021,
+  "base64": 2300,
+  "scheduleSave": 1500,
+  "scheduleGet": 312,
+  "destination": 1500,
+  "smbSave": 1500,
+  "smbGet": 12,
+  "smbTest": 800
+}

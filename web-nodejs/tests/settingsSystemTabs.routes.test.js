@@ -48,7 +48,6 @@ jest.mock('../lib/goApiProxy', () => ({
 
 const settingsRoutes = require('../routes/settings.routes');
 const commercializationRoutes = require('../routes/commercialization.routes');
-const backupService = require('../services/backupService');
 
 function app(role) {
     const a = createTestApp();
@@ -61,13 +60,6 @@ function app(role) {
     a.use(commercializationRoutes);
     return a;
 }
-
-describe('A6: the backend name is awaited', () => {
-    test('backup stats and the JSON settings snapshot name the backend', async () => {
-        expect((await backupService.getBackupStats()).backend).toBe('betterdesk');
-        expect((await backupService.createBackup())._backend).toBe('betterdesk');
-    });
-});
 
 describe('clock settings: read with billing.view or server.config', () => {
     const READS = [
