@@ -155,8 +155,12 @@ func (w *oracleWorld) api(rw http.ResponseWriter, r *http.Request) {
 		}
 		rw.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(rw).Encode(map[string]string{"error": w.script.SetConfig.Error})
-	case r.Method == http.MethodGet && r.URL.Path == "/api/health":
-		w.call("getHealth")
+	case r.Method == http.MethodGet && (r.URL.Path == "/api/health/detail" || r.URL.Path == "/api/health"):
+		// One getHealth of the Node oracle: the detail call, and the short
+		// one the client falls back to when the detail call fails
+		if r.URL.Path == "/api/health/detail" {
+			w.call("getHealth")
+		}
 		rw.Header().Set("Content-Type", "application/json")
 		if w.script.Health != "running" {
 			rw.WriteHeader(http.StatusServiceUnavailable)

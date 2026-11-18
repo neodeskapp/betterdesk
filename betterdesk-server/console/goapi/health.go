@@ -8,11 +8,18 @@ import (
 
 // Health and statistics.
 
-// GetHealth calls GET /api/health. It returns the health object with
-// "status" set to "running" and "backend" set to "betterdesk", or
-// {status:"unreachable", backend:"betterdesk", error} when the call fails.
+// GetHealth calls GET /api/health/detail, the full health payload the API
+// server gives the API key and the console, and GET /api/health, which
+// anyone gets with status and version only, when that call fails. It
+// returns the health object of the call that answered, with "status" set
+// to "running" and "backend" set to "betterdesk", or
+// {status:"unreachable", backend:"betterdesk", error} with the error of the
+// second call when both fail.
 func (c *Client) GetHealth(ctx context.Context) *Object {
-	data, e := c.data(ctx, http.MethodGet, "/health")
+	data, e := c.data(ctx, http.MethodGet, "/health/detail")
+	if e != nil {
+		data, e = c.data(ctx, http.MethodGet, "/health")
+	}
 	if e != nil {
 		return NewObject("status", "unreachable", "backend", "betterdesk", "error", e.Message)
 	}

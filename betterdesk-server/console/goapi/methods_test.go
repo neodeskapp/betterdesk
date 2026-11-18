@@ -128,7 +128,7 @@ func fellBack(msg string, extra string) string {
 }
 
 var methodCases = []methodCase{
-	{fn: "getHealth", request: "GET /api/health",
+	{fn: "getHealth", request: "GET /api/health/detail", failedRequests: []string{"GET /api/health/detail", "GET /api/health"},
 		ok:     `{"ok":true,"status":"running","backend":"betterdesk"}`,
 		failed: `{"status":"unreachable","backend":"betterdesk","error":"` + notFound + `"}`,
 		down:   `{"status":"unreachable","backend":"betterdesk","error":"` + hangUp + `"}`},
@@ -390,6 +390,46 @@ func TestGetServerInfoCallsBothRoutes(t *testing.T) {
 	}}
 	if got, want := toJSON(t, New(api).GetServerInfo(context.Background())), `{"health":{"status":"ok"},"stats":{},"backend":"betterdesk"}`; got != want {
 		t.Errorf("stats failing: result = %s, want %s", got, want)
+	}
+}
+
+// GetHealth reads the full payload of /api/health/detail and falls back to
+// the short /api/health when the detail call fails for any reason (an API
+// server before 3.5.264 answers 404 there, one that refuses the caller
+// 401), as Node's getHealth does.
+func TestGetHealthFallsBackToTheShortPayload(t *testing.T) {
+	for _, c := range []struct {
+		name   string
+		detail func(http.ResponseWriter, *http.Request)
+		want   string
+	}{
+		{"detail answers", answerJSON(200, `{"status":"ok","peers_total":3}`), `{"status":"running","peers_total":3,"backend":"betterdesk"}`},
+		{"no detail route", answerJSON(404, `{"error":"x"}`), `{"status":"running","version":"v","backend":"betterdesk"}`},
+		{"detail refused", answerJSON(401, `{"error":"x"}`), `{"status":"running","version":"v","backend":"betterdesk"}`},
+		{"detail fails", answerJSON(500, `{"error":"x"}`), `{"status":"running","version":"v","backend":"betterdesk"}`},
+		{"detail gives no answer", noAnswer, `{"status":"running","version":"v","backend":"betterdesk"}`},
+	} {
+		api := &fakeAPI{answer: func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/api/health/detail" {
+				c.detail(w, r)
+				return
+			}
+			answerJSON(200, `{"status":"ok","version":"v"}`)(w, r)
+		}}
+		if got := toJSON(t, New(api).GetHealth(context.Background())); got != c.want {
+			t.Errorf("%s: GetHealth = %s, want %s", c.name, got, c.want)
+		}
+	}
+	// Both failing: the error is the one of the short call
+	api := &fakeAPI{answer: func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/health/detail" {
+			noAnswer(w, r)
+			return
+		}
+		answerJSON(503, `{"error":"x"}`)(w, r)
+	}}
+	if got, want := toJSON(t, New(api).GetHealth(context.Background())), `{"status":"unreachable","backend":"betterdesk","error":"Request failed with status code 503"}`; got != want {
+		t.Errorf("both failing: GetHealth = %s, want %s", got, want)
 	}
 }
 

@@ -326,7 +326,7 @@ func TestBackendPassesThrough(t *testing.T) {
 		want string
 		body string
 	}{
-		{"GetHealth", func() { b.GetHealth(ctx) }, "GET /api/health", ""},
+		{"GetHealth", func() { b.GetHealth(ctx) }, "GET /api/health/detail", ""},
 		{"GetServerInfo", nil, "", ""},
 		{"DeleteDevice", func() { b.DeleteDevice(ctx, "P1", DeleteOptions{Revoke: true}) }, "DELETE /api/peers/P1?revoke=true", ""},
 		{"RestoreDevice", func() { b.RestoreDevice(ctx, "P1") }, "POST /api/peers/P1/restore", ""},
