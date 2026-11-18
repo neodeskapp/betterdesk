@@ -1,0 +1,2190 @@
+{
+ "dialect": "postgres",
+ "integration": [
+  {
+   "seed": [
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, NOW() - INTERVAL '1 hours')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, NOW() - INTERVAL '100 hours')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, NOW() - INTERVAL '167 hours')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, NOW() - INTERVAL '169 hours')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, NOW() - INTERVAL '500 hours')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, NOW() - INTERVAL '3000 hours')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, NULL)",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', NOW() - INTERVAL '1 hours')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', NOW() - INTERVAL '169 hours')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', NOW() - INTERVAL '2159 hours')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', NOW() - INTERVAL '2161 hours')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', NOW() - INTERVAL '5000 hours')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', NULL)",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', NOW() - INTERVAL '1 hours')",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', NOW() - INTERVAL '2159 hours')",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', NOW() - INTERVAL '2161 hours')",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', NULL)",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, NOW() - INTERVAL '1 hours')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, NOW() - INTERVAL '2159 hours')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, NOW() - INTERVAL '2161 hours')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, NOW() - INTERVAL '9000 hours')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, NULL)"
+   ],
+   "error": null,
+   "left": [
+    {
+     "t": "audit_alarms",
+     "id": 1
+    },
+    {
+     "t": "audit_alarms",
+     "id": 2
+    },
+    {
+     "t": "audit_alarms",
+     "id": 5
+    },
+    {
+     "t": "audit_connections",
+     "id": 1
+    },
+    {
+     "t": "audit_connections",
+     "id": 2
+    },
+    {
+     "t": "audit_connections",
+     "id": 3
+    },
+    {
+     "t": "audit_connections",
+     "id": 6
+    },
+    {
+     "t": "audit_files",
+     "id": 1
+    },
+    {
+     "t": "audit_files",
+     "id": 2
+    },
+    {
+     "t": "audit_files",
+     "id": 4
+    },
+    {
+     "t": "peer_metrics",
+     "id": 1
+    },
+    {
+     "t": "peer_metrics",
+     "id": 2
+    },
+    {
+     "t": "peer_metrics",
+     "id": 3
+    },
+    {
+     "t": "peer_metrics",
+     "id": 7
+    }
+   ]
+  },
+  {
+   "seed": [
+    "DELETE FROM peer_metrics",
+    "DELETE FROM audit_connections",
+    "DELETE FROM audit_files",
+    "DELETE FROM audit_alarms",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, NOW() - INTERVAL '1 hours')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, NOW() - INTERVAL '100 hours')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, NOW() - INTERVAL '167 hours')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, NOW() - INTERVAL '169 hours')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, NOW() - INTERVAL '500 hours')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, NOW() - INTERVAL '3000 hours')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, NULL)",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', NOW() - INTERVAL '1 hours')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', NOW() - INTERVAL '169 hours')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', NOW() - INTERVAL '2159 hours')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', NOW() - INTERVAL '2161 hours')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', NOW() - INTERVAL '5000 hours')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', NULL)",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', NOW() - INTERVAL '1 hours')",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', NOW() - INTERVAL '2159 hours')",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', NOW() - INTERVAL '2161 hours')",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', NULL)",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, NOW() - INTERVAL '1 hours')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, NOW() - INTERVAL '2159 hours')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, NOW() - INTERVAL '2161 hours')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, NOW() - INTERVAL '9000 hours')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, NULL)",
+    "DROP TABLE audit_files"
+   ],
+   "error": true,
+   "left": [
+    {
+     "t": "audit_alarms",
+     "id": 6
+    },
+    {
+     "t": "audit_alarms",
+     "id": 7
+    },
+    {
+     "t": "audit_alarms",
+     "id": 8
+    },
+    {
+     "t": "audit_alarms",
+     "id": 9
+    },
+    {
+     "t": "audit_alarms",
+     "id": 10
+    },
+    {
+     "t": "audit_connections",
+     "id": 7
+    },
+    {
+     "t": "audit_connections",
+     "id": 8
+    },
+    {
+     "t": "audit_connections",
+     "id": 9
+    },
+    {
+     "t": "audit_connections",
+     "id": 12
+    },
+    {
+     "t": "peer_metrics",
+     "id": 8
+    },
+    {
+     "t": "peer_metrics",
+     "id": 9
+    },
+    {
+     "t": "peer_metrics",
+     "id": 10
+    },
+    {
+     "t": "peer_metrics",
+     "id": 14
+    }
+   ]
+  }
+ ],
+ "stale": [
+  {
+   "value": "",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 2,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": true
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "15",
+   "threshold": "15",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 3,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": false
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "90",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 2,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": true
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "30",
+   "threshold": "30",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 3,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": false
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "5",
+   "threshold": "5",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 3,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": false
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "1",
+   "threshold": "1",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 3,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": false
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "0",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 2,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": true
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "-0",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 2,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": true
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "-5",
+   "threshold": "-5",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 3,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": false
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "+7",
+   "threshold": "7",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 3,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": false
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": " 12",
+   "threshold": "12",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 3,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": false
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "\t\n 8",
+   "threshold": "8",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 3,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": false
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": " 9",
+   "threshold": "9",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 3,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": false
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": " 9",
+   "threshold": "9",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 3,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": false
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "﻿10",
+   "threshold": "10",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 3,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": false
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "1e3",
+   "threshold": "1",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 3,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": false
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "0x10",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 2,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": true
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "3.9",
+   "threshold": "3",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 3,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": false
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "12abc",
+   "threshold": "12",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 3,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": false
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "abc",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 2,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": true
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": " ",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 2,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": true
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "-",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 2,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": true
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "+",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 2,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": true
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "2147483",
+   "threshold": "2147483",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 0,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": true
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": true
+    },
+    {
+     "id": "d3",
+     "status_online": true
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "2147484",
+   "threshold": "2147484",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 0,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": true
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": true
+    },
+    {
+     "id": "d3",
+     "status_online": true
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "99999999999",
+   "threshold": "99999999999",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 0,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": true
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": true
+    },
+    {
+     "id": "d3",
+     "status_online": true
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "999999999999999999999",
+   "threshold": "1e+21",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": null,
+   "error": "interval out of range",
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": true
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": true
+    },
+    {
+     "id": "d3",
+     "status_online": true
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999",
+   "threshold": "Infinity",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": null,
+   "error": "interval out of range",
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": true
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": true
+    },
+    {
+     "id": "d3",
+     "status_online": true
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "٣",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 2,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": true
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  },
+  {
+   "value": "007",
+   "threshold": "7",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', TRUE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', TRUE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', TRUE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', TRUE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', TRUE, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', FALSE, NOW() - INTERVAL '45 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', FALSE, NOW() - INTERVAL '200 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', FALSE, NOW() - INTERVAL '100000 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', FALSE, NOW() + INTERVAL '300 seconds')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', FALSE, NULL)"
+   ],
+   "changes": 3,
+   "error": null,
+   "rows": [
+    {
+     "id": "d1",
+     "status_online": false
+    },
+    {
+     "id": "d10",
+     "status_online": false
+    },
+    {
+     "id": "d2",
+     "status_online": false
+    },
+    {
+     "id": "d3",
+     "status_online": false
+    },
+    {
+     "id": "d4",
+     "status_online": true
+    },
+    {
+     "id": "d5",
+     "status_online": true
+    },
+    {
+     "id": "d6",
+     "status_online": false
+    },
+    {
+     "id": "d7",
+     "status_online": false
+    },
+    {
+     "id": "d8",
+     "status_online": false
+    },
+    {
+     "id": "d9",
+     "status_online": false
+    }
+   ]
+  }
+ ],
+ "settings": [
+  {
+   "value": "",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": "15",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "15"
+  },
+  {
+   "value": "90",
+   "seconds": "90",
+   "delayMs": 90000,
+   "threshold": "90"
+  },
+  {
+   "value": "30",
+   "seconds": "30",
+   "delayMs": 30000,
+   "threshold": "30"
+  },
+  {
+   "value": "5",
+   "seconds": "5",
+   "delayMs": 5000,
+   "threshold": "5"
+  },
+  {
+   "value": "1",
+   "seconds": "1",
+   "delayMs": 1000,
+   "threshold": "1"
+  },
+  {
+   "value": "0",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": "-0",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": "-5",
+   "seconds": "-5",
+   "delayMs": 1,
+   "threshold": "-5"
+  },
+  {
+   "value": "+7",
+   "seconds": "7",
+   "delayMs": 7000,
+   "threshold": "7"
+  },
+  {
+   "value": " 12",
+   "seconds": "12",
+   "delayMs": 12000,
+   "threshold": "12"
+  },
+  {
+   "value": "\t\n 8",
+   "seconds": "8",
+   "delayMs": 8000,
+   "threshold": "8"
+  },
+  {
+   "value": " 9",
+   "seconds": "9",
+   "delayMs": 9000,
+   "threshold": "9"
+  },
+  {
+   "value": " 9",
+   "seconds": "9",
+   "delayMs": 9000,
+   "threshold": "9"
+  },
+  {
+   "value": "﻿10",
+   "seconds": "10",
+   "delayMs": 10000,
+   "threshold": "10"
+  },
+  {
+   "value": "1e3",
+   "seconds": "1",
+   "delayMs": 1000,
+   "threshold": "1"
+  },
+  {
+   "value": "0x10",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": "3.9",
+   "seconds": "3",
+   "delayMs": 3000,
+   "threshold": "3"
+  },
+  {
+   "value": "12abc",
+   "seconds": "12",
+   "delayMs": 12000,
+   "threshold": "12"
+  },
+  {
+   "value": "abc",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": " ",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": "-",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": "+",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": "2147483",
+   "seconds": "2147483",
+   "delayMs": 2147483000,
+   "threshold": "2147483"
+  },
+  {
+   "value": "2147484",
+   "seconds": "2147484",
+   "delayMs": 1,
+   "threshold": "2147484"
+  },
+  {
+   "value": "99999999999",
+   "seconds": "99999999999",
+   "delayMs": 1,
+   "threshold": "99999999999"
+  },
+  {
+   "value": "999999999999999999999",
+   "seconds": "1e+21",
+   "delayMs": 1,
+   "threshold": "1e+21"
+  },
+  {
+   "value": "9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999",
+   "seconds": "Infinity",
+   "delayMs": 1,
+   "threshold": "Infinity"
+  },
+  {
+   "value": "٣",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": "007",
+   "seconds": "7",
+   "delayMs": 7000,
+   "threshold": "7"
+  }
+ ]
+}

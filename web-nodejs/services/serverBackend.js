@@ -208,13 +208,6 @@ async function changePeerId(oldId, newId) {
     return betterdeskApi.changePeerId(oldId, newId);
 }
 
-// ========================== Online Status Sync ===============================
-
-async function syncOnlineStatus() {
-    // BetterDesk Go server owns the peer map — no sync needed.
-    return betterdeskApi.syncOnlineStatus();
-}
-
 // ========================== BetterDesk Features ==============================
 
 async function getStatusSummary() {
@@ -263,7 +256,6 @@ module.exports = {
     updateDevice,
     changePeerId,
     // Status sync
-    syncOnlineStatus,
     // BetterDesk-only
     getStatusSummary,
     getBlocklist,

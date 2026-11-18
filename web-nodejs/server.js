@@ -32,7 +32,6 @@ const {
 const { csrfTokenProvider, csrfGate, downgradeToHttp: csrfDowngradeToHttp } = require('./middleware/csrf');
 const { loadEffectivePermissions } = require('./middleware/auth');
 const authService = require('./services/authService');
-const serverBackend = require('./services/serverBackend');
 const db = require('./services/database');
 const { DatabaseSessionStore } = require('./services/databaseSessionStore');
 const userSync = require('./services/userSync');
@@ -618,62 +617,18 @@ async function startServer() {
         }
         
         // ============ Periodic Housekeeping ============
+        // Old metrics, client audit rows and stale device states are
+        // cleaned up by the Go console in front of this one.
         const housekeepingInterval = setInterval(async () => {
             await authService.cleanupHousekeeping();
-            // Clean up old integration data (metrics >7d, audit >90d)
-            try {
-                await db.runIntegrationHousekeeping();
-            } catch (err) {
-                // Silent fail — don't crash the server for housekeeping
-            }
-            // Clean up old audit_log entries (>90 days)
-            try {
-                if (typeof db.cleanupOldAuditLogs === 'function') {
-                    await db.cleanupOldAuditLogs(90);
-                }
-            } catch (err) {
-                // Silent fail
-            }
         }, 60 * 60 * 1000); // Every hour
         // Offline-time alert rules, checked once a minute
         const stopAlertSweep = require('./services/alertRulesEngine').start();
 
-        // ============ Periodic Online Status Sync ============
-        const syncInterval = parseInt(process.env.STATUS_SYNC_INTERVAL, 10) || 15; // seconds
-        const heartbeatStaleThreshold = parseInt(process.env.HEARTBEAT_STALE_THRESHOLD, 10) || 90; // seconds
-        const statusSyncInterval = setInterval(async () => {
-            try {
-                await serverBackend.syncOnlineStatus();
-            } catch (err) {
-                // Silent fail - don't crash the server
-            }
-            // Also clean up stale heartbeat-based online status
-            try {
-                if (typeof db.cleanupStaleOnlinePeers === 'function') {
-                    await db.cleanupStaleOnlinePeers(heartbeatStaleThreshold);
-                }
-            } catch (err) {
-                // Silent fail
-            }
-        }, syncInterval * 1000);
-        
-        // Initial sync on startup (after short delay for HBBS to be ready)
-        setTimeout(async () => {
-            try {
-                const result = await serverBackend.syncOnlineStatus();
-                if (result.synced > 0) {
-                    console.log(`Initial status sync: ${result.synced} device(s) online`);
-                }
-            } catch (err) {
-                // Silent fail
-            }
-        }, 5000);
-        
         // Graceful shutdown
         const shutdown = (signal) => {
             console.log(`\n${signal} received. Shutting down gracefully...`);
             clearInterval(housekeepingInterval);
-            clearInterval(statusSyncInterval);
             stopAlertSweep();
 
             const closePromises = [new Promise(r => server.close(r))];

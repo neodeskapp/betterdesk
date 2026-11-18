@@ -705,16 +705,6 @@ async function getServerInfo() {
     }
 }
 
-// ========================== Sync (no-op for BetterDesk) ======================
-
-/**
- * In BetterDesk mode the Go server owns the peer map, so status sync
- * is not needed. This is a no-op kept for interface compatibility.
- */
-async function syncOnlineStatus(/* db */) {
-    return { synced: 0, skipped: true, reason: 'betterdesk_manages_state' };
-}
-
 // ===================== Panel grouping and catalog (strangler P2/P3) ==========
 //
 // Go owns the writes for device groups, their members and ACL, folders and
@@ -1862,7 +1852,6 @@ module.exports = {
     getPeerAvailability,
     getPeerConnectionSessions,
     // Sync (no-op)
-    syncOnlineStatus,
     // CDAP
     getCDAPStatus,
     getCDAPDevices,

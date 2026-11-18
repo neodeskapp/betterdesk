@@ -2106,11 +2106,6 @@ function createSqliteAdapter(config) {
                 ORDER BY a.created_at DESC, a.id DESC LIMIT 1
             `).get(action, detailsPrefix, detailsPrefix) || null;
         },
-        async cleanupOldAuditLogs(daysToKeep = 90) {
-            const cutoff = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000).toISOString();
-            const result = openAuth().prepare('DELETE FROM audit_log WHERE created_at < ?').run(cutoff);
-            return result.changes || 0;
-        },
 
         // ---- Settings ----
 
@@ -3141,16 +3136,6 @@ function createSqliteAdapter(config) {
             openMain().prepare(
                 "UPDATE peer SET status_online = 1, last_online = datetime('now') WHERE id = ?"
             ).run(peerId);
-        },
-
-        async cleanupStaleOnlinePeers(thresholdSeconds = 90) {
-            const r = openMain().prepare(`
-                UPDATE peer SET status_online = 0
-                WHERE status_online = 1
-                  AND last_online IS NOT NULL
-                  AND last_online < datetime('now', '-' || ? || ' seconds')
-            `).run(thresholdSeconds);
-            return { changes: r.changes };
         },
 
         async insertPeerMetric(peerId, cpuUsage, memoryUsage, diskUsage) {
@@ -4206,16 +4191,6 @@ function createSqliteAdapter(config) {
                 String(progressPhase || '')
             );
             return this.getAgentBundleBuild({ brandingHash, platform, arch, format });
-        },
-
-        // ---- Integration Housekeeping ----
-
-        async runIntegrationHousekeeping() {
-            const db = openAuth();
-            db.prepare("DELETE FROM peer_metrics WHERE created_at < datetime('now', '-7 days')").run();
-            db.prepare("DELETE FROM audit_connections WHERE created_at < datetime('now', '-90 days')").run();
-            db.prepare("DELETE FROM audit_files WHERE created_at < datetime('now', '-90 days')").run();
-            db.prepare("DELETE FROM audit_alarms WHERE created_at < datetime('now', '-90 days')").run();
         },
     };
 }
@@ -5953,11 +5928,6 @@ function createPostgresAdapter() {
                 WHERE a.action = $1 AND left(a.details, length($2)) = $2
                 ORDER BY a.created_at DESC, a.id DESC LIMIT 1`, [action, detailsPrefix]);
         },
-        async cleanupOldAuditLogs(daysToKeep = 90) {
-            const cutoff = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000).toISOString();
-            const result = await q('DELETE FROM audit_log WHERE created_at < $1', [cutoff]);
-            return result.rowCount || 0;
-        },
 
         // ---- Settings ----
 
@@ -6973,16 +6943,6 @@ function createPostgresAdapter() {
 
         async updatePeerOnlineStatus(peerId) {
             await q('UPDATE peer SET status_online = TRUE, last_online = NOW() WHERE id = $1', [peerId]);
-        },
-
-        async cleanupStaleOnlinePeers(thresholdSeconds = 90) {
-            const r = await q(`
-                UPDATE peer SET status_online = FALSE
-                WHERE status_online = TRUE
-                  AND last_online IS NOT NULL
-                  AND last_online < NOW() - INTERVAL '1 second' * $1
-            `, [thresholdSeconds]);
-            return { changes: r.rowCount };
         },
 
         async insertPeerMetric(peerId, cpuUsage, memoryUsage, diskUsage) {
@@ -8055,15 +8015,6 @@ function createPostgresAdapter() {
                 Math.max(0, Math.min(100, Number(progressPercent || 0))),
                 String(progressPhase || ''),
             ]);
-        },
-
-        // ---- Integration Housekeeping ----
-
-        async runIntegrationHousekeeping() {
-            await q("DELETE FROM peer_metrics WHERE created_at < NOW() - INTERVAL '7 days'");
-            await q("DELETE FROM audit_connections WHERE created_at < NOW() - INTERVAL '90 days'");
-            await q("DELETE FROM audit_files WHERE created_at < NOW() - INTERVAL '90 days'");
-            await q("DELETE FROM audit_alarms WHERE created_at < NOW() - INTERVAL '90 days'");
         },
     };
 }

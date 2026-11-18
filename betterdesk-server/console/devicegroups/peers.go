@@ -283,6 +283,29 @@ func (s *Service) CascadePeerIDChange(ctx context.Context, oldID, newID string) 
 	}
 }
 
+// CleanupStaleOnlinePeers sets the copies of devices offline that count as
+// online in the console's table but whose last contact is more than
+// thresholdSeconds ago, and returns how many it changed. The threshold is
+// bound as a floating-point number, as the old console's driver bound
+// every JavaScript number: on SQLite the time modifier reads "-90.0
+// seconds".
+func (s *Service) CleanupStaleOnlinePeers(ctx context.Context, thresholdSeconds float64) (int64, error) {
+	query := s.db.Pick(`
+                UPDATE peer SET status_online = 0
+                WHERE status_online = 1
+                  AND last_online IS NOT NULL
+                  AND last_online < datetime('now', '-' || ? || ' seconds')`, `
+                UPDATE peer SET status_online = FALSE
+                WHERE status_online = TRUE
+                  AND last_online IS NOT NULL
+                  AND last_online < NOW() - INTERVAL '1 second' * ?`)
+	res, err := s.db.Exec(ctx, query, thresholdSeconds)
+	if err != nil {
+		return 0, fmt.Errorf("set stale devices offline: %w", err)
+	}
+	return res.RowsAffected()
+}
+
 // PeerStats counts the devices of the console's table that are not
 // deleted, after bringing it up to date: {total, online, banned,
 // offline}.

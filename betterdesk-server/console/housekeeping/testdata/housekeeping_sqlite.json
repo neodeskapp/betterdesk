@@ -1,0 +1,3932 @@
+{
+ "dialect": "sqlite",
+ "integration": [
+  {
+   "seed": [
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, datetime('now', '-1 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, CAST(strftime('%s', 'now', '-1 hours') AS INTEGER))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%d', 'now', '-1 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, datetime('now', '-100 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-100 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, CAST(strftime('%s', 'now', '-100 hours') AS INTEGER))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%d', 'now', '-100 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, datetime('now', '-167 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-167 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, CAST(strftime('%s', 'now', '-167 hours') AS INTEGER))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%d', 'now', '-167 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, datetime('now', '-169 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-169 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, CAST(strftime('%s', 'now', '-169 hours') AS INTEGER))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%d', 'now', '-169 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, datetime('now', '-500 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-500 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, CAST(strftime('%s', 'now', '-500 hours') AS INTEGER))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%d', 'now', '-500 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, datetime('now', '-3000 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-3000 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, CAST(strftime('%s', 'now', '-3000 hours') AS INTEGER))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%d', 'now', '-3000 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, NULL)",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, '')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, 'garbage')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, '9999-12-31 23:59:59')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, '0000')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, ' 2000-01-01')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', datetime('now', '-1 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', CAST(strftime('%s', 'now', '-1 hours') AS INTEGER))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%d', 'now', '-1 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', datetime('now', '-169 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-169 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', CAST(strftime('%s', 'now', '-169 hours') AS INTEGER))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%d', 'now', '-169 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', datetime('now', '-2159 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2159 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', CAST(strftime('%s', 'now', '-2159 hours') AS INTEGER))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%d', 'now', '-2159 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', datetime('now', '-2161 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2161 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', CAST(strftime('%s', 'now', '-2161 hours') AS INTEGER))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%d', 'now', '-2161 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', datetime('now', '-5000 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-5000 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', CAST(strftime('%s', 'now', '-5000 hours') AS INTEGER))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%d', 'now', '-5000 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', NULL)",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', '')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', 'garbage')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', '9999-12-31 23:59:59')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', '0000')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', ' 2000-01-01')",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', datetime('now', '-1 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', CAST(strftime('%s', 'now', '-1 hours') AS INTEGER))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', strftime('%Y-%m-%d', 'now', '-1 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', datetime('now', '-2159 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2159 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', CAST(strftime('%s', 'now', '-2159 hours') AS INTEGER))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', strftime('%Y-%m-%d', 'now', '-2159 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', datetime('now', '-2161 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2161 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', CAST(strftime('%s', 'now', '-2161 hours') AS INTEGER))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', strftime('%Y-%m-%d', 'now', '-2161 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', NULL)",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', '')",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', 'garbage')",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', '9999-12-31 23:59:59')",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', '0000')",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', ' 2000-01-01')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, datetime('now', '-1 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, CAST(strftime('%s', 'now', '-1 hours') AS INTEGER))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, strftime('%Y-%m-%d', 'now', '-1 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, datetime('now', '-2159 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2159 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, CAST(strftime('%s', 'now', '-2159 hours') AS INTEGER))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, strftime('%Y-%m-%d', 'now', '-2159 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, datetime('now', '-2161 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2161 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, CAST(strftime('%s', 'now', '-2161 hours') AS INTEGER))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, strftime('%Y-%m-%d', 'now', '-2161 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, datetime('now', '-9000 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-9000 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, CAST(strftime('%s', 'now', '-9000 hours') AS INTEGER))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, strftime('%Y-%m-%d', 'now', '-9000 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, NULL)",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, '')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, 'garbage')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, '9999-12-31 23:59:59')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, '0000')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, ' 2000-01-01')"
+   ],
+   "error": null,
+   "left": [
+    {
+     "t": "audit_alarms",
+     "id": 1
+    },
+    {
+     "t": "audit_alarms",
+     "id": 2
+    },
+    {
+     "t": "audit_alarms",
+     "id": 4
+    },
+    {
+     "t": "audit_alarms",
+     "id": 5
+    },
+    {
+     "t": "audit_alarms",
+     "id": 6
+    },
+    {
+     "t": "audit_alarms",
+     "id": 10
+    },
+    {
+     "t": "audit_alarms",
+     "id": 17
+    },
+    {
+     "t": "audit_alarms",
+     "id": 19
+    },
+    {
+     "t": "audit_alarms",
+     "id": 20
+    },
+    {
+     "t": "audit_connections",
+     "id": 1
+    },
+    {
+     "t": "audit_connections",
+     "id": 2
+    },
+    {
+     "t": "audit_connections",
+     "id": 4
+    },
+    {
+     "t": "audit_connections",
+     "id": 5
+    },
+    {
+     "t": "audit_connections",
+     "id": 6
+    },
+    {
+     "t": "audit_connections",
+     "id": 8
+    },
+    {
+     "t": "audit_connections",
+     "id": 9
+    },
+    {
+     "t": "audit_connections",
+     "id": 10
+    },
+    {
+     "t": "audit_connections",
+     "id": 14
+    },
+    {
+     "t": "audit_connections",
+     "id": 21
+    },
+    {
+     "t": "audit_connections",
+     "id": 23
+    },
+    {
+     "t": "audit_connections",
+     "id": 24
+    },
+    {
+     "t": "audit_files",
+     "id": 1
+    },
+    {
+     "t": "audit_files",
+     "id": 2
+    },
+    {
+     "t": "audit_files",
+     "id": 4
+    },
+    {
+     "t": "audit_files",
+     "id": 5
+    },
+    {
+     "t": "audit_files",
+     "id": 6
+    },
+    {
+     "t": "audit_files",
+     "id": 10
+    },
+    {
+     "t": "audit_files",
+     "id": 13
+    },
+    {
+     "t": "audit_files",
+     "id": 15
+    },
+    {
+     "t": "audit_files",
+     "id": 16
+    },
+    {
+     "t": "peer_metrics",
+     "id": 1
+    },
+    {
+     "t": "peer_metrics",
+     "id": 2
+    },
+    {
+     "t": "peer_metrics",
+     "id": 4
+    },
+    {
+     "t": "peer_metrics",
+     "id": 5
+    },
+    {
+     "t": "peer_metrics",
+     "id": 6
+    },
+    {
+     "t": "peer_metrics",
+     "id": 8
+    },
+    {
+     "t": "peer_metrics",
+     "id": 9
+    },
+    {
+     "t": "peer_metrics",
+     "id": 10
+    },
+    {
+     "t": "peer_metrics",
+     "id": 14
+    },
+    {
+     "t": "peer_metrics",
+     "id": 25
+    },
+    {
+     "t": "peer_metrics",
+     "id": 27
+    },
+    {
+     "t": "peer_metrics",
+     "id": 28
+    }
+   ]
+  },
+  {
+   "seed": [
+    "DELETE FROM peer_metrics",
+    "DELETE FROM audit_connections",
+    "DELETE FROM audit_files",
+    "DELETE FROM audit_alarms",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, datetime('now', '-1 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, CAST(strftime('%s', 'now', '-1 hours') AS INTEGER))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%d', 'now', '-1 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, datetime('now', '-100 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-100 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, CAST(strftime('%s', 'now', '-100 hours') AS INTEGER))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%d', 'now', '-100 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, datetime('now', '-167 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-167 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, CAST(strftime('%s', 'now', '-167 hours') AS INTEGER))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%d', 'now', '-167 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, datetime('now', '-169 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-169 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, CAST(strftime('%s', 'now', '-169 hours') AS INTEGER))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%d', 'now', '-169 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, datetime('now', '-500 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-500 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, CAST(strftime('%s', 'now', '-500 hours') AS INTEGER))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%d', 'now', '-500 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, datetime('now', '-3000 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-3000 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, CAST(strftime('%s', 'now', '-3000 hours') AS INTEGER))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, strftime('%Y-%m-%d', 'now', '-3000 hours'))",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, NULL)",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, '')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, 'garbage')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, '9999-12-31 23:59:59')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, '0000')",
+    "INSERT INTO peer_metrics (peer_id, cpu_usage, created_at) VALUES ('m', 1, ' 2000-01-01')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', datetime('now', '-1 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', CAST(strftime('%s', 'now', '-1 hours') AS INTEGER))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%d', 'now', '-1 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', datetime('now', '-169 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-169 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', CAST(strftime('%s', 'now', '-169 hours') AS INTEGER))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%d', 'now', '-169 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', datetime('now', '-2159 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2159 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', CAST(strftime('%s', 'now', '-2159 hours') AS INTEGER))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%d', 'now', '-2159 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', datetime('now', '-2161 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2161 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', CAST(strftime('%s', 'now', '-2161 hours') AS INTEGER))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%d', 'now', '-2161 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', datetime('now', '-5000 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-5000 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', CAST(strftime('%s', 'now', '-5000 hours') AS INTEGER))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', strftime('%Y-%m-%d', 'now', '-5000 hours'))",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', NULL)",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', '')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', 'garbage')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', '9999-12-31 23:59:59')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', '0000')",
+    "INSERT INTO audit_connections (host_id, action, created_at) VALUES ('h', 'new', ' 2000-01-01')",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', datetime('now', '-1 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', CAST(strftime('%s', 'now', '-1 hours') AS INTEGER))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', strftime('%Y-%m-%d', 'now', '-1 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', datetime('now', '-2159 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2159 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', CAST(strftime('%s', 'now', '-2159 hours') AS INTEGER))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', strftime('%Y-%m-%d', 'now', '-2159 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', datetime('now', '-2161 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2161 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', CAST(strftime('%s', 'now', '-2161 hours') AS INTEGER))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', strftime('%Y-%m-%d', 'now', '-2161 hours'))",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', NULL)",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', '')",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', 'garbage')",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', '9999-12-31 23:59:59')",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', '0000')",
+    "INSERT INTO audit_files (host_id, created_at) VALUES ('h', ' 2000-01-01')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, datetime('now', '-1 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, CAST(strftime('%s', 'now', '-1 hours') AS INTEGER))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, strftime('%Y-%m-%d', 'now', '-1 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, datetime('now', '-2159 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2159 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, CAST(strftime('%s', 'now', '-2159 hours') AS INTEGER))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, strftime('%Y-%m-%d', 'now', '-2159 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, datetime('now', '-2161 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2161 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, CAST(strftime('%s', 'now', '-2161 hours') AS INTEGER))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, strftime('%Y-%m-%d', 'now', '-2161 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, datetime('now', '-9000 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-9000 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, CAST(strftime('%s', 'now', '-9000 hours') AS INTEGER))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, strftime('%Y-%m-%d', 'now', '-9000 hours'))",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, NULL)",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, '')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, 'garbage')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, '9999-12-31 23:59:59')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, '0000')",
+    "INSERT INTO audit_alarms (alarm_type, created_at) VALUES (1, ' 2000-01-01')",
+    "DROP TABLE audit_files"
+   ],
+   "error": true,
+   "left": [
+    {
+     "t": "audit_alarms",
+     "id": 23
+    },
+    {
+     "t": "audit_alarms",
+     "id": 24
+    },
+    {
+     "t": "audit_alarms",
+     "id": 25
+    },
+    {
+     "t": "audit_alarms",
+     "id": 26
+    },
+    {
+     "t": "audit_alarms",
+     "id": 27
+    },
+    {
+     "t": "audit_alarms",
+     "id": 28
+    },
+    {
+     "t": "audit_alarms",
+     "id": 29
+    },
+    {
+     "t": "audit_alarms",
+     "id": 30
+    },
+    {
+     "t": "audit_alarms",
+     "id": 31
+    },
+    {
+     "t": "audit_alarms",
+     "id": 32
+    },
+    {
+     "t": "audit_alarms",
+     "id": 33
+    },
+    {
+     "t": "audit_alarms",
+     "id": 34
+    },
+    {
+     "t": "audit_alarms",
+     "id": 35
+    },
+    {
+     "t": "audit_alarms",
+     "id": 36
+    },
+    {
+     "t": "audit_alarms",
+     "id": 37
+    },
+    {
+     "t": "audit_alarms",
+     "id": 38
+    },
+    {
+     "t": "audit_alarms",
+     "id": 39
+    },
+    {
+     "t": "audit_alarms",
+     "id": 40
+    },
+    {
+     "t": "audit_alarms",
+     "id": 41
+    },
+    {
+     "t": "audit_alarms",
+     "id": 42
+    },
+    {
+     "t": "audit_alarms",
+     "id": 43
+    },
+    {
+     "t": "audit_alarms",
+     "id": 44
+    },
+    {
+     "t": "audit_connections",
+     "id": 27
+    },
+    {
+     "t": "audit_connections",
+     "id": 28
+    },
+    {
+     "t": "audit_connections",
+     "id": 30
+    },
+    {
+     "t": "audit_connections",
+     "id": 31
+    },
+    {
+     "t": "audit_connections",
+     "id": 32
+    },
+    {
+     "t": "audit_connections",
+     "id": 34
+    },
+    {
+     "t": "audit_connections",
+     "id": 35
+    },
+    {
+     "t": "audit_connections",
+     "id": 36
+    },
+    {
+     "t": "audit_connections",
+     "id": 40
+    },
+    {
+     "t": "audit_connections",
+     "id": 47
+    },
+    {
+     "t": "audit_connections",
+     "id": 49
+    },
+    {
+     "t": "audit_connections",
+     "id": 50
+    },
+    {
+     "t": "peer_metrics",
+     "id": 31
+    },
+    {
+     "t": "peer_metrics",
+     "id": 32
+    },
+    {
+     "t": "peer_metrics",
+     "id": 34
+    },
+    {
+     "t": "peer_metrics",
+     "id": 35
+    },
+    {
+     "t": "peer_metrics",
+     "id": 36
+    },
+    {
+     "t": "peer_metrics",
+     "id": 38
+    },
+    {
+     "t": "peer_metrics",
+     "id": 39
+    },
+    {
+     "t": "peer_metrics",
+     "id": 40
+    },
+    {
+     "t": "peer_metrics",
+     "id": 44
+    },
+    {
+     "t": "peer_metrics",
+     "id": 55
+    },
+    {
+     "t": "peer_metrics",
+     "id": 57
+    },
+    {
+     "t": "peer_metrics",
+     "id": 58
+    }
+   ]
+  }
+ ],
+ "stale": [
+  {
+   "value": "",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 4,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 1
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "15",
+   "threshold": "15",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 5,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 0
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "90",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 4,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 1
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "30",
+   "threshold": "30",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 5,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 0
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "5",
+   "threshold": "5",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 5,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 0
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "1",
+   "threshold": "1",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 5,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 0
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "0",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 4,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 1
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "-0",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 4,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 1
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "-5",
+   "threshold": "-5",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 0,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 1
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 1
+    },
+    {
+     "id": "d3",
+     "status_online": 1
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 1
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 1
+    }
+   ]
+  },
+  {
+   "value": "+7",
+   "threshold": "7",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 5,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 0
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": " 12",
+   "threshold": "12",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 5,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 0
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "\t\n 8",
+   "threshold": "8",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 5,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 0
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": " 9",
+   "threshold": "9",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 5,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 0
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": " 9",
+   "threshold": "9",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 5,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 0
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "﻿10",
+   "threshold": "10",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 5,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 0
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "1e3",
+   "threshold": "1",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 5,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 0
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "0x10",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 4,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 1
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "3.9",
+   "threshold": "3",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 5,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 0
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "12abc",
+   "threshold": "12",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 5,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 0
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "abc",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 4,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 1
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": " ",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 4,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 1
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "-",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 4,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 1
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "+",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 4,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 1
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "2147483",
+   "threshold": "2147483",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 2,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 1
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 1
+    },
+    {
+     "id": "d3",
+     "status_online": 1
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "2147484",
+   "threshold": "2147484",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 2,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 1
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 1
+    },
+    {
+     "id": "d3",
+     "status_online": 1
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "99999999999",
+   "threshold": "99999999999",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 1,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 1
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 1
+    },
+    {
+     "id": "d3",
+     "status_online": 1
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 1
+    }
+   ]
+  },
+  {
+   "value": "999999999999999999999",
+   "threshold": "1e+21",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 0,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 1
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 1
+    },
+    {
+     "id": "d3",
+     "status_online": 1
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 1
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 1
+    }
+   ]
+  },
+  {
+   "value": "9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999",
+   "threshold": "Infinity",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 0,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 1
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 1
+    },
+    {
+     "id": "d3",
+     "status_online": 1
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 1
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 1
+    }
+   ]
+  },
+  {
+   "value": "٣",
+   "threshold": "90",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 4,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 1
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  },
+  {
+   "value": "007",
+   "threshold": "7",
+   "seed": [
+    "DELETE FROM peer",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d1', 1, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d2', 1, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d3', 1, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d4', 1, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d5', 1, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d6', 1, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d7', 1, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d8', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d9', 1, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d10', 0, datetime('now', '-45 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d11', 0, datetime('now', '-200 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d12', 0, datetime('now', '-100000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d13', 0, datetime('now', '+300 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d14', 0, NULL)",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d15', 0, '')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d16', 0, 'garbage')",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d17', 0, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds'))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d18', 0, CAST(strftime('%s', 'now', '-1000 seconds') AS INTEGER))",
+    "INSERT INTO peer (id, status_online, last_online) VALUES ('d-two', 2, datetime('now', '-1000 seconds'))"
+   ],
+   "changes": 5,
+   "error": null,
+   "rows": [
+    {
+     "id": "d-two",
+     "status_online": 2
+    },
+    {
+     "id": "d1",
+     "status_online": 0
+    },
+    {
+     "id": "d10",
+     "status_online": 0
+    },
+    {
+     "id": "d11",
+     "status_online": 0
+    },
+    {
+     "id": "d12",
+     "status_online": 0
+    },
+    {
+     "id": "d13",
+     "status_online": 0
+    },
+    {
+     "id": "d14",
+     "status_online": 0
+    },
+    {
+     "id": "d15",
+     "status_online": 0
+    },
+    {
+     "id": "d16",
+     "status_online": 0
+    },
+    {
+     "id": "d17",
+     "status_online": 0
+    },
+    {
+     "id": "d18",
+     "status_online": 0
+    },
+    {
+     "id": "d2",
+     "status_online": 0
+    },
+    {
+     "id": "d3",
+     "status_online": 0
+    },
+    {
+     "id": "d4",
+     "status_online": 1
+    },
+    {
+     "id": "d5",
+     "status_online": 1
+    },
+    {
+     "id": "d6",
+     "status_online": 0
+    },
+    {
+     "id": "d7",
+     "status_online": 1
+    },
+    {
+     "id": "d8",
+     "status_online": 1
+    },
+    {
+     "id": "d9",
+     "status_online": 0
+    }
+   ]
+  }
+ ],
+ "settings": [
+  {
+   "value": "",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": "15",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "15"
+  },
+  {
+   "value": "90",
+   "seconds": "90",
+   "delayMs": 90000,
+   "threshold": "90"
+  },
+  {
+   "value": "30",
+   "seconds": "30",
+   "delayMs": 30000,
+   "threshold": "30"
+  },
+  {
+   "value": "5",
+   "seconds": "5",
+   "delayMs": 5000,
+   "threshold": "5"
+  },
+  {
+   "value": "1",
+   "seconds": "1",
+   "delayMs": 1000,
+   "threshold": "1"
+  },
+  {
+   "value": "0",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": "-0",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": "-5",
+   "seconds": "-5",
+   "delayMs": 1,
+   "threshold": "-5"
+  },
+  {
+   "value": "+7",
+   "seconds": "7",
+   "delayMs": 7000,
+   "threshold": "7"
+  },
+  {
+   "value": " 12",
+   "seconds": "12",
+   "delayMs": 12000,
+   "threshold": "12"
+  },
+  {
+   "value": "\t\n 8",
+   "seconds": "8",
+   "delayMs": 8000,
+   "threshold": "8"
+  },
+  {
+   "value": " 9",
+   "seconds": "9",
+   "delayMs": 9000,
+   "threshold": "9"
+  },
+  {
+   "value": " 9",
+   "seconds": "9",
+   "delayMs": 9000,
+   "threshold": "9"
+  },
+  {
+   "value": "﻿10",
+   "seconds": "10",
+   "delayMs": 10000,
+   "threshold": "10"
+  },
+  {
+   "value": "1e3",
+   "seconds": "1",
+   "delayMs": 1000,
+   "threshold": "1"
+  },
+  {
+   "value": "0x10",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": "3.9",
+   "seconds": "3",
+   "delayMs": 3000,
+   "threshold": "3"
+  },
+  {
+   "value": "12abc",
+   "seconds": "12",
+   "delayMs": 12000,
+   "threshold": "12"
+  },
+  {
+   "value": "abc",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": " ",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": "-",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": "+",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": "2147483",
+   "seconds": "2147483",
+   "delayMs": 2147483000,
+   "threshold": "2147483"
+  },
+  {
+   "value": "2147484",
+   "seconds": "2147484",
+   "delayMs": 1,
+   "threshold": "2147484"
+  },
+  {
+   "value": "99999999999",
+   "seconds": "99999999999",
+   "delayMs": 1,
+   "threshold": "99999999999"
+  },
+  {
+   "value": "999999999999999999999",
+   "seconds": "1e+21",
+   "delayMs": 1,
+   "threshold": "1e+21"
+  },
+  {
+   "value": "9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999",
+   "seconds": "Infinity",
+   "delayMs": 1,
+   "threshold": "Infinity"
+  },
+  {
+   "value": "٣",
+   "seconds": "15",
+   "delayMs": 15000,
+   "threshold": "90"
+  },
+  {
+   "value": "007",
+   "seconds": "7",
+   "delayMs": 7000,
+   "threshold": "7"
+  }
+ ]
+}

@@ -27,11 +27,13 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/alerts"
 	"github.com/unitronix/betterdesk-server/console/auditlog"
+	"github.com/unitronix/betterdesk-server/console/authimport"
 	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/avatars"
 	"github.com/unitronix/betterdesk-server/console/bdrelay"
@@ -39,10 +41,12 @@ import (
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/csrf"
 	"github.com/unitronix/betterdesk-server/console/devicegroups"
+	"github.com/unitronix/betterdesk-server/console/discovery"
 	"github.com/unitronix/betterdesk-server/console/filetransfer"
 	"github.com/unitronix/betterdesk-server/console/generator"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/guestaccess"
+	"github.com/unitronix/betterdesk-server/console/housekeeping"
 	"github.com/unitronix/betterdesk-server/console/i18n"
 	"github.com/unitronix/betterdesk-server/console/jobs"
 	"github.com/unitronix/betterdesk-server/console/kit"
@@ -92,6 +96,9 @@ type Server struct {
 	jobs     *jobs.Registry
 	httpSrv  *http.Server
 	listener net.Listener
+	// authImport says where the old console's auth.db is (Start imports
+	// it).
+	authImport authimport.Options
 }
 
 // New builds the console server: its services, the pipeline and the
@@ -311,6 +318,25 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	s.jobs.Add("device status push", s.deps.StatusPush.Run)
 	s.deps.Relay = bdrelay.New(bdrelay.Options{VerifyDevice: s.deps.Authn.VerifyDeviceWSAuth})
 	s.jobs.Add("bd-relay session cleanup", s.deps.Relay.Run)
+	// The rest of the old console's start sequence: the hourly clean-up,
+	// the stale device sweep, and, unless a Node console behind this one
+	// binds their ports itself, LAN discovery and the mDNS announcement.
+	s.authImport = authimport.FromEnv(getenv, cfg.DataDir)
+	sweeps := housekeeping.New(housekeeping.Options{DB: opts.Store, StalePeers: s.deps.DeviceGroups.CleanupStaleOnlinePeers,
+		StatusSyncInterval: getenv("STATUS_SYNC_INTERVAL"), HeartbeatStaleThreshold: getenv("HEARTBEAT_STALE_THRESHOLD")})
+	s.jobs.Add("integration housekeeping", sweeps.RunIntegration)
+	s.jobs.Add("online status sync", sweeps.RunStatusSync)
+	if cfg.NodeUpstream == nil {
+		lan := discovery.FromEnv(getenv, discovery.Settings{PubKeyPath: cfg.PubKeyPath, Port: float64(cfg.Port), APIPort: float64(cfg.APIPort), HTTPS: cfg.HTTPS,
+			Version: serverinfo.ReadProductVersion(serverinfo.OSFS{}, filepath.Join(cfg.ConsoleDir, ".."), cfg.ConsoleDir, serverinfo.DefaultVersionFallback)})
+		s.jobs.Add("LAN discovery", discovery.NewLAN(lan).Run)
+		// The old console announced itself over mDNS only where someone had
+		// installed bonjour-service by hand; no installer or image did. So
+		// the announcement runs only when PANEL_MDNS asks for it.
+		if mdns := getenv("PANEL_MDNS"); mdns != "" && mdns != "off" && mdns != "0" {
+			s.jobs.Add("mDNS announcement", discovery.NewMDNS(lan).Run)
+		}
+	}
 	registerRoutes(s.deps)
 	registerSockets(s.deps)
 	s.pipeline = s.buildPipeline()
@@ -379,7 +405,10 @@ func (s *Server) handles(r *http.Request) bool {
 // Start opens the listener, starts the background jobs and serves until
 // ctx ends or Stop is called.
 //
-// Before it listens it loads the branding settings into their cache. It
+// Before it listens it imports the old console's auth.db when there is
+// one that was never imported (package authimport; not while the Node
+// console is behind this one, which still reads that file), and loads the
+// branding settings into their cache. It
 // also looks after the first account (see
 // authn.Service.EnsureDefaultAdmin), unless the Node console is behind
 // this one: that console does the same at its own start, and the file by
@@ -388,6 +417,11 @@ func (s *Server) handles(r *http.Request) bool {
 // sure to know the password the installer set (web-nodejs/.env), so it is
 // left to it.
 func (s *Server) Start(ctx context.Context) error {
+	if s.cfg.NodeUpstream == nil {
+		if _, err := authimport.Run(ctx, s.deps.Store, s.authImport); err != nil {
+			return fmt.Errorf("auth.db import: %w", err)
+		}
+	}
 	s.deps.Branding.LoadBranding(ctx)
 	if s.cfg.NodeUpstream == nil {
 		if _, err := s.deps.Authn.EnsureDefaultAdmin(ctx); err != nil {

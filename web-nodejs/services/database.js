@@ -66,7 +66,6 @@ const facade = {
 
     // ---- Peer Online Status / Heartbeat ----
     updatePeerOnlineStatus: (peerId) => adapter.updatePeerOnlineStatus(peerId),
-    cleanupStaleOnlinePeers: (thresholdSeconds) => adapter.cleanupStaleOnlinePeers(thresholdSeconds),
 
     // ---- Peer Sysinfo ----
     upsertPeerSysinfo: (peerId, data) => adapter.upsertPeerSysinfo(peerId, data),
@@ -291,7 +290,6 @@ const facade = {
     setStrategyEnabled: (guid, enabled) => adapter.setStrategyEnabled(guid, enabled),
 
     // ---- Housekeeping ----
-    runIntegrationHousekeeping: () => adapter.runIntegrationHousekeeping(),
 
     // ---- Close ----
     closeAll: () => adapter.close(),
