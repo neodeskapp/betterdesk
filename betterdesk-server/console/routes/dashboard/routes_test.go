@@ -234,12 +234,12 @@ func TestServerStatusProbesThePortsWhenTheAPIIsDown(t *testing.T) {
 func TestClientConfig(t *testing.T) {
 	w := newWorld(t, nil, map[string]string{"id_ed25519.pub": validKey})
 	expect := func(host, source string, unreachable bool) string {
-		payload := serverinfo.ConfigPayload{Host: host, Relay: host, API: "http://" + host + ":21114", Key: validKey}
+		payload := serverinfo.ConfigPayload{Host: host, Relay: host + ":21117", API: "http://" + host + ":21114", Key: validKey}
 		flag := "false"
 		if unreachable {
 			flag = "true"
 		}
-		return `{"success":true,"data":{"server_id":"` + host + `","relay_server":"` + host + `","api_url":"http://` + host + `:21114",` +
+		return `{"success":true,"data":{"server_id":"` + host + `","relay_server":"` + host + `:21117","api_url":"http://` + host + `:21114",` +
 			`"public_key":"` + validKey + `","has_public_key":true,` +
 			`"deploy_config_string":"` + serverinfo.EncodeRustDeskCliConfigString(payload) + `","config_uri":"` + serverinfo.EncodeRustDeskConfigURI(payload) + `",` +
 			`"client_server_host":"` + host + `","endpoint_sources":{"host":"` + source + `","relay":"` + source + `","api":"` + source + `"},` +
@@ -255,7 +255,7 @@ func TestClientConfig(t *testing.T) {
 	// Without a key the fields stay and the QR code is null
 	w = newWorld(t, nil, nil)
 	body := w.get("viewer", "/api/dashboard/client-config").Body.String()
-	if !strings.HasPrefix(body, `{"success":true,"data":{"server_id":"127.0.0.1","relay_server":"127.0.0.1","api_url":"http://127.0.0.1:21114","public_key":"","has_public_key":false,`) ||
+	if !strings.HasPrefix(body, `{"success":true,"data":{"server_id":"127.0.0.1","relay_server":"127.0.0.1:21117","api_url":"http://127.0.0.1:21114","public_key":"","has_public_key":false,`) ||
 		!strings.HasSuffix(body, `"env_override_active":false,"phone_unreachable_host":true,"qr":null}}`) {
 		t.Errorf("without a key: %s", body)
 	}

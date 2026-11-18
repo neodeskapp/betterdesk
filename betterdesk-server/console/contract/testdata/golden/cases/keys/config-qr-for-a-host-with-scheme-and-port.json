@@ -84,7 +84,7 @@
       "api_url": "http://Console.Example.ORG:21121",
       "phone_unreachable_host": false,
       "qr": "<volatile>",
-      "relay_server": "Console.Example.ORG",
+      "relay_server": "Console.Example.ORG:21117",
       "server_id": "Console.Example.ORG"
      },
      "success": true

@@ -90,7 +90,7 @@
       "api_url": "http://console.example.org:21121",
       "phone_unreachable_host": false,
       "qr": "<volatile>",
-      "relay_server": "console.example.org",
+      "relay_server": "console.example.org:21117",
       "server_id": "console.example.org"
      },
      "success": true

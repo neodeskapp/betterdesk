@@ -236,21 +236,23 @@ func (s *Service) ResolveClientFacingHost(req *RequestHost, queryHost string) st
 
 // ResolveRustDeskEndpoints returns the ID server, relay and API address to
 // give a client. The relay and the API address follow the host unless
-// their own public endpoint setting has a value.
+// their own public endpoint setting has a value. The relay always carries
+// a port (RelayEndpointForHost).
 func (s *Service) ResolveRustDeskEndpoints(req *RequestHost, queryHost string) ResolvedEndpoints {
 	settings := s.readPublicEnv()
 	public := settings.endpoints()
 	host, hostSource := s.clientFacingHost(req, queryHost, public, settings.get(PanelPublicHostKey))
 
+	relay := host
 	out := ResolvedEndpoints{
 		Host:              host,
-		Relay:             host,
 		Sources:           EndpointSources{Host: hostSource, Relay: hostSource, API: hostSource},
 		EnvOverrideActive: IsEnvOverrideActive(public),
 	}
 	if public.PublicRelayServer != "" {
-		out.Relay, out.Sources.Relay = public.PublicRelayServer, SourceEnv
+		relay, out.Sources.Relay = public.PublicRelayServer, SourceEnv
 	}
+	out.Relay = s.RelayEndpointForHost(relay, "")
 	switch {
 	case public.PublicAPIURL != "":
 		out.API, out.Sources.API = public.PublicAPIURL, SourceEnv

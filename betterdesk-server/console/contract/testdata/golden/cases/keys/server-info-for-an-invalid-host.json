@@ -87,7 +87,7 @@
        "relay": "config"
       },
       "env_override_active": false,
-      "relay_server": "127.0.0.1",
+      "relay_server": "127.0.0.1:21117",
       "server_id": "127.0.0.1"
      },
      "success": true

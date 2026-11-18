@@ -242,7 +242,7 @@ func (s *Service) BuildRustDeskConfigPayload(ep Endpoints, opts PayloadOptions) 
 	if api == "" {
 		api = s.APIURLForHost(host, useHTTPS)
 	}
-	return ConfigPayload{Host: host, Relay: NormalizeHostInput(relay), API: api, Key: key}
+	return ConfigPayload{Host: host, Relay: s.RelayEndpointForHost(relay, ""), API: api, Key: key}
 }
 
 // ResolveRustDeskConfigPayload is BuildRustDeskConfigPayload with the key

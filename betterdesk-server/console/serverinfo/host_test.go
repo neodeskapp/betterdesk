@@ -259,7 +259,7 @@ func TestResolvedEndpointsJSON(t *testing.T) {
 	s := New(Options{APIURL: "http://127.0.0.1:21114/api", GoAPIPort: 21114, DataDir: t.TempDir(), EnvPath: filepath.Join(t.TempDir(), ".env"),
 		Getenv: envMap(nil)})
 	got := jsonText(t, s.ResolveRustDeskEndpoints(nil, ""))
-	want := `{"host":"127.0.0.1","relay":"127.0.0.1","api":"http://127.0.0.1:21114",` +
+	want := `{"host":"127.0.0.1","relay":"127.0.0.1:21117","api":"http://127.0.0.1:21114",` +
 		`"sources":{"host":"config","relay":"config","api":"config"},"env_override_active":false}`
 	if got != want {
 		t.Errorf("answer\n%s\nwant\n%s", got, want)

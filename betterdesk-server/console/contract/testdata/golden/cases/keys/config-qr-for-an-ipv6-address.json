@@ -84,7 +84,7 @@
       "api_url": "http://2001:21121",
       "phone_unreachable_host": false,
       "qr": "<volatile>",
-      "relay_server": "2001",
+      "relay_server": "2001:21117",
       "server_id": "2001"
      },
      "success": true

@@ -84,7 +84,7 @@
       "api_url": "http://localhost:21121",
       "phone_unreachable_host": true,
       "qr": "<volatile>",
-      "relay_server": "localhost",
+      "relay_server": "localhost:21117",
       "server_id": "localhost"
      },
      "success": true

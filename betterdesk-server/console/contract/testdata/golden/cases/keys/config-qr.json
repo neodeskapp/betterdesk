@@ -90,7 +90,7 @@
       "api_url": "http://127.0.0.1:21121",
       "phone_unreachable_host": true,
       "qr": "<volatile>",
-      "relay_server": "127.0.0.1",
+      "relay_server": "127.0.0.1:21117",
       "server_id": "127.0.0.1"
      },
      "success": true

@@ -206,6 +206,31 @@ async function main() {
         }
     }
 
+    // --- relayEndpointForHost under the relay port settings (RELAY_PORT,
+    // WS_HBBR_PORT, HBBR_PORT) and with a port given or not
+    const RELAY_KEYS = ['RELAY_PORT', 'WS_HBBR_PORT', 'HBBR_PORT'];
+    const RELAY_ENVS = [{}, { RELAY_PORT: '22117' }, { RELAY_PORT: ' 23117x' }, { RELAY_PORT: 'abc', WS_HBBR_PORT: '24117' },
+        { RELAY_PORT: '', WS_HBBR_PORT: '24117' }, { HBBR_PORT: '25117' }, { RELAY_PORT: '-5' }, { RELAY_PORT: '0' },
+        { RELAY_PORT: '1e3' }, { RELAY_PORT: '99999999999999999999999' }, { RELAY_PORT: '\u00a0+7' }];
+    const RELAY_INPUTS = ['host', 'host:21117', 'host:1', 'host:0', 'host:65535', 'host:65536', 'host:00021', 'host:123456',
+        'host:', ':21117', '[::1]', '[::1]:5', '[::1]:0', '[::1]:99999', '[::1]:007', '[FE80::1]:8', '[g::1]', '::1', 'fe80::1:8080', 'a:b',
+        'http://host', 'https://host:8443/x', 'HTTP://Host/', 'Https://h', 'http\u017f://x', 'httpss://x', 'http:/x',
+        'a b:1', 'a\u00a0b:1', 'a\u2028b:1', 'a\u000bb:1', 'a/b:1', ' padded:2 ', '\ufeffbom', 'x'.repeat(400),
+        'y'.repeat(299) + ':1', '\u4e2d.example:7', '\ud83d\ude00:9'];
+    const relayInputs = [...new Set([...HOSTS, ...RELAY_INPUTS, ...wellFormedHosts.slice(0, 400)])].filter(lib.wellFormed);
+    keys.relay_endpoint = [];
+    for (const env of RELAY_ENVS) {
+        for (const k of RELAY_KEYS) delete process.env[k];
+        Object.assign(process.env, env);
+        for (const input of relayInputs) {
+            for (const port of [undefined, '', 0, 21118, '21119', ' 5']) {
+                const out = conn.relayEndpointForHost(input, port);
+                if (lib.wellFormed(out)) keys.relay_endpoint.push({ env, in: input, port: port === undefined ? null : port, out });
+            }
+        }
+    }
+    for (const k of RELAY_KEYS) delete process.env[k];
+
     // --- buildRustDeskConfigPayload, encodeRustDeskCliConfigString, encodeRustDeskConfigUri
     const pubKeyFile = path.join(lib.SCRATCH, 'id_ed25519.pub');
     config.pubKeyPath = pubKeyFile;

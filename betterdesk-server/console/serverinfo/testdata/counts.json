@@ -45,9 +45,10 @@
     "names": 224
   },
   "keys": {
-    "total": 9179,
+    "total": 37955,
     "valid_key": 467,
     "api_url_for_host": 392,
+    "relay_endpoint": 28776,
     "payload": 8036,
     "key_files": 19,
     "api_key_half_characters": 3,

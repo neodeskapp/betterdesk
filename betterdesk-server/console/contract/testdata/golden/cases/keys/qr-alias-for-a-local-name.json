@@ -84,7 +84,7 @@
       "api_url": "http://Printer.LOCAL:21121",
       "phone_unreachable_host": true,
       "qr": "<volatile>",
-      "relay_server": "Printer.LOCAL",
+      "relay_server": "Printer.LOCAL:21117",
       "server_id": "Printer.LOCAL"
      },
      "success": true

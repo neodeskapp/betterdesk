@@ -78,11 +78,11 @@
    "volatile": [
     {
      "path": "data.config_uri",
-     "pattern": "^[9aA+/_=-]{8}:[9aA+/_=-]{175}$"
+     "pattern": "^[9aA+/_=-]{8}:[9aA+/_=-]{183}$"
     },
     {
      "path": "data.deploy_config_string",
-     "pattern": "^[9aA+/_=-]{166}$"
+     "pattern": "^[9aA+/_=-]{174}$"
     },
     {
      "path": "data.public_key",
@@ -108,7 +108,7 @@
       "phone_unreachable_host": true,
       "public_key": "<volatile>",
       "qr": "<volatile>",
-      "relay_server": "127.0.0.1",
+      "relay_server": "127.0.0.1:21117",
       "server_id": "127.0.0.1"
      },
      "success": true

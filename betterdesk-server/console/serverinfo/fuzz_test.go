@@ -3,6 +3,7 @@ package serverinfo
 import (
 	"encoding/base64"
 	"encoding/json"
+	"regexp"
 	"strings"
 	"testing"
 	"unicode/utf8"
@@ -226,19 +227,24 @@ func FuzzConfigURI(f *testing.F) {
 		s := New(Options{GoAPIPort: port, APIURL: "http://127.0.0.1:21114/api"})
 		payload := s.BuildRustDeskConfigPayload(Endpoints{Host: host, Relay: relay, API: api}, PayloadOptions{PublicKey: &key, UseHTTPS: &https})
 
-		// The payload holds what was put in.
-		if payload.Host == "" || payload.Relay == "" || payload.API == "" {
+		// The payload holds what was put in. The relay is the relay given,
+		// else the host, always with a port; a relay of white space only
+		// leaves it empty.
+		if payload.Host == "" || payload.API == "" {
 			t.Fatalf("payload %+v has an empty address", payload)
 		}
 		if payload.Host != NormalizeHostInput(host) {
 			t.Fatalf("host %q, want %q", payload.Host, NormalizeHostInput(host))
 		}
-		wantRelay := payload.Host
+		wantRelay := s.RelayEndpointForHost(payload.Host, "")
 		if relay != "" {
-			wantRelay = NormalizeHostInput(relay)
+			wantRelay = s.RelayEndpointForHost(relay, "")
 		}
 		if payload.Relay != wantRelay {
 			t.Fatalf("relay %q, want %q", payload.Relay, wantRelay)
+		}
+		if payload.Relay == "" && jsTrim(relay) != "" {
+			t.Fatalf("relay %q gave an empty relay", relay)
 		}
 		if api != "" && payload.API != api {
 			t.Fatalf("API address %q, want %q", payload.API, api)
@@ -306,5 +312,42 @@ func FuzzConfigURI(f *testing.F) {
 		parseJSURL("https://" + host + "/" + relay)
 		_, _ = NormalizeSettings(PublicEndpointsInput{PublicServerID: host, PublicRelayServer: relay, PublicAPIURL: api})
 		New(Options{APIURL: api}).DefaultServerHost()
+	})
+}
+
+// FuzzRelayEndpointForHost: the relay address a client gets is empty only
+// for an empty address, always ends in ":" and a port, keeps a valid port it
+// was given, and a second pass over a host:port it made changes nothing
+// while that fits the 300 UTF-16 units an address is cut to first.
+func FuzzRelayEndpointForHost(f *testing.F) {
+	for _, seed := range []struct{ in, port string }{
+		{"host", ""}, {"host:21117", ""}, {"host:0", "21118"}, {"[::1]", ""}, {"[::1]:5", ""}, {"::1", " 5"},
+		{"https://host:8443/x", ""}, {"HTTP://Host/", ""}, {"http\u017f://x", ""}, {" padded:2 ", ""},
+		{"a\u00a0b:1", ""}, {"\xff\xfe", ""}, {strings.Repeat("x", 400), ""}, {"", ""}, {" \u2028", ""},
+	} {
+		f.Add(seed.in, seed.port)
+	}
+	s := New(Options{Getenv: func(string) string { return "" }})
+	plainPort := regexp.MustCompile(`:([0-9]+)$`)
+	f.Fuzz(func(t *testing.T, in, port string) {
+		got := s.RelayEndpointForHost(in, port)
+		if (got == "") != (jsTrim(in) == "") {
+			t.Fatalf("RelayEndpointForHost(%q, %q) = %q", in, port, got)
+		}
+		if got == "" {
+			return
+		}
+		wantPort := port
+		if wantPort == "" {
+			wantPort = "21117"
+		}
+		if m := plainPort.FindStringSubmatch(got); m == nil && !strings.HasSuffix(got, ":"+wantPort) {
+			t.Fatalf("RelayEndpointForHost(%q, %q) = %q has no port", in, port, got)
+		}
+		if m := relayHostPort.FindStringSubmatch(got); m != nil && port == "" && utf16Len(got) <= 300 {
+			if again := s.RelayEndpointForHost(got, ""); again != got {
+				t.Fatalf("a second pass over %q gives %q", got, again)
+			}
+		}
 	})
 }

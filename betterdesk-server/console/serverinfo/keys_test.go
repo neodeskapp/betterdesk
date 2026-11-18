@@ -75,6 +75,12 @@ type keyVectors struct {
 		CLI     string         `json:"cli"`
 		URI     string         `json:"uri"`
 	} `json:"payload"`
+	RelayEndpoint []struct {
+		Env  map[string]string `json:"env"`
+		In   string            `json:"in"`
+		Port json.RawMessage   `json:"port"`
+		Out  string            `json:"out"`
+	} `json:"relay_endpoint"`
 	KeyFiles []struct {
 		State struct {
 			Name  string  `json:"name"`
@@ -140,6 +146,62 @@ func TestAPIURLForHostAgainstNode(t *testing.T) {
 		s := New(Options{GoAPIPort: c.GoAPIPort, APIPort: c.APIPort})
 		if got := s.APIURLForHost(c.Host, c.HTTPS); got != c.Out {
 			t.Errorf("ports %d/%d: APIURLForHost(%q, %v) = %q, Node answers %q", c.GoAPIPort, c.APIPort, c.Host, c.HTTPS, got, c.Out)
+		}
+	}
+}
+
+// relayPortArg is the port argument of relayEndpointForHost as Go takes
+// it: "" where JavaScript's `port || default` picks the default (no port,
+// "", 0), the number or the text otherwise.
+func relayPortArg(t *testing.T, raw json.RawMessage) string {
+	t.Helper()
+	var v any
+	if err := json.Unmarshal(raw, &v); err != nil {
+		t.Fatalf("port %s: %v", raw, err)
+	}
+	switch p := v.(type) {
+	case nil:
+		return ""
+	case string:
+		return p
+	case float64:
+		if p == 0 {
+			return ""
+		}
+		return numberString(p)
+	}
+	t.Fatalf("port %s has a type the script does not send", raw)
+	return ""
+}
+
+func TestRelayEndpointForHostAgainstNode(t *testing.T) {
+	var v keyVectors
+	loadVectors(t, "keys", &v)
+	atLeast(t, "relay_endpoint", len(v.RelayEndpoint), 20000)
+	m := &mismatches{t: t}
+	kinds := map[string]bool{}
+	for i, c := range v.RelayEndpoint {
+		env := c.Env
+		s := New(Options{Getenv: func(key string) string { return env[key] }})
+		port := relayPortArg(t, c.Port)
+		got := s.RelayEndpointForHost(c.In, port)
+		if got != c.Out {
+			m.errorf("case %d: RelayEndpointForHost(%q, %q) with %v = %q, Node answers %q", i, c.In, port, env, got, c.Out)
+		}
+		switch {
+		case c.Out == "":
+			kinds["empty"] = true
+		case strings.HasPrefix(c.Out, "["):
+			kinds["bracketed"] = true
+		case strings.HasSuffix(c.Out, ":21117"):
+			kinds["default port"] = true
+		case strings.HasSuffix(c.Out, ":24117"):
+			kinds["second setting"] = true
+		}
+	}
+	for _, kind := range []string{"empty", "bracketed", "default port", "second setting"} {
+		if !kinds[kind] {
+			t.Errorf("no vector gives a relay of the kind %q", kind)
 		}
 	}
 }
