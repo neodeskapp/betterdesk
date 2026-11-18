@@ -82,36 +82,60 @@ func TestNodeAnswers(t *testing.T) {
 	})
 }
 
-// The route a device uploads its activity with is not registered: it
-// takes a device token. And the group answers nothing under /api/bd,
-// where the old console mounted it for that route.
-func TestTheGroupHasNoDeviceRoutes(t *testing.T) {
+// The console has the group's four routes at /api/bd and at
+// /api/activity, in the order of the old file: the route of the desktop
+// agent, then the three read routes, after the inventory group at each
+// mount. The device route asks for a device token at both mounts, a
+// session does not stand for one; the read routes step aside at /api/bd,
+// where nothing else of this console answers those addresses.
+func TestTheRoutesAtBothMounts(t *testing.T) {
 	w := replay.NewWorld(t, storetest.Migrated(t), nil)
-	registered := map[string]bool{}
+	var routes []string
 	for _, route := range w.Server.Router().Routes() {
-		if strings.HasPrefix(route.Path, "/api/activity") || strings.HasPrefix(route.Path, "/api/bd") && strings.Contains(route.Path, "activity") {
-			registered[route.Method+" "+route.Path] = true
+		routes = append(routes, route.Method+" "+route.Path)
+	}
+	// index finds a route after the position from
+	index := func(route string, from int) int {
+		for i := from; i < len(routes); i++ {
+			if routes[i] == route {
+				return i
+			}
+		}
+		return -1
+	}
+	for _, mount := range []string{"/api/bd", "/api/activity"} {
+		// At /api/bd the inventory group has GET /api/bd and GET /api/bd/{id} too, before this one
+		at := index("POST "+mount+"/activity", 0)
+		if at < 0 {
+			t.Errorf("POST %s/activity is not registered", mount)
+			continue
+		}
+		for _, route := range []string{"GET " + mount, "GET " + mount + "/{id}", "GET " + mount + "/{id}/top"} {
+			next := index(route, at)
+			if next < 0 {
+				t.Errorf("%s is not registered after the device route", route)
+				continue
+			}
+			at = next
 		}
 	}
-	want := []string{"GET /api/activity", "GET /api/activity/{id}", "GET /api/activity/{id}/top"}
-	for _, route := range want {
-		if !registered[route] {
-			t.Errorf("%s is not registered", route)
-		}
-		delete(registered, route)
+	if index("POST /api/bd/activity", 0) > index("POST /api/activity/activity", 0) {
+		t.Errorf("the group is registered at /api/activity before /api/bd")
 	}
-	for route := range registered {
-		t.Errorf("%s is registered: the group has the three read routes and nothing else", route)
-	}
+
+	refused := `{"error":"Bearer access token required"}`
 	for _, req := range []replay.Request{
 		{Role: "admin", Method: "POST", Path: "/api/activity/activity", Body: replay.Text(`{"device_id":"D1"}`)},
 		{Role: "admin", Method: "POST", Path: "/api/bd/activity", Body: replay.Text(`{"device_id":"D1"}`)},
-		{Role: "admin", Path: "/api/bd"},
-		{Role: "admin", Path: "/api/bd/D1"},
-		{Role: "admin", Path: "/api/bd/D1/top"},
+		{Method: "POST", Path: "/api/bd/activity", Body: replay.Text(`{"device_id":"D1"}`)},
 	} {
-		if got := w.Do(req); got.Status != 404 {
-			t.Errorf("%s %s: %d %s, want the console's 404", req.Method, req.Path, got.Status, got.Body)
+		if got := w.Do(req); got.Status != 401 || got.Body != refused {
+			t.Errorf("%s %s as %q: %d %s, want 401 %s", req.Method, req.Path, req.Role, got.Status, got.Body, refused)
+		}
+	}
+	for _, path := range []string{"/api/bd", "/api/bd/D1", "/api/bd/D1/top", "/api/bd/activity"} {
+		if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != 404 || got.Body != `{"success":false,"error":"Not Found"}` {
+			t.Errorf("GET %s as admin: %d %s, want the console's 404", path, got.Status, got.Body)
 		}
 	}
 }

@@ -1,0 +1,70 @@
+{
+ "id": "activity-device/report-other-spelling",
+ "request": {
+  "method": "POST",
+  "path": "/API/BD/Activity/",
+  "body": {
+   "device_id": "900100001",
+   "idle_seconds": 120,
+   "sessions": [
+    {
+     "app_name": "Contract Editor",
+     "category": "productivity",
+     "duration_secs": 30,
+     "ended_at": "2011-03-04T09:01:30.000Z",
+     "started_at": "2011-03-04T09:01:00.000Z",
+     "window_title": "notes.txt"
+    },
+    {
+     "app_name": "Contract Editor",
+     "category": "productivity",
+     "duration_secs": 30,
+     "ended_at": "2011-03-04T09:02:30.000Z",
+     "started_at": "2011-03-04T09:02:00.000Z",
+     "window_title": "notes.txt"
+    }
+   ],
+   "timestamp": "2011-03-04T10:01:00.000Z"
+  },
+  "notes": [
+   "header Authorization: Bearer {secret:device_token}",
+   "no CSRF token",
+   "no cookies"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Invalid CSRF token. Please refresh the page and try again. If you recently disabled SSL, clear your browser cookies for this site and reload.",
+     "success": false
+    }
+   }
+  }
+ ]
+}

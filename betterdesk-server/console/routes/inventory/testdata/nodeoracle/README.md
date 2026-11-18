@@ -63,3 +63,41 @@ In the dev image:
     tools/dev.sh "cd betterdesk-server/console/routes/inventory/testdata && node nodeoracle/inventory.js"
     DEV_DOCKER_ARGS="--network bdgo" tools/dev.sh "cd betterdesk-server/console/routes/inventory/testdata && \
       ORACLE_PG_DSN='postgres://betterdesk:bdgo-local@bdgo-testpg:5432/betterdesk_test?sslmode=disable' node nodeoracle/inventory.js"
+
+## The device routes
+
+`device.js` records the three routes of the desktop agent, `POST
+/inventory`, `POST /telemetry` and `GET /inventory/:id` at `/api/bd` and
+`/api/inventory`, behind the file's own token check, with the real
+`services/database.js` and adapter and the real alert rules engine (its
+mail stubbed; no rule mails): `../node_device_sqlite.json` (1,727 steps)
+and `../node_device_postgres.json` (1,723), replayed by
+`TestNodeDeviceAnswers`. The route file of the tree is the device routes
+alone, so the script runs on the tree as it is.
+
+- tokens in every state (unbound, a client id of any form, expired,
+  revoked, stored before the hash column, a numeric device id) and
+  Authorization headers in many forms
+- the body checked before the device it names, with device ids of every
+  type
+- reports with the hardware, the software and the time of collection of
+  every JSON type, and bodies given as text (keys twice, numbers in every
+  notation, escapes, deep nesting)
+- the device's info in the console's table: each member the upload writes
+  with values of every type, the info in every form a database holds it,
+  devices only the signal server knows (before and after its table
+  exists) and devices deleted in the console
+- disks of every kind with the disk alert they raise, the count of apps
+  that the log line makes text of, and telemetry with values of every type
+  with its CPU and memory alerts (one rule per type that fires for every
+  number)
+- after a request the rows it left: report, info, telemetry, alerts
+
+The harness waits for the background evaluations of the alert rules
+before each step (`settle` in `lib.js`); the Go test waits for the engine
+the same way. A time the route filled in itself is shown as "the time of
+the run" in the statements.
+
+    tools/dev.sh "cd betterdesk-server/console/routes/inventory/testdata && node nodeoracle/device.js"
+    DEV_DOCKER_ARGS="--network bdgo" tools/dev.sh "cd betterdesk-server/console/routes/inventory/testdata && \
+      ORACLE_PG_DSN='postgres://betterdesk:bdgo-local@bdgo-testpg:5432/betterdesk_test?sslmode=disable' node nodeoracle/device.js"

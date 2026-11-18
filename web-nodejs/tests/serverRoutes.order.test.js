@@ -55,9 +55,9 @@ const isApp = (res) => /console app/.test(res.text || '');
 
 describe('server routes before the console at the root', () => {
     test('the server answers its own addresses, not the app', async () => {
-        const status = await request(app(null)).get('/register-status');
-        expect(status.status).toBe(400);
-        expect(status.body.success).toBe(false);
+        const res = await request(app(admin)).get('/remote-dashboard');
+        expect(res.status).toBe(301);
+        expect(isApp(res)).toBe(false);
     });
 
     test('old addresses that redirect still do', async () => {
@@ -90,7 +90,7 @@ describe('server routes before the console at the root', () => {
     test('console pages carry the policy of their build; server answers keep the strict one', async () => {
         const page = await request(app(admin)).get('/devices');
         expect(page.headers['content-security-policy']).toContain("script-src 'self' 'sha256-boot='");
-        for (const p of ['/register-status', '/api/no-such-endpoint']) {
+        for (const p of ['/remote-dashboard', '/api/no-such-endpoint']) {
             const res = await request(app(admin)).get(p);
             const csp = res.headers['content-security-policy'];
             expect([p, /script-src 'self';/.test(csp), /sha256|nonce-/.test(csp)]).toEqual([p, true, false]);

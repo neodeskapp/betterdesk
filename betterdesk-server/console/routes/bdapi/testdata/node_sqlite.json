@@ -1,0 +1,3522 @@
+{
+ "dialect": "sqlite",
+ "seeds": {
+  "a": "0101010101010101010101010101010101010101010101010101010101010101",
+  "b": "0202020202020202020202020202020202020202020202020202020202020202",
+  "c": "0303030303030303030303030303030303030303030303030303030303030303"
+ },
+ "seed": [
+  [
+   "DELETE FROM users",
+   []
+  ],
+  [
+   "INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)",
+   [
+    1,
+    "e2e_admin",
+    "x",
+    "admin"
+   ]
+  ],
+  [
+   "INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)",
+   [
+    2,
+    "e2e_super_admin",
+    "x",
+    "super_admin"
+   ]
+  ],
+  [
+   "INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)",
+   [
+    3,
+    "e2e_server_admin",
+    "x",
+    "server_admin"
+   ]
+  ],
+  [
+   "INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)",
+   [
+    4,
+    "e2e_global_admin",
+    "x",
+    "global_admin"
+   ]
+  ],
+  [
+   "INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)",
+   [
+    5,
+    "e2e_operator",
+    "x",
+    "operator"
+   ]
+  ],
+  [
+   "INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)",
+   [
+    6,
+    "e2e_viewer",
+    "x",
+    "viewer"
+   ]
+  ],
+  [
+   "INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)",
+   [
+    7,
+    "e2e_guest_issuer",
+    "x",
+    "guest_issuer"
+   ]
+  ],
+  [
+   "INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)",
+   [
+    8,
+    "e2e_pro",
+    "x",
+    "pro"
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, 0)",
+   [
+    "tok-dev1-0123456789",
+    "c9ca86b73ba1afd0aec08088d407d42bfe0d442eaf1abe2b63a4ab35815d449b",
+    1,
+    "DEV1",
+    "",
+    "2999-01-01 00:00:00"
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, 0)",
+   [
+    "tok-dev2-0123456789",
+    "3a73f65b61ac0c7800c037e6b43871c4940a470a001cab4ff71992156ea1e2ea",
+    1,
+    "DEV2",
+    "",
+    "2999-01-01 00:00:00"
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, 0)",
+   [
+    "tok-dev3-0123456789",
+    "e3c2a15a9719a470db7e9e5ad9f3dc00a6fcf2dcd8a5952db7b2a8c916bfa2f5",
+    5,
+    "DEV3",
+    "",
+    "2999-01-01 00:00:00"
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, 0)",
+   [
+    "tok-unbound-0123456789",
+    "7456248324bb5b22d27b93161960bf10ea9e237382e1293fa2e32f505106fdf0",
+    1,
+    "",
+    "",
+    "2999-01-01 00:00:00"
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, 0)",
+   [
+    "tok-odd-0123456789",
+    "3bf63ed6b212a0f90640b24d4025f0c6e93ada16dab9c9b70c4f6bbb879aef6b",
+    1,
+    "not a device",
+    "",
+    "2999-01-01 00:00:00"
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, 0)",
+   [
+    "tok-expired-0123456789",
+    "5e0050269b540b3dbef35927ce7642ad8a5ca9877ff7adc05cbc46f41eaa4a0c",
+    1,
+    "DEV1",
+    "",
+    "2000-01-01 00:00:00"
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, 1)",
+   [
+    "tok-revoked-0123456789",
+    "d6aa866b4378c3ecc4d002fce6ef983a807c2b3c5ba8fb0c0af0ad3a6fd529a9",
+    1,
+    "DEV1",
+    "",
+    "2999-01-01 00:00:00"
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, 0)",
+   [
+    "tok-operator-0123456789",
+    "02d02ea6eebb3edf87f51f24d7e59f1c80a0119a815374806fd39ab6eaaf747f",
+    5,
+    "OPDESK",
+    "",
+    "2999-01-01 00:00:00"
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, 0)",
+   [
+    "tok-viewer-0123456789",
+    "364af54603b991aa2487ba2209a3f11331bc79297632427c3af48570a562a577",
+    6,
+    "DEV6",
+    "",
+    "2999-01-01 00:00:00"
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, 0)",
+   [
+    "tok-renamed-0123456789",
+    "2a01e1f75efa57d5a8db1514f7f8941dfa74b249ec32e1242b0ac2c93e22f22b",
+    1,
+    "OLDID1",
+    "",
+    "2999-01-01 00:00:00"
+   ]
+  ],
+  [
+   "INSERT INTO peer (id, uuid, pk, note, info, ip, status_online, is_deleted, is_banned) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)",
+   [
+    "DEV1",
+    "uuid-1",
+    null,
+    "Front desk",
+    "{\"hostname\":\"pc-1\",\"os\":\"Windows\"}",
+    "10.0.0.1",
+    0,
+    0
+   ]
+  ],
+  [
+   "INSERT INTO peer (id, uuid, pk, note, info, ip, status_online, is_deleted, is_banned) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)",
+   [
+    "DEV2",
+    "",
+    null,
+    "",
+    "{\"hostname\":\"pc-2\",\"platform\":\"Linux\"}",
+    "10.0.0.2",
+    0,
+    0
+   ]
+  ],
+  [
+   "INSERT INTO peer (id, uuid, pk, note, info, ip, status_online, is_deleted, is_banned) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)",
+   [
+    "DEV3",
+    "uuid-3",
+    null,
+    "",
+    "{}",
+    "",
+    0,
+    0
+   ]
+  ],
+  [
+   "INSERT INTO peer (id, uuid, pk, note, info, ip, status_online, is_deleted, is_banned) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)",
+   [
+    "KEYDEV",
+    "uuid-k",
+    "iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=",
+    "Keyed",
+    "{}",
+    "",
+    0,
+    0
+   ]
+  ],
+  [
+   "INSERT INTO peer (id, uuid, pk, note, info, ip, status_online, is_deleted, is_banned) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)",
+   [
+    "BANNED1",
+    "uuid-b",
+    null,
+    "",
+    "{}",
+    "",
+    0,
+    1
+   ]
+  ],
+  [
+   "INSERT INTO peer (id, uuid, pk, note, info, ip, status_online, is_deleted, is_banned) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)",
+   [
+    "GONE1",
+    "uuid-g",
+    null,
+    "",
+    "{}",
+    "",
+    1,
+    0
+   ]
+  ],
+  [
+   "INSERT INTO peer (id, uuid, pk, note, info, ip, status_online, is_deleted, is_banned) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)",
+   [
+    "NEWID1",
+    "uuid-n",
+    null,
+    "",
+    "{}",
+    "203.0.113.9",
+    0,
+    0
+   ]
+  ],
+  [
+   "INSERT INTO peer (id, uuid, pk, note, info, ip, status_online, is_deleted, is_banned) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)",
+   [
+    "NEWID2",
+    "uuid-n2",
+    "gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=",
+    "",
+    "{}",
+    "",
+    0,
+    0
+   ]
+  ],
+  [
+   "INSERT INTO peer (id, uuid, pk, note, info, ip, status_online, is_deleted, is_banned) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)",
+   [
+    "900100001",
+    "",
+    null,
+    "Numbered",
+    "{\"hostname\":5,\"os\":[\"w\"]}",
+    "",
+    0,
+    0
+   ]
+  ],
+  [
+   "CREATE TABLE IF NOT EXISTS id_change_history (id INTEGER PRIMARY KEY AUTOINCREMENT, old_id TEXT NOT NULL, new_id TEXT NOT NULL)",
+   []
+  ],
+  [
+   "INSERT INTO id_change_history (old_id, new_id) VALUES (?, ?)",
+   [
+    "OLDID1",
+    "NEWID1"
+   ]
+  ],
+  [
+   "INSERT INTO id_change_history (old_id, new_id) VALUES (?, ?)",
+   [
+    "OLDID2",
+    "NEWID2"
+   ]
+  ],
+  [
+   "INSERT INTO id_change_history (old_id, new_id) VALUES (?, ?)",
+   [
+    "OLDID3",
+    "NOSUCH"
+   ]
+  ],
+  [
+   "INSERT INTO pending_registrations (id, device_id, hostname, platform, version, ip_address, public_key, uuid, status,\n    approved_by, approved_at, rejected_reason, access_token, console_url, server_address, server_key, created_at, updated_at)\n    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, '', NULL, NULL, NULL, NULL, ?, ?)",
+   [
+    1,
+    "APPROVED1",
+    "ap-1",
+    "Windows",
+    "1.0",
+    "10.0.0.5",
+    "",
+    "",
+    "approved",
+    "2001-01-01 00:01:00",
+    "2001-01-01 00:01:00"
+   ]
+  ],
+  [
+   "INSERT INTO pending_registrations (id, device_id, hostname, platform, version, ip_address, public_key, uuid, status,\n    approved_by, approved_at, rejected_reason, access_token, console_url, server_address, server_key, created_at, updated_at)\n    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, '', NULL, NULL, NULL, NULL, ?, ?)",
+   [
+    2,
+    "APPROVED2",
+    "ap-2",
+    "Linux",
+    "1.0",
+    "10.0.0.6",
+    "iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=",
+    "",
+    "approved",
+    "2001-01-01 00:02:00",
+    "2001-01-01 00:02:00"
+   ]
+  ],
+  [
+   "INSERT INTO pending_registrations (id, device_id, hostname, platform, version, ip_address, public_key, uuid, status,\n    approved_by, approved_at, rejected_reason, access_token, console_url, server_address, server_key, created_at, updated_at)\n    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, '', NULL, NULL, NULL, NULL, ?, ?)",
+   [
+    3,
+    "PENDING1",
+    "pe-1",
+    "macOS",
+    "1.0",
+    "10.0.0.7",
+    "",
+    "",
+    "pending",
+    "2001-01-01 00:03:00",
+    "2001-01-01 00:03:00"
+   ]
+  ],
+  [
+   "INSERT INTO pending_registrations (id, device_id, hostname, platform, version, ip_address, public_key, uuid, status,\n    approved_by, approved_at, rejected_reason, access_token, console_url, server_address, server_key, created_at, updated_at)\n    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, '', NULL, NULL, NULL, NULL, ?, ?)",
+   [
+    4,
+    "REJECTED1",
+    "re-1",
+    "Windows",
+    "1.0",
+    "10.0.0.8",
+    "",
+    "",
+    "rejected",
+    "2001-01-01 00:04:00",
+    "2001-01-01 00:04:00"
+   ]
+  ],
+  [
+   "CREATE TABLE IF NOT EXISTS agent_templates (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE,\n        description TEXT NOT NULL DEFAULT '', config_json TEXT NOT NULL DEFAULT '{}', enrollment_token TEXT NOT NULL UNIQUE,\n        enrolled_device_id TEXT DEFAULT NULL, enrolled_at TEXT DEFAULT NULL, created_by INTEGER DEFAULT NULL,\n        created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')))",
+   []
+  ],
+  [
+   "INSERT INTO agent_templates (name, enrollment_token, enrolled_device_id) VALUES ('fresh', 'enroll-fresh', NULL)",
+   []
+  ],
+  [
+   "INSERT INTO agent_templates (name, enrollment_token, enrolled_device_id) VALUES ('empty', 'enroll-empty', '')",
+   []
+  ],
+  [
+   "INSERT INTO agent_templates (name, enrollment_token, enrolled_device_id) VALUES ('taken', 'enroll-taken', 'OTHERDEV')",
+   []
+  ],
+  [
+   "INSERT INTO agent_templates (name, enrollment_token, enrolled_device_id) VALUES ('mine', 'enroll-mine', 'TOKDEV3')",
+   []
+  ],
+  [
+   "INSERT INTO audit_connections (host_id, host_uuid, peer_id, peer_name, action, conn_type, session_id, ip, created_at) VALUES (?, ?, ?, ?, ?, 1, ?, '', ?)",
+   [
+    "alice",
+    "OPDESK",
+    "DEV1",
+    "pc-1",
+    "session_start",
+    "s-1",
+    "2001-01-01 01:00:00"
+   ]
+  ],
+  [
+   "INSERT INTO audit_connections (host_id, host_uuid, peer_id, peer_name, action, conn_type, session_id, ip, created_at) VALUES (?, ?, ?, ?, ?, 1, ?, '', ?)",
+   [
+    "alice",
+    "OPDESK",
+    "DEV1",
+    "pc-1",
+    "session_end",
+    "s-1",
+    "2001-01-01 01:30:10"
+   ]
+  ],
+  [
+   "INSERT INTO audit_connections (host_id, host_uuid, peer_id, peer_name, action, conn_type, session_id, ip, created_at) VALUES (?, ?, ?, ?, ?, 1, ?, '', ?)",
+   [
+    "bob",
+    "",
+    "DEV2",
+    "",
+    "session_end",
+    "s-2",
+    "2001-01-01 02:00:00"
+   ]
+  ],
+  [
+   "INSERT INTO audit_connections (host_id, host_uuid, peer_id, peer_name, action, conn_type, session_id, ip, created_at) VALUES (?, ?, ?, ?, ?, 1, ?, '', ?)",
+   [
+    "carol",
+    "",
+    "DEV3",
+    "pc-3",
+    "session_start",
+    "",
+    "2001-01-01 03:00:00"
+   ]
+  ],
+  [
+   "INSERT INTO audit_connections (host_id, host_uuid, peer_id, peer_name, action, conn_type, session_id, ip, created_at) VALUES (?, ?, ?, ?, ?, 1, ?, '', ?)",
+   [
+    "carol",
+    "",
+    "DEV3",
+    "pc-3",
+    "connect",
+    "s-3",
+    "2001-01-01 03:10:00"
+   ]
+  ],
+  [
+   "INSERT INTO audit_connections (host_id, host_uuid, peer_id, peer_name, action, conn_type, session_id, ip, created_at) VALUES (?, ?, ?, ?, ?, 1, ?, '', ?)",
+   [
+    "dave",
+    "",
+    "DEV2",
+    "pc-2b",
+    "session_start",
+    "s-2",
+    "2001-01-01 01:59:00"
+   ]
+  ],
+  [
+   "INSERT INTO notification_reads (user_id, notification_id, read_at) VALUES (1, '21', ?)",
+   [
+    "2001-01-01 05:00:00"
+   ]
+  ]
+ ],
+ "api": {
+  "GET /api/help/requests": {
+   "status": 200,
+   "type": "application/json",
+   "body": "[{\"id\":21,\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"message\":\"printer\",\"status\":\"pending\",\"created_at\":\"2001-03-01T00:00:30Z\"},{\"id\":22,\"device_id\":\"DEV2\",\"hostname\":\"\",\"message\":\"vpn\",\"status\":\"acknowledged\",\"handled_by\":\"apikey:console-bridge\",\"created_at\":\"2001-03-02T00:00:00Z\"},{\"id\":23,\"device_id\":\"DEV3\",\"message\":\"font\",\"status\":\"resolved\",\"handled_by\":\"helpdesk\",\"created_at\":\"2001-02-01T00:00:00Z\"},{\"id\":24,\"device_id\":\"DEV4\",\"status\":\"constructor\",\"created_at\":\"2001-01-01 10:00:00\"},{\"id\":25,\"status\":\"__proto__\",\"created_at\":\"2001-01-02T00:00:00+02:00\"}]"
+  },
+  "POST /api/help/requests/21/acknowledge": {
+   "status": 200,
+   "type": "application/json",
+   "body": "{\"id\":21,\"status\":\"acknowledged\"}"
+  },
+  "POST /api/help/requests/21/resolve": {
+   "status": 200,
+   "type": "application/json",
+   "body": "{\"id\":21,\"status\":\"resolved\"}"
+  },
+  "POST /api/help/requests/22/resolve": {
+   "status": 200,
+   "type": "application/json",
+   "body": "{\"id\":22,\"status\":\"resolved\"}"
+  },
+  "GET /api/enrollment/pending": {
+   "status": 200,
+   "type": "application/json",
+   "body": "{\"devices\":[{\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"created_at\":\"2001-03-01T12:00:00Z\"}],\"count\":1}"
+  }
+ },
+ "steps": [
+  {
+   "name": "1 GET /api/bd/branding",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/branding",
+   "status": 200,
+   "answer": "{\"company_name\":\"BetterDesk\",\"accent_color\":\"#3b82f6\",\"support_contact\":\"\",\"appearance\":{\"version\":\"2.0\",\"revision\":\"0\",\"product\":\"betterdesk-appearance\",\"identity\":{\"appName\":\"BetterDesk\",\"appDescription\":\"BetterDesk Server Management\",\"logoType\":\"default\",\"logoIcon\":\"dns\",\"logoUrl\":\"\",\"logoText\":\"\",\"logoTextAccent\":\"\"},\"palette\":{\"mode\":\"system\",\"primary\":\"#58a6ff\",\"primaryHover\":\"#79c0ff\",\"background\":\"#0d1117\",\"surface\":\"#161b22\",\"surfaceRaised\":\"#21262d\",\"text\":\"#e6edf3\",\"muted\":\"#8b949e\",\"border\":\"#30363d\",\"danger\":\"#f85149\",\"warning\":\"#d29922\",\"success\":\"#2ea44f\"},\"surfaces\":{\"glassEnabled\":false,\"glassBlur\":\"16\",\"glassOpacity\":\"55\"},\"background\":{\"type\":\"none\",\"color\":\"\",\"gradient\":\"\",\"imageUrl\":\"\",\"overlay\":\"\",\"size\":\"cover\"},\"readability\":{\"ok\":true,\"issues\":[]}}}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "2 GET /api/bd/appearance",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/appearance",
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"version\":\"2.0\",\"revision\":\"0\",\"product\":\"betterdesk-appearance\",\"identity\":{\"appName\":\"BetterDesk\",\"appDescription\":\"BetterDesk Server Management\",\"logoType\":\"default\",\"logoIcon\":\"dns\",\"logoUrl\":\"\",\"logoText\":\"\",\"logoTextAccent\":\"\"},\"palette\":{\"mode\":\"system\",\"primary\":\"#58a6ff\",\"primaryHover\":\"#79c0ff\",\"background\":\"#0d1117\",\"surface\":\"#161b22\",\"surfaceRaised\":\"#21262d\",\"text\":\"#e6edf3\",\"muted\":\"#8b949e\",\"border\":\"#30363d\",\"danger\":\"#f85149\",\"warning\":\"#d29922\",\"success\":\"#2ea44f\"},\"surfaces\":{\"glassEnabled\":false,\"glassBlur\":\"16\",\"glassOpacity\":\"55\"},\"background\":{\"type\":\"none\",\"color\":\"\",\"gradient\":\"\",\"imageUrl\":\"\",\"overlay\":\"\",\"size\":\"cover\"},\"readability\":{\"ok\":true,\"issues\":[]}}}",
+   "header": {
+    "cache-control": "no-store, no-cache, must-revalidate, private"
+   },
+   "calls": []
+  },
+  {
+   "name": "3 no identification POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"DEVX\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Missing device identification\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "4 header too short POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{}",
+   "headers": {
+    "X-Device-Id": "ab"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Missing device identification\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "5 header too long POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{}",
+   "headers": {
+    "X-Device-Id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Missing device identification\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "6 header twice POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{}",
+   "headers": {
+    "X-Device-Id": [
+     "DEVA",
+     "DEVB"
+    ]
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Missing device identification\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "7 unbound token POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{}",
+   "headers": {
+    "Authorization": "Bearer tok-unbound-0123456789"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Missing device identification\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "8 token of no device id POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{}",
+   "headers": {
+    "Authorization": "Bearer tok-odd-0123456789"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Missing device identification\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "9 expired token POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{}",
+   "headers": {
+    "Authorization": "Bearer tok-expired-0123456789"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Missing device identification\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "10 revoked token POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{}",
+   "headers": {
+    "Authorization": "Bearer tok-revoked-0123456789"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Missing device identification\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "11 blank token POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{}",
+   "headers": {
+    "Authorization": "Bearer    "
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Missing device identification\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "12 lower-case bearer POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{}",
+   "headers": {
+    "Authorization": "bearer tok-dev1-0123456789"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Missing device identification\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "13 token with spaces POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"DEV1\",\"uuid\":\"uuid-1\"}",
+   "headers": {
+    "Authorization": "Bearer  tok-dev1-0123456789  "
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"DEV1\",\"server_time\":1795023653083,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "14 unbound token and header POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"uuid\":\"uuid-1\"}",
+   "headers": {
+    "Authorization": "Bearer tok-unbound-0123456789",
+    "X-Device-Id": "DEV1"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"DEV1\",\"server_time\":1795023653097,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "15 token for another device POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"DEV2\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"device_id mismatch\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "16 header for another device POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"DEV2\"}",
+   "headers": {
+    "X-Device-Id": "DEV1"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"device_id mismatch\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "17 claim with spaces POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"  DEV1  \",\"uuid\":\"uuid-1\"}",
+   "headers": {
+    "X-Device-Id": "DEV1"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"DEV1\",\"server_time\":1795023653135,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "18 claim a number POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":7}",
+   "headers": {
+    "X-Device-Id": "DEV1"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"DEV1\",\"server_time\":1795023653149,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "19 refresh POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"DEV1\",\"uuid\":\"uuid-1\",\"hostname\":\"pc-1b\",\"platform\":\"Windows 11\",\"version\":\"1.4\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"DEV1\",\"server_time\":1795023653164,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "20 refresh by header alone POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"DEV2\"}",
+   "headers": {
+    "X-Device-Id": "DEV2"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"DEV2\",\"server_time\":1795023653177,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "21 uuid change, no stored key POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"DEV1\",\"uuid\":\"other\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 409,
+   "answer": "{\"error\":\"identity_change_not_allowed\",\"message\":\"Device identity is already registered; an operator must change it\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "22 same uuid with spaces POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"DEV1\",\"uuid\":\"  uuid-1  \"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"DEV1\",\"server_time\":1795023653202,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "23 key where none was POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"DEV3\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev3-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"DEV3\",\"server_time\":1795023653215,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "24 banned POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"BANNED1\"}",
+   "headers": {
+    "X-Device-Id": "BANNED1"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"device_banned\",\"message\":\"This device is banned\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "25 removed, with a token POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"GONE1\",\"enrollment_token\":\"enroll-fresh\"}",
+   "headers": {
+    "X-Device-Id": "GONE1"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"device_removed\",\"message\":\"This device has been removed\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "26 same key POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"KEYDEV\",\"uuid\":\"uuid-k\",\"public_key\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\"}",
+   "headers": {
+    "X-Device-Id": "KEYDEV"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"KEYDEV\",\"server_time\":1795023653252,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "27 key swap without proof POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
+   "headers": {
+    "X-Device-Id": "KEYDEV"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"identity_proof_required\",\"message\":\"Changing device identity requires proof of possession (missing_proof_headers)\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "28 key swap, proof by another key POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
+   "headers": {
+    "X-Device-Id": "KEYDEV"
+   },
+   "proof": {
+    "device": "KEYDEV",
+    "key": "a",
+    "nonce": "n-27",
+    "sign": "c",
+    "payloadKey": "iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w="
+   },
+   "status": 403,
+   "answer": "{\"error\":\"identity_proof_required\",\"message\":\"Changing device identity requires proof of possession (invalid_signature)\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "29 key swap, proof too old POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
+   "headers": {
+    "X-Device-Id": "KEYDEV"
+   },
+   "proof": {
+    "device": "KEYDEV",
+    "key": "a",
+    "nonce": "n-28",
+    "offset": -360000
+   },
+   "status": 403,
+   "answer": "{\"error\":\"identity_proof_required\",\"message\":\"Changing device identity requires proof of possession (timestamp_outside_skew)\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "30 key swap, proof from the future POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
+   "headers": {
+    "X-Device-Id": "KEYDEV"
+   },
+   "proof": {
+    "device": "KEYDEV",
+    "key": "a",
+    "nonce": "n-29",
+    "offset": 360000
+   },
+   "status": 403,
+   "answer": "{\"error\":\"identity_proof_required\",\"message\":\"Changing device identity requires proof of possession (timestamp_outside_skew)\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "31 key swap, unreadable time POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
+   "headers": {
+    "X-Device-Id": "KEYDEV"
+   },
+   "proof": {
+    "device": "KEYDEV",
+    "key": "a",
+    "nonce": "n-30",
+    "timestamp": "yesterday"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"identity_proof_required\",\"message\":\"Changing device identity requires proof of possession (invalid_timestamp)\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "32 key swap, nonce too long POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
+   "headers": {
+    "X-Device-Id": "KEYDEV"
+   },
+   "proof": {
+    "device": "KEYDEV",
+    "key": "a",
+    "nonce": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"identity_proof_required\",\"message\":\"Changing device identity requires proof of possession (nonce_too_long)\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "33 key swap, signature too short POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
+   "headers": {
+    "X-Device-Id": "KEYDEV"
+   },
+   "proof": {
+    "device": "KEYDEV",
+    "key": "a",
+    "nonce": "n-32",
+    "signature": "AAAA"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"identity_proof_required\",\"message\":\"Changing device identity requires proof of possession (invalid_signature_length)\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "34 key swap, signature of another path POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
+   "headers": {
+    "X-Device-Id": "KEYDEV"
+   },
+   "proof": {
+    "device": "KEYDEV",
+    "key": "a",
+    "nonce": "n-33",
+    "path": "/api/bd/heartbeat"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"identity_proof_required\",\"message\":\"Changing device identity requires proof of possession (invalid_signature)\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "35 key swap, uuid change with proof POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"KEYDEV\",\"uuid\":\"uuid-k2\"}",
+   "headers": {
+    "X-Device-Id": "KEYDEV"
+   },
+   "proof": {
+    "device": "KEYDEV",
+    "key": "a",
+    "nonce": "rot-1"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"KEYDEV\",\"server_time\":1795023653376,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "36 the same proof again POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"KEYDEV\",\"uuid\":\"uuid-k3\"}",
+   "headers": {
+    "X-Device-Id": "KEYDEV"
+   },
+   "proof": {
+    "device": "KEYDEV",
+    "key": "a",
+    "nonce": "rot-1"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"identity_proof_required\",\"message\":\"Changing device identity requires proof of possession (replayed_proof)\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "37 key swap with proof POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
+   "headers": {
+    "X-Device-Id": "KEYDEV"
+   },
+   "proof": {
+    "device": "KEYDEV",
+    "key": "a",
+    "nonce": "rot-2"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"KEYDEV\",\"server_time\":1795023653402,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "38 known devices after",
+   "sql": "SELECT id, uuid, pk, info, ip, status_online, is_deleted FROM peer WHERE id IN (?, ?, ?, ?, ?) ORDER BY id",
+   "params": [
+    "DEV1",
+    "DEV2",
+    "DEV3",
+    "KEYDEV",
+    "GONE1"
+   ],
+   "rows": "[{\"id\":\"DEV1\",\"uuid\":\"  uuid-1  \",\"pk\":null,\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0},{\"id\":\"DEV2\",\"uuid\":\"\",\"pk\":null,\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0},{\"id\":\"DEV3\",\"uuid\":\"\",\"pk\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\",\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0},{\"id\":\"GONE1\",\"uuid\":\"uuid-g\",\"pk\":null,\"info\":\"{}\",\"ip\":\"\",\"status_online\":0,\"is_deleted\":1},{\"id\":\"KEYDEV\",\"uuid\":\"\",\"pk\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\",\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0}]"
+  },
+  {
+   "name": "39 renamed, other uuid POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"OLDID1\",\"uuid\":\"uuid-x\"}",
+   "headers": {
+    "Authorization": "Bearer tok-renamed-0123456789"
+   },
+   "status": 409,
+   "answer": "{\"error\":\"Device ID has been changed\",\"new_id\":\"NEWID1\",\"message\":\"This device ID was renamed to NEWID1. Please update your configuration.\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "40 renamed, same uuid in capitals POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"device_id\":\"OLDID1\",\"uuid\":\"UUID-N\"}",
+   "headers": {
+    "Authorization": "Bearer tok-renamed-0123456789"
+   },
+   "status": 409,
+   "answer": "{\"error\":\"identity_change_not_allowed\",\"message\":\"Device identity is already registered; an operator must change it\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "41 renamed, same address POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{}",
+   "headers": {
+    "X-Device-Id": "OLDID1",
+    "X-Forwarded-For": "203.0.113.9, 10.0.0.1"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"NEWID1\",\"server_time\":1795023653448,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "42 renamed, other address POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{}",
+   "headers": {
+    "X-Device-Id": "OLDID1",
+    "X-Forwarded-For": "203.0.113.8"
+   },
+   "status": 409,
+   "answer": "{\"error\":\"Device ID has been changed\",\"new_id\":\"NEWID1\",\"message\":\"This device ID was renamed to NEWID1. Please update your configuration.\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "43 renamed, same key POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
+   "headers": {
+    "X-Device-Id": "OLDID2"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"NEWID2\",\"server_time\":1795023653477,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "44 renamed, other key POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"public_key\":\"other\"}",
+   "headers": {
+    "X-Device-Id": "OLDID2"
+   },
+   "status": 409,
+   "answer": "{\"error\":\"Device ID has been changed\",\"new_id\":\"NEWID2\",\"message\":\"This device ID was renamed to NEWID2. Please update your configuration.\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "45 renamed to an id nobody has POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{}",
+   "headers": {
+    "X-Device-Id": "OLDID3"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"enrollment_proof_required\",\"message\":\"Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "46 renamed devices after",
+   "sql": "SELECT id, uuid, pk, info, ip, status_online, is_deleted FROM peer WHERE id IN (?, ?, ?, ?, ?) ORDER BY id",
+   "params": [
+    "NEWID1",
+    "NEWID2",
+    "OLDID1",
+    "OLDID2",
+    "OLDID3"
+   ],
+   "rows": "[{\"id\":\"NEWID1\",\"uuid\":\"\",\"pk\":null,\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"203.0.113.9\\\"}\",\"ip\":\"203.0.113.9\",\"status_online\":1,\"is_deleted\":0},{\"id\":\"NEWID2\",\"uuid\":\"\",\"pk\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\",\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0}]"
+  },
+  {
+   "name": "47 approved POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"hostname\":\"ap\"}",
+   "headers": {
+    "X-Device-Id": "APPROVED1"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"APPROVED1\",\"server_time\":1795023653518,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "48 approved with another key POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"public_key\":\"7UkoxijRwsbq6QM4kFmVYSlZJzpcY/k2NsFGFKyHN9E=\"}",
+   "headers": {
+    "X-Device-Id": "APPROVED2"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"enrollment_proof_required\",\"message\":\"Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "49 approved, no key sent POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{}",
+   "headers": {
+    "X-Device-Id": "APPROVED2"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"APPROVED2\",\"server_time\":1795023653544,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "50 only pending POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{}",
+   "headers": {
+    "X-Device-Id": "PENDING1"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"enrollment_proof_required\",\"message\":\"Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "51 rejected POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{}",
+   "headers": {
+    "X-Device-Id": "REJECTED1"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"enrollment_proof_required\",\"message\":\"Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "52 token of another device POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"enrollment_token\":\"enroll-taken\"}",
+   "headers": {
+    "X-Device-Id": "TOKDEV1"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"enrollment_proof_required\",\"message\":\"Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "53 unknown token POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"enrollment_token\":\"enroll-nope\"}",
+   "headers": {
+    "X-Device-Id": "TOKDEV1"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"enrollment_proof_required\",\"message\":\"Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "54 fresh token POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"enrollment_token\":\"  enroll-fresh  \"}",
+   "headers": {
+    "X-Device-Id": "TOKDEV1"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"TOKDEV1\",\"server_time\":1795023653622,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "55 the fresh token again POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"enrollment_token\":\"enroll-fresh\"}",
+   "headers": {
+    "X-Device-Id": "TOKDEV2"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"enrollment_proof_required\",\"message\":\"Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "56 token bound to this device POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"enrollment_token\":\"enroll-mine\"}",
+   "headers": {
+    "X-Device-Id": "TOKDEV3"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"TOKDEV3\",\"server_time\":1795023653654,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "57 token bound to nobody POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"enrollment_token\":\"enroll-empty\"}",
+   "headers": {
+    "X-Device-Id": "TOKDEV4"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"TOKDEV4\",\"server_time\":1795023653670,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "58 token a number POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"enrollment_token\":7}",
+   "headers": {
+    "X-Device-Id": "TOKDEV5"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"enrollment_proof_required\",\"message\":\"Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "59 token without text POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"enrollment_token\":{\"toString\":\"x\"}}",
+   "headers": {
+    "X-Device-Id": "TOKDEV5"
+   },
+   "status": 500,
+   "answer": "{\"error\":\"Registration failed\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "60 templates after",
+   "sql": "SELECT name, enrolled_device_id FROM agent_templates ORDER BY id",
+   "params": [],
+   "rows": "[{\"name\":\"fresh\",\"enrolled_device_id\":\"TOKDEV1\"},{\"name\":\"empty\",\"enrolled_device_id\":\"TOKDEV4\"},{\"name\":\"taken\",\"enrolled_device_id\":\"OTHERDEV\"},{\"name\":\"mine\",\"enrolled_device_id\":\"TOKDEV3\"}]"
+  },
+  {
+   "name": "61 proof POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"public_key\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\"}",
+   "headers": {
+    "X-Device-Id": "PROOF1"
+   },
+   "proof": {
+    "device": "PROOF1",
+    "key": "a",
+    "nonce": "first"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"PROOF1\",\"server_time\":1795023653716,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "62 same nonce, another device POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"public_key\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\"}",
+   "headers": {
+    "X-Device-Id": "PROOF2"
+   },
+   "proof": {
+    "device": "PROOF2",
+    "key": "a",
+    "nonce": "first"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"PROOF2\",\"server_time\":1795023653730,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "63 proof replayed POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"public_key\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\"}",
+   "headers": {
+    "X-Device-Id": "PROOF3"
+   },
+   "proof": {
+    "device": "PROOF3",
+    "key": "a",
+    "nonce": "again"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"PROOF3\",\"server_time\":1795023653744,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "64 proof replayed (2) POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"public_key\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\"}",
+   "headers": {
+    "X-Device-Id": "PROOF3"
+   },
+   "proof": {
+    "device": "PROOF3",
+    "key": "a",
+    "nonce": "again"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"PROOF3\",\"server_time\":1795023653757,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "65 proof for another device POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"public_key\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\"}",
+   "headers": {
+    "X-Device-Id": "PROOF4"
+   },
+   "proof": {
+    "device": "PROOF9",
+    "key": "a",
+    "nonce": "p-64"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"enrollment_proof_required\",\"message\":\"Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "66 proof with a lower-case method POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"public_key\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\"}",
+   "headers": {
+    "X-Device-Id": "PROOF5"
+   },
+   "proof": {
+    "device": "PROOF5",
+    "key": "a",
+    "nonce": "p-65",
+    "method": "post"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"PROOF5\",\"server_time\":1795023653786,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "67 proof without a key POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{}",
+   "headers": {
+    "X-Device-Id": "PROOF6"
+   },
+   "proof": {
+    "device": "PROOF6",
+    "key": "a",
+    "nonce": "nokey"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"enrollment_proof_required\",\"message\":\"Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "68 proof, key unreadable POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"public_key\":\"not base64 !!\"}",
+   "headers": {
+    "X-Device-Id": "PROOF7"
+   },
+   "proof": {
+    "device": "PROOF7",
+    "key": "a",
+    "nonce": "badkey"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"enrollment_proof_required\",\"message\":\"Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "69 proof, key in the URL alphabet POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"public_key\":\" iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w \"}",
+   "headers": {
+    "X-Device-Id": "PROOF8"
+   },
+   "proof": {
+    "device": "PROOF8",
+    "key": "a",
+    "nonce": "urlkey"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"PROOF8\",\"server_time\":1795023653826,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "70 proof, path spelled otherwise POST /API/BD/Register/",
+   "role": "",
+   "method": "POST",
+   "path": "/API/BD/Register/",
+   "body": "{\"public_key\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\"}",
+   "headers": {
+    "X-Device-Id": "PROOF10"
+   },
+   "proof": {
+    "device": "PROOF10",
+    "key": "a",
+    "nonce": "spelled"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"PROOF10\",\"server_time\":1795023653840,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "71 a list for a body POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "[\"DEV1\"]",
+   "headers": {
+    "X-Device-Id": "NEW2"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"enrollment_proof_required\",\"message\":\"Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "72 a form POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "device_id=FORM1&uuid=u",
+   "type": "application/x-www-form-urlencoded",
+   "headers": {
+    "X-Device-Id": "FORM1"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"enrollment_proof_required\",\"message\":\"Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "73 new devices after",
+   "sql": "SELECT id, uuid, pk, info, ip, status_online, is_deleted FROM peer WHERE id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ORDER BY id",
+   "params": [
+    "APPROVED1",
+    "APPROVED2",
+    "TOKDEV1",
+    "TOKDEV2",
+    "TOKDEV3",
+    "TOKDEV4",
+    "PROOF1",
+    "PROOF2",
+    "PROOF3",
+    "PROOF8",
+    "PROOF10"
+   ],
+   "rows": "[{\"id\":\"APPROVED1\",\"uuid\":\"\",\"pk\":null,\"info\":\"{\\\"hostname\\\":\\\"ap\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0},{\"id\":\"APPROVED2\",\"uuid\":\"\",\"pk\":null,\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0},{\"id\":\"PROOF1\",\"uuid\":\"\",\"pk\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\",\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0},{\"id\":\"PROOF10\",\"uuid\":\"\",\"pk\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\",\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0},{\"id\":\"PROOF2\",\"uuid\":\"\",\"pk\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\",\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0},{\"id\":\"PROOF3\",\"uuid\":\"\",\"pk\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\",\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0},{\"id\":\"PROOF8\",\"uuid\":\"\",\"pk\":\" iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w \",\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0},{\"id\":\"TOKDEV1\",\"uuid\":\"\",\"pk\":null,\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0},{\"id\":\"TOKDEV3\",\"uuid\":\"\",\"pk\":null,\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0},{\"id\":\"TOKDEV4\",\"uuid\":\"\",\"pk\":null,\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0}]"
+  },
+  {
+   "name": "74 without a claim POST /api/bd/heartbeat",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/heartbeat",
+   "body": "{}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"server_time\":1795023653897,\"pending_connections\":[]}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "75 POST /api/bd/heartbeat",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/heartbeat",
+   "body": "{\"device_id\":\"DEV1\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"server_time\":1795023653910,\"pending_connections\":[]}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "76 another device POST /api/bd/heartbeat",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/heartbeat",
+   "body": "{\"device_id\":\"DEV2\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"Device ID mismatch\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "77 claim in a list POST /api/bd/heartbeat",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/heartbeat",
+   "body": "{\"device_id\":[\"DEV1\"]}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"server_time\":1795023653954,\"pending_connections\":[]}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "78 number for a device POST /api/bd/heartbeat",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/heartbeat",
+   "body": "{\"device_id\":900100001}",
+   "headers": {
+    "Authorization": "Bearer tok-odd-0123456789"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "79 unbound token POST /api/bd/heartbeat",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/heartbeat",
+   "body": "{}",
+   "headers": {
+    "Authorization": "Bearer tok-unbound-0123456789"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "80 basic POST /api/bd/heartbeat",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/heartbeat",
+   "body": "{}",
+   "headers": {
+    "Authorization": "Basic eDp5"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "81 no target POST /api/bd/connect",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/connect",
+   "body": "{}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 400,
+   "answer": "{\"error\":\"target_id is required\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "82 unbound token POST /api/bd/connect",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/connect",
+   "body": "{\"target_id\":\"DEV2\"}",
+   "headers": {
+    "Authorization": "Bearer tok-unbound-0123456789"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"A device-bound access token is required\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "83 initiator mismatch POST /api/bd/connect",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/connect",
+   "body": "{\"target_id\":\"DEV2\",\"initiator_id\":\"DEV3\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"initiator_id mismatch\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "84 initiator in a list POST /api/bd/connect",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/connect",
+   "body": "{\"target_id\":\"DEV2\",\"initiator_id\":[\"DEV1\"]}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"initiator_id mismatch\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "85 unknown target POST /api/bd/connect",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/connect",
+   "body": "{\"target_id\":\"NOPE\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 404,
+   "answer": "{\"error\":\"Target device not found\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "86 removed target POST /api/bd/connect",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/connect",
+   "body": "{\"target_id\":\"GONE1\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 404,
+   "answer": "{\"error\":\"Target device not found\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "87 banned target POST /api/bd/connect",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/connect",
+   "body": "{\"target_id\":\"BANNED1\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"782d4ad7-b304-4e39-a758-2863e4dc1369\",\"token\":\"ead1fa1ce602e279815372c47d0884de787b9396742a6d5b3d44a4a879fd5795\",\"target_online\":false,\"relay_url\":\"/ws/bd-relay?session=782d4ad7-b304-4e39-a758-2863e4dc1369&token=ead1fa1ce602e279815372c47d0884de787b9396742a6d5b3d44a4a879fd5795&role=initiator\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "88 target a number POST /api/bd/connect",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/connect",
+   "body": "{\"target_id\":900100001}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 404,
+   "answer": "{\"error\":\"Target device not found\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "89 POST /api/bd/connect",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/connect",
+   "body": "{\"target_id\":\"DEV2\",\"initiator_id\":\"DEV1\",\"public_key\":\"pk\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "capture": {
+    "sess": "session_id"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"c0674ab0-835e-492b-bdcc-907f30c3fd63\",\"token\":\"af008ad444a914b8ef015319299559b4f66383de911249e39f529c41e7e617fe\",\"target_online\":false,\"relay_url\":\"/ws/bd-relay?session=c0674ab0-835e-492b-bdcc-907f30c3fd63&token=af008ad444a914b8ef015319299559b4f66383de911249e39f529c41e7e617fe&role=initiator\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "90 token of a viewer POST /api/bd/connect",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/connect",
+   "body": "{\"target_id\":\"DEV1\"}",
+   "headers": {
+    "Authorization": "Bearer tok-viewer-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"e6f0a791-499f-4ebb-a9a4-72dc15477283\",\"token\":\"31a891a262cfd37f0b60178ba59b9a49563eac35548fe48cded1bf2f3a653901\",\"target_online\":false,\"relay_url\":\"/ws/bd-relay?session=e6f0a791-499f-4ebb-a9a4-72dc15477283&token=31a891a262cfd37f0b60178ba59b9a49563eac35548fe48cded1bf2f3a653901&role=initiator\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "91 target sees it POST /api/bd/heartbeat",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/heartbeat",
+   "body": "{\"device_id\":\"DEV2\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev2-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"server_time\":1795023654267,\"pending_connections\":[{\"session_id\":\"c0674ab0-835e-492b-bdcc-907f30c3fd63\",\"initiator_id\":\"DEV1\",\"created_at\":1795023654225}]}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "92 initiator GET /api/bd/session/{sess}",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/session/{sess}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session\":{\"sessionId\":\"c0674ab0-835e-492b-bdcc-907f30c3fd63\",\"initiatorId\":\"DEV1\",\"targetId\":\"DEV2\",\"status\":\"pending\",\"createdAt\":1795023654225}}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "93 target GET /api/bd/session/{sess}",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/session/{sess}",
+   "headers": {
+    "Authorization": "Bearer tok-dev2-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session\":{\"sessionId\":\"c0674ab0-835e-492b-bdcc-907f30c3fd63\",\"initiatorId\":\"DEV1\",\"targetId\":\"DEV2\",\"status\":\"pending\",\"createdAt\":1795023654225}}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "94 somebody else GET /api/bd/session/{sess}",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/session/{sess}",
+   "headers": {
+    "Authorization": "Bearer tok-dev3-0123456789"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"Not a participant of this session\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "95 unknown GET /api/bd/session/nope",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/session/nope",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 404,
+   "answer": "{\"error\":\"Session not found or expired\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "96 somebody else DELETE /api/bd/session/{sess}",
+   "role": "",
+   "method": "DELETE",
+   "path": "/api/bd/session/{sess}",
+   "headers": {
+    "Authorization": "Bearer tok-dev3-0123456789"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"Not a participant of this session\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "97 the target DELETE /api/bd/session/{sess}",
+   "role": "",
+   "method": "DELETE",
+   "path": "/api/bd/session/{sess}",
+   "headers": {
+    "Authorization": "Bearer tok-dev2-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "98 again DELETE /api/bd/session/{sess}",
+   "role": "",
+   "method": "DELETE",
+   "path": "/api/bd/session/{sess}",
+   "headers": {
+    "Authorization": "Bearer tok-dev2-0123456789"
+   },
+   "status": 404,
+   "answer": "{\"error\":\"Session not found\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "99 GET /api/bd/peers",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/peers",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"peers\":[]}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "100 GET /api/bd/peer/DEV1",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/peer/DEV1",
+   "headers": {
+    "Authorization": "Bearer tok-dev2-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"peer\":{\"id\":\"DEV1\",\"hostname\":\"Front desk\",\"banned\":false}}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "101 GET /api/bd/peer/BANNED1",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/peer/BANNED1",
+   "headers": {
+    "Authorization": "Bearer tok-dev2-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"peer\":{\"id\":\"BANNED1\",\"hostname\":\"\",\"banned\":false}}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "102 GET /api/bd/peer/GONE1",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/peer/GONE1",
+   "headers": {
+    "Authorization": "Bearer tok-dev2-0123456789"
+   },
+   "status": 404,
+   "answer": "{\"error\":\"Device not found\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "103 escaped GET /api/bd/peer/%44EV1",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/peer/%44EV1",
+   "headers": {
+    "Authorization": "Bearer tok-dev2-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"peer\":{\"id\":\"DEV1\",\"hostname\":\"Front desk\",\"banned\":false}}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "104 GET /api/bd/peer/NOPE",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/peer/NOPE",
+   "headers": {
+    "Authorization": "Bearer tok-dev2-0123456789"
+   },
+   "status": 404,
+   "answer": "{\"error\":\"Device not found\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "105 API has no route POST /api/bd/help-request",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/help-request",
+   "body": "{\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"message\":\"help\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"request_id\":\"974c7697-75f0-44ef-84f7-5282d5b36477\"}",
+   "header": {},
+   "calls": [
+    {
+     "method": "POST",
+     "url": "/api/help/requests",
+     "body": "{\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"message\":\"help\"}"
+    }
+   ]
+  },
+  {
+   "name": "106 API gives an id POST /api/bd/help-request",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/help-request",
+   "body": "{\"device_id\":\"DEV1\",\"message\":\"mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm\",\"hostname\":{\"x\":1}}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "api": {
+    "POST /api/help/requests": {
+     "status": 201,
+     "type": "application/json",
+     "body": "{\"id\":77}"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"request_id\":\"77\"}",
+   "header": {},
+   "calls": [
+    {
+     "method": "POST",
+     "url": "/api/help/requests",
+     "body": "{\"device_id\":\"DEV1\",\"hostname\":\"[object Object]\",\"message\":\"mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm\"}"
+    }
+   ]
+  },
+  {
+   "name": "107 API gives a request id POST /api/bd/help-request",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/help-request",
+   "body": "{\"device_id\":\"DEV1\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "api": {
+    "POST /api/help/requests": {
+     "status": 200,
+     "type": "application/json",
+     "body": "{\"request_id\":\"r-9\"}"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"request_id\":\"r-9\"}",
+   "header": {},
+   "calls": [
+    {
+     "method": "POST",
+     "url": "/api/help/requests",
+     "body": "{\"device_id\":\"DEV1\",\"hostname\":\"\",\"message\":\"\"}"
+    }
+   ]
+  },
+  {
+   "name": "108 API gives a list POST /api/bd/help-request",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/help-request",
+   "body": "{\"device_id\":\"DEV1\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "api": {
+    "POST /api/help/requests": {
+     "status": 200,
+     "type": "application/json",
+     "body": "{\"id\":0,\"request_id\":[1,2]}"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"request_id\":\"1,2\"}",
+   "header": {},
+   "calls": [
+    {
+     "method": "POST",
+     "url": "/api/help/requests",
+     "body": "{\"device_id\":\"DEV1\",\"hostname\":\"\",\"message\":\"\"}"
+    }
+   ]
+  },
+  {
+   "name": "109 long id POST /api/bd/help-request",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/help-request",
+   "body": "{\"device_id\":\"DEV1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+   "headers": {
+    "Authorization": "Bearer tok-odd-0123456789"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "110 id in a list POST /api/bd/help-request",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/help-request",
+   "body": "{\"device_id\":[\"DEV1\"]}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 400,
+   "answer": "{\"error\":\"Missing device_id\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "111 message without text POST /api/bd/help-request",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/help-request",
+   "body": "{\"device_id\":\"DEV1\",\"message\":{\"toString\":1}}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 500,
+   "answer": "{\"error\":\"Failed to process help request\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "112 no id POST /api/bd/help-request",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/help-request",
+   "body": "{}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 400,
+   "answer": "{\"error\":\"Missing device_id\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "113 audit",
+   "sql": "SELECT user_id, action, details, ip_address FROM audit_log ORDER BY id",
+   "params": [],
+   "rows": "[{\"user_id\":null,\"action\":\"help_request\",\"details\":\"Help requested by DEV1: help\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":null,\"action\":\"help_request\",\"details\":\"Help requested by DEV1: mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":null,\"action\":\"help_request\",\"details\":\"Help requested by DEV1: \",\"ip_address\":\"127.0.0.1\"},{\"user_id\":null,\"action\":\"help_request\",\"details\":\"Help requested by DEV1: \",\"ip_address\":\"127.0.0.1\"}]"
+  },
+  {
+   "name": "114 POST /api/bd/chat/send",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/chat/send",
+   "body": "{\"device_id\":\"DEV1\",\"content\":\"hi\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 500,
+   "answer": "{\"error\":\"Failed to send message\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "115 blank POST /api/bd/chat/send",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/chat/send",
+   "body": "{\"device_id\":\"DEV1\",\"content\":\" \"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 400,
+   "answer": "{\"error\":\"Missing content\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "116 content a number POST /api/bd/chat/send",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/chat/send",
+   "body": "{\"device_id\":\"DEV1\",\"content\":5}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 400,
+   "answer": "{\"error\":\"Missing content\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "117 content of 4098 units POST /api/bd/chat/send",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/chat/send",
+   "body": "{\"device_id\":\"DEV1\",\"content\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 400,
+   "answer": "{\"error\":\"Message too long (max 4096 chars)\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "118 content of 4096 units POST /api/bd/chat/send",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/chat/send",
+   "body": "{\"device_id\":\"DEV1\",\"content\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 500,
+   "answer": "{\"error\":\"Failed to send message\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "119 without a device GET /api/bd/chat/history",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/chat/history",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 400,
+   "answer": "{\"error\":\"Missing device_id\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "120 empty device GET /api/bd/chat/history?device_id=",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/chat/history?device_id=",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 400,
+   "answer": "{\"error\":\"Missing device_id\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "121 another device GET /api/bd/chat/history?device_id=DEV2",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/chat/history?device_id=DEV2",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"Device ID mismatch\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "122 values of every type POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"uuid\":7,\"hostname\":{\"a\":[1,\"é\"]},\"platform\":0,\"version\":null}",
+   "headers": {
+    "X-Device-Id": "DEV2"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"DEV2\",\"server_time\":1795023654810,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "123 key true POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"uuid\":\"\",\"public_key\":true}",
+   "headers": {
+    "X-Device-Id": "DEV2"
+   },
+   "status": 500,
+   "answer": "{\"error\":\"Registration failed\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "124 key an object POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"public_key\":{\"k\":1}}",
+   "headers": {
+    "X-Device-Id": "DEV2"
+   },
+   "status": 500,
+   "answer": "{\"error\":\"Registration failed\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "125 key a number POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"public_key\":12}",
+   "headers": {
+    "X-Device-Id": "DEV3"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"device_id\":\"DEV3\",\"server_time\":1795023654854,\"heartbeat_interval\":15}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "126 uuid a list POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"uuid\":[1,2]}",
+   "headers": {
+    "X-Device-Id": "DEV2"
+   },
+   "status": 409,
+   "answer": "{\"error\":\"identity_change_not_allowed\",\"message\":\"Device identity is already registered; an operator must change it\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "127 uuid without text POST /api/bd/register",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/register",
+   "body": "{\"uuid\":{\"toString\":1}}",
+   "headers": {
+    "X-Device-Id": "DEV2"
+   },
+   "status": 500,
+   "answer": "{\"error\":\"Registration failed\"}",
+   "header": {
+    "ratelimit-limit": "1000000"
+   },
+   "calls": []
+  },
+  {
+   "name": "128 odd values after",
+   "sql": "SELECT id, uuid, pk, info, ip, status_online, is_deleted FROM peer WHERE id IN (?, ?) ORDER BY id",
+   "params": [
+    "DEV2",
+    "DEV3"
+   ],
+   "rows": "[{\"id\":\"DEV2\",\"uuid\":\"7.0\",\"pk\":null,\"info\":\"{\\\"hostname\\\":{\\\"a\\\":[1,\\\"é\\\"]},\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0},{\"id\":\"DEV3\",\"uuid\":\"\",\"pk\":12,\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0}]"
+  },
+  {
+   "name": "129 empty POST /api/bd/operator/login",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/operator/login",
+   "body": "{}",
+   "status": 400,
+   "answer": "{\"error\":\"Username and password are required\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "130 password a list POST /api/bd/operator/login",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/operator/login",
+   "body": "{\"username\":\"e2e_operator\",\"password\":[\"x\"]}",
+   "status": 400,
+   "answer": "{\"error\":\"Username and password are required\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "131 POST /api/bd/operator/login",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/operator/login",
+   "body": "{\"username\":\"e2e_operator\",\"password\":\"wrong\",\"device_id\":\"OPDESK\"}",
+   "status": 429,
+   "answer": "{\"error\":\"Too many failed attempts. Try again later.\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "132 GET /api/bd/operator/devices",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/operator/devices",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"devices\":[{\"id\":\"900100001\",\"hostname\":5,\"platform\":[\"w\"],\"online\":false,\"last_online\":\"\"},{\"id\":\"APPROVED1\",\"hostname\":\"ap\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"APPROVED2\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"BANNED1\",\"hostname\":\"\",\"platform\":\"\",\"online\":false,\"last_online\":\"\"},{\"id\":\"DEV1\",\"hostname\":\"Front desk\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"DEV2\",\"hostname\":{\"a\":[1,\"é\"]},\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:54\"},{\"id\":\"DEV3\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:54\"},{\"id\":\"KEYDEV\",\"hostname\":\"Keyed\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"NEWID1\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"NEWID2\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"PROOF1\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"PROOF10\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"PROOF2\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"PROOF3\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"PROOF5\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"PROOF8\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"TOKDEV1\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"TOKDEV3\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"TOKDEV4\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"}]}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "133 viewer GET /api/bd/operator/devices",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/operator/devices",
+   "headers": {
+    "Authorization": "Bearer tok-viewer-0123456789"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"Insufficient permissions\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "134 expired token GET /api/bd/operator/devices",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/operator/devices",
+   "headers": {
+    "Authorization": "Bearer tok-expired-0123456789"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Missing or invalid Bearer access token\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "135 token with spaces GET /api/bd/operator/devices",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/operator/devices",
+   "headers": {
+    "Authorization": "Bearer  tok-operator-0123456789 "
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"devices\":[{\"id\":\"900100001\",\"hostname\":5,\"platform\":[\"w\"],\"online\":false,\"last_online\":\"\"},{\"id\":\"APPROVED1\",\"hostname\":\"ap\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"APPROVED2\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"BANNED1\",\"hostname\":\"\",\"platform\":\"\",\"online\":false,\"last_online\":\"\"},{\"id\":\"DEV1\",\"hostname\":\"Front desk\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"DEV2\",\"hostname\":{\"a\":[1,\"é\"]},\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:54\"},{\"id\":\"DEV3\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:54\"},{\"id\":\"KEYDEV\",\"hostname\":\"Keyed\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"NEWID1\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"NEWID2\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"PROOF1\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"PROOF10\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"PROOF2\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"PROOF3\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"PROOF5\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"PROOF8\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"TOKDEV1\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"TOKDEV3\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"},{\"id\":\"TOKDEV4\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-18 17:40:53\"}]}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "136 no token GET /api/bd/operator/devices",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/operator/devices",
+   "status": 401,
+   "answer": "{\"error\":\"Missing or invalid Bearer access token\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "137 GET /api/bd/help-requests",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/help-requests",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"requests\":[{\"id\":\"22\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"message\":\"vpn\",\"status\":\"accepted\",\"accepted_by\":\"apikey:console-bridge\",\"resolved_by\":\"\",\"created_at\":983491200000},{\"id\":\"21\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"message\":\"printer\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":983404830000},{\"id\":\"23\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"message\":\"font\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"helpdesk\",\"created_at\":980985600000},{\"id\":\"25\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":{},\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978386400000},{\"id\":\"24\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"message\":\"\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978343200000}]}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "138 filtered GET /api/bd/help-requests?status=pending&device_id=DEV1",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/help-requests?status=pending&device_id=DEV1",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"requests\":[{\"id\":\"22\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"message\":\"vpn\",\"status\":\"accepted\",\"accepted_by\":\"apikey:console-bridge\",\"resolved_by\":\"\",\"created_at\":983491200000},{\"id\":\"21\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"message\":\"printer\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":983404830000},{\"id\":\"23\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"message\":\"font\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"helpdesk\",\"created_at\":980985600000},{\"id\":\"25\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":{},\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978386400000},{\"id\":\"24\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"message\":\"\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978343200000}]}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?status=pending&device_id=DEV1&limit=200",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "139 status twice GET /api/bd/help-requests?status[]=a&status[]=b",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/help-requests?status[]=a&status[]=b",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"requests\":[{\"id\":\"22\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"message\":\"vpn\",\"status\":\"accepted\",\"accepted_by\":\"apikey:console-bridge\",\"resolved_by\":\"\",\"created_at\":983491200000},{\"id\":\"21\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"message\":\"printer\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":983404830000},{\"id\":\"23\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"message\":\"font\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"helpdesk\",\"created_at\":980985600000},{\"id\":\"25\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":{},\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978386400000},{\"id\":\"24\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"message\":\"\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978343200000}]}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?status=a,b&limit=200",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "140 API fails GET /api/bd/help-requests",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/help-requests",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "api": {
+    "GET /api/help/requests": {
+     "status": 500,
+     "type": "application/json",
+     "body": "{\"error\":\"down\"}"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"requests\":[]}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "141 API gives an object GET /api/bd/help-requests",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/help-requests",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "api": {
+    "GET /api/help/requests": {
+     "status": 200,
+     "type": "application/json",
+     "body": "{\"a\":1}"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"requests\":[]}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "142 API gives an id without text GET /api/bd/help-requests",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/help-requests",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "api": {
+    "GET /api/help/requests": {
+     "status": 200,
+     "type": "application/json",
+     "body": "[null,5,{\"id\":{\"toString\":\"x\"}}]"
+    }
+   },
+   "status": 500,
+   "answer": "{\"error\":\"Failed to list help requests\"}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "143 viewer GET /api/bd/help-requests",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/help-requests",
+   "headers": {
+    "Authorization": "Bearer tok-viewer-0123456789"
+   },
+   "status": 403,
+   "answer": "{\"error\":\"Insufficient permissions\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "144 POST /api/bd/help-requests/21/accept",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/help-requests/21/accept",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"request\":{\"id\":21,\"status\":\"acknowledged\"}}",
+   "header": {},
+   "calls": [
+    {
+     "method": "POST",
+     "url": "/api/help/requests/21/acknowledge",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "145 admin token POST /api/bd/help-requests/21/resolve",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/help-requests/21/resolve",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"request\":{\"id\":21,\"status\":\"resolved\"}}",
+   "header": {},
+   "calls": [
+    {
+     "method": "POST",
+     "url": "/api/help/requests/21/resolve",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "146 unknown POST /api/bd/help-requests/99/accept",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/help-requests/99/accept",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 502,
+   "answer": "{\"error\":\"Failed to accept help request\"}",
+   "header": {},
+   "calls": [
+    {
+     "method": "POST",
+     "url": "/api/help/requests/99/acknowledge",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "147 unknown POST /api/bd/help-requests/99/resolve",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/help-requests/99/resolve",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 502,
+   "answer": "{\"error\":\"Failed to resolve help request\"}",
+   "header": {},
+   "calls": [
+    {
+     "method": "POST",
+     "url": "/api/help/requests/99/resolve",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "148 DELETE /api/bd/help-requests/22",
+   "role": "",
+   "method": "DELETE",
+   "path": "/api/bd/help-requests/22",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true}",
+   "header": {},
+   "calls": [
+    {
+     "method": "POST",
+     "url": "/api/help/requests/22/resolve",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "149 unknown DELETE /api/bd/help-requests/99",
+   "role": "",
+   "method": "DELETE",
+   "path": "/api/bd/help-requests/99",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 502,
+   "answer": "{\"error\":\"Failed to delete help request\"}",
+   "header": {},
+   "calls": [
+    {
+     "method": "POST",
+     "url": "/api/help/requests/99/resolve",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "150 audit",
+   "sql": "SELECT user_id, action, details, ip_address FROM audit_log ORDER BY id",
+   "params": [],
+   "rows": "[{\"user_id\":null,\"action\":\"help_request\",\"details\":\"Help requested by DEV1: help\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":null,\"action\":\"help_request\",\"details\":\"Help requested by DEV1: mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":null,\"action\":\"help_request\",\"details\":\"Help requested by DEV1: \",\"ip_address\":\"127.0.0.1\"},{\"user_id\":null,\"action\":\"help_request\",\"details\":\"Help requested by DEV1: \",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"help_request_accept\",\"details\":\"Accepted help request 21\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"help_request_resolve\",\"details\":\"Resolved help request 21\",\"ip_address\":\"127.0.0.1\"}]"
+  },
+  {
+   "name": "151 POST /api/bd/operator/sessions",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/operator/sessions",
+   "body": "{\"action\":\" Start \",\"device_id\":\" DEV1 \",\"hostname\":\" pc-1 \",\"session_id\":\" s-9 \"}",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"s-9\",\"action\":\"session_start\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "152 POST /api/bd/operator/sessions",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/operator/sessions",
+   "body": "{\"action\":\"end\",\"device_id\":\"DEV1\",\"session_id\":\"s-9\"}",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"s-9\",\"action\":\"session_end\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "153 without a session id POST /api/bd/operator/sessions",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/operator/sessions",
+   "body": "{\"action\":\"session_start\",\"device_id\":\"DEV2\"}",
+   "headers": {
+    "Authorization": "Bearer tok-dev1-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"cc6658f1-abfc-4d8c-9ca5-592b2b67fe32\",\"action\":\"session_start\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "154 bad action POST /api/bd/operator/sessions",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/operator/sessions",
+   "body": "{\"action\":\"pause\",\"device_id\":\"DEV1\"}",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 400,
+   "answer": "{\"error\":\"Invalid session action\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "155 bad device POST /api/bd/operator/sessions",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/operator/sessions",
+   "body": "{\"action\":\"start\",\"device_id\":\"D\"}",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 400,
+   "answer": "{\"error\":\"Invalid device_id\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "156 device without text POST /api/bd/operator/sessions",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/operator/sessions",
+   "body": "{\"action\":\"start\",\"device_id\":{\"toString\":1}}",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 500,
+   "answer": "{\"error\":\"Failed to record operator session\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "157 long fields POST /api/bd/operator/sessions",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/operator/sessions",
+   "body": "{\"action\":\"start\",\"device_id\":\"DEV1\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"session_id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\"}",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"session_id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"action\":\"session_start\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "158 connections",
+   "sql": "SELECT host_id, host_uuid, peer_id, peer_name, action, conn_type, session_id, ip FROM audit_connections WHERE host_id <> 'alice' AND host_id <> 'bob' AND host_id <> 'carol' AND host_id <> 'dave' AND session_id LIKE 's-%' ORDER BY id",
+   "params": [],
+   "rows": "[{\"host_id\":\"e2e_operator\",\"host_uuid\":\"OPDESK\",\"peer_id\":\"DEV1\",\"peer_name\":\"pc-1\",\"action\":\"session_start\",\"conn_type\":1,\"session_id\":\"s-9\",\"ip\":\"127.0.0.1\"},{\"host_id\":\"e2e_operator\",\"host_uuid\":\"OPDESK\",\"peer_id\":\"DEV1\",\"peer_name\":\"\",\"action\":\"session_end\",\"conn_type\":1,\"session_id\":\"s-9\",\"ip\":\"127.0.0.1\"}]"
+  },
+  {
+   "name": "159 GET /api/bd/operator/sessions",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/operator/sessions",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"sessions\":[{\"id\":\"s-9\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-18 17:40:55\",\"ended_at\":\"2026-11-18 17:40:55\",\"duration_secs\":0,\"action\":\"session_end\"},{\"id\":\"cc6658f1-abfc-4d8c-9ca5-592b2b67fe32\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"operator\":\"e2e_admin\",\"started_at\":\"2026-11-18 17:40:55\",\"ended_at\":\"\",\"duration_secs\":0,\"action\":\"session_start\"},{\"id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"device_id\":\"DEV1\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-18 17:40:55\",\"ended_at\":\"\",\"duration_secs\":0,\"action\":\"session_start\"},{\"id\":\"carol:DEV3:4\",\"device_id\":\"DEV3\",\"hostname\":\"pc-3\",\"operator\":\"carol\",\"started_at\":\"2001-01-01 03:00:00\",\"ended_at\":\"\",\"duration_secs\":816705655,\"action\":\"session_start\"},{\"id\":\"s-2\",\"device_id\":\"DEV2\",\"hostname\":\"pc-2b\",\"operator\":\"dave\",\"started_at\":\"2001-01-01 01:59:00\",\"ended_at\":\"2001-01-01 02:00:00\",\"duration_secs\":60,\"action\":\"session_end\"},{\"id\":\"s-1\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"alice\",\"started_at\":\"2001-01-01 01:00:00\",\"ended_at\":\"2001-01-01 01:30:10\",\"duration_secs\":1810,\"action\":\"session_end\"}],\"count\":6}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "160 GET /api/bd/operator/sessions?limit=1",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/operator/sessions?limit=1",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"sessions\":[{\"id\":\"s-9\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-18 17:40:55\",\"ended_at\":\"2026-11-18 17:40:55\",\"duration_secs\":0,\"action\":\"session_end\"}],\"count\":1}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "161 GET /api/bd/operator/sessions?limit=0",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/operator/sessions?limit=0",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"sessions\":[{\"id\":\"s-9\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-18 17:40:55\",\"ended_at\":\"2026-11-18 17:40:55\",\"duration_secs\":0,\"action\":\"session_end\"}],\"count\":1}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "162 GET /api/bd/operator/sessions?limit=abc",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/operator/sessions?limit=abc",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"sessions\":[{\"id\":\"s-9\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-18 17:40:55\",\"ended_at\":\"2026-11-18 17:40:55\",\"duration_secs\":0,\"action\":\"session_end\"},{\"id\":\"cc6658f1-abfc-4d8c-9ca5-592b2b67fe32\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"operator\":\"e2e_admin\",\"started_at\":\"2026-11-18 17:40:55\",\"ended_at\":\"\",\"duration_secs\":0,\"action\":\"session_start\"},{\"id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"device_id\":\"DEV1\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-18 17:40:55\",\"ended_at\":\"\",\"duration_secs\":0,\"action\":\"session_start\"},{\"id\":\"carol:DEV3:4\",\"device_id\":\"DEV3\",\"hostname\":\"pc-3\",\"operator\":\"carol\",\"started_at\":\"2001-01-01 03:00:00\",\"ended_at\":\"\",\"duration_secs\":816705655,\"action\":\"session_start\"},{\"id\":\"s-2\",\"device_id\":\"DEV2\",\"hostname\":\"pc-2b\",\"operator\":\"dave\",\"started_at\":\"2001-01-01 01:59:00\",\"ended_at\":\"2001-01-01 02:00:00\",\"duration_secs\":60,\"action\":\"session_end\"},{\"id\":\"s-1\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"alice\",\"started_at\":\"2001-01-01 01:00:00\",\"ended_at\":\"2001-01-01 01:30:10\",\"duration_secs\":1810,\"action\":\"session_end\"}],\"count\":6}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "163 GET /api/bd/operator/sessions?limit=500",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/operator/sessions?limit=500",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"sessions\":[{\"id\":\"s-9\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-18 17:40:55\",\"ended_at\":\"2026-11-18 17:40:55\",\"duration_secs\":0,\"action\":\"session_end\"},{\"id\":\"cc6658f1-abfc-4d8c-9ca5-592b2b67fe32\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"operator\":\"e2e_admin\",\"started_at\":\"2026-11-18 17:40:55\",\"ended_at\":\"\",\"duration_secs\":0,\"action\":\"session_start\"},{\"id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"device_id\":\"DEV1\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-18 17:40:55\",\"ended_at\":\"\",\"duration_secs\":0,\"action\":\"session_start\"},{\"id\":\"carol:DEV3:4\",\"device_id\":\"DEV3\",\"hostname\":\"pc-3\",\"operator\":\"carol\",\"started_at\":\"2001-01-01 03:00:00\",\"ended_at\":\"\",\"duration_secs\":816705655,\"action\":\"session_start\"},{\"id\":\"s-2\",\"device_id\":\"DEV2\",\"hostname\":\"pc-2b\",\"operator\":\"dave\",\"started_at\":\"2001-01-01 01:59:00\",\"ended_at\":\"2001-01-01 02:00:00\",\"duration_secs\":60,\"action\":\"session_end\"},{\"id\":\"s-1\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"alice\",\"started_at\":\"2001-01-01 01:00:00\",\"ended_at\":\"2001-01-01 01:30:10\",\"duration_secs\":1810,\"action\":\"session_end\"}],\"count\":6}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "164 GET /api/bd/operator/sessions?limit[]=2",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/operator/sessions?limit[]=2",
+   "headers": {
+    "Authorization": "Bearer tok-operator-0123456789"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"sessions\":[{\"id\":\"s-9\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-18 17:40:55\",\"ended_at\":\"2026-11-18 17:40:55\",\"duration_secs\":0,\"action\":\"session_end\"},{\"id\":\"cc6658f1-abfc-4d8c-9ca5-592b2b67fe32\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"operator\":\"e2e_admin\",\"started_at\":\"2026-11-18 17:40:55\",\"ended_at\":\"\",\"duration_secs\":0,\"action\":\"session_start\"}],\"count\":2}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "165 GET /api/bd/notifications",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/notifications",
+   "status": 401,
+   "answer": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "166 GET /api/bd/notifications",
+   "role": "pro",
+   "method": "GET",
+   "path": "/api/bd/notifications",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"Pro accounts can only access the RustDesk desktop client API\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "167 GET /api/bd/notifications",
+   "role": "viewer",
+   "method": "GET",
+   "path": "/api/bd/notifications",
+   "status": 200,
+   "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"}],\"unread_count\":5}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "168 GET /api/bd/notifications",
+   "role": "server_admin",
+   "method": "GET",
+   "path": "/api/bd/notifications",
+   "status": 200,
+   "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"}],\"unread_count\":5}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "169 GET /api/bd/notifications",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/notifications",
+   "status": 200,
+   "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":6}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    },
+    {
+     "method": "GET",
+     "url": "/api/enrollment/pending",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "170 GET /api/bd/notifications?limit=1",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/notifications?limit=1",
+   "status": 200,
+   "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"}],\"unread_count\":6}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    },
+    {
+     "method": "GET",
+     "url": "/api/enrollment/pending",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "171 GET /api/bd/notifications?limit=0",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/notifications?limit=0",
+   "status": 200,
+   "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"}],\"unread_count\":6}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    },
+    {
+     "method": "GET",
+     "url": "/api/enrollment/pending",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "172 GET /api/bd/notifications?limit=99",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/notifications?limit=99",
+   "status": 200,
+   "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":6}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    },
+    {
+     "method": "GET",
+     "url": "/api/enrollment/pending",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "173 GET /api/bd/notifications?limit=x",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/notifications?limit=x",
+   "status": 200,
+   "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":6}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    },
+    {
+     "method": "GET",
+     "url": "/api/enrollment/pending",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "174 GET /api/bd/notifications?unread_only=TRUE",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/notifications?unread_only=TRUE",
+   "status": 200,
+   "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":6}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    },
+    {
+     "method": "GET",
+     "url": "/api/enrollment/pending",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "175 GET /api/bd/notifications?unread_only=1",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/notifications?unread_only=1",
+   "status": 200,
+   "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":6}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    },
+    {
+     "method": "GET",
+     "url": "/api/enrollment/pending",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "176 GET /api/bd/notifications?unread_only=true&limit=2",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/notifications?unread_only=true&limit=2",
+   "status": 200,
+   "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"}],\"unread_count\":6}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    },
+    {
+     "method": "GET",
+     "url": "/api/enrollment/pending",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "177 API fails GET /api/bd/notifications",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/notifications",
+   "api": {
+    "GET /api/help/requests": {
+     "status": 500,
+     "type": "application/json",
+     "body": "{\"error\":\"down\"}"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"items\":[{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":2}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    },
+    {
+     "method": "GET",
+     "url": "/api/enrollment/pending",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "178 API gives text GET /api/bd/notifications",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/notifications",
+   "api": {
+    "GET /api/help/requests": {
+     "status": 200,
+     "type": "application/json",
+     "body": "\"text\""
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"items\":[{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":2}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    },
+    {
+     "method": "GET",
+     "url": "/api/enrollment/pending",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "179 POST /api/bd/notifications/22/read",
+   "role": "viewer",
+   "method": "POST",
+   "path": "/api/bd/notifications/22/read",
+   "status": 200,
+   "answer": "{\"success\":true}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "180 long id POST /api/bd/notifications/nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn/read",
+   "role": "viewer",
+   "method": "POST",
+   "path": "/api/bd/notifications/nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn/read",
+   "status": 200,
+   "answer": "{\"success\":true}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "181 signed out POST /api/bd/notifications/22/read",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/notifications/22/read",
+   "status": 401,
+   "answer": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}",
+   "header": {},
+   "calls": []
+  },
+  {
+   "name": "182 GET /api/bd/notifications",
+   "role": "viewer",
+   "method": "GET",
+   "path": "/api/bd/notifications",
+   "status": 200,
+   "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"}],\"unread_count\":4}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "183 POST /api/bd/notifications/read-all",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/bd/notifications/read-all",
+   "status": 200,
+   "answer": "{\"success\":true}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    },
+    {
+     "method": "GET",
+     "url": "/api/enrollment/pending",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "184 GET /api/bd/notifications",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/notifications",
+   "status": 200,
+   "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":true,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":true,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":0}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    },
+    {
+     "method": "GET",
+     "url": "/api/enrollment/pending",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "185 API gives an object POST /api/bd/notifications/read-all",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/bd/notifications/read-all",
+   "api": {
+    "GET /api/help/requests": {
+     "status": 200,
+     "type": "application/json",
+     "body": "{\"a\":1}"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true}",
+   "header": {},
+   "calls": [
+    {
+     "method": "GET",
+     "url": "/api/help/requests?limit=200",
+     "body": ""
+    }
+   ]
+  },
+  {
+   "name": "186 read marks",
+   "sql": "SELECT user_id, notification_id FROM notification_reads ORDER BY user_id, notification_id",
+   "params": [],
+   "rows": "[{\"user_id\":1,\"notification_id\":\"21\"},{\"user_id\":1,\"notification_id\":\"22\"},{\"user_id\":1,\"notification_id\":\"23\"},{\"user_id\":1,\"notification_id\":\"24\"},{\"user_id\":1,\"notification_id\":\"25\"},{\"user_id\":1,\"notification_id\":\"registration:enrollment:E1\"},{\"user_id\":1,\"notification_id\":\"registration:lan:3\"},{\"user_id\":6,\"notification_id\":\"22\"},{\"user_id\":6,\"notification_id\":\"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn\"}]"
+  }
+ ]
+}

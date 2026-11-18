@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
@@ -196,4 +197,72 @@ func topAppsOf(ctx context.Context, db *store.DB, id string, from, to jsbind.Val
 		q.add(" LIMIT ?", jsbind.Number(limit))
 	}
 	return q.run(ctx, db, "list top apps of device "+id)
+}
+
+// insertActivitySessions is insertActivitySessions(deviceId, sessions):
+// one row per session, all of them or none. Each value goes in as the
+// driver bound it, with the defaults of the old adapter: the empty text
+// for an app name and a window title, "other" for a category and 0 for a
+// duration, where the session's value is not true.
+//
+// SQLite keeps what it is given (a number in a text column as "5.0") and
+// the driver refuses a flag or an object; PostgreSQL refuses a time it
+// cannot read and a fraction in the integer column, and stores a list or
+// an object in a text column as its array or JSON text.
+func insertActivitySessions(ctx context.Context, db *store.DB, device string, sessions []middleware.JSONObject) error {
+	empty := jsbind.String("")
+	return db.InTx(ctx, func(tx *store.Tx) error {
+		for i, s := range sessions {
+			args, err := jsbind.Args(tx.Dialect(), 7,
+				jsbind.String(device),
+				jsbind.Of(s.Get("app_name")).Or(empty),
+				jsbind.Of(s.Get("window_title")).Or(empty),
+				jsbind.Of(s.Get("category")).Or(jsbind.String("other")),
+				jsbind.Of(s.Get("started_at")),
+				jsbind.Of(s.Get("ended_at")),
+				jsbind.Of(s.Get("duration_secs")).Or(jsbind.Number(0)),
+			)
+			if err == nil {
+				_, err = tx.Exec(ctx, `
+                INSERT INTO activity_sessions (device_id, app_name, window_title, category, started_at, ended_at, duration_secs)
+                VALUES (?, ?, ?, ?, ?, ?, ?)`, args...)
+			}
+			if err != nil {
+				return fmt.Errorf("store session %d of device %s: %w", i, device, err)
+			}
+		}
+		return nil
+	})
+}
+
+// summary is what upsertActivitySummary stores: the values of the report
+// with the route's defaults filled in.
+type summary struct {
+	IdleSeconds, SessionCount, TotalActiveSecs, ReportedAt jsbind.Value
+}
+
+// upsertActivitySummary is upsertActivitySummary(deviceId, data): the
+// summary of a report, which replaces the one of the same device and time
+// of report, with the time of arrival.
+func upsertActivitySummary(ctx context.Context, db *store.DB, device string, s summary) error {
+	query := db.Pick(`
+                INSERT INTO activity_summaries (device_id, idle_seconds, session_count, total_active_secs, reported_at, received_at)
+                VALUES (?, ?, ?, ?, ?, datetime('now'))
+                ON CONFLICT(device_id, reported_at) DO UPDATE SET
+                    idle_seconds = excluded.idle_seconds,
+                    session_count = excluded.session_count,
+                    total_active_secs = excluded.total_active_secs,
+                    received_at = datetime('now')`, `
+                INSERT INTO activity_summaries (device_id, idle_seconds, session_count, total_active_secs, reported_at, received_at)
+                VALUES ($1, $2, $3, $4, $5, NOW())
+                ON CONFLICT(device_id, reported_at) DO UPDATE SET
+                    idle_seconds = $2, session_count = $3, total_active_secs = $4, received_at = NOW()`)
+	args, err := jsbind.Args(db.Dialect(), 5, jsbind.String(device), s.IdleSeconds, s.SessionCount, s.TotalActiveSecs, s.ReportedAt)
+	if err == nil {
+		_, err = db.Exec(ctx, query, args...)
+	}
+	if err != nil {
+		return fmt.Errorf("store the activity summary of device %s: %w", device, err)
+	}
+	return nil
 }

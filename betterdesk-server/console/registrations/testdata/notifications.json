@@ -1,0 +1,5771 @@
+{
+ "fixed": 1795005296789,
+ "tz": "Europe/Berlin",
+ "lan": [
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": {
+     "$undefined": true
+    }
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": null
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": ""
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": 0
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": 1
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "1970-01-01T00:00:00.001Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": -1
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "1969-12-31T23:59:59.999Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": false
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": true
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "1970-01-01T00:00:00.001Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "nonsense"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026-13-01"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026-02-30"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-03-02T00:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026-11-18 10:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026-11-18 10:00:00.5"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.500Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026-11-18T10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026-11-18T10:00:00.123456789Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.123Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026-11-18T10:00:00+02:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T08:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026-11-18T10:00:00-0130"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T11:30:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026-11-18t10:00:00z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026-11-18"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T00:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026-11"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-01T00:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-01-01T00:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026-11-18Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T00:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026-11-18T24:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-19T00:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "2026-11-18T23:59:60Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "+002026-11-18T10:00:00.000Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "+010000-01-01T00:00:00.000Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "+010000-01-01T00:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "+099999-12-31T23:59:59.999Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "+099999-12-31T23:59:59.999Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "-000001-01-01T00:00:00.000Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "-000001-01-01T00:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "+275760-09-13T00:00:00.000Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "+275760-09-13T00:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "+275760-09-13T00:00:00.001Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "0000-01-01T00:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "0000-01-01T00:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": "1969-12-31T23:59:59.999Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "1969-12-31T23:59:59.999Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": 1795000000000
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T11:06:40.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": 8640000000000000
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "+275760-09-13T00:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": 8640000000000001
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": -8640000000000000
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "-271821-04-20T00:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": 1.5
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "1970-01-01T00:00:00.001Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": -0.5
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "1970-01-01T00:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": 1e+21
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": [
+     2026
+    ]
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-01-01T00:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": [
+     "2026-11-18"
+    ]
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T00:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": []
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": {}
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 7,
+    "device_id": "D7",
+    "hostname": "pc-7",
+    "platform": "Windows",
+    "ip_address": "10.0.0.7",
+    "created_at": {
+     "$date": "2001-02-03T04:05:06.789Z"
+    }
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:7",
+     "title": "pc-7",
+     "message": "D7 · Windows · 10.0.0.7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2001-02-03T04:05:06.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D7",
+     "hostname": "pc-7",
+     "platform": "Windows",
+     "ip": "10.0.0.7",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 8,
+    "device_id": "D8",
+    "updated_at": "2026-11-18 09:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:8",
+     "title": "D8",
+     "message": "D8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T08:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D8",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 8,
+    "device_id": "D8",
+    "created_at": "",
+    "updated_at": {
+     "$date": "2001-02-03T04:05:06.789Z"
+    }
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:8",
+     "title": "D8",
+     "message": "D8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2001-02-03T04:05:06.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D8",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": {
+     "$undefined": true
+    },
+    "hostname": {
+     "$undefined": true
+    },
+    "platform": {
+     "$undefined": true
+    },
+    "ip_address": {
+     "$undefined": true
+    },
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": "",
+     "message": "",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": {
+     "$undefined": true
+    },
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": null,
+    "hostname": null,
+    "platform": null,
+    "ip_address": null,
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": "",
+     "message": "",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": null,
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": "",
+    "hostname": "",
+    "platform": "",
+    "ip_address": "",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": "",
+     "message": "",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": "",
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:",
+     "title": "D9",
+     "message": "D9",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D9",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": 0,
+    "hostname": 0,
+    "platform": 0,
+    "ip_address": 0,
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": "",
+     "message": "",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 0,
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:0",
+     "title": "D9",
+     "message": "D9",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D9",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": 5,
+    "hostname": 5,
+    "platform": 5,
+    "ip_address": 5,
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": 5,
+     "message": "5 · 5 · 5",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "5",
+     "hostname": "5",
+     "platform": "5",
+     "ip": "5",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 5,
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:5",
+     "title": "D9",
+     "message": "D9",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D9",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": 0,
+    "hostname": 0,
+    "platform": 0,
+    "ip_address": 0,
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": "",
+     "message": "",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 0,
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:0",
+     "title": "D9",
+     "message": "D9",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D9",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": 1.5,
+    "hostname": 1.5,
+    "platform": 1.5,
+    "ip_address": 1.5,
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": 1.5,
+     "message": "1.5 · 1.5 · 1.5",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "1.5",
+     "hostname": "1.5",
+     "platform": "1.5",
+     "ip": "1.5",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 1.5,
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:1.5",
+     "title": "D9",
+     "message": "D9",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D9",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": true,
+    "hostname": true,
+    "platform": true,
+    "ip_address": true,
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": true,
+     "message": "true · true · true",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "true",
+     "hostname": "true",
+     "platform": "true",
+     "ip": "true",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": true,
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:true",
+     "title": "D9",
+     "message": "D9",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D9",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": false,
+    "hostname": false,
+    "platform": false,
+    "ip_address": false,
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": "",
+     "message": "",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": false,
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:false",
+     "title": "D9",
+     "message": "D9",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D9",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": "x",
+    "hostname": "x",
+    "platform": "x",
+    "ip_address": "x",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": "x",
+     "message": "x · x · x",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "x",
+     "hostname": "x",
+     "platform": "x",
+     "ip": "x",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": "x",
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:x",
+     "title": "D9",
+     "message": "D9",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D9",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": "a b",
+    "hostname": "a b",
+    "platform": "a b",
+    "ip_address": "a b",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": "a b",
+     "message": "a b · a b · a b",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "a b",
+     "hostname": "a b",
+     "platform": "a b",
+     "ip": "a b",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": "a b",
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:a b",
+     "title": "D9",
+     "message": "D9",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D9",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": [
+     "a",
+     "b"
+    ],
+    "hostname": [
+     "a",
+     "b"
+    ],
+    "platform": [
+     "a",
+     "b"
+    ],
+    "ip_address": [
+     "a",
+     "b"
+    ],
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": [
+      "a",
+      "b"
+     ],
+     "message": "a,b · a,b · a,b",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "a,b",
+     "hostname": "a,b",
+     "platform": "a,b",
+     "ip": "a,b",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": [
+     "a",
+     "b"
+    ],
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:a,b",
+     "title": "D9",
+     "message": "D9",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D9",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": [
+     null,
+     1
+    ],
+    "hostname": [
+     null,
+     1
+    ],
+    "platform": [
+     null,
+     1
+    ],
+    "ip_address": [
+     null,
+     1
+    ],
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": [
+      null,
+      1
+     ],
+     "message": ",1 · ,1 · ,1",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": ",1",
+     "hostname": ",1",
+     "platform": ",1",
+     "ip": ",1",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": [
+     null,
+     1
+    ],
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:,1",
+     "title": "D9",
+     "message": "D9",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D9",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": [],
+    "hostname": [],
+    "platform": [],
+    "ip_address": [],
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": [],
+     "message": " · ",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": [],
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:",
+     "title": "D9",
+     "message": "D9",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D9",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": {},
+    "hostname": {},
+    "platform": {},
+    "ip_address": {},
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": {},
+     "message": "[object Object] · [object Object] · [object Object]",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "[object Object]",
+     "hostname": "[object Object]",
+     "platform": "[object Object]",
+     "ip": "[object Object]",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": {},
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:[object Object]",
+     "title": "D9",
+     "message": "D9",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D9",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": {
+     "a": 1
+    },
+    "hostname": {
+     "a": 1
+    },
+    "platform": {
+     "a": 1
+    },
+    "ip_address": {
+     "a": 1
+    },
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": {
+      "a": 1
+     },
+     "message": "[object Object] · [object Object] · [object Object]",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "[object Object]",
+     "hostname": "[object Object]",
+     "platform": "[object Object]",
+     "ip": "[object Object]",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": {
+     "a": 1
+    },
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:[object Object]",
+     "title": "D9",
+     "message": "D9",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D9",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": " ",
+    "hostname": " ",
+    "platform": " ",
+    "ip_address": " ",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": " ",
+     "message": "  ·   ·  ",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": " ",
+     "hostname": " ",
+     "platform": " ",
+     "ip": " ",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": " ",
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan: ",
+     "title": "D9",
+     "message": "D9",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D9",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": 9,
+    "device_id": "Ünïcödé 😀",
+    "hostname": "Ünïcödé 😀",
+    "platform": "Ünïcödé 😀",
+    "ip_address": "Ünïcödé 😀",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:9",
+     "title": "Ünïcödé 😀",
+     "message": "Ünïcödé 😀 · Ünïcödé 😀 · Ünïcödé 😀",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "Ünïcödé 😀",
+     "hostname": "Ünïcödé 😀",
+     "platform": "Ünïcödé 😀",
+     "ip": "Ünïcödé 😀",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "id": "Ünïcödé 😀",
+    "device_id": "D9",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:lan:Ünïcödé 😀",
+     "title": "D9",
+     "message": "D9",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "D9",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "$undefined": true
+   },
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": null,
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": 0,
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": "",
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": "text",
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": 5,
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": true,
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": [],
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": [
+    "E1"
+   ],
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": {},
+   "out": {
+    "value": null
+   }
+  }
+ ],
+ "enrollment": [
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": {
+     "$undefined": true
+    }
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": null
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": ""
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": 0
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": 1
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "1970-01-01T00:00:00.001Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": -1
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "1969-12-31T23:59:59.999Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": false
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": true
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "1970-01-01T00:00:00.001Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "nonsense"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026-13-01"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026-02-30"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-03-02T00:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026-11-18 10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026-11-18 10:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026-11-18 10:00:00.5"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.500Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026-11-18T10:00:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026-11-18T10:00:00.123456789Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.123Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026-11-18T10:00:00+02:00"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T08:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026-11-18T10:00:00-0130"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T11:30:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026-11-18t10:00:00z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026-11-18"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T00:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026-11"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-01T00:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-01-01T00:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026-11-18Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T00:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026-11-18T24:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-19T00:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "2026-11-18T23:59:60Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "+002026-11-18T10:00:00.000Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "+010000-01-01T00:00:00.000Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "+010000-01-01T00:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "+099999-12-31T23:59:59.999Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "+099999-12-31T23:59:59.999Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "-000001-01-01T00:00:00.000Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "-000001-01-01T00:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "+275760-09-13T00:00:00.000Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "+275760-09-13T00:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "+275760-09-13T00:00:00.001Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "0000-01-01T00:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "0000-01-01T00:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": "1969-12-31T23:59:59.999Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "1969-12-31T23:59:59.999Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": 1795000000000
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T11:06:40.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": 8640000000000000
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "+275760-09-13T00:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": 8640000000000001
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": -8640000000000000
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "-271821-04-20T00:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": 1.5
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "1970-01-01T00:00:00.001Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": -0.5
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "1970-01-01T00:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": 1e+21
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": [
+     2026
+    ]
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-01-01T00:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": [
+     "2026-11-18"
+    ]
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T00:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": []
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": {}
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E7",
+    "hostname": "pc-e",
+    "platform": "Linux",
+    "ip": "10.0.0.8",
+    "created_at": {
+     "$date": "2001-02-03T04:05:06.789Z"
+    }
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E7",
+     "title": "pc-e",
+     "message": "E7 · Linux · 10.0.0.8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2001-02-03T04:05:06.789Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "pc-e",
+     "platform": "Linux",
+     "ip": "10.0.0.8",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": {
+     "$undefined": true
+    },
+    "hostname": {
+     "$undefined": true
+    },
+    "platform": {
+     "$undefined": true
+    },
+    "ip": {
+     "$undefined": true
+    },
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": {
+     "$undefined": true
+    },
+    "platform": "P",
+    "ip": {
+     "$undefined": true
+    },
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": "E9",
+     "message": "E9 · P",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": "",
+     "platform": "P",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": null,
+    "hostname": null,
+    "platform": null,
+    "ip": null,
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": null,
+    "platform": "P",
+    "ip": null,
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": "E9",
+     "message": "E9 · P",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": "",
+     "platform": "P",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "",
+    "hostname": "",
+    "platform": "",
+    "ip": "",
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": "",
+    "platform": "P",
+    "ip": "",
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": "E9",
+     "message": "E9 · P",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": "",
+     "platform": "P",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": 0,
+    "hostname": 0,
+    "platform": 0,
+    "ip": 0,
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": 0,
+    "platform": "P",
+    "ip": 0,
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": "E9",
+     "message": "E9 · P",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": "",
+     "platform": "P",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": 5,
+    "hostname": 5,
+    "platform": 5,
+    "ip": 5,
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:5",
+     "title": 5,
+     "message": "5 · 5 · 5",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "5",
+     "hostname": "5",
+     "platform": "5",
+     "ip": "5",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": 5,
+    "platform": "P",
+    "ip": 5,
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": 5,
+     "message": "E9 · P · 5",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": "5",
+     "platform": "P",
+     "ip": "5",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": 0,
+    "hostname": 0,
+    "platform": 0,
+    "ip": 0,
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": 0,
+    "platform": "P",
+    "ip": 0,
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": "E9",
+     "message": "E9 · P",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": "",
+     "platform": "P",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": 1.5,
+    "hostname": 1.5,
+    "platform": 1.5,
+    "ip": 1.5,
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:1.5",
+     "title": 1.5,
+     "message": "1.5 · 1.5 · 1.5",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "1.5",
+     "hostname": "1.5",
+     "platform": "1.5",
+     "ip": "1.5",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": 1.5,
+    "platform": "P",
+    "ip": 1.5,
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": 1.5,
+     "message": "E9 · P · 1.5",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": "1.5",
+     "platform": "P",
+     "ip": "1.5",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": true,
+    "hostname": true,
+    "platform": true,
+    "ip": true,
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:true",
+     "title": true,
+     "message": "true · true · true",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "true",
+     "hostname": "true",
+     "platform": "true",
+     "ip": "true",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": true,
+    "platform": "P",
+    "ip": true,
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": true,
+     "message": "E9 · P · true",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": "true",
+     "platform": "P",
+     "ip": "true",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": false,
+    "hostname": false,
+    "platform": false,
+    "ip": false,
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": false,
+    "platform": "P",
+    "ip": false,
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": "E9",
+     "message": "E9 · P",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": "",
+     "platform": "P",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "x",
+    "hostname": "x",
+    "platform": "x",
+    "ip": "x",
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:x",
+     "title": "x",
+     "message": "x · x · x",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "x",
+     "hostname": "x",
+     "platform": "x",
+     "ip": "x",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": "x",
+    "platform": "P",
+    "ip": "x",
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": "x",
+     "message": "E9 · P · x",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": "x",
+     "platform": "P",
+     "ip": "x",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "a b",
+    "hostname": "a b",
+    "platform": "a b",
+    "ip": "a b",
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:a b",
+     "title": "a b",
+     "message": "a b · a b · a b",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "a b",
+     "hostname": "a b",
+     "platform": "a b",
+     "ip": "a b",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": "a b",
+    "platform": "P",
+    "ip": "a b",
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": "a b",
+     "message": "E9 · P · a b",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": "a b",
+     "platform": "P",
+     "ip": "a b",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": [
+     "a",
+     "b"
+    ],
+    "hostname": [
+     "a",
+     "b"
+    ],
+    "platform": [
+     "a",
+     "b"
+    ],
+    "ip": [
+     "a",
+     "b"
+    ],
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:a,b",
+     "title": [
+      "a",
+      "b"
+     ],
+     "message": "a,b · a,b · a,b",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "a,b",
+     "hostname": "a,b",
+     "platform": "a,b",
+     "ip": "a,b",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": [
+     "a",
+     "b"
+    ],
+    "platform": "P",
+    "ip": [
+     "a",
+     "b"
+    ],
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": [
+      "a",
+      "b"
+     ],
+     "message": "E9 · P · a,b",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": "a,b",
+     "platform": "P",
+     "ip": "a,b",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": [
+     null,
+     1
+    ],
+    "hostname": [
+     null,
+     1
+    ],
+    "platform": [
+     null,
+     1
+    ],
+    "ip": [
+     null,
+     1
+    ],
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:,1",
+     "title": [
+      null,
+      1
+     ],
+     "message": ",1 · ,1 · ,1",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": ",1",
+     "hostname": ",1",
+     "platform": ",1",
+     "ip": ",1",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": [
+     null,
+     1
+    ],
+    "platform": "P",
+    "ip": [
+     null,
+     1
+    ],
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": [
+      null,
+      1
+     ],
+     "message": "E9 · P · ,1",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": ",1",
+     "platform": "P",
+     "ip": ",1",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": [],
+    "hostname": [],
+    "platform": [],
+    "ip": [],
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:",
+     "title": [],
+     "message": " · ",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": [],
+    "platform": "P",
+    "ip": [],
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": [],
+     "message": "E9 · P · ",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": "",
+     "platform": "P",
+     "ip": "",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": {},
+    "hostname": {},
+    "platform": {},
+    "ip": {},
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:[object Object]",
+     "title": {},
+     "message": "[object Object] · [object Object] · [object Object]",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "[object Object]",
+     "hostname": "[object Object]",
+     "platform": "[object Object]",
+     "ip": "[object Object]",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": {},
+    "platform": "P",
+    "ip": {},
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": {},
+     "message": "E9 · P · [object Object]",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": "[object Object]",
+     "platform": "P",
+     "ip": "[object Object]",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": {
+     "a": 1
+    },
+    "hostname": {
+     "a": 1
+    },
+    "platform": {
+     "a": 1
+    },
+    "ip": {
+     "a": 1
+    },
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:[object Object]",
+     "title": {
+      "a": 1
+     },
+     "message": "[object Object] · [object Object] · [object Object]",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "[object Object]",
+     "hostname": "[object Object]",
+     "platform": "[object Object]",
+     "ip": "[object Object]",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": {
+     "a": 1
+    },
+    "platform": "P",
+    "ip": {
+     "a": 1
+    },
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": {
+      "a": 1
+     },
+     "message": "E9 · P · [object Object]",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": "[object Object]",
+     "platform": "P",
+     "ip": "[object Object]",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": " ",
+    "hostname": " ",
+    "platform": " ",
+    "ip": " ",
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment: ",
+     "title": " ",
+     "message": "  ·   ·  ",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": " ",
+     "hostname": " ",
+     "platform": " ",
+     "ip": " ",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": " ",
+    "platform": "P",
+    "ip": " ",
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": " ",
+     "message": "E9 · P ·  ",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": " ",
+     "platform": "P",
+     "ip": " ",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "Ünïcödé 😀",
+    "hostname": "Ünïcödé 😀",
+    "platform": "Ünïcödé 😀",
+    "ip": "Ünïcödé 😀",
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:Ünïcödé 😀",
+     "title": "Ünïcödé 😀",
+     "message": "Ünïcödé 😀 · Ünïcödé 😀 · Ünïcödé 😀",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "Ünïcödé 😀",
+     "hostname": "Ünïcödé 😀",
+     "platform": "Ünïcödé 😀",
+     "ip": "Ünïcödé 😀",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "device_id": "E9",
+    "hostname": "Ünïcödé 😀",
+    "platform": "P",
+    "ip": "Ünïcödé 😀",
+    "created_at": "2026-11-18T10:00:00Z"
+   },
+   "out": {
+    "value": {
+     "id": "registration:enrollment:E9",
+     "title": "Ünïcödé 😀",
+     "message": "E9 · P · Ünïcödé 😀",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E9",
+     "hostname": "Ünïcödé 😀",
+     "platform": "P",
+     "ip": "Ünïcödé 😀",
+     "status": "pending"
+    }
+   }
+  },
+  {
+   "input": {
+    "$undefined": true
+   },
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": null,
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": 0,
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": "",
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": "text",
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": 5,
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": true,
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": [],
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": [
+    "E1"
+   ],
+   "out": {
+    "value": null
+   }
+  },
+  {
+   "input": {},
+   "out": {
+    "value": null
+   }
+  }
+ ],
+ "list": [
+  {
+   "lan": [
+    {
+     "id": 1,
+     "device_id": "L1",
+     "hostname": "lan-1",
+     "created_at": "2026-11-18 10:00:00"
+    },
+    {
+     "id": 2,
+     "device_id": "L2",
+     "hostname": "",
+     "platform": "Linux",
+     "created_at": "2026-11-18 12:00:00"
+    },
+    {
+     "id": 3,
+     "device_id": "L3",
+     "created_at": "not a time"
+    },
+    {
+     "id": 4,
+     "device_id": "L4",
+     "created_at": "2026-11-18 11:00:00"
+    },
+    {
+     "id": 5,
+     "device_id": "L5",
+     "created_at": "2026-11-18 11:00:00"
+    }
+   ],
+   "api": {
+    "success": true,
+    "data": [
+     {
+      "device_id": "E1",
+      "hostname": "enr-1",
+      "created_at": "2026-11-18T10:30:00Z"
+     },
+     {
+      "device_id": "E2",
+      "created_at": "2026-11-18T11:00:00Z"
+     },
+     {
+      "device_id": "",
+      "created_at": "2026-11-18T11:00:00Z"
+     },
+     {
+      "created_at": "2026-11-18T11:00:00Z"
+     },
+     null,
+     "E3",
+     {
+      "device_id": "E4"
+     },
+     {
+      "device_id": "E5",
+      "created_at": "2026-11-18T09:00:00.000+01:00"
+     }
+    ],
+    "count": 8
+   },
+   "filters": {
+    "status": "pending"
+   },
+   "items": [
+    {
+     "id": "registration:lan:3",
+     "title": "L3",
+     "message": "L3",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L3",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:enrollment:E4",
+     "title": "E4",
+     "message": "E4",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E4",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:2",
+     "title": "L2",
+     "message": "L2 · Linux",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T11:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L2",
+     "hostname": "",
+     "platform": "Linux",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:enrollment:E2",
+     "title": "E2",
+     "message": "E2",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T11:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E2",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:enrollment:E1",
+     "title": "enr-1",
+     "message": "E1",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:30:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E1",
+     "hostname": "enr-1",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:4",
+     "title": "L4",
+     "message": "L4",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L4",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:5",
+     "title": "L5",
+     "message": "L5",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L5",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:1",
+     "title": "lan-1",
+     "message": "L1",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L1",
+     "hostname": "lan-1",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:enrollment:E5",
+     "title": "E5",
+     "message": "E5",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T08:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E5",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   ],
+   "count": 9
+  },
+  {
+   "lan": [],
+   "api": {
+    "success": true,
+    "data": [],
+    "count": 0
+   },
+   "filters": {
+    "status": "pending"
+   },
+   "items": [],
+   "count": 0
+  },
+  {
+   "lan": [
+    {
+     "id": 1,
+     "device_id": "L1",
+     "hostname": "lan-1",
+     "created_at": "2026-11-18 10:00:00"
+    },
+    {
+     "id": 2,
+     "device_id": "L2",
+     "hostname": "",
+     "platform": "Linux",
+     "created_at": "2026-11-18 12:00:00"
+    },
+    {
+     "id": 3,
+     "device_id": "L3",
+     "created_at": "not a time"
+    },
+    {
+     "id": 4,
+     "device_id": "L4",
+     "created_at": "2026-11-18 11:00:00"
+    },
+    {
+     "id": 5,
+     "device_id": "L5",
+     "created_at": "2026-11-18 11:00:00"
+    }
+   ],
+   "api": {
+    "success": false,
+    "error": "connection refused",
+    "data": [],
+    "count": 0
+   },
+   "filters": {
+    "status": "pending"
+   },
+   "items": [
+    {
+     "id": "registration:lan:3",
+     "title": "L3",
+     "message": "L3",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L3",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:2",
+     "title": "L2",
+     "message": "L2 · Linux",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T11:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L2",
+     "hostname": "",
+     "platform": "Linux",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:4",
+     "title": "L4",
+     "message": "L4",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L4",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:5",
+     "title": "L5",
+     "message": "L5",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L5",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:1",
+     "title": "lan-1",
+     "message": "L1",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L1",
+     "hostname": "lan-1",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   ],
+   "count": 5
+  },
+  {
+   "lan": [
+    {
+     "id": 1,
+     "device_id": "L1",
+     "hostname": "lan-1",
+     "created_at": "2026-11-18 10:00:00"
+    },
+    {
+     "id": 2,
+     "device_id": "L2",
+     "hostname": "",
+     "platform": "Linux",
+     "created_at": "2026-11-18 12:00:00"
+    },
+    {
+     "id": 3,
+     "device_id": "L3",
+     "created_at": "not a time"
+    },
+    {
+     "id": 4,
+     "device_id": "L4",
+     "created_at": "2026-11-18 11:00:00"
+    },
+    {
+     "id": 5,
+     "device_id": "L5",
+     "created_at": "2026-11-18 11:00:00"
+    }
+   ],
+   "api": {
+    "success": true,
+    "data": {
+     "devices": []
+    },
+    "count": 0
+   },
+   "filters": {
+    "status": "pending"
+   },
+   "items": [
+    {
+     "id": "registration:lan:3",
+     "title": "L3",
+     "message": "L3",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L3",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:2",
+     "title": "L2",
+     "message": "L2 · Linux",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T11:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L2",
+     "hostname": "",
+     "platform": "Linux",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:4",
+     "title": "L4",
+     "message": "L4",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L4",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:5",
+     "title": "L5",
+     "message": "L5",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L5",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:1",
+     "title": "lan-1",
+     "message": "L1",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L1",
+     "hostname": "lan-1",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   ],
+   "count": 5
+  },
+  {
+   "lan": [
+    {
+     "id": 1,
+     "device_id": "L1",
+     "hostname": "lan-1",
+     "created_at": "2026-11-18 10:00:00"
+    },
+    {
+     "id": 2,
+     "device_id": "L2",
+     "hostname": "",
+     "platform": "Linux",
+     "created_at": "2026-11-18 12:00:00"
+    },
+    {
+     "id": 3,
+     "device_id": "L3",
+     "created_at": "not a time"
+    },
+    {
+     "id": 4,
+     "device_id": "L4",
+     "created_at": "2026-11-18 11:00:00"
+    },
+    {
+     "id": 5,
+     "device_id": "L5",
+     "created_at": "2026-11-18 11:00:00"
+    }
+   ],
+   "api": {
+    "success": true,
+    "data": "E1",
+    "count": 1
+   },
+   "filters": {
+    "status": "pending"
+   },
+   "items": [
+    {
+     "id": "registration:lan:3",
+     "title": "L3",
+     "message": "L3",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L3",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:2",
+     "title": "L2",
+     "message": "L2 · Linux",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T11:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L2",
+     "hostname": "",
+     "platform": "Linux",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:4",
+     "title": "L4",
+     "message": "L4",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L4",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:5",
+     "title": "L5",
+     "message": "L5",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L5",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:1",
+     "title": "lan-1",
+     "message": "L1",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L1",
+     "hostname": "lan-1",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   ],
+   "count": 5
+  },
+  {
+   "lan": [
+    {
+     "id": 1,
+     "device_id": "L1",
+     "hostname": "lan-1",
+     "created_at": "2026-11-18 10:00:00"
+    },
+    {
+     "id": 2,
+     "device_id": "L2",
+     "hostname": "",
+     "platform": "Linux",
+     "created_at": "2026-11-18 12:00:00"
+    },
+    {
+     "id": 3,
+     "device_id": "L3",
+     "created_at": "not a time"
+    },
+    {
+     "id": 4,
+     "device_id": "L4",
+     "created_at": "2026-11-18 11:00:00"
+    },
+    {
+     "id": 5,
+     "device_id": "L5",
+     "created_at": "2026-11-18 11:00:00"
+    }
+   ],
+   "api": {
+    "success": true,
+    "count": 1
+   },
+   "filters": {
+    "status": "pending"
+   },
+   "items": [
+    {
+     "id": "registration:lan:3",
+     "title": "L3",
+     "message": "L3",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L3",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:2",
+     "title": "L2",
+     "message": "L2 · Linux",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T11:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L2",
+     "hostname": "",
+     "platform": "Linux",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:4",
+     "title": "L4",
+     "message": "L4",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L4",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:5",
+     "title": "L5",
+     "message": "L5",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L5",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:1",
+     "title": "lan-1",
+     "message": "L1",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L1",
+     "hostname": "lan-1",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   ],
+   "count": 5
+  },
+  {
+   "lan": [
+    {
+     "id": 4,
+     "device_id": "L4",
+     "created_at": "2026-11-18 11:00:00"
+    },
+    {
+     "id": 5,
+     "device_id": "L5",
+     "created_at": "2026-11-18 11:00:00"
+    }
+   ],
+   "api": {
+    "success": true,
+    "data": [
+     {
+      "device_id": "E7",
+      "created_at": "2026-11-18T11:00:00Z"
+     },
+     {
+      "device_id": "E8",
+      "created_at": "2026-11-18 11:00:00"
+     }
+    ],
+    "count": 2
+   },
+   "filters": {
+    "status": "pending"
+   },
+   "items": [
+    {
+     "id": "registration:enrollment:E7",
+     "title": "E7",
+     "message": "E7",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T11:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E7",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:4",
+     "title": "L4",
+     "message": "L4",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L4",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:5",
+     "title": "L5",
+     "message": "L5",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L5",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:enrollment:E8",
+     "title": "E8",
+     "message": "E8",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E8",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   ],
+   "count": 4
+  },
+  {
+   "lan": [
+    {
+     "id": 6,
+     "device_id": "L6",
+     "created_at": {
+      "$date": "2026-11-18T08:00:00.000Z"
+     }
+    }
+   ],
+   "api": {
+    "success": true,
+    "data": [
+     {
+      "device_id": "E6",
+      "created_at": "2026-11-18T08:00:00.000Z"
+     }
+    ],
+    "count": 1
+   },
+   "filters": {
+    "status": "pending"
+   },
+   "items": [
+    {
+     "id": "registration:lan:6",
+     "title": "L6",
+     "message": "L6",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T08:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L6",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:enrollment:E6",
+     "title": "E6",
+     "message": "E6",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T08:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E6",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   ],
+   "count": 2
+  },
+  {
+   "lan": "throws",
+   "api": {
+    "success": true,
+    "data": [
+     {
+      "device_id": "E1",
+      "hostname": "enr-1",
+      "created_at": "2026-11-18T10:30:00Z"
+     },
+     {
+      "device_id": "E2",
+      "created_at": "2026-11-18T11:00:00Z"
+     },
+     {
+      "device_id": "",
+      "created_at": "2026-11-18T11:00:00Z"
+     },
+     {
+      "created_at": "2026-11-18T11:00:00Z"
+     },
+     null,
+     "E3",
+     {
+      "device_id": "E4"
+     },
+     {
+      "device_id": "E5",
+      "created_at": "2026-11-18T09:00:00.000+01:00"
+     }
+    ],
+    "count": 8
+   },
+   "items": [
+    {
+     "id": "registration:enrollment:E4",
+     "title": "E4",
+     "message": "E4",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E4",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:enrollment:E2",
+     "title": "E2",
+     "message": "E2",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T11:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E2",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:enrollment:E1",
+     "title": "enr-1",
+     "message": "E1",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:30:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E1",
+     "hostname": "enr-1",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:enrollment:E5",
+     "title": "E5",
+     "message": "E5",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T08:00:00.000Z",
+     "kind": "registration",
+     "source": "enrollment",
+     "device_id": "E5",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   ],
+   "count": 4
+  },
+  {
+   "lan": [
+    {
+     "id": 1,
+     "device_id": "L1",
+     "hostname": "lan-1",
+     "created_at": "2026-11-18 10:00:00"
+    },
+    {
+     "id": 2,
+     "device_id": "L2",
+     "hostname": "",
+     "platform": "Linux",
+     "created_at": "2026-11-18 12:00:00"
+    },
+    {
+     "id": 3,
+     "device_id": "L3",
+     "created_at": "not a time"
+    },
+    {
+     "id": 4,
+     "device_id": "L4",
+     "created_at": "2026-11-18 11:00:00"
+    },
+    {
+     "id": 5,
+     "device_id": "L5",
+     "created_at": "2026-11-18 11:00:00"
+    }
+   ],
+   "api": "throws",
+   "items": [
+    {
+     "id": "registration:lan:3",
+     "title": "L3",
+     "message": "L3",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T12:34:56.789Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L3",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:2",
+     "title": "L2",
+     "message": "L2 · Linux",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T11:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L2",
+     "hostname": "",
+     "platform": "Linux",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:4",
+     "title": "L4",
+     "message": "L4",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L4",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:5",
+     "title": "L5",
+     "message": "L5",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T10:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L5",
+     "hostname": "",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    },
+    {
+     "id": "registration:lan:1",
+     "title": "lan-1",
+     "message": "L1",
+     "icon": "how_to_reg",
+     "link": "/registrations",
+     "read": false,
+     "created_at": "2026-11-18T09:00:00.000Z",
+     "kind": "registration",
+     "source": "lan",
+     "device_id": "L1",
+     "hostname": "lan-1",
+     "platform": "",
+     "ip": "",
+     "status": "pending"
+    }
+   ],
+   "count": 5
+  }
+ ]
+}

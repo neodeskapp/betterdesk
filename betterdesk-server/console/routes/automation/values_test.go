@@ -192,18 +192,19 @@ func TestGiven(t *testing.T) {
 	}
 }
 
-// The old console mounted the group at /api/bd too, for the routes of the
-// device agents. There the thirteen routes step aside, so that GET
-// /api/bd/commands reaches the route it is meant for.
+// The group is mounted at /api/bd too, for the routes of the device
+// agents. There the thirteen panel routes step aside, so that GET
+// /api/bd/commands reaches the device route after them (the console
+// tests show that one answering).
 func TestTheRoutesStepAsideAtTheDeviceMount(t *testing.T) {
 	router := kit.NewRouter()
 	Register((&kit.Deps{Router: router, Log: kit.NewLogger("silent", true)}).At("/api/bd"))
-	if len(router.Routes()) != 13 {
-		t.Fatalf("%d routes registered, want the thirteen panel routes", len(router.Routes()))
+	if len(router.Routes()) != 15 {
+		t.Fatalf("%d routes registered, want the thirteen panel routes and the two device routes", len(router.Routes()))
 	}
 	for _, target := range []string{
 		"GET /api/bd/rules", "POST /api/bd/rules", "GET /api/bd/rules/1", "PATCH /api/bd/rules/1", "DELETE /api/bd/rules/1",
-		"GET /api/bd/alerts", "POST /api/bd/alerts/1/ack", "POST /api/bd/commands", "GET /api/bd/commands", "GET /api/bd/commands/1",
+		"GET /api/bd/alerts", "POST /api/bd/alerts/1/ack", "POST /api/bd/commands", "GET /api/bd/commands/1",
 		"GET /api/bd/smtp", "PUT /api/bd/smtp", "POST /api/bd/smtp/test",
 	} {
 		method, path, _ := strings.Cut(target, " ")

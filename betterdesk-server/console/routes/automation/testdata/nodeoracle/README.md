@@ -68,3 +68,26 @@ From a worktree that still has the ten routes, in the dev image:
     tools/dev.sh "cd betterdesk-server/console/routes/automation/testdata && node nodeoracle/automation.js"
     DEV_DOCKER_ARGS="--network bdgo" tools/dev.sh "cd betterdesk-server/console/routes/automation/testdata && \
       ORACLE_PG_DSN='postgres://betterdesk:bdgo-local@bdgo-testpg:5432/betterdesk_test?sslmode=disable' node nodeoracle/automation.js"
+
+## The device routes
+
+`device.js` records the two routes of the device agent, `GET /commands`
+and `POST /commands/:id(\d+)/result`, behind the real `requireDeviceToken`
+of `middleware/deviceAuth.js` with the real adapter, the router mounted at
+`/api/automation` and `/api/bd` as `routes/index.js` has it:
+`../node_device_sqlite.json` and `../node_device_postgres.json`, 226 steps
+each, replayed by `TestNodeDeviceAnswers`. The route file of the tree is
+the device routes alone, so the script runs on the tree as it is.
+
+- tokens in every state at both mounts
+- the pending commands of a device, oldest first, with what the request
+  names (query, `X-Device-Id`) not counting
+- every status, before the command and its device are looked at
+- results of every JSON type, String() of them included where it fails
+- ids in every spelling, commands of other devices and of devices whose
+  id differs only in case or a space, and every status after every other
+- after each result the command's row
+
+    tools/dev.sh "cd betterdesk-server/console/routes/automation/testdata && node nodeoracle/device.js"
+    DEV_DOCKER_ARGS="--network bdgo" tools/dev.sh "cd betterdesk-server/console/routes/automation/testdata && \
+      ORACLE_PG_DSN='postgres://betterdesk:bdgo-local@bdgo-testpg:5432/betterdesk_test?sslmode=disable' node nodeoracle/device.js"

@@ -97,14 +97,14 @@ func TestParsedInfo(t *testing.T) {
 	}
 }
 
-// The old console mounted the group at /api/bd too, for the route a
-// device uploads with. There the three read routes step aside, so that
-// GET /api/bd/commands and the like reach the routes they are meant for.
+// The group is mounted at /api/bd too, for the route a device uploads
+// with. There the three read routes step aside, so that GET
+// /api/bd/commands and the like reach the routes they are meant for.
 func TestTheReadRoutesStepAsideAtTheDeviceMount(t *testing.T) {
 	router := kit.NewRouter()
 	Register((&kit.Deps{Router: router, Log: kit.NewLogger("silent", true)}).At("/api/bd"))
-	if len(router.Routes()) != 3 {
-		t.Fatalf("%d routes registered, want the three read routes", len(router.Routes()))
+	if len(router.Routes()) != 4 {
+		t.Fatalf("%d routes registered, want the device route and the three read routes", len(router.Routes()))
 	}
 	for _, path := range []string{"/api/bd", "/api/bd/commands", "/api/bd/D1/top"} {
 		rec := httptest.NewRecorder()

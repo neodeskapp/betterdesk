@@ -81,7 +81,7 @@ func TestLoginLimiterHeadersAndAnswer(t *testing.T) {
 func TestEveryLimiterHasItsOwnAnswer(t *testing.T) {
 	c := &clock{}
 	set := newSet(c, map[string]string{"RATE_LIMIT_MAX": "1", "LOGIN_RATE_LIMIT_MAX": "1", "PANEL_READ_RATE_LIMIT_MAX": "1", "WIDGET_RATE_LIMIT_MAX": "1",
-		"PANEL_PREFERENCE_RATE_LIMIT_MAX": "1", "RDCLIENT_PAGE_RATE_LIMIT_MAX": "1", "UPLOAD_RATE_LIMIT_MAX": "1", "FILE_ACCESS_RATE_LIMIT_MAX": "1"})
+		"PANEL_PREFERENCE_RATE_LIMIT_MAX": "1", "RDCLIENT_PAGE_RATE_LIMIT_MAX": "1", "UPLOAD_RATE_LIMIT_MAX": "1", "FILE_ACCESS_RATE_LIMIT_MAX": "1", "BD_REGISTER_RATE_LIMIT_MAX": "1"})
 	want := map[string]string{
 		"apiLimiter":             "Too many requests. Please try again later.",
 		"sessionReadLimiter":     "Too many requests. Please slow down.",
@@ -93,6 +93,7 @@ func TestEveryLimiterHasItsOwnAnswer(t *testing.T) {
 		"passwordChangeLimiter":  "Too many password change attempts. Please try again later.",
 		"uploadLimiter":          "Too many upload requests. Please try again later.",
 		"fileAccessLimiter":      "Too many file requests. Please try again later.",
+		"registerLimiter":        "Too many registration requests. Please slow down.",
 	}
 	if len(set.All()) != len(want) {
 		t.Fatalf("%d limiters, want %d", len(set.All()), len(want))
@@ -326,6 +327,7 @@ func TestSetFromEnvironment(t *testing.T) {
 		"apiLimiter": {time.Minute, 100}, "sessionReadLimiter": {time.Minute, 600}, "widgetLimiter": {time.Minute, 600}, "panelReadLimiter": {time.Minute, 600},
 		"panelPreferenceLimiter": {time.Minute, 30}, "rdClientPageLimiter": {time.Minute, 120}, "loginLimiter": {time.Minute, 5},
 		"passwordChangeLimiter": {5 * time.Minute, 3}, "uploadLimiter": {time.Minute, 30}, "fileAccessLimiter": {time.Minute, 120},
+		"registerLimiter": {time.Minute, 20},
 	}
 	for _, l := range set.All() {
 		if want := defaults[l.Name()]; l.Window() != want.window || l.Max() != want.max {
@@ -333,12 +335,13 @@ func TestSetFromEnvironment(t *testing.T) {
 		}
 	}
 	set = newSet(&clock{}, map[string]string{"RATE_LIMIT_WINDOW_MS": "2000", "RATE_LIMIT_MAX": "11", "LOGIN_RATE_LIMIT_MAX": "12", "PANEL_READ_RATE_LIMIT_MAX": "13",
-		"WIDGET_RATE_LIMIT_MAX": "14", "PANEL_PREFERENCE_RATE_LIMIT_MAX": "15", "RDCLIENT_PAGE_RATE_LIMIT_MAX": "16", "UPLOAD_RATE_LIMIT_MAX": "17", "FILE_ACCESS_RATE_LIMIT_MAX": "18"})
+		"WIDGET_RATE_LIMIT_MAX": "14", "PANEL_PREFERENCE_RATE_LIMIT_MAX": "15", "RDCLIENT_PAGE_RATE_LIMIT_MAX": "16", "UPLOAD_RATE_LIMIT_MAX": "17", "FILE_ACCESS_RATE_LIMIT_MAX": "18", "BD_REGISTER_RATE_LIMIT_MAX": "19"})
 	custom := map[string]row{
 		// RATE_LIMIT_WINDOW_MS is the window of four limiters; the others keep theirs
 		"apiLimiter": {2 * time.Second, 11}, "sessionReadLimiter": {2 * time.Second, 13}, "widgetLimiter": {time.Minute, 14}, "panelReadLimiter": {2 * time.Second, 13},
 		"panelPreferenceLimiter": {time.Minute, 15}, "rdClientPageLimiter": {time.Minute, 16}, "loginLimiter": {2 * time.Second, 12},
 		"passwordChangeLimiter": {5 * time.Minute, 3}, "uploadLimiter": {time.Minute, 17}, "fileAccessLimiter": {time.Minute, 18},
+		"registerLimiter": {time.Minute, 19},
 	}
 	for _, l := range set.All() {
 		if want := custom[l.Name()]; l.Window() != want.window || l.Max() != want.max {
@@ -378,14 +381,18 @@ func TestKeys(t *testing.T) {
 	}
 	r.Header.Set("X-User", "7")
 	for l, want := range map[*Limiter]string{set.SessionRead: "session-read:7", set.PanelRead: "panel-read:7", set.PanelPreference: "pref:7",
-		set.API: "203.0.113.5", set.Widget: "203.0.113.5", set.Login: "203.0.113.5", set.Upload: "203.0.113.5", set.FileAccess: "203.0.113.5",
+		set.API: "203.0.113.5", set.Widget: "203.0.113.5", set.Login: "203.0.113.5", set.Upload: "203.0.113.5", set.FileAccess: "203.0.113.5", set.Register: "203.0.113.5",
 		set.RDClientPage: "203.0.113.5", set.PasswordChange: "203.0.113.5"} {
 		if got := l.cfg.Key(r); got != want {
 			t.Errorf("%s: key %q, want %q", l.Name(), got, want)
 		}
 	}
-	// PasswordChange has the address alone, without the fallbacks
+	// PasswordChange has the address alone, without the fallbacks; the
+	// others fall back to X-Forwarded-For
 	address = ""
+	if got := set.Register.cfg.Key(r); got != "203.0.113.9, 10.0.0.1, 10.0.0.2" {
+		t.Errorf("Register without an address: %q", got)
+	}
 	if got := set.PasswordChange.cfg.Key(r); got != "" {
 		t.Errorf("PasswordChange without an address: %q", got)
 	}

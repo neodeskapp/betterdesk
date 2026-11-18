@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/automation"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
@@ -104,22 +103,34 @@ func TestSMTPSettings(t *testing.T) {
 	})
 }
 
-// The routes step aside only for the device mount written "/api/bd"
-// letter for letter, as in the old console. In another spelling of that
-// mount they answer.
+// The panel routes step aside only for the device mount written "/api/bd"
+// letter for letter, as in the old console (BUGS DV8). In another
+// spelling of that mount they answer, unless the inventory group, which
+// the console mounts at /api/bd before this one, has a route for the
+// address: its detail route takes every address of one segment below
+// /API/BD.
 func TestTheDeviceMountInAnotherSpelling(t *testing.T) {
 	w := replay.NewWorld(t, storetest.Migrated(t), nil)
-	automation.Register(w.Server.Deps().At("/api/bd"))
 
-	if got := w.Do(replay.Request{Role: "admin", Path: "/API/BD/smtp"}); got.Status != http.StatusOK || got.Body != `{"configured":false}` {
-		t.Errorf("GET /API/BD/smtp as admin: %d %s, want the SMTP settings", got.Status, got.Body)
+	inventoryDetail := `{"error":"No inventory data for this device"}`
+	for _, path := range []string{"/API/BD/smtp", "/Api/Bd/rules", "/API/BD/Commands"} {
+		if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != http.StatusNotFound || got.Body != inventoryDetail {
+			t.Errorf("GET %s as admin: %d %s, want the inventory detail route's 404", path, got.Status, got.Body)
+		}
 	}
-	if got := w.Do(replay.Request{Role: "admin", Path: "/Api/Bd/rules"}); got.Status != http.StatusOK || got.Body != `{"rules":[],"total":0}` {
-		t.Errorf("GET /Api/Bd/rules as admin: %d %s, want the rules", got.Status, got.Body)
+	if got := w.Do(replay.Request{Role: "admin", Path: "/API/BD/Rules/7"}); got.Status != http.StatusNotFound || got.Body != `{"error":"Rule not found"}` {
+		t.Errorf("GET /API/BD/Rules/7 as admin: %d %s, want the rule route", got.Status, got.Body)
 	}
-	for _, path := range []string{"/api/bd/smtp", "/api/bd/rules", "/api/bd/commands", "/api/bd/commands/1"} {
+	if got := w.Do(replay.Request{Role: "admin", Path: "/Api/bd/commands/7"}); got.Status != http.StatusNotFound || got.Body != `{"error":"Command not found"}` {
+		t.Errorf("GET /Api/bd/commands/7 as admin: %d %s, want the command route", got.Status, got.Body)
+	}
+	for _, path := range []string{"/api/bd/smtp", "/api/bd/rules", "/api/bd/rules/7", "/api/bd/commands/1"} {
 		if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != http.StatusNotFound || got.Body != `{"success":false,"error":"Not Found"}` {
 			t.Errorf("GET %s as admin: %d %s, want the console's 404", path, got.Status, got.Body)
 		}
+	}
+	// The device route after the panel routes
+	if got := w.Do(replay.Request{Role: "admin", Path: "/api/bd/commands"}); got.Status != http.StatusUnauthorized || got.Body != `{"error":"Bearer access token required"}` {
+		t.Errorf("GET /api/bd/commands as admin: %d %s, want the device route's 401", got.Status, got.Body)
 	}
 }

@@ -111,45 +111,53 @@ func TestNodeAnswers(t *testing.T) {
 	})
 }
 
-// The group answers at /api/automation with its thirteen routes and
-// nothing else. The routes for device agents are not registered, and
-// nothing of the group answers under /api/bd, where the old console
-// mounted it for the agents.
-func TestOnlyThePanelRoutesAreRegistered(t *testing.T) {
+// The console has the group's fifteen routes at /api/automation and at
+// /api/bd, in this order and in the order of the old file: the thirteen
+// panel routes, with the two device routes after GET commands/{id}. At
+// /api/bd the panel routes step aside, and nothing else of this console
+// answers their addresses there. The device routes ask for a device token,
+// a session does not stand for one.
+func TestTheRoutesAtBothMounts(t *testing.T) {
 	w := replay.NewWorld(t, storetest.Migrated(t), nil)
-	registered := map[string]bool{}
+	var registered []string
 	for _, route := range w.Server.Router().Routes() {
-		if strings.HasPrefix(route.Path, "/api/automation") {
-			registered[route.Method+" "+route.Path] = true
-		}
-		if strings.HasPrefix(route.Path, "/api/bd/") {
+		for _, mount := range []string{"/api/automation", "/api/bd"} {
 			for _, part := range []string{"/rules", "/alerts", "/commands", "/smtp"} {
-				if strings.HasPrefix(strings.TrimPrefix(route.Path, "/api/bd"), part) {
-					t.Errorf("%s %s is registered: the group answers nothing under /api/bd", route.Method, route.Path)
+				if strings.HasPrefix(route.Path, mount+part) {
+					registered = append(registered, route.Method+" "+route.Path)
 				}
 			}
 		}
 	}
-	want := []string{
-		"GET /api/automation/rules", "POST /api/automation/rules", "GET /api/automation/rules/{id}", "PATCH /api/automation/rules/{id}",
-		"DELETE /api/automation/rules/{id}", "GET /api/automation/alerts", "POST /api/automation/alerts/{id}/ack",
-		"POST /api/automation/commands", "GET /api/automation/commands", "GET /api/automation/commands/{id}",
-		"GET /api/automation/smtp", "PUT /api/automation/smtp", "POST /api/automation/smtp/test",
-	}
-	for _, route := range want {
-		if !registered[route] {
-			t.Errorf("%s is not registered", route)
+	var want []string
+	for _, mount := range []string{"/api/automation", "/api/bd"} {
+		for _, route := range []string{
+			"GET %s/rules", "POST %s/rules", "GET %s/rules/{id}", "PATCH %s/rules/{id}", "DELETE %s/rules/{id}",
+			"GET %s/alerts", "POST %s/alerts/{id}/ack",
+			"POST %s/commands", "GET %s/commands", "GET %s/commands/{id}",
+			"GET %s/commands", "POST %s/commands/{id}/result",
+			"GET %s/smtp", "PUT %s/smtp", "POST %s/smtp/test",
+		} {
+			want = append(want, strings.Replace(route, "%s", mount, 1))
 		}
-		delete(registered, route)
 	}
-	for route := range registered {
-		t.Errorf("%s is registered: the group has the thirteen panel routes and nothing else", route)
+	if strings.Join(registered, "\n") != strings.Join(want, "\n") {
+		t.Errorf("the routes in the order of the console:\n%s\nwant\n%s", strings.Join(registered, "\n"), strings.Join(want, "\n"))
 	}
+
 	body := replay.Text(`{"status":"completed","result":"x","host":"127.0.0.1"}`)
+	refused := `{"error":"Bearer access token required"}`
 	for _, req := range []replay.Request{
 		{Role: "admin", Path: "/api/bd/commands"},
 		{Role: "admin", Method: "POST", Path: "/api/bd/commands/1/result", Body: body},
 		{Role: "admin", Method: "POST", Path: "/api/automation/commands/1/result", Body: body},
+		{Path: "/api/bd/commands"},
+	} {
+		if got := w.Do(req); got.Status != 401 || got.Body != refused {
+			t.Errorf("%s %s as %q: %d %s, want 401 %s", req.Method, req.Path, req.Role, got.Status, got.Body, refused)
+		}
+	}
+	for _, req := range []replay.Request{
 		{Role: "admin", Path: "/api/bd/smtp"},
 		{Role: "admin", Method: "PUT", Path: "/api/bd/smtp", Body: body},
 		{Role: "admin", Method: "POST", Path: "/api/bd/smtp/test", Body: body},

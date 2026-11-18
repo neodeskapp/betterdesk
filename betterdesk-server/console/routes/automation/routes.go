@@ -1,7 +1,15 @@
-// Package automation holds the routes people manage alerts and remote
-// commands with, under /api/automation: alert rules, the alert history,
-// the commands sent to devices, and the SMTP settings. All of them need
-// the permission server.config.
+// Package automation holds the automation routes. The console mounts the
+// group twice, at /api/automation and at /api/bd:
+//
+//   - The routes people manage alerts and remote commands with: alert
+//     rules, the alert history, the commands sent to devices, and the SMTP
+//     settings. All of them need the permission server.config, and all of
+//     them step aside at /api/bd for the routes of other groups there.
+//   - The routes of the device agent, behind the device token guard
+//     (device.go): it fetches its pending commands (GET commands, reached
+//     at /api/bd only, because at /api/automation the people's list of
+//     commands answers first) and reports a command's result (POST
+//     commands/{id}/result, at both mounts).
 //
 // The routes check little and hand what the request gives them to the
 // database, so an answer can depend on the database: a number in a text
@@ -9,12 +17,7 @@
 // there fails on SQLite and is the text "true" on PostgreSQL. Package
 // jsbind keeps both behaviours. A new rule or command is answered with
 // the values of the request on SQLite and with the stored row on
-// PostgreSQL.
-//
-// The routes for device agents (GET commands and POST commands/{id}/result)
-// take a device token and are not here. They are why the old console
-// mounted the group at /api/bd as well, where the routes of this package
-// step aside. The SMTP settings routes hand their work to package mail.
+// PostgreSQL. The SMTP settings routes hand their work to package mail.
 package automation
 
 import (
@@ -62,6 +65,9 @@ func Register(d *kit.Deps) {
 	r.Post("/commands", h.sendCommand, notOnDeviceMount, d.RequireAuth, canConfigure)
 	r.Get("/commands", h.commands, notOnDeviceMount, d.RequireAuth, canConfigure)
 	r.Get("/commands/{id}", h.command, id, notOnDeviceMount, d.RequireAuth, canConfigure)
+
+	r.Get("/commands", h.pendingCommands, d.RequireDeviceToken)
+	r.Post("/commands/{id}/result", h.commandResult, id, d.RequireDeviceToken)
 
 	r.Get("/smtp", h.smtp, notOnDeviceMount, d.RequireAuth, canConfigure)
 	r.Put("/smtp", h.saveSMTP, notOnDeviceMount, d.RequireAuth, canConfigure)

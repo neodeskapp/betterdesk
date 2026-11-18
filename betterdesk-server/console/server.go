@@ -16,8 +16,7 @@
 // answers nothing it has no route for, no 404, no preflight, no file and
 // no page. A Go route that declines a request (kit.PassOn) with no later
 // Go route to take it hands the request on to the Node console as it
-// arrived, body included. The Node console reaches the sockets that moved
-// through a bridge only it can call (nodebridge.go).
+// arrived, body included.
 package console
 
 import (
@@ -102,7 +101,6 @@ type Server struct {
 	early    *kit.Router
 	router   *kit.Router
 	node     *proxy.Proxy
-	bridge   *nodeBridge
 	routing  http.Handler
 	pipeline http.Handler
 	jobs     *jobs.Registry
@@ -123,8 +121,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	}
 	s := &Server{cfg: cfg, early: kit.NewRouter(), router: kit.NewRouter(), jobs: jobs.New()}
 	if cfg.NodeUpstream != nil {
-		s.bridge = newNodeBridge(s)
-		s.node = proxy.New(cfg.NodeUpstream, cfg.TrustProxy, proxy.Header{Name: bridgeHeader, Value: s.bridge.header})
+		s.node = proxy.New(cfg.NodeUpstream, cfg.TrustProxy)
 	}
 	if cfg.DebugRouting {
 		s.routing = proxy.Routing(s.handles, cfg.NodeUpstream != nil)
@@ -415,10 +412,6 @@ func (s *Server) Jobs() *jobs.Registry { return s.jobs }
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.routing != nil && r.Method == http.MethodGet && r.URL.Path == proxy.RoutingPath {
 		s.routing.ServeHTTP(w, r)
-		return
-	}
-	if s.bridge != nil && s.bridge.takes(r) {
-		s.bridge.ServeHTTP(w, r)
 		return
 	}
 	if s.deps.Sockets.Serves(r) {

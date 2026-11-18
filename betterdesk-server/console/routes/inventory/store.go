@@ -201,3 +201,78 @@ func telemetryOf(ctx context.Context, db *store.DB, id string) (*telemetry, erro
 	}
 	return &t, rows.Close()
 }
+
+// upsertInventory is upsertInventory(deviceId, hardware, software,
+// collectedAt): the device's report replaces the one it had, with the
+// time of arrival. The two documents are stored as JSON.stringify wrote
+// them, software || {} for the software, and collectedAt as the driver
+// bound it.
+//
+// SQLite keeps the documents as text and a number given as the time as
+// text like "5.0". PostgreSQL keeps the documents in jsonb columns, which
+// refuse the character U+0000 and half of a surrogate pair, and the time
+// in a timestamptz column, which refuses what is no time.
+func upsertInventory(ctx context.Context, db *store.DB, id string, hardware, software jsjson.Value, collectedAt jsbind.Value) error {
+	hw, _ := hardware.MarshalJSON()
+	sw := []byte("{}")
+	if software.Truthy() {
+		sw, _ = software.MarshalJSON()
+	}
+	query := db.Pick(`
+                INSERT INTO device_inventory (device_id, hardware, software, collected_at, received_at)
+                VALUES (?, ?, ?, ?, datetime('now'))
+                ON CONFLICT(device_id) DO UPDATE SET
+                    hardware = excluded.hardware,
+                    software = excluded.software,
+                    collected_at = excluded.collected_at,
+                    received_at = datetime('now')`, `
+                INSERT INTO device_inventory (device_id, hardware, software, collected_at, received_at)
+                VALUES ($1, $2, $3, $4, NOW())
+                ON CONFLICT(device_id) DO UPDATE SET
+                    hardware = $2, software = $3, collected_at = $4, received_at = NOW()`)
+	args, err := jsbind.Args(db.Dialect(), 4, jsbind.String(id), jsbind.String(string(hw)), jsbind.String(string(sw)), collectedAt)
+	if err == nil {
+		_, err = db.Exec(ctx, query, args...)
+	}
+	if err != nil {
+		return fmt.Errorf("store the inventory of device %s: %w", id, err)
+	}
+	return nil
+}
+
+// deviceTelemetry is what upsertTelemetry stores: the values of the
+// request with the route's defaults filled in.
+type deviceTelemetry struct {
+	CPUUsagePercent, MemoryUsedBytes, MemoryTotalBytes, UptimeSecs, Timestamp jsbind.Value
+}
+
+// upsertTelemetry is upsertTelemetry(deviceId, data): the device's load
+// replaces the one it had, with the time of arrival. The values are bound
+// as the driver bound them: SQLite keeps whatever it is given (text in a
+// number column, a fraction in an integer column), PostgreSQL refuses
+// what its column type cannot read.
+func upsertTelemetry(ctx context.Context, db *store.DB, id string, t deviceTelemetry) error {
+	query := db.Pick(`
+                INSERT INTO device_telemetry (device_id, cpu_usage_percent, memory_used_bytes, memory_total_bytes, uptime_secs, timestamp, received_at)
+                VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+                ON CONFLICT(device_id) DO UPDATE SET
+                    cpu_usage_percent = excluded.cpu_usage_percent,
+                    memory_used_bytes = excluded.memory_used_bytes,
+                    memory_total_bytes = excluded.memory_total_bytes,
+                    uptime_secs = excluded.uptime_secs,
+                    timestamp = excluded.timestamp,
+                    received_at = datetime('now')`, `
+                INSERT INTO device_telemetry (device_id, cpu_usage_percent, memory_used_bytes, memory_total_bytes, uptime_secs, timestamp, received_at)
+                VALUES ($1, $2, $3, $4, $5, $6, NOW())
+                ON CONFLICT(device_id) DO UPDATE SET
+                    cpu_usage_percent = $2, memory_used_bytes = $3, memory_total_bytes = $4,
+                    uptime_secs = $5, timestamp = $6, received_at = NOW()`)
+	args, err := jsbind.Args(db.Dialect(), 6, jsbind.String(id), t.CPUUsagePercent, t.MemoryUsedBytes, t.MemoryTotalBytes, t.UptimeSecs, t.Timestamp)
+	if err == nil {
+		_, err = db.Exec(ctx, query, args...)
+	}
+	if err != nil {
+		return fmt.Errorf("store the telemetry of device %s: %w", id, err)
+	}
+	return nil
+}

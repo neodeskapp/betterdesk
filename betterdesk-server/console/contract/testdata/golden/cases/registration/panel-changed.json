@@ -1,0 +1,152 @@
+{
+ "id": "registration/panel-changed",
+ "request": {
+  "method": "GET",
+  "path": "/ws/panel-events",
+  "notes": [
+   "sent as admin in every role's turn",
+   "websocket panel, own origin",
+   "websocket expect 1 messages",
+   "websocket keep only type=registration_changed",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro",
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "server_admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": []
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "registration": {
+         "device_id": "900100021",
+         "hostname": "contract-lan-kiosk-renamed",
+         "id": 29,
+         "platform": "Windows",
+         "source": "lan",
+         "status": "approved"
+        },
+        "timestamp": 0,
+        "type": "registration_changed"
+       },
+       "order": "type registration{source id device_id hostname platform status} timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "registration": {
+         "device_id": "900100021",
+         "hostname": "contract-lan-kiosk-renamed",
+         "id": 39,
+         "platform": "Windows",
+         "source": "lan",
+         "status": "approved"
+        },
+        "timestamp": 0,
+        "type": "registration_changed"
+       },
+       "order": "type registration{source id device_id hostname platform status} timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "registration": {
+         "device_id": "900100021",
+         "hostname": "contract-lan-kiosk-renamed",
+         "id": 44,
+         "platform": "Windows",
+         "source": "lan",
+         "status": "approved"
+        },
+        "timestamp": 0,
+        "type": "registration_changed"
+       },
+       "order": "type registration{source id device_id hostname platform status} timestamp"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

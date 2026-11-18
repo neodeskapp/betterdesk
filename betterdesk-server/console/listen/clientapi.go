@@ -127,7 +127,7 @@ func NewClientAPI(opts ClientAPIOptions) *ClientAPI {
 		// port read no JSON in this mode (BUGS I1), and the route answered
 		// before the body arrived
 		wan.BeforeBody = func(w http.ResponseWriter, r *http.Request) bool {
-			return r.Method == http.MethodPost && c.registration.serve(w, r)
+			return r.Method == http.MethodPost && (c.router.Serve(w, kit.Begin(r, trust, nil)) || c.registration.serve(w, r))
 		}
 	}
 	stack := limits.WANStack(wan)(inner)

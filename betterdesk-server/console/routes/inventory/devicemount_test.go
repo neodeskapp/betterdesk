@@ -6,22 +6,20 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/routes/inventory"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// The old console mounted the group at /api/bd before every other group
-// there, and its read routes stepped aside only for the mount written
-// "/api/bd" letter for letter. So a GET below /API/BD in another spelling
-// is answered by the inventory detail route (which knows no such device),
-// and the route a later group has for that address never sees it; GET
-// /API/BD/Operator-Info/ was the case that showed it. With the group
-// registered at /api/bd, the Go console answers the same. The later route
-// here has an address no group of the console has, because the test adds
-// the inventory routes after the console registered its own.
+// The console mounts the group at /api/bd before every other group there,
+// and its read routes step aside only for the mount written "/api/bd"
+// letter for letter (BUGS DV8). So a GET of one segment below /API/BD in
+// another spelling is answered by the inventory detail route (which knows
+// no such device), and the route a later group has for that address never
+// sees it; GET /API/BD/Operator-Info/ was the case that showed it. The
+// later route here stands for such a route, with an address no group of
+// the console has; the test adds it after the console registered every
+// group.
 func TestTheDeviceMountInAnotherSpelling(t *testing.T) {
 	w := replay.NewWorld(t, storetest.Migrated(t), nil)
-	inventory.Register(w.Server.Deps().At("/api/bd"))
 	// stands for the route of a later group
 	w.Server.Router().Get("/api/bd/later-info", func(rw http.ResponseWriter, r *http.Request) {
 		kit.JSON(rw, r, http.StatusOK, map[string]string{"answered": "later"})

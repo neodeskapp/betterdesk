@@ -188,6 +188,8 @@ func sampleRoutes(set *Set) http.Handler {
 			limiter = set.FileAccess
 		case get && route == "/api/logs/recent":
 			limiter = set.API
+		case post && route == "/api/bd/register":
+			limiter = set.Register
 		}
 		if limiter != nil {
 			limiter.Middleware(ok).ServeHTTP(w, r)
@@ -248,7 +250,7 @@ func TestConsoleLimitersAgainstNode(t *testing.T) {
 		}
 	}
 	if total < 900 {
-		t.Errorf("%d steps replayed, expected the recorded 985", total)
+		t.Errorf("%d steps replayed, expected the recorded 1023", total)
 	}
 }
 

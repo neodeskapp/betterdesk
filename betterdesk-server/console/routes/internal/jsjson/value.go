@@ -23,6 +23,7 @@ import (
 	"errors"
 	"math"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 )
@@ -82,6 +83,15 @@ func (v Value) Float() float64 { return v.num }
 
 // Items is the elements of an array, nil for every other type.
 func (v Value) Items() []Value { return v.items }
+
+// Keys is Object.keys(v) for an object: its keys in the order JavaScript
+// lists them, array indexes first. It is nil for every other type.
+func (v Value) Keys() []string {
+	if v.kind != Object {
+		return nil
+	}
+	return append([]string(nil), v.keys...)
+}
 
 // Truthy is !!v.
 func (v Value) Truthy() bool {
@@ -224,6 +234,49 @@ func Slice(s string, n int) string {
 		i += size
 	}
 	return s
+}
+
+// Units is s split into its UTF-16 units, each a text of its own, the way
+// {...s} spreads a text: a character outside the first plane gives its
+// two halves, each kept as half of a pair.
+func Units(s string) []string {
+	var out []string
+	for i := 0; i < len(s); {
+		r, size, units := decode(s[i:])
+		switch {
+		case units == 2:
+			out = append(out, halfText(0xD800+(r-0x10000)>>10), halfText(0xDC00+(r-0x10000)&0x3FF))
+		case r == utf8.RuneError && size == 1:
+			out = append(out, string(utf8.RuneError))
+		default:
+			out = append(out, s[i:i+size])
+		}
+		i += size
+	}
+	return out
+}
+
+// WellFormed is s with every half of a surrogate pair replaced by U+FFFD:
+// the text better-sqlite3 and node-postgres sent to the database for a
+// JavaScript string.
+func WellFormed(s string) string {
+	var b strings.Builder
+	for i := 0; i < len(s); {
+		if _, ok := halfPair(s[i:]); ok {
+			b.WriteRune(utf8.RuneError)
+			i += 3
+			continue
+		}
+		b.WriteByte(s[i])
+		i++
+	}
+	return b.String()
+}
+
+// halfText is half of a surrogate pair in the three bytes this package
+// keeps it in.
+func halfText(u rune) string {
+	return string([]byte{0xED, 0x80 | byte(u>>6&0x3F), 0x80 | byte(u&0x3F)})
 }
 
 // decode reads the first character of s: its code point, its bytes and

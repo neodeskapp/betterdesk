@@ -194,13 +194,13 @@ func TestTheListFallsBackToThePeerList(t *testing.T) {
 	}
 }
 
-// The old console mounted the group at /api/bd too, for the routes of
-// the desktop agent. There the two read routes step aside.
+// The group is mounted at /api/bd too, for the routes of the desktop
+// agent. There the two read routes step aside.
 func TestTheReadRoutesStepAsideAtTheDeviceMount(t *testing.T) {
 	router := kit.NewRouter()
 	Register((&kit.Deps{Router: router, Log: kit.NewLogger("silent", true)}).At("/api/bd"))
-	if len(router.Routes()) != 2 {
-		t.Fatalf("%d routes registered, want the two read routes", len(router.Routes()))
+	if len(router.Routes()) != 5 {
+		t.Fatalf("%d routes registered, want the three device routes and the two read routes", len(router.Routes()))
 	}
 	for _, path := range []string{"/api/bd", "/api/bd/commands"} {
 		rec := httptest.NewRecorder()

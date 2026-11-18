@@ -1,0 +1,159 @@
+{
+ "id": "inventory-device/read-other-device-as-it",
+ "request": {
+  "method": "GET",
+  "path": "/api/bd/inventory/900100002",
+  "notes": [
+   "header Authorization: Bearer {secret:device_token_other}",
+   "no CSRF token",
+   "no cookies"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "collected_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "received_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "collected_at": "<volatile>",
+     "device_id": "900100002",
+     "hardware": {
+      "architecture": "x86_64",
+      "cpu": {
+       "brand": "Intel(R) Core(TM) i7-1365U",
+       "logical_cores": 12,
+       "usage_percent": 0
+      },
+      "disks": [
+       {
+        "device": "C:",
+        "filesystem": "NTFS",
+        "mount_point": "C:\\",
+        "total_gb": 475.8,
+        "used_gb": 338.1
+       }
+      ],
+      "hostname": "demo-reception-02",
+      "kernel": "10.0.22631",
+      "memory": {
+       "total_bytes": 17179869184,
+       "used_bytes": 7005291920
+      },
+      "network_interfaces": [
+       {
+        "ip_addresses": [
+         "10.0.2.21"
+        ],
+        "mac": "02:00:5e:10:00:02",
+        "name": "Ethernet"
+       }
+      ],
+      "os_name": "Windows 11 Pro",
+      "os_version": "23H2 (22631.4460)"
+     },
+     "received_at": "<volatile>",
+     "software": {
+      "apps": [
+       {
+        "installed_at": "2025-08-13",
+        "name": "Microsoft Edge",
+        "publisher": "Microsoft Corporation",
+        "version": "130.0.2849.68"
+       },
+       {
+        "installed_at": "2026-06-06",
+        "name": "Google Chrome",
+        "publisher": "Google LLC",
+        "version": "130.0.6723.117"
+       },
+       {
+        "installed_at": "2025-09-27",
+        "name": "Microsoft 365 Apps for business",
+        "publisher": "Microsoft Corporation",
+        "version": "16.0.18129.20116"
+       },
+       {
+        "installed_at": "2026-03-27",
+        "name": "Adobe Acrobat Reader",
+        "publisher": "Adobe",
+        "version": "24.004.20243"
+       },
+       {
+        "installed_at": "2026-09-09",
+        "name": "7-Zip 24.08 (x64)",
+        "publisher": "Igor Pavlov",
+        "version": "24.08"
+       },
+       {
+        "installed_at": "2026-04-15",
+        "name": "Notepad++ (64-bit x64)",
+        "publisher": "Notepad++ Team",
+        "version": "8.7.1"
+       },
+       {
+        "installed_at": "2026-04-29",
+        "name": "VLC media player",
+        "publisher": "VideoLAN",
+        "version": "3.0.21"
+       },
+       {
+        "installed_at": "2025-06-10",
+        "name": "BetterDesk",
+        "publisher": "BetterDesk (demo)",
+        "version": "1.4.2"
+       },
+       {
+        "installed_at": "2026-03-17",
+        "name": "Demo Label Studio",
+        "publisher": "Example Software GmbH",
+        "version": "5.2.0"
+       },
+       {
+        "installed_at": "2026-06-08",
+        "name": "Demo Accounting Suite",
+        "publisher": "Example Ledger Ltd",
+        "version": "2024.3"
+       }
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

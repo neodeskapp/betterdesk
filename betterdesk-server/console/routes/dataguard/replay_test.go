@@ -115,20 +115,33 @@ func TestTheRoutesAtBothMounts(t *testing.T) {
 // /api/dataguard the panel access guard in front of the routes refuses
 // that session (the section needs server.config), which the recording,
 // made without the guard, does not show.
+//
+// The recording mounted this group alone. In the console the inventory
+// group comes first at /api/bd, and its read route GET /api/bd/{id} steps
+// aside only for the mount written in lower case (BUGS DV8): GET
+// /API/BD/DLP-POLICIES/ is that route's, which sends a request without a
+// session to the sign-in page.
 func TestNodeDeviceAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
-		guarded := 0
+		guarded, spelled := 0, 0
 		w.Run(replay.Load(t, db, "node_device"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			if step.Role == "operator" && strings.HasPrefix(step.Path, "/api/dataguard/") && got.Status == 403 &&
 				got.Body == `{"success":false,"error":"Panel access denied: dataguard","code":"panel_access_denied"}` {
 				guarded++
 				return true
 			}
+			if step.Path == "/API/BD/DLP-POLICIES/" {
+				spelled++
+				if got.Status != 302 || got.Header.Get("Location") != "/login" {
+					t.Errorf("%s: %d to %q, want the inventory route's 302 to /login", step.Name, got.Status, got.Header.Get("Location"))
+				}
+				return true
+			}
 			return false
 		})
-		if guarded != 1 {
-			t.Errorf("%d answers were the panel access guard's, want 1", guarded)
+		if guarded != 1 || spelled != 1 {
+			t.Errorf("%d answers were the panel access guard's and %d the inventory route's, want 1 and 1", guarded, spelled)
 		}
 	})
 }

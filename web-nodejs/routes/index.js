@@ -8,8 +8,6 @@ const router = express.Router();
 
 const settingsRoutes = require('./settings.routes');
 const remoteRoutes = require('./remote.routes');
-// bdApiRoutes mounted in server.js (before CSRF) for desktop client access
-const registrationRoutes = require('./registration.routes');
 
 /**
  * Lazy-load wrapper — defers require() until first request.
@@ -24,9 +22,6 @@ function lazyRoute(modulePath) {
 }
 
 // Lazy-loaded route modules (loaded on first request)
-const inventoryRoutes = lazyRoute('./inventory.routes');
-const activityRoutes = lazyRoute('./activity.routes');
-const automationRoutes = lazyRoute('./automation.routes');
 const serverManagementRoutes = lazyRoute('./server-management.routes');
 
 // JSON-only writes to /api/* (lib/requireJsonContentType.js)
@@ -39,15 +34,6 @@ router.use(requireJsonContentType);
 router.use('/', settingsRoutes);
 router.use('/', require('./client-branding.routes'));
 router.use('/', remoteRoutes);
-// bdApiRoutes now mounted in server.js (before CSRF) for desktop client access
-router.use('/api/bd', inventoryRoutes);     // device-facing: /api/bd/inventory, /api/bd/telemetry
-router.use('/api/inventory', inventoryRoutes); // admin-facing: /api/inventory, /api/inventory/:id
-router.use('/api/bd', activityRoutes);           // device-facing: /api/bd/activity
-router.use('/api/activity', activityRoutes);     // admin-facing: /api/activity
-router.use('/api/automation', automationRoutes); // admin-facing: /api/automation/*
-router.use('/api/bd', automationRoutes);         // device-facing: /api/bd/commands
-router.use('/', registrationRoutes);               // admin-facing: /registrations, /api/registrations/*
-router.use('/api/bd', registrationRoutes);          // device-facing: /api/bd/register-request, /api/bd/register-status
 router.use('/', serverManagementRoutes);                 // admin-facing: /server-management, /api/server-management/* (BETA)
 
 module.exports = router;

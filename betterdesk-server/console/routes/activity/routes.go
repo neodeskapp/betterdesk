@@ -1,11 +1,13 @@
-// Package activity holds the routes people read app usage with, under
-// /api/activity: the summaries devices reported, one device's sessions
-// and summaries, and its most used apps. All three need the permission
-// audit.view.
+// Package activity holds the activity routes. The console mounts the
+// group twice, at /api/bd and at /api/activity, so each route answers at
+// both:
 //
-// The route a device uploads its activity with, POST activity, takes a
-// device token and is not here. It is why the old console mounted the
-// group at /api/bd as well, where the three read routes step aside.
+//   - The route the desktop agent reports its app usage with, POST
+//     activity, behind the device guards (device.go).
+//   - The routes people read app usage with: the summaries devices
+//     reported, one device's sessions and summaries, and its most used
+//     apps. All three need the permission audit.view, and all three step
+//     aside at /api/bd for the routes of other groups there.
 package activity
 
 import (
@@ -13,6 +15,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/unitronix/betterdesk-server/console/alerts"
 	"github.com/unitronix/betterdesk-server/console/goapipath"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
@@ -22,15 +25,17 @@ import (
 )
 
 type handlers struct {
-	db  *store.DB
-	log *kit.Logger
+	db     *store.DB
+	alerts *alerts.Engine
+	log    *kit.Logger
 }
 
 // Register adds the group's routes below the mount.
 func Register(d *kit.Deps) {
-	h := &handlers{db: d.Store, log: d.Log.Child("Activity")}
+	h := &handlers{db: d.Store, alerts: d.Alerts, log: d.Log.Child("Activity")}
 	r := d.Router
 	canRead := d.RequirePermission("audit.view")
+	r.Post("/activity", h.report, d.RequireDeviceToken, d.RequireTokenDeviceMatch)
 	r.Get("/", h.list, devicemount.Not, d.RequireAuth, canRead)
 	r.Get("/{id}", h.detail, devicemount.Not, d.RequireAuth, canRead)
 	r.Get("/{id}/top", h.top, devicemount.Not, d.RequireAuth, canRead)

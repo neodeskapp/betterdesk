@@ -1,0 +1,34 @@
+{
+ "id": "registration/panel-open",
+ "request": {
+  "method": "GET",
+  "path": "/ws/panel-events",
+  "notes": [
+   "sent as admin in every role's turn",
+   "websocket panel, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro",
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": []
+    }
+   }
+  }
+ ]
+}

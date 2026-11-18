@@ -54,27 +54,40 @@ func TestNodeAnswers(t *testing.T) {
 	})
 }
 
-// The routes of the desktop agent are not registered: they take a device
-// token. And the group answers nothing under /api/bd, where the old
-// console mounted it for those routes.
-func TestTheGroupHasNoDeviceRoutes(t *testing.T) {
+// The console has the group's five routes at /api/bd and at
+// /api/inventory, in the order of the old file: the three of the desktop
+// agent, then the two read routes. The device routes ask for a device
+// token at both mounts, a session does not stand for one; the read routes
+// step aside at /api/bd, where nothing else of this console answers
+// those addresses.
+func TestTheRoutesAtBothMounts(t *testing.T) {
 	w := replay.NewWorld(t, storetest.Migrated(t), nil)
-	registered := map[string]bool{}
-	for _, route := range w.Server.Router().Routes() {
-		if strings.HasPrefix(route.Path, "/api/inventory") || strings.HasPrefix(route.Path, "/api/bd") && (strings.Contains(route.Path, "inventory") || strings.Contains(route.Path, "telemetry")) {
-			registered[route.Method+" "+route.Path] = true
+	first := map[string]int{}
+	for i, route := range w.Server.Router().Routes() {
+		if _, seen := first[route.Method+" "+route.Path]; !seen {
+			first[route.Method+" "+route.Path] = i
 		}
 	}
-	for _, route := range []string{"GET /api/inventory", "GET /api/inventory/{id}"} {
-		if !registered[route] {
-			t.Errorf("%s is not registered", route)
+	for _, mount := range []string{"/api/bd", "/api/inventory"} {
+		last := -1
+		for _, route := range []string{"POST " + mount + "/inventory", "POST " + mount + "/telemetry", "GET " + mount + "/inventory/{id}", "GET " + mount, "GET " + mount + "/{id}"} {
+			i, ok := first[route]
+			if !ok {
+				t.Errorf("%s is not registered", route)
+				continue
+			}
+			if i < last {
+				t.Errorf("%s is registered before the route that comes before it in the old file", route)
+			}
+			last = i
 		}
-		delete(registered, route)
 	}
-	for route := range registered {
-		t.Errorf("%s is registered: the group has the two read routes and nothing else", route)
+	if first["GET /api/bd/{id}"] > first["GET /api/inventory"] {
+		t.Errorf("the group is registered at /api/inventory before /api/bd")
 	}
+
 	body := replay.Text(`{"device_id":"D1","hardware":{}}`)
+	refused := `{"error":"Bearer access token required"}`
 	for _, req := range []replay.Request{
 		{Role: "admin", Method: "POST", Path: "/api/inventory/inventory", Body: body},
 		{Role: "admin", Method: "POST", Path: "/api/inventory/telemetry", Body: body},
@@ -82,11 +95,16 @@ func TestTheGroupHasNoDeviceRoutes(t *testing.T) {
 		{Role: "admin", Method: "POST", Path: "/api/bd/inventory", Body: body},
 		{Role: "admin", Method: "POST", Path: "/api/bd/telemetry", Body: body},
 		{Role: "admin", Path: "/api/bd/inventory/D1"},
-		{Role: "admin", Path: "/api/bd"},
-		{Role: "admin", Path: "/api/bd/D1"},
+		{Method: "POST", Path: "/api/bd/inventory", Body: body},
+		{Path: "/API/BD/Inventory/D1/"},
 	} {
-		if got := w.Do(req); got.Status != 404 || strings.Contains(got.Body, "No inventory data") {
-			t.Errorf("%s %s: %d %s, want the console's 404", req.Method, req.Path, got.Status, got.Body)
+		if got := w.Do(req); got.Status != 401 || got.Body != refused {
+			t.Errorf("%s %s as %q: %d %s, want 401 %s", req.Method, req.Path, req.Role, got.Status, got.Body, refused)
+		}
+	}
+	for _, path := range []string{"/api/bd", "/api/bd/D1", "/api/bd/inventory"} {
+		if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != 404 || got.Body != `{"success":false,"error":"Not Found"}` {
+			t.Errorf("GET %s as admin: %d %s, want the console's 404", path, got.Status, got.Body)
 		}
 	}
 }

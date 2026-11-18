@@ -138,6 +138,7 @@ function send(port, step) {
  * @param {function} [o.keep] (step, answer) => more fields to record for a step
  * @param {object} [o.vars] texts to put in place of marks in statement parameters, e.g. { '<UPLOADS>': dir }
  * @param {function} [o.finish] called after the last step, before the database closes
+ * @param {function} [o.settle] awaited before every step and before finish: work a route left running in the background
  */
 async function record(o) {
     const db = await openDatabase();
@@ -174,6 +175,7 @@ async function record(o) {
     const steps = [];
     try {
         for (const step of o.steps) {
+            if (o.settle) await o.settle();
             if (step.sql) {
                 const rows = await db.exec(step.sql, filled(step.params));
                 steps.push({ ...step, rows: JSON.stringify(rows) });
@@ -185,6 +187,7 @@ async function record(o) {
             steps.push(recorded);
         }
         // What finish returns is recorded as steps after the last request
+        if (o.settle) await o.settle();
         const more = o.finish ? await o.finish({ exec: db.exec }) : null;
         if (more) steps.push(...more);
     } finally {

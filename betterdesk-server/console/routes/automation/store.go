@@ -370,3 +370,28 @@ func commandByID(ctx context.Context, db *store.DB, id jsbind.Value) (*record, e
 	q.add("SELECT * FROM remote_commands WHERE id = ?", id)
 	return q.row(ctx, db, "load remote command "+id.ToString())
 }
+
+// pendingCommandsOf is getPendingCommands(deviceId): the device's
+// commands that wait for its agent, the one created first first.
+func pendingCommandsOf(ctx context.Context, db *store.DB, device string) ([]record, error) {
+	var q query
+	q.add("SELECT * FROM remote_commands WHERE device_id = ? AND status = 'pending' ORDER BY created_at ASC", jsbind.String(device))
+	return q.rows(ctx, db, "list the pending commands of device "+device)
+}
+
+// updateRemoteCommand is updateRemoteCommand(id, {status, result}) as the
+// result route calls it: the status and the result are always set, the
+// time it began running with "running", the time it ended with
+// "completed" and "failed".
+func updateRemoteCommand(ctx context.Context, db *store.DB, id jsbind.Value, status string, result jsbind.Value) error {
+	var q query
+	q.add("UPDATE remote_commands SET status = ?, result = ?", jsbind.String(status), result)
+	switch status {
+	case "running":
+		q.add(", executed_at = " + store.NowSQL(db.Dialect()))
+	case "completed", "failed":
+		q.add(", completed_at = " + store.NowSQL(db.Dialect()))
+	}
+	q.add(" WHERE id = ?", id)
+	return q.exec(ctx, db, "update remote command "+id.ToString())
+}

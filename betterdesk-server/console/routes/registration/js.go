@@ -1,0 +1,171 @@
+package registration
+
+import (
+	"errors"
+	"net/http"
+	"strings"
+	"unicode/utf8"
+
+	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
+	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+)
+
+// What the handlers read from a request is the value JSON.parse made of
+// it (nil, bool, float64, string, []any, *goapi.Object), so the
+// conversions below can be those of JavaScript.
+
+// errToPrimitive is the TypeError of String(v) for an object with a member
+// named toString, which JSON can only fill with something that is no
+// function.
+var errToPrimitive = errors.New("Cannot convert object to primitive value")
+
+// errNotText is the TypeError of calling a text method (trim, substring)
+// on a value that is no text.
+var errNotText = errors.New("value is not a string")
+
+// text is String(v), and a template literal's ${v}. It fails where
+// JavaScript throws.
+func text(v any) (string, error) {
+	switch t := v.(type) {
+	case *goapi.Object:
+		if t != nil && t.Has("toString") {
+			return "", errToPrimitive
+		}
+	case []any:
+		return join(t, ",")
+	}
+	return jsreq.String(v), nil
+}
+
+// join is list.join(sep): null elements are empty, the others their text.
+func join(list []any, sep string) (string, error) {
+	parts := make([]string, len(list))
+	for i, item := range list {
+		if item == nil {
+			continue
+		}
+		s, err := text(item)
+		if err != nil {
+			return "", err
+		}
+		parts[i] = s
+	}
+	return strings.Join(parts, sep), nil
+}
+
+// textOr is (v || fallback) for a value a route calls a text method on:
+// the fallback when v is not truthy, v when it is text, and the
+// TypeError otherwise.
+func textOr(v any, fallback string) (string, error) {
+	if !goapi.Truthy(v) {
+		return fallback, nil
+	}
+	s, ok := v.(string)
+	if !ok {
+		return "", errNotText
+	}
+	return s, nil
+}
+
+// cut is s.substring(0, n): the first n UTF-16 units. A pair cut in half
+// keeps its first half, which reaches the database and every answer as
+// U+FFFD.
+func cut(s string, n int) string {
+	units := 0
+	for i := 0; i < len(s); {
+		r, size := utf8.DecodeRuneInString(s[i:])
+		width := 1
+		if r > 0xFFFF {
+			width = 2
+		}
+		if units+width > n {
+			if units < n {
+				return s[:i] + string(utf8.RuneError)
+			}
+			return s[:i]
+		}
+		units += width
+		i += size
+	}
+	return s
+}
+
+// length is s.length.
+func length(s string) int { return jsjson.Length(s) }
+
+// orValue is a || b.
+func orValue(a, b any) any {
+	if goapi.Truthy(a) {
+		return a
+	}
+	return b
+}
+
+// add is a + b for the number a and a value of the API server: a number
+// stays a number (null counts as 0, a flag as 0 or 1); text, a list and
+// an object make text. It fails where JavaScript throws.
+func add(a float64, b any) (any, error) {
+	switch t := b.(type) {
+	case nil:
+		return a, nil
+	case bool:
+		if t {
+			return a + 1, nil
+		}
+		return a, nil
+	case float64:
+		return a + t, nil
+	case string:
+		return jsbind.NumberString(a) + t, nil
+	}
+	s, err := text(b)
+	if err != nil {
+		return nil, err
+	}
+	return jsbind.NumberString(a) + s, nil
+}
+
+// headerText is req.headers[name] as Node read it: the values of a header
+// sent more than once joined with ", ", each byte a character (Latin-1).
+func headerText(r *http.Request, name string) string {
+	return httpx.Latin1(strings.Join(r.Header.Values(name), ", "))
+}
+
+// replaceFirst is s.replace(pattern, replacement) for a text pattern: the
+// first match is replaced, and the replacement's $$, $&, $` and $' stand
+// for a dollar sign, the match, the text before it and the text after it.
+func replaceFirst(s, pattern, replacement string) string {
+	i := strings.Index(s, pattern)
+	if i < 0 {
+		return s
+	}
+	before, after := s[:i], s[i+len(pattern):]
+	var b strings.Builder
+	b.WriteString(before)
+	for j := 0; j < len(replacement); j++ {
+		c := replacement[j]
+		if c != '$' || j+1 >= len(replacement) {
+			b.WriteByte(c)
+			continue
+		}
+		switch replacement[j+1] {
+		case '$':
+			b.WriteByte('$')
+		case '&':
+			b.WriteString(pattern)
+		case '`':
+			b.WriteString(before)
+		case '\'':
+			b.WriteString(after)
+		default:
+			b.WriteByte(c)
+			continue
+		}
+		j++
+	}
+	b.WriteString(after)
+	return b.String()
+}

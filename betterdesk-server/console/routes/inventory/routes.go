@@ -1,12 +1,16 @@
-// Package inventory holds the routes people read hardware and software
-// inventory with, under /api/inventory: the list of devices with their
-// hardware in short, and one device's last report with its last
-// telemetry. Both need the permission device.view.
+// Package inventory holds the inventory routes. The console mounts the
+// group twice, at /api/bd and at /api/inventory, so each route answers at
+// both:
 //
-// The routes of the desktop agent (uploading inventory and telemetry,
-// reading its own report) take a device token and are not here. They are
-// why the old console mounted the group at /api/bd as well, where the two
-// read routes step aside.
+//   - The routes of the desktop agent, which take a device token: it
+//     uploads its hardware and software (POST inventory) and its load
+//     (POST telemetry), and reads its own last report (GET inventory/{id}).
+//     They check the token themselves, not with the device guards of
+//     package kit (device.go).
+//   - The routes people read inventory with: the list of devices with their
+//     hardware in short, and one device's last report with its last
+//     telemetry. Both need the permission device.view, and both step aside
+//     at /api/bd for the routes of other groups there.
 package inventory
 
 import (
@@ -14,6 +18,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/unitronix/betterdesk-server/console/alerts"
+	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
@@ -23,16 +29,26 @@ import (
 )
 
 type handlers struct {
-	db  *store.DB
-	api *goapi.Client
-	log *kit.Logger
+	db     *store.DB
+	api    *goapi.Client
+	authn  *authn.Service
+	alerts *alerts.Engine
+	log    *kit.Logger
+	// telemetryLog takes what the telemetry route logs
+	telemetryLog *kit.Logger
 }
 
 // Register adds the group's routes below the mount.
 func Register(d *kit.Deps) {
-	h := &handlers{db: d.Store, api: d.GoAPI, log: d.Log.Child("Inventory")}
+	h := &handlers{
+		db: d.Store, api: d.GoAPI, authn: d.Authn, alerts: d.Alerts,
+		log: d.Log.Child("Inventory"), telemetryLog: d.Log.Child("Telemetry"),
+	}
 	r := d.Router
 	canRead := d.RequirePermission("device.view")
+	r.Post("/inventory", h.upload, h.requireDeviceToken)
+	r.Post("/telemetry", h.telemetry, h.requireDeviceToken)
+	r.Get("/inventory/{id}", h.ownReport, h.requireDeviceToken)
 	r.Get("/", h.list, devicemount.Not, d.RequireAuth, canRead)
 	r.Get("/{id}", h.detail, devicemount.Not, d.RequireAuth, canRead)
 }

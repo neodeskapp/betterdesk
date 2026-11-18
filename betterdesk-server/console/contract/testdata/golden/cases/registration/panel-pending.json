@@ -1,0 +1,367 @@
+{
+ "id": "registration/panel-pending",
+ "request": {
+  "method": "GET",
+  "path": "/ws/panel-events",
+  "notes": [
+   "sent as admin in every role's turn",
+   "websocket panel, own origin",
+   "websocket expect 1 messages",
+   "websocket keep only type=registration_pending"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.registration.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "registration": {
+         "created_at": "<volatile>",
+         "device_id": "900100021",
+         "hostname": "contract-lan-kiosk",
+         "id": 4,
+         "ip": "<client-ip>",
+         "platform": "Windows",
+         "source": "lan"
+        },
+        "timestamp": 0,
+        "type": "registration_pending"
+       },
+       "order": "type registration{source id device_id hostname platform ip created_at} timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "pro"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.registration.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "registration": {
+         "created_at": "<volatile>",
+         "device_id": "900100021",
+         "hostname": "contract-lan-kiosk",
+         "id": 9,
+         "ip": "<client-ip>",
+         "platform": "Windows",
+         "source": "lan"
+        },
+        "timestamp": 0,
+        "type": "registration_pending"
+       },
+       "order": "type registration{source id device_id hostname platform ip created_at} timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.registration.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "registration": {
+         "created_at": "<volatile>",
+         "device_id": "900100021",
+         "hostname": "contract-lan-kiosk",
+         "id": 14,
+         "ip": "<client-ip>",
+         "platform": "Windows",
+         "source": "lan"
+        },
+        "timestamp": 0,
+        "type": "registration_pending"
+       },
+       "order": "type registration{source id device_id hostname platform ip created_at} timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.registration.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "registration": {
+         "created_at": "<volatile>",
+         "device_id": "900100021",
+         "hostname": "contract-lan-kiosk",
+         "id": 19,
+         "ip": "<client-ip>",
+         "platform": "Windows",
+         "source": "lan"
+        },
+        "timestamp": 0,
+        "type": "registration_pending"
+       },
+       "order": "type registration{source id device_id hostname platform ip created_at} timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.registration.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "registration": {
+         "created_at": "<volatile>",
+         "device_id": "900100021",
+         "hostname": "contract-lan-kiosk",
+         "id": 24,
+         "ip": "<client-ip>",
+         "platform": "Windows",
+         "source": "lan"
+        },
+        "timestamp": 0,
+        "type": "registration_pending"
+       },
+       "order": "type registration{source id device_id hostname platform ip created_at} timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.registration.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "registration": {
+         "created_at": "<volatile>",
+         "device_id": "900100021",
+         "hostname": "contract-lan-kiosk",
+         "id": 29,
+         "ip": "<client-ip>",
+         "platform": "Windows",
+         "source": "lan"
+        },
+        "timestamp": 0,
+        "type": "registration_pending"
+       },
+       "order": "type registration{source id device_id hostname platform ip created_at} timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "server_admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.registration.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "registration": {
+         "created_at": "<volatile>",
+         "device_id": "900100021",
+         "hostname": "contract-lan-kiosk",
+         "id": 34,
+         "ip": "<client-ip>",
+         "platform": "Windows",
+         "source": "lan"
+        },
+        "timestamp": 0,
+        "type": "registration_pending"
+       },
+       "order": "type registration{source id device_id hostname platform ip created_at} timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.registration.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "registration": {
+         "created_at": "<volatile>",
+         "device_id": "900100021",
+         "hostname": "contract-lan-kiosk",
+         "id": 39,
+         "ip": "<client-ip>",
+         "platform": "Windows",
+         "source": "lan"
+        },
+        "timestamp": 0,
+        "type": "registration_pending"
+       },
+       "order": "type registration{source id device_id hostname platform ip created_at} timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.registration.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "registration": {
+         "created_at": "<volatile>",
+         "device_id": "900100021",
+         "hostname": "contract-lan-kiosk",
+         "id": 44,
+         "ip": "<client-ip>",
+         "platform": "Windows",
+         "source": "lan"
+        },
+        "timestamp": 0,
+        "type": "registration_pending"
+       },
+       "order": "type registration{source id device_id hostname platform ip created_at} timestamp"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

@@ -51,3 +51,34 @@ From a worktree that still has the read routes, in the dev image:
     tools/dev.sh "cd betterdesk-server/console/routes/activity/testdata && node nodeoracle/activity.js"
     DEV_DOCKER_ARGS="--network bdgo" tools/dev.sh "cd betterdesk-server/console/routes/activity/testdata && \
       ORACLE_PG_DSN='postgres://betterdesk:bdgo-local@bdgo-testpg:5432/betterdesk_test?sslmode=disable' node nodeoracle/activity.js"
+
+## The device route
+
+`device.js` records the route of the desktop agent, `POST /activity` at
+`/api/bd` and `/api/activity`, behind the real device guards of
+`middleware/deviceAuth.js`, with the real alert rules engine (its mail
+stubbed; no rule mails) and the real adapter: `../node_device_sqlite.json`
+and `../node_device_postgres.json`, 1,421 steps each, replayed by
+`TestNodeDeviceAnswers`. The route file of the tree is the device route
+alone, so the script runs on the tree as it is.
+
+- tokens in every state (unbound, a client id that is no device id, too
+  long, expired, revoked, stored before the hash column, a numeric device
+  id) and Authorization headers in several forms
+- the device named in the body, the query and `X-Device-Id`, with values
+  of every JSON type: the guard, then the route's own comparison
+- sessions in every form, each member of a session with values of every
+  type, 501 sessions, the total of the durations as `+` makes it
+- the idle time and the time of the report with values of every type,
+  and the idle alerts they raise (one rule that fires for every number)
+- after each report the sessions, summaries and alerts it left, which are
+  then deleted
+
+The harness waits for the background evaluations of the alert rules
+before each step (`settle` in `lib.js`); the Go test waits for the engine
+the same way. Times the route fills in itself are checked by their form
+in a statement of their own.
+
+    tools/dev.sh "cd betterdesk-server/console/routes/activity/testdata && node nodeoracle/device.js"
+    DEV_DOCKER_ARGS="--network bdgo" tools/dev.sh "cd betterdesk-server/console/routes/activity/testdata && \
+      ORACLE_PG_DSN='postgres://betterdesk:bdgo-local@bdgo-testpg:5432/betterdesk_test?sslmode=disable' node nodeoracle/device.js"

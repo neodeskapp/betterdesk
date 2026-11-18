@@ -1,0 +1,2660 @@
+{
+ "dialect": "postgres",
+ "seed": [
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-device-a",
+    "a70dc32ded6e642ec955672a88edb7cc9d6d9e2abb6bf78146a63491adb24155",
+    5,
+    "device-a",
+    "uuid-tok-device-a",
+    "2999-01-01 00:00:00",
+    false
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-device-b",
+    "638c3bcb28bd43d785bdb2b9555c0d22e2eb931e3a0298384de110a801b52b46",
+    5,
+    "device-b",
+    "uuid-tok-device-b",
+    "2999-01-01 00:00:00",
+    false
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-numeric",
+    "a514c7469f35b6ab81a6689db4fe6206829ef442c38996435ac01fb5c32f56be",
+    5,
+    "123",
+    "uuid-tok-numeric",
+    "2999-01-01 00:00:00",
+    false
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-unbound",
+    "75a5957ae0210565257405a18f88284d277cbfa871951062d1435fdc7f544474",
+    5,
+    "",
+    "uuid-tok-unbound",
+    "2999-01-01 00:00:00",
+    false
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-null-client",
+    "f65fc4070b5e0abddda40fdb6ae79ffd6b58b4355b7ea118802a755ebb01f9a6",
+    5,
+    null,
+    "uuid-tok-null-client",
+    "2999-01-01 00:00:00",
+    false
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-short",
+    "7c7b85d90f624dbe2f9196551fdac64191dc4a52460bd9b5d4b938db6b445b1f",
+    5,
+    "x",
+    "uuid-tok-short",
+    "2999-01-01 00:00:00",
+    false
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-spaced",
+    "9bd27e3b99464fc96da4bd45f4708b62874e91fbecf7f3d288494c0e3b8ed053",
+    5,
+    "dev a",
+    "uuid-tok-spaced",
+    "2999-01-01 00:00:00",
+    false
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-expired",
+    "604a8fed9a3501a46aef5dc1a55ead4decaa0041c450ea003637c00656761c34",
+    5,
+    "device-a",
+    "uuid-tok-expired",
+    "2001-01-01 00:00:00",
+    false
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-revoked",
+    "e721594b71155e7278c5e276710c1b271492d7165d3d13795c0b551b1c6dac25",
+    5,
+    "device-a",
+    "uuid-tok-revoked",
+    "2999-01-01 00:00:00",
+    true
+   ]
+  ],
+  [
+   "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "tok-plain",
+    null,
+    5,
+    "device-p",
+    "uuid-tok-plain",
+    "2999-01-01 00:00:00",
+    false
+   ]
+  ],
+  [
+   "INSERT INTO remote_commands (device_id, command_type, payload, status, result, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "device-a",
+    "shell",
+    "hostname",
+    "pending",
+    null,
+    "e2e_admin",
+    "2001-01-01 00:02:00+00"
+   ]
+  ],
+  [
+   "INSERT INTO remote_commands (device_id, command_type, payload, status, result, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "device-a",
+    "powershell",
+    "Get-Process",
+    "pending",
+    null,
+    "e2e_operator",
+    "2001-01-01 00:01:00+00"
+   ]
+  ],
+  [
+   "INSERT INTO remote_commands (device_id, command_type, payload, status, result, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "device-a",
+    "shell",
+    "uptime",
+    "running",
+    null,
+    "e2e_admin",
+    "2001-01-01 00:03:00+00"
+   ]
+  ],
+  [
+   "INSERT INTO remote_commands (device_id, command_type, payload, status, result, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "device-a",
+    "reboot",
+    "now",
+    "completed",
+    "done",
+    "e2e_admin",
+    "2001-01-01 00:04:00+00"
+   ]
+  ],
+  [
+   "INSERT INTO remote_commands (device_id, command_type, payload, status, result, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "device-b",
+    "shell",
+    "whoami",
+    "pending",
+    null,
+    "e2e_admin",
+    "2001-01-01 00:05:00+00"
+   ]
+  ],
+  [
+   "INSERT INTO remote_commands (device_id, command_type, payload, status, result, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "123",
+    "shell",
+    "id",
+    "pending",
+    null,
+    "e2e_admin",
+    "2001-01-01 00:06:00+00"
+   ]
+  ],
+  [
+   "INSERT INTO remote_commands (device_id, command_type, payload, status, result, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "device-a ",
+    "shell",
+    "spaced",
+    "pending",
+    null,
+    "e2e_admin",
+    "2001-01-01 00:07:00+00"
+   ]
+  ],
+  [
+   "INSERT INTO remote_commands (device_id, command_type, payload, status, result, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "DEVICE-A",
+    "shell",
+    "upper",
+    "pending",
+    null,
+    "e2e_admin",
+    "2001-01-01 00:08:00+00"
+   ]
+  ],
+  [
+   "INSERT INTO remote_commands (device_id, command_type, payload, status, result, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+   [
+    "device-a",
+    "script",
+    "echo 1",
+    "failed",
+    "exit 1",
+    "e2e_admin",
+    "2001-01-01 00:09:00+00"
+   ]
+  ]
+ ],
+ "steps": [
+  {
+   "name": "1 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {},
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "2 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {},
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "3 POST /api/automation/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/automation/commands/5/result",
+   "headers": {},
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "4 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "X-Device-Id": "device-a"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "5 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "X-Device-Id": "device-a"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "6 POST /api/automation/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/automation/commands/5/result",
+   "headers": {
+    "X-Device-Id": "device-a"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "7 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer nope"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "8 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer nope"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "9 POST /api/automation/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/automation/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer nope"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "10 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer tok-unbound"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "11 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-unbound"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "12 POST /api/automation/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/automation/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-unbound"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "13 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer tok-null-client"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "14 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-null-client"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "15 POST /api/automation/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/automation/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-null-client"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "16 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer tok-short"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "17 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-short"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "18 POST /api/automation/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/automation/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-short"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "19 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer tok-spaced"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "20 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-spaced"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "21 POST /api/automation/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/automation/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-spaced"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "22 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer tok-expired"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "23 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-expired"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "24 POST /api/automation/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/automation/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-expired"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "25 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer tok-revoked"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "26 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-revoked"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "27 POST /api/automation/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/automation/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-revoked"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "28 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Basic tok-device-a"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "29 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Basic tok-device-a"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "30 POST /api/automation/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/automation/commands/5/result",
+   "headers": {
+    "Authorization": "Basic tok-device-a"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "31 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "bearer tok-device-a"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "32 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "bearer tok-device-a"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "33 POST /api/automation/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/automation/commands/5/result",
+   "headers": {
+    "Authorization": "bearer tok-device-a"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "34 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer  tok-device-a"
+   },
+   "status": 200,
+   "answer": "{\"commands\":[{\"id\":2,\"device_id\":\"device-a\",\"command_type\":\"powershell\",\"payload\":\"Get-Process\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_operator\",\"created_at\":\"2001-01-01T00:01:00.000Z\",\"executed_at\":null,\"completed_at\":null},{\"id\":1,\"device_id\":\"device-a\",\"command_type\":\"shell\",\"payload\":\"hostname\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:02:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
+  },
+  {
+   "name": "35 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer  tok-device-a"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "36 POST /api/automation/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/automation/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer  tok-device-a"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "37 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer tok-device-a more"
+   },
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "38 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a more"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "39 POST /api/automation/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/automation/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a more"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "40 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer tok-plain"
+   },
+   "status": 200,
+   "answer": "{\"commands\":[]}"
+  },
+  {
+   "name": "41 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-plain"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "42 POST /api/automation/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/automation/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-plain"
+   },
+   "body": "{\"status\":\"nope\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "43 GET /api/bd/commands",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {},
+   "status": 401,
+   "answer": "{\"error\":\"Bearer access token required\"}"
+  },
+  {
+   "name": "44 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "{\"commands\":[{\"id\":2,\"device_id\":\"device-a\",\"command_type\":\"powershell\",\"payload\":\"Get-Process\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_operator\",\"created_at\":\"2001-01-01T00:01:00.000Z\",\"executed_at\":null,\"completed_at\":null},{\"id\":1,\"device_id\":\"device-a\",\"command_type\":\"shell\",\"payload\":\"hostname\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:02:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
+  },
+  {
+   "name": "45 GET /api/bd/commands/",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands/",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "{\"commands\":[{\"id\":2,\"device_id\":\"device-a\",\"command_type\":\"powershell\",\"payload\":\"Get-Process\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_operator\",\"created_at\":\"2001-01-01T00:01:00.000Z\",\"executed_at\":null,\"completed_at\":null},{\"id\":1,\"device_id\":\"device-a\",\"command_type\":\"shell\",\"payload\":\"hostname\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:02:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
+  },
+  {
+   "name": "46 GET /API/BD/COMMANDS",
+   "role": "",
+   "method": "GET",
+   "path": "/API/BD/COMMANDS",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "{\"commands\":[{\"id\":2,\"device_id\":\"device-a\",\"command_type\":\"powershell\",\"payload\":\"Get-Process\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_operator\",\"created_at\":\"2001-01-01T00:01:00.000Z\",\"executed_at\":null,\"completed_at\":null},{\"id\":1,\"device_id\":\"device-a\",\"command_type\":\"shell\",\"payload\":\"hostname\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:02:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
+  },
+  {
+   "name": "47 GET /api/bd/commands?device_id=device-b&status=completed",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands?device_id=device-b&status=completed",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "{\"commands\":[{\"id\":2,\"device_id\":\"device-a\",\"command_type\":\"powershell\",\"payload\":\"Get-Process\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_operator\",\"created_at\":\"2001-01-01T00:01:00.000Z\",\"executed_at\":null,\"completed_at\":null},{\"id\":1,\"device_id\":\"device-a\",\"command_type\":\"shell\",\"payload\":\"hostname\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:02:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
+  },
+  {
+   "name": "48 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer tok-device-a",
+    "X-Device-Id": "device-b"
+   },
+   "status": 200,
+   "answer": "{\"commands\":[{\"id\":2,\"device_id\":\"device-a\",\"command_type\":\"powershell\",\"payload\":\"Get-Process\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_operator\",\"created_at\":\"2001-01-01T00:01:00.000Z\",\"executed_at\":null,\"completed_at\":null},{\"id\":1,\"device_id\":\"device-a\",\"command_type\":\"shell\",\"payload\":\"hostname\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:02:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
+  },
+  {
+   "name": "49 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer tok-device-b"
+   },
+   "status": 200,
+   "answer": "{\"commands\":[{\"id\":5,\"device_id\":\"device-b\",\"command_type\":\"shell\",\"payload\":\"whoami\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:05:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
+  },
+  {
+   "name": "50 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer tok-numeric"
+   },
+   "status": 200,
+   "answer": "{\"commands\":[{\"id\":6,\"device_id\":\"123\",\"command_type\":\"shell\",\"payload\":\"id\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:06:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
+  },
+  {
+   "name": "51 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer tok-plain"
+   },
+   "status": 200,
+   "answer": "{\"commands\":[]}"
+  },
+  {
+   "name": "52 HEAD /api/bd/commands",
+   "role": "",
+   "method": "HEAD",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": ""
+  },
+  {
+   "name": "53 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"result\":\"r\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"pending\",\"result\":null,\"executed\":1,\"completed\":1}]"
+  },
+  {
+   "name": "command 1 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    1
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "54 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "55 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "56 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":null,\"result\":\"r\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"pending\",\"result\":null,\"executed\":1,\"completed\":1}]"
+  },
+  {
+   "name": "command 1 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    1
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "57 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":null}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "58 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":null}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "59 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"\",\"result\":\"r\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"pending\",\"result\":null,\"executed\":1,\"completed\":1}]"
+  },
+  {
+   "name": "command 1 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    1
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "60 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "61 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "62 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":0,\"result\":\"r\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"pending\",\"result\":null,\"executed\":1,\"completed\":1}]"
+  },
+  {
+   "name": "command 1 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    1
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "63 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":0}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "64 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":0}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "65 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":false,\"result\":\"r\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"pending\",\"result\":null,\"executed\":1,\"completed\":1}]"
+  },
+  {
+   "name": "command 1 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    1
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "66 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":false}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "67 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":false}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "68 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"completed\",\"result\":\"r\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"completed\",\"result\":\"r\",\"executed\":1,\"completed\":0}]"
+  },
+  {
+   "name": "command 1 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    1
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "69 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"completed\"}",
+   "status": 404,
+   "answer": "{\"error\":\"Command not found\"}"
+  },
+  {
+   "name": "70 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"completed\"}",
+   "status": 403,
+   "answer": "{\"error\":\"Device ID mismatch\"}"
+  },
+  {
+   "name": "71 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"failed\",\"result\":\"r\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"failed\",\"result\":\"r\",\"executed\":1,\"completed\":0}]"
+  },
+  {
+   "name": "command 1 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    1
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "72 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"failed\"}",
+   "status": 404,
+   "answer": "{\"error\":\"Command not found\"}"
+  },
+  {
+   "name": "73 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"failed\"}",
+   "status": 403,
+   "answer": "{\"error\":\"Device ID mismatch\"}"
+  },
+  {
+   "name": "74 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":\"r\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"r\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "command 1 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    1
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "75 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 404,
+   "answer": "{\"error\":\"Command not found\"}"
+  },
+  {
+   "name": "76 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 403,
+   "answer": "{\"error\":\"Device ID mismatch\"}"
+  },
+  {
+   "name": "77 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"pending\",\"result\":\"r\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"pending\",\"result\":null,\"executed\":1,\"completed\":1}]"
+  },
+  {
+   "name": "command 1 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    1
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "78 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"pending\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "79 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"pending\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "80 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"COMPLETED\",\"result\":\"r\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"pending\",\"result\":null,\"executed\":1,\"completed\":1}]"
+  },
+  {
+   "name": "command 1 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    1
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "81 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"COMPLETED\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "82 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"COMPLETED\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "83 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\" running\",\"result\":\"r\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"pending\",\"result\":null,\"executed\":1,\"completed\":1}]"
+  },
+  {
+   "name": "command 1 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    1
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "84 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\" running\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "85 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\" running\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "86 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":[\"completed\"],\"result\":\"r\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"pending\",\"result\":null,\"executed\":1,\"completed\":1}]"
+  },
+  {
+   "name": "command 1 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    1
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "87 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":[\"completed\"]}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "88 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":[\"completed\"]}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "89 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":[\"running\",\"failed\"],\"result\":\"r\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"pending\",\"result\":null,\"executed\":1,\"completed\":1}]"
+  },
+  {
+   "name": "command 1 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    1
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "90 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":[\"running\",\"failed\"]}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "91 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":[\"running\",\"failed\"]}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "92 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":1,\"result\":\"r\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"pending\",\"result\":null,\"executed\":1,\"completed\":1}]"
+  },
+  {
+   "name": "command 1 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    1
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "93 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":1}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "94 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":1}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "95 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":true,\"result\":\"r\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"pending\",\"result\":null,\"executed\":1,\"completed\":1}]"
+  },
+  {
+   "name": "command 1 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    1
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "96 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":true}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "97 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":true}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "98 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":{},\"result\":\"r\"}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"pending\",\"result\":null,\"executed\":1,\"completed\":1}]"
+  },
+  {
+   "name": "command 1 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    1
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "99 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":{}}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "100 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":{}}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "101 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":null,\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "102 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":null}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"null\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "103 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":0}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"0\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "104 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":0}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"0\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "105 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":\"\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "106 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":\"text\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"text\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "107 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":5.5}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"5.5\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "108 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":1e+21}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"1e+21\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "109 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":true}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"true\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "110 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":false}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"false\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "111 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":[]}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "112 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":[1,[2,null]]}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"1,2,\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "113 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":[null]}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "114 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":{}}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"[object Object]\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "115 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":{\"a\":1}}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"[object Object]\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "116 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":{\"toString\":1}}",
+   "status": 500,
+   "answer": "{\"error\":\"Internal server error\"}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"[object Object]\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "117 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":[{\"toString\":1}]}",
+   "status": 500,
+   "answer": "{\"error\":\"Internal server error\"}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"[object Object]\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "118 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":\"café 😀\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"café 😀\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "119 POST /api/bd/commands/2/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"result\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 2",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    2
+   ],
+   "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "command 2 is pending again",
+   "sql": "UPDATE remote_commands SET status = ?, result = NULL, executed_at = NULL, completed_at = NULL WHERE id = ?",
+   "params": [
+    "pending",
+    2
+   ],
+   "rows": "[]"
+  },
+  {
+   "name": "120 POST /api/bd/commands/3/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/3/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"completed\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 3",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    3
+   ],
+   "rows": "[{\"id\":3,\"device_id\":\"device-a\",\"status\":\"completed\",\"result\":null,\"executed\":1,\"completed\":0}]"
+  },
+  {
+   "name": "121 POST /api/bd/commands/3/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/3/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 3",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    3
+   ],
+   "rows": "[{\"id\":3,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":null,\"executed\":0,\"completed\":0}]"
+  },
+  {
+   "name": "122 POST /api/bd/commands/3/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/3/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"failed\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 3",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    3
+   ],
+   "rows": "[{\"id\":3,\"device_id\":\"device-a\",\"status\":\"failed\",\"result\":null,\"executed\":0,\"completed\":0}]"
+  },
+  {
+   "name": "123 POST /api/bd/commands/3/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/3/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 3",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    3
+   ],
+   "rows": "[{\"id\":3,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":null,\"executed\":0,\"completed\":0}]"
+  },
+  {
+   "name": "124 POST /api/bd/commands/3/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/3/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"completed\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 3",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    3
+   ],
+   "rows": "[{\"id\":3,\"device_id\":\"device-a\",\"status\":\"completed\",\"result\":null,\"executed\":0,\"completed\":0}]"
+  },
+  {
+   "name": "125 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "{\"commands\":[{\"id\":2,\"device_id\":\"device-a\",\"command_type\":\"powershell\",\"payload\":\"Get-Process\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_operator\",\"created_at\":\"2001-01-01T00:01:00.000Z\",\"executed_at\":null,\"completed_at\":null},{\"id\":1,\"device_id\":\"device-a\",\"command_type\":\"shell\",\"payload\":\"hostname\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:02:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
+  },
+  {
+   "name": "126 POST /api/bd/commands/4/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/4/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "127 POST /api/bd/commands/9/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/9/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "128 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 403,
+   "answer": "{\"error\":\"Device ID mismatch\"}"
+  },
+  {
+   "name": "129 POST /api/bd/commands/6/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/6/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 403,
+   "answer": "{\"error\":\"Device ID mismatch\"}"
+  },
+  {
+   "name": "130 POST /api/bd/commands/7/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/7/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 403,
+   "answer": "{\"error\":\"Device ID mismatch\"}"
+  },
+  {
+   "name": "131 POST /api/bd/commands/8/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/8/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 403,
+   "answer": "{\"error\":\"Device ID mismatch\"}"
+  },
+  {
+   "name": "132 POST /api/bd/commands/0/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/0/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 404,
+   "answer": "{\"error\":\"Command not found\"}"
+  },
+  {
+   "name": "133 POST /api/bd/commands/999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 404,
+   "answer": "{\"error\":\"Command not found\"}"
+  },
+  {
+   "name": "134 POST /api/bd/commands/01/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/01/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "135 POST /api/bd/commands/0002/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/0002/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "136 POST /api/bd/commands/2147483647/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2147483647/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 404,
+   "answer": "{\"error\":\"Command not found\"}"
+  },
+  {
+   "name": "137 POST /api/bd/commands/2147483648/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/2147483648/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 500,
+   "answer": "{\"error\":\"Internal server error\"}"
+  },
+  {
+   "name": "138 POST /api/bd/commands/9007199254740993/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/9007199254740993/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 500,
+   "answer": "{\"error\":\"Internal server error\"}"
+  },
+  {
+   "name": "139 POST /api/bd/commands/99999999999999999999/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/99999999999999999999/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 500,
+   "answer": "{\"error\":\"Internal server error\"}"
+  },
+  {
+   "name": "140 POST /api/bd/commands/10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 500,
+   "answer": "{\"error\":\"Internal server error\"}"
+  },
+  {
+   "name": "command 4",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    4
+   ],
+   "rows": "[{\"id\":4,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":null,\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "command 9",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    9
+   ],
+   "rows": "[{\"id\":9,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":null,\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "141 POST /api/bd/commands/6/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/6/result",
+   "headers": {
+    "Authorization": "Bearer tok-numeric"
+   },
+   "body": "{\"status\":\"completed\",\"result\":\"uid=0\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 6",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    6
+   ],
+   "rows": "[{\"id\":6,\"device_id\":\"123\",\"status\":\"completed\",\"result\":\"uid=0\",\"executed\":1,\"completed\":0}]"
+  },
+  {
+   "name": "142 POST /api/bd/commands/5/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/5/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-b"
+   },
+   "body": "{\"status\":\"completed\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 5",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    5
+   ],
+   "rows": "[{\"id\":5,\"device_id\":\"device-b\",\"status\":\"completed\",\"result\":null,\"executed\":1,\"completed\":0}]"
+  },
+  {
+   "name": "143 POST /api/bd/commands/7/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/7/result",
+   "headers": {
+    "Authorization": "Bearer tok-spaced"
+   },
+   "body": "{\"status\":\"completed\"}",
+   "status": 401,
+   "answer": "{\"error\":\"Invalid or unbound access token\"}"
+  },
+  {
+   "name": "144 POST /api/bd/commands/abc/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/abc/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 404,
+   "answer": "{\"oracle\":\"no route\"}"
+  },
+  {
+   "name": "145 POST /api/bd/commands/-1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/-1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 404,
+   "answer": "{\"oracle\":\"no route\"}"
+  },
+  {
+   "name": "146 POST /api/bd/commands/1.0/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1.0/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 404,
+   "answer": "{\"oracle\":\"no route\"}"
+  },
+  {
+   "name": "147 POST /api/bd/commands/%31/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/%31/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 404,
+   "answer": "{\"oracle\":\"no route\"}"
+  },
+  {
+   "name": "148 POST /api/bd/commands/1/results",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/results",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 404,
+   "answer": "{\"oracle\":\"no route\"}"
+  },
+  {
+   "name": "149 POST /api/bd/commands//result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands//result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 404,
+   "answer": "{\"oracle\":\"no route\"}"
+  },
+  {
+   "name": "150 POST /api/automation/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/automation/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"failed\",\"result\":\"at the other mount\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"failed\",\"result\":\"at the other mount\",\"executed\":0,\"completed\":0}]"
+  },
+  {
+   "name": "151 POST /API/BD/Commands/1/Result/",
+   "role": "",
+   "method": "POST",
+   "path": "/API/BD/Commands/1/Result/",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"completed\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"completed\",\"result\":null,\"executed\":0,\"completed\":0}]"
+  },
+  {
+   "name": "152 POST /api/bd/commands/1/result?status=failed",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result?status=failed",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{}",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "153 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a",
+    "X-Device-Id": "device-b"
+   },
+   "body": "{\"status\":\"running\"}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":null,\"executed\":0,\"completed\":0}]"
+  },
+  {
+   "name": "154 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "[{\"status\":\"completed\"}]",
+   "status": 400,
+   "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
+  },
+  {
+   "name": "155 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a",
+    "Content-Type": "application/x-www-form-urlencoded"
+   },
+   "body": "status=completed",
+   "status": 415,
+   "answer": "{\"success\":false,\"error\":\"Content-Type must be application/json\"}"
+  },
+  {
+   "name": "156 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":",
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"Internal Server Error\"}"
+  },
+  {
+   "name": "157 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 415,
+   "answer": "{\"success\":false,\"error\":\"Content-Type must be application/json\"}"
+  },
+  {
+   "name": "158 POST /api/bd/commands/1/result",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/commands/1/result",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "body": "{\"status\":\"running\",\"status\":\"failed\",\"result\":1,\"result\":2}",
+   "status": 200,
+   "answer": "{\"success\":true}"
+  },
+  {
+   "name": "command 1",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands WHERE id = ?",
+   "params": [
+    1
+   ],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"failed\",\"result\":\"2\",\"executed\":0,\"completed\":0}]"
+  },
+  {
+   "name": "159 GET /api/bd/commands",
+   "role": "",
+   "method": "GET",
+   "path": "/api/bd/commands",
+   "headers": {
+    "Authorization": "Bearer tok-device-a"
+   },
+   "status": 200,
+   "answer": "{\"commands\":[]}"
+  },
+  {
+   "name": "the commands",
+   "sql": "SELECT id, device_id, status, result, CASE WHEN executed_at IS NULL THEN 1 ELSE 0 END AS executed, CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END AS completed FROM remote_commands ORDER BY id",
+   "params": [],
+   "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"failed\",\"result\":\"2\",\"executed\":0,\"completed\":0},{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":null,\"executed\":0,\"completed\":1},{\"id\":3,\"device_id\":\"device-a\",\"status\":\"completed\",\"result\":null,\"executed\":0,\"completed\":0},{\"id\":4,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":null,\"executed\":0,\"completed\":1},{\"id\":5,\"device_id\":\"device-b\",\"status\":\"completed\",\"result\":null,\"executed\":1,\"completed\":0},{\"id\":6,\"device_id\":\"123\",\"status\":\"completed\",\"result\":\"uid=0\",\"executed\":1,\"completed\":0},{\"id\":7,\"device_id\":\"device-a \",\"status\":\"pending\",\"result\":null,\"executed\":1,\"completed\":1},{\"id\":8,\"device_id\":\"DEVICE-A\",\"status\":\"pending\",\"result\":null,\"executed\":1,\"completed\":1},{\"id\":9,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":null,\"executed\":0,\"completed\":1}]"
+  },
+  {
+   "name": "the tokens were noted",
+   "sql": "SELECT token, last_used IS NOT NULL AS used FROM access_tokens ORDER BY id",
+   "params": [],
+   "rows": "[{\"token\":\"tok-device-a\",\"used\":true},{\"token\":\"tok-device-b\",\"used\":true},{\"token\":\"tok-numeric\",\"used\":true},{\"token\":\"tok-unbound\",\"used\":false},{\"token\":\"tok-null-client\",\"used\":false},{\"token\":\"tok-short\",\"used\":false},{\"token\":\"tok-spaced\",\"used\":false},{\"token\":\"tok-expired\",\"used\":false},{\"token\":\"tok-revoked\",\"used\":false},{\"token\":\"tok-plain\",\"used\":true}]"
+  }
+ ]
+}

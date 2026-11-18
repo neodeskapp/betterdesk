@@ -12,7 +12,8 @@ import (
 // SMTP settings under /api/automation. Every route needs the permission
 // server.config (server_admin, super_admin, admin). The routes for device
 // agents (GET /api/bd/commands and the two result routes) take a device
-// token and are not part of these cases.
+// token; they are the group automation-device below, which runs after
+// this one, so the commands it completes do not reach the lists here.
 //
 // A role's turn creates five rules, works on the first one and deletes all
 // five. The rule list is read while it holds one row: rules written in the
@@ -395,5 +396,116 @@ func init() {
 		contract.Case{Name: "smtp-test", Method: "POST", Path: "/api/automation/smtp/test", Body: map[string]any{}},
 		contract.Case{Name: "smtp-test-without-body", Method: "POST", Path: "/api/automation/smtp/test"},
 		contract.Case{Name: "smtp-test-without-csrf-token", Method: "POST", Path: "/api/automation/smtp/test", Body: map[string]any{}, NoCSRF: true},
+	)
+}
+
+// automation-device: the routes an agent fetches its commands with and
+// reports their results to, GET /commands at /api/bd (at /api/automation
+// the people's list answers first) and POST /commands/{id}/result at
+// /api/bd and /api/automation. They take a Bearer token bound to a device;
+// the result route then compares the command's device with the token's.
+//
+// In the signed-out turn admin sends a command to 900100002, and that
+// device (the token in /stack/secrets/device_token_other) fetches it,
+// reports it running and completed, and fetches nothing after that. The
+// instance's own device (900100001, device_token) is the other device
+// here: the automation group leaves pending commands for it, so its own
+// list is compared by type only. Then each role's session in front of a
+// device's request, for a command that does not exist. Commands cannot be
+// deleted; the one of this group is completed when the group ends.
+//
+// The setup step goes to a route the Go console answered already when
+// these cases were written, so its golden was recorded from Go with
+// CONTRACT_RECORD_NEW=1, after its answer had been checked against the
+// Node recordings that routes/automation replays for the same request
+// (testdata/node_sqlite.json: a command with a device and a payload as
+// text gets {"success":true,"command":{"id":...,"device_id":...,"status":"pending"}}).
+func init() {
+	const bd = "/api/bd"
+	const own = "/api/automation"
+	device := map[string]string{"Authorization": "Bearer {secret:device_token}"}
+	other := map[string]string{"Authorization": "Bearer {secret:device_token_other}"}
+	unknown := map[string]string{"Authorization": "Bearer contract-no-such-token"}
+	basic := map[string]string{"Authorization": "Basic {secret:device_token_other}"}
+	named := map[string]string{"X-Device-Id": "900100002"}
+	none := map[string]string{}
+	// The ids of the commands depend on the commands the automation group
+	// sent before on the same instance
+	ids := []string{"commands[*].id"}
+	// asDevice sends a case the way 900100002 does: no session, no
+	// cookies, no CSRF token, its token unless the case names other headers
+	asDevice := func(c contract.Case) contract.Case {
+		c.NoCSRF, c.NoCookies, c.Roles = true, true, contract.Roles("signed-out")
+		if c.Headers == nil {
+			c.Headers = other
+		}
+		if c.Body != nil {
+			c.Method = "POST"
+			if c.Path == "" {
+				c.Path = bd + "/commands/{command}/result"
+			}
+		}
+		if c.Path == "" {
+			c.Path = bd + "/commands"
+		}
+		return c
+	}
+	result := func(name string, body map[string]any) contract.Case {
+		return asDevice(contract.Case{Name: name, Body: body})
+	}
+	completed := map[string]any{"status": "completed", "result": "demo-reception-02"}
+
+	contract.Group("automation-device",
+		contract.Case{
+			Name: "setup-command", Method: "POST", Path: own + "/commands", As: "admin", Roles: contract.Roles("signed-out"),
+			Body:     map[string]any{"device_id": "900100002", "command_type": "shell", "payload": "hostname"},
+			Capture:  map[string]string{"command": "command.id"},
+			Volatile: []string{"command.id"},
+		},
+
+		// Fetching
+		asDevice(contract.Case{Name: "fetch", Volatile: ids}),
+		asDevice(contract.Case{Name: "fetch-own-device", Headers: device, Volatile: []string{"commands"}}),
+		asDevice(contract.Case{Name: "fetch-without-token", Headers: none}),
+		asDevice(contract.Case{Name: "fetch-unknown-token", Headers: unknown}),
+		asDevice(contract.Case{Name: "fetch-basic", Headers: basic}),
+		asDevice(contract.Case{Name: "fetch-device-id-alone", Headers: named}),
+		asDevice(contract.Case{Name: "fetch-names-other-device", Query: url.Values{"device_id": {"900100001"}}, Volatile: ids}),
+
+		// Reporting a result: who may
+		result("result-running", map[string]any{"status": "running"}),
+		asDevice(contract.Case{Name: "result-without-token", Body: completed, Headers: none}),
+		asDevice(contract.Case{Name: "result-unknown-token", Body: completed, Headers: unknown}),
+		asDevice(contract.Case{Name: "result-device-id-alone", Body: completed, Headers: named}),
+		asDevice(contract.Case{Name: "result-of-other-device", Body: completed, Headers: device}),
+		asDevice(contract.Case{Name: "result-of-other-device-bad-status", Body: map[string]any{"status": "done"}, Headers: device}),
+		asDevice(contract.Case{Name: "result-at-automation", Path: own + "/commands/{command}/result", Body: completed}),
+		asDevice(contract.Case{Name: "result-other-spelling", Path: "/API/BD/Commands/{command}/Result", Body: completed}),
+
+		// The body and the command
+		result("result-without-status", map[string]any{"result": "x"}),
+		result("result-unknown-status", map[string]any{"status": "done"}),
+		result("result-status-pending", map[string]any{"status": "pending"}),
+		result("result-status-in-a-list", map[string]any{"status": []any{"completed"}}),
+		result("result-status-number", map[string]any{"status": 1}),
+		asDevice(contract.Case{Name: "result-missing-command", Path: bd + "/commands/999999999/result", Body: completed}),
+		asDevice(contract.Case{Name: "result-id-too-long", Path: bd + "/commands/99999999999999999999/result", Body: completed}),
+		asDevice(contract.Case{Name: "result-id-with-zeros", Path: bd + "/commands/00{command}/result", Body: map[string]any{"status": "running", "result": 5}}),
+		asDevice(contract.Case{Name: "fetch-after-running", Volatile: ids}),
+		result("result-no-text", map[string]any{"status": "completed", "result": map[string]any{"toString": 1}}),
+		result("result-object", map[string]any{"status": "failed", "result": map[string]any{"lines": 2}}),
+		result("result-completed", completed),
+		result("result-again", map[string]any{"status": "running"}),
+		result("result-completed-again", completed),
+		asDevice(contract.Case{Name: "fetch-after-completed", Volatile: ids}),
+
+		// A device's request with each role's browser: the session, its
+		// cookies and its CSRF token come along
+		contract.Case{Name: "result-with-session", Method: "POST", Path: bd + "/commands/999999999/result", Body: completed, Headers: other},
+		contract.Case{Name: "result-with-session-without-csrf-token", Method: "POST", Path: bd + "/commands/999999999/result", Body: completed, Headers: other, NoCSRF: true},
+		contract.Case{Name: "result-at-automation-with-session", Method: "POST", Path: own + "/commands/999999999/result", Body: completed, Headers: other},
+		contract.Case{Name: "result-with-session-without-token", Method: "POST", Path: bd + "/commands/999999999/result", Body: completed},
+		contract.Case{Name: "fetch-with-session", Path: bd + "/commands", Headers: other, Volatile: ids},
+		contract.Case{Name: "fetch-with-session-without-token", Path: bd + "/commands"},
 	)
 }

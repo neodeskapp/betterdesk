@@ -657,25 +657,12 @@ func TestClientAPIProxyModeAgainstNode(t *testing.T) {
 	if res.same < 600 {
 		t.Errorf("only %d answers compared", res.same)
 	}
-	// The registration routes reached the stand-in for the Node console
-	// with the constant path, the query as sent and, in this mode, no body
+	// The registration routes are answered by the console's own routes
+	// (routes/registration ClientAPI): nothing reaches the Node console
 	g.reg.mu.Lock()
 	defer g.reg.mu.Unlock()
-	if len(g.reg.seen) == 0 {
-		t.Fatal("no registration request reached the Node console")
-	}
-	for _, s := range g.reg.seen {
-		if s.method == http.MethodPost && (s.body != "" || s.uri != "/api/bd/register-request") {
-			t.Errorf("forwarded %s %s with body %q", s.method, s.uri, s.body)
-		}
-		if s.method == http.MethodGet && !strings.HasPrefix(s.uri, "/api/bd/register-status") {
-			t.Errorf("forwarded %s %s", s.method, s.uri)
-		}
-		// The route records the first X-Forwarded-For address, else
-		// X-Real-IP; the socket follows for the console's trust
-		if !strings.HasSuffix(s.xff, ", 127.0.0.1") || !(strings.HasPrefix(s.xff, "10.") || strings.HasPrefix(s.xff, "198.51.100.20,")) {
-			t.Errorf("forwarded %s %s with X-Forwarded-For %q", s.method, s.uri, s.xff)
-		}
+	if len(g.reg.seen) != 0 {
+		t.Errorf("%d registration requests reached the Node console", len(g.reg.seen))
 	}
 }
 
@@ -687,7 +674,25 @@ func TestClientAPILocalModeAgainstNode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		res := g.replayExchanges(t, scenario, knownClientAPI)
+		known := knownClientAPI
+		if db.Dialect() == store.Postgres {
+			// The recording's Node console ran on SQLite, whose driver
+			// refuses a list for one parameter (500). On PostgreSQL the
+			// driver binds it as an array literal that names no device:
+			// the Node console there answered 200 not_found
+			// (routes/registration testdata/node_postgres.json, step 382)
+			known = map[string]func(t *testing.T, got []reply, closed bool) string{}
+			for id, check := range knownClientAPI {
+				known[id] = check
+			}
+			known["registration status two ids"] = func(_ *testing.T, got []reply, _ bool) string {
+				if len(got) != 1 || got[0].status != http.StatusOK || string(got[0].body) != `{"success":true,"status":"not_found"}` {
+					return fmt.Sprintf("want PostgreSQL's 200 not_found, got %v %q", statuses(got), firstBody(got))
+				}
+				return ""
+			}
+		}
+		res := g.replayExchanges(t, scenario, known)
 		checkReplay(t, "legacy", res)
 		if res.same < 500 || res.routed < 100 {
 			t.Errorf("only %d answers compared and %d routed", res.same, res.routed)

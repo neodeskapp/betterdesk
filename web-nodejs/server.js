@@ -80,10 +80,6 @@ try {
 
 // ============ Middleware Pipeline ============
 
-// The Go console in front of this one names itself on each request it
-// passes on (services/goConsoleBridge.js)
-app.use(require('./services/goConsoleBridge').learn);
-
 // Security headers (Helmet)
 app.use(securityMiddleware);
 
@@ -250,9 +246,8 @@ app.use('/api/desktop/layout', panelPreferenceLimiter);
 app.use('/api/', apiLimiter);
 
 
-// BetterDesk Desktop Client API — device-facing endpoints use Bearer tokens
-// (the initial registration endpoint is the only X-Device-Id compatibility
-// path), not browser CSRF cookies.
+// The token for the remote agent socket (POST /api/bd/remote-agent-token),
+// before the CSRF gate; the rest of the device API is in the Go console
 app.use('/api/bd', bdApiRoutes);
 
 // i18n middleware
