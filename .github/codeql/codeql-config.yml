@@ -61,12 +61,6 @@ query-filters:
       paths:
         - scripts/local-gate.js
 
-  # --- Format strings are fixed templates; IDs only interpolated after validation ---
-  - exclude:
-      id: js/tainted-format-string
-      paths:
-        - web-nodejs/routes/devices.routes.js
-
   # --- Admin file download; auth + rate limit elsewhere on generator API ---
   - exclude:
       id: js/missing-rate-limiting

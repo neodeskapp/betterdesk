@@ -1,0 +1,45 @@
+{
+ "id": "ws-bd-relay/target-accepts",
+ "request": {
+  "method": "GET",
+  "path": "/ws/bd-signal?device_id=900100001&token=%7Bsecret%3Adevice_token%7D",
+  "notes": [
+   "websocket target, own origin",
+   "websocket send {\"session_id\":\"{relay}\",\"type\":\"relay_accept\"}",
+   "websocket expect 1 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "headers": {
+    "content-type": "application/json"
+   },
+   "volatile": [
+    {
+     "path": "messages[*].json.session_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "session_id": "<volatile>",
+        "token": "{secret:target_token}",
+        "type": "relay_ready"
+       },
+       "order": "type session_id token"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,2967 @@
+{
+ "start": 1700000000000,
+ "scenarios": [
+  {
+   "name": "signal checks",
+   "clock": 1700000000000,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/bd-signal"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "a",
+       "close": 4400,
+       "reason": "Missing device_id or token"
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/bd-signal?device_id=dev1"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "b",
+       "close": 4400,
+       "reason": "Missing device_id or token"
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/bd-signal?device_id=&token=x"
+     },
+     "events": [
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "c",
+       "close": 4400,
+       "reason": "Missing device_id or token"
+      },
+      {
+       "socket": "c",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/bd-signal?device_id=dev1&token="
+     },
+     "events": [
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "d",
+       "close": 4400,
+       "reason": "Missing device_id or token"
+      },
+      {
+       "socket": "d",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/ws/bd-signal?device_id=ab&token=tok-ab-good"
+     },
+     "events": [
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "e",
+       "close": 4400,
+       "reason": "Invalid device_id"
+      },
+      {
+       "socket": "e",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "f",
+      "path": "/ws/bd-signal?device_id=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&token=x"
+     },
+     "events": [
+      {
+       "socket": "f",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "f",
+       "close": 4400,
+       "reason": "Invalid device_id"
+      },
+      {
+       "socket": "f",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "g",
+      "path": "/ws/bd-signal?device_id=a+b1&token=tok-a%20b1-good"
+     },
+     "events": [
+      {
+       "socket": "g",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "g",
+       "close": 4400,
+       "reason": "Invalid device_id"
+      },
+      {
+       "socket": "g",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "h",
+      "path": "/ws/bd-signal?device_id=%64ev1&token=tok-dev1-good"
+     },
+     "events": [
+      {
+       "socket": "h",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "h",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev1\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "i",
+      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev2-good"
+     },
+     "events": [
+      {
+       "socket": "i",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "i",
+       "close": 4403,
+       "reason": "Invalid token"
+      },
+      {
+       "socket": "i",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "j",
+      "path": "/ws/bd-signal?device_id=dev1&token=tok-throw"
+     },
+     "events": [
+      {
+       "socket": "j",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "j",
+       "close": 4500,
+       "reason": "Auth error"
+      },
+      {
+       "socket": "j",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "k",
+      "path": "/ws/bd-signal?device_id=dev1&device_id=dev2&token=tok-dev1-good"
+     },
+     "events": [
+      {
+       "socket": "k",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "k",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev1\"}"
+      },
+      {
+       "socket": "h",
+       "close": 4409,
+       "reason": "Replaced by new connection"
+      },
+      {
+       "socket": "h",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "l",
+      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good",
+      "headers": {
+       "Origin": "https://evil.example"
+      }
+     },
+     "events": [
+      {
+       "socket": "l",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "l",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "m",
+      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good",
+      "headers": {
+       "Cookie": "bd.sid=x"
+      }
+     },
+     "events": [
+      {
+       "socket": "m",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "m",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "n",
+      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good",
+      "headers": {
+       "Origin": "http://console.test"
+      }
+     },
+     "events": [
+      {
+       "socket": "n",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "n",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev1\"}"
+      },
+      {
+       "socket": "k",
+       "close": 4409,
+       "reason": "Replaced by new connection"
+      },
+      {
+       "socket": "k",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "online"
+     },
+     "result": [
+      "dev1"
+     ],
+     "events": []
+    }
+   ]
+  },
+  {
+   "name": "signal messages",
+   "clock": 1700000000000,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "a",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev1\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "{\"type\":\"heartbeat\"}"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "text": "{\"type\":\"heartbeat_ack\",\"ts\":1700000000000}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "binary": "eyJ0eXBlIjoiaGVhcnRiZWF0In0="
+     },
+     "events": [
+      {
+       "socket": "a",
+       "text": "{\"type\":\"heartbeat_ack\",\"ts\":1700000000000}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "binary": "e/99"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "not json"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "null"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "[1,2]"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "{\"type\":[\"heartbeat\"]}"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": " {\"type\":\"heartbeat\",\"extra\":{\"a\":1}} "
+     },
+     "events": [
+      {
+       "socket": "a",
+       "text": "{\"type\":\"heartbeat_ack\",\"ts\":1700000000000}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "{\"type\":\"relay_accept\",\"session_id\":5}"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "{\"type\":\"command_response\",\"request_id\":\"none\",\"ok\":true}"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "online"
+     },
+     "result": [
+      "dev1"
+     ],
+     "events": []
+    },
+    {
+     "step": {
+      "call": "isOnline",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": true,
+     "events": []
+    },
+    {
+     "step": {
+      "call": "isOnline",
+      "args": [
+       "dev9"
+      ]
+     },
+     "result": "<undefined>",
+     "events": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "a",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "isOnline",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": "<undefined>",
+     "events": []
+    },
+    {
+     "step": {
+      "call": "online"
+     },
+     "result": [],
+     "events": []
+    }
+   ]
+  },
+  {
+   "name": "signal replaced",
+   "clock": 1700000000000,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "a",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev1\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/bd-signal?device_id=dev2&token=tok-dev2-good"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "b",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev2\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good"
+     },
+     "events": [
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "c",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev1\"}"
+      },
+      {
+       "socket": "a",
+       "close": 4409,
+       "reason": "Replaced by new connection"
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "online"
+     },
+     "result": [
+      "dev1",
+      "dev2"
+     ],
+     "events": []
+    },
+    {
+     "step": {
+      "send": "c",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "c",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "c",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "online"
+     },
+     "result": [
+      "dev2"
+     ],
+     "events": []
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good"
+     },
+     "events": [
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "d",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev1\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "online"
+     },
+     "result": [
+      "dev2",
+      "dev1"
+     ],
+     "events": []
+    },
+    {
+     "step": {
+      "call": "isOnline",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": true,
+     "events": []
+    }
+   ]
+  },
+  {
+   "name": "signal size limit",
+   "clock": 1700000000000,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "a",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev1\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "repeat": 65536
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "repeat": 65537
+     },
+     "events": [
+      {
+       "socket": "a",
+       "close": 1009,
+       "reason": ""
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/bd-signal?device_id=dev2&token=tok-dev2-good"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "b",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev2\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "bytes": "IsMoIg=="
+     },
+     "events": [
+      {
+       "socket": "b",
+       "close": 1007,
+       "reason": ""
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "per-address limit",
+   "clock": 1700000000000,
+   "steps": [
+    {
+     "step": {
+      "open": "s1",
+      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "s1",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s1",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev1\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s2",
+      "path": "/ws/bd-signal?device_id=dev2&token=tok-dev2-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "s2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s2",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev2\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s3",
+      "path": "/ws/bd-signal?device_id=dev3&token=tok-dev3-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "s3",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s3",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev3\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s4",
+      "path": "/ws/bd-signal?device_id=dev4&token=tok-dev4-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "s4",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s4",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev4\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s5",
+      "path": "/ws/bd-signal?device_id=dev5&token=tok-dev5-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "s5",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s5",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev5\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s6",
+      "path": "/ws/bd-signal?device_id=dev6&token=tok-dev6-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "s6",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s6",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev6\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s7",
+      "path": "/ws/bd-signal?device_id=dev7&token=tok-dev7-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "s7",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s7",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev7\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s8",
+      "path": "/ws/bd-signal?device_id=dev8&token=tok-dev8-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "s8",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s8",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev8\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s9",
+      "path": "/ws/bd-signal?device_id=dev9&token=tok-dev9-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "s9",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s9",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev9\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s10",
+      "path": "/ws/bd-signal?device_id=dev10&token=tok-dev10-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "s10",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s10",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev10\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "over",
+      "path": "/ws/bd-signal?device_id=dev11&token=tok-dev11-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "over",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "over",
+       "close": 4429,
+       "reason": "Too many connections"
+      },
+      {
+       "socket": "over",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "other",
+      "path": "/ws/bd-signal?device_id=dev12&token=tok-dev12-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.2"
+      }
+     },
+     "events": [
+      {
+       "socket": "other",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "other",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev12\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "list",
+      "path": "/ws/bd-signal?device_id=dev13&token=tok-dev13-good",
+      "headers": {
+       "X-Forwarded-For": " 10.0.0.1 , 10.0.0.9"
+      }
+     },
+     "events": [
+      {
+       "socket": "list",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "list",
+       "close": 4429,
+       "reason": "Too many connections"
+      },
+      {
+       "socket": "list",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "s1",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "s1",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "s1",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "again",
+      "path": "/ws/bd-signal?device_id=dev14&token=tok-dev14-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "again",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "again",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev14\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "again2",
+      "path": "/ws/bd-signal?device_id=dev15&token=tok-dev15-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.1"
+      }
+     },
+     "events": [
+      {
+       "socket": "again2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "again2",
+       "close": 4429,
+       "reason": "Too many connections"
+      },
+      {
+       "socket": "again2",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "an error counts down twice",
+   "clock": 1700000000000,
+   "steps": [
+    {
+     "step": {
+      "open": "s1",
+      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.3"
+      }
+     },
+     "events": [
+      {
+       "socket": "s1",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s1",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev1\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s2",
+      "path": "/ws/bd-signal?device_id=dev2&token=tok-dev2-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.3"
+      }
+     },
+     "events": [
+      {
+       "socket": "s2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s2",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev2\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s3",
+      "path": "/ws/bd-signal?device_id=dev3&token=tok-dev3-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.3"
+      }
+     },
+     "events": [
+      {
+       "socket": "s3",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s3",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev3\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s4",
+      "path": "/ws/bd-signal?device_id=dev4&token=tok-dev4-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.3"
+      }
+     },
+     "events": [
+      {
+       "socket": "s4",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s4",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev4\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s5",
+      "path": "/ws/bd-signal?device_id=dev5&token=tok-dev5-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.3"
+      }
+     },
+     "events": [
+      {
+       "socket": "s5",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s5",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev5\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s6",
+      "path": "/ws/bd-signal?device_id=dev6&token=tok-dev6-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.3"
+      }
+     },
+     "events": [
+      {
+       "socket": "s6",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s6",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev6\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s7",
+      "path": "/ws/bd-signal?device_id=dev7&token=tok-dev7-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.3"
+      }
+     },
+     "events": [
+      {
+       "socket": "s7",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s7",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev7\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s8",
+      "path": "/ws/bd-signal?device_id=dev8&token=tok-dev8-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.3"
+      }
+     },
+     "events": [
+      {
+       "socket": "s8",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s8",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev8\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s9",
+      "path": "/ws/bd-signal?device_id=dev9&token=tok-dev9-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.3"
+      }
+     },
+     "events": [
+      {
+       "socket": "s9",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s9",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev9\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "s10",
+      "path": "/ws/bd-signal?device_id=dev10&token=tok-dev10-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.3"
+      }
+     },
+     "events": [
+      {
+       "socket": "s10",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "s10",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev10\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "s1",
+      "repeat": 65537
+     },
+     "events": [
+      {
+       "socket": "s1",
+       "close": 1009,
+       "reason": ""
+      },
+      {
+       "socket": "s1",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "x1",
+      "path": "/ws/bd-signal?device_id=dev21&token=tok-dev21-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.3"
+      }
+     },
+     "events": [
+      {
+       "socket": "x1",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "x1",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev21\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "x2",
+      "path": "/ws/bd-signal?device_id=dev22&token=tok-dev22-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.3"
+      }
+     },
+     "events": [
+      {
+       "socket": "x2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "x2",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev22\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "x3",
+      "path": "/ws/bd-signal?device_id=dev23&token=tok-dev23-good",
+      "headers": {
+       "X-Forwarded-For": "10.0.0.3"
+      }
+     },
+     "events": [
+      {
+       "socket": "x3",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "x3",
+       "close": 4429,
+       "reason": "Too many connections"
+      },
+      {
+       "socket": "x3",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "requests",
+   "clock": 1700000000000,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "a",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev1\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "request",
+      "args": [
+       "dev1",
+       "services.list",
+       null,
+       15000
+      ],
+      "as": "r1"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "text": "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"3aabac26-af23-4a71-ac91-5d31183ebcd2\",\"payload\":null}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "{\"type\":\"command_response\",\"request_id\":\"{req.0}\",\"ok\":true,\"data\":{\"b\":1,\"a\":[2,\"3\"],\"2\":0}}"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "r1"
+      ]
+     },
+     "result": {
+      "data": {
+       "2": 0,
+       "b": 1,
+       "a": [
+        2,
+        "3"
+       ]
+      }
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "request",
+      "args": [
+       "dev1",
+       "files.browse",
+       {
+        "path": "/tmp",
+        "show_hidden": false
+       },
+       30000
+      ],
+      "as": "r2"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "text": "{\"protocol_version\":1,\"type\":\"files.browse\",\"request_id\":\"ef51229d-724f-4bd9-af39-6eae2bc8222f\",\"payload\":{\"path\":\"/tmp\",\"show_hidden\":false}}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "{\"type\":\"command_response\",\"request_id\":\"{req.1}\",\"ok\":false,\"error\":\"permission denied\"}"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "r2"
+      ]
+     },
+     "result": {
+      "error": "permission denied"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "request",
+      "args": [
+       "dev1",
+       "x",
+       null,
+       15000
+      ],
+      "as": "r3"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "text": "{\"protocol_version\":1,\"type\":\"x\",\"request_id\":\"0ce3ed8c-687b-4289-99d6-39a79ff255fe\",\"payload\":null}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "{\"type\":\"command_response\",\"request_id\":\"{req.2}\",\"ok\":0}"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "r3"
+      ]
+     },
+     "result": {
+      "error": "agent_error"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "request",
+      "args": [
+       "dev1",
+       "x",
+       null,
+       15000
+      ],
+      "as": "r4"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "text": "{\"protocol_version\":1,\"type\":\"x\",\"request_id\":\"9115b820-aa7a-448a-a04d-c09dfe494cdc\",\"payload\":null}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "{\"type\":\"command_response\",\"request_id\":\"{req.3}\",\"ok\":true,\"data\":0}"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "r4"
+      ]
+     },
+     "result": {
+      "data": null
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "request",
+      "args": [
+       "dev1",
+       "x",
+       null,
+       15000
+      ],
+      "as": "r5"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "text": "{\"protocol_version\":1,\"type\":\"x\",\"request_id\":\"8ee0b906-b230-494a-a01c-df3cb762cf42\",\"payload\":null}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "{\"type\":\"command_response\",\"request_id\":\"{req.4}\",\"ok\":false,\"error\":{\"code\":5}}"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "r5"
+      ]
+     },
+     "result": {
+      "error": "[object Object]"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "request",
+      "args": [
+       "dev1",
+       "x",
+       null,
+       15000
+      ],
+      "as": "r6"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "text": "{\"protocol_version\":1,\"type\":\"x\",\"request_id\":\"05190c4b-b3df-417c-85fb-5051677078c9\",\"payload\":null}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "{\"type\":\"command_response\",\"request_id\":\"{req.5}\",\"ok\":false,\"error\":[1,[2,null],\"x\",true]}"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "r6"
+      ]
+     },
+     "result": {
+      "error": "1,2,,x,true"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "request",
+      "args": [
+       "dev1",
+       "x",
+       null,
+       15000
+      ],
+      "as": "r7"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "text": "{\"protocol_version\":1,\"type\":\"x\",\"request_id\":\"04f8430c-b448-43cb-8605-d89f58f06dd7\",\"payload\":null}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "{\"type\":\"command_response\",\"request_id\":\"{req.6}\",\"ok\":false,\"error\":1.5e21}"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "r7"
+      ]
+     },
+     "result": {
+      "error": "1.5e+21"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "request",
+      "args": [
+       "dev1",
+       "x",
+       null,
+       15000
+      ],
+      "as": "r8"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "text": "{\"protocol_version\":1,\"type\":\"x\",\"request_id\":\"e538acee-efed-4cef-97fe-1637bc03e7aa\",\"payload\":null}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "{\"type\":\"command_response\",\"request_id\":\"{req.7}\",\"ok\":\"yes\",\"data\":\"agent_offline\"}"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "r8"
+      ]
+     },
+     "result": {
+      "data": "agent_offline"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "request",
+      "args": [
+       "dev1",
+       "x",
+       null,
+       15000
+      ],
+      "as": "r9"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "text": "{\"protocol_version\":1,\"type\":\"x\",\"request_id\":\"b0653843-49d7-493b-a07f-7fe2a3c9d6ae\",\"payload\":null}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "{\"type\":\"command_response\",\"request_id\":\"{req.8}\",\"ok\":false,\"error\":\"agent_offline\"}"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "r9"
+      ]
+     },
+     "result": {
+      "error": "agent_offline"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "request",
+      "args": [
+       "dev1",
+       "slow",
+       {
+        "n": 1
+       },
+       15000
+      ],
+      "as": "t1"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "text": "{\"protocol_version\":1,\"type\":\"slow\",\"request_id\":\"2a6766ed-abb5-4d73-bf96-8a23320b97ef\",\"payload\":{\"n\":1}}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 14999
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "t1"
+      ]
+     },
+     "result": {
+      "pending": true
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "advance": 1
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "t1"
+      ]
+     },
+     "result": {
+      "error": "agent_timeout"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "request",
+      "args": [
+       "dev1",
+       "short",
+       null,
+       100
+      ],
+      "as": "t2"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "text": "{\"protocol_version\":1,\"type\":\"short\",\"request_id\":\"1c7dba41-9678-49d2-a93c-b36fcbdb4274\",\"payload\":null}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 999
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "t2"
+      ]
+     },
+     "result": {
+      "pending": true
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "advance": 1
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "t2"
+      ]
+     },
+     "result": {
+      "error": "agent_timeout"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "request",
+      "args": [
+       "dev1",
+       "long",
+       null,
+       120000
+      ],
+      "as": "t3"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "text": "{\"protocol_version\":1,\"type\":\"long\",\"request_id\":\"e1815f22-d71b-45a7-8ef6-cb80a11eaaad\",\"payload\":null}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 59999
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "t3"
+      ]
+     },
+     "result": {
+      "pending": true
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "advance": 1
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "t3"
+      ]
+     },
+     "result": {
+      "error": "agent_timeout"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "request",
+      "args": [
+       "dev1",
+       "closed",
+       null,
+       15000
+      ],
+      "as": "t4"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "text": "{\"protocol_version\":1,\"type\":\"closed\",\"request_id\":\"df1db0e8-22d1-4e04-aa20-70631f88baad\",\"payload\":null}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "a",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "t4"
+      ]
+     },
+     "result": {
+      "pending": true
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "advance": 15000
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "t4"
+      ]
+     },
+     "result": {
+      "error": "agent_timeout"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "request",
+      "args": [
+       "dev1",
+       "offline",
+       null,
+       15000
+      ],
+      "as": "o1"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "o1"
+      ]
+     },
+     "result": {
+      "error": "agent_offline"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "request",
+      "args": [
+       "dev9",
+       "never",
+       null,
+       15000
+      ],
+      "as": "o2"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "await",
+      "args": [
+       "o2"
+      ]
+     },
+     "result": {
+      "error": "agent_offline"
+     },
+     "events": []
+    }
+   ]
+  },
+  {
+   "name": "relay pairing",
+   "clock": 1700000091000,
+   "steps": [
+    {
+     "step": {
+      "open": "tsig",
+      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good"
+     },
+     "events": [
+      {
+       "socket": "tsig",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "tsig",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev1\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "create",
+      "args": [
+       "dev2",
+       "dev1"
+      ],
+      "as": "s1"
+     },
+     "result": {
+      "sessionId": "836a925b-dbdb-47ef-87fb-15eca5b8969f",
+      "initiatorToken": "154963809cc98633cd052c3d426bb3fc492ac50221ec4296d072133f592848c6",
+      "targetToken": "f9abebe18601ed68af6f0551b37aeb7ed1f09bc454bca68c44eec6f529e96fd3"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "notify",
+      "args": [
+       "dev1",
+       {
+        "type": "incoming_connection",
+        "session_id": "x",
+        "initiator_id": "dev2",
+        "initiator_pk": null
+       }
+      ]
+     },
+     "result": true,
+     "events": [
+      {
+       "socket": "tsig",
+       "text": "{\"type\":\"incoming_connection\",\"session_id\":\"x\",\"initiator_id\":\"dev2\",\"initiator_pk\":null}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "notify",
+      "args": [
+       "dev9",
+       {
+        "type": "x"
+       }
+      ]
+     },
+     "result": false,
+     "events": []
+    },
+    {
+     "step": {
+      "call": "pending",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": [
+      {
+       "session_id": "836a925b-dbdb-47ef-87fb-15eca5b8969f",
+       "initiator_id": "dev2",
+       "created_at": 1700000091000
+      }
+     ],
+     "events": []
+    },
+    {
+     "step": {
+      "call": "get",
+      "args": [
+       "{s1.sessionId}"
+      ]
+     },
+     "result": {
+      "sessionId": "836a925b-dbdb-47ef-87fb-15eca5b8969f",
+      "initiatorId": "dev2",
+      "targetId": "dev1",
+      "status": "pending",
+      "createdAt": 1700000091000
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "tsig",
+      "text": "{\"type\":\"relay_accept\",\"session_id\":\"{s1.sessionId}\"}"
+     },
+     "events": [
+      {
+       "socket": "tsig",
+       "text": "{\"type\":\"relay_ready\",\"session_id\":\"836a925b-dbdb-47ef-87fb-15eca5b8969f\",\"token\":\"f9abebe18601ed68af6f0551b37aeb7ed1f09bc454bca68c44eec6f529e96fd3\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "init",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "init",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "init",
+      "text": "before the pair"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "tgt",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.targetToken}&role=target"
+     },
+     "events": [
+      {
+       "socket": "tgt",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "tgt",
+       "text": "{\"type\":\"paired\",\"session\":\"836a925b-dbdb-47ef-87fb-15eca5b8969f\"}"
+      },
+      {
+       "socket": "init",
+       "text": "{\"type\":\"paired\",\"session\":\"836a925b-dbdb-47ef-87fb-15eca5b8969f\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "get",
+      "args": [
+       "{s1.sessionId}"
+      ]
+     },
+     "result": {
+      "sessionId": "836a925b-dbdb-47ef-87fb-15eca5b8969f",
+      "initiatorId": "dev2",
+      "targetId": "dev1",
+      "status": "active",
+      "createdAt": 1700000091000
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "pending",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": [],
+     "events": []
+    },
+    {
+     "step": {
+      "send": "tsig",
+      "text": "{\"type\":\"relay_accept\",\"session_id\":\"{s1.sessionId}\"}"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "init",
+      "text": "hello"
+     },
+     "events": [
+      {
+       "socket": "tgt",
+       "text": "hello"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "tgt",
+      "binary": "AAEC/w=="
+     },
+     "events": [
+      {
+       "socket": "init",
+       "binary": "AAEC/w=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "again",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "again",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "again",
+       "close": 4409,
+       "reason": "Slot already taken"
+      },
+      {
+       "socket": "again",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "init",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "init",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "init",
+       "end": true
+      },
+      {
+       "socket": "tgt",
+       "close": 1000,
+       "reason": "Peer disconnected"
+      },
+      {
+       "socket": "tgt",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "get",
+      "args": [
+       "{s1.sessionId}"
+      ]
+     },
+     "result": null,
+     "events": []
+    }
+   ]
+  },
+  {
+   "name": "relay checks",
+   "clock": 1700000091000,
+   "steps": [
+    {
+     "step": {
+      "call": "create",
+      "args": [
+       "dev2",
+       "dev1"
+      ],
+      "as": "s1"
+     },
+     "result": {
+      "sessionId": "a97832d0-9a6d-4d69-83de-3308239b13a9",
+      "initiatorToken": "480868891db6a439ba75e8b02c5d2c09522d46c1375852135999d986a236b71b",
+      "targetToken": "7938f2ccf6846201a80c05abb6f5f80041ab0589a591920654ccd8bb9d9265f9"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/bd-relay"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "a",
+       "close": 4400,
+       "reason": "Missing or invalid parameters"
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token=x&role=viewer"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "b",
+       "close": 4400,
+       "reason": "Missing or invalid parameters"
+      },
+      {
+       "socket": "b",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/bd-relay?session=none&token=x&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "c",
+       "close": 4404,
+       "reason": "Session not found"
+      },
+      {
+       "socket": "c",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "d",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token=0000000000000000000000000000000000000000000000000000000000000000&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "d",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "d",
+       "close": 4403,
+       "reason": "Invalid token"
+      },
+      {
+       "socket": "d",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "e",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=target"
+     },
+     "events": [
+      {
+       "socket": "e",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "e",
+       "close": 4403,
+       "reason": "Invalid token"
+      },
+      {
+       "socket": "e",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "f",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator",
+      "headers": {
+       "Origin": "https://evil.example"
+      }
+     },
+     "events": [
+      {
+       "socket": "f",
+       "head": "HTTP/1.1 403 Forbidden\r\n\r\n"
+      },
+      {
+       "socket": "f",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "g",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "g",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "h",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "h",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "h",
+       "close": 4409,
+       "reason": "Slot already taken"
+      },
+      {
+       "socket": "h",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "relay expiry and timeouts",
+   "clock": 1700000091000,
+   "steps": [
+    {
+     "step": {
+      "call": "create",
+      "args": [
+       "dev2",
+       "dev1"
+      ],
+      "as": "s1"
+     },
+     "result": {
+      "sessionId": "fc57322c-172f-4dd0-8f52-7ddee4cd1890",
+      "initiatorToken": "f24b98878e592080738aea87df30bde4b8706a4db853aadd3496c075e9c9f260",
+      "targetToken": "bd1b7560f5833a0fca8a7a16ae0a2bfe6ee9aed5524e7692aaa53a742bd7aea6"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "advance": 60001
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "late",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "late",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "late",
+       "close": 4408,
+       "reason": "Session expired"
+      },
+      {
+       "socket": "late",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "get",
+      "args": [
+       "{s1.sessionId}"
+      ]
+     },
+     "result": null,
+     "events": []
+    },
+    {
+     "step": {
+      "call": "create",
+      "args": [
+       "dev2",
+       "dev1"
+      ],
+      "as": "s2"
+     },
+     "result": {
+      "sessionId": "56ef0351-5be8-4539-bbfe-4e9066445ad3",
+      "initiatorToken": "bbf5b7639c49aae3756403609da5a7ad705bd962948654ca22f0d5dc7f8820e9",
+      "targetToken": "8d3567b64be199401926213932268e8353c25ad51f400fa2c4a5f1ef5b6aa2b8"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "wait",
+      "path": "/ws/bd-relay?session={s2.sessionId}&token={s2.initiatorToken}&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "wait",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 59999
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "advance": 1
+     },
+     "events": [
+      {
+       "socket": "wait",
+       "close": 4408,
+       "reason": "Timeout waiting for peer"
+      },
+      {
+       "socket": "wait",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "get",
+      "args": [
+       "{s2.sessionId}"
+      ]
+     },
+     "result": null,
+     "events": []
+    },
+    {
+     "step": {
+      "call": "create",
+      "args": [
+       "dev2",
+       "dev1"
+      ],
+      "as": "s3"
+     },
+     "result": {
+      "sessionId": "2d5bf10c-4fa1-4a5e-b214-02b630d5310b",
+      "initiatorToken": "abbd11e94ade8e0c8ca0df994677b32b7845dc1e10f4635cab4a5cef6b149272",
+      "targetToken": "7e78fce60a7809adc3fe283b2f94eee4a128aeaea3d48b46b3ec735bebc2e399"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "i3",
+      "path": "/ws/bd-relay?session={s3.sessionId}&token={s3.initiatorToken}&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "i3",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "t3",
+      "path": "/ws/bd-relay?session={s3.sessionId}&token={s3.targetToken}&role=target"
+     },
+     "events": [
+      {
+       "socket": "t3",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "t3",
+       "text": "{\"type\":\"paired\",\"session\":\"2d5bf10c-4fa1-4a5e-b214-02b630d5310b\"}"
+      },
+      {
+       "socket": "i3",
+       "text": "{\"type\":\"paired\",\"session\":\"2d5bf10c-4fa1-4a5e-b214-02b630d5310b\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 119999
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "i3",
+      "text": "keep"
+     },
+     "events": [
+      {
+       "socket": "t3",
+       "text": "keep"
+      }
+     ]
+    },
+    {
+     "step": {
+      "advance": 119999
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "advance": 1
+     },
+     "events": [
+      {
+       "socket": "i3",
+       "close": 4408,
+       "reason": "Idle timeout"
+      },
+      {
+       "socket": "t3",
+       "close": 4408,
+       "reason": "Idle timeout"
+      },
+      {
+       "socket": "t3",
+       "end": true
+      },
+      {
+       "socket": "i3",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "get",
+      "args": [
+       "{s3.sessionId}"
+      ]
+     },
+     "result": null,
+     "events": []
+    }
+   ]
+  },
+  {
+   "name": "relay cleanup and delete",
+   "clock": 1700000451000,
+   "steps": [
+    {
+     "step": {
+      "call": "create",
+      "args": [
+       "dev2",
+       "dev1"
+      ],
+      "as": "s1"
+     },
+     "result": {
+      "sessionId": "dc4499b8-f041-445b-a5a3-70a05d7a02eb",
+      "initiatorToken": "684c083f2b0d45969f67ff9a54c697bd4fb8f268eb231fc82829fda826e1fdae",
+      "targetToken": "8a9a8d717da8f851dca7e50372f1313b99786fd0714d8e1c24d3f71dff9d3735"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "create",
+      "args": [
+       "dev3",
+       "dev1"
+      ],
+      "as": "s2"
+     },
+     "result": {
+      "sessionId": "2481cd39-fea9-4c18-9c74-266a80275a57",
+      "initiatorToken": "e4ad092ffa3a6f6499de027eb48f4e289a85563baf02c40139de89263982a5e8",
+      "targetToken": "767da2c73a3517c65d2994838b8bdd60daee5b80514dbf3f0ec572bbbb88d668"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "pending",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": [
+      {
+       "session_id": "dc4499b8-f041-445b-a5a3-70a05d7a02eb",
+       "initiator_id": "dev2",
+       "created_at": 1700000451000
+      },
+      {
+       "session_id": "2481cd39-fea9-4c18-9c74-266a80275a57",
+       "initiator_id": "dev3",
+       "created_at": 1700000451000
+      }
+     ],
+     "events": []
+    },
+    {
+     "step": {
+      "open": "i2",
+      "path": "/ws/bd-relay?session={s2.sessionId}&token={s2.initiatorToken}&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "i2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "delete",
+      "args": [
+       "{s2.sessionId}"
+      ]
+     },
+     "result": true,
+     "events": []
+    },
+    {
+     "step": {
+      "call": "get",
+      "args": [
+       "{s2.sessionId}"
+      ]
+     },
+     "result": null,
+     "events": []
+    },
+    {
+     "step": {
+      "advance": 60000
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "advance": 60000
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "advance": 30000
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "call": "get",
+      "args": [
+       "{s1.sessionId}"
+      ]
+     },
+     "result": null,
+     "events": []
+    },
+    {
+     "step": {
+      "call": "pending",
+      "args": [
+       "dev1"
+      ]
+     },
+     "result": [],
+     "events": []
+    },
+    {
+     "step": {
+      "send": "i2",
+      "close": 1000
+     },
+     "events": [
+      {
+       "socket": "i2",
+       "close": 1000,
+       "reason": ""
+      },
+      {
+       "socket": "i2",
+       "end": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "relay reject and errors",
+   "clock": 1700000601000,
+   "steps": [
+    {
+     "step": {
+      "open": "tsig",
+      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good"
+     },
+     "events": [
+      {
+       "socket": "tsig",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "tsig",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev1\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "other",
+      "path": "/ws/bd-signal?device_id=dev3&token=tok-dev3-good"
+     },
+     "events": [
+      {
+       "socket": "other",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "other",
+       "text": "{\"type\":\"welcome\",\"device_id\":\"dev3\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "create",
+      "args": [
+       "dev2",
+       "dev1"
+      ],
+      "as": "s1"
+     },
+     "result": {
+      "sessionId": "dced5442-f883-4ddc-910f-33da536fcfa2",
+      "initiatorToken": "9ea7e7ece176fc51eeeeb95dbe2d5e49585eb08a748f0efd8ddc98171a3d9901",
+      "targetToken": "0491d0d762b1d361695692883e79631f57390905eaab82bd3c3bc74c0a94a04b"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "init",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "init",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "other",
+      "text": "{\"type\":\"relay_reject\",\"session_id\":\"{s1.sessionId}\"}"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "other",
+      "text": "{\"type\":\"relay_accept\",\"session_id\":\"{s1.sessionId}\"}"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "send": "tsig",
+      "text": "{\"type\":\"relay_reject\",\"session_id\":\"{s1.sessionId}\"}"
+     },
+     "events": [
+      {
+       "socket": "init",
+       "close": 4403,
+       "reason": "Connection rejected by target"
+      },
+      {
+       "socket": "init",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "get",
+      "args": [
+       "{s1.sessionId}"
+      ]
+     },
+     "result": null,
+     "events": []
+    },
+    {
+     "step": {
+      "call": "create",
+      "args": [
+       "dev2",
+       "dev1"
+      ],
+      "as": "s2"
+     },
+     "result": {
+      "sessionId": "89e524cd-164a-42e0-a274-fe5b041b642f",
+      "initiatorToken": "55b6e6e92e568c9fd548da3472ca8a9ef57a3c5324e63d75fd2b47080b9f1328",
+      "targetToken": "520851e229464ee99daa0dfb19978ec90ca0b97f99ab596893d0f24b9683fe19"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "i2",
+      "path": "/ws/bd-relay?session={s2.sessionId}&token={s2.initiatorToken}&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "i2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "t2",
+      "path": "/ws/bd-relay?session={s2.sessionId}&token={s2.targetToken}&role=target"
+     },
+     "events": [
+      {
+       "socket": "t2",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "t2",
+       "text": "{\"type\":\"paired\",\"session\":\"89e524cd-164a-42e0-a274-fe5b041b642f\"}"
+      },
+      {
+       "socket": "i2",
+       "text": "{\"type\":\"paired\",\"session\":\"89e524cd-164a-42e0-a274-fe5b041b642f\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "t2",
+      "repeat": 2097152,
+      "opcode": 2
+     },
+     "events": [
+      {
+       "socket": "i2",
+       "binary": "\u0001RUN:699050:eHh4\u0001eHg="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "i2",
+      "repeat": 2097153,
+      "opcode": 2
+     },
+     "events": [
+      {
+       "socket": "i2",
+       "close": 1009,
+       "reason": ""
+      },
+      {
+       "socket": "t2",
+       "close": 1011,
+       "reason": "WebSocket error"
+      },
+      {
+       "socket": "i2",
+       "end": true
+      },
+      {
+       "socket": "t2",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "get",
+      "args": [
+       "{s2.sessionId}"
+      ]
+     },
+     "result": null,
+     "events": []
+    }
+   ]
+  }
+ ]
+}

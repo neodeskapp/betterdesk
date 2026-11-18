@@ -1,0 +1,30 @@
+{
+ "id": "ws-bd-relay/initiator-leaves",
+ "request": {
+  "method": "GET",
+  "path": "/ws/bd-relay",
+  "notes": [
+   "websocket init, own origin",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

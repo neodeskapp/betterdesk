@@ -1,0 +1,30 @@
+{
+ "id": "ws-bd-relay/initiator-after-delete",
+ "request": {
+  "method": "GET",
+  "path": "/ws/bd-relay?role=initiator&session=%7Brelay3%7D&token=%7Bsecret%3Ainitiator_token3%7D",
+  "notes": [
+   "websocket init4, own origin",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 4404,
+      "reason": "Session not found"
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

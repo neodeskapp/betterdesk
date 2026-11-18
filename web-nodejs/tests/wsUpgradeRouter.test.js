@@ -63,7 +63,6 @@ describe('wsUpgradeRouter', () => {
         };
 
         const { initWsProxy } = require('../services/wsRelay');
-        const { initBdRelay } = require('../services/bdRelay');
         const { initChatRelay } = require('../services/chatRelay');
         const { initRemoteRelay } = require('../services/remoteRelay');
         const { initCdapTerminalProxy } = require('../services/cdapTerminalProxy');
@@ -77,19 +76,17 @@ describe('wsUpgradeRouter', () => {
         });
 
         initWsProxy(server, sessionStub);
-        initBdRelay(server);
         initChatRelay(server, sessionStub, null);
         initRemoteRelay(server, sessionStub);
         initCdapTerminalProxy(server, sessionStub);
         initCdapMediaProxies(server, sessionStub);
         initMeshAshxProxy(server, sessionStub);
-        // deviceStatusPush uses the same registerUpgradeHandler API; register its
-        // path without starting the Go event-bus reconnect loop (keeps Jest clean).
-        registerUpgradeHandler(server, (pathname) => pathname === '/ws/device-status', () => {});
+        registerUpgradeHandler(server, (pathname) => pathname === '/ws/other', () => {});
 
-        // 1 wsRelay + 1 bdRelay + 1 chat + 1 remote + 1 cdap terminal
-        // + 4 cdap media + 1 mesh + 1 device-status = 11 routes, 1 listener
+        // 1 wsRelay + 1 chat + 1 remote + 1 cdap terminal + 4 cdap media
+        // + 1 mesh + 1 more = 10 routes, 1 listener (the agent relay and the
+        // status push are in the Go console)
         expect(server.listenerCount('upgrade')).toBe(1);
-        expect(registeredRouteCount(server)).toBe(11);
+        expect(registeredRouteCount(server)).toBe(10);
     });
 });

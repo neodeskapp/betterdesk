@@ -9,12 +9,15 @@
 //
 // While routes move from the Node console to Go, the Node console runs
 // behind this one (CONSOLE_NODE_UPSTREAM). A request then passes the Go
-// pipeline only when a Go route has its method and path. Everything else
-// goes to the Node console untouched, websocket upgrades included, and the
-// Node console runs its own pipeline: Go answers nothing it has no route
-// for, no 404, no preflight, no file and no page. A Go route that declines
-// a request (kit.PassOn) with no later Go route to take it hands the
-// request on to the Node console as it arrived, body included.
+// pipeline only when a Go route has its method and path, and a websocket
+// upgrade goes to a Go socket only when one is registered for its path
+// (sockets.go, package console/ws). Everything else goes to the Node
+// console untouched, and the Node console runs its own pipeline: Go
+// answers nothing it has no route for, no 404, no preflight, no file and
+// no page. A Go route that declines a request (kit.PassOn) with no later
+// Go route to take it hands the request on to the Node console as it
+// arrived, body included. The Node console reaches the sockets that moved
+// through a bridge only it can call (nodebridge.go).
 package console
 
 import (
@@ -24,7 +27,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/access"
@@ -32,6 +34,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/avatars"
+	"github.com/unitronix/betterdesk-server/console/bdrelay"
 	"github.com/unitronix/betterdesk-server/console/branding"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/csrf"
@@ -50,8 +53,10 @@ import (
 	"github.com/unitronix/betterdesk-server/console/restart"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
 	"github.com/unitronix/betterdesk-server/console/session"
+	"github.com/unitronix/betterdesk-server/console/statuspush"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/webui"
+	"github.com/unitronix/betterdesk-server/console/ws"
 	"github.com/unitronix/betterdesk-server/events"
 	"github.com/unitronix/betterdesk-server/logging"
 )
@@ -81,6 +86,7 @@ type Server struct {
 	early    *kit.Router
 	router   *kit.Router
 	node     *proxy.Proxy
+	bridge   *nodeBridge
 	routing  http.Handler
 	pipeline http.Handler
 	jobs     *jobs.Registry
@@ -98,7 +104,8 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	}
 	s := &Server{cfg: cfg, early: kit.NewRouter(), router: kit.NewRouter(), jobs: jobs.New()}
 	if cfg.NodeUpstream != nil {
-		s.node = proxy.New(cfg.NodeUpstream, cfg.TrustProxy)
+		s.bridge = newNodeBridge(s)
+		s.node = proxy.New(cfg.NodeUpstream, cfg.TrustProxy, proxy.Header{Name: bridgeHeader, Value: s.bridge.header})
 	}
 	if cfg.DebugRouting {
 		s.routing = proxy.Routing(s.handles, cfg.NodeUpstream != nil)
@@ -292,7 +299,20 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	}
 
 	s.jobs.Add("session cleanup", sessions.RunCleanup)
+	s.deps.Sockets = ws.New(ws.Options{
+		Session:    ws.SessionOf(sessions),
+		Permission: ws.PermissionOf(s.deps.Access),
+		Origins: ws.OriginPolicy{
+			Allowed:      ws.ParseAllowedOrigins(getenv("WS_ALLOWED_ORIGINS")),
+			AllowMissing: getenv("BD_ALLOW_MISSING_ORIGIN") == "true",
+		},
+	})
+	s.deps.StatusPush = statuspush.New(statuspush.Options{Events: api.Events, Cascade: s.deps.DeviceGroups.CascadePeerIDChange})
+	s.jobs.Add("device status push", s.deps.StatusPush.Run)
+	s.deps.Relay = bdrelay.New(bdrelay.Options{VerifyDevice: s.deps.Authn.VerifyDeviceWSAuth})
+	s.jobs.Add("bd-relay session cleanup", s.deps.Relay.Run)
 	registerRoutes(s.deps)
+	registerSockets(s.deps)
 	s.pipeline = s.buildPipeline()
 	return s, nil
 }
@@ -318,44 +338,42 @@ func (s *Server) Deps() *kit.Deps { return s.deps }
 // Jobs is the registry of the console's background work.
 func (s *Server) Jobs() *jobs.Registry { return s.jobs }
 
-// ServeHTTP sends a request through the pipeline. With the Node console
-// behind this one, a request no Go route has the method and path for goes
-// there instead, and so does every protocol upgrade: the Node console
-// answers websockets outside its routes.
+// ServeHTTP sends a request through the pipeline. An upgrade to a socket
+// the Go console has (console/ws) goes to that socket, outside the
+// pipeline, as Node's upgrade listener ran outside Express. With the Node
+// console behind this one, every other upgrade goes there, and so does a
+// request no Go route has the method and path for.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.routing != nil && r.Method == http.MethodGet && r.URL.Path == proxy.RoutingPath {
 		s.routing.ServeHTTP(w, r)
 		return
 	}
-	if s.node != nil && (isUpgrade(r) || !s.handles(r)) {
+	if s.bridge != nil && s.bridge.takes(r) {
+		s.bridge.ServeHTTP(w, r)
+		return
+	}
+	if s.deps.Sockets.Serves(r) {
+		s.deps.Sockets.ServeHTTP(w, r)
+		return
+	}
+	if s.node != nil && (ws.IsUpgrade(r) || !s.handles(r)) {
 		s.node.ServeHTTP(w, r)
 		return
 	}
 	s.pipeline.ServeHTTP(w, r)
 }
 
-// handles reports whether a Go route, in either stage, has the method and
-// path of r. The routing report asks the same question.
+// handles reports whether Go answers r: a Go socket for an upgrade, a Go
+// route in either stage for anything else. The routing report asks the
+// same question.
 func (s *Server) handles(r *http.Request) bool {
 	if s.routing != nil && r.Method == http.MethodGet && r.URL.Path == proxy.RoutingPath {
 		return true
 	}
+	if ws.IsUpgrade(r) {
+		return s.deps.Sockets.Serves(r)
+	}
 	return s.early.Match(r) || s.router.Match(r)
-}
-
-// isUpgrade reports a request that asks to switch protocols.
-func isUpgrade(r *http.Request) bool {
-	if r.Header.Get("Upgrade") == "" {
-		return false
-	}
-	for _, value := range r.Header.Values("Connection") {
-		for _, token := range strings.Split(value, ",") {
-			if strings.EqualFold(strings.TrimSpace(token), "upgrade") {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 // Start opens the listener, starts the background jobs and serves until
@@ -409,9 +427,9 @@ func (s *Server) Addr() string {
 }
 
 // Stop closes the listener, gives open requests ten seconds to finish,
-// ends the background jobs and waits for the profile picture syncs that
-// sign-ins started. When it returns, nothing the server started is still
-// running.
+// ends the open websockets and the background jobs and waits for the
+// profile picture syncs that sign-ins started. When it returns, nothing
+// the server started is still running.
 func (s *Server) Stop() {
 	if s.httpSrv != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -420,6 +438,7 @@ func (s *Server) Stop() {
 			_ = s.httpSrv.Close()
 		}
 	}
+	s.deps.Sockets.Close()
 	s.jobs.Stop()
 	s.deps.Avatars.Wait()
 	if s.node != nil {

@@ -1,0 +1,46 @@
+{
+ "id": "ws-device-status/foreign-origin",
+ "request": {
+  "method": "GET",
+  "path": "/ws/device-status",
+  "notes": [
+   "websocket foreign, Origin https://evil.example",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

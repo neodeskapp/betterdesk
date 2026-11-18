@@ -258,6 +258,51 @@ contract.Case{
 A code is a plain variable: it is good for 30 seconds and tells nothing of
 the secret. The golden's request notes it as `computed: code = totp(secret:totp)`.
 
+## Websockets
+
+A case with `Socket` is a step on a websocket at its `Path` (a GET, no
+body). The first step of a role's turn that names a socket opens it with
+the role's cookies (`NoSession` and `NoCookies` work as for requests), the
+case's `Headers` and `Query`, and an `Origin` of the console's own address
+unless the socket says otherwise. Later steps with the same `Name` work on
+the open socket. Each step sends `Send`, then collects what the console
+sends until `Expect` messages came, the console closed the socket
+(`WaitClose` waits for that), or `Wait` ran out (5 s), and listens `Quiet`
+longer (300 ms) so a message too many shows. `Close` closes from the
+suite's side. The sockets of a turn are closed when the turn ends.
+
+```go
+contract.Case{Name: "open", Path: "/ws/device-status", Socket: &contract.Socket{Name: "status"}},
+contract.Case{Name: "change-id", Method: "POST", Path: "/api/devices/900100018/change-id", As: "admin",
+	Body: map[string]any{"newId": "900100098"}},
+contract.Case{Name: "id-changed", Path: "/ws/device-status",
+	Socket: &contract.Socket{Name: "status", Expect: 1, Filter: map[string]string{"type": "device_id_changed"}}},
+```
+
+The answer of a step that opens a socket the console refuses is that
+refusal: status, headers, body. Otherwise the status is 101 and the body is
+JSON the usual rules compare (volatile values, captures, secrets):
+
+```json
+{"protocol": "chat",
+ "messages": [{"json": {"type": "welcome", "device_id": "900100001"}, "order": "type device_id"},
+              {"text": "not JSON"}, {"binary": {"length": 4, "sha256": "..."}}],
+ "closed": {"code": 4403, "reason": "Invalid token"}}
+```
+
+`order` lists the keys of every object of a JSON message in the order the
+console wrote them, so a change of order fails although JSON is compared by
+value. `Filter` keeps only messages with the given top-level values, for a
+socket where the console also pushes what other things cause (device
+status changes the signal server reports). A step on a socket that was
+refused or has closed answers `{"socket": "not open"}` with the status of
+its opening step. `Capture` and `CaptureSecret` read the body like any JSON
+answer (`"messages[0].json.token"`).
+
+The client is part of the suite (`socket.go`, standard library only). The
+upgrade of a socket case goes outside the suite's HTTP client, so its
+answer has none of the default request headers but `User-Agent`.
+
 ## Recording a new case of a moved route
 
 The goldens of a route the Go console answers are frozen, so a case added
@@ -482,7 +527,8 @@ in the modes `front` and `go`) answers
 `GET /__bd/routing?method=GET&path=/api/x` with `{"handler":"go"}`,
 `"node"` or `"none"`, from the lookup it uses for real requests. The suite
 asks once per route and case. Without `CONTRACT_REQUIRE_GO` the summary
-only counts.
+only counts. For a socket case it adds `upgrade=websocket` and the answer
+says whether a Go socket takes the upgrade.
 
 ## The route list and the skip list
 

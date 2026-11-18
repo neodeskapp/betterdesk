@@ -31,7 +31,8 @@ const { requirePermission } = require('../middleware/auth');
 const betterdeskApi = require('../services/betterdeskApi');
 const deviceGroupService = require('../services/deviceGroupService');
 const serverBackend = require('../services/serverBackend');
-const { publishPanelEvent } = require('../services/deviceStatusPush');
+// The panel event sockets are in the Go console
+const { publishPanelEvent } = require('../services/goConsoleBridge');
 
 const ENROLLMENT_SETTING_RICH = 'enrollment_rich_approve';
 const ENROLLMENT_SETTING_TAG_PICKER = 'enrollment_tag_picker';

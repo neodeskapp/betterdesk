@@ -1,0 +1,2935 @@
+{
+ "dialect": "sqlite",
+ "seed": [
+  [
+   "DELETE FROM users",
+   []
+  ],
+  [
+   "INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)",
+   [
+    1,
+    "e2e_admin",
+    "x",
+    "admin"
+   ]
+  ],
+  [
+   "INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)",
+   [
+    5,
+    "e2e_operator",
+    "x",
+    "operator"
+   ]
+  ],
+  [
+   "INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)",
+   [
+    6,
+    "e2e_viewer",
+    "x",
+    "viewer"
+   ]
+  ],
+  [
+   "INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-viewer', 'Viewer only', '', '', 'manual', '')",
+   []
+  ],
+  [
+   "INSERT INTO device_group_user_access (device_group_id, user_id) SELECT id, 6 FROM device_groups WHERE guid = 'g-viewer'",
+   []
+  ],
+  [
+   "INSERT INTO device_group_members (device_group_id, peer_id) SELECT id, 'C1003' FROM device_groups WHERE guid = 'g-viewer'",
+   []
+  ]
+ ],
+ "table": {
+  "GET /api/peers/A1001": {
+   "status": 200,
+   "body": {
+    "id": "A1001",
+    "hostname": "alpha",
+    "live_online": true,
+    "tags": []
+   }
+  },
+  "GET /api/peers/B1002": {
+   "status": 200,
+   "body": {
+    "id": "B1002",
+    "hostname": "beta",
+    "tags": []
+   }
+  },
+  "GET /api/peers/C1003": {
+   "status": 200,
+   "body": {
+    "id": "C1003",
+    "hostname": "",
+    "tags": []
+   }
+  },
+  "GET /api/peers/B1002/telemetry": {
+   "status": 200,
+   "body": {
+    "device_id": "B1002",
+    "schema": 1,
+    "snapshots": {
+     "services": {
+      "collected_at": "2020-01-01T00:00:00Z",
+      "data": [
+       {
+        "name": "sshd",
+        "state": "running"
+       }
+      ]
+     },
+     "processes": {
+      "collected_at": "2020-01-01T00:00:00Z",
+      "data": null
+     },
+     "files": {
+      "collected_at": "2020-01-02T00:00:00Z",
+      "data": {
+       "path": "/",
+       "entries": []
+      }
+     }
+    }
+   }
+  },
+  "GET /api/peers/A1001/telemetry": {
+   "status": 200,
+   "body": {
+    "device_id": "A1001",
+    "snapshots": {
+     "services": {
+      "collected_at": "x",
+      "data": [
+       "from the server"
+      ]
+     }
+    }
+   }
+  },
+  "POST /api/peers/B1002/telemetry/command": {
+   "status": 202,
+   "body": {
+    "accepted": true,
+    "command_id": 9
+   }
+  },
+  "POST /api/peers/A1001/telemetry/command": {
+   "status": 202,
+   "body": {
+    "accepted": true,
+    "command_id": 10
+   }
+  }
+ },
+ "steps": [
+  {
+   "name": "GET /api/devices/A1001/services as admin agent {\"ok\":true,\"data\":{\"items\":[{\"1\":\"x\",\"b\":1,\"a\":2}],\"n\":1.5,\"t\":\"é \"}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": true,
+    "data": {
+     "items": [
+      {
+       "1": "x",
+       "b": 1,
+       "a": 2
+      }
+     ],
+     "n": 1.5,
+     "t": "é "
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"items\":[{\"1\":\"x\",\"b\":1,\"a\":2}],\"n\":1.5,\"t\":\"é \"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/processes as admin agent {\"ok\":true,\"data\":{\"items\":[{\"1\":\"x\",\"b\":1,\"a\":2}],\"n\":1.5,\"t\":\"é \"}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/processes",
+   "agent": {
+    "ok": true,
+    "data": {
+     "items": [
+      {
+       "1": "x",
+       "b": 1,
+       "a": 2
+      }
+     ],
+     "n": 1.5,
+     "t": "é "
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"items\":[{\"1\":\"x\",\"b\":1,\"a\":2}],\"n\":1.5,\"t\":\"é \"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"processes.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/activity as admin agent {\"ok\":true,\"data\":{\"items\":[{\"1\":\"x\",\"b\":1,\"a\":2}],\"n\":1.5,\"t\":\"é \"}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/activity",
+   "agent": {
+    "ok": true,
+    "data": {
+     "items": [
+      {
+       "1": "x",
+       "b": 1,
+       "a": 2
+      }
+     ],
+     "n": 1.5,
+     "t": "é "
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"items\":[{\"1\":\"x\",\"b\":1,\"a\":2}],\"n\":1.5,\"t\":\"é \"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"activity.get\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/clipboard as admin agent {\"ok\":true,\"data\":{\"items\":[{\"1\":\"x\",\"b\":1,\"a\":2}],\"n\":1.5,\"t\":\"é \"}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/clipboard",
+   "agent": {
+    "ok": true,
+    "data": {
+     "items": [
+      {
+       "1": "x",
+       "b": 1,
+       "a": 2
+      }
+     ],
+     "n": 1.5,
+     "t": "é "
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"items\":[{\"1\":\"x\",\"b\":1,\"a\":2}],\"n\":1.5,\"t\":\"é \"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"clipboard.get\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/services as viewer agent {\"ok\":true,\"data\":[1,\"two\",null,true,{\"x\":{}}]}",
+   "role": "viewer",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": true,
+    "data": [
+     1,
+     "two",
+     null,
+     true,
+     {
+      "x": {}
+     }
+    ]
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":[1,\"two\",null,true,{\"x\":{}}]}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/services as admin agent {\"ok\":true,\"data\":\"text\"}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": true,
+    "data": "text"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":\"text\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/services as admin agent {\"ok\":true,\"data\":0}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": true,
+    "data": 0
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/services as admin agent {\"ok\":true,\"data\":\"\"}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": true,
+    "data": ""
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/services as admin agent {\"ok\":true,\"data\":false}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": true,
+    "data": false
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/services as admin agent {\"ok\":true}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": true
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/services as admin agent {\"ok\":\"yes\",\"data\":{\"deep\":[[[]]]}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": "yes",
+    "data": {
+     "deep": [
+      [
+       []
+      ]
+     ]
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"deep\":[[[]]]}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/services as admin agent {\"ok\":false,\"error\":\"permission denied\"}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": false,
+    "error": "permission denied"
+   },
+   "status": 502,
+   "answer": "{\"success\":false,\"error\":\"permission denied\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/services as admin agent {\"ok\":false}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": false
+   },
+   "status": 502,
+   "answer": "{\"success\":false,\"error\":\"agent_error\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/services as admin agent {\"ok\":false,\"error\":\"\"}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": false,
+    "error": ""
+   },
+   "status": 502,
+   "answer": "{\"success\":false,\"error\":\"agent_error\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/services as admin agent {\"ok\":false,\"error\":503}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": false,
+    "error": 503
+   },
+   "status": 502,
+   "answer": "{\"success\":false,\"error\":\"503\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/services as admin agent {\"ok\":false,\"error\":{\"code\":1}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": false,
+    "error": {
+     "code": 1
+    }
+   },
+   "status": 502,
+   "answer": "{\"success\":false,\"error\":\"[object Object]\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/services as admin agent {\"ok\":false,\"error\":[\"a\",[\"b\",null]]}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": false,
+    "error": [
+     "a",
+     [
+      "b",
+      null
+     ]
+    ]
+   },
+   "status": 502,
+   "answer": "{\"success\":false,\"error\":\"a,b,\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/services as admin agent {\"ok\":false,\"error\":\"agent_timeout\"}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": false,
+    "error": "agent_timeout"
+   },
+   "status": 504,
+   "answer": "{\"success\":false,\"error\":\"agent_timeout\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/services as admin agent {\"ok\":false,\"error\":\"agent_offline\"}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": false,
+    "error": "agent_offline"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"cached\":true,\"collected_at\":\"x\",\"data\":[\"from the server\"]}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001",
+     "GET /api/peers/A1001/telemetry"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/processes as admin agent {\"ok\":false,\"error\":\"agent_offline\"}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/processes",
+   "agent": {
+    "ok": false,
+    "error": "agent_offline"
+   },
+   "status": 202,
+   "answer": "{\"success\":true,\"pending\":true,\"data\":{\"pending\":true,\"command\":\"collect.processes\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001",
+     "GET /api/peers/A1001/telemetry",
+     "POST /api/peers/A1001/telemetry/command {\"command\":\"collect.processes\",\"args\":{}}"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"processes.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/clipboard as admin agent {\"ok\":false,\"error\":\"agent_offline\"}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/clipboard",
+   "agent": {
+    "ok": false,
+    "error": "agent_offline"
+   },
+   "status": 503,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"clipboard.get\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/events as admin agent {\"ok\":true,\"data\":{\"q\":\"\"}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/events",
+   "agent": {
+    "ok": true,
+    "data": {
+     "q": ""
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"q\":\"\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"events.list\",\"request_id\":\"<id>\",\"payload\":{\"limit\":100}}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/events?limit=5 as admin agent {\"ok\":true,\"data\":{\"q\":\"?limit=5\"}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/events?limit=5",
+   "agent": {
+    "ok": true,
+    "data": {
+     "q": "?limit=5"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"q\":\"?limit=5\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"events.list\",\"request_id\":\"<id>\",\"payload\":{\"limit\":5}}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/events?limit=0 as admin agent {\"ok\":true,\"data\":{\"q\":\"?limit=0\"}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/events?limit=0",
+   "agent": {
+    "ok": true,
+    "data": {
+     "q": "?limit=0"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"q\":\"?limit=0\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"events.list\",\"request_id\":\"<id>\",\"payload\":{\"limit\":100}}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/events?limit=-3 as admin agent {\"ok\":true,\"data\":{\"q\":\"?limit=-3\"}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/events?limit=-3",
+   "agent": {
+    "ok": true,
+    "data": {
+     "q": "?limit=-3"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"q\":\"?limit=-3\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"events.list\",\"request_id\":\"<id>\",\"payload\":{\"limit\":1}}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/events?limit=abc as admin agent {\"ok\":true,\"data\":{\"q\":\"?limit=abc\"}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/events?limit=abc",
+   "agent": {
+    "ok": true,
+    "data": {
+     "q": "?limit=abc"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"q\":\"?limit=abc\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"events.list\",\"request_id\":\"<id>\",\"payload\":{\"limit\":100}}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/events?limit=999 as admin agent {\"ok\":true,\"data\":{\"q\":\"?limit=999\"}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/events?limit=999",
+   "agent": {
+    "ok": true,
+    "data": {
+     "q": "?limit=999"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"q\":\"?limit=999\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"events.list\",\"request_id\":\"<id>\",\"payload\":{\"limit\":500}}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/events?limit=12.9 as admin agent {\"ok\":true,\"data\":{\"q\":\"?limit=12.9\"}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/events?limit=12.9",
+   "agent": {
+    "ok": true,
+    "data": {
+     "q": "?limit=12.9"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"q\":\"?limit=12.9\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"events.list\",\"request_id\":\"<id>\",\"payload\":{\"limit\":12}}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/events?limit=7x as admin agent {\"ok\":true,\"data\":{\"q\":\"?limit=7x\"}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/events?limit=7x",
+   "agent": {
+    "ok": true,
+    "data": {
+     "q": "?limit=7x"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"q\":\"?limit=7x\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"events.list\",\"request_id\":\"<id>\",\"payload\":{\"limit\":7}}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/events?limit[]=4 as admin agent {\"ok\":true,\"data\":{\"q\":\"?limit[]=4\"}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/events?limit[]=4",
+   "agent": {
+    "ok": true,
+    "data": {
+     "q": "?limit[]=4"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"q\":\"?limit[]=4\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"events.list\",\"request_id\":\"<id>\",\"payload\":{\"limit\":4}}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/events?limit=500 as admin agent {\"ok\":true,\"data\":{\"q\":\"?limit=500\"}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/events?limit=500",
+   "agent": {
+    "ok": true,
+    "data": {
+     "q": "?limit=500"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"q\":\"?limit=500\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"events.list\",\"request_id\":\"<id>\",\"payload\":{\"limit\":500}}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/events?limit=501 as admin agent {\"ok\":true,\"data\":{\"q\":\"?limit=501\"}}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/events?limit=501",
+   "agent": {
+    "ok": true,
+    "data": {
+     "q": "?limit=501"
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"q\":\"?limit=501\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"events.list\",\"request_id\":\"<id>\",\"payload\":{\"limit\":500}}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/clipboard as admin agent \"silent\"",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/clipboard",
+   "agent": "silent",
+   "status": 504,
+   "answer": "{\"success\":false,\"error\":\"agent_timeout\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"clipboard.get\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/ZZ9/services as admin",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/ZZ9/services",
+   "status": 404,
+   "answer": "{\"success\":false,\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/ZZ9"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/ZZ9/clipboard as admin",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/ZZ9/clipboard",
+   "status": 404,
+   "answer": "{\"success\":false,\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/ZZ9"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/C1003/services as operator",
+   "role": "operator",
+   "method": "GET",
+   "path": "/api/devices/C1003/services",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/C1003/services as viewer",
+   "role": "viewer",
+   "method": "GET",
+   "path": "/api/devices/C1003/services",
+   "status": 503,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003",
+     "GET /api/peers/C1003/telemetry",
+     "POST /api/peers/C1003/telemetry/command {\"command\":\"collect.services\",\"args\":{}}"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/activity as operator agent {\"ok\":true,\"data\":1}",
+   "role": "operator",
+   "method": "GET",
+   "path": "/api/devices/A1001/activity",
+   "agent": {
+    "ok": true,
+    "data": 1
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":1}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"activity.get\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "GET /api/devices/D1004/services as admin",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/D1004/services",
+   "status": 404,
+   "answer": "{\"success\":false,\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/D1004"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/B1002/services as admin",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/B1002/services",
+   "status": 200,
+   "answer": "{\"success\":true,\"cached\":true,\"collected_at\":\"2020-01-01T00:00:00Z\",\"data\":[{\"name\":\"sshd\",\"state\":\"running\"}]}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002",
+     "GET /api/peers/B1002/telemetry"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/B1002/processes as admin",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/B1002/processes",
+   "status": 202,
+   "answer": "{\"success\":true,\"pending\":true,\"data\":{\"pending\":true,\"command\":\"collect.processes\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002",
+     "GET /api/peers/B1002/telemetry",
+     "POST /api/peers/B1002/telemetry/command {\"command\":\"collect.processes\",\"args\":{}}"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/B1002/events?limit=3 as admin",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/B1002/events?limit=3",
+   "status": 202,
+   "answer": "{\"success\":true,\"pending\":true,\"data\":{\"pending\":true,\"command\":\"collect.events\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002",
+     "GET /api/peers/B1002/telemetry",
+     "POST /api/peers/B1002/telemetry/command {\"command\":\"collect.events\",\"args\":{\"limit\":3}}"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/B1002/activity as admin",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/B1002/activity",
+   "status": 202,
+   "answer": "{\"success\":true,\"pending\":true,\"data\":{\"pending\":true,\"command\":\"collect.activity\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002",
+     "GET /api/peers/B1002/telemetry",
+     "POST /api/peers/B1002/telemetry/command {\"command\":\"collect.activity\",\"args\":{}}"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/B1002/clipboard as admin",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/B1002/clipboard",
+   "status": 503,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/B1002/files/browse {\"path\":\"/var\",\"show_hidden\":\"true\"} as admin",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/B1002/files/browse",
+   "body": "{\"path\":\"/var\",\"show_hidden\":\"true\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"cached\":true,\"collected_at\":\"2020-01-02T00:00:00Z\",\"data\":{\"path\":\"/\",\"entries\":[]}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002",
+     "GET /api/peers/B1002/telemetry"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/B1002/files/read {\"path\":\"/etc/hosts\"} as admin",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/B1002/files/read",
+   "body": "{\"path\":\"/etc/hosts\"}",
+   "status": 202,
+   "answer": "{\"success\":true,\"pending\":true,\"data\":{\"pending\":true,\"command\":\"files.read\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002",
+     "POST /api/peers/B1002/telemetry/command {\"command\":\"files.read\",\"args\":{\"path\":\"/etc/hosts\",\"offset\":0,\"length\":65536}}"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/B1002/screenshot {} as admin",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/B1002/screenshot",
+   "body": "{}",
+   "status": 503,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/B1002/terminal/execute {\"command\":\"ls\"} as admin",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/B1002/terminal/execute",
+   "body": "{\"command\":\"ls\"}",
+   "status": 503,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/B1002/services as admin",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/B1002/services",
+   "api": {
+    "GET /api/peers/B1002/telemetry": {
+     "status": 500,
+     "body": {
+      "error": "down"
+     }
+    }
+   },
+   "status": 202,
+   "answer": "{\"success\":true,\"pending\":true,\"data\":{\"pending\":true,\"command\":\"collect.services\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002",
+     "GET /api/peers/B1002/telemetry",
+     "POST /api/peers/B1002/telemetry/command {\"command\":\"collect.services\",\"args\":{}}"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/B1002/services as admin",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/B1002/services",
+   "api": {
+    "GET /api/peers/B1002/telemetry": {
+     "status": 200,
+     "body": {
+      "snapshots": {
+       "services": {
+        "data": 0
+       }
+      }
+     }
+    }
+   },
+   "status": 202,
+   "answer": "{\"success\":true,\"pending\":true,\"data\":{\"pending\":true,\"command\":\"collect.services\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002",
+     "GET /api/peers/B1002/telemetry",
+     "POST /api/peers/B1002/telemetry/command {\"command\":\"collect.services\",\"args\":{}}"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/B1002/services as admin",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/B1002/services",
+   "api": {
+    "GET /api/peers/B1002/telemetry": {
+     "status": 200,
+     "body": {
+      "snapshots": {
+       "services": {
+        "data": "yes"
+       }
+      }
+     }
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"cached\":true,\"data\":\"yes\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002",
+     "GET /api/peers/B1002/telemetry"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/B1002/services as admin",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/B1002/services",
+   "api": {
+    "GET /api/peers/B1002/telemetry": {
+     "status": 200,
+     "body": "not an object"
+    }
+   },
+   "status": 202,
+   "answer": "{\"success\":true,\"pending\":true,\"data\":{\"pending\":true,\"command\":\"collect.services\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002",
+     "GET /api/peers/B1002/telemetry",
+     "POST /api/peers/B1002/telemetry/command {\"command\":\"collect.services\",\"args\":{}}"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/B1002/processes as admin",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/B1002/processes",
+   "api": {
+    "POST /api/peers/B1002/telemetry/command": {
+     "status": 400,
+     "body": {
+      "error": "command is not allowed"
+     }
+    }
+   },
+   "status": 503,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002",
+     "GET /api/peers/B1002/telemetry",
+     "POST /api/peers/B1002/telemetry/command {\"command\":\"collect.processes\",\"args\":{}}"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/B1002/processes as admin",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/B1002/processes",
+   "api": {
+    "POST /api/peers/B1002/telemetry/command": {
+     "status": 500
+    }
+   },
+   "status": 503,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002",
+     "GET /api/peers/B1002/telemetry",
+     "POST /api/peers/B1002/telemetry/command {\"command\":\"collect.processes\",\"args\":{}}"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/B1002/processes as admin",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/B1002/processes",
+   "api": {
+    "POST /api/peers/B1002/telemetry/command": {
+     "status": 202,
+     "body": {
+      "success": false
+     }
+    }
+   },
+   "status": 202,
+   "answer": "{\"success\":true,\"pending\":true,\"data\":{\"pending\":true,\"command\":\"collect.processes\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002",
+     "GET /api/peers/B1002/telemetry",
+     "POST /api/peers/B1002/telemetry/command {\"command\":\"collect.processes\",\"args\":{}}"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "GET /api/devices/A1001/services as admin agent {\"ok\":false,\"error\":\"agent_offline\"}",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/devices/A1001/services",
+   "agent": {
+    "ok": false,
+    "error": "agent_offline"
+   },
+   "api": {
+    "GET /api/peers/A1001/telemetry": {
+     "status": 404,
+     "body": {
+      "error": "not found"
+     }
+    }
+   },
+   "status": 202,
+   "answer": "{\"success\":true,\"pending\":true,\"data\":{\"pending\":true,\"command\":\"collect.services\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001",
+     "GET /api/peers/A1001/telemetry",
+     "POST /api/peers/A1001/telemetry/command {\"command\":\"collect.services\",\"args\":{}}"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/browse {\"path\":\"/tmp\",\"show_hidden\":true} as admin agent {\"ok\":true,\"data\":{\"entries\":[]}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/browse",
+   "body": "{\"path\":\"/tmp\",\"show_hidden\":true}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "entries": []
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"entries\":[]}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.browse\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"/tmp\",\"show_hidden\":true}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/browse {} as admin agent {\"ok\":true,\"data\":{\"entries\":[]}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/browse",
+   "body": "{}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "entries": []
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"entries\":[]}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.browse\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"\",\"show_hidden\":false}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/browse {\"path\":5,\"show_hidden\":1} as admin agent {\"ok\":true,\"data\":{\"entries\":[]}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/browse",
+   "body": "{\"path\":5,\"show_hidden\":1}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "entries": []
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"entries\":[]}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.browse\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"5\",\"show_hidden\":true}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/browse {\"path\":[\"x\"],\"show_hidden\":\"yes\"} as admin agent {\"ok\":true,\"data\":{\"entries\":[]}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/browse",
+   "body": "{\"path\":[\"x\"],\"show_hidden\":\"yes\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "entries": []
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"entries\":[]}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.browse\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"\",\"show_hidden\":false}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/browse {\"path\":null} as admin agent {\"ok\":true,\"data\":{\"entries\":[]}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/browse",
+   "body": "{\"path\":null}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "entries": []
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"entries\":[]}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.browse\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"\",\"show_hidden\":false}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/browse {\"path\":\"\u0001RUN:5000:p\u0001\"} as admin agent {\"ok\":true,\"data\":{\"entries\":[]}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/browse",
+   "body": "{\"path\":\"\u0001RUN:5000:p\u0001\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "entries": []
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"entries\":[]}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.browse\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"\u0001RUN:4096:p\u0001\",\"show_hidden\":false}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/browse {\"path\":\"\u0001RUN:2049:😀\u0001\"} as admin agent {\"ok\":true,\"data\":{\"entries\":[]}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/browse",
+   "body": "{\"path\":\"\u0001RUN:2049:😀\u0001\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "entries": []
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"entries\":[]}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.browse\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"\u0001RUN:2048:😀\u0001\",\"show_hidden\":false}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/browse {\"path\":true,\"show_hidden\":\"0\"} as admin agent {\"ok\":true,\"data\":{\"entries\":[]}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/browse",
+   "body": "{\"path\":true,\"show_hidden\":\"0\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "entries": []
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"entries\":[]}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.browse\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"true\",\"show_hidden\":false}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/browse [1,2] as admin agent {\"ok\":true,\"data\":{\"entries\":[]}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/browse",
+   "body": "[1,2]",
+   "agent": {
+    "ok": true,
+    "data": {
+     "entries": []
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"entries\":[]}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.browse\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"\",\"show_hidden\":false}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/read {\"path\":\"/a\",\"offset\":7,\"length\":9} as admin agent {\"ok\":true,\"data\":{\"content\":\"eA==\"}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/read",
+   "body": "{\"path\":\"/a\",\"offset\":7,\"length\":9}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "content": "eA=="
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"content\":\"eA==\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.read\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"/a\",\"offset\":7,\"length\":9}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/read {} as admin agent {\"ok\":true,\"data\":{\"content\":\"eA==\"}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/read",
+   "body": "{}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "content": "eA=="
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"content\":\"eA==\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.read\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"\",\"offset\":0,\"length\":65536}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/read {\"offset\":-1,\"length\":1048577} as admin agent {\"ok\":true,\"data\":{\"content\":\"eA==\"}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/read",
+   "body": "{\"offset\":-1,\"length\":1048577}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "content": "eA=="
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"content\":\"eA==\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.read\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"\",\"offset\":0,\"length\":1048576}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/read {\"offset\":\"12\",\"length\":\"0x10\"} as admin agent {\"ok\":true,\"data\":{\"content\":\"eA==\"}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/read",
+   "body": "{\"offset\":\"12\",\"length\":\"0x10\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "content": "eA=="
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"content\":\"eA==\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.read\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"\",\"offset\":12,\"length\":0}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/read {\"offset\":\"abc\",\"length\":\" \"} as admin agent {\"ok\":true,\"data\":{\"content\":\"eA==\"}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/read",
+   "body": "{\"offset\":\"abc\",\"length\":\" \"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "content": "eA=="
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"content\":\"eA==\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.read\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"\",\"offset\":0,\"length\":65536}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/read {\"offset\":3.9,\"length\":-2.5} as admin agent {\"ok\":true,\"data\":{\"content\":\"eA==\"}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/read",
+   "body": "{\"offset\":3.9,\"length\":-2.5}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "content": "eA=="
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"content\":\"eA==\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.read\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"\",\"offset\":3,\"length\":0}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/read {\"offset\":[1],\"length\":{\"a\":1}} as admin agent {\"ok\":true,\"data\":{\"content\":\"eA==\"}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/read",
+   "body": "{\"offset\":[1],\"length\":{\"a\":1}}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "content": "eA=="
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"content\":\"eA==\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.read\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"\",\"offset\":0,\"length\":65536}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/read not json as admin agent {\"ok\":true,\"data\":{\"content\":\"eA==\"}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/read",
+   "body": "not json",
+   "agent": {
+    "ok": true,
+    "data": {
+     "content": "eA=="
+    }
+   },
+   "status": 400,
+   "answer": "{\"oracle\":\"error handler\",\"status\":400}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/read [1] as admin agent {\"ok\":true,\"data\":{\"content\":\"eA==\"}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/read",
+   "body": "[1]",
+   "agent": {
+    "ok": true,
+    "data": {
+     "content": "eA=="
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"content\":\"eA==\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.read\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"\",\"offset\":0,\"length\":65536}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/read \"text\" as admin agent {\"ok\":true,\"data\":{\"content\":\"eA==\"}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/read",
+   "body": "\"text\"",
+   "agent": {
+    "ok": true,
+    "data": {
+     "content": "eA=="
+    }
+   },
+   "status": 400,
+   "answer": "{\"oracle\":\"error handler\",\"status\":400}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/read null as admin agent {\"ok\":true,\"data\":{\"content\":\"eA==\"}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/read",
+   "body": "null",
+   "agent": {
+    "ok": true,
+    "data": {
+     "content": "eA=="
+    }
+   },
+   "status": 400,
+   "answer": "{\"oracle\":\"error handler\",\"status\":400}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/write {\"path\":\"/tmp/f\",\"data\":\"eA==\",\"mode\":\"create\"} as admin agent {\"ok\":true,\"data\":{\"written\":1}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/write",
+   "body": "{\"path\":\"/tmp/f\",\"data\":\"eA==\",\"mode\":\"create\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "written": 1
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"written\":1}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.write\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"/tmp/f\",\"data\":\"eA==\",\"mode\":\"create\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/write {\"path\":\"/tmp/f\",\"data\":\"eA==\"} as admin agent {\"ok\":true,\"data\":{\"written\":1}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/write",
+   "body": "{\"path\":\"/tmp/f\",\"data\":\"eA==\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "written": 1
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"written\":1}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.write\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"/tmp/f\",\"data\":\"eA==\",\"mode\":\"overwrite\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/write {\"path\":\"/tmp/f\",\"mode\":\"delete\"} as admin agent {\"ok\":true,\"data\":{\"written\":1}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/write",
+   "body": "{\"path\":\"/tmp/f\",\"mode\":\"delete\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "written": 1
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"written\":1}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.write\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"/tmp/f\",\"data\":\"\",\"mode\":\"overwrite\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/write {\"data\":\"x\"} as admin agent {\"ok\":true,\"data\":{\"written\":1}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/write",
+   "body": "{\"data\":\"x\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "written": 1
+    }
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"path_required\"}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/write {\"path\":\"\",\"data\":\"x\"} as admin agent {\"ok\":true,\"data\":{\"written\":1}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/write",
+   "body": "{\"path\":\"\",\"data\":\"x\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "written": 1
+    }
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"path_required\"}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/write {\"path\":0} as admin agent {\"ok\":true,\"data\":{\"written\":1}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/write",
+   "body": "{\"path\":0}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "written": 1
+    }
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"path_required\"}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/write {\"path\":[\"a\",\"b\"],\"data\":{\"x\":1},\"mode\":\"append\"} as admin agent {\"ok\":true,\"data\":{\"written\":1}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/write",
+   "body": "{\"path\":[\"a\",\"b\"],\"data\":{\"x\":1},\"mode\":\"append\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "written": 1
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"written\":1}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.write\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"a,b\",\"data\":\"[object Object]\",\"mode\":\"append\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/write {\"path\":\"\u0001RUN:5000:p\u0001\",\"data\":7} as admin agent {\"ok\":true,\"data\":{\"written\":1}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/write",
+   "body": "{\"path\":\"\u0001RUN:5000:p\u0001\",\"data\":7}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "written": 1
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"written\":1}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.write\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"\u0001RUN:4096:p\u0001\",\"data\":\"7\",\"mode\":\"overwrite\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/delete {\"path\":\"/tmp/x\",\"recursive\":true} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/delete",
+   "body": "{\"path\":\"/tmp/x\",\"recursive\":true}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.delete\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"/tmp/x\",\"recursive\":true}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/delete {\"path\":\"/tmp/x\",\"recursive\":\"true\"} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/delete",
+   "body": "{\"path\":\"/tmp/x\",\"recursive\":\"true\"}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.delete\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"/tmp/x\",\"recursive\":false}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/delete {} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/delete",
+   "body": "{}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"path_required\"}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/delete {\"path\":false} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/delete",
+   "body": "{\"path\":false}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"path_required\"}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/rename {\"from\":\"/a\",\"to\":\"/b\"} as admin agent {\"ok\":true,\"data\":{\"ok\":1}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/rename",
+   "body": "{\"from\":\"/a\",\"to\":\"/b\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "ok": 1
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"ok\":1}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.rename\",\"request_id\":\"<id>\",\"payload\":{\"from\":\"/a\",\"to\":\"/b\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/rename {\"from\":\"/a\"} as admin agent {\"ok\":true,\"data\":{\"ok\":1}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/rename",
+   "body": "{\"from\":\"/a\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "ok": 1
+    }
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"paths_required\"}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/rename {\"to\":\"/b\"} as admin agent {\"ok\":true,\"data\":{\"ok\":1}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/rename",
+   "body": "{\"to\":\"/b\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "ok": 1
+    }
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"paths_required\"}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/rename {\"from\":1,\"to\":2} as admin agent {\"ok\":true,\"data\":{\"ok\":1}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/rename",
+   "body": "{\"from\":1,\"to\":2}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "ok": 1
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"ok\":1}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.rename\",\"request_id\":\"<id>\",\"payload\":{\"from\":\"1\",\"to\":\"2\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/mkdir {\"path\":\"/tmp/d\"} as admin agent {\"ok\":true,\"data\":{}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/mkdir",
+   "body": "{\"path\":\"/tmp/d\"}",
+   "agent": {
+    "ok": true,
+    "data": {}
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.mkdir\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"/tmp/d\",\"recursive\":true}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/mkdir {\"path\":\"/tmp/d\",\"recursive\":false} as admin agent {\"ok\":true,\"data\":{}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/mkdir",
+   "body": "{\"path\":\"/tmp/d\",\"recursive\":false}",
+   "agent": {
+    "ok": true,
+    "data": {}
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.mkdir\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"/tmp/d\",\"recursive\":false}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/mkdir {\"path\":\"/tmp/d\",\"recursive\":0} as admin agent {\"ok\":true,\"data\":{}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/mkdir",
+   "body": "{\"path\":\"/tmp/d\",\"recursive\":0}",
+   "agent": {
+    "ok": true,
+    "data": {}
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"files.mkdir\",\"request_id\":\"<id>\",\"payload\":{\"path\":\"/tmp/d\",\"recursive\":true}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/files/mkdir {} as admin agent {\"ok\":true,\"data\":{}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/files/mkdir",
+   "body": "{}",
+   "agent": {
+    "ok": true,
+    "data": {}
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"path_required\"}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/B1002/files/write {\"path\":\"/x\",\"data\":\"y\"} as admin",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/B1002/files/write",
+   "body": "{\"path\":\"/x\",\"data\":\"y\"}",
+   "status": 503,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/B1002"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/ZZ9/files/write {\"path\":\"/x\",\"data\":\"y\"} as admin",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/ZZ9/files/write",
+   "body": "{\"path\":\"/x\",\"data\":\"y\"}",
+   "status": 404,
+   "answer": "{\"success\":false,\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/ZZ9"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/C1003/files/delete {\"path\":\"/x\"} as operator",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/devices/C1003/files/delete",
+   "body": "{\"path\":\"/x\"}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/C1003"
+    ],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/clipboard {\"text\":\"copy\"} as admin agent {\"ok\":true,\"data\":{\"set\":true}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/clipboard",
+   "body": "{\"text\":\"copy\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "set": true
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"set\":true}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"clipboard.set\",\"request_id\":\"<id>\",\"payload\":{\"text\":\"copy\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/clipboard {} as admin agent {\"ok\":true,\"data\":{\"set\":true}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/clipboard",
+   "body": "{}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "set": true
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"set\":true}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"clipboard.set\",\"request_id\":\"<id>\",\"payload\":{\"text\":\"\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/clipboard {\"text\":5} as admin agent {\"ok\":true,\"data\":{\"set\":true}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/clipboard",
+   "body": "{\"text\":5}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "set": true
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"set\":true}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"clipboard.set\",\"request_id\":\"<id>\",\"payload\":{\"text\":\"\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/clipboard {\"text\":\"\"} as admin agent {\"ok\":true,\"data\":{\"set\":true}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/clipboard",
+   "body": "{\"text\":\"\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "set": true
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"set\":true}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"clipboard.set\",\"request_id\":\"<id>\",\"payload\":{\"text\":\"\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/clipboard {\"text\":\"\u0001RUN:1048576:c\u0001\"} as admin agent {\"ok\":true,\"data\":{\"set\":true}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/clipboard",
+   "body": "{\"text\":\"\u0001RUN:1048576:c\u0001\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "set": true
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"set\":true}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"clipboard.set\",\"request_id\":\"<id>\",\"payload\":{\"text\":\"\u0001RUN:1048576:c\u0001\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/clipboard {\"text\":\"\u0001RUN:1048577:c\u0001\"} as admin agent {\"ok\":true,\"data\":{\"set\":true}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/clipboard",
+   "body": "{\"text\":\"\u0001RUN:1048577:c\u0001\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "set": true
+    }
+   },
+   "status": 413,
+   "answer": "{\"success\":false,\"error\":\"text_too_large\"}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/clipboard {\"text\":\"\u0001RUN:524288:😀\u0001\"} as admin agent {\"ok\":true,\"data\":{\"set\":true}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/clipboard",
+   "body": "{\"text\":\"\u0001RUN:524288:😀\u0001\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "set": true
+    }
+   },
+   "status": 413,
+   "answer": "{\"oracle\":\"error handler\",\"status\":413}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/screenshot {} as admin agent {\"ok\":true,\"data\":{\"image\":\"iVBORw0KGgo=\",\"width\":1,\"height\":1}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/screenshot",
+   "body": "{}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "image": "iVBORw0KGgo=",
+     "width": 1,
+     "height": 1
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"image\":\"iVBORw0KGgo=\",\"width\":1,\"height\":1}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"screenshot.capture\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/screenshot {} as operator agent {\"ok\":true,\"data\":{\"image\":\"\"}}",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/devices/A1001/screenshot",
+   "body": "{}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "image": ""
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"image\":\"\"}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"screenshot.capture\",\"request_id\":\"<id>\",\"payload\":null}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/mouse {\"action\":\"click\",\"x\":10.7,\"y\":-0.5,\"button\":\"left\"} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/mouse",
+   "body": "{\"action\":\"click\",\"x\":10.7,\"y\":-0.5,\"button\":\"left\"}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"input.mouse\",\"request_id\":\"<id>\",\"payload\":{\"action\":\"click\",\"button\":\"left\",\"x\":10,\"y\":0}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/mouse {} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/mouse",
+   "body": "{}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"input.mouse\",\"request_id\":\"<id>\",\"payload\":{\"action\":\"move\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/mouse {\"action\":7,\"button\":3,\"x\":\"1\",\"y\":null} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/mouse",
+   "body": "{\"action\":7,\"button\":3,\"x\":\"1\",\"y\":null}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"input.mouse\",\"request_id\":\"<id>\",\"payload\":{\"action\":\"7\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/mouse {\"action\":\"\",\"x_rel\":0.25,\"y_rel\":-1e-7,\"screen_w\":1920.9,\"screen_h\":1080,\"wheel_dx\":-3.9,\"wheel_dy\":1e+21} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/mouse",
+   "body": "{\"action\":\"\",\"x_rel\":0.25,\"y_rel\":-1e-7,\"screen_w\":1920.9,\"screen_h\":1080,\"wheel_dx\":-3.9,\"wheel_dy\":1e+21}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"input.mouse\",\"request_id\":\"<id>\",\"payload\":{\"action\":\"move\",\"x_rel\":0.25,\"y_rel\":-1e-7,\"screen_w\":1920,\"screen_h\":1080,\"wheel_dx\":-3,\"wheel_dy\":1e+21}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/mouse {\"x\":0} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/mouse",
+   "body": "{\"x\":0}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"input.mouse\",\"request_id\":\"<id>\",\"payload\":{\"action\":\"move\",\"x\":0}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/mouse [1] as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/mouse",
+   "body": "[1]",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"input.mouse\",\"request_id\":\"<id>\",\"payload\":{\"action\":\"move\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/key {\"key\":\"Enter\"} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/key",
+   "body": "{\"key\":\"Enter\"}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"input.key\",\"request_id\":\"<id>\",\"payload\":{\"key\":\"Enter\",\"action\":\"press\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/key {} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/key",
+   "body": "{}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"key_required\"}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/key {\"key\":\"kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk\",\"action\":\"down\"} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/key",
+   "body": "{\"key\":\"kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk\",\"action\":\"down\"}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"input.key\",\"request_id\":\"<id>\",\"payload\":{\"key\":\"kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk\",\"action\":\"down\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/key {\"key\":9,\"action\":0} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/key",
+   "body": "{\"key\":9,\"action\":0}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"input.key\",\"request_id\":\"<id>\",\"payload\":{\"key\":\"9\",\"action\":\"press\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/key {\"key\":[\"a\",\"b\"]} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/key",
+   "body": "{\"key\":[\"a\",\"b\"]}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"input.key\",\"request_id\":\"<id>\",\"payload\":{\"key\":\"a,b\",\"action\":\"press\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/key {\"key\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\"} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/key",
+   "body": "{\"key\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\"}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"input.key\",\"request_id\":\"<id>\",\"payload\":{\"key\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\",\"action\":\"press\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/text {\"text\":\"hello\"} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/text",
+   "body": "{\"text\":\"hello\"}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"input.text\",\"request_id\":\"<id>\",\"payload\":{\"text\":\"hello\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/text {} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/text",
+   "body": "{}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"text_required\"}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/text {\"text\":0} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/text",
+   "body": "{\"text\":0}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"text_required\"}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/text {\"text\":\"\u0001RUN:5000:t\u0001\"} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/text",
+   "body": "{\"text\":\"\u0001RUN:5000:t\u0001\"}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"input.text\",\"request_id\":\"<id>\",\"payload\":{\"text\":\"\u0001RUN:4096:t\u0001\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/text {\"text\":{\"a\":1}} as admin agent {\"ok\":true,\"data\":null}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/text",
+   "body": "{\"text\":{\"a\":1}}",
+   "agent": {
+    "ok": true,
+    "data": null
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":null}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"input.text\",\"request_id\":\"<id>\",\"payload\":{\"text\":\"[object Object]\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/terminal/execute {\"command\":\"uptime\"} as admin agent {\"ok\":true,\"data\":{\"stdout\":\"up\",\"code\":0}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/terminal/execute",
+   "body": "{\"command\":\"uptime\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "stdout": "up",
+     "code": 0
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"stdout\":\"up\",\"code\":0}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"terminal.execute\",\"request_id\":\"<id>\",\"payload\":{\"command\":\"uptime\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/terminal/execute {} as admin agent {\"ok\":true,\"data\":{\"stdout\":\"up\",\"code\":0}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/terminal/execute",
+   "body": "{}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "stdout": "up",
+     "code": 0
+    }
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"command_required\"}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/terminal/execute {\"command\":\"  \\t \"} as admin agent {\"ok\":true,\"data\":{\"stdout\":\"up\",\"code\":0}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/terminal/execute",
+   "body": "{\"command\":\"  \\t \"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "stdout": "up",
+     "code": 0
+    }
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"command_required\"}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/terminal/execute {\"command\":\"echo \u0001RUN:5000:x\u0001\"} as admin agent {\"ok\":true,\"data\":{\"stdout\":\"up\",\"code\":0}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/terminal/execute",
+   "body": "{\"command\":\"echo \u0001RUN:5000:x\u0001\"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "stdout": "up",
+     "code": 0
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"stdout\":\"up\",\"code\":0}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"terminal.execute\",\"request_id\":\"<id>\",\"payload\":{\"command\":\"echo \u0001RUN:4091:x\u0001\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/terminal/execute {\"command\":42} as admin agent {\"ok\":true,\"data\":{\"stdout\":\"up\",\"code\":0}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/terminal/execute",
+   "body": "{\"command\":42}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "stdout": "up",
+     "code": 0
+    }
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"stdout\":\"up\",\"code\":0}}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"terminal.execute\",\"request_id\":\"<id>\",\"payload\":{\"command\":\"42\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/terminal/execute {\"command\":\" \"} as admin agent {\"ok\":true,\"data\":{\"stdout\":\"up\",\"code\":0}}",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/terminal/execute",
+   "body": "{\"command\":\" \"}",
+   "agent": {
+    "ok": true,
+    "data": {
+     "stdout": "up",
+     "code": 0
+    }
+   },
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"command_required\"}",
+   "extra": {
+    "calls": [],
+    "agent": []
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/terminal/execute {\"command\":\"id\"} as operator agent {\"ok\":false,\"error\":\"denied\"}",
+   "role": "operator",
+   "method": "POST",
+   "path": "/api/devices/A1001/terminal/execute",
+   "body": "{\"command\":\"id\"}",
+   "agent": {
+    "ok": false,
+    "error": "denied"
+   },
+   "status": 502,
+   "answer": "{\"success\":false,\"error\":\"denied\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"terminal.execute\",\"request_id\":\"<id>\",\"payload\":{\"command\":\"id\"}}"
+    ]
+   }
+  },
+  {
+   "name": "POST /api/devices/A1001/input/key {\"key\":\"a\"} as admin agent \"silent\"",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/devices/A1001/input/key",
+   "body": "{\"key\":\"a\"}",
+   "agent": "silent",
+   "status": 504,
+   "answer": "{\"success\":false,\"error\":\"agent_timeout\"}",
+   "extra": {
+    "calls": [
+     "GET /api/peers/A1001"
+    ],
+    "agent": [
+     "{\"protocol_version\":1,\"type\":\"input.key\",\"request_id\":\"<id>\",\"payload\":{\"key\":\"a\",\"action\":\"press\"}}"
+    ]
+   }
+  },
+  {
+   "name": "audit",
+   "sql": "SELECT user_id, action, details, ip_address FROM audit_log ORDER BY id",
+   "params": [],
+   "rows": "[{\"user_id\":1,\"action\":\"terminal.execute\",\"details\":\"Terminal command on B1002: ls\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write create on A1001: /tmp/f\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write overwrite on A1001: /tmp/f\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write overwrite on A1001: /tmp/f\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write append on A1001: a,b\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write overwrite on A1001: \u0001RUN:4096:p\u0001\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.delete\",\"details\":\"Delete (recursive) on A1001: /tmp/x\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.delete\",\"details\":\"Delete on A1001: /tmp/x\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.rename\",\"details\":\"Rename on A1001: /a -> /b\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.rename\",\"details\":\"Rename on A1001: 1 -> 2\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.mkdir\",\"details\":\"Mkdir on A1001: /tmp/d\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.mkdir\",\"details\":\"Mkdir on A1001: /tmp/d\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.mkdir\",\"details\":\"Mkdir on A1001: /tmp/d\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write overwrite on B1002: /x\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"files.write\",\"details\":\"Write overwrite on ZZ9: /x\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"files.delete\",\"details\":\"Delete on C1003: /x\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"clipboard.set\",\"details\":\"Clipboard set on A1001 (4 chars)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"clipboard.set\",\"details\":\"Clipboard set on A1001 (0 chars)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"clipboard.set\",\"details\":\"Clipboard set on A1001 (0 chars)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"clipboard.set\",\"details\":\"Clipboard set on A1001 (0 chars)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"clipboard.set\",\"details\":\"Clipboard set on A1001 (1048576 chars)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"terminal.execute\",\"details\":\"Terminal command on A1001: uptime\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"terminal.execute\",\"details\":\"Terminal command on A1001: echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"terminal.execute\",\"details\":\"Terminal command on A1001: 42\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"terminal.execute\",\"details\":\"Terminal command on A1001: id\",\"ip_address\":\"127.0.0.1\"}]"
+  }
+ ]
+}

@@ -1,0 +1,145 @@
+{
+ "id": "ws-panel-events/registration-changed",
+ "request": {
+  "method": "GET",
+  "path": "/ws/panel-events",
+  "notes": [
+   "websocket panel, own origin",
+   "websocket expect 1 messages",
+   "websocket keep only type=registration_changed"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "registration": {
+         "device_id": "contract-ws-lan",
+         "hostname": "lan-box",
+         "id": 9,
+         "platform": "linux",
+         "source": "lan",
+         "status": "approved"
+        },
+        "timestamp": 0,
+        "type": "registration_changed"
+       },
+       "order": "type registration{source id device_id hostname platform status} timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "registration": {
+         "device_id": "contract-ws-lan",
+         "hostname": "lan-box",
+         "id": 11,
+         "platform": "linux",
+         "source": "lan",
+         "status": "approved"
+        },
+        "timestamp": 0,
+        "type": "registration_changed"
+       },
+       "order": "type registration{source id device_id hostname platform status} timestamp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.timestamp",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "registration": {
+         "device_id": "contract-ws-lan",
+         "hostname": "lan-box",
+         "id": 12,
+         "platform": "linux",
+         "source": "lan",
+         "status": "approved"
+        },
+        "timestamp": 0,
+        "type": "registration_changed"
+       },
+       "order": "type registration{source id device_id hostname platform status} timestamp"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

@@ -21,7 +21,8 @@ const (
 // answers {"handler":"go"} when the Go route table has that method and
 // path, {"handler":"node"} when the request goes to the Node console, and
 // {"handler":"none"} when nothing answers it because there is no Node
-// console behind this one.
+// console behind this one. With upgrade=websocket the question is about a
+// websocket upgrade to the path: "go" when a Go socket takes it.
 //
 // served is the lookup the console server uses for real requests, so the
 // report cannot disagree with what happens. The contract suite reads the
@@ -46,9 +47,15 @@ func Routing(served func(*http.Request) bool, hasUpstream bool) http.HandlerFunc
 			return
 		}
 
+		asked := &http.Request{Method: method, URL: u, Header: http.Header{}}
+		if upgrade := r.URL.Query().Get("upgrade"); upgrade != "" {
+			asked.Header.Set("Upgrade", upgrade)
+			asked.Header.Set("Connection", "Upgrade")
+			asked.RequestURI = target
+		}
 		handler := HandlerNone
 		switch {
-		case served(&http.Request{Method: method, URL: u, Header: http.Header{}}):
+		case served(asked):
 			handler = HandlerGo
 		case hasUpstream:
 			handler = HandlerNode

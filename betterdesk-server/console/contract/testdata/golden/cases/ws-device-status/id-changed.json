@@ -1,0 +1,63 @@
+{
+ "id": "ws-device-status/id-changed",
+ "request": {
+  "method": "GET",
+  "path": "/ws/device-status",
+  "notes": [
+   "websocket status, own origin",
+   "websocket expect 1 messages",
+   "websocket keep only type=device_id_changed"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.timestamp",
+     "pattern": "^9999-99-99A99:99:99\\.9+A$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "new_id": "900100098",
+        "old_id": "900100018",
+        "source": "panel",
+        "timestamp": "<volatile>",
+        "type": "device_id_changed"
+       },
+       "order": "type old_id new_id source timestamp"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

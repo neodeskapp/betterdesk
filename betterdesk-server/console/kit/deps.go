@@ -9,6 +9,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/avatars"
+	"github.com/unitronix/betterdesk-server/console/bdrelay"
 	"github.com/unitronix/betterdesk-server/console/branding"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/csrf"
@@ -23,8 +24,10 @@ import (
 	"github.com/unitronix/betterdesk-server/console/restart"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
 	"github.com/unitronix/betterdesk-server/console/session"
+	"github.com/unitronix/betterdesk-server/console/statuspush"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/webui"
+	"github.com/unitronix/betterdesk-server/console/ws"
 )
 
 // Jobs is where a group adds background work that runs for as long as
@@ -119,6 +122,18 @@ type Deps struct {
 	Log *Logger
 	// Jobs takes background work that stops with the console.
 	Jobs Jobs
+	// Sockets is the registry of the console's websockets: a service adds
+	// a socket path with d.Sockets.Handle (package console/ws). Upgrades
+	// to a path nobody registered go to the Node console while it is
+	// behind this one.
+	Sockets *ws.Registry
+	// StatusPush pushes device status and panel events to the browsers
+	// (services/deviceStatusPush.js); d.StatusPush.PublishPanelEvent is
+	// publishPanelEvent.
+	StatusPush *statuspush.Service
+	// Relay is the agents' signal and relay sockets (services/bdRelay.js);
+	// d.Relay.RequestFromDevice asks a connected agent for something.
+	Relay *bdrelay.Service
 }
 
 // At returns the same Deps with both route tables mounted at prefix, for

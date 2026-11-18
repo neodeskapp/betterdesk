@@ -167,6 +167,9 @@ type Agent struct {
 // SignedOut returns a browser without a session.
 func (w *World) SignedOut() *Agent { return &Agent{w: w, cookies: map[string]string{}} }
 
+// Addr is the host and port the console listens on, for websockets.
+func (w *World) Addr() string { return strings.TrimPrefix(w.front.URL, "http://") }
+
 // As returns a browser signed in as the test account of a role.
 func (w *World) As(role string) *Agent {
 	w.T.Helper()
@@ -189,6 +192,16 @@ var client = &http.Client{
 // Do sends a request. A write carries the browser's CSRF token, and a body
 // goes out as JSON. header is a list of name, value pairs that are added.
 func (a *Agent) Do(method, target, body string, header ...string) Answer {
+	a.w.T.Helper()
+	answer, err := a.Try(method, target, body, header...)
+	if err != nil {
+		a.w.T.Fatalf("%s %s: %v", method, target, err)
+	}
+	return answer
+}
+
+// Try is Do for a request that may get no answer: the error says why.
+func (a *Agent) Try(method, target, body string, header ...string) (Answer, error) {
 	a.w.T.Helper()
 	var reader io.Reader
 	if body != "" {
@@ -216,7 +229,7 @@ func (a *Agent) Do(method, target, body string, header ...string) Answer {
 	}
 	res, err := client.Do(req)
 	if err != nil {
-		a.w.T.Fatalf("%s %s: %v", method, target, err)
+		return Answer{}, err
 	}
 	defer res.Body.Close()
 	raw, _ := io.ReadAll(res.Body)
@@ -227,7 +240,7 @@ func (a *Agent) Do(method, target, body string, header ...string) Answer {
 		}
 		a.cookies[c.Name] = c.Value
 	}
-	return Answer{Status: res.StatusCode, Header: res.Header, Body: string(raw)}
+	return Answer{Status: res.StatusCode, Header: res.Header, Body: string(raw)}, nil
 }
 
 func (a *Agent) csrf() string {

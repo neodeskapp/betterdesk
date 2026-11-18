@@ -1,0 +1,46 @@
+{
+ "id": "ws-device-status/version-12",
+ "request": {
+  "method": "GET",
+  "path": "/ws/device-status",
+  "notes": [
+   "header Sec-WebSocket-Version: 12",
+   "websocket badversion, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 400,
+   "headers": {
+    "content-type": "text/html"
+   },
+   "body": {
+    "kind": "bytes",
+    "type": "text/html",
+    "length": 47,
+    "sha256": "078fad4672521c1932e81e9ad13056336adb3caba2e4376b50d009b63d63170c",
+    "head": "Missing or invalid Sec-WebSocket-Version header"
+   }
+  }
+ ]
+}

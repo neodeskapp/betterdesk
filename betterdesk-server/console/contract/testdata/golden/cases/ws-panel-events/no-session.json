@@ -1,0 +1,31 @@
+{
+ "id": "ws-panel-events/no-session",
+ "request": {
+  "method": "GET",
+  "path": "/ws/panel-events",
+  "notes": [
+   "no session cookie",
+   "websocket nosession, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro",
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

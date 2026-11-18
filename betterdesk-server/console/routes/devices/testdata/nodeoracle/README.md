@@ -45,3 +45,37 @@ From a worktree that still has the route handlers, in the dev image:
     tools/dev.sh "cd betterdesk-server/console/routes/devices/testdata && node nodeoracle/routes.js"
     DEV_DOCKER_ARGS="--network bdgo" tools/dev.sh "cd betterdesk-server/console/routes/devices/testdata && \
       ORACLE_PG_DSN='postgres://betterdesk:bdgo-local@bdgo-testpg:5432/betterdesk_test?sslmode=disable' node nodeoracle/routes.js"
+
+## The routes that reach into an agent (agent.js)
+
+`agent.js` runs the routes of `routes/devices.routes.js` that ask a
+running agent (services, processes, events, activity, the file routes,
+clipboard, screenshot, mouse, key, text, terminal) with the real
+`services/bdRelay.js`, the real database adapter and the API server table,
+and a made-up agent of device A1001 connected to `/ws/bd-signal` that
+answers each request the way the step says: data of every JSON type, an
+error of every type (`agent_offline` and `agent_timeout` included), or
+nothing (the route's timeout). B1002 has no agent, so its steps show the
+server's snapshot, a queued collection, 503; the API server's telemetry and
+queue answers vary. C1003 is out of e2e_operator's scope. Bodies and
+queries are odd on purpose. It records each answer, the calls to the API
+server, the requests the agent got (request id as `<id>`) and the audit
+rows: 134 steps per database in `../node_agent_sqlite.json` and
+`../node_agent_postgres.json`. `TestNodeAgentAnswers` replays them through
+the whole console with a Go made-up agent (`console/bdrelay/fakeagent`)
+that has a real access token of A1001.
+
+The oracle's app has no panel access guard and ends with a stand-in error
+handler, so its steps stay within what the guard lets through, and for an
+answer of that handler (a body that is not JSON, one over the size limit)
+only the status is compared.
+
+Not in the recording, because it ends the Node process: a body value
+`String()` throws on in an async route (BUGS WS9);
+`TestAgentRequestThatWouldEndNode` covers the Go side.
+
+    tools/dev.sh "cd betterdesk-server/console/routes/devices/testdata && node nodeoracle/agent.js"
+    DEV_DOCKER_ARGS="--network bdgo" tools/dev.sh "cd betterdesk-server/console/routes/devices/testdata && \
+      ORACLE_PG_DSN='postgres://betterdesk:bdgo-local@bdgo-testpg:5432/betterdesk_test?sslmode=disable' node nodeoracle/agent.js"
+
+After a run, `node ../../../ws/wstest/squeeze.js node_agent_sqlite.json node_agent_postgres.json` (from `testdata`) writes the megabyte bodies of the size limits as markers; the test reads the files through `wstest.Expand`.

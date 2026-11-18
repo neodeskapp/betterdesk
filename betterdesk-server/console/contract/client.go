@@ -449,25 +449,37 @@ func (c *Client) HasRouting() bool {
 // HandlerNode, HandlerNone, or HandlerUnknown when the console has no
 // routing report.
 func (c *Client) Handler(method, target string) string {
+	return c.handlerOf(method, target, false)
+}
+
+// handlerOf is Handler, for a websocket upgrade to target when upgrade
+// is set.
+func (c *Client) handlerOf(method, target string, upgrade bool) string {
 	if !c.HasRouting() {
 		return HandlerUnknown
 	}
 	key := method + " " + target
+	if upgrade {
+		key = "UPGRADE " + key
+	}
 	c.mu.Lock()
 	handler, ok := c.routing[key]
 	c.mu.Unlock()
 	if ok {
 		return handler
 	}
-	handler = c.askRouting(method, target)
+	handler = c.askRouting(method, target, upgrade)
 	c.mu.Lock()
 	c.routing[key] = handler
 	c.mu.Unlock()
 	return handler
 }
 
-func (c *Client) askRouting(method, target string) string {
+func (c *Client) askRouting(method, target string, upgrade ...bool) string {
 	q := url.Values{"method": {method}, "path": {target}}
+	if len(upgrade) > 0 && upgrade[0] {
+		q.Set("upgrade", "websocket")
+	}
 	object, status, err := c.fetchJSON(nil, "/__bd/routing?"+q.Encode())
 	if err != nil || status != http.StatusOK {
 		return HandlerUnknown

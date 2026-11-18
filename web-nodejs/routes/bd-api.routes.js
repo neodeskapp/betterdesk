@@ -29,7 +29,8 @@ const router = express.Router();
 const crypto = require('crypto');
 const config = require('../config/config');
 const db = require('../services/database');
-const bdRelay = require('../services/bdRelay');
+// The relay sessions and the agents' signal sockets are in the Go console
+const { relay: bdRelay } = require('../services/goConsoleBridge');
 const remoteRelay = require('../services/remoteRelay');
 const brandingService = require('../services/brandingService');
 const authService = require('../services/authService');
@@ -328,16 +329,7 @@ router.post('/heartbeat', requireDeviceToken, requireTokenDeviceMatch, async (re
         } catch (_) {}
 
         // Check for pending incoming connection requests
-        const pending = [];
-        for (const [sid, session] of bdRelay.activeSessions) {
-            if (session.targetId === id && session.status === 'pending') {
-                pending.push({
-                    session_id: sid,
-                    initiator_id: session.initiatorId,
-                    created_at: session.createdAt,
-                });
-            }
-        }
+        const pending = await bdRelay.pendingConnections(id);
 
         res.json({
             success: true,
@@ -407,10 +399,10 @@ router.post('/connect', requireDeviceAuth, async (req, res) => {
         }
 
         // Create relay session
-        const { sessionId, initiatorToken, targetToken } = bdRelay.createRelaySession(srcId, target_id);
+        const { sessionId, initiatorToken } = await bdRelay.createRelaySession(srcId, target_id);
 
         // Try to notify target via WebSocket signal channel
-        const targetNotified = bdRelay.notifyTarget(target_id, {
+        const targetNotified = await bdRelay.notifyTarget(target_id, {
             type: 'incoming_connection',
             session_id: sessionId,
             initiator_id: srcId,
@@ -434,8 +426,8 @@ router.post('/connect', requireDeviceAuth, async (req, res) => {
 //  GET /api/bd/session/:id — Check session status
 // ---------------------------------------------------------------------------
 
-router.get('/session/:id', requireDeviceToken, (req, res) => {
-    const session = bdRelay.getRelaySession(req.params.id);
+router.get('/session/:id', requireDeviceToken, async (req, res) => {
+    const session = await bdRelay.getRelaySession(req.params.id);
     if (!session) {
         return res.status(404).json({ error: 'Session not found or expired' });
     }
@@ -449,9 +441,9 @@ router.get('/session/:id', requireDeviceToken, (req, res) => {
 //  DELETE /api/bd/session/:id — Cancel relay session
 // ---------------------------------------------------------------------------
 
-router.delete('/session/:id', requireDeviceToken, (req, res) => {
+router.delete('/session/:id', requireDeviceToken, async (req, res) => {
     const sessionId = req.params.id;
-    const session = bdRelay.getRelaySession(sessionId);
+    const session = await bdRelay.getRelaySession(sessionId);
     if (!session) {
         return res.status(404).json({ error: 'Session not found' });
     }
@@ -461,7 +453,7 @@ router.delete('/session/:id', requireDeviceToken, (req, res) => {
         return res.status(403).json({ error: 'Not a participant of this session' });
     }
     // Teardown handled internally
-    bdRelay.activeSessions.delete(sessionId);
+    await bdRelay.deleteSession(sessionId);
     res.json({ success: true });
 });
 
@@ -471,7 +463,7 @@ router.delete('/session/:id', requireDeviceToken, (req, res) => {
 
 router.get('/peers', requireDeviceToken, async (req, res) => {
     try {
-        const onlineIds = bdRelay.getOnlineDeviceIds();
+        const onlineIds = await bdRelay.getOnlineDeviceIds();
         const peers = [];
 
         for (const id of onlineIds) {
@@ -508,7 +500,7 @@ router.get('/peer/:id', requireDeviceToken, async (req, res) => {
             peer: {
                 id: device.id,
                 hostname: device.note || '',
-                online: bdRelay.isDeviceOnline(device.id),
+                online: await bdRelay.isDeviceOnline(device.id),
                 banned: !!device.is_banned,
             },
         });

@@ -24,8 +24,9 @@ import (
 // banned, not deleted, the same id.
 //
 // The routes that reach into a connected agent (services, processes,
-// files, input, terminal and the others behind bdRelay) are not here:
-// their matrix goldens cover what comes before the agent.
+// files, input, terminal and the others behind the agent's signal
+// socket) are near the end, with the answers for an agent that is not
+// connected; they were added with the move of the agent socket.
 func init() {
 	long := strings.Repeat("x", 600)
 	tags21 := make([]any, 21)
@@ -424,6 +425,46 @@ func init() {
 		contract.Case{Name: "strategy-delete", Method: "DELETE", Path: "/api/panel/strategies/{rule}"},
 		contract.Case{Name: "strategies-at-the-end", Path: "/api/panel/strategies"},
 		contract.Case{Name: "cleanup-rule", Method: "DELETE", Path: "/api/panel/strategies/{rule}", As: "admin"},
+
+		// The routes that reach into a running agent over its signal
+		// socket. No agent is connected to a test instance, so these are
+		// the answers for an agent that is offline: the snapshot the server
+		// has, a collection queued for later, or 503. The answers of a
+		// connected agent are pinned by the Node recordings the package
+		// replays (routes/devices/testdata/node_agent.json).
+		contract.Case{Name: "agent-services", Path: "/api/devices/900100001/services"},
+		contract.Case{Name: "agent-services-offline", Path: "/api/devices/900100018/services"},
+		contract.Case{Name: "agent-services-restricted", Path: "/api/devices/900100019/services"},
+		contract.Case{Name: "agent-services-unknown", Path: "/api/devices/999999999/services"},
+		contract.Case{Name: "agent-processes", Path: "/api/devices/900100001/processes"},
+		contract.Case{Name: "agent-events", Path: "/api/devices/900100001/events", Query: map[string][]string{"limit": {"5"}}},
+		contract.Case{Name: "agent-events-limit-text", Path: "/api/devices/900100018/events", Query: map[string][]string{"limit": {"abc"}}},
+		contract.Case{Name: "agent-activity", Path: "/api/devices/900100001/activity"},
+		contract.Case{Name: "agent-clipboard", Path: "/api/devices/900100001/clipboard"},
+		contract.Case{Name: "agent-clipboard-unknown", Path: "/api/devices/999999999/clipboard"},
+		contract.Case{Name: "agent-files-browse", Method: "POST", Path: "/api/devices/900100018/files/browse", Body: map[string]any{"path": "/tmp", "show_hidden": true}},
+		contract.Case{Name: "agent-files-browse-restricted", Method: "POST", Path: "/api/devices/900100019/files/browse", Body: map[string]any{}},
+		contract.Case{Name: "agent-files-read", Method: "POST", Path: "/api/devices/900100018/files/read", Body: map[string]any{"path": "/etc/hostname", "offset": 3, "length": 10}},
+		contract.Case{Name: "agent-files-write-without-path", Method: "POST", Path: "/api/devices/900100018/files/write", Body: map[string]any{"data": "eA=="}},
+		contract.Case{Name: "agent-files-write", Method: "POST", Path: "/api/devices/900100018/files/write", Body: map[string]any{"path": "/tmp/contract.txt", "data": "eA==", "mode": "append"}},
+		contract.Case{Name: "agent-files-delete-without-path", Method: "POST", Path: "/api/devices/900100018/files/delete", Body: map[string]any{}},
+		contract.Case{Name: "agent-files-delete", Method: "POST", Path: "/api/devices/900100018/files/delete", Body: map[string]any{"path": "/tmp/contract.txt", "recursive": true}},
+		contract.Case{Name: "agent-files-rename-without-paths", Method: "POST", Path: "/api/devices/900100018/files/rename", Body: map[string]any{"from": "/tmp/a"}},
+		contract.Case{Name: "agent-files-rename", Method: "POST", Path: "/api/devices/900100018/files/rename", Body: map[string]any{"from": "/tmp/a", "to": "/tmp/b"}},
+		contract.Case{Name: "agent-files-mkdir-without-path", Method: "POST", Path: "/api/devices/900100018/files/mkdir", Body: map[string]any{"recursive": false}},
+		contract.Case{Name: "agent-files-mkdir", Method: "POST", Path: "/api/devices/900100018/files/mkdir", Body: map[string]any{"path": "/tmp/new"}},
+		contract.Case{Name: "agent-clipboard-set", Method: "POST", Path: "/api/devices/900100018/clipboard", Body: map[string]any{"text": "contract"}},
+		contract.Case{Name: "agent-clipboard-set-not-text", Method: "POST", Path: "/api/devices/900100018/clipboard", Body: map[string]any{"text": 5}},
+		contract.Case{Name: "agent-clipboard-set-too-long", Method: "POST", Path: "/api/devices/900100018/clipboard", Body: map[string]any{"text": strings.Repeat("c", 1024*1024+1)}},
+		contract.Case{Name: "agent-screenshot", Method: "POST", Path: "/api/devices/900100018/screenshot", Body: map[string]any{}},
+		contract.Case{Name: "agent-input-mouse", Method: "POST", Path: "/api/devices/900100018/input/mouse", Body: map[string]any{"action": "click", "x": 10.7, "y": 20, "button": "left"}},
+		contract.Case{Name: "agent-input-key-without-key", Method: "POST", Path: "/api/devices/900100018/input/key", Body: map[string]any{}},
+		contract.Case{Name: "agent-input-key", Method: "POST", Path: "/api/devices/900100018/input/key", Body: map[string]any{"key": "Enter"}},
+		contract.Case{Name: "agent-input-text-without-text", Method: "POST", Path: "/api/devices/900100018/input/text", Body: map[string]any{"text": ""}},
+		contract.Case{Name: "agent-input-text", Method: "POST", Path: "/api/devices/900100018/input/text", Body: map[string]any{"text": "hello"}},
+		contract.Case{Name: "agent-terminal-blank", Method: "POST", Path: "/api/devices/900100018/terminal/execute", Body: map[string]any{"command": "   "}},
+		contract.Case{Name: "agent-terminal", Method: "POST", Path: "/api/devices/900100018/terminal/execute", Body: map[string]any{"command": "uptime"}},
+		contract.Case{Name: "agent-terminal-unknown", Method: "POST", Path: "/api/devices/999999999/terminal/execute", Body: map[string]any{"command": "uptime"}},
 
 		// Cleanup
 		contract.Case{

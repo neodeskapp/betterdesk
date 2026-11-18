@@ -1,0 +1,30 @@
+{
+ "id": "ws-bd-relay/session-unknown",
+ "request": {
+  "method": "GET",
+  "path": "/ws/bd-relay?role=initiator&session=contract-none&token=t",
+  "notes": [
+   "websocket c, own origin",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 4404,
+      "reason": "Session not found"
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

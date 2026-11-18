@@ -85,8 +85,10 @@ type slot struct {
 	// layer is "matrix" or "cases"; group and name give the file.
 	layer, group, name string
 	rec                recording
-	// method and target are what the routing report is asked about.
+	// method and target are what the routing report is asked about;
+	// upgrade asks about a websocket upgrade to the target.
 	method, target string
+	upgrade        bool
 }
 
 func (sl *slot) file(dir string) string {
@@ -105,7 +107,7 @@ func (s *Suite) judge(t *testing.T, sl *slot, role Role, answer Answer) {
 	tally := sl.layer + "/" + sl.group
 	handler := HandlerUnknown
 	if sl.method != "" {
-		handler = s.Client.Handler(sl.method, sl.target)
+		handler = s.Client.handlerOf(sl.method, sl.target, sl.upgrade)
 		s.Report.answeredBy(sl.layer, sl.rec.ID, handler)
 	}
 	if answer.Failed != "" {

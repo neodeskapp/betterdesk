@@ -1,0 +1,46 @@
+{
+ "id": "ws-device-status/upgrade-other",
+ "request": {
+  "method": "GET",
+  "path": "/ws/device-status",
+  "notes": [
+   "header Upgrade: h2c",
+   "websocket h2c, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 400,
+   "headers": {
+    "content-type": "text/html"
+   },
+   "body": {
+    "kind": "bytes",
+    "type": "text/html",
+    "length": 22,
+    "sha256": "8b7fe5c61cf5e8bb27abcc010edda5bc59cb052ab5086b0ab1cc1b7790b4bc4e",
+    "head": "Invalid Upgrade header"
+   }
+  }
+ ]
+}

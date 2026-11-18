@@ -1,0 +1,30 @@
+{
+ "id": "ws-bd-relay/target-told",
+ "request": {
+  "method": "GET",
+  "path": "/ws/bd-relay",
+  "notes": [
+   "websocket tgt, own origin",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": "Peer disconnected"
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,30 @@
+{
+ "id": "ws-bd-signal/first-replaced",
+ "request": {
+  "method": "GET",
+  "path": "/ws/bd-signal?device_id=900100001&token=%7Bsecret%3Adevice_token%7D",
+  "notes": [
+   "websocket agent, own origin",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 4409,
+      "reason": "Replaced by new connection"
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

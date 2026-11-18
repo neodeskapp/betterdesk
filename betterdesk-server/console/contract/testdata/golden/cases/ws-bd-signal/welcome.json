@@ -1,0 +1,34 @@
+{
+ "id": "ws-bd-signal/welcome",
+ "request": {
+  "method": "GET",
+  "path": "/ws/bd-signal?device_id=900100001&token=%7Bsecret%3Adevice_token%7D",
+  "notes": [
+   "websocket agent, own origin",
+   "websocket expect 1 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "device_id": "900100001",
+        "type": "welcome"
+       },
+       "order": "type device_id"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

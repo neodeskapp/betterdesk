@@ -37,7 +37,6 @@ const db = require('./services/database');
 const { DatabaseSessionStore } = require('./services/databaseSessionStore');
 const userSync = require('./services/userSync');
 const { initWsProxy } = require('./services/wsRelay');
-const { initBdRelay } = require('./services/bdRelay');
 const { initChatRelay } = require('./services/chatRelay');
 const { apiClient: goApiClient } = require('./services/betterdeskApi');
 const { initRemoteRelay } = require('./services/remoteRelay');
@@ -49,7 +48,6 @@ const { initRemoteTargetGateway } = require('./services/remoteTargetGateway');
 const { loadEffectivePolicy } = require('./services/panelAccessPolicyService');
 const { panelAccessGuard } = require('./middleware/panelAccess');
 const { startDiscoveryService } = require('./services/lanDiscovery');
-const { initDeviceStatusPush } = require('./services/deviceStatusPush');
 const { initHelpRequestEmailService } = require('./services/helpRequestEmailService');
 const routes = require('./routes');
 const { mountRoutes } = require('./lib/mountRoutes');
@@ -83,6 +81,10 @@ try {
 }
 
 // ============ Middleware Pipeline ============
+
+// The Go console in front of this one names itself on each request it
+// passes on (services/goConsoleBridge.js)
+app.use(require('./services/goConsoleBridge').learn);
 
 // Security headers (Helmet)
 app.use(securityMiddleware);
@@ -504,9 +506,6 @@ async function startServer() {
         // Initialize WebSocket proxy for remote desktop client
         initWsProxy(server, sessionMiddleware);
 
-        // Initialize BetterDesk native relay (WebSocket)
-        initBdRelay(server);
-
         // Initialize Chat relay (WebSocket — agent ↔ operator, persistent via Go API)
         initChatRelay(server, sessionMiddleware, goApiClient);
 
@@ -531,8 +530,6 @@ async function startServer() {
         initMeshAshxProxy(server, sessionMiddleware);
         initRemoteTargetGateway(server, sessionMiddleware);
 
-        // Initialize real-time device status push (Go event bus → browser)
-        initDeviceStatusPush(server, sessionMiddleware, config.betterdeskApiUrl, config.betterdeskApiKey);
         initHelpRequestEmailService(config.betterdeskApiUrl, config.betterdeskApiKey);
 
         // Start LAN Discovery UDP service

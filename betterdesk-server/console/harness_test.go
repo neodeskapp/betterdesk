@@ -37,6 +37,7 @@ type seen struct {
 	Cookie string `json:"cookie"`
 	Type   string `json:"type"`
 	Body   string `json:"body"`
+	Bridge string `json:"bridge"`
 }
 
 // fakeNode stands in for the Node console: it answers 418 with what it
@@ -79,6 +80,7 @@ func newFakeNode(t *testing.T) *fakeNode {
 			XFF: r.Header.Get("X-Forwarded-For"), Proto: r.Header.Get("X-Forwarded-Proto"),
 			XFHost: r.Header.Get("X-Forwarded-Host"), RealIP: r.Header.Get("X-Real-IP"),
 			Cookie: r.Header.Get("Cookie"), Type: r.Header.Get("Content-Type"), Body: string(body),
+			Bridge: r.Header.Get("X-BD-Bridge"),
 		}
 		node.mu.Lock()
 		node.requests = append(node.requests, got)

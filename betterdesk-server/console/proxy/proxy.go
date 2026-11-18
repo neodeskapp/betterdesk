@@ -14,6 +14,12 @@ import (
 	"github.com/unitronix/betterdesk-server/logging"
 )
 
+// Header is a header the front door sets on requests to Node.
+type Header struct {
+	Name  string
+	Value func() string
+}
+
 // Proxy forwards requests to the Node console.
 type Proxy struct {
 	forward   *httputil.ReverseProxy
@@ -27,7 +33,11 @@ type Proxy struct {
 // worked out: one address in X-Forwarded-For, the scheme and the host.
 // Node trusts these because it listens on loopback only while it runs
 // behind Go (TRUST_PROXY=loopback).
-func New(upstream *url.URL, trust httpx.TrustProxy) *Proxy {
+//
+// Headers gives headers the front door sets on every request it passes
+// on, replacing what the client sent under those names; a header whose
+// value is "" is only removed.
+func New(upstream *url.URL, trust httpx.TrustProxy, headers ...Header) *Proxy {
 	transport := &http.Transport{
 		MaxIdleConns:        256,
 		MaxIdleConnsPerHost: 256,
@@ -47,6 +57,12 @@ func New(upstream *url.URL, trust httpx.TrustProxy) *Proxy {
 			pr.Out.Header.Del("X-Real-IP")
 			pr.Out.Header.Set("X-Forwarded-For", trust.ClientIP(pr.In))
 			pr.Out.Header.Set("X-Forwarded-Proto", trust.Scheme(pr.In))
+			for _, h := range headers {
+				pr.Out.Header.Del(h.Name)
+				if value := h.Value(); value != "" {
+					pr.Out.Header.Set(h.Name, value)
+				}
+			}
 			pr.Out.Header.Set("X-Forwarded-Host", host)
 		},
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {

@@ -1,0 +1,30 @@
+{
+ "id": "ws-bd-relay/initiator-rejected",
+ "request": {
+  "method": "GET",
+  "path": "/ws/bd-relay",
+  "notes": [
+   "websocket init3, own origin",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 4403,
+      "reason": "Connection rejected by target"
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

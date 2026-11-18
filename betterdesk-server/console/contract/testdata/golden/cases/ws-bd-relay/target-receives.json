@@ -1,0 +1,36 @@
+{
+ "id": "ws-bd-relay/target-receives",
+ "request": {
+  "method": "GET",
+  "path": "/ws/bd-relay",
+  "notes": [
+   "websocket tgt, own origin",
+   "websocket expect 2 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "text": "hello target"
+      },
+      {
+       "binary": {
+        "length": 4,
+        "sha256": "3d1f57c984978ef98a18378c8166c1cb8ede02c03eeb6aee7e2f121dfeee3e56"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

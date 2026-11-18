@@ -1,0 +1,680 @@
+{
+ "id": "ws-panel-events/registration-approve",
+ "request": {
+  "method": "PUT",
+  "path": "/api/bd/api/registrations/{registration}/approve",
+  "body": {},
+  "notes": [
+   "sent as admin in every role's turn"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.access_token",
+     "pattern": "^[9aA+/_=-]{64}$"
+    },
+    {
+     "path": "data.approved_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.server_key",
+     "pattern": "^[9aA+/_=-]{44}$"
+    },
+    {
+     "path": "data.updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "access_token": "<volatile>",
+      "approved_at": "<volatile>",
+      "approved_by": "e2e_admin",
+      "console_url": "http://<hostname>:5001",
+      "created_at": "<volatile>",
+      "device_id": "contract-ws-lan",
+      "hostname": "lan-box",
+      "id": 4,
+      "ip_address": "<client-ip>",
+      "platform": "linux",
+      "public_key": "",
+      "rejected_reason": "",
+      "server_address": "<hostname>:21116",
+      "server_key": "<volatile>",
+      "status": "approved",
+      "updated_at": "<volatile>",
+      "uuid": "",
+      "version": "1.0.0"
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "pro"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.access_token",
+     "pattern": "^[9aA+/_=-]{64}$"
+    },
+    {
+     "path": "data.approved_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.server_key",
+     "pattern": "^[9aA+/_=-]{44}$"
+    },
+    {
+     "path": "data.updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "access_token": "<volatile>",
+      "approved_at": "<volatile>",
+      "approved_by": "e2e_admin",
+      "console_url": "http://<hostname>:5001",
+      "created_at": "<volatile>",
+      "device_id": "contract-ws-lan",
+      "hostname": "lan-box",
+      "id": 5,
+      "ip_address": "<client-ip>",
+      "platform": "linux",
+      "public_key": "",
+      "rejected_reason": "",
+      "server_address": "<hostname>:21116",
+      "server_key": "<volatile>",
+      "status": "approved",
+      "updated_at": "<volatile>",
+      "uuid": "",
+      "version": "1.0.0"
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.access_token",
+     "pattern": "^[9aA+/_=-]{64}$"
+    },
+    {
+     "path": "data.approved_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.server_key",
+     "pattern": "^[9aA+/_=-]{44}$"
+    },
+    {
+     "path": "data.updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "access_token": "<volatile>",
+      "approved_at": "<volatile>",
+      "approved_by": "e2e_admin",
+      "console_url": "http://<hostname>:5001",
+      "created_at": "<volatile>",
+      "device_id": "contract-ws-lan",
+      "hostname": "lan-box",
+      "id": 6,
+      "ip_address": "<client-ip>",
+      "platform": "linux",
+      "public_key": "",
+      "rejected_reason": "",
+      "server_address": "<hostname>:21116",
+      "server_key": "<volatile>",
+      "status": "approved",
+      "updated_at": "<volatile>",
+      "uuid": "",
+      "version": "1.0.0"
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "viewer"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.access_token",
+     "pattern": "^[9aA+/_=-]{64}$"
+    },
+    {
+     "path": "data.approved_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.server_key",
+     "pattern": "^[9aA+/_=-]{44}$"
+    },
+    {
+     "path": "data.updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "access_token": "<volatile>",
+      "approved_at": "<volatile>",
+      "approved_by": "e2e_admin",
+      "console_url": "http://<hostname>:5001",
+      "created_at": "<volatile>",
+      "device_id": "contract-ws-lan",
+      "hostname": "lan-box",
+      "id": 7,
+      "ip_address": "<client-ip>",
+      "platform": "linux",
+      "public_key": "",
+      "rejected_reason": "",
+      "server_address": "<hostname>:21116",
+      "server_key": "<volatile>",
+      "status": "approved",
+      "updated_at": "<volatile>",
+      "uuid": "",
+      "version": "1.0.0"
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "operator"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.access_token",
+     "pattern": "^[9aA+/_=-]{64}$"
+    },
+    {
+     "path": "data.approved_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.server_key",
+     "pattern": "^[9aA+/_=-]{44}$"
+    },
+    {
+     "path": "data.updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "access_token": "<volatile>",
+      "approved_at": "<volatile>",
+      "approved_by": "e2e_admin",
+      "console_url": "http://<hostname>:5001",
+      "created_at": "<volatile>",
+      "device_id": "contract-ws-lan",
+      "hostname": "lan-box",
+      "id": 8,
+      "ip_address": "<client-ip>",
+      "platform": "linux",
+      "public_key": "",
+      "rejected_reason": "",
+      "server_address": "<hostname>:21116",
+      "server_key": "<volatile>",
+      "status": "approved",
+      "updated_at": "<volatile>",
+      "uuid": "",
+      "version": "1.0.0"
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.access_token",
+     "pattern": "^[9aA+/_=-]{64}$"
+    },
+    {
+     "path": "data.approved_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.server_key",
+     "pattern": "^[9aA+/_=-]{44}$"
+    },
+    {
+     "path": "data.updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "access_token": "<volatile>",
+      "approved_at": "<volatile>",
+      "approved_by": "e2e_admin",
+      "console_url": "http://<hostname>:5001",
+      "created_at": "<volatile>",
+      "device_id": "contract-ws-lan",
+      "hostname": "lan-box",
+      "id": 9,
+      "ip_address": "<client-ip>",
+      "platform": "linux",
+      "public_key": "",
+      "rejected_reason": "",
+      "server_address": "<hostname>:21116",
+      "server_key": "<volatile>",
+      "status": "approved",
+      "updated_at": "<volatile>",
+      "uuid": "",
+      "version": "1.0.0"
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "server_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.access_token",
+     "pattern": "^[9aA+/_=-]{64}$"
+    },
+    {
+     "path": "data.approved_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.server_key",
+     "pattern": "^[9aA+/_=-]{44}$"
+    },
+    {
+     "path": "data.updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "access_token": "<volatile>",
+      "approved_at": "<volatile>",
+      "approved_by": "e2e_admin",
+      "console_url": "http://<hostname>:5001",
+      "created_at": "<volatile>",
+      "device_id": "contract-ws-lan",
+      "hostname": "lan-box",
+      "id": 10,
+      "ip_address": "<client-ip>",
+      "platform": "linux",
+      "public_key": "",
+      "rejected_reason": "",
+      "server_address": "<hostname>:21116",
+      "server_key": "<volatile>",
+      "status": "approved",
+      "updated_at": "<volatile>",
+      "uuid": "",
+      "version": "1.0.0"
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.access_token",
+     "pattern": "^[9aA+/_=-]{64}$"
+    },
+    {
+     "path": "data.approved_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.server_key",
+     "pattern": "^[9aA+/_=-]{44}$"
+    },
+    {
+     "path": "data.updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "access_token": "<volatile>",
+      "approved_at": "<volatile>",
+      "approved_by": "e2e_admin",
+      "console_url": "http://<hostname>:5001",
+      "created_at": "<volatile>",
+      "device_id": "contract-ws-lan",
+      "hostname": "lan-box",
+      "id": 11,
+      "ip_address": "<client-ip>",
+      "platform": "linux",
+      "public_key": "",
+      "rejected_reason": "",
+      "server_address": "<hostname>:21116",
+      "server_key": "<volatile>",
+      "status": "approved",
+      "updated_at": "<volatile>",
+      "uuid": "",
+      "version": "1.0.0"
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.access_token",
+     "pattern": "^[9aA+/_=-]{64}$"
+    },
+    {
+     "path": "data.approved_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.server_key",
+     "pattern": "^[9aA+/_=-]{44}$"
+    },
+    {
+     "path": "data.updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "access_token": "<volatile>",
+      "approved_at": "<volatile>",
+      "approved_by": "e2e_admin",
+      "console_url": "http://<hostname>:5001",
+      "created_at": "<volatile>",
+      "device_id": "contract-ws-lan",
+      "hostname": "lan-box",
+      "id": 12,
+      "ip_address": "<client-ip>",
+      "platform": "linux",
+      "public_key": "",
+      "rejected_reason": "",
+      "server_address": "<hostname>:21116",
+      "server_key": "<volatile>",
+      "status": "approved",
+      "updated_at": "<volatile>",
+      "uuid": "",
+      "version": "1.0.0"
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

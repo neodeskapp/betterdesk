@@ -192,6 +192,33 @@
 // /api/dataguard/dlp-events) needs the CSRF token like any write, as it
 // did in Node.
 //
+// # Websockets
+//
+// A socket is registered on d.Sockets (package console/ws), not on a
+// route table: upgrades never pass the pipeline, as Node's upgrade
+// listener ran outside Express. The handler runs the socket's checks in
+// the old order and answers the handshake:
+//
+//	d.Sockets.Handle("/ws/notes/{device}", func(u *ws.Upgrade) {
+//		if !u.CheckOrigin("notes") { // "HTTP/1.1 403 Forbidden", then close
+//			return
+//		}
+//		if !u.Session().SignedIn() {
+//			u.Refuse(http.StatusUnauthorized)
+//			return
+//		}
+//		conn, ok := u.Accept(ws.AcceptOptions{MaxPayload: 64 << 10})
+//		if !ok {
+//			return
+//		}
+//		defer conn.Wait()
+//		...
+//	})
+//
+// console/sockets.go lists the services whose sockets are switched on.
+// Upgrades to a path nobody registered go to the Node console while it
+// runs behind this one.
+//
 // # What a handler reads and writes
 //
 //	kit.Session(r)            req.session        Get, Set, Delete, Destroy, Regenerate, Establish

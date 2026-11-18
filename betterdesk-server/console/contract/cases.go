@@ -99,6 +99,8 @@ type Case struct {
 	// by route ID ("POST /api/auth/logout"). The route that matches Method
 	// and Path is covered without being named.
 	Covers []string
+	// Socket makes the case a step on a websocket at Path (socketcase.go).
+	Socket *Socket
 }
 
 // Part is one part of a multipart/form-data body.
@@ -240,6 +242,14 @@ func (c *Case) check() error {
 			return fmt.Errorf("covers %q: a route ID is method and path, like \"POST /api/auth/logout\"", id)
 		}
 	}
+	if c.Socket != nil {
+		if c.Method != http.MethodGet || bodies > 0 || c.FollowRedirects || c.NoCSRF {
+			return fmt.Errorf("a socket case is a GET without body, redirects or CSRF settings")
+		}
+		if err := c.Socket.check(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -297,6 +307,8 @@ type turn struct {
 	// captured secret, for masking.
 	run   *secretSet
 	clock clock
+	// sockets are the websockets the turn opened, by name.
+	sockets map[string]*turnSocket
 }
 
 // clock is the time as the two-factor functions see it.
@@ -311,7 +323,7 @@ func (realClock) Now() time.Time        { return time.Now() }
 func (realClock) Sleep(d time.Duration) { time.Sleep(d) }
 
 func newTurn(run *secretSet) *turn {
-	return &turn{vars: variables{}, secrets: map[string]string{}, steps: map[string]int64{}, run: run, clock: realClock{}}
+	return &turn{vars: variables{}, secrets: map[string]string{}, steps: map[string]int64{}, run: run, clock: realClock{}, sockets: map[string]*turnSocket{}}
 }
 
 // secret is the value of {secret:name}: captured in this turn, or the file
@@ -522,6 +534,9 @@ func (c *Case) info() RequestInfo {
 	}
 	sort.Strings(computed)
 	info.Notes = append(info.Notes, computed...)
+	if c.Socket != nil {
+		info.Notes = append(info.Notes, c.Socket.notes()...)
+	}
 	return info
 }
 
@@ -687,7 +702,7 @@ func (s *Suite) runGroup(t *testing.T, group *CaseGroup) {
 	for i := range group.Cases {
 		c := &group.Cases[i]
 		sl := newSlot("cases", group.Name, c.Name, group.Name+"/"+c.Name, c.info())
-		sl.method, sl.target = c.Method, variables{}.fill(c.Path)
+		sl.method, sl.target, sl.upgrade = c.Method, variables{}.fill(c.Path), c.Socket != nil
 		sl.rec.Volatile, sl.rec.VolatileHeaders = c.Volatile, c.VolatileHeaders
 		slots[i] = sl
 		for _, role := range c.roles() {
@@ -706,6 +721,7 @@ func (s *Suite) runGroup(t *testing.T, group *CaseGroup) {
 	for _, role := range sortRoles(roleKeys(turns)) {
 		t.Run(string(role), func(t *testing.T) {
 			tn := newTurn(s.Client.secrets)
+			defer tn.closeSockets()
 			for i := range group.Cases {
 				c := &group.Cases[i]
 				if !c.runsFor(role) {
@@ -727,7 +743,12 @@ func (s *Suite) runGroup(t *testing.T, group *CaseGroup) {
 					id := group.Name + "/" + c.Name
 					s.note(role, id)
 					start := time.Now()
-					answer := sess.Do(request)
+					var answer Answer
+					if c.Socket != nil {
+						answer = s.socketStep(sess, c, tn, request)
+					} else {
+						answer = sess.Do(request)
+					}
 					s.Report.took(fmt.Sprintf("%s as %s", id, role), time.Since(start))
 					if err := c.capture(answer, tn); err != nil {
 						t.Errorf("%s", s.redact(err.Error()))

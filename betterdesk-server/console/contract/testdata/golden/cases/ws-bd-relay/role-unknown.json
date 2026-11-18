@@ -1,0 +1,30 @@
+{
+ "id": "ws-bd-relay/role-unknown",
+ "request": {
+  "method": "GET",
+  "path": "/ws/bd-relay?role=viewer&session=s&token=t",
+  "notes": [
+   "websocket b, own origin",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 4400,
+      "reason": "Missing or invalid parameters"
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

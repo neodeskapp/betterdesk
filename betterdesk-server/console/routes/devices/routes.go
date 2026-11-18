@@ -11,9 +11,7 @@
 //
 // The routes that reach into a running agent (its services, processes,
 // event log, activity, files, clipboard, screen, keyboard, mouse and
-// terminal) are not here: they talk to the agent over the websocket relay
-// of the Node console (services/bdRelay.js), and stay with it until that
-// relay moves.
+// terminal) ask it over its signal socket (console/bdrelay); agent.go.
 //
 // GET /api/devices shares its address with the RustDesk client API, which
 // answers a request with a bearer token. That API has not moved: the list
@@ -86,6 +84,24 @@ func Register(d *kit.Deps) {
 	r.Put("/api/devices/{id}/access-policy", h.saveAccessPolicy, d.RequireAuth, edit)
 	r.Delete("/api/devices/{id}/access-policy", h.deleteAccessPolicy, d.RequireAuth, edit)
 	r.Get("/api/devices/{id}/connect-password", h.connectPassword, d.RequireAuth, d.RequirePermission("device.connect"))
+
+	r.Get("/api/devices/{id}/services", h.services, d.RequireAuth, view)
+	r.Get("/api/devices/{id}/processes", h.processes, d.RequireAuth, view)
+	r.Get("/api/devices/{id}/events", h.events, d.RequireAuth, view)
+	r.Get("/api/devices/{id}/activity", h.activity, d.RequireAuth, view)
+	r.Post("/api/devices/{id}/files/browse", h.filesBrowse, d.RequireAuth, edit)
+	r.Post("/api/devices/{id}/files/read", h.filesRead, d.RequireAuth, edit)
+	r.Post("/api/devices/{id}/files/write", h.filesWrite, d.RequireAuth, edit)
+	r.Post("/api/devices/{id}/files/delete", h.filesDelete, d.RequireAuth, edit)
+	r.Post("/api/devices/{id}/files/rename", h.filesRename, d.RequireAuth, edit)
+	r.Post("/api/devices/{id}/files/mkdir", h.filesMkdir, d.RequireAuth, edit)
+	r.Get("/api/devices/{id}/clipboard", h.clipboard, d.RequireAuth, view)
+	r.Post("/api/devices/{id}/clipboard", h.setClipboard, d.RequireAuth, edit)
+	r.Post("/api/devices/{id}/screenshot", h.screenshot, d.RequireAuth, view)
+	r.Post("/api/devices/{id}/input/mouse", h.mouse, d.RequireAuth, edit)
+	r.Post("/api/devices/{id}/input/key", h.key, d.RequireAuth, edit)
+	r.Post("/api/devices/{id}/input/text", h.typeText, d.RequireAuth, edit)
+	r.Post("/api/devices/{id}/terminal/execute", h.terminal, d.RequireAuth, edit)
 
 	r.Post("/api/devices/{id}/rename", h.rename, d.RequireAuth, edit)
 
