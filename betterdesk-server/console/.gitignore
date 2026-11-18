@@ -1,3 +1,7 @@
 # Packages and goldens whose names contain "backup" (the root .gitignore
 # leaves out folders named like backups)
 !*backup*/
+# Test fixtures: certificates and keys made for tests only, and archives
+# recorded from the old console (the root .gitignore leaves out *.pem,
+# *.key and *.tar.gz everywhere)
+!**/testdata/**
