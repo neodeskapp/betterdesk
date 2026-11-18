@@ -32,6 +32,15 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "data.buildMethod",
+    "data.canInstallGo",
+    "data.goMinimumVersion",
+    "data.goPath",
+    "data.goVersion",
+    "data.goVersionNumber",
+    "data.sourcePresent"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -68,6 +77,15 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "data.buildMethod",
+    "data.canInstallGo",
+    "data.goMinimumVersion",
+    "data.goPath",
+    "data.goVersion",
+    "data.goVersionNumber",
+    "data.sourcePresent"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -107,23 +125,32 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "data.buildMethod",
+    "data.canInstallGo",
+    "data.goMinimumVersion",
+    "data.goPath",
+    "data.goVersion",
+    "data.goVersionNumber",
+    "data.sourcePresent"
+   ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
       "binaryPath": "/usr/local/bin/betterdesk-server",
-      "buildMethod": "local",
+      "buildMethod": "<volatile>",
       "canAutoUpdate": true,
-      "canInstallGo": true,
+      "canInstallGo": false,
       "goAvailable": true,
       "goMeetsMinimum": true,
-      "goMinimumVersion": "1.26.9",
+      "goMinimumVersion": "<volatile>",
       "goNeedsUpgrade": false,
-      "goPath": "/usr/local/go/bin/go",
+      "goPath": "<volatile>",
       "goSource": "path",
-      "goVersion": "go version go1.26.10 linux/amd64",
-      "goVersionNumber": "1.26.10",
-      "sourcePresent": true,
+      "goVersion": "<volatile>",
+      "goVersionNumber": "<volatile>",
+      "sourcePresent": false,
       "vendoredGoInstalled": false
      },
      "success": true

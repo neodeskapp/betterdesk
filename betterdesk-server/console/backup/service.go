@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,8 +26,8 @@ const (
 )
 
 // DefaultMaxArchiveBytes is the largest unpacked archive Restore and the
-// checks accept: 2 GiB.
-const DefaultMaxArchiveBytes = 2 << 30
+// checks accept: 2 GiB, or what an int holds on a 32-bit platform.
+const DefaultMaxArchiveBytes = min(2<<30, math.MaxInt)
 
 // Branding is the part of the branding service a backup reads and writes.
 type Branding interface {

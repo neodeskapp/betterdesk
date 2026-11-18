@@ -25,6 +25,7 @@ import (
 	"github.com/unitronix/betterdesk-server/billing"
 	"github.com/unitronix/betterdesk-server/cdap"
 	"github.com/unitronix/betterdesk-server/config"
+	"github.com/unitronix/betterdesk-server/console/updater"
 	"github.com/unitronix/betterdesk-server/crypto"
 	"github.com/unitronix/betterdesk-server/db"
 	"github.com/unitronix/betterdesk-server/internal/productversion"
@@ -42,6 +43,10 @@ import (
 var (
 	Version   = "dev"
 	BuildDate = "unknown"
+	// Commit is the commit the binary was built from (-X main.Commit=...),
+	// empty for a build without one. The updater compares it with a
+	// release.
+	Commit = ""
 
 	runSQLiteAuthConsolidation       bool
 	sqliteAuthConsolidationDryRun    bool
@@ -136,7 +141,28 @@ func main() {
 	// BETTERDESK_ENV_FILE first: the flags and every setting read the
 	// environment it fills
 	loadEnvFileFromOS()
+	if code, handled := runSubcommand(os.Args[1:]); handled {
+		os.Exit(code)
+	}
+	// Before anything else: count this start of a freshly installed binary,
+	// and put the previous one back when it is the fourth.
+	pending := updater.StartupCheck(updater.StartupOptions{
+		Args: os.Args[1:], Version: Version, Commit: Commit,
+		Logf: func(format string, args ...any) { log.Printf(format, args...) },
+	})
+	if pending.RolledBack() {
+		os.Exit(updater.ExitRestart)
+	}
+
 	cfg := parseFlags()
+	// exitCode ends the process once every deferred stop below has run: a
+	// restart the console asked for exits with updater.ExitRestart.
+	exitCode := 0
+	defer func() {
+		if exitCode != 0 {
+			os.Exit(exitCode)
+		}
+	}()
 
 	// Configure log format (must be before any log output)
 	logCleanup := logging.Setup(cfg.LogFormat, cfg.LogLevel)
@@ -433,6 +459,16 @@ func main() {
 	// Context for graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	// The console asks for a restart after a confirmed restart, an update
+	// or a restore, when a supervisor starts the process again (DECISIONS
+	// A30).
+	restartRequested := make(chan struct{}, 1)
+	requestRestart := func() {
+		select {
+		case restartRequested <- struct{}{}:
+		default:
+		}
+	}
 
 	// Time sync + billing (commercialization module)
 	timeSyncSvc := timesync.NewService(database, timesync.Config{
@@ -617,7 +653,7 @@ func main() {
 		}
 		defer adminSrv.Stop()
 
-		stopConsole, err := startConsole(ctx, cfg, database, apiSrv, sig.EventBus())
+		stopConsole, err := startConsole(ctx, cfg, database, apiSrv, sig.EventBus(), requestRestart)
 		if err != nil {
 			log.Fatalf("Failed to start console: %v", err)
 		}
@@ -688,11 +724,23 @@ func main() {
 		log.Fatalf("Unknown mode: %s (use: all, signal, relay)", cfg.Mode)
 	}
 
+	// Everything listens: a freshly installed binary has made it.
+	pending.Ready()
+
 	// Wait for shutdown signal
 	sigCh := make(chan os.Signal, 1)
 	osSignal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-	sig := <-sigCh
-	log.Printf("Received signal %v, shutting down...", sig)
+	select {
+	case sig := <-sigCh:
+		log.Printf("Received signal %v, shutting down...", sig)
+	case <-restartRequested:
+		log.Printf("Restart requested, shutting down so that the supervisor starts the server again...")
+		exitCode = updater.ExitRestart
+		time.AfterFunc(30*time.Second, func() {
+			log.Printf("Shutdown took more than 30 seconds, exiting")
+			os.Exit(updater.ExitRestart)
+		})
+	}
 	cancel()
 	log.Printf("Server stopped")
 }
@@ -1113,7 +1161,12 @@ func parseFlags() *config.Config {
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Printf("betterdesk-server %s (built %s)\n", Version, BuildDate)
+		// The updater reads this line from a binary it is about to install.
+		if Commit != "" {
+			fmt.Printf("betterdesk-server %s (built %s, commit %s)\n", Version, BuildDate, Commit)
+		} else {
+			fmt.Printf("betterdesk-server %s (built %s)\n", Version, BuildDate)
+		}
 		os.Exit(0)
 	}
 

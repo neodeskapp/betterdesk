@@ -75,6 +75,17 @@ var (
 		// the console that answers: Node's version, Go's in the Go console.
 		"GET /api/stats":         {"~data.hbbs.uptime"},
 		"GET /api/settings/info": {"~data.goServer.uptime", "data.server.uptime", "data.server.memoryUsage", "~data.app.nodeVersion"},
+		// DECISIONS A29: updates install release binaries, so the Go toolchain
+		// facts describe no toolchain; the install has one service, a
+		// restart is the exit under a supervisor, and an update needs the
+		// binary's folder instead of Node and npm.
+		"GET /api/settings/updates/server-info": {
+			"~data.goVersion", "~data.goVersionNumber", "~data.goPath", "~data.goMinimumVersion",
+			"data.canInstallGo", "data.sourcePresent", "~data.buildMethod",
+		},
+		"GET /api/settings/management/capabilities": {
+			"data.services", "data.groups.update", "~data.groups.restart.checks[0].error", "~data.checks[7].error", "data.checks[9]",
+		},
 	}
 
 	matrixVolatileHeaders = map[string][]string{

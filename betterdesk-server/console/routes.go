@@ -43,6 +43,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/serverattestation"
 	"github.com/unitronix/betterdesk-server/console/routes/settings"
 	"github.com/unitronix/betterdesk-server/console/routes/settingsbackup"
+	"github.com/unitronix/betterdesk-server/console/routes/settingsupdates"
 	"github.com/unitronix/betterdesk-server/console/routes/system"
 	"github.com/unitronix/betterdesk-server/console/routes/tenants"
 	"github.com/unitronix/betterdesk-server/console/routes/tickets"
@@ -84,14 +85,16 @@ func registerRoutes(d *kit.Deps) {
 	keys.Register(d)           // routes/keys.routes.js
 	settings.Register(d)       // routes/settings.routes.js: the general settings and the branding reads
 	settingsbackup.Register(d) // routes/settings.routes.js: backup, restore and the scheduled backups
-	generator.Register(d)      // routes/generator.routes.js
-	avatars.Register(d)        // routes/avatars.routes.js
-	users.Register(d)          // routes/users.routes.js
-	panelaccess.Register(d)    // routes/panel-access.routes.js
-	uishell.Register(d)        // routes/ui-shell.routes.js
-	folders.Register(d)        // routes/folders.routes.js
-	guest.Register(d)          // routes/guest.routes.js
-	i18nroutes.Register(d)     // routes/i18n.routes.js at /api/i18n
+	// routes/settings.routes.js: the update and management routes
+	settingsupdates.Register(d)
+	generator.Register(d)   // routes/generator.routes.js
+	avatars.Register(d)     // routes/avatars.routes.js
+	users.Register(d)       // routes/users.routes.js
+	panelaccess.Register(d) // routes/panel-access.routes.js
+	uishell.Register(d)     // routes/ui-shell.routes.js
+	folders.Register(d)     // routes/folders.routes.js
+	guest.Register(d)       // routes/guest.routes.js
+	i18nroutes.Register(d)  // routes/i18n.routes.js at /api/i18n
 	// routes/dataguard.routes.js at /api/dataguard and at /api/bd
 	// routes/inventory.routes.js at /api/inventory, without the device routes (inventory, telemetry, inventory/:id), which are all the group answers at /api/bd
 	inventory.Register(d.At("/api/inventory"))

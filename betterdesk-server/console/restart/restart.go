@@ -106,10 +106,12 @@ type Options struct {
 	// Rollbacks are the functions for the kinds of rollback other than
 	// "go-config", by the "type" of the descriptor.
 	Rollbacks map[string]Rollback
-	// Exit ends the console process after a confirmed restart, ExitDelay
-	// after Confirm returned (process.exit(0)): whoever supervises the
-	// console starts it again. Nil ends nothing, which is what the old
-	// console did with NODE_ENV=test.
+	// Exit ends the process with the exit status that asks its
+	// supervisor to start it again (DECISIONS A30): ExitDelay after a
+	// confirmed restart, and through ExitLater after an installed update
+	// or a restore. The console sets it only when an installer named a
+	// supervisor (BETTERDESK_SUPERVISOR). Nil ends nothing: the routes
+	// then answer as they do where no restart is possible.
 	Exit func()
 	// After runs f once d has passed. Nil means time.AfterFunc.
 	After func(d time.Duration, f func())
@@ -176,6 +178,24 @@ func (s *Service) StatePath() string {
 // restarting under another boot id has outlived the process that
 // confirmed it.
 func (s *Service) BootID() string { return s.bootID }
+
+// Supervised reports whether the process ends, to be started again, after
+// a confirmed restart, an installed update or a restore.
+func (s *Service) Supervised() bool { return s.opts.Exit != nil }
+
+// ExitLater ends the process d from now, so that the answer a route just
+// wrote reaches the client first, and logs why. It reports false, and
+// does nothing, when the process is not supervised.
+func (s *Service) ExitLater(d time.Duration, reason string) bool {
+	if s.opts.Exit == nil {
+		return false
+	}
+	s.opts.After(d, func() {
+		s.opts.Logger.Info(reason)
+		s.opts.Exit()
+	})
+	return true
+}
 
 // SetRollback sets the function that undoes changes of one kind, the
 // "type" of their descriptors. The group that owns the setting calls it

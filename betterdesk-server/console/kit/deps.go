@@ -26,6 +26,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/statuspush"
 	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/unitronix/betterdesk-server/console/updater"
 	"github.com/unitronix/betterdesk-server/console/webui"
 	"github.com/unitronix/betterdesk-server/console/ws"
 )
@@ -116,6 +117,10 @@ type Deps struct {
 	// (services/agentBundleService.js, supportGeneratorModule.js,
 	// clientBuilderService.js, clientTemplateWorker.js).
 	Generator *generator.Service
+	// Updater installs release binaries, keeps the update backups and
+	// reports what the install can do (services/updateService.js,
+	// lib/managementCapabilities.js).
+	Updater *updater.Service
 	// Audit writes the audit log. LogAction is the usual way to it.
 	Audit *auditlog.Log
 	// Log is the console's logger; a group takes d.Log.Child("TICKETS").

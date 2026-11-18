@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"math"
 	"net"
 	"net/url"
 	"os"
@@ -503,21 +504,25 @@ func parseIntOr(s string, fallback int) int {
 		negative = s[0] == '-'
 		s = s[1:]
 	}
-	const ceiling = 1 << 53
-	n, digits := 0, 0
+	// Digits past 2^53 change nothing, as in a JavaScript number; the
+	// result is held to what an int holds on this platform
+	const ceiling = int64(1) << 53
+	var n int64
+	digits := 0
 	for digits < len(s) && s[digits] >= '0' && s[digits] <= '9' {
 		if n < ceiling {
-			n = n*10 + int(s[digits]-'0')
+			n = n*10 + int64(s[digits]-'0')
 		}
 		digits++
 	}
 	if digits == 0 || n == 0 {
 		return fallback
 	}
+	n = min(n, int64(math.MaxInt))
 	if negative {
-		return -n
+		return -int(n)
 	}
-	return n
+	return int(n)
 }
 
 // apiURLPort is the port of an API address as the old console read it:

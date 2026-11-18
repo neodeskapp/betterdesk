@@ -32,6 +32,13 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "data.checks[7].error",
+    "data.checks[9]",
+    "data.groups.restart.checks[0].error",
+    "data.groups.update",
+    "data.services"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -68,6 +75,13 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "data.checks[7].error",
+    "data.checks[9]",
+    "data.groups.restart.checks[0].error",
+    "data.groups.update",
+    "data.services"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -109,6 +123,13 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "data.checks[7].error",
+    "data.checks[9]",
+    "data.groups.restart.checks[0].error",
+    "data.groups.update",
+    "data.services"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -164,7 +185,7 @@
         "ready": true
        },
        {
-        "error": "Docker CLI or daemon unavailable",
+        "error": "<volatile>",
         "id": "restart",
         "method": "unavailable",
         "ready": false
@@ -173,12 +194,7 @@
         "id": "config-schema",
         "ready": true
        },
-       {
-        "error": "Docker CLI unavailable",
-        "id": "update",
-        "method": "docker-compose",
-        "ready": false
-       }
+       {}
       ],
       "docker": true,
       "groups": {
@@ -256,7 +272,7 @@
        "restart": {
         "checks": [
          {
-          "error": "Docker CLI or daemon unavailable",
+          "error": "<volatile>",
           "id": "restart",
           "method": "unavailable",
           "ready": false
@@ -264,52 +280,7 @@
         ],
         "ready": false
        },
-       "update": {
-        "checks": [
-         {
-          "directory": true,
-          "exists": true,
-          "id": "console-read",
-          "path": "/repo/web-nodejs",
-          "ready": true
-         },
-         {
-          "directory": true,
-          "exists": true,
-          "id": "console-write",
-          "path": "/repo/web-nodejs",
-          "ready": true
-         },
-         {
-          "directory": true,
-          "exists": true,
-          "id": "data-write",
-          "path": "/app/data",
-          "ready": true
-         },
-         {
-          "directory": true,
-          "exists": true,
-          "id": "server-read",
-          "path": "/opt/rustdesk",
-          "ready": true
-         },
-         {
-          "directory": true,
-          "exists": true,
-          "id": "server-write",
-          "path": "/opt/rustdesk",
-          "ready": true
-         },
-         {
-          "error": "Docker CLI unavailable",
-          "id": "update",
-          "method": "docker-compose",
-          "ready": false
-         }
-        ],
-        "ready": false
-       }
+       "update": {}
       },
       "paths": {
        "backupPath": "/app/data/backups",
@@ -320,11 +291,7 @@
        "serverPath": "/opt/rustdesk"
       },
       "platform": "linux",
-      "services": [
-       "betterdesk",
-       "betterdesk-server",
-       "betterdesk-console"
-      ],
+      "services": [],
       "success": true
      },
      "success": true

@@ -22,6 +22,7 @@ package console
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"os"
@@ -57,6 +58,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/statuspush"
 	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/unitronix/betterdesk-server/console/updater"
 	"github.com/unitronix/betterdesk-server/console/webui"
 	"github.com/unitronix/betterdesk-server/console/ws"
 	"github.com/unitronix/betterdesk-server/events"
@@ -79,6 +81,18 @@ type Options struct {
 	// Roles is the server's database with the role overrides. nil leaves
 	// every role with its built-in permissions.
 	Roles access.OverrideStore
+	// Version and Commit are the running binary's (main.Version and
+	// main.Commit), for the updater.
+	Version, Commit string
+	// Exit asks the process to end with the exit status that makes its
+	// supervisor start it again (DECISIONS A30). The console calls it only
+	// when an installer named a supervisor (BETTERDESK_SUPERVISOR): after
+	// a confirmed restart, an installed update and a restore. Nil never
+	// ends the process.
+	Exit func()
+	// DataBackup makes the data backup before an update
+	// (console/backup's Service). Nil makes none.
+	DataBackup updater.DataBackup
 }
 
 // Server is the console's HTTP server.
@@ -240,17 +254,38 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	s.deps.GuestAccess = guestaccess.New(guestaccess.Options{HTTPS: cfg.HTTPS, GoAPI: api})
 	s.deps.FileTransfer = filetransfer.New(filetransfer.Options{Dir: cfg.TransfersDir, Logger: s.deps.Log})
 	s.jobs.Add("file transfer cleanup", s.deps.FileTransfer.Run)
+	// Under a supervisor a restart is the process's own exit (A30);
+	// otherwise the restart runs through the service manager as it did,
+	// and nothing ends the process.
+	restartServer := s.deps.ServerInfo.RestartServer
+	var exit func()
+	if supervisor := updater.Supervisor(getenv); supervisor != "" && opts.Exit != nil {
+		restartServer, exit = restart.SupervisorRestart(supervisor), opts.Exit
+	}
 	s.deps.Restart = restart.New(restart.Options{
 		DataDir:       cfg.DataDir,
 		GoAPI:         api,
-		RestartServer: s.deps.ServerInfo.RestartServer,
+		RestartServer: restartServer,
 		Rollbacks:     map[string]restart.Rollback{"connection-mode": restart.ConnectionModeRollback(s.deps.ServerInfo)},
+		Exit:          exit,
 		Logger:        s.deps.Log,
 	})
 	s.deps.Generator = generator.New(generator.Options{
 		DB: opts.Store, ServerInfo: s.deps.ServerInfo, DataDir: cfg.DataDir, ConsoleDir: cfg.ConsoleDir,
 		ArtifactDir: cfg.AgentArtifactDir, Embedded: cfg.GeneratorEmbedded, WorkerEnabled: cfg.AgentBuildWorker,
 		PollInterval: cfg.AgentBuildPoll, Cooldown: cfg.AgentBuildCooldown, Logger: s.deps.Log,
+	})
+	s.deps.Updater = updater.New(updater.Options{
+		DataDir:    cfg.DataDir,
+		ConsoleDir: cfg.ConsoleDir,
+		EnvFile:    getenv("BETTERDESK_ENV_FILE"),
+		Version:    opts.Version,
+		Commit:     opts.Commit,
+		Docker:     cfg.Docker,
+		Getenv:     getenv,
+		DataBackup: opts.DataBackup,
+		Setting:    readSetting(opts.Store),
+		Logger:     s.deps.Log.Child("UPDATE"),
 	})
 	s.deps.DeviceGroups = devicegroups.New(devicegroups.Options{DB: opts.Store, Access: s.deps.Access})
 	s.deps.Backend = goapi.NewBackend(api, devicegroups.DeviceStore{Groups: s.deps.DeviceGroups})
@@ -470,5 +505,29 @@ func (s *Server) Stop() {
 	s.deps.Avatars.Wait()
 	if s.node != nil {
 		s.node.Close()
+	}
+}
+
+// readSetting reads one row of the console's settings table, for the
+// updater's backup retention (db.getSetting). A NULL value counts as no
+// row.
+func readSetting(db *store.DB) func(ctx context.Context, key string) (string, bool, error) {
+	return func(ctx context.Context, key string) (string, bool, error) {
+		if db == nil {
+			return "", false, nil
+		}
+		rows, err := db.Query(ctx, "SELECT value FROM settings WHERE key = ?", key)
+		if err != nil {
+			return "", false, fmt.Errorf("read setting %s: %w", key, err)
+		}
+		defer rows.Close()
+		if !rows.Next() {
+			return "", false, rows.Err()
+		}
+		var value sql.NullString
+		if err := rows.Scan(&value); err != nil {
+			return "", false, fmt.Errorf("read setting %s: %w", key, err)
+		}
+		return value.String, value.Valid, rows.Err()
 	}
 }
