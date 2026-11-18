@@ -62,7 +62,6 @@ describe('server routes before the console at the root', () => {
 
     test('old addresses that redirect still do', async () => {
         expect((await request(app(admin)).get('/remote-dashboard')).headers.location).toBe('/remote');
-        expect((await request(app(admin)).get('/generator')).headers.location).toBe('/agents');
         expect((await request(app(admin)).get('/remote-desktop/900100001')).headers.location).toBe('/remote/900100001');
         expect((await request(app(admin)).get('/remote-cdap/900100001')).headers.location).toBe('/remote/900100001?transport=cdap');
     });

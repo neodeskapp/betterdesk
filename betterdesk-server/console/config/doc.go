@@ -58,6 +58,25 @@
 //	WS_HBBS_PORT             21116                 reports the port and the ports next to it (NAT test, websockets).
 //	WS_HBBR_HOST             localhost             Where the console reaches the relay.
 //	WS_HBBR_PORT             21117
+//	BETTERDESK_CLIENT_GENERATOR_MODE  download     "embedded" builds the support client from source on this machine
+//	                                               instead of using the downloaded templates.
+//	AGENT_BUILD_WORKER       (on)                  "off" keeps the support client build worker from starting. It never
+//	                                               starts while a Node console runs behind this one.
+//	AGENT_BUILD_POLL_MS      5000                  How often the build worker looks for a queued build. Zero, a
+//	                                               negative number or no number: every millisecond.
+//	AGENT_BUILD_COOLDOWN_MS  1000                  Pause after a build. Zero, negative or no number: none.
+//	AGENT_ARTIFACT_DIR       DATA_DIR/agent-builds  Where the finished installers are kept.
+//
+// The support client generator reads its other settings from the
+// environment when it needs them, with /etc/betterdesk/build.env
+// (BETTERDESK_BUILD_ENV_FILE) filling the names the environment lacks:
+// BETTERDESK_CLIENT_REPO, BETTERDESK_CLIENT_RELEASE_TAG, BETTERDESK_CLIENT_REF,
+// BETTERDESK_CLIENT_ALLOWED_REPOS, BETTERDESK_GITHUB_TOKEN (or GITHUB_TOKEN),
+// BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED, BETTERDESK_CLIENT_BUILD_COMMAND,
+// BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON, BETTERDESK_CLIENT_PROVIDER_TARGETS_FILE,
+// BETTERDESK_CLIENT_GITHUB_ACTIONS, BETTERDESK_CLIENT_BUILD_WORKFLOW,
+// BETTERDESK_CLIENT_BUILD_TIMEOUT_MS and the toolchain paths of the local
+// builder (package generator).
 //
 // The numbers are read as the old console read them: digits up to the
 // first other character, and the default for zero or no number. Two files

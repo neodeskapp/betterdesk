@@ -1,0 +1,1053 @@
+[
+ {
+  "kind": "product",
+  "input": null,
+  "missing": true,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "product",
+  "input": null,
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "product",
+  "input": true,
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "product",
+  "input": false,
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "product",
+  "input": 0,
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "product",
+  "input": 1,
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "product",
+  "input": 0,
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "product",
+  "input": 0.5,
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "product",
+  "input": 2,
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "product",
+  "input": 21114,
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "product",
+  "input": "21114",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "21114",
+  "out": "21114",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": [],
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "product",
+  "input": [
+   "#aabbcc"
+  ],
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "product",
+  "input": [
+   1,
+   2
+  ],
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "product",
+  "input": {},
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "product",
+  "input": {
+   "a": 1
+  },
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "product",
+  "input": "",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "",
+  "out": "queued",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": " ",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": " ",
+  "out": "queued",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "a",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "a",
+  "out": "a",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": " Acme ",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": " Acme ",
+  "out": "acme",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "Acme Support",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "Acme Support",
+  "out": "acme support",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "Łódź & Warszawa",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "Łódź & Warszawa",
+  "out": "łódź & warszawa",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "Moja Firma IT",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "Moja Firma IT",
+  "out": "moja firma it",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "Žluťoučký kůň",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "Žluťoučký kůň",
+  "out": "žluťoučký kůň",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "Straße",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "Straße",
+  "out": "straße",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀",
+  "out": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀",
+  "out": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀",
+  "out": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+  "out": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "\ud83d",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "\ud83d",
+  "out": "\ud83d",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "a\udc00b",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "a\udc00b",
+  "out": "a\udc00b",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": " line ",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": " line ",
+  "out": "line",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "﻿bom",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "﻿bom",
+  "out": "bom",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": " nbsp　",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": " nbsp　",
+  "out": "nbsp",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "İstanbul",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "İstanbul",
+  "out": "i̇stanbul",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "tab\there",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "tab\there",
+  "out": "tab\there",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "quote\"back\\slash",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "quote\"back\\slash",
+  "out": "quote\"back\\slash",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "<b>html</b>&",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "<b>html</b>&",
+  "out": "<b>html</b>&",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "desk.example.com",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "desk.example.com",
+  "out": "desk.example.com",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "https://Desk.Example.com:8443/path",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "https://Desk.Example.com:8443/path",
+  "out": "https://desk.example.com:8443/path",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "http://[::1]:80",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "http://[::1]:80",
+  "out": "http://[::1]:80",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "10.0.0.1",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "10.0.0.1",
+  "out": "10.0.0.1",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "300.1.1.1",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "300.1.1.1",
+  "out": "300.1.1.1",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "bad host!",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "bad host!",
+  "out": "bad host!",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "-leading",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "-leading",
+  "out": "-leading",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "out": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "out": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "xn--bcher-kva.example",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "xn--bcher-kva.example",
+  "out": "xn--bcher-kva.example",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "bücher.example",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "bücher.example",
+  "out": "bücher.example",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "UPPER.example",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "UPPER.example",
+  "out": "upper.example",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "#ABCDEF",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "#ABCDEF",
+  "out": "#abcdef",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "#abcdef",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "#abcdef",
+  "out": "#abcdef",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "#12345",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "#12345",
+  "out": "#12345",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "#1234567",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "#1234567",
+  "out": "#1234567",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "red",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "red",
+  "out": "red",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "#aBcDeF",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "#aBcDeF",
+  "out": "#abcdef",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "data:image/png;base64,AAAA",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "data:image/png;base64,AAAA",
+  "out": "data:image/png;base64,aaaa",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "data:image/svg+xml;base64,PHN2Zz4=",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "data:image/svg+xml;base64,PHN2Zz4=",
+  "out": "data:image/svg+xml;base64,phn2zz4=",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "data:text/plain;base64,AAAA",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "data:text/plain;base64,AAAA",
+  "out": "data:text/plain;base64,aaaa",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "data:image/png,raw",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "data:image/png,raw",
+  "out": "data:image/png,raw",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "example.com/help",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "example.com/help",
+  "out": "example.com/help",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "https://example.com/x?y=1#z",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "https://example.com/x?y=1#z",
+  "out": "https://example.com/x?y=1#z",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "javascript:alert(1)",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "javascript:alert(1)",
+  "out": "javascript:alert(1)",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "ftp://example.com",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "ftp://example.com",
+  "out": "ftp://example.com",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "mailto:a@b.c",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "mailto:a@b.c",
+  "out": "mailto:a@b.c",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "http://exa mple.com",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "http://exa mple.com",
+  "out": "http://exa mple.com",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "https://",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "https://",
+  "out": "https://",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "en",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "en",
+  "out": "en",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "de",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "de",
+  "out": "de",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "zh-TW",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "zh-TW",
+  "out": "zh-tw",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "zh-tw",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "zh-tw",
+  "out": "zh-tw",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "xx",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "xx",
+  "out": "xx",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "EN",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "EN",
+  "out": "en",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "agent",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "agent",
+  "out": "agent",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "AGENT",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "AGENT",
+  "out": "agent",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": " support-agent ",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": " support-agent ",
+  "out": "support-agent",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "support_agent",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "support_agent",
+  "out": "support_agent",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "agent_client",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "agent_client",
+  "out": "agent_client",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "agent-client",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "agent-client",
+  "out": "agent-client",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "rdclient",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "rdclient",
+  "out": "rdclient",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "betterdesk_support",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "betterdesk_support",
+  "out": "betterdesk_support",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "betterdesk-support",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "betterdesk-support",
+  "out": "betterdesk-support",
+  "queued": false
+ },
+ {
+  "kind": "product",
+  "input": "unknown",
+  "missing": false,
+  "out": "betterdesk-support"
+ },
+ {
+  "kind": "status",
+  "input": "unknown",
+  "out": "unknown",
+  "queued": false
+ },
+ {
+  "kind": "status",
+  "input": "queued",
+  "out": "queued",
+  "queued": true
+ },
+ {
+  "kind": "status",
+  "input": "PENDING",
+  "out": "queued",
+  "queued": true
+ },
+ {
+  "kind": "status",
+  "input": " pending ",
+  "out": "queued",
+  "queued": true
+ },
+ {
+  "kind": "status",
+  "input": "building",
+  "out": "building",
+  "queued": false
+ },
+ {
+  "kind": "status",
+  "input": "ready",
+  "out": "ready",
+  "queued": false
+ },
+ {
+  "kind": "status",
+  "input": "failed",
+  "out": "failed",
+  "queued": false
+ },
+ {
+  "kind": "status",
+  "input": "",
+  "out": "queued",
+  "queued": false
+ },
+ {
+  "kind": "status",
+  "input": "Ready",
+  "out": "ready",
+  "queued": false
+ },
+ {
+  "kind": "support",
+  "input": "{\"sku\":\"betterdesk-support\"}",
+  "out": true
+ },
+ {
+  "kind": "support",
+  "input": "{\"generator_kind\":\"betterdesk-support\"}",
+  "out": true
+ },
+ {
+  "kind": "support",
+  "input": "{\"generator_version\":2}",
+  "out": true
+ },
+ {
+  "kind": "support",
+  "input": "{\"generator_version\":\"2\"}",
+  "out": true
+ },
+ {
+  "kind": "support",
+  "input": "{\"generator_version\":\"2.5\"}",
+  "out": true
+ },
+ {
+  "kind": "support",
+  "input": "{\"generator_version\":[3]}",
+  "out": true
+ },
+ {
+  "kind": "support",
+  "input": "{\"generator_version\":true}",
+  "out": false
+ },
+ {
+  "kind": "support",
+  "input": "{}",
+  "out": false
+ },
+ {
+  "kind": "support",
+  "input": "{\"app_name\":\"Old\"}",
+  "out": false
+ },
+ {
+  "kind": "support",
+  "input": "",
+  "out": false
+ },
+ {
+  "kind": "support",
+  "input": "null",
+  "out": false
+ },
+ {
+  "kind": "support",
+  "input": "not json",
+  "out": false
+ },
+ {
+  "kind": "support",
+  "input": "5",
+  "out": false
+ },
+ {
+  "kind": "support",
+  "input": "\"text\"",
+  "out": false
+ },
+ {
+  "kind": "support",
+  "input": "[1]",
+  "out": false
+ },
+ {
+  "kind": "support",
+  "input": "{\"sku\":\"BetterDesk-Support\"}",
+  "out": false
+ },
+ {
+  "kind": "support",
+  "input": "{\"generator_version\":\" 0x2 \"}",
+  "out": true
+ },
+ {
+  "kind": "support",
+  "input": "{\"generator_version\":1.99}",
+  "out": false
+ }
+]

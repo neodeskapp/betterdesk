@@ -18,6 +18,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/filetransfer"
 	"github.com/unitronix/betterdesk-server/console/routes/fleet"
 	"github.com/unitronix/betterdesk-server/console/routes/folders"
+	"github.com/unitronix/betterdesk-server/console/routes/generator"
 	"github.com/unitronix/betterdesk-server/console/routes/guest"
 	"github.com/unitronix/betterdesk-server/console/routes/health"
 	i18nroutes "github.com/unitronix/betterdesk-server/console/routes/i18n"
@@ -68,6 +69,7 @@ func registerRoutes(d *kit.Deps) {
 	keys.Register(d)           // routes/keys.routes.js
 	settings.Register(d)       // routes/settings.routes.js: the general settings and the branding reads
 	settingsbackup.Register(d) // routes/settings.routes.js: backup, restore and the scheduled backups
+	generator.Register(d)      // routes/generator.routes.js
 	avatars.Register(d)        // routes/avatars.routes.js
 	users.Register(d)          // routes/users.routes.js
 	panelaccess.Register(d)    // routes/panel-access.routes.js

@@ -14,6 +14,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/csrf"
 	"github.com/unitronix/betterdesk-server/console/devicegroups"
 	"github.com/unitronix/betterdesk-server/console/filetransfer"
+	"github.com/unitronix/betterdesk-server/console/generator"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/guestaccess"
 	"github.com/unitronix/betterdesk-server/console/i18n"
@@ -107,6 +108,11 @@ type Deps struct {
 	Mail *mail.Service
 	// Alerts is the alert rules engine (services/alertRulesEngine.js).
 	Alerts *alerts.Engine
+	// Generator is the support client generator: bundles, the template
+	// module, the client builder and the build queue
+	// (services/agentBundleService.js, supportGeneratorModule.js,
+	// clientBuilderService.js, clientTemplateWorker.js).
+	Generator *generator.Service
 	// Audit writes the audit log. LogAction is the usual way to it.
 	Audit *auditlog.Log
 	// Log is the console's logger; a group takes d.Log.Child("TICKETS").

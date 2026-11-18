@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/httpx"
 )
@@ -144,6 +145,22 @@ type Config struct {
 	EnvPath     string
 	ComposePath string
 
+	// GeneratorEmbedded is BETTERDESK_CLIENT_GENERATOR_MODE=embedded (any
+	// letter case, space around it): the support generator builds the
+	// client from source instead of using the downloaded templates.
+	GeneratorEmbedded bool
+	// AgentBuildWorker is false with AGENT_BUILD_WORKER=off.
+	AgentBuildWorker bool
+	// AgentBuildPoll and AgentBuildCooldown are AGENT_BUILD_POLL_MS
+	// (default 5000) and AGENT_BUILD_COOLDOWN_MS (default 1000). A poll
+	// value that is zero, negative or no number is one millisecond, as a
+	// timer took it; a cooldown like that is none.
+	AgentBuildPoll     time.Duration
+	AgentBuildCooldown time.Duration
+	// AgentArtifactDir is where the finished installers are kept
+	// (AGENT_ARTIFACT_DIR, default DataDir/agent-builds).
+	AgentArtifactDir string
+
 	// Getenv reads the settings that packages parse themselves: the
 	// session secret and policy (package session), the rate limits
 	// (package limits) and the sign-in settings (package authn).
@@ -264,7 +281,49 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 	cfg.RelayPort = parseIntOr(getenv("WS_HBBR_PORT"), 21117)
 	cfg.EnvPath = filepath.Join(cfg.ConsoleDir, ".env")
 	cfg.ComposePath = filepath.Join(cfg.ConsoleDir, "..", "docker-compose.yml")
+	cfg.GeneratorEmbedded = strings.ToLower(strings.TrimSpace(orDefault(getenv("BETTERDESK_CLIENT_GENERATOR_MODE"), "download"))) == "embedded"
+	cfg.AgentBuildWorker = getenv("AGENT_BUILD_WORKER") != "off"
+	cfg.AgentBuildPoll = timerDelay(orDefault(getenv("AGENT_BUILD_POLL_MS"), "5000"))
+	if ms, ok := parseInt(orDefault(getenv("AGENT_BUILD_COOLDOWN_MS"), "1000")); ok && ms > 0 {
+		cfg.AgentBuildCooldown = time.Duration(ms) * time.Millisecond
+	}
+	cfg.AgentArtifactDir = orDefault(getenv("AGENT_ARTIFACT_DIR"), filepath.Join(cfg.DataDir, "agent-builds"))
 	return cfg, nil
+}
+
+// parseInt is parseInt(s, 10): ok is false where it gives NaN.
+func parseInt(s string) (int64, bool) {
+	s = strings.TrimLeft(s, " \t\n\v\f\r")
+	negative := false
+	if s != "" && (s[0] == '+' || s[0] == '-') {
+		negative = s[0] == '-'
+		s = s[1:]
+	}
+	var n int64
+	digits := 0
+	for digits < len(s) && s[digits] >= '0' && s[digits] <= '9' {
+		if n < 1<<53 {
+			n = n*10 + int64(s[digits]-'0')
+		}
+		digits++
+	}
+	if digits == 0 {
+		return 0, false
+	}
+	if negative {
+		n = -n
+	}
+	return n, true
+}
+
+// timerDelay is the delay setInterval made of parseInt(s, 10): one
+// millisecond for no number, zero, a negative one or one beyond 2^31-1.
+func timerDelay(s string) time.Duration {
+	ms, ok := parseInt(s)
+	if !ok || ms < 1 || ms > 1<<31-1 {
+		return time.Millisecond
+	}
+	return time.Duration(ms) * time.Millisecond
 }
 
 // Addr is the listen address.

@@ -1,0 +1,355 @@
+[
+ {
+  "input": "",
+  "url": null
+ },
+ {
+  "input": " ",
+  "url": null
+ },
+ {
+  "input": "a",
+  "url": null
+ },
+ {
+  "input": " Acme ",
+  "url": null
+ },
+ {
+  "input": "Acme Support",
+  "url": null
+ },
+ {
+  "input": "Łódź & Warszawa",
+  "url": null
+ },
+ {
+  "input": "Moja Firma IT",
+  "url": null
+ },
+ {
+  "input": "Žluťoučký kůň",
+  "url": null
+ },
+ {
+  "input": "Straße",
+  "url": null
+ },
+ {
+  "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀",
+  "url": null
+ },
+ {
+  "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀",
+  "url": null
+ },
+ {
+  "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀",
+  "url": null
+ },
+ {
+  "input": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+  "url": null
+ },
+ {
+  "input": "\ud83d",
+  "url": null
+ },
+ {
+  "input": "a\udc00b",
+  "url": null
+ },
+ {
+  "input": " line ",
+  "url": null
+ },
+ {
+  "input": "﻿bom",
+  "url": null
+ },
+ {
+  "input": " nbsp　",
+  "url": null
+ },
+ {
+  "input": "İstanbul",
+  "url": null
+ },
+ {
+  "input": "tab\there",
+  "url": null
+ },
+ {
+  "input": "quote\"back\\slash",
+  "url": null
+ },
+ {
+  "input": "<b>html</b>&",
+  "url": null
+ },
+ {
+  "input": "desk.example.com",
+  "url": null
+ },
+ {
+  "input": "https://Desk.Example.com:8443/path",
+  "url": {
+   "protocol": "https:",
+   "href": "https://desk.example.com:8443/path"
+  }
+ },
+ {
+  "input": "http://[::1]:80",
+  "url": {
+   "protocol": "http:",
+   "href": "http://[::1]/"
+  }
+ },
+ {
+  "input": "10.0.0.1",
+  "url": null
+ },
+ {
+  "input": "300.1.1.1",
+  "url": null
+ },
+ {
+  "input": "bad host!",
+  "url": null
+ },
+ {
+  "input": "-leading",
+  "url": null
+ },
+ {
+  "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "url": null
+ },
+ {
+  "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "url": null
+ },
+ {
+  "input": "xn--bcher-kva.example",
+  "url": null
+ },
+ {
+  "input": "bücher.example",
+  "url": null
+ },
+ {
+  "input": "UPPER.example",
+  "url": null
+ },
+ {
+  "input": "#ABCDEF",
+  "url": null
+ },
+ {
+  "input": "#abcdef",
+  "url": null
+ },
+ {
+  "input": "#12345",
+  "url": null
+ },
+ {
+  "input": "#1234567",
+  "url": null
+ },
+ {
+  "input": "red",
+  "url": null
+ },
+ {
+  "input": "#aBcDeF",
+  "url": null
+ },
+ {
+  "input": "data:image/png;base64,AAAA",
+  "url": {
+   "protocol": "data:",
+   "href": "data:image/png;base64,AAAA"
+  }
+ },
+ {
+  "input": "data:image/svg+xml;base64,PHN2Zz4=",
+  "url": {
+   "protocol": "data:",
+   "href": "data:image/svg+xml;base64,PHN2Zz4="
+  }
+ },
+ {
+  "input": "data:text/plain;base64,AAAA",
+  "url": {
+   "protocol": "data:",
+   "href": "data:text/plain;base64,AAAA"
+  }
+ },
+ {
+  "input": "data:image/png,raw",
+  "url": {
+   "protocol": "data:",
+   "href": "data:image/png,raw"
+  }
+ },
+ {
+  "input": "example.com/help",
+  "url": null
+ },
+ {
+  "input": "https://example.com/x?y=1#z",
+  "url": {
+   "protocol": "https:",
+   "href": "https://example.com/x?y=1#z"
+  }
+ },
+ {
+  "input": "javascript:alert(1)",
+  "url": {
+   "protocol": "javascript:",
+   "href": "javascript:alert(1)"
+  }
+ },
+ {
+  "input": "ftp://example.com",
+  "url": {
+   "protocol": "ftp:",
+   "href": "ftp://example.com/"
+  }
+ },
+ {
+  "input": "mailto:a@b.c",
+  "url": {
+   "protocol": "mailto:",
+   "href": "mailto:a@b.c"
+  }
+ },
+ {
+  "input": "http://exa mple.com",
+  "url": null
+ },
+ {
+  "input": "https://",
+  "url": null
+ },
+ {
+  "input": "en",
+  "url": null
+ },
+ {
+  "input": "de",
+  "url": null
+ },
+ {
+  "input": "zh-TW",
+  "url": null
+ },
+ {
+  "input": "zh-tw",
+  "url": null
+ },
+ {
+  "input": "xx",
+  "url": null
+ },
+ {
+  "input": "EN",
+  "url": null
+ },
+ {
+  "input": "http://a",
+  "url": {
+   "protocol": "http:",
+   "href": "http://a/"
+  }
+ },
+ {
+  "input": "HTTPS://EXAMPLE.COM",
+  "url": {
+   "protocol": "https:",
+   "href": "https://example.com/"
+  }
+ },
+ {
+  "input": "https://example.com:443/",
+  "url": {
+   "protocol": "https:",
+   "href": "https://example.com/"
+  }
+ },
+ {
+  "input": "http://example.com:80/a/../b",
+  "url": {
+   "protocol": "http:",
+   "href": "http://example.com/b"
+  }
+ },
+ {
+  "input": "https://user:pw@example.com",
+  "url": {
+   "protocol": "https:",
+   "href": "https://user:pw@example.com/"
+  }
+ },
+ {
+  "input": "https://example.com/ä?x=ü",
+  "url": {
+   "protocol": "https:",
+   "href": "https://example.com/%C3%A4?x=%C3%BC"
+  }
+ },
+ {
+  "input": "  https://example.com  ",
+  "url": {
+   "protocol": "https:",
+   "href": "https://example.com/"
+  }
+ },
+ {
+  "input": "https://[::1]/",
+  "url": {
+   "protocol": "https:",
+   "href": "https://[::1]/"
+  }
+ },
+ {
+  "input": "https://0x7f.1/",
+  "url": {
+   "protocol": "https:",
+   "href": "https://127.0.0.1/"
+  }
+ },
+ {
+  "input": "http://example.com/%zz",
+  "url": {
+   "protocol": "http:",
+   "href": "http://example.com/%zz"
+  }
+ },
+ {
+  "input": "https://example..com",
+  "url": {
+   "protocol": "https:",
+   "href": "https://example..com/"
+  }
+ },
+ {
+  "input": "https://-a.example",
+  "url": {
+   "protocol": "https:",
+   "href": "https://-a.example/"
+  }
+ },
+ {
+  "input": "https://a_b.example",
+  "url": {
+   "protocol": "https:",
+   "href": "https://a_b.example/"
+  }
+ },
+ {
+  "input": "example.com",
+  "url": null
+ }
+]

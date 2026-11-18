@@ -8,7 +8,6 @@ const router = express.Router();
 
 const devicesRoutes = require('./devices.routes');
 const settingsRoutes = require('./settings.routes');
-const generatorRoutes = require('./generator.routes');
 const remoteRoutes = require('./remote.routes');
 // bdApiRoutes mounted in server.js (before CSRF) for desktop client access
 const registrationRoutes = require('./registration.routes');
@@ -41,7 +40,6 @@ router.use(requireJsonContentType);
 // Mount routes
 router.use('/', devicesRoutes);  // the routes that reach into an agent over bdRelay (the other device routes are in the Go console)
 router.use('/', settingsRoutes);
-router.use('/', generatorRoutes);
 router.use('/', require('./client-branding.routes'));
 router.use('/', remoteRoutes);
 // bdApiRoutes now mounted in server.js (before CSRF) for desktop client access

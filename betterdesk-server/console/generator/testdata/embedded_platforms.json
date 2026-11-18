@@ -1,0 +1,1427 @@
+[
+ {
+  "settings": {
+   "command": "",
+   "actions": "",
+   "token": ""
+  },
+  "capabilities": "{\"mode\":\"local\",\"host\":{\"platform\":\"linux\",\"arch\":\"x64\"},\"toolchain\":{\"ready\":false,\"missing\":[\"cargo\",\"flutter\",\"VCPKG_ROOT\"],\"packageFormats\":[\"portable\",\"deb\"]},\"targets\":[],\"buildReady\":false,\"reason\":\"local_builder_toolchain_missing\"}",
+  "platforms": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Windows x64 portable (.zip)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"windows\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Windows ARM64 portable (.zip)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Linux x64 portable (.tar.gz)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu x64 package (.deb)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE x64 package (.rpm)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"arch\",\"label\":\"Arch Linux x64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Linux ARM64 portable (.tar.gz)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu ARM64 package (.deb)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE ARM64 package (.rpm)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"arch\",\"label\":\"Arch Linux ARM64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"macos\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"macOS Intel portable (.tar.gz)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"macos\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"macOS Apple Silicon portable (.tar.gz)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"}]",
+  "available": "[]",
+  "selections": [
+   {
+    "given": false,
+    "selection": "null",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": false,
+    "selection": "null",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "\"all\"",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"os\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\"},{\"platform\":\"beos\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"macos\",\"arch\":\"arm64\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[null,5]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   }
+  ],
+  "failedFor": 101
+ },
+ {
+  "settings": {
+   "command": "trusted-remote-provider"
+  },
+  "capabilities": "{\"mode\":\"remote\",\"provider\":\"command\",\"targets\":[],\"host\":null,\"toolchain\":{\"ready\":false,\"missing\":[\"provider_targets_missing\"]},\"buildReady\":false,\"reason\":\"provider_targets_missing\"}",
+  "platforms": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Windows x64 portable (.zip)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"windows\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Windows ARM64 portable (.zip)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Linux x64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu x64 package (.deb)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE x64 package (.rpm)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"arch\",\"label\":\"Arch Linux x64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Linux ARM64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu ARM64 package (.deb)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE ARM64 package (.rpm)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"arch\",\"label\":\"Arch Linux ARM64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"macOS Intel portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"macOS Apple Silicon portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"}]",
+  "available": "[]",
+  "selections": [
+   {
+    "given": false,
+    "selection": "null",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": false,
+    "selection": "null",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "\"all\"",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"os\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\"},{\"platform\":\"beos\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"macos\",\"arch\":\"arm64\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[null,5]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   }
+  ],
+  "failedFor": 1201
+ },
+ {
+  "settings": {
+   "command": "trusted-remote-provider",
+   "targets": "{\"targets\":[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"},{\"platform\":\"not-supported\"}]}"
+  },
+  "capabilities": "{\"mode\":\"remote\",\"provider\":\"command\",\"targets\":[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"}],\"host\":null,\"toolchain\":{\"ready\":true,\"missing\":[]},\"buildReady\":true,\"reason\":null}",
+  "platforms": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Windows x64 portable (.zip)\",\"available\":true,\"reason\":null,\"provider\":\"remote\"},{\"platform\":\"windows\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Windows ARM64 portable (.zip)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Linux x64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu x64 package (.deb)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE x64 package (.rpm)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"arch\",\"label\":\"Arch Linux x64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Linux ARM64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu ARM64 package (.deb)\",\"available\":true,\"reason\":null,\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE ARM64 package (.rpm)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"arch\",\"label\":\"Arch Linux ARM64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"macOS Intel portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"macOS Apple Silicon portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"}]",
+  "available": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Windows x64 portable (.zip)\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu ARM64 package (.deb)\"}]",
+  "selections": [
+   {
+    "given": false,
+    "selection": "null",
+    "valid": true,
+    "error": "",
+    "details": [],
+    "selected": [
+     "windows/x64/portable",
+     "linux/arm64/deb"
+    ]
+   },
+   {
+    "given": false,
+    "selection": "null",
+    "valid": true,
+    "error": "",
+    "details": [],
+    "selected": [
+     "windows/x64/portable",
+     "linux/arm64/deb"
+    ]
+   },
+   {
+    "given": true,
+    "selection": "[]",
+    "valid": false,
+    "error": "platforms_required",
+    "details": [
+     "platforms_required"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "\"all\"",
+    "valid": false,
+    "error": "platforms_required",
+    "details": [
+     "platforms_required"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\"}]",
+    "valid": true,
+    "error": "",
+    "details": [],
+    "selected": [
+     "windows/x64/portable"
+    ]
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\"}]",
+    "valid": true,
+    "error": "",
+    "details": [],
+    "selected": [
+     "windows/x64/portable"
+    ]
+   },
+   {
+    "given": true,
+    "selection": "[{\"os\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"}]",
+    "valid": true,
+    "error": "",
+    "details": [],
+    "selected": [
+     "linux/arm64/deb"
+    ]
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\"},{\"platform\":\"beos\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "linux/x64/rpm",
+     "beos/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"macos\",\"arch\":\"arm64\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "macos/arm64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[null,5]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "/x64/portable"
+    ],
+    "selected": []
+   }
+  ],
+  "failedFor": 1201
+ },
+ {
+  "settings": {
+   "command": "p",
+   "targets": "[{\"os\":\"Linux\",\"arch\":\"X64\"},{\"platform\":\"macos\",\"arch\":\"arm64\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\"}]"
+  },
+  "capabilities": "{\"mode\":\"remote\",\"provider\":\"command\",\"targets\":[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\"},{\"platform\":\"macos\",\"arch\":\"arm64\",\"format\":\"portable\"}],\"host\":null,\"toolchain\":{\"ready\":true,\"missing\":[]},\"buildReady\":true,\"reason\":null}",
+  "platforms": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Windows x64 portable (.zip)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"windows\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Windows ARM64 portable (.zip)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Linux x64 portable (.tar.gz)\",\"available\":true,\"reason\":null,\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu x64 package (.deb)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE x64 package (.rpm)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"arch\",\"label\":\"Arch Linux x64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Linux ARM64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu ARM64 package (.deb)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE ARM64 package (.rpm)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"arch\",\"label\":\"Arch Linux ARM64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"macOS Intel portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"macOS Apple Silicon portable (.tar.gz)\",\"available\":true,\"reason\":null,\"provider\":\"remote\"}]",
+  "available": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Linux x64 portable (.tar.gz)\"},{\"platform\":\"macos\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"macOS Apple Silicon portable (.tar.gz)\"}]",
+  "selections": [
+   {
+    "given": false,
+    "selection": "null",
+    "valid": true,
+    "error": "",
+    "details": [],
+    "selected": [
+     "linux/x64/portable",
+     "macos/arm64/portable"
+    ]
+   },
+   {
+    "given": false,
+    "selection": "null",
+    "valid": true,
+    "error": "",
+    "details": [],
+    "selected": [
+     "linux/x64/portable",
+     "macos/arm64/portable"
+    ]
+   },
+   {
+    "given": true,
+    "selection": "[]",
+    "valid": false,
+    "error": "platforms_required",
+    "details": [
+     "platforms_required"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "\"all\"",
+    "valid": false,
+    "error": "platforms_required",
+    "details": [
+     "platforms_required"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "windows/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "windows/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"os\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "linux/arm64/deb"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\"},{\"platform\":\"beos\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "linux/x64/rpm",
+     "beos/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"macos\",\"arch\":\"arm64\"}]",
+    "valid": true,
+    "error": "",
+    "details": [],
+    "selected": [
+     "macos/arm64/portable"
+    ]
+   },
+   {
+    "given": true,
+    "selection": "[null,5]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "/x64/portable"
+    ],
+    "selected": []
+   }
+  ],
+  "failedFor": 1201
+ },
+ {
+  "settings": {
+   "command": "p",
+   "targets": "[]"
+  },
+  "capabilities": "{\"mode\":\"remote\",\"provider\":\"command\",\"targets\":[],\"host\":null,\"toolchain\":{\"ready\":false,\"missing\":[\"provider_targets_invalid\"]},\"buildReady\":false,\"reason\":\"provider_targets_invalid\"}",
+  "platforms": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Windows x64 portable (.zip)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"windows\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Windows ARM64 portable (.zip)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Linux x64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu x64 package (.deb)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE x64 package (.rpm)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"arch\",\"label\":\"Arch Linux x64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Linux ARM64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu ARM64 package (.deb)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE ARM64 package (.rpm)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"arch\",\"label\":\"Arch Linux ARM64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"macOS Intel portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"macOS Apple Silicon portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"}]",
+  "available": "[]",
+  "selections": [
+   {
+    "given": false,
+    "selection": "null",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": false,
+    "selection": "null",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "\"all\"",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"os\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\"},{\"platform\":\"beos\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"macos\",\"arch\":\"arm64\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[null,5]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   }
+  ],
+  "failedFor": 1201
+ },
+ {
+  "settings": {
+   "command": "p",
+   "targets": "{\"targets\":5}"
+  },
+  "capabilities": "{\"mode\":\"remote\",\"provider\":\"command\",\"targets\":[],\"host\":null,\"toolchain\":{\"ready\":false,\"missing\":[\"provider_targets_invalid\"]},\"buildReady\":false,\"reason\":\"provider_targets_invalid\"}",
+  "platforms": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Windows x64 portable (.zip)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"windows\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Windows ARM64 portable (.zip)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Linux x64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu x64 package (.deb)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE x64 package (.rpm)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"arch\",\"label\":\"Arch Linux x64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Linux ARM64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu ARM64 package (.deb)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE ARM64 package (.rpm)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"arch\",\"label\":\"Arch Linux ARM64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"macOS Intel portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"macOS Apple Silicon portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"}]",
+  "available": "[]",
+  "selections": [
+   {
+    "given": false,
+    "selection": "null",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": false,
+    "selection": "null",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "\"all\"",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"os\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\"},{\"platform\":\"beos\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"macos\",\"arch\":\"arm64\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[null,5]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   }
+  ],
+  "failedFor": 1201
+ },
+ {
+  "settings": {
+   "command": "p",
+   "targets": "not json"
+  },
+  "capabilities": "{\"mode\":\"remote\",\"provider\":\"command\",\"targets\":[],\"host\":null,\"toolchain\":{\"ready\":false,\"missing\":[\"provider_targets_invalid\"]},\"buildReady\":false,\"reason\":\"provider_targets_invalid\"}",
+  "platforms": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Windows x64 portable (.zip)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"windows\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Windows ARM64 portable (.zip)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Linux x64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu x64 package (.deb)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE x64 package (.rpm)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"arch\",\"label\":\"Arch Linux x64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Linux ARM64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu ARM64 package (.deb)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE ARM64 package (.rpm)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"arch\",\"label\":\"Arch Linux ARM64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"macOS Intel portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"macOS Apple Silicon portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"}]",
+  "available": "[]",
+  "selections": [
+   {
+    "given": false,
+    "selection": "null",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": false,
+    "selection": "null",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "\"all\"",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"os\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\"},{\"platform\":\"beos\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"macos\",\"arch\":\"arm64\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[null,5]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   }
+  ],
+  "failedFor": 1201
+ },
+ {
+  "settings": {
+   "command": "p",
+   "targets": "[\"x\",null,5,{\"platform\":\"windows\",\"arch\":\"arm64\"}]"
+  },
+  "capabilities": "{\"mode\":\"remote\",\"provider\":\"command\",\"targets\":[{\"platform\":\"windows\",\"arch\":\"arm64\",\"format\":\"portable\"}],\"host\":null,\"toolchain\":{\"ready\":true,\"missing\":[]},\"buildReady\":true,\"reason\":null}",
+  "platforms": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Windows x64 portable (.zip)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"windows\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Windows ARM64 portable (.zip)\",\"available\":true,\"reason\":null,\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Linux x64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu x64 package (.deb)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE x64 package (.rpm)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"arch\",\"label\":\"Arch Linux x64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Linux ARM64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu ARM64 package (.deb)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE ARM64 package (.rpm)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"arch\",\"label\":\"Arch Linux ARM64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"macOS Intel portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"macOS Apple Silicon portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"}]",
+  "available": "[{\"platform\":\"windows\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Windows ARM64 portable (.zip)\"}]",
+  "selections": [
+   {
+    "given": false,
+    "selection": "null",
+    "valid": true,
+    "error": "",
+    "details": [],
+    "selected": [
+     "windows/arm64/portable"
+    ]
+   },
+   {
+    "given": false,
+    "selection": "null",
+    "valid": true,
+    "error": "",
+    "details": [],
+    "selected": [
+     "windows/arm64/portable"
+    ]
+   },
+   {
+    "given": true,
+    "selection": "[]",
+    "valid": false,
+    "error": "platforms_required",
+    "details": [
+     "platforms_required"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "\"all\"",
+    "valid": false,
+    "error": "platforms_required",
+    "details": [
+     "platforms_required"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "windows/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "windows/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"os\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "linux/arm64/deb"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\"},{\"platform\":\"beos\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "linux/x64/rpm",
+     "beos/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"macos\",\"arch\":\"arm64\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "macos/arm64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[null,5]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "/x64/portable"
+    ],
+    "selected": []
+   }
+  ],
+  "failedFor": 1201
+ },
+ {
+  "settings": {
+   "command": "p",
+   "file": "<SCRATCH>/missing.json"
+  },
+  "capabilities": "{\"mode\":\"remote\",\"provider\":\"command\",\"targets\":[],\"host\":null,\"toolchain\":{\"ready\":false,\"missing\":[\"provider_targets_file_unreadable:ENOENT\"]},\"buildReady\":false,\"reason\":\"provider_targets_file_unreadable:ENOENT\"}",
+  "platforms": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Windows x64 portable (.zip)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"windows\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Windows ARM64 portable (.zip)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Linux x64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu x64 package (.deb)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE x64 package (.rpm)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"arch\",\"label\":\"Arch Linux x64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Linux ARM64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu ARM64 package (.deb)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE ARM64 package (.rpm)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"arch\",\"label\":\"Arch Linux ARM64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"macOS Intel portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"macOS Apple Silicon portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_targets_missing\",\"provider\":\"remote\"}]",
+  "available": "[]",
+  "selections": [
+   {
+    "given": false,
+    "selection": "null",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": false,
+    "selection": "null",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "\"all\"",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"os\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\"},{\"platform\":\"beos\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"macos\",\"arch\":\"arm64\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[null,5]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   }
+  ],
+  "failedFor": 1201
+ },
+ {
+  "settings": {
+   "command": "p",
+   "file": "<SCRATCH>/targets.json",
+   "fileContent": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\"}]"
+  },
+  "capabilities": "{\"mode\":\"remote\",\"provider\":\"command\",\"targets\":[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\"}],\"host\":null,\"toolchain\":{\"ready\":true,\"missing\":[]},\"buildReady\":true,\"reason\":null}",
+  "platforms": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Windows x64 portable (.zip)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"windows\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Windows ARM64 portable (.zip)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Linux x64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu x64 package (.deb)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE x64 package (.rpm)\",\"available\":true,\"reason\":null,\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"arch\",\"label\":\"Arch Linux x64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Linux ARM64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu ARM64 package (.deb)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE ARM64 package (.rpm)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"arch\",\"label\":\"Arch Linux ARM64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"macOS Intel portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"macOS Apple Silicon portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"}]",
+  "available": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE x64 package (.rpm)\"}]",
+  "selections": [
+   {
+    "given": false,
+    "selection": "null",
+    "valid": true,
+    "error": "",
+    "details": [],
+    "selected": [
+     "linux/x64/rpm"
+    ]
+   },
+   {
+    "given": false,
+    "selection": "null",
+    "valid": true,
+    "error": "",
+    "details": [],
+    "selected": [
+     "linux/x64/rpm"
+    ]
+   },
+   {
+    "given": true,
+    "selection": "[]",
+    "valid": false,
+    "error": "platforms_required",
+    "details": [
+     "platforms_required"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "\"all\"",
+    "valid": false,
+    "error": "platforms_required",
+    "details": [
+     "platforms_required"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "windows/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "windows/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"os\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "linux/arm64/deb"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\"},{\"platform\":\"beos\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "beos/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"macos\",\"arch\":\"arm64\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "macos/arm64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[null,5]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "/x64/portable"
+    ],
+    "selected": []
+   }
+  ],
+  "failedFor": 1201
+ },
+ {
+  "settings": {
+   "command": "",
+   "actions": "on",
+   "token": "t0ken-made-up",
+   "targets": "[{\"platform\":\"linux\",\"arch\":\"x64\"}]"
+  },
+  "capabilities": "{\"mode\":\"remote\",\"provider\":\"github-actions\",\"targets\":[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\"}],\"host\":null,\"toolchain\":{\"ready\":true,\"missing\":[]},\"buildReady\":true,\"reason\":null}",
+  "platforms": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Windows x64 portable (.zip)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"windows\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Windows ARM64 portable (.zip)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Linux x64 portable (.tar.gz)\",\"available\":true,\"reason\":null,\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu x64 package (.deb)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE x64 package (.rpm)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"arch\",\"label\":\"Arch Linux x64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Linux ARM64 portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu ARM64 package (.deb)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE ARM64 package (.rpm)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"arch\",\"label\":\"Arch Linux ARM64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"macOS Intel portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"},{\"platform\":\"macos\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"macOS Apple Silicon portable (.tar.gz)\",\"available\":false,\"reason\":\"provider_target_unavailable\",\"provider\":\"remote\"}]",
+  "available": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Linux x64 portable (.tar.gz)\"}]",
+  "selections": [
+   {
+    "given": false,
+    "selection": "null",
+    "valid": true,
+    "error": "",
+    "details": [],
+    "selected": [
+     "linux/x64/portable"
+    ]
+   },
+   {
+    "given": false,
+    "selection": "null",
+    "valid": true,
+    "error": "",
+    "details": [],
+    "selected": [
+     "linux/x64/portable"
+    ]
+   },
+   {
+    "given": true,
+    "selection": "[]",
+    "valid": false,
+    "error": "platforms_required",
+    "details": [
+     "platforms_required"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "\"all\"",
+    "valid": false,
+    "error": "platforms_required",
+    "details": [
+     "platforms_required"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "windows/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "windows/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"os\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "linux/arm64/deb"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\"},{\"platform\":\"beos\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "linux/x64/rpm",
+     "beos/x64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"macos\",\"arch\":\"arm64\"}]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "macos/arm64/portable"
+    ],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[null,5]",
+    "valid": false,
+    "error": "unsupported_platform",
+    "details": [
+     "/x64/portable"
+    ],
+    "selected": []
+   }
+  ],
+  "failedFor": 1201
+ },
+ {
+  "settings": {
+   "command": "",
+   "actions": "OFF",
+   "token": "t0ken-made-up",
+   "targets": "[{\"platform\":\"linux\",\"arch\":\"x64\"}]"
+  },
+  "capabilities": "{\"mode\":\"local\",\"host\":{\"platform\":\"linux\",\"arch\":\"x64\"},\"toolchain\":{\"ready\":false,\"missing\":[\"cargo\",\"flutter\",\"VCPKG_ROOT\"],\"packageFormats\":[\"portable\",\"deb\"]},\"targets\":[],\"buildReady\":false,\"reason\":\"local_builder_toolchain_missing\"}",
+  "platforms": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Windows x64 portable (.zip)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"windows\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Windows ARM64 portable (.zip)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Linux x64 portable (.tar.gz)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu x64 package (.deb)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE x64 package (.rpm)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"arch\",\"label\":\"Arch Linux x64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Linux ARM64 portable (.tar.gz)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu ARM64 package (.deb)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE ARM64 package (.rpm)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"arch\",\"label\":\"Arch Linux ARM64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"macos\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"macOS Intel portable (.tar.gz)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"macos\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"macOS Apple Silicon portable (.tar.gz)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"}]",
+  "available": "[]",
+  "selections": [
+   {
+    "given": false,
+    "selection": "null",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": false,
+    "selection": "null",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "\"all\"",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"os\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\"},{\"platform\":\"beos\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"macos\",\"arch\":\"arm64\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[null,5]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   }
+  ],
+  "failedFor": 101
+ },
+ {
+  "settings": {
+   "command": "",
+   "actions": "on",
+   "token": "",
+   "targets": "[{\"platform\":\"linux\",\"arch\":\"x64\"}]"
+  },
+  "capabilities": "{\"mode\":\"local\",\"host\":{\"platform\":\"linux\",\"arch\":\"x64\"},\"toolchain\":{\"ready\":false,\"missing\":[\"cargo\",\"flutter\",\"VCPKG_ROOT\"],\"packageFormats\":[\"portable\",\"deb\"]},\"targets\":[],\"buildReady\":false,\"reason\":\"local_builder_toolchain_missing\"}",
+  "platforms": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Windows x64 portable (.zip)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"windows\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Windows ARM64 portable (.zip)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"Linux x64 portable (.tar.gz)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu x64 package (.deb)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE x64 package (.rpm)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"arch\",\"label\":\"Arch Linux x64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"Linux ARM64 portable (.tar.gz)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\",\"label\":\"Debian/Ubuntu ARM64 package (.deb)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"rpm\",\"label\":\"Fedora/RHEL/openSUSE ARM64 package (.rpm)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"arch\",\"label\":\"Arch Linux ARM64 package (.pkg.tar.zst)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"macos\",\"arch\":\"x64\",\"format\":\"portable\",\"label\":\"macOS Intel portable (.tar.gz)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"},{\"platform\":\"macos\",\"arch\":\"arm64\",\"format\":\"portable\",\"label\":\"macOS Apple Silicon portable (.tar.gz)\",\"available\":false,\"reason\":\"local_builder_toolchain_missing:cargo,flutter,VCPKG_ROOT\",\"provider\":\"local\"}]",
+  "available": "[]",
+  "selections": [
+   {
+    "given": false,
+    "selection": "null",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": false,
+    "selection": "null",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "\"all\"",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"windows\",\"arch\":\"x64\",\"format\":\"portable\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"os\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"},{\"platform\":\"linux\",\"arch\":\"arm64\",\"format\":\"deb\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"linux\",\"arch\":\"x64\",\"format\":\"rpm\"},{\"platform\":\"beos\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[{\"platform\":\"macos\",\"arch\":\"arm64\"}]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   },
+   {
+    "given": true,
+    "selection": "[null,5]",
+    "valid": false,
+    "error": "local_builder_no_supported_targets",
+    "details": [],
+    "selected": []
+   }
+  ],
+  "failedFor": 101
+ }
+]

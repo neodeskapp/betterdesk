@@ -1,0 +1,136 @@
+{
+ "id": "generator/preview-full",
+ "request": {
+  "method": "POST",
+  "path": "/api/generator/preview",
+  "body": {
+   "branding": {
+    "accent_color": "red",
+    "allow_unattended": "yes",
+    "api_port": 21114,
+    "appName": "  Acme Remote  ",
+    "autostart": true,
+    "capabilities": {
+     "audio": 0,
+     "desktop": false,
+     "files": null
+    },
+    "companyName": "Acme GmbH",
+    "contactUrl": "example.com/help",
+    "contact_email": "help@example.com",
+    "contact_phone": "+49 30 1",
+    "default_lang": "zh-TW",
+    "disable_settings": false,
+    "enrollment_token": "never",
+    "hide_product_type": 1,
+    "logo_data_url": "data:image/png;base64,AAAA",
+    "primaryColor": "#ABCDEF",
+    "product_label": " Remote help ",
+    "public_key": "client-key",
+    "relay_host": " relay.example.com ",
+    "server": {
+     "address": "a",
+     "api_url": 5,
+     "public_key": "k"
+    },
+    "server_host": "https://Desk.Example.com:8443/path",
+    "short_text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "textMutedColor": "#123456",
+    "use_https": false
+   }
+  }
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.branding.server.public_key",
+     "pattern": "^[9aA+/_=-]{44}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "branding": {
+       "accent_color": "#e0f2fe",
+       "allow_unattended": true,
+       "api_port": "21114",
+       "api_server": "http://Desk.Example.com:21114",
+       "app_name": "BetterDesk Support Agent",
+       "autostart": true,
+       "background_color": "#ffffff",
+       "capabilities": {
+        "audio": false,
+        "clipboard": true,
+        "desktop": false,
+        "files": true,
+        "restart": true,
+        "terminal": true
+       },
+       "company_name": "BetterDesk Support Agent",
+       "contact_email": "help@example.com",
+       "contact_phone": "+49 30 1",
+       "contact_url": "https://example.com/help",
+       "default_lang": "zh-TW",
+       "disable_settings": false,
+       "header_text_color": "#1f2937",
+       "hide_product_type": true,
+       "install_service": true,
+       "logo_data_url": "data:image/png;base64,AAAA",
+       "primary_color": "#abcdef",
+       "product_label": "Remote help",
+       "relay_host": "relay.example.com",
+       "server": {
+        "address": "http://Desk.Example.com:21114",
+        "api_url": "http://Desk.Example.com:21114",
+        "public_key": "<volatile>"
+       },
+       "server_host": "Desk.Example.com",
+       "short_text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+       "status_ready_color": "#22c55e",
+       "surface_color": "#f3f4f6",
+       "text_color": "#1f2937",
+       "text_muted_color": "#123456",
+       "use_https": false
+      },
+      "errors": [
+       "accent_color_invalid"
+      ],
+      "valid": false
+     },
+     "errors": [
+      "accent_color_invalid"
+     ],
+     "success": true
+    }
+   }
+  }
+ ]
+}

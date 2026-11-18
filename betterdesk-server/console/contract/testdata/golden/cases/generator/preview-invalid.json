@@ -1,0 +1,118 @@
+{
+ "id": "generator/preview-invalid",
+ "request": {
+  "method": "POST",
+  "path": "/api/generator/preview",
+  "body": {
+   "branding": {
+    "background_color": 5,
+    "contact_url": "javascript:alert(1)",
+    "default_lang": "xx",
+    "logo_data_url": "http://x/logo.png",
+    "primary_color": "#12345",
+    "server_host": "bad host!"
+   }
+  }
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.branding.server.public_key",
+     "pattern": "^[9aA+/_=-]{44}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "branding": {
+       "accent_color": "#e0f2fe",
+       "allow_unattended": false,
+       "api_port": "21121",
+       "api_server": "https://bad host!:21121",
+       "app_name": "BetterDesk Support Agent",
+       "autostart": false,
+       "background_color": "#ffffff",
+       "capabilities": {
+        "audio": true,
+        "clipboard": true,
+        "desktop": true,
+        "files": true,
+        "restart": true,
+        "terminal": true
+       },
+       "company_name": "BetterDesk Support Agent",
+       "contact_email": "",
+       "contact_phone": "",
+       "contact_url": "javascript:alert(1)",
+       "default_lang": "en",
+       "disable_settings": true,
+       "header_text_color": "#1f2937",
+       "hide_product_type": false,
+       "install_service": false,
+       "logo_data_url": "",
+       "primary_color": "#2563eb",
+       "product_label": "",
+       "relay_host": "bad host!",
+       "server": {
+        "address": "https://bad host!:21121",
+        "api_url": "https://bad host!:21121",
+        "public_key": "<volatile>"
+       },
+       "server_host": "bad host!",
+       "short_text": "",
+       "status_ready_color": "#22c55e",
+       "surface_color": "#f3f4f6",
+       "text_color": "#1f2937",
+       "text_muted_color": "#6b7280",
+       "use_https": true
+      },
+      "errors": [
+       "contact_url_invalid",
+       "logo_invalid",
+       "primary_color_invalid",
+       "background_color_invalid",
+       "server_host_invalid"
+      ],
+      "valid": false
+     },
+     "errors": [
+      "contact_url_invalid",
+      "logo_invalid",
+      "primary_color_invalid",
+      "background_color_invalid",
+      "server_host_invalid"
+     ],
+     "success": true
+    }
+   }
+  }
+ ]
+}

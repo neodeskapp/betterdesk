@@ -37,6 +37,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/csrf"
 	"github.com/unitronix/betterdesk-server/console/devicegroups"
 	"github.com/unitronix/betterdesk-server/console/filetransfer"
+	"github.com/unitronix/betterdesk-server/console/generator"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/guestaccess"
 	"github.com/unitronix/betterdesk-server/console/i18n"
@@ -230,6 +231,11 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		RestartServer: s.deps.ServerInfo.RestartServer,
 		Rollbacks:     map[string]restart.Rollback{"connection-mode": restart.ConnectionModeRollback(s.deps.ServerInfo)},
 		Logger:        s.deps.Log,
+	})
+	s.deps.Generator = generator.New(generator.Options{
+		DB: opts.Store, ServerInfo: s.deps.ServerInfo, DataDir: cfg.DataDir, ConsoleDir: cfg.ConsoleDir,
+		ArtifactDir: cfg.AgentArtifactDir, Embedded: cfg.GeneratorEmbedded, WorkerEnabled: cfg.AgentBuildWorker,
+		PollInterval: cfg.AgentBuildPoll, Cooldown: cfg.AgentBuildCooldown, Logger: s.deps.Log,
 	})
 	s.deps.DeviceGroups = devicegroups.New(devicegroups.Options{DB: opts.Store, Access: s.deps.Access})
 	s.deps.Backend = goapi.NewBackend(api, devicegroups.DeviceStore{Groups: s.deps.DeviceGroups})

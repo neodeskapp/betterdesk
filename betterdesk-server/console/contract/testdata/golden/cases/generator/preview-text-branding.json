@@ -1,0 +1,98 @@
+{
+ "id": "generator/preview-text-branding",
+ "request": {
+  "method": "POST",
+  "path": "/api/generator/preview",
+  "body": {
+   "branding": "abc"
+  }
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.branding.server.public_key",
+     "pattern": "^[9aA+/_=-]{44}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "branding": {
+       "accent_color": "#e0f2fe",
+       "allow_unattended": false,
+       "api_port": "21121",
+       "api_server": "https://127.0.0.1:21121",
+       "app_name": "BetterDesk Support Agent",
+       "autostart": false,
+       "background_color": "#ffffff",
+       "capabilities": {
+        "audio": true,
+        "clipboard": true,
+        "desktop": true,
+        "files": true,
+        "restart": true,
+        "terminal": true
+       },
+       "company_name": "BetterDesk Support Agent",
+       "contact_email": "",
+       "contact_phone": "",
+       "contact_url": "",
+       "default_lang": "en",
+       "disable_settings": true,
+       "header_text_color": "#1f2937",
+       "hide_product_type": false,
+       "install_service": false,
+       "logo_data_url": "",
+       "primary_color": "#2563eb",
+       "product_label": "",
+       "relay_host": "127.0.0.1",
+       "server": {
+        "address": "https://127.0.0.1:21121",
+        "api_url": "https://127.0.0.1:21121",
+        "public_key": "<volatile>"
+       },
+       "server_host": "127.0.0.1",
+       "short_text": "",
+       "status_ready_color": "#22c55e",
+       "surface_color": "#f3f4f6",
+       "text_color": "#1f2937",
+       "text_muted_color": "#6b7280",
+       "use_https": true
+      },
+      "errors": [],
+      "valid": true
+     },
+     "errors": [],
+     "success": true
+    }
+   }
+  }
+ ]
+}
