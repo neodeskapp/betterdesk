@@ -24,6 +24,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/remoterelay"
 	"github.com/unitronix/betterdesk-server/console/restart"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/unitronix/betterdesk-server/console/servermgmt"
 	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/statuspush"
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -144,6 +145,11 @@ type Deps struct {
 	// (services/remoteRelay.js): its sessions and the agents' single-use
 	// tokens.
 	RemoteRelay *remoterelay.Service
+	// ServerMgmt is the server management: the machine's resources (also
+	// read by the server attestation), the file browser, the system
+	// services and the terminal socket (services/serverManagement.js,
+	// services/serverTerminalProxy.js).
+	ServerMgmt *servermgmt.Service
 }
 
 // At returns the same Deps with both route tables mounted at prefix, for

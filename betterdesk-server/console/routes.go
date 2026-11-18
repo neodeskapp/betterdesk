@@ -45,6 +45,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/scaling"
 	"github.com/unitronix/betterdesk-server/console/routes/securityaudit"
 	"github.com/unitronix/betterdesk-server/console/routes/serverattestation"
+	"github.com/unitronix/betterdesk-server/console/routes/servermanagement"
 	"github.com/unitronix/betterdesk-server/console/routes/settings"
 	"github.com/unitronix/betterdesk-server/console/routes/settingsbackup"
 	"github.com/unitronix/betterdesk-server/console/routes/settingsupdates"
@@ -155,6 +156,7 @@ func registerRoutes(d *kit.Deps) {
 	system.Register(d)                        // routes/system.routes.js
 	cdapstudio.Register(d)                    // routes/cdap-studio.routes.js
 	permissions.Register(d)                   // routes/permissions.routes.js
+	servermanagement.Register(d)              // routes/server-management.routes.js (beta)
 	serverattestation.Register(d)             // routes/server-attestation.routes.js, with the job that runs the capacity tests
 	phase45.Register(d)                       // routes/phase4_5.routes.js
 	pairing.Register(d)                       // routes/pairing.routes.js

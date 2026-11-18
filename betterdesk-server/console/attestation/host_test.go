@@ -1,52 +1,35 @@
 package attestation
 
 import (
+	"math"
 	"reflect"
 	"testing"
+
+	"github.com/unitronix/betterdesk-server/console/servermgmt"
 )
 
-func TestParseDF(t *testing.T) {
-	raw := "Mounted on Type 1B-blocks Used Avail\n" +
-		"/ ext4 100000000000 25000000000 75000000000\n" +
-		"/dev/shm tmpfs 8000000000 0 8000000000\n" +
-		"/small ext4 1000 10 990\n" +
-		"/data xfs 2000000000000 1900000000000 100000000000\n" +
-		"/broken ext4 x y z\n" +
-		"short line\n"
-	got := parseDF(raw)
-	want := []Disk{{Size: 1e11, Used: 2.5e10}, {Size: 2e12, Used: 1.9e12}}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("parseDF = %+v, want %+v", got, want)
-	}
-	if maxDiskPercent(got) != 95 {
-		t.Errorf("fullest disk %v", maxDiskPercent(got))
-	}
-}
-
-// The processor load is the busy share since the last reading, 0 at the
-// first and when the processors changed; the memory is the share in use,
-// both with one decimal.
+// The run takes the processor, the memory, the disks, the host's name and
+// the number of processors from the server management snapshot; numbers
+// the host could not read (NaN) count as 0.
 func TestHostSnapshot(t *testing.T) {
-	readings := []hostReading{
-		{cpus: []cpuTimes{{idle: 100, total: 200}, {idle: 100, total: 200}}, memTotal: 3000, free: 1000, hostname: "h", disks: []Disk{{Size: 10, Used: 5}}},
-		{cpus: []cpuTimes{{idle: 150, total: 300}, {idle: 120, total: 300}}, memTotal: 3000, free: 2999},
-		{cpus: []cpuTimes{{idle: 150, total: 300}}, memTotal: 0},
+	nan := servermgmt.Num(math.NaN())
+	read := func() servermgmt.Snapshot {
+		return servermgmt.Snapshot{
+			CPU: 12.5, Mem: servermgmt.Memory{Total: 3000, Percent: 66.7}, Hostname: "h", CPUCount: 2,
+			Disks: []servermgmt.Disk{{Mount: "/", Size: 100, Used: 95}, {Mount: "/x", Size: 10, Used: nan}},
+		}
 	}
-	n := 0
-	h := &Host{read: func() hostReading { r := readings[n]; n++; return r }}
-	first := h.Snapshot()
-	if first.CPU != 0 || first.MemPercent != 66.7 || first.CPUCount != 2 || first.Hostname != "h" || first.MemTotal != 3000 || len(first.Disks) != 1 {
-		t.Errorf("first %+v", first)
+	got := HostSnapshot(read)()
+	want := Snapshot{CPU: 12.5, MemTotal: 3000, MemPercent: 66.7, Hostname: "h", CPUCount: 2, Disks: []Disk{{Size: 100, Used: 95}, {Size: 10, Used: 0}}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("HostSnapshot = %+v, want %+v", got, want)
 	}
-	// busy (200 - 70) of 200
-	if second := h.Snapshot(); second.CPU != 65 || second.MemPercent != 0 {
-		t.Errorf("second %+v", second)
+	if maxDiskPercent(got.Disks) != 95 {
+		t.Errorf("fullest disk %v", maxDiskPercent(got.Disks))
 	}
-	if third := h.Snapshot(); third.CPU != 0 || third.MemPercent != 0 || third.CPUCount != 1 {
-		t.Errorf("third %+v", third)
-	}
-	if got := cpuPercent([]cpuTimes{{0, 100}}, []cpuTimes{{0, 100}}); got != 0 {
-		t.Errorf("no time passed: %v", got)
+	empty := HostSnapshot(func() servermgmt.Snapshot { return servermgmt.Snapshot{Mem: servermgmt.Memory{Percent: nan}} })()
+	if empty.MemPercent != 0 || empty.Disks == nil {
+		t.Errorf("unreadable memory: %+v", empty)
 	}
 }
 

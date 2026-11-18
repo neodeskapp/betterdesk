@@ -50,10 +50,13 @@ var (
 			"snapshot.swap.free", "snapshot.swap.total", "snapshot.swap.used",
 			"snapshot.cpu", "snapshot.load", "snapshot.uptime", "snapshot.nodeUptime", "snapshot.ts",
 			"snapshot.disks[#]", "snapshot.network[#]", "snapshot.history[#]",
+			// The runtime of the console that answers: Node's version, Go's
+			// in the Go console (spec updater-installers 4.6).
+			"~snapshot.nodeVersion",
 		},
 		// Process numbers and how long the servers have been up. Two
-		// recordings can agree on these by chance.
-		"GET /api/server-management/info":  {"pid", "server.uptimeSeconds"},
+		// recordings can agree on these by chance. nodeVersion as above.
+		"GET /api/server-management/info":  {"pid", "server.uptimeSeconds", "~nodeVersion"},
 		"GET /api/settings/restart-status": {"data.uptime"},
 		"GET /api/server/status":           {"data.uptime"},
 		// What the last look at a public time server found.

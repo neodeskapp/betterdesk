@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/alerts"
@@ -55,6 +56,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/remoterelay"
 	"github.com/unitronix/betterdesk-server/console/restart"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/unitronix/betterdesk-server/console/servermgmt"
 	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/statuspush"
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -363,6 +365,21 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		VerifyDevice: s.deps.Authn.VerifyDeviceWSAuth,
 		DB:           opts.Store,
 		CanAccess:    s.deps.DeviceGroups.UserCanAccessDevice,
+	})
+	// Server management and its terminal. Relative paths and the console's
+	// folder are CONSOLE_DIR, the old console's working directory. A
+	// restart of this process's own service is its exit under a supervisor
+	// (A30, spec updater-installers 4.6).
+	s.deps.ServerMgmt = servermgmt.New(servermgmt.Options{
+		Getenv: getenv, WorkDir: cfg.ConsoleDir,
+		RestartSelf: func() bool {
+			return s.deps.Restart.ExitLater(2*time.Second, "[SERVER-MGMT] Restarting after a restart of the server from server management...")
+		},
+		Terminal: servermgmt.TerminalOptions{Audit: func(ctx context.Context, userID int64, action, details, ip string) {
+			if err := audit.Write(ctx, userID, action, details, ip); err != nil {
+				logging.Logf("console", "WARN: [srv-term] audit log failed: %v", err)
+			}
+		}},
 	})
 	// The rest of the old console's start sequence: the hourly clean-up,
 	// the stale device sweep, and, unless a Node console behind this one

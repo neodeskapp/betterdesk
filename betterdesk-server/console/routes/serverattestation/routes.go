@@ -70,6 +70,10 @@ func RegisterWith(d *kit.Deps, svc *attestation.Service) {
 func Options(d *kit.Deps) attestation.Options {
 	env := func(string) string { return "" }
 	o := attestation.Options{Settings: attestation.StoreSettings(d.Store)}
+	if d.ServerMgmt != nil {
+		// the host the resources route reads, so both share one history
+		o.Snapshot = attestation.HostSnapshot(d.ServerMgmt.Snapshot)
+	}
 	if cfg := d.Config; cfg != nil {
 		if cfg.Getenv != nil {
 			env = cfg.Getenv

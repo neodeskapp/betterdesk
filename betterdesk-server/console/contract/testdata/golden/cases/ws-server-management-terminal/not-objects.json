@@ -1,0 +1,61 @@
+{
+ "id": "ws-server-management-terminal/not-objects",
+ "request": {
+  "method": "GET",
+  "path": "/ws/server-management/terminal",
+  "notes": [
+   "websocket term, own origin",
+   "websocket send text \"hello\"",
+   "websocket send text \"[1]\"",
+   "websocket send text \"null\"",
+   "websocket send text \"5\"",
+   "websocket send text \"\\\"text\\\"\"",
+   "websocket send text \"{\""
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "json",
+    "json": {
+     "socket": "not open"
+    }
+   }
+  },
+  {
+   "roles": [
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": []
+    }
+   }
+  }
+ ]
+}

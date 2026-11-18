@@ -35,7 +35,6 @@ const authService = require('./services/authService');
 const db = require('./services/database');
 const { DatabaseSessionStore } = require('./services/databaseSessionStore');
 const userSync = require('./services/userSync');
-const { initServerTerminalProxy } = require('./services/serverTerminalProxy');
 const { loadEffectivePolicy } = require('./services/panelAccessPolicyService');
 const { panelAccessGuard } = require('./middleware/panelAccess');
 const { startDiscoveryService } = require('./services/lanDiscovery');
@@ -470,15 +469,6 @@ async function startServer() {
             });
         }
         
-
-        // Initialize Server Management terminal WebSocket (browser ↔ host shell)
-        initServerTerminalProxy(server, sessionMiddleware, {
-            logAction: (...args) => {
-                void Promise.resolve().then(() => db.logAction(...args)).catch((err) => {
-                    console.warn('[srv-term] audit log failed:', err.message);
-                });
-            }
-        });
 
 
         initHelpRequestEmailService(config.betterdeskApiUrl, config.betterdeskApiKey);

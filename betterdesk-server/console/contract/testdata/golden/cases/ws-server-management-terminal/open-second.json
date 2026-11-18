@@ -1,0 +1,49 @@
+{
+ "id": "ws-server-management-terminal/open-second",
+ "request": {
+  "method": "GET",
+  "path": "/ws/server-management/terminal",
+  "notes": [
+   "websocket second, own origin"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": []
+    }
+   }
+  }
+ ]
+}

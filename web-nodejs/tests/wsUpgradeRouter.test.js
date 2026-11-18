@@ -55,27 +55,4 @@ describe('wsUpgradeRouter', () => {
         expect(socket.write).not.toHaveBeenCalled();
         expect(socket.destroy).not.toHaveBeenCalled();
     });
-
-    test('production WS inits share a single upgrade listener on one HTTP server', () => {
-        const sessionStub = (req, _res, next) => {
-            req.session = { userId: 1 };
-            next();
-        };
-
-        const { initServerTerminalProxy } = require('../services/serverTerminalProxy');
-        const { registerUpgradeHandler, registeredRouteCount } = require('../services/wsUpgradeRouter');
-
-        const server = http.createServer((req, res) => {
-            res.writeHead(404);
-            res.end();
-        });
-
-        initServerTerminalProxy(server, sessionStub, { logAction: () => {} });
-        registerUpgradeHandler(server, (pathname) => pathname === '/ws/other', () => {});
-
-        // 1 server terminal + 1 more = 2 routes, 1 listener (every other
-        // websocket is in the Go console)
-        expect(server.listenerCount('upgrade')).toBe(1);
-        expect(registeredRouteCount(server)).toBe(2);
-    });
 });

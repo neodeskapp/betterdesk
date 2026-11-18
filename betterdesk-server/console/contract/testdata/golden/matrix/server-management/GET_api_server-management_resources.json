@@ -46,6 +46,7 @@
     "snapshot.mem.used",
     "snapshot.network[#]",
     "snapshot.nodeUptime",
+    "snapshot.nodeVersion",
     "snapshot.platform",
     "snapshot.release",
     "snapshot.swap.free",
@@ -104,6 +105,7 @@
     "snapshot.mem.used",
     "snapshot.network[#]",
     "snapshot.nodeUptime",
+    "snapshot.nodeVersion",
     "snapshot.platform",
     "snapshot.release",
     "snapshot.swap.free",
@@ -177,6 +179,7 @@
     },
     "snapshot.network[#]",
     "snapshot.nodeUptime",
+    "snapshot.nodeVersion",
     "snapshot.platform",
     "snapshot.release",
     {
@@ -223,7 +226,7 @@
        {}
       ],
       "nodeUptime": 0,
-      "nodeVersion": "v22.23.4",
+      "nodeVersion": "<volatile>",
       "platform": "<volatile>",
       "release": "<volatile>",
       "swap": {

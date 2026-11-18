@@ -60,7 +60,7 @@ type Options struct {
 	// Network is where the test connects.
 	Network Network
 	// Snapshot reads the host (serverManagement.getResourceSnapshot).
-	// Default: a Host of this package.
+	// Default: a servermgmt.Host of the service's own (HostSnapshot).
 	Snapshot func() Snapshot
 	// ServerStats is betterdeskApi.getServerStats: the data of a
 	// successful answer (branding.Undefined when it has none), nil when the
@@ -104,7 +104,7 @@ type Service struct {
 // New returns the service.
 func New(opts Options) *Service {
 	if opts.Snapshot == nil {
-		opts.Snapshot = NewHost().Snapshot
+		opts.Snapshot = ownHost()
 	}
 	if opts.ServerStats == nil {
 		opts.ServerStats = func(context.Context) any { return nil }

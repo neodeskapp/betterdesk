@@ -20,7 +20,6 @@ function lazyRoute(modulePath) {
 }
 
 // Lazy-loaded route modules (loaded on first request)
-const serverManagementRoutes = lazyRoute('./server-management.routes');
 
 // JSON-only writes to /api/* (lib/requireJsonContentType.js)
 const { requireJsonContentType } = require('../lib/requireJsonContentType');
@@ -29,6 +28,5 @@ const { requireJsonContentType } = require('../lib/requireJsonContentType');
 router.use(requireJsonContentType);
 
 // Mount routes
-router.use('/', serverManagementRoutes);                 // admin-facing: /server-management, /api/server-management/* (BETA)
 
 module.exports = router;

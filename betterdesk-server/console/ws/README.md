@@ -16,6 +16,7 @@ to the Node console while it runs behind this one. Sockets that live here:
 | `/ws/rendezvous`, `/ws/relay` | `console/wsrelay` | `services/wsRelay.js` |
 | `/ws/remote-agent/<id>`, `/ws/remote-viewer/<id>` | `console/remoterelay` | `services/remoteRelay.js` |
 | `/ws/remote-target/<id>` | `console/remotetarget` | `services/remoteTargetGateway.js` |
+| `/ws/server-management/terminal` | `console/servermgmt` | `services/serverTerminalProxy.js` |
 
 The CDAP and MeshCentral sockets pass what they get on to a socket of
 the API server. The old console opened that socket over the network
@@ -68,6 +69,7 @@ a marker; the tests read recordings through `wstest.Expand`.
 | `wsrelay` | `codec.js`, `relay.js` | `node_codec.json`, `node_relay.json` | 7,515 rendezvous payloads and 202 frame streams through the guest check and the codec; 14 scenarios, 213 steps: every check, the dialing of the signal server and the relay, bytes both ways, message transport, the per-address limit, idle timeout, guest links (validate, consume, recheck, expiry, revocation) |
 | `remoterelay` | `remote.js`, `peer.js` | `node_remote.json`, `node_peer_*.json` | 6 scenarios, 160 steps of agents and viewers, 13 cases that ended Node; the device lookup on SQLite and PostgreSQL |
 | `remotetarget` | `gateway.js` | `node_gateway.json` | 5 scenarios, 52 steps: every check, messages both ways, the tunnel's answers and sizes, names that cannot be a header |
+| `servermgmt` | `terminal.js` | `node_terminal_pipe.json`, `node_terminal_pty.json` | 14 upgrades and 37 conversations with a real shell, with node-pty and without (output compared after the steps settle; see the package's oracle README) |
 
 `wstest.Player` plays these recordings with raw sockets, `wstest.PlayProxy`
 the two proxy recordings against a made-up API server (`wstest.FakeAPI`).
@@ -122,3 +124,6 @@ device routes' cases see the answers for an agent that is offline.
 - Absolute-form request targets with unusual hosts are approximated: the
   host checks of the URL Standard are not all ported. Node's own parser
   refused most of those targets before the upgrade handler saw them.
+- The server terminal ends every shell it started when its socket ends,
+  closes (1008 "Session ended") when its session ends, and starts a shell
+  that switches accounts without supplementary groups (BUGS SM2 to SM4).
