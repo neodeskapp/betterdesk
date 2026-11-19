@@ -659,6 +659,16 @@ func (r *replay) run(i int, step oracleStep) {
 			ConditionValue: bindValue(t, step.Rule["condition_value"]),
 			NotifyEmails:   bindValue(t, step.Rule["notify_emails"]),
 		}
+		if len(step.Sent) > 0 {
+			html, _ := optional(step.Sent[0].HTML)
+			if html != nil {
+				if escaped := escapedAlertCells(alert, *html); escaped != *html {
+					r.counts["EM3: an alert value with markup is escaped"]++
+					step.Sent = append(step.Sent[:0:0], step.Sent...)
+					step.Sent[0].HTML = marshal(t, escaped)
+				}
+			}
+		}
 		got, err := r.service.SendAlertEmail(ctx, alert, rule)
 		r.checkSend(i, step, got, err)
 	case "help":
@@ -748,6 +758,30 @@ func (r *replay) run(i int, step oracleStep) {
 	}
 }
 
+// escapedAlertCells is the HTML of an alert mail Node sent, with the
+// severity, the device and the time escaped as the Go console prints them
+// (BUGS EM3). Node printed those three as they were.
+func escapedAlertCells(alert Alert, html string) string {
+	text := func(v jsbind.Value) string {
+		s, _ := fromBind(v).toString()
+		return s
+	}
+	device := "N/A"
+	if alert.DeviceID.Truthy() {
+		device = text(alert.DeviceID)
+	}
+	row := `</td></tr>
+                <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">`
+	for _, cell := range []struct{ value, after string }{
+		{text(alert.Severity), row + "Device</td>"},
+		{device, row + "Message</td>"},
+		{text(alert.TriggeredAt), "</td></tr>\n            </table>"},
+	} {
+		html = strings.Replace(html, ">"+cell.value+cell.after, ">"+escapeHTML(cell.value)+cell.after, 1)
+	}
+	return html
+}
+
 func orUndefined(text string) string {
 	if text == "" {
 		return "undefined"
@@ -800,7 +834,7 @@ func TestNodeRecording(t *testing.T) {
 		// Every kind of step and every special case has to have been met
 		for _, name := range []string{"state", "env", "reset", "load", "get", "test", "send", "alert", "help", "baseurl", "put", "has", "logsent", "logcount",
 			"nodemailer fails before it connects", "credentials that are no text", "a sender that is no text", "a sender that is no text, sent as text",
-			"recipients that are no text", "EM1: a stored tlsVerify that is no flag"} {
+			"recipients that are no text", "EM1: a stored tlsVerify that is no flag", "EM3: an alert value with markup is escaped"} {
 			if r.counts[name] == 0 {
 				t.Errorf("the recording has no %q", name)
 			}

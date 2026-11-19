@@ -238,16 +238,19 @@ func TestTLSVerification(t *testing.T) {
 	}
 }
 
+// Every value an alert mail or a help request mail prints into its HTML is
+// escaped: also the severity, the device and the time of an alert, which
+// a rule's update and a device's token can set (BUGS EM3).
 func TestMailsEscapeWhatTheyPrint(t *testing.T) {
 	hostile := `<script>alert("x")</script>&`
 	escaped := `&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;&amp;`
 	_, _, html, err := alertMail(
-		Alert{Severity: jsbind.String("warning"), DeviceID: jsbind.String("dev-1"), Message: jsbind.String(hostile), TriggeredAt: jsbind.String("now")},
+		Alert{Severity: jsbind.String(hostile), DeviceID: jsbind.String(hostile), Message: jsbind.String(hostile), TriggeredAt: jsbind.String(hostile)},
 		AlertRule{Name: jsbind.String(hostile), Description: jsbind.String(hostile), ConditionValue: jsbind.Number(1)})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Count(html, escaped) != 3 || strings.Contains(html, "<script>") {
+	if strings.Count(html, escaped) != 6 || strings.Contains(html, "<script>") {
 		t.Fatalf("alert mail: %s", html)
 	}
 	_, _, html, err = helpRequestMail(HelpRequest{Hostname: jsbind.String(hostile), DeviceID: jsbind.String(hostile), Message: jsbind.String(hostile)},

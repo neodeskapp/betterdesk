@@ -336,13 +336,13 @@ func alertMail(alert Alert, rule AlertRule) (subject, text, html string, err err
             <h2 style="color: #e74c3c;">BetterDesk Alert: ` + escapeHTML(name) + `</h2>
             <table style="border-collapse: collapse; width: 100%;">
                 <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Severity</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #eee;">` + severity + `</td></tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #eee;">` + escapeHTML(severity) + `</td></tr>
                 <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Device</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #eee;">` + device + `</td></tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #eee;">` + escapeHTML(device) + `</td></tr>
                 <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Message</td>
                     <td style="padding: 8px; border-bottom: 1px solid #eee;">` + escapeHTML(message) + `</td></tr>
                 <tr><td style="padding: 8px; font-weight: bold;">Time</td>
-                    <td style="padding: 8px;">` + triggered + `</td></tr>
+                    <td style="padding: 8px;">` + escapeHTML(triggered) + `</td></tr>
             </table>
             <p style="color: #888; font-size: 12px; margin-top: 16px;">
                 Rule: ` + escapeHTML(description) + `
