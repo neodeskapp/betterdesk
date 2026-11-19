@@ -4,10 +4,6 @@ package rustdeskapi_test
 
 import (
 	"bytes"
-	"crypto/hmac"
-	"crypto/sha1"
-	"encoding/base32"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -39,9 +35,10 @@ import (
 //
 //	BD_URL=http://bdgo-rd2:5000 RDFLOW_DB=sqlite go test -tags rdflow -count=1 -run TestClientAPIFlow ./console/routes/rustdeskapi/
 //
-// RDFLOW_RECORD=1 writes the recording instead of comparing, and
-// CONTRACT_REQUIRE_GO=1 fails when the Node console answered a route of
-// the client API.
+// RDFLOW_RECORD=1 writes the recording instead of comparing,
+// RDAPI_RECORD_FIXED=1 writes the answers of the steps a bug fix changed
+// (differences_test.go), and CONTRACT_REQUIRE_GO=1 fails when the Node
+// console answered a route of the client API.
 
 const (
 	flowUser     = "rd_flow_tmp"
@@ -436,7 +433,8 @@ func TestClientAPIFlow(t *testing.T) {
 	f.call("operator-logout", request{method: "POST", path: "/api/logout", token: operator, body: map[string]any{"id": "rdflow-operator"}})
 	f.call("operator-logged-out", request{path: "/api/currentUser", token: operator})
 
-	// The second step. Any code passes (BUGS S5); a secret works once.
+	// The second step. A wrong code is refused and keeps the secret, the
+	// right code uses it up.
 	step1 := f.call("tfa-password", request{method: "POST", path: "/api/login",
 		body: map[string]any{"username": flowUser, "password": flowPassword, "id": "rdflow-tfa", "uuid": "rdflow-uuid-tfa"}, volatile: []string{secretMark}})
 	pending, _ := field(t, step1, "secret").(string)
@@ -444,18 +442,22 @@ func TestClientAPIFlow(t *testing.T) {
 		body: map[string]any{"username": flowUser, "tfaCode": wrongCode(t, secret), "secret": pending, "id": "rdflow-tfa", "uuid": "rdflow-uuid-tfa"}, volatile: []string{tokenMark}})
 	tfaToken, _ := field(t, tfa, "access_token").(string)
 	f.call("tfa-current-user", request{path: "/api/currentUser", token: tfaToken})
-	f.call("tfa-secret-used", request{method: "POST", path: "/api/login",
-		body: map[string]any{"tfaCode": currentCode(t, secret), "secret": pending}})
+	right := f.call("tfa-secret-used", request{method: "POST", path: "/api/login",
+		body: map[string]any{"tfaCode": currentCode(t, secret), "secret": pending}, volatile: []string{tokenMark}})
+	if tfaToken == "" {
+		tfaToken, _ = field(t, right, "access_token").(string)
+	}
 	step2 := f.call("tfa-password-again", request{method: "POST", path: "/api/login",
 		body: map[string]any{"username": flowUser, "password": flowPassword}, volatile: []string{secretMark}})
 	pending2, _ := field(t, step2, "secret").(string)
 	f.call("tfa-verification-code", request{method: "POST", path: "/api/login",
 		body: map[string]any{"verificationCode": currentCode(t, secret), "secret": pending2, "uuid": "rdflow-uuid-tfa-2"}, volatile: []string{tokenMark}})
 
-	// Ten wrong passwords lock the account.
+	// Ten failed sign-ins lock the account: the wrong code and nine wrong
+	// passwords.
 	for i := 1; i <= 10; i++ {
 		f.call(fmt.Sprintf("wrong-password-%d", i), request{method: "POST", path: "/api/login",
-			body: map[string]any{"username": flowUser, "password": "not-the-password", "id": "rdflow-tfa"}})
+			body: map[string]any{"username": flowUser, "password": "not-the-password", "id": "rdflow-tfa"}, volatile: []string{"retry_after integer"}})
 	}
 	time.Sleep(500 * time.Millisecond)
 	f.call("locked", request{method: "POST", path: "/api/login",
@@ -475,16 +477,30 @@ func TestClientAPIFlow(t *testing.T) {
 		}
 	}
 
-	if os.Getenv("RDFLOW_RECORD") == "1" {
+	names := make([]string, len(f.steps))
+	for i, step := range f.steps {
+		names[i] = step.Name
+	}
+	checkListed(t, "flow_"+dbName, names)
+	fixes := fixesOf("flow_" + dbName)
+	if os.Getenv("RDFLOW_RECORD") == "1" || recordingFixed() {
 		// A mark that does not fit the value it masks would make the
 		// recording fail every later run
+		answers := map[string]any{}
 		for i, step := range f.steps {
 			for _, diff := range contract.CompareAnswers(step.Answer, f.got[i]) {
 				t.Errorf("%s (%s) does not fit its own marks: %s", step.Name, step.Request, diff)
 			}
+			if _, fixed := fixes[step.Name]; fixed {
+				answers[step.Name] = step.Answer
+			}
 		}
 		if t.Failed() {
 			t.FailNow()
+		}
+		if recordingFixed() {
+			writeFixed(t, "flow_"+dbName, answers)
+			return
 		}
 		out, err := json.MarshalIndent(f.steps, "", " ")
 		if err != nil {
@@ -511,11 +527,19 @@ func TestClientAPIFlow(t *testing.T) {
 	if len(want) != len(f.steps) {
 		t.Fatalf("the recording has %d steps, the flow %d", len(want), len(f.steps))
 	}
+	fixed := loadFixed(t, "flow_"+dbName)
 	for i, step := range f.steps {
 		if want[i].Name != step.Name {
 			t.Fatalf("step %d is %q in the recording and %q in the flow", i+1, want[i].Name, step.Name)
 		}
-		for _, diff := range contract.CompareAnswers(want[i].Answer, f.got[i]) {
+		expected := want[i].Answer
+		if entry, ok := fixed[step.Name]; ok {
+			expected = contract.GoldenAnswer{}
+			if err := json.Unmarshal(entry.Answer, &expected); err != nil {
+				t.Fatalf("the fixed answer of %s: %v", step.Name, err)
+			}
+		}
+		for _, diff := range contract.CompareAnswers(expected, f.got[i]) {
 			t.Errorf("%s (%s): %s", step.Name, step.Request, diff)
 		}
 	}
@@ -637,44 +661,6 @@ func sortData(t *testing.T, answer contract.Answer) contract.Answer {
 	out.WriteByte('}')
 	answer.Body.JSON = out.Bytes()
 	return answer
-}
-
-func totpAt(t *testing.T, secret string, at time.Time) string {
-	t.Helper()
-	key, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(secret)
-	if err != nil {
-		t.Fatalf("the secret is not base32: %v", err)
-	}
-	var counter [8]byte
-	binary.BigEndian.PutUint64(counter[:], uint64(at.Unix()/30))
-	mac := hmac.New(sha1.New, key)
-	mac.Write(counter[:])
-	sum := mac.Sum(nil)
-	offset := sum[len(sum)-1] & 0x0f
-	value := binary.BigEndian.Uint32(sum[offset:offset+4]) & 0x7fffffff
-	return fmt.Sprintf("%06d", value%1000000)
-}
-
-// currentCode is the code of the step that is running; near the end of a
-// step this waits for the next.
-func currentCode(t *testing.T, secret string) string {
-	t.Helper()
-	if left := 30 - time.Now().Unix()%30; left <= 4 {
-		time.Sleep(time.Duration(left)*time.Second + 200*time.Millisecond)
-	}
-	return totpAt(t, secret, time.Now())
-}
-
-// wrongCode is six digits that are not the code of this step or the next.
-func wrongCode(t *testing.T, secret string) string {
-	t.Helper()
-	now := time.Now()
-	for _, candidate := range []string{"000000", "111111", "222222"} {
-		if candidate != totpAt(t, secret, now) && candidate != totpAt(t, secret, now.Add(30*time.Second)) {
-			return candidate
-		}
-	}
-	return "333333"
 }
 
 // auditRows reads the newest audit entries as the settings page gets them.

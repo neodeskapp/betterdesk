@@ -1,0 +1,345 @@
+{
+ "audit-entries": {
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "body": {
+    "kind": "json",
+    "json": [
+     {
+      "action": "api_login_success",
+      "details": "Client: rdflow-viewer",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "e2e_viewer"
+     },
+     {
+      "action": "api_login_success",
+      "details": "Client: rdflow-operator",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "e2e_operator"
+     },
+     {
+      "action": "api_login_success",
+      "details": "Client: rdflow-admin",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "e2e_admin"
+     },
+     {
+      "action": "api_login_failed",
+      "details": "User: e***o",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "api_login_success",
+      "details": "Client: rdflow-pro",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "rd_flow_pro_tmp"
+     },
+     {
+      "action": "api_login_success",
+      "details": "Client: rdflow-viewer",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "e2e_viewer"
+     },
+     {
+      "action": "api_login_success",
+      "details": "Client: rdflow-viewer-2",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "e2e_viewer"
+     },
+     {
+      "action": "api_logout",
+      "details": "Client: rdflow-viewer",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "e2e_viewer"
+     },
+     {
+      "action": "api_login_success",
+      "details": "Client: rdflow-viewer-3",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "e2e_viewer"
+     },
+     {
+      "action": "api_logout",
+      "details": "Client: unknown",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "e2e_viewer"
+     },
+     {
+      "action": "api_logout",
+      "details": "Client: rdflow-operator",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "e2e_operator"
+     },
+     {
+      "action": "api_login_tfa_required",
+      "details": "Client: rdflow-tfa",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "rd_flow_tmp"
+     },
+     {
+      "action": "api_tfa_failed",
+      "details": "Client: rdflow-tfa",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "rd_flow_tmp"
+     },
+     {
+      "action": "api_login_success",
+      "details": "Client: rdflow-tfa (2FA: totp)",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "rd_flow_tmp"
+     },
+     {
+      "action": "api_login_tfa_required",
+      "details": "Client: unknown",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "rd_flow_tmp"
+     },
+     {
+      "action": "api_login_success",
+      "details": "Client: unknown (2FA: totp)",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "rd_flow_tmp"
+     },
+     {
+      "action": "api_login_failed",
+      "details": "User: r***p",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "api_login_failed",
+      "details": "User: r***p",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "api_login_failed",
+      "details": "User: r***p",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "api_login_failed",
+      "details": "User: r***p",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "api_login_failed",
+      "details": "User: r***p",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "api_login_failed",
+      "details": "User: r***p",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "api_login_failed",
+      "details": "User: r***p",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "api_login_failed",
+      "details": "User: r***p",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "api_login_failed",
+      "details": "User: r***p",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "api_login_blocked",
+      "details": "User: r***, IP: \u003cclient-ip\u003e, Reason: Account temporarily locked due to too many failed attempts",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "api_login_blocked",
+      "details": "User: r***, IP: \u003cclient-ip\u003e, Reason: Account temporarily locked due to too many failed attempts",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "api_login_blocked",
+      "details": "User: r***, IP: \u003cclient-ip\u003e, Reason: Account temporarily locked due to too many failed attempts",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": null
+     },
+     {
+      "action": "api_logout",
+      "details": "Client: unknown",
+      "ip_address": "\u003cclient-ip\u003e",
+      "username": "rd_flow_tmp"
+     }
+    ]
+   }
+  },
+  "bug": "S5"
+ },
+ "tfa-current-user": {
+  "answer": {
+   "roles": null,
+   "status": 401,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Authorization required"
+    }
+   }
+  },
+  "bug": "S5"
+ },
+ "tfa-secret-used": {
+  "answer": {
+   "roles": null,
+   "status": 200,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "access_token",
+     "pattern": "^[9a]{64}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "access_token": "<volatile>",
+     "type": "access_token",
+     "user": {
+      "email": "",
+      "grp": "",
+      "is_admin": false,
+      "name": "rd_flow_tmp",
+      "note": "",
+      "status": 1
+     }
+    }
+   }
+  },
+  "bug": "S5"
+ },
+ "tfa-wrong-code": {
+  "answer": {
+   "roles": null,
+   "status": 401,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "access_token",
+     "pattern": "^[9a]{64}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Invalid verification code"
+    }
+   }
+  },
+  "bug": "S5"
+ },
+ "wrong-password-10": {
+  "answer": {
+   "roles": null,
+   "status": 429,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "retry_after",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "error": "Account temporarily locked due to too many failed attempts",
+     "retry_after": 0
+    }
+   }
+  },
+  "bug": "S5"
+ }
+}

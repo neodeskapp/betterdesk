@@ -205,25 +205,43 @@ func firstTruthy(values ...middleware.Value) jsbind.Value {
 	return jsbind.String("")
 }
 
-// secondStep is handleTfaVerification. The code is checked and the answer
-// of the check is not read, so every code passes (BUGS S5, kept): Node
-// called verifyTotpCode without await and tested the promise.
+// secondStep is handleTfaVerification: the code of the account's second
+// factor for a pending secret. A wrong code counts as a failed sign-in
+// and keeps the secret until it expires, so the client can ask for the
+// code again; the right code uses the secret up.
 func (h *handlers) secondStep(w http.ResponseWriter, r *http.Request, ip string, body middleware.JSONObject) {
 	ctx := r.Context()
+	serverError := func(err error) {
+		h.log.Error("RustDesk API TFA error:", err)
+		fail(w, r, http.StatusInternalServerError, msgServerError)
+	}
 	secret := member(body, "secret")
-	pending, ok := h.tfa.get(secret)
+	pending, ok := h.tfa.get(secret, h.now())
 	if !ok {
 		fail(w, r, http.StatusUnauthorized, "TFA session expired or invalid")
 		return
 	}
 	code, _ := or(member(body, "tfaCode"), member(body, "verificationCode")).(string)
-	_, _ = h.d.Authn.VerifyTOTPCode(ctx, pending.userID, code)
+	verified, err := h.d.Authn.VerifyTOTPCode(ctx, pending.userID, code)
+	if err != nil {
+		serverError(err)
+		return
+	}
+	if !verified {
+		_ = h.d.Authn.RecordAttempt(ctx, pending.username, ip, false)
+		details, err := clientText(valueOf(pending.clientID))
+		if err == nil {
+			err = h.audit(ctx, pending.userID, "api_tfa_failed", "Client: "+details, ip)
+		}
+		if err != nil {
+			serverError(err)
+			return
+		}
+		fail(w, r, http.StatusUnauthorized, "Invalid verification code")
+		return
+	}
 	h.tfa.remove(secret.(string))
 
-	serverError := func(err error) {
-		h.log.Error("RustDesk API TFA error:", err)
-		fail(w, r, http.StatusInternalServerError, msgServerError)
-	}
 	_ = h.d.Authn.RecordAttempt(ctx, pending.username, ip, true)
 	// The client id and UUID of this step, else those of the first step
 	// (stored as `id || ''`)

@@ -2,7 +2,11 @@ package rustdeskapi_test
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha1"
 	"crypto/sha256"
+	"encoding/base32"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +17,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/devicegroups"
@@ -119,9 +124,11 @@ func TestTheFiveRoutesLeaveRequestsWithoutABearerToken(t *testing.T) {
 
 var secretField = regexp.MustCompile(`"secret":"([0-9a-f]{32})"`)
 
-// The second step takes any code (BUGS S5), works once, and only for a
+// The second step takes the code of the account's second factor. A wrong
+// code is refused, counts as a failed sign-in and keeps the secret, so the
+// client can ask again; the right code signs in once, and only for a
 // secret that is text.
-func TestTheSecondStepTakesAnyCode(t *testing.T) {
+func TestSecondStepRefusesAWrongCode(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := world(t, db, nil)
 		setTOTP(t, w, db)
@@ -133,11 +140,28 @@ func TestTheSecondStepTakesAnyCode(t *testing.T) {
 		if got := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"tfaCode":"000000","secret":5}`)}); got.Status != http.StatusUnauthorized {
 			t.Errorf("a secret that is no text: %d %s", got.Status, got.Body)
 		}
-		second := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"verificationCode":"not a code","secret":"` + m[1] + `"}`)})
-		if second.Status != http.StatusOK || !strings.Contains(second.Body, `"type":"access_token"`) || !strings.Contains(second.Body, `"name":"e2e_viewer"`) {
-			t.Fatalf("second step with a wrong code: %d %s", second.Status, second.Body)
+		for _, body := range []string{
+			`{"verificationCode":"` + wrongCode(t, totpSecret) + `","secret":"` + m[1] + `"}`,
+			`{"tfaCode":123456,"secret":"` + m[1] + `"}`,
+		} {
+			got := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(body)})
+			if got.Status != http.StatusUnauthorized || got.Body != `{"error":"Invalid verification code"}` {
+				t.Errorf("second step %s: %d %s", body, got.Status, got.Body)
+			}
 		}
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"tfaCode":"000000","secret":"` + m[1] + `"}`)}); got.Status != http.StatusUnauthorized || got.Body != `{"error":"TFA session expired or invalid"}` {
+		var action, details string
+		if err := db.QueryRow(context.Background(), "SELECT action, details FROM audit_log ORDER BY id DESC LIMIT 1").Scan(&action, &details); err != nil || action != "api_tfa_failed" || details != "Client: c1" {
+			t.Errorf("audit entry of a wrong code: %q %q, %v", action, details, err)
+		}
+		var failed int
+		if err := db.QueryRow(context.Background(), "SELECT COUNT(*) FROM login_attempts WHERE username = 'e2e_viewer' AND NOT success").Scan(&failed); err != nil || failed != 2 {
+			t.Errorf("failed attempts recorded: %d, %v", failed, err)
+		}
+		second := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"tfaCode":"` + currentCode(t, totpSecret) + `","secret":"` + m[1] + `"}`)})
+		if second.Status != http.StatusOK || !strings.Contains(second.Body, `"type":"access_token"`) || !strings.Contains(second.Body, `"name":"e2e_viewer"`) {
+			t.Fatalf("second step with the right code after wrong ones: %d %s", second.Status, second.Body)
+		}
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"tfaCode":"` + currentCode(t, totpSecret) + `","secret":"` + m[1] + `"}`)}); got.Status != http.StatusUnauthorized || got.Body != `{"error":"TFA session expired or invalid"}` {
 			t.Errorf("a used secret: %d %s", got.Status, got.Body)
 		}
 		// The token of the second step names the client of the first
@@ -147,6 +171,9 @@ func TestTheSecondStepTakesAnyCode(t *testing.T) {
 		}
 	})
 }
+
+// totpSecret is the second factor setTOTP gives the viewer.
+const totpSecret = "JBSWY3DPEHPK3PXP"
 
 func setTOTP(t *testing.T, w *replay.World, db *store.DB) {
 	t.Helper()
@@ -158,7 +185,47 @@ func setTOTP(t *testing.T, w *replay.World, db *store.DB) {
 	if db.IsPostgres() {
 		enabled = true
 	}
-	w.Exec("UPDATE users SET password_hash = ?, totp_enabled = ?, totp_secret = 'JBSWY3DPEHPK3PXP' WHERE id = 6", []any{hash, enabled})
+	w.Exec("UPDATE users SET password_hash = ?, totp_enabled = ?, totp_secret = ? WHERE id = 6", []any{hash, enabled, totpSecret})
+}
+
+// totpAt is the code of a base32 secret for the step of 30 seconds that
+// holds the time (RFC 6238, HMAC-SHA1, six digits).
+func totpAt(t *testing.T, secret string, at time.Time) string {
+	t.Helper()
+	key, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(secret)
+	if err != nil {
+		t.Fatalf("the secret is not base32: %v", err)
+	}
+	var counter [8]byte
+	binary.BigEndian.PutUint64(counter[:], uint64(at.Unix()/30))
+	mac := hmac.New(sha1.New, key)
+	mac.Write(counter[:])
+	sum := mac.Sum(nil)
+	offset := sum[len(sum)-1] & 0x0f
+	value := binary.BigEndian.Uint32(sum[offset:offset+4]) & 0x7fffffff
+	return fmt.Sprintf("%06d", value%1000000)
+}
+
+// currentCode is the code of the step that is running; near the end of a
+// step this waits for the next.
+func currentCode(t *testing.T, secret string) string {
+	t.Helper()
+	if left := 30 - time.Now().Unix()%30; left <= 4 {
+		time.Sleep(time.Duration(left)*time.Second + 200*time.Millisecond)
+	}
+	return totpAt(t, secret, time.Now())
+}
+
+// wrongCode is six digits that are not the code of this step or the next.
+func wrongCode(t *testing.T, secret string) string {
+	t.Helper()
+	now := time.Now()
+	for _, candidate := range []string{"000000", "111111", "222222"} {
+		if candidate != totpAt(t, secret, now) && candidate != totpAt(t, secret, now.Add(30*time.Second)) {
+			return candidate
+		}
+	}
+	return "333333"
 }
 
 // RUSTDESK_API_DISABLE_TOTP skips the second factor only together with its

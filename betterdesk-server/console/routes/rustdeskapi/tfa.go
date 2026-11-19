@@ -20,8 +20,8 @@ type tfaSession struct {
 
 // tfaSessions holds the pending second steps of one listener in memory
 // (req.app.locals._tfaSessions): a sign-in started on one port is finished
-// on the same port. Entries older than five minutes are dropped when the
-// next one is added, and only then.
+// on the same port. A step is good for five minutes: an older one is
+// refused when it is used, and dropped then or when the next one is added.
 type tfaSessions struct {
 	mu      sync.Mutex
 	pending map[string]tfaSession
@@ -45,9 +45,9 @@ func (s *tfaSessions) add(secret string, session tfaSession) {
 	}
 }
 
-// get returns the pending second step of a secret. A secret that is not
-// text matches none.
-func (s *tfaSessions) get(secret any) (tfaSession, bool) {
+// get returns the pending second step of a secret that is not older than
+// five minutes at now. A secret that is not text matches none.
+func (s *tfaSessions) get(secret any, now time.Time) (tfaSession, bool) {
 	text, ok := secret.(string)
 	if !ok {
 		return tfaSession{}, false
@@ -55,6 +55,10 @@ func (s *tfaSessions) get(secret any) (tfaSession, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	session, found := s.pending[text]
+	if found && now.Sub(session.createdAt) > tfaMaxAge {
+		delete(s.pending, text)
+		return tfaSession{}, false
+	}
 	return session, found
 }
 

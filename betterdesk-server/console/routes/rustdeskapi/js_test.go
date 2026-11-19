@@ -148,23 +148,28 @@ func TestPendingSecondSteps(t *testing.T) {
 	s := &tfaSessions{}
 	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	s.add("old", tfaSession{userID: 1, createdAt: start})
-	if _, ok := s.get("old"); !ok {
+	if _, ok := s.get("old", start); !ok {
 		t.Fatal("a pending step is not kept")
 	}
-	if _, ok := s.get(5.0); ok {
+	if _, ok := s.get(5.0, start); ok {
 		t.Error("a secret that is no text matched")
 	}
-	// Entries go only when a new one comes, and only when older than five minutes
+	// A step is good for five minutes, also when no other sign-in comes
+	// in between (BUGS RD5)
+	if _, ok := s.get("old", start.Add(5*time.Minute)); !ok {
+		t.Error("an entry of exactly five minutes was refused")
+	}
+	if _, ok := s.get("old", start.Add(5*time.Minute+time.Millisecond)); ok {
+		t.Error("an entry older than five minutes was found")
+	}
+	// A new step drops the ones older than five minutes
 	s.add("new", tfaSession{userID: 2, createdAt: start.Add(5 * time.Minute)})
-	if _, ok := s.get("old"); !ok {
-		t.Error("an entry of exactly five minutes was dropped")
+	s.add("newer", tfaSession{userID: 3, createdAt: start.Add(10*time.Minute + time.Millisecond)})
+	if _, kept := s.pending["new"]; kept || len(s.pending) != 1 {
+		t.Errorf("the steps left after a new one: %v", s.pending)
 	}
-	s.add("newer", tfaSession{userID: 3, createdAt: start.Add(5*time.Minute + time.Millisecond)})
-	if _, ok := s.get("old"); ok {
-		t.Error("an entry older than five minutes was kept")
-	}
-	s.remove("new")
-	if _, ok := s.get("new"); ok {
+	s.remove("newer")
+	if _, ok := s.get("newer", start.Add(10*time.Minute)); ok {
 		t.Error("a used secret works again")
 	}
 }
