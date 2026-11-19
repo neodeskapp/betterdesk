@@ -15,9 +15,13 @@ import (
 // The queries take request values as they came (jsbind.Value) and bind
 // them as the old console's driver for the database did.
 //
-// Rows are read with SELECT * and go out with the columns in the order of
-// the table, as they always did: a table from before policy_type, action
-// and scope were added has those three at its end.
+// A policy goes out with its columns in one order (policyColumns), also
+// from a table made before policy_type, action and scope were added,
+// which has those three at its end. Events go out in the order of their
+// table.
+
+// policyColumns are the columns of a policy in the order they go out.
+const policyColumns = "id, name, description, policy_type, action, scope, enabled, rules, created_at, updated_at"
 
 // row is a row with its columns in order, each as it goes into JSON.
 type row struct {
@@ -228,7 +232,7 @@ func documentRows(ctx context.Context, db *store.DB, column, fallback, query str
 
 // listPolicies returns every policy, by id.
 func listPolicies(ctx context.Context, db *store.DB) ([]row, error) {
-	rows, err := policyRows(ctx, db, "SELECT * FROM dlp_policies ORDER BY id")
+	rows, err := policyRows(ctx, db, "SELECT "+policyColumns+" FROM dlp_policies ORDER BY id")
 	if err != nil {
 		return nil, fmt.Errorf("list policies: %w", err)
 	}
@@ -241,7 +245,7 @@ func policyByID(ctx context.Context, db *store.DB, id jsbind.Value) (*row, error
 	if err != nil {
 		return nil, fmt.Errorf("load policy %s: %w", id.ToString(), err)
 	}
-	return onePolicy(ctx, db, "load policy "+id.ToString(), "SELECT * FROM dlp_policies WHERE id = ?", args...)
+	return onePolicy(ctx, db, "load policy "+id.ToString(), "SELECT "+policyColumns+" FROM dlp_policies WHERE id = ?", args...)
 }
 
 // policyExists reports whether there is a policy with the id. It does not
@@ -252,7 +256,7 @@ func policyExists(ctx context.Context, db *store.DB, id jsbind.Value) (bool, err
 	if err != nil {
 		return false, fmt.Errorf("load policy %s: %w", id.ToString(), err)
 	}
-	rows, _, err := selectRows(ctx, db, "SELECT * FROM dlp_policies WHERE id = ?", args...)
+	rows, _, err := selectRows(ctx, db, "SELECT "+policyColumns+" FROM dlp_policies WHERE id = ?", args...)
 	if err != nil {
 		return false, fmt.Errorf("load policy %s: %w", id.ToString(), err)
 	}
@@ -285,7 +289,7 @@ func createPolicy(ctx context.Context, db *store.DB, data newPolicy) (*row, erro
 		return nil, fmt.Errorf("create policy: %w", err)
 	}
 	if db.IsPostgres() {
-		return onePolicy(ctx, db, "create policy", insert+" RETURNING *", args...)
+		return onePolicy(ctx, db, "create policy", insert+" RETURNING "+policyColumns, args...)
 	}
 	res, err := db.Exec(ctx, insert, args...)
 	if err != nil {
@@ -326,7 +330,7 @@ func updatePolicy(ctx context.Context, db *store.DB, id jsbind.Value, changes []
 	}
 	update := "UPDATE dlp_policies SET " + strings.Join(sets, ", ") + " WHERE id = ?"
 	if db.IsPostgres() {
-		return onePolicy(ctx, db, doing, update+" RETURNING *", args...)
+		return onePolicy(ctx, db, doing, update+" RETURNING "+policyColumns, args...)
 	}
 	if _, err := db.Exec(ctx, update, args...); err != nil {
 		return nil, fmt.Errorf("%s: %w", doing, err)

@@ -52,9 +52,9 @@ func TestNodeAnswers(t *testing.T) {
 }
 
 // A database from before policy_type, action and scope were added has
-// those columns at the end of the table, and a policy goes out with its
-// columns in the table's order.
-func TestPolicyColumnsKeepTheOrderOfTheTable(t *testing.T) {
+// those columns at the end of the table; a policy goes out with its
+// columns in the same order as from a new table (BUGS DG7).
+func TestPolicyColumnsHaveOneOrder(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		ctx := context.Background()
 		old := db.Pick(
@@ -71,8 +71,8 @@ func TestPolicyColumnsKeepTheOrderOfTheTable(t *testing.T) {
 		w := replay.NewWorld(t, db, nil)
 		got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/bd/policies", Body: replay.Text(`{"name":"old table","policy_type":"usb","scope":"all","rules":[{"b":1,"a":2}]}`)})
 		want := db.Pick(
-			`{"id":1,"name":"old table","description":"","enabled":1,"rules":[{"b":1,"a":2}],"created_at":"<now, SQLite form>","updated_at":"<now, SQLite form>","policy_type":"usb","action":"log","scope":"all"}`,
-			`{"id":1,"name":"old table","description":"","enabled":true,"rules":[{"a":2,"b":1}],"created_at":"<now, ISO form>","updated_at":"<now, ISO form>","policy_type":"usb","action":"log","scope":"all"}`)
+			`{"id":1,"name":"old table","description":"","policy_type":"usb","action":"log","scope":"all","enabled":1,"rules":[{"b":1,"a":2}],"created_at":"<now, SQLite form>","updated_at":"<now, SQLite form>"}`,
+			`{"id":1,"name":"old table","description":"","policy_type":"usb","action":"log","scope":"all","enabled":true,"rules":[{"a":2,"b":1}],"created_at":"<now, ISO form>","updated_at":"<now, ISO form>"}`)
 		if have := replay.Normalize(got.Body); got.Status != 201 || have != want {
 			t.Errorf("create: %d %s\nwant 201 %s", got.Status, have, want)
 		}
