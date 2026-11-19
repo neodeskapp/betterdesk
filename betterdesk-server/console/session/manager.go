@@ -137,29 +137,52 @@ func From(r *http.Request) *Session {
 
 // Load returns the session a request's cookie names, without renewing it:
 // the row is not touched and no cookie is sent. Websocket upgrades use it.
-// A request without a valid session gets an empty one.
+// A request without a valid, live session gets an empty one.
 func (m *Manager) Load(r *http.Request) (*Session, error) {
-	s, err := m.newSession(r)
+	s, expired, err := m.load(r)
+	if err != nil || expired == "" {
+		return s, err
+	}
+	return m.newSession(r)
+}
+
+// load is Load that also reports a signed-in session the request's cookie
+// names whose row it found past a limit and ended: expired is the reason,
+// and the session holds what the row held, so the answer knows the
+// account. A session without an account that ran out is no session.
+func (m *Manager) load(r *http.Request) (s *Session, expired string, err error) {
+	s, err = m.newSession(r)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	id, ok := m.cookieID(r)
 	if !ok {
-		return s, nil
+		return s, "", nil
 	}
 	s.cookieID = id
-	text, found, err := m.table.get(r.Context(), id)
+	text, found, ended, err := m.table.get(r.Context(), id)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	if !found {
-		return s, nil
+	if !found && ended == "" {
+		return s, "", nil
 	}
 	if err := s.restore(text); err != nil {
-		return nil, fmt.Errorf("stored session: %w", err)
+		return nil, "", fmt.Errorf("stored session: %w", err)
 	}
 	s.id, s.originalID = id, id
-	return s, nil
+	if ended == "" {
+		return s, "", nil
+	}
+	if s.signedInLocked() {
+		return s, ended, nil
+	}
+	empty, err := m.newSession(r)
+	if err != nil {
+		return nil, "", err
+	}
+	empty.cookieID = id
+	return empty, "", nil
 }
 
 // cookieID reads the session id from the request's cookie. ok is false
@@ -209,13 +232,17 @@ func (m *Manager) secureRequest(r *http.Request) bool {
 // written to the store, before the first byte goes out.
 func (m *Manager) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s, err := m.Load(r)
+		s, expired, err := m.load(r)
 		if err != nil {
 			m.onError(w, r, err)
 			return
 		}
 		r = r.WithContext(context.WithValue(r.Context(), contextKey{}, s))
 		s.req = r
+		if expired != "" {
+			m.answerExpired(w, r, s, expired)
+			return
+		}
 		if s.signedInLocked() {
 			if ok, reason := s.touchActivity(r); !ok {
 				m.answerExpired(w, r, s, reason)

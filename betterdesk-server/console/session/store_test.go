@@ -125,7 +125,7 @@ func TestSchemaUpgradesTheFirstTable(t *testing.T) {
 		if row == nil || !row.active {
 			t.Fatalf("the old row is not active after the upgrade: %+v", row)
 		}
-		text, found, err := f.m.table.get(ctx, "old-sid")
+		text, found, _, err := f.m.table.get(ctx, "old-sid")
 		if err != nil || !found || !strings.Contains(text, `"k":"v"`) {
 			t.Fatalf("get(old-sid) = %q, %v, %v", text, found, err)
 		}
@@ -153,7 +153,7 @@ func (f *fixture) mustSet(sid string, rec record) {
 
 func (f *fixture) found(sid string) bool {
 	f.t.Helper()
-	_, found, err := f.m.table.get(ctx, sid)
+	_, found, _, err := f.m.table.get(ctx, sid)
 	if err != nil {
 		f.t.Fatalf("get %s: %v", sid, err)
 	}
@@ -172,7 +172,7 @@ func TestStoreSetGetTouchDestroy(t *testing.T) {
 			json: text, expiresAt: now + 60_000, createdAt: now, lastActivityAt: now,
 			userID: int64(7), username: "alice", ip: "203.0.113.10", userAgent: "TestAgent/1.0", fingerprint: "fp_12345678",
 		})
-		got, found, err := f.m.table.get(ctx, "sid-1")
+		got, found, _, err := f.m.table.get(ctx, "sid-1")
 		if err != nil || !found || got != text {
 			t.Fatalf("get = %q, %v, %v", got, found, err)
 		}

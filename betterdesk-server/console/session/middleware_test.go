@@ -744,16 +744,15 @@ func TestBackgroundRequestsDoNotKeepAnIdleSessionAlive(t *testing.T) {
 			t.Fatal("the session ended at exactly the idle timeout")
 		}
 		f.clock.Advance(time.Millisecond)
-		var userID int64 = -1
-		rec := f.serve(background(get("/api/poll", pair)), func(w http.ResponseWriter, r *http.Request) { userID = From(r).UserID() })
+		called := false
+		rec := f.serve(background(get("/api/poll", pair)), func(http.ResponseWriter, *http.Request) { called = true })
 		row := f.row(sid)
-		if userID != 0 || row.active || row.reason.String != ReasonIdle {
-			t.Fatalf("user %d, row %+v; want the session ended as idle", userID, row)
+		if called || row.active || row.reason.String != ReasonIdle {
+			t.Fatalf("handler ran %v, row %+v; want the session ended as idle", called, row)
 		}
-		// The store ended it: the request goes on signed out, nothing is
-		// cleared and nothing is audited
-		if len(setCookies(rec)) != 0 || len(f.audits) != 0 || row.json == "{}" {
-			t.Fatalf("Set-Cookie %q, audits %v, JSON %s", setCookies(rec), f.audits, row.json)
+		// It is answered as an ended session: cookie cleared, audited
+		if rec.Code != http.StatusUnauthorized || len(setCookies(rec)) == 0 || len(f.audits) != 1 || row.json != "{}" {
+			t.Fatalf("status %d, Set-Cookie %q, audits %v, JSON %s", rec.Code, setCookies(rec), f.audits, row.json)
 		}
 	})
 }
@@ -788,10 +787,10 @@ func TestAbsoluteLifetime(t *testing.T) {
 			t.Fatalf("row one millisecond before the end: %+v", row)
 		}
 		f.clock.Advance(2 * time.Millisecond)
-		var userID int64 = -1
-		f.serve(get("/", pair), func(w http.ResponseWriter, r *http.Request) { userID = From(r).UserID() })
-		if row := f.row(sid); userID != 0 || row.active || row.reason.String != ReasonMaxAge {
-			t.Fatalf("user %d, row %+v; want ended as max_age", userID, row)
+		called := false
+		rec := f.serve(get("/", pair), func(http.ResponseWriter, *http.Request) { called = true })
+		if row := f.row(sid); called || rec.Code != http.StatusFound || row.active || row.reason.String != ReasonMaxAge {
+			t.Fatalf("handler ran %v, status %d, row %+v; want ended as max_age and sent to the sign-in page", called, rec.Code, row)
 		}
 	})
 }

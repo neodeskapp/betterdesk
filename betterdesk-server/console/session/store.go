@@ -161,9 +161,10 @@ func (t *table) expired(row storedRow, now int64) (bool, string) {
 }
 
 // get returns the stored JSON of a live session. found is false when there
-// is no row, or when the row has ended or is past a limit; a row found past
-// a limit is marked as ended on the way.
-func (t *table) get(ctx context.Context, sid string) (text string, found bool, err error) {
+// is no row, or when the row has ended or is past a limit. A row found past
+// a limit is marked as ended on the way: then ended is the reason, and
+// text what the row held.
+func (t *table) get(ctx context.Context, sid string) (text string, found bool, ended string, err error) {
 	var row storedRow
 	var expires, created, last any
 	var reason sql.NullString
@@ -173,10 +174,10 @@ func (t *table) get(ctx context.Context, sid string) (text string, found bool, e
 		 FROM panel_sessions WHERE sid = ?`, sid,
 	).Scan(&row.json, &expires, &created, &last, &reason, &active)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", false, nil
+		return "", false, "", nil
 	}
 	if err != nil {
-		return "", false, fmt.Errorf("load session: %w", err)
+		return "", false, "", fmt.Errorf("load session: %w", err)
 	}
 	row.expiresAt = columnMillis(expires)
 	row.createdAt = columnMillis(created)
@@ -185,14 +186,15 @@ func (t *table) get(ctx context.Context, sid string) (text string, found bool, e
 	row.active = active == 1
 
 	if gone, why := t.expired(row, t.nowMs()); gone {
-		if row.active {
-			if err := t.markEnded(ctx, sid, why); err != nil {
-				return "", false, err
-			}
+		if !row.active {
+			return "", false, "", nil
 		}
-		return "", false, nil
+		if err := t.markEnded(ctx, sid, why); err != nil {
+			return "", false, "", err
+		}
+		return row.json, false, why, nil
 	}
-	return row.json, true, nil
+	return row.json, true, "", nil
 }
 
 // columnMillis reads a time column: milliseconds as a number, or a
