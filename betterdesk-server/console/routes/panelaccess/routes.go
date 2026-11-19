@@ -137,14 +137,25 @@ func (h *handlers) user(w http.ResponseWriter, r *http.Request) {
 	kit.OK(w, r, out)
 }
 
+// errBadPolicy refuses a save whose body is no object, or whose sections
+// or features are there and no list: storing it would delete every row.
+var errBadPolicy = &access.StatusError{Status: http.StatusBadRequest, Message: "Invalid access policy"}
+
 // submitted is the "sections" and "features" of the body, as decoded JSON.
-// A body that is no object has neither.
-func submitted(r *http.Request) (sections, features any) {
+// Either may be left out (or null); when given it is a list.
+func submitted(r *http.Request) (sections, features any, err error) {
 	var body map[string]any
 	if err := kit.Bind(r, &body); err != nil {
-		return nil, nil
+		return nil, nil, errBadPolicy
 	}
-	return body["sections"], body["features"]
+	for _, key := range []string{"sections", "features"} {
+		if value := body[key]; value != nil {
+			if _, isList := value.([]any); !isList {
+				return nil, nil, errBadPolicy
+			}
+		}
+	}
+	return body["sections"], body["features"], nil
 }
 
 // saveUser answers PUT /api/panel/access/users/{id} with the body
@@ -156,7 +167,11 @@ func (h *handlers) saveUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	subject := jsreq.String(float64(user.ID))
-	sections, features := submitted(r)
+	sections, features, err := submitted(r)
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
 	saved, err := h.d.Access.SavePolicy(r.Context(), access.SubjectUser, subject, sections, features)
 	if err == nil {
 		h.audit(r, "user_access_policy_updated", "Updated access policy for user "+subject)
@@ -224,7 +239,11 @@ func (h *handlers) saveGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	guid := r.PathValue("guid")
-	sections, features := submitted(r)
+	sections, features, err := submitted(r)
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
 	saved, err := h.d.Access.SavePolicy(r.Context(), access.SubjectGroup, guid, sections, features)
 	if err == nil {
 		h.audit(r, "user_group_access_policy_updated", "Updated access policy for group "+guid)

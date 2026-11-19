@@ -151,14 +151,18 @@ func TestUserPolicy(t *testing.T) {
 			t.Errorf("after: %d %s", got.Status, got.Body)
 		}
 
-		// A body that is a list, or lists of the wrong kind, store nothing
-		for _, body := range []string{`[{"sections":[{"resource_key":"devices","access_level":"write"}]}]`, `{"sections":"devices","features":{"audio":false}}`, `{}`} {
-			exec(t, w.DB, "INSERT INTO panel_access_policies (subject_type, subject_id, resource_key, access_level) VALUES ('user', '6', 'reports', 'read')")
-			got = admin.Do("PUT", "/api/panel/access/users/6", body)
-			a = decode(t, got)
-			if got.Status != 200 || string(a.Data.Sections) != "[]" || string(a.Data.Features) != "[]" || a.Data.Effective.Sections["devices"].Source != "role" {
+		// A body that is a list, or lists of the wrong kind, is refused and
+		// keeps the stored rows (TH11); a body without lists clears them
+		exec(t, w.DB, "INSERT INTO panel_access_policies (subject_type, subject_id, resource_key, access_level) VALUES ('user', '6', 'reports', 'read')")
+		for _, body := range []string{`[{"sections":[{"resource_key":"devices","access_level":"write"}]}]`, `{"sections":"devices","features":{"audio":false}}`} {
+			if got = admin.Do("PUT", "/api/panel/access/users/6", body); got.Status != 400 || got.Body != `{"success":false,"error":"Invalid access policy"}` {
 				t.Errorf("save %s: %d %s", body, got.Status, got.Body)
 			}
+		}
+		got = admin.Do("PUT", "/api/panel/access/users/6", `{}`)
+		a = decode(t, got)
+		if got.Status != 200 || string(a.Data.Sections) != "[]" || string(a.Data.Features) != "[]" || a.Data.Effective.Sections["devices"].Source != "role" {
+			t.Errorf("save {}: %d %s", got.Status, got.Body)
 		}
 	})
 }
@@ -256,6 +260,41 @@ func TestGroupPolicy(t *testing.T) {
 		}
 		if rows := w.AuditRows(); len(rows) != 0 {
 			t.Errorf("audit log after refused saves: %q", rows)
+		}
+	})
+}
+
+// TH11: a save whose body is no object, or whose sections or features are
+// there and no list, is refused with 400 and keeps the stored rows, for an
+// account and for a user group.
+func TestPolicySaveOfTheWrongShapeKeepsTheRows(t *testing.T) {
+	eachDB(t, func(t *testing.T, w *routetest.World) {
+		exec(t, w.DB, "INSERT INTO user_groups (guid, name) VALUES ('team-1', 'Team')")
+		admin := w.As("admin")
+		if got := admin.Do("PUT", "/api/panel/access/users/6", policy); got.Status != 200 {
+			t.Fatalf("save: %d %s", got.Status, got.Body)
+		}
+		refused := `{"success":false,"error":"Invalid access policy"}`
+		for _, body := range []string{
+			`[{"sections":[{"resource_key":"devices","access_level":"write"}]}]`,
+			`{"sections":"devices","features":{"audio":false}}`,
+			`{"sections":{"devices":"write"}}`,
+			`{"features":"audio"}`,
+		} {
+			if got := admin.Do("PUT", "/api/panel/access/users/6", body); got.Status != 400 || got.Body != refused {
+				t.Errorf("save %s: %d %s", body, got.Status, got.Body)
+			}
+			if got := admin.Do("PUT", "/api/panel/access/groups/team-1", body); got.Status != 400 || got.Body != refused {
+				t.Errorf("group save %s: %d %s", body, got.Status, got.Body)
+			}
+		}
+		var stored int
+		if err := w.DB.QueryRow(context.Background(), "SELECT COUNT(*) FROM panel_access_policies WHERE subject_type = 'user' AND subject_id = '6'").Scan(&stored); err != nil || stored == 0 {
+			t.Errorf("rows of account 6 after the refused saves: %d %v", stored, err)
+		}
+		// Leaving a list out is no wrong shape: the save clears that list.
+		if got := admin.Do("PUT", "/api/panel/access/users/6", `{}`); got.Status != 200 {
+			t.Errorf("save without lists: %d %s", got.Status, got.Body)
 		}
 	})
 }
