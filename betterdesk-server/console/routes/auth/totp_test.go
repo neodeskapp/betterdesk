@@ -66,12 +66,15 @@ func TestSecondFactor(t *testing.T) {
 		want(t, "no code", a.post("/api/auth/totp/verify", `{}`), http.StatusUnauthorized, invalidCode)
 		want(t, "code with a space", a.post("/api/auth/totp/verify", fmt.Sprintf(`{"code":%q}`, currentCode(t, totpSecret)+" ")), http.StatusUnauthorized, invalidCode)
 		want(t, "code as a number", a.post("/api/auth/totp/verify", `{"code":1`+currentCode(t, totpSecret)+`}`), http.StatusUnauthorized, invalidCode)
-		want(t, "wrong recovery code", a.post("/api/auth/totp/verify", `{"recoveryCode":"0000-0000"}`), http.StatusUnauthorized, invalidCode)
-		// A recovery code that is not text was a fault
-		want(t, "recovery code as a number", a.post("/api/auth/totp/verify", `{"recoveryCode":12345678}`), http.StatusInternalServerError, serverErrorBody)
 		if a.sessionID() != pending {
 			t.Error("a refused code changed the session")
 		}
+		// Five wrong codes end a wait: the password starts a new one
+		a.post("/api/auth/login", login("alice", password))
+		want(t, "wrong recovery code", a.post("/api/auth/totp/verify", `{"recoveryCode":"0000-0000"}`), http.StatusUnauthorized, invalidCode)
+		// A recovery code that is not text was a fault
+		want(t, "recovery code as a number", a.post("/api/auth/totp/verify", `{"recoveryCode":12345678}`), http.StatusInternalServerError, serverErrorBody)
+		pending = a.sessionID()
 
 		// The right code, sent from another client than the password
 		res := a.post("/api/auth/totp/verify", fmt.Sprintf(`{"code":%q,"return":"/devices"}`, currentCode(t, totpSecret)),

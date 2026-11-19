@@ -25,8 +25,15 @@ const (
 	pendingUserID = "pendingTotpUserId"
 	pendingUser   = "pendingTotpUser"
 	pendingMeta   = "pendingClientMeta"
-	partialToken  = "goPartialToken"
+	// pendingFailures counts the wrong codes given since the password
+	// step.
+	pendingFailures = "pendingTotpFailures"
+	partialToken    = "goPartialToken"
 )
+
+// maxWrongCodes is how many wrong codes end the wait for the second
+// factor.
+const maxWrongCodes = 5
 
 // errNotText stands for the fault the old console ran into when a password
 // that is not text reached the hash compare.
@@ -428,6 +435,7 @@ func (h *handlers) totpVerify(w http.ResponseWriter, r *http.Request) {
 			kit.Fail(w, r, http.StatusTooManyRequests, kit.T(r, "auth.totp_rate_limited", nil))
 			return
 		case answer.Bool("rejected"):
+			countWrongCode(sess)
 			if err := h.audit(r, userID, "totp_failed", "Go server rejected TOTP"); err != nil {
 				h.serverError(w, r, "TOTP verify error:", err)
 				return
@@ -457,6 +465,7 @@ func (h *handlers) totpVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !verified {
+		countWrongCode(sess)
 		if err := h.audit(r, userID, "totp_failed", "Method: "+method); err != nil {
 			h.serverError(w, r, "TOTP verify error:", err)
 			return
@@ -569,4 +578,24 @@ func (h *handlers) finishSecondFactor(w http.ResponseWriter, r *http.Request, wh
 		return
 	}
 	kit.JSON(w, r, http.StatusOK, h.signedInAnswer(who, replaced, body))
+}
+
+// countWrongCode notes a refused code of the waiting sign-in. The
+// maxWrongCodes-th ends the wait, so the next code needs the password
+// again.
+func countWrongCode(sess *session.Session) {
+	var failures int
+	sess.Get(pendingFailures, &failures)
+	if failures++; failures >= maxWrongCodes {
+		endPending(sess)
+		return
+	}
+	sess.Set(pendingFailures, failures)
+}
+
+// endPending drops the waiting sign-in from the session.
+func endPending(sess *session.Session) {
+	for _, key := range []string{pendingUserID, pendingUser, pendingMeta, pendingFailures, partialToken} {
+		sess.Delete(key)
+	}
 }

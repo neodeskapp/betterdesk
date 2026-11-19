@@ -90,6 +90,7 @@ func TestEveryLimiterHasItsOwnAnswer(t *testing.T) {
 		"panelPreferenceLimiter": "Too many layout save requests. Please slow down.",
 		"rdClientPageLimiter":    "Too many remote page requests. Please slow down.",
 		"loginLimiter":           "Too many login attempts. Please try again in a minute.",
+		"totpVerifyLimiter":      "Too many verification attempts. Please try again in a minute.",
 		"passwordChangeLimiter":  "Too many password change attempts. Please try again later.",
 		"uploadLimiter":          "Too many upload requests. Please try again later.",
 		"fileAccessLimiter":      "Too many file requests. Please try again later.",
@@ -325,7 +326,7 @@ func TestSetFromEnvironment(t *testing.T) {
 	}
 	defaults := map[string]row{
 		"apiLimiter": {time.Minute, 100}, "sessionReadLimiter": {time.Minute, 600}, "widgetLimiter": {time.Minute, 600}, "panelReadLimiter": {time.Minute, 600},
-		"panelPreferenceLimiter": {time.Minute, 30}, "rdClientPageLimiter": {time.Minute, 120}, "loginLimiter": {time.Minute, 5},
+		"panelPreferenceLimiter": {time.Minute, 30}, "rdClientPageLimiter": {time.Minute, 120}, "loginLimiter": {time.Minute, 5}, "totpVerifyLimiter": {time.Minute, 5},
 		"passwordChangeLimiter": {5 * time.Minute, 3}, "uploadLimiter": {time.Minute, 30}, "fileAccessLimiter": {time.Minute, 120},
 		"registerLimiter": {time.Minute, 20},
 	}
@@ -337,9 +338,9 @@ func TestSetFromEnvironment(t *testing.T) {
 	set = newSet(&clock{}, map[string]string{"RATE_LIMIT_WINDOW_MS": "2000", "RATE_LIMIT_MAX": "11", "LOGIN_RATE_LIMIT_MAX": "12", "PANEL_READ_RATE_LIMIT_MAX": "13",
 		"WIDGET_RATE_LIMIT_MAX": "14", "PANEL_PREFERENCE_RATE_LIMIT_MAX": "15", "RDCLIENT_PAGE_RATE_LIMIT_MAX": "16", "UPLOAD_RATE_LIMIT_MAX": "17", "FILE_ACCESS_RATE_LIMIT_MAX": "18", "BD_REGISTER_RATE_LIMIT_MAX": "19"})
 	custom := map[string]row{
-		// RATE_LIMIT_WINDOW_MS is the window of four limiters; the others keep theirs
+		// RATE_LIMIT_WINDOW_MS is the window of five limiters; the others keep theirs
 		"apiLimiter": {2 * time.Second, 11}, "sessionReadLimiter": {2 * time.Second, 13}, "widgetLimiter": {time.Minute, 14}, "panelReadLimiter": {2 * time.Second, 13},
-		"panelPreferenceLimiter": {time.Minute, 15}, "rdClientPageLimiter": {time.Minute, 16}, "loginLimiter": {2 * time.Second, 12},
+		"panelPreferenceLimiter": {time.Minute, 15}, "rdClientPageLimiter": {time.Minute, 16}, "loginLimiter": {2 * time.Second, 12}, "totpVerifyLimiter": {2 * time.Second, 12},
 		"passwordChangeLimiter": {5 * time.Minute, 3}, "uploadLimiter": {time.Minute, 17}, "fileAccessLimiter": {time.Minute, 18},
 		"registerLimiter": {time.Minute, 19},
 	}

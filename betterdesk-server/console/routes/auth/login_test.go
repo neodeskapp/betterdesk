@@ -441,10 +441,14 @@ func TestLoginLimiterAndTheOrderOfChecks(t *testing.T) {
 	if got := res.header.Get("RateLimit-Limit") + " " + res.header.Get("RateLimit-Remaining"); got != "2 1" {
 		t.Errorf("RateLimit headers of the first request: %q", got)
 	}
-	// The second factor shares the limit with the password
-	want(t, "second", a.post("/api/auth/totp/verify", `{"code":"123456"}`), http.StatusBadRequest, `{"success":false,"error":"Session expired. Please log in again."}`)
+	want(t, "second", a.post("/api/auth/login", `{}`), http.StatusBadRequest, invalidCredentials)
 	want(t, "third", a.post("/api/auth/login", login("alice", password)), http.StatusTooManyRequests, tooMany)
-	want(t, "fourth", a.post("/api/auth/totp/verify", `{"code":"123456"}`), http.StatusTooManyRequests, tooMany)
+	// The second factor has a limit of its own (BUGS.md AR4)
+	const noWait = `{"success":false,"error":"Session expired. Please log in again."}`
+	want(t, "first code", a.post("/api/auth/totp/verify", `{"code":"123456"}`), http.StatusBadRequest, noWait)
+	want(t, "second code", a.post("/api/auth/totp/verify", `{"code":"123456"}`), http.StatusBadRequest, noWait)
+	want(t, "third code", a.post("/api/auth/totp/verify", `{"code":"123456"}`), http.StatusTooManyRequests,
+		`{"success":false,"error":"Too many verification attempts. Please try again in a minute."}`)
 	if rows := w.attempts(); len(rows) != 0 {
 		t.Errorf("a limited sign-in reached the account: %v", rows)
 	}

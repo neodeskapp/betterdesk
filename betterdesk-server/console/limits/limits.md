@@ -23,6 +23,7 @@ read" is a GET or HEAD with a session.
 | `PanelPreference` | `panelPreferenceLimiter` | 60 s | `PANEL_PREFERENCE_RATE_LIMIT_MAX`, 30 | `pref:<user>`, signed out the address | nothing | Too many layout save requests. Please slow down. |
 | `RDClientPage` | `rdClientPageLimiter` | 60 s | `RDCLIENT_PAGE_RATE_LIMIT_MAX`, 120 | address | nothing | Too many remote page requests. Please slow down. |
 | `Login` | `loginLimiter` | `W` | `LOGIN_RATE_LIMIT_MAX`, 5 | address | nothing | Too many login attempts. Please try again in a minute. |
+| `TOTPVerify` | `totpVerifyLimiter` | `W` | `LOGIN_RATE_LIMIT_MAX`, 5 | address | nothing | Too many verification attempts. Please try again in a minute. |
 | `PasswordChange` | `passwordChangeLimiter` | 5 min | 3, fixed | the address alone (no fallback) | nothing | Too many password change attempts. Please try again later. |
 | `Upload` | `uploadLimiter` | 60 s | `UPLOAD_RATE_LIMIT_MAX`, 30 | address | nothing | Too many upload requests. Please try again later. |
 | `FileAccess` | `fileAccessLimiter` | 60 s | `FILE_ACCESS_RATE_LIMIT_MAX`, 120 | address | nothing | Too many file requests. Please try again later. |
@@ -94,7 +95,8 @@ runs before the sign-in check, so requests without a session count too.
 
 | Limiter | Routes (Node file) | Position |
 |---|---|---|
-| `Login` | `POST /api/auth/login`, `POST /api/auth/totp/verify` (`auth.routes.js`) | first |
+| `Login` | `POST /api/auth/login` (`auth.routes.js`) | first |
+| `TOTPVerify` | `POST /api/auth/totp/verify` (`auth.routes.js`) | first |
 | `PasswordChange` | `POST /api/auth/password` (`auth.routes.js`) | after the sign-in check |
 | `PasswordChange` | `POST /api/users`, `POST /api/users/:id/reset-password` (`users.routes.js`) | after the sign-in and permission checks |
 | `PanelRead` | `GET /api/users/avatars`, `GET /api/users/:id/avatar` (`avatars.routes.js`) | after the sign-in check |

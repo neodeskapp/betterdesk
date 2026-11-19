@@ -68,7 +68,7 @@ func Register(d *kit.Deps) {
 	r.Get("/api/auth/oidc/callback", h.oidcCallback)
 	r.Get("/api/oidc/callback", h.oidcCallback)
 	r.Get("/api/auth/oidc/session", h.oidcSession)
-	r.Post("/api/auth/totp/verify", h.totpVerify, d.Limits.Login.Middleware)
+	r.Post("/api/auth/totp/verify", h.totpVerify, d.Limits.TOTPVerify.Middleware)
 	r.Post("/api/auth/totp/setup", h.totpSetup, d.RequireAuth)
 	r.Post("/api/auth/totp/enable", h.totpEnable, d.RequireAuth)
 	r.Post("/api/auth/totp/disable", h.totpDisable, d.RequireAuth)

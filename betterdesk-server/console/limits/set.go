@@ -149,6 +149,9 @@ type Set struct {
 	RDClientPage *Limiter
 	// Login is the limit of sign-in attempts.
 	Login *Limiter
+	// TOTPVerify is the limit of second-factor codes per address, apart
+	// from the password step's.
+	TOTPVerify *Limiter
 	// PasswordChange is the limit of password changes.
 	PasswordChange *Limiter
 	// Upload is the limit of uploads and ticket writes.
@@ -163,9 +166,9 @@ type Set struct {
 
 // NewSet builds the limiters from the environment:
 //
-//	RATE_LIMIT_WINDOW_MS             60000  window of API, SessionRead, PanelRead, Login
+//	RATE_LIMIT_WINDOW_MS             60000  window of API, SessionRead, PanelRead, Login, TOTPVerify
 //	RATE_LIMIT_MAX                   100    API
-//	LOGIN_RATE_LIMIT_MAX             5      Login
+//	LOGIN_RATE_LIMIT_MAX             5      Login and TOTPVerify
 //	PANEL_READ_RATE_LIMIT_MAX        600    SessionRead and PanelRead
 //	WIDGET_RATE_LIMIT_MAX            600    Widget
 //	PANEL_PREFERENCE_RATE_LIMIT_MAX  30     PanelPreference
@@ -215,6 +218,7 @@ func NewSet(opts Options) *Set {
 		func(r *http.Request) string { return s.userOrAddressKey("pref:", r) }, nil)
 	s.RDClientPage = limiter("rdClientPageLimiter", minute, env("RDCLIENT_PAGE_RATE_LIMIT_MAX", 120), "Too many remote page requests. Please slow down.", s.addressKey, nil)
 	s.Login = limiter("loginLimiter", window, env("LOGIN_RATE_LIMIT_MAX", 5), "Too many login attempts. Please try again in a minute.", s.addressKey, nil)
+	s.TOTPVerify = limiter("totpVerifyLimiter", window, env("LOGIN_RATE_LIMIT_MAX", 5), "Too many verification attempts. Please try again in a minute.", s.addressKey, nil)
 	s.PasswordChange = limiter("passwordChangeLimiter", 5*minute, 3, "Too many password change attempts. Please try again later.", opts.ClientIP, nil)
 	s.Upload = limiter("uploadLimiter", minute, env("UPLOAD_RATE_LIMIT_MAX", 30), "Too many upload requests. Please try again later.", s.addressKey, nil)
 	s.FileAccess = limiter("fileAccessLimiter", minute, env("FILE_ACCESS_RATE_LIMIT_MAX", 120), "Too many file requests. Please try again later.", s.addressKey, nil)
@@ -243,7 +247,7 @@ func (s *Set) userOrAddressKey(prefix string, r *http.Request) string {
 
 // All lists the limiters.
 func (s *Set) All() []*Limiter {
-	return []*Limiter{s.API, s.SessionRead, s.Widget, s.PanelRead, s.PanelPreference, s.RDClientPage, s.Login, s.PasswordChange, s.Upload, s.FileAccess, s.Register}
+	return []*Limiter{s.API, s.SessionRead, s.Widget, s.PanelRead, s.PanelPreference, s.RDClientPage, s.Login, s.TOTPVerify, s.PasswordChange, s.Upload, s.FileAccess, s.Register}
 }
 
 type mount struct {
