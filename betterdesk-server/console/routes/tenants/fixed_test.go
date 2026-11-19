@@ -2,9 +2,12 @@ package tenants_test
 
 import (
 	"encoding/json"
+	"math"
+	"net/url"
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
@@ -247,3 +250,364 @@ var _ = tenantFixes.Add("TN7", map[string]replay.Fix{
 	`admin PATCH /api/tenants/2 {"active":""}`:                                         {Status: 400, Answer: `{"error":"Invalid active"}`, After: nodeTenant},
 	`admin PATCH /api/tenants/2 {"active":"false"}`:                                    {Status: 400, Answer: `{"error":"Invalid active"}`, After: nodeTenant},
 })
+
+// TN3: an id is the digits of a positive 32-bit number, as written.
+var _ = tenantFixes.Add("TN3", map[string]replay.Fix{
+	`admin GET /api/tenants/1.0 `:                                                                   {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1.0/devices `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1.0/users `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1.0/stats `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/1.0 {"contact_email":"set-by-1.0"}`:                                   {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/1.0/devices {"device_id":"spelling-2"}`:                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1.0/devices/spelling-2 `:                                             {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/1.0/users {"user_id":7}`:                                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1.0/users/7 `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/1e0 `:                                                                   {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1e0/devices `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1e0/users `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1e0/stats `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/1e0 {"contact_email":"set-by-1e0"}`:                                   {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/1e0/devices {"device_id":"spelling-3"}`:                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1e0/devices/spelling-3 `:                                             {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/1e0/users {"user_id":7}`:                                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1e0/users/7 `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/%201 `:                                                                  {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/%201/devices `:                                                          {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/%201/users `:                                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/%201/stats `:                                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/%201 {"contact_email":"set-by-%201"}`:                                 {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/%201/devices {"device_id":"spelling-4"}`:                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/%201/devices/spelling-4 `:                                            {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/%201/users {"user_id":7}`:                                              {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/%201/users/7 `:                                                       {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/1%20 `:                                                                  {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1%20/devices `:                                                          {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1%20/users `:                                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1%20/stats `:                                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/1%20 {"contact_email":"set-by-1%20"}`:                                 {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/1%20/devices {"device_id":"spelling-5"}`:                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1%20/devices/spelling-5 `:                                            {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/1%20/users {"user_id":7}`:                                              {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1%20/users/7 `:                                                       {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/0x1 `:                                                                   {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/0x1/devices `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/0x1/users `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/0x1/stats `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/0x1 {"contact_email":"set-by-0x1"}`:                                   {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/0x1/devices {"device_id":"spelling-6"}`:                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/0x1/devices/spelling-6 `:                                             {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/0x1/users {"user_id":7}`:                                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/0x1/users/7 `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/0X1 `:                                                                   {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/0X1/devices `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/0X1/users `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/0X1/stats `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/0X1 {"contact_email":"set-by-0X1"}`:                                   {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/0X1/devices {"device_id":"spelling-7"}`:                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/0X1/devices/spelling-7 `:                                             {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/0X1/users {"user_id":7}`:                                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/0X1/users/7 `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/0b1 `:                                                                   {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/0b1/devices `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/0b1/users `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/0b1/stats `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/0b1 {"contact_email":"set-by-0b1"}`:                                   {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/0b1/devices {"device_id":"spelling-8"}`:                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/0b1/devices/spelling-8 `:                                             {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/0b1/users {"user_id":7}`:                                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/0b1/users/7 `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/0o1 `:                                                                   {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/0o1/devices `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/0o1/users `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/0o1/stats `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/0o1 {"contact_email":"set-by-0o1"}`:                                   {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/0o1/devices {"device_id":"spelling-9"}`:                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/0o1/devices/spelling-9 `:                                             {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/0o1/users {"user_id":7}`:                                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/0o1/users/7 `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/+1 `:                                                                    {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/+1/devices `:                                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/+1/users `:                                                              {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/+1/stats `:                                                              {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/+1 {"contact_email":"set-by-+1"}`:                                     {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/+1/devices {"device_id":"spelling-10"}`:                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/+1/devices/spelling-10 `:                                             {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/+1/users {"user_id":7}`:                                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/+1/users/7 `:                                                         {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/-1 `:                                                                    {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/-1/devices `:                                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/-1/users `:                                                              {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/-1/stats `:                                                              {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/-1 {"contact_email":"set-by--1"}`:                                     {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/-1/devices {"device_id":"spelling-11"}`:                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/-1/devices/spelling-11 `:                                             {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/-1/users {"user_id":7}`:                                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/-1/users/7 `:                                                         {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/1.5 `:                                                                   {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1.5/devices `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1.5/users `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1.5/stats `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/1.5 {"contact_email":"set-by-1.5"}`:                                   {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/1.5/devices {"device_id":"spelling-12"}`:                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1.5/devices/spelling-12 `:                                            {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/1.5/users {"user_id":7}`:                                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1.5/users/7 `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/abc `:                                                                   {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/abc/devices `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/abc/users `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/abc/stats `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/abc {"contact_email":"set-by-abc"}`:                                   {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/abc/devices {"device_id":"spelling-13"}`:                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/abc/devices/spelling-13 `:                                            {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/abc/users {"user_id":7}`:                                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/abc/users/7 `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/NaN `:                                                                   {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/NaN/devices `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/NaN/users `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/NaN/stats `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/NaN {"contact_email":"set-by-NaN"}`:                                   {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/NaN/devices {"device_id":"spelling-14"}`:                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/NaN/devices/spelling-14 `:                                            {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/NaN/users {"user_id":7}`:                                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/NaN/users/7 `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/Infinity `:                                                              {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/Infinity/devices `:                                                      {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/Infinity/users `:                                                        {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/Infinity/stats `:                                                        {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/Infinity {"contact_email":"set-by-Infinity"}`:                         {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/Infinity/devices {"device_id":"spelling-15"}`:                          {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/Infinity/devices/spelling-15 `:                                       {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/Infinity/users {"user_id":7}`:                                          {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/Infinity/users/7 `:                                                   {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/-Infinity `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/-Infinity/devices `:                                                     {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/-Infinity/users `:                                                       {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/-Infinity/stats `:                                                       {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/-Infinity {"contact_email":"set-by--Infinity"}`:                       {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/-Infinity/devices {"device_id":"spelling-16"}`:                         {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/-Infinity/devices/spelling-16 `:                                      {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/-Infinity/users {"user_id":7}`:                                         {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/-Infinity/users/7 `:                                                  {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/0 `:                                                                     {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/0/devices `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/0/users `:                                                               {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/0/stats `:                                                               {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/0 {"contact_email":"set-by-0"}`:                                       {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/0/devices {"device_id":"spelling-18"}`:                                 {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/0/devices/spelling-18 `:                                              {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/0/users {"user_id":7}`:                                                 {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/0/users/7 `:                                                          {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/-0 `:                                                                    {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/-0/devices `:                                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/-0/users `:                                                              {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/-0/stats `:                                                              {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/-0 {"contact_email":"set-by--0"}`:                                     {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/-0/devices {"device_id":"spelling-19"}`:                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/-0/devices/spelling-19 `:                                             {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/-0/users {"user_id":7}`:                                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/-0/users/7 `:                                                         {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/3000000000 `:                                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/3000000000/devices `:                                                    {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/3000000000/users `:                                                      {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/3000000000/stats `:                                                      {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/3000000000 {"contact_email":"set-by-3000000000"}`:                     {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/3000000000/devices {"device_id":"spelling-20"}`:                        {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/3000000000/devices/spelling-20 `:                                     {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/3000000000/users {"user_id":7}`:                                        {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/3000000000/users/7 `:                                                 {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/99999999999999999999 `:                                                  {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/99999999999999999999/devices `:                                          {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/99999999999999999999/users `:                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/99999999999999999999/stats `:                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/99999999999999999999 {"contact_email":"set-by-99999999999999999999"}`: {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/99999999999999999999/devices {"device_id":"spelling-21"}`:              {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/99999999999999999999/devices/spelling-21 `:                           {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/99999999999999999999/users {"user_id":7}`:                              {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/99999999999999999999/users/7 `:                                       {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/1e400 `:                                                                 {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1e400/devices `:                                                         {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1e400/users `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1e400/stats `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/1e400 {"contact_email":"set-by-1e400"}`:                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/1e400/devices {"device_id":"spelling-22"}`:                             {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1e400/devices/spelling-22 `:                                          {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/1e400/users {"user_id":7}`:                                             {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1e400/users/7 `:                                                      {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/%20 `:                                                                   {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/%20/devices `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/%20/users `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/%20/stats `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/%20 {"contact_email":"set-by-%20"}`:                                   {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/%20/devices {"device_id":"spelling-23"}`:                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/%20/devices/spelling-23 `:                                            {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/%20/users {"user_id":7}`:                                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/%20/users/7 `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/1_0 `:                                                                   {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1_0/devices `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1_0/users `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1_0/stats `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/1_0 {"contact_email":"set-by-1_0"}`:                                   {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/1_0/devices {"device_id":"spelling-24"}`:                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1_0/devices/spelling-24 `:                                            {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/1_0/users {"user_id":7}`:                                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1_0/users/7 `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/%EF%BC%91 `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/%EF%BC%91/devices `:                                                     {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/%EF%BC%91/users `:                                                       {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/%EF%BC%91/stats `:                                                       {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/%EF%BC%91 {"contact_email":"set-by-%EF%BC%91"}`:                       {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/%EF%BC%91/devices {"device_id":"spelling-25"}`:                         {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/%EF%BC%91/devices/spelling-25 `:                                      {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/%EF%BC%91/users {"user_id":7}`:                                         {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/%EF%BC%91/users/7 `:                                                  {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/1;x `:                                                                   {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1;x/devices `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1;x/users `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1;x/stats `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/1;x {"contact_email":"set-by-1;x"}`:                                   {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/1;x/devices {"device_id":"spelling-26"}`:                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1;x/devices/spelling-26 `:                                            {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/1;x/users {"user_id":7}`:                                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1;x/users/7 `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/1%2C2 `:                                                                 {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1%2C2/devices `:                                                         {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1%2C2/users `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1%2C2/stats `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/1%2C2 {"contact_email":"set-by-1%2C2"}`:                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/1%2C2/devices {"device_id":"spelling-27"}`:                             {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1%2C2/devices/spelling-27 `:                                          {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/1%2C2/users {"user_id":7}`:                                             {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1%2C2/users/7 `:                                                      {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/.5e1 `:                                                                  {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/.5e1/devices `:                                                          {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/.5e1/users `:                                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/.5e1/stats `:                                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/.5e1 {"contact_email":"set-by-.5e1"}`:                                 {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/.5e1/devices {"device_id":"spelling-28"}`:                              {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/.5e1/devices/spelling-28 `:                                           {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/.5e1/users {"user_id":7}`:                                              {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/.5e1/users/7 `:                                                       {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/5. `:                                                                    {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/5./devices `:                                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/5./users `:                                                              {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/5./stats `:                                                              {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/5. {"contact_email":"set-by-5."}`:                                     {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/5./devices {"device_id":"spelling-29"}`:                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/5./devices/spelling-29 `:                                             {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/5./users {"user_id":7}`:                                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/5./users/7 `:                                                         {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/1e `:                                                                    {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1e/devices `:                                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1e/users `:                                                              {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/1e/stats `:                                                              {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/1e {"contact_email":"set-by-1e"}`:                                     {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/1e/devices {"device_id":"spelling-30"}`:                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1e/devices/spelling-30 `:                                             {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/1e/users {"user_id":7}`:                                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/1e/users/7 `:                                                         {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/--1 `:                                                                   {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/--1/devices `:                                                           {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/--1/users `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/--1/stats `:                                                             {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/--1 {"contact_email":"set-by---1"}`:                                   {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/--1/devices {"device_id":"spelling-31"}`:                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/--1/devices/spelling-31 `:                                            {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/--1/users {"user_id":7}`:                                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/--1/users/7 `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/null `:                                                                  {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/null/devices `:                                                          {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/null/users `:                                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/null/stats `:                                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/null {"contact_email":"set-by-null"}`:                                 {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/null/devices {"device_id":"spelling-32"}`:                              {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/null/devices/spelling-32 `:                                           {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/null/users {"user_id":7}`:                                              {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/null/users/7 `:                                                       {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin GET /api/tenants/true `:                                                                  {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/true/devices `:                                                          {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/true/users `:                                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin GET /api/tenants/true/stats `:                                                            {Status: 404, Answer: `{"error":"Tenant not found"}`},
+	`admin PATCH /api/tenants/true {"contact_email":"set-by-true"}`:                                 {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeTenant},
+	`admin POST /api/tenants/true/devices {"device_id":"spelling-33"}`:                              {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/true/devices/spelling-33 `:                                           {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin POST /api/tenants/true/users {"user_id":7}`:                                              {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeAssigned},
+	`admin DELETE /api/tenants/true/users/7 `:                                                       {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin DELETE /api/tenants/1/users/1.5 `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin DELETE /api/tenants/1/users/2.5 `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin DELETE /api/tenants/1/users/abc `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin DELETE /api/tenants/1/users/0x5 `:                                                        {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin DELETE /api/tenants/1/users/%203 `:                                                       {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin DELETE /api/tenants/1/users/Infinity `:                                                   {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin DELETE /api/tenants/1/users/-1 `:                                                         {Status: 404, Answer: `{"error":"Assignment not found"}`, After: nodeRemoved},
+	`admin DELETE /api/tenants/2.0 `:                                                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeRemoved},
+	`admin DELETE /api/tenants/abc `:                                                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeRemoved},
+	`admin DELETE /api/tenants/1e400 `:                                                              {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeRemoved},
+	`admin DELETE /api/tenants/3.5 `:                                                                {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeRemoved},
+	`admin DELETE /api/tenants/%204 `:                                                               {Status: 404, Answer: `{"error":"Tenant not found"}`, After: nodeRemoved},
+})
+
+// nodeNumber is Number() of a part of the step's path, as Node read ids.
+func nodeNumber(t *testing.T, step replay.Step, part int) float64 {
+	t.Helper()
+	parts := strings.Split(strings.SplitN(step.Path, "?", 2)[0], "/")
+	text, err := url.PathUnescape(parts[part])
+	if err != nil {
+		t.Fatal(err)
+	}
+	return jsbind.ParseNumber(text)
+}
+
+// nodeAssigned writes the assignment Node made for an id spelled in a way
+// the Go console refuses, so the ids and times of the rows after it stay
+// as Node's. Where Node's insert failed on PostgreSQL for a tenant that
+// does not exist, it still used an id of the table's sequence.
+func nodeAssigned(t *testing.T, w *replay.World, step replay.Step) {
+	t.Helper()
+	var body map[string]any
+	if err := json.Unmarshal([]byte(*step.Body), &body); err != nil {
+		t.Fatal(err)
+	}
+	tenant := nodeNumber(t, step, 3)
+	device, isDevice := body["device_id"].(string)
+	table := map[bool]string{true: "tenant_devices", false: "tenant_users"}[isDevice]
+	made := strings.Contains(step.Answer, `"assigned":1`) || step.Answer == `{"ok":true}`
+	switch {
+	case step.Status != 200:
+	case made && isDevice:
+		w.Exec("INSERT INTO tenant_devices (tenant_id, device_id) VALUES (?, ?)", []any{int64(tenant), device})
+	case made:
+		w.Exec("INSERT INTO tenant_users (tenant_id, user_id) VALUES (?, ?)", []any{int64(tenant), body["user_id"]})
+	case w.DB.IsPostgres() && tenant == math.Trunc(tenant) && math.Abs(tenant) <= math.MaxInt32:
+		w.Exec("SELECT nextval(pg_get_serial_sequence('"+table+"', 'id'))", nil)
+	}
+}
+
+// nodeRemoved removes what Node removed for an id spelled in a way the Go
+// console refuses: a tenant, or an assignment.
+func nodeRemoved(t *testing.T, w *replay.World, step replay.Step) {
+	t.Helper()
+	if step.Status != 200 {
+		return
+	}
+	tenant := int64(nodeNumber(t, step, 3))
+	parts := strings.Split(step.Path, "/")
+	switch {
+	case len(parts) == 4:
+		w.Exec("DELETE FROM tenants WHERE id = ?", []any{tenant})
+	case parts[4] == "devices":
+		device, _ := url.PathUnescape(parts[5])
+		w.Exec("DELETE FROM tenant_devices WHERE tenant_id = ? AND device_id = ?", []any{tenant, device})
+	default:
+		user := nodeNumber(t, step, 5)
+		if math.IsInf(user, 0) {
+			// SQLite holds an infinite id as the real 9e999
+			w.Exec("DELETE FROM tenant_users WHERE tenant_id = ? AND user_id = 9e999", []any{tenant})
+			return
+		}
+		var id any = user
+		if user == math.Trunc(user) {
+			id = int64(user)
+		}
+		w.Exec("DELETE FROM tenant_users WHERE tenant_id = ? AND user_id = ?", []any{tenant, id})
+	}
+}

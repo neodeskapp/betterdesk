@@ -113,3 +113,35 @@ func TestUpdateChecksEveryMember(t *testing.T) {
 		}
 	})
 }
+
+// A tenant id, and the user id of an assignment, is the digits of a
+// positive 32-bit number as the client wrote them; anything else is not
+// found, on both databases (BUGS TN3).
+func TestTenantIDsThatAreNoWholeNumber(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tenants", Body: replay.Text(`{"name":"One"}`)}); got.Status != 201 {
+			t.Fatalf("create: %d %s", got.Status, got.Body)
+		}
+		notFound := `{"error":"Tenant not found"}`
+		for _, id := range []string{"1.0", "%201", "%31", "1e0", "0x1", "abc", "Infinity", "3000000000", "0", "-1", "1.5"} {
+			for _, path := range []string{"/api/tenants/" + id, "/api/tenants/" + id + "/devices", "/api/tenants/" + id + "/users", "/api/tenants/" + id + "/stats"} {
+				if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != 404 || got.Body != notFound {
+					t.Errorf("GET %s: %d %s", path, got.Status, got.Body)
+				}
+			}
+			if got := w.Do(replay.Request{Role: "admin", Method: "PATCH", Path: "/api/tenants/" + id, Body: replay.Text(`{"notes":"x"}`)}); got.Status != 404 || got.Body != notFound {
+				t.Errorf("PATCH %s: %d %s", id, got.Status, got.Body)
+			}
+			if got := w.Do(replay.Request{Role: "admin", Method: "DELETE", Path: "/api/tenants/1/users/" + id}); got.Status != 404 || got.Body != `{"error":"Assignment not found"}` {
+				t.Errorf("DELETE user %s: %d %s", id, got.Status, got.Body)
+			}
+		}
+		if got := w.Do(replay.Request{Role: "admin", Path: "/api/tenants/01"}); got.Status != 200 {
+			t.Errorf("GET /api/tenants/01: %d %s", got.Status, got.Body)
+		}
+		if rows := w.Rows("SELECT notes FROM tenants", nil); rows != `[{"notes":""}]` {
+			t.Errorf("the tenant after the refused changes: %s", rows)
+		}
+	})
+}

@@ -11,6 +11,7 @@ import (
 	"math"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/access"
@@ -74,9 +75,41 @@ func requireAdmin(next http.Handler) http.Handler {
 	})
 }
 
-// number is Number(req.params[name]).
-func number(r *http.Request, name string) jsbind.Value {
-	return jsbind.Number(jsbind.ParseNumber(r.PathValue(name)))
+// The parts of a path below /api/tenants where the ids are.
+const (
+	tenantPart = 3 // /api/tenants/{id}
+	userPart   = 5 // /api/tenants/{id}/users/{userId}
+)
+
+// pathID reads the id in a part of the path: the digits of a positive
+// 32-bit number as the client wrote them, without escapes. ok is false
+// for anything else.
+func pathID(r *http.Request, name string, part int) (id jsbind.Value, ok bool) {
+	value := r.PathValue(name)
+	parts := strings.Split(strings.TrimSuffix(r.URL.EscapedPath(), "/"), "/")
+	if part >= len(parts) || parts[part] != value || value == "" || len(value) > 10 {
+		return jsbind.Undefined, false
+	}
+	for _, c := range value {
+		if c < '0' || c > '9' {
+			return jsbind.Undefined, false
+		}
+	}
+	n, err := strconv.ParseInt(value, 10, 64)
+	if err != nil || n < 1 || n > math.MaxInt32 {
+		return jsbind.Undefined, false
+	}
+	return jsbind.Number(float64(n)), true
+}
+
+// tenantFromPath reads the tenant id of the path and answers 404 with message
+// when it is none.
+func tenantFromPath(w http.ResponseWriter, r *http.Request, message string) (jsbind.Value, bool) {
+	id, ok := pathID(r, "id", tenantPart)
+	if !ok {
+		fail(w, r, http.StatusNotFound, message)
+	}
+	return id, ok
 }
 
 // list answers GET /api/tenants.
@@ -92,7 +125,11 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 
 // get answers GET /api/tenants/{id}.
 func (h *handlers) get(w http.ResponseWriter, r *http.Request) {
-	t, err := tenantByID(r.Context(), h.db, number(r, "id"))
+	id, ok := tenantFromPath(w, r, "Tenant not found")
+	if !ok {
+		return
+	}
+	t, err := tenantByID(r.Context(), h.db, id)
 	if err != nil {
 		h.log.Error("GET /:id error:", err)
 		fail(w, r, http.StatusInternalServerError, "Failed to fetch tenant")
@@ -210,7 +247,10 @@ func flag(v jsbind.Value) (on, ok bool) {
 // something in it, the other texts text (also null, but for the slug),
 // max_devices a whole number from 0, active a flag. The answer is the row.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
-	id := number(r, "id")
+	id, ok := tenantFromPath(w, r, "Tenant not found")
+	if !ok {
+		return
+	}
 	existing, err := tenantByID(r.Context(), h.db, id)
 	if err == nil && existing == nil {
 		fail(w, r, http.StatusNotFound, "Tenant not found")
@@ -269,7 +309,11 @@ func (h *handlers) changes(r *http.Request) []tenantChange {
 
 // remove answers DELETE /api/tenants/{id}.
 func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
-	ok, err := deleteTenant(r.Context(), h.db, number(r, "id"))
+	id, ok := tenantFromPath(w, r, "Tenant not found")
+	if !ok {
+		return
+	}
+	ok, err := deleteTenant(r.Context(), h.db, id)
 	if err != nil {
 		h.log.Error("DELETE /:id error:", err)
 		fail(w, r, http.StatusInternalServerError, "Failed to delete tenant")
@@ -285,7 +329,11 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 // devices answers GET /api/tenants/{id}/devices. A tenant that does not
 // exist has no devices.
 func (h *handlers) devices(w http.ResponseWriter, r *http.Request) {
-	devices, err := tenantDevices(r.Context(), h.db, number(r, "id"))
+	id, ok := tenantFromPath(w, r, "Tenant not found")
+	if !ok {
+		return
+	}
+	devices, err := tenantDevices(r.Context(), h.db, id)
 	if err != nil {
 		h.log.Error("GET /:id/devices error:", err)
 		fail(w, r, http.StatusInternalServerError, "Failed to fetch tenant devices")
@@ -303,8 +351,11 @@ type assigned struct {
 // {device_id} or {device_ids: [...]}. It counts the assignments that went
 // through, also those that were there before.
 func (h *handlers) assignDevices(w http.ResponseWriter, r *http.Request) {
-	tenantID := number(r, "id")
-	t, err := tenantByID(r.Context(), h.db, tenantID)
+	id, ok := tenantFromPath(w, r, "Tenant not found")
+	if !ok {
+		return
+	}
+	t, err := tenantByID(r.Context(), h.db, id)
 	if err == nil && t == nil {
 		fail(w, r, http.StatusNotFound, "Tenant not found")
 		return
@@ -324,8 +375,8 @@ func (h *handlers) assignDevices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	count := 0
-	for _, id := range ids {
-		if assignDevice(r.Context(), h.db, tenantID, id) {
+	for _, device := range ids {
+		if assignDevice(r.Context(), h.db, id, device) {
 			count++
 		}
 	}
@@ -372,7 +423,11 @@ func deviceIDs(many, single middleware.Value) (ids []jsbind.Value, none bool, er
 
 // removeDevice answers DELETE /api/tenants/{id}/devices/{deviceId}.
 func (h *handlers) removeDevice(w http.ResponseWriter, r *http.Request) {
-	ok, err := removeDevice(r.Context(), h.db, number(r, "id"), r.PathValue("deviceId"))
+	id, ok := tenantFromPath(w, r, "Assignment not found")
+	if !ok {
+		return
+	}
+	ok, err := removeDevice(r.Context(), h.db, id, r.PathValue("deviceId"))
 	if err != nil {
 		h.log.Error("DELETE /:id/devices/:deviceId error:", err)
 		fail(w, r, http.StatusInternalServerError, "Failed to remove device")
@@ -387,7 +442,11 @@ func (h *handlers) removeDevice(w http.ResponseWriter, r *http.Request) {
 
 // users answers GET /api/tenants/{id}/users.
 func (h *handlers) users(w http.ResponseWriter, r *http.Request) {
-	users, err := tenantUsers(r.Context(), h.db, number(r, "id"))
+	id, ok := tenantFromPath(w, r, "Tenant not found")
+	if !ok {
+		return
+	}
+	users, err := tenantUsers(r.Context(), h.db, id)
 	if err != nil {
 		h.log.Error("GET /:id/users error:", err)
 		fail(w, r, http.StatusInternalServerError, "Failed to fetch tenant users")
@@ -405,13 +464,25 @@ func (h *handlers) assignUser(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "user_id required")
 		return
 	}
-	ok := assignUser(r.Context(), h.db, number(r, "id"), jsbind.Number(userID.ToNumber()))
+	id, found := tenantFromPath(w, r, "Tenant not found")
+	if !found {
+		return
+	}
+	ok := assignUser(r.Context(), h.db, id, jsbind.Number(userID.ToNumber()))
 	kit.JSON(w, r, http.StatusOK, done{OK: ok})
 }
 
 // removeUser answers DELETE /api/tenants/{id}/users/{userId}.
 func (h *handlers) removeUser(w http.ResponseWriter, r *http.Request) {
-	ok, err := removeUser(r.Context(), h.db, number(r, "id"), number(r, "userId"))
+	id, ok := tenantFromPath(w, r, "Assignment not found")
+	userID, userOK := pathID(r, "userId", userPart)
+	if ok && !userOK {
+		fail(w, r, http.StatusNotFound, "Assignment not found")
+	}
+	if !ok || !userOK {
+		return
+	}
+	ok, err := removeUser(r.Context(), h.db, id, userID)
 	if err != nil {
 		h.log.Error("DELETE /:id/users/:userId error:", err)
 		fail(w, r, http.StatusInternalServerError, "Failed to remove user")
@@ -435,7 +506,10 @@ type stats struct {
 
 // stats answers GET /api/tenants/{id}/stats.
 func (h *handlers) stats(w http.ResponseWriter, r *http.Request) {
-	tenantID := number(r, "id")
+	tenantID, ok := tenantFromPath(w, r, "Tenant not found")
+	if !ok {
+		return
+	}
 	t, err := tenantByID(r.Context(), h.db, tenantID)
 	if err == nil && t == nil {
 		fail(w, r, http.StatusNotFound, "Tenant not found")
