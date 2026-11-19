@@ -343,6 +343,9 @@ func TestRefusedChangesWriteNothing(t *testing.T) {
 			{"PATCH", "/api/users/5", `{"role":"viewer","folderIds":[1],"strategyGuid":"missing"}`, 500, serverError},
 			{"PATCH", "/api/users/5", `{"role":"viewer","password":["Abcdefgh1!"]}`, 500, serverError},
 			{"PATCH", "/api/users/5", `{"username":"renamed_op","role":"nonsense"}`, 400, `{"success":false,"error":"Invalid role"}`},
+			// A taken name is refused before the other checks, as when the
+			// rename came first
+			{"PATCH", "/api/users/5", `{"username":"e2e_viewer","role":"nonsense"}`, 409, `{"success":false,"error":"Username already exists"}`},
 			{"PATCH", "/api/users/5", `{"username":"renamed_again","password":"weak"}`, 400, ""},
 		} {
 			before := state()
