@@ -1,6 +1,8 @@
 package restart
 
 import (
+	"errors"
+	"net/http"
 	"os"
 	"path/filepath"
 )
@@ -39,6 +41,23 @@ func (w *oracleWorld) fixedStep(step vectorStep, out *string, err error) (bug st
 			problems = append(problems, "not every change was undone or reported as failed")
 		}
 		return "RC2", problems
+	}
+	// RC3: a change while a transaction is restarting under this boot id
+	// is refused and the transaction stays. Node replaced it, which took
+	// a new id (16 random bytes) and three readings of the clock; the
+	// counters move on as Node's did.
+	if step.Op == "register" && step.Err == nil {
+		state := w.svc.load()
+		var refused *Error
+		if state == nil || phaseOf(state) != PhaseRestarting || !isText(state.Get("bootId"), w.svc.bootID) {
+			return "", nil
+		}
+		if !errors.As(err, &refused) || refused.Status != http.StatusConflict || refused.Message != "restart_transaction_owned" || len(w.calls) > 0 {
+			problems = append(problems, "the change was not refused with restart_transaction_owned: "+describe(out))
+		}
+		w.tick += 3
+		w.random += 16
+		return "RC3", problems
 	}
 	return "", nil
 }

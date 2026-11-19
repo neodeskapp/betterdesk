@@ -347,13 +347,16 @@ func (s *Service) rawForOperator(userID int64, id string) (*goapi.Object, error)
 }
 
 // RegisterChange adds a change to the operator's pending transaction, or
-// starts one, and returns the transaction. A transaction that is past
-// pending, whoever owns it, is replaced.
+// starts one, and returns the transaction. A transaction that failed, is
+// ready, or was restarting under the boot id of an earlier process is
+// replaced, whoever owns it. One that is restarting under this process's
+// boot id stays: its operator's page follows it by its id and token.
 //
 // Errors: "restart_change_not_reversible" without a rollback,
 // "restart_auth_required" when nobody is signed in,
 // "restart_transaction_owned" (409) while another operator's transaction
-// is pending, "restart_too_many_changes" for the 33rd change.
+// is pending or any transaction is restarting under this boot id,
+// "restart_too_many_changes" for the 33rd change.
 func (s *Service) RegisterChange(userID int64, change Change) (*Public, error) {
 	if change.Rollback == nil {
 		return nil, &Error{Message: "restart_change_not_reversible"}
@@ -366,6 +369,9 @@ func (s *Service) RegisterChange(userID int64, change Change) (*Public, error) {
 	defer s.mu.Unlock()
 
 	state := s.load()
+	if state != nil && phaseOf(state) == PhaseRestarting && isText(state.Get("bootId"), s.bootID) {
+		return nil, refusal(http.StatusConflict, "restart_transaction_owned")
+	}
 	if state != nil && phaseOf(state) != PhasePending {
 		state = nil
 	}

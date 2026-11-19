@@ -392,6 +392,9 @@ func TestNodeVectors(t *testing.T) {
 	if fixed["RC2"] < 40 {
 		t.Errorf("%d steps confirm a restart that fails with an error, the vector file has more (BUGS RC2)", fixed["RC2"])
 	}
+	if fixed["RC3"] < 1 {
+		t.Errorf("%d steps register a change while a restart runs, the vector file has more (BUGS RC3)", fixed["RC3"])
+	}
 }
 
 func boolText(b bool) string {

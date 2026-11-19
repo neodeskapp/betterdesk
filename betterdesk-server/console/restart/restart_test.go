@@ -176,6 +176,37 @@ func TestConfirmWithoutARestartFunction(t *testing.T) {
 	}
 }
 
+// TestRegisterChangeWaitsForARunningRestart: while a transaction is
+// restarting under this process's boot id, a new change is refused for
+// every operator and the transaction stays, so its page can follow it.
+// After the restart, in a process with another boot id, it is replaced
+// (BUGS RC3).
+func TestRegisterChangeWaitsForARunningRestart(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "data")
+	s := newService(t, Options{DataDir: dir, RestartServer: okRestart})
+	public := mustRegister(t, s, 1, "k")
+	confirmed, err := s.Confirm(context.Background(), 1, public.ID())
+	if err != nil || confirmed.Phase() != PhaseRestarting {
+		t.Fatalf("confirm: %v", err)
+	}
+	before, _ := os.ReadFile(s.StatePath())
+	for _, user := range []int64{2, 1} {
+		_, err := s.RegisterChange(user, Change{Key: "other", Rollback: goConfig("other", "N")})
+		var refused *Error
+		if !errors.As(err, &refused) || refused.StatusCode() != http.StatusConflict || refused.Message != "restart_transaction_owned" {
+			t.Errorf("operator %d during the restart: %v", user, err)
+		}
+	}
+	if after, _ := os.ReadFile(s.StatePath()); string(after) != string(before) {
+		t.Errorf("the restarting transaction changed:\n%s\nwas\n%s", after, before)
+	}
+	next := newService(t, Options{DataDir: dir})
+	replaced, err := next.RegisterChange(2, Change{Key: "other", Rollback: goConfig("other", "N")})
+	if err != nil || replaced.Phase() != PhasePending || replaced.ID() == public.ID() {
+		t.Errorf("after the restart: %v, %v", replaced, err)
+	}
+}
+
 // TestConfirmRollsBackWhenTheRestartFails: a restart that fails with an
 // error undoes the changes as one that reports success false does, and the
 // transaction says whether everything came back; the answer is still the
