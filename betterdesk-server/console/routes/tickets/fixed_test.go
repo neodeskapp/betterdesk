@@ -235,3 +235,20 @@ var _ = ticketFixes.Add("TK3", map[string]replay.Fix{
 	`admin PATCH /api/tickets/2 {"priority":""}`:   {Status: 400, Answer: invalidPriority, After: set("priority", "", "")},
 	`admin PATCH /api/tickets/2 {"priority":0}`:    {Status: 400, Answer: invalidPriority, After: set("priority", "0.0", "0")},
 })
+
+// TK4: a list filter is one text.
+var _ = ticketFixes.Add("TK4", map[string]replay.Fix{
+	"admin GET /api/tickets?status=open&status=closed ":         {Status: 400, Answer: `{"error":"Invalid status"}`},
+	"admin GET /api/tickets?status[]=open ":                     {Status: 400, Answer: `{"error":"Invalid status"}`},
+	"admin GET /api/tickets?status%5B%5D=open&priority[]=high ": {Status: 400, Answer: `{"error":"Invalid status"}`},
+	"admin GET /api/tickets?status[0]=open ":                    {Status: 400, Answer: `{"error":"Invalid status"}`},
+	"admin GET /api/tickets?status[1]=open&status[0]=closed ":   {Status: 400, Answer: `{"error":"Invalid status"}`},
+	"admin GET /api/tickets?status[x]=open ":                    {Status: 400, Answer: `{"error":"Invalid status"}`},
+	"admin GET /api/tickets?status[][]=open ":                   {Status: 400, Answer: `{"error":"Invalid status"}`},
+	"admin GET /api/tickets?priority=high&priority= ":           {Status: 400, Answer: `{"error":"Invalid priority"}`},
+	"admin GET /api/tickets?device_id[]=D1&status=open ":        {Status: 400, Answer: `{"error":"Invalid device_id"}`},
+	"admin GET /api/tickets?assigned_to[]=e2e_viewer ":          {Status: 400, Answer: `{"error":"Invalid assigned_to"}`},
+	"admin GET /api/tickets?category=network&category[]=x ":     {Status: 400, Answer: `{"error":"Invalid category"}`},
+	"viewer GET /api/tickets?status[]=open ":                    {Status: 400, Answer: `{"error":"Invalid status"}`},
+	"viewer GET /api/tickets?status=open&status=closed ":        {Status: 400, Answer: `{"error":"Invalid status"}`},
+})

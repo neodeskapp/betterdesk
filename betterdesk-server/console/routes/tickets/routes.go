@@ -154,7 +154,8 @@ var filterKeys = []string{"status", "priority", "category", "assigned_to", "devi
 
 // list answers GET /api/tickets?status=&priority=&category=&assigned_to=
 // &device_id=&search=. A viewer gets the tickets assigned to it, whatever
-// assigned_to says.
+// assigned_to says. A filter is one text: given twice, in brackets or as
+// an object it is refused.
 func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	user := kit.User(r)
 	var filters []filter
@@ -162,6 +163,10 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 		value := jsbind.Query(r.URL.RawQuery, key)
 		if key == "assigned_to" && user.Role == "viewer" {
 			value = jsbind.String(user.Username)
+		}
+		if !value.IsUndefined() && !value.IsString() {
+			fail(w, r, http.StatusBadRequest, "Invalid "+key)
+			return
 		}
 		if value.Truthy() {
 			filters = append(filters, filter{key, value})

@@ -499,6 +499,35 @@ func TestUpdateChecksStatusWhenPresent(t *testing.T) {
 	})
 }
 
+// A list filter is one text: given twice, in brackets or as an object it
+// is 400 on both databases, where SQLite failed and PostgreSQL found
+// nothing (BUGS TK4). A viewer's assigned_to is not read.
+func TestListFiltersTakeOneTextEach(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		g := newGroup(t, db)
+		g.want(g.do("admin", "POST", "/api/tickets", `{"title":"Listed","assigned_to":"e2e_viewer"}`), 201, "")
+		for query, want := range map[string]string{
+			"status=open&status=closed":         `{"error":"Invalid status"}`,
+			"status[]=open":                     `{"error":"Invalid status"}`,
+			"status[x]=1&priority=a&priority=b": `{"error":"Invalid status"}`,
+			"status=open&priority=a&priority=b": `{"error":"Invalid priority"}`,
+			"category[0]=general":               `{"error":"Invalid category"}`,
+			"assigned_to=a&assigned_to=b":       `{"error":"Invalid assigned_to"}`,
+			"device_id[a][b]=c":                 `{"error":"Invalid device_id"}`,
+		} {
+			g.want(g.do("admin", "GET", "/api/tickets?"+query, ""), 400, want)
+		}
+		for _, query := range []string{"status=open", "status=", "search=Listed&search=x"} {
+			if rec := g.do("admin", "GET", "/api/tickets?"+query, ""); rec.Code != 200 || !strings.Contains(rec.Body.String(), `"total":1`) {
+				t.Errorf("?%s: %d %s", query, rec.Code, rec.Body.String())
+			}
+		}
+		if rec := g.do("viewer", "GET", "/api/tickets?assigned_to[]=x&assigned_to=y", ""); rec.Code != 200 || !strings.Contains(rec.Body.String(), `"total":1`) {
+			t.Errorf("a viewer's list: %d %s", rec.Code, rec.Body.String())
+		}
+	})
+}
+
 // unread is a request body that counts what is read of it.
 type unread struct {
 	left int64
