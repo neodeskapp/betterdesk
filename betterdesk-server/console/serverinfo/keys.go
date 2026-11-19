@@ -131,10 +131,11 @@ func (s *Service) ResolvePublicKey(ctx context.Context) NullString {
 	return NullString(fromGo)
 }
 
-// GetAPIKey reads the API key file. With masked set, a key longer than 8
-// characters shows its first and last 4 with "****" between. ok is false
-// when the file is missing or cannot be read; an empty file gives "" and
-// true.
+// GetAPIKey reads the API key file. With masked set, a key shows "****"
+// between its first and last characters: 4 at each end, and at most a
+// quarter of the key's length (in UTF-16 units), so a key of 3 or fewer
+// shows none. ok is false when the file is missing or cannot be read; an
+// empty file gives "" and true.
 func (s *Service) GetAPIKey(masked bool) (key string, ok bool) {
 	path := s.opts.APIKeyPath
 	if !s.fs.Exists(path) {
@@ -146,8 +147,9 @@ func (s *Service) GetAPIKey(masked bool) (key string, ok bool) {
 		return "", false
 	}
 	key = jsTrim(text)
-	if n := utf16Len(key); masked && n > 8 {
-		return sliceUnits(key, 0, 4) + "****" + sliceUnits(key, n-4, n), true
+	if n := utf16Len(key); masked && n > 0 {
+		shown := min(4, n/4)
+		return sliceUnits(key, 0, shown) + "****" + sliceUnits(key, n-shown, n), true
 	}
 	return key, true
 }

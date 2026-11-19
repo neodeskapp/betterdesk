@@ -290,6 +290,9 @@ func TestKeyFilesAgainstNode(t *testing.T) {
 			masked bool
 			want   *string
 		}{{true, c.APIKeyMasked}, {true, c.APIKeyMaskedTrue}, {false, c.APIKey}} {
+			if fixed, isFixed := shortKeyMasks[c.State.Name]; isFixed && call.masked {
+				call.want = &fixed
+			}
 			got, ok := s.GetAPIKey(call.masked)
 			if ok != (call.want != nil) || (ok && got != *call.want) {
 				t.Errorf("%s: GetAPIKey(%v) = %q, %v, Node answers %s", c.State.Name, call.masked, got, ok, text(call.want))
@@ -306,21 +309,54 @@ func TestAPIKeyMaskCutsThroughCharacter(t *testing.T) {
 	loadVectors(t, "keys", &v)
 	atLeast(t, "api_key_half_characters", len(v.HalfCharacters), 3)
 	apiKey := filepath.Join(t.TempDir(), ".api_key")
-	cut := 0
 	for _, c := range v.HalfCharacters {
-		if err := os.WriteFile(apiKey, decodeBase64(t, c.Bytes), 0o600); err != nil {
+		key := decodeBase64(t, c.Bytes)
+		want, isFixed := shortKeyCutMasks[string(key)]
+		if !isFixed {
+			want = c.ToWellFormed
+		}
+		if err := os.WriteFile(apiKey, key, 0o600); err != nil {
 			t.Fatal(err)
 		}
-		got, ok := New(Options{APIKeyPath: apiKey}).GetAPIKey(true)
-		if !ok || got != c.ToWellFormed {
-			t.Errorf("GetAPIKey(true) = %q, Node's answer made well-formed is %q", got, c.ToWellFormed)
-		}
-		if !c.WellFormed {
-			cut++
+		if got, ok := New(Options{APIKeyPath: apiKey}).GetAPIKey(true); !ok || got != want {
+			t.Errorf("GetAPIKey(true) = %q, want %q", got, want)
 		}
 	}
-	if cut == 0 {
-		t.Fatal("no vector cuts through a character")
+	// A key over 16 characters shows 4 UTF-16 units at each end, which can
+	// cut through a character at both.
+	if err := os.WriteFile(apiKey, []byte("abc😀0123456789😀xyz"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if got, ok := New(Options{APIKeyPath: apiKey}).GetAPIKey(true); !ok || got != "abc\uFFFD****\uFFFDxyz" {
+		t.Errorf("GetAPIKey(true) = %q, want both ends cut through a character", got)
+	}
+}
+
+// TestGetAPIKeyMasksShortKeys masks every key that is not empty: at most
+// the first and last 4 characters show, and at most a quarter of the key
+// at each end (BUGS SI4: a key of 8 characters or fewer went out whole).
+func TestGetAPIKeyMasksShortKeys(t *testing.T) {
+	apiKey := filepath.Join(t.TempDir(), ".api_key")
+	for key, want := range map[string]string{
+		"":                  "",
+		"a":                 "****",
+		"abc":               "****",
+		"abcd":              "a****d",
+		"abcd1234":          "ab****34",
+		"abcd12345":         "ab****45",
+		"abcdefghijkl":      "abc****jkl",
+		"0123456789abcdef":  "0123****cdef",
+		"0123456789abcdefg": "0123****defg",
+	} {
+		if err := os.WriteFile(apiKey, []byte(key+"\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if got, ok := New(Options{APIKeyPath: apiKey}).GetAPIKey(true); !ok || got != want {
+			t.Errorf("GetAPIKey(true) of %q = %q, %v, want %q", key, got, ok, want)
+		}
+		if got, _ := New(Options{APIKeyPath: apiKey}).GetAPIKey(false); got != key {
+			t.Errorf("GetAPIKey(false) of %q = %q", key, got)
+		}
 	}
 }
 
@@ -380,7 +416,7 @@ func TestKeyRunsAgainstNode(t *testing.T) {
 				t.Fatalf("unknown call %q", step.Call)
 			}
 			label := "run " + strconv.Itoa(r) + " step " + strconv.Itoa(i) + " " + step.Call
-			if text := jsonText(t, got); text != string(step.Out) {
+			if text := jsonText(t, got); text != fixedKeyRunAnswer(string(step.Out)) {
 				m.errorf("%s: answer\n%s\nNode answers\n%s", label, text, step.Out)
 			}
 

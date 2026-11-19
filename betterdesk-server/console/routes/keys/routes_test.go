@@ -249,9 +249,9 @@ func TestAPIKeyThatIsMissingOrEmpty(t *testing.T) {
 	w = newWorld(t, map[string]string{".api_key": " \n"}, nil)
 	want(t, "empty file", w.get("admin", "/api/keys/api"), 404, notFound)
 
-	// A short key is not masked (BUGS SI4)
+	// A short key shows at most a quarter at each end (BUGS SI4)
 	w = newWorld(t, map[string]string{".api_key": "12345678"}, nil)
-	want(t, "short key", w.get("viewer", "/api/keys/api"), 200, `{"success":true,"data":{"key":"12345678","masked":true}}`)
+	want(t, "short key", w.get("viewer", "/api/keys/api"), 200, `{"success":true,"data":{"key":"12****78","masked":true}}`)
 }
 
 func TestServerInfo(t *testing.T) {
