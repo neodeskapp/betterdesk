@@ -10,6 +10,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
+	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
@@ -202,8 +203,7 @@ func TestDeviceRoutesAtBothMounts(t *testing.T) {
 
 // The checks of the request route, each on its own: the device id must
 // be text of at least three UTF-16 units before it is trimmed, a field
-// that is truthy but no text fails, the fields are cut to their length,
-// and the address comes from X-Forwarded-For, X-Real-IP, the connection.
+// that is truthy but no text fails, the fields are cut to their length.
 func TestRegisterRequestChecks(t *testing.T) {
 	w := routetest.New(t, routetest.Options{})
 	device := w.SignedOut()
@@ -253,27 +253,48 @@ func TestRegisterRequestChecks(t *testing.T) {
 		t.Errorf("falsy fields: %v", r)
 	}
 	long := `{"device_id":"cut","hostname":"` + strings.Repeat("h", 300) + `","platform":"` + strings.Repeat("😀", 40) + `","version":"` + strings.Repeat("v", 40) + `","public_key":"` + strings.Repeat("k", 600) + `","uuid":"` + strings.Repeat("u", 70) + `"}`
-	if got := device.Do(http.MethodPost, "/api/bd/register-request", long, "X-Forwarded-For", " 203.0.113.9 , 10.0.0.1", "X-Real-IP", "192.0.2.1"); got.Status != http.StatusOK {
+	if got := device.Do(http.MethodPost, "/api/bd/register-request", long); got.Status != http.StatusOK {
 		t.Fatalf("long fields: %d %s", got.Status, got.Body)
 	}
 	r := row("cut")
 	if len(r["hostname"].(string)) != 255 || r["platform"] != strings.Repeat("😀", 32) || len(r["version"].(string)) != 32 ||
-		len(r["public_key"].(string)) != 512 || len(r["uuid"].(string)) != 64 || r["ip"] != "203.0.113.9" {
+		len(r["public_key"].(string)) != 512 || len(r["uuid"].(string)) != 64 {
 		t.Errorf("cut fields: %v", r)
 	}
 	// A pair cut in half is stored as U+FFFD
 	odd := `{"device_id":"half","platform":"` + strings.Repeat("a", 63) + `😀"}`
-	if got := device.Do(http.MethodPost, "/api/bd/register-request", odd, "X-Real-IP", "192.0.2.1"); got.Status != http.StatusOK {
+	if got := device.Do(http.MethodPost, "/api/bd/register-request", odd); got.Status != http.StatusOK {
 		t.Fatalf("half a pair: %d %s", got.Status, got.Body)
 	}
-	if r := row("half"); r["platform"] != strings.Repeat("a", 63)+string(utf8.RuneError) || r["ip"] != "192.0.2.1" {
+	if r := row("half"); r["platform"] != strings.Repeat("a", 63)+string(utf8.RuneError) {
 		t.Errorf("half a pair: %v", r)
 	}
-	if got := device.Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"socket"}`, "X-Forwarded-For", " , 10.0.0.2"); got.Status != http.StatusOK {
-		t.Fatalf("socket: %d %s", got.Status, got.Body)
-	}
-	if r := row("socket"); r["ip"] != "127.0.0.1" {
-		t.Errorf("an empty first X-Forwarded-For entry: %v", r)
+}
+
+// The address of a request, and of the audit entries of the people who
+// decide on it, is the client's as TRUST_PROXY gives it: X-Forwarded-For
+// and X-Real-IP count only from a trusted proxy (BUGS RG1).
+func TestRecordsTheTrustedAddress(t *testing.T) {
+	for _, c := range []struct{ trust, want string }{{"", "127.0.0.1"}, {"1", "203.0.113.5"}} {
+		w := routetest.New(t, routetest.Options{Config: func(cfg *config.Config) {
+			cfg.TrustProxy, _ = httpx.ParseTrustProxy(c.trust)
+		}})
+		forwarded := []string{"X-Forwarded-For", "203.0.113.5", "X-Real-IP", "192.0.2.1"}
+		if got := w.SignedOut().Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"addr-1"}`, forwarded...); got.Status != http.StatusOK {
+			t.Fatalf("TRUST_PROXY=%q: request %d %s", c.trust, got.Status, got.Body)
+		}
+		var ip string
+		if err := w.DB.QueryRow(context.Background(), "SELECT ip_address FROM pending_registrations WHERE device_id = 'addr-1'").Scan(&ip); err != nil || ip != c.want {
+			t.Errorf("TRUST_PROXY=%q: stored address %q (%v), want %s", c.trust, ip, err, c.want)
+		}
+		if got := w.As("admin").Do(http.MethodPut, "/api/registrations/1/reject", `{"reason":"no"}`, forwarded...); got.Status != http.StatusOK {
+			t.Fatalf("TRUST_PROXY=%q: reject %d %s", c.trust, got.Status, got.Body)
+		}
+		// The session notes a changed address on its own under a trusted proxy
+		rows := w.AuditRows()
+		if last := rows[len(rows)-1]; !strings.HasPrefix(last, "registration_rejected|") || !strings.HasSuffix(last, "|"+c.want+"|1") {
+			t.Errorf("TRUST_PROXY=%q: audit %q, want the address %s", c.trust, rows, c.want)
+		}
 	}
 }
 
@@ -356,8 +377,9 @@ func TestClientAPIPort(t *testing.T) {
 	if status, body := post(local, "/api/bd/register-request", `{"device_id":"port-dev"}`); status != http.StatusOK || body != `{"success":true,"status":"pending","id":1}` {
 		t.Fatalf("local mode: %d %s", status, body)
 	}
+	// The connection's address: the port trusts no proxy here
 	var ip string
-	if err := db.QueryRow(context.Background(), "SELECT ip_address FROM pending_registrations WHERE id = 1").Scan(&ip); err != nil || ip != "198.51.100.4" {
+	if err := db.QueryRow(context.Background(), "SELECT ip_address FROM pending_registrations WHERE id = 1").Scan(&ip); err != nil || ip != "192.0.2.1" {
 		t.Fatalf("stored address %q %v", ip, err)
 	}
 	if status, _ := post(local, "/register-request", `{"device_id":"port-dev"}`); status != http.StatusNotFound {

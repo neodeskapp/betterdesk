@@ -4,11 +4,14 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
 )
 
@@ -145,5 +148,44 @@ func TestEnrollmentToken(t *testing.T) {
 	var bound string
 	if err := w.DB.QueryRow(ctx, "SELECT enrolled_device_id FROM agent_templates").Scan(&bound); err != nil || bound != "TOKDEV1" {
 		t.Errorf("bound to %q (%v)", bound, err)
+	}
+}
+
+// The address of a registration is the client's as TRUST_PROXY gives it.
+// The rename guard matches a device that sends neither key nor uuid by
+// that address, so an X-Forwarded-For from anyone else names no stored
+// address (BUGS BD3).
+func TestRegistrationAddressIsTheTrustedOne(t *testing.T) {
+	for _, c := range []struct {
+		trust, answer, ip string
+	}{
+		{"", `409 {"error":"Device ID has been changed","new_id":"NEWID1","message":"This device ID was renamed to NEWID1. Please update your configuration."}`, ""},
+		{"1", `200 NEWID1`, "203.0.113.9"},
+	} {
+		w := routetest.New(t, routetest.Options{Config: func(cfg *config.Config) {
+			cfg.TrustProxy, _ = httpx.ParseTrustProxy(c.trust)
+		}})
+		ctx := context.Background()
+		for _, stmt := range []string{
+			"CREATE TABLE IF NOT EXISTS id_change_history (id INTEGER PRIMARY KEY AUTOINCREMENT, old_id TEXT NOT NULL, new_id TEXT NOT NULL)",
+			"INSERT INTO id_change_history (old_id, new_id) VALUES ('OLDID1', 'NEWID1')",
+			"INSERT INTO peer (id, uuid, ip, info) VALUES ('NEWID1', '', '203.0.113.9', '{}')",
+		} {
+			if _, err := w.DB.Exec(ctx, stmt); err != nil {
+				t.Fatal(err)
+			}
+		}
+		got := w.SignedOut().Do("POST", "/api/bd/register", `{}`, "X-Device-Id", "OLDID1", "X-Forwarded-For", "203.0.113.9")
+		have := fmt.Sprint(got.Status, " ", got.Body)
+		if got.Status == 200 && strings.Contains(got.Body, `"device_id":"NEWID1"`) {
+			have = "200 NEWID1"
+		}
+		if have != c.answer {
+			t.Errorf("TRUST_PROXY=%q: %s, want %s", c.trust, have, c.answer)
+		}
+		var ip string
+		if err := w.DB.QueryRow(ctx, "SELECT ip FROM peer WHERE id = 'NEWID1'").Scan(&ip); err != nil || c.ip != "" && ip != c.ip {
+			t.Errorf("TRUST_PROXY=%q: stored address %q (%v)", c.trust, ip, err)
+		}
 	}
 }

@@ -2,12 +2,10 @@ package registration
 
 import (
 	"errors"
-	"net/http"
 	"strings"
 	"unicode/utf8"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
@@ -126,12 +124,6 @@ func add(a float64, b any) (any, error) {
 		return nil, err
 	}
 	return jsbind.NumberString(a) + s, nil
-}
-
-// headerText is req.headers[name] as Node read it: the values of a header
-// sent more than once joined with ", ", each byte a character (Latin-1).
-func headerText(r *http.Request, name string) string {
-	return httpx.Latin1(strings.Join(r.Header.Values(name), ", "))
 }
 
 // replaceFirst is s.replace(pattern, replacement) for a text pattern: the

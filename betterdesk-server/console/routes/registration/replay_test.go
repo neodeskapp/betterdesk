@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -205,7 +206,11 @@ func (p *replayer) run() {
 			t.Errorf(format, a...)
 		}
 	}
-	for i, step := range p.rec.Steps {
+	steps, errs := fixedSteps(p.db.Dialect().String(), p.rec.Steps)
+	for _, err := range errs {
+		report("%v", err)
+	}
+	for i, step := range steps {
 		switch {
 		case step.SQL != "":
 			if !strings.HasPrefix(step.SQL, "SELECT") {
@@ -259,6 +264,120 @@ func (p *replayer) run() {
 	if failed > 30 {
 		t.Errorf("%d more steps differ", failed-30)
 	}
+}
+
+// fix is how a bug fix changed recorded steps on purpose: the status a
+// step answers now, its whole answer, or text of what Node answered, the
+// rows it stored, its panel events or its notifications replaced by what
+// the Go console writes since the fix. Fixes apply in their order, so a
+// later one edits what an earlier one wrote.
+type fix struct {
+	bug string
+	// dialect limits the fix to one database's recording
+	dialect string
+	// steps are the names of the steps the fix changes; a name ending in
+	// "..." stands for the step with the name before it and every step
+	// after it, for a fix whose changed rows later steps list
+	steps []string
+	// status is the step's status now; 0 keeps Node's
+	status int
+	// answer is the step's whole answer now; "" keeps Node's
+	answer string
+	// edits are pairs of the text Node wrote and the text Go writes
+	edits []string
+}
+
+// fixes are the bug fixes that changed answers of the recording.
+var fixes = []fix{
+	// The replay sends from 127.0.0.1 without TRUST_PROXY: the addresses
+	// its requests name in X-Forwarded-For and X-Real-IP are not taken,
+	// and a search for one of them finds nothing
+	{bug: "RG1", steps: []string{"355 address POST /api/bd/register-request..."}, edits: forwardedAddresses()},
+	{bug: "RG1", steps: []string{"411 GET /api/registrations?search=100%25_"}, answer: `{"success":true,"data":[],"total":0}`},
+}
+
+// forwardedAddresses are the edits of RG1: each address the requests of
+// the replay sent in a header, as a row, an event and a notification show
+// it, becomes the connection's address.
+func forwardedAddresses() []string {
+	var edits []string
+	for _, address := range []string{"203.0.113.5", "198.51.100.7", "192.0.2.4", "192.0.2.9", "spaced", "not an address", "198.51.100.8", "2001:db8::1"} {
+		for _, form := range []string{`"ip_address":"%s"`, `"ip":"%s"`, `· %s"`} {
+			edits = append(edits, fmt.Sprintf(form, address), fmt.Sprintf(form, routetest.ClientIP))
+		}
+	}
+	return edits
+}
+
+// fixedSteps returns the steps as the Go console answers them since the
+// fixes. A fix that changes no step, and a step a fix names that it does
+// not change, are errors, so the list cannot go stale.
+func fixedSteps(dialect string, steps []recordedStep) ([]recordedStep, []error) {
+	out := make([]recordedStep, len(steps))
+	for i, step := range steps {
+		step.Events = append([]string(nil), step.Events...)
+		out[i] = step
+	}
+	var errs []error
+	for _, f := range fixes {
+		if f.dialect != "" && f.dialect != dialect {
+			continue
+		}
+		changed := 0
+		for _, name := range f.steps {
+			from, isRange := strings.CutSuffix(name, "...")
+			first := -1
+			for i := range out {
+				if out[i].Name == from {
+					first = i
+					break
+				}
+			}
+			if first < 0 {
+				errs = append(errs, fmt.Errorf("the %s fix names a step the recording does not have: %q", f.bug, from))
+				continue
+			}
+			last := first
+			if isRange {
+				last = len(out) - 1
+			}
+			for i := first; i <= last; i++ {
+				if f.apply(&out[i]) {
+					changed++
+				} else if !isRange {
+					errs = append(errs, fmt.Errorf("the %s fix does not change step %q", f.bug, from))
+				}
+			}
+		}
+		if changed == 0 {
+			errs = append(errs, fmt.Errorf("the %s fix changes no step", f.bug))
+		}
+	}
+	return out, errs
+}
+
+// apply changes the step and reports whether anything changed.
+func (f fix) apply(step *recordedStep) bool {
+	changed := false
+	texts := []*string{&step.Answer, &step.Rows, &step.Items}
+	for i := range step.Events {
+		texts = append(texts, &step.Events[i])
+	}
+	for i := 0; i+1 < len(f.edits); i += 2 {
+		for _, text := range texts {
+			if strings.Contains(*text, f.edits[i]) {
+				*text = strings.ReplaceAll(*text, f.edits[i], f.edits[i+1])
+				changed = true
+			}
+		}
+	}
+	if f.status != 0 && f.status != step.Status {
+		step.Status, changed = f.status, true
+	}
+	if f.answer != "" && f.answer != step.Answer {
+		step.Answer, changed = f.answer, true
+	}
+	return changed
 }
 
 // wholeApp are the answers of the whole Node console where they differ

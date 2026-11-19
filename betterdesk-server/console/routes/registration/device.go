@@ -2,10 +2,8 @@ package registration
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/registrations"
@@ -14,22 +12,12 @@ import (
 
 // The two routes devices call without signing in.
 
-// clientIP is the address the group records (getClientIp): the first
-// entry of X-Forwarded-For as the client sent it, else X-Real-IP, else
-// the connection's address, else "unknown". The headers are trusted
-// whoever sent them (BUGS RG1).
+// clientIP is the address the group records: the client's address as
+// TRUST_PROXY gives it, so X-Forwarded-For and X-Real-IP count only from a
+// trusted proxy; "unknown" without one.
 func clientIP(r *http.Request) string {
-	if forwarded := headerText(r, "X-Forwarded-For"); forwarded != "" {
-		first, _, _ := strings.Cut(forwarded, ",")
-		if first = jsbind.Trim(first); first != "" {
-			return first
-		}
-	}
-	if real := headerText(r, "X-Real-Ip"); real != "" {
-		return real
-	}
-	if socket := httpx.SocketIP(r); socket != "" {
-		return socket
+	if ip := kit.ClientIP(r); ip != "" {
+		return ip
 	}
 	return "unknown"
 }

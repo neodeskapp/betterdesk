@@ -10,6 +10,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
 )
 
@@ -104,22 +105,13 @@ func headerText(r *http.Request, name string) string {
 	return httpx.Latin1(strings.Join(r.Header.Values(name), ", "))
 }
 
-// clientIP is getClientIp of the route file: the first entry of
-// X-Forwarded-For as the client sent it, else X-Real-IP, else the
-// connection's address, else "unknown". The headers are trusted whoever
-// sent them (BUGS BD3).
+// clientIP is the address the group records and the rename guard
+// matches: the client's address as TRUST_PROXY gives it, so
+// X-Forwarded-For and X-Real-IP count only from a trusted proxy;
+// "unknown" without one.
 func clientIP(r *http.Request) string {
-	if forwarded := headerText(r, "X-Forwarded-For"); forwarded != "" {
-		first, _, _ := strings.Cut(forwarded, ",")
-		if first = trim(first); first != "" {
-			return first
-		}
-	}
-	if real := headerText(r, "X-Real-Ip"); real != "" {
-		return real
-	}
-	if socket := httpx.SocketIP(r); socket != "" {
-		return socket
+	if ip := kit.ClientIP(r); ip != "" {
+		return ip
 	}
 	return "unknown"
 }
