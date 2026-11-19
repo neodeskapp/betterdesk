@@ -332,6 +332,27 @@ func TestCheckHostReturnsTheAddressesItChecked(t *testing.T) {
 	}
 }
 
+// Dot segments are resolved as the URL standard and browsers do, also
+// after a segment that starts with a dot (BUGS.md SC10).
+func TestParseURLResolvesDotSegmentsAfterADotName(t *testing.T) {
+	for in, want := range map[string]string{
+		"http://h/.well-known/../x":        "/x",
+		"http://h/a/.b/./c":                "/a/.b/c",
+		"http://h/a/.git/../../etc/passwd": "/etc/passwd",
+		"http://h/.x/y/..":                 "/.x/",
+		"http://h/.well-known/acme":        "/.well-known/acme",
+		"https://h/a/b/../c?x=/../y#/../z": "/a/c",
+	} {
+		u, ok := ParseURL(in)
+		if !ok || u.Pathname != want {
+			t.Errorf("%s: %+v, want the path %s", in, u, want)
+		}
+	}
+	if u, ok := ParseURL("http://h/.well-known/../x?q#f"); !ok || u.Href != "http://h/x?q#f" {
+		t.Errorf("href: %+v", u)
+	}
+}
+
 func TestSystemLookupReadsOldIPv4Spellings(t *testing.T) {
 	cases := map[string]string{
 		"2130706433": "127.0.0.1", "0x7f.1": "127.0.0.1", "0177.0.0.1": "127.0.0.1", "127.1": "127.0.0.1",

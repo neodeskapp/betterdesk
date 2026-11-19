@@ -50,7 +50,6 @@ const (
 	stateFileHost
 	statePathStart
 	statePath
-	stateVerbatimPathEnd
 	stateOpaquePath
 	stateQuery
 	stateFragment
@@ -108,8 +107,6 @@ func parseURL(text string) (*URL, error) {
 		query, fragment            strings.Builder
 		hasQuery, hasFragment      bool
 		querySet                   = isQueryEncode
-		verbatimPath               string
-		hasVerbatimPath            bool
 	)
 	at := func(i int) rune {
 		if i < 0 || i >= len(input) {
@@ -317,15 +314,6 @@ func parseURL(text string) (*URL, error) {
 				if c != '/' && c != '\\' {
 					p--
 				}
-				end := p + 1
-				for end < len(input) && input[end] != '?' && input[end] != '#' {
-					end++
-				}
-				if scheme != "file" && keptVerbatim(input[p+1:end]) {
-					verbatimPath, hasVerbatimPath = string(input[p+1:end]), true
-					state = stateVerbatimPathEnd
-					p = end - 1
-				}
 			case c == '?':
 				hasQuery = true
 				state = stateQuery
@@ -376,7 +364,7 @@ func parseURL(text string) (*URL, error) {
 				buffer = append(buffer, []rune(encoded.String())...)
 			}
 
-		case stateVerbatimPathEnd, stateOpaquePath:
+		case stateOpaquePath:
 			switch {
 			case c == '?':
 				hasQuery = true
@@ -422,9 +410,6 @@ func parseURL(text string) (*URL, error) {
 		return u, nil
 	}
 	u.Pathname = "/" + strings.Join(path, "/")
-	if hasVerbatimPath {
-		u.Pathname = "/" + verbatimPath
-	}
 	if hasQuery && query.Len() > 0 {
 		u.Search = "?" + query.String()
 	}
@@ -453,33 +438,6 @@ func parseURL(text string) (*URL, error) {
 	}
 	u.Href = href.String()
 	return u, nil
-}
-
-// keptVerbatim reports a path that Node's URL parser takes as it is
-// although it may hold dot segments, where a browser would resolve them.
-// view is the path after its first slash. Node looks at the first "/."
-// only: when the path has dots but nothing to encode, does not start with
-// a dot, and that first "/." starts an ordinary name ("/.well-known"), it
-// does not look at the segments after it, so "/.well-known/../x" stays
-// what it is.
-func keptVerbatim(view []rune) bool {
-	if len(view) == 0 || view[0] == '.' {
-		return false
-	}
-	first := -1
-	for i, c := range view {
-		if c == '\\' || c == '%' || isPathEncode(c) {
-			return false
-		}
-		if first < 0 && c == '.' && i > 0 && view[i-1] == '/' {
-			first = i
-		}
-	}
-	if first < 0 {
-		return false
-	}
-	after := first + 1
-	return after < len(view) && view[after] != '.' && view[after] != '/'
 }
 
 func lowerASCII(c rune) rune {

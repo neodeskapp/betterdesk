@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 	"unicode/utf8"
 
@@ -245,6 +246,10 @@ func TestNodeVectors(t *testing.T) {
 				want.Href, want.Pathname, want.Search, want.Hash = "", "", "", ""
 			}
 			if !reflect.DeepEqual(have, want) {
+				if reflect.DeepEqual(have, withDotsResolved(want)) {
+					changed["SC10"]++
+					continue
+				}
 				fail("vector %d: ParseURL(%q)\n got  %+v\n node %+v", i, v.URL, have, want)
 			}
 
@@ -298,6 +303,42 @@ func TestNodeVectors(t *testing.T) {
 		}
 	}
 	t.Logf("replayed %v; %d URLs have a host that needs IDNA and are refused here; answers that differ from Node's for a fixed row: %v", counts, idna, changed)
+}
+
+// withDotsResolved is the URL Node parsed with the dot segments of its
+// path resolved as the URL standard does: Node's parser left some in
+// (BUGS.md SC10).
+func withDotsResolved(u vectorURL) vectorURL {
+	if !strings.HasPrefix(u.Pathname, "/") {
+		return u
+	}
+	rest, ok := strings.CutSuffix(u.Href, u.Pathname+u.Search+u.Hash)
+	if !ok {
+		return u
+	}
+	segments := strings.Split(u.Pathname[1:], "/")
+	var kept []string
+	for i, segment := range segments {
+		last := i == len(segments)-1
+		switch strings.ToLower(segment) {
+		case "..", ".%2e", "%2e.", "%2e%2e":
+			if len(kept) > 0 {
+				kept = kept[:len(kept)-1]
+			}
+			if last {
+				kept = append(kept, "")
+			}
+		case ".", "%2e":
+			if last {
+				kept = append(kept, "")
+			}
+		default:
+			kept = append(kept, segment)
+		}
+	}
+	u.Pathname = "/" + strings.Join(kept, "/")
+	u.Href = rest + u.Pathname + u.Search + u.Hash
+	return u
 }
 
 func errOr(err error) error {

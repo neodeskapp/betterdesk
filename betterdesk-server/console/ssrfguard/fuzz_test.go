@@ -283,6 +283,11 @@ func FuzzSSRFGuard(f *testing.F) {
 			var u vectorURL
 			_ = json.Unmarshal(answer.OK, &u)
 			want = u.Href + " " + u.Hostname
+			// Node left some dot segments in a path (BUGS.md SC10); its URL,
+			// read again here, has them resolved
+			if again, ok := ParseURL(u.Href); ok && got != want && got == again.Href+" "+u.Hostname {
+				return
+			}
 		default:
 			_ = json.Unmarshal(answer.OK, &want)
 		}
