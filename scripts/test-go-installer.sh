@@ -272,6 +272,38 @@ test_server_folder_mode() (
     rm -rf "$TEST_DIR"
 )
 
+# The console's language files, themes and images come from the binary:
+# an update copies none from a web-nodejs folder an older release left in
+# the checkout, and the console folder keeps its .env, data, installed
+# fonts and language files.
+test_console_home_copies_no_console_files() (
+    load
+    SCRIPT_DIR="$TEST_DIR/checkout"
+    mkdir -p "$SCRIPT_DIR/web-nodejs/lang" "$SCRIPT_DIR/web-nodejs/themes"
+    printf '{"old":true}\n' > "$SCRIPT_DIR/web-nodejs/lang/en.json"
+    printf 'old\n' > "$SCRIPT_DIR/web-nodejs/themes/dark.css"
+    mkdir -p "$CONSOLE_PATH/data/transfers" "$CONSOLE_PATH/public/fonts" "$CONSOLE_PATH/lang"
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    printf 'file\n' > "$CONSOLE_PATH/data/transfers/a.bin"
+    printf 'font\n' > "$CONSOLE_PATH/public/fonts/inter.woff2"
+    printf '{"custom":true}\n' > "$CONSOLE_PATH/lang/xx.json"
+    SERVICE_USER=$(id -un)
+    MINIMAL_MODE=false
+    STORE_ADMIN_CREDENTIALS=false
+    print_step() { :; }
+    print_success() { :; }
+    ensure_service_user() { :; }
+    merge_console_env() { [ "$1" = false ] || fail "an install with .env counted as fresh"; }
+    setup_console_home >/dev/null
+    [ ! -e "$CONSOLE_PATH/lang/en.json" ] || fail "the update copied the checkout's web-nodejs/lang into the console folder"
+    [ ! -e "$CONSOLE_PATH/themes" ] || fail "the update copied the checkout's web-nodejs/themes into the console folder"
+    [ "$(cat "$CONSOLE_PATH/.env")" = SESSION_SECRET=kept ] || fail "the update changed .env"
+    [ -f "$CONSOLE_PATH/data/transfers/a.bin" ] || fail "the update lost a file of data/"
+    [ -f "$CONSOLE_PATH/public/fonts/inter.woff2" ] || fail "the update lost an installed font"
+    [ -f "$CONSOLE_PATH/lang/xx.json" ] || fail "the update lost a language file of the console folder"
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
@@ -283,4 +315,5 @@ test_update_channel_in_env
 test_update_channel_before_server_update
 test_update_channel_kept_without_one
 test_server_folder_mode
+test_console_home_copies_no_console_files
 echo "Go installer unit checks passed"

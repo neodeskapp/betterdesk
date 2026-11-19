@@ -932,21 +932,6 @@ function Install-Binaries {
     return $ok
 }
 
-# Copies the console's language files, themes and images from this checkout
-# into the console folder when the checkout has them: the server reads them
-# there unless its binary carries them.
-function Install-ConsoleStaticFiles {
-    $src = Join-Path $script:ScriptDir "web-nodejs"
-    if (-not (Test-Path (Join-Path $src "lang\en.json"))) { return }
-    foreach ($item in @("lang", "public", "themes", "protos", "wallpapers", "config")) {
-        $from = Join-Path $src $item
-        if (-not (Test-Path $from)) { continue }
-        $to = Join-Path $script:CONSOLE_PATH $item
-        New-Item -ItemType Directory -Path $to -Force | Out-Null
-        Copy-Item -Path (Join-Path $from "*") -Destination $to -Recurse -Force
-    }
-}
-
 # The console's folder with its .env and data folder.
 function Setup-ConsoleHome {
     Print-Step "Setting up the web console's folder $($script:CONSOLE_PATH)..."
@@ -965,7 +950,6 @@ function Setup-ConsoleHome {
         Set-ConsoleEnvValue -Key "CONSOLE_PORT" -Value "0"
         Print-Info "Minimal installation: the web console stays off (CONSOLE_PORT=0)"
     }
-    Install-ConsoleStaticFiles
     $gateway = Join-Path $script:ScriptDir "remote-gateway"
     if (Test-Path $gateway) {
         $to = Join-Path $script:CONSOLE_PATH "remote-gateway"

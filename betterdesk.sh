@@ -3867,19 +3867,6 @@ set_server_folder_permissions() {
     return 0
 }
 
-# Copies the console's language files, themes and images from this
-# checkout into the console folder when the checkout has them: the server
-# reads them there unless its binary carries them.
-install_console_static_files() {
-    local src="$SCRIPT_DIR/web-nodejs" item
-    [ -f "$src/lang/en.json" ] || return 0
-    for item in lang public themes protos wallpapers config; do
-        [ -d "$src/$item" ] || continue
-        mkdir -p "$CONSOLE_PATH/$item"
-        cp -a "$src/$item/." "$CONSOLE_PATH/$item/"
-    done
-}
-
 # setup_console_home: the console's folder with its .env and data folder.
 setup_console_home() {
     print_step "Setting up the web console's folder $CONSOLE_PATH..."
@@ -3908,7 +3895,6 @@ setup_console_home() {
         print_info "Minimal installation: the web console stays off (CONSOLE_PORT=0)"
     fi
 
-    install_console_static_files
     if [ -d "$SCRIPT_DIR/remote-gateway" ]; then
         mkdir -p "$CONSOLE_PATH/remote-gateway"
         cp -a "$SCRIPT_DIR/remote-gateway/." "$CONSOLE_PATH/remote-gateway/"

@@ -120,8 +120,39 @@ function Test-NssmServiceIsSupervised {
     Remove-Item -Recurse -Force $dir
 }
 
+# The console's language files, themes and images come from the binary:
+# an update copies none from a web-nodejs folder an older release left in
+# the checkout, and the console folder keeps its .env, data, installed
+# fonts and language files.
+function Test-ConsoleHomeCopiesNoConsoleFiles {
+    $dir = New-TestInstall
+    $old = Join-Path $dir 'web-nodejs'
+    $console = $script:CONSOLE_PATH
+    New-Item -ItemType Directory -Force -Path (Join-Path $old 'lang'), (Join-Path $old 'themes'), `
+        (Join-Path $console 'data\transfers'), (Join-Path $console 'public\fonts'), (Join-Path $console 'lang') | Out-Null
+    Set-Content -Path (Join-Path $old 'lang\en.json') -Value '{"old":true}'
+    Set-Content -Path (Join-Path $old 'themes\dark.css') -Value 'old'
+    Set-Content -Path (Join-Path $console '.env') -Value 'SESSION_SECRET=kept'
+    Set-Content -Path (Join-Path $console 'data\transfers\a.bin') -Value 'file'
+    Set-Content -Path (Join-Path $console 'public\fonts\inter.woff2') -Value 'font'
+    Set-Content -Path (Join-Path $console 'lang\xx.json') -Value '{"custom":true}'
+    $script:MINIMAL_MODE = $false
+    $script:mergedFresh = $null
+    function Merge-ConsoleEnv { param([bool]$FreshInstall) $script:mergedFresh = $FreshInstall; return $true }
+    Setup-ConsoleHome | Out-Null
+    if ($script:mergedFresh -ne $false) { Fail "an install with .env counted as fresh ($($script:mergedFresh))" }
+    if (Test-Path (Join-Path $console 'lang\en.json')) { Fail "the update copied the checkout's web-nodejs\lang into the console folder" }
+    if (Test-Path (Join-Path $console 'themes')) { Fail "the update copied the checkout's web-nodejs\themes into the console folder" }
+    if ((Get-Content (Join-Path $console '.env') -Raw).Trim() -ne 'SESSION_SECRET=kept') { Fail 'the update changed .env' }
+    if (-not (Test-Path (Join-Path $console 'data\transfers\a.bin'))) { Fail 'the update lost a file of data' }
+    if (-not (Test-Path (Join-Path $console 'public\fonts\inter.woff2'))) { Fail 'the update lost an installed font' }
+    if (-not (Test-Path (Join-Path $console 'lang\xx.json'))) { Fail 'the update lost a language file of the console folder' }
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
+Test-ConsoleHomeCopiesNoConsoleFiles
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'

@@ -183,7 +183,20 @@ test_update_keeps_old_web_nodejs() (
     rm -rf "$TEST_DIR"
 )
 
+# The images take nothing from that web-nodejs folder: no Dockerfile names
+# it and the build context leaves it out, so its .env and the old console's
+# files stay out of /app.
+test_images_leave_out_old_web_nodejs() (
+    local df
+    for df in "$SCRIPT_ROOT"/Dockerfile*; do
+        if grep -q 'web-nodejs' "$df"; then fail "$(basename "$df") reads web-nodejs"; fi
+    done
+    tr -d '\r' < "$SCRIPT_ROOT/.dockerignore" | grep -qx 'web-nodejs/' \
+        || fail ".dockerignore does not leave web-nodejs out of the build context"
+)
+
 test_failed_build_restores_sources
 test_backup_keeps_dotfiles_and_console_data
 test_update_keeps_old_web_nodejs
+test_images_leave_out_old_web_nodejs
 echo "Docker installer checks passed"

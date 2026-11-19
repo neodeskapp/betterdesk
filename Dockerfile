@@ -54,18 +54,6 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -trimpath \
     -tags "netgo osusergo" \
     -o /betterdesk-server .
 
-# ============= The console's language files, themes and images =============
-# Copied into /app when the checkout has them (web-nodejs); the server reads
-# them there unless its binary carries them.
-FROM alpine:3.22 AS console-static
-RUN --mount=type=bind,target=/ctx \
-    mkdir -p /static && \
-    if [ -f /ctx/web-nodejs/lang/en.json ]; then \
-        for d in lang public themes protos wallpapers config; do \
-            if [ -d "/ctx/web-nodejs/$d" ]; then cp -a "/ctx/web-nodejs/$d" /static/; fi; \
-        done; \
-    fi
-
 # ============= Runtime =============
 FROM alpine:3.22
 
@@ -85,7 +73,6 @@ RUN addgroup -g 10001 -S betterdesk && \
     chown -R betterdesk:betterdesk /opt/rustdesk /app/data
 
 COPY --from=go-builder /betterdesk-server /usr/local/bin/betterdesk-server
-COPY --from=console-static /static/ /app/
 
 ARG BETTERDESK_IMAGE_VERSION=unknown
 ENV BETTERDESK_IMAGE_VERSION=${BETTERDESK_IMAGE_VERSION}

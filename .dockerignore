@@ -7,8 +7,11 @@
 # native binaries (e.g. Windows x64) that will break Linux/Alpine
 # containers.  The Dockerfile builds its own node_modules.
 **/node_modules/
-web-nodejs/data/
-web-nodejs/uploads/
+
+# The Node.js console's folder of an install from before the web console
+# moved into the server binary: no image reads it, and its .env and data
+# stay out of the build
+web-nodejs/
 
 # Git
 .git/
@@ -34,7 +37,6 @@ archive/
 docs/
 screenshots/
 *.md
-!web-nodejs/**/*.md
 !docker/*.md
 
 # Development & testing
