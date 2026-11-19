@@ -173,7 +173,7 @@ var nodeTempDir = regexp.MustCompile(`/tmp/i18n-[a-z]+-[A-Za-z0-9]+`)
 func TestRoutesLikeNode(t *testing.T) {
 	for _, name := range []string{"routes-edge.json", "routes-upload.json"} {
 		t.Run(name, func(t *testing.T) {
-			want := vectors(t, name)
+			want := fixedVectors(t, name)
 			now := time.UnixMilli(int64(num(want, "now")))
 			fixture := filepath.Join("testdata", str(want, "label"))
 			cases := list(want, "vectors")
@@ -283,7 +283,7 @@ func segments(c any) []byte {
 // The upload route against multer and busboy: about 140 forms, good and
 // broken, with the answer, the files written and the audit entry.
 func TestUploadLikeNode(t *testing.T) {
-	cases := list(vectors(t, "upload.json"))
+	cases := list(fixedVectors(t, "upload.json"))
 	if len(cases) < 130 {
 		t.Fatalf("only %d vectors", len(cases))
 	}
@@ -367,7 +367,7 @@ func decodeAll(m map[string]string) map[string]string {
 // The translations page's routes against Node, on the odd fixture files
 // and with files added and removed.
 func TestPanelRoutesLikeNode(t *testing.T) {
-	cases := list(vectors(t, "panel-edge.json"))
+	cases := list(fixedVectors(t, "panel-edge.json"))
 	if len(cases) < 40 {
 		t.Fatalf("only %d vectors", len(cases))
 	}
@@ -423,7 +423,7 @@ func firstDifference(got, want string) string {
 
 // The same routes on the real language files: the whole answers as hashes.
 func TestPanelRoutesOnRealFilesLikeNode(t *testing.T) {
-	cases := list(vectors(t, "panel-real.json"))
+	cases := list(fixedVectors(t, "panel-real.json"))
 	if len(cases) < 20 {
 		t.Fatalf("only %d vectors", len(cases))
 	}

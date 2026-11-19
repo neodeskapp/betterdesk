@@ -27,7 +27,7 @@ func listJSON(t *testing.T, b *Bundle) string {
 // texts and merged texts byte for byte (as hashes), every validation
 // report, and several hundred translate calls.
 func TestRealFilesLikeNode(t *testing.T) {
-	want := vectors(t, "real.json")
+	want := fixedVectors(t, "real.json")
 	b, l := loaded(t, copyDir(t, realLangDir), "en")
 
 	if got, w := l.take(), strs(want, "logs"); !reflect.DeepEqual(got, w) {
@@ -88,7 +88,7 @@ func TestRealFilesLikeNode(t *testing.T) {
 // a string or a number, metadata of the wrong type, invalid UTF-8, unsafe
 // keys, numeric keys, repeated keys.
 func TestEdgeFilesLikeNode(t *testing.T) {
-	want := vectors(t, "edge.json")
+	want := fixedVectors(t, "edge.json")
 	b, l := loaded(t, copyDir(t, "testdata/lang-edge"), "en")
 
 	if got, w := l.take(), strs(want, "logs"); !reflect.DeepEqual(got, w) {
@@ -148,7 +148,7 @@ func checkSnapshot(t *testing.T, b *Bundle, snapshot any) {
 
 // Another default language, and one that has no file.
 func TestOtherDefaultLanguageLikeNode(t *testing.T) {
-	want, _ := vectors(t, "defaults.json").(*Object)
+	want, _ := fixedVectors(t, "defaults.json").(*Object)
 	sets := varSets(t)
 	for _, def := range want.Keys() {
 		b, _ := loaded(t, copyDir(t, "testdata/lang-edge"), def)
@@ -252,7 +252,7 @@ func TestLoadSkipsWhatIsNotInTheTable(t *testing.T) {
 	if !b.Has("fr") || b.Meta("fr") != nil || b.Translations("fr") != nil {
 		t.Error("a file that holds null counts as a language but has no entry and no texts")
 	}
-	if !b.Has("constructor") || !b.Has("__proto__") || b.Has("") || b.Has("En") {
+	if b.Has("constructor") || b.Has("__proto__") || b.Has("") || b.Has("En") {
 		t.Error("Has for inherited names, empty and wrong case")
 	}
 	for _, line := range l.take() {

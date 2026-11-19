@@ -86,16 +86,6 @@ func UnsafeKey(key string) bool {
 	return key == "__proto__" || key == "prototype" || key == "constructor"
 }
 
-// inheritedNames are the names every JavaScript object answers to. "Is
-// this a language" is JavaScript's in operator on the object of loaded
-// languages, and that says yes for them. Has says the same, so a request
-// language or a cookie with such a name is treated the same everywhere.
-var inheritedNames = map[string]bool{
-	"constructor": true, "__defineGetter__": true, "__defineSetter__": true, "hasOwnProperty": true,
-	"__lookupGetter__": true, "__lookupSetter__": true, "isPrototypeOf": true, "propertyIsEnumerable": true,
-	"toString": true, "valueOf": true, "__proto__": true, "toLocaleString": true,
-}
-
 // Bundle is the set of loaded languages.
 type Bundle struct {
 	// Dir is the folder with the <code>.json files.
@@ -223,19 +213,12 @@ func (b *Bundle) loadLocked(root langRoot, code string) bool {
 	return true
 }
 
-// Has reports whether code counts as a language: a loaded one, or one of
-// the names every JavaScript object has (see inheritedNames).
+// Has reports whether code is a loaded language.
 func (b *Bundle) Has(code string) bool {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
-	return b.hasLocked(code)
-}
-
-func (b *Bundle) hasLocked(code string) bool {
-	if _, ok := b.translations[code]; ok {
-		return true
-	}
-	return inheritedNames[code]
+	_, ok := b.translations[code]
+	return ok
 }
 
 // Translations returns the texts of a language as its file has them, or
@@ -556,8 +539,8 @@ func stringList(in []string) []any {
 func (b *Bundle) Validate(code string) Report {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
-	texts, own := b.translations[code]
-	if !(own && truthy(texts)) && !inheritedNames[code] {
+	texts := b.translations[code]
+	if !truthy(texts) {
 		return Report{}
 	}
 	if code == b.DefaultLang {

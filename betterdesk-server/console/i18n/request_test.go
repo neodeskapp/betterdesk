@@ -24,13 +24,27 @@ func toBytes(s string) string {
 // several hundred combinations of query, stored preference, cookie,
 // Accept-Language and default language.
 func TestRequestLanguageLikeNode(t *testing.T) {
-	want := vectors(t, "pick.json")
-	now := time.UnixMilli(int64(num(want, "now")))
+	b, _ := loaded(t, copyDir(t, realLangDir), "en")
+	node := vectors(t, "pick.json")
+	now := time.UnixMilli(int64(num(node, "now")))
+	// The reference the bug fixes rewrite these vectors with gives Node's
+	// answers under Node's rules.
+	for i, c := range list(node, "vectors") {
+		lang, cookie, throws := referencePick(b, c, pickRules{}, now)
+		wantCookie := ""
+		if set := strs(c, "setCookie"); len(set) > 0 {
+			wantCookie = set[0]
+		}
+		if lang != str(c, "lang") || cookie != wantCookie || throws != str(c, "throws") {
+			t.Errorf("#%d query=%s: the reference gives %q, %q, %q; Node %q, %q, %q", i, short(str(c, "query")), lang, cookie, throws, str(c, "lang"), wantCookie, str(c, "throws"))
+		}
+	}
+
+	want := fixedVectors(t, "pick.json")
 	cases := list(want, "vectors")
 	if len(cases) < 300 {
 		t.Fatalf("only %d vectors", len(cases))
 	}
-	b, _ := loaded(t, copyDir(t, realLangDir), "en")
 	cookies, throws := 0, 0
 	for i, c := range cases {
 		b.DefaultLang = str(c, "def")
@@ -78,6 +92,29 @@ func TestRequestLanguageLikeNode(t *testing.T) {
 	}
 	if cookies < 30 || throws < 1 {
 		t.Errorf("the vectors set %d cookies and throw %d times; too few to mean anything", cookies, throws)
+	}
+}
+
+// The names every JavaScript object has are no languages: not as ?lang=,
+// not in Accept-Language and not to Validate (BUGS.md L1).
+func TestHasIgnoresInheritedNames(t *testing.T) {
+	b, _ := loaded(t, copyDir(t, "testdata/lang-upload"), "en")
+	now := time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
+	for _, name := range []string{"constructor", "toString", "valueOf", "hasOwnProperty", "__proto__", "isPrototypeOf", "toLocaleString"} {
+		if b.Has(name) {
+			t.Errorf("Has(%q) = true", name)
+		}
+		query := &http.Request{URL: &url.URL{Path: "/", RawQuery: "lang=" + name}, Header: http.Header{}}
+		if sel := b.RequestLanguage(query, "", now); sel.Lang != "en" || sel.SetCookie != "" || sel.Err != nil {
+			t.Errorf("?lang=%s: language %q, cookie %q, error %v; want en and no cookie", name, sel.Lang, sel.SetCookie, sel.Err)
+		}
+		accept := &http.Request{URL: &url.URL{Path: "/"}, Header: http.Header{"Accept-Language": {name + ", de;q=0.5"}}}
+		if sel := b.RequestLanguage(accept, "", now); sel.Lang != "de" {
+			t.Errorf("Accept-Language %s, de;q=0.5: language %q, want de", name, sel.Lang)
+		}
+		if got := stringify(b.Validate(name).Object(), ""); got != `{"valid":false,"error":"Language not found"}` {
+			t.Errorf("Validate(%q) = %s", name, got)
+		}
 	}
 }
 
