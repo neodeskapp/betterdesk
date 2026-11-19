@@ -561,6 +561,9 @@ func FuzzFontFile(f *testing.F) {
 	for _, name := range []string{"a.ttf", "a.TTF", "a.woff2", ".ttf", "a/b.ttf", `a\b.woff2`, "..", "x.", "a.ttf\x00.png", "ü.ttf", "CON.ttf", strings.Repeat("n", 300) + ".woff2"} {
 		f.Add("Für 'Fonts' \\ \n", name, "application/octet-stream", []byte("data"))
 	}
+	for _, mimeType := range []string{"image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml", "image/svg"} {
+		f.Add("", "page.html", mimeType, []byte("<script>x</script>"))
+	}
 	f.Fuzz(func(t *testing.T, family, fileName, mimeType string, content []byte) {
 		family, fileName = decodeUTF8([]byte(family)), decodeUTF8([]byte(fileName))
 		if len(content) > 1<<16 {
@@ -627,16 +630,18 @@ func FuzzFontFile(f *testing.F) {
 
 		// the same file as a logo and as a background
 		for prefix, store := range map[string]func(string, io.Reader) (string, error){"logo-": s.StoreLogo, "bg-": s.StoreBackground} {
-			name, err := store(fileName, bytes.NewReader(content))
+			name, err := store(mimeType, bytes.NewReader(content))
 			if err != nil {
-				// a name the file system refuses, such as one with a zero byte
+				if err != ErrInvalidImageType || AcceptImageUpload(mimeType) {
+					t.Fatalf("a %s upload as %q: %v", prefix, mimeType, err)
+				}
 				if left := tree(t, s.opts.UploadsDir); len(left) != 0 {
-					t.Fatalf("a failed upload left %s", Stringify(left))
+					t.Fatalf("a refused upload left %s", Stringify(left))
 				}
 				continue
 			}
-			if !strings.HasPrefix(name, prefix) || strings.ContainsAny(name, "/\x00") || !regexp.MustCompile(`^[0-9a-f]{16}(\.|$)`).MatchString(name[len(prefix):]) {
-				t.Fatalf("stored as %q", name)
+			if !AcceptImageUpload(mimeType) || !strings.HasPrefix(name, prefix) || !regexp.MustCompile(`^[0-9a-f]{16}\.(png|jpg|gif|webp|svg)$`).MatchString(name[len(prefix):]) {
+				t.Fatalf("%q as %q stored as %q", fileName, mimeType, name)
 			}
 			data, err := os.ReadFile(filepath.Join(s.opts.UploadsDir, name))
 			if err != nil || !bytes.Equal(data, content) {

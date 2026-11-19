@@ -158,10 +158,49 @@ func TestUploadLogo(t *testing.T) {
 		if rows := w.AuditRows(); len(rows) != auditBefore {
 			t.Errorf("refused uploads were audited: %v", rows[auditBefore:])
 		}
-		// exactly the limit is taken, a file name without extension is .png
+		// exactly the limit is taken
 		res = upload(t, admin, "/api/settings/branding/upload-logo", part{field: "logo", name: "noext", contentType: "image/webp", content: bytes.Repeat([]byte("a"), branding.LogoMaxBytes)})
-		if res.Status != http.StatusOK || !strings.HasSuffix(decode(t, res.Body)["url"].(string), ".png") {
+		if res.Status != http.StatusOK || !strings.HasSuffix(decode(t, res.Body)["url"].(string), ".webp") {
 			t.Errorf("exact size: %d %s", res.Status, res.Body)
+		}
+	})
+}
+
+// TestUploadsTakeTheExtensionOfTheirType: a logo or background is stored
+// with the extension of the picture type it was accepted as, never with
+// the one of the client's file name, so a page or a script sent as a
+// picture is not served as one from /uploads/ (BUGS I9).
+func TestUploadsTakeTheExtensionOfTheirType(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db)
+		admin := w.As("admin")
+		uploads := filepath.Join(w.DataDir, "uploads")
+		for _, c := range []struct {
+			path, field, name, contentType, ext string
+		}{
+			{"upload-logo", "logo", "x.html", "image/png", ".png"},
+			{"upload-logo", "logo", "x.js", "image/svg+xml", ".svg"},
+			{"upload-logo", "logo", "photo.JPEG", "image/jpeg", ".jpg"},
+			{"upload-logo", "logo", "noext", "image/gif", ".gif"},
+			{"upload-background", "background", "x.html", "image/jpeg", ".jpg"},
+			{"upload-background", "background", "wall.php", "image/webp", ".webp"},
+			{"upload-background", "background", "wall", "image/png", ".png"},
+		} {
+			res := upload(t, admin, "/api/settings/branding/"+c.path, part{field: c.field, name: c.name, contentType: c.contentType, content: pngBytes})
+			url, _ := decode(t, res.Body)["url"].(string)
+			stored := strings.TrimPrefix(url, "/uploads/")
+			if res.Status != http.StatusOK || !regexp.MustCompile(`^(logo|bg)-[0-9a-f]{16}\`+c.ext+`$`).MatchString(stored) {
+				t.Errorf("%s %q as %s: %d %s, want a name ending in %s", c.path, c.name, c.contentType, res.Status, res.Body, c.ext)
+				continue
+			}
+			if data, err := os.ReadFile(filepath.Join(uploads, stored)); err != nil || !bytes.Equal(data, pngBytes) {
+				t.Errorf("%s %q: the stored file %s: %v", c.path, c.name, stored, err)
+			}
+		}
+		for _, name := range files(t, uploads) {
+			if ext := filepath.Ext(name); ext == ".html" || ext == ".js" || ext == ".php" || ext == "" {
+				t.Errorf("an upload is stored as %s", name)
+			}
 		}
 	})
 }
@@ -175,7 +214,7 @@ func TestUploadBackground(t *testing.T) {
 		answer := decode(t, res.Body)
 		url, _ := answer["url"].(string)
 		if res.Status != http.StatusOK || keyOrder(t, res.Body) != "success,url,applied,data,revision" || answer["applied"] != true ||
-			!regexp.MustCompile(`^/uploads/bg-[0-9a-f]{16}\.jpeg$`).MatchString(url) {
+			!regexp.MustCompile(`^/uploads/bg-[0-9a-f]{16}\.jpg$`).MatchString(url) {
 			t.Fatalf("applied: %d %s", res.Status, res.Body)
 		}
 		data := answer["data"].(map[string]any)
@@ -194,7 +233,7 @@ func TestUploadBackground(t *testing.T) {
 			res := upload(t, admin, "/api/settings/branding/upload-background", parts...)
 			answer := decode(t, res.Body)
 			if res.Status != http.StatusOK || keyOrder(t, res.Body) != "success,url,applied,data" || answer["applied"] != false || answer["data"] != nil ||
-				!strings.HasSuffix(answer["url"].(string), ".jpg") {
+				!strings.HasSuffix(answer["url"].(string), ".png") {
 				t.Errorf("target %q: %d %s", target, res.Status, res.Body)
 			}
 			if got := lastAudit(t, w); !strings.HasPrefix(got, "branding_bg_upload|Uploaded background: bg-") {
@@ -330,12 +369,19 @@ func TestUploadsLikeNode(t *testing.T) {
 			}
 		}
 		last := ""
+		renames := 0
+		defer func() {
+			if renames < 10 {
+				t.Errorf("%d uploads stored under another name than Node's, the recording has more (BUGS I9)", renames)
+			}
+		}()
 		for i, entry := range steps {
 			step := branding.Field(entry, "step")
 			get := func(key string) string { s, _ := branding.ToString(branding.Field(step, key)); return s }
 			what := "step " + strconv.Itoa(i) + " " + clipText(branding.Stringify(step))
 			auditBefore := len(w.AuditRows())
 			status, body := 0, ""
+			var renamed []string
 			switch get("op") {
 			case "upload":
 				var content []byte
@@ -369,6 +415,17 @@ func TestUploadsLikeNode(t *testing.T) {
 				parts = append(parts, part{field: field, name: name, contentType: mimeType, content: content})
 				res := upload(t, admin, route, parts...)
 				status, body = res.Status, res.Body
+				if from, to := nodeUploadName(t, body, branding.Field(entry, "body"), mimeType); from != to {
+					// stored under the extension of its type, where Node took
+					// the one of the file name (BUGS I9): the file gets Node's
+					// name, so the later steps see the folder Node saw
+					renamed = append(renamed, from, to)
+					renames++
+					if err := os.Rename(filepath.Join(uploads, from), filepath.Join(uploads, to)); err != nil {
+						t.Fatal(err)
+					}
+					body = strings.ReplaceAll(body, from, to)
+				}
 				if url := regexp.MustCompile(`"url":"([^"]*)"`).FindStringSubmatch(body); url != nil {
 					last = url[1]
 				}
@@ -416,7 +473,7 @@ func TestUploadsLikeNode(t *testing.T) {
 			var audit []string
 			for _, row := range w.AuditRows()[auditBefore:] {
 				parts := strings.SplitN(row, "|", 3)
-				audit = append(audit, branding.Stringify([]any{parts[0], maskUploadNames(parts[1])}))
+				audit = append(audit, branding.Stringify([]any{parts[0], maskUploadNames(strings.NewReplacer(renamed...).Replace(parts[1]))}))
 			}
 			var wantAudit []string
 			for _, a := range lines2(branding.Field(entry, "audit")) {
@@ -458,7 +515,32 @@ var (
 	reRevisionField = regexp.MustCompile(`"revision":"[^"]*"`)
 	reRandomUpload  = regexp.MustCompile(`\b(logo|bg)-[0-9a-f]{16}`)
 	reTempUpload    = regexp.MustCompile(`font-upload-\d+`)
+	reStoredURL     = regexp.MustCompile(`"url":"/uploads/((?:logo|bg)-[0-9a-f]{16})([^"]*)"`)
+	reRecordedURL   = regexp.MustCompile(`"url":"/uploads/(?:logo|bg)-<HEX>([^"]*)"`)
 )
+
+// uploadExtensions are the extensions a logo or background gets by its
+// content type (BUGS I9).
+var uploadExtensions = map[string]string{"image/png": ".png", "image/jpeg": ".jpg", "image/gif": ".gif", "image/webp": ".webp", "image/svg+xml": ".svg"}
+
+// nodeUploadName takes the name of a stored logo or background from the
+// console's answer and the extension Node gave it from its recorded
+// answer, and checks that the console's extension is the one of the
+// type. It returns the console's name and the name Node gave the same
+// file, both empty when nothing was stored.
+func nodeUploadName(t *testing.T, body string, recorded any, mimeType string) (string, string) {
+	t.Helper()
+	got := reStoredURL.FindStringSubmatch(body)
+	text, _ := recorded.(string)
+	want := reRecordedURL.FindStringSubmatch(text)
+	if got == nil || want == nil {
+		return "", ""
+	}
+	if got[2] != uploadExtensions[mimeType] {
+		t.Errorf("stored as %s%s, want the extension %s of the type %s", got[1], got[2], uploadExtensions[mimeType], mimeType)
+	}
+	return got[1] + got[2], got[1] + want[1]
+}
 
 func maskUploadNames(text string) string {
 	return reTempUpload.ReplaceAllLiteralString(reRandomUpload.ReplaceAllString(text, "$1-<HEX>"), "font-upload-<MS>")

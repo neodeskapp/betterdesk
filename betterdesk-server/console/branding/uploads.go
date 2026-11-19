@@ -25,18 +25,32 @@ const (
 // ErrFileTooLarge is returned for an upload that is longer than its limit.
 var ErrFileTooLarge = errors.New("file too large")
 
+// ErrInvalidImageType is returned for a logo or background whose content
+// type AcceptImageUpload refuses.
+var ErrInvalidImageType = errors.New("Invalid file type")
+
 var (
-	reImageType         = regexp.MustCompile(`^image/(png|jpeg|gif|webp|svg\+xml)$`)
 	reManagedLogo       = regexp.MustCompile(`^` + ci("logo-") + `[0-9a-fA-F]{16}\.` + ciAny("png", "jpg", "jpeg", "gif", "webp", "svg") + `$`)
 	reManagedBackground = regexp.MustCompile(`^` + ci("bg-") + `[0-9a-fA-F]{16}\.` + ciAny("png", "jpg", "jpeg", "gif", "webp") + `$`)
 	reFontFileName      = regexp.MustCompile(`\.` + ciAny("woff2", "ttf") + `$`)
 )
 
+// imageExtensions are the content types a logo or background may have,
+// each with the extension its file gets.
+var imageExtensions = map[string]string{
+	"image/png":     ".png",
+	"image/jpeg":    ".jpg",
+	"image/gif":     ".gif",
+	"image/webp":    ".webp",
+	"image/svg+xml": ".svg",
+}
+
 // AcceptImageUpload reports whether a logo or background upload has an
 // accepted content type: png, jpeg, gif, webp or svg+xml, as the client
 // named it. The content itself is not looked at.
 func AcceptImageUpload(mimeType string) bool {
-	return reImageType.MatchString(mimeType)
+	_, ok := imageExtensions[mimeType]
+	return ok
 }
 
 // AcceptFontUpload reports whether a font upload is accepted: a file name
@@ -53,33 +67,34 @@ func AcceptFontUpload(originalName, mimeType string) bool {
 	return false
 }
 
-// StoreLogo writes an uploaded logo into UploadsDir and returns its file
-// name, logo-<16 hex digits><extension>. The extension is the one of the
-// client's file name in lower case, ".png" when it has none. It fails with
-// ErrFileTooLarge, and leaves no file, when content is longer than
+// StoreLogo writes an uploaded logo of the content type mimeType into
+// UploadsDir and returns its file name, logo-<16 hex digits><extension>.
+// The extension is the one of the type (.png, .jpg, .gif, .webp, .svg),
+// whatever the client named the file, so an upload is never served as a
+// page or a script. It fails with ErrInvalidImageType for any other type,
+// and with ErrFileTooLarge, leaving no file, when content is longer than
 // LogoMaxBytes. The picture is served as /uploads/<name>.
-func (s *Service) StoreLogo(originalName string, content io.Reader) (string, error) {
-	return s.storeUpload("logo-", ".png", LogoMaxBytes, originalName, content)
+func (s *Service) StoreLogo(mimeType string, content io.Reader) (string, error) {
+	return s.storeUpload("logo-", LogoMaxBytes, mimeType, content)
 }
 
 // StoreBackground writes an uploaded background picture into UploadsDir
-// and returns its file name, bg-<16 hex digits><extension>, with ".jpg"
-// for a client file name without extension. The limit is
-// BackgroundMaxBytes.
-func (s *Service) StoreBackground(originalName string, content io.Reader) (string, error) {
-	return s.storeUpload("bg-", ".jpg", BackgroundMaxBytes, originalName, content)
+// as StoreLogo does and returns its file name, bg-<16 hex
+// digits><extension>. The limit is BackgroundMaxBytes.
+func (s *Service) StoreBackground(mimeType string, content io.Reader) (string, error) {
+	return s.storeUpload("bg-", BackgroundMaxBytes, mimeType, content)
 }
 
-func (s *Service) storeUpload(prefix, defaultExt string, limit int64, originalName string, content io.Reader) (string, error) {
-	ext := toLower(posixExtname(originalName))
-	if ext == "" {
-		ext = defaultExt
+func (s *Service) storeUpload(prefix string, limit int64, mimeType string, content io.Reader) (string, error) {
+	ext, ok := imageExtensions[mimeType]
+	if !ok {
+		return "", ErrInvalidImageType
 	}
 	random := make([]byte, 8)
 	if _, err := io.ReadFull(s.opts.Rand, random); err != nil {
 		return "", wrap("make a file name", err)
 	}
-	name := prefix + hex.EncodeToString(random) + wellFormed(ext)
+	name := prefix + hex.EncodeToString(random) + ext
 	path := filepath.Join(s.opts.UploadsDir, name)
 	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o666)
 	if err != nil {

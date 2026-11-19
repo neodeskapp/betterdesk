@@ -42,7 +42,7 @@
     },
     {
      "path": "data.loginBgImageUrl",
-     "pattern": "^[9aA+/_=-]{28}\\.[9aA+/_=-]{4}$"
+     "pattern": "^[9aA+/_=-]{28}\\.[9aA+/_=-]{3}$"
     },
     {
      "path": "revision",
@@ -50,7 +50,7 @@
     },
     {
      "path": "url",
-     "pattern": "^[9aA+/_=-]{28}\\.[9aA+/_=-]{4}$"
+     "pattern": "^[9aA+/_=-]{28}\\.[9aA+/_=-]{3}$"
     }
    ],
    "body": {

@@ -127,13 +127,13 @@ field". Both are the route's business.
 
 | Route | Field | Go |
 |---|---|---|
-| `POST .../branding/upload-logo` | `logo` | `branding.AcceptImageUpload(type)` false: 400 "Invalid file type". `s.StoreLogo(name, body)`: `ErrFileTooLarge` is 400 "File too large (max 2 MB)", other errors 400 with the message. Then `s.RemovePreviousLogo(stored)`, audit `branding_logo_upload` "Uploaded logo: <stored>", answer `{success, url: "/uploads/<stored>"}` |
+| `POST .../branding/upload-logo` | `logo` | `branding.AcceptImageUpload(type)` false: 400 "Invalid file type". `s.StoreLogo(type, body)` (the file gets the extension of the type): `ErrFileTooLarge` is 400 "File too large (max 2 MB)", other errors 400 with the message. Then `s.RemovePreviousLogo(stored)`, audit `branding_logo_upload` "Uploaded logo: <stored>", answer `{success, url: "/uploads/<stored>"}` |
 | `POST .../branding/upload-background` | `background`, text field `target` | As the logo with `s.StoreBackground` and "(max 8 MB)". Then `s.ApplyBackground(ctx, trimmed target, url)`. Answer `{success, url, applied, data: settings or null, revision}` with `revision` only when applied. Audit `branding_bg_upload` "Uploaded and applied background: <stored> (<target>)" or "Uploaded background: <stored>" |
 | `GET .../branding/backgrounds` | | `s.ListBackgrounds()` as `data`; an error is 500 |
 | `POST /api/settings/fonts/upload` | `font`, text field `family` | `branding.AcceptFontUpload(name, type)` false: 400 "Invalid font file type". More than `FontMaxBytes`: 400 "File too large (max 5 MB)". `s.UploadFont(family field or Undefined, name, bytes)`: errors are 400 with the message. Audit `font_upload` "Uploaded font: <family field, or the file name without extension, trimmed>", answer `{success, data}` |
 
-The uploads folder is served as `/uploads/` without a session, and the
-stored extension is the client's (BUGS I9).
+The uploads folder is served as `/uploads/` without a session; a logo or
+background has the extension of its type, whatever the client named it.
 
 ## Fonts
 

@@ -79,7 +79,7 @@ func (h *handlers) uploadLogo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	b := h.d.Branding
-	stored, err := b.StoreLogo(up.File.OriginalName, bytes.NewReader(up.File.Buffer))
+	stored, err := b.StoreLogo(up.File.MIMEType, bytes.NewReader(up.File.Buffer))
 	if err != nil {
 		failMessage(w, r, http.StatusBadRequest, err, "Upload failed")
 		return
@@ -110,7 +110,7 @@ func (h *handlers) uploadBackground(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	b := h.d.Branding
-	stored, err := b.StoreBackground(up.File.OriginalName, bytes.NewReader(up.File.Buffer))
+	stored, err := b.StoreBackground(up.File.MIMEType, bytes.NewReader(up.File.Buffer))
 	if err != nil {
 		failMessage(w, r, http.StatusBadRequest, err, "Upload failed")
 		return

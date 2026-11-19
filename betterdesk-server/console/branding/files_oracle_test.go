@@ -179,6 +179,9 @@ type filesReplay struct {
 	google *fakeGoogle
 	data   any
 	clock  time.Time
+	// renamed counts the uploads stored under another name than Node's
+	// (BUGS I9, see renameAsNode)
+	renamed int
 }
 
 func newFilesReplay(t *testing.T) *filesReplay {
@@ -361,11 +364,11 @@ func failure(status int, message string) (int, string) {
 
 // uploadLogo does what POST /api/settings/branding/upload-logo does with
 // one file in the field "logo".
-func (r *filesReplay) uploadLogo(name, mimeType string, content []byte, audit *[]any) (int, string) {
+func (r *filesReplay) uploadLogo(mimeType string, content []byte, audit *[]any) (int, string) {
 	if !AcceptImageUpload(mimeType) {
 		return failure(400, "Invalid file type")
 	}
-	stored, err := r.s.StoreLogo(name, bytes.NewReader(content))
+	stored, err := r.s.StoreLogo(mimeType, bytes.NewReader(content))
 	if errors.Is(err, ErrFileTooLarge) {
 		return failure(400, "File too large (max 2 MB)")
 	}
@@ -379,11 +382,11 @@ func (r *filesReplay) uploadLogo(name, mimeType string, content []byte, audit *[
 
 // uploadBackground does what POST
 // /api/settings/branding/upload-background does.
-func (r *filesReplay) uploadBackground(name, mimeType string, content []byte, target any, audit *[]any) (int, string) {
+func (r *filesReplay) uploadBackground(mimeType string, content []byte, target any, audit *[]any) (int, string) {
 	if !AcceptImageUpload(mimeType) {
 		return failure(400, "Invalid file type")
 	}
-	stored, err := r.s.StoreBackground(name, bytes.NewReader(content))
+	stored, err := r.s.StoreBackground(mimeType, bytes.NewReader(content))
 	if errors.Is(err, ErrFileTooLarge) {
 		return failure(400, "File too large (max 8 MB)")
 	}
@@ -461,14 +464,15 @@ func (r *filesReplay) uploadSteps() {
 			fields := property(step, "fields")
 			switch kind := get("kind"); kind {
 			case "logo":
-				status, body = r.uploadLogo(name, mimeType, content, &audit)
+				status, body = r.uploadLogo(mimeType, content, &audit)
 			case "background":
-				status, body = r.uploadBackground(name, mimeType, content, property(fields, "target"), &audit)
+				status, body = r.uploadBackground(mimeType, content, property(fields, "target"), &audit)
 			case "font":
 				status, body = r.uploadFont(name, mimeType, content, property(fields, "family"), &audit)
 			default:
 				t.Fatalf("step %d: unknown kind %s", i, kind)
 			}
+			body = r.renameAsNode(body, audit, property(entry, "body"), mimeType)
 			if parsed, err := parseJSON(body); err == nil {
 				if url, ok := property(parsed, "url").(string); ok {
 					last = url
@@ -652,7 +656,13 @@ func (r *filesReplay) supporters() {
 func TestOracleFiles(t *testing.T) {
 	r := newFilesReplay(t)
 	t.Run("fonts", func(t *testing.T) { r.t = t; r.fontSteps() })
-	t.Run("uploads", func(t *testing.T) { r.t = t; r.uploadSteps() })
+	t.Run("uploads", func(t *testing.T) {
+		r.t = t
+		r.uploadSteps()
+		if r.renamed < 10 {
+			t.Errorf("%d uploads stored under another name than Node's, the recording has more (BUGS I9)", r.renamed)
+		}
+	})
 	t.Run("themes", func(t *testing.T) { r.t = t; r.themes() })
 	t.Run("supporters", func(t *testing.T) { r.t = t; r.supporters() })
 }

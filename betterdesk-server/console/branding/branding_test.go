@@ -1151,37 +1151,37 @@ func TestUploads(t *testing.T) {
 	}
 
 	// the test's random source counts up from 0123456789abcdef
-	for i, tc := range []struct{ original, ext string }{
-		{"Photo.PNG", ".png"}, {"noext", ".png"}, {".hidden", ".png"}, {"page.html", ".html"}, {"a.b.SVG", ".svg"}, {"x.", "."},
+	for i, tc := range []struct{ mimeType, ext string }{
+		{"image/png", ".png"}, {"image/jpeg", ".jpg"}, {"image/gif", ".gif"}, {"image/webp", ".webp"}, {"image/svg+xml", ".svg"}, {"image/png", ".png"},
 	} {
 		want := "logo-0123456789abcde" + string("f0123456789"[i]) + tc.ext
 		if i > 0 {
 			want = "logo-0123456789abcdf" + string("0123456789"[i-1]) + tc.ext
 		}
-		name, err := s.StoreLogo(tc.original, strings.NewReader("data"))
+		name, err := s.StoreLogo(tc.mimeType, strings.NewReader("data"))
 		if err != nil || name != want {
-			t.Errorf("StoreLogo(%q) = %q, %v; want %q", tc.original, name, err, want)
+			t.Errorf("StoreLogo(%q) = %q, %v; want %q", tc.mimeType, name, err, want)
 		}
 		if data, err := os.ReadFile(filepath.Join(s.opts.UploadsDir, name)); err != nil || string(data) != "data" {
 			t.Errorf("the stored logo %s: %q, %v", name, data, err)
 		}
 	}
-	if name, err := s.StoreBackground("wall", strings.NewReader("x")); err != nil || name != "bg-0123456789abcdf5.jpg" {
+	if name, err := s.StoreBackground("image/jpeg", strings.NewReader("x")); err != nil || name != "bg-0123456789abcdf5.jpg" {
 		t.Errorf("StoreBackground = %q, %v", name, err)
 	}
 
 	// the limits: exactly the limit is fine, one byte more is not and leaves no file
 	before, _ := os.ReadDir(s.opts.UploadsDir)
-	if _, err := s.StoreLogo("big.png", bytes.NewReader(make([]byte, LogoMaxBytes+1))); !errors.Is(err, ErrFileTooLarge) {
+	if _, err := s.StoreLogo("image/png", bytes.NewReader(make([]byte, LogoMaxBytes+1))); !errors.Is(err, ErrFileTooLarge) {
 		t.Errorf("a logo over the limit: %v", err)
 	}
-	if _, err := s.StoreBackground("big.jpg", bytes.NewReader(make([]byte, BackgroundMaxBytes+1))); !errors.Is(err, ErrFileTooLarge) {
+	if _, err := s.StoreBackground("image/jpeg", bytes.NewReader(make([]byte, BackgroundMaxBytes+1))); !errors.Is(err, ErrFileTooLarge) {
 		t.Errorf("a background over the limit: %v", err)
 	}
 	if after, _ := os.ReadDir(s.opts.UploadsDir); len(after) != len(before) {
 		t.Errorf("a refused upload left a file: %d entries, were %d", len(after), len(before))
 	}
-	if name, err := s.StoreLogo("limit.gif", bytes.NewReader(make([]byte, LogoMaxBytes))); err != nil {
+	if name, err := s.StoreLogo("image/gif", bytes.NewReader(make([]byte, LogoMaxBytes))); err != nil {
 		t.Errorf("a logo of exactly the limit: %v", err)
 	} else if info, _ := os.Stat(filepath.Join(s.opts.UploadsDir, name)); info.Size() != LogoMaxBytes {
 		t.Errorf("stored %d bytes of %d", info.Size(), LogoMaxBytes)
