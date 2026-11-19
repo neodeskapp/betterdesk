@@ -114,6 +114,11 @@ var RouteRules = []Rule{
 	{Prefix: "/api/settings/restart-status"},
 	// The audit trail the Security audit page reads.
 	{Prefix: "/api/settings/audit", Section: "security-audit"},
+	// A person's own profile, the profile pictures and the person's own
+	// effective policy need a session only.
+	{Prefix: "/api/users/me"},
+	{Prefix: "/api/users/avatars"},
+	{Prefix: "/api/panel/access/effective"},
 }
 
 const apiPrefix = "/api/"

@@ -165,3 +165,18 @@ func TestSettingsAuditIsTheSecurityAuditsTrail(t *testing.T) {
 		t.Errorf("audit with security-audit at none: %+v", got)
 	}
 }
+
+// PA3 (F3): a person's own profile, the profile pictures and the person's
+// own effective policy need a session only; another account's picture
+// stays in the users section.
+func TestOwnProfileIsForEveryAccount(t *testing.T) {
+	// viewer, operator, guest_issuer, global_admin, server_admin
+	checkRouteCases(t, []routeCase{
+		{"GET", "/api/users/me/profile", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"PUT", "/api/users/me/profile", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/users/avatars", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/panel/access/effective", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/users/3/avatar", "", [5]string{"guard", "ok", "guard", "ok", "ok"}},
+		{"GET", "/api/users", "user.view", [5]string{"guard", "ok", "guard", "ok", "ok"}},
+	})
+}
