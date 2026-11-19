@@ -28,18 +28,18 @@ type handlers struct {
 func Register(d *kit.Deps) {
 	h := &handlers{db: d.Store, log: d.Log.Child("Tenants")}
 	r := d.Router
-	r.Get("/", h.list, requireAdmin)
-	r.Get("/{id}", h.get, requireAdmin)
-	r.Post("/", h.create, requireAdmin)
-	r.Patch("/{id}", h.update, requireAdmin)
-	r.Delete("/{id}", h.remove, requireAdmin)
-	r.Get("/{id}/devices", h.devices, requireAdmin)
-	r.Post("/{id}/devices", h.assignDevices, requireAdmin)
-	r.Delete("/{id}/devices/{deviceId}", h.removeDevice, requireAdmin)
-	r.Get("/{id}/users", h.users, requireAdmin)
-	r.Post("/{id}/users", h.assignUser, requireAdmin)
-	r.Delete("/{id}/users/{userId}", h.removeUser, requireAdmin)
-	r.Get("/{id}/stats", h.stats, requireAdmin)
+	r.Get("/", h.list, d.RequireAuth, requireAdmin)
+	r.Get("/{id}", h.get, d.RequireAuth, requireAdmin)
+	r.Post("/", h.create, d.RequireAuth, requireAdmin)
+	r.Patch("/{id}", h.update, d.RequireAuth, requireAdmin)
+	r.Delete("/{id}", h.remove, d.RequireAuth, requireAdmin)
+	r.Get("/{id}/devices", h.devices, d.RequireAuth, requireAdmin)
+	r.Post("/{id}/devices", h.assignDevices, d.RequireAuth, requireAdmin)
+	r.Delete("/{id}/devices/{deviceId}", h.removeDevice, d.RequireAuth, requireAdmin)
+	r.Get("/{id}/users", h.users, d.RequireAuth, requireAdmin)
+	r.Post("/{id}/users", h.assignUser, d.RequireAuth, requireAdmin)
+	r.Delete("/{id}/users/{userId}", h.removeUser, d.RequireAuth, requireAdmin)
+	r.Get("/{id}/stats", h.stats, d.RequireAuth, requireAdmin)
 }
 
 // failure is the group's error answer: {"error":"..."}.
@@ -56,8 +56,9 @@ type done struct {
 	OK bool `json:"ok"`
 }
 
-// requireAdmin lets super_admin, admin and global_admin through. Everyone
-// else gets 403, also someone who is not signed in.
+// requireAdmin lets super_admin, admin and global_admin through. Every
+// other signed-in account gets 403; d.RequireAuth in front of it answers
+// someone who is not signed in.
 func requireAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		role := ""
