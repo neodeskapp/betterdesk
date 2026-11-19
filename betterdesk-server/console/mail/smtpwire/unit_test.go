@@ -490,7 +490,9 @@ func TestDialSeveralAddresses(t *testing.T) {
 		}
 	})
 
-	t.Run("all refused: the error has no text", func(t *testing.T) {
+	// Node's error had no text here; the first address's failure is the
+	// text (BUGS EM11)
+	t.Run("all refused: the error is the first address's", func(t *testing.T) {
 		var tried []string
 		err := Verify(context.Background(), Options{
 			Host: "smtp.example.test", Port: 2525, Resolver: resolver, Families: both, Shuffle: noShuffle, Hostname: testHostname,
@@ -499,7 +501,7 @@ func TestDialSeveralAddresses(t *testing.T) {
 				return nil, refusal(syscall.ECONNREFUSED)
 			},
 		})
-		wantError(t, err, "", "ESOCKET")
+		wantError(t, err, "connect ECONNREFUSED 2001:db8::1:2525", "ESOCKET")
 		if want := []string{"[2001:db8::1]:2525", "192.0.2.1:2525", "192.0.2.2:2525"}; !reflect.DeepEqual(tried, want) {
 			t.Errorf("tried %q, want %q", tried, want)
 		}

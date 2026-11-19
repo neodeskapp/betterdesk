@@ -192,7 +192,7 @@ func (c *client) dial(t target) (net.Conn, error) {
 	ctx, cancel := context.WithDeadline(c.ctx, c.connectionDeadline)
 	defer cancel()
 	port := strconv.Itoa(c.port)
-	failed := 0
+	var first *Error
 	for i, address := range t.addresses {
 		attempt := ctx
 		stop := context.CancelFunc(func() {})
@@ -210,18 +210,17 @@ func (c *client) dial(t target) (net.Conn, error) {
 		if ctx.Err() != nil {
 			return nil, &Error{Message: "Connection timeout", Code: "ETIMEDOUT", Command: "CONN"}
 		}
-		if len(t.addresses) == 1 {
-			return nil, &Error{Message: socketErrorText("connect", err, address+":"+port), Code: "ESOCKET", Command: "CONN", cause: err}
+		if first == nil {
+			first = &Error{Message: socketErrorText("connect", err, address+":"+port), Code: "ESOCKET", Command: "CONN", cause: err}
 		}
-		failed++
 	}
-	if failed == 0 {
+	if first == nil {
 		// the system knew the name a moment ago and now has no address for it
 		return nil, &Error{Message: "getaddrinfo ENOTFOUND " + c.host, Code: "ESOCKET", Command: "CONN"}
 	}
-	// Node reports the failures of several addresses as one error without
-	// a text of its own
-	return nil, &Error{Message: "", Code: "ESOCKET", Command: "CONN"}
+	// When every address failed, the failure of the first one tried is the
+	// text: Node reports them as one error without a text of its own
+	return nil, first
 }
 
 // socketErrorText is Node's text for a failed socket call: the call, the

@@ -304,6 +304,17 @@ func replaySession(t *testing.T, sc *scenario, roots *x509.CertPool) {
 	opts := scenarioOptions(t, sc, s, roots)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
+	if strings.HasPrefix(sc.Name, "connect/dns/two-records-all-refused/") {
+		// BUGS EM11: where every address refused, nodemailer's error had no
+		// text; the Go client gives the first address's. The addresses are
+		// tried in the order of the records here, so the first is known.
+		opts.Shuffle = func(int, func(i, j int)) {}
+		fixed := *sc
+		outcome := *sc.Outcome.Error
+		outcome.Message = "connect ECONNREFUSED " + sc.DNS.A[0] + ":" + strconv.Itoa(sc.Options.Port)
+		fixed.Outcome.Error = &outcome
+		sc = &fixed
+	}
 
 	var info *Info
 	var err error
