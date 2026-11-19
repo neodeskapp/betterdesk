@@ -95,10 +95,12 @@ func TestSMTPSettings(t *testing.T) {
 		// port 1 of loopback, and the answer is the connection's error.
 		expect(do("admin", "POST", "/api/automation/smtp/test", "{}"), 200, `{"success":false,"error":"connect ECONNREFUSED 127.0.0.1:1"}`, "test against a closed port")
 
-		// Only a host: the defaults of the other members
-		expect(do("admin", "PUT", "/api/automation/smtp", `{"host":" mail.example.test "}`), 200, `{"success":true}`, "save with a host only")
-		if rows := stored(); !strings.Contains(rows, `\"host\":\"mail.example.test\",\"port\":587,`) || !strings.Contains(rows, `\"from\":\"betterdesk@localhost\"`) {
-			t.Errorf("a host alone is stored as %s", rows)
+		// A host alone has no sender and is refused (BUGS EM9); with a
+		// sender the other members take their defaults
+		expect(do("admin", "PUT", "/api/automation/smtp", `{"host":" mail.example.test "}`), 400, `{"error":"SMTP sender is required"}`, "save with a host only")
+		expect(do("admin", "PUT", "/api/automation/smtp", `{"host":" mail.example.test ","from":"alerts@example.com"}`), 200, `{"success":true}`, "save with a host and a sender")
+		if rows := stored(); !strings.Contains(rows, `\"host\":\"mail.example.test\",\"port\":587,`) || !strings.Contains(rows, `\"from\":\"alerts@example.com\"`) {
+			t.Errorf("a host and a sender are stored as %s", rows)
 		}
 	})
 }

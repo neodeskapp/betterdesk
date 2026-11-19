@@ -35,12 +35,12 @@ func TestSMTPSettings(t *testing.T) {
 		if res := admin.Do("PUT", path, `{"port":1}`, json...); res.Status != http.StatusBadRequest || res.Body != `{"error":"SMTP host is required"}` {
 			t.Errorf("save without host: %d %s", res.Status, res.Body)
 		}
-		save := `{"host":" 127.0.0.1 ","port":"1","user":"contract","pass":"smtp-test-pass","alert_email":" ops@example.com ","tlsVerify":false}`
+		save := `{"host":" 127.0.0.1 ","port":"1","user":"contract","pass":"smtp-test-pass","from":"console@example.com","alert_email":" ops@example.com ","tlsVerify":false}`
 		if res := admin.Do("PUT", path, save, json...); res.Status != http.StatusOK || res.Body != `{"success":true}` {
 			t.Errorf("save: %d %s", res.Status, res.Body)
 		}
 		res := admin.Do("GET", path, "")
-		want := `{"configured":true,"host":"127.0.0.1","port":1,"secure":false,"user":"contract","pass":"********","from":"betterdesk@localhost","alert_email":"ops@example.com","tlsVerify":false}`
+		want := `{"configured":true,"host":"127.0.0.1","port":1,"secure":false,"user":"contract","pass":"********","from":"console@example.com","alert_email":"ops@example.com","tlsVerify":false}`
 		if res.Body != want {
 			t.Errorf("read after save:\n%s\nwant\n%s", res.Body, want)
 		}
