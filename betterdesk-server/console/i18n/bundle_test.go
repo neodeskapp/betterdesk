@@ -523,8 +523,8 @@ func TestDelete(t *testing.T) {
 	if got := strings.Join(b.Available().Keys(), " "); got != "en pl" {
 		t.Errorf("available after delete: %q", got)
 	}
-	// A language without a file: success, nothing happens.
-	if r := b.Delete("fr"); !r.Success {
+	// A language without a file that is not loaded: not found.
+	if r := b.Delete("fr"); r.Success || !r.NotFound || r.Error != "Language not found" {
 		t.Errorf("Delete(fr) = %+v", r)
 	}
 	// Deleted and saved again: at the end of the list.

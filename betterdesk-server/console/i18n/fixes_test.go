@@ -80,6 +80,10 @@ var vectorFixes = []vectorFix{
 	// The missing keys of a code that is not a language code are refused.
 	{"L14", "panel-edge.json", missingRefusesBadCodes},
 	{"L14", "panel-real.json", missingRefusesBadCodes},
+
+	// Deleting a language that has no file and is not loaded is 404.
+	{"L18", "routes-edge.json", deleteWithoutFileNotFound},
+	{"L18", "routes-upload.json", deleteWithoutFileNotFound},
 }
 
 // fixedVectors reads a file of vectors with every fix applied.
@@ -223,6 +227,26 @@ func nullFileNoLanguage(t testing.TB, file any) int {
 			if setAll(c, "setCookie", []any{}, "persisted", []any{}, "sessionPreferred", nil) || changed {
 				n++
 			}
+		}
+	}
+	return n
+}
+
+// --- L18 ---
+
+func deleteWithoutFileNotFound(t testing.TB, file any) int {
+	n := 0
+	for _, c := range list(file, "vectors") {
+		code, isDelete := strings.CutPrefix(str(c, "path"), "/api/i18n/")
+		if str(c, "method") != "DELETE" || !isDelete || !ValidCode(code) || code == "en" || code == "pl" {
+			continue
+		}
+		if _, err := os.Stat(filepath.Join("testdata", str(file, "label"), code+".json")); !os.IsNotExist(err) {
+			continue
+		}
+		changed := answerJSON(c, 404, `{"success":false,"error":"Language not found"}`)
+		if setAll(c, "audit", []any{}, "removed", []any{}) || changed {
+			n++
 		}
 	}
 	return n

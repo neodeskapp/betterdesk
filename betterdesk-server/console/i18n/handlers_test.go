@@ -687,3 +687,31 @@ func TestPanelMissingRefusesCodeWithOtherCharacters(t *testing.T) {
 		t.Errorf("de: %d %s", got.status, got.body)
 	}
 }
+
+// Deleting a language that has no file and is not loaded answers 404 and
+// writes no audit entry; a loaded language whose file is gone is still
+// forgotten (BUGS.md L18).
+func TestDeleteUnknownLanguageIsNotFound(t *testing.T) {
+	dir := copyDir(t, "testdata/lang-upload")
+	h, rec, _ := handlersFor(t, dir, time.Now())
+	srv := httptest.NewServer(routes(h))
+	defer srv.Close()
+	for _, code := range []string{"fr", "yy", "abcdefgh", "en-US"} {
+		got := do(t, srv.URL, "DELETE", "/api/i18n/"+code, nil, nil, 0)
+		if got.status != 404 || got.body != `{"success":false,"error":"Language not found"}` {
+			t.Errorf("%s: %d %s", code, got.status, got.body)
+		}
+	}
+	if len(rec.audit) != 0 {
+		t.Errorf("audit entries for languages that do not exist: %v", rec.audit)
+	}
+	if err := os.Remove(filepath.Join(dir, "de.json")); err != nil {
+		t.Fatal(err)
+	}
+	if got := do(t, srv.URL, "DELETE", "/api/i18n/de", nil, nil, 0); got.status != 200 || h.Bundle.Has("de") {
+		t.Errorf("de, loaded without a file: %d %s", got.status, got.body)
+	}
+	if !reflect.DeepEqual(rec.audit, [][2]string{{"language_deleted", "Language de deleted"}}) {
+		t.Errorf("audit %v", rec.audit)
+	}
+}

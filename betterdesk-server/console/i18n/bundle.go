@@ -589,10 +589,12 @@ func allKeys(v any, prefix string) []string {
 }
 
 // Result is the outcome of Save or Delete. Error holds the text the
-// console's API sends when Success is false.
+// console's API sends when Success is false; NotFound is set when the
+// language to delete does not exist.
 type Result struct {
-	Success bool
-	Error   string
+	Success  bool
+	Error    string
+	NotFound bool
 }
 
 // Save writes texts to <code>.json and loads the language again.
@@ -621,7 +623,8 @@ func (b *Bundle) Save(code string, texts any) Result {
 }
 
 // Delete removes <code>.json and forgets the language. English and Polish
-// cannot be deleted. Deleting a language that has no file succeeds.
+// cannot be deleted. A language that has no file and is not loaded is not
+// found.
 func (b *Bundle) Delete(code string) Result {
 	if !ValidCode(code) {
 		return Result{Error: "Invalid language code format"}
@@ -635,9 +638,14 @@ func (b *Bundle) Delete(code string) Result {
 	if err != nil {
 		return Result{Error: err.Error()}
 	}
-	if err := b.stat(path); err == nil {
+	switch err := b.stat(path); {
+	case err == nil:
 		if err := b.remove(path); err != nil {
 			return Result{Error: nodeFSMessage(err, "unlink", path)}
+		}
+	case errors.Is(err, fs.ErrNotExist):
+		if _, loaded := b.translations[code]; !loaded {
+			return Result{Error: "Language not found", NotFound: true}
 		}
 	}
 	delete(b.translations, code)

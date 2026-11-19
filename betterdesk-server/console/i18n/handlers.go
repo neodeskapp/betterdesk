@@ -246,7 +246,11 @@ func (h *Handlers) Upload(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) Delete(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
 	if result := h.Bundle.Delete(code); !result.Success {
-		fail(w, r, http.StatusBadRequest, result.Error)
+		status := http.StatusBadRequest
+		if result.NotFound {
+			status = http.StatusNotFound
+		}
+		fail(w, r, status, result.Error)
 		return
 	}
 	h.forgetStrings(code)

@@ -95,8 +95,8 @@ func TestBundleOnFSReadsAsOnDisk(t *testing.T) {
 	if !inFS.Has("de") || stringify(inFS.Merged("de"), "") != texts {
 		t.Error("a failed write in FS changed the loaded language")
 	}
-	// A language without a file is forgotten, as on disk
-	if r := inFS.Delete("yy"); !r.Success {
+	// A language without a file is not found, as on disk
+	if r := inFS.Delete("yy"); r.Success || !r.NotFound {
 		t.Errorf("Delete of a language without a file in FS: %+v", r)
 	}
 	// On disk the same writes go through
