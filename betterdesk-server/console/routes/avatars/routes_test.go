@@ -169,9 +169,21 @@ func latin1Bytes(s string) string {
 	return string(b)
 }
 
+// changedByFixes are the replayed requests a bug fix answers differently
+// on purpose, with the status Go gives now.
+var changedByFixes = map[string]struct {
+	status int
+	cache  string
+}{
+	// AV3: user 5's picture row has no bytes, which Node served as an
+	// empty picture
+	"/api/users/5/avatar": {404, "private, no-cache"},
+}
+
 // TestOracleRoutes replays the requests the Node route answered with
 // pictures in its database (testdata/nodeoracle/routes.js): status, the
-// headers the route sets, and the body must be the same.
+// headers the route sets, and the body must be the same, but for the
+// requests in changedByFixes.
 func TestOracleRoutes(t *testing.T) {
 	f, err := os.Open("testdata/routes.json.gz")
 	if err != nil {
@@ -228,6 +240,12 @@ func TestOracleRoutes(t *testing.T) {
 		}
 		got := w.send(cookie, q.Method, q.Target, headers)
 		statuses[got.Code]++
+		if fixed, ok := changedByFixes[q.Target]; ok && q.As != "anon" {
+			if got.Code != fixed.status || got.Header().Get("Cache-Control") != fixed.cache {
+				t.Errorf("%s: %d, Cache-Control %q; the fix answers %d, %q", what, got.Code, got.Header().Get("Cache-Control"), fixed.status, fixed.cache)
+			}
+			continue
+		}
 		if got.Code != q.Answer.Status {
 			t.Errorf("%s: status %d, Node %d", what, got.Code, q.Answer.Status)
 			continue
@@ -369,6 +387,29 @@ func TestPictureOfTheLargestID(t *testing.T) {
 		rec := w.send(w.cookie, http.MethodGet, "/api/users/2147483647/avatar", nil)
 		if rec.Code != 200 || rec.Body.String() != "GIF89a" {
 			t.Fatalf("the picture of id 2147483647: %d %q", rec.Code, rec.Body.String())
+		}
+	})
+}
+
+// A picture row without bytes is no picture: 404, also for a browser
+// that sends the row's version.
+func TestPictureWithoutBytesIsNotFound(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db, nil)
+		w.signIn(w.user("bob"))
+		alice := w.user("alice")
+		w.picture(alice, "image/png", []byte{}, "bbbbbbbbbbbbbbbb", "oidc", "")
+		target := fmt.Sprintf("/api/users/%d/avatar", alice)
+		for _, headers := range []http.Header{nil, {"If-None-Match": {`"bbbbbbbbbbbbbbbb"`}}} {
+			for _, method := range []string{http.MethodGet, http.MethodHead} {
+				rec := w.send(w.cookie, method, target+"?v=bbbbbbbbbbbbbbbb", headers)
+				if rec.Code != 404 || rec.Header().Get("Cache-Control") != "private, no-cache" || rec.Header().Get("ETag") == `"bbbbbbbbbbbbbbbb"` {
+					t.Errorf("%s with %v: %d %q, Cache-Control %q, ETag %q", method, headers, rec.Code, rec.Body.String(), rec.Header().Get("Cache-Control"), rec.Header().Get("ETag"))
+				}
+				if method == http.MethodGet && rec.Body.String() != `{"success":false,"error":"not_found"}` {
+					t.Errorf("%s with %v: body %q", method, headers, rec.Body.String())
+				}
+			}
 		}
 	})
 }

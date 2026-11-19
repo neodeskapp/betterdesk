@@ -73,8 +73,8 @@ func (h *handlers) picture(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	header := w.Header()
-	// A row without bytes is served as it is: an empty picture
-	if row == nil || !servable(lowerASCII(row.MimeType)) {
+	// A row without bytes is no picture
+	if row == nil || len(row.Data) == 0 || !servable(lowerASCII(row.MimeType)) {
 		header.Set("Cache-Control", "private, no-cache")
 		kit.Fail(w, r, http.StatusNotFound, "not_found")
 		return
