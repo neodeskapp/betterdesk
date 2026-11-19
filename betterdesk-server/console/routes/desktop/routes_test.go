@@ -95,11 +95,11 @@ func TestSaveAndLoad(t *testing.T) {
 			t.Errorf("layout of the other account: %s", got)
 		}
 
-		// A wallpaper alone empties the layout; widgets alone keep the wallpaper
+		// A wallpaper alone keeps the layout; widgets alone keep the wallpaper
 		if got := admin.Do("POST", "/api/desktop/layout", `{"wallpaper":"solid:#1a2B3c"}`); got.Status != 200 {
 			t.Fatalf("save the wallpaper alone: %d %s", got.Status, got.Body)
 		}
-		if got := admin.Do("GET", "/api/desktop/layout", ""); got.Body != `{"success":true,"data":{"widgets":[],"wallpaper":"solid:#1a2B3c"}}` {
+		if got := admin.Do("GET", "/api/desktop/layout", ""); got.Body != `{"success":true,"data":{"widgets":`+stored+`,"wallpaper":"solid:#1a2B3c"}}` {
 			t.Errorf("after the wallpaper alone: %s", got.Body)
 		}
 		if got := admin.Do("POST", "/api/desktop/layout", `{"widgets":[{"id":"w2","type":"note","x":0,"y":0,"w":1,"h":1}]}`); got.Status != 200 {
@@ -112,7 +112,7 @@ func TestSaveAndLoad(t *testing.T) {
 		if got := admin.Do("POST", "/api/desktop/layout", `[{"id":"w3","type":"note","x":0,"y":0,"w":1,"h":1}]`); got.Status != 200 {
 			t.Fatalf("save a list: %d %s", got.Status, got.Body)
 		}
-		if got := setting(t, w, "desktop_layout_1"); got != "[]" {
+		if got := setting(t, w, "desktop_layout_1"); got != `[{"id":"w2","type":"note","x":0,"y":0,"w":1,"h":1}]` {
 			t.Errorf("stored layout after a list as body: %s", got)
 		}
 		if got := admin.Do("POST", "/api/desktop/layout", `{"widgets":[],"wallpaper":""}`); got.Status != 200 {
@@ -385,4 +385,42 @@ func TestWallpaperNullClearsIt(t *testing.T) {
 			t.Errorf("load: %s", got.Body)
 		}
 	})
+}
+
+// TestWallpaperAloneKeepsTheLayout: a save without widgets, and a body
+// that is no object, leave the stored layout as it is, in the database
+// and in the fallback file.
+func TestWallpaperAloneKeepsTheLayout(t *testing.T) {
+	widgets := `[{"id":"w","type":"clock","x":0,"y":0,"w":1,"h":1}]`
+	eachDB(t, func(t *testing.T, w *routetest.World) {
+		admin := w.As("admin")
+		if got := admin.Do("POST", "/api/desktop/layout", `{"widgets":`+widgets+`}`); got.Status != 200 {
+			t.Fatal(got.Body)
+		}
+		for _, body := range []string{`{"wallpaper":"solid:#1a2B3c"}`, `{}`, `[{"id":"x","type":"note","x":0,"y":0,"w":1,"h":1}]`} {
+			if got := admin.Do("POST", "/api/desktop/layout", body); got.Status != 200 || got.Body != `{"success":true}` {
+				t.Fatalf("save %s: %d %s", body, got.Status, got.Body)
+			}
+			if got := setting(t, w, "desktop_layout_1"); got != widgets {
+				t.Errorf("stored layout after %s: %s", body, got)
+			}
+		}
+		if got := admin.Do("GET", "/api/desktop/layout", ""); got.Body != `{"success":true,"data":{"widgets":`+widgets+`,"wallpaper":"solid:#1a2B3c"}}` {
+			t.Errorf("load: %s", got.Body)
+		}
+	})
+
+	w := routetest.New(t, routetest.Options{})
+	admin := w.As("admin")
+	if _, err := w.DB.Exec(context.Background(), "DROP TABLE settings"); err != nil {
+		t.Fatal(err)
+	}
+	for _, body := range []string{`{"widgets":` + widgets + `}`, `{"wallpaper":"solid:#abc"}`} {
+		if got := admin.Do("POST", "/api/desktop/layout", body); got.Status != 200 {
+			t.Fatalf("save %s without the settings table: %d %s", body, got.Status, got.Body)
+		}
+	}
+	if got := admin.Do("GET", "/api/desktop/layout", ""); got.Body != `{"success":true,"data":{"widgets":`+widgets+`,"wallpaper":"solid:#abc"}}` {
+		t.Errorf("load from the fallback file: %s", got.Body)
+	}
 }

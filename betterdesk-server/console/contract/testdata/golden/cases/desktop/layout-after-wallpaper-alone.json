@@ -40,7 +40,30 @@
     "json": {
      "data": {
       "wallpaper": "solid:#1a2B3c",
-      "widgets": []
+      "widgets": [
+       {
+        "h": 2,
+        "id": "w1",
+        "settings": {
+         "a": 2,
+         "b": 1,
+         "zone": "Europe/Berlin"
+        },
+        "type": "clock",
+        "w": 2,
+        "x": 0,
+        "y": 0
+       },
+       {
+        "h": 3,
+        "id": "w2",
+        "title": "Geräte <b>&amp;</b>",
+        "type": "devices",
+        "w": 4,
+        "x": 2.5,
+        "y": -1
+       }
+      ]
      },
      "success": true
     }

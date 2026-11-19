@@ -40,7 +40,16 @@
     "json": {
      "data": {
       "wallpaper": "",
-      "widgets": []
+      "widgets": [
+       {
+        "h": 2,
+        "id": "w5",
+        "type": "clock",
+        "w": 2,
+        "x": 0,
+        "y": 0
+       }
+      ]
      },
      "success": true
     }

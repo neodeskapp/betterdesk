@@ -5,7 +5,7 @@
 // and the wallpaper under desktop_wallpaper_<user id>. When the database
 // refuses the write, the layout goes to the file
 // DATA_DIR/desktop-layouts/<user id>.json, which is read when the database
-// holds no layout.
+// holds no layout. A save changes only what its body names.
 package desktop
 
 import (
@@ -100,22 +100,20 @@ func validWallpaper(v any) bool {
 }
 
 // save answers POST /api/desktop/layout with the body {widgets,
-// wallpaper}. Without widgets the layout is stored empty; without
-// wallpaper the stored one stays, and a wallpaper of null or "" takes it
-// away.
+// wallpaper}. Without widgets the stored layout stays, as it does for a
+// body that is no object; without wallpaper the stored one stays, and a
+// wallpaper of null or "" takes it away.
 func (h *handlers) save(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
 	object, _ := body.(*goapi.Object)
 	widgets, wallpaper := object.Get("widgets"), object.Get("wallpaper")
-	if object.Has("widgets") && !validWidgets(widgets) {
+	hasWidgets := object.Has("widgets")
+	if hasWidgets && !validWidgets(widgets) {
 		kit.Fail(w, r, http.StatusBadRequest, "Invalid widget layout")
 		return
 	}
-	if !goapi.Truthy(widgets) {
-		widgets = []any{}
-	}
 	payload := jsreq.Stringify(widgets)
-	if jsreq.Length(payload) > maxLayoutSize {
+	if hasWidgets && jsreq.Length(payload) > maxLayoutSize {
 		kit.Fail(w, r, http.StatusRequestEntityTooLarge, "Layout too large")
 		return
 	}
@@ -125,7 +123,10 @@ func (h *handlers) save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := strconv.FormatInt(kit.UserID(r), 10)
-	err := setSetting(r.Context(), h.store, layoutKey(user), payload)
+	var err error
+	if hasWidgets {
+		err = setSetting(r.Context(), h.store, layoutKey(user), payload)
+	}
 	if err == nil && object.Has("wallpaper") {
 		stored := wallpaper
 		if stored == nil {
@@ -152,7 +153,15 @@ func (h *handlers) fallbackPath(user string) string {
 	return filepath.Join(h.dataDir, "desktop-layouts", user+".json")
 }
 
+// writeFallback writes the layout file. Without widgets (nil) the file
+// keeps the widgets it has.
 func (h *handlers) writeFallback(user string, widgets, wallpaper any) error {
+	if widgets == nil {
+		widgets = []any{}
+		if kept, ok := goapi.Dig(h.readFallback(user), "widgets").([]any); ok {
+			widgets = kept
+		}
+	}
 	if !goapi.Truthy(wallpaper) {
 		wallpaper = ""
 	}
