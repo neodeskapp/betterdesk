@@ -135,10 +135,12 @@ func isBufferObject(v any) (string, bool) {
 }
 
 // sqliteArgs binds values as better-sqlite3 did for a statement with n
-// placeholders: numbers as doubles (NaN as NULL), text, Buffers as BLOBs,
-// null and undefined as NULL; an array gives one value per element; an
-// object is a set of named parameters, which the statements here do not
-// have; a boolean cannot be bound.
+// placeholders: numbers (NaN as NULL), text, Buffers as BLOBs, null and
+// undefined as NULL; an array gives one value per element; an object is a
+// set of named parameters, which the statements here do not have; a
+// boolean cannot be bound. A whole number up to 2^53-1 either way is bound
+// as an integer, so a text column gets "7" and not "7.0"; other numbers
+// are doubles.
 func sqliteArgs(n int, values ...any) ([]any, error) {
 	args := make([]any, 0, len(values))
 	object := false
@@ -147,9 +149,12 @@ func sqliteArgs(n int, values ...any) ([]any, error) {
 		case nil:
 			args = append(args, nil)
 		case float64:
-			if math.IsNaN(x) {
+			switch {
+			case math.IsNaN(x):
 				args = append(args, nil)
-			} else {
+			case x == math.Trunc(x) && math.Abs(x) <= maxSafeInteger:
+				args = append(args, int64(x))
+			default:
 				args = append(args, x)
 			}
 		case string:

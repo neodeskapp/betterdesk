@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/branding"
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
@@ -545,6 +547,12 @@ func compareArchives(t *testing.T, goArchive, nodeArchive []byte) {
 				gd = bytes.Replace(gd, []byte(line+"\n"), nil, 1)
 			}
 		}
+		sizeMayDiffer := false
+		if g.name == "console/data.json" {
+			asNode := dumpAsNodeWroteIt(gd)
+			sizeMayDiffer = !bytes.Equal(asNode, gd)
+			gd = asNode
+		}
 		if !bytes.Equal(gd, nd) {
 			// An archive holds secrets: the failure names sizes and the
 			// first differing offset, never the content.
@@ -554,10 +562,39 @@ func compareArchives(t *testing.T, goArchive, nodeArchive []byte) {
 			}
 			t.Errorf("entry %s differs: %d and %d bytes, first difference at byte %d", g.name, len(gd), len(nd), at)
 		}
-		if g.name != "manifest.json" && g.name != "README.txt" && !bytes.Equal(g.header, n.header) {
+		gh, nh := g.header, n.header
+		if sizeMayDiffer {
+			gh, nh = withoutSize(gh), withoutSize(nh)
+		}
+		if g.name != "manifest.json" && g.name != "README.txt" && !bytes.Equal(gh, nh) {
 			t.Errorf("entry %s: tar headers differ", g.name)
 		}
 	}
+}
+
+// bigIntegerText is an integer past 2^53-1 that Go's SQLite dump writes as
+// text.
+var bigIntegerText = regexp.MustCompile(`"-?[0-9]{16,}"`)
+
+// dumpAsNodeWroteIt is Go's dump with the values Go writes otherwise than
+// Node on purpose put back the way Node wrote them: an integer past
+// 2^53-1 on SQLite is its exact text in Go's dump, an inexact JavaScript
+// number in Node's (BUGS.md BK2).
+func dumpAsNodeWroteIt(dump []byte) []byte {
+	return bigIntegerText.ReplaceAllFunc(dump, func(quoted []byte) []byte {
+		n, err := strconv.ParseInt(string(quoted[1:len(quoted)-1]), 10, 64)
+		if err != nil || (n <= maxSafeInteger && n >= -maxSafeInteger) {
+			return quoted
+		}
+		return []byte(jsbind.NumberString(float64(n)))
+	})
+}
+
+// withoutSize is a tar header without its size field.
+func withoutSize(h []byte) []byte {
+	h = bytes.Clone(h)
+	copy(h[124:136], bytes.Repeat([]byte{' '}, 12))
+	return h
 }
 
 func restoreResultJSON(r RestoreResult) string {
@@ -663,11 +700,28 @@ func TestArchivesRoundTripWithNode(t *testing.T) {
 			}
 			base := outcomes["node archive, node restore"]
 			t.Logf("node restore result: %s", base.result)
+			// Where Go's archive holds a table exactly and Node's does not,
+			// a restore of Go's archive, by either program, brings it back
+			// as it was (BUGS.md BK2: integers past 2^53 on SQLite).
+			exactInGoArchive := map[string]bool{}
+			if dialect == "sqlite" {
+				exactInGoArchive["device_telemetry"] = true
+			}
 			for label, o := range outcomes {
 				if o.result != base.result {
 					t.Errorf("%s: result %s, node restore of the node archive %s", label, o.result, base.result)
 				}
-				diffSnapshots(t, label, base.tables, o.tables)
+				expect := base.tables
+				if strings.HasPrefix(label, "go archive") {
+					expect = map[string][]string{}
+					for table, rows := range base.tables {
+						if exactInGoArchive[table] {
+							rows = want[table]
+						}
+						expect[table] = rows
+					}
+				}
+				diffSnapshots(t, label, expect, o.tables)
 				for name, content := range wantFiles {
 					if strings.HasPrefix(name, "keys/db_v2") {
 						continue
@@ -677,13 +731,12 @@ func TestArchivesRoundTripWithNode(t *testing.T) {
 					}
 				}
 			}
-			// What the restore cannot bring back as it was, on both sides:
-			// the tables with a warning; on SQLite the settings (an integer
-			// in a text column comes back as "7.0", broken UTF-8 as U+FFFD)
-			// and an integer above 2^53, which the dump holds as a
-			// JavaScript number (BUGS.md BK2).
-			// On PostgreSQL every time keeps its milliseconds only: the dump
-			// holds JavaScript dates (BUGS.md BK3).
+			// What Node's round trip cannot bring back as it was: the tables
+			// with a warning; on SQLite the settings (broken UTF-8 comes
+			// back as U+FFFD, which JSON cannot carry) and an integer above
+			// 2^53, which Node's dump holds as a JavaScript number (BUGS.md
+			// BK2). On PostgreSQL every time keeps its milliseconds only:
+			// Node's dump holds JavaScript dates (BUGS.md BK3).
 			lossy := map[string]bool{}
 			if dialect == "sqlite" {
 				lossy["settings"], lossy["device_telemetry"] = true, true

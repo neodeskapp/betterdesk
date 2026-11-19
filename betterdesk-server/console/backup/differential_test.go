@@ -102,24 +102,23 @@ func TestSnapshotMatchesNode(t *testing.T) {
 	}
 }
 
-// snapshotRestoreDifferences are the tables Go restores otherwise than
-// Node on purpose, by dialect, case and table, with the rows Go writes
-// (times masked).
-var snapshotRestoreDifferences = map[string]string{
+// snapshotRestoreDifferences are the rows Go restores otherwise than Node
+// on purpose, by dialect, case and table: each pair turns a piece of
+// Node's rows (times masked) into what Go writes there.
+var snapshotRestoreDifferences = map[string][][2]string{
 	// BK11: a rule's permissions are stored as JSON text once, not as the
 	// JSON text of their JSON text
-	"sqlite/odd values/strategies": strings.Join([]string{
-		`1|'g-1'|'rule'|''|''|1|'{"view":true}'|'<time>'|'<time>'`,
-		`2|'s1'|'a'|''|''|0|'{"x":1}'|'<time>'|'<time>'`,
-		`3|'s2'|'b'|''|''|1|'{"y":true}'|'<time>'|'<time>'`,
-		`4|'s3'|'c'|''|''|1|'{}'|'<time>'|'<time>'`,
-	}, "\n"),
-	"postgres/odd values/strategies": strings.Join([]string{
-		`(1,g-1,rule,"","",t,"{""view"":true}","<time>","<time>")`,
-		`(2,s1,a,"","",f,"{""x"":1}","<time>","<time>")`,
-		`(3,s2,b,"","",t,"{""y"":true}","<time>","<time>")`,
-		`(4,s3,c,"","",f,{},"<time>","<time>")`,
-	}, "\n"),
+	"sqlite/odd values/strategies": {
+		{`'"{\"x\":1}"'`, `'{"x":1}'`},
+		{`'"{\"y\":true}"'`, `'{"y":true}'`},
+	},
+	"postgres/odd values/strategies": {
+		{`"""{\\""x\\"":1}"""`, `"{""x"":1}"`},
+		{`"""{\\""y\\"":true}"""`, `"{""y"":true}"`},
+	},
+	// BK2: a whole number goes into a text column as "5", not "5.0"
+	"sqlite/odd values/settings":    {{`'b'|'5.0'|`, `'b'|'5'|`}},
+	"sqlite/odd values/user_groups": {{`|'5.0'|'num'|`, `|'5'|'num'|`}},
 }
 
 func TestSnapshotRestoreMatchesNode(t *testing.T) {
@@ -187,9 +186,16 @@ func TestSnapshotRestoreMatchesNode(t *testing.T) {
 					}
 					want, have := tablesOf(t, nodeDst, tables), tablesOf(t, goDst, tables)
 					for _, table := range tables {
-						if fixed, ok := snapshotRestoreDifferences[dialect+"/"+c.name+"/"+table]; ok {
+						if pairs, ok := snapshotRestoreDifferences[dialect+"/"+c.name+"/"+table]; ok {
+							fixed := want[table]
+							for _, p := range pairs {
+								if !strings.Contains(fixed, p[0]) {
+									t.Errorf("table %s: Node's rows have no %s", table, p[0])
+								}
+								fixed = strings.ReplaceAll(fixed, p[0], p[1])
+							}
 							if have[table] != fixed {
-								t.Errorf("table %s:\n go:   %s\n want: %s (Node: %s)", table, have[table], fixed, want[table])
+								t.Errorf("table %s:\n go:   %s\n want: %s", table, have[table], fixed)
 							}
 							continue
 						}

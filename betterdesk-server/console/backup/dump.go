@@ -24,7 +24,7 @@ import (
 // the old console's driver handed it to JSON.stringify:
 //
 //	                SQLite                    PostgreSQL
-//	integer         number (inexact past 2^53) int2, int4: number; int8, numeric: string
+//	integer         number (string past 2^53) int2, int4: number; int8, numeric: string
 //	real            number                    float4: its short form; float8: number
 //	text            string                    string
 //	blob, bytea     {"__buf__":"<base64>"}    {"__buf__":"<base64>"}
@@ -165,12 +165,18 @@ func dumpSQLiteTable(ctx context.Context, db *store.DB, table string) ([]byte, e
 	return out.Bytes(), nil
 }
 
-// sqliteValueJSON is the JSON of a value better-sqlite3 returned.
+// sqliteValueJSON is the JSON of a value better-sqlite3 returned, but an
+// integer past 2^53-1 either way, which a JSON number does not carry
+// exactly to the reader, is its decimal text; a column of integer or
+// numeric affinity turns that text back into the integer on restore.
 func sqliteValueJSON(v any) []byte {
 	switch x := v.(type) {
 	case nil:
 		return []byte("null")
 	case int64:
+		if x > maxSafeInteger || x < -maxSafeInteger {
+			return jsQuote(nil, strconv.FormatInt(x, 10))
+		}
 		raw, _ := jsbind.CellOf(x).MarshalJSON()
 		return raw
 	case float64:

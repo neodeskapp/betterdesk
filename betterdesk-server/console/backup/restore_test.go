@@ -544,6 +544,56 @@ func TestRestoreDropsTheListOfPictures(t *testing.T) {
 	})
 }
 
+// BK2: a full backup on SQLite brings integers back exactly, those past
+// 2^53 too, and a whole number bound into a text column stays "7".
+func TestSQLiteNumbersComeBackAsTheyWere(t *testing.T) {
+	ctx := context.Background()
+	src := newInstall(t, "sqlite")
+	mustExec(t, src.db, `INSERT INTO device_telemetry (device_id, memory_total_bytes, memory_used_bytes, cpu_usage_percent) VALUES ('d1', 9007199254740993, -9007199254740995, 2.0)`)
+	archive, _, err := src.service(t, "x").CreateFullBackup(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	files, err := ExtractTarGz(archive, Limits{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	dump, _ := files.Get("console/data.json")
+	if !strings.Contains(string(dump), `"memory_used_bytes":"-9007199254740995","memory_total_bytes":"9007199254740993"`) {
+		t.Errorf("the dump does not hold the integers exactly: %s", telemetryOf(string(dump)))
+	}
+	dst := newInstall(t, "sqlite")
+	if res, err := dst.service(t, "x").RestoreFullBackup(ctx, archive, RestoreOptions{Database: true}); err != nil || len(res.Warnings) != 0 {
+		t.Fatalf("restore: %+v %v", res, err)
+	}
+	want := snapshot(t, src.db)["device_telemetry"]
+	if got := snapshot(t, dst.db)["device_telemetry"]; strings.Join(got, "\n") != strings.Join(want, "\n") || !strings.Contains(want[0], "|-9007199254740995|9007199254740993|") {
+		t.Errorf("device_telemetry:\n got  %q\n want %q", got, want)
+	}
+
+	// numbers a dump holds for text columns
+	parsed := parsedJSON(t, `{"tables":{"settings":[{"key":"whole","value":7},{"key":"fraction","value":7.5},{"key":"big","value":1e21},{"key":"negative","value":-3}]}}`)
+	if _, err := ImportAllTables(ctx, dst.db, parsed); err != nil {
+		t.Fatal(err)
+	}
+	rows, err := readStrings(ctx, dst.db, `SELECT key || '=' || value || ':' || typeof(value) FROM settings ORDER BY key`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := strings.Join(rows, ","); got != "big=1.0e+21:text,fraction=7.5:text,negative=-3:text,whole=7:text" {
+		t.Errorf("settings: %s", got)
+	}
+}
+
+// telemetryOf is the device_telemetry part of a dump, for a failure.
+func telemetryOf(dump string) string {
+	i := strings.Index(dump, `"device_telemetry":`)
+	if i < 0 {
+		return "(no device_telemetry)"
+	}
+	return dump[i:min(len(dump), i+300)]
+}
+
 func parsedJSON(t *testing.T, text string) any {
 	t.Helper()
 	v, err := branding.ParseJSON([]byte(text))
