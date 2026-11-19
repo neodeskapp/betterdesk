@@ -76,10 +76,10 @@ func TestTargetValuesOfTheWrongType(t *testing.T) {
 		// What the web app sends, and the forms of a number the old routes took
 		status, answer := send("POST", "/api/network/targets", `{"name":"Printer","host":"10.1.2.3","check_type":"tcp","port":"9100","interval_ms":30000,"timeout_ms":0,"enabled":0}`)
 		var created struct {
-			ID         int64    `json:"id"`
-			Port       *float64 `json:"port"`
-			TimeoutMs  float64  `json:"timeout_ms"`
-			IntervalMs float64  `json:"interval_ms"`
+			ID         int64           `json:"id"`
+			Port       *float64        `json:"port"`
+			TimeoutMs  float64         `json:"timeout_ms"`
+			IntervalMs float64         `json:"interval_ms"`
 			Enabled    json.RawMessage `json:"enabled"`
 		}
 		if err := json.Unmarshal([]byte(answer), &created); status != 201 || err != nil || created.Port == nil || *created.Port != 9100 || created.TimeoutMs != 5000 || created.IntervalMs != 30000 || !isFlag(created.Enabled, false) {
@@ -109,11 +109,11 @@ func TestTargetValuesOfTheWrongType(t *testing.T) {
 		}
 		status, answer = send("PATCH", target, `{"name":"Printer 2","host":null,"port":null,"timeout_ms":2500,"interval_ms":0,"enabled":true}`)
 		var updated struct {
-			Name       string   `json:"name"`
-			Host       *string  `json:"host"`
-			Port       *float64 `json:"port"`
-			TimeoutMs  float64  `json:"timeout_ms"`
-			IntervalMs float64  `json:"interval_ms"`
+			Name       string          `json:"name"`
+			Host       *string         `json:"host"`
+			Port       *float64        `json:"port"`
+			TimeoutMs  float64         `json:"timeout_ms"`
+			IntervalMs float64         `json:"interval_ms"`
 			Enabled    json.RawMessage `json:"enabled"`
 		}
 		if err := json.Unmarshal([]byte(answer), &updated); status != 200 || err != nil || updated.Name != "Printer 2" || updated.Host != nil || updated.Port != nil || updated.TimeoutMs != 2500 || updated.IntervalMs != 0 || !isFlag(updated.Enabled, true) {
@@ -135,4 +135,29 @@ func isFlag(raw json.RawMessage, on bool) bool {
 func jsonInt(n int64) string {
 	out, _ := json.Marshal(n)
 	return string(out)
+}
+
+// An update that names no column answers the target as it is; 404 is for
+// an id no target has (BUGS.md NM2).
+func TestUpdateWithNothingAnswersTheTarget(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db, names{})
+		send := func(method, path, body string) (int, string) {
+			t.Helper()
+			rec := w.do("adm", method, path, &body, "")
+			return rec.Code, rec.Body.String()
+		}
+		status, created := send("POST", "/api/network/targets", `{"name":"Printer","host":"10.1.2.3","check_type":"ping"}`)
+		if status != 201 {
+			t.Fatalf("create: %d %s", status, created)
+		}
+		for _, body := range []string{`{}`, `{"note":"x","last_status":"up","id":7}`, `[{"name":"x"}]`} {
+			if status, answer := send("PATCH", "/api/network/targets/1", body); status != 200 || answer != created {
+				t.Errorf("update %s: %d %s, want 200 %s", body, status, answer, created)
+			}
+		}
+		if status, answer := send("PATCH", "/api/network/targets/2", `{}`); status != 404 || answer != `{"error":"Target not found"}` {
+			t.Errorf("update of a missing target: %d %s", status, answer)
+		}
+	})
 }

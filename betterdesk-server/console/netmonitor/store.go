@@ -411,8 +411,8 @@ type TargetChanges struct {
 }
 
 // UpdateTarget is updateNetworkTarget(id, data): it changes the named
-// columns and returns the row. It returns nil when there is nothing to
-// change, and when no target has the id.
+// columns and returns the row. With nothing to change it returns the row
+// as it is. It returns nil when no target has the id.
 func UpdateTarget(ctx context.Context, db *store.DB, id Param, data TargetChanges) (*Target, error) {
 	var sets []string
 	var params []Param
@@ -443,7 +443,7 @@ func UpdateTarget(ctx context.Context, db *store.DB, id Param, data TargetChange
 	set("last_check_at", data.LastCheckAt)
 	set("last_rtt_ms", data.LastRTT)
 	if len(sets) == 0 {
-		return nil, nil
+		return GetTarget(ctx, db, id)
 	}
 	sets = append(sets, "updated_at = "+store.NowSQL(db.Dialect()))
 	params = append(params, id)

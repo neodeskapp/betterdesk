@@ -472,6 +472,12 @@ func TestNodeSteps(t *testing.T) {
 				}
 				continue
 			}
+			if unchangedTargets[s.Name] {
+				if read := w.do(as, "GET", s.Path, nil, ""); rec.Code != http.StatusOK || rec.Body.String() != read.Body.String() {
+					t.Errorf("%s: %d %s, want 200 and the target, %s", s.Name, rec.Code, rec.Body.String(), read.Body.String())
+				}
+				continue
+			}
 			if enabledByZero[s.Name] {
 				want := strings.NewReplacer(`"enabled":1`, `"enabled":0`, `"enabled":true`, `"enabled":false`).Replace(s.Text)
 				if rec.Code != http.StatusCreated || maskTimes(rec.Body.String()) != maskTimes(want) {
@@ -517,6 +523,15 @@ func TestNodeSteps(t *testing.T) {
 var enabledByZero = map[string]bool{
 	"create with keys in another order": true,
 	"create odd: enabled zero":          true,
+}
+
+// unchangedTargets are the updates that name no column of a target that
+// exists. Node answered 404; the route answers the target as it is
+// (BUGS.md NM2), the same as a read of it.
+var unchangedTargets = map[string]bool{
+	"update: nothing":              true,
+	"update: unknown members only": true,
+	"update with a list body":      true,
 }
 
 // storeAsNode stores the target row Node answered a create (POST) or an

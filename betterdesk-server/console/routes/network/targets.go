@@ -302,8 +302,8 @@ func (h *handlers) getTarget(w http.ResponseWriter, r *http.Request) {
 }
 
 // updateTarget answers PATCH /targets/{id}: it changes the members the
-// body names. A body that names none answers 404, like an id no target
-// has (BUGS.md NM2).
+// body names and answers the target. A body that names none answers the
+// target as it is.
 func (h *handlers) updateTarget(w http.ResponseWriter, r *http.Request) {
 	changes, problem := targetChanges(kit.Body(r))
 	if problem != "" {
