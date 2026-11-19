@@ -490,6 +490,8 @@ var probeDifferences = map[string]string{
 	// the command no longer sees the name in capitals, which the script's
 	// command did not know
 	"ping in capitals": `{"success":true,"rtt_ms":"number","error":null}`,
+	// NM9: when every address of a name fails, the message is the first one's
+	"http name with a v6 and a v4 address": `{"success":false,"rtt_ms":null,"status_code":null,"error":"connect ENETUNREACH 2001:db8::1:8080 - Local (:::0)"}`,
 	// Go's server refuses a request line with a "%" that starts no escape
 	// before the handler sees it; Node's server passes it on. The check
 	// sends the same line to both.
@@ -1062,8 +1064,8 @@ func TestShellCharacters(t *testing.T) {
 }
 
 // The addresses of a name are tried with IPv4 and IPv6 taking turns. When
-// none connects the check fails with the empty message Node's error for
-// that had (BUGS.md NM9).
+// none connects the check fails with the message of the first address
+// (BUGS.md NM9).
 func TestHTTPCheckTriesFamiliesInTurn(t *testing.T) {
 	w := newWorld(t)
 	w.resolver.names["three.test"] = []string{"192.0.2.50", "192.0.2.51", "fd00::5"}
@@ -1082,7 +1084,7 @@ func TestHTTPCheckTriesFamiliesInTurn(t *testing.T) {
 	p := w.prober(false)
 	p.transport = transport
 	res := p.checkHTTP(context.Background(), "http://three.test:8080/", 5000)
-	if got := w.resultJSON(res); got != `{"success":false,"rtt_ms":null,"status_code":null,"error":""}` {
+	if got := w.resultJSON(res); got != `{"success":false,"rtt_ms":null,"status_code":null,"error":"connect ECONNREFUSED 192.0.2.50:8080"}` {
 		t.Errorf("result %s", got)
 	}
 	if got, want := fmt.Sprint(dialer.dialed), "[192.0.2.50:8080 [fd00::5]:8080 192.0.2.51:8080]"; got != want {

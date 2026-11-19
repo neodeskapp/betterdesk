@@ -463,11 +463,6 @@ type connectError struct {
 func (e *connectError) Error() string { return connectMessage(e.err, e.ip, e.port) }
 func (e *connectError) Unwrap() error { return e.err }
 
-// errEveryAddressFailed is the failure of a name with several addresses
-// when none of them could be connected to. Node's error for it has an
-// empty message.
-var errEveryAddressFailed = errors.New("")
-
 // certError is a server certificate that was not accepted.
 type certError struct {
 	message string
@@ -522,12 +517,14 @@ func (c *connector) dial(ctx context.Context, network, address string) (net.Conn
 		return conn, nil
 	}
 	ordered := takeTurns(addresses)
+	var first error
 	for i, ip := range ordered {
 		attemptCtx, cancel := ctx, context.CancelFunc(func() {})
 		if i < len(ordered)-1 {
 			attemptCtx, cancel = context.WithTimeout(ctx, attemptTimeout)
 		}
 		conn, err := c.dialer.DialContext(attemptCtx, network, net.JoinHostPort(ip, portText))
+		timedOut := attemptCtx.Err() != nil
 		cancel()
 		if err == nil {
 			return conn, nil
@@ -535,8 +532,15 @@ func (c *connector) dial(ctx context.Context, network, address string) (net.Conn
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
 		}
+		if first == nil {
+			if timedOut {
+				err = syscall.ETIMEDOUT
+			}
+			first = &connectError{err: err, ip: ip, port: port}
+		}
 	}
-	return nil, errEveryAddressFailed
+	// Every address failed: the message is the first one's
+	return nil, first
 }
 
 // takeTurns orders addresses so that IPv4 and IPv6 alternate, starting

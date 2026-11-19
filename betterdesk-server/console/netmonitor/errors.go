@@ -96,9 +96,6 @@ func connectMessage(err error, ip string, port int) string {
 
 // requestMessage is the message of a failed HTTP request.
 func requestMessage(err error) string {
-	if errors.Is(err, errEveryAddressFailed) {
-		return ""
-	}
 	var (
 		lookup  *ssrfguard.LookupError
 		connect *connectError
