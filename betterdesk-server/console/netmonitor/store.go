@@ -507,7 +507,8 @@ type HistoryFilter struct {
 }
 
 // CheckHistory is getNetworkCheckHistory(targetId, {limit, from, to}):
-// the checks of a target, the newest first.
+// the checks of a target, the newest first; checks of the same second in
+// the order they were stored, the last first.
 func CheckHistory(ctx context.Context, db store.Querier, targetID Param, filter HistoryFilter) ([]Check, error) {
 	query := "SELECT " + checkColumns + " FROM network_checks WHERE target_id = ?"
 	params := []Param{targetID}
@@ -519,7 +520,7 @@ func CheckHistory(ctx context.Context, db store.Querier, targetID Param, filter 
 		query += " AND checked_at <= ?"
 		params = append(params, *filter.To)
 	}
-	query += " ORDER BY checked_at DESC"
+	query += " ORDER BY checked_at DESC, id DESC"
 	if filter.Limit != nil {
 		query += " LIMIT ?"
 		params = append(params, *filter.Limit)
