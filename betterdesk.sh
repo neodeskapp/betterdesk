@@ -2511,6 +2511,10 @@ merge_console_env() {
     if [ "$fresh_install" = "true" ] && ! grep -q '^INIT_ADMIN_PASS=' "$env_file"; then
         printf 'INIT_ADMIN_PASS=%s\n' "$admin_password" >> "$env_file"
     fi
+    # The update channel the installer was given, over the template's main
+    if [ -n "${UPDATE_GITHUB_BRANCH_GIVEN:-}" ]; then
+        _upsert_env_line "$env_file" UPDATE_GITHUB_BRANCH "$UPDATE_GITHUB_BRANCH_GIVEN"
+    fi
 
     if ! BETTERDESK_ENV_FILE='' "$bin" upgrade-env --from "$env_file" --write --supervisor systemd >/dev/null; then
         print_error "betterdesk-server upgrade-env could not finish .env"
@@ -4048,7 +4052,7 @@ generate_ssl_certificates() {
 # env_file_value FILE KEY: the value the first line setting KEY has, trimmed.
 env_file_value() {
     [ -f "$1" ] || return 0
-    grep -m1 "^$2=" "$1" 2>/dev/null | cut -d= -f2- | tr -d '\r' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'
+    { grep -m1 "^$2=" "$1" 2>/dev/null || true; } | cut -d= -f2- | tr -d '\r' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'
 }
 
 # unit_environment UNIT: the KEY=VALUE pairs of a unit's Environment= lines,
@@ -4964,10 +4968,14 @@ do_install() {
 # GitHub repository configuration for online updates
 UPDATE_GITHUB_OWNER="${UPDATE_GITHUB_OWNER:-UNITRONIX}"
 UPDATE_GITHUB_REPO="${UPDATE_GITHUB_REPO:-BetterDesk}"
+# A channel given to the installer (install.sh passes the branch it
+# installed) wins over .env and is written into it
+UPDATE_GITHUB_BRANCH_GIVEN="${UPDATE_GITHUB_BRANCH:-}"
 UPDATE_GITHUB_BRANCH="${UPDATE_GITHUB_BRANCH:-main}"
 
 read_update_github_branch_from_env() {
     local env_file="${CONSOLE_PATH:-}/.env"
+    [ -n "${UPDATE_GITHUB_BRANCH_GIVEN:-}" ] && return 0
     if [ -n "$CONSOLE_PATH" ] && [ -f "$env_file" ]; then
         local val
         val=$(grep -E '^UPDATE_GITHUB_BRANCH=' "$env_file" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r"')
@@ -4994,6 +5002,7 @@ write_update_github_branch_to_env() {
         printf '\nUPDATE_GITHUB_BRANCH=%s\n' "$branch" >> "$env_file"
     fi
     UPDATE_GITHUB_BRANCH="$branch"
+    UPDATE_GITHUB_BRANCH_GIVEN="${UPDATE_GITHUB_BRANCH_GIVEN:+$branch}"
     export UPDATE_GITHUB_BRANCH
     print_success "Update channel saved (GitHub branch: $branch)"
     return 0

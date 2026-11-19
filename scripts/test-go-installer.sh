@@ -186,6 +186,58 @@ FAKE
     rm -rf "$TEST_DIR"
 )
 
+# UP8: an update channel given to the installer (install.sh passes the
+# branch it installed) goes into .env over the template's main, on a fresh
+# install and on an update; without one .env keeps what it has.
+test_update_channel_in_env() (
+    export UPDATE_GITHUB_BRANCH=dev
+    load
+    cat > "$RUSTDESK_PATH/betterdesk-server" <<'FAKE'
+#!/bin/bash
+# Stands in for the binary: upgrade-env --from FILE (the commands it has)
+if [ "$1 $2" = "env merge" ]; then
+    grep -q '^UPDATE_GITHUB_BRANCH=' "$4" 2>/dev/null || printf 'UPDATE_GITHUB_BRANCH=main\n' >> "$4"
+    echo '{"success":true,"mode":"merge","added":[]}'
+fi
+exit 0
+FAKE
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    ADMIN_PASSWORD='Channel-Test-1'
+    USE_POSTGRESQL=false
+    merge_console_env true >/dev/null
+    grep -qx 'UPDATE_GITHUB_BRANCH=dev' "$CONSOLE_PATH/.env" \
+        || fail "a fresh install from dev writes $(grep '^UPDATE_GITHUB_BRANCH=' "$CONSOLE_PATH/.env")"
+
+    # An update reads the channel before it downloads the binary
+    printf 'UPDATE_GITHUB_BRANCH=main\n' > "$CONSOLE_PATH/.env"
+    read_update_github_branch_from_env
+    [ "$UPDATE_GITHUB_BRANCH" = dev ] || fail "the given channel lost to the main in .env: $UPDATE_GITHUB_BRANCH"
+    merge_console_env false >/dev/null
+    [ "$(grep -c '^UPDATE_GITHUB_BRANCH=' "$CONSOLE_PATH/.env")" = 1 ] || fail "the key is in .env twice"
+    grep -qx 'UPDATE_GITHUB_BRANCH=dev' "$CONSOLE_PATH/.env" \
+        || fail "an update with a given channel keeps $(grep '^UPDATE_GITHUB_BRANCH=' "$CONSOLE_PATH/.env")"
+    rm -rf "$TEST_DIR"
+)
+
+test_update_channel_kept_without_one() (
+    unset UPDATE_GITHUB_BRANCH
+    load
+    cat > "$RUSTDESK_PATH/betterdesk-server" <<'FAKE'
+#!/bin/bash
+# Stands in for the binary: upgrade-env --from FILE (the commands it has)
+[ "$1 $2" = "env merge" ] && echo '{"success":true,"mode":"merge","added":[]}'
+exit 0
+FAKE
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    USE_POSTGRESQL=false
+    printf 'UPDATE_GITHUB_BRANCH=dev\nDEFAULT_ADMIN_PASSWORD=x\n' > "$CONSOLE_PATH/.env"
+    merge_console_env false >/dev/null
+    grep -qx 'UPDATE_GITHUB_BRANCH=dev' "$CONSOLE_PATH/.env" || fail "an update without a channel changed .env"
+    read_update_github_branch_from_env
+    [ "$UPDATE_GITHUB_BRANCH" = dev ] || fail "the channel of .env was not read: $UPDATE_GITHUB_BRANCH"
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
@@ -193,4 +245,6 @@ test_write_server_unit
 test_node_era_detection
 test_kill_stale_processes
 test_fresh_env_admin_password
+test_update_channel_in_env
+test_update_channel_kept_without_one
 echo "Go installer unit checks passed"

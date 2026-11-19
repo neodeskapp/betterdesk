@@ -678,6 +678,14 @@ install_native_mode() {
     if [ -n "$ADMIN_PASSWORD" ]; then
         export ADMIN_PASSWORD
     fi
+    # The update channel is the branch installed: dev updates from the dev
+    # pre-release, main from the newest release
+    case "$BETTERDESK_BRANCH" in
+        main|dev)
+            export UPDATE_GITHUB_BRANCH="$BETTERDESK_BRANCH"
+            log "Update channel: ${BETTERDESK_BRANCH}"
+            ;;
+    esac
     (cd "$repo_dir" && ./betterdesk.sh --auto --relay-servers "$relay")
 
     ok "Native installation finished. See ${repo_dir} for logs and credentials."

@@ -139,6 +139,57 @@ FAKE_ID
         || fail "piped native installer did not reach main: ${piped_output}"
 )
 
+# UP8: the native install passes the branch it installed to betterdesk.sh
+# as the update channel, so an install from dev updates from dev. A branch
+# that is no channel passes none, and betterdesk.sh keeps its default.
+test_native_update_channel() (
+    local temp_dir fake_bin
+    temp_dir=$(mktemp -d)
+    trap 'rm -rf "$temp_dir"' EXIT
+    fake_bin="$temp_dir/bin"
+    mkdir -p "$fake_bin"
+    cat > "$fake_bin/git" <<'FAKE_GIT'
+#!/usr/bin/env bash
+if [ "${1:-}" = "-C" ]; then
+    [ "${3:-}" = rev-parse ] && printf 'abc123\n'
+    exit 0
+fi
+if [ "${1:-}" = "clone" ]; then
+    destination="${!#}"
+    mkdir -p "$destination/.git"
+    printf '#!/usr/bin/env bash\nprintf "%%s" "${UPDATE_GITHUB_BRANCH:-}" > "%s/channel"\n' "$CHANNEL_DIR" > "$destination/betterdesk.sh"
+    exit 0
+fi
+exit 1
+FAKE_GIT
+    chmod +x "$fake_bin/git"
+    printf '#!/usr/bin/env bash\n[ "${1:-}" = "-u" ] && { printf "0\\n"; exit 0; }\nexec /usr/bin/id "$@"\n' > "$fake_bin/id"
+    chmod +x "$fake_bin/id"
+    export PATH="$fake_bin:$PATH" RELAY_SERVERS="127.0.0.1:21117" BETTERDESK_REPO="example/BetterDesk"
+    export CHANNEL_DIR="$temp_dir"
+    unset UPDATE_GITHUB_BRANCH
+
+    local branch expected got
+    for branch in dev main feature-x; do
+        case "$branch" in
+            dev|main) expected="$branch" ;;
+            *) expected="" ;;
+        esac
+        rm -f "$temp_dir/channel"
+        (
+            export INSTALL_DIR="$temp_dir/install-$branch" BETTERDESK_BRANCH="$branch"
+            set --
+            # shellcheck disable=SC1091
+            source "$SCRIPT_ROOT/install.sh"
+            install_native_mode
+        ) >/dev/null
+        got=$(cat "$temp_dir/channel" 2>/dev/null || echo "(betterdesk.sh did not run)")
+        [ "$got" = "$expected" ] \
+            || fail "native install from $branch passes update channel '$got', expected '$expected'"
+    done
+)
+
 test_bounded_go_commands
 test_dirty_native_clone
+test_native_update_channel
 printf 'PASS: native installer regression tests\n'
