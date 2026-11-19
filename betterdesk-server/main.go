@@ -25,6 +25,7 @@ import (
 	"github.com/unitronix/betterdesk-server/billing"
 	"github.com/unitronix/betterdesk-server/cdap"
 	"github.com/unitronix/betterdesk-server/config"
+	"github.com/unitronix/betterdesk-server/console/backup"
 	"github.com/unitronix/betterdesk-server/console/updater"
 	"github.com/unitronix/betterdesk-server/crypto"
 	"github.com/unitronix/betterdesk-server/db"
@@ -250,6 +251,7 @@ func main() {
 	log.Printf("Server public key: %s", kp.PublicKeyBase64())
 
 	// Initialize database
+	swapRestoredDatabase(cfg.DBPath)
 	database, err := db.Open(cfg.DBPath)
 	if err != nil {
 		log.Fatalf("Failed to open database: %v", err)
@@ -1191,4 +1193,23 @@ func parseFlags() *config.Config {
 	}
 
 	return cfg
+}
+
+// swapRestoredDatabase puts the SQLite file a restore left next to the
+// server database in its place, before anything opens the database. A
+// PostgreSQL DSN names no file, so there is nothing to swap. A failed swap
+// is logged and the server starts on the database it has.
+func swapRestoredDatabase(dsn string) {
+	lower := strings.ToLower(dsn)
+	if strings.HasPrefix(lower, "postgres://") || strings.HasPrefix(lower, "postgresql://") {
+		return
+	}
+	swapped, err := backup.SwapInRestoredDatabase(dsn)
+	if err != nil {
+		log.Printf("ERROR: restored database not put in place: %v", err)
+		return
+	}
+	if swapped {
+		log.Printf("Restored database put in place: %s", dsn)
+	}
 }
