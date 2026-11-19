@@ -18,19 +18,20 @@ type agentCreated struct {
 
 // createFromAgent answers POST /api/tickets/bd with the body {title,
 // description?, priority?, category?}: a ticket about the token's device,
-// made by "agent:<device id>" and assigned to nobody. A priority or a
-// category that is not one of the known texts becomes medium or general.
+// made by "agent:<device id>" and assigned to nobody. Title and
+// description are text. A priority or a category that is not one of the
+// known texts becomes medium or general.
 func (h *handlers) createFromAgent(w http.ResponseWriter, r *http.Request) {
 	device := kit.Device(r).DeviceID
 	body := kit.Body(r)
 	rawTitle := jsbind.Of(body.Get("title"))
-	title, empty, broken := text(rawTitle)
-	if broken {
-		h.serverError(w, r, "Agent create error", errNotText("title"))
+	title, ok := text(rawTitle)
+	if !ok {
+		fail(w, r, http.StatusBadRequest, "Title is required")
 		return
 	}
-	if empty {
-		fail(w, r, http.StatusBadRequest, "Title is required")
+	if !optionalText(jsbind.Of(body.Get("description"))) {
+		fail(w, r, http.StatusBadRequest, "Invalid description")
 		return
 	}
 	priority, category := "medium", "general"

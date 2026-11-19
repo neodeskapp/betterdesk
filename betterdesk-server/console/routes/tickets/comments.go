@@ -29,12 +29,8 @@ func (h *handlers) addComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	body := kit.Body(r)
-	content, empty, broken := text(jsbind.Of(body.Get("body")))
-	if broken {
-		h.serverError(w, r, "Comment error", errNotText("body"))
-		return
-	}
-	if empty {
+	content, ok := text(jsbind.Of(body.Get("body")))
+	if !ok {
 		fail(w, r, http.StatusBadRequest, "Comment body is required")
 		return
 	}

@@ -384,6 +384,35 @@ func TestAttachmentDataMustBeText(t *testing.T) {
 	})
 }
 
+// A title and a comment are text with something in it: any other value is
+// 400, on create and in a change, and a change keeps the title it had
+// (BUGS TK2).
+func TestTitleAndCommentThatAreNoText(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		g := newGroup(t, db)
+		g.want(g.do("admin", "POST", "/api/tickets", `{"title":"Kept"}`), 201, "")
+		title := `{"error":"Title is required"}`
+		for _, value := range []string{`5`, `true`, `["x"]`, `[]`, `{"a":1}`} {
+			g.want(g.do("admin", "POST", "/api/tickets", `{"title":`+value+`}`), 400, title)
+			g.want(g.do("admin", "POST", "/api/tickets/1/comments", `{"body":`+value+`}`), 400, `{"error":"Comment body is required"}`)
+		}
+		for _, value := range []string{`null`, `""`, `"  "`, `5`, `["x"]`} {
+			g.want(g.do("admin", "PATCH", "/api/tickets/1", `{"title":`+value+`}`), 400, title)
+		}
+		var kept string
+		if err := db.QueryRow(context.Background(), "SELECT title FROM tickets WHERE id = 1").Scan(&kept); err != nil || kept != "Kept" {
+			t.Errorf("title after the refused changes: %q, %v", kept, err)
+		}
+		for table, want := range map[string]int{"tickets": 1, "ticket_comments": 0} {
+			var n int
+			if err := db.QueryRow(context.Background(), "SELECT COUNT(*) FROM "+table).Scan(&n); err != nil || n != want {
+				t.Errorf("rows in %s: %d, %v; want %d", table, n, err, want)
+			}
+		}
+		g.want(g.do("admin", "PATCH", "/api/tickets/1", `{"title":" Renamed "}`), 200, `{"success":true}`)
+	})
+}
+
 // unread is a request body that counts what is read of it.
 type unread struct {
 	left int64

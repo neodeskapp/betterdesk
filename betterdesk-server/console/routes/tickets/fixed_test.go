@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
+	"github.com/unitronix/betterdesk-server/console/store"
 )
 
 // fix is a recorded request whose answer a bug fix changed on purpose: the
@@ -36,13 +37,40 @@ func fixKey(step replay.Step) string {
 // resend sends the step's request again with another body, which has to
 // get Node's answer to the recorded one.
 func resend(body string) func(t *testing.T, w *replay.World, step replay.Step) {
+	return resendBy(body, body)
+}
+
+// resendBy is resend with a body per database, for a value Node stored
+// differently on each; "" sends nothing on that database, where Node's
+// request stored nothing.
+func resendBy(sqlite, postgres string) func(t *testing.T, w *replay.World, step replay.Step) {
 	return func(t *testing.T, w *replay.World, step replay.Step) {
 		t.Helper()
-		got := w.Do(replay.Request{Role: step.Role, Method: step.Method, Path: step.Path, Body: replay.Text(body)})
+		body := w.DB.Pick(sqlite, postgres)
+		if body == "" {
+			return
+		}
+		got := w.Do(replay.Request{Role: step.Role, Method: step.Method, Path: step.Path, Body: replay.Text(body), Headers: step.Headers})
 		if got.Status != step.Status || replay.Normalize(got.Body) != replay.Normalize(step.Answer) {
 			t.Errorf("%s again as %s: %d %s, want Node's %d %s", step.Name, body, got.Status, got.Body, step.Status, step.Answer)
 		}
 	}
+}
+
+// write runs statements that write what Node's request wrote; <now> in
+// them is the database's clock.
+func write(queries ...string) func(t *testing.T, w *replay.World, step replay.Step) {
+	return func(t *testing.T, w *replay.World, step replay.Step) {
+		t.Helper()
+		for _, query := range queries {
+			w.Exec(strings.ReplaceAll(query, "<now>", store.NowSQL(w.DB.Dialect())), nil)
+		}
+	}
+}
+
+// updated is the audit entry of a change of a ticket by admin.
+func updated(ticket, columns string) string {
+	return "INSERT INTO audit_log (user_id, action, details, ip_address) VALUES (1, 'ticket_updated', 'Ticket #" + ticket + " updated: " + columns + "', '203.0.113.7')"
 }
 
 // resendFile uploads the bytes Node made of the recorded data, as base64.
@@ -73,8 +101,9 @@ func emptyFile(filename string) func(t *testing.T, w *replay.World, step replay.
 // fixKey.
 type fixList map[string]fix
 
-// ticketFixes are the changed steps of testdata/node_*.json.
-var ticketFixes = fixList{}
+// ticketFixes are the changed steps of testdata/node_*.json, deviceFixes
+// those of testdata/node_device_*.json.
+var ticketFixes, deviceFixes = fixList{}, fixList{}
 
 // add puts the steps of a bug fix on the list.
 func (l fixList) add(bug string, steps map[string]fix) bool {
@@ -106,6 +135,48 @@ var _ = ticketFixes.add("TK6", map[string]fix{
 	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":{"0":7,"length":1.5}}`:                            {status: 400, answer: dataRefused, after: resendFile("data.bin", 7)},
 	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":{"length":0}}`:                                    {status: 400, answer: dataRefused, after: emptyFile("data.bin")},
 	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":{"data":[1]}}`:                                    {status: 400, answer: dataRefused},
+})
+
+var (
+	titleRequired   = `{"error":"Title is required"}`
+	commentRequired = `{"error":"Comment body is required"}`
+)
+
+// TK2: a title and a comment are text with something in it, also in a
+// change.
+var _ = ticketFixes.add("TK2", map[string]fix{
+	`admin POST /api/tickets {"title":5}`:               {status: 400, answer: titleRequired},
+	`admin POST /api/tickets {"title":true}`:            {status: 400, answer: titleRequired},
+	`admin POST /api/tickets {"title":["x"]}`:           {status: 400, answer: titleRequired},
+	`admin POST /api/tickets {"title":[]}`:              {status: 400, answer: titleRequired},
+	`admin POST /api/tickets {"title":{"a":1}}`:         {status: 400, answer: titleRequired},
+	`admin PATCH /api/tickets/2 {"title":""}`:           {status: 400, answer: titleRequired, after: write("UPDATE tickets SET title = '', updated_at = <now> WHERE id = 2", updated("2", "title"))},
+	`admin PATCH /api/tickets/2 {"title":null}`:         {status: 400, answer: titleRequired},
+	`admin PATCH /api/tickets/2 {"title":5}`:            {status: 400, answer: titleRequired},
+	`admin PATCH /api/tickets/2 {"title":["x"]}`:        {status: 400, answer: titleRequired},
+	`admin POST /api/tickets/5/comments {"body":5}`:     {status: 400, answer: commentRequired},
+	`admin POST /api/tickets/5/comments {"body":true}`:  {status: 400, answer: commentRequired},
+	`admin POST /api/tickets/5/comments {"body":["x"]}`: {status: 400, answer: commentRequired},
+	`admin POST /api/tickets/5/comments {"body":{}}`:    {status: 400, answer: commentRequired},
+})
+
+// DV5: the title and the description of a device's ticket are text.
+var _ = deviceFixes.add("DV5", map[string]fix{
+	` POST /api/tickets/bd {"title":5}`:     {status: 400, answer: titleRequired},
+	` POST /api/tickets/bd {"title":true}`:  {status: 400, answer: titleRequired},
+	` POST /api/tickets/bd {"title":[]}`:    {status: 400, answer: titleRequired},
+	` POST /api/tickets/bd {"title":["a"]}`: {status: 400, answer: titleRequired},
+	` POST /api/tickets/bd {"title":{}}`:    {status: 400, answer: titleRequired},
+	` POST /api/tickets/bd {"title":"Description number","description":7}`: {status: 400, answer: `{"error":"Invalid description"}`,
+		after: resendBy(`{"title":"Description number","description":"7.0"}`, `{"title":"Description number","description":"7"}`)},
+	` POST /api/tickets/bd {"title":"Description zero","description":0}`:      {status: 400, answer: `{"error":"Invalid description"}`, after: resend(`{"title":"Description zero"}`)},
+	` POST /api/tickets/bd {"title":"Description false","description":false}`: {status: 400, answer: `{"error":"Invalid description"}`, after: resend(`{"title":"Description false"}`)},
+	` POST /api/tickets/bd {"title":"Description list","description":["a","b"]}`: {status: 400, answer: `{"error":"Invalid description"}`,
+		after: resendBy("", `{"title":"Description list","description":"{\"a\",\"b\"}"}`)},
+	` POST /api/tickets/bd {"title":"Description object","description":{"a":1}}`: {status: 400, answer: `{"error":"Invalid description"}`,
+		after: resendBy("", `{"title":"Description object","description":"{\"a\":1}"}`)},
+	` POST /api/tickets/bd {"title":"Description true","description":true}`: {status: 400, answer: `{"error":"Invalid description"}`,
+		after: resendBy("", `{"title":"Description true","description":"true"}`)},
 })
 
 // apply compares a step on the list with the answer its bug fix

@@ -122,11 +122,47 @@ func download(t *testing.T, step replay.Step, got replay.Answer) {
 // on SQLite and on PostgreSQL (testdata/node_device_sqlite.json,
 // testdata/node_device_postgres.json): tokens in every state, the list of
 // a device, tickets created with values of every JSON type, the rows they
-// wrote and the time they are due.
+// wrote and the time they are due. The steps the bug fixes change are
+// listed in deviceFixes (fixed_test.go).
 func TestNodeDeviceAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
-		w.Run(replay.Load(t, db, "node_device"), nil)
+		used := map[string]int{}
+		defer deviceFixes.unused(t, used)
+		w.Run(replay.Load(t, db, "node_device"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
+			return deviceFixes.apply(t, w, step, got, used)
+		})
+	})
+}
+
+// A device's ticket has a title and a description that are text; any
+// other value is refused, and nothing is stored (BUGS DV5).
+func TestAgentTicketWithANumberTitleIs400(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at) VALUES (?, ?, 5, 'device-a', '2999-01-01 00:00:00')",
+			[]any{"tok-device-a", "a70dc32ded6e642ec955672a88edb7cc9d6d9e2abb6bf78146a63491adb24155"})
+		device := map[string]string{"Authorization": "Bearer tok-device-a"}
+		for body, want := range map[string]string{
+			`{"title":5}`:                         `{"error":"Title is required"}`,
+			`{"title":true}`:                      `{"error":"Title is required"}`,
+			`{"title":["a"]}`:                     `{"error":"Title is required"}`,
+			`{"title":{"a":1}}`:                   `{"error":"Title is required"}`,
+			`{"title":"x","description":7}`:       `{"error":"Invalid description"}`,
+			`{"title":"x","description":false}`:   `{"error":"Invalid description"}`,
+			`{"title":"x","description":["a"]}`:   `{"error":"Invalid description"}`,
+			`{"title":"x","description":{"a":1}}`: `{"error":"Invalid description"}`,
+		} {
+			if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/bd", Body: replay.Text(body), Headers: device}); got.Status != 400 || got.Body != want {
+				t.Errorf("%s: %d %s, want 400 %s", body, got.Status, got.Body, want)
+			}
+		}
+		if rows := w.Rows("SELECT COUNT(*) AS n FROM tickets", nil); rows != `[{"n":0}]` {
+			t.Errorf("tickets stored: %s", rows)
+		}
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/bd", Body: replay.Text(`{"title":"x","description":null}`), Headers: device}); got.Status != 201 {
+			t.Errorf("a description of null: %d %s", got.Status, got.Body)
+		}
 	})
 }
 

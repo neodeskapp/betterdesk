@@ -189,19 +189,20 @@ func (h *handlers) stats(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, stats)
 }
 
-// text reads a body member the routes call .trim() on: the trimmed text
-// of a string. empty is true for a value that counts as missing
-// (!value || !value.trim()), and broken for a value that is neither empty
-// nor a text, on which .trim() threw.
-func text(v jsbind.Value) (trimmed string, empty, broken bool) {
-	switch {
-	case !v.Truthy():
-		return "", true, false
-	case !v.IsString():
-		return "", false, true
+// text reads a body member that has to be text with something in it, a
+// title or a comment: the trimmed text, and whether there is one. A value
+// that is no text has none.
+func text(v jsbind.Value) (trimmed string, ok bool) {
+	if !v.IsString() {
+		return "", false
 	}
 	trimmed = jsbind.Trim(v.Str())
-	return trimmed, trimmed == "", false
+	return trimmed, trimmed != ""
+}
+
+// optionalText reports whether a body member is text, null or missing.
+func optionalText(v jsbind.Value) bool {
+	return v.IsString() || v.IsNull() || v.IsUndefined()
 }
 
 type created struct {
@@ -219,12 +220,8 @@ type createdTicket struct {
 func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	rawTitle := jsbind.Of(body.Get("title"))
-	title, empty, broken := text(rawTitle)
-	if broken {
-		h.serverError(w, r, "Create error", errNotText("title"))
-		return
-	}
-	if empty {
+	title, ok := text(rawTitle)
+	if !ok {
 		fail(w, r, http.StatusBadRequest, "Title is required")
 		return
 	}
@@ -257,11 +254,6 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	h.log.Info("#" + number(id) + " created by " + user.Username + ": " + rawTitle.Str())
 	kit.JSON(w, r, http.StatusCreated, created{Success: true, Ticket: createdTicket{ID: id, Title: title}})
 }
-
-// errNotText is the TypeError of .trim() on a value that is no text.
-type errNotText string
-
-func (e errNotText) Error() string { return string(e) + ".trim is not a function" }
 
 type ticketDetail struct {
 	ticket
@@ -308,8 +300,8 @@ func (h *handlers) get(w http.ResponseWriter, r *http.Request) {
 
 // update answers PATCH /api/tickets/{id}: every member of the body that
 // names one of title, description, status, priority, category,
-// assigned_to, sla_due_at and device_id is written. Only status,
-// priority and device_id are checked.
+// assigned_to, sla_due_at and device_id is written. Status, priority,
+// device_id and the title are checked.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	t, err := ticketByID(r.Context(), h.db, ticketID(r, "id"))
 	if err != nil {
@@ -335,6 +327,11 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "Invalid device_id")
 		return
 	}
+	// A ticket keeps a title
+	if _, ok := text(jsbind.Of(body.Get("title"))); body.Has("title") && !ok {
+		fail(w, r, http.StatusBadRequest, "Title is required")
+		return
+	}
 
 	var changes []change
 	for _, column := range []string{"title", "description", "status", "priority", "category", "assigned_to", "sla_due_at", "device_id"} {
@@ -344,10 +341,6 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 		value := jsbind.Of(body.Get(column))
 		switch column {
 		case "title":
-			if !value.IsString() {
-				h.serverError(w, r, "Update error", errNotText("title"))
-				return
-			}
 			value = jsbind.String(jsbind.Trim(value.Str()))
 		case "device_id":
 			if trimmed := jsbind.Trim(value.Str()); trimmed != "" {
