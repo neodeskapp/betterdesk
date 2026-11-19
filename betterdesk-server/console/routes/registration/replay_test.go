@@ -594,10 +594,11 @@ func sameCalls(got, want []apiCall) bool {
 var axiosQuery = strings.NewReplacer("%2C", ",", "%3A", ":", "%24", "$")
 
 // openPanel opens /ws/panel-events as the admin, where the routes' events
-// arrive.
+// arrive. The socket takes a session only from a page of the console
+// itself, so the upgrade names the console as its Origin.
 func (p *replayer) openPanel() {
 	a := p.agent("admin")
-	header := http.Header{"Cookie": {a.cookieHeader()}}
+	header := http.Header{"Cookie": {a.cookieHeader()}, "Origin": {"http://" + p.world.Addr()}}
 	panel, res, err := wstest.Dial(p.world.Addr(), "/ws/panel-events", header)
 	if err != nil || panel == nil {
 		status := 0
