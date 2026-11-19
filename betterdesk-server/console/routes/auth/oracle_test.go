@@ -3,6 +3,7 @@ package auth_test
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -156,6 +157,23 @@ func TestLockoutAnswersOfNode(t *testing.T) {
 		readRecording(t, "lockout_"+dialectName(w.db)+".json", &rec)
 		seedRecording(w, rec.Seed)
 		for _, step := range rec.Steps {
+			if passwordNoText(step.Body) && step.Status == 500 {
+				// AR2: Node failed on a password that is not text; the
+				// console refuses it as a wrong one. The attempt and the
+				// entry that refusal writes go again, so the steps after it
+				// count the failures Node counted.
+				before := w.int(`SELECT COALESCE(MAX(id), 0) FROM login_attempts`)
+				beforeAudit := w.int(`SELECT COALESCE(MAX(id), 0) FROM audit_log`)
+				locked := w.int(`SELECT COUNT(*) FROM account_lockouts`)
+				got := w.agentFrom(step.IP).post("/api/auth/login", step.Body)
+				want(t, step.Label+" (AR2)", got, http.StatusUnauthorized, invalidCredentials)
+				w.exec(`DELETE FROM login_attempts WHERE id > ?`, before)
+				w.exec(`DELETE FROM audit_log WHERE id > ?`, beforeAudit)
+				if n := w.int(`SELECT COUNT(*) FROM account_lockouts`); n != locked {
+					t.Fatalf("%s: the refusal locked an account", step.Label)
+				}
+				continue
+			}
 			got := w.agentFrom(step.IP).post("/api/auth/login", step.Body)
 			wantBody := retryAfter.ReplaceAllStringFunc(step.Answer, func(m string) string { return `"retry_after":` + roundWait(m[14:]) })
 			gotBody := retryAfter.ReplaceAllStringFunc(got.body, func(m string) string { return `"retry_after":` + roundWait(m[14:]) })
@@ -196,6 +214,18 @@ func withoutSignInNames(rows []string) []string {
 		out[i] = signInName.ReplaceAllString(row, "${1}Username: <name>")
 	}
 	return out
+}
+
+// passwordNoText reports whether a sign-in body names a user and gives a
+// password that is not text.
+func passwordNoText(body string) bool {
+	var fields map[string]json.RawMessage
+	if json.Unmarshal([]byte(body), &fields) != nil {
+		return false
+	}
+	var name, password string
+	return json.Unmarshal(fields["username"], &name) == nil && fields["password"] != nil &&
+		json.Unmarshal(fields["password"], &password) != nil
 }
 
 // selectColumns are the column names of a recorded SELECT, in order.

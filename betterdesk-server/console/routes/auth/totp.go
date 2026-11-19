@@ -95,16 +95,13 @@ func (h *handlers) totpDisable(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusNotFound, kit.T(r, "users.not_found", nil))
 		return
 	}
-	// A password that is not text was a fault of the hash compare
-	text, isText := password.Str()
-	if !isText {
-		h.serverError(w, r, "TOTP disable error:", errNotText)
-		return
-	}
-	valid, err := h.authn.VerifyPassword(r.Context(), text, user.PasswordHash.String)
-	if err != nil {
-		h.serverError(w, r, "TOTP disable error:", err)
-		return
+	// A password that is not text is never the right one
+	valid := false
+	if text, isText := password.Str(); isText {
+		if valid, err = h.authn.VerifyPassword(r.Context(), text, user.PasswordHash.String); err != nil {
+			h.serverError(w, r, "TOTP disable error:", err)
+			return
+		}
 	}
 	if !valid {
 		kit.Fail(w, r, http.StatusUnauthorized, kit.T(r, "auth.invalid_credentials", nil))

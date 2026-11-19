@@ -73,11 +73,9 @@ func (h *handlers) changePassword(w http.ResponseWriter, r *http.Request) {
 	kit.OK(w, r, nil)
 }
 
-// replacePassword changes the password of the signed-in account. Values
-// that are not text are refused where the old console refused them, and
-// are a server error where it ran into one: a current password that is
-// not text once the account is found, a new one once the current password
-// was accepted.
+// replacePassword changes the password of the signed-in account. A current
+// password that is not text is a wrong one, and a new one that is not text
+// is refused, once the current one was accepted, as one too short.
 func (h *handlers) replacePassword(r *http.Request, current, next middleware.Value) error {
 	userID := kit.UserID(r)
 	currentText, currentIsText := current.Str()
@@ -93,7 +91,7 @@ func (h *handlers) replacePassword(r *http.Request, current, next middleware.Val
 		return authn.ErrUserNotFound
 	}
 	if !currentIsText {
-		return errNotText
+		return authn.ErrWrongPassword
 	}
 	valid, err := h.authn.VerifyPassword(r.Context(), currentText, user.PasswordHash.String)
 	if err != nil {
@@ -102,7 +100,7 @@ func (h *handlers) replacePassword(r *http.Request, current, next middleware.Val
 	if !valid {
 		return authn.ErrWrongPassword
 	}
-	return errNotText
+	return authn.ErrPasswordTooShort
 }
 
 // endOtherSessions ends the signed-in account's sessions but the one of

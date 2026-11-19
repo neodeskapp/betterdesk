@@ -73,8 +73,8 @@ func TestSecondFactor(t *testing.T) {
 		// Five wrong codes end a wait: the password starts a new one
 		a.post("/api/auth/login", login("alice", password))
 		want(t, "wrong recovery code", a.post("/api/auth/totp/verify", `{"recoveryCode":"0000-0000"}`), http.StatusUnauthorized, invalidCode)
-		// A recovery code that is not text was a fault
-		want(t, "recovery code as a number", a.post("/api/auth/totp/verify", `{"recoveryCode":12345678}`), http.StatusInternalServerError, serverErrorBody)
+		// A recovery code that is not text is a wrong one (BUGS.md AR2)
+		want(t, "recovery code as a number", a.post("/api/auth/totp/verify", `{"recoveryCode":12345678}`), http.StatusUnauthorized, invalidCode)
 		pending = a.sessionID()
 
 		// The right code, sent from another client than the password
@@ -103,6 +103,7 @@ func TestSecondFactor(t *testing.T) {
 			fmt.Sprintf("totp_failed|Method: totp|127.0.0.1|%d", alice),
 			fmt.Sprintf("totp_failed|Method: totp|127.0.0.1|%d", alice),
 			fmt.Sprintf("totp_failed|Method: totp|127.0.0.1|%d", alice),
+			fmt.Sprintf("totp_failed|Method: recovery|127.0.0.1|%d", alice),
 			fmt.Sprintf("totp_failed|Method: recovery|127.0.0.1|%d", alice),
 			fmt.Sprintf("login|User logged in (2FA: totp (local)); ip=127.0.0.1; ua=auth-test/1|127.0.0.1|%d", alice),
 		})
@@ -304,7 +305,7 @@ func TestTwoFactorEnrolment(t *testing.T) {
 		want(t, "disable without password", a.post("/api/auth/totp/disable", `{}`), http.StatusBadRequest, `{"success":false,"error":"Password is required"}`)
 		want(t, "disable with an empty password", a.post("/api/auth/totp/disable", `{"password":""}`), http.StatusBadRequest, `{"success":false,"error":"Password is required"}`)
 		want(t, "disable with a wrong password", a.post("/api/auth/totp/disable", `{"password":"wrong"}`), http.StatusUnauthorized, invalidCredentials)
-		want(t, "disable with a number", a.post("/api/auth/totp/disable", `{"password":12345}`), http.StatusInternalServerError, serverErrorBody)
+		want(t, "disable with a number", a.post("/api/auth/totp/disable", `{"password":12345}`), http.StatusUnauthorized, invalidCredentials)
 		want(t, "status still enabled", a.get("/api/auth/totp/status"), http.StatusOK, on)
 		want(t, "disable", a.post("/api/auth/totp/disable", fmt.Sprintf(`{"password":%q}`, password)), http.StatusOK, `{"success":true}`)
 		want(t, "status disabled", a.get("/api/auth/totp/status"), http.StatusOK, off)

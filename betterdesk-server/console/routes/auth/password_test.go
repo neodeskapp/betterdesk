@@ -65,12 +65,12 @@ func TestPasswordChangeRefusals(t *testing.T) {
 		{"wrong current password", change("not-the-password", otherPassword, otherPassword), 400, wrong},
 		{"wrong current password before a short new one", change("not-the-password", "short", "short"), 400, wrong},
 		{"new password of 7", change(password, "Short-7", "Short-7"), 400, short},
-		// Values that are not text: refused where the old console refused
-		// them, a server error where it ran into one
-		{"number as current password", fmt.Sprintf(`{"currentPassword":12345678,"newPassword":%q,"confirmPassword":%q}`, otherPassword, otherPassword), 500, serverErrorBody},
-		{"equal numbers as new password", fmt.Sprintf(`{"currentPassword":%q,"newPassword":123456789,"confirmPassword":123456789}`, password), 500, serverErrorBody},
+		// Values that are not text: a current password is a wrong one, a new
+		// one is too short (BUGS.md AR2)
+		{"number as current password", fmt.Sprintf(`{"currentPassword":12345678,"newPassword":%q,"confirmPassword":%q}`, otherPassword, otherPassword), 400, wrong},
+		{"equal numbers as new password", fmt.Sprintf(`{"currentPassword":%q,"newPassword":123456789,"confirmPassword":123456789}`, password), 400, short},
 		{"number as new password, wrong current one", `{"currentPassword":"not-the-password","newPassword":123456789,"confirmPassword":123456789}`, 400, wrong},
-		{"true as new password", fmt.Sprintf(`{"currentPassword":%q,"newPassword":true,"confirmPassword":true}`, password), 500, serverErrorBody},
+		{"true as new password", fmt.Sprintf(`{"currentPassword":%q,"newPassword":true,"confirmPassword":true}`, password), 400, short},
 	}
 	w := newWorld(t, nil, setup{trustProxy: "loopback"})
 	alice := w.addUser(user{name: "alice"})

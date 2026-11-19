@@ -106,12 +106,10 @@ func TestLoginWithValuesThatAreNoText(t *testing.T) {
 		refused("list as name", `{"username":["a",null,["b"]],"password":"x"}`, http.StatusInternalServerError, serverErrorBody)
 		refused("list of one as name", `{"username":["abc"],"password":"x"}`, http.StatusUnauthorized, invalidCredentials)
 		refused("object as name", `{"username":{"a":1},"password":"x"}`, http.StatusInternalServerError, serverErrorBody)
-		// A password that is not text is a server error where the password
-		// would have been compared
-		want(t, "number as password, unknown user", post(`{"username":"nobody","password":12345}`), http.StatusInternalServerError, serverErrorBody)
-		want(t, "number as password, local account", post(`{"username":"alice","password":12345}`), http.StatusInternalServerError, serverErrorBody)
-		want(t, "list as password", post(`{"username":"alice","password":["x"]}`), http.StatusInternalServerError, serverErrorBody)
-		// and a refusal where the account is refused before that
+		// A password that is not text is a wrong one (BUGS.md AR2)
+		want(t, "number as password, unknown user", post(`{"username":"nobody","password":12345}`), http.StatusUnauthorized, invalidCredentials)
+		want(t, "number as password, local account", post(`{"username":"alice","password":12345}`), http.StatusUnauthorized, invalidCredentials)
+		want(t, "list as password", post(`{"username":"alice","password":["x"]}`), http.StatusUnauthorized, invalidCredentials)
 		want(t, "number as password, single sign-on account", post(`{"username":"sso","password":12345}`), http.StatusUnauthorized, invalidCredentials)
 		want(t, "number as password, directory account", post(`{"username":"dora","password":true}`), http.StatusUnauthorized, invalidCredentials)
 		want(t, "number as password, blank name", post(`{"username":" ","password":12345}`), http.StatusUnauthorized, invalidCredentials)
@@ -119,17 +117,17 @@ func TestLoginWithValuesThatAreNoText(t *testing.T) {
 		failed := func(name string) string {
 			return "login_failed|Username: " + name + "; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0"
 		}
-		others := []string{failed("s***o"), failed("d***a"), "login_failed|Username:  ; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0"}
+		others := []string{failed("n***y"), failed("a***e"), failed("a***e"), failed("s***o"), failed("d***a"), "login_failed|Username:  ; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0"}
 		// SQLite took a number as a double, which a text column keeps as
 		// "12345.0", and a list of one value as that value. PostgreSQL
 		// stored the text of every value.
 		wantAudit := append([]string{failed("1***5"), failed("a***c")}, others...)
-		wantAttempts := []string{"12345.0|127.0.0.1|0", "abc|127.0.0.1|0", "sso|127.0.0.1|0", "dora|127.0.0.1|0", " |127.0.0.1|0"}
+		wantAttempts := []string{"12345.0|127.0.0.1|0", "abc|127.0.0.1|0", "nobody|127.0.0.1|0", "alice|127.0.0.1|0", "alice|127.0.0.1|0", "sso|127.0.0.1|0", "dora|127.0.0.1|0", " |127.0.0.1|0"}
 		if w.db.IsPostgres() {
 			wantAudit = append([]string{failed("1***5"), failed("t***e"), failed("a***b"), failed("a***c"), failed("[***t Object]")}, others...)
 			wantAttempts = []string{
 				"12345|127.0.0.1|0", "true|127.0.0.1|0", `{"a",NULL,{"b"}}|127.0.0.1|0`, `{"abc"}|127.0.0.1|0`, `{"a":1}|127.0.0.1|0`,
-				"sso|127.0.0.1|0", "dora|127.0.0.1|0", " |127.0.0.1|0",
+				"nobody|127.0.0.1|0", "alice|127.0.0.1|0", "alice|127.0.0.1|0", "sso|127.0.0.1|0", "dora|127.0.0.1|0", " |127.0.0.1|0",
 			}
 		}
 		equal(t, "audit", w.audit(), wantAudit)

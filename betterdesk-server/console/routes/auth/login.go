@@ -42,10 +42,6 @@ const (
 	maxWrongCodes      = 5
 )
 
-// errNotText stands for the fault the old console ran into when a password
-// that is not text reached the hash compare.
-var errNotText = errors.New("the password is not text")
-
 // clientMeta is what a sign-in records about the client. The fingerprint
 // is the body's clientFingerprint, else its fingerprint, else the header
 // X-Client-Fingerprint.
@@ -305,34 +301,15 @@ type secondFactorDue struct {
 }
 
 // authenticate checks the credentials of a sign-in, whatever their JSON
-// type.
-//
-// A user name that is not text is refused. A password that is not text is
-// a server error, unless the account is refused before its password is
-// looked at: a blank name, an account bound to single sign-on, and a
-// directory account, whose password the signal server would refuse.
+// type. A user name or a password that is not text is refused like a
+// wrong one.
 func (h *handlers) authenticate(r *http.Request, username, password middleware.Value) (authn.Outcome, error) {
-	name, isText := username.Str()
-	if !isText {
+	name, nameIsText := username.Str()
+	pass, passIsText := password.Str()
+	if !nameIsText || !passIsText {
 		return authn.Outcome{}, nil
 	}
-	if pass, isText := password.Str(); isText {
-		return h.authn.Authenticate(r.Context(), name, pass)
-	}
-	if jsTrim(name) == "" {
-		return authn.Outcome{}, nil
-	}
-	user, err := h.authn.UserByUsername(r.Context(), name)
-	if err != nil {
-		return authn.Outcome{}, err
-	}
-	if user != nil {
-		switch strings.ToLower(jsTrim(user.AuthProvider.String)) {
-		case "oidc", "ldap":
-			return authn.Outcome{}, nil
-		}
-	}
-	return authn.Outcome{}, errNotText
+	return h.authn.Authenticate(r.Context(), name, pass)
 }
 
 // recordAttempt notes a sign-in attempt for the lockout counters. A
@@ -490,20 +467,13 @@ func (h *handlers) totpVerify(w http.ResponseWriter, r *http.Request) {
 }
 
 // verifyRecoveryCode checks a recovery code of any JSON type. A code that
-// is not text is a server error once the account has codes to compare it
-// with, as it was in the old console.
+// is not text is never the right one.
 func (h *handlers) verifyRecoveryCode(r *http.Request, userID int64, code middleware.Value) (bool, error) {
-	if text, ok := code.Str(); ok {
-		return h.authn.VerifyRecoveryCode(r.Context(), userID, text)
-	}
-	user, err := h.authn.UserByID(r.Context(), userID)
-	if err != nil {
-		return false, err
-	}
-	if user == nil || !user.TOTPEnabled.True() || !json.Valid([]byte(user.TOTPRecoveryCodes.String)) {
+	text, ok := code.Str()
+	if !ok {
 		return false, nil
 	}
-	return false, errors.New("the recovery code is not text")
+	return h.authn.VerifyRecoveryCode(r.Context(), userID, text)
 }
 
 // pendingAccount reads the account a session waits for the second factor
