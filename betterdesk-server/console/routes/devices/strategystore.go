@@ -71,9 +71,9 @@ func flagArg(db *store.DB, b bool) any {
 	return 0
 }
 
-// returned is the row of a write: on PostgreSQL what RETURNING * gave,
-// with the permissions as the driver handed them over; on SQLite the
-// rule read again, with its permissions parsed.
+// returned is the row of a write with its permissions parsed: on
+// PostgreSQL what RETURNING * gave (the column is JSONB or, in the table
+// the signal server created, TEXT), on SQLite the rule read again.
 func returned(ctx context.Context, db *store.DB, query, guid string, args ...any) (*goapi.Object, error) {
 	if db.IsPostgres() {
 		rows, err := devicegroups.Rows(ctx, db, query+` RETURNING *`, args...)
@@ -83,7 +83,9 @@ func returned(ctx context.Context, db *store.DB, query, guid string, args ...any
 		if len(rows) == 0 {
 			return nil, nil
 		}
-		return plainRows(rows)[0], nil
+		row := plainRows(rows)[0]
+		row.Set("permissions", safeJSONParse(db, row.Get("permissions"), goapi.NewObject()))
+		return row, nil
 	}
 	if _, err := db.Exec(ctx, query, args...); err != nil {
 		return nil, err

@@ -320,3 +320,22 @@ func TestAssignChecksEveryReferenceFirst(t *testing.T) {
 		}
 	})
 }
+
+// TestStrategyWriteAnswersPermissions: creating and changing a rule
+// answers the stored permissions, also on PostgreSQL where the signal
+// server created the table with a TEXT column for them (BUGS DE8).
+func TestStrategyWriteAnswersPermissions(t *testing.T) {
+	storetest.EachOrigin(t, func(t *testing.T, db *store.DB, origin storetest.Origin) {
+		w, _ := world(t, db, nil, nil)
+		admin := w.As("admin")
+		created := admin.Do("POST", "/api/panel/strategies", `{"name":"Night","permissions":{"enable-audio":true}}`)
+		m := strategyGUIDField.FindStringSubmatch(created.Body)
+		if created.Status != http.StatusOK || m == nil || !strings.Contains(created.Body, `"permissions":{"enable-audio":"Y"}`) {
+			t.Fatalf("create: %d %s", created.Status, created.Body)
+		}
+		got := admin.Do("PATCH", "/api/panel/strategies/"+m[1], `{"permissions":{"enable-audio":false,"enable-tunnel":"Y"}}`)
+		if got.Status != http.StatusOK || !strings.Contains(got.Body, `"permissions":{"enable-audio":"N","enable-tunnel":"Y"}`) {
+			t.Errorf("update: %d %s", got.Status, got.Body)
+		}
+	})
+}
