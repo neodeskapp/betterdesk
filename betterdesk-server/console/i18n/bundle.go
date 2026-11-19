@@ -449,33 +449,29 @@ func varText(v any) string {
 }
 
 // Translate looks key up in lang, then in the default language, and
-// returns the key itself when neither has it.
+// returns the key itself when neither has a text for it.
 //
-// key is a dot path ("devices.count"). A path through an unsafe key finds
-// nothing. The value comes back as the file has it: usually a string, but
-// a path that names an object, a list, a number, true, false or null
-// returns that (null as nil), and an empty string stays an empty string
-// without falling back. A path can go into a string or a list by index or
-// "length".
+// key is a dot path ("devices.count"). Only a string counts as a text: a
+// path through an unsafe key, or one that names an object, a list, a
+// number, true, false or null finds nothing. An empty string is a text and
+// does not fall back. A path can go into a string by index ("x.0").
 //
-// In a string value each {name} of vars is replaced by its value, in the
-// order of Vars, so a value that contains another placeholder can be
-// replaced again by a later variable. Placeholders without a variable
-// stay as they are. Numbers print as JavaScript prints them, nil as
-// "null".
-func (b *Bundle) Translate(lang, key string, vars Vars) any {
+// In the text each {name} of vars is replaced by its value, in the order
+// of Vars, so a value that contains another placeholder can be replaced
+// again by a later variable. Placeholders without a variable stay as they
+// are. Numbers print as JavaScript prints them, nil as "null".
+func (b *Bundle) Translate(lang, key string, vars Vars) string {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
-	value := lookup(b.translations[lang], key)
-	if value == undefined && lang != b.DefaultLang {
-		value = lookup(b.translations[b.DefaultLang], key)
+	text, found := lookup(b.translations[lang], key).(string)
+	if !found && lang != b.DefaultLang {
+		text, found = lookup(b.translations[b.DefaultLang], key).(string)
 	}
-	if value == undefined {
+	if !found {
 		return key
 	}
-	text, isString := value.(string)
-	if !isString || len(vars) == 0 {
-		return value
+	if len(vars) == 0 {
+		return text
 	}
 	ordered := NewObject()
 	for _, v := range vars {
@@ -488,15 +484,9 @@ func (b *Bundle) Translate(lang, key string, vars Vars) any {
 	return text
 }
 
-// T is Translate with the result as text, the way a JavaScript template
-// string prints it: an object as "[object Object]", a list joined by
-// commas, null as "null".
+// T is Translate, for the console's handlers (kit.T).
 func (b *Bundle) T(lang, key string, vars Vars) string {
-	v := b.Translate(lang, key, vars)
-	if s, ok := jsString(v); ok {
-		return s
-	}
-	return key
+	return b.Translate(lang, key, vars)
 }
 
 func lookup(root any, key string) any {

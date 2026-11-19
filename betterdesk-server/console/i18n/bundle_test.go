@@ -170,7 +170,7 @@ func TestTranslate(t *testing.T) {
 		name      string
 		lang, key string
 		vars      Vars
-		want      any
+		want      string
 	}{
 		{"own text", "de", "common.cancel", nil, "Abbrechen"},
 		{"falls back to the default language", "de", "common.save", nil, "Save"},
@@ -178,8 +178,8 @@ func TestTranslate(t *testing.T) {
 		{"missing key comes back", "de", "no.such.key", nil, "no.such.key"},
 		{"empty key comes back", "de", "", nil, ""},
 		{"empty string is a value", "en", "common.empty", V("name", "x"), ""},
-		{"null is a value", "en", "common.nothing", nil, nil},
-		{"number", "en", "common.num", V("name", "x"), 12.5},
+		{"null is no text", "en", "common.nothing", nil, "common.nothing"},
+		{"a number is no text", "en", "common.num", V("name", "x"), "common.num"},
 		{"placeholders", "en", "common.hello", V("name", "Ada", "count", 3), "Hello Ada, you have 3 items Ada"},
 		{"missing variable stays", "en", "common.hello", V("name", "Ada"), "Hello Ada, you have {count} items Ada"},
 		{"no variables", "en", "common.hello", nil, "Hello {name}, you have {count} items {name}"},
@@ -191,26 +191,19 @@ func TestTranslate(t *testing.T) {
 		{"numeric names first", "en", "common.nested.deep.leaf", V("b", "{0}", "0", "zero"), "Leaf zero {a.b} {[} {0} {}"},
 		{"unsafe path", "en", "__proto__.polluted", nil, "__proto__.polluted"},
 		{"unsafe path in the middle", "de", "common.constructor.x", nil, "common.constructor.x"},
-		{"into a string", "en", "common.cancel.length", nil, 6.0},
-		{"into a list", "en", "common.list.1.x", nil, 1.0},
+		{"into a string", "en", "common.cancel.length", nil, "common.cancel.length"},
+		{"into a list", "en", "common.list.1.x", nil, "common.list.1.x"},
+		{"a section", "de", "only_en", nil, "only_en"},
+		{"a character of a string", "en", "common.cancel.0", nil, "C"},
 	}
 	for _, c := range cases {
 		got := b.Translate(c.lang, c.key, c.vars)
-		if !reflect.DeepEqual(got, c.want) {
+		if got != c.want {
 			t.Errorf("%s: Translate(%q, %q) = %#v, want %#v", c.name, c.lang, c.key, got, c.want)
 		}
-	}
-	if obj, ok := b.Translate("de", "only_en", nil).(*Object); !ok || stringify(obj, "") != `{"a":"A","b":{"c":"C"}}` {
-		t.Errorf("a key that names an object returns the object, got %#v", b.Translate("de", "only_en", nil))
-	}
-	if got := b.T("de", "only_en", nil); got != "[object Object]" {
-		t.Errorf("T of an object = %q", got)
-	}
-	if got := b.T("en", "common.list", nil); got != "a,[object Object],2,3" {
-		t.Errorf("T of a list = %q", got)
-	}
-	if got := b.T("en", "common.nothing", nil); got != "null" {
-		t.Errorf("T of null = %q", got)
+		if got := b.T(c.lang, c.key, c.vars); got != c.want {
+			t.Errorf("%s: T(%q, %q) = %#v, want %#v", c.name, c.lang, c.key, got, c.want)
+		}
 	}
 }
 
@@ -681,5 +674,37 @@ func TestTextsHaveNoUnsafeKeysAtAnyLevel(t *testing.T) {
 	saved, err := parseJSON(string(raw))
 	if err != nil || unsafeKeyPath(saved, "") != "" {
 		t.Errorf("the saved file: %s", raw)
+	}
+}
+
+// Only a string counts as a translation: a key that names a section, a
+// list, a number, true or null, or a path into a string, falls back to
+// the default language's text and then to the key itself (BUGS.md L21).
+func TestTranslateReturnsTheKeyForValuesThatAreNotText(t *testing.T) {
+	b, _ := loaded(t, copyDir(t, "testdata/lang-edge"), "en")
+	cases := []struct{ lang, key, want string }{
+		{"en", "common", "common"},
+		{"en", "common.nested", "common.nested"},
+		{"en", "common.list", "common.list"},
+		{"en", "common.num", "common.num"},
+		{"en", "common.flag", "common.flag"},
+		{"en", "common.nothing", "common.nothing"},
+		{"en", "common.cancel.length", "common.cancel.length"},
+		{"en", "common.toString", "common.toString"},
+		{"de", "common.cancel.length", "common.cancel.length"},
+		{"de", "str_vs_obj", "plain"},
+		{"de", "arr_vs_obj", "arr_vs_obj"},
+		{"de", "common.list", "common.list"},
+		{"en", "common.empty", ""},
+		{"en", "common.cancel.0", "C"},
+		{"de", "common.cancel", "Abbrechen"},
+	}
+	for _, c := range cases {
+		if got := b.Translate(c.lang, c.key, V("name", "Ada")); got != c.want {
+			t.Errorf("Translate(%q, %q) = %#v, want %q", c.lang, c.key, got, c.want)
+		}
+		if got := b.T(c.lang, c.key, nil); got != c.want {
+			t.Errorf("T(%q, %q) = %q, want %q", c.lang, c.key, got, c.want)
+		}
 	}
 }

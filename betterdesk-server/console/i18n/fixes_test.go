@@ -92,6 +92,12 @@ var vectorFixes = []vectorFix{
 	{"L19", "defaults.json", unsafeKeysDroppedForEveryDefault},
 	{"L19", "routes-edge.json", unsafeKeysDroppedInRoutes},
 	{"L19", "upload.json", unsafeKeysDroppedInUploads},
+
+	// Only a string is a translation: anything else falls back to the
+	// default language's text, then to the key.
+	{"L21", "real.json", textOnlyTranslations(realLangDir, "en")},
+	{"L21", "edge.json", textOnlyTranslations("testdata/lang-edge", "en")},
+	{"L21", "defaults.json", textOnlyTranslationsForEveryDefault},
 }
 
 // fixedVectors reads a file of vectors with every fix applied.
@@ -430,6 +436,56 @@ func unsafeKeysDroppedInUploads(t testing.TB, file any) int {
 			if setIf(changed, name, base64.StdEncoding.EncodeToString([]byte(text))) {
 				n++
 			}
+		}
+	}
+	return n
+}
+
+// --- L21 ---
+
+// textOnlyTranslations rewrites the translate vectors whose value was not
+// a string, made on the files of dir with the default language def.
+func textOnlyTranslations(dir, def string) func(t testing.TB, file any) int {
+	return func(t testing.TB, file any) int {
+		return textOnlyIn(t, list(file, "translate"), dir, def)
+	}
+}
+
+func textOnlyTranslationsForEveryDefault(t testing.TB, file any) int {
+	n := 0
+	for _, def := range file.(*Object).Keys() {
+		n += textOnlyIn(t, list(at(file, def), "translate"), "testdata/lang-edge", def)
+	}
+	return n
+}
+
+func textOnlyIn(t testing.TB, vectors []any, dir, def string) int {
+	b, _ := loaded(t, copyDir(t, dir), def)
+	sets := varSets(t)
+	n := 0
+	for _, c := range vectors {
+		kind := str(c, "result", "type")
+		if kind == "string" || kind == "function" || kind == "throws" || flag(c, "builtin") {
+			continue
+		}
+		lang, key := str(c, "lang"), str(c, "key")
+		want := key
+		if text, isText := lookup(b.translations[def], key).(string); isText && lang != def {
+			want = text
+			if idx := int(num(c, "vars")); idx >= 0 {
+				// The placeholders in the order of a JavaScript object's keys
+				ordered := NewObject()
+				for _, v := range sets[idx] {
+					ordered.Set(v.Name, v.Value)
+				}
+				for _, name := range ordered.Keys() {
+					v, _ := ordered.Get(name)
+					want = strings.ReplaceAll(want, "{"+name+"}", varText(v))
+				}
+			}
+		}
+		if setIf(c, "result", obj("type", "string", "value", want)) {
+			n++
 		}
 	}
 	return n
