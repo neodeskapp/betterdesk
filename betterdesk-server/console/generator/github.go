@@ -22,11 +22,10 @@ import (
 // Requests to GitHub. The template module fetches from four GitHub hosts
 // only, over https, and follows up to eight redirects among them; the
 // client builder asks api.github.com and follows the redirects of an
-// artifact download wherever they lead, as the old services did. The
-// token (BETTERDESK_GITHUB_TOKEN, else GITHUB_TOKEN) goes with every
-// request of the module and with the builder's requests to
-// api.github.com. Requests carry no Accept-Encoding, and nothing here
-// logs a token.
+// artifact download over https to hosts the outbound guard lets through.
+// The token (BETTERDESK_GITHUB_TOKEN, else GITHUB_TOKEN) goes to
+// api.github.com only. Requests carry no Accept-Encoding, and nothing
+// here logs a token.
 
 // githubFetchHosts are the hosts the template module may fetch from.
 var githubFetchHosts = map[string]bool{
@@ -37,10 +36,13 @@ var githubFetchHosts = map[string]bool{
 }
 
 // defaultTransport is http.DefaultTransport without transparent
-// compression, which would add Accept-Encoding to every request.
+// compression, which would add Accept-Encoding to every request, and
+// with the connections of a guarded download pinned to the addresses the
+// guard checked.
 var defaultTransport = sync.OnceValue(func() http.RoundTripper {
 	t := http.DefaultTransport.(*http.Transport).Clone()
 	t.DisableCompression = true
+	t.DialContext = dialChecked(t.DialContext)
 	return t
 })
 
@@ -202,7 +204,7 @@ func (s *Service) githubGetBuffer(ctx context.Context, rawURL, accept string) ([
 		req.Header.Set("User-Agent", "BetterDesk-Console-Generator")
 		req.Header.Set("Accept", accept)
 		req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
-		if token := s.githubToken(); token != "" {
+		if token := s.githubToken(); token != "" && validated.host == "api.github.com" {
 			req.Header.Set("Authorization", "Bearer "+token)
 		}
 		resp, err := s.transport().RoundTrip(req)
@@ -426,14 +428,22 @@ func (s *Service) githubRequest(ctx context.Context, method, rawURL string, body
 }
 
 // downloadToFile is the builder's download of an artifact, following up
-// to eight redirects to wherever they point.
+// to eight redirects. Every address it fetches, the first and each
+// redirect's, must be https and pass the outbound guard (no loopback,
+// link-local or private address), and the connection goes to an address
+// the guard checked (dialChecked).
 func (s *Service) downloadToFile(ctx context.Context, rawURL, destination string) error {
+	guard := &ssrfguard.Guard{Lookup: s.opts.Lookup}
 	target := rawURL
 	for redirects := 0; ; redirects++ {
 		if redirects > 8 {
 			return codeError("too_many_redirects")
 		}
-		resp, idle, stop, err := s.builderRequest(ctx, http.MethodGet, target, nil, "application/octet-stream", target, 120*time.Second)
+		checked, err := checkDownload(ctx, guard, target)
+		if err != nil {
+			return err
+		}
+		resp, idle, stop, err := s.builderRequest(context.WithValue(ctx, checkedHost{}, checked), http.MethodGet, target, nil, "application/octet-stream", target, 120*time.Second)
 		if err == errTimeout {
 			return codeError("github_download_timeout")
 		}
@@ -473,6 +483,49 @@ func (s *Service) downloadToFile(ctx context.Context, rawURL, destination string
 			return closeErr
 		}
 		return nil
+	}
+}
+
+// checkDownload checks an address of an artifact download: https, and a
+// host the outbound guard lets through. It returns the host as checked.
+func checkDownload(ctx context.Context, guard *ssrfguard.Guard, raw string) (ssrfguard.Host, error) {
+	u, ok := ssrfguard.ParseURL(raw)
+	if !ok {
+		return ssrfguard.Host{}, codeError("Invalid URL")
+	}
+	if u.Protocol != "https:" {
+		return ssrfguard.Host{}, codeError("github_download_requires_https")
+	}
+	_, checked, err := guard.CheckHTTPURL(ctx, raw, ssrfguard.Options{})
+	return checked, err
+}
+
+// checkedHost is the key of the host the outbound guard checked for a
+// request, in the request's context.
+type checkedHost struct{}
+
+type dialFunc func(ctx context.Context, network, address string) (net.Conn, error)
+
+// dialChecked connects a request whose context carries a checked host to
+// that host's checked addresses only, one after the other, since the name
+// looked up again could answer with another address. Any other
+// connection, also one to a proxy, goes through base as given.
+func dialChecked(base dialFunc) dialFunc {
+	return func(ctx context.Context, network, address string) (net.Conn, error) {
+		checked, ok := ctx.Value(checkedHost{}).(ssrfguard.Host)
+		host, port, err := net.SplitHostPort(address)
+		if !ok || err != nil || !strings.EqualFold(host, checked.Name) {
+			return base(ctx, network, address)
+		}
+		lastErr := error(&ssrfguard.LookupError{Code: "ENOTFOUND", Host: host})
+		for _, a := range checked.Addresses {
+			conn, err := base(ctx, network, net.JoinHostPort(a, port))
+			if err == nil {
+				return conn, nil
+			}
+			lastErr = err
+		}
+		return nil, lastErr
 	}
 }
 

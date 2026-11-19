@@ -12,6 +12,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/unitronix/betterdesk-server/console/ssrfguard"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
@@ -505,8 +507,13 @@ func TestInstallFromGitHub(t *testing.T) {
 				}
 			}
 			for _, r := range gh.requests {
+				// the token goes to the API only, not to the file hosts (BUGS GN10)
+				token := ""
+				if r.URL.Host == "api.github.com" {
+					token = "Bearer made-up-token"
+				}
 				if r.URL.Scheme != "https" || r.Header.Get("User-Agent") != "BetterDesk-Console-Generator" || r.Header.Get("X-GitHub-Api-Version") != "2022-11-28" ||
-					r.Header.Get("Authorization") != "Bearer made-up-token" || r.Header.Get("Accept-Encoding") != "" {
+					r.Header.Get("Authorization") != token || r.Header.Get("Accept-Encoding") != "" {
 					t.Errorf("request %s: %v", r.URL, r.Header)
 				}
 				if !githubFetchHosts[r.URL.Host] {
@@ -686,9 +693,109 @@ func TestBuilderToken(t *testing.T) {
 		}
 		return reply(200, []byte("zip"))
 	}}
-	s := New(Options{DataDir: t.TempDir(), HTTP: gh, Env: func() []string { return []string{"GITHUB_TOKEN=made-up-token"} }})
+	s := New(Options{DataDir: t.TempDir(), HTTP: gh, Lookup: testLookup, Env: func() []string { return []string{"GITHUB_TOKEN=made-up-token"} }})
 	must(t, s.downloadToFile(context.Background(), "https://api.github.com/repos/x/y/actions/artifacts/1/zip", filepath.Join(t.TempDir(), "a.zip")))
 	if len(auth) != 2 || auth[0] != "api.github.com Bearer made-up-token" || auth[1] != "pipelines.example " {
 		t.Fatalf("authorization per host: %q", auth)
 	}
+}
+
+// testLookup resolves the made-up hosts of the download tests: two public
+// ones, and one with a private address among its public ones.
+func testLookup(_ context.Context, host string) ([]string, error) {
+	switch host {
+	case "api.github.com":
+		return []string{"140.82.121.6"}, nil
+	case "pipelines.example":
+		return []string{"20.60.40.4", "2603:1030:403::4"}, nil
+	case "inside.example":
+		return []string{"20.60.40.5", "10.1.2.3"}, nil
+	}
+	return nil, &ssrfguard.LookupError{Code: "ENOTFOUND", Host: host}
+}
+
+// TestArtifactRedirectStaysPublic follows an artifact download only to
+// https addresses outside loopback, link-local and the private ranges
+// (BUGS GN10). A refused address is never requested, and every request
+// carries the addresses the guard checked, which are the only ones the
+// connection may go to.
+func TestArtifactRedirectStaysPublic(t *testing.T) {
+	for _, c := range []struct {
+		location string
+		want     string
+	}{
+		{"https://pipelines.example/zip", ""},
+		{"http://pipelines.example/zip", "github_download_requires_https"},
+		{"ftp://pipelines.example/zip", "github_download_requires_https"},
+		{"https://127.0.0.1/zip", "Blocked IP address: 127.0.0.1"},
+		{"https://[::1]:8443/zip", "Blocked IP address: ::1"},
+		{"https://169.254.169.254/latest/meta-data", "Blocked IP address: 169.254.169.254"},
+		{"https://192.168.1.10/zip", "Blocked IP address: 192.168.1.10"},
+		{"https://localhost/zip", "Blocked hostname: localhost"},
+		{"https://inside.example/zip", "Hostname inside.example resolves to blocked address 10.1.2.3"},
+		{"https://nowhere.example/zip", "DNS lookup failed for nowhere.example: getaddrinfo ENOTFOUND nowhere.example"},
+	} {
+		t.Run(c.location, func(t *testing.T) {
+			var hosts []string
+			gh := &fakeGitHub{answer: func(r *http.Request) *http.Response {
+				checked, _ := r.Context().Value(checkedHost{}).(ssrfguard.Host)
+				hosts = append(hosts, r.URL.Host+" "+strings.Join(checked.Addresses, ","))
+				if r.URL.Host == "api.github.com" {
+					return reply(302, nil, "Location", c.location)
+				}
+				return reply(200, []byte("zip"))
+			}}
+			s := New(Options{DataDir: t.TempDir(), HTTP: gh, Lookup: testLookup, Env: func() []string { return nil }})
+			err := s.downloadToFile(context.Background(), "https://api.github.com/repos/x/y/actions/artifacts/1/zip", filepath.Join(t.TempDir(), "a.zip"))
+			want := []string{"api.github.com 140.82.121.6"}
+			if c.want == "" {
+				want = append(want, "pipelines.example 20.60.40.4,2603:1030:403::4")
+				if err != nil {
+					t.Fatal(err)
+				}
+			} else if err == nil || err.Error() != c.want {
+				t.Fatalf("error %v, want %s", err, c.want)
+			}
+			if strings.Join(hosts, "|") != strings.Join(want, "|") {
+				t.Fatalf("requests %q, want %q", hosts, want)
+			}
+		})
+	}
+}
+
+// TestDownloadDialsCheckedAddresses connects a request that carries the
+// addresses the guard checked to those addresses only, in their order;
+// any other request dials its host as given.
+func TestDownloadDialsCheckedAddresses(t *testing.T) {
+	var dialed []string
+	dial := dialChecked(func(_ context.Context, _, address string) (net.Conn, error) {
+		dialed = append(dialed, address)
+		return nil, errors.New("refused")
+	})
+	checked := ssrfguard.Host{Name: "pipelines.example", Addresses: []string{"20.60.40.4", "2603:1030:403::4"}}
+	ctx := context.WithValue(context.Background(), checkedHost{}, checked)
+	if _, err := dial(ctx, "tcp", "pipelines.example:443"); err == nil {
+		t.Fatal("dial did not fail")
+	}
+	if _, err := dial(ctx, "tcp", "proxy.example:3128"); err == nil {
+		t.Fatal("dial did not fail")
+	}
+	if _, err := dial(context.Background(), "tcp", "api.github.com:443"); err == nil {
+		t.Fatal("dial did not fail")
+	}
+	want := "20.60.40.4:443 [2603:1030:403::4]:443 proxy.example:3128 api.github.com:443"
+	if got := strings.Join(dialed, " "); got != want {
+		t.Fatalf("dialed %q, want %q", got, want)
+	}
+
+	// The service's own transport dials that way: a name that resolves
+	// nowhere reaches the address it was checked at.
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	must(t, err)
+	defer ln.Close()
+	_, port, _ := net.SplitHostPort(ln.Addr().String())
+	ctx = context.WithValue(context.Background(), checkedHost{}, ssrfguard.Host{Name: "artifact.invalid", Addresses: []string{"127.0.0.1"}})
+	conn, err := defaultTransport().(*http.Transport).DialContext(ctx, "tcp", "artifact.invalid:"+port)
+	must(t, err)
+	conn.Close()
 }

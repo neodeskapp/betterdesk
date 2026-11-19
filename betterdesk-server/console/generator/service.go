@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/unitronix/betterdesk-server/console/ssrfguard"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
@@ -75,6 +76,9 @@ type Options struct {
 
 	// HTTP sends the requests to GitHub. Nil means http.DefaultTransport.
 	HTTP http.RoundTripper
+	// Lookup resolves the hosts of an artifact download for the outbound
+	// guard. Nil means the system's resolver.
+	Lookup ssrfguard.LookupFunc
 	// Run starts the tools (tar, git, the build tools). Nil runs them.
 	Run Runner
 	// Now and Sleep are the clock; Rand gives bundle ids and new signing
