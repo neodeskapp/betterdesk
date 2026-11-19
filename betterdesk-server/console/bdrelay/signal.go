@@ -114,6 +114,7 @@ func (s *Service) serveSignal(u *ws.Upgrade) {
 	if current, ok := s.online.get(deviceID); ok && current == conn {
 		s.online.delete(deviceID)
 	}
+	s.offlineLocked(conn)
 }
 
 // signalMessage handles one message of an agent: a heartbeat, the answer

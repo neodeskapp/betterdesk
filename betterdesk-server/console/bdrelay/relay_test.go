@@ -2,6 +2,7 @@ package bdrelay
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -564,4 +565,61 @@ func TestDeleteSessionClosesTheJoinedSides(t *testing.T) {
 	if svc.DeleteSession(paired) {
 		t.Error("a second delete found the session")
 	}
+}
+
+// TestRequestOfAClosedSocketSettlesAtOnce: a request whose agent's signal
+// socket ends (it closes, or a new socket of the device replaces it) is
+// answered with ErrAgentOffline at once instead of waiting for its
+// timeout, so the route serves what it serves for an agent that is gone.
+func TestRequestOfAClosedSocketSettlesAtOnce(t *testing.T) {
+	t.Cleanup(wstest.Goroutines(t))
+	svc, addr := newRelay(t)
+	request := func() <-chan error {
+		done := make(chan error, 1)
+		go func() {
+			_, err := svc.RequestFromDevice(context.Background(), "dev1", "x", goapi.NewObject(), 30*time.Second)
+			done <- err
+		}()
+		return done
+	}
+	settled := func(done <-chan error, how string) {
+		t.Helper()
+		select {
+		case err := <-done:
+			if !errors.Is(err, ErrAgentOffline) {
+				t.Errorf("%s: %v, want agent_offline", how, err)
+			}
+		case <-time.After(3 * time.Second):
+			t.Fatalf("%s: the request still waits", how)
+		}
+	}
+	gotRequest := func(c *wstest.Client) {
+		t.Helper()
+		if !c.Wait(3*time.Second, func(f []wstest.Frame, _ bool) bool { return len(f) > 1 }) {
+			t.Fatal("the agent got no request")
+		}
+	}
+
+	agent, ok, code := openSignal(t, addr, "dev1", nil)
+	if !ok {
+		t.Fatalf("closed with %d", code)
+	}
+	done := request()
+	gotRequest(agent)
+	agent.Close(1000)
+	settled(done, "closed socket")
+
+	first, _, _ := openSignal(t, addr, "dev1", nil)
+	done = request()
+	gotRequest(first)
+	second, ok, code := openSignal(t, addr, "dev1", nil)
+	if !ok {
+		t.Fatalf("the second socket closed with %d", code)
+	}
+	settled(done, "replaced socket")
+	if _, _, pending := svc.Counts(); pending != 0 {
+		t.Errorf("%d requests still listed", pending)
+	}
+	first.Drop()
+	second.Close(1000)
 }

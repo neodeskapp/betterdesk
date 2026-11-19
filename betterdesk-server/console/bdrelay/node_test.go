@@ -627,6 +627,9 @@ var fixes = []fix{
 	// the socket gone
 	{bug: "WS6", scenario: "relay cleanup and delete", step: 4, events: `[{"socket":"i2","close":1000,"reason":"Session deleted"},{"socket":"i2","end":true}]`},
 	{bug: "WS6", scenario: "relay cleanup and delete", step: 11, events: `[]`},
+	// The request whose socket closed is answered at once
+	{bug: "WS7", scenario: "requests", step: 45, result: `{"error":"agent_offline"}`},
+	{bug: "WS7", scenario: "requests", step: 47, result: `{"error":"agent_offline"}`},
 }
 
 // fixFor is the fix of a step, ok false for a step no fix changed.

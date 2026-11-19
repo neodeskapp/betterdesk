@@ -7,6 +7,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/unitronix/betterdesk-server/console/ws"
 )
 
 // AgentError is a request to an agent that did not get data: the agent is
@@ -25,10 +26,12 @@ var (
 	ErrAgentTimeout = &AgentError{Message: "agent_timeout"}
 )
 
-// pendingRequest waits for an agent's command_response.
+// pendingRequest waits for an agent's command_response on the signal
+// socket conn it was sent to.
 type pendingRequest struct {
 	done  chan requestResult
 	timer Timer
+	conn  *ws.Conn
 }
 
 type requestResult struct {
@@ -40,8 +43,9 @@ type requestResult struct {
 // a device's signal socket and waits for its command_response with that
 // request id (requestFromDevice). timeout is held between 1 and 60
 // seconds. The data is the answer's data as JSON.parse read it, null when
-// it is not truthy. A request whose socket closes keeps waiting for its
-// timeout, as it did in Node. ctx ends the wait for the caller only.
+// it is not truthy. A request whose socket ends (closed, or replaced by a
+// new socket of the device) gets ErrAgentOffline at once. ctx ends the
+// wait for the caller only.
 func (s *Service) RequestFromDevice(ctx context.Context, deviceID, typ string, payload any, timeout time.Duration) (any, error) {
 	s.mu.Lock()
 	conn, ok := s.online.get(deviceID)
@@ -51,7 +55,7 @@ func (s *Service) RequestFromDevice(ctx context.Context, deviceID, typ string, p
 	}
 	id := s.randomUUID()
 	timeout = max(time.Second, min(60*time.Second, timeout))
-	p := &pendingRequest{done: make(chan requestResult, 1)}
+	p := &pendingRequest{done: make(chan requestResult, 1), conn: conn}
 	p.timer = s.clock.AfterFunc(timeout, func() {
 		s.mu.Lock()
 		defer s.mu.Unlock()
@@ -77,6 +81,18 @@ func (s *Service) RequestFromDevice(ctx context.Context, deviceID, typ string, p
 		return r.data, r.err
 	case <-ctx.Done():
 		return nil, ctx.Err()
+	}
+}
+
+// offlineLocked settles the pending requests sent to conn, whose socket
+// has ended, with ErrAgentOffline.
+func (s *Service) offlineLocked(conn *ws.Conn) {
+	for id, p := range s.pending {
+		if p.conn == conn {
+			delete(s.pending, id)
+			p.timer.Stop()
+			p.done <- requestResult{err: ErrAgentOffline}
+		}
 	}
 }
 
