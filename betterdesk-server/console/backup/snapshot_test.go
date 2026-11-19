@@ -127,6 +127,11 @@ func TestSnapshotRestoresRulePermissions(t *testing.T) {
 				t.Errorf("%s: permissions %s, want %s", guid, got[guid], want)
 			}
 		}
+		// empty text is stored as an empty object, as the old console did
+		var stored string
+		if err := in.db.QueryRow(ctx, `SELECT permissions FROM strategies WHERE guid = 's3'`).Scan(&stored); err != nil || stored != "{}" {
+			t.Errorf("s3 stored %q %v", stored, err)
+		}
 	})
 }
 
