@@ -90,12 +90,14 @@ func base64Body(content []byte) []byte {
 const qpSliceSize = 64 * 1024
 
 // qpEncodeBody encodes a text as quoted-printable with soft line breaks.
+// Every line end of the text, a bare CR or LF too, becomes CR LF.
 //
 // White space at the very end of the text is encoded, however long the run
 // is not: only its last byte. The input is worked through in slices of
 // 64 KiB; the last line of a slice is wrapped again together with the next
 // slice.
 func qpEncodeBody(content []byte) []byte {
+	content = crlfLineEnds(content)
 	// trailing white space waits until the rest is done, unless there is
 	// more of it than one slice holds
 	end := len(content)
@@ -126,6 +128,27 @@ func qpEncodeBody(content []byte) []byte {
 	encodeSlices(content)
 	encodeSlices(held)
 	return append(out, line...)
+}
+
+// crlfLineEnds writes every line end of a text as CR LF: CR LF stays, a
+// bare CR and a bare LF become CR LF.
+func crlfLineEnds(content []byte) []byte {
+	if !bytes.ContainsAny(content, "\r\n") {
+		return content
+	}
+	out := make([]byte, 0, len(content)+len(content)/16)
+	for i := 0; i < len(content); i++ {
+		switch c := content[i]; {
+		case c == '\r' && i+1 < len(content) && content[i+1] == '\n':
+			out = append(out, '\r', '\n')
+			i++
+		case c == '\r' || c == '\n':
+			out = append(out, '\r', '\n')
+		default:
+			out = append(out, c)
+		}
+	}
+	return out
 }
 
 // qpEncodeBytes encodes bytes as quoted-printable without wrapping. Tab,

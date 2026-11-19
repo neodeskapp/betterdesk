@@ -432,12 +432,12 @@ func TestQuotedPrintableBody(t *testing.T) {
 	}{
 		{"empty", "", ""},
 		{"equals sign", "a=b", "a=3Db"},
-		{"line feed and carriage return stay", "a\nb\rc\r\nd", "a\nb\rc\r\nd"},
+		{"every line end becomes CR LF", "a\nb\rc\r\nd\n\re", "a\r\nb\r\nc\r\nd\r\n\r\ne"},
 		{"space at the end", "a ", "a=20"},
 		{"tab at the end", "a\t", "a=09"},
 		{"only the last space of a run at the end", "a   ", "a  =20"},
-		{"space in front of a line feed", "a \nb", "a=20\nb"},
-		{"space in front of a carriage return", "a\t\rb", "a=09\rb"},
+		{"space in front of a line feed", "a \nb", "a=20\r\nb"},
+		{"space in front of a carriage return", "a\t\rb", "a=09\r\nb"},
 		{"76 characters stay on one line", a(76), a(76)},
 		{"77 characters break after 75", a(77), a(75) + "=\r\n" + a(2)},
 		{"a break goes after the last space of the last third", a(60) + " " + a(20), a(60) + " =\r\n" + a(20)},
@@ -447,8 +447,8 @@ func TestQuotedPrintableBody(t *testing.T) {
 		{"an escape that ends the line moves down", a(73) + "=" + a(5), a(73) + "=\r\n=3D" + a(5)},
 		{"the bytes of a character stay together", a(71) + "\u00fc" + a(5), a(71) + "=\r\n=C3=BC" + a(5)},
 		{"three bytes stay together", a(68) + "\u20ac" + a(5), a(68) + "=\r\n=E2=82=AC" + a(5)},
-		{"a line feed in the last third ends the line", a(70) + "\n" + a(20), a(70) + "\n" + a(20)},
-		{"a line that ends at the limit", a(76) + "\n" + a(3), a(75) + "=\r\na\n" + a(3)},
+		{"a line end in the last third ends the line", a(70) + "\n" + a(20), a(70) + "\r\n" + a(20)},
+		{"a line that ends at the limit", a(76) + "\n" + a(3), a(75) + "=\r\na\r\n" + a(3)},
 		{"control characters", "\x00\x1f\x7f\xff", "=00=1F=7F=FF"},
 		{"a break in the last part of the text", a(116) + " " + a(10) + "b", a(75) + "=\r\n" + a(41) + " =\r\n" + a(10) + "b"},
 		{"no break in a last part of 51 characters", a(75) + a(39) + " " + a(10) + "b", a(75) + "=\r\n" + a(39) + " " + a(10) + "b"},
@@ -467,6 +467,22 @@ func TestQuotedPrintableBody(t *testing.T) {
 	decoded, err := io.ReadAll(quotedprintable.NewReader(bytes.NewReader(qpEncodeBody([]byte(long)))))
 	if err != nil || string(decoded) != long {
 		t.Errorf("a long text does not come back from quoted-printable: %v", err)
+	}
+}
+
+// TestQuotedPrintableLineEnds checks that every line end of a
+// quoted-printable body is CR LF, also a bare CR or LF of the text: a line
+// that ends in another way is no line of quoted-printable (BUGS EM15).
+func TestQuotedPrintableLineEnds(t *testing.T) {
+	text := "Grüße\nzwei \rdrei\r\nvier ä\n\n"
+	m := build(t, Mail{From: "a@b.c", To: []string{"x@y.z"}, Text: ptr(text)})
+	_, body, _ := strings.Cut(string(m.Raw), "\r\n\r\n")
+	if want := "Gr=C3=BC=C3=9Fe\r\nzwei=20\r\ndrei\r\nvier =C3=A4\r\n\r\n"; body != want {
+		t.Errorf("body %q, want %q", body, want)
+	}
+	decoded, err := io.ReadAll(quotedprintable.NewReader(strings.NewReader(body)))
+	if want := crlfText(text); err != nil || string(decoded) != want {
+		t.Errorf("decoded %q %v, want %q", decoded, err, want)
 	}
 }
 

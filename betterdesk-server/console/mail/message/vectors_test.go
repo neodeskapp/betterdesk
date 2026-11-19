@@ -40,8 +40,9 @@ type messageVector struct {
 	EnvToSHA256 string `json:"envToSha256"`
 
 	// foldedAtOtherSpace is set by check for a message nodemailer folded
-	// in front of white space other than a space or a tab
-	foldedAtOtherSpace bool
+	// in front of white space other than a space or a tab, bareLineEnds
+	// for one whose quoted-printable body kept a bare CR or LF
+	foldedAtOtherSpace, bareLineEnds bool
 }
 
 // foldedAtOtherSpace reports whether a message's header block has a line
@@ -159,10 +160,18 @@ func (v *messageVector) check() string {
 		return fmt.Sprintf("Message-ID %q, want %q", message.MessageID, v.ID)
 	}
 	if v.Raw == nil {
-		if got := sha256Hex(message.Raw); len(message.Raw) != v.RawLength || got != v.RawSHA256 {
-			return fmt.Sprintf("message of %d bytes with hash %s, want %d bytes with %s", len(message.Raw), got, v.RawLength, v.RawSHA256)
+		got := sha256Hex(message.Raw)
+		if len(message.Raw) == v.RawLength && got == v.RawSHA256 {
+			return ""
 		}
-		return ""
+		if texts := qpTexts(mail); slices.ContainsFunc(texts, func(text string) bool { return strings.ContainsAny(text, "\r\n") }) {
+			// BUGS EM15, for a message recorded by its hash only: its
+			// quoted-printable bodies decode to the texts with CR LF for
+			// every line end
+			v.bareLineEnds = true
+			return checkQPBodies(message.Raw, texts)
+		}
+		return fmt.Sprintf("message of %d bytes with hash %s, want %d bytes with %s", len(message.Raw), got, v.RawLength, v.RawSHA256)
 	}
 	// the recorded message has one character per byte
 	want := make([]byte, 0, len(*v.Raw))
@@ -172,29 +181,159 @@ func (v *messageVector) check() string {
 		}
 		want = append(want, byte(r))
 	}
-	if !bytes.Equal(message.Raw, want) && foldedAtOtherSpace(want) {
+	got := message.Raw
+	if bytes.Equal(got, want) {
+		return ""
+	}
+	if foldedAtOtherSpace(want) {
 		// BUGS EM13: nodemailer folded a header in front of white space
 		// other than a space or a tab, Build folds only in front of those
 		// two; unfolded, the headers are the same
 		v.foldedAtOtherSpace = true
-		switch {
-		case foldedAtOtherSpace(message.Raw):
+		if foldedAtOtherSpace(got) {
 			return "a header line starts with white space other than a space or a tab"
-		case !bytes.Equal(unfold(message.Raw), unfold(want)):
-			return fmt.Sprintf("unfolded, the message differs\n got  %q\n want %q", unfold(message.Raw), unfold(want))
+		}
+		got, want = unfold(got), unfold(want)
+	}
+	if gotRest, gotBodies := qpBodies(got); hasBareLineEnd(want) {
+		// BUGS EM15: nodemailer kept a bare CR or LF of a text in its
+		// quoted-printable body, Build writes every line end as CR LF; the
+		// rest of the message is the same, and decoded, so is the text
+		v.bareLineEnds = true
+		wantRest, wantBodies := qpBodies(want)
+		if !bytes.Equal(gotRest, wantRest) || len(gotBodies) != len(wantBodies) {
+			return fmt.Sprintf("outside the quoted-printable bodies, the message differs\n got  %q\n want %q", gotRest, wantRest)
+		}
+		for k, body := range gotBodies {
+			for _, line := range bytes.SplitAfter(body, []byte("\r\n")) {
+				if line = bytes.TrimSuffix(line, []byte("\r\n")); bytes.ContainsAny(line, "\r\n") || len(line) > maxBodyLine {
+					return fmt.Sprintf("quoted-printable line %q", line)
+				}
+			}
+			if g, w := lineEndsAsLF(decodeQP(body)), lineEndsAsLF(decodeQP(wantBodies[k])); !bytes.Equal(g, w) {
+				return fmt.Sprintf("quoted-printable body %d decodes to %q, want %q", k, g, w)
+			}
 		}
 		return ""
 	}
-	if !bytes.Equal(message.Raw, want) {
+	if !bytes.Equal(got, want) {
 		at := 0
-		for at < len(want) && at < len(message.Raw) && want[at] == message.Raw[at] {
+		for at < len(want) && at < len(got) && want[at] == got[at] {
 			at++
 		}
 		from := max(at-60, 0)
 		return fmt.Sprintf("message differs at byte %d\n got  ...%q\n want ...%q", at,
-			message.Raw[from:min(at+80, len(message.Raw))], want[from:min(at+80, len(want))])
+			got[from:min(at+80, len(got))], want[from:min(at+80, len(want))])
 	}
 	return ""
+}
+
+// qpBodies cuts a message into the bodies of its quoted-printable parts
+// and the rest, which keeps a mark where each body was. A body starts
+// after the headers of its part and ends at the boundary of its part, or
+// at the end of a message of one part.
+func qpBodies(raw []byte) (rest []byte, bodies [][]byte) {
+	head, _, _ := bytes.Cut(raw, []byte("\r\n\r\n"))
+	var delimiter []byte
+	if _, after, found := bytes.Cut(head, []byte(`boundary="`)); found {
+		boundary, _, _ := bytes.Cut(after, []byte(`"`))
+		delimiter = append([]byte("\r\n--"), boundary...)
+	}
+	for {
+		at := bytes.Index(raw, []byte("Content-Transfer-Encoding: quoted-printable\r\n"))
+		if at < 0 {
+			return append(rest, raw...), bodies
+		}
+		start := bytes.Index(raw[at:], []byte("\r\n\r\n"))
+		if start < 0 {
+			return append(rest, raw...), bodies
+		}
+		start += at + len("\r\n\r\n")
+		rest = append(rest, raw[:start]...)
+		raw = raw[start:]
+		end := len(raw)
+		if delimiter != nil {
+			if i := bytes.Index(raw, delimiter); i >= 0 {
+				end = i
+			}
+		}
+		bodies = append(bodies, raw[:end])
+		rest = append(rest, "<body>"...)
+		raw = raw[end:]
+	}
+}
+
+// qpTexts are the texts of a mail that go into quoted-printable bodies, in
+// the order of the parts.
+func qpTexts(m Mail) []string {
+	var texts []string
+	for _, text := range []*string{m.Text, m.HTML} {
+		if text != nil && transferEncoding(*text) == transferQP {
+			texts = append(texts, *text)
+		}
+	}
+	return texts
+}
+
+// checkQPBodies checks the quoted-printable bodies of a message against
+// the texts that went into them: every line ends in CR LF and has at most
+// 76 characters, and each body decodes to its text, whose line ends may be
+// CR, LF or CR LF. A message of one part ends in a line break that its
+// text may lack.
+func checkQPBodies(raw []byte, texts []string) string {
+	head, _, _ := bytes.Cut(raw, []byte("\r\n\r\n"))
+	_, bodies := qpBodies(raw)
+	if len(bodies) != len(texts) {
+		return fmt.Sprintf("%d quoted-printable bodies for %d texts", len(bodies), len(texts))
+	}
+	for k, body := range bodies {
+		for _, line := range bytes.SplitAfter(body, []byte("\r\n")) {
+			if line = bytes.TrimSuffix(line, []byte("\r\n")); bytes.ContainsAny(line, "\r\n") || len(line) > maxBodyLine {
+				return fmt.Sprintf("quoted-printable line %q", line)
+			}
+		}
+		want := lineEndsAsLF([]byte(texts[k]))
+		if !bytes.Contains(head, []byte("boundary=")) && !bytes.HasSuffix(want, []byte("\n")) {
+			want = append(want, '\n')
+		}
+		if got := lineEndsAsLF(decodeQP(body)); !bytes.Equal(got, want) {
+			return fmt.Sprintf("quoted-printable body %d decodes to %q, want %q", k, got, want)
+		}
+	}
+	return ""
+}
+
+// hasBareLineEnd reports whether a quoted-printable body of a message has
+// a CR or an LF that is not part of CR LF.
+func hasBareLineEnd(raw []byte) bool {
+	_, bodies := qpBodies(raw)
+	for _, body := range bodies {
+		if bytes.Count(body, []byte("\r")) != bytes.Count(body, []byte("\r\n")) || bytes.Count(body, []byte("\n")) != bytes.Count(body, []byte("\r\n")) {
+			return true
+		}
+	}
+	return false
+}
+
+// decodeQP takes the quoted-printable encoding off a body: "=" and CR LF
+// is a soft break, "=XX" a byte, the rest is literal.
+func decodeQP(body []byte) []byte {
+	body = bytes.ReplaceAll(body, []byte("=\r\n"), nil)
+	out := make([]byte, 0, len(body))
+	for i := 0; i < len(body); i++ {
+		if body[i] == '=' && i+2 < len(body) && isHexDigit(body[i+1]) && isHexDigit(body[i+2]) {
+			out = append(out, byte(hexValue(body[i+1], body[i+2])))
+			i += 2
+			continue
+		}
+		out = append(out, body[i])
+	}
+	return out
+}
+
+// lineEndsAsLF writes every line end of a text, CR LF, CR or LF, as LF.
+func lineEndsAsLF(text []byte) []byte {
+	return []byte(strings.NewReplacer("\r\n", "\n", "\r", "\n").Replace(string(text)))
 }
 
 // describe prints the input of a vector for a failure message.
@@ -215,34 +354,42 @@ func (v *messageVector) describe() string {
 	return fmt.Sprintf("from %s to %s subject %s\n text %s\n html %s", show(v.From), to, show(v.Subject), show(v.Text), show(v.HTML))
 }
 
-// replayMessages checks every vector of a file and returns how many there
-// were, how many of them recorded an error and how many nodemailer folded
-// in front of white space other than a space or a tab.
-func replayMessages(t *testing.T, file string) (count, withError, foldedAtOtherSpace int) {
+// vectorCounts counts the vectors of a file: all of them, the ones that
+// recorded an error, the ones nodemailer folded in front of white space
+// other than a space or a tab, and the ones whose quoted-printable body
+// kept a bare CR or LF.
+type vectorCounts struct{ all, withError, foldedAtOtherSpace, bareLineEnds int }
+
+// replayMessages checks every vector of a file and counts them.
+func replayMessages(t *testing.T, file string) vectorCounts {
+	var n vectorCounts
 	failed := 0
 	readLines(t, file, func(line []byte) {
 		var v messageVector
 		decoder := json.NewDecoder(bytes.NewReader(line))
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&v); err != nil {
-			t.Fatalf("decode vector %d: %v", count, err)
+			t.Fatalf("decode vector %d: %v", n.all, err)
 		}
 		if v.Err != nil {
-			withError++
+			n.withError++
 		}
 		if diff := v.check(); diff != "" {
 			failed++
-			t.Errorf("vector %d: %s\n %s", count, diff, v.describe())
+			t.Errorf("vector %d: %s\n %s", n.all, diff, v.describe())
 			if failed >= 25 {
 				t.Fatalf("stopping after %d failures", failed)
 			}
 		}
 		if v.foldedAtOtherSpace {
-			foldedAtOtherSpace++
+			n.foldedAtOtherSpace++
 		}
-		count++
+		if v.bareLineEnds {
+			n.bareLineEnds++
+		}
+		n.all++
 	})
-	return count, withError, foldedAtOtherSpace
+	return n
 }
 
 // TestNodeMessageVectors replays the mails of
@@ -250,13 +397,15 @@ func replayMessages(t *testing.T, file string) (count, withError, foldedAtOtherS
 // time and random bytes as nodemailer and has to give the same envelope,
 // Message-ID and message bytes, or the same error. Where nodemailer folded
 // a header in front of white space other than a space or a tab, the
-// headers are the same once unfolded (BUGS EM13).
+// headers are the same once unfolded (BUGS EM13); where it kept a bare CR
+// or LF in a quoted-printable body, the body decodes to the same text with
+// CR LF for every line end (EM15).
 func TestNodeMessageVectors(t *testing.T) {
-	count, withError, folded := replayMessages(t, "testdata/message.json.gz")
-	if count < 8000 || withError == 0 || folded == 0 {
-		t.Fatalf("%d vectors, %d with an error, %d folded at other white space, in testdata/message.json.gz: the file is incomplete", count, withError, folded)
+	n := replayMessages(t, "testdata/message.json.gz")
+	if n.all < 8000 || n.withError == 0 || n.foldedAtOtherSpace == 0 || n.bareLineEnds == 0 {
+		t.Fatalf("testdata/message.json.gz is incomplete: %+v", n)
 	}
-	t.Logf("%d vectors, %d with an error, %d folded at other white space", count, withError, folded)
+	t.Logf("%+v", n)
 }
 
 // TestExtraMessageVectors replays a second file of vectors, named by the
@@ -266,6 +415,5 @@ func TestExtraMessageVectors(t *testing.T) {
 	if file == "" {
 		t.Skip("MESSAGE_VECTORS is not set")
 	}
-	count, withError, folded := replayMessages(t, file)
-	t.Logf("%d vectors, %d with an error, %d folded at other white space", count, withError, folded)
+	t.Logf("%+v", replayMessages(t, file))
 }

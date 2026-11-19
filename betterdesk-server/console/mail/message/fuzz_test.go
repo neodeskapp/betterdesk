@@ -100,11 +100,10 @@ func decodeBody(t *testing.T, body, encoding string) string {
 	case transfer7bit:
 		return body
 	case transferQP:
-		// The encoder writes a carriage return or a line feed of the text
-		// as it is. A decoder that reads them as line breaks, as the one of
-		// the standard library does, drops a carriage return at the end of
-		// a line. So the encoding is taken off by its own rules here: "="
-		// and CR LF is a soft break, "=XX" is a byte, the rest is literal.
+		// The encoding is taken off by its own rules here, without the
+		// standard library's decoder, which also drops white space at the
+		// end of a line: "=" and CR LF is a soft break, "=XX" is a byte,
+		// the rest is literal.
 		body = strings.ReplaceAll(body, "=\r\n", "")
 		decoded := make([]byte, 0, len(body))
 		for i := 0; i < len(body); i++ {
@@ -148,6 +147,16 @@ func checkEncodedLines(t *testing.T, body, encoding string) {
 	if hasASCIIControl(body, "\t\r\n") || !isASCII(body) {
 		t.Fatalf("%s body with a raw control character or byte outside ASCII: %q", encoding, body)
 	}
+	// Every line ends in CR LF (BUGS EM15)
+	if strings.Count(body, "\r") != strings.Count(body, "\r\n") || strings.Count(body, "\n") != strings.Count(body, "\r\n") {
+		t.Fatalf("%s body with a bare CR or LF: %q", encoding, body)
+	}
+}
+
+// crlfText is a text with every line end written as CR LF, as a
+// quoted-printable body carries it.
+func crlfText(s string) string {
+	return strings.NewReplacer("\r\n", "\r\n", "\r", "\r\n", "\n", "\r\n").Replace(s)
 }
 
 // FuzzBuild builds mails from arbitrary text and checks what must hold for
@@ -260,7 +269,11 @@ func FuzzBuild(f *testing.F) {
 			// The message ends in a line feed, which is added where the body
 			// has none: after a carriage return a line feed, else CR LF. A
 			// base64 body never ends in a line break of its own.
-			switch content := parts[0].content; {
+			content := parts[0].content
+			if encoding == transferQP {
+				content = crlfText(content)
+			}
+			switch {
 			case encoding != transferBase64 && strings.HasSuffix(content, "\n"):
 			case encoding != transferBase64 && strings.HasSuffix(content, "\r"):
 				if !strings.HasSuffix(body, "\r\n") {
@@ -274,8 +287,8 @@ func FuzzBuild(f *testing.F) {
 				body = body[:len(body)-2]
 			}
 			checkEncodedLines(t, body, encoding)
-			if decoded := decodeBody(t, body, encoding); decoded != parts[0].content {
-				t.Fatalf("%s body decodes to %q, want %q", encoding, decoded, parts[0].content)
+			if decoded := decodeBody(t, body, encoding); decoded != content {
+				t.Fatalf("%s body decodes to %q, want %q", encoding, decoded, content)
 			}
 		case 2:
 			if headers["Content-Type"] != `multipart/alternative; boundary="`+zeroBoundary+`"` || headers["Content-Transfer-Encoding"] != "" {
@@ -300,8 +313,12 @@ func FuzzBuild(f *testing.F) {
 					t.Fatalf("part %d has the headers %q", i, partHead)
 				}
 				checkEncodedLines(t, partBody, encoding)
-				if decoded := decodeBody(t, partBody, encoding); decoded != p.content {
-					t.Fatalf("part %d: %s body decodes to %q, want %q", i, encoding, decoded, p.content)
+				content := p.content
+				if encoding == transferQP {
+					content = crlfText(content)
+				}
+				if decoded := decodeBody(t, partBody, encoding); decoded != content {
+					t.Fatalf("part %d: %s body decodes to %q, want %q", i, encoding, decoded, content)
 				}
 			}
 		}

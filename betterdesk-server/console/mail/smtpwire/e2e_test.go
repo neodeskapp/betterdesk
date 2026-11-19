@@ -165,13 +165,93 @@ func TestEndToEnd(t *testing.T) {
 		t.Fatalf("only %d sessions in testdata/e2e_sessions.json", len(file.Sessions))
 	}
 	roots := smtpwire.TrustedRoots(t)
+	lineEnds := 0
 	for i := range file.Sessions {
 		sess := &file.Sessions[i]
-		t.Run(sess.Name, func(t *testing.T) { replayEndToEnd(t, sess, file.PanelBaseURL, roots) })
+		t.Run(sess.Name, func(t *testing.T) {
+			if replayEndToEnd(t, sess, file.PanelBaseURL, roots) {
+				lineEnds++
+			}
+		})
+	}
+	if lineEnds == 0 {
+		t.Error("no session has a quoted-printable body with a bare line end")
 	}
 }
 
-func replayEndToEnd(t *testing.T, sess *e2eSession, panelBaseURL string, roots *x509.CertPool) {
+// qpBodies cuts the data of a message into the bodies of its
+// quoted-printable parts and the rest, which keeps a mark where each body
+// was. The dots the data stream doubled at the start of a line are taken
+// off first.
+func qpBodies(data []byte) (rest []byte, bodies [][]byte) {
+	data = bytes.ReplaceAll(data, []byte("\r\n.."), []byte("\r\n."))
+	head, _, _ := bytes.Cut(data, []byte("\r\n\r\n"))
+	var delimiter []byte
+	if _, after, found := bytes.Cut(head, []byte(`boundary="`)); found {
+		boundary, _, _ := bytes.Cut(after, []byte(`"`))
+		delimiter = append([]byte("\r\n--"), boundary...)
+	}
+	for {
+		at := bytes.Index(data, []byte("Content-Transfer-Encoding: quoted-printable\r\n"))
+		start := -1
+		if at >= 0 {
+			start = bytes.Index(data[at:], []byte("\r\n\r\n"))
+		}
+		if start < 0 {
+			return append(rest, data...), bodies
+		}
+		start += at + len("\r\n\r\n")
+		rest = append(append(rest, data[:start]...), "<body>"...)
+		data = data[start:]
+		end := len(data)
+		if i := bytes.Index(data, delimiter); delimiter != nil && i >= 0 {
+			end = i
+		}
+		bodies = append(bodies, data[:end])
+		data = data[end:]
+	}
+}
+
+// decodedText takes the quoted-printable encoding off a body ("=" and CR
+// LF is a soft break, "=XX" a byte) and writes every line end as LF.
+func decodedText(body []byte) string {
+	body = bytes.ReplaceAll(body, []byte("=\r\n"), nil)
+	out := make([]byte, 0, len(body))
+	for i := 0; i < len(body); i++ {
+		if body[i] == '=' && i+2 < len(body) {
+			if b, err := hex.DecodeString(string(body[i+1 : i+3])); err == nil {
+				out = append(out, b[0])
+				i += 2
+				continue
+			}
+		}
+		out = append(out, body[i])
+	}
+	return strings.NewReplacer("\r\n", "\n", "\r", "\n").Replace(string(out))
+}
+
+// sameButQPLineEnds reports whether two messages differ only in the
+// quoted-printable bodies, which decode to the same text with its line
+// ends taken alike. nodemailer kept a bare CR or LF of a text in such a
+// body, where the line breaking counts it as no line end; the Go console
+// writes every line end as CR LF (BUGS EM15).
+func sameButQPLineEnds(got, want []byte) bool {
+	gotRest, gotBodies := qpBodies(got)
+	wantRest, wantBodies := qpBodies(want)
+	if !bytes.Equal(gotRest, wantRest) || len(gotBodies) != len(wantBodies) {
+		return false
+	}
+	for k := range gotBodies {
+		if decodedText(gotBodies[k]) != decodedText(wantBodies[k]) {
+			return false
+		}
+	}
+	return true
+}
+
+// replayEndToEnd replays one session and reports whether its message
+// differs from Node's only in the line ends of a quoted-printable body.
+func replayEndToEnd(t *testing.T, sess *e2eSession, panelBaseURL string, roots *x509.CertPool) (qpLineEnds bool) {
 	// The scripted server, or a port of loopback where nothing listens
 	var sink *smtpwire.Sink
 	var port string
@@ -347,6 +427,9 @@ func replayEndToEnd(t *testing.T, sess *e2eSession, panelBaseURL string, roots *
 		case wantEvent.E == "data" && gotEvent.B64 != nil:
 			gotData, _ := base64.StdEncoding.DecodeString(*gotEvent.B64)
 			same = bytes.Equal(gotData, recordedData)
+			if !same && sameButQPLineEnds(gotData, recordedData) {
+				same, qpLineEnds = true, true
+			}
 			if !same {
 				t.Errorf("the message differs\n got:\n%s\nwant:\n%s", gotData, recordedData)
 			}
@@ -360,6 +443,7 @@ func replayEndToEnd(t *testing.T, sess *e2eSession, panelBaseURL string, roots *
 			break
 		}
 	}
+	return qpLineEnds
 }
 
 func eventsText(events []smtpwire.SinkEvent) string {
