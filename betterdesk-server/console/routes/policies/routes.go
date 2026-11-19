@@ -136,18 +136,20 @@ type noRecords struct {
 
 // attestations answers GET /api/panel/attestation?limit=&offset=: the
 // attestation records. limit is 50 when the query gives none or 0 and at
-// most 200; offset is 0 when it gives none. An API server without
-// attestation answers 404, which is the empty list here.
+// most 200; offset is 0 when it gives none. Each is read from one text: a
+// list or an object (limit[]=1, limit[toString]=1) is answered with 400
+// "Invalid limit" or "Invalid offset" before any call. An API server
+// without attestation answers 404, which is the empty list here.
 func (h *handlers) attestations(w http.ResponseWriter, r *http.Request) {
-	limit, err := queryInt(r, "limit", defaultLimit)
-	if err != nil {
-		h.web.ServerError(w, r, err, 0)
+	limit, ok := queryInt(r, "limit", defaultLimit)
+	if !ok {
+		kit.JSON(w, r, http.StatusBadRequest, goapipath.ErrorBody{Error: "Invalid limit"})
 		return
 	}
 	limit = math.Min(limit, maxLimit)
-	offset, err := queryInt(r, "offset", 0)
-	if err != nil {
-		h.web.ServerError(w, r, err, 0)
+	offset, ok := queryInt(r, "offset", 0)
+	if !ok {
+		kit.JSON(w, r, http.StatusBadRequest, goapipath.ErrorBody{Error: "Invalid offset"})
 		return
 	}
 	path := "/attestation?limit=" + goapipath.NumberText(limit) + "&offset=" + goapipath.NumberText(offset)
@@ -165,17 +167,23 @@ func (h *handlers) attestations(w http.ResponseWriter, r *http.Request) {
 }
 
 // queryInt is parseInt(req.query[name]) || fallback: the whole number the
-// value starts with, and the fallback when it starts with none or is 0.
-func queryInt(r *http.Request, name string, fallback float64) (float64, error) {
-	text, err := goapipath.Query(r, name).Text()
-	if err != nil {
-		return 0, err
+// value starts with, and the fallback when the query has none, or the
+// value starts with none or with 0. ok is false for a value that is no
+// single text.
+func queryInt(r *http.Request, name string, fallback float64) (n float64, ok bool) {
+	value := goapipath.Query(r, name)
+	if !value.Exists() {
+		return fallback, true
 	}
-	n := goapipath.ParseInt(text)
+	text, ok := value.OneText()
+	if !ok {
+		return 0, false
+	}
+	n = goapipath.ParseInt(text)
 	if n == 0 || math.IsNaN(n) {
-		return fallback, nil
+		return fallback, true
 	}
-	return n, nil
+	return n, true
 }
 
 // missing reports a call the API server has no route for, or that found

@@ -178,5 +178,158 @@
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Invalid deviceId\"}",
   "calls": []
+ },
+ {
+  "vector": 891,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?limit=10&limit=20",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid limit\"}",
+  "calls": []
+ },
+ {
+  "vector": 892,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?limit[]=7",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid limit\"}",
+  "calls": []
+ },
+ {
+  "vector": 893,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?limit[]=7&limit[]=8",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid limit\"}",
+  "calls": []
+ },
+ {
+  "vector": 894,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?limit[x]=7",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid limit\"}",
+  "calls": []
+ },
+ {
+  "vector": 895,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?offset=1&offset=2",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid offset\"}",
+  "calls": []
+ },
+ {
+  "vector": 896,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?offset[]=9",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid offset\"}",
+  "calls": []
+ },
+ {
+  "vector": 897,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?offset[0]=9&offset[1]=1",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid offset\"}",
+  "calls": []
+ },
+ {
+  "vector": 898,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?offset[x]=9",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid offset\"}",
+  "calls": []
+ },
+ {
+  "vector": 984,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?limit[x]offset",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid limit\"}",
+  "calls": []
+ },
+ {
+  "vector": 1011,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?&offset[x]=limitlimit9[]",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid offset\"}",
+  "calls": []
+ },
+ {
+  "vector": 1090,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?offset[0]e0x=x0xlimit0x",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid offset\"}",
+  "calls": []
+ },
+ {
+  "vector": 1126,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?&limit[x]%20a",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid limit\"}",
+  "calls": []
+ },
+ {
+  "vector": 1261,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?limit[x]1+=",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid limit\"}",
+  "calls": []
+ },
+ {
+  "vector": 1296,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?offset[]&,[0]0x",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid offset\"}",
+  "calls": []
+ },
+ {
+  "vector": 1361,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?limit[]1limit=[x]=%20=",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid limit\"}",
+  "calls": []
+ },
+ {
+  "vector": 1385,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?limit[x]0",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid limit\"}",
+  "calls": []
+ },
+ {
+  "vector": 1390,
+  "bug": "FL1",
+  "request": "GET /api/panel/attestation?elimit&limit[0]",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid limit\"}",
+  "calls": []
  }
 ]

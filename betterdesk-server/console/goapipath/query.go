@@ -593,3 +593,12 @@ func nodeText(n *queryNode) (string, error) {
 	}
 	return "[object Object]", nil
 }
+
+// OneText is the value when the query gives it as text: name=value once,
+// without brackets. ok is false for a missing name, a list and an object.
+func (v QueryValue) OneText() (text string, ok bool) {
+	if v.node == nil || v.node.kind != queryString {
+		return "", false
+	}
+	return v.node.text, true
+}
