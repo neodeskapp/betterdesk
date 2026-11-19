@@ -89,9 +89,10 @@ func FuzzStoredConfig(f *testing.F) {
 		if want := cfg.get("secure").truthy(); tr.settings.Secure != want {
 			t.Fatalf("%q: secure %v", text, tr.settings.Secure)
 		}
+		// A stored flag decides, anything else leaves the default (on here)
 		wantVerify := true
-		if v := cfg.get("tlsVerify"); !v.isUndefined() {
-			wantVerify = v.truthy()
+		if v := cfg.get("tlsVerify"); v.kind == kindBool {
+			wantVerify = v.flag
 		}
 		if tr.settings.TLSVerify != wantVerify {
 			t.Fatalf("%q: certificate check %v, want %v", text, tr.settings.TLSVerify, wantVerify)

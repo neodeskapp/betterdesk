@@ -2,23 +2,25 @@ package config
 
 import "testing"
 
-// The two switches the mail service reads through the configuration, with
-// the old console's defaults: certificates of the mail server are not
-// checked unless SMTP_TLS_VERIFY is "true", and links in mails are https
-// unless HTTP_REDIRECT_HTTPS is something else than "true".
+// The two switches the mail service reads through the configuration:
+// certificates of the mail server are checked unless SMTP_TLS_VERIFY is
+// "false" (BUGS EM1), and links in mails are https unless
+// HTTP_REDIRECT_HTTPS is something else than "true".
 func TestMailSwitches(t *testing.T) {
 	for _, tt := range []struct {
 		verify, redirect         string
 		wantVerify, wantRedirect bool
 	}{
-		{"", "", false, true},
+		{"", "", true, true},
 		{"true", "true", true, true},
 		{"TRUE", "True", true, true},
 		{"false", "false", false, false},
-		{"1", "1", false, false},
-		{"yes", "0", false, false},
-		{" true", "true ", false, false},
-		{"on", "off", false, false},
+		{"FALSE", "False", false, false},
+		{"1", "1", true, false},
+		{"yes", "0", true, false},
+		{" true", "true ", true, false},
+		{"off", "off", true, false},
+		{"0", "", true, true},
 	} {
 		cfg, err := load(env(map[string]string{"SMTP_TLS_VERIFY": tt.verify, "HTTP_REDIRECT_HTTPS": tt.redirect}), machine())
 		if err != nil {
@@ -32,11 +34,13 @@ func TestMailSwitches(t *testing.T) {
 		}
 	}
 	// ALLOW_SELF_SIGNED_CERTS is about the console's own calls, not mail
-	cfg, err := load(env(map[string]string{"ALLOW_SELF_SIGNED_CERTS": "true"}), machine())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if cfg.SMTPTLSVerify {
-		t.Error("ALLOW_SELF_SIGNED_CERTS changed the mail server check")
+	for _, allow := range []string{"true", "false"} {
+		cfg, err := load(env(map[string]string{"ALLOW_SELF_SIGNED_CERTS": allow}), machine())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !cfg.SMTPTLSVerify {
+			t.Errorf("ALLOW_SELF_SIGNED_CERTS=%s turned the mail server check off", allow)
+		}
 	}
 }

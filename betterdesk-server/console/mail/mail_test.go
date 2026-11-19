@@ -190,9 +190,9 @@ func TestConnectionTestAnswers(t *testing.T) {
 
 // ---- security decisions ----
 
-// The certificate of the mail server is checked only when the
-// configuration or SMTP_TLS_VERIFY says so: the default is off, as in the
-// Node console.
+// The certificate of the mail server is checked unless the configuration
+// says false or the console's default (SMTP_TLS_VERIFY) is off. A stored
+// tlsVerify that is no flag counts as not set (BUGS EM1).
 func TestTLSVerification(t *testing.T) {
 	db := storetest.Migrated(t)
 	ctx := context.Background()
@@ -205,9 +205,12 @@ func TestTLSVerification(t *testing.T) {
 		{`{"host":"h"}`, true, true},
 		{`{"host":"h","tlsVerify":true}`, false, true},
 		{`{"host":"h","tlsVerify":false}`, true, false},
-		{`{"host":"h","tlsVerify":null}`, true, false},
-		{`{"host":"h","tlsVerify":"false"}`, false, true},
-		{`{"host":"h","tlsVerify":0}`, true, false},
+		{`{"host":"h","tlsVerify":null}`, true, true},
+		{`{"host":"h","tlsVerify":null}`, false, false},
+		{`{"host":"h","tlsVerify":"false"}`, true, true},
+		{`{"host":"h","tlsVerify":"true"}`, false, false},
+		{`{"host":"h","tlsVerify":0}`, true, true},
+		{`{"host":"h","tlsVerify":1}`, false, false},
 	} {
 		storeConfig(t, db, c.stored)
 		s, transport, _ := newTestService(db, nil, Options{TLSVerify: c.byDefault})
@@ -216,6 +219,12 @@ func TestTLSVerification(t *testing.T) {
 		}
 		if got := transport.verifies[0].TLSVerify; got != c.wantVerify {
 			t.Errorf("%s with the default %v: verify %v", c.stored, c.byDefault, got)
+		}
+		// The settings page sees a stored flag, and nothing for the default
+		answer := marshal(t, s.GetSMTPSettings(ctx).Body)
+		want := map[string]string{"true": `"tlsVerify":true`, "false": `"tlsVerify":false`}[strings.TrimSuffix(strings.TrimPrefix(c.stored, `{"host":"h","tlsVerify":`), "}")]
+		if want == "" && strings.Contains(answer, "tlsVerify") || want != "" && !strings.HasSuffix(answer, ","+want+"}") {
+			t.Errorf("%s: the settings answer %s", c.stored, answer)
 		}
 	}
 	// The environment's configuration takes the default
@@ -226,9 +235,6 @@ func TestTLSVerification(t *testing.T) {
 		if transport.verifies[0].TLSVerify != byDefault {
 			t.Errorf("environment with the default %v: verify %v", byDefault, transport.verifies[0].TLSVerify)
 		}
-	}
-	if New(Options{}).opts.TLSVerify {
-		t.Error("certificates are checked without being asked to")
 	}
 }
 

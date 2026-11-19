@@ -43,7 +43,7 @@
 //	HSTS_ENABLED             (auto)                true, 1, on: always send Strict-Transport-Security in HTTPS mode.
 //	                                               false, 0, off: never. Otherwise only without self-signed certificates.
 //	ALLOW_SELF_SIGNED_CERTS  false                 "true" turns the automatic HSTS off. It does not touch mail.
-//	SMTP_TLS_VERIFY          false                 "true" in any letter case: the mail server's certificate is checked
+//	SMTP_TLS_VERIFY          true                  "false" in any letter case: the mail server's certificate is not checked
 //	                                               when the saved SMTP settings have no tlsVerify of their own.
 //	HTTP_REDIRECT_HTTPS      true                  "true" in any letter case: the link to the console in a mail
 //	                                               starts with https, else with http. Nothing is redirected by it.

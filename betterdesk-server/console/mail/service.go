@@ -86,10 +86,9 @@ type Options struct {
 	// SMTP_SECURE, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_ALERT_EMAIL,
 	// PANEL_PUBLIC_URL and PUBLIC_URL. Nil means none is set.
 	Getenv func(string) string
-	// TLSVerify is config.smtpTlsVerify: whether the mail server's
-	// certificate is checked when the configuration does not say. It
-	// comes from SMTP_TLS_VERIFY (ParseFlag with the default "false"), so
-	// it is off unless the variable is "true".
+	// TLSVerify is whether the mail server's certificate is checked when
+	// the configuration does not say. The console sets it from
+	// SMTP_TLS_VERIFY, which is on unless the variable is "false".
 	TLSVerify bool
 	// Host is config.host: HOST, default "127.0.0.1".
 	Host string

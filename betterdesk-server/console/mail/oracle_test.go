@@ -288,6 +288,27 @@ func (p oracleProbe) refusal() (string, bool) {
 	return "", false
 }
 
+// storedTLSVerifyIsNoFlag reports whether the configuration in use has a
+// tlsVerify that is neither true nor false. Node read such a value by its
+// truth; the Go console takes the default for it (BUGS EM1), and leaves it
+// out of the settings answer.
+func (r *replay) storedTLSVerifyIsNoFlag() bool {
+	cfg := r.service.LoadSMTPConfig(context.Background())
+	if cfg == nil {
+		return false
+	}
+	v := cfg.get("tlsVerify")
+	if v.isUndefined() || v.kind == kindBool {
+		return false
+	}
+	r.counts["EM1: a stored tlsVerify that is no flag"]++
+	return true
+}
+
+// tlsVerifyMember is the member a settings answer ends with when the
+// stored configuration has a tlsVerify.
+var tlsVerifyMember = regexp.MustCompile(`,"tlsVerify":(true|false)\}$`)
+
 // wantSettings is what the recording says nodemailer connected with.
 func (r *replay) wantSettings(used oracleTransport) (Settings, bool) {
 	var want Settings
@@ -315,6 +336,9 @@ func (r *replay) wantSettings(used oracleTransport) (Settings, bool) {
 	want.TLSVerify = m[1] == "true"
 	if want.Secure && used.Probe.Connect.RejectUnauthorized != m[1] {
 		r.t.Fatalf("rejectUnauthorized %s at the socket, %s in the options", used.Probe.Connect.RejectUnauthorized, m[1])
+	}
+	if r.storedTLSVerifyIsNoFlag() {
+		want.TLSVerify = r.service.opts.TLSVerify
 	}
 	if auth := used.Probe.Auth; auth != nil {
 		user, okUser := dumped(auth.User)
@@ -584,6 +608,9 @@ func (r *replay) run(i int, step oracleStep) {
 			t.Fatalf("step %d alert email: %q %v, Node: %q", i, email, err, *step.AlertEmail.Text)
 		}
 	case "get":
+		if r.storedTLSVerifyIsNoFlag() {
+			step.Body = tlsVerifyMember.ReplaceAllString(step.Body, "}")
+		}
 		r.checkAnswer(i, step, r.service.GetSMTPSettings(ctx))
 	case "test":
 		answer := r.service.TestSMTPSettings(ctx)
@@ -773,7 +800,7 @@ func TestNodeRecording(t *testing.T) {
 		// Every kind of step and every special case has to have been met
 		for _, name := range []string{"state", "env", "reset", "load", "get", "test", "send", "alert", "help", "baseurl", "put", "has", "logsent", "logcount",
 			"nodemailer fails before it connects", "credentials that are no text", "a sender that is no text", "a sender that is no text, sent as text",
-			"recipients that are no text"} {
+			"recipients that are no text", "EM1: a stored tlsVerify that is no flag"} {
 			if r.counts[name] == 0 {
 				t.Errorf("the recording has no %q", name)
 			}

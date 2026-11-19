@@ -37,8 +37,8 @@ func (c *Config) signature() string { return c.doc.json() }
 
 // MarshalJSON writes the configuration as GET .../smtp answers it:
 // configured, host, port, secure, user, pass ("********" or ""), from,
-// alert_email and, when the configuration has one, tlsVerify. A port the
-// configuration does not have is left out. (No configuration at all is
+// alert_email and, when the configuration holds it as a flag, tlsVerify.
+// A port the configuration does not have is left out. (No configuration at all is
 // {"configured":false}; GetSMTPSettings answers that for a nil *Config,
 // which encoding/json would write as null.)
 func (c *Config) MarshalJSON() ([]byte, error) {
@@ -65,8 +65,8 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		"from", or("from"),
 		"alert_email", or("alert_email"),
 	)
-	if v := c.get("tlsVerify"); !v.isUndefined() {
-		out.set("tlsVerify", boolValue(v.truthy()))
+	if v := c.get("tlsVerify"); v.kind == kindBool {
+		out.set("tlsVerify", v)
 	}
 	return out.appendJSON(nil), nil
 }
@@ -146,11 +146,12 @@ type transporter struct {
 }
 
 // tlsVerify is options.tls.rejectUnauthorized: the configuration's
-// tlsVerify when it has one (null counts as off), else the console's
-// default.
+// tlsVerify when it is true or false, else the console's default. A value
+// of another type (null, a number, text) was never written by a save and
+// does not turn the check off.
 func (s *Service) tlsVerify(cfg *Config) bool {
-	if v := cfg.get("tlsVerify"); !v.isUndefined() {
-		return v.truthy()
+	if v := cfg.get("tlsVerify"); v.kind == kindBool {
+		return v.flag
 	}
 	return s.opts.TLSVerify
 }

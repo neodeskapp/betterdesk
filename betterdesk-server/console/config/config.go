@@ -138,7 +138,8 @@ type Config struct {
 	HSTSEnabled          string
 	AllowSelfSignedCerts bool
 	// SMTPTLSVerify says whether the mail server's certificate is checked
-	// when the saved SMTP settings do not say (SMTP_TLS_VERIFY).
+	// when the saved SMTP settings do not say: yes unless SMTP_TLS_VERIFY
+	// is "false" in any letter case.
 	SMTPTLSVerify bool
 
 	// DefaultLanguage is the language of a request that names none
@@ -352,7 +353,7 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 	cfg.CAFile = getenv("SSL_CA_PATH")
 	cfg.HSTSEnabled = getenv("HSTS_ENABLED")
 	cfg.AllowSelfSignedCerts = isTrue(getenv("ALLOW_SELF_SIGNED_CERTS"))
-	cfg.SMTPTLSVerify = isTrue(getenv("SMTP_TLS_VERIFY"))
+	cfg.SMTPTLSVerify = strings.ToLower(getenv("SMTP_TLS_VERIFY")) != "false"
 
 	cfg.DefaultLanguage = orDefault(getenv("DEFAULT_LANGUAGE"), "en")
 	cfg.DeviceScopeDefault = strings.ToLower(orDefault(getenv("DEVICE_SCOPE_DEFAULT"), "open"))
