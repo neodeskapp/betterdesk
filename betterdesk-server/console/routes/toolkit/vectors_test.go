@@ -130,6 +130,33 @@ func clip(s string) string {
 	return s
 }
 
+// longerChain reports whether an answer of the certificate check is
+// Node's answer with a longer chain that starts with Node's. Node stopped
+// at an issuer it found last in the list and left out a certificate whose
+// issuer it did not know (BUGS.md SC11).
+func longerChain(t *testing.T, got, node string) bool {
+	t.Helper()
+	split := func(answer string) (map[string]any, []any) {
+		var v map[string]any
+		if err := json.Unmarshal([]byte(answer), &v); err != nil {
+			return nil, nil
+		}
+		data, _ := v["data"].(map[string]any)
+		if data == nil {
+			return nil, nil
+		}
+		chain, _ := data["chain"].([]any)
+		delete(data, "chain")
+		return v, chain
+	}
+	gotRest, gotChain := split(got)
+	nodeRest, nodeChain := split(node)
+	if gotRest == nil || nodeRest == nil || fmt.Sprint(gotRest) != fmt.Sprint(nodeRest) || len(gotChain) <= len(nodeChain) {
+		return false
+	}
+	return fmt.Sprint(gotChain[:len(nodeChain)]) == fmt.Sprint(nodeChain)
+}
+
 type sslVector struct {
 	Server  string `json:"server"`
 	Trusted bool   `json:"trusted"`
@@ -172,7 +199,7 @@ func TestNodeSSLVectors(t *testing.T) {
 				// Node asked about 0.0.0.0, which the guard refuses since BUGS.md
 				// SC3. The certificates name 10.1.2.3 as well, so the answers stay
 				status, body := s.post(s.signIn("admin"), "/api/toolkit/ssl", `{"host":"10.1.2.3","port":8443}`)
-				if status != v.Status || body != v.Answer {
+				if status != v.Status || body != v.Answer && !longerChain(t, body, v.Answer) {
 					t.Errorf("\n got  %d %s\n node %d %s", status, body, v.Status, v.Answer)
 				}
 				if asked != "10.1.2.3:8443" {

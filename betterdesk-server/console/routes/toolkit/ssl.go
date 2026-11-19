@@ -251,13 +251,12 @@ func (h *handlers) describe(state *tls.ConnectionState, host string) sslData {
 		Chain:        []chainLink{},
 	}
 
-	// A certificate gets a line in the chain when its issuer is known:
-	// sent by the server, found among the trusted roots, or itself
-	linked, closed := issuerChain(state.PeerCertificates, h.net.Roots)
+	// Every certificate of the chain gets a line, the last one also when
+	// its issuer is unknown
 	seen := map[string]bool{}
-	for i, cert := range linked {
+	for _, cert := range issuerChain(state.PeerCertificates, h.net.Roots) {
 		print := fingerprint(cert)
-		if (i == len(linked)-1 && !closed) || seen[print] {
+		if seen[print] {
 			break
 		}
 		seen[print] = true
@@ -389,13 +388,13 @@ func issued(issuer, subject *x509.Certificate) bool {
 	return issuer.KeyUsage == 0 || issuer.KeyUsage&x509.KeyUsageCertSign != 0
 }
 
-// issuerChain orders the certificates a server sent: the server's own,
-// then for each the first of the others that issued it. When the last one
-// is not its own issuer, the trusted roots are asked for the rest. closed
-// says the chain ends in a certificate that is its own issuer.
-func issuerChain(sent []*x509.Certificate, roots *x509.CertPool) (chain []*x509.Certificate, closed bool) {
+// issuerChain orders the certificates a server sent, in whatever order it
+// sent them: the server's own, then for each the first of the others that
+// issued it. When the last one is not its own issuer, the trusted roots
+// are asked for the rest.
+func issuerChain(sent []*x509.Certificate, roots *x509.CertPool) []*x509.Certificate {
 	current := sent[0]
-	chain = []*x509.Certificate{current}
+	chain := []*x509.Certificate{current}
 	rest := append([]*x509.Certificate(nil), sent[1:]...)
 	for {
 		found := -1
@@ -410,15 +409,7 @@ func issuerChain(sent []*x509.Certificate, roots *x509.CertPool) (chain []*x509.
 		}
 		current = rest[found]
 		chain = append(chain, current)
-		// The old search ended when the issuer it found was the last
-		// certificate of the list, also when others were still unused. A
-		// server that sends its certificates out of order gets a shorter
-		// chain for it.
-		last := found == len(rest)-1
 		rest = append(rest[:found], rest[found+1:]...)
-		if last {
-			break
-		}
 	}
 	if !issued(current, current) {
 		// Dates are left out of this lookup too: it runs at a moment the
@@ -429,10 +420,9 @@ func issuerChain(sent []*x509.Certificate, roots *x509.CertPool) (chain []*x509.
 		})
 		if err == nil && len(paths) > 0 && len(paths[0]) > 1 {
 			chain = append(chain, paths[0][1:]...)
-			current = chain[len(chain)-1]
 		}
 	}
-	return chain, issued(current, current)
+	return chain
 }
 
 var oidSubjectAltName = asn1.ObjectIdentifier{2, 5, 29, 17}

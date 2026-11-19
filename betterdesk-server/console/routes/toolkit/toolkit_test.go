@@ -592,6 +592,53 @@ func TestWhois(t *testing.T) {
 	}
 }
 
+// The chain follows the issuers among all the certificates a server sent,
+// in whatever order it sent them, and lists the last one also when its
+// issuer is unknown (BUGS.md SC11).
+func TestSSLChainOfCertificatesOutOfOrder(t *testing.T) {
+	for _, c := range []struct {
+		server  string
+		trusted bool
+		want    string
+	}{
+		{"shuffled", false, "tls.test < Toolkit Test Intermediate < Toolkit Test Root"},
+		{"with-a-stranger", false, "tls.test < Toolkit Test Intermediate"},
+		{"with-a-stranger", true, "tls.test < Toolkit Test Intermediate < Toolkit Test Root"},
+		{"no-root", false, "tls.test < Toolkit Test Intermediate"},
+		{"leaf-only", false, "tls.test"},
+		{"unknown-issuer", false, "unknown.test"},
+		{"full", false, "tls.test < Toolkit Test Intermediate < Toolkit Test Root"},
+	} {
+		s := newSite(t, Options{
+			Network: Network{
+				Roots: rootsOf(t, c.trusted),
+				Handshake: func(context.Context, string, []string, int) (*tls.ConnectionState, error) {
+					return &tls.ConnectionState{PeerCertificates: sentBy(t, c.server), Version: tls.VersionTLS13, CipherSuite: tls.TLS_AES_256_GCM_SHA384}, nil
+				},
+			},
+			Now: func() time.Time { return oracleNow },
+		})
+		status, answer := s.post(s.signIn("admin"), "/api/toolkit/ssl", `{"host":"10.1.2.3"}`)
+		var got struct {
+			Data struct {
+				Chain []struct {
+					Subject any `json:"subject"`
+				} `json:"chain"`
+			} `json:"data"`
+		}
+		if err := json.Unmarshal([]byte(answer), &got); status != 200 || err != nil {
+			t.Fatalf("%s: %d %s", c.server, status, answer)
+		}
+		var subjects []string
+		for _, link := range got.Data.Chain {
+			subjects = append(subjects, fmt.Sprint(link.Subject))
+		}
+		if strings.Join(subjects, " < ") != c.want {
+			t.Errorf("%s, root trusted %v: chain %q, want %s", c.server, c.trusted, subjects, c.want)
+		}
+	}
+}
+
 func TestAltNamesAndChainsOfTheTestCertificates(t *testing.T) {
 	full := loadCert(t, "leaf-full")
 	names := altNames(full)
@@ -602,18 +649,18 @@ func TestAltNamesAndChainsOfTheTestCertificates(t *testing.T) {
 		t.Errorf("a certificate without names: %#v, want an empty list", got)
 	}
 	inter, root, stranger := loadCert(t, "inter"), loadCert(t, "root"), loadCert(t, "leaf-selfsigned")
-	chain, closed := issuerChain([]*x509.Certificate{full, inter, root}, rootsOf(t, false))
-	if len(chain) != 3 || !closed {
-		t.Errorf("in order: %d certificates, closed %v", len(chain), closed)
+	if chain := issuerChain([]*x509.Certificate{full, inter, root}, rootsOf(t, false)); len(chain) != 3 {
+		t.Errorf("in order: %d certificates", len(chain))
 	}
-	// The issuer found last in the list ends the search
-	chain, closed = issuerChain([]*x509.Certificate{full, stranger, inter, root}[:3], rootsOf(t, false))
-	if len(chain) != 2 || closed {
-		t.Errorf("issuer at the end of the list: %d certificates, closed %v", len(chain), closed)
+	// A certificate nobody issued with stays out
+	if chain := issuerChain([]*x509.Certificate{full, stranger, inter}, rootsOf(t, false)); len(chain) != 2 || chain[1] != inter {
+		t.Errorf("with a stranger: %d certificates", len(chain))
 	}
-	chain, closed = issuerChain([]*x509.Certificate{full, root, inter}, rootsOf(t, true))
-	if len(chain) != 3 || !closed || chain[2].Subject.CommonName != "Toolkit Test Root" {
-		t.Errorf("out of order with a trusted root: %d certificates, closed %v", len(chain), closed)
+	if chain := issuerChain([]*x509.Certificate{full, root, inter}, rootsOf(t, false)); len(chain) != 3 || chain[2].Subject.CommonName != "Toolkit Test Root" {
+		t.Errorf("out of order: %d certificates", len(chain))
+	}
+	if chain := issuerChain([]*x509.Certificate{full, inter}, rootsOf(t, true)); len(chain) != 3 || chain[2].Subject.CommonName != "Toolkit Test Root" {
+		t.Errorf("the root from the trusted ones: %d certificates", len(chain))
 	}
 	if issued(loadCert(t, "other-root"), full) || !issued(inter, full) || issued(loadCert(t, "leaf-nocertsign"), loadCert(t, "leaf-nocertsign")) {
 		t.Error("issued: wrong answer for the test certificates")
