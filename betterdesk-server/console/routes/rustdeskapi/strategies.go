@@ -2,10 +2,13 @@ package rustdeskapi
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/unitronix/betterdesk-server/console/authn"
+	"github.com/unitronix/betterdesk-server/console/devicegroups"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
@@ -175,11 +178,11 @@ func (h *handlers) strategy(w http.ResponseWriter, r *http.Request) {
 func iterationError(v any) error {
 	switch x := v.(type) {
 	case float64:
-		return fmt.Errorf("number %s is not iterable (cannot read property Symbol(Symbol.iterator))", jsbind.NumberString(x))
+		return assignError("number " + jsbind.NumberString(x) + " is not iterable (cannot read property Symbol(Symbol.iterator))")
 	case bool:
-		return fmt.Errorf("boolean %t is not iterable (cannot read property Symbol(Symbol.iterator))", x)
+		return assignError(fmt.Sprintf("boolean %t is not iterable (cannot read property Symbol(Symbol.iterator))", x))
 	}
-	return fmt.Errorf("object is not iterable (cannot read property Symbol(Symbol.iterator))")
+	return assignError("object is not iterable (cannot read property Symbol(Symbol.iterator))")
 }
 
 // refs is for (const ref of body[name] || []): the items of a list, the
@@ -209,7 +212,7 @@ func (h *handlers) resolveRefs(ctx context.Context, body middleware.JSONObject) 
 		for _, item := range items {
 			text, err := str(or(item, ""))
 			if err != nil {
-				return err
+				return assignError(err.Error())
 			}
 			key, err := lookup(ctx, text)
 			if err != nil {
@@ -245,8 +248,37 @@ func lengthOf(v any) bool {
 	return false
 }
 
+// assignError is a failed assignment the client may read about: a
+// reference that names nothing, or a list of the wrong type.
+type assignError string
+
+func (e assignError) Error() string { return string(e) }
+
+// assignmentText is the text a failed assignment answers with: the text of
+// an assignError or of a reference to no account or device group, else
+// "Assign failed", so no text of the database reaches the client.
+func assignmentText(err error) string {
+	var own assignError
+	var user authn.AssignmentError
+	var group devicegroups.ErrNotFound
+	text := ""
+	switch {
+	case errors.As(err, &own):
+		text = string(own)
+	case errors.As(err, &user):
+		text = user.Text
+	case errors.As(err, &group):
+		text = group.Text
+	}
+	if text == "" {
+		return "Assign failed"
+	}
+	return text
+}
+
 // assignStrategy answers POST /api/strategies/assign. Every failure is a
-// 400 with its text.
+// 400: a reference to nothing or a list of the wrong type with its text,
+// anything else with "Assign failed".
 func (h *handlers) assignStrategy(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	body := kit.Body(r)
@@ -260,12 +292,8 @@ func (h *handlers) assignStrategy(w http.ResponseWriter, r *http.Request) {
 		err = h.store.assignStrategy(ctx, strategy, targets)
 	}
 	if err != nil {
-		message := jsbind.Message(err)
-		h.strategyLog.Error("Assign error:", message)
-		if message == "" {
-			message = "Assign failed"
-		}
-		fail(w, r, http.StatusBadRequest, message)
+		h.strategyLog.Error("Assign error:", jsbind.Message(err))
+		fail(w, r, http.StatusBadRequest, assignmentText(err))
 		return
 	}
 	kit.JSON(w, r, http.StatusOK, statusAnswer{Status: "ok"})

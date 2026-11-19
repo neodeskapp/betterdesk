@@ -628,7 +628,7 @@ func (s *clientStore) carryRenames(ctx context.Context, query string) {
 func (s *clientStore) resolvePeerAssignmentKey(ctx context.Context, ref string) (string, error) {
 	key := jsTrim(ref)
 	if key == "" {
-		return "", errors.New("empty peer reference")
+		return "", assignError("empty peer reference")
 	}
 	var id string
 	err := s.db.QueryRow(ctx, `
@@ -637,7 +637,7 @@ func (s *clientStore) resolvePeerAssignmentKey(ctx context.Context, ref string) 
                 LIMIT 1
             `, key, key, key).Scan(&id)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", errors.New("peer not found")
+		return "", assignError("peer not found")
 	}
 	if err != nil {
 		return "", err
@@ -645,7 +645,7 @@ func (s *clientStore) resolvePeerAssignmentKey(ctx context.Context, ref string) 
 	var uuid, guid string
 	err = s.db.QueryRow(ctx, `SELECT COALESCE(uuid, '') AS uuid, COALESCE(guid, '') AS guid FROM peers WHERE id = ?`, id).Scan(&uuid, &guid)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", errors.New("peer not found")
+		return "", assignError("peer not found")
 	}
 	if err != nil {
 		return "", err
@@ -1177,7 +1177,7 @@ func (s *clientStore) assignStrategy(ctx context.Context, strategyGUID string, t
 			return err
 		}
 		if st == nil {
-			return errors.New("strategy not found")
+			return assignError("strategy not found")
 		}
 	}
 	upsert := func(targetType string, keys []string) error {

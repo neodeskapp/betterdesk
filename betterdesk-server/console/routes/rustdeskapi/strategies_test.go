@@ -105,3 +105,42 @@ func TestStrategyListReadsTheSwitch(t *testing.T) {
 		}
 	})
 }
+
+// POST /api/strategies/assign names what a request got wrong (a reference
+// to nothing, a list that is none) and hides every other failure behind
+// "Assign failed": the database's own text stays in the log.
+func TestAssignHidesDatabaseErrors(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := strategyWorld(t, db)
+		guid := createStrategy(t, w, `{"name":"rd-assign"}`)
+		assign := func(body string) replay.Answer {
+			return w.Do(replay.Request{Method: "POST", Path: "/api/strategies/assign", Headers: bearer(adminToken), Body: replay.Text(body)})
+		}
+		// Without the signal server's device table a device reference fails
+		// in the database
+		if got := assign(`{"strategy":"` + guid + `","peers":["RDNONE"]}`); got.Status != http.StatusBadRequest || got.Body != `{"error":"Assign failed"}` {
+			t.Errorf("without the device table: %d %s", got.Status, got.Body)
+		}
+		w.Exec("CREATE TABLE peers (id TEXT PRIMARY KEY, uuid TEXT, guid TEXT)", nil)
+		for body, want := range map[string]string{
+			`{"strategy":"` + guid + `","peers":["RDNONE"]}`:       "peer not found",
+			`{"strategy":"` + guid + `","peers":[" "]}`:            "empty peer reference",
+			`{"strategy":"` + guid + `","users":["rd-nobody"]}`:    "user not found",
+			`{"strategy":"` + guid + `","groups":["rd-no-group"]}`: "device group not found",
+			`{"strategy":"rd-none","users":["e2e_viewer"]}`:        "strategy not found",
+			`{"strategy":"` + guid + `","peers":5,"users":["x"]}`:  "number 5 is not iterable (cannot read property Symbol(Symbol.iterator))",
+			`{"strategy":"` + guid + `","users":[{"toString":1}]}`: "Cannot convert object to primitive value",
+		} {
+			if got := assign(body); got.Status != http.StatusBadRequest || got.Body != `{"error":"`+want+`"}` {
+				t.Errorf("%s: %d %s, want the text %q", body, got.Status, got.Body, want)
+			}
+		}
+		if got := assign(`{"strategy":"` + guid + `","users":["e2e_viewer"]}`); got.Status != http.StatusOK {
+			t.Fatalf("a good assignment: %d %s", got.Status, got.Body)
+		}
+		w.Exec("DROP TABLE strategy_assignments", nil)
+		if got := assign(`{"strategy":"` + guid + `","users":["e2e_viewer"]}`); got.Status != http.StatusBadRequest || got.Body != `{"error":"Assign failed"}` {
+			t.Errorf("a failing database: %d %s", got.Status, got.Body)
+		}
+	})
+}
