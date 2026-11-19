@@ -40,6 +40,7 @@ const BASH_INSTALLER_FILES = [
     'scripts/test-go-installer.sh',
     'scripts/check-go-toolchain-pins.sh',
     'scripts/test-docker-installer.sh',
+    'scripts/check-supervisor-env.sh',
     'scripts/test-postgresql-hba.sh',
     'scripts/test-docker-hardening.sh',
     'scripts/local-gate.sh',
@@ -745,6 +746,7 @@ async function runInstallerChecks(report, tools) {
         ['installer-go-upgrade', 'scripts/test-go-installer.sh', 'Test the upgrade to the server with its web console'],
         ['installer-go-toolchain', 'scripts/check-go-toolchain-pins.sh', 'Check the Go pins of the installers against go.mod'],
         ['installer-docker-update', 'scripts/test-docker-installer.sh', 'Test the Docker manager update and backup'],
+        ['installer-supervisor', 'scripts/check-supervisor-env.sh', 'Check that the systemd unit and the image name their supervisor'],
         ['installer-native-recovery', 'scripts/test-native-installer.sh', 'Test native installer recovery'],
         ['installer-postgres-hba', 'scripts/test-postgresql-hba.sh', 'Test PostgreSQL HBA setup'],
     ]) {

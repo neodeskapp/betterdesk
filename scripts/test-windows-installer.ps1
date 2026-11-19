@@ -21,7 +21,11 @@ function Fail([string]$Message) { Write-Host "FAIL: $Message"; $script:failures+
 
 # Stand-ins for Windows and NSSM
 $script:registeredTasks = @{}
-function Get-NssmPath { return $null }
+$script:fakeNssm = $null
+$script:nssmCalls = @()
+function Get-NssmPath { return $script:fakeNssm }
+function fake-nssm { $script:nssmCalls += , @($args | ForEach-Object { $_ } | ForEach-Object { "$_" }) }
+function Set-ServiceLeastPrivilege { param($ServiceName, $NssmPath, $Paths) }
 function icacls { }
 function Unregister-ScheduledTask { param($TaskName, [switch]$Confirm, $ErrorAction) $script:registeredTasks.Remove($TaskName) }
 function New-ScheduledTaskAction { param($Execute, $Argument, $WorkingDirectory) [pscustomobject]@{ Execute = $Execute; Arguments = $Argument } }
@@ -97,7 +101,27 @@ function Test-UpdateRewritesOldLauncher {
     Remove-Item -Recurse -Force $dir
 }
 
+# RC1: the NSSM service tells the server that NSSM starts it again
+# (BETTERDESK_SUPERVISOR=nssm) and restarts it after any exit.
+function Test-NssmServiceIsSupervised {
+    $dir = New-TestInstall
+    $script:fakeNssm = 'fake-nssm'
+    $script:nssmCalls = @()
+    Setup-Services | Out-Null
+    $script:fakeNssm = $null
+    $envCall = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq 'AppEnvironmentExtra' } | Select-Object -Last 1
+    if (-not $envCall) { Fail 'the NSSM service gets no environment' }
+    else {
+        if ($envCall -notcontains 'BETTERDESK_SUPERVISOR=nssm') { Fail "the NSSM service has no BETTERDESK_SUPERVISOR=nssm: $($envCall -join ' ')" }
+        if ($envCall -contains 'CONSOLE_PORT=0') { Fail 'the NSSM service keeps the console off' }
+    }
+    $exitCall = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq 'AppExit' } | Select-Object -Last 1
+    if (-not $exitCall -or ($exitCall -join ' ') -notmatch 'AppExit Default Restart$') { Fail 'NSSM does not restart the server after it ends' }
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
+Test-NssmServiceIsSupervised
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'

@@ -10,6 +10,8 @@ on:
       - 'betterdesk-docker.sh'
       - 'scripts/test-go-installer.sh'
       - 'scripts/test-docker-installer.sh'
+      - 'scripts/check-supervisor-env.sh'
+      - 'scripts/test-windows-installer.ps1'
       - 'scripts/check-go-toolchain-pins.sh'
       - 'betterdesk-server/go.mod'
       - 'scripts/test-postgresql-hba.sh'
@@ -32,6 +34,8 @@ on:
       - 'betterdesk-docker.sh'
       - 'scripts/test-go-installer.sh'
       - 'scripts/test-docker-installer.sh'
+      - 'scripts/check-supervisor-env.sh'
+      - 'scripts/test-windows-installer.ps1'
       - 'scripts/check-go-toolchain-pins.sh'
       - 'betterdesk-server/go.mod'
       - 'scripts/test-postgresql-hba.sh'
@@ -79,6 +83,7 @@ jobs:
             scripts/test-native-installer.sh \
             scripts/test-go-installer.sh \
             scripts/test-docker-installer.sh \
+            scripts/check-supervisor-env.sh \
             scripts/check-go-toolchain-pins.sh \
             scripts/test-postgresql-hba.sh \
             scripts/test-docker-hardening.sh)
@@ -91,6 +96,7 @@ jobs:
             scripts/test-native-installer.sh \
             scripts/test-go-installer.sh \
             scripts/test-docker-installer.sh \
+            scripts/check-supervisor-env.sh \
             scripts/check-go-toolchain-pins.sh \
             scripts/test-postgresql-hba.sh \
             scripts/test-docker-hardening.sh
@@ -100,6 +106,8 @@ jobs:
         run: bash scripts/check-go-toolchain-pins.sh
       - name: Test the Docker manager's update and backup
         run: bash scripts/test-docker-installer.sh
+      - name: Check that the systemd unit and the image name their supervisor
+        run: bash scripts/check-supervisor-env.sh
       - name: Test native installer watchdog and clone recovery
         run: bash scripts/test-native-installer.sh
       - name: Test PostgreSQL pg_hba.conf setup
