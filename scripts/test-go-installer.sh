@@ -136,9 +136,36 @@ test_node_era_detection() (
     rm -rf "$TEST_DIR"
 )
 
+# Stopping stale servers ends a running betterdesk-server, never a process
+# that only names the binary in its arguments (the installer run with
+# --binary /dist/betterdesk-server-linux-amd64).
+test_kill_stale_processes() (
+    load
+    print_warning() { :; }
+    mkdir -p "$TEST_DIR/bin"
+    cp "$(command -v sleep)" "$TEST_DIR/bin/betterdesk-server"
+    "$TEST_DIR/bin/betterdesk-server" 60 &
+    local server=$!
+    bash -c 'sleep 60; : --binary /dist/betterdesk-server-linux-amd64' &
+    local installer=$!
+    sleep 0.5
+    kill_stale_processes "betterdesk-server"
+    if kill -0 "$server" 2>/dev/null; then
+        kill "$server" "$installer" 2>/dev/null || true
+        fail "the stale betterdesk-server kept running"
+    fi
+    if ! kill -0 "$installer" 2>/dev/null; then
+        fail "a process that only names betterdesk-server in its arguments was killed"
+    fi
+    kill "$installer" 2>/dev/null || true
+    wait 2>/dev/null || true
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
 test_write_server_unit
 test_node_era_detection
+test_kill_stale_processes
 echo "Go installer unit checks passed"

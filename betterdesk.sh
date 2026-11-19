@@ -967,21 +967,26 @@ kill_processes_holding_ports() {
 
 kill_stale_processes() {
     local process_name="$1"
+    # The program itself, as the first word of the command line: a process
+    # that only names it in its arguments (this installer run with
+    # --binary .../betterdesk-server-linux-amd64) is left alone
+    local pattern="^([^ ]*/)?${process_name}( |$)"
 
     # Find and kill any remaining processes
-    local pids=$(pgrep -f "$process_name" 2>/dev/null || true)
-    
+    local pids
+    pids=$(pgrep -f "$pattern" 2>/dev/null || true)
+
     if [ -n "$pids" ]; then
         print_warning "Found stale $process_name processes: $pids"
-        
+
         # Try graceful termination first
         for pid in $pids; do
             kill -TERM "$pid" 2>/dev/null || true
         done
         sleep 2
-        
+
         # Force kill if still running
-        pids=$(pgrep -f "$process_name" 2>/dev/null || true)
+        pids=$(pgrep -f "$pattern" 2>/dev/null || true)
         if [ -n "$pids" ]; then
             for pid in $pids; do
                 kill -9 "$pid" 2>/dev/null || true
