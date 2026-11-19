@@ -39,14 +39,15 @@ func TestNot(t *testing.T) {
 		"/api/bd/":                    "",
 		"/api/bd?x=/API/BD":           "",
 		"/api/bd/operator-info/extra": "",
-		// the device mount in another spelling: the group answers, and
-		// the later route never sees the request
-		"/API/BD/Operator-Info/": "group Operator-Info at /API/BD",
-		"/API/BD/operator-info":  "group operator-info at /API/BD",
-		"/Api/bd/operator-info":  "group operator-info at /Api/bd",
-		"/api/bD/x":              "group x at /api/bD",
-		"/api/Bd":                "group  at /api/Bd",
-		"/API/BD/":               "group  at /API/BD",
+		// the device mount in any other spelling: the group steps aside
+		// too (BUGS.md DV8), so the later route answers
+		"/API/BD/Operator-Info/": "later",
+		"/API/BD/operator-info":  "later",
+		"/Api/bd/operator-info":  "later",
+		"/API/BD/D1":             "",
+		"/api/bD/x":              "",
+		"/api/Bd":                "",
+		"/API/BD/":               "",
 	} {
 		req := httptest.NewRequest(http.MethodGet, "http://console.test/", nil)
 		req.RequestURI = target

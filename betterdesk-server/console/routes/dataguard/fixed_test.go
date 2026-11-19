@@ -180,6 +180,7 @@ var _ = deviceFixes.Add("DV7", map[string]replay.Fix{
 	" GET /api/dataguard/dlp-policies ":                    {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
 	" GET /api/dataguard/dlp-policies?device_id=device-b ": {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
 	" GET /API/DATAGUARD/DLP-POLICIES/ ":                   {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
+	" GET /API/BD/DLP-POLICIES/ ":                          {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
 })
 
 var _ = deviceFixes.Add("DV7", map[string]replay.Fix{

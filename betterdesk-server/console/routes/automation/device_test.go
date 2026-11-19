@@ -19,18 +19,13 @@ import (
 // results of every JSON type, ids in every spelling, and every status
 // after every other.
 //
-// Three kinds of answers are not compared byte for byte:
+// Two kinds of answers are not compared byte for byte:
 //
 //   - Where the recording's stand-in for the rest of the console answered
 //     (no route for the address, a body that is no JSON), only the status
 //     is compared: the console has its own answers for those.
 //   - An address with two slashes in a row is no address of the Go
 //     console's route table, which answers 404.
-//   - The recording mounted this group alone. In the console the
-//     inventory group comes first at /api/bd, and its read route GET
-//     /api/bd/{id} steps aside only for the mount written in lower case
-//     (BUGS DV8): GET /API/BD/COMMANDS is that route's, which sends a
-//     request without a session to the sign-in page.
 //
 // The steps the bug fixes change are listed in deviceFixes
 // (fixed_test.go). One fix changes a whole kind of answer: a report Node
@@ -41,7 +36,7 @@ import (
 func TestNodeDeviceAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
-		elsewhere, slashes, spelled, refused := 0, 0, 0, 0
+		elsewhere, slashes, refused := 0, 0, 0
 		defer deviceFixes.Unused(t, db)
 		w.Run(replay.Load(t, db, "node_device"), deviceFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			switch {
@@ -56,12 +51,6 @@ func TestNodeDeviceAnswers(t *testing.T) {
 					t.Errorf("%s: %d %s, Node answered %d %s", step.Name, got.Status, got.Body, step.Status, step.Answer)
 				}
 				nodeResult(t, w, step)
-				return true
-			case step.Path == "/API/BD/COMMANDS":
-				spelled++
-				if got.Status != 302 || got.Header.Get("Location") != "/login" {
-					t.Errorf("%s: %d to %q, want the inventory route's 302 to /login", step.Name, got.Status, got.Header.Get("Location"))
-				}
 				return true
 			case strings.Contains(step.Path, "//"):
 				slashes++
@@ -78,8 +67,8 @@ func TestNodeDeviceAnswers(t *testing.T) {
 			}
 			return false
 		}))
-		if elsewhere != 6 || slashes != 1 || spelled != 1 {
-			t.Errorf("%d answers were compared by status only, %d had two slashes and %d went to the inventory route, want 6, 1 and 1", elsewhere, slashes, spelled)
+		if elsewhere != 6 || slashes != 1 {
+			t.Errorf("%d answers were compared by status only and %d had two slashes, want 6 and 1", elsewhere, slashes)
 		}
 		if refused != finishedReports {
 			t.Errorf("%d reports on finished commands were refused, want %d", refused, finishedReports)

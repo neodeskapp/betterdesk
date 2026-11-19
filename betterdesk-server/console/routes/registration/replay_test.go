@@ -282,14 +282,9 @@ type outcome struct {
 	Events []string  `json:"events,omitempty"`
 }
 
-// outcomeOf is what Node gave for the step, the whole Node console's
-// answer where it differs from the recording's.
+// outcomeOf is what Node gave for the step.
 func outcomeOf(step recordedStep) outcome {
-	o := outcome{Status: step.Status, Answer: step.Answer, Rows: step.Rows, Items: step.Items, Calls: step.Calls, Events: step.Events}
-	if a, ok := wholeApp[step.Name]; ok {
-		o.Status, o.Answer = a.status, a.answer
-	}
-	return o
+	return outcome{Status: step.Status, Answer: step.Answer, Rows: step.Rows, Items: step.Items, Calls: step.Calls, Events: step.Events}
 }
 
 // play runs a step and returns what the Go console gave. want is what the
@@ -531,19 +526,6 @@ func (f fix) apply(step *recordedStep) bool {
 		step.Answer, changed = f.answer, true
 	}
 	return changed
-}
-
-// wholeApp are the answers of the whole Node console where they differ
-// from the recording's, which mounted the registration routes alone. In
-// routes/index.js the inventory group's router comes first at /api/bd, and
-// its admin route GET /:id answers any spelling of the mount that is not
-// all lower case (BUGS DV8); the Go console mounts inventory there first
-// too.
-var wholeApp = map[string]struct {
-	status int
-	answer string
-}{
-	"308 letter case of the mount GET /api/BD/register-status?device_id=DEV3": {http.StatusNotFound, `{"error":"No inventory data for this device"}`},
 }
 
 func (p *replayer) setOverrides(o map[string]apiReply) {
