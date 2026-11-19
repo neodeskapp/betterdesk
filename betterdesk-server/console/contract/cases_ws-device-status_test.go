@@ -6,13 +6,14 @@ import (
 	"github.com/unitronix/betterdesk-server/console/contract"
 )
 
-// The socket /ws/device-status: who may open it (a session, no origin
-// check, no permission), what the handshake checks of the websocket
+// The socket /ws/device-status: who may open it (the origin check, then
+// a session with device.view), what the handshake checks of the websocket
 // library answer behind the session check, and the device_id_changed
-// message a new device id pushes to every open socket. The id change
-// goes through 900100018 (offline, in no folder, not kept online by the
-// fake heartbeats) and back, and is filtered by type, because the
-// socket also carries the status changes the signal server reports.
+// message a new device id pushes to every open socket of an account that
+// sees the device (every role here). The id change goes through
+// 900100018 (offline, in no folder, not kept online by the fake
+// heartbeats) and back, and is filtered by type, because the socket also
+// carries the status changes the signal server reports.
 //
 // The group's name starts with "ws-" so it runs after the route groups:
 // it writes audit entries and changes a device's id history.

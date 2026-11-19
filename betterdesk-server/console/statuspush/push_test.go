@@ -47,14 +47,23 @@ func load(t *testing.T) recording {
 	return rec
 }
 
-// oraclePermission is the permission stub of the oracle.
+// oraclePermission is the permission stub of the oracle, with device.view,
+// which the oracle never asked for, for the roles that see devices.
 func oraclePermission(_ context.Context, role, permission string) (bool, error) {
 	if role == "broken" {
 		return false, context.DeadlineExceeded
 	}
-	switch role {
-	case "admin", "super_admin", "global_admin", "allowed":
-		return permission == "enrollment.approve", nil
+	switch permission {
+	case "enrollment.approve":
+		switch role {
+		case "admin", "super_admin", "global_admin", "allowed":
+			return true, nil
+		}
+	case "device.view":
+		switch role {
+		case "admin", "super_admin", "global_admin", "allowed", "operator", "viewer":
+			return true, nil
+		}
 	}
 	return false, nil
 }
@@ -137,7 +146,7 @@ func newServer(t *testing.T, opts Options) (*Service, *ws.Registry, *httptest.Se
 	t.Helper()
 	reg := ws.New(ws.Options{Session: wstest.OracleSession, Permission: oraclePermission})
 	svc := New(opts)
-	svc.Register(reg)
+	svc.Register(reg, Scope{})
 	srv := httptest.NewServer(reg)
 	t.Cleanup(func() {
 		srv.Close()
@@ -146,20 +155,56 @@ func newServer(t *testing.T, opts Options) (*Service, *ws.Registry, *httptest.Se
 	return svc, reg, srv
 }
 
+// handshakeFix is a recorded upgrade that a bug fix answers differently on
+// purpose, with the answer Go gives since the fix.
+type handshakeFix struct {
+	bug, name, answer string
+}
+
+// handshakeFixes are the upgrades the bug fixes changed. The tests of each
+// fix pin what it does; here they say only what the replay sees instead.
+var handshakeFixes = []handshakeFix{
+	// Both sockets check the Origin first, as every other socket does
+	{"I6 WS1", "/ws/device-status foreign origin", "HTTP/1.1 403 Forbidden\r\n\r\n"},
+	{"I6 WS1", "/ws/panel-events foreign origin", "HTTP/1.1 403 Forbidden\r\n\r\n"},
+	// The device status socket asks for device.view of
+	// req.session.user.role: a failed lookup is 503, no such role 403
+	{"I6", "/ws/device-status as broken", "HTTP/1.1 503 Service Unavailable\r\n\r\n"},
+	{"I6", "/ws/device-status as null", "HTTP/1.1 403 Forbidden\r\n\r\n"},
+	{"I6", "/ws/device-status role number", "HTTP/1.1 403 Forbidden\r\n\r\n"},
+	{"I6", "/ws/device-status session role only", "HTTP/1.1 403 Forbidden\r\n\r\n"},
+}
+
 // TestNodeHandshakes sends the recorded upgrade requests and compares the
-// raw answers: refusals byte for byte, the handshake by its headers.
+// raw answers: refusals byte for byte, the handshake by its headers. An
+// upgrade a bug fix changed is compared with its fix's answer.
 func TestNodeHandshakes(t *testing.T) {
 	rec := load(t)
 	_, _, srv := newServer(t, Options{})
 	addr := strings.TrimPrefix(srv.URL, "http://")
+	fixed := map[string]handshakeFix{}
+	for _, f := range handshakeFixes {
+		fixed[f.name] = f
+	}
 	for _, h := range rec.Handshakes {
+		want := h.Answer
+		if f, ok := fixed[h.Name]; ok {
+			if wstest.SameAnswer(want, f.answer) {
+				t.Errorf("the %s fix of %q changes nothing", f.bug, h.Name)
+			}
+			want = f.answer
+			delete(fixed, h.Name)
+		}
 		got, err := wstest.Raw(addr, h.Request)
 		if err != nil {
 			t.Fatalf("%s: %v", h.Name, err)
 		}
-		if !wstest.SameAnswer(h.Answer, got) {
-			t.Errorf("%s\n node: %q\n   go: %q", h.Name, h.Answer, got)
+		if !wstest.SameAnswer(want, got) {
+			t.Errorf("%s\n want: %q\n   go: %q", h.Name, want, got)
 		}
+	}
+	for name, f := range fixed {
+		t.Errorf("the %s fix names %q, which the recording does not have", f.bug, name)
 	}
 }
 
@@ -221,7 +266,7 @@ func TestPushToOpenSockets(t *testing.T) {
 			mu.Unlock()
 		},
 	})
-	svc.Register(reg)
+	svc.Register(reg, Scope{})
 	srv := httptest.NewServer(reg)
 	addr := strings.TrimPrefix(srv.URL, "http://")
 	ctx, cancel := context.WithCancel(context.Background())
@@ -306,7 +351,7 @@ func TestPushToOpenSockets(t *testing.T) {
 func TestMessageSizeLimit(t *testing.T) {
 	_, _, srv := newServer(t, Options{})
 	addr := strings.TrimPrefix(srv.URL, "http://")
-	c, _, err := wstest.Dial(addr, "/ws/device-status", map[string][]string{"X-Oracle-Session": {`{"userId":1}`}})
+	c, _, err := wstest.Dial(addr, "/ws/device-status", map[string][]string{"X-Oracle-Session": {`{"userId":1,"user":{"role":"viewer"}}`}})
 	if err != nil || c == nil {
 		t.Fatalf("dial: %v", err)
 	}

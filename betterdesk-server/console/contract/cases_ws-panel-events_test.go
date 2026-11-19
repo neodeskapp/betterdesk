@@ -6,9 +6,10 @@ import (
 	"github.com/unitronix/betterdesk-server/console/contract"
 )
 
-// The socket /ws/panel-events: a session with enrollment.approve may open
-// it, no origin check. Its messages here come from a LAN registration
-// request and its approval. Each turn removes the registration it made.
+// The socket /ws/panel-events: after the origin check, a session with
+// enrollment.approve may open it. Its messages here come from a LAN
+// registration request and its approval. Each turn removes the
+// registration it made.
 // The messages the API server's event bus brings (enrollment, help
 // requests) cannot be caused through the console; the package's tests
 // replay what Node made of them.

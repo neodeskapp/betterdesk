@@ -1,11 +1,15 @@
 package console
 
 import (
+	"context"
+
 	"github.com/unitronix/betterdesk-server/console/cdapproxy"
+	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/meshproxy"
 	"github.com/unitronix/betterdesk-server/console/remotetarget"
 	"github.com/unitronix/betterdesk-server/console/routes/chat"
+	"github.com/unitronix/betterdesk-server/console/statuspush"
 	"github.com/unitronix/betterdesk-server/console/wsrelay"
 )
 
@@ -41,5 +45,10 @@ func registerSockets(d *kit.Deps) {
 		CanAccess:    d.DeviceGroups.UserCanAccessDevice,
 		API:          d.GoAPI.Handler(),
 	}).Register(d.Sockets)
-	d.StatusPush.Register(d.Sockets) // services/deviceStatusPush.js: /ws/device-status, /ws/panel-events
+	// services/deviceStatusPush.js: /ws/device-status, /ws/panel-events. A
+	// message about a device goes to the accounts whose scope holds it.
+	d.StatusPush.Register(d.Sockets, statuspush.Scope{
+		Device: func(ctx context.Context, id string) *goapi.Object { return d.Backend.GetDeviceByID(ctx, id, true) },
+		Of:     d.DeviceGroups.DeviceScopeForUser,
+	})
 }

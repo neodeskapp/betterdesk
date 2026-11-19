@@ -6,8 +6,8 @@
 // The messages are the bytes the old console sent: the event as the API
 // server's event socket writes it, read as JSON.parse read it and written
 // as JSON.stringify writes it, with the same keys in the same order.
-// Nothing is filtered by role or device scope and nothing is throttled:
-// every open socket gets every message of its kind.
+// Nothing is throttled. A message about a device goes only to the accounts
+// whose device scope holds that device (DECISIONS A54, see Scope).
 package statuspush
 
 import (
@@ -16,13 +16,18 @@ import (
 	"sync"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/ws"
 	"github.com/unitronix/betterdesk-server/logging"
 )
 
 // PingInterval is how often an open socket is pinged.
 const PingInterval = 30 * time.Second
+
+// scopeTimeout bounds the device scope checks of one message.
+const scopeTimeout = 10 * time.Second
 
 // Options configure the service.
 type Options struct {
@@ -41,13 +46,29 @@ type Options struct {
 	PingInterval time.Duration
 }
 
-// Service holds the open sockets.
+// Scope decides which accounts get a message (DECISIONS A54). A message
+// about a device (its status, a new id, a help request, a decided
+// registration) goes to the accounts whose device scope holds the device.
+// A pending registration, and a message that names no device the console
+// knows, go only to accounts whose scope has no limit. The zero Scope
+// sends every message to every socket of its kind.
+type Scope struct {
+	// Device is the device of an id, deleted ones included; nil when
+	// there is none (goapi.Backend.GetDeviceByID).
+	Device func(ctx context.Context, id string) *goapi.Object
+	// Of is the account's scope over a list of devices, nil without a
+	// limit (devicegroups.Service.DeviceScopeForUser).
+	Of func(ctx context.Context, user *session.User, devices []*goapi.Object) (*access.DeviceScope, error)
+}
+
+// Service holds the open sockets with the account of each.
 type Service struct {
 	opts Options
 
 	mu     sync.Mutex
-	status map[*ws.Conn]struct{}
-	panel  map[*ws.Conn]struct{}
+	scope  Scope
+	status map[*ws.Conn]*session.User
+	panel  map[*ws.Conn]*session.User
 }
 
 // New returns the service. Register adds its sockets; Run reads the
@@ -59,43 +80,49 @@ func New(opts Options) *Service {
 	if opts.PingInterval <= 0 {
 		opts.PingInterval = PingInterval
 	}
-	return &Service{opts: opts, status: map[*ws.Conn]struct{}{}, panel: map[*ws.Conn]struct{}{}}
+	return &Service{opts: opts, status: map[*ws.Conn]*session.User{}, panel: map[*ws.Conn]*session.User{}}
 }
 
-// Register adds /ws/device-status and /ws/panel-events.
+// Register adds /ws/device-status and /ws/panel-events, whose messages
+// follow scope.
 //
-// Both take only a signed-in session ("HTTP/1.1 401 Unauthorized"
-// otherwise). The panel socket also needs enrollment.approve ("403
-// Forbidden"; "503 Service Unavailable" when the permission lookup
-// fails). Neither checks the Origin, unlike every other socket of the
-// console. Messages the browser sends are read and dropped.
-func (s *Service) Register(reg *ws.Registry) {
-	reg.Handle("/ws/device-status", func(u *ws.Upgrade) { s.serve(u, s.status, nil) })
+// Both check the Origin first, as every other socket of the console does
+// ("HTTP/1.1 403 Forbidden"), then take only a signed-in session ("401
+// Unauthorized") whose role has a permission: device.view for the device
+// status, enrollment.approve for the panel events ("403 Forbidden"; "503
+// Service Unavailable" when the permission lookup fails). Messages the
+// browser sends are read and dropped.
+func (s *Service) Register(reg *ws.Registry, scope Scope) {
+	s.mu.Lock()
+	s.scope = scope
+	s.mu.Unlock()
+	reg.Handle("/ws/device-status", func(u *ws.Upgrade) {
+		s.serve(u, "device-status /ws/device-status", s.status, "device.view")
+	})
 	reg.Handle("/ws/panel-events", func(u *ws.Upgrade) {
-		s.serve(u, s.panel, func(session ws.Session) (bool, error) {
-			return u.RoleHasPermission(session.UserRole(), "enrollment.approve")
-		})
+		s.serve(u, "panel-events /ws/panel-events", s.panel, "enrollment.approve")
 	})
 }
 
-// serve runs the checks of one socket and keeps it in clients while it
-// is open.
-func (s *Service) serve(u *ws.Upgrade, clients map[*ws.Conn]struct{}, authorize func(ws.Session) (bool, error)) {
+// serve runs the checks of one socket and keeps it in clients, with its
+// account, while it is open.
+func (s *Service) serve(u *ws.Upgrade, label string, clients map[*ws.Conn]*session.User, permission string) {
+	if !u.CheckOrigin(label) {
+		return
+	}
 	session := u.Session()
 	if !session.SignedIn() {
 		u.Refuse(http.StatusUnauthorized)
 		return
 	}
-	if authorize != nil {
-		allowed, err := authorize(session)
-		if err != nil {
-			u.Refuse(http.StatusServiceUnavailable)
-			return
-		}
-		if !allowed {
-			u.Refuse(http.StatusForbidden)
-			return
-		}
+	allowed, err := u.RoleHasPermission(session.UserRole(), permission)
+	if err != nil {
+		u.Refuse(http.StatusServiceUnavailable)
+		return
+	}
+	if !allowed {
+		u.Refuse(http.StatusForbidden)
+		return
 	}
 	conn, ok := u.Accept(ws.AcceptOptions{})
 	if !ok {
@@ -103,7 +130,7 @@ func (s *Service) serve(u *ws.Upgrade, clients map[*ws.Conn]struct{}, authorize 
 	}
 	defer conn.Wait()
 	s.mu.Lock()
-	clients[conn] = struct{}{}
+	clients[conn] = session.User()
 	s.mu.Unlock()
 	defer func() {
 		s.mu.Lock()
@@ -121,29 +148,135 @@ func (s *Service) Clients() (status, panel int) {
 	return len(s.status), len(s.panel)
 }
 
-// broadcast sends text to every socket of a kind; SendText skips one that
+// recipient is an open socket and its account.
+type recipient struct {
+	conn *ws.Conn
+	user *session.User
+}
+
+// broadcast sends text, the message msg written out, to the sockets of a
+// kind whose account may see what msg is about; SendText skips one that
 // is closing, as the old service skipped a socket that was not open.
-func (s *Service) broadcast(clients map[*ws.Conn]struct{}, text string) {
+func (s *Service) broadcast(ctx context.Context, clients map[*ws.Conn]*session.User, msg *goapi.Object, text string) {
 	s.mu.Lock()
-	open := make([]*ws.Conn, 0, len(clients))
-	for c := range clients {
-		open = append(open, c)
+	scope := s.scope
+	open := make([]recipient, 0, len(clients))
+	for c, user := range clients {
+		open = append(open, recipient{conn: c, user: user})
 	}
 	s.mu.Unlock()
-	for _, c := range open {
-		c.SendText(text)
+	if len(open) == 0 {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, scopeTimeout)
+	defer cancel()
+	sees := scope.audience(ctx, subject(msg))
+	for _, r := range open {
+		if sees(r.user) {
+			r.conn.SendText(text)
+		}
 	}
 }
 
-// PublishPanelText sends a message that is already JSON text to every
-// panel socket, as publishPanelEvent did for events the console made
-// itself (a LAN registration request, its approval).
-func (s *Service) PublishPanelText(text string) {
-	s.broadcast(s.panel, text)
+// subject is the id of the device a message is about, "" for a pending
+// registration and for a message that names no device.
+func subject(msg *goapi.Object) string {
+	if msg == nil {
+		return ""
+	}
+	var id any
+	switch msg.Get("type") {
+	case "registration_pending":
+		return ""
+	case "registration_changed":
+		if registration, ok := msg.Get("registration").(*goapi.Object); ok && registration != nil {
+			id = registration.Get("device_id")
+		}
+	case "device_id_changed":
+		id = msg.Get("new_id")
+	default:
+		id = msg.Get("device_id")
+	}
+	text, _ := id.(string)
+	return text
 }
 
-// PublishPanelEvent sends v, written as JSON.stringify writes it, to
-// every panel socket.
+// accountKey tells accounts apart for the checks of one message.
+type accountKey struct {
+	id             int64
+	username, role string
+}
+
+// audience returns whether an account may see a message about deviceID
+// ("" for none). Each account is checked once per message and the device
+// is read once; a failed check sees nothing.
+func (sc Scope) audience(ctx context.Context, deviceID string) func(user *session.User) bool {
+	if sc.Of == nil {
+		return func(*session.User) bool { return true }
+	}
+	var device *goapi.Object
+	loaded := false
+	seen := map[accountKey]bool{}
+	return func(user *session.User) bool {
+		if user == nil {
+			return false
+		}
+		key := accountKey{user.ID, user.Username, user.Role}
+		if v, ok := seen[key]; ok {
+			return v
+		}
+		// Only an account with a limit needs the device
+		v := sc.sees(ctx, user, deviceID, func() *goapi.Object {
+			if !loaded {
+				loaded = true
+				if deviceID != "" && sc.Device != nil {
+					device = sc.Device(ctx, deviceID)
+				}
+			}
+			return device
+		})
+		seen[key] = v
+		return v
+	}
+}
+
+// sees reports whether the account sees a message about deviceID: always
+// without a limit, else when deviceID is a device in its scope.
+func (sc Scope) sees(ctx context.Context, user *session.User, deviceID string, device func() *goapi.Object) bool {
+	scope, err := sc.Of(ctx, user, nil)
+	if err != nil {
+		logging.Logf("console", "WARN: [DeviceStatus] device scope of account %d: %v", user.ID, err)
+		return false
+	}
+	if scope == nil {
+		return true
+	}
+	if deviceID == "" {
+		return false
+	}
+	d := device()
+	if d == nil {
+		return false
+	}
+	scope, err = sc.Of(ctx, user, []*goapi.Object{d})
+	if err != nil {
+		logging.Logf("console", "WARN: [DeviceStatus] device scope of account %d: %v", user.ID, err)
+		return false
+	}
+	return scope.Has(deviceID)
+}
+
+// PublishPanelText sends a message that is already JSON text to the panel
+// sockets whose account may see what it is about, as publishPanelEvent
+// did for events the console made itself (a LAN registration request,
+// its approval). Text that is no JSON object names no device.
+func (s *Service) PublishPanelText(text string) {
+	msg, _ := parseObject(text)
+	s.broadcast(context.Background(), s.panel, msg, text)
+}
+
+// PublishPanelEvent sends v, written as JSON.stringify writes it, to the
+// panel sockets as PublishPanelText does.
 func (s *Service) PublishPanelEvent(v any) error {
 	text, err := stringify(v)
 	if err != nil {
@@ -151,6 +284,16 @@ func (s *Service) PublishPanelEvent(v any) error {
 	}
 	s.PublishPanelText(text)
 	return nil
+}
+
+// parseObject reads JSON text as an object, nil for anything else.
+func parseObject(text string) (*goapi.Object, bool) {
+	v, err := goapi.Parse([]byte(text))
+	if err != nil {
+		return nil, false
+	}
+	o, ok := v.(*goapi.Object)
+	return o, ok && o != nil
 }
 
 // Run reads the event bus until ctx ends and pushes each event.
@@ -184,8 +327,8 @@ func (s *Service) Handle(ctx context.Context, frame any) {
 		return
 	}
 	if out.panel {
-		s.broadcast(s.panel, text)
+		s.broadcast(ctx, s.panel, out.message, text)
 	} else {
-		s.broadcast(s.status, text)
+		s.broadcast(ctx, s.status, out.message, text)
 	}
 }

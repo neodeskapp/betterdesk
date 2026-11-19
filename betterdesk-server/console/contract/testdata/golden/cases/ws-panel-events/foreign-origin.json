@@ -13,41 +13,18 @@
   {
    "roles": [
     "signed-out",
-    "pro"
-   ],
-   "status": 401,
-   "body": {
-    "kind": "empty"
-   }
-  },
-  {
-   "roles": [
+    "pro",
     "guest_issuer",
     "viewer",
     "operator",
-    "server_admin"
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
    ],
    "status": 403,
    "body": {
     "kind": "empty"
-   }
-  },
-  {
-   "roles": [
-    "global_admin",
-    "super_admin",
-    "admin"
-   ],
-   "status": 101,
-   "body": {
-    "kind": "json",
-    "json": {
-     "closed": {
-      "code": 1000,
-      "reason": ""
-     },
-     "messages": []
-    }
    }
   }
  ]

@@ -30,16 +30,9 @@
     "super_admin",
     "admin"
    ],
-   "status": 101,
+   "status": 403,
    "body": {
-    "kind": "json",
-    "json": {
-     "closed": {
-      "code": 1000,
-      "reason": ""
-     },
-     "messages": []
-    }
+    "kind": "empty"
    }
   }
  ]
