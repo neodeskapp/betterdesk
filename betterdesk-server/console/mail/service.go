@@ -29,9 +29,8 @@ import (
 type Settings struct {
 	// Host is options.host: a host name or an address, as stored.
 	Host string
-	// Port is options.port as nodemailer reads it: the stored port, else
-	// 587, else (for a value that is no number) 465 with Secure and 587
-	// without. Always from 1 to 65535.
+	// Port is options.port: the stored port, 587 when none is set. Always
+	// from 1 to 65535.
 	Port int
 	// Secure is options.secure: TLS from the first byte.
 	Secure bool

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"math"
-	"net/netip"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 )
@@ -138,10 +137,10 @@ type transporter struct {
 	config    *Config
 	signature string
 	settings  Settings
-	// refusal is set when nodemailer could not have opened a connection
-	// with these options: the message of the error it failed with (or, for
-	// the values that ended the Node process, of the exception). The
-	// Transport is not called then.
+	// refusal is set when no connection is opened with these options:
+	// errInvalidConfig, or the error nodemailer failed with for
+	// credentials it could not make text of. The Transport is not called
+	// then.
 	refusal error
 }
 
@@ -156,48 +155,44 @@ func (s *Service) tlsVerify(cfg *Config) bool {
 	return s.opts.TLSVerify
 }
 
+// errInvalidConfig is what sending and the connection test fail with for
+// a stored configuration whose host is no text or whose port is no whole
+// number from 1 to 65535: a row edited by hand or written by another
+// version, which no save stores.
+var errInvalidConfig = errors.New("Invalid SMTP configuration")
+
 // newTransporter works out what nodemailer makes of the configuration.
 //
-// nodemailer takes options.host as it is and fails on anything but text
-// when it looks the name up; it reads options.port with Number() and
-// falls back on 465 or 587 for what is no number; it connects with TLS
-// for any options.secure that is truthy (also the text "false"); and it
-// signs in with user and pass as text.
+// The host has to be text and the port a number, or text of one, that is
+// whole and from 1 to 65535; a port that is not set (missing, null, 0,
+// false, the empty text, NaN) is 587. Anything else makes the
+// configuration invalid. nodemailer connects with TLS for any
+// options.secure that is truthy (also the text "false"), and signs in
+// with user and pass as text.
 func (s *Service) newTransporter(cfg *Config) *transporter {
 	t := &transporter{config: cfg, signature: cfg.signature()}
 	t.settings.Secure = cfg.get("secure").truthy()
 	t.settings.TLSVerify = s.tlsVerify(cfg)
 	t.settings.RequireTLS = s.opts.RequireTLS
 
-	// The port is read when the connection object is made, before
-	// anything else.
 	port := 587.0
 	if p := cfg.get("port"); p.truthy() {
-		n, err := p.toNumber()
-		if err != nil {
-			t.refusal = err
+		n := math.NaN()
+		if p.kind == kindNumber || p.kind == kindString {
+			n, _ = p.toNumber()
+		}
+		if n != math.Trunc(n) || n < 1 || n > 65535 {
+			t.refusal = errInvalidConfig
 			return t
 		}
 		port = n
 	}
-	if port == 0 || math.IsNaN(port) {
-		port = 587
-		if t.settings.Secure {
-			port = 465
-		}
-	}
-
 	host := cfg.get("host")
 	if host.kind != kindString {
-		t.refusal = hostRefusal(host)
+		t.refusal = errInvalidConfig
 		return t
 	}
 	t.settings.Host = wellFormed(host.str)
-
-	if port != math.Trunc(port) || port < 0 || port > 65535 {
-		t.refusal = errors.New("Port should be >= 0 and < 65536. Received type number (" + jsbind.NumberString(port) + ").")
-		return t
-	}
 	t.settings.Port = int(port)
 
 	if user, pass := cfg.get("user"), cfg.get("pass"); user.truthy() && pass.truthy() {
@@ -216,49 +211,20 @@ func (s *Service) newTransporter(cfg *Config) *transporter {
 	return t
 }
 
-// hostRefusal is the error Node raised for a host that is no text. A list
-// that reads as an IP address gets as far as the socket, which refuses
-// it; everything else fails at the name lookup.
-func hostRefusal(host value) error {
-	text, err := host.toString()
-	if err != nil {
-		return err
-	}
-	if host.kind == kindArray {
-		if _, err := netip.ParseAddr(text); err == nil {
-			return errors.New(`The "options.host" property must be of type string. Received an instance of Array`)
-		}
-	}
-	received := ""
-	switch host.kind {
-	case kindNumber:
-		received = "type number (" + text + ")"
-	case kindBool:
-		received = "type boolean (" + text + ")"
-	case kindArray:
-		received = "an instance of Array"
-	default:
-		received = "an instance of Object"
-	}
-	return errors.New(`The "name" argument must be of type string. Received ` + received)
-}
-
 // transporterFor is getTransporter: the transporter of the configuration
 // in use, nil when there is no configuration or mail is off.
 //
 // The service remembers the configuration it last set a transporter up
-// for and logs "SMTP transporter configured" when another one comes
-// along. The error is the TypeError the console threw while writing that
-// line for a host or port it could not make text of; the configuration
-// counts as set up all the same, so the next call goes through.
-func (s *Service) transporterFor(ctx context.Context) (*transporter, error) {
+// for and logs "SMTP transporter configured" with its host and port when
+// another one comes along; an invalid configuration is not logged.
+func (s *Service) transporterFor(ctx context.Context) *transporter {
 	if s.opts.Transport == nil {
 		s.log.Warn("nodemailer not installed — email disabled")
-		return nil, nil
+		return nil
 	}
 	cfg := s.LoadSMTPConfig(ctx)
 	if cfg == nil {
-		return nil, nil
+		return nil
 	}
 	signature := cfg.signature()
 
@@ -266,20 +232,16 @@ func (s *Service) transporterFor(ctx context.Context) (*transporter, error) {
 	if s.current != nil && s.current.signature == signature {
 		t := s.current
 		s.mu.Unlock()
-		return t, nil
+		return t
 	}
 	t := s.newTransporter(cfg)
 	s.current = t
 	s.mu.Unlock()
 
-	host, err := cfg.get("host").toString()
-	if err != nil {
-		return nil, err
+	if t.refusal != errInvalidConfig {
+		// A valid port is a number, text or not set, so it makes text
+		port, _ := cfg.get("port").toString()
+		s.log.Info("SMTP transporter configured: " + t.settings.Host + ":" + wellFormed(port))
 	}
-	port, err := cfg.get("port").toString()
-	if err != nil {
-		return nil, err
-	}
-	s.log.Info("SMTP transporter configured: " + wellFormed(host) + ":" + wellFormed(port))
-	return t, nil
+	return t
 }

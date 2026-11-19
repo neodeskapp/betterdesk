@@ -305,6 +305,20 @@ func (r *replay) storedTLSVerifyIsNoFlag() bool {
 	return true
 }
 
+// invalidConfig reports whether the configuration in use has a host that
+// is no text or a port that is set and no number, or text of a number,
+// that is whole and from 1 to 65535 (BUGS EM4).
+func (r *replay) invalidConfig() bool {
+	cfg := r.service.LoadSMTPConfig(context.Background())
+	if cfg == nil {
+		return false
+	}
+	port := cfg.get("port")
+	n, err := port.toNumber()
+	goodPort := (port.kind == kindNumber || port.kind == kindString) && err == nil && n == math.Trunc(n) && n >= 1 && n <= 65535
+	return cfg.get("host").kind != kindString || port.truthy() && !goodPort
+}
+
 // tlsVerifyMember is the member a settings answer ends with when the
 // stored configuration has a tlsVerify.
 var tlsVerifyMember = regexp.MustCompile(`,"tlsVerify":(true|false)\}$`)
@@ -429,6 +443,20 @@ func toOf(t testing.TB, text string) (to []string, list bool) {
 func (r *replay) checkSend(i int, step oracleStep, got bool, err error) {
 	t := r.t
 	wantLogs, _ := nodeLogs(t, step)
+	if err == nil && (step.Used != nil || step.Throws != nil) && r.invalidConfig() {
+		// BUGS EM4: Node failed with the name lookup's exception, its
+		// socket's error or the TypeError of its log line; the Go console
+		// connects nothing and logs the configuration as invalid
+		r.counts["EM4: a stored configuration that is invalid"]++
+		last := [2]string{}
+		if len(r.log.lines) > 0 {
+			last = r.log.lines[len(r.log.lines)-1]
+		}
+		if got || len(r.transport.sends) != 0 || last != [2]string{"error", "Send failed: Invalid SMTP configuration"} {
+			t.Fatalf("step %d %s: got %v, %d sends, logs %q", i, step.Op, got, len(r.transport.sends), r.log.lines)
+		}
+		return
+	}
 	if step.Throws != nil {
 		if err == nil || err.Error() != *step.Throws {
 			t.Fatalf("step %d %s: error %v, Node threw %q", i, step.Op, err, *step.Throws)
@@ -468,8 +496,9 @@ func (r *replay) checkSend(i int, step oracleStep, got bool, err error) {
 		}
 	}
 	if message, refused := step.Used.Probe.refusal(); refused {
-		failed("nodemailer fails before it connects", &message)
-		return
+		// nodemailer failed this way only on configurations the Go
+		// console takes as invalid (EM4)
+		t.Fatalf("step %d %s: nodemailer failed before it connected (%s) on a valid configuration", i, step.Op, message)
 	}
 	wantSettings, ok := r.wantSettings(*step.Used)
 	if !ok {
@@ -614,6 +643,14 @@ func (r *replay) run(i int, step oracleStep) {
 		r.checkAnswer(i, step, r.service.GetSMTPSettings(ctx))
 	case "test":
 		answer := r.service.TestSMTPSettings(ctx)
+		if r.invalidConfig() {
+			// BUGS EM4, as in checkSend
+			r.counts["EM4: a stored configuration that is invalid"]++
+			if answer.Status != 200 || marshal(t, answer.Body) != `{"success":false,"error":"Invalid SMTP configuration"}` || len(r.transport.verifies) != 0 || len(r.log.lines) != 0 {
+				t.Fatalf("step %d test: %d %s, %d connections, logs %q", i, answer.Status, marshal(t, answer.Body), len(r.transport.verifies), r.log.lines)
+			}
+			return
+		}
 		wantLogs, wantSettingsLog := nodeLogs(t, step)
 		if !sameLogs(r.log.lines, wantLogs) || answer.LogError != wantSettingsLog {
 			t.Fatalf("step %d test: logs %q and %q\nNode: %q", i, r.log.lines, answer.LogError, step.Logs)
@@ -622,9 +659,9 @@ func (r *replay) run(i int, step oracleStep) {
 		wantVerifies := step.Verified
 		if step.Used != nil {
 			if message, refused := step.Used.Probe.refusal(); refused {
-				r.counts["nodemailer fails before it connects"]++
-				wantBody, wantVerifies = marshal(t, failedTest(message)), 0
-			} else if want, ok := r.wantSettings(*step.Used); !ok {
+				t.Fatalf("step %d test: nodemailer failed before it connected (%s) on a valid configuration", i, message)
+			}
+			if want, ok := r.wantSettings(*step.Used); !ok {
 				wantBody, wantVerifies = marshal(t, failedTest(errNotPrimitive.Error())), 0
 			} else if len(r.transport.verifies) != 1 || r.transport.verifies[0] != want {
 				t.Fatalf("step %d test: verified with %+v\nnodemailer: %+v (%s)", i, r.transport.verifies, want, step.Used.Options)
@@ -856,9 +893,9 @@ func TestNodeRecording(t *testing.T) {
 		}
 		// Every kind of step and every special case has to have been met
 		for _, name := range []string{"state", "env", "reset", "load", "get", "test", "send", "alert", "help", "baseurl", "put", "has", "logsent", "logcount",
-			"nodemailer fails before it connects", "credentials that are no text", "a sender that is no text", "a sender that is no text, sent as text",
+			"credentials that are no text", "a sender that is no text", "a sender that is no text, sent as text",
 			"recipients that are no text", "EM1: a stored tlsVerify that is no flag", "EM3: an alert value with markup is escaped",
-			"EM7: a help request mail with its blank lines"} {
+			"EM7: a help request mail with its blank lines", "EM4: a stored configuration that is invalid"} {
 			if r.counts[name] == 0 {
 				t.Errorf("the recording has no %q", name)
 			}

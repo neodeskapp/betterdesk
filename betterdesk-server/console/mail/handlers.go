@@ -204,13 +204,9 @@ func nextConfig(body middleware.JSONObject, existing value) (value, error) {
 }
 
 // TestSMTPSettings tests the connection to the mail server of the
-// configuration in use and answers the TestResult. The TypeError of
-// TestConnection is a 500 {"error":"Internal server error"}.
+// configuration in use and answers the TestResult.
 func (s *Service) TestSMTPSettings(ctx context.Context) Answer {
-	result, err := s.TestConnection(ctx)
-	if err != nil {
-		return serverError("SMTP test error:", err)
-	}
+	result, _ := s.TestConnection(ctx)
 	return Answer{Status: http.StatusOK, Body: result}
 }
 

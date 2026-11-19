@@ -87,9 +87,8 @@ func fromText(from value) (string, error) {
 // The sender is the configuration's from, else "betterdesk@localhost".
 // Without a configuration nothing is sent and the answer is false.
 //
-// The error is not a failed delivery (that is false with a log line): it
-// is the TypeError the console threw for a stored host or port it could
-// not make text of.
+// A failed delivery is false with a log line, also for a stored
+// configuration that is invalid; the error is always nil.
 func (s *Service) SendEmail(ctx context.Context, m Email) (bool, error) {
 	return s.deliver(ctx, m, nil)
 }
@@ -97,15 +96,12 @@ func (s *Service) SendEmail(ctx context.Context, m Email) (bool, error) {
 // deliver is SendEmail. unreadable is the error nodemailer would fail with
 // while building the message, for recipients it could not make text of.
 func (s *Service) deliver(ctx context.Context, m Email, unreadable error) (bool, error) {
-	t, err := s.transporterFor(ctx)
-	if err != nil {
-		return false, err
-	}
+	t := s.transporterFor(ctx)
 	if t == nil {
 		s.log.Warn("Cannot send — no SMTP config")
 		return false, nil
 	}
-	err = unreadable
+	err := unreadable
 	if err == nil {
 		err = s.send(ctx, t, m)
 	}
@@ -161,15 +157,12 @@ func failedTest(message string) TestResult { return TestResult{Error: &message} 
 
 // TestConnection connects to the mail server of the configuration in use
 // and signs in, without sending anything. Without a configuration the
-// answer is the error "No SMTP configuration".
+// answer is the error "No SMTP configuration", and for a stored
+// configuration that is invalid "Invalid SMTP configuration".
 //
-// The error result is the TypeError of SendEmail; a failed test is a
-// TestResult.
+// A failed test is a TestResult; the error is always nil.
 func (s *Service) TestConnection(ctx context.Context) (TestResult, error) {
-	t, err := s.transporterFor(ctx)
-	if err != nil {
-		return TestResult{}, err
-	}
+	t := s.transporterFor(ctx)
 	if t == nil {
 		return failedTest("No SMTP configuration"), nil
 	}
