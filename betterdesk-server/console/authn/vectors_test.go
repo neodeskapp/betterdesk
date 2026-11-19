@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -69,6 +70,23 @@ func TestHashVectors(t *testing.T) {
 	ctx := context.Background()
 	produced := regexp.MustCompile(`^\$2b\$12\$[./A-Za-z0-9]{53}$`)
 	groups := map[string]int{}
+	// AN5: for a "$2a$" hash Node counted the password's length plus its
+	// closing zero byte in one byte, and for "$2$" the length alone, so of a
+	// password of 255 (256) bytes or more only the length modulo 256
+	// counted. The console reads such a password like any long one, by its
+	// first 72 bytes: it gets the answer Node gave for those 72 bytes where
+	// the vectors have it.
+	node := map[[2]string]bool{}
+	for _, v := range vectors {
+		if v.Thrown == nil {
+			node[[2]string{v.Password, v.Hash}] = v.bool(t)
+		}
+	}
+	wrapped := func(password, hash string) bool {
+		n := len(toWellFormed(password))
+		return strings.HasPrefix(hash, "$2a$") && n+1 > 255 || strings.HasPrefix(hash, "$2$") && n > 255
+	}
+	changed := 0
 	for i, v := range vectors {
 		slow := v.Group == "node-hashed-cost12" || v.Group == "pbkdf2-legacy" || v.Group == "fixed"
 		if slow && testing.Short() {
@@ -79,6 +97,17 @@ func TestHashVectors(t *testing.T) {
 			t.Fatalf("vector %d (%s): Node threw %q; no such case is expected", i, v.Group, *v.Thrown)
 		}
 		want := v.bool(t)
+		if wrapped(v.Password, v.Hash) {
+			first72 := string([]byte(toWellFormed(v.Password))[:bcryptKeyBytes])
+			fixed, recorded := node[[2]string{first72, v.Hash}]
+			if !recorded {
+				fixed, _ = s.VerifyPassword(ctx, first72, v.Hash)
+			}
+			if fixed != want {
+				changed++
+			}
+			want = fixed
+		}
 		got, err := s.VerifyPassword(ctx, v.Password, v.Hash)
 		if err != nil {
 			t.Errorf("vector %d (%s) hash %q: error %v", i, v.Group, v.Hash, err)
@@ -90,6 +119,9 @@ func TestHashVectors(t *testing.T) {
 		if v.Produced && !produced.MatchString(v.Hash) {
 			t.Errorf("vector %d: the console's hash %q has not the form $2b$12$ and 53 letters", i, v.Hash)
 		}
+	}
+	if changed == 0 && !testing.Short() {
+		t.Error("no vector changes with AN5")
 	}
 	for _, group := range []string{"bcrypt-2b", "bcrypt-2a", "bcrypt-2", "bcrypt-relabel", "pbkdf2-modern", "malformed"} {
 		if groups[group] == 0 {

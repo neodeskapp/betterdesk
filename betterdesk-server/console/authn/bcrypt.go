@@ -11,17 +11,15 @@ import (
 )
 
 // bcrypt as the stored hashes need it. They come from the C implementation
-// of OpenBSD in the form the bcrypt library for Node has it, and that
-// implementation decides what verifies:
+// of OpenBSD in the form the bcrypt library for Node has it:
 //
 //   - "$2b$": the password's first 72 bytes and a closing zero byte.
-//   - "$2a$": the password and a closing zero byte, with the length counted
-//     in one byte. A password of 255 bytes or more is cut to its length
-//     modulo 256, so only its first bytes count.
-//   - "$2$": the password without the closing zero byte, the length again
-//     in one byte.
+//   - "$2a$": the password and a closing zero byte.
+//   - "$2$": the password without the closing zero byte.
 //
-// Blowfish reads the key round and round, 72 bytes each time.
+// Blowfish reads the key round and round, 72 bytes each time, so of a
+// longer password only the first 72 bytes count, for every version and
+// every length.
 //
 // A stored hash verifies only when it is, letter for letter, what the C
 // code prints for the password: two cost digits, a salt whose last letter
@@ -101,7 +99,9 @@ func bcryptDecodeSalt(text string) (salt []byte, ok bool) {
 }
 
 // bcryptKey returns the bytes of password that reach Blowfish for a hash
-// of the given minor version (0 for "$2$").
+// of the given minor version (0 for "$2$"): the password with its closing
+// zero byte, without it for "$2$". Of a long password only the first 72
+// bytes count, whatever the version (bcryptRaw cuts the key there).
 func bcryptKey(password string, minor byte) []byte {
 	data := append([]byte(password), 0)
 	var n int
@@ -109,9 +109,9 @@ func bcryptKey(password string, minor byte) []byte {
 	case 'b':
 		n = min(len(password), bcryptKeyBytes) + 1
 	case 'a':
-		n = (len(password) + 1) & 0xff
+		n = len(password) + 1
 	default:
-		n = len(password) & 0xff
+		n = len(password)
 	}
 	if n == 0 {
 		// A length of zero makes the C code read the first byte over and
