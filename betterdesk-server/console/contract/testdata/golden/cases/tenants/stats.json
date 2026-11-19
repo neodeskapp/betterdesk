@@ -11,7 +11,7 @@
     "signed-out",
     "pro"
    ],
-   "status": 403,
+   "status": 401,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -32,10 +32,15 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "online_devices"
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "error": "Admin access required"
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
     }
    }
   },
@@ -70,6 +75,9 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "online_devices"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -105,15 +113,18 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "online_devices"
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "max_devices": 40,
+     "max_devices": 30,
      "online_devices": 0,
      "tenant_id": 1,
      "tenant_name": "Acme Corporation",
      "total_devices": 5,
-     "total_users": 2
+     "total_users": 3
     }
    }
   },
@@ -145,15 +156,18 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "online_devices"
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "max_devices": 40,
+     "max_devices": 30,
      "online_devices": 0,
-     "tenant_id": 5,
+     "tenant_id": 3,
      "tenant_name": "Acme Corporation",
      "total_devices": 5,
-     "total_users": 2
+     "total_users": 3
     }
    }
   },
@@ -185,15 +199,18 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "online_devices"
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "max_devices": 40,
+     "max_devices": 30,
      "online_devices": 0,
-     "tenant_id": 9,
+     "tenant_id": 5,
      "tenant_name": "Acme Corporation",
      "total_devices": 5,
-     "total_users": 2
+     "total_users": 3
     }
    }
   }

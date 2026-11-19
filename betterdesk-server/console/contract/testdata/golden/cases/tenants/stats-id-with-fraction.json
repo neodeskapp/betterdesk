@@ -11,7 +11,7 @@
     "signed-out",
     "pro"
    ],
-   "status": 403,
+   "status": 401,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -32,10 +32,15 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "online_devices"
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "error": "Admin access required"
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
     }
    }
   },
@@ -70,6 +75,9 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "online_devices"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -79,89 +87,11 @@
   },
   {
    "roles": [
-    "global_admin"
-   ],
-   "status": 200,
-   "headers": {
-    "cache-control": "no-cache, no-store, must-revalidate",
-    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "application/json; charset=utf-8",
-    "cross-origin-resource-policy": "same-origin",
-    "etag": "<present>",
-    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "ratelimit-limit": "1000000",
-    "ratelimit-policy": "1000000;w=60",
-    "ratelimit-remaining": "<n>",
-    "ratelimit-reset": "<n>",
-    "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": [
-     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
-    ],
-    "x-content-type-options": "nosniff",
-    "x-dns-prefetch-control": "off",
-    "x-download-options": "noopen",
-    "x-frame-options": "DENY",
-    "x-permitted-cross-domain-policies": "none",
-    "x-xss-protection": "0"
-   },
-   "body": {
-    "kind": "json",
-    "json": {
-     "max_devices": 40,
-     "online_devices": 0,
-     "tenant_id": 1,
-     "tenant_name": "Acme Corporation",
-     "total_devices": 5,
-     "total_users": 2
-    }
-   }
-  },
-  {
-   "roles": [
-    "super_admin"
-   ],
-   "status": 200,
-   "headers": {
-    "cache-control": "no-cache, no-store, must-revalidate",
-    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "application/json; charset=utf-8",
-    "cross-origin-resource-policy": "same-origin",
-    "etag": "<present>",
-    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "ratelimit-limit": "1000000",
-    "ratelimit-policy": "1000000;w=60",
-    "ratelimit-remaining": "<n>",
-    "ratelimit-reset": "<n>",
-    "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": [
-     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
-    ],
-    "x-content-type-options": "nosniff",
-    "x-dns-prefetch-control": "off",
-    "x-download-options": "noopen",
-    "x-frame-options": "DENY",
-    "x-permitted-cross-domain-policies": "none",
-    "x-xss-protection": "0"
-   },
-   "body": {
-    "kind": "json",
-    "json": {
-     "max_devices": 40,
-     "online_devices": 0,
-     "tenant_id": 5,
-     "tenant_name": "Acme Corporation",
-     "total_devices": 5,
-     "total_users": 2
-    }
-   }
-  },
-  {
-   "roles": [
+    "global_admin",
+    "super_admin",
     "admin"
    ],
-   "status": 200,
+   "status": 404,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -185,15 +115,13 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "online_devices"
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "max_devices": 40,
-     "online_devices": 0,
-     "tenant_id": 9,
-     "tenant_name": "Acme Corporation",
-     "total_devices": 5,
-     "total_users": 2
+     "error": "Tenant not found"
     }
    }
   }

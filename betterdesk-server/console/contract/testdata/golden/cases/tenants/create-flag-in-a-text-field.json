@@ -15,7 +15,7 @@
     "signed-out",
     "pro"
    ],
-   "status": 403,
+   "status": 401,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -38,7 +38,9 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Admin access required"
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
     }
    }
   },
@@ -83,7 +85,7 @@
     "super_admin",
     "admin"
    ],
-   "status": 500,
+   "status": 400,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -107,7 +109,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Failed to create tenant"
+     "error": "Invalid contact_email"
     }
    }
   }

@@ -11,7 +11,7 @@
     "signed-out",
     "pro"
    ],
-   "status": 403,
+   "status": 401,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -35,7 +35,9 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Admin access required"
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
     }
    }
   },
@@ -135,35 +137,11 @@
       "contact_email": "",
       "contact_name": "",
       "created_at": "<volatile>",
-      "id": 4,
-      "max_devices": 0,
-      "name": "List",
-      "notes": "",
-      "slug": "from-a-list",
-      "updated_at": "<volatile>"
-     },
-     {
-      "active": 1,
-      "contact_email": "",
-      "contact_name": "",
-      "created_at": "<volatile>",
       "id": 2,
       "max_devices": 0,
       "name": "Nord Süd GmbH & Co.",
       "notes": "",
       "slug": "nord-s-d-gmbh-co",
-      "updated_at": "<volatile>"
-     },
-     {
-      "active": 1,
-      "contact_email": "",
-      "contact_name": "5.0",
-      "created_at": "<volatile>",
-      "id": 3,
-      "max_devices": 12,
-      "name": "Types",
-      "notes": "1.5",
-      "slug": "77.0",
       "updated_at": "<volatile>"
      }
     ]
@@ -172,6 +150,74 @@
   {
    "roles": [
     "super_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "[*].updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": [
+     {
+      "active": 1,
+      "contact_email": "ada@example.com",
+      "contact_name": "Ada",
+      "created_at": "<volatile>",
+      "id": 3,
+      "max_devices": 25,
+      "name": "Acme Corp",
+      "notes": "first",
+      "slug": "acme-corp",
+      "updated_at": "<volatile>"
+     },
+     {
+      "active": 1,
+      "contact_email": "",
+      "contact_name": "",
+      "created_at": "<volatile>",
+      "id": 4,
+      "max_devices": 0,
+      "name": "Nord Süd GmbH & Co.",
+      "notes": "",
+      "slug": "nord-s-d-gmbh-co",
+      "updated_at": "<volatile>"
+     }
+    ]
+   }
+  },
+  {
+   "roles": [
+    "admin"
    ],
    "status": 200,
    "headers": {
@@ -227,127 +273,11 @@
       "contact_email": "",
       "contact_name": "",
       "created_at": "<volatile>",
-      "id": 8,
-      "max_devices": 0,
-      "name": "List",
-      "notes": "",
-      "slug": "from-a-list",
-      "updated_at": "<volatile>"
-     },
-     {
-      "active": 1,
-      "contact_email": "",
-      "contact_name": "",
-      "created_at": "<volatile>",
       "id": 6,
       "max_devices": 0,
       "name": "Nord Süd GmbH & Co.",
       "notes": "",
       "slug": "nord-s-d-gmbh-co",
-      "updated_at": "<volatile>"
-     },
-     {
-      "active": 1,
-      "contact_email": "",
-      "contact_name": "5.0",
-      "created_at": "<volatile>",
-      "id": 7,
-      "max_devices": 12,
-      "name": "Types",
-      "notes": "1.5",
-      "slug": "77.0",
-      "updated_at": "<volatile>"
-     }
-    ]
-   }
-  },
-  {
-   "roles": [
-    "admin"
-   ],
-   "status": 200,
-   "headers": {
-    "cache-control": "no-cache, no-store, must-revalidate",
-    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "application/json; charset=utf-8",
-    "cross-origin-resource-policy": "same-origin",
-    "etag": "<present>",
-    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "ratelimit-limit": "1000000",
-    "ratelimit-policy": "1000000;w=60",
-    "ratelimit-remaining": "<n>",
-    "ratelimit-reset": "<n>",
-    "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": [
-     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
-    ],
-    "x-content-type-options": "nosniff",
-    "x-dns-prefetch-control": "off",
-    "x-download-options": "noopen",
-    "x-frame-options": "DENY",
-    "x-permitted-cross-domain-policies": "none",
-    "x-xss-protection": "0"
-   },
-   "volatile": [
-    {
-     "path": "[*].created_at",
-     "format": "9999-99-99 99:99:99"
-    },
-    {
-     "path": "[*].updated_at",
-     "format": "9999-99-99 99:99:99"
-    }
-   ],
-   "body": {
-    "kind": "json",
-    "json": [
-     {
-      "active": 1,
-      "contact_email": "ada@example.com",
-      "contact_name": "Ada",
-      "created_at": "<volatile>",
-      "id": 9,
-      "max_devices": 25,
-      "name": "Acme Corp",
-      "notes": "first",
-      "slug": "acme-corp",
-      "updated_at": "<volatile>"
-     },
-     {
-      "active": 1,
-      "contact_email": "",
-      "contact_name": "",
-      "created_at": "<volatile>",
-      "id": 12,
-      "max_devices": 0,
-      "name": "List",
-      "notes": "",
-      "slug": "from-a-list",
-      "updated_at": "<volatile>"
-     },
-     {
-      "active": 1,
-      "contact_email": "",
-      "contact_name": "",
-      "created_at": "<volatile>",
-      "id": 10,
-      "max_devices": 0,
-      "name": "Nord Süd GmbH & Co.",
-      "notes": "",
-      "slug": "nord-s-d-gmbh-co",
-      "updated_at": "<volatile>"
-     },
-     {
-      "active": 1,
-      "contact_email": "",
-      "contact_name": "5.0",
-      "created_at": "<volatile>",
-      "id": 11,
-      "max_devices": 12,
-      "name": "Types",
-      "notes": "1.5",
-      "slug": "77.0",
       "updated_at": "<volatile>"
      }
     ]

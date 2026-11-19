@@ -116,8 +116,10 @@ func init() {
 			Body: map[string]any{"active": "no", "max_devices": "40"},
 		},
 		contract.Case{
+			// The slug of the second tenant: the fourth, made with a slug in a
+			// list, is refused since BUGS TN1
 			Name: "update-slug-taken", Method: "PATCH", Path: "/api/tenants/{tenant}",
-			Body: map[string]any{"slug": "from-a-list"},
+			Body: map[string]any{"slug": "nord-s-d-gmbh-co"},
 		},
 		contract.Case{
 			Name: "update-name-null", Method: "PATCH", Path: "/api/tenants/{tenant}",
