@@ -11,6 +11,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/devicegroups"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
 )
@@ -28,12 +29,30 @@ var errNotPrimitive = errors.New("Cannot convert object to primitive value")
 type refusal struct {
 	status  int
 	message string
+	// key, when set, names the text of the answer in the request's
+	// language; message is then the key.
+	key string
 }
 
 func (e *refusal) Error() string { return e.message }
 
 func badRequest(message string) error {
 	return &refusal{status: http.StatusBadRequest, message: message}
+}
+
+// badRequestKey is a refusal answered with the text of a message key.
+func badRequestKey(key string) error {
+	return &refusal{status: http.StatusBadRequest, message: key, key: key}
+}
+
+// refusalText is the answer's text for err: the text of its key in the
+// request's language, or its own text.
+func refusalText(r *http.Request, err error) string {
+	var rf *refusal
+	if errors.As(err, &rf) && rf.key != "" {
+		return kit.T(r, rf.key, nil)
+	}
+	return err.Error()
 }
 
 // reply is an answer a route gave on its own instead of throwing: it is
@@ -219,9 +238,9 @@ func normalizeEmail(v jsbind.Value) (*string, error) {
 	switch {
 	case trimmed == "":
 	case jsLength(trimmed) > 200:
-		return nil, badRequest("email_too_long")
+		return nil, badRequestKey("users.email_too_long")
 	case !emailPattern.MatchString(trimmed):
-		return nil, badRequest("invalid_email")
+		return nil, badRequestKey("users.invalid_email")
 	}
 	return &trimmed, nil
 }

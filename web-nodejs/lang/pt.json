@@ -1876,6 +1876,8 @@
     "cannot_demote_self": "Não pode despromover-se a si mesmo",
     "cannot_delete_self": "Não pode excluir a sua própria conta",
     "last_admin": "Não é possível excluir o último administrador",
+    "invalid_email": "Introduza um endereço de email válido.",
+    "email_too_long": "Um endereço de email tem no máximo 200 caracteres.",
     "last_admin_go": "Não é possível excluir: este é o único Super Admin no servidor BetterDesk. Crie ou sincronize outro Super Admin primeiro (não Global Admin).",
     "delete_mirror_failed": "Não foi possível remover o usuário do servidor. Tente novamente quando o servidor BetterDesk estiver acessível.",
     "admin_only": "Esta funcionalidade está disponível apenas para administradores",

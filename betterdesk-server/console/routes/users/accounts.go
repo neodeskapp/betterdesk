@@ -246,9 +246,10 @@ func isUniqueViolation(err error) bool {
 // create answers POST /api/users with the body {"username", "password",
 // "role", "email", "groupGuids", "folderIds", "peerIds", "strategyGuid"}.
 // What it checks, in order: both given, the username's form (text only),
-// that it is free, the user group guids, the password's strength, the role the
-// caller may give. Then the account is written, its groups, its email
-// (which is checked only then), its device scope, and the audit entry.
+// that it is free, the user group guids, the password's strength, the
+// role the caller may give, the email, the device scope. Only then is
+// anything written: the account, its groups, its email, its device scope
+// and the audit entry.
 func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	created, err := h.createAccount(r)
 	if err == nil {
@@ -313,6 +314,18 @@ func (h *handlers) createAccount(r *http.Request) (*createdAccount, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Without an email the answer says ""; with null it says nothing
+	saved := new(string)
+	if !email.IsUndefined() {
+		if saved, err = normalizeEmail(email); err != nil {
+			return nil, err
+		}
+	}
+	strategy, err := h.checkScope(ctx, body)
+	if err != nil {
+		return nil, err
+	}
+
 	id, err := insertAccount(ctx, h.d.Store, name, hash, assigned)
 	if err != nil {
 		return nil, err
@@ -320,20 +333,13 @@ func (h *handlers) createAccount(r *http.Request) (*createdAccount, error) {
 	if _, err := h.d.DeviceGroups.SetUserGroupMemberships(ctx, id.V, groups); err != nil {
 		return nil, err
 	}
-	// Without an email the answer says ""; with null it says nothing
-	saved := new(string)
 	if !email.IsUndefined() {
-		if saved, err = normalizeEmail(email); err != nil {
-			return nil, err
-		}
 		if err := updateEmail(ctx, h.d.Store, id.V, textOf(saved)); err != nil {
 			return nil, err
 		}
 	}
-	if body.Has("folderIds") || body.Has("peerIds") || body.Has("strategyGuid") {
-		if err := h.applyScope(ctx, id.V, username, body); err != nil {
-			return nil, err
-		}
+	if err := h.applyScope(ctx, id.V, name, body, strategy); err != nil {
+		return nil, err
 	}
 	if err := h.d.LogAction(r, "user_created", "Created user: "+name+" ("+assigned+")"); err != nil {
 		return nil, err
@@ -365,7 +371,7 @@ func (h *handlers) clientError(w http.ResponseWriter, r *http.Request, err error
 		status = http.StatusInternalServerError
 	}
 	if status == http.StatusBadRequest {
-		fail(w, r, status, err.Error())
+		fail(w, r, status, refusalText(r, err))
 		return
 	}
 	failKey(w, r, status, "errors.server_error")
@@ -375,12 +381,12 @@ func (h *handlers) clientError(w http.ResponseWriter, r *http.Request, err error
 
 // update answers PATCH /api/users/{id} with the body {"username", "role",
 // "password", "email", "groupGuids", "folderIds", "peerIds",
-// "strategyGuid"}. Checks and writes go in this order, and what was
-// written before a refusal stays: the id, the account, whether the caller
-// may change it (mayChange), the password and role of a directory or
-// single sign-on account, the new username, the caller's own demotion,
-// the role (the last administrator keeps one), the password, the user
-// groups, the device scope, the email. The answer is the account as the
+// "strategyGuid"}. What it checks, in order: the id, the account,
+// whether the caller may change it (mayChange), the password and role of
+// a directory or single sign-on account, the new username, the caller's
+// own demotion, the role (the last administrator keeps one), the
+// password, the user groups, the device scope, the email. Only then is
+// anything written, in the same order. The answer is the account as the
 // list has it.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	userID, ok := pathID(r)
@@ -425,15 +431,15 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	if external && password.Truthy() || provider == "ldap" && role.Truthy() {
 		return nil, sayKey(r, http.StatusBadRequest, "users.provider_managed_hint")
 	}
-	if next, ok := newUsername(body, user); ok {
-		if err := h.rename(r, user, next, external); err != nil {
+	next, renaming := newUsername(body, user)
+	if renaming {
+		if err := h.checkRename(r, user, next, external); err != nil {
 			return nil, err
 		}
 	}
 	if isSessionAccount(r, user.ID.V) && role.Truthy() && access.IsSuperAdminRole(callerRole(r)) && !(role.IsString() && access.IsSuperAdminRole(role.Str())) {
 		return nil, sayKey(r, http.StatusBadRequest, "users.cannot_demote_self")
 	}
-	id := user.ID.V
 	if role.Truthy() {
 		if !validRole(role) {
 			return nil, sayKey(r, http.StatusBadRequest, "users.invalid_role")
@@ -450,10 +456,8 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 				return nil, sayKey(r, http.StatusBadRequest, "users.last_admin")
 			}
 		}
-		if err := updateRole(ctx, h.d.Store, id, role.Str()); err != nil {
-			return nil, err
-		}
 	}
+	hash := ""
 	if password.Truthy() {
 		rating, err := strength(password)
 		if err != nil {
@@ -462,11 +466,7 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 		if rating.Strength == "weak" {
 			return nil, weakPassword(rating)
 		}
-		hash, err := h.hash(ctx, password)
-		if err != nil {
-			return nil, err
-		}
-		if err := updatePasswordHash(ctx, h.d.Store, id, hash); err != nil {
+		if hash, err = h.hash(ctx, password); err != nil {
 			return nil, err
 		}
 	}
@@ -474,19 +474,42 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	if err != nil {
 		return nil, err
 	}
+	strategy, err := h.checkScope(ctx, body)
+	if err != nil {
+		return nil, err
+	}
+	var normalized *string
+	if !email.IsUndefined() {
+		if normalized, err = normalizeEmail(email); err != nil {
+			return nil, err
+		}
+	}
+
+	id := user.ID.V
+	if renaming {
+		if err := h.rename(r, user, next); err != nil {
+			return nil, err
+		}
+	}
+	if role.Truthy() {
+		if err := updateRole(ctx, h.d.Store, id, role.Str()); err != nil {
+			return nil, err
+		}
+	}
+	if password.Truthy() {
+		if err := updatePasswordHash(ctx, h.d.Store, id, hash); err != nil {
+			return nil, err
+		}
+	}
 	if given {
 		if _, err := h.d.DeviceGroups.SetUserGroupMemberships(ctx, id, groups); err != nil {
 			return nil, err
 		}
 	}
-	if err := h.applyScope(ctx, id, jsbind.String(user.username()), body); err != nil {
+	if err := h.applyScope(ctx, id, user.username(), body, strategy); err != nil {
 		return nil, err
 	}
 	if !email.IsUndefined() {
-		normalized, err := normalizeEmail(email)
-		if err != nil {
-			return nil, err
-		}
 		if err := updateEmail(ctx, h.d.Store, id, textOf(normalized)); err != nil {
 			return nil, err
 		}
@@ -520,18 +543,31 @@ func newUsername(body middleware.JSONObject, user *account) (string, bool) {
 	return next, true
 }
 
-// rename gives the account the new username, with what is keyed by the
-// name, and notes it in the audit log. A directory or single sign-on
-// account keeps the name its provider gives it. Afterwards the account
-// goes by the new name for the rest of the request. Its sessions and
-// access tokens go on.
-func (h *handlers) rename(r *http.Request, user *account, next string, external bool) error {
+// checkRename checks a new username before anything is written: a
+// directory or single sign-on account keeps the name its provider gives
+// it, the name has the username's form and no other account has it.
+func (h *handlers) checkRename(r *http.Request, user *account, next string, external bool) error {
 	if external {
 		return sayKey(r, http.StatusBadRequest, "users.provider_managed_hint")
 	}
 	if !usernamePattern.MatchString(next) {
 		return sayKey(r, http.StatusBadRequest, "users.invalid_username")
 	}
+	taken, err := nameTakenByOther(r.Context(), h.d.Store, user.ID.V, next)
+	if err != nil {
+		return err
+	}
+	if taken {
+		return sayKey(r, http.StatusConflict, "users.username_exists")
+	}
+	return nil
+}
+
+// rename gives the account the new username checkRename passed, with
+// what is keyed by the name, and notes it in the audit log. Afterwards
+// the account goes by the new name for the rest of the request. Its
+// sessions and access tokens go on.
+func (h *handlers) rename(r *http.Request, user *account, next string) error {
 	outcome, err := renameAccount(r.Context(), h.d.Store, user.ID.V, next)
 	switch {
 	case err != nil:

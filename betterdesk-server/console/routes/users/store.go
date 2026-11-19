@@ -158,6 +158,16 @@ func deleteAccount(ctx context.Context, db *store.DB, id int64) error {
 	return nil
 }
 
+// nameTakenByOther reports whether another account than the one with the
+// id has the username.
+func nameTakenByOther(ctx context.Context, db *store.DB, id int64, username string) (bool, error) {
+	var n int64
+	if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE username = ? AND id <> ?`, username, id).Scan(&n); err != nil {
+		return false, fmt.Errorf("look up user name: %w", err)
+	}
+	return n > 0, nil
+}
+
 // renameOutcome is how a rename ended when no error stopped it.
 type renameOutcome int
 
@@ -358,10 +368,23 @@ var (
 	errStrategyNotFound = errors.New("strategy not found")
 )
 
-// assignStrategy assigns the strategy String(value || "").trim() to an
-// account, or takes the account's assignment away when that is ""
+// strategyExists reports whether a strategy has the guid.
+func strategyExists(ctx context.Context, db *store.DB, guid string) (bool, error) {
+	var one int
+	err := db.QueryRow(ctx, `SELECT 1 FROM strategies WHERE guid = ?`, guid).Scan(&one)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("load strategy %q: %w", guid, err)
+	}
+	return true, nil
+}
+
+// assignStrategy assigns a strategy that checkScope found to an account,
+// or takes the account's assignment away for ""
 // (setUserStrategyAssignment). It returns what is assigned now.
-func assignStrategy(ctx context.Context, db *store.DB, id int64, value jsbind.Value) (string, error) {
+func assignStrategy(ctx context.Context, db *store.DB, id int64, strategyGUID string) (string, error) {
 	guid, err := ensureAccountGUID(ctx, db, id)
 	if err != nil {
 		return "", err
@@ -369,23 +392,11 @@ func assignStrategy(ctx context.Context, db *store.DB, id int64, value jsbind.Va
 	if guid == "" {
 		return "", errUserNotFound
 	}
-	strategyGUID, err := trimmedOr(value, "")
-	if err != nil {
-		return "", err
-	}
 	if strategyGUID == "" {
 		if _, err := db.Exec(ctx, `DELETE FROM strategy_assignments WHERE target_type = 'user' AND target_key = ?`, guid); err != nil {
 			return "", fmt.Errorf("remove strategy of user %d: %w", id, err)
 		}
 		return "", nil
-	}
-	var one int
-	err = db.QueryRow(ctx, `SELECT 1 FROM strategies WHERE guid = ?`, strategyGUID).Scan(&one)
-	if errors.Is(err, sql.ErrNoRows) {
-		return "", errStrategyNotFound
-	}
-	if err != nil {
-		return "", fmt.Errorf("load strategy %q: %w", strategyGUID, err)
 	}
 	if _, err := db.Exec(ctx, `INSERT INTO strategy_assignments (target_type, target_key, strategy_guid, updated_at)
 		VALUES ('user', ?, ?, `+store.NowSQL(db.Dialect())+`)

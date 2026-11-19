@@ -295,6 +295,73 @@ func TestSessionAccountWithTextID(t *testing.T) {
 	})
 }
 
+// Every check runs before the first write: a refused create stores no
+// account and no memberships, a refused change leaves the account's
+// name, role, password, email, guid, user groups, folders and strategy
+// as they were. The two email errors are texts, not message keys (BUGS
+// US4).
+func TestRefusedChangesWriteNothing(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		w := world(t, storetest.Prepare(t, db, storetest.GoServerFirst), routetest.Options{})
+		ctx := context.Background()
+		queries := []string{
+			`INSERT INTO folders (name) VALUES ('Office')`,
+			`INSERT INTO user_groups (guid, name) VALUES ('g1', 'Group one')`,
+		}
+		if db.IsPostgres() {
+			queries = append(queries, `SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users))`)
+		}
+		for _, query := range queries {
+			if _, err := db.Exec(ctx, query); err != nil {
+				t.Fatal(err)
+			}
+		}
+		state := func() string {
+			t.Helper()
+			var s string
+			if err := db.QueryRow(ctx, `SELECT username || ' ' || role || ' ' || password_hash || ' ' || COALESCE(email, '') || ' ' || COALESCE(guid, '') || ' ' ||
+				(SELECT COUNT(*) FROM users) || ' ' || (SELECT COUNT(*) FROM user_group_members) || ' ' ||
+				(SELECT COUNT(*) FROM device_group_user_access) || ' ' || (SELECT COUNT(*) FROM strategy_assignments)
+				FROM users WHERE id = 5`).Scan(&s); err != nil {
+				t.Fatal(err)
+			}
+			return s
+		}
+		const (
+			invalidEmail = `{"success":false,"error":"Enter a valid email address."}`
+			emailTooLong = `{"success":false,"error":"An email address has at most 200 characters."}`
+			serverError  = `{"success":false,"error":"Server error"}`
+		)
+		long := strings.Repeat("a", 195) + "@b.cde"
+		admin := w.As("admin")
+		for i, c := range []struct {
+			method, path, body string
+			status             int
+			answer             string
+		}{
+			{"POST", "/api/users", `{"username":"mail_bad","password":"Strong-Pass-1!","groupGuids":["g1"],"email":"not-a-mail"}`, 400, invalidEmail},
+			{"POST", "/api/users", `{"username":"mail_long","password":"Strong-Pass-1!","groupGuids":["g1"],"email":"` + long + `"}`, 400, emailTooLong},
+			{"POST", "/api/users", `{"username":"mail_number","password":"Strong-Pass-1!","email":5}`, 400, invalidEmail},
+			{"POST", "/api/users", `{"username":"no_strategy","password":"Strong-Pass-1!","groupGuids":["g1"],"folderIds":[1],"strategyGuid":"missing"}`, 500, serverError},
+			{"PATCH", "/api/users/5", `{"role":"viewer","password":"weak"}`, 400, ""},
+			{"PATCH", "/api/users/5", `{"role":"viewer","password":"Strong-Pass-1!","groupGuids":["bad guid"]}`, 400, `{"success":false,"error":"Invalid user group identifier"}`},
+			{"PATCH", "/api/users/5", `{"role":"viewer","password":"Strong-Pass-1!","groupGuids":["g1"],"folderIds":[1],"email":"bad"}`, 400, invalidEmail},
+			{"PATCH", "/api/users/5", `{"groupGuids":["g1"],"email":"` + long + `"}`, 400, emailTooLong},
+			{"PATCH", "/api/users/5", `{"role":"viewer","folderIds":[1],"strategyGuid":"missing"}`, 500, serverError},
+			{"PATCH", "/api/users/5", `{"role":"viewer","password":["Abcdefgh1!"]}`, 500, serverError},
+			{"PATCH", "/api/users/5", `{"username":"renamed_op","role":"nonsense"}`, 400, `{"success":false,"error":"Invalid role"}`},
+			{"PATCH", "/api/users/5", `{"username":"renamed_again","password":"weak"}`, 400, ""},
+		} {
+			before := state()
+			got := admin.Do(c.method, c.path, c.body, "X-Forwarded-For", "10.5.0."+strconv.Itoa(i+1))
+			expect(t, c.body, got, c.status, c.answer)
+			if after := state(); after != before {
+				t.Errorf("%s %s: the refused request wrote\nbefore %s\n after %s", c.method, c.body, before, after)
+			}
+		}
+	})
+}
+
 // String() of an object whose own toString member hides the method
 // throws: folder and device ids made of such values are a server error,
 // and nothing is written. An object as folderIds is no list and takes the

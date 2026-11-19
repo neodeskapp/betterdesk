@@ -2,8 +2,12 @@ package users_test
 
 import (
 	"context"
+	"crypto/rand"
+	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
@@ -30,13 +34,32 @@ type fix struct {
 func is(answer string) func(string) string { return func(string) string { return answer } }
 
 const (
-	roleAboveOwn    = `{"success":false,"error":"Cannot assign a role higher than your own"}`
-	invalidUsername = `{"success":false,"error":"A username has 3 to 32 characters: letters, numbers and underscores only."}`
+	roleAboveOwn     = `{"success":false,"error":"Cannot assign a role higher than your own"}`
+	invalidUsername  = `{"success":false,"error":"A username has 3 to 32 characters: letters, numbers and underscores only."}`
+	invalidRole      = `{"success":false,"error":"Invalid role"}`
+	cannotDemoteSelf = `{"success":false,"error":"You cannot demote yourself"}`
+	invalidEmail     = `{"success":false,"error":"Enter a valid email address."}`
+	emailTooLong     = `{"success":false,"error":"An email address has at most 200 characters."}`
 )
+
+// fixFor is the fix of a step: the one for the recording's shape
+// ("sqlite-go: 509 PATCH ..."), or the one for every shape.
+func fixFor(rec recording, name string) (fix, bool) {
+	variant := rec.Dialect
+	if rec.Shape == "go" {
+		variant += "-go"
+	}
+	if f, ok := fixes[variant+": "+name]; ok {
+		return f, true
+	}
+	f, ok := fixes[name]
+	return f, ok
+}
 
 // fixes are the steps the Go console answers otherwise, by the step's
 // name. The names of the steps before the renames (section 9 of the
-// oracle) are the same on every database shape.
+// oracle) are the same on every database shape; later ones carry the
+// shape in front.
 var fixes = map[string]fix{
 	// A username that is no text: Node created viewers named as each
 	// database's driver stored the value; true failed on SQLite.
@@ -89,6 +112,71 @@ var fixes = map[string]fix{
 				n.audit("user_deleted", "Deleted user: e2e_admin")
 			}
 		}},
+
+	// Checks after writes: Node created the account, then refused its
+	// email or strategy. The strategy gave it its guid first.
+	"227 POST /api/users": {bug: "US4", answer: is(invalidEmail), node: func(n *nodeWrites) { n.account(n.id(40, 41), "mail_bad") }},
+	"228 POST /api/users": {bug: "US4", answer: is(emailTooLong), node: func(n *nodeWrites) { n.account(n.id(41, 42), "mail_long") }},
+	"229 POST /api/users": {bug: "US4", answer: is(invalidEmail), node: func(n *nodeWrites) { n.account(n.id(42, 43), "mail_num") }},
+	"230 POST /api/users": {bug: "US4", node: func(n *nodeWrites) { n.account(n.id(43, 44), "mail_tostr") }},
+	"231 POST /api/users": {bug: "US4", answer: is(invalidEmail), node: func(n *nodeWrites) { n.account(n.id(44, 45), "mail_true") }},
+	"239 POST /api/users": {bug: "US4", node: func(n *nodeWrites) {
+		id := n.id(52, 53)
+		n.account(id, "scope_missing")
+		n.guid(id)
+	}},
+	// Node wrote the role before the weak password, the folders before the
+	// unknown strategy, the user groups before the invalid email
+	"366 PATCH /api/users/13": {bug: "US4", node: func(n *nodeWrites) { n.exec(`UPDATE users SET role = 'viewer' WHERE id = 13`) }},
+	"378 PATCH /api/users/13": {bug: "US4", node: func(n *nodeWrites) {
+		if _, err := n.p.world.Server.Deps().Access.SyncUserFolderAccess(context.Background(), "target_op", []any{1.0}); err != nil {
+			n.p.t.Fatal(err)
+		}
+	}},
+	"381 PATCH /api/users/13": {bug: "US4", answer: is(invalidEmail), node: func(n *nodeWrites) {
+		if _, err := n.p.world.Server.Deps().DeviceGroups.SetUserGroupMemberships(context.Background(), 13, []string{"ug-beta"}); err != nil {
+			n.p.t.Fatal(err)
+		}
+	}},
+	// A new name with a role or a demotion that is refused: Node renamed
+	// first. Where Node made address_books itself, the rename failed.
+	"sqlite: 501 PATCH /api/users/17":             {bug: "US4", status: http.StatusBadRequest, answer: is(invalidRole)},
+	"sqlite: 542 PATCH /api/users/{rnAlpha}":      {bug: "US4", status: http.StatusBadRequest, answer: is(invalidRole)},
+	"sqlite: 555 PATCH /api/users/2":              {bug: "US4", status: http.StatusBadRequest, answer: is(cannotDemoteSelf)},
+	"sqlite-go: 509 PATCH /api/users/17":          {bug: "US4", node: renamedTo("srv_renamed")},
+	"sqlite-go: 554 PATCH /api/users/{rnAlpha}":   {bug: "US4", node: renamedTo("rn_final")},
+	"sqlite-go: 571 PATCH /api/users/2":           {bug: "US4", node: renamedTo("super_self")},
+	"postgres: 505 PATCH /api/users/17":           {bug: "US4", node: renamedTo("srv_renamed")},
+	"postgres: 548 PATCH /api/users/{rnAlpha}":    {bug: "US4", node: renamedTo("rn_final")},
+	"postgres: 562 PATCH /api/users/2":            {bug: "US4", node: renamedTo("super_self")},
+	"postgres-go: 509 PATCH /api/users/17":        {bug: "US4", node: renamedTo("srv_renamed")},
+	"postgres-go: 554 PATCH /api/users/{rnAlpha}": {bug: "US4", node: renamedTo("rn_final")},
+	"postgres-go: 571 PATCH /api/users/2":         {bug: "US4", node: renamedTo("super_self")},
+}
+
+// renamedTo gives the step's account the name Node gave it, through the
+// route: the rename, the rows keyed by the name and the rename's audit
+// entry. Node notes the change as a whole only when it went through, and
+// had no answer that could give the account a guid, so the entry goes
+// again and the guid stays as it was.
+func renamedTo(name string) func(n *nodeWrites) {
+	return func(n *nodeWrites) {
+		n.p.t.Helper()
+		ctx := context.Background()
+		target := n.p.fill(n.step.Path)
+		id := target[strings.LastIndex(target, "/")+1:]
+		var guid sql.NullString
+		if err := n.p.db.QueryRow(ctx, `SELECT guid FROM users WHERE CAST(id AS TEXT) = ?`, id).Scan(&guid); err != nil {
+			n.p.t.Fatalf("step %q, account %s: %v", n.step.Name, id, err)
+		}
+		got := n.p.agent(n.step.Role).Do(n.step.Method, target, `{"username":"`+name+`"}`, "X-Forwarded-For", n.step.Headers["X-Forwarded-For"])
+		if got.Status != http.StatusOK {
+			n.p.t.Fatalf("step %q, Node's rename: %d %s", n.step.Name, got.Status, got.Body)
+		}
+		n.p.api.Calls()
+		n.exec(`DELETE FROM audit_log WHERE id = (SELECT MAX(id) FROM audit_log WHERE action = 'user_updated')`)
+		n.exec(`UPDATE users SET guid = ? WHERE CAST(id AS TEXT) = ?`, guid, id)
+	}
 }
 
 // nodeWrites writes what the request of a step wrote in Node.
@@ -121,16 +209,42 @@ func (n *nodeWrites) pick(sqlite, postgres string) string {
 	return sqlite
 }
 
-// createdAccount stores the viewer a create made, with its id, as the
-// username was stored and with the audit entry that names it as it was
-// sent. PostgreSQL's id sequence moves past it.
-func (n *nodeWrites) createdAccount(id int64, stored, sent string) {
+// id is the id Node gave an account on SQLite or on PostgreSQL, where
+// the username true made one account more.
+func (n *nodeWrites) id(sqlite, postgres int64) int64 {
+	if n.p.db.IsPostgres() {
+		return postgres
+	}
+	return sqlite
+}
+
+// account stores a viewer a create made, with its id and its username as
+// it was stored. PostgreSQL's id sequence moves past it.
+func (n *nodeWrites) account(id int64, stored string) {
 	n.p.t.Helper()
 	n.exec(`INSERT INTO users (id, username, password_hash, role, auth_provider) VALUES (?, ?, 'set by Node', 'viewer', 'local')`, id, stored)
 	if n.p.db.IsPostgres() {
 		n.exec(`SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users))`)
 	}
+}
+
+// createdAccount is account with the audit entry of a create that went
+// through, which names the account as it was sent.
+func (n *nodeWrites) createdAccount(id int64, stored, sent string) {
+	n.p.t.Helper()
+	n.account(id, stored)
 	n.audit("user_created", "Created user: "+sent+" (viewer)")
+}
+
+// guid gives an account a random guid, as crypto.randomUUID makes them.
+func (n *nodeWrites) guid(id int64) {
+	n.p.t.Helper()
+	var b [16]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		n.p.t.Fatal(err)
+	}
+	b[6], b[8] = b[6]&0x0f|0x40, b[8]&0x3f|0x80
+	n.exec(`UPDATE users SET guid = ? WHERE id = ?`, fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16]), id)
 }
 
 // deleteAccount deletes an account as the route does: its panel access

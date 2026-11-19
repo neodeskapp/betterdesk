@@ -1883,6 +1883,8 @@
     "cannot_demote_self": "لا يمكنك خفض رتبة نفسك",
     "cannot_delete_self": "لا يمكنك حذف حسابك الخاص",
     "last_admin": "لا يمكن حذف المسؤول الأخير",
+    "invalid_email": "أدخل عنوان بريد إلكتروني صالحًا.",
+    "email_too_long": "يمكن أن يتكون عنوان البريد الإلكتروني من 200 حرف كحد أقصى.",
     "last_admin_go": "تعذر الحذف: هذا هو Super Admin الوحيد على خادم BetterDesk. أنشئ أو زامن Super Admin آخر أولاً (وليس Global Admin).",
     "delete_mirror_failed": "تعذر إزالة المستخدم من الخادم. أعد المحاولة عندما يكون خادم BetterDesk متاحاً.",
     "admin_only": "هذه الميزة متاحة فقط للمسؤولين",

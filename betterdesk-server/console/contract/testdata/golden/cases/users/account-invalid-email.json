@@ -40,7 +40,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "invalid_email",
+     "error": "Enter a valid email address.",
      "success": false
     }
    }

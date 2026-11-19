@@ -23,40 +23,57 @@ func plainMember(body middleware.JSONObject, name string) any {
 	return v
 }
 
-// applyScope is applyUserScopeFromBody: the folders of body.folderIds, the
-// device grants of body.peerIds and the strategy of body.strategyGuid,
+// checkScope checks the device scope of a body before anything is
+// written: folder and device ids that can be read as text, and a strategy
+// that exists. It returns the strategy's guid.
+func (h *handlers) checkScope(ctx context.Context, body middleware.JSONObject) (string, error) {
+	// Only a list of folders is read, item by item as text
+	if ids := member(body, "folderIds"); body.Has("folderIds") && ids.IsArray() && hidesToString(ids) {
+		return "", errNotPrimitive
+	}
+	if body.Has("peerIds") && hidesToString(member(body, "peerIds")) {
+		return "", errNotPrimitive
+	}
+	if !body.Has("strategyGuid") {
+		return "", nil
+	}
+	strategy, err := trimmedOr(member(body, "strategyGuid"), "")
+	if err != nil || strategy == "" {
+		return "", err
+	}
+	known, err := strategyExists(ctx, h.d.Store, strategy)
+	if err != nil {
+		return "", err
+	}
+	if !known {
+		return "", errStrategyNotFound
+	}
+	return strategy, nil
+}
+
+// applyScope is applyUserScopeFromBody after checkScope: the folders of
+// body.folderIds, the device grants of body.peerIds and the strategy,
 // each only when the body has it, in this order. The assignment of the
 // strategy is told to the API server too; whether that works does not
 // matter.
-func (h *handlers) applyScope(ctx context.Context, userID int64, username jsbind.Value, body middleware.JSONObject) error {
+func (h *handlers) applyScope(ctx context.Context, userID int64, username string, body middleware.JSONObject, strategy string) error {
 	if body.Has("folderIds") {
-		// Only a list is read, item by item as text
-		if ids := member(body, "folderIds"); ids.IsArray() && hidesToString(ids) {
-			return errNotPrimitive
-		}
-		name, err := textOr(username, "")
-		if err != nil {
-			return err
-		}
-		if _, err := h.d.Access.SyncUserFolderAccess(ctx, name, plainMember(body, "folderIds")); err != nil {
+		if _, err := h.d.Access.SyncUserFolderAccess(ctx, username, plainMember(body, "folderIds")); err != nil {
 			return err
 		}
 	}
 	if body.Has("peerIds") {
-		if hidesToString(member(body, "peerIds")) {
-			return errNotPrimitive
-		}
 		if _, err := h.d.Access.SyncUserPeerGrants(ctx, userID, plainMember(body, "peerIds")); err != nil {
 			return err
 		}
 	}
 	if body.Has("strategyGuid") {
-		strategy, err := assignStrategy(ctx, h.d.Store, userID, member(body, "strategyGuid"))
+		assigned, err := assignStrategy(ctx, h.d.Store, userID, strategy)
 		if err != nil {
 			return err
 		}
 		if h.d.Backend.IsBetterDesk() {
-			h.tellStrategy(ctx, username, strategy)
+			h.tellStrategy(ctx, username, assigned)
 		}
 	}
 	return nil
@@ -71,12 +88,8 @@ type strategyAssignment struct {
 
 // tellStrategy hands an account's strategy to the API server. A failure
 // is logged and changes nothing: the assignment is stored already.
-func (h *handlers) tellStrategy(ctx context.Context, username jsbind.Value, strategy string) {
-	ref, err := trimmedOr(username, "")
-	var key string
-	if err == nil {
-		key, err = assignmentKey(ctx, h.d.Store, ref)
-	}
+func (h *handlers) tellStrategy(ctx context.Context, username, strategy string) {
+	key, err := assignmentKey(ctx, h.d.Store, jsbind.Trim(username))
 	if err == nil {
 		_, err = h.d.GoAPI.Post(ctx, "/strategies/assign", goapi.Body(strategyAssignment{Strategy: strategy, Users: []string{key}}))
 	}

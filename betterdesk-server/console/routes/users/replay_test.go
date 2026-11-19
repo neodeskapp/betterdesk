@@ -244,7 +244,7 @@ func (p *replayer) run() {
 		}
 		got := p.send(step)
 		status, answer, wantCalls := step.Status, step.Answer, nodeCalls(step.Extra.Calls)
-		f, fixed := fixes[step.Name]
+		f, fixed := fixFor(p.rec, step.Name)
 		if fixed {
 			if f.status != 0 {
 				status, wantCalls = f.status, nil

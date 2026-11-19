@@ -1882,6 +1882,8 @@
     "cannot_demote_self": "Et voi alentaa itseäsi",
     "cannot_delete_self": "Et voi poistaa omaa tiliäsi",
     "last_admin": "Viimeistä järjestelmänvalvojaa ei voi poistaa",
+    "invalid_email": "Anna kelvollinen sähköpostiosoite.",
+    "email_too_long": "Sähköpostiosoitteessa voi olla enintään 200 merkkiä.",
     "last_admin_go": "Ei voi poistaa: tämä on ainoa Super Admin BetterDesk-palvelimella. Luo tai synkronoi ensin toinen Super Admin (ei Global Admin).",
     "delete_mirror_failed": "Käyttäjää ei voitu poistaa palvelimelta. Yritä uudelleen, kun BetterDesk-palvelin on tavoitettavissa.",
     "admin_only": "Tämä ominaisuus on vain järjestelmänvalvojien käytettävissä",

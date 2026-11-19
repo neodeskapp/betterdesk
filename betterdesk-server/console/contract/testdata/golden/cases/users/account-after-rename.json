@@ -62,7 +62,7 @@
       "strategy_guid": "",
       "totp_enabled": false,
       "user_groups": [],
-      "username": "contract_renamed_tmp"
+      "username": "contract.renamed@tmp"
      },
      "success": true
     }

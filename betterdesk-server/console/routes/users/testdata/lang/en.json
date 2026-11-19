@@ -19,6 +19,8 @@
   "invalid_role": "Invalid role",
   "cannot_delete_self": "You cannot delete your own account",
   "last_admin": "Cannot delete the last administrator",
+  "invalid_email": "Enter a valid email address.",
+  "email_too_long": "An email address has at most 200 characters.",
   "password_required": "Enter a password.",
   "user_group_not_found": "User group not found"
  }
