@@ -101,9 +101,11 @@ func TestAvailabilityHistory(t *testing.T) {
 		if want := `{"success":true,"data":` + c.want + `}`; res.Body != want {
 			t.Errorf("%s: %s, want %s", c.body, res.Body, want)
 		}
+		// the values there before are read first (BUGS SE6)
 		calls := s.API.Calls()
 		want := strings.Split(c.calls, "|")
-		if len(calls) != 2 || !strings.HasSuffix(calls[0], `{"value":`+want[0]+`}`) || !strings.HasSuffix(calls[1], `{"value":`+want[1]+`}`) {
+		if len(calls) != 4 || !strings.HasPrefix(calls[0], "GET ") || !strings.HasPrefix(calls[1], "GET ") ||
+			!strings.HasSuffix(calls[2], `{"value":`+want[0]+`}`) || !strings.HasSuffix(calls[3], `{"value":`+want[1]+`}`) {
 			t.Errorf("%s: calls %v", c.body, calls)
 		}
 	}
@@ -114,6 +116,14 @@ func TestAvailabilityHistory(t *testing.T) {
 	res := admin.Do("POST", "/api/settings/availability-history", `{}`)
 	if res.Status != http.StatusBadGateway || res.Body != `{"success":false,"error":"invalid value"}` {
 		t.Errorf("refused retention: %d %s", res.Status, res.Body)
+	}
+	// a refused retention puts the switch back as it was (BUGS SE6)
+	s.API.On("GET /api/config/availability_history_enabled", http.StatusOK, `{"value":"true"}`)
+	s.API.Calls()
+	res = admin.Do("POST", "/api/settings/availability-history", `{"enabled":false}`)
+	if calls := s.API.Calls(); res.Status != http.StatusBadGateway || len(calls) != 5 ||
+		calls[2] != `PUT /api/config/availability_history_enabled {"value":"false"}` || calls[4] != `PUT /api/config/availability_history_enabled {"value":"true"}` {
+		t.Errorf("refused retention after a stored switch: %d %s, calls %v", res.Status, res.Body, calls)
 	}
 	s.API.On("PUT /api/config/availability_history_enabled", http.StatusInternalServerError, `{"error":""}`)
 	res = admin.Do("POST", "/api/settings/availability-history", `{}`)
@@ -305,6 +315,9 @@ func TestClientSessions(t *testing.T) {
 		t.Errorf("save: %s", res.Body)
 	}
 	want := []string{
+		`GET /api/config/client_session_expiry_days`,
+		`GET /api/config/client_session_sliding`,
+		`GET /api/config/client_session_max_days`,
 		`PUT /api/config/client_session_expiry_days {"value":"12"}`,
 		`PUT /api/config/client_session_sliding {"value":"true"}`,
 		`PUT /api/config/client_session_max_days {"value":"365"}`,
@@ -329,7 +342,7 @@ func TestClientSessions(t *testing.T) {
 	if res := admin.Do("PUT", "/api/settings/client-sessions", `{"expiry_days":9,"sliding":false}`); res.Body != `{"success":true}` {
 		t.Errorf("save: %s", res.Body)
 	}
-	if calls := s.API.Calls(); len(calls) != 3 || calls[1] != `PUT /api/config/client_session_sliding {"value":"false"}` {
+	if calls := s.API.Calls(); len(calls) != 6 || calls[4] != `PUT /api/config/client_session_sliding {"value":"false"}` {
 		t.Errorf("sliding false: %v", calls)
 	}
 	if content, _ := os.ReadFile(envPath); string(content) != "PORT=5000\nAPI_TOKEN_EXPIRY_DAYS=9\n" {
@@ -345,17 +358,28 @@ func TestClientSessions(t *testing.T) {
 	if res := admin.Do("PUT", "/api/settings/client-sessions", `{}`); res.Body != `{"success":true}` {
 		t.Errorf("save with a .env that is a folder: %s", res.Body)
 	}
-	if calls := s.API.Calls(); len(calls) != 3 || calls[1] != `PUT /api/config/client_session_sliding {"value":"true"}` {
+	if calls := s.API.Calls(); len(calls) != 6 || calls[4] != `PUT /api/config/client_session_sliding {"value":"true"}` {
 		t.Errorf("sliding missing: %v", calls)
 	}
+	// a refused value stops the save and puts back the values the server
+	// took, as they were (BUGS SE6)
+	s.API.On("GET /api/config/client_session_expiry_days", http.StatusOK, `{"value":"30"}`)
 	s.API.On("PUT /api/config/client_session_sliding", http.StatusInternalServerError, `{"error":"Go server down"}`)
 	s.API.Calls()
 	res = admin.Do("PUT", "/api/settings/client-sessions", `{}`)
 	if res.Status != http.StatusInternalServerError || res.Body != `{"success":false,"error":"Go server down"}` {
 		t.Errorf("refused: %d %s", res.Status, res.Body)
 	}
-	if calls := s.API.Calls(); len(calls) != 3 {
-		t.Errorf("all three values are sent, also when one fails: %v", calls)
+	want = []string{
+		`GET /api/config/client_session_expiry_days`,
+		`GET /api/config/client_session_sliding`,
+		`GET /api/config/client_session_max_days`,
+		`PUT /api/config/client_session_expiry_days {"value":"7"}`,
+		`PUT /api/config/client_session_sliding {"value":"true"}`,
+		`PUT /api/config/client_session_expiry_days {"value":"30"}`,
+	}
+	if calls := s.API.Calls(); !reflect.DeepEqual(calls, want) {
+		t.Errorf("calls of a refused save: %v", calls)
 	}
 }
 

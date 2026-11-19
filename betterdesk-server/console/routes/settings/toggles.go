@@ -110,7 +110,8 @@ func (g *general) getAvailabilityHistory(w http.ResponseWriter, r *http.Request)
 
 // setAvailabilityHistory answers POST /api/settings/availability-history
 // with {enabled, retention_days}: days below 1 or no number are 30, more
-// than 3650 are 3650.
+// than 3650 are 3650. When the server refuses the days, the switch it
+// took is put back as it was, so a failed save changes nothing.
 func (g *general) setAvailabilityHistory(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
 	enabled := goapi.Truthy(jsreq.Prop(body, "enabled"))
@@ -120,12 +121,8 @@ func (g *general) setAvailabilityHistory(w http.ResponseWriter, r *http.Request)
 	}
 	days = math.Min(days, maxRetentionDays)
 
-	if res := g.d.GoAPI.SetConfig(r.Context(), availabilityEnabledKey, strconv.FormatBool(enabled)); res.Get("success") == false {
-		kit.JSON(w, r, http.StatusBadGateway, failure{Error: orText(res.Get("error"), kit.T(r, "errors.server_error", nil))})
-		return
-	}
 	daysText := jsreq.String(days)
-	if res := g.d.GoAPI.SetConfig(r.Context(), availabilityRetentionKey, daysText); res.Get("success") == false {
+	if res, ok := g.setConfigs(r, []configPair{{availabilityEnabledKey, strconv.FormatBool(enabled)}, {availabilityRetentionKey, daysText}}); !ok {
 		kit.JSON(w, r, http.StatusBadGateway, failure{Error: orText(res.Get("error"), kit.T(r, "errors.server_error", nil))})
 		return
 	}
@@ -135,6 +132,38 @@ func (g *general) setAvailabilityHistory(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	kit.OK(w, r, availabilityData{Enabled: enabled, RetentionDays: days})
+}
+
+// configPair is a key of the server's configuration with a value.
+type configPair struct{ key, value string }
+
+// setConfigs writes values into the server's configuration in order, as
+// one save: the values there before are read first, and when the server
+// refuses one, those it took are put back, newest first. ok is false with
+// the refusal as res.
+func (g *general) setConfigs(r *http.Request, pairs []configPair) (res *goapi.Object, ok bool) {
+	ctx := r.Context()
+	before := make([]any, len(pairs))
+	for i, p := range pairs {
+		before[i] = configValue(g.d.GoAPI.GetConfig(ctx, p.key), nil)
+	}
+	for i, p := range pairs {
+		res = g.d.GoAPI.SetConfig(ctx, p.key, p.value)
+		if goapi.Truthy(res.Get("success")) {
+			continue
+		}
+		for j := i - 1; j >= 0; j-- {
+			if before[j] == nil {
+				g.log.Warn("Could not put back " + pairs[j].key + ": its value before the save is not known")
+				continue
+			}
+			if back := g.d.GoAPI.SetConfig(ctx, pairs[j].key, jsreq.String(before[j])); !goapi.Truthy(back.Get("success")) {
+				g.log.Warn("Could not put back "+pairs[j].key+":", back.Get("error"))
+			}
+		}
+		return res, false
+	}
+	return res, true
 }
 
 const (
@@ -329,22 +358,20 @@ func (g *general) getClientSessions(w http.ResponseWriter, r *http.Request) {
 // {expiry_days, sliding, max_days}. The server keeps the values; the
 // expiry is also written into the console's .env when that file exists
 // (a .env that cannot be written is only logged), and the next client
-// token lasts that long.
+// token lasts that long. When the server refuses a value, those it took
+// are put back as they were, so a failed save changes nothing.
 func (g *general) setClientSessions(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
 	expiryDays := clampSessionDays(jsreq.Prop(body, "expiry_days"), 7)
 	maxDays := clampSessionDays(jsreq.Prop(body, "max_days"), 30)
 	sliding := jsreq.Prop(body, "sliding") != false
-	results := []*goapi.Object{
-		g.d.GoAPI.SetConfig(r.Context(), "client_session_expiry_days", jsreq.String(expiryDays)),
-		g.d.GoAPI.SetConfig(r.Context(), "client_session_sliding", strconv.FormatBool(sliding)),
-		g.d.GoAPI.SetConfig(r.Context(), "client_session_max_days", jsreq.String(maxDays)),
-	}
-	for _, result := range results {
-		if !goapi.Truthy(result.Get("success")) {
-			kit.JSON(w, r, http.StatusInternalServerError, failure{Error: orText(result.Get("error"), "Failed to save client session settings")})
-			return
-		}
+	if result, ok := g.setConfigs(r, []configPair{
+		{"client_session_expiry_days", jsreq.String(expiryDays)},
+		{"client_session_sliding", strconv.FormatBool(sliding)},
+		{"client_session_max_days", jsreq.String(maxDays)},
+	}); !ok {
+		kit.JSON(w, r, http.StatusInternalServerError, failure{Error: orText(result.Get("error"), "Failed to save client session settings")})
+		return
 	}
 	g.writeExpiryToEnv(jsreq.String(expiryDays))
 	if g.d.Authn != nil {
