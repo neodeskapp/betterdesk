@@ -510,6 +510,30 @@ func TestEngineAsNodeWithoutDatabase(t *testing.T) {
 			}
 			continue
 		}
+		if never, ambiguous := sweepNeverOnline(t, c.Fn, c.Devices); len(never) > 0 {
+			// BUGS AE1: a device whose last_online lies before 1970 was
+			// never online and is not checked; Node took it as offline
+			// since then
+			counts["AE1: a device never online in the sweep"]++
+			// Where Node threw at such a device, or the list has its id
+			// twice, the Go console raises no more than Node
+			if ambiguous || c.Throws != nil {
+				if len(mem.created) > len(c.Created) || err != nil && (c.Throws == nil || err.Error() != *c.Throws) {
+					t.Fatalf("case %d %s: %v, alerts %q", i, describe(), err, mem.created)
+				}
+				continue
+			}
+			c.RecentCalls = withoutDevices(c.RecentCalls, never, func(call [3]string) string { return call[1] })
+			c.Mails = withoutDevices(c.Mails, never, func(m oracleMail) string { return m.Alert["device_id"] })
+			c.Logs = withoutDevices(c.Logs, never, func(line [2]string) string { return line[1] })
+			created := c.Created[:0:0]
+			for _, alert := range c.Created {
+				if len(withoutDevices([]string{alert.Alert}, never, func(s string) string { return s })) == 1 {
+					created = append(created, alert)
+				}
+			}
+			c.Created = created
+		}
 		if (err == nil) != (c.Throws == nil) || (err != nil && err.Error() != *c.Throws) {
 			t.Fatalf("case %d %s: error %v, Node threw %s", i, describe(), err, show(c.Throws))
 		}
@@ -569,7 +593,7 @@ func TestEngineAsNodeWithoutDatabase(t *testing.T) {
 			t.Fatalf("case %d %s: logs %q\nNode: %q", i, describe(), logs.lines, c.Logs)
 		}
 	}
-	for _, name := range []string{"rules", "telemetry", "sweep", "odd ids", "thrown", "alerts", "mails", "AE2: a rule with an object's member as its operator"} {
+	for _, name := range []string{"rules", "telemetry", "sweep", "odd ids", "thrown", "alerts", "mails", "AE2: a rule with an object's member as its operator", "AE1: a device never online in the sweep"} {
 		if counts[name] == 0 {
 			t.Errorf("the recording has no %q", name)
 		}
@@ -780,6 +804,20 @@ func TestEngineAsNodeOnRows(t *testing.T) {
 				}
 				continue
 			}
+			if never, ambiguous := sweepNeverOnline(t, c.Fn, c.Devices); len(never) > 0 {
+				// BUGS AE1, as in TestEngineAsNodeWithoutDatabase
+				counts["AE1: a device never online in the sweep"]++
+				if ambiguous || c.Throws != nil {
+					if len(rows) > len(c.Rows) || err != nil && (c.Throws == nil || err.Error() != *c.Throws) {
+						t.Fatalf("case %d %s: %v, alerts %q", i, describe(), err, rows)
+					}
+					continue
+				}
+				c.Rows = withoutDevices(c.Rows, never, func(row string) string { return row })
+				c.Mails = withoutDevices(c.Mails, never, func(m oracleMail) string { return m.Alert["device_id"] })
+				c.Logs = withoutDevices(c.Logs, never, func(line [2]string) string { return line[1] })
+				c.Triggered = c.Triggered[:len(c.Rows)]
+			}
 			if (err == nil) != (c.Throws == nil) || (err != nil && err.Error() != *c.Throws) {
 				t.Fatalf("case %d %s: error %v, Node threw %s", i, describe(), err, show(c.Throws))
 			}
@@ -834,7 +872,7 @@ func TestEngineAsNodeOnRows(t *testing.T) {
 				t.Fatalf("case %d %s: logs %q\nNode: %q", i, describe(), logs.lines, c.Logs)
 			}
 		}
-		for _, name := range []string{"rules", "telemetry", "sweep", "alerts", "mails", "held back by the cooldown"} {
+		for _, name := range []string{"rules", "telemetry", "sweep", "alerts", "mails", "held back by the cooldown", "AE1: a device never online in the sweep"} {
 			if counts[name] == 0 {
 				t.Errorf("the recording has no %q", name)
 			}

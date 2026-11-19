@@ -152,7 +152,8 @@ func FuzzDeviceList(f *testing.F) {
 				break
 			}
 			ms, ok := dateParse(text, time.UTC)
-			if !ok {
+			// A time before 1970 is never seen (BUGS AE1)
+			if !ok || ms < 0 {
 				continue
 			}
 			secs := math.Floor((float64(nowMs) - ms) / 1000)

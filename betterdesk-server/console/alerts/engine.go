@@ -380,8 +380,8 @@ func (e *Engine) EvaluateInBackground(fn func(ctx context.Context) error) {
 // for a while is checked against the offline_duration rules, with the
 // seconds since it was last seen. The device list is read only when such
 // a rule is on. Devices that are online, banned or deleted, RDP and VNC
-// targets, and devices never seen (no last_online, or one that is no
-// date) are left out.
+// targets, and devices never seen (no last_online, one that is no date,
+// or one before 1970) are left out.
 //
 // The cooldown of an offline alert is at least as long as the device has
 // been offline, so one stretch offline raises one alert per rule.
@@ -424,7 +424,9 @@ func (e *Engine) PeriodicCheckAt(ctx context.Context, at time.Time) error {
 			}
 		}
 		last, ok := dateParse(lastOnline, e.opts.Location)
-		if !ok {
+		// A time before 1970 is no time the device was seen: the API server
+		// sends Go's zero time for a device that was never online
+		if !ok || last < 0 {
 			continue
 		}
 		secs := math.Floor((now - last) / 1000)
