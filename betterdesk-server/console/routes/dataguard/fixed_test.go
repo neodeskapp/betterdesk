@@ -157,3 +157,48 @@ var _ = policyFixes.Add("DG2", map[string]replay.Fix{
 	`admin PATCH /api/bd/policies/2 [{"name":"In a list"}]`: {Dialect: "postgres", Status: 200,
 		Answer: `{"id":2,"name":"Last","description":"{}","policy_type":"usb","action":"log","scope":"{\"x\",\"y\"}","enabled":true,"rules":[1],"created_at":"2001-02-03T04:05:06.000Z","updated_at":"<now, ISO form>"}`},
 })
+
+// DG3: a row whose details or rules hold no JSON does not fail a list:
+// details go out as the text they hold, rules as no rules.
+var _ = policyFixes.Add("DG3", map[string]replay.Fix{
+	"admin GET /api/dataguard/events?device_id=D5 ":         {Dialect: "sqlite", Status: 200, Has: []string{`"device_id":"D5"`, `"details":"not json"`}},
+	"admin GET /api/dataguard/events?device_id=D6 ":         {Dialect: "sqlite", Status: 200, Has: []string{`"device_id":"D6"`, `"details":""`}},
+	"admin GET /api/dataguard/events ":                      {Dialect: "sqlite", NodeStatus: 500, Status: 200, Has: []string{`"details":"not json"`, `"details":""`, `"device_id":"D1"`}},
+	"admin GET /api/dataguard/policies/902 ":                {Dialect: "sqlite", Status: 200, Has: []string{`"id":902,"name":"rules broken"`, `"rules":[]`}},
+	"admin GET /api/dataguard/policies/904 ":                {Dialect: "sqlite", Status: 200, Has: []string{`"id":904,"name":"rules empty"`, `"rules":[]`}},
+	"admin GET /api/dataguard/policies ":                    {Dialect: "sqlite", NodeStatus: 500, Status: 200, Has: []string{`"id":902,"name":"rules broken"`, `"id":904,"name":"rules empty"`, `"id":1,"name":"By admin at /api/dataguard"`}},
+	`admin PATCH /api/dataguard/policies/902 {"scope":"x"}`: {Dialect: "sqlite", Status: 200, Has: []string{`"id":902,"name":"rules broken"`, `"scope":"x"`, `"rules":[]`}},
+})
+
+// DV7: a device gets the policies that are on, enabled read as one flag
+// (a text such as "yes" is off), and rules that are no list, or no JSON, as
+// no rules; one unreadable row no longer fails the list.
+var _ = deviceFixes.Add("DV7", map[string]replay.Fix{
+	" GET /api/bd/dlp-policies ":                           {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
+	" GET /api/bd/dlp-policies?device_id=device-b ":        {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
+	"operator GET /api/bd/dlp-policies ":                   {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
+	" GET /api/dataguard/dlp-policies ":                    {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
+	" GET /api/dataguard/dlp-policies?device_id=device-b ": {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
+	" GET /API/DATAGUARD/DLP-POLICIES/ ":                   {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
+})
+
+var _ = deviceFixes.Add("DV7", map[string]replay.Fix{
+	" GET /api/bd/dlp-policies ":        {NodeStatus: 500, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
+	" GET /api/dataguard/dlp-policies ": {NodeStatus: 500, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
+})
+
+var (
+	dv7Has   = []string{`{"id":1,"name":"usb block","rules":[{"type":"usb","action":"block"}]}`}
+	dv7Lacks = []string{`"rules":{`, `"rules":0`, `"rules":null`, `"rules":"`, `"name":"enabled text"`}
+)
+
+// DG3 on PostgreSQL, where the rows that cannot be read are others.
+var _ = policyFixes.Add("DG3", map[string]replay.Fix{
+	"admin GET /api/dataguard/events?device_id= ":       {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":10,"device_id":"D4"`}},
+	"admin GET /api/dataguard/events?event_source=usb ": {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":8,"device_id":"D3"`}},
+	"admin GET /api/dataguard/events?DEVICE_ID=D3 ":     {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":10,"device_id":"D4"`}},
+	"admin GET /api/dataguard/events ":                  {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":10,"device_id":"D4"`}},
+	"admin GET /api/bd/events?device_id=D2 ":            {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":6,"device_id":"D2"`}},
+	"admin GET /api/dataguard/policies/903 ":            {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":903,"name":"rules a broken string"`, `"rules":[]`}},
+	"admin GET /api/dataguard/policies ":                {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":903,"name":"rules a broken string"`, `"id":1,"name":"By admin at /api/dataguard"`}},
+})

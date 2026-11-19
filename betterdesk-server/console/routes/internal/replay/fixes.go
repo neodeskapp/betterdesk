@@ -1,6 +1,7 @@
 package replay
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 
@@ -19,6 +20,13 @@ type Fix struct {
 	Answer string
 	// Headers are headers the answer must have, by name ("" for none).
 	Headers map[string]string
+	// Has and Lacks, where Answer is empty, are texts the answer must hold
+	// and must not hold: for a long answer whose parts the fix changes.
+	Has, Lacks []string
+	// NodeStatus, when set, limits the fix to the steps Node answered with
+	// that status, where one request is sent several times and its
+	// answers differ.
+	NodeStatus int
 	// Dialect limits the fix to one database ("sqlite", "postgres"),
 	// where the step is a different request on each.
 	Dialect string
@@ -48,6 +56,9 @@ func (l *Fixes) Add(bug string, steps map[string]Fix) bool {
 		l.steps = map[string]Fix{}
 	}
 	for key, f := range steps {
+		if f.NodeStatus != 0 {
+			key = strconv.Itoa(f.NodeStatus) + ": " + key
+		}
 		if f.Dialect != "" {
 			key = f.Dialect + ": " + key
 		}
@@ -67,17 +78,32 @@ func (l *Fixes) Check(w *World, next Check) Check {
 	l.used = map[string]int{}
 	return func(t *testing.T, step Step, got Answer) bool {
 		t.Helper()
-		key := FixKey(step)
-		f, listed := l.steps[key]
-		if !listed {
-			key = w.DB.Dialect().String() + ": " + key
-			f, listed = l.steps[key]
+		var key string
+		var f Fix
+		listed := false
+		plain, status, dialect := FixKey(step), strconv.Itoa(step.Status)+": ", w.DB.Dialect().String()+": "
+		for _, candidate := range []string{dialect + status + plain, status + plain, dialect + plain, plain} {
+			if f, listed = l.steps[candidate]; listed {
+				key = candidate
+				break
+			}
 		}
 		if !listed {
 			return next != nil && next(t, step, got)
 		}
 		l.used[key]++
-		if got.Status != f.Status || Normalize(got.Body) != Normalize(f.Answer) {
+		have := Normalize(got.Body)
+		for _, part := range f.Has {
+			if !strings.Contains(have, part) {
+				t.Errorf("%s (%s): %s: the answer lacks %s: %s", step.Name, f.Bug, key, part, got.Body)
+			}
+		}
+		for _, part := range f.Lacks {
+			if strings.Contains(have, part) {
+				t.Errorf("%s (%s): %s: the answer holds %s: %s", step.Name, f.Bug, key, part, got.Body)
+			}
+		}
+		if got.Status != f.Status || (f.Answer != "" || f.Has == nil) && have != Normalize(f.Answer) {
 			t.Errorf("%s (%s): %s\n   fix: %d %s\n    go: %d %s", step.Name, f.Bug, key, f.Status, f.Answer, got.Status, got.Body)
 		}
 		for name, value := range f.Headers {

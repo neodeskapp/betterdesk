@@ -106,3 +106,45 @@ func TestStatsWithoutEventsAreZero(t *testing.T) {
 		}
 	})
 }
+
+// A row whose details or rules hold no JSON does not fail a list: the
+// details go out as the text they hold, the rules as no rules (BUGS DG3).
+func TestAnUnreadableRowDoesNotFailTheList(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		broken := db.Pick(`x`, `"x"`)
+		w.Exec("INSERT INTO dlp_events (device_id, event_source, event_type, action, details) VALUES ('D1', 'usb', 'info', 'log', ?)", []any{broken})
+		w.Exec("INSERT INTO dlp_policies (name, rules) VALUES ('broken', ?)", []any{db.Pick(`x`, `"x"`)})
+		events := w.Do(replay.Request{Role: "admin", Path: "/api/dataguard/events"})
+		if events.Status != 200 || !strings.Contains(events.Body, `"details":"x"`) {
+			t.Errorf("events: %d %s", events.Status, events.Body)
+		}
+		for _, path := range []string{"/api/dataguard/policies", "/api/dataguard/policies/1"} {
+			if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != 200 || !strings.Contains(got.Body, `"name":"broken"`) || !strings.Contains(got.Body, `"rules":[]`) {
+				t.Errorf("%s: %d %s", path, got.Status, got.Body)
+			}
+		}
+	})
+}
+
+// A device gets the policies that are on, with enabled read as one flag
+// and rules that are no list as no rules; a policy whose rules cannot be
+// read does not fail the list (BUGS DV7).
+func TestActivePoliciesSkipABadRow(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at) VALUES (?, ?, 5, 'device-a', '2999-01-01 00:00:00')",
+			[]any{"tok-device-a", "a70dc32ded6e642ec955672a88edb7cc9d6d9e2abb6bf78146a63491adb24155"})
+		w.Exec("INSERT INTO dlp_policies (id, name, rules) VALUES (1, 'list', '[1]')", nil)
+		w.Exec("INSERT INTO dlp_policies (id, name, rules) VALUES (2, 'broken', ?)", []any{db.Pick(`x`, `"x"`)})
+		w.Exec("INSERT INTO dlp_policies (id, name, rules) VALUES (3, 'object', '{\"a\":1}')", nil)
+		if !db.IsPostgres() {
+			w.Exec("INSERT INTO dlp_policies (id, name, enabled, rules) VALUES (4, 'enabled yes', 'yes', '[2]')", nil)
+		}
+		got := w.Do(replay.Request{Path: "/api/bd/dlp-policies", Headers: map[string]string{"Authorization": "Bearer tok-device-a"}})
+		want := `[{"id":1,"name":"list","rules":[1]},{"id":2,"name":"broken","rules":[]},{"id":3,"name":"object","rules":[]}]`
+		if got.Status != 200 || got.Body != want {
+			t.Errorf("the policies of a device: %d %s, want %s", got.Status, got.Body, want)
+		}
+	})
+}

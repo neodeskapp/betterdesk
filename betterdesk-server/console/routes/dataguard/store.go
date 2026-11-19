@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -174,6 +175,23 @@ func (d document) parsed(column, fallback string) (json.RawMessage, error) {
 	return restringify.MarshalJSON()
 }
 
+// unreadable is what a list answers for a document column that holds no
+// JSON: the rules as no rules, the details as the text they hold.
+func (d document) unreadable(column string) json.RawMessage {
+	if column == "rules" {
+		return json.RawMessage("[]")
+	}
+	text := d.text
+	if d.jsonb {
+		var inner string
+		if json.Unmarshal([]byte(strings.TrimSpace(d.text)), &inner) == nil {
+			text = inner
+		}
+	}
+	encoded, _ := json.Marshal(text)
+	return encoded
+}
+
 // isZero reports whether JSON text is the number 0 in any spelling.
 func isZero(text string) bool {
 	var n float64
@@ -196,7 +214,11 @@ func documentRows(ctx context.Context, db *store.DB, column, fallback, query str
 			continue
 		}
 		value, err := doc.parsed(column, fallback)
-		if err != nil {
+		var notJSON errNotJSON
+		switch {
+		case errors.As(err, &notJSON):
+			value = doc.unreadable(column)
+		case err != nil:
 			return nil, err
 		}
 		r.set(column, value)
@@ -411,21 +433,19 @@ type activePolicy struct {
 	Rules json.RawMessage `json:"rules"`
 }
 
-// isOn is the test the device route made of a policy's enabled: a number
-// has to be 1, any other value has to be true for JavaScript. SQLite keeps
-// what it was given in the INTEGER column, so 2, 0.5 and a text such as
-// "yes" are there too.
+// isOn reads a policy's enabled as one flag on both databases: on is
+// true, 1 or the text "1". SQLite keeps what it was given in the INTEGER
+// column, so 2, 0.5 and a text such as "yes" can be there; they are off.
 func isOn(enabled jsbind.Value) bool {
-	if enabled.IsNumber() {
-		return enabled.ToNumber() == 1
+	switch enabled.JSON() {
+	case "true", "1", `"1"`:
+		return true
 	}
-	return enabled.Truthy()
+	return false
 }
 
 // listActivePolicies returns the policies that are on, by id, with their
-// rules parsed. A policy that is off is passed over before its rules are
-// read, so rules that are no JSON fail the list only where the policy is
-// on.
+// rules parsed. Rules that are no list, or no JSON, go out as no rules.
 func listActivePolicies(ctx context.Context, db *store.DB) ([]activePolicy, error) {
 	rows, err := store.Select(ctx, db, "SELECT id, name, enabled, rules FROM dlp_policies ORDER BY id")
 	if err != nil {
@@ -453,8 +473,8 @@ func listActivePolicies(ctx context.Context, db *store.DB) ([]activePolicy, erro
 	out := make([]activePolicy, len(on))
 	for i, c := range on {
 		rules, err := c.rules.parsed("rules", "[]")
-		if err != nil {
-			return nil, fmt.Errorf("read the rules of a policy: %w", err)
+		if err != nil || !bytes.HasPrefix(bytes.TrimSpace(rules), []byte("[")) {
+			rules = json.RawMessage("[]")
 		}
 		out[i] = c.policy
 		out[i].Rules = rules
