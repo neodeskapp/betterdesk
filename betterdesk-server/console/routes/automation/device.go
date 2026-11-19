@@ -32,9 +32,10 @@ func (h *handlers) pendingCommands(w http.ResponseWriter, r *http.Request) {
 // commandResult answers POST commands/{id}/result with the body {status,
 // result?}: the agent reports that a command of its device runs, or has
 // completed or failed. The status is checked first, then whether the
-// command exists, then whether it is the device's. The result is stored
-// as String() made it, or NULL when there is none; any state may follow
-// any other, also after a command completed.
+// command exists and is the device's: another device's command is not
+// found either, so a device cannot learn which ids exist. The result is
+// stored as String() made it, or NULL when there is none; any state may
+// follow any other, also after a command completed.
 func (h *handlers) commandResult(w http.ResponseWriter, r *http.Request) {
 	device := kit.Device(r).DeviceID
 	body := kit.Body(r)
@@ -48,13 +49,8 @@ func (h *handlers) commandResult(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Command result error", err)
 		return
 	}
-	if command == nil {
+	if command == nil || !ownedBy(*command, device) {
 		fail(w, r, http.StatusNotFound, "Command not found")
-		return
-	}
-	// cmd.device_id !== req.deviceId
-	if owner := command.number("device_id"); !owner.IsString() || owner.Str() != device {
-		fail(w, r, http.StatusForbidden, "Device ID mismatch")
 		return
 	}
 	result := jsbind.Null
@@ -73,4 +69,10 @@ func (h *handlers) commandResult(w http.ResponseWriter, r *http.Request) {
 	}
 	h.log.Info("Command #" + id.ToString() + " result from " + device + ": " + status.Str())
 	kit.JSON(w, r, http.StatusOK, done{Success: true})
+}
+
+// ownedBy reports whether the command is one of the device's.
+func ownedBy(command record, device string) bool {
+	owner := command.number("device_id")
+	return owner.IsString() && owner.Str() == device
 }

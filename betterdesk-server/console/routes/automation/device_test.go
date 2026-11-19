@@ -30,11 +30,15 @@ import (
 //     /api/bd/{id} steps aside only for the mount written in lower case
 //     (BUGS DV8): GET /API/BD/COMMANDS is that route's, which sends a
 //     request without a session to the sign-in page.
+//
+// The steps the bug fixes change are listed in deviceFixes
+// (fixed_test.go).
 func TestNodeDeviceAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		elsewhere, slashes, spelled := 0, 0, 0
-		w.Run(replay.Load(t, db, "node_device"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		defer deviceFixes.Unused(t, db)
+		w.Run(replay.Load(t, db, "node_device"), deviceFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			switch {
 			case step.Path == "/API/BD/COMMANDS":
 				spelled++
@@ -56,7 +60,7 @@ func TestNodeDeviceAnswers(t *testing.T) {
 				return true
 			}
 			return false
-		})
+		}))
 		if elsewhere != 6 || slashes != 1 || spelled != 1 {
 			t.Errorf("%d answers were compared by status only, %d had two slashes and %d went to the inventory route, want 6, 1 and 1", elsewhere, slashes, spelled)
 		}
@@ -146,6 +150,34 @@ func TestDeviceRouteFailures(t *testing.T) {
 		}
 		if got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/commands/1/result", Body: replay.Text(`{"status":"done"}`), Headers: deviceA}); got.Status != 400 {
 			t.Errorf("a status that is none without the table: %d %s, want 400", got.Status, got.Body)
+		}
+	})
+}
+
+// A device that reports a result for another device's command gets the
+// answer of a command nobody has, so it cannot learn which ids exist, and
+// the command stays as it was (BUGS AU14). A status that is none is still
+// refused first.
+func TestAnotherDevicesCommandIsNotFound(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := deviceWorld(t, db)
+		w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at) VALUES (?, ?, 5, 'device-b', '2999-01-01 00:00:00')",
+			[]any{"tok-device-b", "638c3bcb28bd43d785bdb2b9555c0d22e2eb931e3a0298384de110a801b52b46"})
+		deviceB := map[string]string{"Authorization": "Bearer tok-device-b"}
+		notFound := `{"error":"Command not found"}`
+		for _, path := range []string{"/api/bd/commands/1/result", "/api/bd/commands/999/result"} {
+			for _, status := range []string{"running", "completed", "failed"} {
+				got := w.Do(replay.Request{Method: "POST", Path: path, Body: replay.Text(`{"status":"` + status + `","result":"x"}`), Headers: deviceB})
+				if got.Status != 404 || got.Body != notFound {
+					t.Errorf("%s as device-b with %s: %d %s, want 404 %s", path, status, got.Status, got.Body, notFound)
+				}
+			}
+		}
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/commands/1/result", Body: replay.Text(`{"status":"done"}`), Headers: deviceB}); got.Status != 400 {
+			t.Errorf("a status that is none for another device's command: %d %s, want 400", got.Status, got.Body)
+		}
+		if got := w.Rows("SELECT status, result, executed_at, completed_at FROM remote_commands", nil); got != `[{"status":"pending","result":null,"executed_at":null,"completed_at":null}]` {
+			t.Errorf("the command after device-b's reports: %s", got)
 		}
 	})
 }
