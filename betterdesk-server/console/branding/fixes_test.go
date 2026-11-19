@@ -217,6 +217,9 @@ func (f *storeFixes) before(step any) {
 	// BR7: a word wrapped around itself in a colour or the custom CSS
 	case anyValue(step, wrappedCSSWord):
 		bug = "BR7"
+	// BR12: rows written straight that the console reads otherwise
+	case property(step, "op") == "rows" && oddRows(property(step, "rows")):
+		bug = "BR12"
 	case property(step, "op") == "profileApply" && anyValue(f.profileData(id), wrappedCSSWord):
 		bug = "BR7"
 	}
@@ -248,7 +251,8 @@ func (f *storeFixes) compared(same bool, rows []any) bool {
 	if f.diverged == "" {
 		return true
 	}
-	if same && !(f.diverged == "BR1" && anyValue(rows, isControlAddress)) {
+	stays := f.diverged == "BR1" && anyValue(rows, isControlAddress) || f.diverged == "BR12" && oddRows(rows)
+	if same && !stays {
 		f.diverged = ""
 		return true
 	}
@@ -298,7 +302,7 @@ func (f *storeFixes) recordedProfiles(recorded any) any {
 // that the state was Node's again soon after each.
 func (f *storeFixes) check() {
 	f.t.Helper()
-	for bug, atLeast := range map[string]int{"BR1": 5, "BR2": 1, "BR7": 1} {
+	for bug, atLeast := range map[string]int{"BR1": 5, "BR2": 1, "BR7": 1, "BR12": 1} {
 		if f.fixed[bug] < atLeast {
 			f.t.Errorf("%d steps of the scenario are changed by the fix of %s, the recording has more", f.fixed[bug], bug)
 		}
@@ -309,6 +313,28 @@ func (f *storeFixes) check() {
 			f.t.Errorf("after the steps the fix of %s changes, the state stayed other than Node's for %d steps", bug, steps)
 		}
 	}
+}
+
+// oddRows reports stored rows that the console reads otherwise than Node
+// (BR12): a key every JavaScript object has, which Node took as a
+// setting, or a slide list with a value that cannot be turned into text,
+// which made Node forget every setting.
+func oddRows(rows any) bool {
+	list, _ := rows.([]any)
+	for _, row := range list {
+		pair, _ := row.([]any)
+		if len(pair) != 2 {
+			continue
+		}
+		key := toString(pair[0])
+		if _, inherited := objectPrototype[key]; inherited && key != "__proto__" && !DefaultBranding().Has(key) {
+			return true
+		}
+		if key == "loginSlides" && try(func() { sanitizeLoginSlides(pair[1]) }) != nil {
+			return true
+		}
+	}
+	return false
 }
 
 // isControlAddress reports a picture address on this server with a

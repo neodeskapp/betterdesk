@@ -192,7 +192,7 @@ func (s *Service) LoadBranding(ctx context.Context) *Object {
 	var branding *Object
 	rows, err := getBrandingConfig(ctx, s.opts.DB)
 	if err == nil {
-		err = try(func() { branding = brandingFromRows(rows) })
+		err = try(func() { branding = brandingFromRows(rows, s.opts.Logf) })
 	}
 	if err != nil {
 		s.opts.Logf("[Branding] Failed to load from DB, using defaults: %v", err)
@@ -217,35 +217,41 @@ func (s *Service) LoadBranding(ctx context.Context) *Object {
 
 // brandingFromRows lays stored settings over the defaults. A setting
 // without a row keeps its default: the plain sign-in layout and the
-// built-in slides among them. It throws when a stored slide list holds a
-// value that cannot be turned into text.
-func brandingFromRows(rows []configRow) *Object {
+// built-in slides among them. A row whose key is no setting is ignored,
+// and a row that cannot be read (a slide list with a value that cannot be
+// turned into text) is logged and leaves its setting as it was.
+func brandingFromRows(rows []configRow, logf func(format string, args ...any)) *Object {
 	branding := DefaultBranding()
 	for _, row := range rows {
-		switch {
-		case row.key == "colors":
-			saved, err := parseJSON(row.value)
-			if err != nil {
-				continue
-			}
-			colors, _ := branding.Get("colors")
-			assign(colors.(*Object), saved)
-		case row.key == "loginSlides":
-			branding.Set("loginSlides", sanitizeLoginSlides(row.value))
-		case row.key == "loginPromoMode":
-			branding.Set("loginPromoMode", normalizeLoginPromoMode(row.value))
-		case row.key == "__proto__":
-			// Assigning text to this name changes nothing in JavaScript.
-		default:
-			if _, inherited := objectPrototype[row.key]; inherited || branding.Has(row.key) {
-				branding.Set(row.key, row.value)
-			}
+		if err := try(func() { applyRow(branding, row) }); err != nil {
+			logf("[Branding] Ignoring the stored setting %s: %v", row.key, err)
 		}
 	}
 	if logoType, _ := branding.Get("logoType"); logoType != "default" && usesDefaultLogo(branding) {
 		branding.Set("logoType", "default")
 	}
 	return branding
+}
+
+// applyRow lays one stored setting over branding.
+func applyRow(branding *Object, row configRow) {
+	switch row.key {
+	case "colors":
+		saved, err := parseJSON(row.value)
+		if err != nil {
+			return
+		}
+		colors, _ := branding.Get("colors")
+		assign(colors.(*Object), saved)
+	case "loginSlides":
+		branding.Set("loginSlides", sanitizeLoginSlides(row.value))
+	case "loginPromoMode":
+		branding.Set("loginPromoMode", normalizeLoginPromoMode(row.value))
+	default:
+		if branding.Has(row.key) {
+			branding.Set(row.key, row.value)
+		}
+	}
 }
 
 // assign is Object.assign(dst, src): the own keys of src are set on dst.

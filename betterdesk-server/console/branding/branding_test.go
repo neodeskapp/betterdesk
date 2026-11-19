@@ -977,8 +977,8 @@ func TestOddRows(t *testing.T) {
 		if keys[0] != "0" || keys[len(keys)-1] != "extra" || colors.(*Object).Has("__proto__") || colors.(*Object).Text("bgPrimary") != "#111111" {
 			t.Errorf("colours: %s", Stringify(colors))
 		}
-		all := b.Keys()
-		if b.Has("unknownKey") || b.Has("__proto__") || b.Text("constructor") != "kept as a key" || all[len(all)-1] != "constructor" {
+		// a key every JavaScript object has is no setting either (BUGS BR12)
+		if all := b.Keys(); b.Has("unknownKey") || b.Has("__proto__") || b.Has("constructor") || len(all) != len(DefaultBranding().Keys()) {
 			t.Errorf("keys of the settings: %s", Stringify(all))
 		}
 		if b.Text("loginPromoMode") != "single" || b.Text("appName") != "" {
@@ -992,6 +992,13 @@ func TestOddRows(t *testing.T) {
 		colors, _ = s.GetBranding().Get("colors")
 		if colors.(*Object).Len() != len(colorKeys) || colors.(*Object).Text("bgPrimary") != "" {
 			t.Errorf("colours from broken JSON: %s", Stringify(colors))
+		}
+		// a slide list that cannot be read keeps the default slides and
+		// takes nothing else with it (BUGS BR12)
+		setRows(t, s, [2]string{"appName", "Kept"}, [2]string{"loginSlides", `[{"imageUrl":{"toString":1}}]`}, [2]string{"footerText", "Also kept"})
+		b = s.GetBranding()
+		if slides, _ := b.Get("loginSlides"); b.Text("appName") != "Kept" || b.Text("footerText") != "Also kept" || Stringify(slides) != Stringify(DefaultLoginSlides()) {
+			t.Errorf("settings with a slide list that cannot be read: %s %s %s", b.Text("appName"), b.Text("footerText"), Stringify(slides))
 		}
 	})
 }
