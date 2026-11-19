@@ -5,9 +5,11 @@
 
 .DESCRIPTION
     Features:
-      - Fresh installation (Node.js web console)
-      - Minimal installation (Go server only, no web console)
-      - Update existing installation
+      - Fresh installation: one service, BetterDeskServer, that serves the
+        signal and relay server, the API and the web console
+      - Minimal installation (the same server with its web console off)
+      - Update an installation (release binaries checked by SHA-256)
+      - Upgrade an install with the Node.js console in place, and roll it back
       - Repair/fix issues (enhanced with graceful shutdown)
       - Validate installation
       - Backup & restore
@@ -38,8 +40,23 @@
 .PARAMETER SkipVerify
     Skip SHA256 verification of binaries
 
-.PARAMETER NodeJs
-    Install Node.js web console (default)
+.PARAMETER Update
+    Update without questions. An install with the Node.js console is upgraded
+    in place to the server with its web console.
+
+.PARAMETER RollbackGo
+    Put the Node.js console and the server from before the upgrade back
+    (binary, services or tasks, .env); data stays.
+
+.PARAMETER CleanupNode
+    Delete the Node.js console's code and its disabled service after an upgrade.
+
+.PARAMETER Binary
+    Install this betterdesk-server.exe instead of the release.
+
+.PARAMETER FromSource
+    Build betterdesk-server.exe from this checkout (needs Go, and Node.js
+    unless web-ui\build exists).
 
 .PARAMETER Protocol
     Set protocol mode: 'http' or 'https'
@@ -78,7 +95,15 @@
 
 .EXAMPLE
     .\betterdesk.ps1 -Auto
-    Automatic installation with Node.js console and SQLite
+    Automatic installation with SQLite; an install with the Node.js console is upgraded
+
+.EXAMPLE
+    .\betterdesk.ps1 -Update
+    Update, or upgrade an install with the Node.js console
+
+.EXAMPLE
+    .\betterdesk.ps1 -RollbackGo
+    Put the Node.js console back after an upgrade
 
 .EXAMPLE
     .\betterdesk.ps1 -Auto -PostgreSQL
@@ -103,7 +128,12 @@ param(
     [switch]$Purge,
     [switch]$SkipVerify,
     [switch]$Minimal,
-    [switch]$NodeJs,
+    [switch]$NodeJs,  # No longer needed: the web console is part of the server
+    [switch]$Update,
+    [switch]$RollbackGo,
+    [switch]$CleanupNode,
+    [string]$Binary = "",
+    [switch]$FromSource,
     [switch]$PostgreSQL,
     [string]$PgUri = "",
     [ValidateSet('http', 'https', '')]
@@ -115,7 +145,7 @@ param(
     [switch]$CheckPermissions,
     [switch]$RepairPermissions,
     [string[]]$SetConfig = @(),
-    [switch]$Flask  # Deprecated, kept for backward compatibility
+    [switch]$Flask  # No longer needed: the web console is part of the server
 )
 
 #===============================================================================
@@ -134,6 +164,19 @@ $script:MINIMAL_MODE = $Minimal
 $script:CHECK_PERMISSIONS = $CheckPermissions
 $script:REPAIR_PERMISSIONS = $RepairPermissions
 $script:MANAGED_CONFIG_CHANGES = @($SetConfig)
+$script:UPDATE_MODE = $Update
+$script:ROLLBACK_GO_MODE = $RollbackGo
+$script:CLEANUP_NODE_MODE = $CleanupNode
+# Where the server binary comes from: a file (-Binary), a build of this
+# checkout (-FromSource), else the release of the update channel.
+$script:BINARY_FILE = if ($Binary) { (Resolve-Path $Binary -ErrorAction Stop).Path } else { "" }
+$script:FROM_SOURCE = [bool]$FromSource
+$script:STAGED_SERVER_DIR = ""
+$script:STAGED_SERVER_BINARY = ""
+$script:STAGED_SERVER_VERSION = ""
+# The record of an upgrade from the Node.js console, in the console's data
+# folder: {from, to, at, backup}. The rollback reads it.
+$script:GO_UPGRADE_RECORD = ".go-upgrade.json"
 
 # Privilege separation (default). The installer needs Administrator, but the
 # services run under low-privilege per-service virtual accounts (NT SERVICE\...)
@@ -141,11 +184,8 @@ $script:MANAGED_CONFIG_CHANGES = @($SetConfig)
 # legacy behavior of running services as LocalSystem.
 $script:RUN_AS_ROOT = $RunAsRoot -or ($env:BETTERDESK_RUN_AS_ROOT -eq "1") -or ($env:BETTERDESK_RUN_AS_ROOT -eq "true")
 
-# Console type preference
-$script:PREFERRED_CONSOLE_TYPE = "nodejs"  # Always Node.js (Flask removed in v2.3.0)
-if ($Flask) { 
-    Write-Host "WARNING: Flask console is deprecated. Node.js will be installed instead." -ForegroundColor Yellow
-    $script:PREFERRED_CONSOLE_TYPE = "nodejs" 
+if ($NodeJs -or $Flask) {
+    Write-Host "NOTE: -NodeJs and -Flask are no longer needed: the web console is part of betterdesk-server" -ForegroundColor Yellow
 }
 
 # Database configuration
@@ -301,42 +341,6 @@ function Print-Step {
 # Management capabilities and allowlisted runtime configuration
 #===============================================================================
 
-function Get-ManagementCliPath {
-    $candidates = @(
-        (Join-Path $script:CONSOLE_PATH "scripts\management-cli.js"),
-        (Join-Path $script:ScriptDir "web-nodejs\scripts\management-cli.js")
-    )
-    foreach ($candidate in $candidates) {
-        if (Test-Path $candidate) { return $candidate }
-    }
-    return $null
-}
-
-function Invoke-ManagementCli {
-    param(
-        [Parameter(Mandatory = $true)][string]$Action,
-        [string[]]$Arguments = @()
-    )
-    $cli = Get-ManagementCliPath
-    $node = Get-Command node -ErrorAction SilentlyContinue
-    if (-not $cli -or -not $node) {
-        Print-Error "Management capability tool or Node.js is unavailable"
-        return $false
-    }
-    $oldConsolePath = $env:BETTERDESK_CONSOLE_PATH
-    $oldServerPath = $env:BETTERDESK_PATH
-    $oldDataDir = $env:DATA_DIR
-    $env:BETTERDESK_CONSOLE_PATH = $script:CONSOLE_PATH
-    $env:BETTERDESK_PATH = $script:RUSTDESK_PATH
-    $env:DATA_DIR = Join-Path $script:CONSOLE_PATH "data"
-    & $node.Source $cli $Action @Arguments
-    $ok = ($LASTEXITCODE -eq 0)
-    $env:BETTERDESK_CONSOLE_PATH = $oldConsolePath
-    $env:BETTERDESK_PATH = $oldServerPath
-    $env:DATA_DIR = $oldDataDir
-    return $ok
-}
-
 function Test-ManagementCapabilities {
     Print-Step "Checking BetterDesk management capabilities..."
     $ok = Invoke-ManagementCli -Action "check"
@@ -346,62 +350,6 @@ function Test-ManagementCapabilities {
         Print-Warning "One or more management capabilities are blocked; see the report above"
     }
     return $ok
-}
-
-function Repair-ManagementPermissions {
-    Print-Step "Repairing BetterDesk management permissions..."
-    foreach ($path in @($script:RUSTDESK_PATH, $script:CONSOLE_PATH)) {
-        if (Test-Path $path) {
-            & icacls $path /inheritance:e /grant "Administrators:(OI)(CI)F" /grant "SYSTEM:(OI)(CI)F" /T /C /Q 2>$null | Out-Null
-        } else {
-            New-Item -ItemType Directory -Path $path -Force | Out-Null
-        }
-    }
-    if (Test-Path $script:CONSOLE_PATH) {
-        & icacls $script:CONSOLE_PATH /grant "NT SERVICE\BetterDeskConsole:(OI)(CI)M" /T /C /Q 2>$null | Out-Null
-    }
-    if (Test-Path $script:RUSTDESK_PATH) {
-        & icacls $script:RUSTDESK_PATH /grant "NT SERVICE\BetterDeskServer:(OI)(CI)M" /T /C /Q 2>$null | Out-Null
-    }
-    $generatorRoot = Join-Path $script:CONSOLE_PATH "data"
-    foreach ($path in @(
-        (Join-Path $generatorRoot "modules\betterdesk-support-generator"),
-        (Join-Path $generatorRoot "agent-builds"),
-        (Join-Path $generatorRoot "build-cache\support-templates"),
-        (Join-Path $generatorRoot ".generator-uploads")
-    )) {
-        New-Item -ItemType Directory -Path $path -Force | Out-Null
-        & icacls $path /inheritance:e /grant "NT SERVICE\BetterDeskConsole:(OI)(CI)M" /grant "SYSTEM:(OI)(CI)F" /T /C /Q 2>$null | Out-Null
-    }
-    foreach ($path in @(
-        (Join-Path $script:CONSOLE_PATH ".env"),
-        (Join-Path $script:RUSTDESK_PATH ".api_key"),
-        (Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3")
-    )) {
-        if (Test-Path $path) {
-            & icacls $path /inheritance:r /grant:r "Administrators:F" "SYSTEM:F" "NT SERVICE\BetterDeskConsole:R" 2>$null | Out-Null
-        }
-    }
-    $seed = Join-Path $generatorRoot "modules\betterdesk-support-generator\custom-client-signing.seed"
-    if (Test-Path $seed) {
-        & icacls $seed /inheritance:r /grant:r "SYSTEM:F" "NT SERVICE\BetterDeskConsole:R" 2>$null | Out-Null
-    }
-    Test-ManagementCapabilities | Out-Null
-}
-
-function Set-ManagedConfiguration {
-    if (-not $script:MANAGED_CONFIG_CHANGES -or $script:MANAGED_CONFIG_CHANGES.Count -eq 0) {
-        Print-Error "No allowlisted configuration changes supplied"
-        return $false
-    }
-    Print-Step "Applying allowlisted BetterDesk configuration..."
-    if (-not (Invoke-ManagementCli -Action "set" -Arguments $script:MANAGED_CONFIG_CHANGES)) {
-        return $false
-    }
-    & "$env:SystemRoot\System32\sc.exe" control $script:SERVER_SERVICE paramchange 2>$null | Out-Null
-    Restart-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue
-    Restart-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
-    return (Start-ServicesWithVerification)
 }
 
 function Press-Enter {
@@ -656,6 +604,1436 @@ function Generate-RandomPassword {
     return $password
 }
 
+# Write or merge the console's .env from the template built into the server
+# (issue #158), then let upgrade-env add what the server needs (CONSOLE_PORT,
+# BETTERDESK_ENV_FILE, the pinned ports) and comment out what it does not.
+function Merge-ConsoleEnv {
+    param(
+        [bool]$FreshInstall = $false
+    )
+
+    $bin = Get-ServerBinaryPath
+    if (-not (Test-BinaryHasSubcommands -Path $bin)) {
+        Print-Error "$bin is missing or too old to write .env"
+        return $false
+    }
+    $envFile = Join-Path $script:CONSOLE_PATH ".env"
+
+    $sslDir = Join-Path $script:RUSTDESK_PATH "ssl"
+    $dbType = "sqlite"
+    $databaseUrl = ""
+    if ($script:USE_POSTGRESQL -and $script:POSTGRESQL_URI) {
+        $dbType = "postgres"
+        $databaseUrl = $script:POSTGRESQL_URI
+    }
+
+    $adminPassword = $env:ADMIN_PASSWORD
+    $sessionSecret = ""
+    if ($FreshInstall) {
+        if (-not $adminPassword) {
+            $adminPassword = Generate-RandomPassword
+        }
+        $sessionSecret = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
+    } else {
+        $sessionSecret = Get-ConsoleEnvValue -Key "SESSION_SECRET"
+        if (-not $adminPassword) { $adminPassword = Get-ConsoleEnvValue -Key "DEFAULT_ADMIN_PASSWORD" }
+        if (-not $sessionSecret) {
+            $sessionSecret = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
+        }
+    }
+    $remoteTargetVaultKey = Get-ConsoleEnvValue -Key "REMOTE_TARGET_VAULT_KEY"
+    if (-not $remoteTargetVaultKey) {
+        $remoteTargetVaultKey = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
+    }
+
+    $goPort = if ($script:GO_API_PORT) { $script:GO_API_PORT } else { 21114 }
+    $clientPort = if ($script:CLIENT_API_PORT) { $script:CLIENT_API_PORT } else { 21121 }
+    $subst = [ordered]@{
+        RUSTDESK_DIR            = $script:RUSTDESK_PATH
+        PUB_KEY_PATH            = (Join-Path $script:RUSTDESK_PATH "id_ed25519.pub")
+        API_KEY_PATH            = (Join-Path $script:RUSTDESK_PATH ".api_key")
+        DB_TYPE                 = $dbType
+        DB_PATH                 = (Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3")
+        DATABASE_URL            = $databaseUrl
+        DATA_DIR                = (Join-Path $script:CONSOLE_PATH "data")
+        GO_API_PORT             = [string]$goPort
+        HBBS_API_URL            = "http://localhost:${goPort}/api"
+        BETTERDESK_API_URL      = "http://localhost:${goPort}/api"
+        API_PORT                = [string]$clientPort
+        DEFAULT_ADMIN_PASSWORD  = [string]$adminPassword
+        SESSION_SECRET          = [string]$sessionSecret
+        REMOTE_TARGET_VAULT_KEY = [string]$remoteTargetVaultKey
+        GUACD_ADDRESS           = "127.0.0.1:4822"
+        SSL_CERT_PATH           = (Join-Path $sslDir "betterdesk.crt")
+        SSL_KEY_PATH            = (Join-Path $sslDir "betterdesk.key")
+    }
+    foreach ($k in $subst.Keys) { [Environment]::SetEnvironmentVariable("BD_SUBST_$k", $subst[$k], "Process") }
+    $savedEnvFile = $env:BETTERDESK_ENV_FILE
+    $env:BETTERDESK_ENV_FILE = $null
+    try {
+        $mergeArgs = @("env", "merge", "--target", $envFile, "--subst-env")
+        if ($FreshInstall) { $mergeArgs += "--fresh" }
+        $output = & $bin @mergeArgs 2>&1
+        $mergeCode = $LASTEXITCODE
+    } finally {
+        foreach ($k in $subst.Keys) { [Environment]::SetEnvironmentVariable("BD_SUBST_$k", $null, "Process") }
+    }
+    if ($mergeCode -ne 0 -or "$output" -notmatch '"success":true') {
+        $env:BETTERDESK_ENV_FILE = $savedEnvFile
+        Print-Error "Failed to write .env (betterdesk-server env merge): $output"
+        return $false
+    }
+
+    # The server's database: DB_URL (the old services passed it in their environment)
+    if (-not (Get-ConsoleEnvValue -Key "DB_URL")) {
+        if ($dbType -eq "postgres") { Set-ConsoleEnvValue -Key "DB_URL" -Value $databaseUrl }
+        else { Set-ConsoleEnvValue -Key "DB_URL" -Value $subst.DB_PATH }
+    }
+    # The server makes the first admin before the console starts, and the
+    # console keeps an admin it did not make: both take the same password
+    if ($FreshInstall -and -not (Get-ConsoleEnvValue -Key "INIT_ADMIN_PASS")) {
+        Set-ConsoleEnvValue -Key "INIT_ADMIN_PASS" -Value ([string]$adminPassword)
+    }
+
+    $supervisor = if (Get-NssmPath) { "nssm" } else { "task" }
+    & $bin upgrade-env --from $envFile --write --supervisor $supervisor | Out-Null
+    $upgradeCode = $LASTEXITCODE
+    $env:BETTERDESK_ENV_FILE = $savedEnvFile
+    if ($upgradeCode -ne 0) {
+        Print-Error "betterdesk-server upgrade-env could not finish .env"
+        return $false
+    }
+    # A fresh file has no older version to keep
+    if ($FreshInstall) { Remove-Item -Path "$envFile.pre-go" -Force -ErrorAction SilentlyContinue }
+
+    if ($FreshInstall) {
+        Print-Info "Created .env configuration file (fresh install)"
+    } else {
+        Print-Info "Merged new .env keys (existing settings preserved)"
+    }
+    return $true
+}
+
+# The value the first line setting $Key has in the console's .env, or "".
+function Get-ConsoleEnvValue {
+    param([string]$Key)
+    $envFile = Join-Path $script:CONSOLE_PATH ".env"
+    if (-not (Test-Path $envFile)) { return "" }
+    foreach ($line in Get-Content $envFile) {
+        if ($line -match "^$([regex]::Escape($Key))=(.*)$") { return $Matches[1].Trim() }
+    }
+    return ""
+}
+#===============================================================================
+# The server with its web console: binary, console folder, service
+#===============================================================================
+
+# The NSSM executable: on PATH or in tools\ beside the script; $null without.
+function Get-NssmPath {
+    $cmd = Get-Command nssm -ErrorAction SilentlyContinue
+    if ($cmd) { return $cmd.Source }
+    $local = Join-Path $script:ScriptDir "tools\nssm.exe"
+    if (Test-Path $local) { return $local }
+    return $null
+}
+
+function Get-ServerBinaryPath {
+    return (Join-Path $script:RUSTDESK_PATH "betterdesk-server.exe")
+}
+
+# True when the binary carries the commands of the release with the console
+# inside (upgrade-env, env merge, config, reset-password, check, update).
+# Read from the file: an older binary would take an unknown command for its
+# own arguments and start a server.
+function Test-BinaryHasSubcommands {
+    param([string]$Path = (Get-ServerBinaryPath))
+    if (-not $Path -or -not (Test-Path $Path)) { return $false }
+    return [bool](Select-String -Path $Path -Pattern 'upgrade-env --from FILE' -SimpleMatch -Quiet)
+}
+
+# The NSSM environment of a service as a list of KEY=VALUE lines.
+function Get-NssmEnvironment {
+    param([string]$Nssm, [string]$Service)
+    if (-not $Nssm) { return @() }
+    return @(@(& $Nssm get $Service AppEnvironmentExtra 2>$null) | ForEach-Object { "$_".Trim([char]0, ' ') } | Where-Object { $_ -match '^[A-Za-z_][A-Za-z0-9_]*=' })
+}
+
+# True when BetterDeskServer runs the server with its web console: this
+# installer puts BETTERDESK_SUPERVISOR into its environment (NSSM) or its
+# launcher (scheduled task).
+function Test-GoOnlyInstall {
+    $nssm = Get-NssmPath
+    if ($nssm -and (Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue)) {
+        if (Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE | Where-Object { $_ -like 'BETTERDESK_SUPERVISOR=*' }) {
+            return $true
+        }
+    }
+    $launcher = Join-Path $script:RUSTDESK_PATH "start-betterdesk-server.cmd"
+    return ((Test-Path $launcher) -and [bool](Select-String -Path $launcher -Pattern 'BETTERDESK_SUPERVISOR=' -SimpleMatch -Quiet))
+}
+
+# True when the install still runs the Node.js console.
+function Test-NodeEraInstall {
+    if (Test-GoOnlyInstall) { return $false }
+    if (Test-Path (Join-Path $script:CONSOLE_PATH "server.js")) { return $true }
+    if (Get-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue) { return $true }
+    return [bool](Get-ScheduledTask -TaskName $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue)
+}
+
+# Runs a command of the installed binary with the console's env file; the
+# text of -InputText goes to its standard input. Returns the exit code.
+function Invoke-ServerCommand {
+    param(
+        [string[]]$Arguments,
+        [string]$InputText = $null,
+        [string]$Binary = (Get-ServerBinaryPath)
+    )
+    if (-not (Test-BinaryHasSubcommands -Path $Binary)) {
+        Print-Error "$Binary is not a release with the web console inside; update first"
+        return 1
+    }
+    $saved = @{}
+    $vars = @{
+        BETTERDESK_ENV_FILE     = (Join-Path $script:CONSOLE_PATH ".env")
+        BETTERDESK_CONSOLE_PATH = $script:CONSOLE_PATH
+        BETTERDESK_PATH         = $script:RUSTDESK_PATH
+    }
+    foreach ($k in $vars.Keys) {
+        $saved[$k] = [Environment]::GetEnvironmentVariable($k, "Process")
+        [Environment]::SetEnvironmentVariable($k, $vars[$k], "Process")
+    }
+    try {
+        if ($null -ne $InputText) {
+            $InputText | & $Binary @Arguments | ForEach-Object { Write-Host $_ }
+        } else {
+            & $Binary @Arguments | ForEach-Object { Write-Host $_ }
+        }
+        return $LASTEXITCODE
+    } finally {
+        foreach ($k in $vars.Keys) { [Environment]::SetEnvironmentVariable($k, $saved[$k], "Process") }
+    }
+}
+
+# Where the release files are: RELEASE_BASE_URL, else the newest release
+# (stable channel, branch main) or the "dev" pre-release (development
+# channel, branch dev).
+function Get-ReleaseBaseUrl {
+    if ($env:RELEASE_BASE_URL) { return $env:RELEASE_BASE_URL.TrimEnd('/') }
+    $releases = "https://github.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/releases"
+    if ($script:UPDATE_GITHUB_BRANCH -eq "dev") { return "$releases/download/dev" }
+    return "$releases/latest/download"
+}
+
+# Downloads the release binary for this machine into $Dir, checked against
+# the release's SHA256SUMS. Returns the path or $null.
+function Get-ReleaseBinary {
+    param([string]$Dir)
+    $asset = "betterdesk-server-windows-amd64.exe"
+    if (-not [Environment]::Is64BitOperatingSystem) {
+        Print-Error "There is no release binary for 32-bit Windows; use -FromSource"
+        return $null
+    }
+    Read-UpdateGitHubBranchFromEnv
+    $base = Get-ReleaseBaseUrl
+    Print-Info "Downloading $asset ($($script:UPDATE_GITHUB_BRANCH) channel) from $base"
+    $sums = Join-Path $Dir "SHA256SUMS"
+    $file = Join-Path $Dir $asset
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -Uri "$base/SHA256SUMS" -OutFile $sums -UseBasicParsing -ErrorAction Stop
+        Invoke-WebRequest -Uri "$base/$asset" -OutFile $file -UseBasicParsing -ErrorAction Stop
+    } catch {
+        Print-Error "Download failed: $_"
+        return $null
+    }
+    $expected = $null
+    foreach ($line in Get-Content $sums) {
+        $parts = $line.Trim() -split '\s+', 2
+        if ($parts.Count -eq 2 -and ($parts[1] -eq $asset -or $parts[1] -eq "*$asset")) { $expected = $parts[0].ToLower(); break }
+    }
+    $actual = (Get-FileHash -Path $file -Algorithm SHA256).Hash.ToLower()
+    if ($script:SKIP_VERIFY) {
+        Print-Warning "SHA-256 check skipped (-SkipVerify)"
+    } elseif (-not $expected) {
+        Print-Error "SHA256SUMS of the release does not list $asset"
+        return $null
+    } elseif ($actual -ne $expected) {
+        Print-Error "SHA-256 of $asset does not match the release's SHA256SUMS"
+        return $null
+    } else {
+        Print-Success "SHA-256 of $asset matches the release"
+    }
+    $target = Join-Path $Dir "betterdesk-server.exe"
+    Move-Item -Path $file -Destination $target -Force
+    return $target
+}
+
+# A checked binary for this machine from -Binary, -FromSource or the
+# release, in a temporary folder. Sets $script:STAGED_SERVER_BINARY and
+# $script:STAGED_SERVER_VERSION; returns $true on success.
+function Get-StagedServerBinary {
+    $dir = Join-Path $env:TEMP "betterdesk-server-$PID"
+    Remove-Item -Path $dir -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Path $dir -Force | Out-Null
+    $script:STAGED_SERVER_DIR = $dir
+    $staged = Join-Path $dir "betterdesk-server.exe"
+    if ($script:BINARY_FILE) {
+        Print-Info "Using the binary $($script:BINARY_FILE)"
+        Copy-Item -Path $script:BINARY_FILE -Destination $staged -Force
+    } elseif ($script:FROM_SOURCE) {
+        if (-not (Compile-GoServer)) { return $false }
+        Copy-Item -Path (Join-Path $script:GO_SERVER_SOURCE "betterdesk-server.exe") -Destination $staged -Force
+    } else {
+        $downloaded = Get-ReleaseBinary -Dir $dir
+        if (-not $downloaded) { return $false }
+    }
+    $line = (& $staged -version 2>$null | Select-Object -First 1)
+    if ($LASTEXITCODE -ne 0 -or -not $line) {
+        Print-Error "The new binary does not run on this machine"
+        return $false
+    }
+    if (-not (Test-BinaryHasSubcommands -Path $staged)) {
+        Print-Error "The new binary is not a release with the web console inside ($line)"
+        return $false
+    }
+    $script:STAGED_SERVER_BINARY = $staged
+    $script:STAGED_SERVER_VERSION = "$line"
+    Print-Success "New binary: $line"
+    return $true
+}
+
+# Puts the staged binary in place of the installed one and keeps the old
+# one as betterdesk-server.exe<Suffix>. The service must be stopped.
+function Install-StagedBinary {
+    param([string]$Suffix = ".prev")
+    $target = Get-ServerBinaryPath
+    New-Item -ItemType Directory -Path $script:RUSTDESK_PATH -Force | Out-Null
+    try {
+        if (Test-Path $target) {
+            Copy-Item -Path $target -Destination "$target$Suffix" -Force -ErrorAction Stop
+        }
+        Copy-Item -Path $script:STAGED_SERVER_BINARY -Destination $target -Force -ErrorAction Stop
+    } catch {
+        Print-Error "Could not install ${target}: $_"
+        return $false
+    }
+    Print-Success "Installed $target"
+    return $true
+}
+
+function Install-Binaries {
+    Print-Step "Installing betterdesk-server..."
+    $ok = Get-StagedServerBinary
+    if ($ok) {
+        Stop-AllServices
+        $ok = Install-StagedBinary
+    }
+    Remove-Item -Path $script:STAGED_SERVER_DIR -Recurse -Force -ErrorAction SilentlyContinue
+    return $ok
+}
+
+# Copies the console's language files, themes and images from this checkout
+# into the console folder when the checkout has them: the server reads them
+# there unless its binary carries them.
+function Install-ConsoleStaticFiles {
+    $src = Join-Path $script:ScriptDir "web-nodejs"
+    if (-not (Test-Path (Join-Path $src "lang\en.json"))) { return }
+    foreach ($item in @("lang", "public", "themes", "protos", "wallpapers", "config")) {
+        $from = Join-Path $src $item
+        if (-not (Test-Path $from)) { continue }
+        $to = Join-Path $script:CONSOLE_PATH $item
+        New-Item -ItemType Directory -Path $to -Force | Out-Null
+        Copy-Item -Path (Join-Path $from "*") -Destination $to -Recurse -Force
+    }
+}
+
+# The console's folder with its .env and data folder.
+function Setup-ConsoleHome {
+    Print-Step "Setting up the web console's folder $($script:CONSOLE_PATH)..."
+    New-Item -ItemType Directory -Path (Join-Path $script:CONSOLE_PATH "data") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $script:CONSOLE_PATH "logs") -Force | Out-Null
+    $envFile = Join-Path $script:CONSOLE_PATH ".env"
+    $isFresh = -not (Test-Path $envFile)
+    if ($isFresh) {
+        if (-not $env:ADMIN_PASSWORD) { $env:ADMIN_PASSWORD = Generate-RandomPassword }
+        New-Item -ItemType File -Path (Join-Path $script:CONSOLE_PATH "data\.force_password_update") -Force | Out-Null
+    } else {
+        Print-Info "Keeping the existing .env and accounts"
+    }
+    if (-not (Merge-ConsoleEnv -FreshInstall $isFresh)) { return $false }
+    if ($script:MINIMAL_MODE) {
+        Set-ConsoleEnvValue -Key "CONSOLE_PORT" -Value "0"
+        Print-Info "Minimal installation: the web console stays off (CONSOLE_PORT=0)"
+    }
+    Install-ConsoleStaticFiles
+    $gateway = Join-Path $script:ScriptDir "remote-gateway"
+    if (Test-Path $gateway) {
+        $to = Join-Path $script:CONSOLE_PATH "remote-gateway"
+        New-Item -ItemType Directory -Path $to -Force | Out-Null
+        Copy-Item -Path (Join-Path $gateway "*") -Destination $to -Recurse -Force
+    }
+    $script:CONSOLE_TYPE = "go"
+    Print-Success "Web console folder ready"
+    return $true
+}
+
+# The arguments of the server: relay address, keys, API port, rate limit
+# and, when certificates exist, TLS for signal and relay (the API stays
+# HTTP: RustDesk clients call it without TLS).
+function Get-ServerArguments {
+    param([string]$ServerIP)
+    $signalRateLimit = if ($env:SIGNAL_RATE_LIMIT_PER_IP) { $env:SIGNAL_RATE_LIMIT_PER_IP } else { "20" }
+    if ($signalRateLimit -notmatch '^\d+$') {
+        Print-Warning "Invalid SIGNAL_RATE_LIMIT_PER_IP='$signalRateLimit'; using 20"
+        $signalRateLimit = "20"
+    }
+    $serverArgs = "-mode all -relay-servers $ServerIP -key-file `"$script:RUSTDESK_PATH\id_ed25519`" -api-port $script:GO_API_PORT -signal-rate-limit-per-ip $signalRateLimit"
+    $certPath = Join-Path $script:RUSTDESK_PATH "ssl\betterdesk.crt"
+    $keyPath = Join-Path $script:RUSTDESK_PATH "ssl\betterdesk.key"
+    if ((Test-Path $certPath) -and (Test-Path $keyPath)) {
+        $serverArgs += " -tls-cert `"$certPath`" -tls-key `"$keyPath`" -tls-signal -tls-relay"
+        Print-Info "TLS: on for signal and relay (API stays HTTP)"
+    }
+    return $serverArgs
+}
+
+# The settings BetterDeskServer gets besides those it reads from .env.
+function Get-ServerBaseEnvironment {
+    param([string]$Supervisor = "nssm")
+    return @(
+        "BETTERDESK_ENV_FILE=$(Join-Path $script:CONSOLE_PATH '.env')",
+        "BETTERDESK_SUPERVISOR=$Supervisor",
+        "SIGNAL_PORT=21116",
+        "RELAY_PORT=21117",
+        "GO_API_PORT=$($script:GO_API_PORT)",
+        "MESH_ENABLED=Y"
+    )
+}
+
+# Merges environment lists: the first list wins, later lists add keys it lacks.
+function Merge-EnvironmentLists {
+    param([object[]]$Lists)
+    $seen = @{}
+    $out = @()
+    foreach ($list in $Lists) {
+        foreach ($line in @($list)) {
+            if (-not $line) { continue }
+            $key = ($line -split '=', 2)[0]
+            if ($seen.ContainsKey($key)) { continue }
+            $seen[$key] = $true
+            $out += $line
+        }
+    }
+    return , $out
+}
+
+# Writes BetterDeskServer as an NSSM service that NSSM starts again after
+# every exit (exit code 3 is the server's restart request after a restart,
+# update or restore from the panel). $Environment are its settings.
+function Set-NssmServerService {
+    param([string]$Nssm, [string]$Arguments, [string[]]$Environment)
+    $serverExe = Get-ServerBinaryPath
+    if (-not (Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue)) {
+        & $Nssm install $script:SERVER_SERVICE $serverExe $Arguments | Out-Null
+    }
+    & $Nssm set $script:SERVER_SERVICE Application $serverExe | Out-Null
+    & $Nssm set $script:SERVER_SERVICE AppParameters $Arguments | Out-Null
+    & $Nssm set $script:SERVER_SERVICE AppDirectory $script:RUSTDESK_PATH | Out-Null
+    & $Nssm set $script:SERVER_SERVICE DisplayName "BetterDesk Server $($script:VERSION)" | Out-Null
+    & $Nssm set $script:SERVER_SERVICE Description "BetterDesk server and web console (signal, relay, API, panel)" | Out-Null
+    & $Nssm set $script:SERVER_SERVICE Start SERVICE_AUTO_START | Out-Null
+    & $Nssm set $script:SERVER_SERVICE AppEnvironmentExtra $Environment | Out-Null
+    & $Nssm set $script:SERVER_SERVICE AppExit Default Restart | Out-Null
+    & $Nssm set $script:SERVER_SERVICE AppRestartDelay 2000 | Out-Null
+    & $Nssm set $script:SERVER_SERVICE AppStopMethodConsole 10000 | Out-Null
+    New-Item -ItemType Directory -Path "$script:RUSTDESK_PATH\logs" -Force | Out-Null
+    & $Nssm set $script:SERVER_SERVICE AppStdout "$script:RUSTDESK_PATH\logs\server.log" | Out-Null
+    & $Nssm set $script:SERVER_SERVICE AppStderr "$script:RUSTDESK_PATH\logs\server_error.log" | Out-Null
+    & $Nssm set $script:SERVER_SERVICE AppRotateFiles 1 | Out-Null
+    & $Nssm set $script:SERVER_SERVICE AppRotateBytes 10485760 | Out-Null
+    # The service account needs the server folder and the console's folder
+    # (.env, data); the Node console's account had the console folder.
+    Set-ServiceLeastPrivilege -ServiceName $script:SERVER_SERVICE -NssmPath $Nssm -Paths @($script:RUSTDESK_PATH, $script:CONSOLE_PATH)
+}
+
+# The scheduled-task launcher of the server. Task Scheduler does not start a
+# task again after a clean exit, so the launcher loops: when the server ends
+# (exit code 3 is its restart request) it starts it again after two
+# seconds. Only this loop makes BETTERDESK_SUPERVISOR true.
+function Write-ServerLauncher {
+    param([string]$Arguments, [string[]]$Environment)
+    $launcher = Join-Path $script:RUSTDESK_PATH "start-betterdesk-server.cmd"
+    $lines = @("@echo off")
+    foreach ($pair in $Environment) {
+        if ($pair -like 'BETTERDESK_SUPERVISOR=*') { continue }
+        $lines += "set `"$pair`""
+    }
+    $lines += "set `"BETTERDESK_SUPERVISOR=task`""
+    $lines += ":run"
+    $lines += "`"$(Get-ServerBinaryPath)`" $Arguments"
+    $lines += "timeout /t 2 /nobreak >nul"
+    $lines += "goto run"
+    Set-Content -Path $launcher -Value $lines -Encoding ASCII
+    & icacls $launcher /inheritance:r /grant:r "*S-1-5-32-544:F" "*S-1-5-18:F" 2>$null | Out-Null
+    return $launcher
+}
+
+# The environment of an existing launcher: its "set" lines.
+function Get-LauncherEnvironment {
+    $launcher = Join-Path $script:RUSTDESK_PATH "start-betterdesk-server.cmd"
+    if (-not (Test-Path $launcher)) { return @() }
+    return @(Get-Content $launcher | ForEach-Object {
+        if ($_ -match '^set "([A-Za-z_][A-Za-z0-9_]*=.*)"$') { $Matches[1] }
+    })
+}
+
+# The arguments of an existing launcher's server line.
+function Get-LauncherArguments {
+    $launcher = Join-Path $script:RUSTDESK_PATH "start-betterdesk-server.cmd"
+    if (-not (Test-Path $launcher)) { return $null }
+    foreach ($line in Get-Content $launcher) {
+        if ($line -match '^"[^"]*betterdesk-server\.exe"\s*(.*)$') { return $Matches[1] }
+    }
+    return $null
+}
+
+function Register-ServerTask {
+    param([string]$Launcher)
+    Unregister-ScheduledTask -TaskName $script:SERVER_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
+    $action = New-ScheduledTaskAction -Execute "cmd.exe" -Argument "/c `"$Launcher`"" -WorkingDirectory $script:RUSTDESK_PATH
+    $trigger = New-ScheduledTaskTrigger -AtStartup
+    $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero)
+    Register-ScheduledTask -TaskName $script:SERVER_SERVICE -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description "BetterDesk server and web console" | Out-Null
+}
+
+# The URL the web console answers /health on: HTTPS_PORT when HTTPS is on
+# and its certificate is there, else CONSOLE_PORT; $null when it is off.
+function Get-ConsoleHealthUrl {
+    $port = Get-ConsoleEnvValue -Key "CONSOLE_PORT"
+    if (-not $port) { $port = Get-ConsoleEnvValue -Key "PORT" }
+    if (-not $port) { $port = "5000" }
+    if ($port -eq "0") { return $null }
+    $cert = Get-ConsoleEnvValue -Key "SSL_CERT_PATH"
+    $key = Get-ConsoleEnvValue -Key "SSL_KEY_PATH"
+    if ((Get-ConsoleEnvValue -Key "HTTPS_ENABLED") -eq "true" -and $cert -and $key -and (Test-Path $cert) -and (Test-Path $key)) {
+        $httpsPort = Get-ConsoleEnvValue -Key "HTTPS_PORT"
+        if (-not $httpsPort) { $httpsPort = "5443" }
+        return "https://127.0.0.1:$httpsPort/health"
+    }
+    return "http://127.0.0.1:$port/health"
+}
+
+# The server answers: API and web console /health, signal and relay ports
+# (betterdesk-server check).
+function Test-GoInstall {
+    param([int]$TimeoutSeconds = 90)
+    $checkArgs = @("check", "--api", "http://127.0.0.1:$($script:GO_API_PORT)/api/health", "--port", "127.0.0.1:21116", "--port", "127.0.0.1:21117", "--insecure")
+    $consoleUrl = Get-ConsoleHealthUrl
+    if ($consoleUrl) { $checkArgs += @("--panel", $consoleUrl) }
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    do {
+        $code = Invoke-ServerCommand -Arguments $checkArgs 6>$null
+        if ($code -eq 0) {
+            Print-Success "betterdesk-server answers: API :$($script:GO_API_PORT)$(if ($consoleUrl) { ", web console $consoleUrl" }), signal :21116, relay :21117"
+            return $true
+        }
+        Start-Sleep -Seconds 3
+    } while ((Get-Date) -lt $deadline)
+    Invoke-ServerCommand -Arguments $checkArgs | Out-Null
+    Print-Error "betterdesk-server does not answer (logs: $script:RUSTDESK_PATH\logs)"
+    return $false
+}
+
+function Start-ServerService {
+    if (Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue) {
+        Start-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue
+    } else {
+        Start-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue
+    }
+}
+
+function Stop-ServerService {
+    Stop-Service -Name $script:SERVER_SERVICE -Force -ErrorAction SilentlyContinue
+    Stop-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue
+    Get-Process -Name "betterdesk-server" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 2
+}
+
+#===============================================================================
+# Upgrade of an install with the Node.js console, and its rollback
+#===============================================================================
+
+# Settings of the old services the server does not take over: the console
+# port the installer kept off while Node held it, what only Node read, and
+# the old binary's path.
+$script:UPGRADE_SKIPPED_KEYS = @("CONSOLE_PORT", "NODE_EXTRA_CA_CERTS", "NODE_OPTIONS", "BETTERDESK_SERVER_BINARY")
+
+# The NSSM settings the upgrade changes and the rollback puts back.
+$script:NSSM_SAVED_SETTINGS = @("Application", "AppParameters", "AppDirectory", "AppEnvironmentExtra", "ObjectName", "Start", "AppStdout", "AppStderr", "DisplayName", "AppExit", "AppRestartDelay")
+
+# Saves a service's NSSM settings into $Dir\nssm-<service>.json.
+function Save-NssmSettings {
+    param([string]$Nssm, [string]$Service, [string]$Dir)
+    if (-not (Get-Service -Name $Service -ErrorAction SilentlyContinue)) { return }
+    $saved = [ordered]@{}
+    foreach ($name in $script:NSSM_SAVED_SETTINGS) {
+        if ($name -eq "AppExit") {
+            $saved[$name] = @(& $Nssm get $Service AppExit Default 2>$null | ForEach-Object { "$_".Trim([char]0, ' ') } | Where-Object { $_ })
+        } else {
+            $saved[$name] = @(& $Nssm get $Service $name 2>$null | ForEach-Object { "$_".Trim([char]0, ' ') } | Where-Object { $_ })
+        }
+    }
+    $saved | ConvertTo-Json -Depth 4 | Set-Content -Path (Join-Path $Dir "nssm-$Service.json") -Encoding UTF8
+}
+
+function Restore-NssmSettings {
+    param([string]$Nssm, [string]$Service, [string]$Dir)
+    $file = Join-Path $Dir "nssm-$Service.json"
+    if (-not (Test-Path $file)) { return }
+    $saved = Get-Content $file -Raw | ConvertFrom-Json
+    foreach ($name in $script:NSSM_SAVED_SETTINGS) {
+        $values = @($saved.$name)
+        if ($values.Count -eq 0 -or -not $values[0]) {
+            if ($name -eq "AppEnvironmentExtra") { & $Nssm reset $Service AppEnvironmentExtra | Out-Null }
+            continue
+        }
+        switch ($name) {
+            "ObjectName" {
+                if ($values[0] -eq "LocalSystem") { & $Nssm set $Service ObjectName LocalSystem | Out-Null }
+                else { & $Nssm set $Service ObjectName $values[0] "" | Out-Null }
+            }
+            "AppExit" { & $Nssm set $Service AppExit Default $values[0] | Out-Null }
+            "AppEnvironmentExtra" { & $Nssm set $Service AppEnvironmentExtra $values | Out-Null }
+            default { & $Nssm set $Service $name $values[0] | Out-Null }
+        }
+    }
+}
+
+# The upgrade: an install with the Node.js console becomes one service,
+# BetterDeskServer, that serves the web console itself. Data stays where it
+# is; the old binary, the services' settings and .env are kept, and the
+# console's service stays disabled for one release, so -RollbackGo can put
+# the old pair back. A failed start rolls back by itself.
+function Invoke-GoUpgrade {
+    Print-Header
+    Write-Host "========== UPGRADE: WEB CONSOLE INTO THE SERVER ==========" -ForegroundColor White
+    Write-Host ""
+    $envFile = Join-Path $script:CONSOLE_PATH ".env"
+    if (-not (Test-Path $envFile)) {
+        Print-Error "No ${envFile}: this is no install to upgrade"
+        return $false
+    }
+    Print-Info "This upgrade moves the web console into BetterDeskServer:"
+    Print-Info "  - one service, $($script:SERVER_SERVICE), serves the panel on the same ports"
+    Print-Info "  - $($script:CONSOLE_SERVICE) is stopped and disabled (kept for a rollback until the next update)"
+    Print-Info "  - data, keys and accounts stay where they are"
+    Print-Info "  - roll back with: .\betterdesk.ps1 -RollbackGo"
+    if (-not $script:AUTO_MODE -and -not (Confirm-Action "Upgrade now?")) { return $true }
+
+    $nssm = Get-NssmPath
+    $taskMode = -not $nssm -or -not (Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue)
+
+    # 1-2. The new binary, before anything stops
+    Print-Step "[1/8] Getting the new server binary..."
+    if (-not (Get-StagedServerBinary)) {
+        Remove-Item -Path $script:STAGED_SERVER_DIR -Recurse -Force -ErrorAction SilentlyContinue
+        return $false
+    }
+
+    # 3. Backup
+    $backup = Join-Path $script:BACKUP_DIR ("pre-go-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
+    Print-Step "[2/8] Backing up the binary, services and .env to $backup..."
+    New-Item -ItemType Directory -Path $backup -Force | Out-Null
+    $serverExe = Get-ServerBinaryPath
+    if (Test-Path $serverExe) { Copy-Item -Path $serverExe -Destination (Join-Path $backup "betterdesk-server.exe") -Force }
+    Copy-Item -Path $envFile -Destination (Join-Path $backup "console.env") -Force
+    $launcher = Join-Path $script:RUSTDESK_PATH "start-betterdesk-server.cmd"
+    if (Test-Path $launcher) { Copy-Item -Path $launcher -Destination (Join-Path $backup "start-betterdesk-server.cmd") -Force }
+    if ($taskMode) {
+        foreach ($task in @($script:SERVER_SERVICE, $script:CONSOLE_SERVICE)) {
+            if (Get-ScheduledTask -TaskName $task -ErrorAction SilentlyContinue) {
+                Export-ScheduledTask -TaskName $task | Set-Content -Path (Join-Path $backup "task-$task.xml") -Encoding Unicode
+            }
+        }
+    } else {
+        Save-NssmSettings -Nssm $nssm -Service $script:SERVER_SERVICE -Dir $backup
+        Save-NssmSettings -Nssm $nssm -Service $script:CONSOLE_SERVICE -Dir $backup
+    }
+    $oldVersion = if (Test-Path $serverExe) { "$(& $serverExe -version 2>$null | Select-Object -First 1)" } else { "unknown" }
+    @{ from = $oldVersion; rustdesk_path = $script:RUSTDESK_PATH; console_path = $script:CONSOLE_PATH; task_mode = $taskMode } |
+        ConvertTo-Json | Set-Content -Path (Join-Path $backup "manifest.json") -Encoding UTF8
+
+    # 4. Stop both, then the database copy
+    Print-Step "[3/8] Stopping $($script:CONSOLE_SERVICE) and $($script:SERVER_SERVICE)..."
+    Stop-AllServices
+    $dbFile = Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"
+    if ((Get-ConsoleEnvValue -Key "DB_TYPE") -ne "postgres" -and (Test-Path $dbFile)) {
+        Copy-Item -Path $dbFile -Destination (Join-Path $backup "db_v2.sqlite3") -Force
+        foreach ($side in @("-wal", "-shm")) {
+            if (Test-Path "$dbFile$side") { Copy-Item -Path "$dbFile$side" -Destination (Join-Path $backup "db_v2.sqlite3$side") -Force }
+        }
+    } elseif ((Get-ConsoleEnvValue -Key "DB_TYPE") -eq "postgres") {
+        $pgDump = Get-Command pg_dump -ErrorAction SilentlyContinue
+        if ($pgDump) {
+            & $pgDump.Source -Fc -f (Join-Path $backup "postgres.dump") (Get-ConsoleEnvValue -Key "DATABASE_URL") 2>$null
+        } else {
+            Print-Warning "pg_dump is not installed: there is no database snapshot"
+        }
+    }
+    $authDb = Join-Path $script:CONSOLE_PATH "data\auth.db"
+    if (Test-Path $authDb) { Copy-Item -Path $authDb -Destination (Join-Path $backup "auth.db") -Force }
+
+    # 5. The console's service stays, disabled
+    Print-Step "[4/8] Disabling $($script:CONSOLE_SERVICE) (kept for a rollback)..."
+    if ($taskMode) {
+        Disable-ScheduledTask -TaskName $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue | Out-Null
+    } else {
+        & $nssm set $script:CONSOLE_SERVICE Start SERVICE_DISABLED 2>$null | Out-Null
+    }
+
+    # 6. The binary; the old one stays as betterdesk-server.exe.pre-go
+    Print-Step "[5/8] Installing the new binary..."
+    $installed = Install-StagedBinary -Suffix ".pre-go"
+    Remove-Item -Path $script:STAGED_SERVER_DIR -Recurse -Force -ErrorAction SilentlyContinue
+    if (-not $installed) {
+        Undo-GoUpgrade -Backup $backup | Out-Null
+        return $false
+    }
+
+    # 7. The env file: upgrade-env (it keeps .env.pre-go), then the Node
+    # console's service environment. Node filled only what its environment
+    # left unset, so those settings won over .env; they go into .env, where
+    # the panel and this installer change them. Its PORT becomes CONSOLE_PORT.
+    Print-Step "[6/8] Moving the settings into $envFile..."
+    $serverArgs = $null
+    $oldServerEnv = @()
+    $oldConsoleEnv = @()
+    if ($taskMode) {
+        $serverArgs = Get-LauncherArguments
+        $oldServerEnv = Get-LauncherEnvironment
+    } else {
+        $serverArgs = "$(& $nssm get $script:SERVER_SERVICE AppParameters 2>$null)".Trim([char]0, ' ')
+        $oldServerEnv = Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE
+        $oldConsoleEnv = Get-NssmEnvironment -Nssm $nssm -Service $script:CONSOLE_SERVICE
+    }
+    $code = Invoke-ServerCommand -Arguments @("upgrade-env", "--from", $envFile, "--write", "--supervisor", $(if ($taskMode) { "task" } else { "nssm" }))
+    if ($code -ne 0) {
+        Print-Error "upgrade-env failed; rolling back"
+        Undo-GoUpgrade -Backup $backup | Out-Null
+        return $false
+    }
+    foreach ($pair in $oldConsoleEnv) {
+        $key, $value = $pair -split '=', 2
+        if ($script:UPGRADE_SKIPPED_KEYS -contains $key) { continue }
+        if ($key -eq "PORT") { Set-ConsoleEnvValue -Key "CONSOLE_PORT" -Value $value }
+        Set-ConsoleEnvValue -Key $key -Value $value
+        Print-Info "  carry    $key (from $($script:CONSOLE_SERVICE))"
+    }
+
+    # 8. The one service: the server's own settings without CONSOLE_PORT=0
+    Print-Step "[7/8] Writing $($script:SERVER_SERVICE)..."
+    if (-not $serverArgs) { $serverArgs = Get-ServerArguments -ServerIP (Resolve-RelayIp) }
+    $serverArgs = ($serverArgs -replace '\s-tls-api-port(=\S+)?', '' -replace '\s-tls-api(=\S+)?', '').Trim()
+    $carried = @($oldServerEnv | Where-Object {
+        $script:UPGRADE_SKIPPED_KEYS -notcontains ($_ -split '=', 2)[0]
+    })
+    $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "nssm"), $carried)
+    if ($taskMode) {
+        $launcherPath = Write-ServerLauncher -Arguments $serverArgs -Environment $environment
+        Register-ServerTask -Launcher $launcherPath
+    } else {
+        Set-NssmServerService -Nssm $nssm -Arguments $serverArgs -Environment $environment
+    }
+
+    # The console's folder: the server's account writes .env and data now
+    if (-not $script:RUN_AS_ROOT) {
+        & icacls $script:CONSOLE_PATH /grant "NT SERVICE\$($script:SERVER_SERVICE):(OI)(CI)M" /T /C /Q 2>$null | Out-Null
+        foreach ($f in @($envFile, (Join-Path $script:RUSTDESK_PATH ".api_key"), $dbFile)) {
+            if (Test-Path $f) { & icacls $f /grant "NT SERVICE\$($script:SERVER_SERVICE):M" 2>$null | Out-Null }
+        }
+    }
+
+    # 9. Start and check; roll back when it does not come up
+    Print-Step "[8/8] Starting $($script:SERVER_SERVICE)..."
+    Start-ServerService
+    if (-not (Test-GoInstall -TimeoutSeconds 90)) {
+        Print-Error "The server with its web console did not come up; putting the old services back"
+        Undo-GoUpgrade -Backup $backup | Out-Null
+        return $false
+    }
+
+    @{ from = $oldVersion; to = $script:STAGED_SERVER_VERSION; at = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"); backup = $backup } |
+        ConvertTo-Json | Set-Content -Path (Join-Path $script:CONSOLE_PATH "data\$($script:GO_UPGRADE_RECORD)") -Encoding UTF8
+    Write-Host ""
+    Print-Success "Upgrade done: $($script:SERVER_SERVICE) serves the web console"
+    Print-Info "Backup: $backup"
+    Print-Info "Roll back: .\betterdesk.ps1 -RollbackGo"
+    Print-Info "The next successful update removes the Node.js console's code (or: .\betterdesk.ps1 -CleanupNode)"
+    return $true
+}
+
+# The rollback: puts the binary, the services' settings (or tasks) and .env
+# from before the upgrade back and starts both services. The database stays
+# as it is (the server keeps its schema readable by the old version); an
+# interactive run offers the snapshot from before the upgrade.
+function Undo-GoUpgrade {
+    param([string]$Backup = "")
+    $record = Join-Path $script:CONSOLE_PATH "data\$($script:GO_UPGRADE_RECORD)"
+    if (-not $Backup -and (Test-Path $record)) {
+        $Backup = (Get-Content $record -Raw | ConvertFrom-Json).backup
+    }
+    if (-not $Backup) {
+        $latest = Get-ChildItem -Path $script:BACKUP_DIR -Directory -Filter "pre-go-*" -ErrorAction SilentlyContinue | Sort-Object Name | Select-Object -Last 1
+        if ($latest) { $Backup = $latest.FullName }
+    }
+    if (-not $Backup -or -not (Test-Path (Join-Path $Backup "manifest.json"))) {
+        Print-Error "No backup from an upgrade to roll back to (looked for $($script:BACKUP_DIR)\pre-go-*)"
+        return $false
+    }
+    if (-not (Test-Path (Join-Path $script:CONSOLE_PATH "server.js"))) {
+        Print-Error "The Node.js console's code is gone from $($script:CONSOLE_PATH) (-CleanupNode); it cannot be started again"
+        return $false
+    }
+    Print-Step "Rolling back to the services from before the upgrade ($Backup)..."
+    $manifest = Get-Content (Join-Path $Backup "manifest.json") -Raw | ConvertFrom-Json
+    Stop-ServerService
+
+    $serverExe = Get-ServerBinaryPath
+    $savedExe = Join-Path $Backup "betterdesk-server.exe"
+    if (Test-Path $savedExe) { Copy-Item -Path $savedExe -Destination $serverExe -Force }
+    Remove-Item -Path "$serverExe.pre-go" -Force -ErrorAction SilentlyContinue
+    Copy-Item -Path (Join-Path $Backup "console.env") -Destination (Join-Path $script:CONSOLE_PATH ".env") -Force
+    Remove-Item -Path (Join-Path $script:CONSOLE_PATH ".env.pre-go") -Force -ErrorAction SilentlyContinue
+    $savedLauncher = Join-Path $Backup "start-betterdesk-server.cmd"
+    if (Test-Path $savedLauncher) { Copy-Item -Path $savedLauncher -Destination (Join-Path $script:RUSTDESK_PATH "start-betterdesk-server.cmd") -Force }
+
+    if ($manifest.task_mode) {
+        foreach ($task in @($script:SERVER_SERVICE, $script:CONSOLE_SERVICE)) {
+            $xml = Join-Path $Backup "task-$task.xml"
+            if (Test-Path $xml) {
+                Unregister-ScheduledTask -TaskName $task -Confirm:$false -ErrorAction SilentlyContinue
+                Register-ScheduledTask -TaskName $task -Xml (Get-Content $xml -Raw) | Out-Null
+            }
+        }
+        Enable-ScheduledTask -TaskName $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue | Out-Null
+    } else {
+        $nssm = Get-NssmPath
+        Restore-NssmSettings -Nssm $nssm -Service $script:SERVER_SERVICE -Dir $Backup
+        Restore-NssmSettings -Nssm $nssm -Service $script:CONSOLE_SERVICE -Dir $Backup
+        & $nssm set $script:CONSOLE_SERVICE Start SERVICE_AUTO_START 2>$null | Out-Null
+    }
+
+    $snapshot = Join-Path $Backup "db_v2.sqlite3"
+    if (-not $script:AUTO_MODE -and (Test-Path $snapshot) -and
+        (Confirm-Action "Also restore the database from before the upgrade? What was saved since is lost.")) {
+        $dbFile = Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"
+        Remove-Item -Path "$dbFile-wal", "$dbFile-shm" -Force -ErrorAction SilentlyContinue
+        Copy-Item -Path $snapshot -Destination $dbFile -Force
+        Print-Info "Database restored from $Backup"
+    }
+
+    if ($manifest.task_mode) {
+        Start-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue
+        Start-ScheduledTask -TaskName $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
+    } else {
+        Start-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue
+        Start-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
+    }
+    if (Test-Path $record) { Move-Item -Path $record -Destination (Join-Path $script:CONSOLE_PATH "data\.go-upgrade.rolled-back.json") -Force }
+
+    $ok = (Test-ServiceHealth -ServiceName $script:SERVER_SERVICE -ExpectedPort 21116 -TimeoutSeconds 60) -and
+          (Test-HttpEndpoint -Url "http://127.0.0.1:$($script:GO_API_PORT)/api/health" -TimeoutSeconds 60)
+    if ($ok) {
+        Print-Success "Rolled back: $($script:SERVER_SERVICE) and $($script:CONSOLE_SERVICE) run as before the upgrade"
+    } else {
+        Print-Error "Rolled back, but a service did not come up; see $($script:RUSTDESK_PATH)\logs"
+    }
+    return $ok
+}
+
+# Deletes the Node.js console's code from the console folder and its
+# disabled service after an upgrade. The console's .env, data and its
+# language files, themes and images stay.
+function Remove-NodeLeftovers {
+    if (-not (Test-GoOnlyInstall)) {
+        Print-Error "This install still runs the Node.js console; upgrade it first (-Update)"
+        return $false
+    }
+    Print-Step "Removing the Node.js console's code and its disabled service..."
+    $removed = 0
+    foreach ($item in @("server.js", "routes", "services", "lib", "middleware", "scripts", "node_modules", "web-ui",
+                        "vendor", "tests", "package.json", "package-lock.json", ".env.example", "README.md",
+                        "reset-password.js", "test-db.js")) {
+        $path = Join-Path $script:CONSOLE_PATH $item
+        if (Test-Path $path) {
+            Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
+            $removed++
+        }
+    }
+    $nssm = Get-NssmPath
+    if ($nssm -and (Get-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue)) {
+        & $nssm stop $script:CONSOLE_SERVICE 2>$null | Out-Null
+        & $nssm remove $script:CONSOLE_SERVICE confirm 2>$null | Out-Null
+        $removed++
+    }
+    if (Get-ScheduledTask -TaskName $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue) {
+        Unregister-ScheduledTask -TaskName $script:CONSOLE_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
+        $removed++
+    }
+    Remove-Item -Path "$(Get-ServerBinaryPath).pre-go" -Force -ErrorAction SilentlyContinue
+    Print-Success "Removed $removed leftovers of the Node.js console"
+    if (Get-Command node -ErrorAction SilentlyContinue) {
+        Print-Info "BetterDesk no longer needs Node.js; uninstall it if nothing else uses it"
+    }
+    return $true
+}
+
+# The update of the server with its console: the newest release of the
+# update channel (or -Binary, -FromSource, RELEASE_BASE_URL), the service
+# settings written again, a restart and a check. A new binary that does not
+# come up is replaced by the previous one.
+function Update-GoInstall {
+    $serverExe = Get-ServerBinaryPath
+    $before = if (Test-Path $serverExe) { (Get-FileHash $serverExe -Algorithm SHA256).Hash } else { "" }
+    Print-Info "Creating backup before update..."
+    Do-BackupSilent
+
+    if ($script:BINARY_FILE -or $script:FROM_SOURCE -or $env:RELEASE_BASE_URL) {
+        if (-not (Get-StagedServerBinary)) {
+            Remove-Item -Path $script:STAGED_SERVER_DIR -Recurse -Force -ErrorAction SilentlyContinue
+            return $false
+        }
+        Stop-ServerService
+        $installed = Install-StagedBinary -Suffix ".prev"
+        Remove-Item -Path $script:STAGED_SERVER_DIR -Recurse -Force -ErrorAction SilentlyContinue
+        if (-not $installed) { Start-ServerService; return $false }
+    } else {
+        # The server's own updater: the release of the channel, its manifest
+        # signature and SHA-256 checked; the running exe is renamed aside and
+        # the old one kept as .prev
+        Print-Step "Installing the newest release with betterdesk-server update..."
+        if ((Invoke-ServerCommand -Arguments @("update", "--yes")) -ne 0) {
+            Print-Error "betterdesk-server update failed"
+            return $false
+        }
+        Stop-ServerService
+    }
+    $after = (Get-FileHash $serverExe -Algorithm SHA256).Hash
+
+    Merge-ConsoleEnv -FreshInstall $false | Out-Null
+    Update-ServerServiceDefinition
+    Start-ServerService
+    if (-not (Test-GoInstall -TimeoutSeconds 90)) {
+        if ($before -ne $after -and (Test-Path "$serverExe.prev")) {
+            Print-Error "The new binary did not come up; putting the previous one back"
+            Stop-ServerService
+            Copy-Item -Path "$serverExe.prev" -Destination $serverExe -Force
+            Start-ServerService
+            Test-GoInstall -TimeoutSeconds 60 | Out-Null
+        }
+        return $false
+    }
+
+    # One release after the upgrade from the Node.js console, its code goes
+    $record = Join-Path $script:CONSOLE_PATH "data\$($script:GO_UPGRADE_RECORD)"
+    if ($before -ne $after -and (Test-Path $record) -and (Test-Path (Join-Path $script:CONSOLE_PATH "server.js"))) {
+        Remove-NodeLeftovers | Out-Null
+    }
+    Print-Success "betterdesk-server: $(& $serverExe -version 2>$null | Select-Object -First 1)"
+    return $true
+}
+
+# Writes BetterDeskServer's settings again from the template, keeping its
+# arguments and its other environment; rewrites the scheduled-task launcher
+# (a launcher written before held CONSOLE_PORT=0 and no restart loop).
+function Update-ServerServiceDefinition {
+    $nssm = Get-NssmPath
+    if ($nssm -and (Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue)) {
+        $serverArgs = "$(& $nssm get $script:SERVER_SERVICE AppParameters 2>$null)".Trim([char]0, ' ')
+        $serverArgs = ($serverArgs -replace '\s-tls-api-port(=\S+)?', '' -replace '\s-tls-api(=\S+)?', '').Trim()
+        $current = Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE | Where-Object { $_ -notlike 'CONSOLE_PORT=0' }
+        $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "nssm"), $current)
+        Set-NssmServerService -Nssm $nssm -Arguments $serverArgs -Environment $environment
+        return
+    }
+    if (Get-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue) {
+        $serverArgs = Get-LauncherArguments
+        if (-not $serverArgs) { $serverArgs = Get-ServerArguments -ServerIP (Resolve-RelayIp) }
+        $current = Get-LauncherEnvironment | Where-Object { $_ -notlike 'CONSOLE_PORT=0' }
+        $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "task"), $current)
+        $launcherPath = Write-ServerLauncher -Arguments $serverArgs -Environment $environment
+        Register-ServerTask -Launcher $launcherPath
+        return
+    }
+    Setup-Services
+}
+function Invoke-ManagementCli {
+    param(
+        [Parameter(Mandatory = $true)][string]$Action,
+        [string[]]$Arguments = @()
+    )
+    if (-not (Test-BinaryHasSubcommands)) {
+        if (Test-NodeEraInstall) {
+            Print-Info "Management capabilities are checked after the upgrade to the server with its console"
+            return $true
+        }
+        Print-Error "The management check needs an installed betterdesk-server.exe"
+        return $false
+    }
+    $code = Invoke-ServerCommand -Arguments (@("config", $Action) + $Arguments)
+    return ($code -eq 0)
+}
+
+function Repair-ManagementPermissions {
+    Print-Step "Repairing BetterDesk management permissions..."
+    foreach ($path in @($script:RUSTDESK_PATH, $script:CONSOLE_PATH)) {
+        if (Test-Path $path) {
+            & icacls $path /inheritance:e /grant "Administrators:(OI)(CI)F" /grant "SYSTEM:(OI)(CI)F" /T /C /Q 2>$null | Out-Null
+        } else {
+            New-Item -ItemType Directory -Path $path -Force | Out-Null
+        }
+    }
+    # The server's account writes both folders: its data and keys, the
+    # console's .env and data
+    $account = "NT SERVICE\$($script:SERVER_SERVICE)"
+    foreach ($path in @($script:RUSTDESK_PATH, $script:CONSOLE_PATH)) {
+        if (Test-Path $path) {
+            & icacls $path /grant "${account}:(OI)(CI)M" /T /C /Q 2>$null | Out-Null
+        }
+    }
+    foreach ($path in @(
+        (Join-Path $script:CONSOLE_PATH ".env"),
+        (Join-Path $script:RUSTDESK_PATH ".api_key"),
+        (Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3")
+    )) {
+        if (Test-Path $path) {
+            & icacls $path /inheritance:r /grant:r "Administrators:F" "SYSTEM:F" "${account}:M" 2>$null | Out-Null
+        }
+    }
+    $seed = Join-Path $script:CONSOLE_PATH "data\modules\betterdesk-support-generator\custom-client-signing.seed"
+    if (Test-Path $seed) {
+        & icacls $seed /inheritance:r /grant:r "SYSTEM:F" "${account}:R" 2>$null | Out-Null
+    }
+    Test-ManagementCapabilities | Out-Null
+}
+
+function Set-ManagedConfiguration {
+    if (-not $script:MANAGED_CONFIG_CHANGES -or $script:MANAGED_CONFIG_CHANGES.Count -eq 0) {
+        Print-Error "No allowlisted configuration changes supplied"
+        return $false
+    }
+    Print-Step "Applying allowlisted BetterDesk configuration..."
+    if (-not (Invoke-ManagementCli -Action "set" -Arguments $script:MANAGED_CONFIG_CHANGES)) {
+        return $false
+    }
+    Stop-ServerService
+    return (Start-ServicesWithVerification)
+}
+
+function Compile-GoServer {
+    Print-Step "Compiling BetterDesk Go Server..."
+
+    if (-not (Test-Path $script:GO_SERVER_SOURCE)) {
+        Print-Error "Go server source not found at: $script:GO_SERVER_SOURCE"
+        return $false
+    }
+    if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
+        if (-not (Install-Golang)) { return $false }
+    }
+
+    # The binary carries the web app: its build goes into the module first.
+    # Without web-ui\build it is built here, which needs Node.js 22 and npm.
+    $webUi = Join-Path $script:ScriptDir "web-ui"
+    $webBuild = Join-Path $webUi "build"
+    if (-not (Test-Path (Join-Path $webBuild "index.html"))) {
+        if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
+            Print-Error "A build from source needs the web app: $webBuild, or Node.js 22 and npm to build it"
+            return $false
+        }
+        Print-Step "Building the web app (npm, a few minutes)..."
+        Push-Location $webUi
+        try {
+            & npx -y npm@11.6.2 ci --no-audit --no-fund 2>&1 | Out-Null
+            & npm run build 2>&1 | Out-Null
+        } finally {
+            Pop-Location
+        }
+        if (-not (Test-Path (Join-Path $webBuild "index.html"))) {
+            Print-Error "The web app build failed"
+            return $false
+        }
+    }
+
+    $currentDir = Get-Location
+    Set-Location $script:GO_SERVER_SOURCE
+    try {
+        & go run ./cmd/embed-webui -from $webBuild 2>&1 | ForEach-Object { Write-Host "  $_" }
+        if ($LASTEXITCODE -ne 0) {
+            Print-Error "Could not copy the web app build into the server module"
+            return $false
+        }
+        Print-Info "Building static binary..."
+        $env:CGO_ENABLED = "0"
+        $env:GOOS = "windows"
+        $env:GOARCH = "amd64"
+        $commit = ""
+        if (Get-Command git -ErrorAction SilentlyContinue) {
+            $commit = "$(& git -C $script:ScriptDir rev-parse HEAD 2>$null)".Trim()
+        }
+        & go build -trimpath -ldflags="-s -w -X main.Version=$($script:VERSION) -X main.Commit=$commit" -o "betterdesk-server.exe" . 2>&1 | ForEach-Object { Write-Host "  $_" }
+    } finally {
+        Set-Location $currentDir
+    }
+
+    $outputBinary = Join-Path $script:GO_SERVER_SOURCE "betterdesk-server.exe"
+    if (Test-Path $outputBinary) {
+        $size = [math]::Round((Get-Item $outputBinary).Length / 1MB, 2)
+        Print-Success "Build successful: betterdesk-server.exe ($size MB)"
+        return $true
+    } else {
+        Print-Error "Build failed - binary not created"
+        return $false
+    }
+}
+
+function Setup-Services {
+    Print-Step "Configuring the Windows service..."
+
+    # The database settings from an existing .env, so a reinstall keeps
+    # PostgreSQL
+    if (-not $script:USE_POSTGRESQL -and (Get-ConsoleEnvValue -Key "DB_TYPE") -eq "postgres") {
+        $url = Get-ConsoleEnvValue -Key "DATABASE_URL"
+        if ($url) {
+            $script:USE_POSTGRESQL = $true
+            $script:POSTGRESQL_URI = $url
+            Print-Info "Recovered PostgreSQL config from existing .env"
+        }
+    }
+
+    # Relay address: RELAY_SERVERS, else the mode (auto = public IP, local =
+    # LAN IP), asked for in an interactive run
+    if (-not $script:AUTO_MODE -and -not $script:RELAY_SERVERS -and $script:RELAY_MODE -eq "auto") {
+        $localIp = Get-LocalIP
+        Write-Host ""
+        Print-Info "Relay server address controls how clients connect for remote sessions."
+        Write-Host "  1) Internet / public  (auto-detect public IP - default)" -ForegroundColor Cyan
+        Write-Host "  2) LAN only           (use this server's local IP: $localIp)" -ForegroundColor Cyan
+        Write-Host "  3) Custom address     (enter a specific IP or host)" -ForegroundColor Cyan
+        $relayChoice = Read-Host "  Select relay mode [1]"
+        switch ($relayChoice) {
+            "2" { $script:RELAY_MODE = "local" }
+            "3" { $script:RELAY_SERVERS = Read-Host "  Enter relay address (IP or host[:port])" }
+            default { $script:RELAY_MODE = "auto" }
+        }
+        Write-Host ""
+    }
+
+    $serverIP = Resolve-RelayIp
+    $connModeEnv = Resolve-ConnectionModeEnv
+    Print-Info "Relay server IP: $serverIP (mode: $(if ($script:RELAY_SERVERS) { 'fixed' } else { $script:RELAY_MODE }))"
+
+    $apiKeyPath = Join-Path $script:RUSTDESK_PATH ".api_key"
+    if (-not (Test-Path $apiKeyPath)) {
+        $apiKeyBytes = New-Object byte[] 32
+        $rng = New-Object System.Security.Cryptography.RNGCryptoServiceProvider
+        $rng.GetBytes($apiKeyBytes)
+        $rng.Dispose()
+        $apiKey = [System.BitConverter]::ToString($apiKeyBytes) -replace '-', '' | ForEach-Object { $_.ToLower() }
+        Set-Content -Path $apiKeyPath -Value $apiKey -NoNewline
+    }
+
+    $serverArgs = Get-ServerArguments -ServerIP $serverIP
+    $extra = @($connModeEnv)
+    # New installs default to "managed" enrollment so stock RustDesk clients are
+    # queued for operator approval. Existing installs are left untouched.
+    if ($script:FRESH_INSTALL) { $extra += "ENROLLMENT_MODE=managed" }
+
+    $nssm = Get-NssmPath
+    if (-not $nssm) {
+        Print-Warning "NSSM not found. The server runs as a scheduled task."
+        Print-Info "For a Windows service, install NSSM from https://nssm.cc"
+        $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "task"), $extra)
+        $launcher = Write-ServerLauncher -Arguments $serverArgs -Environment $environment
+        Register-ServerTask -Launcher $launcher
+        Print-Success "Scheduled task $($script:SERVER_SERVICE) created (its launcher starts the server again after it ends)"
+        return
+    }
+
+    # Retired services
+    foreach ($svc in @($script:HBBS_SERVICE, $script:HBBR_SERVICE, "BetterDeskAPI")) {
+        & $nssm stop $svc 2>$null | Out-Null
+        & $nssm remove $svc confirm 2>$null | Out-Null
+    }
+
+    $current = @()
+    if (Test-GoOnlyInstall) {
+        $current = Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE
+    }
+    $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "nssm"), $extra, $current)
+    Set-NssmServerService -Nssm $nssm -Arguments $serverArgs -Environment $environment
+
+    Print-Success "Windows service $($script:SERVER_SERVICE) configured (server and web console)"
+}
+
+function Start-Services {
+    Start-ServicesWithVerification | Out-Null
+}
+
+function Start-ServicesWithVerification {
+    Print-Step "Starting $($script:SERVER_SERVICE) with health verification..."
+
+    $running = Get-Process -Name "betterdesk-server" -ErrorAction SilentlyContinue
+    if (-not $running) {
+        $hasErrors = $false
+        if (-not (Test-PortAvailable -Port 21116 -ServiceName "betterdesk-server")) { $hasErrors = $true }
+        if (-not (Test-PortAvailable -Port 21117 -ServiceName "betterdesk-server")) { $hasErrors = $true }
+        if ($hasErrors) {
+            Print-Error "Cannot start betterdesk-server - ports in use"
+            Print-Info "Use: Get-NetTCPConnection -State Listen | Where-Object LocalPort -in 21116,21117"
+            return $false
+        }
+    }
+    Start-ServerService
+    if (-not (Test-GoInstall -TimeoutSeconds 90)) {
+        Print-Error "betterdesk-server did not come up"
+        return $false
+    }
+    Print-Success "betterdesk-server started and verified"
+    return $true
+}
+
+# Minimal installation: the same server with its web console off
+# (CONSOLE_PORT=0 in .env); setting a port there turns it on.
+function Do-InstallMinimal {
+    $script:MINIMAL_MODE = $true
+    Do-Install
+}
+
+function Do-Update {
+    Print-Header
+    Write-Host "========== UPDATE ==========" -ForegroundColor White
+    Write-Host ""
+
+    Detect-Installation
+
+    if ($script:INSTALL_STATUS -eq "none" -and -not (Test-NodeEraInstall)) {
+        Print-Error "BetterDesk is not installed!"
+        Print-Info "Use 'FRESH INSTALLATION' option"
+        Press-Enter
+        return $false
+    }
+
+    # Detect Rust -> Go upgrade (major architecture change)
+    if ($script:SERVER_TYPE -eq "rust") {
+        Print-Warning "Legacy Rust server (hbbs/hbbr) detected!"
+        Print-Warning "Upgrading from Rust to Go server requires a FRESH INSTALLATION."
+        Print-Info "Your data (keys, database) will be preserved during migration."
+        Write-Host ""
+        if ($script:AUTO_MODE -or (Confirm-Action "Proceed with fresh installation (recommended)?")) {
+            Do-Install
+        }
+        return $true
+    }
+
+    # CRITICAL: Preserve database configuration before the .env is merged
+    Preserve-DatabaseConfig
+    Read-UpdateGitHubBranchFromEnv
+
+    # The Node.js console moves into the server: one upgrade, in place
+    if (Test-NodeEraInstall) {
+        $ok = Invoke-GoUpgrade
+        Press-Enter
+        return $ok
+    }
+
+    $channel = if ($script:UPDATE_GITHUB_BRANCH -eq "dev") { "development" } else { "stable" }
+    Print-Info "Update channel: $($script:UPDATE_GITHUB_BRANCH) ($channel)"
+    if (-not $script:AUTO_MODE) {
+        $items = @(
+            "Update now`tInstall the newest release of the update channel",
+            "Switch update channel`tChoose stable (main) or development (dev)",
+            "Back`tReturn to the main menu"
+        )
+        $returns = @("1", "2", "0")
+        Invoke-MenuChoose -Title "Update" -Subtitle "Releases are checked by SHA-256 before they replace the binary" -Items $items -Returns $returns
+        switch ($script:MENU_CHOICE) {
+            "0" { return $true }
+            "2" { Switch-UpdateChannel; return $true }
+        }
+    }
+
+    $ok = Update-GoInstall
+    if (-not $ok) { Print-Error "Update failed" }
+    Press-Enter
+    return $ok
+}
+
+function Repair-Binaries {
+    Print-Step "Repairing betterdesk-server.exe..."
+    if (Test-NodeEraInstall) {
+        Print-Error "This install runs the Node.js console; use Update to upgrade it"
+        return
+    }
+    if (-not (Get-StagedServerBinary)) {
+        Remove-Item -Path $script:STAGED_SERVER_DIR -Recurse -Force -ErrorAction SilentlyContinue
+        Print-Error "Could not get a server binary"
+        return
+    }
+    Stop-ServerService
+    $installed = Install-StagedBinary -Suffix ".prev"
+    Remove-Item -Path $script:STAGED_SERVER_DIR -Recurse -Force -ErrorAction SilentlyContinue
+    if (-not $installed) { Start-ServerService; return }
+    if (-not (Start-ServicesWithVerification)) {
+        Print-Error "betterdesk-server failed to start after the binary repair"
+        return
+    }
+    Print-Success "Server binary repaired and verified!"
+}
+
+# The server migrates its tables at every start.
+function Repair-Database {
+    Print-Step "Repairing database..."
+    Print-Info "betterdesk-server migrates its tables at start; restarting it"
+    Stop-ServerService
+    if (Start-ServicesWithVerification) {
+        Print-Success "Database checked by the server's start"
+    }
+}
+
+function Repair-Services {
+    Print-Step "Repairing the Windows service..."
+    if (Test-NodeEraInstall) {
+        Print-Error "This install runs the Node.js console; use Update to upgrade it"
+        return
+    }
+    if (-not (Test-Path (Get-ServerBinaryPath))) {
+        Print-Error "betterdesk-server.exe not found at $script:RUSTDESK_PATH"
+        Print-Info "Run 'Repair binaries' first"
+        return
+    }
+    Stop-ServerService
+    Update-ServerServiceDefinition
+    if (-not (Start-ServicesWithVerification)) {
+        Print-Error "betterdesk-server failed to start after the repair"
+        return
+    }
+    Print-Success "Service repaired and verified!"
+}
+
+function Do-ResetPassword {
+    Print-Header
+    Write-Host "========== ADMIN PASSWORD RESET ==========" -ForegroundColor White
+    Write-Host ""
+
+    Auto-DetectPaths
+    Detect-Installation
+    if (Test-NodeEraInstall) {
+        Print-Error "This install runs the Node.js console; use Update to move it into the server first"
+        Press-Enter
+        return
+    }
+
+    $items = @(
+        "Generate random password`tCreate a strong random admin password",
+        "Set custom password`tType a new password (min. 8 characters)",
+        "Back`tReturn to the main menu"
+    )
+    $returns = @("1", "2", "0")
+    Invoke-MenuChoose -Title "Admin Password Reset" -Subtitle "The account admin of the web console" -Items $items -Returns $returns
+    $newPassword = $null
+    switch ($script:MENU_CHOICE) {
+        "1" { $newPassword = Generate-RandomPassword }
+        "2" {
+            $secure = Read-Host "Enter new password (min. 8 characters)" -AsSecureString
+            $newPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure))
+            if ($newPassword.Length -lt 8) {
+                Print-Error "Password must be at least 8 characters!"
+                Press-Enter
+                return
+            }
+        }
+        default { return }
+    }
+
+    # The server sets it on the console's database (SQLite or PostgreSQL);
+    # the password goes in on standard input, never in the arguments
+    $code = Invoke-ServerCommand -Arguments @("reset-password", "admin") -InputText $newPassword
+    Write-Host ""
+    if ($code -eq 0) {
+        # DEFAULT_ADMIN_PASSWORD in .env must match, or the next start with a
+        # forced password update would set the old one again
+        if (Get-ConsoleEnvValue -Key "DEFAULT_ADMIN_PASSWORD") {
+            Set-ConsoleEnvValue -Key "DEFAULT_ADMIN_PASSWORD" -Value $newPassword
+        }
+        Write-Host "============================================================" -ForegroundColor Green
+        Write-Host "              NEW LOGIN CREDENTIALS                         " -ForegroundColor Green
+        Write-Host "============================================================" -ForegroundColor Green
+        Write-Host "  Login:    " -NoNewline; Write-Host "admin" -ForegroundColor White
+        Write-Host "  Password: " -NoNewline; Write-Host $newPassword -ForegroundColor White
+        Write-Host "============================================================" -ForegroundColor Green
+        if ($script:STORE_ADMIN_CREDENTIALS) {
+            "admin:$newPassword" | Out-File -FilePath (Join-Path $script:RUSTDESK_PATH ".admin_credentials") -Encoding UTF8
+        }
+    } else {
+        Print-Error "Failed to reset password!"
+        Print-Info "Check the database settings in $(Join-Path $script:CONSOLE_PATH '.env')"
+    }
+    Press-Enter
+}
+
+function Create-AdminUser {
+    Print-Step "Admin account..."
+
+    # The server makes the admin at its first start from DEFAULT_ADMIN_PASSWORD.
+    $adminPassword = $env:ADMIN_PASSWORD
+    if (-not $adminPassword) { $adminPassword = Get-ConsoleEnvValue -Key "DEFAULT_ADMIN_PASSWORD" }
+
+    if ($adminPassword) {
+        Write-Host ""
+        Write-Host "============================================================" -ForegroundColor Green
+        Write-Host "             PANEL LOGIN CREDENTIALS                        " -ForegroundColor Green
+        Write-Host "============================================================" -ForegroundColor Green
+        Write-Host "  Login:    " -NoNewline; Write-Host "admin" -ForegroundColor White
+        Write-Host "  Password: " -NoNewline; Write-Host $adminPassword -ForegroundColor White
+        Write-Host "============================================================" -ForegroundColor Green
+        Write-Host ""
+        if ($script:STORE_ADMIN_CREDENTIALS) {
+            $mainCredsFile = Join-Path $script:RUSTDESK_PATH ".admin_credentials"
+            "admin:$adminPassword" | Out-File -FilePath $mainCredsFile -Encoding UTF8
+            Print-Info "Credentials saved in: $mainCredsFile"
+        } else {
+            Print-Warning "Credentials are not persisted by default (security hardening)."
+        }
+        return $adminPassword
+    }
+    Print-Warning "No admin password found"
+    Print-Info "Use password reset option to set a new admin password"
+    return $null
+}
+
+function Update-EnvForTLS {
+    param(
+        [string]$CertPath,
+        [string]$KeyPath,
+        [bool]$UpdateApiUrls = $false
+    )
+    $envFile = Join-Path $script:CONSOLE_PATH ".env"
+    if (Test-Path $envFile) {
+        $content = Get-Content $envFile -Raw
+        $content = $content -replace 'HTTPS_ENABLED=.*', 'HTTPS_ENABLED=true'
+        $content = $content -replace 'SSL_CERT_PATH=.*', "SSL_CERT_PATH=$CertPath"
+        $content = $content -replace 'SSL_KEY_PATH=.*', "SSL_KEY_PATH=$KeyPath"
+        # Internal Go API URLs must stay HTTP for RustDesk client compatibility.
+        $content = $content -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
+        $content = $content -replace 'BETTERDESK_API_URL=https://localhost', 'BETTERDESK_API_URL=http://localhost'
+        # Only the Node.js console read NODE_EXTRA_CA_CERTS
+        $content = $content -replace '(?m)^NODE_EXTRA_CA_CERTS=.*\r?\n?', ''
+        Set-Content -Path $envFile -Value $content -NoNewline
+        Print-Info "Updated .env with HTTPS configuration"
+    }
+}
+
 #===============================================================================
 # Detection Functions
 #===============================================================================
@@ -705,15 +2083,14 @@ function Detect-Installation {
         $script:DATABASE_OK = $true
     }
     
-    # Detect console type
+    # Detect console type: the console inside the server, or the old Node.js one
     if (Test-Path $script:CONSOLE_PATH) {
-        if ((Test-Path "$script:CONSOLE_PATH\server.js") -or (Test-Path "$script:CONSOLE_PATH\package.json")) {
+        if ((Test-GoOnlyInstall) -and (Test-Path "$script:CONSOLE_PATH\.env")) {
+            $script:CONSOLE_TYPE = "go"
+        } elseif ((Test-Path "$script:CONSOLE_PATH\server.js") -or (Test-Path "$script:CONSOLE_PATH\package.json")) {
             $script:CONSOLE_TYPE = "nodejs"
-        } elseif (Test-Path "$script:CONSOLE_PATH\app.py") {
-            $script:CONSOLE_TYPE = "nodejs"  # Legacy Flask, will be migrated
-            Print-Warning "Legacy Flask console detected. Will be migrated to Node.js on update."
         }
-        
+
         if ($script:CONSOLE_TYPE -ne "none" -and $script:BINARIES_OK) {
             $script:INSTALL_STATUS = "complete"
         }
@@ -738,14 +2115,18 @@ function Detect-Installation {
         }
     }
     
-    $consoleService = Get-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
-    if ($consoleService -and $consoleService.Status -eq 'Running') {
-        $script:CONSOLE_RUNNING = $true
+    if ($script:CONSOLE_TYPE -eq "go") {
+        $script:CONSOLE_RUNNING = $script:SERVER_RUNNING -or [bool](Get-Process -Name "betterdesk-server" -ErrorAction SilentlyContinue)
+    } else {
+        $consoleService = Get-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
+        if ($consoleService -and $consoleService.Status -eq 'Running') {
+            $script:CONSOLE_RUNNING = $true
+        }
     }
 }
 
 # Preserve database configuration from existing .env file
-# This MUST be called before Install-NodeJsConsole during UPDATE/REPAIR
+# This MUST be called before the .env is merged during UPDATE/REPAIR
 # to prevent switching from PostgreSQL to SQLite
 function Preserve-DatabaseConfig {
     $envFile = Join-Path $script:CONSOLE_PATH ".env"
@@ -769,121 +2150,6 @@ function Preserve-DatabaseConfig {
             Print-Info "Preserving SQLite configuration from existing .env"
         }
     }
-}
-
-# Write or merge console .env from web-nodejs/.env.example (issue #158).
-function Merge-ConsoleEnv {
-    param(
-        [bool]$FreshInstall = $false
-    )
-
-    $mergeScript = Join-Path $script:CONSOLE_PATH "scripts\merge-env.js"
-    if (-not (Test-Path $mergeScript)) {
-        $mergeScript = Join-Path $script:ScriptDir "web-nodejs\scripts\merge-env.js"
-    }
-    if (-not (Test-Path $mergeScript)) {
-        Print-Error "merge-env.js not found — cannot configure .env"
-        return $false
-    }
-
-    $sslDir = Join-Path $script:RUSTDESK_PATH "ssl"
-    $dbType = "sqlite"
-    $databaseUrl = ""
-    if ($script:USE_POSTGRESQL -and $script:POSTGRESQL_URI) {
-        $dbType = "postgres"
-        $databaseUrl = $script:POSTGRESQL_URI
-    }
-
-    $adminPassword = $env:ADMIN_PASSWORD
-    $sessionSecret = ""
-    $remoteTargetVaultKey = ""
-
-    if ($FreshInstall) {
-        if (-not $adminPassword) {
-            $adminPassword = Generate-RandomPassword
-        }
-        $sessionSecret = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
-    } else {
-        $envFile = Join-Path $script:CONSOLE_PATH ".env"
-        if (Test-Path $envFile) {
-            $ssLine = Select-String -Path $envFile -Pattern '^SESSION_SECRET=' -SimpleMatch | Select-Object -First 1
-            $sessionSecret = if ($ssLine) { ($ssLine.Line -split '=', 2)[1].Trim() } else { "" }
-            if (-not $adminPassword) {
-                $apLine = Select-String -Path $envFile -Pattern '^DEFAULT_ADMIN_PASSWORD=' -SimpleMatch | Select-Object -First 1
-                $adminPassword = if ($apLine) { ($apLine.Line -split '=', 2)[1].Trim() } else { "" }
-            }
-        }
-        if (-not $sessionSecret) {
-            $sessionSecret = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
-        }
-    }
-    $envFile = Join-Path $script:CONSOLE_PATH ".env"
-    if (Test-Path $envFile) {
-        $rtLine = Select-String -Path $envFile -Pattern '^REMOTE_TARGET_VAULT_KEY=' -SimpleMatch | Select-Object -First 1
-        $remoteTargetVaultKey = if ($rtLine) { ($rtLine.Line -split '=', 2)[1].Trim() } else { "" }
-    }
-    if (-not $remoteTargetVaultKey) {
-        $remoteTargetVaultKey = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
-    }
-
-    $goPort = if ($script:GO_API_PORT) { $script:GO_API_PORT } else { 21114 }
-    $clientPort = if ($script:CLIENT_API_PORT) { $script:CLIENT_API_PORT } else { 21121 }
-    $dataDir = Join-Path $script:CONSOLE_PATH "data"
-
-    $substScript = Join-Path $script:CONSOLE_PATH "scripts\write-installer-env-subst.js"
-    if (-not (Test-Path $substScript)) {
-        $substScript = Join-Path $script:ScriptDir "web-nodejs\scripts\write-installer-env-subst.js"
-    }
-    $substFile = Join-Path $env:TEMP "betterdesk-env-subst-$PID.json"
-
-    $env:BD_SUBST_RUSTDESK_DIR = $script:RUSTDESK_PATH
-    $env:BD_SUBST_PUB_KEY_PATH = Join-Path $script:RUSTDESK_PATH "id_ed25519.pub"
-    $env:BD_SUBST_API_KEY_PATH = Join-Path $script:RUSTDESK_PATH ".api_key"
-    $env:BD_SUBST_DB_TYPE = $dbType
-    $env:BD_SUBST_DB_PATH = Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"
-    $env:BD_SUBST_DATABASE_URL = $databaseUrl
-    $env:BD_SUBST_DATA_DIR = $dataDir
-    $env:BD_SUBST_GO_API_PORT = [string]$goPort
-    $env:BD_SUBST_HBBS_API_URL = "http://localhost:${goPort}/api"
-    $env:BD_SUBST_BETTERDESK_API_URL = "http://localhost:${goPort}/api"
-    $env:BD_SUBST_API_PORT = [string]$clientPort
-    $env:BD_SUBST_DEFAULT_ADMIN_PASSWORD = [string]$adminPassword
-    $env:BD_SUBST_SESSION_SECRET = [string]$sessionSecret
-    $env:BD_SUBST_REMOTE_TARGET_VAULT_KEY = [string]$remoteTargetVaultKey
-    $env:BD_SUBST_GUACD_ADDRESS = "127.0.0.1:4822"
-    $env:BD_SUBST_SSL_CERT_PATH = Join-Path $sslDir "betterdesk.crt"
-    $env:BD_SUBST_SSL_KEY_PATH = Join-Path $sslDir "betterdesk.key"
-
-    if (-not (Test-Path $substScript)) {
-        Print-Error "write-installer-env-subst.js not found"
-        return $false
-    }
-    & node $substScript $substFile 2>&1 | Out-Null
-    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $substFile)) {
-        Print-Error "Failed to build .env substitution file"
-        return $false
-    }
-
-    $nodeArgs = @(
-        $mergeScript,
-        "--target", (Join-Path $script:CONSOLE_PATH ".env"),
-        "--subst-file", $substFile
-    )
-    if ($FreshInstall) { $nodeArgs += "--fresh" }
-
-    $output = & node @nodeArgs 2>&1
-    Remove-Item -Path $substFile -Force -ErrorAction SilentlyContinue
-    if ($LASTEXITCODE -ne 0) {
-        Print-Error "Failed to write .env via merge-env.js: $output"
-        return $false
-    }
-
-    if ($FreshInstall) {
-        Print-Info "Created .env configuration file (fresh install)"
-    } else {
-        Print-Info "Merged new .env keys (existing settings preserved)"
-    }
-    return $true
 }
 
 function Auto-DetectPaths {
@@ -924,27 +2190,24 @@ function Auto-DetectPaths {
     $consoleFound = $false
     $script:CONSOLE_TYPE = "none"
     
+    # The console's folder holds its .env and data (and, before the upgrade,
+    # the Node.js console's code)
     foreach ($path in $script:COMMON_CONSOLE_PATHS) {
-        # Check for Node.js console first (server.js or package.json)
-        if ((Test-Path $path) -and ((Test-Path "$path\server.js") -or (Test-Path "$path\package.json"))) {
+        if ((Test-Path $path) -and ((Test-Path "$path\.env") -or (Test-Path "$path\server.js"))) {
             $script:CONSOLE_PATH = $path
-            $script:CONSOLE_TYPE = "nodejs"
-            Print-Success "Detected Node.js Console: $script:CONSOLE_PATH"
-            $consoleFound = $true
-            break
-        }
-        # Check for legacy Flask/Python console (app.py) - migrate to Node.js
-        if ((Test-Path $path) -and (Test-Path "$path\app.py") -and -not (Test-Path "$path\server.js")) {
-            $script:CONSOLE_PATH = $path
-            $script:CONSOLE_TYPE = "nodejs"  # Will be migrated
-            Print-Warning "Legacy Flask console detected at $path. Will be migrated to Node.js."
+            Print-Success "Detected the console folder: $script:CONSOLE_PATH"
             $consoleFound = $true
             break
         }
     }
-    
+
     if (-not $consoleFound) {
         $script:CONSOLE_PATH = "C:\BetterDeskConsole"
+    }
+    if (Test-GoOnlyInstall) {
+        $script:CONSOLE_TYPE = "go"
+    } elseif (Test-Path "$script:CONSOLE_PATH\server.js") {
+        $script:CONSOLE_TYPE = "nodejs"
     }
     
     # Update DB_PATH
@@ -992,7 +2255,8 @@ function Print-Status {
     
     if (Test-Path $script:CONSOLE_PATH) {
         $consoleTypeLabel = switch ($script:CONSOLE_TYPE) {
-            "nodejs" { " (Node.js)" }
+            "go" { " (inside betterdesk-server)" }
+            "nodejs" { " (Node.js; Update moves it into betterdesk-server)" }
             default { "" }
         }
         Write-Host "  Web Console:  " -NoNewline; Write-Host "[OK]$consoleTypeLabel" -ForegroundColor Green
@@ -1037,6 +2301,8 @@ function Print-Status {
     
     if ($script:CONSOLE_RUNNING) {
         Write-Host "  Web Console:   " -NoNewline; Write-Host "* Active" -ForegroundColor Green
+    } elseif ($script:CONSOLE_TYPE -eq "go") {
+        Write-Host "  Web Console:   " -NoNewline; Write-Host "o Inactive (part of $($script:SERVER_SERVICE))" -ForegroundColor Red
     } else {
         $consoleSvc = Get-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
         if ($consoleSvc -and $consoleSvc.Status -eq 'Stopped') {
@@ -1143,246 +2409,6 @@ function Install-Golang {
         Print-Error "Go installation verification failed"
         return $false
     }
-}
-
-function Compile-GoServer {
-    Print-Step "Compiling BetterDesk Go Server..."
-    
-    if (-not (Test-Path $script:GO_SERVER_SOURCE)) {
-        Print-Error "Go server source not found at: $script:GO_SERVER_SOURCE"
-        return $false
-    }
-    
-    $currentDir = Get-Location
-    Set-Location $script:GO_SERVER_SOURCE
-    
-    Print-Info "Running 'go mod tidy'..."
-    & go mod tidy 2>&1 | ForEach-Object { Write-Host "  $_" }
-    
-    Print-Info "Building static binary..."
-    $env:CGO_ENABLED = "0"
-    $env:GOOS = "windows"
-    $env:GOARCH = "amd64"
-    
-    & go build -ldflags="-s -w" -o "betterdesk-server.exe" . 2>&1 | ForEach-Object { Write-Host "  $_" }
-    
-    Set-Location $currentDir
-    
-    $outputBinary = Join-Path $script:GO_SERVER_SOURCE "betterdesk-server.exe"
-    if (Test-Path $outputBinary) {
-        $size = [math]::Round((Get-Item $outputBinary).Length / 1MB, 2)
-        Print-Success "Build successful: betterdesk-server.exe ($size MB)"
-        return $true
-    } else {
-        Print-Error "Build failed - binary not created"
-        return $false
-    }
-}
-
-#===============================================================================
-# Binary Verification Functions
-#===============================================================================
-
-function Verify-BinaryChecksum {
-    param(
-        [string]$FilePath,
-        [string]$ExpectedHash
-    )
-    
-    $fileName = Split-Path -Leaf $FilePath
-    
-    if (-not (Test-Path $FilePath)) {
-        Print-Error "File not found: $FilePath"
-        return $false
-    }
-    
-    Print-Info "Verifying $fileName..."
-    $actualHash = (Get-FileHash -Path $FilePath -Algorithm SHA256).Hash.ToUpper()
-    
-    if ($actualHash -eq $ExpectedHash.ToUpper()) {
-        Print-Success "$fileName`: SHA256 OK"
-        return $true
-    } else {
-        Print-Error "$fileName`: SHA256 MISMATCH!"
-        Print-Error "  Expected: $ExpectedHash"
-        Print-Error "  Got:      $actualHash"
-        return $false
-    }
-}
-
-function Verify-GoBinary {
-    Print-Step "Verifying Go server binary..."
-    
-    $goBinary = Join-Path $script:GO_SERVER_SOURCE "betterdesk-server.exe"
-    
-    if (-not (Test-Path $goBinary)) {
-        Print-Error "Go binary not found: $goBinary"
-        return $false
-    }
-    
-    # Verify it's a valid Windows executable
-    try {
-        $peHeader = [System.IO.File]::ReadAllBytes($goBinary)[0..1]
-        if ($peHeader[0] -eq 0x4D -and $peHeader[1] -eq 0x5A) {  # MZ header
-            $size = [math]::Round((Get-Item $goBinary).Length / 1MB, 2)
-            Print-Success "Go binary valid: betterdesk-server.exe ($size MB)"
-            return $true
-        }
-    } catch {
-        Print-Error "Failed to read binary: $_"
-        return $false
-    }
-    
-    Print-Error "Invalid binary format"
-    return $false
-}
-
-function Verify-Binaries {
-    Print-Step "Verifying BetterDesk binaries..."
-    
-    if ($script:SKIP_VERIFY) {
-        Print-Warning "Verification skipped (-SkipVerify)"
-        return $true
-    }
-    
-    # Check for Go binary first
-    $goBinary = Join-Path $script:GO_SERVER_SOURCE "betterdesk-server.exe"
-    
-    if (Test-Path $goBinary) {
-        return Verify-GoBinary
-    }
-    
-    # Fallback: Check legacy Rust binaries
-    $binSource = Join-Path $script:ScriptDir "hbbs-patch-v2"
-    $errors = 0
-    
-    $hbbsPath = Join-Path $binSource "hbbs-windows-x86_64.exe"
-    $hbbrPath = Join-Path $binSource "hbbr-windows-x86_64.exe"
-    
-    if (Test-Path $hbbsPath) {
-        if (-not (Verify-BinaryChecksum -FilePath $hbbsPath -ExpectedHash $script:HBBS_WINDOWS_X86_64_SHA256)) {
-            $errors++
-        }
-    }
-    
-    if (Test-Path $hbbrPath) {
-        if (-not (Verify-BinaryChecksum -FilePath $hbbrPath -ExpectedHash $script:HBBR_WINDOWS_X86_64_SHA256)) {
-            $errors++
-        }
-    }
-    
-    if ($errors -gt 0) {
-        Print-Error "Binary verification failed! $errors error(s)"
-        Print-Warning "Binaries may be corrupted or outdated."
-        if (-not $script:AUTO_MODE) {
-            if (-not (Confirm-Action "Continue anyway?")) {
-                return $false
-            }
-        } else {
-            return $false
-        }
-    } else {
-        Print-Success "All binaries verified"
-    }
-    
-    return $true
-}
-
-#===============================================================================
-# Installation Functions
-#===============================================================================
-
-function Install-Dependencies {
-    Print-Step "Checking dependencies..."
-    
-    # Check Python
-    $pythonCmd = Get-Command python -ErrorAction SilentlyContinue
-    if (-not $pythonCmd) {
-        Print-Warning "Python not found! Please install Python 3.8+ from python.org"
-        Print-Info "Download: https://www.python.org/downloads/"
-        if (-not $script:AUTO_MODE) {
-            Press-Enter
-        }
-        return $false
-    }
-    
-    $pythonVersion = python --version 2>&1
-    Print-Info "Python: $pythonVersion"
-    
-    # Check pip
-    try {
-        $null = python -m pip --version 2>&1
-        Print-Success "pip is available"
-    } catch {
-        Print-Warning "pip not found, attempting to install..."
-        python -m ensurepip --upgrade
-    }
-    
-    # Install bcrypt for password hashing (used by reset-password fallback)
-    Print-Step "Installing Python packages..."
-    python -m pip install --quiet --upgrade pip
-    python -m pip install --quiet bcrypt requests
-    
-    Print-Success "Dependencies installed"
-    return $true
-}
-
-#===============================================================================
-# Node.js Installation Functions
-#===============================================================================
-
-function Install-NodeJs {
-    Print-Step "Checking Node.js installation..."
-    
-    # Check if Node.js is already installed and version is sufficient
-    $nodeCmd = Get-Command node -ErrorAction SilentlyContinue
-    if ($nodeCmd) {
-        $nodeVersion = (node --version) -replace 'v', '' -split '\.' | Select-Object -First 1
-        if ([int]$nodeVersion -ge 22) {
-            Print-Success "Node.js v$(node --version) already installed"
-            return $true
-        } else {
-            Print-Warning "Node.js version $nodeVersion is too old (need 22+). Upgrading..."
-        }
-    }
-    
-    Print-Step "Installing Node.js 24 LTS..."
-    
-    # Try winget first (Windows 10/11)
-    $wingetCmd = Get-Command winget -ErrorAction SilentlyContinue
-    if ($wingetCmd) {
-        Print-Info "Installing via winget..."
-        try {
-            winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements --silent
-            # Refresh PATH
-            $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
-            Print-Success "Node.js installed via winget"
-            return $true
-        } catch {
-            Print-Warning "winget installation failed, trying alternative method..."
-        }
-    }
-    
-    # Try chocolatey
-    $chocoCmd = Get-Command choco -ErrorAction SilentlyContinue
-    if ($chocoCmd) {
-        Print-Info "Installing via Chocolatey..."
-        try {
-            choco install nodejs-lts -y
-            # Refresh PATH
-            $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
-            Print-Success "Node.js installed via Chocolatey"
-            return $true
-        } catch {
-            Print-Warning "Chocolatey installation failed..."
-        }
-    }
-    
-    # Manual download as last resort
-    Print-Warning "Automatic installation not available."
-    Print-Info "Please install Node.js 24 LTS manually from: https://nodejs.org/"
-    Print-Info "After installation, restart the script."
-    return $false
 }
 
 #===============================================================================
@@ -1517,12 +2543,6 @@ function Migrate-SQLiteToPostgreSQL {
     }
 }
 
-# The new web console (web-ui\, SvelteKit) is built on this server. Its
-# sources go to $CONSOLE_PATH\web-ui and the console serves web-ui\build
-# through WEB_UI_DIR in .env. The in-app updater keeps the same layout.
-$script:WEB_UI_NODE_MIN = [version]"22.17"   # engines.node in web-ui\package.json
-$script:WEB_UI_NPM = "npm@11.6.2"            # npm 10 (bundled with Node 22) can't resolve web-ui's dependency tree
-
 function Set-ConsoleEnvValue {
     param([string]$Key, [string]$Value)
     $envFile = Join-Path $script:CONSOLE_PATH ".env"
@@ -1542,440 +2562,7 @@ function Set-ConsoleEnvValue {
     [System.IO.File]::WriteAllLines($envFile, [string[]]$updated, (New-Object System.Text.UTF8Encoding($false)))
 }
 
-# Copy web-ui sources from -Source to $CONSOLE_PATH\web-ui and build them.
-# A failed build never stops the console: the previous build is put back
-# (or, without one, the old pages stay) and a warning names the log.
-# Returns $false when the new console was not built.
-function Install-WebUi {
-    param([string]$Source)
-
-    $dest = Join-Path $script:CONSOLE_PATH "web-ui"
-    $buildDir = Join-Path $dest "build"
-    $prevDir = Join-Path $dest ".build-prev"
-    $dataDir = Join-Path $script:CONSOLE_PATH "data"
-    $log = Join-Path $dataDir "web-ui-build.log"
-
-    if (-not (Test-Path (Join-Path $Source "package.json")) -or -not (Test-Path (Join-Path $Source "package-lock.json"))) {
-        Print-Info "No web-ui\ in $(Split-Path $Source -Parent); the new web console is not installed"
-        return $true
-    }
-
-    Print-Step "Installing the new web console (web-ui)..."
-    New-Item -ItemType Directory -Path $dest, $dataDir -Force | Out-Null
-
-    # An interrupted earlier build left the good copy in .build-prev
-    if ((Test-Path $prevDir) -and -not (Test-Path (Join-Path $buildDir "index.html"))) {
-        Remove-Item -Path $buildDir -Recurse -Force -ErrorAction SilentlyContinue
-        Rename-Item -Path $prevDir -NewName "build" -ErrorAction SilentlyContinue
-    }
-    # Replace the sources but keep the build dependencies and the current build.
-    # Generated folders and the test suites are not copied.
-    @(Get-ChildItem -Path $dest -Force) | Where-Object { @("node_modules", "build") -notcontains $_.Name } |
-        Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-    $skipDirs = @("build", ".svelte-kit", "test-results", "playwright-report", "coverage", "e2e", "tests") |
-        ForEach-Object { Join-Path $Source $_ }
-    & robocopy $Source $dest /E /XD node_modules @skipDirs /NFL /NDL /NJH /NJS /NP | Out-Null
-    if ($LASTEXITCODE -ge 8) {
-        Print-Warning "Could not copy web-ui sources to $dest (robocopy exit code $LASTEXITCODE); the new web console was not updated"
-        return $false
-    }
-    try {
-        Set-ConsoleEnvValue -Key "WEB_UI_DIR" -Value $buildDir
-    } catch {
-        Print-Warning "Could not set WEB_UI_DIR in $($script:CONSOLE_PATH)\.env: $($_.Exception.Message)"
-    }
-
-    $hadBuild = Test-Path (Join-Path $buildDir "index.html")
-    $keeps = if ($hadBuild) { "its previous build" } else { "the old pages" }
-
-    $nodeVersion = $null
-    try { $nodeVersion = [version]((& node --version) -replace '^v', '' -replace '-.*$', '') } catch { }
-    if (-not $nodeVersion -or $nodeVersion -lt $script:WEB_UI_NODE_MIN) {
-        Print-Warning "The new web console needs Node.js $($script:WEB_UI_NODE_MIN) or newer to build (found $(if ($nodeVersion) { $nodeVersion } else { 'none' })); skipping it"
-        Print-Info "The console keeps running with $keeps. Upgrade Node.js, then run the update again."
-        return $false
-    }
-
-    Print-Info "The build downloads its dependencies to $dest\node_modules (about 220 MB, kept for the next build)"
-    try {
-        $drive = New-Object System.IO.DriveInfo((Split-Path -Qualifier $dest))
-        $freeMb = [math]::Floor($drive.AvailableFreeSpace / 1MB)
-        if ($freeMb -lt 500) {
-            Print-Warning "Only $freeMb MB free on $($drive.Name); the build needs about 400 MB (dependencies and npm cache)"
-        }
-    } catch { }
-
-    Print-Step "Building the new web console (a few minutes; output in $log)..."
-    if (Test-Path $prevDir) { Remove-Item -Path $prevDir -Recurse -Force -ErrorAction SilentlyContinue }
-    # The static adapter empties build\ before it writes the new one, so a
-    # failure late in the build would leave it half written: keep a copy.
-    if ($hadBuild) {
-        try {
-            Copy-Item -Path $buildDir -Destination $prevDir -Recurse -Force -ErrorAction Stop
-        } catch {
-            Print-Warning "Could not copy the current web-ui build aside; not rebuilding it"
-            return $false
-        }
-    }
-
-    $built = $false
-    Push-Location $dest
-    try {
-        & npx -y $script:WEB_UI_NPM ci --include=dev --no-audit --no-fund 2>&1 |
-            ForEach-Object { "$_" } | Out-File -FilePath $log -Encoding UTF8
-        if ($LASTEXITCODE -eq 0) {
-            & npm run build 2>&1 | ForEach-Object { "$_" } | Out-File -FilePath $log -Append -Encoding UTF8
-            $built = ($LASTEXITCODE -eq 0) -and (Test-Path (Join-Path $buildDir "index.html"))
-        }
-    } catch {
-        "$_" | Out-File -FilePath $log -Append -Encoding UTF8
-    } finally {
-        Pop-Location
-    }
-
-    if ($built) {
-        Remove-Item -Path $prevDir -Recurse -Force -ErrorAction SilentlyContinue
-        Print-Success "New web console built ($buildDir)"
-        try {
-            $depsBytes = (Get-ChildItem -Path (Join-Path $dest "node_modules") -Recurse -File -Force -ErrorAction SilentlyContinue |
-                Measure-Object -Property Length -Sum).Sum
-            Print-Info "Its build dependencies use $([math]::Round($depsBytes / 1MB)) MB in $dest\node_modules. Only builds need them, and every update reinstalls them, so the folder can be deleted to free the space."
-        } catch { }
-        return $true
-    }
-
-    Remove-Item -Path $buildDir -Recurse -Force -ErrorAction SilentlyContinue
-    if ($hadBuild) {
-        try {
-            Rename-Item -Path $prevDir -NewName "build" -ErrorAction Stop
-        } catch {
-            Print-Warning "Could not put the previous web-ui build back from $prevDir"
-        }
-    }
-    Print-Warning "The new web console could not be built. The console keeps running with $keeps."
-    Print-Warning "Build log: $log"
-    Get-Content -Path $log -Tail 15 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "    $_" }
-    return $false
-}
-
-function Install-NodeJsConsole {
-    Print-Step "Installing Node.js Web Console..."
-    
-    # Install Node.js if not present
-    if (-not (Install-NodeJs)) {
-        Print-Error "Cannot proceed without Node.js"
-        return $false
-    }
-    
-    # Create directory
-    if (-not (Test-Path $script:CONSOLE_PATH)) {
-        New-Item -ItemType Directory -Path $script:CONSOLE_PATH -Force | Out-Null
-    }
-    
-    # Check for web-nodejs folder first, then web folder with server.js
-    $sourceFolder = $null
-    $webNodejsPath = Join-Path $script:ScriptDir "web-nodejs"
-    $webPath = Join-Path $script:ScriptDir "web"
-    
-    if (Test-Path (Join-Path $webNodejsPath "server.js")) {
-        $sourceFolder = $webNodejsPath
-        Print-Info "Found Node.js console in web-nodejs/"
-    } elseif (Test-Path (Join-Path $webPath "server.js")) {
-        $sourceFolder = $webPath
-        Print-Info "Found Node.js console in web/"
-    } else {
-        Print-Error "Node.js web console not found!"
-        Print-Info "Expected: $webNodejsPath\server.js or $webPath\server.js"
-        return $false
-    }
-    
-    # Copy web files (wildcard skips dotfiles — .env.example is required by merge-env.js, #166)
-    Copy-Item -Path "$sourceFolder\*" -Destination $script:CONSOLE_PATH -Recurse -Force
-    $envExampleSrc = Join-Path $sourceFolder ".env.example"
-    if (Test-Path $envExampleSrc) {
-        Copy-Item -Path $envExampleSrc -Destination (Join-Path $script:CONSOLE_PATH ".env.example") -Force
-    }
-    $versionSrc = Join-Path $script:ScriptDir "VERSION"
-    if (Test-Path $versionSrc) {
-        Copy-Item -Path $versionSrc -Destination (Join-Path $script:CONSOLE_PATH "VERSION") -Force -ErrorAction SilentlyContinue
-    }
-    $remoteGatewaySrc = Join-Path $script:ScriptDir "remote-gateway"
-    if (Test-Path $remoteGatewaySrc) {
-        Copy-Item -Path $remoteGatewaySrc -Destination (Join-Path $script:CONSOLE_PATH "remote-gateway") -Recurse -Force
-        Print-Info "Installed RDP/VNC gateway module contract"
-    }
-    
-    # Install npm dependencies
-    Print-Step "Installing npm dependencies..."
-    Push-Location $script:CONSOLE_PATH
-    try {
-        $npmOutput = npm install --production 2>&1
-        $npmOutput | ForEach-Object { Write-Host "[npm] $_" }
-        if ($LASTEXITCODE -ne 0) {
-            Print-Error "npm install failed (exit code: $LASTEXITCODE)"
-            Print-Info "Check npm output above for details"
-            Pop-Location
-            return $false
-        }
-
-        # Best-effort install of node-pty for Server Management terminal (BETA).
-        # Optional native module — falls back to pipe spawn if build fails.
-        Print-Step "Installing optional node-pty (Server Management terminal - BETA)..."
-        $ptyOutput = npm install --no-audit --no-fund --no-save node-pty 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            Print-Success "node-pty installed (real PTY available)"
-        } else {
-            Print-Warning "node-pty install failed - Server Management terminal will use pipe fallback"
-            $ptyOutput | Select-Object -Last 5 | ForEach-Object { Write-Host "[node-pty] $_" }
-        }
-        
-        # Fresh install only when no existing panel state (issue #158).
-        $dataDir = Join-Path $script:CONSOLE_PATH "data"
-        if (-not (Test-Path $dataDir)) {
-            New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
-        }
-
-        $envFile = Join-Path $script:CONSOLE_PATH ".env"
-        $authDbPath = Join-Path $dataDir "auth.db"
-        $isFresh = (-not (Test-Path $envFile)) -and (-not (Test-Path $authDbPath))
-
-        if ($isFresh) {
-            if (Test-Path $authDbPath) {
-                Print-Info "Removing old auth database (fresh install)..."
-                Remove-Item -Force -Path $authDbPath, "$authDbPath-wal", "$authDbPath-shm" -ErrorAction SilentlyContinue
-            }
-            if ($env:ADMIN_PASSWORD) {
-                Print-Info "Using custom admin password from ADMIN_PASSWORD env var"
-            }
-            New-Item -ItemType File -Path (Join-Path $dataDir ".force_password_update") -Force | Out-Null
-        } else {
-            Print-Info "Update mode: preserving auth database and panel passwords"
-        }
-
-        if (-not (Merge-ConsoleEnv -FreshInstall:$isFresh)) {
-            Pop-Location
-            return $false
-        }
-
-        $nodejsAdminPassword = $env:ADMIN_PASSWORD
-        if (-not $nodejsAdminPassword -and (Test-Path $envFile)) {
-            $apLine = Select-String -Path $envFile -Pattern '^DEFAULT_ADMIN_PASSWORD=' -SimpleMatch | Select-Object -First 1
-            $nodejsAdminPassword = if ($apLine) { ($apLine.Line -split '=', 2)[1].Trim() } else { "" }
-        }
-
-        if ($script:USE_POSTGRESQL) {
-            Print-Info "Database: PostgreSQL"
-        } else {
-            Print-Info "Database: SQLite"
-        }
-
-        # Persist credentials only when explicitly requested (fresh install).
-        if ($script:STORE_ADMIN_CREDENTIALS -and $isFresh -and $nodejsAdminPassword) {
-            $credsFile = Join-Path $dataDir ".admin_credentials"
-            $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-            @("Admin Username: admin", "Admin Password: $nodejsAdminPassword", "Generated by: BetterDesk installer", "Timestamp: $timestamp") | Out-File -FilePath $credsFile -Encoding UTF8
-        }
-
-        # The new web console; a failed build leaves the old pages in place
-        $null = Install-WebUi -Source (Join-Path $script:ScriptDir "web-ui")
-
-        $script:CONSOLE_TYPE = "nodejs"
-        Print-Success "Node.js Web Console installed"
-        return $true
-    } catch {
-        Print-Error "Failed to install npm dependencies: $_"
-        return $false
-    } finally {
-        Pop-Location
-    }
-}
-
 # Install-FlaskConsole removed in v2.3.0 - Flask support deprecated
-
-function Migrate-Console {
-    param(
-        [string]$FromType,
-        [string]$ToType
-    )
-    
-    Print-Step "Migrating from $FromType to $ToType..."
-    
-    # Backup existing console
-    $backupPath = Join-Path $script:BACKUP_DIR "console_${FromType}_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
-    if (-not (Test-Path $backupPath)) {
-        New-Item -ItemType Directory -Path $backupPath -Force | Out-Null
-    }
-    
-    # Backup user database (auth.db) if exists
-    $authDb = Join-Path $script:CONSOLE_PATH "data\auth.db"
-    if (Test-Path $authDb) {
-        Copy-Item -Path $authDb -Destination $backupPath
-        Print-Info "Backed up user database"
-    }
-    
-    # Backup .env if exists
-    $envFile = Join-Path $script:CONSOLE_PATH ".env"
-    if (Test-Path $envFile) {
-        Copy-Item -Path $envFile -Destination $backupPath
-    }
-    
-    # Stop old console service/task
-    Stop-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue -Force
-    Stop-ScheduledTask -TaskName $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
-    
-    # Remove old console specific files
-    $venvPath = Join-Path $script:CONSOLE_PATH "venv"
-    $nodeModulesPath = Join-Path $script:CONSOLE_PATH "node_modules"
-    if (Test-Path $venvPath) { Remove-Item -Path $venvPath -Recurse -Force }
-    if (Test-Path $nodeModulesPath) { Remove-Item -Path $nodeModulesPath -Recurse -Force }
-    
-    Print-Success "Old $FromType console backed up to $backupPath"
-}
-
-function Install-Console {
-    # Always install Node.js console (Flask removed in v2.3.0)
-    Print-Info "Installing Node.js web console..."
-    
-    # Check for existing Flask console and migrate
-    if (Test-Path $script:CONSOLE_PATH) {
-        if ((Test-Path (Join-Path $script:CONSOLE_PATH "app.py")) -and -not (Test-Path (Join-Path $script:CONSOLE_PATH "server.js"))) {
-            Print-Warning "Legacy Flask console detected at $($script:CONSOLE_PATH)"
-            if (-not $script:AUTO_MODE) {
-                if (Confirm-Action "Migrate from Flask to Node.js?") {
-                    Migrate-Console -FromType "flask" -ToType "nodejs"
-                } else {
-                    Print-Info "Flask is deprecated. Installing Node.js alongside..."
-                }
-            } else {
-                Print-Info "Auto mode: Migrating from Flask to Node.js"
-                Migrate-Console -FromType "flask" -ToType "nodejs"
-            }
-        }
-    }
-    
-    return Install-NodeJsConsole
-}
-
-function Install-Binaries {
-    param(
-        [switch]$ForceRecompile
-    )
-    
-    Print-Step "Installing BetterDesk Go Server..."
-    
-    # Create directory
-    if (-not (Test-Path $script:RUSTDESK_PATH)) {
-        New-Item -ItemType Directory -Path $script:RUSTDESK_PATH -Force | Out-Null
-    }
-    
-    # Check for Go server binary
-    $goBinaryPath = Join-Path $script:GO_SERVER_SOURCE "betterdesk-server.exe"
-    $needCompile = $false
-    
-    if (-not (Test-Path $goBinaryPath)) {
-        $needCompile = $true
-        Print-Info "Pre-compiled binary not found, attempting to compile..."
-    } elseif ($ForceRecompile) {
-        # During UPDATE: check if any .go source file is newer than the binary
-        $binaryTime = (Get-Item $goBinaryPath).LastWriteTime
-        $newerSource = Get-ChildItem -Path $script:GO_SERVER_SOURCE -Filter "*.go" -Recurse |
-            Where-Object { $_.LastWriteTime -gt $binaryTime } |
-            Select-Object -First 1
-        if ($newerSource) {
-            $needCompile = $true
-            Print-Info "Source code updated since last build, recompiling..."
-        } else {
-            Print-Info "Binary is up-to-date with source code"
-        }
-    }
-    
-    if ($needCompile) {
-        # Check if Go is installed
-        if (-not (Test-GoInstalled)) {
-            Print-Info "Installing Go toolchain..."
-            if (-not (Install-Golang)) {
-                Print-Error "Failed to install Go toolchain"
-                return $false
-            }
-        }
-        
-        # Compile Go server
-        if (-not (Compile-GoServer)) {
-            Print-Error "Failed to compile Go server"
-            return $false
-        }
-    } else {
-        Print-Info "Using existing Go server binary"
-    }
-    
-    # Verify binary
-    if (-not (Verify-Binaries)) {
-        Print-Error "Aborting installation due to verification failure"
-        return $false
-    }
-    
-    # Stop services and kill processes (prevents file locking)
-    Print-Info "Stopping services before binary installation..."
-    Stop-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue -Force
-    Stop-Service -Name $script:HBBS_SERVICE -ErrorAction SilentlyContinue -Force
-    Stop-Service -Name $script:HBBR_SERVICE -ErrorAction SilentlyContinue -Force
-    Stop-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue
-    Stop-ScheduledTask -TaskName $script:HBBS_SERVICE -ErrorAction SilentlyContinue
-    Stop-ScheduledTask -TaskName $script:HBBR_SERVICE -ErrorAction SilentlyContinue
-    
-    # Kill any remaining processes
-    Get-Process -Name "betterdesk-server" -ErrorAction SilentlyContinue | Stop-Process -Force
-    Get-Process -Name "hbbs" -ErrorAction SilentlyContinue | Stop-Process -Force
-    Get-Process -Name "hbbr" -ErrorAction SilentlyContinue | Stop-Process -Force
-    Start-Sleep -Seconds 2
-    
-    # Target path
-    $serverTarget = Join-Path $script:RUSTDESK_PATH "betterdesk-server.exe"
-    
-    # Verify file is not locked
-    if (Test-Path $serverTarget) {
-        try {
-            $stream = [System.IO.File]::Open($serverTarget, 'Open', 'ReadWrite', 'None')
-            $stream.Close()
-        } catch {
-            Print-Warning "File $serverTarget is still locked, waiting..."
-            Start-Sleep -Seconds 3
-            Get-Process -Name "betterdesk-server" -ErrorAction SilentlyContinue | Stop-Process -Force
-        }
-    }
-    
-    # Copy binary
-    Copy-Item -Path $goBinaryPath -Destination $serverTarget -Force
-    Print-Success "Installed betterdesk-server.exe (Go: signal + relay + API)"
-    
-    Print-Success "BetterDesk Go Server v$script:VERSION installed"
-    return $true
-}
-
-function Update-EnvForTLS {
-    param(
-        [string]$CertPath,
-        [string]$KeyPath,
-        [bool]$UpdateApiUrls = $false
-    )
-    $envFile = Join-Path $script:CONSOLE_PATH ".env"
-    if (Test-Path $envFile) {
-        $content = Get-Content $envFile -Raw
-        $content = $content -replace 'HTTPS_ENABLED=.*', 'HTTPS_ENABLED=true'
-        $content = $content -replace 'SSL_CERT_PATH=.*', "SSL_CERT_PATH=$CertPath"
-        $content = $content -replace 'SSL_KEY_PATH=.*', "SSL_KEY_PATH=$KeyPath"
-        # Internal Go API URLs must stay HTTP for RustDesk client compatibility.
-        $content = $content -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
-        $content = $content -replace 'BETTERDESK_API_URL=https://localhost', 'BETTERDESK_API_URL=http://localhost'
-        if ($content -match 'NODE_EXTRA_CA_CERTS=') {
-            $content = $content -replace 'NODE_EXTRA_CA_CERTS=.*', "NODE_EXTRA_CA_CERTS=$CertPath"
-        } else {
-            $content = $content.TrimEnd() + "`nNODE_EXTRA_CA_CERTS=$CertPath`n"
-        }
-        Set-Content -Path $envFile -Value $content -NoNewline
-        Print-Info "Updated .env with HTTPS configuration"
-    }
-}
 
 function Generate-SSLCertificates {
     Print-Step "Generating self-signed TLS certificates..."
@@ -2030,7 +2617,7 @@ function Generate-SSLCertificates {
         # Clean up certificate from store
         Remove-Item "Cert:\LocalMachine\My\$($cert.Thumbprint)" -ErrorAction SilentlyContinue
         
-        # Enable HTTPS in .env so Node.js console (admin panel port 5000/5443) uses TLS
+        # HTTPS for the web console (5443, a redirect on its HTTP port)
         Update-EnvForTLS -CertPath $certPath -KeyPath $keyPath
         
         Print-Success "Self-signed TLS certificate generated"
@@ -2096,724 +2683,6 @@ function Set-ServiceLeastPrivilege {
         }
     }
     Print-Info "Service $ServiceName runs under least-privilege account ($account)"
-}
-
-# Safe in-place patch of NSSM services (TLS API flags, HTTP URLs) without remove+install.
-function Patch-ServiceDefinitions {
-    $nssm = Get-Command nssm -ErrorAction SilentlyContinue
-    if (-not $nssm) {
-        $nssmLocal = Join-Path $script:ScriptDir "tools\nssm.exe"
-        if (Test-Path $nssmLocal) { $nssm = $nssmLocal } else { return }
-    }
-    $nssmExe = if ($nssm -is [System.Management.Automation.ApplicationInfo]) { $nssm.Source } else { $nssm }
-
-    $changed = $false
-    foreach ($svc in @($script:SERVER_SERVICE, $script:CONSOLE_SERVICE)) {
-        if (-not (Get-Service -Name $svc -ErrorAction SilentlyContinue)) { continue }
-        try {
-            if ($svc -eq $script:SERVER_SERVICE) {
-                $args = (& $nssmExe get $svc AppParameters 2>$null)
-                if ($args) {
-                    $clean = ($args -replace '\s-tls-api(=\S+)?', '' -replace '\s-tls-api-port(=\S+)?', '').Trim()
-                    if ($clean -ne $args.Trim()) {
-                        & $nssmExe set $svc AppParameters $clean | Out-Null
-                        Print-Info "Patched $svc AppParameters (removed incompatible TLS API flags)"
-                        $changed = $true
-                    }
-                }
-            }
-            $envRaw = (& $nssmExe get $svc AppEnvironmentExtra 2>$null)
-            if ($envRaw) {
-                $cleanEnv = $envRaw `
-                    -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost' `
-                    -replace 'BETTERDESK_API_URL=https://localhost', 'BETTERDESK_API_URL=http://localhost'
-                if ($cleanEnv -ne $envRaw) {
-                    & $nssmExe set $svc AppEnvironmentExtra $cleanEnv | Out-Null
-                    Print-Info "Patched $svc AppEnvironmentExtra (Go API URLs stay HTTP)"
-                    $changed = $true
-                }
-            }
-            if ($svc -eq $script:SERVER_SERVICE) {
-                # The Node console serves port 5000; the server's own console,
-                # on by default, stays off
-                $serverEnv = @(@(& $nssmExe get $svc AppEnvironmentExtra 2>$null) | Where-Object { $_ })
-                if (-not ($serverEnv | Where-Object { $_ -like 'CONSOLE_PORT=*' })) {
-                    & $nssmExe set $svc AppEnvironmentExtra ($serverEnv + 'CONSOLE_PORT=0') | Out-Null
-                    Print-Info "Patched $svc AppEnvironmentExtra (CONSOLE_PORT=0: the Node console serves the panel)"
-                    $changed = $true
-                }
-            }
-        } catch { }
-    }
-    if ($changed) {
-        Print-Success "Service definitions patched (custom NSSM settings preserved)"
-    }
-}
-
-# During UPDATE: create missing services; patch existing; optional full recreate.
-function Maybe-UpdateServices {
-    param(
-        [ValidateSet('default', 'recreate')]
-        [string]$Mode = 'default'
-    )
-
-    $needSetup = $false
-    if (-not (Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue)) {
-        $needSetup = $true
-    }
-    if ((Test-Path (Join-Path $script:CONSOLE_PATH "server.js")) -and
-        -not (Get-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue)) {
-        $needSetup = $true
-    }
-    if ($needSetup) {
-        Print-Info "Services missing — creating Windows services..."
-        Setup-Services
-        return
-    }
-
-    Patch-ServiceDefinitions
-
-    if ($Mode -eq 'recreate' -or $env:UPDATE_REFRESH_SERVICES -eq 'true') {
-        Print-Info "Recreating Windows services from template..."
-        Setup-Services
-        return
-    }
-
-    Print-Info "Services present — patched in place (Repair → Repair services for full recreate)"
-}
-
-function Setup-Services {
-    Print-Step "Configuring Windows services..."
-    
-    # SAFETY NET: Re-read database config from .env if script vars are empty.
-    # This prevents PostgreSQL -> SQLite regression during UPDATE/REPAIR
-    # if Preserve-DatabaseConfig was not called or vars were lost.
-    if (-not $script:USE_POSTGRESQL) {
-        $envFile = Join-Path $script:CONSOLE_PATH ".env"
-        if (Test-Path $envFile) {
-            $dtLine = Select-String -Path $envFile -Pattern '^DB_TYPE=' -SimpleMatch | Select-Object -First 1
-            $_envDbType = if ($dtLine) { ($dtLine.Line -split '=', 2)[1].Trim() } else { "" }
-            if ($_envDbType -eq "postgres") {
-                $duLine = Select-String -Path $envFile -Pattern '^DATABASE_URL=' -SimpleMatch | Select-Object -First 1
-                $_envDbUrl = if ($duLine) { ($duLine.Line -split '=', 2)[1].Trim() } else { "" }
-                if ($_envDbUrl) {
-                    $script:USE_POSTGRESQL = $true
-                    $script:POSTGRESQL_URI = $_envDbUrl
-                    Print-Info "Recovered PostgreSQL config from existing .env"
-                }
-            }
-        }
-    }
-    
-    # Resolve relay server IP according to RELAY_MODE / RELAY_SERVERS
-    # Interactive relay mode selection (skipped in auto mode or when explicitly set)
-    if (-not $script:AUTO_MODE -and -not $script:RELAY_SERVERS -and $script:RELAY_MODE -eq "auto") {
-        $localIp = Get-LocalIP
-        Write-Host ""
-        Print-Info "Relay server address controls how clients connect for remote sessions."
-        Write-Host "  1) Internet / public  (auto-detect public IP - default)" -ForegroundColor Cyan
-        Write-Host "  2) LAN only           (use this server's local IP: $localIp)" -ForegroundColor Cyan
-        Write-Host "  3) Custom address     (enter a specific IP or host)" -ForegroundColor Cyan
-        $relayChoice = Read-Host "  Select relay mode [1]"
-        switch ($relayChoice) {
-            "2" { $script:RELAY_MODE = "local" }
-            "3" { $script:RELAY_SERVERS = Read-Host "  Enter relay address (IP or host[:port])" }
-            default { $script:RELAY_MODE = "auto" }
-        }
-        Write-Host ""
-    }
-
-    $serverIP = Resolve-RelayIp
-    $connModeEnv = Resolve-ConnectionModeEnv
-
-    Print-Info "Relay server IP: $serverIP (mode: $(if ($script:RELAY_SERVERS) { 'fixed' } else { $script:RELAY_MODE }))"
-    Print-Info "API Port: $script:API_PORT"
-    
-    # Build database value (raw). The DSN is passed to the Go server through NSSM
-    # AppEnvironmentExtra (DB_URL env var), never as a CLI argument, so the
-    # PostgreSQL password does not appear in the process command line.
-    $dbValue = ""
-    if ($script:USE_POSTGRESQL -and $script:POSTGRESQL_URI) {
-        $dbValue = $script:POSTGRESQL_URI
-        Print-Info "Database: PostgreSQL"
-    } else {
-        $dbValue = $script:DB_PATH
-        Print-Info "Database: SQLite"
-    }
-    
-    # Check for NSSM (Non-Sucking Service Manager)
-    $nssmPath = Get-Command nssm -ErrorAction SilentlyContinue
-    
-    if (-not $nssmPath) {
-        # Try to find NSSM in the project directory
-        $nssmLocalPath = Join-Path $script:ScriptDir "tools\nssm.exe"
-        if (Test-Path $nssmLocalPath) {
-            $nssmPath = $nssmLocalPath
-        } else {
-            Print-Warning "NSSM not found. Services will be created as scheduled tasks."
-            Print-Info "For proper Windows services, install NSSM from https://nssm.cc"
-            
-            # Create scheduled tasks as fallback
-            Setup-ScheduledTasks -ServerIP $serverIP
-            return
-        }
-    }
-    
-    $nssm = if ($nssmPath -is [System.Management.Automation.ApplicationInfo]) { $nssmPath.Source } else { $nssmPath }
-    
-    # Remove legacy services
-    & $nssm stop $script:HBBS_SERVICE 2>$null
-    & $nssm remove $script:HBBS_SERVICE confirm 2>$null
-    & $nssm stop $script:HBBR_SERVICE 2>$null
-    & $nssm remove $script:HBBR_SERVICE confirm 2>$null
-    & $nssm stop $script:SERVER_SERVICE 2>$null
-    & $nssm remove $script:SERVER_SERVICE confirm 2>$null
-    & $nssm stop $script:CONSOLE_SERVICE 2>$null
-    & $nssm remove $script:CONSOLE_SERVICE confirm 2>$null
-    
-    # Remove legacy Flask API service (deprecated in v2.3.0)
-    & $nssm stop "BetterDeskAPI" 2>$null
-    & $nssm remove "BetterDeskAPI" confirm 2>$null
-    
-    Start-Sleep -Seconds 2
-    
-    # Generate shared API key for Node.js <-> Go server communication
-    $apiKeyPath = Join-Path $script:RUSTDESK_PATH ".api_key"
-    if (-not (Test-Path $apiKeyPath)) {
-        $apiKeyBytes = New-Object byte[] 32
-        $rng = New-Object System.Security.Cryptography.RNGCryptoServiceProvider
-        $rng.GetBytes($apiKeyBytes)
-        $rng.Dispose()
-        $apiKey = [System.BitConverter]::ToString($apiKeyBytes) -replace '-', '' | ForEach-Object { $_.ToLower() }
-        Set-Content -Path $apiKeyPath -Value $apiKey -NoNewline
-        Print-Info "Generated API key for console-server communication"
-    }
-    
-    # BetterDesk Go Server (single binary: signal + relay + API)
-    $serverExe = Join-Path $script:RUSTDESK_PATH "betterdesk-server.exe"
-    $signalRateLimit = if ($env:SIGNAL_RATE_LIMIT_PER_IP) { $env:SIGNAL_RATE_LIMIT_PER_IP } else { "20" }
-    if ($signalRateLimit -notmatch '^\d+$') {
-        Print-Warning "Invalid SIGNAL_RATE_LIMIT_PER_IP='$signalRateLimit'; using 20"
-        $signalRateLimit = "20"
-    }
-    $serverArgs = "-mode all -relay-servers $serverIP -key-file `"$script:RUSTDESK_PATH\id_ed25519`" -api-port $script:API_PORT -signal-rate-limit-per-ip $signalRateLimit"
-    
-    # Discover admin password to sync the Go server initial admin with the
-    # Node.js console. It is passed via NSSM AppEnvironmentExtra (INIT_ADMIN_PASS),
-    # never as a CLI argument, to keep it out of the process command line.
-    $adminPass = $null
-    $credsFile = Join-Path $script:CONSOLE_PATH "data\.admin_credentials"
-    if (Test-Path $credsFile) {
-        $credsContent = Get-Content $credsFile -Raw
-        if ($credsContent -match ':(.+)') {
-            $adminPass = $Matches[1].Trim()
-        }
-    }
-    if (-not $adminPass) {
-        $envFile = Join-Path $script:CONSOLE_PATH ".env"
-        if (Test-Path $envFile) {
-            $line = Get-Content $envFile | Where-Object { $_ -like 'DEFAULT_ADMIN_PASSWORD=*' } | Select-Object -First 1
-            if ($line) {
-                $adminPass = ($line -split '=', 2)[1].Trim()
-            }
-        }
-    }
-    
-    # Add TLS flags if certificates exist
-    $sslDir = Join-Path $script:RUSTDESK_PATH "ssl"
-    $certPath = Join-Path $sslDir "betterdesk.crt"
-    $keyPath = Join-Path $sslDir "betterdesk.key"
-    $apiScheme = "http"
-    $tlsIsSelfSigned = $false
-    if ((Test-Path $certPath) -and (Test-Path $keyPath)) {
-        # Check if certificate is self-signed
-        try {
-            $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($certPath)
-            $tlsIsSelfSigned = ($cert.Issuer -eq $cert.Subject) -or ($cert.Subject -like "*O=BetterDesk*")
-            $cert.Dispose()
-        } catch {
-            $tlsIsSelfSigned = $true
-        }
-        
-        # Enable TLS on signal/relay for client encryption.
-        # API port (21121) MUST stay HTTP -- RustDesk desktop clients always send
-        # plain HTTP to signal_port-2 and do not support HTTPS for API endpoints.
-        $serverArgs += " -tls-cert `"$certPath`" -tls-key `"$keyPath`" -tls-signal -tls-relay"
-        
-        # RustDesk clients always send HTTP to API port. API stays HTTP for all cert types.
-        if (-not $tlsIsSelfSigned) {
-            $apiScheme = "http"
-            Print-Info "TLS: Enabled for signal/relay (proper certificate, API stays HTTP)"
-        } else {
-            $apiScheme = "http"
-            Print-Info "TLS: Enabled for signal/relay (self-signed cert, API stays HTTP)"
-        }
-    } else {
-        Print-Info "TLS: Disabled (no certificate found)"
-    }
-    
-    & $nssm install $script:SERVER_SERVICE $serverExe $serverArgs
-    & $nssm set $script:SERVER_SERVICE AppDirectory $script:RUSTDESK_PATH
-    & $nssm set $script:SERVER_SERVICE DisplayName "BetterDesk Go Server v$script:VERSION"
-    & $nssm set $script:SERVER_SERVICE Description "BetterDesk Go Server (Signal + Relay + API)"
-    & $nssm set $script:SERVER_SERVICE Start SERVICE_AUTO_START
-    & $nssm set $script:SERVER_SERVICE AppStdout "$script:RUSTDESK_PATH\logs\server.log"
-    & $nssm set $script:SERVER_SERVICE AppStderr "$script:RUSTDESK_PATH\logs\server_error.log"
-    
-    # Server secrets via environment (DB_URL / INIT_ADMIN_PASS) instead of CLI
-    # arguments, so the PostgreSQL and admin passwords stay out of the process
-    # command line (NSSM stores these in the ACL-protected service registry key).
-    $serverEnvExtra = @("DB_URL=$dbValue")
-    if ($adminPass) { $serverEnvExtra += "INIT_ADMIN_PASS=$adminPass" }
-    if ($connModeEnv) { $serverEnvExtra += $connModeEnv }
-    # New installs default to "managed" enrollment so stock RustDesk clients are
-    # queued for operator approval. Existing installs are left untouched.
-    if ($script:FRESH_INSTALL) { $serverEnvExtra += "ENROLLMENT_MODE=managed" }
-    $serverEnvExtra += "MESH_ENABLED=Y"
-    # The Node console serves port 5000; the server's own console, on by
-    # default, stays off
-    $serverEnvExtra += "CONSOLE_PORT=0"
-    & $nssm set $script:SERVER_SERVICE AppEnvironmentExtra $serverEnvExtra
-    
-    # Privilege separation: drop the Go server to its low-privilege virtual account.
-    Set-ServiceLeastPrivilege -ServiceName $script:SERVER_SERVICE -NssmPath $nssm -Paths @($script:RUSTDESK_PATH)
-    
-    Print-Success "Created BetterDesk Go Server service"
-    
-    # Console Service (Web Interface) - Node.js only
-    if ($script:CONSOLE_TYPE -eq "nodejs") {
-        $nodeExe = (Get-Command node -ErrorAction SilentlyContinue).Source
-        if (-not $nodeExe) { $nodeExe = "node.exe" }
-        $serverJs = Join-Path $script:CONSOLE_PATH "server.js"
-        
-        & $nssm install $script:CONSOLE_SERVICE $nodeExe $serverJs
-        & $nssm set $script:CONSOLE_SERVICE AppDirectory $script:CONSOLE_PATH
-        & $nssm set $script:CONSOLE_SERVICE DisplayName "BetterDesk Web Console (Node.js)"
-        & $nssm set $script:CONSOLE_SERVICE Description "BetterDesk Web Management Console - Node.js"
-        & $nssm set $script:CONSOLE_SERVICE Start SERVICE_AUTO_START
-        $envExtra = @(
-            "NODE_ENV=production",
-            "RUSTDESK_DIR=$script:RUSTDESK_PATH",
-            "RUSTDESK_PATH=$script:RUSTDESK_PATH",
-            "KEYS_PATH=$script:RUSTDESK_PATH",
-            "DATA_DIR=$script:CONSOLE_PATH\data",
-            "DB_PATH=$script:RUSTDESK_PATH\db_v2.sqlite3",
-            "PUB_KEY_PATH=$script:RUSTDESK_PATH\id_ed25519.pub",
-            "API_KEY_PATH=$script:RUSTDESK_PATH\.api_key",
-            "HBBS_API_URL=${apiScheme}://localhost:$($script:API_PORT)/api",
-            "BETTERDESK_API_URL=${apiScheme}://localhost:$($script:API_PORT)/api",
-            "SERVER_BACKEND=betterdesk",
-            "PORT=5000",
-            "HOST=0.0.0.0",
-            "API_HOST=0.0.0.0"
-        )
-        # Propagate database type to NSSM environment
-        if ($script:USE_POSTGRESQL -and $script:POSTGRESQL_URI) {
-            $envExtra += "DB_TYPE=postgres"
-            $envExtra += "DATABASE_URL=$($script:POSTGRESQL_URI)"
-        } else {
-            $envExtra += "DB_TYPE=sqlite"
-        }
-        # Enable HTTPS on Node.js console when TLS certs are available (for browser access)
-        # This is separate from Go API TLS -- the web panel can serve HTTPS for browsers
-        if ((Test-Path $certPath) -and (Test-Path $keyPath)) {
-            $envExtra += "HTTPS_ENABLED=true"
-            $envExtra += "SSL_CERT_PATH=$certPath"
-            $envExtra += "SSL_KEY_PATH=$keyPath"
-            $envExtra += "RUSTDESK_API_TLS=$(if ($tlsIsSelfSigned) { 'false' } else { 'auto' })"
-        }
-        # Trust self-signed cert for localhost API communication
-        if ($tlsIsSelfSigned -and (Test-Path $certPath)) {
-            $envExtra += "NODE_EXTRA_CA_CERTS=$certPath"
-        }
-        & $nssm set $script:CONSOLE_SERVICE AppEnvironmentExtra $envExtra
-        & $nssm set $script:CONSOLE_SERVICE AppStdout "$script:CONSOLE_PATH\logs\console.log"
-        & $nssm set $script:CONSOLE_SERVICE AppStderr "$script:CONSOLE_PATH\logs\console_error.log"
-        
-        # Privilege separation: the console's virtual account needs read/write on
-        # its own dir and read access to the server keys / API key in RUSTDESK_PATH.
-        Set-ServiceLeastPrivilege -ServiceName $script:CONSOLE_SERVICE -NssmPath $nssm -Paths @($script:CONSOLE_PATH, $script:RUSTDESK_PATH)
-        
-        Print-Success "Created Node.js console service"
-    }
-    
-    # Create logs directories
-    New-Item -ItemType Directory -Path "$script:RUSTDESK_PATH\logs" -Force | Out-Null
-    New-Item -ItemType Directory -Path "$script:CONSOLE_PATH\logs" -Force | Out-Null
-    
-    Print-Success "Windows services configured"
-    Print-Info "Services: $script:SERVER_SERVICE, $script:CONSOLE_SERVICE"
-}
-
-function Get-GoBillingEnvLauncherLines {
-    param([string]$EnvFilePath)
-    $lines = @()
-    $keys = @(
-        'NTP_SERVERS',
-        'BILLING_MAX_CLOCK_SKEW_MS',
-        'BILLING_REQUIRE_SYNCED_CLOCK',
-        'BILLING_TRUST_OS_NTP'
-    )
-    if (-not $EnvFilePath -or -not (Test-Path $EnvFilePath)) {
-        return $lines
-    }
-    foreach ($rawLine in Get-Content $EnvFilePath) {
-        $line = $rawLine.Trim()
-        if (-not $line -or $line.StartsWith('#')) { continue }
-        $parts = $line -split '=', 2
-        if ($parts.Count -lt 2) { continue }
-        $key = $parts[0].Trim()
-        if ($keys -notcontains $key) { continue }
-        $value = $parts[1].Trim()
-        $lines += "set `"$key=$value`""
-    }
-    return $lines
-}
-
-function Setup-ScheduledTasks {
-    param([string]$ServerIP)
-    
-    Print-Step "Creating scheduled tasks as service alternative..."
-    
-    # Build database value (raw). Injected into the launcher below as an env var,
-    # never as a task action argument (those are visible in Task Scheduler).
-    $dbValue = ""
-    if ($script:USE_POSTGRESQL -and $script:POSTGRESQL_URI) {
-        $dbValue = $script:POSTGRESQL_URI
-    } else {
-        $dbValue = $script:DB_PATH
-    }
-    
-    # Remove existing tasks
-    Unregister-ScheduledTask -TaskName $script:SERVER_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
-    Unregister-ScheduledTask -TaskName $script:HBBS_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
-    Unregister-ScheduledTask -TaskName $script:HBBR_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
-    Unregister-ScheduledTask -TaskName $script:CONSOLE_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
-    
-    # BetterDesk Go Server Task
-    $serverExe = Join-Path $script:RUSTDESK_PATH "betterdesk-server.exe"
-    $signalRateLimit = if ($env:SIGNAL_RATE_LIMIT_PER_IP) { $env:SIGNAL_RATE_LIMIT_PER_IP } else { "20" }
-    if ($signalRateLimit -notmatch '^\d+$') {
-        Print-Warning "Invalid SIGNAL_RATE_LIMIT_PER_IP='$signalRateLimit'; using 20"
-        $signalRateLimit = "20"
-    }
-    $serverArgs = "-mode all -relay-servers $ServerIP -key-file `"$script:RUSTDESK_PATH\id_ed25519`" -api-port $script:API_PORT -signal-rate-limit-per-ip $signalRateLimit"
-    
-    # Discover admin password (synced with Node.js console). Injected via the
-    # protected launcher as INIT_ADMIN_PASS, never as a task action argument.
-    $adminPass = $null
-    $credsFile = Join-Path $script:CONSOLE_PATH "data\.admin_credentials"
-    if (Test-Path $credsFile) {
-        $credsContent = Get-Content $credsFile -Raw
-        if ($credsContent -match ':(.+)') {
-            $adminPass = $Matches[1].Trim()
-        }
-    }
-    if (-not $adminPass) {
-        $envFile = Join-Path $script:CONSOLE_PATH ".env"
-        if (Test-Path $envFile) {
-            $line = Get-Content $envFile | Where-Object { $_ -like 'DEFAULT_ADMIN_PASSWORD=*' } | Select-Object -First 1
-            if ($line) {
-                $adminPass = ($line -split '=', 2)[1].Trim()
-            }
-        }
-    }
-    
-    # Add TLS flags if certificates exist
-    $sslDir = Join-Path $script:RUSTDESK_PATH "ssl"
-    $certPath = Join-Path $sslDir "betterdesk.crt"
-    $keyPath = Join-Path $sslDir "betterdesk.key"
-    $tlsIsSelfSigned = $false
-    if ((Test-Path $certPath) -and (Test-Path $keyPath)) {
-        try {
-            $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($certPath)
-            $tlsIsSelfSigned = ($cert.Issuer -eq $cert.Subject) -or ($cert.Subject -like "*O=BetterDesk*")
-            $cert.Dispose()
-        } catch {
-            $tlsIsSelfSigned = $true
-        }
-        
-        $serverArgs += " -tls-cert `"$certPath`" -tls-key `"$keyPath`" -tls-signal -tls-relay"
-        if (-not $tlsIsSelfSigned) {
-            Print-Info "TLS: Enabled for signal/relay (proper certificate, API stays HTTP)"
-        } else {
-            Print-Info "TLS: Enabled for signal/relay (self-signed, API stays HTTP)"
-        }
-    }
-    
-    # Secrets (DB_URL / INIT_ADMIN_PASS) are injected via a launcher script that
-    # is restricted to Administrators/SYSTEM, never via the task action arguments
-    # (which are visible in Task Scheduler and the process command line).
-    $serverLauncher = Join-Path $script:RUSTDESK_PATH "start-betterdesk-server.cmd"
-    $launcherLines = @("@echo off")
-    $launcherLines += "set `"DB_URL=$dbValue`""
-    if ($adminPass) { $launcherLines += "set `"INIT_ADMIN_PASS=$adminPass`"" }
-    # New installs default to "managed" enrollment; existing installs untouched.
-    if ($script:FRESH_INSTALL) { $launcherLines += "set `"ENROLLMENT_MODE=managed`"" }
-    $billingEnvFile = Join-Path $script:CONSOLE_PATH ".env"
-    foreach ($billingLine in (Get-GoBillingEnvLauncherLines -EnvFilePath $billingEnvFile)) {
-        $launcherLines += $billingLine
-    }
-    # The Node console serves port 5000; the server's own console, on by
-    # default, stays off
-    $launcherLines += "set `"CONSOLE_PORT=0`""
-    $launcherLines += "`"$serverExe`" $serverArgs"
-    Set-Content -Path $serverLauncher -Value $launcherLines -Encoding ASCII
-    & icacls $serverLauncher /inheritance:r /grant:r "*S-1-5-32-544:F" "*S-1-5-18:F" 2>$null | Out-Null
-    $serverAction = New-ScheduledTaskAction -Execute "cmd.exe" -Argument "/c `"$serverLauncher`"" -WorkingDirectory $script:RUSTDESK_PATH
-    $serverTrigger = New-ScheduledTaskTrigger -AtStartup
-    $serverPrincipal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
-    $serverSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
-    Register-ScheduledTask -TaskName $script:SERVER_SERVICE -Action $serverAction -Trigger $serverTrigger -Principal $serverPrincipal -Settings $serverSettings -Description "BetterDesk Go Server (Signal + Relay + API)" | Out-Null
-    
-    # Console Task - Node.js
-    if ($script:CONSOLE_TYPE -eq "nodejs") {
-        $nodeExe = (Get-Command node -ErrorAction SilentlyContinue).Source
-        if (-not $nodeExe) { $nodeExe = "node.exe" }
-        $serverJs = Join-Path $script:CONSOLE_PATH "server.js"
-        $consoleAction = New-ScheduledTaskAction -Execute $nodeExe -Argument $serverJs -WorkingDirectory $script:CONSOLE_PATH
-        $consoleDesc = "BetterDesk Web Console (Node.js)"
-        Print-Info "Creating Node.js console task"
-    }
-    
-    $consoleTrigger = New-ScheduledTaskTrigger -AtStartup
-    $consolePrincipal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
-    $consoleSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
-    Register-ScheduledTask -TaskName $script:CONSOLE_SERVICE -Action $consoleAction -Trigger $consoleTrigger -Principal $consolePrincipal -Settings $consoleSettings -Description $consoleDesc | Out-Null
-    
-    Print-Success "Scheduled tasks created"
-}
-
-function Run-Migrations {
-    Print-Step "Running database migrations..."
-    
-    # Ensure database directory exists
-    $dbDir = Split-Path -Parent $script:DB_PATH
-    if (-not (Test-Path $dbDir)) {
-        New-Item -ItemType Directory -Path $dbDir -Force | Out-Null
-    }
-    
-    # Create database schema and add missing columns
-    $pythonScript = @"
-import sqlite3
-import os
-from datetime import datetime
-
-db_path = r'$($script:DB_PATH)'
-
-# Ensure db directory exists
-os.makedirs(os.path.dirname(db_path), exist_ok=True)
-
-conn = sqlite3.connect(db_path)
-cursor = conn.cursor()
-
-# Create peer table if not exists
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS peer (
-        guid BLOB PRIMARY KEY NOT NULL,
-        id VARCHAR(100) NOT NULL,
-        uuid BLOB NOT NULL,
-        pk BLOB NOT NULL,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        user BLOB,
-        status INTEGER DEFAULT 0,
-        note VARCHAR(300),
-        info TEXT NOT NULL,
-        last_online TEXT,
-        is_deleted INTEGER DEFAULT 0,
-        deleted_at TEXT,
-        updated_at TEXT,
-        previous_ids TEXT,
-        id_changed_at TEXT,
-        is_banned INTEGER DEFAULT 0
-    )
-''')
-
-# Create indexes
-cursor.execute('CREATE UNIQUE INDEX IF NOT EXISTS index_peer_id ON peer (id)')
-cursor.execute('CREATE INDEX IF NOT EXISTS index_peer_user ON peer (user)')
-cursor.execute('CREATE INDEX IF NOT EXISTS index_peer_created_at ON peer (created_at)')
-cursor.execute('CREATE INDEX IF NOT EXISTS index_peer_status ON peer (status)')
-
-# Create users table
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username VARCHAR(50) UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        role VARCHAR(20) NOT NULL DEFAULT 'viewer',
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        last_login DATETIME,
-        is_active INTEGER NOT NULL DEFAULT 1
-    )
-''')
-
-# Create sessions table
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS sessions (
-        token VARCHAR(64) PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        created_at DATETIME NOT NULL,
-        expires_at DATETIME NOT NULL,
-        last_activity DATETIME NOT NULL,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )
-''')
-
-# Create audit_log table
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS audit_log (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        action VARCHAR(50) NOT NULL,
-        device_id VARCHAR(100),
-        details TEXT,
-        ip_address VARCHAR(50),
-        timestamp DATETIME NOT NULL,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-    )
-''')
-
-# Create indexes for auth tables
-cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)')
-cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at)')
-cursor.execute('CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_id)')
-cursor.execute('CREATE INDEX IF NOT EXISTS idx_audit_device ON audit_log(device_id)')
-cursor.execute('CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp)')
-
-# Add missing columns to peer table
-columns_to_add = [
-    ('status', 'INTEGER DEFAULT 0'),
-    ('last_online', 'TEXT'),
-    ('is_deleted', 'INTEGER DEFAULT 0'),
-    ('deleted_at', 'TEXT'),
-    ('updated_at', 'TEXT'),
-    ('note', 'TEXT'),
-    ('previous_ids', 'TEXT'),
-    ('id_changed_at', 'TEXT'),
-    ('is_banned', 'INTEGER DEFAULT 0'),
-]
-
-cursor.execute("PRAGMA table_info(peer)")
-existing_columns = [col[1] for col in cursor.fetchall()]
-
-for col_name, col_def in columns_to_add:
-    if col_name not in existing_columns:
-        try:
-            cursor.execute(f"ALTER TABLE peer ADD COLUMN {col_name} {col_def}")
-            print(f"  Added column: {col_name}")
-        except Exception as e:
-            pass
-
-conn.commit()
-conn.close()
-print("Database migrations completed")
-"@
-    
-    $pythonScript | python
-    
-    Print-Success "Migrations completed"
-}
-
-function Create-AdminUser {
-    Print-Step "Creating admin user..."
-    
-    # Detect console type
-    $currentConsoleType = ""
-    if (Test-Path (Join-Path $script:CONSOLE_PATH "server.js")) {
-        $currentConsoleType = "nodejs"
-    } elseif (Test-Path (Join-Path $script:CONSOLE_PATH "app.py")) {
-        $currentConsoleType = "nodejs"  # Legacy Flask detected, treat as Node.js
-        Print-Warning "Legacy Flask console detected. Please migrate to Node.js."
-    } else {
-        Print-Warning "No console detected, skipping admin creation"
-        return $null
-    }
-    
-    # Node.js console - admin is created automatically on startup.
-    # Prefer plaintext credentials file (legacy), then .env fallback.
-    $adminPassword = $null
-    $dataDir = Join-Path $script:CONSOLE_PATH "data"
-    $credsFile = Join-Path $dataDir ".admin_credentials"
-    if (Test-Path $credsFile) {
-        $creds = Get-Content $credsFile -Raw
-        $adminPassword = ($creds -split ':')[1].Trim()
-    }
-    if (-not $adminPassword) {
-        $envFile = Join-Path $script:CONSOLE_PATH ".env"
-        if (Test-Path $envFile) {
-            $line = Get-Content $envFile | Where-Object { $_ -like 'DEFAULT_ADMIN_PASSWORD=*' } | Select-Object -First 1
-            if ($line) {
-                $adminPassword = ($line -split '=', 2)[1].Trim()
-            }
-        }
-    }
-
-    if ($adminPassword) {
-        
-        Write-Host ""
-        Write-Host "============================================================" -ForegroundColor Green
-        Write-Host "             PANEL LOGIN CREDENTIALS                        " -ForegroundColor Green
-        Write-Host "============================================================" -ForegroundColor Green
-        Write-Host "  Login:    " -NoNewline; Write-Host "admin" -ForegroundColor White
-        Write-Host "  Password: " -NoNewline; Write-Host $adminPassword -ForegroundColor White
-        Write-Host "============================================================" -ForegroundColor Green
-        Write-Host ""
-        
-        if ($script:STORE_ADMIN_CREDENTIALS) {
-            # Legacy behavior (opt-in): persist plaintext credentials file
-            $mainCredsFile = Join-Path $script:RUSTDESK_PATH ".admin_credentials"
-            "admin:$adminPassword" | Out-File -FilePath $mainCredsFile -Encoding UTF8
-            Print-Info "Credentials saved in: $mainCredsFile"
-        } else {
-            Print-Warning "Credentials are not persisted by default (security hardening)."
-        }
-        return $adminPassword
-    } else {
-        Print-Warning "No Node.js admin credentials found"
-        Print-Info "Use password reset option to set a new admin password"
-        return $null
-    }
-}
-
-function Start-Services {
-    Print-Step "Starting services..."
-    
-    # Try Go server service first, then legacy
-    $goServiceExists = Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue
-    $legacyServiceExists = Get-Service -Name $script:HBBS_SERVICE -ErrorAction SilentlyContinue
-    
-    if ($goServiceExists) {
-        # New Go single-binary architecture
-        Start-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue
-        Start-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
-    } elseif ($legacyServiceExists) {
-        # Legacy Rust architecture (hbbs + hbbr)
-        Start-Service -Name $script:HBBS_SERVICE -ErrorAction SilentlyContinue
-        Start-Service -Name $script:HBBR_SERVICE -ErrorAction SilentlyContinue
-        Start-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
-    } else {
-        # Try scheduled tasks (Go first, then legacy)
-        $goTaskExists = Get-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue
-        if ($goTaskExists) {
-            Start-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue
-        } else {
-            Start-ScheduledTask -TaskName $script:HBBS_SERVICE -ErrorAction SilentlyContinue
-            Start-ScheduledTask -TaskName $script:HBBR_SERVICE -ErrorAction SilentlyContinue
-        }
-        Start-ScheduledTask -TaskName $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
-    }
-    
-    Start-Sleep -Seconds 3
-    
-    Detect-Installation
-    
-    if ($script:SERVER_RUNNING -or ($script:HBBS_RUNNING -and $script:HBBR_RUNNING)) {
-        Print-Success "All services started"
-    } else {
-        Print-Warning "Some services may not be working properly"
-        Print-Info "Check logs in: $script:RUSTDESK_PATH\logs\"
-    }
 }
 
 function Stop-AllServices {
@@ -2924,302 +2793,9 @@ function Test-HttpEndpoint {
     return $false
 }
 
-function Start-ServicesWithVerification {
-    Print-Step "Starting services with health verification..."
-    
-    $hasErrors = $false
-    
-    # Check ports first
-    if (-not (Test-PortAvailable -Port 21116 -ServiceName "betterdesk-server")) {
-        Print-Error "Port 21116 (ID server) not available"
-        $hasErrors = $true
-    }
-    
-    if (-not (Test-PortAvailable -Port 21117 -ServiceName "betterdesk-server")) {
-        Print-Error "Port 21117 (relay) not available"  
-        $hasErrors = $true
-    }
-    
-    if ($hasErrors) {
-        Print-Error "Cannot start services - ports in use"
-        Print-Info "Use: Get-NetTCPConnection -State Listen | Where-Object LocalPort -in 21116,21117"
-        return $false
-    }
-    
-    # Start Go Server (single binary: signal + relay + API)
-    Print-Info "Starting $($script:SERVER_SERVICE) (Go server)..."
-    $goServiceExists = Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue
-    
-    if ($goServiceExists) {
-        Start-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue
-    } else {
-        # Try scheduled task
-        $goTaskExists = Get-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue
-        if ($goTaskExists) {
-            Start-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue
-        } else {
-            # Legacy fallback: start hbbs + hbbr separately
-            Print-Warning "Go server service not found, trying legacy hbbs/hbbr..."
-            $legacyService = Get-Service -Name $script:HBBS_SERVICE -ErrorAction SilentlyContinue
-            if ($legacyService) {
-                Start-Service -Name $script:HBBS_SERVICE -ErrorAction SilentlyContinue
-                Start-Service -Name $script:HBBR_SERVICE -ErrorAction SilentlyContinue
-            } else {
-                Start-ScheduledTask -TaskName $script:HBBS_SERVICE -ErrorAction SilentlyContinue
-                Start-ScheduledTask -TaskName $script:HBBR_SERVICE -ErrorAction SilentlyContinue
-            }
-        }
-    }
-    
-    Start-Sleep -Seconds 3
-    
-    if (-not (Test-ServiceHealth -ServiceName $script:SERVER_SERVICE -ExpectedPort 21116 -TimeoutSeconds 10)) {
-        Print-Error "Failed to start BetterDesk server"
-        return $false
-    }
-    Print-Success "BetterDesk server started and healthy (signal + relay + API)"
-    
-    # Inject shared API key into Go server database for Node.js <-> Go communication
-    $apiKeyPath = Join-Path $script:RUSTDESK_PATH ".api_key"
-    $goDbPath = Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"
-    if ((Test-Path $apiKeyPath) -and (Test-Path $goDbPath)) {
-        $apiKey = Get-Content $apiKeyPath -Raw
-        $apiKey = $apiKey.Trim()
-        try {
-            $env:BETTERDESK_GO_DB_PATH = $goDbPath
-            $env:BETTERDESK_API_KEY_TMP = $apiKey
-            $pythonScript = "import os, sqlite3; conn = sqlite3.connect(os.environ['BETTERDESK_GO_DB_PATH']); conn.execute('INSERT OR REPLACE INTO server_config (key, value) VALUES (?, ?)', ('api_key', os.environ['BETTERDESK_API_KEY_TMP'])); conn.commit(); conn.close()"
-            python -c $pythonScript 2>$null
-            Remove-Item Env:BETTERDESK_GO_DB_PATH -ErrorAction SilentlyContinue
-            Remove-Item Env:BETTERDESK_API_KEY_TMP -ErrorAction SilentlyContinue
-            if ($LASTEXITCODE -eq 0) {
-                Print-Info "API key synced to Go server database"
-            }
-        } catch {
-            # Non-critical: API key sync failed, Node.js will still work with JWT auth
-        }
-    }
-    
-    # Start Console
-    Print-Info "Starting $($script:CONSOLE_SERVICE)..."
-    $consoleService = Get-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
-    if ($consoleService) {
-        Start-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
-    } else {
-        Start-ScheduledTask -TaskName $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
-    }
-    
-    Start-Sleep -Seconds 2
-    $healthOk = $true
-    if (-not (Test-HttpEndpoint -Url "http://127.0.0.1:$($script:GO_API_PORT)/api/health")) {
-        $healthOk = $false
-    }
-    if (-not (Test-HttpEndpoint -Url "http://127.0.0.1:5000/health")) {
-        $healthOk = $false
-    }
-    $protocolScript = Join-Path $script:ScriptDir "scripts\installer-protocol-check.js"
-    $node = Get-Command node -ErrorAction SilentlyContinue
-    if ($node -and (Test-Path $protocolScript)) {
-        & $node.Source $protocolScript `
-            --api-url "http://127.0.0.1:$($script:GO_API_PORT)/api/health" `
-            --panel-url "http://127.0.0.1:5000/health" `
-            --port "127.0.0.1:21116" | ForEach-Object { Print-Info "$_" }
-        if ($LASTEXITCODE -ne 0) {
-            $healthOk = $false
-        }
-    }
-    if (-not $healthOk) {
-        Print-Error "Services are running but HTTP health verification failed"
-        return $false
-    }
-
-    Print-Success "All services started and verified"
-    
-    return $true
-}
-
 #=============================================================================
 # Minimal Installation Function (Go server only, no web console)
 #===============================================================================
-
-function Do-InstallMinimal {
-    Print-Header
-    Write-Host "========== MINIMAL INSTALLATION (Server Only) ==========" -ForegroundColor White
-    Write-Host ""
-    
-    Print-Info "BetterDesk Minimal installs the Go server binary only."
-    Print-Info "No web console, no Node.js, no npm dependencies."
-    Print-Info "Manage via REST API on port $script:API_PORT or TCP admin console."
-    Write-Host ""
-    
-    Detect-Installation
-    
-    if ($script:INSTALL_STATUS -eq "complete") {
-        Print-Warning "BetterDesk is already installed!"
-        if (-not $script:AUTO_MODE) {
-            if (-not (Confirm-Action "Do you want to reinstall in Minimal mode?")) {
-                return
-            }
-        }
-        Do-BackupSilent
-    }
-    
-    # Choose database type (SQLite or PostgreSQL)
-    Choose-DatabaseType
-    
-    # Gracefully stop existing services
-    Graceful-StopServices
-    
-    # Create installation directory
-    $installDir = $script:INSTALL_DIR
-    if (-not (Test-Path $installDir)) {
-        New-Item -ItemType Directory -Path $installDir -Force | Out-Null
-    }
-    
-    # Setup PostgreSQL if selected
-    if ($script:USE_POSTGRESQL) {
-        if (-not (Setup-PostgreSQLDatabase)) {
-            Print-Error "PostgreSQL setup failed"
-            return
-        }
-    }
-    
-    # Install Go server binary
-    Detect-Architecture
-    if (-not (Install-Binaries)) {
-        Print-Error "Binary installation failed"
-        return
-    }
-    
-    # Skip console installation entirely
-    Print-Info "Skipping web console (Minimal mode)"
-    
-    # Generate self-signed TLS certificates
-    Generate-SSLCertificates
-    
-    # Setup only the Go server service (no console service)
-    Setup-ServicesMinimal
-    
-    # Configure firewall rules (server ports only)
-    Print-Step "Configuring firewall rules..."
-    # Minimum set documented in docs/CONNECTION_PORTS.md: signal, relay, Client API.
-    # 21118/21119 are WebSocket ports and only needed when WebSocket Mode is used; the
-    # panel (5000/5443) is never opened here.
-    $ports = @([int]$script:GO_API_PORT, 21116, 21117)
-    foreach ($port in $ports) {
-        try {
-            New-NetFirewallRule -DisplayName "BetterDesk Port $port" -Direction Inbound -LocalPort $port -Protocol TCP -Action Allow -ErrorAction SilentlyContinue | Out-Null
-        } catch {}
-    }
-    # UDP for signal port
-    try {
-        New-NetFirewallRule -DisplayName "BetterDesk Signal UDP 21116" -Direction Inbound -LocalPort 21116 -Protocol UDP -Action Allow -ErrorAction SilentlyContinue | Out-Null
-    } catch {}
-    
-    # Start server
-    Print-Step "Starting BetterDesk server..."
-    $svcName = "BetterDeskServer"
-    if (Get-Service $svcName -ErrorAction SilentlyContinue) {
-        Start-Service $svcName -ErrorAction SilentlyContinue
-    } elseif (Get-Command nssm -ErrorAction SilentlyContinue) {
-        nssm start $svcName 2>$null
-    }
-    
-    Start-Sleep -Seconds 3
-    
-    # Verify
-    $svc = Get-Service $svcName -ErrorAction SilentlyContinue
-    if ($svc -and $svc.Status -eq "Running") {
-        Print-Success "BetterDesk server is running"
-    } else {
-        Print-Warning "BetterDesk server may not have started correctly"
-    }
-    
-    Write-Host ""
-    Print-Success "===== BETTERDESK MINIMAL INSTALLATION COMPLETE ====="
-    Write-Host ""
-    
-    $serverIP = Get-PublicIP
-    Write-Host "Server: $serverIP" -ForegroundColor Green
-    Write-Host "API: http://${serverIP}:$($script:API_PORT)" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "Ports: $($script:API_PORT) (API), 21115-21117 (Signal/Relay), 21118-21119 (WS)" -ForegroundColor Yellow
-    Write-Host "No web console installed. Use REST API or TCP admin for management." -ForegroundColor Yellow
-    Write-Host ""
-    
-    Press-Enter
-}
-
-function Setup-ServicesMinimal {
-    Print-Step "Setting up BetterDesk server service (Minimal mode)..."
-    
-    $goBinary = Join-Path $script:INSTALL_DIR "betterdesk-server.exe"
-    $keyDir = $script:INSTALL_DIR
-    $dbDir = $script:INSTALL_DIR
-    
-    # Build arguments
-    $serverArgs = "-key `"$keyDir`" -db `"$dbDir`""
-    
-    # Add relay servers (honors RELAY_MODE / RelayServers)
-    $serverIP = Resolve-RelayIp
-    if ($serverIP) {
-        $serverArgs += " -relay-servers $serverIP"
-    }
-    
-    # TLS configuration
-    $tlsCert = Join-Path $script:INSTALL_DIR "cert.pem"
-    $tlsKey = Join-Path $script:INSTALL_DIR "key.pem"
-    if ((Test-Path $tlsCert) -and (Test-Path $tlsKey)) {
-        $serverArgs += " -tls-cert `"$tlsCert`" -tls-key `"$tlsKey`" -tls-signal -tls-relay"
-    }
-    
-    # Remove old services
-    foreach ($oldSvc in @("RustDeskSignal", "RustDeskRelay", "BetterDeskAPI", "BetterDeskGo", "BetterDeskConsole")) {
-        if (Get-Service $oldSvc -ErrorAction SilentlyContinue) {
-            Stop-Service $oldSvc -Force -ErrorAction SilentlyContinue
-            if (Get-Command nssm -ErrorAction SilentlyContinue) {
-                nssm remove $oldSvc confirm 2>$null
-            } else {
-                sc.exe delete $oldSvc 2>$null
-            }
-        }
-    }
-    
-    # Install NSSM if not present
-    if (-not (Get-Command nssm -ErrorAction SilentlyContinue)) {
-        Install-NSSM
-    }
-    
-    # Create server service via NSSM
-    $svcName = "BetterDeskServer"
-    if (Get-Service $svcName -ErrorAction SilentlyContinue) {
-        nssm remove $svcName confirm 2>$null
-    }
-    
-    nssm install $svcName $goBinary $serverArgs
-    nssm set $svcName AppDirectory $script:INSTALL_DIR
-    nssm set $svcName DisplayName "BetterDesk Server (Minimal)"
-    nssm set $svcName Description "BetterDesk Go server - signal, relay, and API"
-    nssm set $svcName Start SERVICE_AUTO_START
-    nssm set $svcName AppStdout (Join-Path $script:INSTALL_DIR "server.log")
-    nssm set $svcName AppStderr (Join-Path $script:INSTALL_DIR "server-error.log")
-    nssm set $svcName AppRotateFiles 1
-    nssm set $svcName AppRotateBytes 10485760
-    
-    # Database environment
-    $envExtra = "SIGNAL_PORT=21116"
-    if ($script:USE_POSTGRESQL -and $script:POSTGRESQL_URI) {
-        $envExtra += "`nDB_URL=$($script:POSTGRESQL_URI)"
-    }
-    # Server only: the console in the binary is on by default and stays off
-    $envExtra += "`nCONSOLE_PORT=0"
-    nssm set $svcName AppEnvironmentExtra $envExtra
-    
-    # Privilege separation: drop the Go server to its low-privilege virtual account.
-    Set-ServiceLeastPrivilege -ServiceName $svcName -NssmPath "nssm" -Paths @($script:INSTALL_DIR)
-    
-    Print-Success "BetterDesk server service created (Minimal mode)"
-}
 
 #=============================================================================
 # Main Installation Function
@@ -3231,7 +2807,15 @@ function Do-Install {
     Write-Host ""
     
     Detect-Installation
-    
+
+    # An install with the Node.js console is upgraded in place, never
+    # installed over
+    if (Test-NodeEraInstall) {
+        Print-Warning "This server runs the Node.js web console."
+        Print-Info "The upgrade moves it into betterdesk-server and keeps all data."
+        return (Invoke-GoUpgrade)
+    }
+
     if ($script:INSTALL_STATUS -eq "complete") {
         Print-Warning "BetterDesk is already installed!"
         if (-not $script:AUTO_MODE) {
@@ -3241,20 +2825,18 @@ function Do-Install {
         }
         Do-BackupSilent
     }
-    
+
     # Treat as fresh only when no database exists yet. Reinstalls over an
     # existing database preserve the operator's current enrollment policy.
     $script:FRESH_INSTALL = -not $script:DATABASE_OK
-    
+
     Write-Host ""
-    Print-Info "Starting BetterDesk Console v$script:VERSION installation..."
+    Print-Info "Starting BetterDesk v$script:VERSION installation..."
     Write-Host ""
-    
+
     # Choose database type (SQLite or PostgreSQL)
     Choose-DatabaseType
-    
-    if (-not (Install-Dependencies)) { return }
-    
+
     # Setup PostgreSQL if selected
     if ($script:USE_POSTGRESQL) {
         if (-not (Setup-PostgreSQLDatabase)) {
@@ -3264,28 +2846,31 @@ function Do-Install {
     }
     
     if (-not (Install-Binaries)) { Print-Error "Binary installation failed"; return }
-    if (-not (Install-Console)) { Print-Error "Console installation failed"; return }
-    
+    if (-not (Setup-ConsoleHome)) { Print-Error "Setting up the console folder failed"; return }
+
     # Generate self-signed TLS certificates (default for fresh installs)
-    Generate-SSLCertificates
-    
+    Generate-SSLCertificates | Out-Null
+
     # Migrate existing SQLite data to PostgreSQL if applicable
     if ($script:USE_POSTGRESQL) {
         Migrate-SQLiteToPostgreSQL
     }
-    
+
     Setup-Services
-    Run-Migrations
     $adminPassword = Create-AdminUser
-    
+
     # Configure firewall rules
     Print-Step "Configuring Windows Firewall rules..."
     Configure-Firewall | Out-Null
-    
-    Start-Services
-    
+
+    $installOk = Start-ServicesWithVerification
+
     Write-Host ""
-    Print-Success "Installation completed successfully!"
+    if ($installOk) {
+        Print-Success "Installation completed successfully!"
+    } else {
+        Print-Warning "Installation finished but betterdesk-server does not answer; see $script:RUSTDESK_PATH\logs"
+    }
     Write-Host ""
     
     $serverIP = Get-PublicIP
@@ -3307,7 +2892,12 @@ function Do-Install {
     Write-Host "============================================================" -ForegroundColor Cyan
     Write-Host "              INSTALLATION INFO                             " -ForegroundColor Cyan
     Write-Host "============================================================" -ForegroundColor Cyan
-    Write-Host "  Panel Web:     " -NoNewline; Write-Host "http://${serverIP}:5000" -ForegroundColor White
+    $panelUrl = "off (minimal installation)"
+    if (-not $script:MINIMAL_MODE) {
+        $healthUrl = Get-ConsoleHealthUrl
+        if ($healthUrl) { $panelUrl = ($healthUrl -replace '/health$', '') -replace '127\.0\.0\.1', $serverIP }
+    }
+    Write-Host "  Panel Web:     " -NoNewline; Write-Host $panelUrl -ForegroundColor White
     Write-Host "  API Port:      " -NoNewline; Write-Host $script:API_PORT -ForegroundColor White
     Write-Host "  Server ID:     " -NoNewline; Write-Host $serverIP -ForegroundColor White
     Write-Host "  Database:      " -NoNewline; Write-Host $dbTypeInfo -ForegroundColor White
@@ -3322,8 +2912,8 @@ function Do-Install {
     Write-Host "    TCP    21115  - NAT type test"
     Write-Host "    TCP    21117  - Relay Server"
     Write-Host "    TCP    $($script:GO_API_PORT)  - Go API (default, direct)"
-    Write-Host "    TCP    5000   - Web Console (admin panel)"
-    Write-Host "    TCP    $($script:CLIENT_API_PORT)  - RustDesk client API (backward-compat proxy)"
+    Write-Host "    TCP    5000   - Web Console (admin panel; 5443 with HTTPS)"
+    Write-Host "    TCP    $($script:CLIENT_API_PORT)  - RustDesk client API (served by the web console)"
     Write-Host ""
     Write-Host "  RustDesk Client Configuration:" -ForegroundColor Yellow
     Write-Host "    ID Server:    $serverIP"
@@ -3339,7 +2929,7 @@ function Do-Install {
     Write-Host ""
     
     # Offer HTTPS Enterprise configuration for fresh installs
-    if (-not $script:AUTO_MODE) {
+    if (-not $script:AUTO_MODE -and $installOk -and -not $script:MINIMAL_MODE) {
         Write-Host ""
         Print-Info "Enterprise TLS enables HTTPS for panel/signal/relay; Go API stays HTTP for compatibility"
         Print-Info "Recommended for production deployments behind trusted operator access"
@@ -3348,10 +2938,11 @@ function Do-Install {
             Do-ConfigureSSL
         }
     }
-    
+
     if (-not $script:AUTO_MODE) {
         Press-Enter
     }
+    return $installOk
 }
 
 #===============================================================================
@@ -3374,68 +2965,6 @@ function Read-UpdateGitHubBranchFromEnv {
             $env:UPDATE_GITHUB_BRANCH = $script:UPDATE_GITHUB_BRANCH
         }
     }
-}
-
-function Resolve-UpdateRemoteSha {
-    param([Parameter(Mandatory = $true)][string]$CloneDir)
-
-    $remoteSha = ""
-    $git = Get-Command git -ErrorAction SilentlyContinue
-    if ($git -and (Test-Path (Join-Path $CloneDir ".git"))) {
-        $remoteSha = ((& git -C $CloneDir rev-parse HEAD 2>$null) | Select-Object -First 1).Trim()
-    }
-    if ($remoteSha -notmatch '^[0-9a-fA-F]{40}$' -and $git) {
-        $remoteSha = ((& git ls-remote `
-            "https://github.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO).git" `
-            "refs/heads/$($script:UPDATE_GITHUB_BRANCH)" 2>$null) |
-            Select-Object -First 1)
-        if ($remoteSha -is [array]) { $remoteSha = $remoteSha[0] }
-        if ($remoteSha) { $remoteSha = ($remoteSha -split '\s+')[0] }
-    }
-    if ($remoteSha -notmatch '^[0-9a-fA-F]{40}$') {
-        try {
-            $encodedBranch = [Uri]::EscapeDataString($script:UPDATE_GITHUB_BRANCH)
-            $apiUrl = "https://api.github.com/repos/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/commits?sha=$encodedBranch&per_page=1"
-            $commit = Invoke-RestMethod -Uri $apiUrl -Headers @{ Accept = "application/vnd.github+json" } -TimeoutSec 30
-            $firstCommit = if ($commit -is [array]) { $commit[0] } else { $commit }
-            $remoteSha = [string]$firstCommit.sha
-        } catch {
-            $remoteSha = ""
-        }
-    }
-
-    if ($remoteSha -match '^[0-9a-fA-F]{40}$') {
-        return $remoteSha
-    }
-    return $null
-}
-
-function Stage-SupportAgentSource {
-    param([Parameter(Mandatory = $true)][string]$CloneDir)
-
-    $base = Join-Path $script:CONSOLE_PATH "agent-source"
-    $sources = @(
-        @{ Name = "betterdesk-support-agent"; Required = "build.sh" },
-        @{ Name = "betterdesk-agent"; Required = "go.mod" },
-        @{ Name = "betterdesk-server"; Required = "go.mod" }
-    )
-    $staged = 0
-    foreach ($item in $sources) {
-        $source = Join-Path $CloneDir $item.Name
-        $destination = Join-Path $base $item.Name
-        if (-not (Test-Path (Join-Path $source $item.Required))) {
-            Print-Warning "Support-agent source missing: $source"
-            continue
-        }
-        New-Item -ItemType Directory -Path $base -Force | Out-Null
-        Remove-Item -Path $destination -Recurse -Force -ErrorAction SilentlyContinue
-        New-Item -ItemType Directory -Path $destination -Force | Out-Null
-        Get-ChildItem -Path $source -Force |
-            Where-Object { $_.Name -notin @(".git", "dist", "data") } |
-            Copy-Item -Destination $destination -Recurse -Force
-        $staged++
-    }
-    return ($staged -gt 0)
 }
 
 function Write-UpdateGitHubBranchToEnv {
@@ -3502,448 +3031,6 @@ function Switch-UpdateChannel {
     Press-Enter
 }
 
-function Invoke-TerminalProjectUpdate {
-    $script:TerminalUpdateExitCode = 2
-    $cliPath = Join-Path $script:CONSOLE_PATH "scripts\update-cli.js"
-    $node = Get-Command node -ErrorAction SilentlyContinue
-
-    if (-not $node -or -not (Test-Path $cliPath)) {
-        return
-    }
-
-    Print-Step "Running commit-aware project updater..."
-    Print-Info "Updater CLI: $cliPath"
-
-    $args = @()
-    if ($script:AUTO_MODE) { $args += "--yes" }
-
-    & $node.Source $cliPath @args
-    $script:TerminalUpdateExitCode = $LASTEXITCODE
-}
-
-# Pull latest project from GitHub and apply update to local installation.
-# Downloads latest code, rebuilds Go server, reinstalls Node.js console.
-# All local state (databases, keys, .env, auth.db) is preserved.
-function Update-FromGitHub {
-    $cloneDir = Join-Path $env:TEMP "betterdesk-update-$PID"
-    $script:ServerBuildFailed = $false
-    $previousGoSource = ""
-    $remoteSha = ""
-
-    Read-UpdateGitHubBranchFromEnv
-
-    # Clean up any leftover clone from a previous failed run
-    if (Test-Path $cloneDir) { Remove-Item -Recurse -Force $cloneDir -ErrorAction SilentlyContinue }
-
-    # ---- Step 1: Clone or download latest code ----
-    Print-Step "Downloading latest BetterDesk from GitHub..."
-    $gitCmd = Get-Command git -ErrorAction SilentlyContinue
-    $downloaded = $false
-
-    if ($gitCmd) {
-        $repoUrl = "https://github.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO).git"
-        try {
-            & git clone --depth 1 --single-branch --branch $script:UPDATE_GITHUB_BRANCH $repoUrl $cloneDir 2>$null
-            if ($LASTEXITCODE -eq 0) {
-                Print-Success "Repository cloned (branch: $($script:UPDATE_GITHUB_BRANCH))"
-                $downloaded = $true
-            }
-        } catch { }
-    }
-
-    if (-not $downloaded) {
-        # Fallback: download ZIP archive
-        $zipUrl = "https://github.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/archive/refs/heads/$($script:UPDATE_GITHUB_BRANCH).zip"
-        $zipPath = Join-Path $env:TEMP "betterdesk-update-$PID.zip"
-        Print-Info "git not available, downloading ZIP archive..."
-        try {
-            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-            $wc = New-Object System.Net.WebClient
-            $wc.DownloadFile($zipUrl, $zipPath)
-            $wc.Dispose()
-
-            New-Item -ItemType Directory -Path $cloneDir -Force | Out-Null
-            Expand-Archive -Path $zipPath -DestinationPath $cloneDir -Force
-
-            # GitHub ZIP extracts into a subdirectory like "BetterDesk-main/"
-            $subDir = Get-ChildItem -Path $cloneDir -Directory | Select-Object -First 1
-            if ($subDir) {
-                Get-ChildItem -Path $subDir.FullName | Move-Item -Destination $cloneDir -Force
-                Remove-Item -Path $subDir.FullName -Recurse -Force -ErrorAction SilentlyContinue
-            }
-
-            Remove-Item -Path $zipPath -Force -ErrorAction SilentlyContinue
-            Print-Success "Source downloaded and extracted"
-            $downloaded = $true
-        } catch {
-            Print-Error "Download failed: $($_.Exception.Message)"
-            Remove-Item -Path $zipPath -Force -ErrorAction SilentlyContinue
-            Remove-Item -Recurse -Force $cloneDir -ErrorAction SilentlyContinue
-            return $false
-        }
-    }
-
-    if (-not $downloaded) {
-        Print-Error "Failed to download source code"
-        return $false
-    }
-
-    # Validate downloaded source
-    $goModPath = Join-Path $cloneDir "betterdesk-server\go.mod"
-    $serverJsPath = Join-Path $cloneDir "web-nodejs\server.js"
-    if (-not (Test-Path $goModPath) -or -not (Test-Path $serverJsPath)) {
-        Print-Error "Downloaded source is incomplete or invalid"
-        Remove-Item -Recurse -Force $cloneDir -ErrorAction SilentlyContinue
-        return $false
-    }
-
-    $remoteSha = Resolve-UpdateRemoteSha -CloneDir $cloneDir
-    if (-not $remoteSha) {
-        Print-Error "Could not resolve the downloaded commit SHA; refusing an untracked update"
-        Remove-Item -Recurse -Force $cloneDir -ErrorAction SilentlyContinue
-        return $false
-    }
-    Print-Info "Downloaded commit: $($remoteSha.Substring(0, 7))"
-
-    # Read remote version
-    $remoteVersion = ""
-    $versionFile = Join-Path $cloneDir "VERSION"
-    if (Test-Path $versionFile) {
-        $remoteVersion = (Get-Content $versionFile -Raw).Trim()
-    }
-    if ($remoteVersion) {
-        Print-Info "Remote version: $remoteVersion"
-    }
-
-    # ---- Step 2: Update Go server source & compile ----
-    Print-Step "Updating Go server source..."
-    $goServerSource = $script:GO_SERVER_SOURCE
-    if (Test-Path $goServerSource) {
-        $previousGoSource = "$goServerSource.pre-update.$PID"
-        try {
-            Rename-Item -Path $goServerSource -NewName $previousGoSource -ErrorAction Stop
-        } catch {
-            $previousGoSource = ""
-            Print-Warning "Could not stage the previous Go source tree; update will continue in place"
-        }
-    }
-    $sourceDir = Join-Path $cloneDir "betterdesk-server"
-    # Copy the *contents* into a guaranteed-existing destination. Copying the
-    # directory itself would nest the new tree inside an existing
-    # $goServerSource if the rename above failed (e.g. a momentarily locked
-    # file), leaving the old inconsistent source in place and breaking
-    # `go build` with "undefined" errors (issue #158).
-    New-Item -ItemType Directory -Path $goServerSource -Force | Out-Null
-    Copy-Item -Path "$sourceDir\*" -Destination $goServerSource -Recurse -Force
-
-    # Restore any local data/ directory from old source
-    $oldDataDir = if ($previousGoSource) { Join-Path $previousGoSource "data" } else { "" }
-    if ($oldDataDir -and (Test-Path $oldDataDir)) {
-        Copy-Item -Path "$oldDataDir\*" -Destination (Join-Path $goServerSource "data") -Recurse -Force -ErrorAction SilentlyContinue
-    }
-    Print-Success "Go server source updated"
-
-    # Compile Go server
-    Print-Step "Building Go server..."
-    $goAvailable = Test-GoInstalled
-    if (-not $goAvailable) {
-        Print-Info "Installing Go toolchain..."
-        Install-Golang
-        $goAvailable = Test-GoInstalled
-    }
-
-    if ($goAvailable) {
-        if (Compile-GoServer) {
-            Print-Success "Go server compiled successfully"
-            $builtBinary = Join-Path $goServerSource "betterdesk-server.exe"
-            if (Test-Path $builtBinary) {
-                $targetBinary = Join-Path $script:RUSTDESK_PATH "betterdesk-server.exe"
-                if (Test-Path $targetBinary) {
-                    $ts = Get-Date -Format "yyyyMMddHHmmss"
-                    Copy-Item $targetBinary "$targetBinary.bak.$ts" -ErrorAction SilentlyContinue
-                }
-                Copy-Item $builtBinary $targetBinary -Force
-                Print-Success "Go server binary deployed to $($script:RUSTDESK_PATH)"
-            }
-        } else {
-            Print-Warning "Go server compilation failed -- keeping existing binary"
-            Print-Info "Use the panel Rebuild server binary button or option 7 (Build & deploy server)"
-            $script:ServerBuildFailed = $true
-        }
-    } else {
-        Print-Warning "Go toolchain not available -- server binary not updated"
-        Print-Info "Install Go manually from https://go.dev/dl/ and re-run update"
-        $script:ServerBuildFailed = $true
-    }
-
-    # ---- Step 3: Update Node.js console files ----
-    Print-Step "Updating Node.js web console..."
-
-    # Files/directories to preserve during console update
-    $preserveItems = @(".env", ".env.local", "data", "node_modules")
-    $preservedDir = Join-Path $env:TEMP "betterdesk-console-state-$PID"
-    New-Item -ItemType Directory -Path $preservedDir -Force | Out-Null
-
-    foreach ($item in $preserveItems) {
-        $src = Join-Path $script:CONSOLE_PATH $item
-        if (Test-Path $src) {
-            $dst = Join-Path $preservedDir $item
-            Copy-Item -Path $src -Destination $dst -Recurse -Force -ErrorAction SilentlyContinue
-        }
-    }
-
-    # Copy new console files
-    $consoleSrc = Join-Path $cloneDir "web-nodejs"
-    Copy-Item -Path "$consoleSrc\*" -Destination $script:CONSOLE_PATH -Recurse -Force
-    $envExampleSrc = Join-Path $consoleSrc ".env.example"
-    if (Test-Path $envExampleSrc) {
-        Copy-Item -Path $envExampleSrc -Destination (Join-Path $script:CONSOLE_PATH ".env.example") -Force
-    }
-
-    # Restore preserved state files
-    foreach ($item in $preserveItems) {
-        $src = Join-Path $preservedDir $item
-        if (Test-Path $src) {
-            $dst = Join-Path $script:CONSOLE_PATH $item
-            if (Test-Path $src -PathType Container) {
-                if (-not (Test-Path $dst)) { New-Item -ItemType Directory -Path $dst -Force | Out-Null }
-                Copy-Item -Path "$src\*" -Destination $dst -Recurse -Force -ErrorAction SilentlyContinue
-            } else {
-                Copy-Item -Path $src -Destination $dst -Force -ErrorAction SilentlyContinue
-            }
-        }
-    }
-    Remove-Item -Path $preservedDir -Recurse -Force -ErrorAction SilentlyContinue
-    Print-Success "Console files updated"
-
-    # Install npm dependencies
-    Print-Step "Installing npm dependencies..."
-    Push-Location $script:CONSOLE_PATH
-    try {
-        & npm install --production --no-audit --no-fund 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            Print-Success "npm dependencies installed"
-        } else {
-            Print-Warning "npm install had issues (non-critical)"
-        }
-    } catch {
-        Print-Warning "npm install failed (non-critical): $($_.Exception.Message)"
-    }
-    Pop-Location
-
-    # The new web console; a failed build keeps the previous one (non-critical)
-    $null = Install-WebUi -Source (Join-Path $cloneDir "web-ui")
-
-    # Merge any new .env keys from .env.example (preserve operator settings — issue #158)
-    Print-Step "Merging new .env configuration keys..."
-    if (-not (Merge-ConsoleEnv -FreshInstall:$false)) {
-        Print-Warning ".env merge skipped (merge-env.js unavailable)"
-    }
-
-    # ---- Step 4: Update installer scripts ----
-    Print-Step "Updating installer scripts..."
-    $scriptFiles = @(
-        "install.sh", "betterdesk.sh", "betterdesk.ps1", "betterdesk-docker.sh",
-        "docker-compose.yml", "docker-compose.single.yml", "docker-compose.quick.yml",
-        "docker-compose.quick.single.yml", "docker-compose.quick.single.macvlan.yml",
-        "Dockerfile", "Dockerfile.server", "Dockerfile.console", "docker-entrypoint.sh",
-        "docker\entrypoint.sh", "docker\server-entrypoint.sh", "docker\console-entrypoint.sh",
-        "docker\supervisord.conf", "scripts\installer-protocol-check.js", "VERSION"
-    )
-    $scriptsUpdated = 0
-    foreach ($sf in $scriptFiles) {
-        $src = Join-Path $cloneDir $sf
-        if (Test-Path $src) {
-            Copy-Item -Path $src -Destination (Join-Path $script:ScriptDir $sf) -Force -ErrorAction SilentlyContinue
-            $scriptsUpdated++
-        }
-    }
-    Print-Success "$scriptsUpdated installer files updated"
-
-    # Stage agent sources where the console build worker expects them. This
-    # keeps Windows update parity with the Linux installer and avoids a full
-    # repository checkout on the production host.
-    Print-Step "Staging support-agent source for Generator builds..."
-    if (Stage-SupportAgentSource -CloneDir $cloneDir) {
-        $dataDir = Join-Path $script:CONSOLE_PATH "data"
-        if (-not (Test-Path $dataDir)) { New-Item -ItemType Directory -Path $dataDir -Force | Out-Null }
-        $pending = @{ reason = "betterdesk.ps1 update"; at = (Get-Date).ToUniversalTime().ToString("o") } |
-            ConvertTo-Json -Compress
-        Set-Content -Path (Join-Path $dataDir ".agent_rebuild_pending") -Value $pending -Encoding UTF8
-        Print-Info "Generator bundles will rebuild after console restart"
-    } else {
-        Print-Warning "Support-agent source staging skipped"
-    }
-
-    if ($script:ServerBuildFailed) {
-        if ($previousGoSource -and (Test-Path $previousGoSource)) {
-            Remove-Item -Path $goServerSource -Recurse -Force -ErrorAction SilentlyContinue
-            try {
-                Rename-Item -Path $previousGoSource -NewName $goServerSource -ErrorAction Stop
-            } catch {
-                Print-Warning "Could not restore the previous Go source tree"
-            }
-        }
-        Remove-Item -Recurse -Force $cloneDir -ErrorAction SilentlyContinue
-        Print-Error "Go server binary was not rebuilt — update incomplete for server component"
-        return $false
-    }
-
-    # Only mark the update complete after the server build/deploy succeeded.
-    $dataDir = Join-Path $script:CONSOLE_PATH "data"
-    if (-not (Test-Path $dataDir)) { New-Item -ItemType Directory -Path $dataDir -Force | Out-Null }
-    Set-Content -Path (Join-Path $dataDir ".update_sha") -Value $remoteSha
-    Set-Content -Path (Join-Path $dataDir ".agent_source_sha") -Value $remoteSha
-    Remove-Item -Path (Join-Path $dataDir ".last_update_result.json") -Force -ErrorAction SilentlyContinue
-    Print-Info "SHA tracking updated: $($remoteSha.Substring(0, 7))"
-
-    if ($remoteVersion -and (Test-Path (Join-Path $cloneDir "VERSION"))) {
-        Copy-Item -Path (Join-Path $cloneDir "VERSION") -Destination (Join-Path $script:ScriptDir "VERSION") -Force -ErrorAction SilentlyContinue
-        Copy-Item -Path (Join-Path $cloneDir "VERSION") -Destination (Join-Path $script:CONSOLE_PATH "VERSION") -Force -ErrorAction SilentlyContinue
-    }
-    Remove-Item -Recurse -Force $cloneDir -ErrorAction SilentlyContinue
-    if ($previousGoSource) {
-        Remove-Item -Path $previousGoSource -Recurse -Force -ErrorAction SilentlyContinue
-    }
-    Print-Success "All project files updated from GitHub"
-    return $true
-}
-
-function Do-Update {
-    Print-Header
-    Write-Host "========== UPDATE ==========" -ForegroundColor White
-    Write-Host ""
-    
-    Detect-Installation
-    Test-ManagementCapabilities | Out-Null
-    
-    if ($script:INSTALL_STATUS -eq "none") {
-        Print-Error "BetterDesk is not installed!"
-        Print-Info "Use 'FRESH INSTALLATION' option"
-        Press-Enter
-        return
-    }
-    
-    # Detect Rust -> Go upgrade (major architecture change)
-    if ($script:SERVER_TYPE -eq "rust") {
-        Print-Warning "Legacy Rust server (hbbs/hbbr) detected!"
-        Print-Warning "Upgrading from Rust to Go server requires a FRESH INSTALLATION."
-        Print-Info "The Go server is a single binary replacing both hbbs and hbbr."
-        Print-Info "Your data (keys, database) will be preserved during migration."
-        Write-Host ""
-        if (-not $script:AUTO_MODE) {
-            if (Confirm-Action "Proceed with fresh installation (recommended)?") {
-                Do-Install
-                return
-            } else {
-                Print-Warning "Continuing with update -- legacy Rust binaries will NOT be replaced with Go server."
-            }
-        } else {
-            Print-Info "Auto mode: Redirecting to fresh installation for Rust -> Go migration"
-            Do-Install
-            return
-        }
-    }
-    
-    # CRITICAL: Preserve database configuration before reinstalling console
-    # This prevents PostgreSQL -> SQLite switch during updates
-    Preserve-DatabaseConfig
-
-    # ---- Update method selection ----
-    Read-UpdateGitHubBranchFromEnv
-    Print-Info "GitHub update branch: $($script:UPDATE_GITHUB_BRANCH)"
-
-    if ($script:AUTO_MODE) {
-        Print-Info "Auto mode: using GitHub pull update"
-    } else {
-        $items = @(
-            "Online update from GitHub`tDownload latest code + rebuild (recommended)",
-            "In-app updater`tBuilt-in Node.js commit-aware updater",
-            "Local update`tCopy files from this script's directory",
-            "Switch update channel`tChoose stable (main) or development (dev) branch",
-            "Back`tReturn to the main menu"
-        )
-        $returns = @("1", "2", "3", "4", "0")
-        Invoke-MenuChoose -Title "Update Method" -Subtitle "Online GitHub update is recommended" -Items $items -Returns $returns
-        $updateMethod = $script:MENU_CHOICE
-        if (-not $updateMethod) { $updateMethod = "1" }
-
-        switch ($updateMethod) {
-            "0" {
-                return
-            }
-            "4" {
-                Switch-UpdateChannel
-                return
-            }
-            "2" {
-                Invoke-TerminalProjectUpdate
-                if ($script:TerminalUpdateExitCode -eq 0) {
-                    Print-Success "Online project update completed"
-                } elseif ($script:TerminalUpdateExitCode -ne 2) {
-                    Print-Error "In-app update failed (exit code: $($script:TerminalUpdateExitCode))"
-                } else {
-                    Print-Error "In-app updater not available (Node.js or CLI script missing)"
-                }
-                Press-Enter
-                return
-            }
-            "3" {
-                # Legacy local update path
-                Print-Info "Using local files from: $($script:ScriptDir)"
-                Print-Info "Creating backup before update..."
-                Do-BackupSilent
-                Stop-AllServices
-                if (-not (Install-Binaries -ForceRecompile)) { Print-Error "Binary update failed"; return }
-                if (-not (Install-Console)) { Print-Error "Console update failed"; return }
-                Run-Migrations
-                Maybe-UpdateServices
-                Create-AdminUser | Out-Null
-                Start-Services
-                Print-Success "Local update completed!"
-                Press-Enter
-                return
-            }
-        }
-    }
-
-    # ---- GitHub Pull Update ----
-    Print-Info "Creating backup before update..."
-    Do-BackupSilent
-
-    # Stop services before updating files
-    Stop-AllServices
-
-    $result = Update-FromGitHub
-    if (-not $result) {
-        Print-Error "GitHub update failed"
-        Print-Info "Attempting to restart services with existing files..."
-        Start-Services
-        Press-Enter
-        return
-    }
-
-    # Run database migrations
-    Run-Migrations
-    
-    $svcMode = 'default'
-    if (-not $script:AUTO_MODE) {
-        Write-Host ""
-        $recreateSvc = Read-Host "Recreate Windows service definitions from installer template? [y/N]"
-        if ($recreateSvc -match '^(y|yes)$') { $svcMode = 'recreate' }
-    }
-
-    Maybe-UpdateServices -Mode $svcMode
-    
-    # Informational; panel passwords live in auth.db / PostgreSQL
-    Create-AdminUser | Out-Null
-    
-    Start-Services
-    
-    Print-Success "Update completed!"
-    Press-Enter
-}
-
 #===============================================================================
 # Repair Functions
 #===============================================================================
@@ -3987,99 +3074,6 @@ function Do-Repair {
     }
     
     Press-Enter
-}
-
-function Repair-Binaries {
-    Print-Step "Repairing BetterDesk server binaries..."
-
-    # The supported installer architecture uses one Go binary. Do not gate
-    # repairs on hbbs-patch-v2: those legacy RustDesk artifacts are absent from
-    # fresh Go installations and are not needed by betterdesk-server.exe.
-    $goSourceDir = $script:GO_SERVER_SOURCE
-    $goSourceBinary = Join-Path $goSourceDir "betterdesk-server.exe"
-    $installedGoBinary = Join-Path $script:RUSTDESK_PATH "betterdesk-server.exe"
-    $goSourceAvailable = (Test-Path $goSourceBinary) -or (Test-Path (Join-Path $goSourceDir "go.mod"))
-
-    if ($goSourceAvailable) {
-        if (-not (Install-Binaries -ForceRecompile)) {
-            Print-Error "Failed to compile or install betterdesk-server.exe"
-            return
-        }
-    } elseif (Test-Path $installedGoBinary) {
-        # A binary-only installation can still be repaired by validating and
-        # restarting it. Rebuilding requires the source tree or a later update.
-        try {
-            $header = [System.IO.File]::ReadAllBytes($installedGoBinary)[0..1]
-            if ($header[0] -ne 0x4D -or $header[1] -ne 0x5A) {
-                Print-Error "Invalid Windows executable: $installedGoBinary"
-                return
-            }
-        } catch {
-            Print-Error "Unable to validate $installedGoBinary`: $($_.Exception.Message)"
-            return
-        }
-        Print-Info "Validated existing Go server binary (source tree not present)"
-    } elseif ((Test-Path (Join-Path $script:RUSTDESK_PATH "hbbs.exe")) -and
-              (Test-Path (Join-Path $script:RUSTDESK_PATH "hbbr.exe"))) {
-        Print-Warning "Legacy RustDesk binaries detected; no Go source or Go binary is available."
-        Print-Info "Run an update or fresh Go installation to migrate this deployment."
-        if (-not (Start-ServicesWithVerification)) {
-            Print-Error "Legacy services failed to start after repair"
-            return
-        }
-        Print-Success "Legacy services verified; no Go binary was changed."
-        return
-    } else {
-        Print-Error "No BetterDesk server binary or source tree found."
-        Print-Info "Run a fresh installation or update before repairing binaries."
-        return
-    }
-
-    if (-not (Start-ServicesWithVerification)) {
-        Print-Error "Services failed to start after binary repair"
-        return
-    }
-
-    Print-Success "BetterDesk server binaries repaired and verified!"
-}
-
-function Repair-Database {
-    Print-Step "Repairing database..."
-    
-    Run-Migrations
-    
-    Print-Success "Database repaired"
-}
-
-function Repair-Services {
-    Print-Step "Repairing Windows services (enhanced v2.1.2)..."
-    
-    # Stop services first
-    Stop-AllServices
-    Start-Sleep -Seconds 2
-    
-    # Verify binaries exist (Go server: betterdesk-server.exe, fallback: legacy hbbs.exe)
-    $serverBinary = Join-Path $script:RUSTDESK_PATH "betterdesk-server.exe"
-    if (-not (Test-Path $serverBinary)) {
-        # Fallback to legacy Rust binary name
-        $serverBinary = Join-Path $script:RUSTDESK_PATH "hbbs.exe"
-        if (-not (Test-Path $serverBinary)) {
-            Print-Error "betterdesk-server.exe not found at $script:RUSTDESK_PATH"
-            Print-Info "Run 'Repair binaries' first"
-            return
-        }
-    }
-    
-    # Recreate services/tasks
-    Setup-Services
-    
-    # Start with verification
-    if (-not (Start-ServicesWithVerification)) {
-        Print-Error "Services failed to start after repair"
-        return
-    }
-    
-    Print-Success "Services repaired and verified!"
 }
 
 #===============================================================================
@@ -4161,7 +3155,8 @@ function Do-Validate {
     Write-Host "Checking services..." -ForegroundColor White
     Write-Host ""
     
-    $services = @($script:HBBS_SERVICE, $script:HBBR_SERVICE, $script:CONSOLE_SERVICE)
+    $services = @($script:SERVER_SERVICE)
+    if (-not (Test-GoOnlyInstall)) { $services += $script:CONSOLE_SERVICE }
     foreach ($service in $services) {
         Write-Host "  ${service}: " -NoNewline
         $svc = Get-Service -Name $service -ErrorAction SilentlyContinue
@@ -4193,13 +3188,14 @@ function Do-Validate {
     Write-Host "Checking ports..." -ForegroundColor White
     Write-Host ""
     
+    $consoleProcess = if (Test-GoOnlyInstall) { "betterdesk-server" } else { "node" }
     $ports = @(
         @{Port=[int]$script:GO_API_PORT; Desc="Go API"; Expected="betterdesk-server"},
-        @{Port=[int]$script:CLIENT_API_PORT; Desc="Client API proxy"; Expected="node"},
+        @{Port=[int]$script:CLIENT_API_PORT; Desc="Client API"; Expected=$consoleProcess},
         @{Port=21115; Desc="NAT Test"; Expected="hbbs"},
         @{Port=21116; Desc="ID Server"; Expected="hbbs"},
         @{Port=21117; Desc="Relay"; Expected="hbbr"},
-        @{Port=5000;  Desc="Web Console"; Expected="node"}
+        @{Port=5000;  Desc="Web Console"; Expected=$consoleProcess}
     )
     foreach ($p in $ports) {
         $status = Check-PortStatus -Port $p.Port -Protocol "TCP" -ExpectedService $p.Expected
@@ -4334,211 +3330,6 @@ function Do-BackupSilent {
 #===============================================================================
 # Password Reset Function
 #===============================================================================
-
-function Do-ResetPassword {
-    Print-Header
-    Write-Host "========== ADMIN PASSWORD RESET ==========" -ForegroundColor White
-    Write-Host ""
-    
-    # Detect console type
-    Detect-Installation
-    
-    if ($script:CONSOLE_TYPE -eq "none") {
-        Print-Error "No console installation detected"
-        Print-Info "Run installation first"
-        Press-Enter
-        return
-    }
-    
-    $items = @(
-        "Generate random password`tCreate a new strong password",
-        "Set custom password`tType the password yourself",
-        "Back`tReturn to the main menu"
-    )
-    $returns = @("1", "2", "0")
-    Invoke-MenuChoose -Title "Admin Password Reset" -Subtitle "Console type: Node.js" -Items $items -Returns $returns
-    $choice = $script:MENU_CHOICE
-    
-    $newPassword = $null
-    
-    switch ($choice) {
-        "1" { $newPassword = Generate-RandomPassword }
-        "2" { 
-            $newPassword = Read-Host "Enter new password (min 8 chars)"
-            if ($newPassword.Length -lt 8) {
-                Print-Error "Password too short!"
-                Press-Enter
-                return
-            }
-        }
-        "0" { return }
-        default { return }
-    }
-    
-    if (-not $newPassword) { return }
-    
-    $success = $false
-    
-    if ($script:CONSOLE_TYPE -eq "nodejs") {
-        # --- Hotfix: detect broken Go-first auth flow (commit 188991d) ---
-        $authServicePath = Join-Path $script:CONSOLE_PATH "services\authService.js"
-        if (Test-Path $authServicePath) {
-            $authContent = Get-Content $authServicePath -Raw -ErrorAction SilentlyContinue
-            if ($authContent -match 'const health = await checkGoServerHealth') {
-                Print-Warning "Detected broken authentication flow (Go-first delegation bug)"
-                Print-Info "Downloading fixed authService.js from GitHub..."
-                $fixUrl = "https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/web-nodejs/services/authService.js"
-                $tmpPath = "$authServicePath.tmp"
-                try {
-                    Invoke-WebRequest -Uri $fixUrl -OutFile $tmpPath -UseBasicParsing -ErrorAction Stop
-                    $tmpContent = Get-Content $tmpPath -Raw
-                    if ($tmpContent -match 'Step 1: Check local database FIRST') {
-                        Move-Item -Path $tmpPath -Destination $authServicePath -Force
-                        Print-Success "Fixed authentication flow (restored local-first login)"
-                    } else {
-                        Remove-Item $tmpPath -Force -ErrorAction SilentlyContinue
-                        Print-Warning "Downloaded file does not contain expected fix - skipped"
-                    }
-                } catch {
-                    Remove-Item $tmpPath -Force -ErrorAction SilentlyContinue
-                    Print-Warning "Could not download fix (no internet?) - password reset will proceed but login may still fail"
-                    Print-Info "Manual fix: download $fixUrl to $authServicePath"
-                }
-            }
-        }
-
-        # Detect database type from console .env
-        $dbType = "sqlite"
-        $envFile = Join-Path $script:CONSOLE_PATH ".env"
-        if (Test-Path $envFile) {
-            $envContent = Get-Content $envFile -Raw -ErrorAction SilentlyContinue
-            if ($envContent -match '(?m)^DB_TYPE\s*=\s*(postgres|postgresql)') {
-                $dbType = "postgres"
-            }
-        }
-        
-        Print-Info "Database type: $dbType"
-        
-        # Use Node.js reset-password script (supports both SQLite and PostgreSQL)
-        $resetScript = Join-Path $script:CONSOLE_PATH "scripts\reset-password.js"
-        if (Test-Path $resetScript) {
-            Print-Info "Using reset-password.js script..."
-            $nodeExe = Get-Command "node" -ErrorAction SilentlyContinue
-            if ($nodeExe) {
-                Push-Location $script:CONSOLE_PATH
-                try {
-                    $env:DATA_DIR = Join-Path $script:CONSOLE_PATH "data"
-                    # The script reads .env for DB_TYPE and DATABASE_URL automatically
-                    & node $resetScript $newPassword admin
-                    if ($LASTEXITCODE -eq 0) {
-                        $success = $true
-                    }
-                } finally {
-                    Pop-Location
-                }
-            }
-        }
-        
-        # Fallback: direct database update
-        if (-not $success) {
-            Print-Info "Using direct database update..."
-            
-            if ($dbType -eq "postgres") {
-                # PostgreSQL mode -- need psycopg2 or pg module
-                Print-Warning "PostgreSQL password reset requires Node.js. Please ensure node is installed."
-                Print-Info "Alternatively, run: psql DATABASE_URL -c `"UPDATE users SET password_hash='...' WHERE username='admin'`""
-            } else {
-                # SQLite mode -- update auth.db directly
-                $authDbPath = Join-Path $script:CONSOLE_PATH "data\auth.db"
-                if (-not (Test-Path $authDbPath)) {
-                    $authDbPath = Join-Path $script:RUSTDESK_PATH "auth.db"
-                }
-                Print-Info "Auth database: $authDbPath"
-                
-                $env:BETTERDESK_AUTH_DB_PATH = $authDbPath
-                $env:BETTERDESK_RESET_PASSWORD = $newPassword
-                $pythonScript = @"
-import sqlite3
-import bcrypt
-import os
-
-auth_db_path = os.environ.get('BETTERDESK_AUTH_DB_PATH', '')
-
-# Create parent directory if needed
-os.makedirs(os.path.dirname(auth_db_path), exist_ok=True)
-
-conn = sqlite3.connect(auth_db_path)
-cursor = conn.cursor()
-
-# Ensure table exists (for fresh installations)
-cursor.execute('''CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    role TEXT DEFAULT 'admin',
-    created_at TEXT DEFAULT (datetime('now')),
-    last_login TEXT
-)''')
-
-new_password = os.environ.get('BETTERDESK_RESET_PASSWORD', '')
-password_hash = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt(12)).decode()
-
-cursor.execute("UPDATE users SET password_hash = ? WHERE username = 'admin'", (password_hash,))
-
-if cursor.rowcount == 0:
-    cursor.execute('''INSERT INTO users (username, password_hash, role)
-                      VALUES ('admin', ?, 'admin')''', (password_hash,))
-
-conn.commit()
-conn.close()
-print("Password updated successfully")
-"@
-                $output = $pythonScript | python 2>&1
-                Remove-Item Env:BETTERDESK_AUTH_DB_PATH -ErrorAction SilentlyContinue
-                Remove-Item Env:BETTERDESK_RESET_PASSWORD -ErrorAction SilentlyContinue
-                if ($output -match "successfully") {
-                    $success = $true
-                } else {
-                    Print-Warning "Python output: $output"
-                }
-            }
-        }
-    }
-    
-    Write-Host ""
-    if ($success) {
-        Write-Host "============================================================" -ForegroundColor Green
-        Write-Host "              NEW LOGIN CREDENTIALS                         " -ForegroundColor Green
-        Write-Host "============================================================" -ForegroundColor Green
-        Write-Host "  Login:    " -NoNewline; Write-Host "admin" -ForegroundColor White
-        Write-Host "  Password: " -NoNewline; Write-Host $newPassword -ForegroundColor White
-        Write-Host "============================================================" -ForegroundColor Green
-        
-        if ($script:STORE_ADMIN_CREDENTIALS) {
-            # Legacy behavior (opt-in): persist plaintext credentials
-            $consoleCredsFile = Join-Path $script:CONSOLE_PATH "data\.admin_credentials"
-            $rustdeskCredsFile = Join-Path $script:RUSTDESK_PATH ".admin_credentials"
-
-            # Create console data directory if it doesn't exist
-            $consoleDataDir = Join-Path $script:CONSOLE_PATH "data"
-            if (-not (Test-Path $consoleDataDir)) {
-                New-Item -ItemType Directory -Path $consoleDataDir -Force | Out-Null
-            }
-
-            $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-            @("Admin Username: admin", "Admin Password: $newPassword", "Generated by: BetterDesk password reset", "Timestamp: $timestamp") | Out-File -FilePath $consoleCredsFile -Encoding UTF8
-            @("Admin Username: admin", "Admin Password: $newPassword", "Generated by: BetterDesk password reset", "Timestamp: $timestamp") | Out-File -FilePath $rustdeskCredsFile -Encoding UTF8
-            Print-Info "Credentials saved to: $consoleCredsFile"
-        } else {
-            Print-Warning "Credentials are not persisted by default (security hardening)."
-        }
-    } else {
-        Print-Error "Failed to reset password!"
-        Print-Info "Make sure Node.js is installed and the console is set up correctly"
-    }
-    
-    Press-Enter
-}
 
 #===============================================================================
 # Diagnostics Function
@@ -4766,14 +3557,15 @@ conn.close()
     Write-Host "=== Port Diagnostics ===" -ForegroundColor White
     Write-Host ""
     
+    $consoleProcess = if (Test-GoOnlyInstall) { "betterdesk-server" } else { "node" }
     $portDefs = @(
         @{Port=[int]$script:GO_API_PORT; Proto="TCP"; Expected="betterdesk-server"; Desc="Go API (default)"},
-        @{Port=[int]$script:CLIENT_API_PORT; Proto="TCP"; Expected="node"; Desc="Client API (backward-compat proxy)"},
+        @{Port=[int]$script:CLIENT_API_PORT; Proto="TCP"; Expected=$consoleProcess; Desc="Client API"},
         @{Port=21115; Proto="TCP"; Expected="betterdesk-server"; Desc="NAT Test"},
         @{Port=21116; Proto="TCP"; Expected="betterdesk-server"; Desc="ID Server (TCP)"},
         @{Port=21116; Proto="UDP"; Expected="betterdesk-server"; Desc="ID Server (UDP)"},
         @{Port=21117; Proto="TCP"; Expected="betterdesk-server"; Desc="Relay Server"},
-        @{Port=5000;  Proto="TCP"; Expected="node"; Desc="Web Console"}
+        @{Port=5000;  Proto="TCP"; Expected=$consoleProcess; Desc="Web Console"}
     )
     
     $portIssues = 0
@@ -5301,7 +4093,7 @@ function Do-ConfigureSSL {
     
     $envFile = Join-Path $script:CONSOLE_PATH ".env"
     if (-not (Test-Path $envFile)) {
-        Print-Error "Node.js console .env not found at $envFile"
+        Print-Error "Console .env not found at $envFile"
         Print-Info "Please install BetterDesk first (option 1)"
         Press-Enter
         return
@@ -5812,7 +4604,7 @@ function Do-ConfigureSSL {
         if (Get-Service -Name $serverService -ErrorAction SilentlyContinue) {
             Restart-Service -Name $serverService -Force -ErrorAction SilentlyContinue
         }
-        if (Get-Service -Name $consoleService -ErrorAction SilentlyContinue) {
+        if (-not (Test-GoOnlyInstall) -and (Get-Service -Name $consoleService -ErrorAction SilentlyContinue)) {
             Restart-Service -Name $consoleService -Force -ErrorAction SilentlyContinue
         }
         Print-Success "BetterDesk services restarted"
@@ -5835,7 +4627,7 @@ function Do-ToggleProtocol {
 
     # Detect current mode from NSSM or .env
     $currentMode = "HTTP"
-    $nssmConsole = "BetterDeskConsole"
+    $nssmConsole = if (Test-GoOnlyInstall) { $script:SERVER_SERVICE } else { "BetterDeskConsole" }
     try {
         $nssmEnv = (nssm get $nssmConsole AppEnvironmentExtra 2>$null) -join "`n"
         if ($nssmEnv -match "HTTPS_ENABLED=true") {
@@ -6294,12 +5086,13 @@ function Show-Menu {
     Write-Host "  8. DIAGNOSTICS"
     Write-Host "  9. UNINSTALL"
     Write-Host ""
-    Write-Host "  L. MINIMAL INSTALLATION (server only)"
+    Write-Host "  L. MINIMAL INSTALLATION (web console off)"
     Write-Host "  C. Configure SSL certificates"
     Write-Host "  T. Toggle HTTP/HTTPS mode"
     Write-Host "  M. Database migration"
     Write-Host "  S. Settings (paths)"
     Write-Host "  P. Management capabilities and server settings"
+    Write-Host "  R. Roll back the upgrade (Node.js console back)"
     Write-Host "  0. Exit"
     Write-Host ""
 }
@@ -6326,23 +5119,41 @@ function Main {
         exit 0
     }
 
-    # Auto mode - run installation directly
+    # Update, rollback and cleanup run without questions
+    if ($script:ROLLBACK_GO_MODE) {
+        $script:AUTO_MODE = $true
+        exit ([int](-not (Undo-GoUpgrade)))
+    }
+    if ($script:CLEANUP_NODE_MODE) {
+        $script:AUTO_MODE = $true
+        exit ([int](-not (Remove-NodeLeftovers)))
+    }
+    if ($script:UPDATE_MODE) {
+        $script:AUTO_MODE = $true
+        exit ([int](-not (Do-Update)))
+    }
+
+    # Auto mode - run installation directly; an install with the Node.js
+    # console is upgraded in place
     if ($script:AUTO_MODE) {
         Print-Info "Running in AUTO mode..."
+        $ok = $true
         if ($script:UNINSTALL_MODE) {
             Do-Uninstall
+        } elseif (Test-NodeEraInstall) {
+            $ok = Do-Update
         } elseif ($script:MINIMAL_MODE) {
-            Do-InstallMinimal
+            $ok = Do-InstallMinimal
         } else {
-            Do-Install
+            $ok = Do-Install
         }
-        exit 0
+        exit ([int](-not $ok))
     }
-    
+
     while ($true) {
         $menuLabels = @(
             "Fresh installation`tFull install from scratch",
-            "Update`tUpdate an existing installation",
+            "Update`tNewest release; a Node.js console install is upgraded in place",
             "Repair installation`tFix common problems",
             "Validate installation`tCheck correctness",
             "Backup`tCreate a backup",
@@ -6350,15 +5161,16 @@ function Main {
             "Build & deploy server`tCompile and deploy the Go server",
             "Diagnostics`tDetailed problem analysis",
             "Uninstall`tRemove BetterDesk",
-            "Minimal installation`tServer only",
+            "Minimal installation`tServer with its web console off",
             "Configure SSL certificates`tLet's Encrypt / custom / self-signed",
             "Toggle HTTP/HTTPS`tSwitch protocol mode",
             "Database migration`tMigrate between backends",
             "Settings (paths)`tConfigure install paths",
             "Management capabilities`tCheck permissions and change allowlisted server settings",
+            "Roll back the upgrade`tPut the Node.js console and old server back",
             "Exit`tQuit the manager"
         )
-        $menuActions = @("1", "2", "3", "4", "5", "6", "7", "8", "9", "L", "C", "T", "M", "S", "P", "0")
+        $menuActions = @("1", "2", "3", "4", "5", "6", "7", "8", "9", "L", "C", "T", "M", "S", "P", "R", "0")
 
         $choice = ""
         if (Test-TuiAvailable) {
@@ -6374,8 +5186,8 @@ function Main {
         }
         
         switch ($choice) {
-            "1" { Do-Install }
-            "2" { Do-Update }
+            "1" { Do-Install | Out-Null }
+            "2" { Do-Update | Out-Null }
             "3" { Do-Repair }
             "4" { Do-Validate }
             "5" { Do-Backup }
@@ -6383,8 +5195,10 @@ function Main {
             "7" { Do-Build }
             "8" { Do-Diagnostics }
             "9" { Do-Uninstall }
-            "L" { Do-InstallMinimal }
-            "l" { Do-InstallMinimal }
+            "L" { Do-InstallMinimal | Out-Null }
+            "l" { Do-InstallMinimal | Out-Null }
+            "R" { Undo-GoUpgrade | Out-Null; Press-Enter }
+            "r" { Undo-GoUpgrade | Out-Null; Press-Enter }
             "C" { Do-ConfigureSSL }
             "c" { Do-ConfigureSSL }
             "T" { Do-ToggleProtocol }
