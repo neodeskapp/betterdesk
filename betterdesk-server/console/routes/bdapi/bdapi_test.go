@@ -13,6 +13,8 @@ import (
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
+	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
 // deviceToken adds a live access token of the admin account bound to a
@@ -188,4 +190,37 @@ func TestRegistrationAddressIsTheTrustedOne(t *testing.T) {
 			t.Errorf("TRUST_PROXY=%q: stored address %q (%v)", c.trust, ip, err)
 		}
 	}
+}
+
+// A banned device is no target: connect refuses it, and the device
+// lookup says it is banned (BUGS BD4).
+func TestBannedTarget(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		ctx := context.Background()
+		for _, stmt := range []string{
+			"INSERT INTO peer (id, note, is_banned) VALUES ('BANNED1', 'banned box', " + db.Pick("1", "TRUE") + ")",
+			"INSERT INTO peer (id, note) VALUES ('FREE1', 'free box')",
+		} {
+			if _, err := w.DB.Exec(ctx, stmt); err != nil {
+				t.Fatal(err)
+			}
+		}
+		token := deviceToken(t, w, "tok-banned-target-01", "DEV1")
+		auth := []string{"Authorization", "Bearer " + token}
+		if got := w.SignedOut().Do("POST", "/api/bd/connect", `{"target_id":"BANNED1"}`, auth...); got.Status != 403 || got.Body != `{"error":"Target device is banned"}` {
+			t.Errorf("connect to a banned device: %d %s", got.Status, got.Body)
+		}
+		if got := w.SignedOut().Do("POST", "/api/bd/connect", `{"target_id":"FREE1"}`, auth...); got.Status != 200 {
+			t.Errorf("connect to a device that is not banned: %d %s", got.Status, got.Body)
+		}
+		for id, want := range map[string]string{
+			"BANNED1": `{"success":true,"peer":{"id":"BANNED1","hostname":"banned box","banned":true}}`,
+			"FREE1":   `{"success":true,"peer":{"id":"FREE1","hostname":"free box","banned":false}}`,
+		} {
+			if got := w.SignedOut().Do("GET", "/api/bd/peer/"+id, "", auth...); got.Status != 200 || got.Body != want {
+				t.Errorf("peer %s: %d %s, want %s", id, got.Status, got.Body, want)
+			}
+		}
+	})
 }

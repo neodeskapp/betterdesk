@@ -40,7 +40,7 @@
     "kind": "json",
     "json": {
      "peer": {
-      "banned": false,
+      "banned": true,
       "hostname": "",
       "id": "900100028"
      },

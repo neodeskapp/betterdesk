@@ -272,6 +272,9 @@ var fixes = []fix{
 		`{"id":"NEWID1","hostname":"","platform":"","online":true,"last_online":"2026-11-18 17:40:53"}`,
 		`{"id":"NEWID1","hostname":"","platform":"","online":false,"last_online":""}`,
 	}},
+	// A banned device is no target, and the lookup says it is banned
+	{bug: "BD4", steps: []string{"87 banned target POST /api/bd/connect"}, status: http.StatusForbidden, answer: `{"error":"Target device is banned"}`},
+	{bug: "BD4", steps: []string{"101 GET /api/bd/peer/BANNED1"}, edits: []string{`"banned":false`, `"banned":true`}},
 }
 
 // fixedSteps returns the steps as the Go console answers them since the

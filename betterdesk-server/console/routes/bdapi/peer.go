@@ -19,14 +19,14 @@ import (
 // write: a device the signal server knows shows up in peer, and one that
 // was deleted in the console comes back.
 //
-// The routes read only the id and the note of the device the lookup gave
-// (parsePeer of the adapters): the device object has no is_banned or
-// is_deleted, so those checks of the routes never refuse (BUGS BD4).
+// The routes read the id, the note and the ban of the device the lookup
+// gave. A deleted device is not found, unless the copy brings it back.
 
 // device is what the routes read of a device the console knows.
 type device struct {
-	id   jsbind.Cell
-	note string
+	id     jsbind.Cell
+	note   string
+	banned bool
 }
 
 // deviceByID returns the device with the id, nil when neither table has
@@ -57,18 +57,18 @@ func (h *handlers) deviceByID(ctx context.Context, id jsbind.Value) (*device, er
 	return d, nil
 }
 
-// readDevice reads the id and the note of the device's row in the
-// console's table, unless the row is marked deleted.
+// readDevice reads the id, the note and the ban of the device's row in
+// the console's table, unless the row is marked deleted.
 func readDevice(ctx context.Context, db *store.DB, args []any) (*device, error) {
-	var id, note jsbind.Cell
-	err := db.QueryRow(ctx, "SELECT id, note FROM peer WHERE id = ? AND "+db.Pick("is_deleted = 0", "NOT is_deleted"), args...).Scan(&id, &note)
+	var id, note, banned jsbind.Cell
+	err := db.QueryRow(ctx, "SELECT id, note, is_banned FROM peer WHERE id = ? AND "+db.Pick("is_deleted = 0", "NOT is_deleted"), args...).Scan(&id, &note, &banned)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("load device: %w", err)
 	}
-	d := &device{id: id}
+	d := &device{id: id, banned: oneOrTrue(banned.Value())}
 	if v := note.Value(); v.Truthy() {
 		d.note = v.ToString()
 	}

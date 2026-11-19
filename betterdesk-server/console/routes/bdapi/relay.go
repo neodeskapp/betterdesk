@@ -52,8 +52,9 @@ type connectAnswer struct {
 // connect answers POST /api/bd/connect {target_id, initiator_id,
 // public_key}: a relay session from the token's device to the target. The
 // token must be bound to a device, and initiator_id, when given, must be
-// that device. The target must be a device the console knows. A target
-// whose socket is open is told at once; the answer says whether it was.
+// that device. The target must be a device the console knows that is not
+// banned. A target whose socket is open is told at once; the answer says
+// whether it was.
 //
 // A target_id that is no text finds its device as the database compares
 // it, but the session waits for a device with no id, which never comes.
@@ -86,7 +87,10 @@ func (h *handlers) connect(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusNotFound, "Target device not found")
 		return
 	}
-	// target.is_banned: the device object has no such member (BUGS BD4)
+	if found.banned {
+		fail(w, r, http.StatusForbidden, "Target device is banned")
+		return
+	}
 	targetID, _ := target.(string)
 	sessionID, initiatorToken, _ := h.d.Relay.CreateRelaySession(source, targetID)
 	notified := false
@@ -156,7 +160,7 @@ type peersAnswer struct {
 }
 
 // peers answers GET /api/bd/peers: the devices with an open signal socket
-// that the console knows, banned ones included (BUGS BD4).
+// that the console knows and has not banned.
 func (h *handlers) peers(w http.ResponseWriter, r *http.Request) {
 	out := []onlinePeer{}
 	for _, id := range h.d.Relay.OnlineDeviceIDs() {
@@ -165,7 +169,7 @@ func (h *handlers) peers(w http.ResponseWriter, r *http.Request) {
 			h.serverError(w, r, "Peers error:", err, "Failed to list peers")
 			return
 		}
-		if found != nil {
+		if found != nil && !found.banned {
 			out = append(out, onlinePeer{ID: found.id, Hostname: found.note, Online: true})
 		}
 	}
@@ -185,7 +189,7 @@ type peerAnswer struct {
 	Peer    peerAnswerInfo `json:"peer"`
 }
 
-// peer answers GET /api/bd/peer/{id}. banned is always false (BUGS BD4).
+// peer answers GET /api/bd/peer/{id}.
 func (h *handlers) peer(w http.ResponseWriter, r *http.Request) {
 	found, err := h.deviceByID(r.Context(), jsbind.String(r.PathValue("id")))
 	if err != nil {
@@ -196,7 +200,7 @@ func (h *handlers) peer(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusNotFound, "Device not found")
 		return
 	}
-	info := peerAnswerInfo{ID: found.id, Hostname: found.note}
+	info := peerAnswerInfo{ID: found.id, Hostname: found.note, Banned: found.banned}
 	if online, known := h.d.Relay.IsDeviceOnline(found.id.Value().ToString()); known {
 		info.Online = &online
 	}
