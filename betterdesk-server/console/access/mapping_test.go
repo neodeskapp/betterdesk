@@ -254,3 +254,17 @@ func TestToolkitAsksDeviceConnect(t *testing.T) {
 		t.Errorf("toolkit with device.connect alone: %s, want write", got)
 	}
 }
+
+// PA3 (F11): an operator files work reports (billing.reports); the time
+// sync and clock settings are the server's and answer as their routes
+// say; the commercialization routes beside billing are guarded.
+func TestCommercializationWritesAndTheClock(t *testing.T) {
+	// viewer, operator, guest_issuer, global_admin, server_admin
+	checkRouteCases(t, []routeCase{
+		{"POST", "/api/panel/billing/sessions/1/report", "billing.reports", [5]string{"guard", "ok", "guard", "ok", "guard"}},
+		{"POST", "/api/panel/billing/packages", "billing.manage", [5]string{"guard", "route", "guard", "ok", "guard"}},
+		{"POST", "/api/panel/billing/timesync/check", "server.config", [5]string{"route", "route", "route", "route", "ok"}},
+		{"PUT", "/api/panel/billing/clock/settings", "server.config", [5]string{"route", "route", "route", "route", "ok"}},
+		{"GET", "/api/panel/commercialization/plans", "billing.view", [5]string{"guard", "ok", "guard", "ok", "guard"}},
+	})
+}

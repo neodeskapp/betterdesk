@@ -123,6 +123,11 @@ var RouteRules = []Rule{
 	{Prefix: "/api/network/tcp", Section: "toolkit"},
 	{Prefix: "/api/network/http", Section: "toolkit"},
 	{Prefix: "/api/network/resolve", Section: "toolkit"},
+	// The server's clock, which the billing page and the system settings
+	// read; the routes check their permissions themselves.
+	{Prefix: "/api/panel/billing/timesync"},
+	{Prefix: "/api/panel/billing/clock"},
+	{Prefix: "/api/panel/commercialization", Section: "commercialization"},
 }
 
 const apiPrefix = "/api/"

@@ -70,6 +70,10 @@ var ruleFixes = []ruleFix{
 	{bug: "PA3 (F4)", add: Rule{Prefix: "/api/network/tcp", Section: "toolkit"}},
 	{bug: "PA3 (F4)", add: Rule{Prefix: "/api/network/http", Section: "toolkit"}},
 	{bug: "PA3 (F4)", add: Rule{Prefix: "/api/network/resolve", Section: "toolkit"}},
+	// The server's clock, and the commercialization routes beside billing.
+	{bug: "PA3 (F11)", add: Rule{Prefix: "/api/panel/billing/timesync"}},
+	{bug: "PA3 (F11)", add: Rule{Prefix: "/api/panel/billing/clock"}},
+	{bug: "PA3 (F11)", add: Rule{Prefix: "/api/panel/commercialization", Section: "commercialization"}},
 	// The reports page was listed twice.
 	{bug: "PA3 (F6), RP1", remove: Rule{Prefix: "/reports", Section: "reports"}},
 	// /attestation is the device identity page; the server attestation
@@ -95,6 +99,9 @@ var sectionFixes = []sectionFix{
 	{bug: "PA3 (F4)", key: "network", read: "device.view", write: "server.config"},
 	// The toolkit page and its wake-on-LAN route ask device.connect.
 	{bug: "PA3 (F7)", key: "toolkit", read: "device.connect", write: "device.connect"},
+	// Filing a work report asks billing.reports; the other writes check
+	// billing.manage themselves.
+	{bug: "PA3 (F11)", key: "commercialization", read: "billing.view", write: "billing.reports"},
 	// Every reports route asks audit.view, also the writes.
 	{bug: "PA3 (F6), RP1", key: "reports", read: "audit.view", write: "audit.view"},
 	// All server attestation routes ask server.attestation.

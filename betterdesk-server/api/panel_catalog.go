@@ -62,7 +62,7 @@ var panelSectionCatalog = []panelSection{
 	{Key: "reports", Label: "Reports", Group: "operations", ReadPermission: auth.PermAuditView, WritePermission: auth.PermAuditView},
 	{Key: "agents", Label: "Agents", Group: "operations", ReadPermission: auth.PermDeviceView, WritePermission: auth.PermDeviceEdit},
 	{Key: "toolkit", Label: "Toolkit", Group: "operations", ReadPermission: auth.PermDeviceConnect, WritePermission: auth.PermDeviceConnect},
-	{Key: "commercialization", Label: "Commercialization", Group: "commercialization", ReadPermission: auth.PermBillingView, WritePermission: auth.PermBillingManage},
+	{Key: "commercialization", Label: "Commercialization", Group: "commercialization", ReadPermission: auth.PermBillingView, WritePermission: auth.PermBillingReports},
 	{Key: "scaling", Label: "Scaling", Group: "commercialization", ReadPermission: auth.PermServerConfig, WritePermission: auth.PermServerConfig},
 	{Key: "cross-platform", Label: "Cross-platform", Group: "commercialization", ReadPermission: auth.PermDeviceView, WritePermission: auth.PermDeviceEdit},
 	{Key: "security-audit", Label: "Security audit", Group: "security", ReadPermission: auth.PermAuditView, WritePermission: auth.PermServerConfig},

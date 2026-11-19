@@ -199,7 +199,7 @@
        {
         "key": "commercialization",
         "read": "billing.view",
-        "write": "billing.manage"
+        "write": "billing.reports"
        },
        {
         "key": "scaling",
@@ -1044,7 +1044,7 @@
        {
         "key": "commercialization",
         "read": "billing.view",
-        "write": "billing.manage"
+        "write": "billing.reports"
        },
        {
         "key": "scaling",

@@ -44,8 +44,7 @@
   },
   {
    "roles": [
-    "viewer",
-    "operator"
+    "viewer"
    ],
    "status": 403,
    "headers": {
@@ -75,6 +74,7 @@
   },
   {
    "roles": [
+    "operator",
     "admin"
    ],
    "status": 400,

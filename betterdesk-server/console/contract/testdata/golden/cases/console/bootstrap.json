@@ -199,7 +199,7 @@
        {
         "key": "commercialization",
         "read": "billing.view",
-        "write": "billing.manage"
+        "write": "billing.reports"
        },
        {
         "key": "scaling",
@@ -985,7 +985,7 @@
        {
         "key": "commercialization",
         "read": "billing.view",
-        "write": "billing.manage"
+        "write": "billing.reports"
        },
        {
         "key": "scaling",
@@ -1832,7 +1832,7 @@
        {
         "key": "commercialization",
         "read": "billing.view",
-        "write": "billing.manage"
+        "write": "billing.reports"
        },
        {
         "key": "scaling",
@@ -2017,7 +2017,7 @@
        "automation": "write",
        "cdap": "write",
        "chat": "write",
-       "commercialization": "read",
+       "commercialization": "write",
        "cross-platform": "write",
        "dashboard": "read",
        "dataguard": "none",
@@ -2768,7 +2768,7 @@
        {
         "key": "commercialization",
         "read": "billing.view",
-        "write": "billing.manage"
+        "write": "billing.reports"
        },
        {
         "key": "scaling",
@@ -3805,7 +3805,7 @@
        {
         "key": "commercialization",
         "read": "billing.view",
-        "write": "billing.manage"
+        "write": "billing.reports"
        },
        {
         "key": "scaling",
@@ -4843,7 +4843,7 @@
        {
         "key": "commercialization",
         "read": "billing.view",
-        "write": "billing.manage"
+        "write": "billing.reports"
        },
        {
         "key": "scaling",
@@ -6054,7 +6054,7 @@
        {
         "key": "commercialization",
         "read": "billing.view",
-        "write": "billing.manage"
+        "write": "billing.reports"
        },
        {
         "key": "scaling",

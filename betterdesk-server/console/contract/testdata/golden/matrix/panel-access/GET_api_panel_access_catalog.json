@@ -356,7 +356,7 @@
         "key": "commercialization",
         "label": "Commercialization",
         "readPermission": "billing.view",
-        "writePermission": "billing.manage"
+        "writePermission": "billing.reports"
        },
        {
         "group": "commercialization",

@@ -677,8 +677,8 @@
         "source": "role"
        },
        "commercialization": {
-        "access": "read",
-        "role_ceiling": "read",
+        "access": "write",
+        "role_ceiling": "write",
         "source": "role"
        },
        "cross-platform": {

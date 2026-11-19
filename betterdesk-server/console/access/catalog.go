@@ -114,7 +114,7 @@ var Catalog = []Section{
 	{"reports", "Reports", "operations", "audit.view", "audit.view"},
 	{"agents", "Agents", "operations", "device.view", "device.edit"},
 	{"toolkit", "Toolkit", "operations", "device.connect", "device.connect"},
-	{"commercialization", "Commercialization", "commercialization", "billing.view", "billing.manage"},
+	{"commercialization", "Commercialization", "commercialization", "billing.view", "billing.reports"},
 	{"scaling", "Scaling", "commercialization", "server.config", "server.config"},
 	{"cross-platform", "Cross-platform", "commercialization", "device.view", "device.edit"},
 	{"security-audit", "Security audit", "security", "audit.view", "server.config"},
