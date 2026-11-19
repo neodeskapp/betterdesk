@@ -265,3 +265,21 @@ func TestGroupPolicy(t *testing.T) {
 		}
 	})
 }
+
+// TH12: the policy is stored before the audit entry is written; a failed
+// audit entry is logged and the save still answers what it stored.
+func TestPolicySaveAnswersWhenTheAuditEntryFails(t *testing.T) {
+	eachDB(t, func(t *testing.T, w *routetest.World) {
+		if _, err := w.DB.Exec(context.Background(), "DROP TABLE audit_log"); err != nil {
+			t.Fatal(err)
+		}
+		got := w.As("admin").Do("PUT", "/api/panel/access/users/6", policy)
+		if a := decode(t, got); got.Status != 200 || string(a.Data.UserID) != "6" {
+			t.Fatalf("save with the audit log gone: %d %s", got.Status, got.Body)
+		}
+		var stored int
+		if err := w.DB.QueryRow(context.Background(), "SELECT COUNT(*) FROM panel_access_policies WHERE subject_type = 'user' AND subject_id = '6'").Scan(&stored); err != nil || stored == 0 {
+			t.Errorf("rows stored: %d %v", stored, err)
+		}
+	})
+}

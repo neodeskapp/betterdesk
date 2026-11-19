@@ -44,6 +44,14 @@ func (h *handlers) fail(w http.ResponseWriter, r *http.Request, err error) {
 	kit.Fail(w, r, status, err.Error())
 }
 
+// audit writes the audit entry of a stored policy. The policy is stored
+// by then, so a failed entry is logged and the save still answers.
+func (h *handlers) audit(r *http.Request, action, details string) {
+	if err := h.d.LogAction(r, action, details); err != nil {
+		h.log.Error("Panel access audit entry failed:", err)
+	}
+}
+
 // catalog answers GET /api/panel/access/catalog.
 func (h *handlers) catalog(w http.ResponseWriter, r *http.Request) {
 	kit.OK(w, r, access.GetCatalog())
@@ -149,7 +157,7 @@ func (h *handlers) saveUser(w http.ResponseWriter, r *http.Request) {
 	sections, features := submitted(r)
 	saved, err := h.d.Access.SavePolicy(r.Context(), access.SubjectUser, subject, sections, features)
 	if err == nil {
-		err = h.d.LogAction(r, "user_access_policy_updated", "Updated access policy for user "+subject)
+		h.audit(r, "user_access_policy_updated", "Updated access policy for user "+subject)
 	}
 	out := userPolicy{UserID: user.ID, Sections: saved.Sections, Features: saved.Features}
 	if err == nil {
@@ -217,7 +225,7 @@ func (h *handlers) saveGroup(w http.ResponseWriter, r *http.Request) {
 	sections, features := submitted(r)
 	saved, err := h.d.Access.SavePolicy(r.Context(), access.SubjectGroup, guid, sections, features)
 	if err == nil {
-		err = h.d.LogAction(r, "user_group_access_policy_updated", "Updated access policy for group "+guid)
+		h.audit(r, "user_group_access_policy_updated", "Updated access policy for group "+guid)
 	}
 	out := groupPolicy{GroupGUID: guid, Sections: saved.Sections, Features: saved.Features}
 	if err == nil {
