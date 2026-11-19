@@ -640,6 +640,15 @@ var knownClientAPI = map[string]func(t *testing.T, got []reply, closed bool) str
 	// A second request that never completes on a kept-alive connection:
 	// Node's keep-alive timer closed it about 6 seconds after its first
 	// bytes, net/http's header timeout closes it after 10; neither answers
+	// A device id given twice: the status of the first, which names no
+	// registration here; Node's SQLite driver refused the list with 500
+	// (BUGS LS9)
+	"registration status two ids": func(_ *testing.T, got []reply, _ bool) string {
+		if len(got) != 1 || got[0].status != http.StatusOK || string(got[0].body) != `{"success":true,"status":"not_found"}` {
+			return fmt.Sprintf("want 200 not_found, got %v %q", statuses(got), firstBody(got))
+		}
+		return ""
+	},
 	"slow keep-alive then partial": func(_ *testing.T, got []reply, closed bool) string {
 		if len(got) != 1 || !closed {
 			return fmt.Sprintf("want the first answer and a close, got %v closed %v", statuses(got), closed)
@@ -685,25 +694,7 @@ func TestClientAPILocalModeAgainstNode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		known := knownClientAPI
-		if db.Dialect() == store.Postgres {
-			// The recording's Node console ran on SQLite, whose driver
-			// refuses a list for one parameter (500). On PostgreSQL the
-			// driver binds it as an array literal that names no device:
-			// the Node console there answered 200 not_found
-			// (routes/registration testdata/node_postgres.json, step 382)
-			known = map[string]func(t *testing.T, got []reply, closed bool) string{}
-			for id, check := range knownClientAPI {
-				known[id] = check
-			}
-			known["registration status two ids"] = func(_ *testing.T, got []reply, _ bool) string {
-				if len(got) != 1 || got[0].status != http.StatusOK || string(got[0].body) != `{"success":true,"status":"not_found"}` {
-					return fmt.Sprintf("want PostgreSQL's 200 not_found, got %v %q", statuses(got), firstBody(got))
-				}
-				return ""
-			}
-		}
-		res := g.replayExchanges(t, scenario, known)
+		res := g.replayExchanges(t, scenario, knownClientAPI)
 		checkReplay(t, "legacy", res)
 		if res.same < 500 || res.routed < 100 {
 			t.Errorf("only %d answers compared and %d routed", res.same, res.routed)

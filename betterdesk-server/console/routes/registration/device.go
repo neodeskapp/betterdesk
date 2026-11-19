@@ -88,6 +88,24 @@ func (h *handlers) registerRequest(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, goapi.NewObject("success", true, "status", row.Get("status"), "id", row.Get("id")))
 }
 
+// statusDeviceID is the device id a status request names: device_id as
+// text, the first one when the query gives it more than once or as a
+// list; "" for none and for an object.
+func statusDeviceID(r *http.Request) string {
+	v := jsbind.Query(r.URL.RawQuery, "device_id")
+	if v.IsArray() {
+		items := v.Items()
+		if len(items) == 0 {
+			return ""
+		}
+		v = items[0]
+	}
+	if v.IsString() {
+		return v.Str()
+	}
+	return ""
+}
+
 // publish sends an event to the panel sockets and forgets about it, as
 // the old console did through its bridge to this one.
 func (h *handlers) publish(event *goapi.Object) {
@@ -101,16 +119,14 @@ func (h *handlers) publish(event *goapi.Object) {
 
 // registerStatus answers GET /register-status?device_id=: the status of
 // the device's registration, with the server configuration once it is
-// approved and the reason once it is rejected. The device id is bound as
-// the query parser made it (a list or an object fails on SQLite, BUGS
-// LS9).
+// approved and the reason once it is rejected.
 func (h *handlers) registerStatus(w http.ResponseWriter, r *http.Request) {
-	deviceID := jsbind.Query(r.URL.RawQuery, "device_id")
-	if !deviceID.Truthy() {
+	deviceID := statusDeviceID(r)
+	if deviceID == "" {
 		failure(w, r, http.StatusBadRequest, "Missing device_id")
 		return
 	}
-	reg, err := h.regs.ByDeviceIDValue(r.Context(), deviceID)
+	reg, err := h.regs.ByDeviceID(r.Context(), deviceID)
 	if err != nil {
 		h.log.Error("Register status error:", err)
 		failure(w, r, http.StatusInternalServerError, "Internal server error")

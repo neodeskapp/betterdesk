@@ -185,17 +185,7 @@ func (s *Service) ByID(ctx context.Context, id jsbind.Value) (*goapi.Object, err
 // ByDeviceID is getPendingRegistrationByDeviceId: the row of the device,
 // nil when there is none.
 func (s *Service) ByDeviceID(ctx context.Context, deviceID string) (*goapi.Object, error) {
-	return s.ByDeviceIDValue(ctx, jsbind.String(deviceID))
-}
-
-// ByDeviceIDValue is ByDeviceID for any value a request can carry: a list
-// or an object from the query string is bound as the driver bound it.
-func (s *Service) ByDeviceIDValue(ctx context.Context, deviceID jsbind.Value) (*goapi.Object, error) {
-	bound, err := args(s.db, 1, deviceID)
-	if err != nil {
-		return nil, fmt.Errorf("load registration of a device: %w", err)
-	}
-	row, err := readRow(ctx, s.db, "SELECT "+columns(s.db)+" FROM pending_registrations WHERE device_id = ?", bound...)
+	row, err := readRow(ctx, s.db, "SELECT "+columns(s.db)+" FROM pending_registrations WHERE device_id = ?", deviceID)
 	if err != nil {
 		return nil, fmt.Errorf("load registration of a device: %w", err)
 	}

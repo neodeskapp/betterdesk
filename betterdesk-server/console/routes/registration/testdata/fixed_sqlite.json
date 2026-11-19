@@ -345,6 +345,30 @@
   "answer": "{\"success\":true,\"status\":\"rejected\",\"id\":8,\"reason\":\"\"}"
  },
  {
+  "step": "382 GET /api/bd/register-status?device_id=DEV1\u0026device_id=DEV2",
+  "bugs": [
+   "LS9"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"status\":\"pending\",\"id\":1}"
+ },
+ {
+  "step": "384 GET /api/bd/register-status?device_id[]=DEV1\u0026device_id[]=DEV2",
+  "bugs": [
+   "LS9"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"status\":\"pending\",\"id\":1}"
+ },
+ {
+  "step": "385 GET /api/bd/register-status?device_id[x]=DEV1",
+  "bugs": [
+   "LS9"
+  ],
+  "status": 400,
+  "answer": "{\"success\":false,\"error\":\"Missing device_id\"}"
+ },
+ {
   "step": "388 GET /api/bd/register-status?device_id=NEW11",
   "bugs": [
    "RG4"

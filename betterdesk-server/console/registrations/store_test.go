@@ -173,24 +173,6 @@ func TestByDeviceIDAndBinding(t *testing.T) {
 		if row, err := s.ByDeviceID(ctx, "DEV-1"); err != nil || row != nil {
 			t.Fatalf("another letter case: %v %v", row, err)
 		}
-		list := jsbind.Query("device_id=dev-1&device_id=x", "device_id")
-		row, err = s.ByDeviceIDValue(ctx, list)
-		if db.IsPostgres() {
-			if err != nil || row != nil {
-				t.Fatalf("a list on PostgreSQL: %v %v", row, err)
-			}
-		} else if err == nil {
-			t.Fatalf("a list of two on SQLite: %v", row)
-		}
-		one := jsbind.Query("device_id[]=dev-1", "device_id")
-		row, err = s.ByDeviceIDValue(ctx, one)
-		if db.IsPostgres() {
-			if err != nil || row != nil {
-				t.Fatalf("a list of one on PostgreSQL: %v %v", row, err)
-			}
-		} else if err != nil || row == nil {
-			t.Fatalf("a list of one on SQLite: %v %v", row, err)
-		}
 		for _, n := range []float64{math.NaN(), math.Inf(1), 1e21, 99999999999} {
 			row, err := s.ByID(ctx, jsbind.Number(n))
 			if db.IsPostgres() != (err != nil) || row != nil {

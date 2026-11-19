@@ -345,6 +345,38 @@
   "answer": "{\"success\":true,\"status\":\"rejected\",\"id\":8,\"reason\":\"\"}"
  },
  {
+  "step": "382 GET /api/bd/register-status?device_id=DEV1\u0026device_id=DEV2",
+  "bugs": [
+   "LS9"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"status\":\"pending\",\"id\":1}"
+ },
+ {
+  "step": "383 GET /api/bd/register-status?device_id[]=DEV1",
+  "bugs": [
+   "LS9"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"status\":\"pending\",\"id\":1}"
+ },
+ {
+  "step": "384 GET /api/bd/register-status?device_id[]=DEV1\u0026device_id[]=DEV2",
+  "bugs": [
+   "LS9"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"status\":\"pending\",\"id\":1}"
+ },
+ {
+  "step": "385 GET /api/bd/register-status?device_id[x]=DEV1",
+  "bugs": [
+   "LS9"
+  ],
+  "status": 400,
+  "answer": "{\"success\":false,\"error\":\"Missing device_id\"}"
+ },
+ {
   "step": "388 GET /api/bd/register-status?device_id=NEW11",
   "bugs": [
    "RG4"
@@ -359,6 +391,14 @@
   ],
   "status": 200,
   "answer": "{\"success\":true,\"status\":\"not_found\"}"
+ },
+ {
+  "step": "394 GET /api/bd/register-status?device_id[0]=DEV3",
+  "bugs": [
+   "LS9"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"status\":\"approved\",\"id\":3,\"config\":{\"console_url\":\"http://h:5000\",\"server_address\":\"h:21116\",\"server_key\":\"key-3\",\"access_token\":\"tok-3\"}}"
  },
  {
   "step": "397 GET /api/registrations",

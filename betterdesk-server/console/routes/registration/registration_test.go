@@ -332,6 +332,10 @@ func TestRegisterStatus(t *testing.T) {
 		"?device_id=rej":    `200 {"success":true,"status":"rejected","id":4,"reason":"not ours"}`,
 		"?device_id=rejn":   `200 {"success":true,"status":"rejected","id":5,"reason":""}`,
 		"?device_id[]=appr": `200 {"success":true,"status":"approved","id":2,"config":{"console_url":"http://h:5000","server_address":"h:21116","server_key":"key","access_token":"tok"}}`,
+		// The first of several, and an object is no id (BUGS LS9)
+		"?device_id=pend&device_id=appr":    `200 {"success":true,"status":"pending","id":1}`,
+		"?device_id[]=rej&device_id[]=pend": `200 {"success":true,"status":"rejected","id":4,"reason":"not ours"}`,
+		"?device_id[x]=pend":                `400 {"success":false,"error":"Missing device_id"}`,
 	} {
 		got := device.Do(http.MethodGet, "/api/bd/register-status"+query, "")
 		if have := strconv.Itoa(got.Status) + " " + got.Body; have != want {
