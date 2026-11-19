@@ -70,7 +70,7 @@ func (s *Service) CheckBruteForceFor(ctx context.Context, name any, ip string) (
 		}
 		if found {
 			answer := BruteForce{Blocked: true, Reason: reasonAccountLocked, RetryUnknown: true}
-			if end, ok := lockoutEnd(lockedUntil, s.db.IsPostgres(), s.zone); ok {
+			if end, ok := lockoutEnd(lockedUntil, s.db.IsPostgres()); ok {
 				left := math.Ceil(float64(end.UnixMilli()-s.now().UnixMilli()) / 1000)
 				answer.RetryAfter, answer.RetryUnknown = int64(math.Max(left, 1)), false
 			}
@@ -91,21 +91,13 @@ func (s *Service) CheckBruteForceFor(ctx context.Context, name any, ip string) (
 
 var lockoutText = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(\.\d+)?$`)
 
-// lockoutEnd is the time the remaining seconds are counted to.
-//
-// On SQLite the column is text in UTC and means what it says. On
-// PostgreSQL the answer is computed from the column's time as this
-// process's clock on the wall shows it, to the second, read as if it were
-// UTC: with a time zone other than UTC the remaining time is off by the
-// zone's offset (BUGS.md AN3).
-func lockoutEnd(lockedUntil store.Time, postgres bool, zone *time.Location) (time.Time, bool) {
+// lockoutEnd is the time the remaining seconds are counted to: the instant
+// the column holds, to the millisecond. On SQLite the column is text in
+// UTC; text that is no time gives none.
+func lockoutEnd(lockedUntil store.Time, postgres bool) (time.Time, bool) {
 	if postgres {
 		instant, ok := lockedUntil.Instant()
-		if !ok {
-			return time.Time{}, false
-		}
-		wall := instant.In(zone)
-		return time.Date(wall.Year(), wall.Month(), wall.Day(), wall.Hour(), wall.Minute(), wall.Second(), 0, time.UTC), true
+		return instant.Truncate(time.Millisecond), ok
 	}
 	text := lockedUntil.String()
 	if !lockoutText.MatchString(text) {
@@ -116,6 +108,18 @@ func lockoutEnd(lockedUntil store.Time, postgres bool, zone *time.Location) (tim
 		return time.Time{}, false
 	}
 	return end.Truncate(time.Millisecond), true
+}
+
+// expiryText is how an end time the service computed (of a lockout, of an
+// access token) is written: the UTC text the console's SQLite times have,
+// and on PostgreSQL the same text with its zone, so a timestamptz column
+// gets that instant whatever time zone the database session is in.
+func (s *Service) expiryText(t time.Time) string {
+	text := store.DateTimeMillis(t)
+	if s.db.IsPostgres() {
+		return text + "+00"
+	}
+	return text
 }
 
 // RecordAttempt writes a sign-in attempt. A success clears the account's
@@ -143,7 +147,7 @@ func (s *Service) RecordAttemptFor(ctx context.Context, name any, ip string, suc
 	}
 	if failed >= int64(s.set.MaxFailedAttempts) {
 		until := s.now().Add(time.Duration(s.set.LockoutMinutes) * time.Minute)
-		return lockAccount(ctx, s.db, name, store.DateTimeMillis(until), failed)
+		return lockAccount(ctx, s.db, name, s.expiryText(until), failed)
 	}
 	return nil
 }

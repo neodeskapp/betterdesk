@@ -241,7 +241,7 @@ type Service struct {
 	// for .admin_credentials.
 	windows bool
 	// zone is the time zone of the process, which one answer depends on
-	// (lockoutEnd).
+	// (enrollmentExpiry).
 	zone *time.Location
 
 	mu sync.Mutex

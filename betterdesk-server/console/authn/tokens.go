@@ -52,7 +52,7 @@ func (s *Service) IssueAccessToken(ctx context.Context, userID int64, clientID, 
 		return "", fmt.Errorf("access token: %w", err)
 	}
 	expires := s.now().Add(time.Duration(s.tokenDays.Load()) * 24 * time.Hour)
-	if err := createAccessToken(ctx, s.db, token, userID, clientID, clientUUID, store.DateTimeMillis(expires), ip); err != nil {
+	if err := createAccessToken(ctx, s.db, token, userID, clientID, clientUUID, s.expiryText(expires), ip); err != nil {
 		return "", err
 	}
 	return token, nil

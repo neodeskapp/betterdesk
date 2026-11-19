@@ -420,46 +420,26 @@ func TestTouchLastLoginAndUserByID(t *testing.T) {
 	})
 }
 
-// The end of a lockout on PostgreSQL is read through the zone of the
-// process (BUGS.md, lockout rows).
-func TestLockoutEndFollowsTheProcessZone(t *testing.T) {
-	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		ctx := context.Background()
-		berlin, err := time.LoadLocation("Europe/Berlin")
-		if err != nil {
-			t.Skip("no time zone data")
+// On SQLite the end of a lockout is the UTC text the column holds, read to
+// the millisecond; text that is no time of that form gives none.
+func TestLockoutEndOfSQLiteText(t *testing.T) {
+	db := storetest.Migrated(t)
+	ctx := context.Background()
+	var text store.Time
+	if err := store.SelectRow(ctx, db, `SELECT '2026-11-10 05:15:00.123'`).Scan(&text); err != nil {
+		t.Fatal(err)
+	}
+	end, ok := lockoutEnd(text, false)
+	if want := time.Date(2026, 11, 10, 5, 15, 0, 123e6, time.UTC); !ok || !end.Equal(want) {
+		t.Errorf("SQLite text: %v, %v; want %v", end, ok, want)
+	}
+	for _, bad := range []string{"", "soon", "2026-11-10T05:15:00Z", "2026-11-10"} {
+		var odd store.Time
+		_ = store.SelectRow(ctx, db, `SELECT ?`, bad).Scan(&odd)
+		if _, ok := lockoutEnd(odd, false); ok {
+			t.Errorf("SQLite text %q counts as a time", bad)
 		}
-		if !db.IsPostgres() {
-			var text store.Time
-			if err := store.SelectRow(ctx, db, `SELECT '2026-11-10 05:15:00.123'`).Scan(&text); err != nil {
-				t.Fatal(err)
-			}
-			end, ok := lockoutEnd(text, false, berlin)
-			if want := time.Date(2026, 11, 10, 5, 15, 0, 123e6, time.UTC); !ok || !end.Equal(want) {
-				t.Errorf("SQLite text: %v, %v; want %v", end, ok, want)
-			}
-			for _, bad := range []string{"", "soon", "2026-11-10T05:15:00Z", "2026-11-10"} {
-				var odd store.Time
-				_ = store.SelectRow(ctx, db, `SELECT ?`, bad).Scan(&odd)
-				if _, ok := lockoutEnd(odd, false, time.UTC); ok {
-					t.Errorf("SQLite text %q counts as a time", bad)
-				}
-			}
-			return
-		}
-		var stamp store.Time
-		if err := store.SelectRow(ctx, db, `SELECT TIMESTAMPTZ '2026-11-10 05:15:00.123+00'`).Scan(&stamp); err != nil {
-			t.Fatal(err)
-		}
-		end, ok := lockoutEnd(stamp, true, time.UTC)
-		if want := time.Date(2026, 11, 10, 5, 15, 0, 0, time.UTC); !ok || !end.Equal(want) {
-			t.Errorf("UTC: %v, %v; want %v (the milliseconds are dropped)", end, ok, want)
-		}
-		end, ok = lockoutEnd(stamp, true, berlin)
-		if want := time.Date(2026, 11, 10, 6, 15, 0, 0, time.UTC); !ok || !end.Equal(want) {
-			t.Errorf("Berlin: %v, %v; want %v (the wall clock read as UTC)", end, ok, want)
-		}
-	})
+	}
 }
 
 // The known defects of sign-in that the port keeps (BUGS.md). Each test
