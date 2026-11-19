@@ -3,8 +3,7 @@
 // codecs and features the devices that are online name, and one device as
 // the API server describes it.
 //
-// The two counts read one page of the API server's device list. A page
-// holds at most 500 devices, whatever size is asked for. An account
+// The two counts read the API server's whole device list. An account
 // limited to some devices counts those and reads only those.
 package crossplatform
 
@@ -20,8 +19,10 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
 )
 
-// peersPage is the device list the counts are made from.
-const peersPage = "/peers?page_size=9999"
+// peersPage is the device list the counts are made from. Without a page
+// size the API server answers every device as a list; with one it would
+// cut the list at 500.
+const peersPage = "/peers"
 
 type handlers struct {
 	api   *goapi.Client
@@ -69,10 +70,10 @@ type device struct {
 	fields *goapi.Object
 }
 
-// devices reads the device list: the "peers" of the API server's answer,
-// else its "data". Text in the place of the list is walked letter by
-// letter, each letter an entry without fields. For an account limited to
-// some devices only the entries whose id is in its scope are kept.
+// devices reads the device list (deviceList). Text in the place of the
+// list is walked letter by letter, each letter an entry without fields.
+// For an account limited to some devices only the entries whose id is in
+// its scope are kept.
 func (h *handlers) devices(r *http.Request) ([]device, error) {
 	scope, err := h.scope(r)
 	if err != nil {
@@ -91,16 +92,20 @@ func (h *handlers) devices(r *http.Request) ([]device, error) {
 	return kept, nil
 }
 
-// deviceList is the API server's device list for every account.
+// deviceList is the API server's device list for every account: the
+// answer itself when it is a list, else its "peers" or its "data".
 func (h *handlers) deviceList(r *http.Request) ([]device, error) {
 	resp, err := h.api.Get(r.Context(), peersPage)
 	if err != nil {
 		return nil, err
 	}
-	data := resp.Data()
-	found := goapi.Dig(data, "peers")
-	if !goapi.Truthy(found) {
-		found = goapi.Dig(data, "data")
+	found := resp.Data()
+	if _, isList := found.([]any); !isList {
+		data := found
+		found = goapi.Dig(data, "peers")
+		if !goapi.Truthy(found) {
+			found = goapi.Dig(data, "data")
+		}
 	}
 	if !goapi.Truthy(found) {
 		return nil, nil

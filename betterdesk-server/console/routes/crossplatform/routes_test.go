@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -60,6 +61,22 @@ func target(sc scenario) string {
 	return "/api/panel/cross-platform/capabilities/" + id
 }
 
+// changedByFixes are the scenarios a bug fix answers differently on
+// purpose, by route and name, with what Go answers now.
+var changedByFixes = map[string]struct {
+	status int
+	text   string
+}{
+	// TH4, G4: the device list is asked for without a page size, and the
+	// API server then answers a bare list, which Node never read
+	"distribution, a bare list": {200, `{"total":20,"platforms":{"windows":2,"ubuntu 22.04":1,"linux":1,"macos":3,"android":1,"ios":4,"chromeos":1,"other":3,"freebsd 14":1,"debian 12":2,"äöü éire":1},"archs":{"unknown":14,"x86_64":2,"arm64":2,"amd64":1,"αρμ":1},"versions":{"2":2,"9":1,"10":1,"1.4.2":4,"1.4.1":1,"1.3.9":1,"unknown":5,"1.5":1,"true":1,"1,2":1,"[object Object]":1,"Ünïcode":1}}`},
+	"protocols, a bare list":    {200, `{"totalOnline":3,"codecs":{"vp9":1,"h264":2},"features":{"file_transfer":2,"clipboard":1}}`},
+}
+
+// TestRoutesMatchNode replays the answers of the API server the Node
+// routes were recorded with: Go answers what Node answered, but for the
+// scenarios in changedByFixes, and asks for the device list without a
+// page size where Node asked for page_size=9999 (TH4, G4).
 func TestRoutesMatchNode(t *testing.T) {
 	var current scenario
 	api := routetest.NewAPI()
@@ -75,8 +92,12 @@ func TestRoutesMatchNode(t *testing.T) {
 		current = sc
 		name := sc.Route + ", " + sc.Name
 		got := admin.Do("GET", target(sc), "")
-		if got.Status != sc.Answer.Status || got.Body != sc.Answer.Text {
-			t.Errorf("%s:\n got %d %s\nNode %d %s", name, got.Status, got.Body, sc.Answer.Status, sc.Answer.Text)
+		wantStatus, wantText := sc.Answer.Status, sc.Answer.Text
+		if fixed, ok := changedByFixes[name]; ok {
+			wantStatus, wantText = fixed.status, fixed.text
+		}
+		if got.Status != wantStatus || got.Body != wantText {
+			t.Errorf("%s:\n got %d %s\nwant %d %s", name, got.Status, got.Body, wantStatus, wantText)
 		}
 		if got.Header.Get("Content-Type") != "application/json; charset=utf-8" {
 			t.Errorf("%s: Content-Type %q", name, got.Header.Get("Content-Type"))
@@ -84,6 +105,9 @@ func TestRoutesMatchNode(t *testing.T) {
 		var want []string
 		for _, call := range sc.Calls {
 			method, path, _ := strings.Cut(call, " ")
+			if path == "/peers?page_size=9999" {
+				path = "/peers"
+			}
 			want = append(want, method+" /api"+path)
 		}
 		if calls := api.Calls(); !reflect.DeepEqual(calls, want) {
@@ -94,7 +118,7 @@ func TestRoutesMatchNode(t *testing.T) {
 
 func TestGuards(t *testing.T) {
 	api := routetest.NewAPI()
-	api.On("GET /api/peers?page_size=9999", 200, `{"total":0,"data":[]}`)
+	api.On("GET /api/peers", 200, `[]`)
 	api.On("GET /api/peers/900100001", 200, `{"id":"900100001"}`)
 	// Every role has device.view; the operator role loses it here
 	w := routetest.New(t, routetest.Options{API: api, Roles: routetest.Overrides{"operator": {"device.view": false}}})
@@ -133,7 +157,6 @@ func TestCapabilitiesOfADeviceOutOfScope(t *testing.T) {
 		`{"id":"c","platform":"Linux","version":"1.3"}]`
 	api := routetest.NewAPI()
 	api.On("GET /api/peers", 200, devices)
-	api.On("GET /api/peers?page_size=9999", 200, `{"total":3,"data":`+devices+`}`)
 	for _, id := range []string{"a", "b"} {
 		api.On("GET /api/peers/"+id, 200, `{"id":"`+id+`"}`)
 	}
@@ -173,6 +196,27 @@ func TestCapabilitiesOfADeviceOutOfScope(t *testing.T) {
 	for _, call := range api.Calls() {
 		if strings.HasPrefix(call, "GET /api/peers/") {
 			t.Errorf("the API server was asked %s for a device out of scope", call)
+		}
+	}
+}
+
+// TestCountsCoverMoreThan500Devices: the counts read every device, where
+// a page of the API server's list holds at most 500.
+func TestCountsCoverMoreThan500Devices(t *testing.T) {
+	devices := make([]string, 501)
+	for i := range devices {
+		devices[i] = `{"id":"` + strconv.Itoa(900200000+i) + `","platform":"Linux","version":"1.4","live_online":true,"supported_codecs":["vp9"]}`
+	}
+	api := routetest.NewAPI()
+	api.On("GET /api/peers", 200, "["+strings.Join(devices, ",")+"]")
+	api.On("GET /api/peers?page_size=9999", 200, `{"total":501,"data":[`+strings.Join(devices[:500], ",")+`]}`)
+	admin := routetest.New(t, routetest.Options{API: api}).As("admin")
+	for path, want := range map[string]string{
+		"/api/panel/cross-platform/distribution": `{"total":501,"platforms":{"linux":501},"archs":{"unknown":501},"versions":{"1.4":501}}`,
+		"/api/panel/cross-platform/protocols":    `{"totalOnline":501,"codecs":{"vp9":501},"features":{}}`,
+	} {
+		if got := admin.Do("GET", path, ""); got.Status != 200 || got.Body != want {
+			t.Errorf("%s: %d %s, want %s", path, got.Status, got.Body, want)
 		}
 	}
 }
