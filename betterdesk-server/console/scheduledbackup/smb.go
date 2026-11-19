@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io/fs"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -162,7 +163,9 @@ func (s *Service) TestSMB(ctx context.Context, body any) (string, error) {
 }
 
 // TestSMBConnection lists the share with smbclient (on Windows: net use
-// and net use /delete). It returns the share as it was addressed.
+// and net use /delete). It returns the share as it was addressed. The
+// password never goes on the command line, where every local user could
+// read it: smbclient gets it in PASSWD, net use on stdin.
 func (s *Service) TestSMBConnection(ctx context.Context, v any) (string, error) {
 	smb, err := ValidateSMB(v)
 	if err != nil {
@@ -174,33 +177,39 @@ func (s *Service) TestSMBConnection(ctx context.Context, v any) (string, error) 
 		if smb.Domain != "" {
 			user = smb.Domain + `\` + smb.Username
 		}
-		args := []string{"use", target}
+		c := Command{Name: "net", Args: []string{"use", target}}
 		if user != "" {
-			args = append(args, "/user:"+argText(user), argText(smb.Password))
+			// "*" makes net use ask for the password, which it reads from
+			// stdin.
+			c.Args = append(c.Args, "*", "/user:"+argText(user))
+			c.Stdin = argText(smb.Password) + "\r\n"
 		}
 		defer func() {
 			cctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), s.o.SMBCleanupTimeout)
 			defer cancel()
-			_, _ = s.o.Run(cctx, "net", "use", target, "/delete", "/y")
+			_, _ = s.o.Run(cctx, Command{Name: "net", Args: []string{"use", target, "/delete", "/y"}})
 		}()
-		if err := s.runSMB(ctx, "net", args...); err != nil {
+		if err := s.runSMB(ctx, c); err != nil {
 			return "", err
 		}
 		return target, nil
 	}
 	target := "//" + smb.Host + "/" + smb.Share
-	args := []string{target}
+	c := Command{Name: "smbclient", Args: []string{target}}
 	if smb.Username != "" {
-		auth := smb.Username + "%" + smb.Password
+		user := smb.Username
 		if smb.Domain != "" {
-			auth = smb.Domain + `\` + auth
+			user = smb.Domain + `\` + user
 		}
-		args = append(args, "-U", argText(auth))
+		// smbclient takes the password of a user given without
+		// "%password" from the variable PASSWD.
+		c.Args = append(c.Args, "-U", argText(user))
+		c.Env = []string{"PASSWD=" + argText(smb.Password)}
 	} else {
-		args = append(args, "-N")
+		c.Args = append(c.Args, "-N")
 	}
-	args = append(args, "-c", "dir")
-	if err := s.runSMB(ctx, "smbclient", args...); err != nil {
+	c.Args = append(c.Args, "-c", "dir")
+	if err := s.runSMB(ctx, c); err != nil {
 		if errors.Is(err, errNotInstalled) {
 			return "", errors.New("smbclient is not installed; mount the share in the operating system and test its path instead")
 		}
@@ -213,10 +222,11 @@ var errNotInstalled = errors.New("not installed")
 
 // runSMB runs a program with the test's time limit and gives its failure
 // the old messages.
-func (s *Service) runSMB(ctx context.Context, name string, args ...string) error {
+func (s *Service) runSMB(ctx context.Context, c Command) error {
+	name := c.Name
 	rctx, cancel := context.WithTimeout(ctx, s.o.SMBTimeout)
 	defer cancel()
-	code, err := s.o.Run(rctx, name, args...)
+	code, err := s.o.Run(rctx, c)
 	switch {
 	case rctx.Err() != nil && ctx.Err() == nil:
 		return errors.New("SMB connection test timed out")
@@ -242,8 +252,14 @@ func argText(s string) string { return strings.ToValidUTF8(s, "\ufffd") }
 
 // runProgram runs a program and returns its exit status. Its output is
 // read and dropped.
-func runProgram(ctx context.Context, name string, args ...string) (int, error) {
-	cmd := exec.CommandContext(ctx, name, args...)
+func runProgram(ctx context.Context, c Command) (int, error) {
+	cmd := exec.CommandContext(ctx, c.Name, c.Args...)
+	if len(c.Env) > 0 {
+		cmd.Env = append(os.Environ(), c.Env...)
+	}
+	if c.Stdin != "" {
+		cmd.Stdin = strings.NewReader(c.Stdin)
+	}
 	err := cmd.Run()
 	var exit *exec.ExitError
 	if errors.As(err, &exit) {

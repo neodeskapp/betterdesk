@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"syscall"
 	"testing"
 
@@ -239,21 +240,24 @@ func TestSMBSettingsMatchNode(t *testing.T) {
 			t.Errorf("smb get %d %s: got %s %v, want %s", i, hide(show(c.Stored)), hide(got), err, hide(string(c.Result)))
 		}
 	}
+	moved := 0
 	for i, c := range v.SMBTest {
 		windows := c.Platform == "win32"
 		var calls []string
+		var ran []Command
 		plan := c.Plan
-		run := func(_ context.Context, name string, args ...string) (int, error) {
-			list := make([]any, len(args))
-			for k, a := range args {
+		run := func(_ context.Context, cmd Command) (int, error) {
+			list := make([]any, len(cmd.Args))
+			for k, a := range cmd.Args {
 				list[k] = a
 			}
-			calls = append(calls, branding.Stringify([]any{name, list}))
+			calls = append(calls, branding.Stringify([]any{cmd.Name, list}))
+			ran = append(ran, cmd)
 			switch plan.ErrorCode {
 			case "ENOENT":
-				return 0, &exec.Error{Name: name, Err: exec.ErrNotFound}
+				return 0, &exec.Error{Name: cmd.Name, Err: exec.ErrNotFound}
 			case "EACCES":
-				return 0, &fs.PathError{Op: "fork/exec", Path: name, Err: syscall.EACCES}
+				return 0, &fs.PathError{Op: "fork/exec", Path: cmd.Name, Err: syscall.EACCES}
 			}
 			return plan.Code, nil
 		}
@@ -272,9 +276,63 @@ func TestSMBSettingsMatchNode(t *testing.T) {
 		}
 		for k := range calls {
 			// spawn hands a lone surrogate to the program as U+FFFD
-			if calls[k] != loneSurrogate.ReplaceAllString(canon(t, c.Calls[k]), "\ufffd") {
-				t.Errorf("smb test %d call %d differs (%d bytes, want %d); the arguments hold the password", i, k, len(calls[k]), len(c.Calls[k]))
+			want := loneSurrogate.ReplaceAllString(canon(t, c.Calls[k]), "\ufffd")
+			wantEnv, wantStdin := "", ""
+			if smb, err := ValidateSMB(parse(t, c.Body)); err == nil {
+				var ok bool
+				want, wantEnv, wantStdin, ok = passwordMoved(t, want, argText(smb.Password))
+				if !ok {
+					t.Errorf("smb test %d call %d: the password is not where Node put it", i, k)
+					continue
+				}
+				if wantEnv != "" || wantStdin != "" {
+					moved++
+				}
+			}
+			if calls[k] != want {
+				t.Errorf("smb test %d call %d differs (%d bytes, want %d)", i, k, len(calls[k]), len(want))
+			}
+			if env := strings.Join(ran[k].Env, "\n"); env != wantEnv || ran[k].Stdin != wantStdin {
+				t.Errorf("smb test %d call %d: %d variables and %d bytes on stdin, want %d and %d", i, k, len(ran[k].Env), len(ran[k].Stdin), len(wantEnv), len(wantStdin))
 			}
 		}
 	}
+	if moved < 50 {
+		t.Errorf("only %d calls with a password", moved)
+	}
+}
+
+// passwordMoved is a call Node recorded, as JSON text, with the password
+// taken out of the arguments (BUGS.md BK10): smbclient's "-U user%password"
+// becomes "-U user" with the password in PASSWD, net use's
+// "/user:name password" becomes "* /user:name" with the password on
+// stdin. Other calls stay as they are. ok is false when the recorded call
+// does not hold the password where Node put it.
+func passwordMoved(t *testing.T, call, password string) (want, env, stdin string, ok bool) {
+	t.Helper()
+	parts := parse(t, []byte(call)).([]any)
+	name := parts[0].(string)
+	var args []string
+	for _, a := range parts[1].([]any) {
+		args = append(args, a.(string))
+	}
+	switch {
+	case name == "smbclient" && len(args) > 2 && args[1] == "-U":
+		user, cut := strings.CutSuffix(args[2], "%"+password)
+		if !cut {
+			return "", "", "", false
+		}
+		args[2], env = user, "PASSWD="+password
+	case name == "net" && len(args) == 4 && strings.HasPrefix(args[2], "/user:"):
+		if args[3] != password {
+			return "", "", "", false
+		}
+		args = []string{args[0], args[1], "*", args[2]}
+		stdin = password + "\r\n"
+	}
+	list := make([]any, len(args))
+	for k, a := range args {
+		list[k] = a
+	}
+	return branding.Stringify([]any{name, list}), env, stdin, true
 }

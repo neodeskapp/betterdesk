@@ -60,10 +60,20 @@ type Backups interface {
 	ValidateFullBackup(buf []byte) (backup.Validation, error)
 }
 
+// Command is a program the SMB test starts: its arguments, variables it
+// gets on top of the console's environment, and what it reads on stdin
+// (nothing when empty).
+type Command struct {
+	Name  string
+	Args  []string
+	Env   []string
+	Stdin string
+}
+
 // Runner starts a program and waits for it. exitCode is its exit status;
 // err is a failure to start it (exec.ErrNotFound for a program that is
 // not installed) or the end of ctx.
-type Runner func(ctx context.Context, name string, args ...string) (exitCode int, err error)
+type Runner func(ctx context.Context, c Command) (exitCode int, err error)
 
 // Options are the settings of a Service.
 type Options struct {
