@@ -1246,6 +1246,10 @@ UPDATE_GITHUB_OWNER="${UPDATE_GITHUB_OWNER:-UNITRONIX}"
 UPDATE_GITHUB_REPO="${UPDATE_GITHUB_REPO:-BetterDesk}"
 UPDATE_GITHUB_BRANCH="${UPDATE_GITHUB_BRANCH:-main}"
 
+# The manager's settings (update channel, PUID/PGID, the allowlisted
+# configuration): web-nodejs/.env on an install that has it from before the
+# web console moved into the server binary, else .env next to the compose
+# file.
 docker_update_env_file() {
     if [ -f "$SCRIPT_DIR/web-nodejs/.env" ]; then
         echo "$SCRIPT_DIR/web-nodejs/.env"
@@ -1353,7 +1357,7 @@ switch_update_channel() {
 # there until the new image is built, and restore_update_sources puts them
 # back when the build fails.
 UPDATE_SOURCE_ITEMS=(
-    betterdesk-server web-nodejs web-ui docker
+    betterdesk-server web-ui docker
     Dockerfile Dockerfile.server
     docker-compose.single.yml docker-compose.quick.single.yml docker-compose.quick.single.macvlan.yml
     betterdesk-docker.sh betterdesk.sh betterdesk.ps1 VERSION
@@ -1478,30 +1482,11 @@ update_docker_from_github() {
     cp -rf "$clone_dir/betterdesk-server/." "$SCRIPT_DIR/betterdesk-server/"
     files_updated=$((files_updated + 1))
 
-    # The console's language files, themes and images (web-nodejs) while the
-    # checkout has them; the image copies them in. data/ and node_modules/
-    # stay.
-    local pd
-    local preserve_dirs=("data" "node_modules")
-    if [ -d "$SCRIPT_DIR/web-nodejs" ]; then
-        for pd in "${preserve_dirs[@]}"; do
-            if [ -d "$SCRIPT_DIR/web-nodejs/$pd" ]; then
-                mv "$SCRIPT_DIR/web-nodejs/$pd" "/tmp/betterdesk-docker-preserve-$$-$pd" 2>/dev/null || true
-            fi
-        done
-        rm -rf "$SCRIPT_DIR/web-nodejs"
-    fi
-    if [ -d "$clone_dir/web-nodejs" ]; then
-        mkdir -p "$SCRIPT_DIR/web-nodejs"
-        cp -rf "$clone_dir/web-nodejs/." "$SCRIPT_DIR/web-nodejs/"
-    fi
-    for pd in "${preserve_dirs[@]}"; do
-        if [ -d "/tmp/betterdesk-docker-preserve-$$-$pd" ]; then
-            mkdir -p "$SCRIPT_DIR/web-nodejs"
-            mv "/tmp/betterdesk-docker-preserve-$$-$pd" "$SCRIPT_DIR/web-nodejs/$pd" 2>/dev/null || true
-        fi
-    done
-    files_updated=$((files_updated + 1))
+    # An install from before the web console moved into the server binary
+    # has a web-nodejs folder: its .env holds the manager's settings
+    # (docker_update_env_file), and its data/ and node_modules/ stayed
+    # through every update. The release has no web-nodejs, and the update
+    # leaves the folder as it is.
 
     # Update the new web console's source: the images build it (web-ui-builder
     # stage), so the Dockerfiles below fail without it. Stale files would be

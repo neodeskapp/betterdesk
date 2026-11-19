@@ -52,10 +52,15 @@ write_old_tree() {
     printf 'old compose\n' > "$COMPOSE_FILE"
 }
 
-# git clone that writes the release's files into the last argument
+# git clone that writes the release's files into the last argument and
+# records the branch it was asked for in $TEST_DIR/cloned-branches
 git() {
     if [ "${1:-}" = "clone" ]; then
-        local dest="${!#}"
+        local dest="${!#}" prev="" arg
+        for arg in "$@"; do
+            [ "$prev" = --branch ] && printf '%s\n' "$arg" >> "$TEST_DIR/cloned-branches"
+            prev=$arg
+        done
         mkdir -p "$dest/betterdesk-server" "$dest/docker" "$dest/web-ui"
         printf 'new\n' > "$dest/betterdesk-server/go.mod"
         printf 'new\n' > "$dest/Dockerfile"
@@ -146,6 +151,39 @@ test_backup_keeps_dotfiles_and_console_data() (
     rm -rf "$TEST_DIR"
 )
 
+# An install from before the web console moved into the server binary has
+# a web-nodejs folder with the manager's .env. An update from a release
+# without web-nodejs leaves the folder as it is, after a good build and
+# after one that fails, so the next update still takes the channel in it.
+test_update_keeps_old_web_nodejs() (
+    load
+    write_old_tree
+    local old="$SCRIPT_DIR/web-nodejs"
+    mkdir -p "$old/data" "$old/node_modules"
+    printf 'UPDATE_GITHUB_BRANCH=dev\nPUID=1500\n' > "$old/.env"
+    printf 'sha\n' > "$old/data/.update_sha"
+    printf 'kept\n' > "$old/node_modules/dep.js"
+    COMPOSE_CMD=fake_compose
+    MENU_CHOICE=1
+    menu_choose() { MENU_CHOICE=1; }
+    do_backup_silent() { :; }
+    local build
+    for build in 0 1 0; do
+        export BUILD_FAILS=$build
+        ( do_update ) >/dev/null 2>&1
+        grep -qx 'UPDATE_GITHUB_BRANCH=dev' "$old/.env" 2>/dev/null \
+            || fail "web-nodejs/.env lost the update channel after an update (build failed: $build)"
+        grep -qx 'PUID=1500' "$old/.env" || fail "web-nodejs/.env lost PUID after an update (build failed: $build)"
+        [ -f "$old/data/.update_sha" ] || fail "web-nodejs/data lost a file after an update (build failed: $build)"
+        [ -f "$old/node_modules/dep.js" ] || fail "web-nodejs/node_modules lost a file after an update (build failed: $build)"
+    done
+    [ "$(tr '\n' ' ' < "$TEST_DIR/cloned-branches")" = "dev dev dev " ] \
+        || fail "the updates cloned the branches $(tr '\n' ' ' < "$TEST_DIR/cloned-branches")"
+    [ "$(cat "$SCRIPT_DIR/betterdesk-server/go.mod")" = new ] || fail "the update did not put the new server source in place"
+    rm -rf "$TEST_DIR"
+)
+
 test_failed_build_restores_sources
 test_backup_keeps_dotfiles_and_console_data
+test_update_keeps_old_web_nodejs
 echo "Docker installer checks passed"
