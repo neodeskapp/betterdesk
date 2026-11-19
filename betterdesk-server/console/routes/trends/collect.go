@@ -3,16 +3,22 @@ package trends
 import (
 	"context"
 	"errors"
+	"slices"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
 )
 
 // collection is what the reports page gets: every time is in milliseconds
 // since 1970.
+//
+// One collection is kept for every account. It notes which devices
+// reported each session, which devices were read and which were listed, so
+// that visibleTo can cut it to the devices of an account.
 type collection struct {
 	Days           int            `json:"days"`
 	Since          int64          `json:"since"`
@@ -20,6 +26,41 @@ type collection struct {
 	Help           []helpActivity `json:"help"`
 	DevicesChecked int            `json:"devicesChecked"`
 	DevicesTotal   int            `json:"devicesTotal"`
+
+	// reporters holds, for each session, the devices whose lists had it
+	reporters [][]string
+	// checked are the devices whose sessions were read
+	checked []string
+	// listed are the ids of the API server's devices; a device without
+	// an id is listed as ""
+	listed []string
+}
+
+// visibleTo is the part of the collection an account with the device
+// scope sees: the sessions a device of the scope reported, and the
+// devices of the scope among those read and listed. A nil scope sees all
+// of it.
+func (c *collection) visibleTo(scope *access.DeviceScope) *collection {
+	if scope == nil {
+		return c
+	}
+	out := &collection{Days: c.Days, Since: c.Since, Sessions: []sessionSpan{}, Help: c.Help}
+	for i, span := range c.Sessions {
+		if slices.ContainsFunc(c.reporters[i], scope.Has) {
+			out.Sessions = append(out.Sessions, span)
+		}
+	}
+	for _, id := range c.checked {
+		if scope.Has(id) {
+			out.DevicesChecked++
+		}
+	}
+	for _, id := range c.listed {
+		if id != "" && scope.Has(id) {
+			out.DevicesTotal++
+		}
+	}
+	return out
 }
 
 // sessionSpan is one remote session. End is null while it runs, and when
@@ -50,7 +91,8 @@ func collect(ctx context.Context, api source, days int, now int64) (*collection,
 
 	peers := api.GetAllPeers(ctx, false)
 	var ids []string
-	for _, p := range peers {
+	listed := make([]string, len(peers))
+	for i, p := range peers {
 		if p == nil {
 			return nil, errShape
 		}
@@ -58,15 +100,19 @@ func collect(ctx context.Context, api source, days int, now int64) (*collection,
 		if !goapi.Truthy(id) {
 			id = p.Get("peer_id")
 		}
-		if goapi.Truthy(id) && len(ids) < maxPeers {
-			ids = append(ids, jsreq.String(id))
+		if goapi.Truthy(id) {
+			listed[i] = jsreq.String(id)
+			if len(ids) < maxPeers {
+				ids = append(ids, listed[i])
+			}
 		}
 	}
 
 	lists := sessionLists(ctx, api, ids)
-	seen := map[string]bool{}
+	seen := map[string]int{}
 	sessions := []sessionSpan{}
-	for _, list := range lists {
+	var reporters [][]string
+	for i, list := range lists {
 		rows, err := iterable(list)
 		if err != nil {
 			return nil, err
@@ -81,15 +127,17 @@ func collect(ctx context.Context, api source, days int, now int64) (*collection,
 				continue
 			}
 			key := sessionKey(s)
-			if seen[key] {
+			if at, ok := seen[key]; ok {
+				reporters[at] = append(reporters[at], ids[i])
 				continue
 			}
-			seen[key] = true
+			seen[key] = len(sessions)
 			span := sessionSpan{Start: start}
 			if end, ok := toTime(s.Get("ended_at")); ok {
 				span.End = &end
 			}
 			sessions = append(sessions, span)
+			reporters = append(reporters, []string{ids[i]})
 		}
 	}
 
@@ -121,6 +169,7 @@ func collect(ctx context.Context, api source, days int, now int64) (*collection,
 	return &collection{
 		Days: days, Since: since, Sessions: sessions, Help: help,
 		DevicesChecked: len(ids), DevicesTotal: len(peers),
+		reporters: reporters, checked: ids, listed: listed,
 	}, nil
 }
 

@@ -4,7 +4,8 @@
 // browser sorts into its own days.
 //
 // Sessions are read per device, six devices at a time, for at most 500
-// devices. The result is kept for five minutes.
+// devices. The result is kept for five minutes, for every account; an
+// account limited to some devices sees the sessions and counts of those.
 package trends
 
 import (
@@ -13,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
@@ -38,10 +40,15 @@ type source interface {
 	ListHelpRequests(ctx context.Context, filter any) *goapi.Object
 }
 
+// scopeFunc is the device scope of the account of a request, nil when
+// it sees every device.
+type scopeFunc func(r *http.Request) (*access.DeviceScope, error)
+
 type handlers struct {
-	api source
-	log *kit.Logger
-	now func() time.Time
+	api   source
+	scope scopeFunc
+	log   *kit.Logger
+	now   func() time.Time
 
 	mu    sync.Mutex
 	cache *cached
@@ -57,8 +64,21 @@ type cached struct {
 
 // Register adds the group's route.
 func Register(d *kit.Deps) {
-	h := &handlers{api: d.GoAPI, log: d.Log.Child("TRENDS"), now: time.Now}
+	h := &handlers{api: d.GoAPI, scope: scopeOf(d), log: d.Log.Child("TRENDS"), now: time.Now}
 	d.Router.Get("/api/reports/trends", h.trends, d.RequireAuth, d.RequirePermission("audit.view"))
+}
+
+// scopeOf reads the scope over every device of the device layer, which
+// knows their folders and tags, and only for an account that has a limit.
+func scopeOf(d *kit.Deps) scopeFunc {
+	return func(r *http.Request) (*access.DeviceScope, error) {
+		ctx, user := r.Context(), kit.User(r)
+		scope, err := d.DeviceGroups.DeviceScopeForUser(ctx, user, nil)
+		if err != nil || scope == nil {
+			return scope, err
+		}
+		return d.DeviceGroups.DeviceScopeForUser(ctx, user, d.Backend.GetAllDevices(ctx, goapi.DeviceFilters{}))
+	}
 }
 
 type answer struct {
@@ -71,13 +91,19 @@ type answer struct {
 // anything that is no number, and 0, means 14.
 func (h *handlers) trends(w http.ResponseWriter, r *http.Request) {
 	days := daysOf(jsreq.Query(r, "days"))
+	scope, err := h.scope(r)
+	if err != nil {
+		h.log.Error("Trends device scope error:", err)
+		kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
+		return
+	}
 	entry, err := h.collected(r.Context(), days)
 	if err != nil {
 		h.log.Error("Trends error:", err)
 		kit.Fail(w, r, http.StatusBadGateway, kit.T(r, "errors.server_error", nil))
 		return
 	}
-	kit.JSON(w, r, http.StatusOK, answer{Success: true, Data: entry.data, GeneratedAt: entry.at})
+	kit.JSON(w, r, http.StatusOK, answer{Success: true, Data: entry.data.visibleTo(scope), GeneratedAt: entry.at})
 }
 
 // daysOf is Math.min(90, Math.max(1, parseInt(days, 10) || 14)).

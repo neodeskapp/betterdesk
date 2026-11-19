@@ -4,7 +4,8 @@
 // the API server describes it.
 //
 // The two counts read one page of the API server's device list. A page
-// holds at most 500 devices, whatever size is asked for.
+// holds at most 500 devices, whatever size is asked for. An account
+// limited to some devices counts those and reads only those.
 package crossplatform
 
 import (
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
@@ -22,17 +24,34 @@ import (
 const peersPage = "/peers?page_size=9999"
 
 type handlers struct {
-	api *goapi.Client
+	api   *goapi.Client
+	scope func(r *http.Request) (*access.DeviceScope, error)
+	log   *kit.Logger
 }
 
 // Register adds the group's routes.
 func Register(d *kit.Deps) {
-	h := &handlers{api: d.GoAPI}
+	h := &handlers{api: d.GoAPI, scope: scopeOf(d), log: d.Log.Child("CROSS-PLATFORM")}
 	r := d.Router
 	view := d.RequirePermission("device.view")
 	r.Get("/api/panel/cross-platform/distribution", h.distribution, d.RequireAuth, view)
 	r.Get("/api/panel/cross-platform/capabilities/{deviceId}", h.capabilities, d.RequireAuth, view)
 	r.Get("/api/panel/cross-platform/protocols", h.protocols, d.RequireAuth, view)
+}
+
+// scopeOf is the device scope of the account of a request, nil when it
+// sees every device. It is read over every device of the device layer,
+// which knows their folders and tags, and only for an account that has a
+// limit.
+func scopeOf(d *kit.Deps) func(r *http.Request) (*access.DeviceScope, error) {
+	return func(r *http.Request) (*access.DeviceScope, error) {
+		ctx, user := r.Context(), kit.User(r)
+		scope, err := d.DeviceGroups.DeviceScopeForUser(ctx, user, nil)
+		if err != nil || scope == nil {
+			return scope, err
+		}
+		return d.DeviceGroups.DeviceScopeForUser(ctx, user, d.Backend.GetAllDevices(ctx, goapi.DeviceFilters{}))
+	}
 }
 
 type failure struct {
@@ -52,8 +71,28 @@ type device struct {
 
 // devices reads the device list: the "peers" of the API server's answer,
 // else its "data". Text in the place of the list is walked letter by
-// letter, each letter an entry without fields.
+// letter, each letter an entry without fields. For an account limited to
+// some devices only the entries whose id is in its scope are kept.
 func (h *handlers) devices(r *http.Request) ([]device, error) {
+	scope, err := h.scope(r)
+	if err != nil {
+		return nil, err
+	}
+	list, err := h.deviceList(r)
+	if err != nil || scope == nil {
+		return list, err
+	}
+	kept := make([]device, 0, len(list))
+	for _, d := range list {
+		if id := d.fields.Get("id"); goapi.Truthy(id) && scope.Has(jsreq.String(id)) {
+			kept = append(kept, d)
+		}
+	}
+	return kept, nil
+}
+
+// deviceList is the API server's device list for every account.
+func (h *handlers) deviceList(r *http.Request) ([]device, error) {
 	resp, err := h.api.Get(r.Context(), peersPage)
 	if err != nil {
 		return nil, err
@@ -176,8 +215,22 @@ func platformKey(platform string) string {
 }
 
 // capabilities answers GET /api/panel/cross-platform/capabilities/{deviceId}
-// with the API server's answer for the device, status and body.
+// with the API server's answer for the device, status and body. A device
+// outside the account's scope, or one no device has, is refused with 403
+// for an account limited to some devices.
 func (h *handlers) capabilities(w http.ResponseWriter, r *http.Request) {
+	if id, err := access.SafeAPIID(r.PathValue("deviceId"), "deviceId"); err == nil {
+		scope, err := h.scope(r)
+		if err != nil {
+			h.log.Error("Device scope error:", err)
+			kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
+			return
+		}
+		if !scope.Has(id) {
+			kit.Fail(w, r, http.StatusForbidden, kit.T(r, "errors.forbidden", nil))
+			return
+		}
+	}
 	jsreq.ProxyToGo(w, r, h.api, http.MethodGet, func() (string, error) {
 		segment, err := jsreq.SafeSegment(r.PathValue("deviceId"), "deviceId")
 		if err != nil {

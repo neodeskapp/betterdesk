@@ -1,7 +1,9 @@
 package trends_test
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"sort"
 	"testing"
@@ -150,5 +152,60 @@ func TestTrendsNeedsAuditView(t *testing.T) {
 	}
 	if got := w.As("viewer").Do("GET", "/api/reports/trends", ""); got.Status != 200 {
 		t.Errorf("viewer: %d %s", got.Status, got.Body)
+	}
+}
+
+// TestTrendsCountOnlyDevicesInScope closes devices a and c to the viewer
+// with a device group whose access list names the operator: it gets the
+// sessions b reported and counts b alone, also from the result kept for
+// every account, while the admin keeps seeing every device.
+func TestTrendsCountOnlyDevicesInScope(t *testing.T) {
+	now := time.Now().UTC().Truncate(time.Second)
+	started := now.Add(-2 * time.Hour)
+	session := func(id int, host, peer string) string {
+		return fmt.Sprintf(`{"id":%d,"host_id":"%s","peer_id":"%s","started_at":"%s"}`, id, host, peer, stamp(started.Add(time.Duration(id)*time.Minute)))
+	}
+	api := routetest.NewAPI()
+	api.On("GET /api/peers", 200, `[{"id":"a"},{"id":"b"},{"id":"c"}]`)
+	api.On("GET /api/peers/a/connection-sessions?limit=500", 200, `{"sessions":[`+session(1, "a", "b")+`,`+session(2, "a", "c")+`]}`)
+	api.On("GET /api/peers/b/connection-sessions?limit=500", 200, `{"sessions":[`+session(1, "a", "b")+`]}`)
+	api.On("GET /api/peers/c/connection-sessions?limit=500", 200, `{"sessions":[`+session(2, "a", "c")+`,`+session(3, "c", "x")+`]}`)
+	w := routetest.New(t, routetest.Options{API: api})
+	ctx := context.Background()
+	for _, statement := range []string{
+		"INSERT INTO device_groups (id, guid, name) VALUES (90, 'closed', 'Closed')",
+		"INSERT INTO device_group_members (device_group_id, peer_id) VALUES (90, 'a'), (90, 'c')",
+		"INSERT INTO device_group_user_access (device_group_id, user_id) VALUES (90, 5)",
+	} {
+		if _, err := w.DB.Exec(ctx, statement); err != nil {
+			t.Fatal(err)
+		}
+	}
+	read := func(role string) answer {
+		t.Helper()
+		got := w.As(role).Do("GET", "/api/reports/trends", "")
+		var a answer
+		if got.Status != 200 || json.Unmarshal([]byte(got.Body), &a) != nil {
+			t.Fatalf("%s: %d %s", role, got.Status, got.Body)
+		}
+		return a
+	}
+	starts := func(a answer) []int64 {
+		var out []int64
+		for _, s := range a.Data.Sessions {
+			out = append(out, (s.Start-started.UnixMilli())/60000)
+		}
+		return out
+	}
+	for i, role := range []string{"viewer", "admin", "viewer"} {
+		got := read(role)
+		wantSessions, wantDevices := []int64{1}, 1
+		if role == "admin" {
+			wantSessions, wantDevices = []int64{1, 2, 3}, 3
+		}
+		if !reflect.DeepEqual(starts(got), wantSessions) || got.Data.DevicesChecked != wantDevices || got.Data.DevicesTotal != wantDevices {
+			t.Errorf("request %d as %s: sessions %v, checked %d, total %d; want sessions %v and %d devices",
+				i+1, role, starts(got), got.Data.DevicesChecked, got.Data.DevicesTotal, wantSessions, wantDevices)
+		}
 	}
 }

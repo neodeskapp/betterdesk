@@ -1,6 +1,7 @@
 package crossplatform_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/url"
 	"os"
@@ -118,6 +119,60 @@ func TestGuards(t *testing.T) {
 		}
 		if calls := api.Calls(); len(calls) != 3 {
 			t.Errorf("%s: %d calls for three accounts that may: %v", path, len(calls), calls)
+		}
+	}
+}
+
+// TestCapabilitiesOfADeviceOutOfScope closes devices a and c to the
+// viewer with a device group whose access list names the operator: the
+// counts hold b alone, and the capabilities of any other device are
+// refused before the API server is asked. The admin sees every device.
+func TestCapabilitiesOfADeviceOutOfScope(t *testing.T) {
+	devices := `[{"id":"a","platform":"Windows 11","version":"1.4","live_online":true,"supported_codecs":["vp9"]},` +
+		`{"id":"b","platform":"Linux","version":"1.3","live_online":true,"supported_codecs":["h264"]},` +
+		`{"id":"c","platform":"Linux","version":"1.3"}]`
+	api := routetest.NewAPI()
+	api.On("GET /api/peers", 200, devices)
+	api.On("GET /api/peers?page_size=9999", 200, `{"total":3,"data":`+devices+`}`)
+	for _, id := range []string{"a", "b"} {
+		api.On("GET /api/peers/"+id, 200, `{"id":"`+id+`"}`)
+	}
+	w := routetest.New(t, routetest.Options{API: api})
+	for _, statement := range []string{
+		"INSERT INTO device_groups (id, guid, name) VALUES (90, 'closed', 'Closed')",
+		"INSERT INTO device_group_members (device_group_id, peer_id) VALUES (90, 'a'), (90, 'c')",
+		"INSERT INTO device_group_user_access (device_group_id, user_id) VALUES (90, 5)",
+	} {
+		if _, err := w.DB.Exec(context.Background(), statement); err != nil {
+			t.Fatal(err)
+		}
+	}
+	viewer, admin := w.As("viewer"), w.As("admin")
+	for _, c := range []struct {
+		who        *routetest.Agent
+		path, want string
+	}{
+		{viewer, "/api/panel/cross-platform/distribution", `{"total":1,"platforms":{"linux":1},"archs":{"unknown":1},"versions":{"1.3":1}}`},
+		{viewer, "/api/panel/cross-platform/protocols", `{"totalOnline":1,"codecs":{"h264":1},"features":{}}`},
+		{admin, "/api/panel/cross-platform/distribution", `{"total":3,"platforms":{"windows":1,"linux":2},"archs":{"unknown":3},"versions":{"1.4":1,"1.3":2}}`},
+		{admin, "/api/panel/cross-platform/protocols", `{"totalOnline":2,"codecs":{"vp9":1,"h264":1},"features":{}}`},
+		{viewer, "/api/panel/cross-platform/capabilities/b", `{"id":"b"}`},
+		{admin, "/api/panel/cross-platform/capabilities/a", `{"id":"a"}`},
+	} {
+		if got := c.who.Do("GET", c.path, ""); got.Status != 200 || got.Body != c.want {
+			t.Errorf("%s: %d %s, want %s", c.path, got.Status, got.Body, c.want)
+		}
+	}
+	api.Calls()
+	for _, id := range []string{"a", "%20a%20", "zzz"} {
+		got := viewer.Do("GET", "/api/panel/cross-platform/capabilities/"+id, "")
+		if got.Status != 403 || !strings.HasPrefix(got.Body, `{"success":false,"error":`) {
+			t.Errorf("capabilities of %s out of the viewer's scope: %d %s", id, got.Status, got.Body)
+		}
+	}
+	for _, call := range api.Calls() {
+		if strings.HasPrefix(call, "GET /api/peers/") {
+			t.Errorf("the API server was asked %s for a device out of scope", call)
 		}
 	}
 }
