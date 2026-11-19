@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strings"
 	"unicode/utf16"
-	"unicode/utf8"
 
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/httpx"
@@ -299,9 +298,6 @@ func (h *handlers) deploy(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// errNotRunnable is a flow whose nodes cannot be walked.
-var errNotRunnable = errors.New("the flow's nodes cannot be read")
-
 // test answers POST /api/cdap-studio/flows/{id}/test with a dry run: one
 // made-up result per node of the flow, and the numbers of nodes and
 // wires. Nothing of the flow runs.
@@ -319,48 +315,26 @@ func (h *handlers) test(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusBadRequest, invalidJSON)
 		return
 	}
-	answer, err := dryRun(data)
-	if err != nil {
-		h.failed(w, r, "test flow", err, "Failed to test flow")
-		return
-	}
-	text, _ := stringify(answer, "")
+	text, _ := stringify(dryRun(data), "")
 	httpx.WriteJSONBytes(w, r, http.StatusOK, []byte(text))
 }
 
-// dryRun builds the answer of a test run from the parsed flow. It reads
-// the flow the way the old console's JavaScript did, whatever the JSON
-// holds: nodes may be a list or a text (one node per character), a node
-// may be any value but null, and a member that is not there is left out
-// of the result.
-func dryRun(data any) (*object, error) {
-	nodes, wires := any([]any{}), any([]any{})
-	if truthy(data) {
-		if v := property(data, "nodes"); truthy(v) {
-			nodes = v
-		}
-		if v := property(data, "wires"); truthy(v) {
-			wires = v
-		}
-	}
-	var list []any
-	switch t := nodes.(type) {
-	case []any:
-		list = t
-	case string:
-		list = characters(t)
-	default:
-		return nil, errNotRunnable
-	}
-	results := make([]any, 0, len(list))
-	for _, node := range list {
-		if node == nil {
-			return nil, errNotRunnable
+// dryRun builds the answer of a test run from the parsed flow. nodes and
+// wires count only when they are lists; anything else counts as an empty
+// list. A node that is no object, or whose type cannot be written as text,
+// gets no result; nodeCount still counts it.
+func dryRun(data any) *object {
+	nodes, _ := property(data, "nodes").([]any)
+	wires, _ := property(data, "wires").([]any)
+	results := make([]any, 0, len(nodes))
+	for _, node := range nodes {
+		if _, isObject := node.(*object); !isObject {
+			continue
 		}
 		kind := property(node, "type")
 		kindText, ok := toText(kind)
 		if !ok {
-			return nil, errNotRunnable
+			continue
 		}
 		label := property(node, "label")
 		if !truthy(label) {
@@ -380,24 +354,9 @@ func dryRun(data any) (*object, error) {
 	answer := newObject()
 	answer.set("success", true)
 	answer.set("results", results)
-	answer.set("nodeCount", property(nodes, "length"))
-	answer.set("wireCount", property(wires, "length"))
-	return answer, nil
-}
-
-// characters cuts a text into its characters, each half of a broken
-// surrogate pair on its own.
-func characters(s string) []any {
-	var out []any
-	for i := 0; i < len(s); {
-		size := 3
-		if _, half := halfPair(s, i); !half {
-			_, size = utf8.DecodeRuneInString(s[i:])
-		}
-		out = append(out, s[i:i+size])
-		i += size
-	}
-	return out
+	answer.set("nodeCount", float64(len(nodes)))
+	answer.set("wireCount", float64(len(wires)))
+	return answer
 }
 
 // exported is a .bdflow file.

@@ -127,9 +127,6 @@ func TestUnitsAndProperty(t *testing.T) {
 	if n := units(half.(string)); n != 5 {
 		t.Errorf("units = %d, want 5", n)
 	}
-	if got := characters(half.(string)); len(got) != 4 {
-		t.Errorf("characters = %q, want 4", got)
-	}
 	list, _ := parseJSON(`[1,2,3]`)
 	obj, _ := parseJSON(`{"length":"x","id":7}`)
 	if property(list, "length") != 3.0 || property(half, "length") != 5.0 || property(obj, "length") != "x" || property(obj, "id") != 7.0 {

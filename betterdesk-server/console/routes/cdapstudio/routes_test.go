@@ -147,6 +147,22 @@ var stepDifferences = map[string]struct {
 	status int
 	text   string
 }{
+	// ST2: nodes and wires count only as lists, and a node that is no
+	// object or whose type is no text gets no result
+	"test: nodes of every kind":                   {200, `{"success":true,"results":[{"nodeId":1,"nodeType":2,"label":3,"status":"ok","output":{"_simulated":true,"value":"Mock data from 2"}},{"nodeId":null,"nodeType":null,"label":null,"status":"ok","output":{"_simulated":true,"value":"Mock data from null"}},{"nodeId":"a","nodeType":"b","label":"b","status":"ok","output":{"_simulated":true,"value":"Mock data from b"}},{"nodeId":"a","nodeType":"b","label":"b","status":"ok","output":{"_simulated":true,"value":"Mock data from b"}},{"nodeId":"a","nodeType":"b","label":[],"status":"ok","output":{"_simulated":true,"value":"Mock data from b"}},{"nodeId":{"x":1},"nodeType":["t",1,null,[2,[3]],{}],"label":{},"status":"ok","output":{"_simulated":true,"value":"Mock data from t,1,,2,3,[object Object]"}},{"status":"ok","output":{"_simulated":true,"value":"Mock data from undefined"}},{"nodeType":true,"label":true,"status":"ok","output":{"_simulated":true,"value":"Mock data from true"}},{"nodeType":1e+21,"label":1e+21,"status":"ok","output":{"_simulated":true,"value":"Mock data from 1e+21"}},{"nodeType":0,"label":0,"status":"ok","output":{"_simulated":true,"value":"Mock data from 0"}},{"nodeType":0.1,"label":0.1,"status":"ok","output":{"_simulated":true,"value":"Mock data from 0.1"}},{"nodeType":1e-7,"label":1e-7,"status":"ok","output":{"_simulated":true,"value":"Mock data from 1e-7"}},{"nodeType":null,"label":null,"status":"ok","output":{"_simulated":true,"value":"Mock data from null"}},{"nodeType":null,"label":null,"status":"ok","output":{"_simulated":true,"value":"Mock data from null"}},{"nodeId":"last","status":"ok","output":{"_simulated":true,"value":"Mock data from undefined"}}],"nodeCount":21,"wireCount":3}`},
+	"test: a null node":                           {200, `{"success":true,"results":[{"nodeId":"n1","status":"ok","output":{"_simulated":true,"value":"Mock data from undefined"}}],"nodeCount":2,"wireCount":0}`},
+	"test: a node type with toString":             {200, `{"success":true,"results":[],"nodeCount":1,"wireCount":0}`},
+	"test: a node type list with toString inside": {200, `{"success":true,"results":[],"nodeCount":1,"wireCount":0}`},
+	"test: nodes as text":                         {200, `{"success":true,"results":[],"nodeCount":0,"wireCount":0}`},
+	"test: nodes as a number":                     {200, `{"success":true,"results":[],"nodeCount":0,"wireCount":0}`},
+	"test: nodes as true":                         {200, `{"success":true,"results":[],"nodeCount":0,"wireCount":0}`},
+	"test: nodes as an object":                    {200, `{"success":true,"results":[],"nodeCount":0,"wireCount":0}`},
+	"test: wires as a number":                     {200, `{"success":true,"results":[],"nodeCount":0,"wireCount":0}`},
+	"test: wires as true":                         {200, `{"success":true,"results":[],"nodeCount":0,"wireCount":0}`},
+	"test: wires as an object with length":        {200, `{"success":true,"results":[],"nodeCount":0,"wireCount":0}`},
+	"test: wires as an object with an odd length": {200, `{"success":true,"results":[],"nodeCount":0,"wireCount":0}`},
+	"test: wires as an object without length":     {200, `{"success":true,"results":[],"nodeCount":0,"wireCount":0}`},
+	"test: wires with a null length":              {200, `{"success":true,"results":[],"nodeCount":0,"wireCount":0}`},
 	// ST1: a flow nested deeper than 200 levels is not JSON
 	"flow text nested 1000 deep": {400, `{"success":false,"error":"Invalid flow JSON"}`},
 	"export nested 1000 deep":    {404, `{"success":false,"error":"Flow not found"}`},
@@ -514,4 +530,31 @@ func TestFlowNestedTooDeepIsRefused(t *testing.T) {
 	expect(t, "an import of 201 levels", w.do("alice", "POST", "/api/cdap-studio/flows/import", `{"name":"Deep","flow":`+deep(201)+`}`, ""), 400, refused)
 	objects := strings.Repeat(`{"a":`, 201) + "1" + strings.Repeat("}", 201)
 	expect(t, "201 levels of objects", w.do("alice", "POST", "/api/cdap-studio/flows", `{"name":"Deep","flow_json":`+objects+`}`, ""), 400, refused)
+}
+
+// TestDryRunOfOddFlows: nodes and wires count only as lists, and a node
+// that is no object or whose type is no text gets no result, where the
+// dry run answered 500 or walked a text letter by letter.
+func TestDryRunOfOddFlows(t *testing.T) {
+	w := newWorld(t, storetest.Migrated(t))
+	mock := func(id, kind string) string {
+		return `{"nodeId":"` + id + `","nodeType":"` + kind + `","label":"` + kind + `","status":"ok","output":{"_simulated":true,"value":"Mock data from ` + kind + `"}}`
+	}
+	for i, c := range []struct{ flow, want string }{
+		{`{"nodes":5,"wires":3}`, `{"success":true,"results":[],"nodeCount":0,"wireCount":0}`},
+		{`{"nodes":true,"wires":true}`, `{"success":true,"results":[],"nodeCount":0,"wireCount":0}`},
+		{`{"nodes":{"0":{"id":"n","type":"t"}},"wires":{"length":7}}`, `{"success":true,"results":[],"nodeCount":0,"wireCount":0}`},
+		{`{"nodes":"abc","wires":"xy"}`, `{"success":true,"results":[],"nodeCount":0,"wireCount":0}`},
+		{`{"nodes":[null,1,"x",["y"],{"id":"n1","type":"inject"},{"id":"n2","type":{"toString":1}},{"id":"n3","type":["a",{"toString":1}]}],"wires":[1,2]}`,
+			`{"success":true,"results":[` + mock("n1", "inject") + `],"nodeCount":7,"wireCount":2}`},
+	} {
+		created := w.do("alice", "POST", "/api/cdap-studio/flows", `{"name":"Odd","flow_json":`+c.flow+`}`, "")
+		var answer struct {
+			ID string `json:"id"`
+		}
+		if err := json.Unmarshal(created.Body.Bytes(), &answer); err != nil || answer.ID == "" {
+			t.Fatalf("flow %d: %d %s", i, created.Code, created.Body.String())
+		}
+		expect(t, c.flow, w.do("alice", "POST", "/api/cdap-studio/flows/"+answer.ID+"/test", `{}`, ""), 200, c.want)
+	}
 }
