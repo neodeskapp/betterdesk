@@ -58,9 +58,14 @@ type RelayOptions struct {
 // (services/chatRelay.js of the old console): /ws/chat/<device> for the
 // device's agent, /ws/chat-operator/<device> for operators in that
 // device's room, /ws/chat-operator/panel for the inbox. Rooms live in
-// this process only and are never removed, as in Node.
+// this process only, while a socket is in them; the API server keeps the
+// messages. Every socket is pinged every PingInterval and closed when its
+// client has not answered for two intervals; one that is just quiet stays
+// open.
 type Relay struct {
 	opts RelayOptions
+	// operators counts the open operator sockets per account
+	operators accounts
 
 	mu    sync.Mutex
 	rooms map[string]*room
@@ -102,8 +107,8 @@ func (r *Relay) nowMillis() float64 { return float64(r.opts.Now().UnixMilli()) }
 // serveAgent is a device's socket. Before the handshake: a foreign origin
 // 403, then the device token (the query's token, else a bearer header)
 // checked for the device in the path: refused 403, a failed check 500.
-// There is no limit on connections; a second socket of the device
-// replaces the first, which is closed with 1001 "New agent connected".
+// A second socket of the device replaces the first, which is closed
+// with 1001 "New agent connected".
 func (r *Relay) serveAgent(u *ws.Upgrade) {
 	if !u.CheckOrigin("chat-agent " + u.Path) {
 		return
@@ -122,12 +127,12 @@ func (r *Relay) serveAgent(u *ws.Upgrade) {
 		u.Refuse(http.StatusForbidden)
 		return
 	}
-	conn, accepted := u.Accept(ws.AcceptOptions{})
+	conn, answers, accepted := accept(u)
 	if !accepted {
 		return
 	}
 	defer conn.Wait()
-	c := r.newClient(u, conn, deviceID, "")
+	c := r.newClient(u, conn, answers, deviceID, "")
 	r.agentJoins(c)
 	c.run(r.agentFrame)
 	r.agentLeaves(c)
@@ -137,9 +142,9 @@ func (r *Relay) serveAgent(u *ws.Upgrade) {
 // serveOperator is a console user's socket. Before the handshake: a
 // foreign origin 403, no signed-in session 401, the role without
 // chat.access (or its lookup failing) 403, a room that is no device in
-// the account's device scope 404 (the inbox is open to every account).
-// The operator's name is the session's user name, "operator" without
-// one.
+// the account's device scope 404 (the inbox is open to every account),
+// MaxOperatorSockets of the account open 429. The operator's name is the
+// session's user name, "operator" without one.
 func (r *Relay) serveOperator(u *ws.Upgrade) {
 	if !u.CheckOrigin("chat-operator " + u.Path) {
 		return
@@ -158,7 +163,13 @@ func (r *Relay) serveOperator(u *ws.Upgrade) {
 		u.Refuse(http.StatusNotFound)
 		return
 	}
-	conn, accepted := u.Accept(ws.AcceptOptions{})
+	account := session.UserID()
+	if !r.operators.take(account) {
+		u.Refuse(http.StatusTooManyRequests)
+		return
+	}
+	defer r.operators.release(account)
+	conn, answers, accepted := accept(u)
 	if !accepted {
 		return
 	}
@@ -167,7 +178,7 @@ func (r *Relay) serveOperator(u *ws.Upgrade) {
 	if name == "" {
 		name = "operator"
 	}
-	c := r.newClient(u, conn, u.Param("id"), name)
+	c := r.newClient(u, conn, answers, u.Param("id"), name)
 	c.user = session.User()
 	r.operatorJoins(c)
 	c.run(r.operatorFrame)
@@ -175,10 +186,21 @@ func (r *Relay) serveOperator(u *ws.Upgrade) {
 	c.wait()
 }
 
+// accept answers the handshake of an upgrade whose client's answers to
+// pings are noted.
+func accept(u *ws.Upgrade) (*ws.Conn, *heard, bool) {
+	answers := &heard{}
+	answers.listen(u)
+	conn, ok := u.Accept(ws.AcceptOptions{})
+	return conn, answers, ok
+}
+
 // client is one open socket of the relay.
 type client struct {
 	relay *Relay
 	conn  *ws.Conn
+	// answers notes when the client last sent anything
+	answers *heard
 	// id is the device id of the path: the room
 	id string
 	// operator is the operator's name, "" for an agent
@@ -194,8 +216,8 @@ type client struct {
 	done chan struct{}
 }
 
-func (r *Relay) newClient(u *ws.Upgrade, conn *ws.Conn, id, operator string) *client {
-	c := &client{relay: r, conn: conn, id: id, operator: operator, api: u.Context(),
+func (r *Relay) newClient(u *ws.Upgrade, conn *ws.Conn, answers *heard, id, operator string) *client {
+	c := &client{relay: r, conn: conn, answers: answers, id: id, operator: operator, api: u.Context(),
 		tasks: make(chan func(context.Context), taskQueue), done: make(chan struct{})}
 	go func() {
 		defer close(c.done)
@@ -219,9 +241,11 @@ func (c *client) later(task func(ctx context.Context)) {
 }
 
 // run reads the socket's messages until it ends and hands each to handle,
-// while its calls to the API server run in order beside it.
+// while its calls to the API server run in order beside it. It pings the
+// socket and closes it when the client stops answering.
 func (c *client) run(handle func(*client, jsjson.Value) error) {
 	c.conn.KeepAlive(c.relay.opts.PingInterval)
+	defer c.answers.closeSilent(c.conn, 2*c.relay.opts.PingInterval)()
 	for {
 		binary, data, err := c.conn.Read()
 		if err != nil {
@@ -410,12 +434,15 @@ func (r *Relay) sendHistory(ctx context.Context, c *client, data jsjson.Value, o
 	c.send(newObject().str("type", "history").raw("messages", r.memory(c.id)))
 }
 
-// memory is the messages a room keeps, as a JSON array.
+// memory is the messages a room keeps, as a JSON array; none when the
+// room is gone.
 func (r *Relay) memory(id string) []byte {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	rm := r.roomLocked(id)
-	return array(rm.messages)
+	if rm := r.rooms[id]; rm != nil {
+		return array(rm.messages)
+	}
+	return array(nil)
 }
 
 // agentLeaves takes the agent out of its room, unless another one has
@@ -431,6 +458,7 @@ func (r *Relay) agentLeaves(c *client) {
 	logging.Logf("console", "[Chat] Agent disconnected: %s", c.id)
 	rm.broadcastLocked(newObject().str("type", "status").boolean("agent_connected", false).text(), nil)
 	rm.broadcastLocked(newObject().str("type", "presence").str("device_id", c.id).boolean("online", false).text(), nil)
+	r.dropIfEmptyLocked(c.id, rm)
 	r.mu.Unlock()
 	r.toPanel(c.api, c.id, nil, rm,
 		newObject().str("type", "status").str("device_id", c.id).boolean("agent_connected", false).text(),
@@ -521,7 +549,23 @@ func (r *Relay) operatorLeaves(c *client) {
 		}
 	}
 	r.panel = panel
+	r.dropIfEmptyLocked(c.id, rm)
 	logging.Logf("console", "[Chat] Operator %s left %s", c.operator, c.id)
+}
+
+// dropIfEmptyLocked removes a room nobody is in any more, with the
+// messages it kept in memory.
+func (r *Relay) dropIfEmptyLocked(id string, rm *room) {
+	if rm.agent != nil || len(rm.operators) > 0 {
+		return
+	}
+	delete(r.rooms, id)
+	for i, known := range r.order {
+		if known == id {
+			r.order = append(r.order[:i:i], r.order[i+1:]...)
+			break
+		}
+	}
 }
 
 func without(list []*ws.Conn, c *ws.Conn) []*ws.Conn {
