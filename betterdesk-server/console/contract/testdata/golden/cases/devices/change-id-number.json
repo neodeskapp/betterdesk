@@ -138,7 +138,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "new_id is required",
+     "error": "Invalid device ID (6-16 characters required)",
      "success": false
     }
    }

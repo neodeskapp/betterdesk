@@ -527,7 +527,7 @@
         "created_at": "<volatile>",
         "guid": "<volatile>",
         "id": 0,
-        "member_count": 0,
+        "member_count": 1,
         "name": "Contract group renamed",
         "note": "",
         "source_type": "manual",
@@ -633,6 +633,23 @@
         "source_type": "tag",
         "tag_filter": "laptop",
         "team_id": ""
+       },
+       {
+        "allowed_groups": [],
+        "allowed_user_groups": [],
+        "allowed_users": [
+         "e2e_operator",
+         "e2e_viewer"
+        ],
+        "created_at": "<volatile>",
+        "guid": "<volatile>",
+        "id": 0,
+        "member_count": 1,
+        "name": "Contract group renamed",
+        "note": "",
+        "source_type": "manual",
+        "tag_filter": "",
+        "team_id": ""
        }
       ]
      },
@@ -733,7 +750,7 @@
         "created_at": "<volatile>",
         "guid": "<volatile>",
         "id": 0,
-        "member_count": 0,
+        "member_count": 1,
         "name": "Contract group renamed",
         "note": "",
         "source_type": "manual",
@@ -854,6 +871,23 @@
         "note": "",
         "source_type": "tag",
         "tag_filter": "laptop",
+        "team_id": ""
+       },
+       {
+        "allowed_groups": [],
+        "allowed_user_groups": [],
+        "allowed_users": [
+         "e2e_operator",
+         "e2e_viewer"
+        ],
+        "created_at": "<volatile>",
+        "guid": "<volatile>",
+        "id": 0,
+        "member_count": 1,
+        "name": "Contract group renamed",
+        "note": "",
+        "source_type": "manual",
+        "tag_filter": "",
         "team_id": ""
        }
       ]

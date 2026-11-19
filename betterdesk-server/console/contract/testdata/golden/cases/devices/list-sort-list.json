@@ -54,9 +54,10 @@
     "super_admin",
     "admin"
    ],
-   "status": 500,
+   "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "application/json; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
@@ -71,6 +72,7 @@
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
      "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
+    "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -79,13 +81,99 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "data.devices[*].groups[*].id"
+    {
+     "path": "data.devices[*].banned_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.devices[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    "data.devices[*].groups[*].id",
+    {
+     "path": "data.devices[*].last_online",
+     "format": "9999-99-99A99:99:99A"
+    }
    ],
    "body": {
     "kind": "json",
     "json": {
-     "error": "Server error",
-     "success": false
+     "data": {
+      "devices": [
+       {
+        "ban_reason": "Reported stolen",
+        "banned": true,
+        "banned_at": "<volatile>",
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [],
+        "hostname": "demo-stolen-laptop",
+        "id": "900100028",
+        "ip": "10.0.4.47",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Windows 11 Pro",
+        "platform": "Windows 11 Pro",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [
+         "laptop"
+        ],
+        "username": "demo.lost",
+        "uuid": "demo-uuid-900100028",
+        "version": "1.4.0"
+       },
+       {
+        "ban_reason": "Unknown device, blocked",
+        "banned": true,
+        "banned_at": "<volatile>",
+        "cdap_connected": false,
+        "client_type": "rustdesk",
+        "created_at": "<volatile>",
+        "deleted_at": null,
+        "device_type": "rustdesk",
+        "disabled": false,
+        "display_name": "",
+        "folder_id": null,
+        "groups": [],
+        "hostname": "demo-unknown-box",
+        "id": "900100029",
+        "ip": "10.0.1.48",
+        "last_online": "<volatile>",
+        "linked_peer_id": "",
+        "mesh_connected": false,
+        "mesh_node_id": "",
+        "nat_type": 0,
+        "no_signal": false,
+        "note": "",
+        "online": false,
+        "os": "Linux 5.15",
+        "platform": "Linux 5.15",
+        "signal_ready": false,
+        "soft_deleted": false,
+        "status_tier": "OFFLINE",
+        "tags": [],
+        "username": "",
+        "uuid": "demo-uuid-900100029",
+        "version": "1.2.0"
+       }
+      ],
+      "total": 2
+     },
+     "success": true
     }
    }
   }

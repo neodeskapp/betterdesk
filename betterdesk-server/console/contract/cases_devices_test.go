@@ -77,7 +77,7 @@ func init() {
 		list("list-sort-by-version", "sortBy=version&sortOrder=asc"),
 		list("list-sort-by-note", "hasNotes=true&sortBy=note"),
 		list("list-sort-list", "status=banned&sortBy[]=id&sortOrder[]=asc"),
-		list("list-search-list", "search[]=demo"),
+		list("list-search-list", "search[]=demo&sortBy=id&sortOrder=asc"),
 		list("list-status-list", "status[]=banned&sortBy=id&sortOrder=asc"),
 		list("list-pages-ignored", "page=2&limit=3&offset=5&sortBy=id&sortOrder=asc"),
 		// A request with a bearer token belongs to the RustDesk client API
