@@ -3,18 +3,16 @@ package rustdeskapi
 import (
 	"sync"
 	"time"
-
-	"github.com/unitronix/betterdesk-server/console/middleware"
 )
 
 // tfaSession is a sign-in that waits for its second factor, with the
-// client id and UUID of the first step as the body had them.
+// client id and UUID of the first step ("" where the body had no text).
 type tfaSession struct {
 	userID     int64
 	username   string
 	role       string
-	clientID   middleware.Value
-	clientUUID middleware.Value
+	clientID   string
+	clientUUID string
 	createdAt  time.Time
 }
 

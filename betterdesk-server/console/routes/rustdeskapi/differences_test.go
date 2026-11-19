@@ -50,6 +50,19 @@ var fixedSteps = []fixedStep{
 	// PostgreSQL instance has none in the console's table).
 	{"flow_sqlite", "viewer-devices", "RD4"},
 	{"flow_sqlite", "admin-devices-page", "RD4"},
+	// A client id or UUID that is no text counts as missing: the sign-in
+	// stores the empty text in its place and gives the token, its audit
+	// entry names the client "unknown", and such a UUID revokes nothing.
+	{"node_sqlite", "462 POST /api/login", "RD7"},
+	{"node_sqlite", "463 POST /api/login", "RD7"},
+	{"node_sqlite", "465 POST /api/login", "RD7"},
+	{"node_sqlite", "466 POST /api/login", "RD7"},
+	{"node_sqlite", "467 POST /api/login", "RD7"},
+	{"node_sqlite", "468 POST /api/login", "RD7"},
+	{"node", "469 POST /api/login", "RD7"},
+	{"node", "the tokens", "RD7"},
+	{"node", "the tokens after sign-out", "RD7"},
+	{"node", "the audit entries", "RD7"},
 }
 
 // fixedStep is a step of the recordings of both databases ("node",

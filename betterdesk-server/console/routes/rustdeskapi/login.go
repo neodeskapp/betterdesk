@@ -53,6 +53,31 @@ func clientText(values ...any) (string, error) {
 	return "unknown", nil
 }
 
+// clientRef is the member of a sign-in body that names the client (id,
+// uuid). It counts only as text: a member of another type is missing.
+func clientRef(body middleware.JSONObject, name string) (text string, given bool) {
+	text, given = member(body, name).(string)
+	return text, given
+}
+
+// firstText is a || b || ” for texts.
+func firstText(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+// orUnknown is `${value || 'unknown'}` of an audit entry, for texts.
+func orUnknown(values ...string) string {
+	if text := firstText(values...); text != "" {
+		return text
+	}
+	return "unknown"
+}
+
 // login answers POST /api/login: the password step, or with a code and a
 // secret the second step.
 func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +89,8 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 	password, _ := member(body, "password").(string)
 	h.log.Info(fmt.Sprintf("[API:LOGIN] Login attempt from %s user=%s", ip, auditlog.RedactUsername(username)))
 
-	clientID, clientUUID := body.Get("id"), body.Get("uuid")
+	clientID, _ := clientRef(body, "id")
+	clientUUID, uuidGiven := clientRef(body, "uuid")
 	code := or(member(body, "tfaCode"), member(body, "verificationCode"))
 	if truthy(code) && truthy(member(body, "secret")) {
 		h.secondStep(w, r, ip, body)
@@ -101,7 +127,7 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// A banned device may not sign in (the client id is the device id)
-	if device := sanitize(or(valueOf(clientID), ""), maxIDLen); device != "" && isValidDeviceID(device) {
+	if device := sanitize(clientID, maxIDLen); device != "" && isValidDeviceID(device) {
 		row, err := h.store.peerByID(ctx, device)
 		if err != nil {
 			serverError(err)
@@ -154,11 +180,7 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 			userID: userID, username: user.Username, role: user.Role.String,
 			clientID: clientID, clientUUID: clientUUID, createdAt: h.now(),
 		})
-		details, err := clientText(valueOf(clientID))
-		if err == nil {
-			err = h.audit(ctx, userID, "api_login_tfa_required", "Client: "+details, ip)
-		}
-		if err != nil {
+		if err := h.audit(ctx, userID, "api_login_tfa_required", "Client: "+orUnknown(clientID), ip); err != nil {
 			serverError(err)
 			return
 		}
@@ -169,7 +191,7 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 	// No second factor, or the operator switched it off for this API
 	// (RUSTDESK_API_DISABLE_TOTP with its acknowledgement)
 	_ = h.d.Authn.RecordAttempt(ctx, username, ip, true)
-	token, err := h.issueToken(ctx, userID, jsbind.Of(clientID), jsbind.Of(clientUUID), ip)
+	token, err := h.issueToken(ctx, userID, clientID, clientUUID, uuidGiven, ip)
 	if err == nil {
 		err = h.d.Authn.TouchLastLogin(ctx, userID)
 	}
@@ -177,15 +199,11 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		serverError(err)
 		return
 	}
-	details, err := clientText(valueOf(clientID))
-	if err == nil {
-		action := "api_login_success"
-		if user.TOTPRequired {
-			action, details = "api_login_success_totp_bypassed", details+" (RUSTDESK_API_DISABLE_TOTP=true)"
-		}
-		err = h.audit(ctx, userID, action, "Client: "+details, ip)
+	action, details := "api_login_success", orUnknown(clientID)
+	if user.TOTPRequired {
+		action, details = "api_login_success_totp_bypassed", details+" (RUSTDESK_API_DISABLE_TOTP=true)"
 	}
-	if err != nil {
+	if err := h.audit(ctx, userID, action, "Client: "+details, ip); err != nil {
 		serverError(err)
 		return
 	}
@@ -193,16 +211,6 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		h.log.Warn(fmt.Sprintf("[API:LOGIN] TOTP bypass active for user '%s' (RUSTDESK_API_DISABLE_TOTP=true)", username))
 	}
 	kit.JSON(w, r, http.StatusOK, tokenAnswer{Type: "access_token", AccessToken: token, User: buildUserPayload(user.Username, user.Role.String)})
-}
-
-// firstTruthy is a || b || ” for body members.
-func firstTruthy(values ...middleware.Value) jsbind.Value {
-	for _, v := range values {
-		if v.Truthy() {
-			return jsbind.Of(v)
-		}
-	}
-	return jsbind.String("")
 }
 
 // secondStep is handleTfaVerification: the code of the account's second
@@ -229,11 +237,7 @@ func (h *handlers) secondStep(w http.ResponseWriter, r *http.Request, ip string,
 	}
 	if !verified {
 		_ = h.d.Authn.RecordAttempt(ctx, pending.username, ip, false)
-		details, err := clientText(valueOf(pending.clientID))
-		if err == nil {
-			err = h.audit(ctx, pending.userID, "api_tfa_failed", "Client: "+details, ip)
-		}
-		if err != nil {
+		if err := h.audit(ctx, pending.userID, "api_tfa_failed", "Client: "+orUnknown(pending.clientID), ip); err != nil {
 			serverError(err)
 			return
 		}
@@ -243,11 +247,12 @@ func (h *handlers) secondStep(w http.ResponseWriter, r *http.Request, ip string,
 	h.tfa.remove(secret.(string))
 
 	_ = h.d.Authn.RecordAttempt(ctx, pending.username, ip, true)
-	// The client id and UUID of this step, else those of the first step
-	// (stored as `id || ''`)
-	clientID := firstTruthy(body.Get("id"), pending.clientID)
-	clientUUID := firstTruthy(body.Get("uuid"), pending.clientUUID)
-	token, err := h.issueToken(ctx, pending.userID, clientID, clientUUID, ip)
+	// The client id and UUID of this step, else those of the first step;
+	// the tokens of that UUID are revoked, also of the empty one
+	bodyID, _ := clientRef(body, "id")
+	bodyUUID, _ := clientRef(body, "uuid")
+	clientID, clientUUID := firstText(bodyID, pending.clientID), firstText(bodyUUID, pending.clientUUID)
+	token, err := h.issueToken(ctx, pending.userID, clientID, clientUUID, true, ip)
 	if err == nil {
 		err = h.d.Authn.TouchLastLogin(ctx, pending.userID)
 	}
@@ -255,11 +260,7 @@ func (h *handlers) secondStep(w http.ResponseWriter, r *http.Request, ip string,
 		serverError(err)
 		return
 	}
-	details, err := clientText(valueOf(body.Get("id")), valueOf(pending.clientID))
-	if err == nil {
-		err = h.audit(ctx, pending.userID, "api_login_success", "Client: "+details+" (2FA: totp)", ip)
-	}
-	if err != nil {
+	if err := h.audit(ctx, pending.userID, "api_login_success", "Client: "+orUnknown(clientID)+" (2FA: totp)", ip); err != nil {
 		serverError(err)
 		return
 	}
@@ -275,42 +276,16 @@ func randomSecret() (string, error) {
 	return hex.EncodeToString(b[:]), nil
 }
 
-// issueToken is authService.generateAccessToken with the client id and
-// UUID as the request had them, in any JSON form. The database drivers
-// bound such values in their own ways (package jsbind): first the user's
-// tokens of the UUID are revoked (a missing or null UUID matches none),
-// then the token is stored with `clientId || ”` and `clientUuid || ”`.
-// A value a driver could not bind fails the call, as it did in Node.
-func (h *handlers) issueToken(ctx context.Context, userID int64, clientID, clientUUID jsbind.Value, ip string) (string, error) {
-	dialect := h.d.Store.Dialect()
-	if !clientUUID.IsUndefined() && !clientUUID.IsNull() {
-		args, err := jsbind.Args(dialect, 2, jsbind.Number(float64(userID)), clientUUID)
-		if err != nil {
-			return "", fmt.Errorf("revoke the tokens of the client: %w", err)
-		}
-		text, err := h.store.boundText(ctx, args[1])
-		if err != nil {
-			return "", err
-		}
-		if err := h.d.Authn.RevokeClientUUIDTokens(ctx, userID, text); err != nil {
+// issueToken is authService.generateAccessToken for a client id and UUID
+// given as text: with revoke, the account's tokens of the UUID are
+// revoked first, then the token is stored for the client.
+func (h *handlers) issueToken(ctx context.Context, userID int64, clientID, clientUUID string, revoke bool, ip string) (string, error) {
+	if revoke {
+		if err := h.d.Authn.RevokeClientUUIDTokens(ctx, userID, clientUUID); err != nil {
 			return "", err
 		}
 	}
-	placeholder, empty := jsbind.String(""), jsbind.String("")
-	args, err := jsbind.Args(dialect, 7, placeholder, placeholder, jsbind.Number(float64(userID)),
-		clientID.Or(empty), clientUUID.Or(empty), placeholder, jsbind.String(ip))
-	if err != nil {
-		return "", fmt.Errorf("store the access token: %w", err)
-	}
-	storedID, err := h.store.boundText(ctx, args[3])
-	if err != nil {
-		return "", err
-	}
-	storedUUID, err := h.store.boundText(ctx, args[4])
-	if err != nil {
-		return "", err
-	}
-	return h.d.Authn.IssueAccessToken(ctx, userID, storedID, storedUUID, ip)
+	return h.d.Authn.IssueAccessToken(ctx, userID, clientID, clientUUID, ip)
 }
 
 // audit writes an audit entry; userID 0 is no account.

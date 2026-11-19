@@ -766,3 +766,50 @@ func TestDevicesComePageByPage(t *testing.T) {
 		}
 	})
 }
+
+// The client id and UUID of a sign-in count when they are text. A number,
+// a boolean, a list or an object counts as missing: the token is stored
+// with the empty text in its place, the client gets it, and a UUID that is
+// no text revokes no token of the account.
+func TestSignInStoresTextClientIDsOnly(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db, nil)
+		hash, err := w.Server.Deps().Authn.HashPassword(context.Background(), "Rd-Test-1!x")
+		if err != nil {
+			t.Fatal(err)
+		}
+		w.Exec("UPDATE users SET password_hash = ? WHERE id = 6", []any{hash})
+		ctx := context.Background()
+		for _, c := range []struct{ ids, id, uuid string }{
+			{`"id":"cl-1","uuid":"uu-1"`, "cl-1", "uu-1"},
+			{`"id":5,"uuid":7`, "", ""},
+			{`"id":1.5,"uuid":true`, "", ""},
+			{`"id":false,"uuid":false`, "", ""},
+			{`"id":["a"],"uuid":["b","c"]`, "", ""},
+			{`"id":{"a":1},"uuid":"uu-3"`, "", "uu-3"},
+			{`"id":{"toString":1},"uuid":{"toString":1}`, "", ""},
+		} {
+			got := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"username":"e2e_viewer","password":"Rd-Test-1!x",` + c.ids + `}`)})
+			if got.Status != http.StatusOK || !strings.Contains(got.Body, `"type":"access_token"`) {
+				t.Errorf("sign-in with %s: %d %s", c.ids, got.Status, got.Body)
+				continue
+			}
+			var id, uuid string
+			if err := db.QueryRow(ctx, "SELECT client_id, client_uuid FROM access_tokens WHERE user_id = 6 ORDER BY id DESC LIMIT 1").Scan(&id, &uuid); err != nil || id != c.id || uuid != c.uuid {
+				t.Errorf("sign-in with %s stored client %q and UUID %q, %v", c.ids, id, uuid, err)
+			}
+			client := c.id
+			if client == "" {
+				client = "unknown"
+			}
+			var details string
+			if err := db.QueryRow(ctx, "SELECT details FROM audit_log ORDER BY id DESC LIMIT 1").Scan(&details); err != nil || details != "Client: "+client {
+				t.Errorf("sign-in with %s: audit details %q, %v", c.ids, details, err)
+			}
+		}
+		var kept int
+		if err := db.QueryRow(ctx, "SELECT COUNT(*) FROM access_tokens WHERE user_id = 6 AND client_uuid = 'uu-1' AND NOT revoked").Scan(&kept); err != nil || kept != 1 {
+			t.Errorf("tokens of uu-1 left after sign-ins with UUIDs that are no text: %d, %v", kept, err)
+		}
+	})
+}
