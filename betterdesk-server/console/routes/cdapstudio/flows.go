@@ -16,14 +16,16 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
-// maxFlowUnits is the longest flow JSON, counted the way JavaScript counts
-// the length of a string.
-const maxFlowUnits = 5 * 1024 * 1024
+// maxFlowBytes is the longest flow JSON that is stored, in bytes: the
+// limit of a request body. A flow sent as text cannot be longer; one sent
+// as a JSON value can, when its numbers grow as they are written out
+// again (1e20 is stored as 21 digits).
+const maxFlowBytes = middleware.DefaultBodyLimit
 
 const (
 	notFound     = "Flow not found"
 	invalidJSON  = "Invalid flow JSON"
-	flowTooLarge = "Flow data too large (max 5MB)"
+	flowTooLarge = "Flow data too large (max 2MB)"
 )
 
 type flowList struct {
@@ -109,7 +111,7 @@ func flowText(value middleware.Value) (text, problem string) {
 			text, _ = stringify(parsed, "")
 		}
 	}
-	if units(text) > maxFlowUnits {
+	if len(text) > maxFlowBytes {
 		return "", flowTooLarge
 	}
 	if _, err := parseJSON(text); err != nil {

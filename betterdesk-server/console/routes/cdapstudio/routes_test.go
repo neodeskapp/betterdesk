@@ -459,16 +459,21 @@ func TestExportFile(t *testing.T) {
 		`{"success":true,"flow":{"id":"a0a1a2a3a4a50000","name":"Füll-level №1_a","description":"d","flow_json":"{nope","status":"draft","version":1,"created_by":"alice","created_at":"2026-11-10T08:00:01.000Z","updated_at":"2026-11-10T08:00:01.000Z"}}`)
 }
 
-// A flow of more than 5 MB is refused. A request body ends at 2 MB, so
-// only numbers that grow when they are written out get there.
+// A flow whose stored text has more bytes than a request body may have
+// (2 MiB) is refused. A request body ends there, so only numbers that grow
+// when they are written out get past it. Each 1e20 is stored as 21
+// digits: n of them in a list are 22n+1 bytes.
 func TestFlowTooLarge(t *testing.T) {
 	w := newWorld(t, storetest.Migrated(t))
-	grows := `{"name":"Big","flow_json":[` + strings.Repeat("1e20,", 260000) + `1]}`
-	expect(t, "numbers that grow", w.do("alice", "POST", "/api/cdap-studio/flows", grows, ""), 400, `{"success":false,"error":"Flow data too large (max 5MB)"}`)
-	fits := `{"name":"Fits","flow_json":[` + strings.Repeat("1e20,", 230000) + `1]}`
-	expect(t, "numbers that fit", w.do("alice", "POST", "/api/cdap-studio/flows", fits, ""), 200, `{"success":true,"id":"a0a1a2a3a4a50000"}`)
-	expect(t, "import of numbers that grow", w.do("alice", "POST", "/api/cdap-studio/flows/import", `{"flow":[`+strings.Repeat("1e20,", 260000)+`1]}`, ""), 400, `{"success":false,"error":"Flow data too large (max 5MB)"}`)
-	expect(t, "update with numbers that grow", w.do("alice", "PUT", "/api/cdap-studio/flows/a0a1a2a3a4a50000", grows, ""), 400, `{"success":false,"error":"Flow data too large (max 5MB)"}`)
+	tooLarge := `{"success":false,"error":"Flow data too large (max 2MB)"}`
+	numbers := func(n int) string { return "[" + strings.Repeat("1e20,", n-1) + "1e20]" }
+	expect(t, "2097151 bytes", w.do("alice", "POST", "/api/cdap-studio/flows", `{"name":"Fits","flow_json":`+numbers(95325)+`}`, ""), 200, `{"success":true,"id":"a0a1a2a3a4a50000"}`)
+	expect(t, "2097173 bytes", w.do("alice", "POST", "/api/cdap-studio/flows", `{"name":"Big","flow_json":`+numbers(95326)+`}`, ""), 400, tooLarge)
+	expect(t, "an import of 2097173 bytes", w.do("alice", "POST", "/api/cdap-studio/flows/import", `{"flow":`+numbers(95326)+`}`, ""), 400, tooLarge)
+	expect(t, "an update to 2097173 bytes", w.do("alice", "PUT", "/api/cdap-studio/flows/a0a1a2a3a4a50000", `{"flow_json":`+numbers(95326)+`}`, ""), 400, tooLarge)
+	// Bytes count, not characters: 100000 euro signs are 300000 bytes
+	euros := `["` + strings.Repeat("€", 100000) + `",` + strings.TrimPrefix(numbers(81689), "[")
+	expect(t, "2097162 bytes in 1897162 characters", w.do("alice", "POST", "/api/cdap-studio/flows", `{"name":"Euro","flow_json":`+euros+`}`, ""), 400, tooLarge)
 }
 
 func TestDatabaseFailureAnswers500(t *testing.T) {
