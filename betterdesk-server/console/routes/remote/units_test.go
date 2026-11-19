@@ -127,10 +127,6 @@ func TestDevMockScript(t *testing.T) {
 	if !strings.HasPrefix(rec.Header().Get("ETag"), `W/"`) || rec.Header().Get("Last-Modified") == "" || rec.Header().Get("Accept-Ranges") != "bytes" {
 		t.Errorf("mock on: ETag %q, Last-Modified %q, Accept-Ranges %q", rec.Header().Get("ETag"), rec.Header().Get("Last-Modified"), rec.Header().Get("Accept-Ranges"))
 	}
-	original, err := os.ReadFile(filepath.Join("..", "..", "..", "..", "web-nodejs", "lib", "devMockRemote", "mock-session.js"))
-	if err == nil && rec.Body.String() != string(original) {
-		t.Error("the embedded mock is not the old console's file")
-	}
 	off := newWorld(t, storetest.Migrated(t), "1.0.0", false)
 	rec = off.do(&vector{Request: request{Method: "GET", Path: "/dev/mock-remote.js"}})
 	if rec.Code != http.StatusNotFound || rec.Body.String() != "no route" {

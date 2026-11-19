@@ -1,5 +1,18 @@
 # Node oracle for console/routes/rustdeskapi
 
+`web-nodejs` is gone from this tree. These scripts stay as the record of
+how the recordings in this package were made; the Go tests replay the
+recordings and need no Node. To run a script again, use a tree that still
+has `web-nodejs`: the spec worktree
+`C:\Users\info\worktrees\betterdesk-go-spec264`. Mount its `web-nodejs`,
+with its modules, over `/repo/web-nodejs` of this tree:
+
+    DEV_DOCKER_ARGS="-v C:/Users/info/worktrees/betterdesk-go-spec264/web-nodejs:/repo/web-nodejs -v bdgo-node-nm:/repo/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/<this folder> && node <script>"
+
+Its Node code is upstream's release there, so a script that loads a file
+the port deleted or changed on the way can fail or record other answers.
+
 `rdapi.js` runs the Node console's client API (`routes/rustdesk-api.routes.js`
 with the real `services/dbAdapter.js`, `services/authService.js`,
 `services/rustdeskAddressBookSync.js`, `services/deviceGroupService.js` and
@@ -11,7 +24,7 @@ Content-Type, the same body byte for byte (access tokens and second-step
 secrets are random on both sides and compared by their form) and the same
 writes to the API server.
 
-This folder is a test fixture for the time both servers exist. The route
+This folder is a test fixture from the time both servers existed. The route
 file is gone from `web-nodejs` since the routes moved to Go, so the script
 runs only on a tree from before the move. The recorded files stay:
 `../node_sqlite.json` and `../node_postgres.json` are plain data and keep

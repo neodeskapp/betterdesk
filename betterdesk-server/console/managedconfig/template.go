@@ -2,8 +2,8 @@ package managedconfig
 
 import _ "embed"
 
-// template is the console's env file template, a copy of
-// web-nodejs/.env.example that gen_allowlist.go writes with the allowlist.
+// template is the console's env file template (.env.example), from which
+// gen_allowlist.go writes the allowlist.
 //
 //go:embed env.example
 var template string

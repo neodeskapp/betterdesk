@@ -251,8 +251,7 @@ func newGoStack(t *testing.T, db *store.DB, scenario oracleScenario, certs *test
 		}
 	}
 	t.Setenv("SESSION_SECRET", testSecret)
-	consoleDir, _ := filepath.Abs(filepath.Join("..", "..", "web-nodejs"))
-	t.Setenv("CONSOLE_DIR", consoleDir)
+	t.Setenv("CONSOLE_DIR", t.TempDir())
 	cfg, err := config.LoadEnv()
 	if err != nil {
 		t.Fatal(err)

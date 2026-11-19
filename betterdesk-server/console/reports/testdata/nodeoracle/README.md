@@ -1,5 +1,18 @@
 # Node oracle for console/reports
 
+`web-nodejs` is gone from this tree. These scripts stay as the record of
+how the recordings in this package were made; the Go tests replay the
+recordings and need no Node. To run a script again, use a tree that still
+has `web-nodejs`: the spec worktree
+`C:\Users\info\worktrees\betterdesk-go-spec264`. Mount its `web-nodejs`,
+with its modules, over `/repo/web-nodejs` of this tree:
+
+    DEV_DOCKER_ARGS="-v C:/Users/info/worktrees/betterdesk-go-spec264/web-nodejs:/repo/web-nodejs -v bdgo-node-nm:/repo/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/<this folder> && node <script>"
+
+Its Node code is upstream's release there, so a script that loads a file
+the port deleted or changed on the way can fail or record other answers.
+
 `engine.js` runs the Node console's report engine (`services/reportEngine.js`
 with the real `services/dbAdapter.js`) on a scratch database and records what
 it makes. `TestNodeReports` in the Go package runs the same statements on a
@@ -7,7 +20,7 @@ fresh database and must make the same reports, byte for byte: the JSON of
 every report, the CSV of every part of it, and `toCsv` of rows written by
 hand.
 
-This folder is a test fixture for the time both consoles exist. The engine
+This folder is a test fixture from the time both consoles existed. The engine
 it loads is gone from `web-nodejs` since the reports moved to Go, so the
 script runs only on a tree that still has it (the commit before the move).
 The recorded files stay: `../engine_*.json` are plain data and keep pinning

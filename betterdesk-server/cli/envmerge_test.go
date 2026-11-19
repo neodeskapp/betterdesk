@@ -208,7 +208,7 @@ func TestSubstFilesLikeNode(t *testing.T) {
 	}
 }
 
-// The command uses the built-in template, which is web-nodejs/.env.example.
+// The command uses the built-in template, console/managedconfig/env.example.
 func TestEnvMergeUsesTheBuiltInTemplate(t *testing.T) {
 	dir := t.TempDir()
 	target := filepath.Join(dir, ".env")

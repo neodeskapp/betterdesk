@@ -1,5 +1,18 @@
 # Node oracle for console/routes/dataguard
 
+`web-nodejs` is gone from this tree. These scripts stay as the record of
+how the recordings in this package were made; the Go tests replay the
+recordings and need no Node. To run a script again, use a tree that still
+has `web-nodejs`: the spec worktree
+`C:\Users\info\worktrees\betterdesk-go-spec264`. Mount its `web-nodejs`,
+with its modules, over `/repo/web-nodejs` of this tree:
+
+    DEV_DOCKER_ARGS="-v C:/Users/info/worktrees/betterdesk-go-spec264/web-nodejs:/repo/web-nodejs -v bdgo-node-nm:/repo/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/<this folder> && node <script>"
+
+Its Node code is upstream's release there, so a script that loads a file
+the port deleted or changed on the way can fail or record other answers.
+
 `dataguard.js` runs the policy and event routes of the Node console
 (`routes/dataguard.routes.js` with the real `services/dbAdapter.js`) at both
 of its mounts, `/api/dataguard` and `/api/bd`, on a scratch database and
@@ -7,7 +20,7 @@ records every answer. `TestNodeAnswers` in the Go package replays the
 requests on the same rows and must get the same status and the same body,
 byte for byte.
 
-This folder is a test fixture for the time both servers exist. The routes it
+This folder is a test fixture from the time both servers existed. The routes it
 records are gone from `web-nodejs` since they moved to Go (the route file
 there keeps the two device routes only), so the script runs only on a tree
 from before the move. The recorded files stay: `../node_sqlite.json` and

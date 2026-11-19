@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "i18n:check": "node web-nodejs/scripts/i18n-check.js --system web-nodejs",
+    "i18n:check": "node scripts/i18n-check.js --system console",
+    "check:provenance": "node scripts/check-cleanroom-provenance.js",
     "local:gate": "node scripts/local-gate.js",
     "local:gate:dry-run": "node scripts/local-gate.js --dry-run",
     "test:local-gate": "node --test scripts/local-gate.test.js"

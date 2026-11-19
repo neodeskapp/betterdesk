@@ -28,19 +28,6 @@ const FILE_RULES = [
         apply: (content, version) => `${version}\n`,
     },
     {
-        id: 'package-json',
-        path: 'web-nodejs/package.json',
-        extract: (content) => {
-            const pkg = JSON.parse(content);
-            return pkg.version;
-        },
-        apply: (content, version) => {
-            const pkg = JSON.parse(content);
-            pkg.version = version;
-            return `${JSON.stringify(pkg, null, 2)}\n`;
-        },
-    },
-    {
         id: 'betterdesk-sh',
         path: 'betterdesk.sh',
         extract: (content) => content.match(/^VERSION="([^"]+)"/m)?.[1],

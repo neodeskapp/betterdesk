@@ -1,12 +1,25 @@
 # Node oracle for the address parser
 
+`web-nodejs` is gone from this tree. These scripts stay as the record of
+how the recordings in this package were made; the Go tests replay the
+recordings and need no Node. To run a script again, use a tree that still
+has `web-nodejs`: the spec worktree
+`C:\Users\info\worktrees\betterdesk-go-spec264`. Mount its `web-nodejs`,
+with its modules, over `/repo/web-nodejs` of this tree:
+
+    DEV_DOCKER_ARGS="-v C:/Users/info/worktrees/betterdesk-go-spec264/web-nodejs:/repo/web-nodejs -v bdgo-node-nm:/repo/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/<this folder> && node <script>"
+
+Its Node code is upstream's release there, so a script that loads a file
+the port deleted or changed on the way can fail or record other answers.
+
 `addressparser.js` runs the address parser of the nodemailer version the Node
 console has installed on about 23,000 inputs and writes what it returns to
 `../addressparser.json`. The Go test `TestNodeVectors` replays that file and
 compares every result with `Parse` and `Flatten`.
 
 The script and the vector file are fixtures for the move from Node to Go. They
-go away together with `web-nodejs`.
+stay now that `web-nodejs` is gone.
 
 ## Running it
 

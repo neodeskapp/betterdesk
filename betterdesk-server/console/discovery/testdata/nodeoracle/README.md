@@ -1,11 +1,24 @@
 # Node oracle for console/discovery
 
+`web-nodejs` is gone from this tree. These scripts stay as the record of
+how the recordings in this package were made; the Go tests replay the
+recordings and need no Node. To run a script again, use a tree that still
+has `web-nodejs`: the spec worktree
+`C:\Users\info\worktrees\betterdesk-go-spec264`. Mount its `web-nodejs`,
+with its modules, over `/repo/web-nodejs` of this tree:
+
+    DEV_DOCKER_ARGS="-v C:/Users/info/worktrees/betterdesk-go-spec264/web-nodejs:/repo/web-nodejs -v bdgo-node-nm:/repo/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/<this folder> && node <script>"
+
+Its Node code is upstream's release there, so a script that loads a file
+the port deleted or changed on the way can fail or record other answers.
+
 Two scripts record what the Node console's LAN discovery and mDNS
 announcement send and answer. The Go tests in `console/discovery` replay
 every record (`lan_test.go`, `mdns_test.go`).
 
-This folder is a test fixture for the time both servers exist. It needs
-`web-nodejs` and goes away with it. The recordings in the parent folder
+This folder is a test fixture from the time both servers existed. It needs
+`web-nodejs`, which this tree no longer has. The recordings in the parent folder
 (`lan.json.gz`, `mdns.json.gz`) stay.
 
 | Script | What it records |

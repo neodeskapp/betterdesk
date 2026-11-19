@@ -55,23 +55,6 @@ func (c *counter) Read(p []byte) (int, error) {
 	return 6, nil
 }
 
-// consoleDir is the old console's folder in the source tree, for the
-// branding palettes and the language files.
-func consoleDir(t *testing.T) string {
-	t.Helper()
-	dir, _ := os.Getwd()
-	for {
-		if _, err := os.Stat(filepath.Join(dir, "web-nodejs", "config", "theme-palettes.json")); err == nil {
-			return filepath.Join(dir, "web-nodejs")
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			t.Skip("no web-nodejs folder in the source tree")
-		}
-		dir = parent
-	}
-}
-
 // TestNodeAnswers replays what the Node console's generator routes
 // answered (testdata/node_sqlite.json): the module installed from an
 // uploaded template archive, bundles created, changed, rebuilt, revoked
@@ -92,10 +75,8 @@ func TestNodeAnswers(t *testing.T) {
 		if err := os.WriteFile(keyFile, []byte(testPublicKey+"\n"), 0o644); err != nil {
 			t.Fatal(err)
 		}
-		dir := consoleDir(t)
 		var dataDir string
 		w := replay.NewWorld(t, db, func(cfg *config.Config) {
-			cfg.ConsoleDir = dir
 			cfg.APIURL = "http://desk.example.test:21114/api"
 			cfg.PubKeyPath = keyFile
 			cfg.AgentArtifactDir = filepath.Join(cfg.DataDir, "agent-builds")

@@ -114,7 +114,7 @@ func init() {
 		},
 		contract.Case{
 			Name: "schedule-save-app-folder", Method: "PUT", Path: "/api/settings/backup/schedule",
-			Body: map[string]any{"destinationType": "path", "destinationPath": "/repo/web-nodejs/backups"}, Roles: admin,
+			Body: map[string]any{"destinationType": "path", "destinationPath": "/app/backups"}, Roles: admin,
 		},
 		contract.Case{
 			Name: "schedule-save-path", Method: "PUT", Path: "/api/settings/backup/schedule",

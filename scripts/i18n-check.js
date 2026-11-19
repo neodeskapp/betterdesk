@@ -8,11 +8,11 @@
  * untranslated UI behind a false 100% key coverage result.
  *
  * Usage:
- *   node web-nodejs/scripts/i18n-check.js
- *   node web-nodejs/scripts/i18n-check.js --system web-nodejs
- *   node web-nodejs/scripts/i18n-check.js --system agent-client
- *   node web-nodejs/scripts/i18n-check.js --system mgmt
- *   node web-nodejs/scripts/i18n-check.js --json
+ *   node scripts/i18n-check.js
+ *   node scripts/i18n-check.js --system console
+ *   node scripts/i18n-check.js --system agent-client
+ *   node scripts/i18n-check.js --system mgmt
+ *   node scripts/i18n-check.js --json
  */
 
 'use strict';
@@ -22,7 +22,7 @@ const path = require('path');
 
 const REFERENCE_FILES = ['en.json', 'pl.json'];
 const DEFAULT_SYSTEMS = [
-    { id: 'web-nodejs', label: 'Web Console', dir: 'web-nodejs/lang' },
+    { id: 'console', label: 'Web Console', dir: 'betterdesk-server/console/static/files/lang' },
     { id: 'agent-client', label: 'Agent Client', dir: 'betterdesk-agent-client/src/locales' },
     { id: 'mgmt', label: 'MGMT Client', dir: 'betterdesk-mgmt/src/locales' }
 ];
@@ -39,11 +39,11 @@ if (args.includes('--fix')) {
 }
 
 if (args.includes('--help') || args.includes('-h')) {
-    console.log(`BetterDesk i18n audit\n\nUsage:\n  node web-nodejs/scripts/i18n-check.js [--system web-nodejs|agent-client|mgmt] [--json] [--verbose]\n\nChecks:\n  - EN and PL key parity\n  - every locale has the same EN+PL key baseline\n  - no empty values\n  - no likely English fallback values in non-English locales\n\nThe script is read-only. It never inserts English values into target locales.`);
+    console.log(`BetterDesk i18n audit\n\nUsage:\n  node scripts/i18n-check.js [--system console|agent-client|mgmt] [--json] [--verbose]\n\nChecks:\n  - EN and PL key parity\n  - every locale has the same EN+PL key baseline\n  - no empty values\n  - no likely English fallback values in non-English locales\n\nThe script is read-only. It never inserts English values into target locales.`);
     process.exit(0);
 }
 
-const ROOT_DIR = path.resolve(__dirname, '..', '..');
+const ROOT_DIR = path.resolve(__dirname, '..');
 
 const SHARED_EXACT_VALUES = new Set([
     '',

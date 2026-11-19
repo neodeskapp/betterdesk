@@ -1,5 +1,18 @@
 # Node oracle for console/routes/registration
 
+`web-nodejs` is gone from this tree. These scripts stay as the record of
+how the recordings in this package were made; the Go tests replay the
+recordings and need no Node. To run a script again, use a tree that still
+has `web-nodejs`: the spec worktree
+`C:\Users\info\worktrees\betterdesk-go-spec264`. Mount its `web-nodejs`,
+with its modules, over `/repo/web-nodejs` of this tree:
+
+    DEV_DOCKER_ARGS="-v C:/Users/info/worktrees/betterdesk-go-spec264/web-nodejs:/repo/web-nodejs -v bdgo-node-nm:/repo/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/<this folder> && node <script>"
+
+Its Node code is upstream's release there, so a script that loads a file
+the port deleted or changed on the way can fail or record other answers.
+
 `registration.js` runs the Node console's registration routes
 (`routes/registration.routes.js`, mounted at the root and at `/api/bd`)
 with the real `services/dbAdapter.js`, the real permission loading, panel
@@ -12,7 +25,7 @@ the times the database fills in and the random access tokens, the same
 rows, audit entries and calls to the API server, and the same events on
 `/ws/panel-events`.
 
-This folder is a test fixture for the time both servers exist. Once
+This folder is a test fixture from the time both servers existed. Once
 `web-nodejs` loses the route file the script cannot run any more; the
 recorded files `../node_sqlite.json` and `../node_postgres.json` stay and
 keep pinning the Go code to what Node answered.

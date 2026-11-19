@@ -1,5 +1,18 @@
 # Node oracle for console/routes/auth
 
+`web-nodejs` is gone from this tree. These scripts stay as the record of
+how the recordings in this package were made; the Go tests replay the
+recordings and need no Node. To run a script again, use a tree that still
+has `web-nodejs`: the spec worktree
+`C:\Users\info\worktrees\betterdesk-go-spec264`. Mount its `web-nodejs`,
+with its modules, over `/repo/web-nodejs` of this tree:
+
+    DEV_DOCKER_ARGS="-v C:/Users/info/worktrees/betterdesk-go-spec264/web-nodejs:/repo/web-nodejs -v bdgo-node-nm:/repo/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/<this folder> && node <script>"
+
+Its Node code is upstream's release there, so a script that loads a file
+the port deleted or changed on the way can fail or record other answers.
+
 `auth.js` runs the Node console's sign-in routes (`routes/auth.routes.js`)
 with the real `services/dbAdapter.js`, `services/authService.js`, the
 translations and the sign-in limiter, against a made-up API server that
@@ -22,7 +35,7 @@ records two things per database:
   `TestLockoutAnswersOfNode` replays them; the seconds left of a lockout
   are compared to the full ones the seed gave.
 
-This folder is a test fixture for the time both servers exist. The route
+This folder is a test fixture from the time both servers existed. The route
 file is gone from `web-nodejs` here; the script loads the spec tree of
 upstream 3.5.264, mounted at `/spec/web-nodejs` (`WEB_NODEJS` names another
 place):

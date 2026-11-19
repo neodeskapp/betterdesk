@@ -10,7 +10,7 @@
 const { existsSync, readFileSync } = require('fs');
 const { join } = require('path');
 
-const repoRoot = join(__dirname, '..', '..');
+const repoRoot = join(__dirname, '..');
 const register = join(repoRoot, 'docs', 'important', 'support-agent-provenance.md');
 const webRemotePlan = join(repoRoot, 'docs', 'features', 'WEB_REMOTE_CLIENT_PLAN.md');
 const serverContext = join(repoRoot, '.github', 'go-server-context.md');

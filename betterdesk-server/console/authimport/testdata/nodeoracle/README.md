@@ -1,5 +1,18 @@
 # Node fixtures for console/authimport
 
+`web-nodejs` is gone from this tree. These scripts stay as the record of
+how the recordings in this package were made; the Go tests replay the
+recordings and need no Node. To run a script again, use a tree that still
+has `web-nodejs`: the spec worktree
+`C:\Users\info\worktrees\betterdesk-go-spec264`. Mount its `web-nodejs`,
+with its modules, over `/repo/web-nodejs` of this tree:
+
+    DEV_DOCKER_ARGS="-v C:/Users/info/worktrees/betterdesk-go-spec264/web-nodejs:/repo/web-nodejs -v bdgo-node-nm:/repo/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/<this folder> && node <script>"
+
+Its Node code is upstream's release there, so a script that loads a file
+the port deleted or changed on the way can fail or record other answers.
+
 There is no Node code that imports `auth.db`; the import is new (DECISIONS
 D1). These scripts use the real Node console to build what the import
 works on and to check what the old console reads afterwards.
@@ -23,4 +36,4 @@ In the dev image, from the worktree:
     tools/dev.sh "cd betterdesk-server/console/authimport/testdata/nodeoracle && node split.js /tmp/split"
     tools/dev.sh "cd betterdesk-server && go test -tags nodeoracle ./console/authimport/ -count=1"
 
-This folder goes away with `web-nodejs`; `../split/*.sql` stays.
+This folder stays now that `web-nodejs` is gone; `../split/*.sql` stays.

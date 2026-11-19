@@ -1,5 +1,18 @@
 # Node oracle for console/routes/devices
 
+`web-nodejs` is gone from this tree. These scripts stay as the record of
+how the recordings in this package were made; the Go tests replay the
+recordings and need no Node. To run a script again, use a tree that still
+has `web-nodejs`: the spec worktree
+`C:\Users\info\worktrees\betterdesk-go-spec264`. Mount its `web-nodejs`,
+with its modules, over `/repo/web-nodejs` of this tree:
+
+    DEV_DOCKER_ARGS="-v C:/Users/info/worktrees/betterdesk-go-spec264/web-nodejs:/repo/web-nodejs -v bdgo-node-nm:/repo/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/<this folder> && node <script>"
+
+Its Node code is upstream's release there, so a script that loads a file
+the port deleted or changed on the way can fail or record other answers.
+
 `routes.js` runs the Node console's device routes (`routes/devices.routes.js`
 with the real `services/dbAdapter.js`, the real API client and the real
 i18n middleware) on a scratch database, in front of an API server that
@@ -9,7 +22,7 @@ requests on the same rows with the same API answers and must get the same
 status and body, byte for byte, make the same calls, and leave the same
 rows.
 
-This folder is a test fixture for the time both servers exist. The route
+This folder is a test fixture from the time both servers existed. The route
 handlers it loads are gone from `web-nodejs` since the routes moved to Go,
 so the scripts run on a tree that still has them, named by `WEB_NODEJS`
 (default `/repo/web-nodejs`): the recordings are from the specification

@@ -1,5 +1,18 @@
 # Node oracle for console/routes/generator
 
+`web-nodejs` is gone from this tree. These scripts stay as the record of
+how the recordings in this package were made; the Go tests replay the
+recordings and need no Node. To run a script again, use a tree that still
+has `web-nodejs`: the spec worktree
+`C:\Users\info\worktrees\betterdesk-go-spec264`. Mount its `web-nodejs`,
+with its modules, over `/repo/web-nodejs` of this tree:
+
+    DEV_DOCKER_ARGS="-v C:/Users/info/worktrees/betterdesk-go-spec264/web-nodejs:/repo/web-nodejs -v bdgo-node-nm:/repo/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/<this folder> && node <script>"
+
+Its Node code is upstream's release there, so a script that loads a file
+the port deleted or changed on the way can fail or record other answers.
+
 `generator.js` runs the Node console's generator routes
 (`routes/generator.routes.js` with the real `dbAdapter`, template module,
 build queue and bundle service) on a scratch database and records every
@@ -7,7 +20,7 @@ answer. `TestNodeAnswers` replays the requests on the same rows and must
 get the same status and body, byte for byte, and for downloads the same
 headers.
 
-This folder is a test fixture for the time both consoles exist. The route
+This folder is a test fixture from the time both consoles existed. The route
 file it loads is gone from `web-nodejs` since the routes moved to Go, so the
 script runs only on a tree that still has it, named by `WEB_NODEJS`. The
 files were last recorded on upstream 3.5.264 (relay addresses with a port).

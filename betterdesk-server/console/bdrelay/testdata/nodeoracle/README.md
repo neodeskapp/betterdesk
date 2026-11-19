@@ -1,5 +1,18 @@
 # Node oracle for console/bdrelay
 
+`web-nodejs` is gone from this tree. These scripts stay as the record of
+how the recordings in this package were made; the Go tests replay the
+recordings and need no Node. To run a script again, use a tree that still
+has `web-nodejs`: the spec worktree
+`C:\Users\info\worktrees\betterdesk-go-spec264`. Mount its `web-nodejs`,
+with its modules, over `/repo/web-nodejs` of this tree:
+
+    DEV_DOCKER_ARGS="-v C:/Users/info/worktrees/betterdesk-go-spec264/web-nodejs:/repo/web-nodejs -v bdgo-node-nm:/repo/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/<this folder> && node <script>"
+
+Its Node code is upstream's release there, so a script that loads a file
+the port deleted or changed on the way can fail or record other answers.
+
 `relay.js` runs the old console's `services/bdRelay.js` on a real HTTP
 server and plays scenarios against it. `Date.now()` and the timers are a
 made-up clock that moves only when a step says so (`advance`), and the
@@ -29,7 +42,7 @@ lengths`), and a throw in the relay handler closes that socket with 1011
 "Internal error" (`relay handler throws`). The other twelve scenarios are
 the same as in the recording of the tree before the move.
 
-This folder is a test fixture for the time both servers exist. The service
+This folder is a test fixture from the time both servers existed. The service
 is gone from `web-nodejs` since it moved, so the script runs on the spec
 tree of the upstream merge, mounted at `/spec/web-nodejs` with the
 dependencies of the dev image; the recording stays.

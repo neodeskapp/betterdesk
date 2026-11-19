@@ -1,12 +1,25 @@
 # Node oracle for the mail message builder
 
+`web-nodejs` is gone from this tree. These scripts stay as the record of
+how the recordings in this package were made; the Go tests replay the
+recordings and need no Node. To run a script again, use a tree that still
+has `web-nodejs`: the spec worktree
+`C:\Users\info\worktrees\betterdesk-go-spec264`. Mount its `web-nodejs`,
+with its modules, over `/repo/web-nodejs` of this tree:
+
+    DEV_DOCKER_ARGS="-v C:/Users/info/worktrees/betterdesk-go-spec264/web-nodejs:/repo/web-nodejs -v bdgo-node-nm:/repo/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/<this folder> && node <script>"
+
+Its Node code is upstream's release there, so a script that loads a file
+the port deleted or changed on the way can fail or record other answers.
+
 The Go package `message` builds the same bytes as nodemailer 10.4.0 on
 Node 22. The scripts here run the real nodemailer from
 `web-nodejs/node_modules` and write what it produces. The Go tests replay
 those files.
 
 The scripts and the vector files are fixtures for the move from Node to Go.
-They go away together with `web-nodejs`. `tables.bin.gz` in the package
+They stay now that `web-nodejs` is gone. `tables.bin.gz` in the package
 folder stays: the Go code needs it.
 
 ## The scripts

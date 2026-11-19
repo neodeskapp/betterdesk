@@ -171,9 +171,9 @@ func TestPaths(t *testing.T) {
 // console read it (parseEnvKeys). Run "go generate" after the template
 // changed.
 func TestAllowlistMatchesTheTemplate(t *testing.T) {
-	data, err := os.ReadFile(filepath.Join("..", "..", "..", "web-nodejs", ".env.example"))
+	data, err := os.ReadFile("env.example")
 	if err != nil {
-		t.Skip("no web-nodejs/.env.example in this tree")
+		t.Fatal(err)
 	}
 	line := regexp.MustCompile(`^\s*#?\s*([A-Z][A-Z0-9_]*)\s*=`)
 	seen := map[string]bool{}
@@ -190,8 +190,5 @@ func TestAllowlistMatchesTheTemplate(t *testing.T) {
 	}
 	if len(keys) < 50 {
 		t.Errorf("only %d keys", len(keys))
-	}
-	if Template() != string(data) {
-		t.Error("the embedded template differs from web-nodejs/.env.example; run go generate")
 	}
 }

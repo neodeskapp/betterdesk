@@ -1,6 +1,19 @@
 # Comparison with the Node console's network routes
 
-This folder is a test fixture. It goes away together with `web-nodejs`; the
+`web-nodejs` is gone from this tree. These scripts stay as the record of
+how the recordings in this package were made; the Go tests replay the
+recordings and need no Node. To run a script again, use a tree that still
+has `web-nodejs`: the spec worktree
+`C:\Users\info\worktrees\betterdesk-go-spec264`. Mount its `web-nodejs`,
+with its modules, over `/repo/web-nodejs` of this tree:
+
+    DEV_DOCKER_ARGS="-v C:/Users/info/worktrees/betterdesk-go-spec264/web-nodejs:/repo/web-nodejs -v bdgo-node-nm:/repo/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/<this folder> && node <script>"
+
+Its Node code is upstream's release there, so a script that loads a file
+the port deleted or changed on the way can fail or record other answers.
+
+This folder is a test fixture. It stays now that `web-nodejs` is gone; the
 route file it runs (`web-nodejs/routes/network.routes.js`) is already gone
 from the tree, so the script runs on a checkout from before the move (pass
 its `web-nodejs` folder as the second argument).

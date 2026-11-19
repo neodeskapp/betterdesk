@@ -1,5 +1,18 @@
 # Node oracle for the console's listeners
 
+`web-nodejs` is gone from this tree. These scripts stay as the record of
+how the recordings in this package were made; the Go tests replay the
+recordings and need no Node. To run a script again, use a tree that still
+has `web-nodejs`: the spec worktree
+`C:\Users\info\worktrees\betterdesk-go-spec264`. Mount its `web-nodejs`,
+with its modules, over `/repo/web-nodejs` of this tree:
+
+    DEV_DOCKER_ARGS="-v C:/Users/info/worktrees/betterdesk-go-spec264/web-nodejs:/repo/web-nodejs -v bdgo-node-nm:/repo/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/<this folder> && node <script>"
+
+Its Node code is upstream's release there, so a script that loads a file
+the port deleted or changed on the way can fail or record other answers.
+
 `record.js` starts the Node console's real `server.js` again and again with
 different settings and talks to its listeners over real sockets, plain and
 TLS: the client API port (`startRustDeskApiServer`) in proxy and local mode
@@ -26,7 +39,7 @@ console) the exchanges. The redirect exchanges of the first recording,
 which took the host from the request, are removed from
 `node_listeners.json`.
 
-This folder is a fixture for the time both servers exist. The client API
+This folder is a fixture from the time both servers existed. The client API
 listener is gone from `web-nodejs/server.js` since it moved to Go, so
 `record.js` runs only on a tree from before that (2925a114), and
 `redirect.js` on the spec tree of the upstream merge. The recordings stay

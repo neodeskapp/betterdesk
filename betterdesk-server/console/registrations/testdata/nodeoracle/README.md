@@ -1,5 +1,18 @@
 # Node oracle for console/registrations
 
+`web-nodejs` is gone from this tree. These scripts stay as the record of
+how the recordings in this package were made; the Go tests replay the
+recordings and need no Node. To run a script again, use a tree that still
+has `web-nodejs`: the spec worktree
+`C:\Users\info\worktrees\betterdesk-go-spec264`. Mount its `web-nodejs`,
+with its modules, over `/repo/web-nodejs` of this tree:
+
+    DEV_DOCKER_ARGS="-v C:/Users/info/worktrees/betterdesk-go-spec264/web-nodejs:/repo/web-nodejs -v bdgo-node-nm:/repo/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/<this folder> && node <script>"
+
+Its Node code is upstream's release there, so a script that loads a file
+the port deleted or changed on the way can fail or record other answers.
+
 `notifications.js` calls the real `services/registrationNotifications.js`
 (`lanRegistrationToNotification`, `enrollmentToNotification`,
 `listRegistrationNotifications`) with many inputs and writes what they
@@ -16,8 +29,7 @@ The database methods of the package (`pending_registrations` in
 `console/routes/registration/testdata`, which run them through the routes
 on SQLite and PostgreSQL, and by the package's own tests.
 
-This folder is a test fixture for the time both servers exist. It goes away
-with `web-nodejs`; the recorded file stays.
+This folder is a test fixture from the time both servers existed. It stays now that `web-nodejs` is gone; the recorded file stays.
 
 ## Running
 
