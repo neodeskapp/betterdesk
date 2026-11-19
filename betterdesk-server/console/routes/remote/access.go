@@ -39,6 +39,17 @@ func abort() {
 	panic(http.ErrAbortHandler)
 }
 
+// tokenFailure is the answer to a guest or share token that cannot be
+// turned into text: 400, as the guest and MeshCentral routes answer it.
+type tokenFailure struct {
+	Error string `json:"error"`
+}
+
+var (
+	badGuestToken = tokenFailure{Error: "Invalid guest token"}
+	badShareToken = tokenFailure{Error: "Invalid share token"}
+)
+
 // guestDenied is the answer to an explicit guest link that does not
 // reach the device.
 type guestDenied struct {
@@ -60,6 +71,9 @@ type guestDenied struct {
 //   - a share link of a mesh device (?mesh_share=) the API server finds
 //     good for this device;
 //   - else the remote client's guard with device.connect.
+//
+// A guest token (query or cookie) or share token that cannot be turned
+// into text is refused with 400.
 func (h *handlers) requireRemoteAccess(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		deviceID := r.PathValue("deviceId")
@@ -82,16 +96,19 @@ func (h *handlers) requireRemoteAccess(next http.Handler) http.Handler {
 		guests := h.d.GuestAccess
 		queryToken, err := guests.TokenFromQuery(r)
 		if err != nil {
-			abort()
+			kit.JSON(w, r, http.StatusBadRequest, badGuestToken)
+			return
 		}
 		guestToken, err := guests.Token(r)
 		if err != nil {
-			abort()
+			kit.JSON(w, r, http.StatusBadRequest, badGuestToken)
+			return
 		}
 		if guestToken != "" && deviceID != "" {
 			grant, err := guests.AttachGrant(r.Context(), r, deviceID)
 			if err != nil {
-				abort()
+				kit.JSON(w, r, http.StatusBadRequest, badGuestToken)
+				return
 			}
 			if grant != nil {
 				g.guest, g.guestToken = grant, grant.Token
@@ -114,7 +131,8 @@ func (h *handlers) requireRemoteAccess(next http.Handler) http.Handler {
 
 		share, ok := queryText(reqquery.Of(r), "mesh_share", "")
 		if !ok {
-			abort()
+			kit.JSON(w, r, http.StatusBadRequest, badShareToken)
+			return
 		}
 		if share = jsbind.Trim(share); share != "" && deviceID != "" {
 			resp, err := h.d.GoAPI.Get(r.Context(), "/mesh/share/validate", goapi.Query("token", share), goapi.Query("peer_id", deviceID))

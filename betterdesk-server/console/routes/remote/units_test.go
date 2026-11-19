@@ -15,11 +15,24 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
+// refusedTokens are the requests of testdata/crashes.json whose guest or
+// share token is no text: the Go console refuses them with 400 (MC1), as
+// the guest and MeshCentral routes refuse such a token.
+var refusedTokens = map[string]string{
+	"/api/remote/viewer/dev-1?guest[toString]=1":      `{"error":"Invalid guest token"}`,
+	"/api/remote/viewer/dev-1?t[toString]=1":          `{"error":"Invalid guest token"}`,
+	"/api/remote/viewer/dev-1?mesh_share[toString]=1": `{"error":"Invalid share token"}`,
+	"/api/remote/guest-info?t[toString]=1":            `{"error":"Invalid guest token"}`,
+	"/api/remote/guest-info?guest[toString]=1":        `{"error":"Invalid guest token"}`,
+}
+
 // TestRequestsThatEndedNode sends the requests that ended the Node
 // process (testdata/crashes.json, from testdata/nodeoracle/crash.js): a
-// query value with a member toString where the route needed text. The Go
-// console closes that one connection without an answer (DECISIONS A19);
-// the requests Node still answered get Node's status.
+// query value with a member toString where the route needed text. A
+// guest or share token of that kind is refused with 400 (refusedTokens);
+// for the rest the Go console closes that one connection without an
+// answer (DECISIONS A19). The requests Node still answered get Node's
+// status.
 func TestRequestsThatEndedNode(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("testdata", "crashes.json"))
 	if err != nil {
@@ -56,7 +69,12 @@ func TestRequestsThatEndedNode(t *testing.T) {
 			rec = w.do(v)
 			return false
 		}()
+		refusal, refused := refusedTokens[c.Path]
 		switch {
+		case c.Ended && refused:
+			if aborted || rec.Code != http.StatusBadRequest || strings.TrimSpace(rec.Body.String()) != refusal {
+				t.Errorf("%s (signed in %v): aborted %v; want 400 %s", c.Path, c.SignedIn, aborted, refusal)
+			}
 		case c.Ended && !aborted:
 			t.Errorf("%s (signed in %v) answered %d; Node ended there, so the connection should be dropped", c.Path, c.SignedIn, rec.Code)
 		case !c.Ended && aborted:
@@ -224,5 +242,19 @@ func repoRoot(t *testing.T) string {
 			return "/repo"
 		}
 		dir = parent
+	}
+}
+
+// TestGuestCookieWithoutATextIsRefused: a guest cookie that holds no text
+// is refused with 400 by the guest page and the viewer, as a query token
+// of that kind is.
+func TestGuestCookieWithoutATextIsRefused(t *testing.T) {
+	w := newWorld(t, storetest.Migrated(t), "1.0.0", false)
+	for _, path := range []string{"/api/remote/guest-info", "/api/remote/viewer/dev-1"} {
+		v := &vector{Request: request{Method: "GET", Path: path, Headers: map[string]string{"Cookie": `bd.guest=j:{"toString":1}`}}}
+		rec := w.do(v)
+		if rec.Code != http.StatusBadRequest || strings.TrimSpace(rec.Body.String()) != `{"error":"Invalid guest token"}` {
+			t.Errorf("%s: %d %s", path, rec.Code, rec.Body.String())
+		}
 	}
 }

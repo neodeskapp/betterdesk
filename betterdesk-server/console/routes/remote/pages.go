@@ -123,13 +123,15 @@ type guestInfo struct {
 // guestInfo answers GET /api/remote/guest-info?t=<token>, the data of the
 // /remote/guest page: the link's token (from the query or the guest
 // cookie) must be good on the API server, which also names its devices;
-// a good one is stored in the guest cookie.
+// a good one is stored in the guest cookie. A token that cannot be
+// turned into text is refused with 400.
 func (h *handlers) guestInfo(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	page := h.pageInfo(r)
 	token, err := h.d.GuestAccess.Token(r)
 	if err != nil {
-		abort()
+		kit.JSON(w, r, http.StatusBadRequest, badGuestToken)
+		return
 	}
 	if token == "" {
 		kit.JSON(w, r, http.StatusBadRequest, guestFailure{Code: "missing_token", Error: kit.T(r, "guest_access.missing_token", nil), Page: page})

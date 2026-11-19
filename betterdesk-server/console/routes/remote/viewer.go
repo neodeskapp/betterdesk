@@ -166,9 +166,11 @@ func (h *handlers) viewer(w http.ResponseWriter, r *http.Request) {
 	connection := h.connectionSnapshot(ctx)
 	guestToken := g.guestToken
 	if guestToken == "" {
+		// A signed-in account comes here without the guest checks
 		token, err := h.d.GuestAccess.TokenFromQuery(r)
 		if err != nil {
-			abort()
+			kit.JSON(w, r, http.StatusBadRequest, badGuestToken)
+			return
 		}
 		guestToken = token
 	}
