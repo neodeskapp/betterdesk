@@ -354,15 +354,15 @@ func TestHostileValues(t *testing.T) {
 	}
 }
 
-// TestFoldAtUnicodeSpace pins a weakness that is nodemailer's: a header is
-// folded in front of any Unicode white space, and inside a quoted local part
-// that leaves a line which starts with the bytes of that character and not
-// with a space or tab.
+// TestFoldAtUnicodeSpace checks that a header is folded only in front of a
+// space or a tab. nodemailer folded in front of any Unicode white space,
+// which inside a quoted local part left a line that started with the bytes
+// of that character, a new header for a lenient reader (BUGS EM13).
 func TestFoldAtUnicodeSpace(t *testing.T) {
 	to := "\"" + strings.Repeat("a", 70) + "\u00a0X-Header: value\"@example.com"
 	m := build(t, Mail{From: "a@b.c", To: []string{to}, Subject: "S"})
 	lines := headerLines(t, m.Raw)
-	want := []string{"From: a@b.c", "To:", " <\"" + strings.Repeat("a", 70), "\u00a0X-Header: value\"@example.com>", "Subject: S"}
+	want := []string{"From: a@b.c", "To:", " <\"" + strings.Repeat("a", 70) + "\u00a0X-Header:", " value\"@example.com>", "Subject: S"}
 	if len(lines) < len(want) || !slices.Equal(lines[:len(want)], want) {
 		t.Errorf("headers\n got  %q\n want %q", lines, want)
 	}

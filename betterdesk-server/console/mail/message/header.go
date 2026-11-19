@@ -183,12 +183,13 @@ func splitQEncoded(text string, maxLength int) []string {
 }
 
 // foldLines breaks a header line into lines of at most maxHeaderLine
-// characters. A break goes in front of the last run of white space that
-// leaves something on the line, so the next line starts with that white
-// space. A word that does not fit stays in one piece on a line of its own.
+// characters. A break goes in front of the last run of spaces and tabs
+// that leaves something on the line, so the next line starts with a space
+// or a tab, the only characters a reader takes for a folded line. A word
+// that does not fit stays in one piece on a line of its own.
 func foldLines(line string) string {
 	units := utf16Units(line)
-	space := func(u uint16) bool { return isJSSpace(rune(u)) }
+	space := func(u uint16) bool { return u == ' ' || u == '\t' }
 	result := make([]uint16, 0, len(units)+len(units)/maxHeaderLine*2+2)
 	for pos := 0; pos < len(units); {
 		if len(units)-pos < maxHeaderLine {

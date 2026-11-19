@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 )
 
 // messageVector is one mail of a file that testdata/nodeoracle/message.js
@@ -37,6 +38,37 @@ type messageVector struct {
 	RawSHA256   string `json:"rawSha256"`
 	EnvToCount  int    `json:"envToCount"`
 	EnvToSHA256 string `json:"envToSha256"`
+
+	// foldedAtOtherSpace is set by check for a message nodemailer folded
+	// in front of white space other than a space or a tab
+	foldedAtOtherSpace bool
+}
+
+// foldedAtOtherSpace reports whether a message's header block has a line
+// that starts with white space other than a space or a tab, as nodemailer
+// folded in front of any Unicode white space (BUGS EM13).
+func foldedAtOtherSpace(raw []byte) bool {
+	head, _, _ := bytes.Cut(raw, []byte("\r\n\r\n"))
+	for _, line := range bytes.Split(head, []byte("\r\n"))[1:] {
+		if r, _ := utf8.DecodeRune(line); isJSSpace(r) && r != ' ' && r != '\t' {
+			return true
+		}
+	}
+	return false
+}
+
+// unfold joins the folded lines of a message's header block: every CR LF
+// in front of white space goes.
+func unfold(raw []byte) []byte {
+	head, body, _ := bytes.Cut(raw, []byte("\r\n\r\n"))
+	var out []byte
+	for i, line := range bytes.Split(head, []byte("\r\n")) {
+		if r, _ := utf8.DecodeRune(line); i > 0 && !isJSSpace(r) {
+			out = append(out, '\r', '\n')
+		}
+		out = append(out, line...)
+	}
+	return append(append(out, "\r\n\r\n"...), body...)
 }
 
 // mail returns the vector's input as Build takes it.
@@ -140,6 +172,19 @@ func (v *messageVector) check() string {
 		}
 		want = append(want, byte(r))
 	}
+	if !bytes.Equal(message.Raw, want) && foldedAtOtherSpace(want) {
+		// BUGS EM13: nodemailer folded a header in front of white space
+		// other than a space or a tab, Build folds only in front of those
+		// two; unfolded, the headers are the same
+		v.foldedAtOtherSpace = true
+		switch {
+		case foldedAtOtherSpace(message.Raw):
+			return "a header line starts with white space other than a space or a tab"
+		case !bytes.Equal(unfold(message.Raw), unfold(want)):
+			return fmt.Sprintf("unfolded, the message differs\n got  %q\n want %q", unfold(message.Raw), unfold(want))
+		}
+		return ""
+	}
 	if !bytes.Equal(message.Raw, want) {
 		at := 0
 		for at < len(want) && at < len(message.Raw) && want[at] == message.Raw[at] {
@@ -171,8 +216,9 @@ func (v *messageVector) describe() string {
 }
 
 // replayMessages checks every vector of a file and returns how many there
-// were and how many of them recorded an error.
-func replayMessages(t *testing.T, file string) (count, withError int) {
+// were, how many of them recorded an error and how many nodemailer folded
+// in front of white space other than a space or a tab.
+func replayMessages(t *testing.T, file string) (count, withError, foldedAtOtherSpace int) {
 	failed := 0
 	readLines(t, file, func(line []byte) {
 		var v messageVector
@@ -191,21 +237,26 @@ func replayMessages(t *testing.T, file string) (count, withError int) {
 				t.Fatalf("stopping after %d failures", failed)
 			}
 		}
+		if v.foldedAtOtherSpace {
+			foldedAtOtherSpace++
+		}
 		count++
 	})
-	return count, withError
+	return count, withError, foldedAtOtherSpace
 }
 
 // TestNodeMessageVectors replays the mails of
 // testdata/nodeoracle/message.js: for each one Build gets the same mail,
 // time and random bytes as nodemailer and has to give the same envelope,
-// Message-ID and message bytes, or the same error.
+// Message-ID and message bytes, or the same error. Where nodemailer folded
+// a header in front of white space other than a space or a tab, the
+// headers are the same once unfolded (BUGS EM13).
 func TestNodeMessageVectors(t *testing.T) {
-	count, withError := replayMessages(t, "testdata/message.json.gz")
-	if count < 8000 || withError == 0 {
-		t.Fatalf("%d vectors, %d with an error, in testdata/message.json.gz: the file is incomplete", count, withError)
+	count, withError, folded := replayMessages(t, "testdata/message.json.gz")
+	if count < 8000 || withError == 0 || folded == 0 {
+		t.Fatalf("%d vectors, %d with an error, %d folded at other white space, in testdata/message.json.gz: the file is incomplete", count, withError, folded)
 	}
-	t.Logf("%d vectors, %d with an error", count, withError)
+	t.Logf("%d vectors, %d with an error, %d folded at other white space", count, withError, folded)
 }
 
 // TestExtraMessageVectors replays a second file of vectors, named by the
@@ -215,6 +266,6 @@ func TestExtraMessageVectors(t *testing.T) {
 	if file == "" {
 		t.Skip("MESSAGE_VECTORS is not set")
 	}
-	count, withError := replayMessages(t, file)
-	t.Logf("%d vectors, %d with an error", count, withError)
+	count, withError, folded := replayMessages(t, file)
+	t.Logf("%d vectors, %d with an error, %d folded at other white space", count, withError, folded)
 }

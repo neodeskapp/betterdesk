@@ -53,17 +53,15 @@ func checkHeaders(t *testing.T, head string) map[string]string {
 	for i, line := range strings.Split(head, "\r\n") {
 		// a line is at most 76 characters long, or it holds one word that
 		// could not be broken
-		if utf16Len(line) > maxHeaderLine && strings.ContainsFunc(strings.TrimLeftFunc(line, isJSSpace), isJSSpace) {
+		if utf16Len(line) > maxHeaderLine && strings.ContainsAny(strings.TrimLeft(line, " \t"), " \t") {
 			t.Fatalf("header line %d has %d characters and more than one word: %q", i, utf16Len(line), line)
 		}
-		first, _ := utf8.DecodeRuneInString(line)
 		if line == "" {
 			t.Fatalf("empty line %d in the headers: %q", i, head)
 		}
-		if isJSSpace(first) {
-			// The line continues the header before it. nodemailer folds in
-			// front of any Unicode white space, so the line can start with
-			// one that is not a space or a tab; see TestFoldAtUnicodeSpace.
+		if line[0] == ' ' || line[0] == '\t' {
+			// The line continues the header before it: a header is folded
+			// only in front of a space or a tab (BUGS EM13)
 			if current == "" {
 				t.Fatalf("the headers start with a continuation line: %q", head)
 			}
