@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -174,6 +175,49 @@ func TestRestoreCreated(t *testing.T) {
 	}
 	if err := s.RestoreBackup("go-blocklist", nil, false); !errors.Is(err, ErrInvalidBackup) {
 		t.Errorf("without created: %v", err)
+	}
+}
+
+// TestFailedRestoreKeepsTheFile: a restore whose copy fails (the backup is
+// a folder) leaves the configuration file as it was, and one that works
+// puts the backup's content and mode in place, with no temporary file
+// left beside it (BUGS SE3).
+func TestFailedRestoreKeepsTheFile(t *testing.T) {
+	s, root := testService(t, nil)
+	keys := filepath.Join(root, "keys")
+	target := filepath.Join(keys, "blocklist.txt")
+	if err := os.MkdirAll(target+".bak.dir", 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(target, []byte("current"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	err := s.RestoreBackup("go-blocklist", target+".bak.dir", false)
+	if err == nil || !strings.HasPrefix(err.Error(), "EISDIR: illegal operation on a directory, copyfile ") {
+		t.Errorf("restore from a folder: %v", err)
+	}
+	if data, err := os.ReadFile(target); err != nil || string(data) != "current" {
+		t.Errorf("the file after the failed restore: %q, %v", data, err)
+	}
+
+	backup := target + ".bak.2026-01-01T00-00-00-000Z"
+	if err := os.WriteFile(backup, []byte("before"), 0o444); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.RestoreBackup("go-blocklist", backup, false); err != nil {
+		t.Fatal(err)
+	}
+	info, err := os.Stat(target)
+	if data, _ := os.ReadFile(target); err != nil || string(data) != "before" || (runtime.GOOS != "windows" && info.Mode().Perm() != 0o444) {
+		t.Errorf("the file after the restore: %q, %v", data, err)
+	}
+	entries, _ := os.ReadDir(keys)
+	var names []string
+	for _, e := range entries {
+		names = append(names, e.Name())
+	}
+	if strings.Join(names, ",") != "blocklist.txt,blocklist.txt.bak.2026-01-01T00-00-00-000Z,blocklist.txt.bak.dir" {
+		t.Errorf("the folder after the restores: %v", names)
 	}
 }
 

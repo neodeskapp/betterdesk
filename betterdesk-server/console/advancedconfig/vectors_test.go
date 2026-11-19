@@ -246,7 +246,7 @@ func truthy(v any) bool {
 
 func TestNodeVectors(t *testing.T) {
 	scenarios := loadVectors(t)
-	steps := 0
+	steps, fixed := 0, 0
 	for _, sc := range scenarios {
 		t.Run(sc.Name, func(t *testing.T) {
 			root := t.TempDir()
@@ -306,7 +306,11 @@ func TestNodeVectors(t *testing.T) {
 					if _, isUndefined := id.(undefinedValue); isUndefined {
 						id = nil
 					}
+					before := treeOf(t, root)
 					err = s.RestoreBackup(id, args[1], created)
+					if failedCopyKeepsTheFile(t, root, step, before) {
+						fixed++
+					}
 				default:
 					t.Fatalf("unknown step %s", op)
 				}
@@ -336,4 +340,34 @@ func TestNodeVectors(t *testing.T) {
 	if steps < 150 {
 		t.Fatalf("only %d steps in the vectors", steps)
 	}
+	if fixed == 0 {
+		t.Error("no restore of the vectors failed in its copy (BUGS SE3)")
+	}
+}
+
+// failedCopyKeepsTheFile is BUGS SE3 in the replay: a restore whose copy
+// fails leaves the configuration file as it was, where Node's copyFile
+// had removed it. It checks that the step changed no file, then removes
+// what Node's step removed, so the next steps start from Node's folder,
+// and reports whether the step was one of these.
+func failedCopyKeepsTheFile(t *testing.T, root string, step vectorStep, before []vectorFile) bool {
+	t.Helper()
+	if step.Error == nil || !strings.Contains(*step.Error, ", copyfile '") {
+		return false
+	}
+	if got := treeOf(t, root); !reflect.DeepEqual(got, before) {
+		t.Errorf("a restore that failed in its copy changed the files:\n got  %+v\n were %+v", got, before)
+	}
+	kept := map[string]bool{}
+	for _, f := range step.Tree {
+		kept[f.Path] = true
+	}
+	for _, f := range before {
+		if !kept[f.Path] {
+			if err := os.Remove(filepath.Join(root, f.Path)); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	return true
 }

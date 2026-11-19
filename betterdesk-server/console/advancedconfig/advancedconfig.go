@@ -450,11 +450,15 @@ func resolve(path string) string {
 	return abs
 }
 
-// copyFile is fs.copyFile as libuv does it: the target is created or
-// truncated and gets the mode of the source, nothing happens when both
-// are one file, and a copy that fails once the target is open removes the
-// target (a folder as the source fails only when it is read).
-func copyFile(from, to string) (err error) {
+// copyFile copies a file as fs.copyFile does: the target gets the content
+// and the mode of the source, and nothing happens when both are one file
+// (a folder as the source fails only when it is read). The source is read
+// whole before the target is touched, and the copy goes into a temporary
+// file beside the target that then replaces it, so a copy that fails
+// leaves the target as it was. Where the target cannot be replaced (a
+// folder the console may not write, a file mounted on its own into a
+// container), the copy is written over it.
+func copyFile(from, to string) error {
 	src, err := os.Open(from)
 	if err != nil {
 		return err
@@ -464,31 +468,45 @@ func copyFile(from, to string) (err error) {
 	if err != nil {
 		return err
 	}
-	dst, err := os.OpenFile(to, os.O_WRONLY|os.O_CREATE, info.Mode().Perm())
+	if dstInfo, statErr := os.Stat(to); statErr == nil && os.SameFile(info, dstInfo) {
+		return nil
+	}
+	data, err := io.ReadAll(src)
+	if err != nil {
+		return err
+	}
+	mode := info.Mode().Perm()
+	if replaceFile(to, data, mode) == nil {
+		return nil
+	}
+	if err := os.WriteFile(to, data, mode); err != nil {
+		return err
+	}
+	return os.Chmod(to, mode)
+}
+
+// replaceFile writes data into a temporary file beside path and renames it
+// over path. On failure the temporary file is gone and path is untouched.
+func replaceFile(path string, data []byte, mode fs.FileMode) (err error) {
+	tmp, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+".tmp-*")
 	if err != nil {
 		return err
 	}
 	defer func() {
-		if closeErr := dst.Close(); err == nil {
-			err = closeErr
-		}
 		if err != nil {
-			_ = os.Remove(to)
+			_ = os.Remove(tmp.Name())
 		}
 	}()
-	if dstInfo, statErr := dst.Stat(); statErr != nil {
-		return statErr
-	} else if os.SameFile(info, dstInfo) {
-		return nil
+	if _, err = tmp.Write(data); err == nil {
+		err = tmp.Chmod(mode)
 	}
-	if err := dst.Truncate(0); err != nil {
+	if closeErr := tmp.Close(); err == nil {
+		err = closeErr
+	}
+	if err != nil {
 		return err
 	}
-	if err := dst.Chmod(info.Mode().Perm()); err != nil {
-		return err
-	}
-	_, err = io.Copy(dst, src)
-	return err
+	return os.Rename(tmp.Name(), path)
 }
 
 // mtimeOf is stats.mtime.toISOString(): Node rounds the time of the last
