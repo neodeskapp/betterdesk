@@ -74,6 +74,10 @@ const step = (role, method, p, body, extra = {}) => {
     steps.push(s);
 };
 const sql = (text, params = []) => { n += 1; steps.push({ name: `${n} sql`, sql: text, params }); };
+// The old route queued a changed bundle's builds after it answered; the Go
+// route queues them first. Waiting for the rows keeps a slow database from
+// recording a half-filled queue.
+const until = (text, params, test) => steps.push({ until: { sql: text, params, test } });
 
 const ADMINS = ['admin', 'server_admin', 'global_admin'];
 const branding = {
@@ -143,6 +147,7 @@ put({ branding: { ...branding, server_host: 'other.example.com' } });
 put({ branding: { server_host: 'bad host!' } });
 put({ platforms: [] });
 put({ name: 'x' }, 'nope');
+until('SELECT COUNT(*) AS n FROM agent_bundle_builds WHERE branding_hash = (SELECT branding_hash FROM agent_bundles WHERE slug = ?)', ['acme-new'], (rows) => Number(rows[0].n) >= 6);
 step('admin', 'GET', '/api/generator/bundles/<ID:acme-new>');
 
 // rebuilds
@@ -206,6 +211,17 @@ step('viewer', 'GET', '/api/generator/config');
 for (const body of [{}, { serverHost: 'h' }, { serverHost: 'h', serverPort: 1, relayHost: 'r', relayPort: '2', clientName: 'c' }, { serverHost: ['a', 'b'], relayHost: 0, clientName: { x: 1 } }]) {
     step('viewer', 'POST', '/api/generator/generate-config', body);
 }
+// the relay line always has a port (3.5.264): the one in relayHost, else
+// relayPort, else the server's relay port
+const relays = [
+    { relayHost: 'r' }, { relayHost: ' r:5 ', relayPort: 9 }, { relayHost: 'r:0' }, { relayHost: 'r:65536', relayPort: '7' },
+    { relayHost: 'r:007' }, { relayHost: '[fe80::1]' }, { relayHost: '[fe80::1]:6' }, { relayHost: '[fe80::1]:0', relayPort: 8 },
+    { relayHost: 'fe80::1' }, { relayHost: 'https://R.example:8443/x' }, { relayHost: 'HTTP://r.example/p/q' }, { relayHost: '   ' },
+    { relayHost: 5 }, { relayHost: ['r'] }, { relayHost: { a: 1 } }, { relayHost: true }, { relayHost: 'r', relayPort: 0 },
+    { relayHost: 'r', relayPort: [] }, { relayHost: 'r', relayPort: [1, 2] }, { relayHost: 'r', relayPort: true }, { relayHost: 'r', relayPort: { a: 1 } },
+    { relayHost: 'r', relayPort: '' }, { relayHost: 'r', relayPort: ' 3 ' }, { relayHost: 'r :5' }, { relayHost: 'x'.repeat(320) + ':5' },
+];
+for (const body of relays) step('viewer', 'POST', '/api/generator/generate-config', { serverHost: 'h', ...body });
 
 // a legacy bundle and a second module install
 sql("INSERT INTO agent_bundles (bundle_id, slug, name, branding, branding_hash, product_type) VALUES ('legacy00001', NULL, 'Old', '{\"app_name\":\"Old\"}', 'oldhash', 'agent')"); sql("UPDATE agent_bundles SET created_at = '2019-02-01 00:00:01' WHERE bundle_id = 'legacy00001'");

@@ -140,7 +140,7 @@ func TestLogoLimit(t *testing.T) {
 	head := "data:image/png;base64,"
 	for size, want := range map[int]bool{maxLogoBytes: true, maxLogoBytes + 1: false} {
 		logo := head + strings.Repeat("A", size-len(head))
-		v, err := ValidateBranding(goapiObject("server_host", "h.example", "logo_data_url", logo))
+		v, err := ValidateBranding(goapiObject("server_host", "h.example", "logo_data_url", logo), nil)
 		if err != nil {
 			t.Fatal(err)
 		}

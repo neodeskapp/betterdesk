@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/serverinfo"
 )
 
 // The Support client reads its server settings from custom.txt: the JSON
@@ -25,6 +26,9 @@ type CustomTxtOptions struct {
 	DisableSettings any
 	// DisableSettingsSet says DisableSettings was given.
 	DisableSettingsSet bool
+	// RelayPort gives the port of a relay address without one
+	// (serverinfo DefaultRelayPort). Nil means 21117.
+	RelayPort func() string
 }
 
 // BuildSupportCustomTxt builds the JSON of custom.txt
@@ -54,7 +58,7 @@ func BuildSupportCustomTxt(o CustomTxtOptions) *goapi.Object {
 		"disable-settings", disable,
 		"override-settings", goapi.NewObject(
 			"custom-rendezvous-server", text(o.Host),
-			"relay-server", text(or(o.Relay, o.Host)),
+			"relay-server", serverinfo.RelayEndpoint(text(or(o.Relay, o.Host)), "", relayPortOr(o.RelayPort)),
 			"api-server", text(o.API),
 			"key", text(o.Key),
 			"hide-server-settings", "Y",
@@ -177,4 +181,13 @@ func nodeBase64Decode(s string) []byte {
 		out = append(out, byte(acc>>10), byte(acc>>2))
 	}
 	return out
+}
+
+// relayPortOr is the default relay port of a relay address, 21117 when no
+// function gives one.
+func relayPortOr(port func() string) func() string {
+	if port != nil {
+		return port
+	}
+	return func() string { return "21117" }
 }

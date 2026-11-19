@@ -148,7 +148,7 @@
        "logo_data_url": "",
        "primary_color": "#2563eb",
        "product_label": "",
-       "relay_host": "127.0.0.1",
+       "relay_host": "127.0.0.1:21117",
        "server": {
         "address": "https://127.0.0.1:21121",
         "api_url": "https://127.0.0.1:21121",

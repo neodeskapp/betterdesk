@@ -106,7 +106,7 @@
        "logo_data_url": "data:image/png;base64,AAAA",
        "primary_color": "#abcdef",
        "product_label": "Remote help",
-       "relay_host": "relay.example.com",
+       "relay_host": "relay.example.com:21117",
        "server": {
         "address": "http://Desk.Example.com:21114",
         "api_url": "http://Desk.Example.com:21114",

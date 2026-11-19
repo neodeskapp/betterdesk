@@ -80,7 +80,7 @@
        "logo_data_url": "",
        "primary_color": "#2563eb",
        "product_label": "",
-       "relay_host": "bad host!",
+       "relay_host": "bad host!:21117",
        "server": {
         "address": "https://bad host!:21121",
         "api_url": "https://bad host!:21121",

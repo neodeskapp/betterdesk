@@ -349,7 +349,7 @@ func (h *handlers) createBundle(w http.ResponseWriter, r *http.Request) {
 		h.fail(w, r, http.StatusBadRequest, "generator.errors.name_required")
 		return
 	}
-	validation, err := gen.ValidateBranding(or(prop(body, "branding"), goapi.NewObject()))
+	validation, err := gen.ValidateBranding(or(prop(body, "branding"), goapi.NewObject()), h.serverInfo.DefaultRelayPort)
 	if err != nil {
 		h.serverError(w, r, "create bundle", err)
 		return
@@ -436,7 +436,7 @@ func (h *handlers) updateBundle(w http.ResponseWriter, r *http.Request) {
 		h.fail(w, r, http.StatusBadRequest, "generator.errors.name_required")
 		return
 	}
-	validation, err := gen.ValidateBranding(or(prop(body, "branding"), gen.ParseStoredBranding(existing.Branding)))
+	validation, err := gen.ValidateBranding(or(prop(body, "branding"), gen.ParseStoredBranding(existing.Branding)), h.serverInfo.DefaultRelayPort)
 	if err != nil {
 		h.serverError(w, r, "update bundle", err)
 		return
@@ -656,7 +656,7 @@ func (h *handlers) deleteBundle(w http.ResponseWriter, r *http.Request) {
 // stored, and what is wrong with it.
 func (h *handlers) preview(w http.ResponseWriter, r *http.Request) {
 	finalized := h.gen.FinalizeSupportBranding(r.Context(), or(prop(requestBody(r), "branding"), goapi.NewObject()))
-	validation, err := gen.ValidateBranding(finalized)
+	validation, err := gen.ValidateBranding(finalized, h.serverInfo.DefaultRelayPort)
 	if err != nil {
 		h.serverError(w, r, "preview", err)
 		return

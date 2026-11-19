@@ -13,16 +13,22 @@ import (
 // timeout".
 
 // DefaultRelayPort is the port of the relay server clients are told to
-// dial, as text: RELAY_PORT, else WS_HBBR_PORT, else HBBR_PORT, the first
-// of them that is set, when it reads as a positive number (parseInt);
-// "21117" otherwise.
+// dial, as text (DefaultRelayPortOf the service's environment).
 func (s *Service) DefaultRelayPort() string {
-	raw := s.env("RELAY_PORT")
+	return DefaultRelayPortOf(s.env)
+}
+
+// DefaultRelayPortOf is the relay port in the environment getenv reads, as
+// text: RELAY_PORT, else WS_HBBR_PORT, else HBBR_PORT, the first of them
+// that is set, when it reads as a positive number (parseInt); "21117"
+// otherwise.
+func DefaultRelayPortOf(getenv func(string) string) string {
+	raw := getenv("RELAY_PORT")
 	if raw == "" {
-		raw = s.env("WS_HBBR_PORT")
+		raw = getenv("WS_HBBR_PORT")
 	}
 	if raw == "" {
-		raw = s.env("HBBR_PORT")
+		raw = getenv("HBBR_PORT")
 	}
 	if n := jsParseInt(raw); !math.IsNaN(n) && n > 0 {
 		return numberString(n)
@@ -38,20 +44,25 @@ var (
 	httpScheme = regexp.MustCompile(`^[hH][tT][tT][pP][sS]?://`)
 )
 
-// RelayEndpointForHost returns the host:port of the relay for an address
-// that may have a port already. An address with a valid port keeps it (a
-// number from 1 to 65535, written without leading zeros), an IPv6 address
-// is put in brackets, and a URL loses its scheme and path; everything else
-// gets port, or DefaultRelayPort when port is "". An empty address gives
-// "". The address is trimmed and cut to 300 UTF-16 units first.
+// RelayEndpointForHost is RelayEndpoint with the service's DefaultRelayPort.
 func (s *Service) RelayEndpointForHost(hostPort, port string) string {
+	return RelayEndpoint(hostPort, port, s.DefaultRelayPort)
+}
+
+// RelayEndpoint returns the host:port of the relay for an address that may
+// have a port already. An address with a valid port keeps it (a number from
+// 1 to 65535, written without leading zeros), an IPv6 address is put in
+// brackets, and a URL loses its scheme and path; everything else gets port,
+// or the default port when port is "". An empty address gives "". The
+// address is trimmed and cut to 300 UTF-16 units first.
+func RelayEndpoint(hostPort, port string, defaultPort func() string) string {
 	raw := sliceUnits(jsTrim(hostPort), 0, 300)
 	if raw == "" {
 		return ""
 	}
 	relayPort := port
 	if relayPort == "" {
-		relayPort = s.DefaultRelayPort()
+		relayPort = defaultPort()
 	}
 
 	if m := relayHostPort.FindStringSubmatch(raw); m != nil {

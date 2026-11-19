@@ -790,6 +790,7 @@ func (s *Service) BuildCustomTxtContent(ctx context.Context, branding any) (Sign
 		Key:                key,
 		DisableSettings:    prop(branding, "disable_settings") != false,
 		DisableSettingsSet: true,
+		RelayPort:          s.relayPort,
 	}, s.SigningSeed())
 	return signed, err
 }

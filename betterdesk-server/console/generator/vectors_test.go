@@ -70,7 +70,7 @@ func TestValidateBrandingMatchesNode(t *testing.T) {
 			idna++
 			continue
 		}
-		got, err := ValidateBranding(input)
+		got, err := ValidateBranding(input, nil)
 		switch {
 		case c.Threw != "":
 			if err == nil {

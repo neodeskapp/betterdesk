@@ -37,6 +37,7 @@ func (fakeServerInfo) ResolveClientFacingHost(*serverinfo.RequestHost, string) s
 func (fakeServerInfo) DefaultServerHost() string { return "desk.example.test" }
 func (fakeServerInfo) DefaultUseHTTPS() bool     { return false }
 func (fakeServerInfo) DefaultAPIPort() string    { return "21114" }
+func (fakeServerInfo) DefaultRelayPort() string  { return "21117" }
 
 // fakeRunner records the tools a test's service starts and answers with
 // what its handler says.
@@ -104,7 +105,7 @@ func readyModule(t *testing.T, s *Service) {
 func newBundle(t *testing.T, s *Service, profile *goapi.Object, commit string) *Bundle {
 	t.Helper()
 	ctx := context.Background()
-	v, err := ValidateBranding(profile)
+	v, err := ValidateBranding(profile, nil)
 	if err != nil || !v.Valid {
 		t.Fatalf("profile: %v %v", err, v.Errors)
 	}

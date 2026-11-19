@@ -53,7 +53,9 @@ type generatedConfigData struct {
 
 // generateConfig answers POST /api/generator/generate-config: the lines
 // of a rustdesk.toml from serverHost, serverPort (21116), relayHost,
-// relayPort (21117) and clientName, with the server's key.
+// relayPort and clientName, with the server's key. The relay line always
+// has a port: the one in relayHost, else relayPort, else the server's relay
+// port (relayEndpoint).
 func (h *handlers) generateConfig(w http.ResponseWriter, r *http.Request) {
 	body := requestBody(r)
 	serverHost := prop(body, "serverHost")
@@ -64,7 +66,9 @@ func (h *handlers) generateConfig(w http.ResponseWriter, r *http.Request) {
 	key := h.serverInfo.ResolvePublicKey(r.Context())
 	lines := []string{"rendezvous_server = " + jsString(serverHost) + ":" + jsString(or(prop(body, "serverPort"), float64(21116)))}
 	if relay := prop(body, "relayHost"); gen.Truthy(relay) {
-		lines = append(lines, "relay_server = "+jsString(relay)+":"+jsString(or(prop(body, "relayPort"), float64(21117))))
+		if endpoint := h.relayEndpoint(relay, prop(body, "relayPort")); endpoint != "" {
+			lines = append(lines, "relay_server = "+endpoint)
+		}
 	}
 	if key != "" {
 		lines = append(lines, "key = "+string(key))
@@ -76,6 +80,19 @@ func (h *handlers) generateConfig(w http.ResponseWriter, r *http.Request) {
 		Config:   strings.Join(lines, "\n"),
 		FileName: "rustdesk.toml",
 	}})
+}
+
+// relayEndpoint is serverinfo.RelayEndpoint for request values of any JSON
+// type: an address that is not text has none, and a port that is truthy is
+// taken as String() makes it, even when that is "" (String([])).
+func (h *handlers) relayEndpoint(host, port any) string {
+	address, _ := host.(string)
+	defaultPort := h.serverInfo.DefaultRelayPort
+	if gen.Truthy(port) {
+		text := jsString(port)
+		defaultPort = func() string { return text }
+	}
+	return serverinfo.RelayEndpoint(address, "", defaultPort)
 }
 
 // contentDisposition is the Content-Disposition of a download under name

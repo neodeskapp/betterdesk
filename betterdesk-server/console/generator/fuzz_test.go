@@ -45,13 +45,13 @@ func FuzzValidateBranding(f *testing.F) {
 	for _, s := range []string{`{}`, `{"server_host":"desk.example.com","contact_url":"x.example"}`, `{"primary_color":["#aabbcc"]}`, `{"capabilities":[],"server":"x"}`} {
 		f.Add(s)
 	}
-	keys := stringify(func() any { v, _ := ValidateBranding(goapi.NewObject()); return v.Normalized.Keys() }())
+	keys := stringify(func() any { v, _ := ValidateBranding(goapi.NewObject(), nil); return v.Normalized.Keys() }())
 	f.Fuzz(func(t *testing.T, text string) {
 		input, err := parseJSON(text)
 		if err != nil {
 			return
 		}
-		v, err := ValidateBranding(input)
+		v, err := ValidateBranding(input, nil)
 		if err != nil {
 			return
 		}

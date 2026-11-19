@@ -32,6 +32,7 @@ type ServerInfo interface {
 	DefaultServerHost() string
 	DefaultUseHTTPS() bool
 	DefaultAPIPort() string
+	DefaultRelayPort() string
 }
 
 // Options are the settings of a Service. The names in brackets are the
@@ -252,4 +253,14 @@ func (s *Service) childEnv(extra map[string]string) []string {
 // splitLines is text.split(/\r?\n/).
 func splitLines(text string) []string {
 	return regexp.MustCompile(`\r?\n`).Split(text, -1)
+}
+
+// relayPort is the port a relay address without one gets: the server info
+// service's (RELAY_PORT, WS_HBBR_PORT, HBBR_PORT), else the generator's
+// own environment.
+func (s *Service) relayPort() string {
+	if s.opts.ServerInfo != nil {
+		return s.opts.ServerInfo.DefaultRelayPort()
+	}
+	return serverinfo.DefaultRelayPortOf(s.getenv)
 }

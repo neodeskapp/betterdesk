@@ -107,13 +107,14 @@ type Validation struct {
 // ValidateBranding cleans a profile an operator sent: texts trimmed and
 // cut to their length, colours checked and in lower case, unknown
 // languages replaced by English, the server's host read with
-// serverinfo.NormalizeServerHost. Errors lists what was wrong, in the
+// serverinfo.NormalizeServerHost, the relay as host:port with relayPort
+// when it has no port (nil: 21117). Errors lists what was wrong, in the
 // order the checks ran; Normalized holds defaults in place of the wrong
 // values (agentBundleService.validateBranding).
 //
 // The error is the TypeError the old service threw: for a null profile,
 // and for a colour given as a list.
-func ValidateBranding(input any) (Validation, error) {
+func ValidateBranding(input any, relayPort func() string) (Validation, error) {
 	if input == nil {
 		return Validation{}, typeError("Cannot read properties of null (reading 'app_name')")
 	}
@@ -132,7 +133,9 @@ func ValidateBranding(input any) (Validation, error) {
 	if appName == "" {
 		out.Set("app_name", companyName)
 	}
-	out.Set("relay_host", clip(or(or(or(get("relay_host"), get("relayHost")), get("relay_server")), ""), 253))
+	// The relay is kept as host:port: a bare host makes RustDesk 1.4.8 and
+	// 1.4.9 clients ask the API port for the relay
+	out.Set("relay_host", serverinfo.RelayEndpoint(clip(or(or(or(get("relay_host"), get("relayHost")), get("relay_server")), ""), 253), "", relayPortOr(relayPort)))
 	out.Set("api_server", clip(or(or(get("api_server"), get("apiServer")), ""), maxContact))
 	out.Set("api_port", clip(jsString(or(or(get("api_port"), get("apiPort")), "")), 8))
 	out.Set("disable_settings", get("disable_settings") != false && get("disableSettings") != false)

@@ -132,7 +132,8 @@ function send(port, step) {
  * @param {string[]} o.mounts where the console mounted it
  * @param {Array<[string, any[]]>} [o.seed] statements with ? placeholders, run before the first step
  * @param {object[]} o.steps  { name, role, method, path, body (text), headers }, or
- *        { name, sql, params }: a statement instead of a request, its rows are recorded
+ *        { name, sql, params }: a statement instead of a request, its rows are recorded, or
+ *        { until: { sql, params, test } }: waits until test(rows) holds, records nothing
  * @param {string} o.out      name of the recorded file, without dialect and extension
  * @param {function} [o.prepare] called with { web, stub, scratch, WEB, dialect } before the route file loads
  * @param {function} [o.keep] (step, answer) => more fields to record for a step
@@ -180,6 +181,14 @@ async function record(o) {
     const ids = {};
     try {
         for (const step of o.steps) {
+            if (step.until) {
+                const deadline = Date.now() + 60000;
+                while (!step.until.test(await db.exec(step.until.sql, filled(step.until.params)))) {
+                    if (Date.now() > deadline) throw new Error(`gave up waiting for: ${step.until.sql}`);
+                    await new Promise((resolve) => setTimeout(resolve, 100));
+                }
+                continue;
+            }
             if (step.sql) {
                 const rows = await db.exec(step.sql, filled(step.params));
                 steps.push({ ...step, rows: JSON.stringify(rows) });
