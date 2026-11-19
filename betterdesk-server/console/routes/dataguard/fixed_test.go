@@ -192,6 +192,39 @@ var (
 	dv7Lacks = []string{`"rules":{`, `"rules":0`, `"rules":null`, `"rules":"`, `"name":"enabled text"`}
 )
 
+// DG6: the panel access guard covers the routes for people at /api/bd as
+// at /api/dataguard, so the roles without the data guard section get its
+// refusal there too.
+var _ = policyFixes.Add("DG6", guardRefuses(bdSteps()...))
+
+// bdSteps are the steps of the recording at /api/bd that a role without
+// the data guard section sends.
+func bdSteps() []string {
+	var keys []string
+	for _, role := range []string{"global_admin", "operator", "viewer", "guest_issuer"} {
+		keys = append(keys,
+			role+` POST /api/bd/policies {"name":"By `+role+` at /api/bd"}`,
+			role+" GET /api/bd/policies ",
+			role+" GET /api/bd/policies/1 ",
+			role+` PATCH /api/bd/policies/999 {"name":"x"}`,
+			role+" DELETE /api/bd/policies/999 ",
+			role+" GET /api/bd/events ",
+			role+" GET /api/bd/stats ",
+		)
+	}
+	return append(keys, "viewer GET /api/bd/events?device_id=D1 ", "operator GET /api/bd/events?device_id=D1&limit=1 ")
+}
+
+// guardRefuses are fixes of steps the panel access guard answers with its
+// refusal for the data guard section.
+func guardRefuses(keys ...string) map[string]replay.Fix {
+	steps := make(map[string]replay.Fix, len(keys))
+	for _, key := range keys {
+		steps[key] = replay.Fix{Status: 403, Answer: `{"success":false,"error":"Panel access denied: dataguard","code":"panel_access_denied"}`}
+	}
+	return steps
+}
+
 // DG3 on PostgreSQL, where the rows that cannot be read are others.
 var _ = policyFixes.Add("DG3", map[string]replay.Fix{
 	"admin GET /api/dataguard/events?device_id= ":       {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":10,"device_id":"D4"`}},

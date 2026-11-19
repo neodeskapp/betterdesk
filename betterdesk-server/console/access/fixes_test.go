@@ -88,6 +88,10 @@ var ruleFixes = []ruleFix{
 	// /attestation is the device identity page; the server attestation
 	// page had no rule.
 	{bug: "PA5 (F9)", remove: Rule{Prefix: "/attestation", Section: "server-attestation"}, add: Rule{Prefix: "/server-attestation", Section: "server-attestation"}},
+	// The data guard's routes for people answer at /api/bd too.
+	{bug: "DG6", add: Rule{Prefix: "/api/bd/policies", Section: "dataguard"}},
+	{bug: "DG6", add: Rule{Prefix: "/api/bd/events", Section: "dataguard"}},
+	{bug: "DG6", add: Rule{Prefix: "/api/bd/stats", Section: "dataguard"}},
 }
 
 // sectionFix is a catalog section whose permissions differ from Node's.

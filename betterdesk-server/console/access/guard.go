@@ -136,6 +136,11 @@ var RouteRules = []Rule{
 	{Prefix: "/api/remote/viewer"},
 	{Prefix: "/api/remote/login-info"},
 	{Prefix: "/api/remote-targets", Section: "remote"},
+	// The data guard group answers at /api/bd too, with the routes for
+	// people beside the device routes.
+	{Prefix: "/api/bd/policies", Section: "dataguard"},
+	{Prefix: "/api/bd/events", Section: "dataguard"},
+	{Prefix: "/api/bd/stats", Section: "dataguard"},
 }
 
 const apiPrefix = "/api/"

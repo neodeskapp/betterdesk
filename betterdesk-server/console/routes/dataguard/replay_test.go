@@ -20,9 +20,10 @@ import (
 // The recording was made without the panel access guard, which sits in
 // front of the routes in the console and lets only roles with
 // server.config into /api/dataguard. Where the guard refuses a role that
-// the routes alone let read, the guard's answer is taken; /api/bd has no
-// guard, so there every answer is compared. The steps the bug fixes
-// change are listed in policyFixes (fixed_test.go).
+// the routes alone let read, the guard's answer is taken. Node's guard had
+// no rule for the routes at /api/bd; the steps there that the guard
+// refuses now (DG6) are listed in policyFixes (fixed_test.go) with the
+// steps the other bug fixes change.
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
@@ -190,38 +191,91 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 	})
 }
 
-// Every route asks for its permission, also where every role of the
-// console has it out of the box: a role that had the three permissions
-// taken away is refused, with the name of the permission it lacks.
+// The panel access guard covers the routes for people at both mounts
+// (BUGS DG6): every role gets the same answer at /api/bd as at
+// /api/dataguard, and a policy row that closes the data guard closes it
+// at both.
+func TestTheGuardAtBothMounts(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/dataguard/policies", Body: replay.Text(`{"name":"one"}`)}); got.Status != 201 {
+			t.Fatalf("create: %d %s", got.Status, got.Body)
+		}
+		routes := []struct{ method, path, body string }{
+			{"GET", "/policies", ""}, {"GET", "/policies/1", ""}, {"POST", "/policies", `{"name":"two"}`},
+			{"PATCH", "/policies/999", `{"name":"renamed"}`}, {"DELETE", "/policies/999", ""},
+			{"GET", "/events", ""}, {"GET", "/stats", ""},
+		}
+		do := func(role, mount string, route struct{ method, path, body string }) replay.Answer {
+			req := replay.Request{Role: role, Method: route.method, Path: mount + route.path}
+			if route.body != "" {
+				req.Body = replay.Text(route.body)
+			}
+			return w.Do(req)
+		}
+		for _, role := range []string{"viewer", "operator", "guest_issuer", "global_admin"} {
+			for _, route := range routes {
+				want, got := do(role, "/api/dataguard", route), do(role, "/api/bd", route)
+				if got.Status != want.Status || got.Body != want.Body {
+					t.Errorf("%s %s as %s: %d %s at /api/bd, %d %s at /api/dataguard", route.method, route.path, role, got.Status, got.Body, want.Status, want.Body)
+				}
+			}
+		}
+		w.Exec("INSERT INTO panel_access_policies (subject_type, subject_id, resource_key, access_level, updated_at) VALUES ('user', '3', 'dataguard', 'none', '2019-01-01 00:00:00')", nil)
+		closed := `{"success":false,"error":"Panel access denied: dataguard","code":"panel_access_denied"}`
+		for _, mount := range []string{"/api/dataguard", "/api/bd"} {
+			for _, route := range routes {
+				if got := do("server_admin", mount, route); got.Status != 403 || got.Body != closed {
+					t.Errorf("%s %s%s as a server admin with the data guard closed: %d %s", route.method, mount, route.path, got.Status, got.Body)
+				}
+			}
+		}
+		if got := w.Rows("SELECT name FROM dlp_policies ORDER BY id", nil); got != `[{"name":"one"}]` {
+			t.Errorf("the policies after the refused requests: %s", got)
+		}
+	})
+}
+
+// Every route asks for its permission. Reading asks device.view or
+// audit.view: a role that kept server.config, which lets it past the
+// panel access guard, and lost those two is refused by the route, with
+// the name of the permission it lacks. Writing asks server.config, which
+// the guard asks for writing too: a role without the three permissions is
+// refused by the guard, at both mounts.
 func TestPermissions(t *testing.T) {
 	w := replay.NewWorldWithRoles(t, storetest.Migrated(t), nil, replay.RoleOverrides{
-		"operator": {"device.view": false, "audit.view": false, "server.config": false},
+		"operator": {"device.view": false, "audit.view": false, "server.config": true},
+		"viewer":   {"device.view": false, "audit.view": false, "server.config": false},
 	})
 	if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/bd/policies", Body: replay.Text(`{"name":"one"}`)}); got.Status != 201 {
 		t.Fatalf("create: %d %s", got.Status, got.Body)
 	}
-	for _, tt := range []struct{ method, path, body, permission string }{
-		{"GET", "/api/bd/policies", "", "device.view"},
-		{"GET", "/api/bd/policies/1", "", "device.view"},
-		{"POST", "/api/bd/policies", `{"name":"two"}`, "server.config"},
-		{"PATCH", "/api/bd/policies/1", `{"name":"renamed"}`, "server.config"},
-		{"DELETE", "/api/bd/policies/1", "", "server.config"},
-		{"GET", "/api/bd/events", "", "audit.view"},
-		{"GET", "/api/bd/stats", "", "audit.view"},
-	} {
-		req := replay.Request{Role: "operator", Method: tt.method, Path: tt.path}
-		if tt.body != "" {
-			req.Body = replay.Text(tt.body)
-		}
-		want := `{"success":false,"error":"Permission denied: ` + tt.permission + `"}`
-		if got := w.Do(req); got.Status != 403 || got.Body != want {
-			t.Errorf("%s %s without the permissions: %d %s, want 403 %s", tt.method, tt.path, got.Status, got.Body, want)
-		}
-	}
-	// A guest issuer has device.view and nothing else of the three
-	for path, status := range map[string]int{"/api/bd/policies": 200, "/api/bd/policies/1": 200, "/api/bd/events": 403, "/api/bd/stats": 403} {
-		if got := w.Do(replay.Request{Role: "guest_issuer", Path: path}); got.Status != status {
-			t.Errorf("GET %s as a guest issuer: %d %s, want %d", path, got.Status, got.Body, status)
+	const guarded = `{"success":false,"error":"Panel access denied: dataguard","code":"panel_access_denied"}`
+	for _, mount := range []string{"/api/dataguard", "/api/bd"} {
+		for _, tt := range []struct{ method, path, body, permission string }{
+			{"GET", "/policies", "", "device.view"},
+			{"GET", "/policies/1", "", "device.view"},
+			{"POST", "/policies", `{"name":"two"}`, "server.config"},
+			{"PATCH", "/policies/1", `{"name":"renamed"}`, "server.config"},
+			{"DELETE", "/policies/1", "", "server.config"},
+			{"GET", "/events", "", "audit.view"},
+			{"GET", "/stats", "", "audit.view"},
+		} {
+			req := replay.Request{Role: "viewer", Method: tt.method, Path: mount + tt.path}
+			if tt.body != "" {
+				req.Body = replay.Text(tt.body)
+			}
+			if got := w.Do(req); got.Status != 403 || got.Body != guarded {
+				t.Errorf("%s %s without the permissions: %d %s, want 403 %s", tt.method, req.Path, got.Status, got.Body, guarded)
+			}
+			if tt.permission == "server.config" {
+				continue
+			}
+			req.Role = "operator"
+			want := `{"success":false,"error":"Permission denied: ` + tt.permission + `"}`
+			if got := w.Do(req); got.Status != 403 || got.Body != want {
+				t.Errorf("%s %s with server.config alone: %d %s, want 403 %s", tt.method, req.Path, got.Status, got.Body, want)
+			}
 		}
 	}
 	if got := w.Do(replay.Request{Role: "admin", Path: "/api/bd/policies/1"}); got.Status != 200 || !strings.Contains(got.Body, `"name":"one"`) {

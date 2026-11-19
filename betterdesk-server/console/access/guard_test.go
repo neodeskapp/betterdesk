@@ -69,6 +69,12 @@ var guardPaths = []struct {
 	{"/api/bd/transfer", "files"}, {"/api/bd/transfers", "files"}, {"/api/bd/transfers/abc/download", "files"},
 	{"/api/bd/file-transfer", ""}, {"/api/bd/transfersx", ""},
 
+	// the second mount below /api/bd of the data guard's routes for people
+	// (DG6); the device routes beside them have no rule
+	{"/api/bd/policies", "dataguard"}, {"/api/bd/policies/7", "dataguard"}, {"/api/bd/events", "dataguard"},
+	{"/api/bd/stats", "dataguard"}, {"/api/bd/dlp-policies", ""}, {"/api/bd/dlp-events", ""}, {"/api/bd/policiesx", ""},
+	{"/api/bd/statistics", ""},
+
 	// the real prefixes of the sections whose rules named none (PA4)
 	{"/api/panel/org/1", "organizations"}, {"/api/panel/fleet/tasks", "fleet"}, {"/api/panel/scaling/relays", "scaling"},
 	{"/api/panel/languages/de/missing", "languages"}, {"/api/panel/resource-control/policies", "resource-control"},
@@ -333,26 +339,30 @@ func TestGuardWithoutPolicy(t *testing.T) {
 	}
 }
 
-// FT8: the file transfer routes for people that answer a second time
-// below /api/bd keep the section of their first address.
+// FT8, DG6: the file transfer and data guard routes for people that answer
+// a second time below /api/bd keep the section of their first address.
 func TestGuardCoversTheBDMounts(t *testing.T) {
-	closed := func() *Context {
-		return &Context{UserID: 7, HasUser: true, Role: "global_admin", Policy: policyWith("files", LevelNone)}
+	closed := func(section string) *Context {
+		return &Context{UserID: 7, HasUser: true, Role: "global_admin", Policy: policyWith(section, LevelNone)}
 	}
 	for _, c := range []struct{ method, path, section string }{
 		{"POST", "/api/bd/transfer", "files"}, {"GET", "/api/bd/transfers", "files"},
 		{"GET", "/api/bd/transfers/t1", "files"}, {"POST", "/api/bd/transfers/t1/cancel", "files"},
 		{"GET", "/api/bd/transfers/t1/download", "files"},
+		{"GET", "/api/bd/policies", "dataguard"}, {"POST", "/api/bd/policies", "dataguard"},
+		{"GET", "/api/bd/policies/1", "dataguard"}, {"PATCH", "/api/bd/policies/1", "dataguard"},
+		{"DELETE", "/api/bd/policies/1", "dataguard"}, {"GET", "/api/bd/events", "dataguard"},
+		{"GET", "/api/bd/stats", "dataguard"},
 	} {
-		got := closed().Guard(c.method, c.path)
+		got := closed(c.section).Guard(c.method, c.path)
 		if got.Verdict != VerdictDenied || got.Section != c.section || got.Decision.Status != 403 {
 			t.Errorf("%s %s: %+v, want refused in %s", c.method, c.path, got, c.section)
 		}
 	}
 	// The device routes beside them have no section: devices call them
 	// without a session.
-	for _, path := range []string{"/api/bd/file-transfer", "/api/bd/file-transfer/t1", "/api/bd/commands", "/api/bd/inventory"} {
-		if got := closed().Guard("POST", path); got.Verdict != VerdictNoRule {
+	for _, path := range []string{"/api/bd/file-transfer", "/api/bd/file-transfer/t1", "/api/bd/commands", "/api/bd/inventory", "/api/bd/dlp-policies", "/api/bd/dlp-events"} {
+		if got := closed("files").Guard("POST", path); got.Verdict != VerdictNoRule {
 			t.Errorf("POST %s: %+v, want no rule", path, got)
 		}
 	}
