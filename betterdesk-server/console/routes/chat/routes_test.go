@@ -503,6 +503,29 @@ func TestDownloadNeedsTheWholeID(t *testing.T) {
 	}
 }
 
+// A download the file sender refuses after it found the file (a range
+// beyond the end, an If-Match that does not hold) answers JSON, without
+// the file's type and name.
+func TestRefusedDownloadAnswersWithoutTheFileHeaders(t *testing.T) {
+	w := newWorld(t)
+	w.put(firstID+".txt", "contract chat file\n")
+	for what, header := range map[string][]string{
+		"a range beyond the file":        {"Range", "bytes=100-200"},
+		"an If-Match that does not hold": {"If-Match", `"other"`},
+	} {
+		rec := w.get("viewer", "GET", "/api/chat/files/"+firstID, header...)
+		if rec.Code != 416 && rec.Code != 412 {
+			t.Errorf("%s: %d", what, rec.Code)
+		}
+		if got := rec.Header().Get("Content-Type"); got != "application/json; charset=utf-8" {
+			t.Errorf("%s: Content-Type %q", what, got)
+		}
+		if got := rec.Header().Get("Content-Disposition"); got != "" {
+			t.Errorf("%s: Content-Disposition %q", what, got)
+		}
+	}
+}
+
 // A console installed below a folder whose name starts with a dot sends
 // its chat files: only the name below the chat folder is looked at.
 func TestDownloadFromAHiddenFolder(t *testing.T) {

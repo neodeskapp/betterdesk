@@ -70,6 +70,10 @@ func register(d *kit.Deps, dir string) *handlers {
 		NoFallthrough: true,
 		SetHeaders:    attachment,
 		OnError: func(w http.ResponseWriter, r *http.Request, status int, err error) {
+			// The sender refused after it set the file's headers: the
+			// error answer is JSON and no file to save
+			w.Header().Del("Content-Type")
+			w.Header().Del("Content-Disposition")
 			h.serverError(w, r, err, status)
 		},
 	})
