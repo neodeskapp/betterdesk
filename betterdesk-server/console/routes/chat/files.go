@@ -29,8 +29,19 @@ type uploaded struct {
 //
 // A form the parser refuses (a file in another field, a second file, a
 // file over 50 MB, a broken body) goes to the console's error handler,
-// which answers 500.
+// which answers 500. Once the files hold maxFolder bytes, an upload is
+// refused with 507, before its body is read; a file that would take the
+// folder over is removed again.
 func (h *handlers) upload(w http.ResponseWriter, r *http.Request) {
+	used, err := folderSize(h.dir)
+	if err != nil {
+		h.serverError(w, r, err, 0)
+		return
+	}
+	if used >= h.maxFolder {
+		kit.Fail(w, r, http.StatusInsufficientStorage, folderFull)
+		return
+	}
 	form, err := middleware.ParseUpload(r, middleware.UploadOptions{
 		Field:       "file",
 		MaxFileSize: maxFileSize,
@@ -47,6 +58,15 @@ func (h *handlers) upload(w http.ResponseWriter, r *http.Request) {
 	}
 	name := form.File.Filename
 	id := strings.TrimSuffix(name, extname(name))
+	if used, err = folderSize(h.dir); err != nil || used > h.maxFolder {
+		_ = os.Remove(filepath.Join(h.dir, name))
+		if err != nil {
+			h.serverError(w, r, err, 0)
+			return
+		}
+		kit.Fail(w, r, http.StatusInsufficientStorage, folderFull)
+		return
+	}
 	if user := h.user(r); user != nil && user.ID != 0 {
 		if err := addLink(h.dir, id, link{Owner: user.ID}); err != nil {
 			_ = os.Remove(filepath.Join(h.dir, name))
@@ -55,6 +75,36 @@ func (h *handlers) upload(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	kit.JSON(w, r, http.StatusOK, uploaded{Success: true, FileID: id, Filename: name, Size: form.File.Size, URL: "/api/chat/files/" + id})
+}
+
+// folderFull is the answer to an upload when the files hold maxFolder.
+const folderFull = "Chat file storage is full"
+
+// folderSize is how many bytes the files of dir hold together; 0 before
+// the first upload made the folder.
+func folderSize(dir string) (int64, error) {
+	entries, err := os.ReadDir(dir)
+	if errors.Is(err, fs.ErrNotExist) {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, err
+	}
+	var total int64
+	for _, entry := range entries {
+		if !entry.Type().IsRegular() {
+			continue
+		}
+		info, err := entry.Info()
+		if errors.Is(err, fs.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			return 0, err
+		}
+		total += info.Size()
+	}
+	return total, nil
 }
 
 // storedName names a new file: 16 random bytes in hex and the start of

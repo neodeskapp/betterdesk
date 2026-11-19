@@ -8,7 +8,8 @@
 // <32 hex digits><extension>, where the extension is the first ten
 // characters of the uploaded name's extension. A message links to a file
 // as /api/chat/files/<32 hex digits>. Who may download a file is noted
-// next to it (links.go). Files are never deleted.
+// next to it (links.go). Files are never deleted: once they hold
+// maxFolderSize, the folder takes no more uploads.
 package chat
 
 import (
@@ -28,10 +29,15 @@ import (
 // maxFileSize is the largest file an upload may carry, 50 MB.
 const maxFileSize = 50 << 20
 
+// maxFolderSize is how much the chat files may hold together, 2 GiB.
+const maxFolderSize = 2 << 30
+
 type handlers struct {
 	api *goapi.Client
 	// dir is the folder of the uploaded files.
 	dir string
+	// maxFolder is how many bytes the files of dir may hold together.
+	maxFolder int64
 	// files sends a file of dir.
 	files *httpx.Static
 	// random gives the bytes of a new file's id.
@@ -58,7 +64,7 @@ func Register(d *kit.Deps) {
 }
 
 func register(d *kit.Deps, dir string) *handlers {
-	h := &handlers{api: d.GoAPI, dir: dir, random: rand.Reader, errors: d.WebUI, user: kit.User}
+	h := &handlers{api: d.GoAPI, dir: dir, maxFolder: maxFolderSize, random: rand.Reader, errors: d.WebUI, user: kit.User}
 	h.files = httpx.NewStatic(dir, httpx.StaticOptions{
 		NoIndex:       true,
 		NoFallthrough: true,
@@ -70,7 +76,7 @@ func register(d *kit.Deps, dir string) *handlers {
 	// The chat websocket needs chat.access; its HTTP routes need the same
 	chatAccess := d.RequirePermission("chat.access")
 	r := d.Router
-	r.Post("/api/chat/upload", h.upload, d.RequireAuth, chatAccess)
+	r.Post("/api/chat/upload", h.upload, d.Limits.Upload.Middleware, d.RequireAuth, chatAccess)
 	r.Get("/api/chat/files/{fileId}", h.download, d.RequireAuth, chatAccess)
 	r.Get("/api/chat/search", h.search, d.RequireAuth, chatAccess)
 	return h

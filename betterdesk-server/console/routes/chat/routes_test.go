@@ -17,6 +17,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/limits"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/session"
 )
@@ -62,6 +63,17 @@ func newWorld(t *testing.T) *world {
 
 func newWorldIn(t *testing.T, dir string) *world {
 	t.Helper()
+	return newWorldWith(t, dir, nil)
+}
+
+// testLimits are the console's rate limits with the settings of env.
+func testLimits(env map[string]string) *limits.Set {
+	return limits.NewSet(limits.Options{ClientIP: httpx.SocketIP, Getenv: func(key string) string { return env[key] }})
+}
+
+// newWorldWith is a world in dir with the rate limits env sets.
+func newWorldWith(t *testing.T, dir string, env map[string]string) *world {
+	t.Helper()
 	w := &world{t: t, dir: dir}
 	api := goapi.New(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		w.mu.Lock()
@@ -74,7 +86,7 @@ func newWorldIn(t *testing.T, dir string) *world {
 		}
 		answer(rw, r)
 	}))
-	d := &kit.Deps{Router: kit.NewRouter(), GoAPI: api}
+	d := &kit.Deps{Router: kit.NewRouter(), GoAPI: api, Limits: testLimits(env)}
 	h := register(d, dir)
 	h.random = &counter{}
 	h.user = testUser
@@ -215,7 +227,7 @@ func expect(t *testing.T, what string, rec *httptest.ResponseRecorder, status in
 }
 
 func TestRoutesInTheOrderOfTheOldFile(t *testing.T) {
-	d := &kit.Deps{Router: kit.NewRouter(), GoAPI: goapi.New(http.NotFoundHandler())}
+	d := &kit.Deps{Router: kit.NewRouter(), GoAPI: goapi.New(http.NotFoundHandler()), Limits: testLimits(nil)}
 	register(d, t.TempDir())
 	var got []string
 	for _, route := range d.Router.Routes() {
@@ -359,6 +371,53 @@ func TestUploadWhenTheFolderCannotBeMade(t *testing.T) {
 	expect(t, "upload", w.upload("admin", part{"file", "a.txt", []byte("x")}), 500, failed)
 	expect(t, "download", w.get("admin", "GET", "/api/chat/files/"+firstID), 500, failed)
 }
+
+// Uploads count against the upload limit of the address, also those that
+// are refused later; one over the limit is not read.
+func TestUploadGoesThroughTheUploadLimiter(t *testing.T) {
+	w := newWorldWith(t, filepath.Join(t.TempDir(), "chat-files"), map[string]string{"UPLOAD_RATE_LIMIT_MAX": "2"})
+	file := part{"file", "a.txt", []byte("x")}
+	expect(t, "first", w.upload("viewer", file), 200, `{"success":true,"file_id":"`+firstID+`","filename":"`+firstID+`.txt","size":1,"url":"/api/chat/files/`+firstID+`"}`)
+	expect(t, "second, signed out", w.upload("", file), 401, signedOut)
+	rec := w.upload("viewer", file)
+	expect(t, "third", rec, 429, `{"success":false,"error":"Too many upload requests. Please try again later."}`)
+	if rec.Header().Get("RateLimit-Limit") != "2" {
+		t.Errorf("third: RateLimit-Limit %q", rec.Header().Get("RateLimit-Limit"))
+	}
+	if got := w.stored(); len(got) != 1 {
+		t.Errorf("stored %q, want the first upload only", got)
+	}
+	expect(t, "a download", w.get("viewer", "GET", "/api/chat/files/"+firstID), 200, "x")
+}
+
+// Uploads stop once the files hold the folder's limit: a file that would
+// take them over it is removed again, and with the folder full an upload
+// is refused before its body is read.
+func TestUploadRefusedWhenTheFolderIsFull(t *testing.T) {
+	const full = `{"success":false,"error":"Chat file storage is full"}`
+	w := newWorld(t)
+	w.h.maxFolder = 10
+	w.put("ffffffffffffffffffffffffffffffff.txt", "123456")
+	expect(t, "over the limit", w.upload("admin", part{"file", "a.txt", []byte("12345")}), 507, full)
+	if got := w.stored(); len(got) != 1 {
+		t.Errorf("stored %q, want the file that was there", got)
+	}
+	expect(t, "up to the limit", w.upload("admin", part{"file", "b.txt", []byte("1234")}), 200,
+		`{"success":true,"file_id":"`+secondID+`","filename":"`+secondID+`.txt","size":4,"url":"/api/chat/files/`+secondID+`"}`)
+	r := w.uploadRequest(part{"file", "c.txt", nil})
+	r.Body = io.NopCloser(readerFunc(func([]byte) (int, error) {
+		t.Error("the body of an upload into a full folder was read")
+		return 0, io.EOF
+	}))
+	expect(t, "a full folder", w.send("admin", r), 507, full)
+	if got := w.stored(); len(got) != 2 {
+		t.Errorf("stored %q, want two files", got)
+	}
+}
+
+type readerFunc func([]byte) (int, error)
+
+func (f readerFunc) Read(p []byte) (int, error) { return f(p) }
 
 func TestDownload(t *testing.T) {
 	w := newWorld(t)
