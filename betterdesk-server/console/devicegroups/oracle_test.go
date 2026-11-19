@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -17,7 +18,8 @@ import (
 // The tests in this file replay what the Node console's device group
 // payload helpers, tag service and address book sync answered
 // (testdata/nodeoracle/vectors.js). Every record must get the same answer
-// here.
+// here, except where a bug fix changes it on purpose: those records are
+// compared with Node's answer as the fix changes it, named with the bug.
 
 func loadVectors(t *testing.T, name string, into any) {
 	t.Helper()
@@ -338,7 +340,14 @@ func TestOracleAddressBook(t *testing.T) {
 		}
 	}
 	for _, rec := range v.Merge {
-		got := MergeAddressBookData(parsed(t, rec.Data), MergeOptions{Devices: list(t, rec.Devices), KnownOnly: rec.KnownOnly})
+		devices := list(t, rec.Devices)
+		got := MergeAddressBookData(parsed(t, rec.Data), MergeOptions{Devices: devices, KnownOnly: rec.KnownOnly})
+		if banned := bannedDevices(devices); !rec.KnownOnly && len(banned) > 0 {
+			if problem := withoutBanned(t, parsed(t, rec.Data), got, nodeText(rec.Out), banned); problem != "" {
+				t.Errorf("MergeAddressBookData(%s, %s) of every device: %s\n   = %s\nNode %s", rec.Data, rec.Devices, problem, got, rec.Out)
+			}
+			continue
+		}
 		if got != nodeText(rec.Out) {
 			t.Errorf("MergeAddressBookData(%s, %s, known only %v)\n   = %s\nNode %s", rec.Data, rec.Devices, rec.KnownOnly, got, rec.Out)
 		}
@@ -367,6 +376,64 @@ func TestOracleAddressBook(t *testing.T) {
 			t.Errorf("CollectPeerTagUpdates(%s) = %s, Node %s", rec.Data, encoded, rec.Out)
 		}
 	}
+}
+
+// bannedDevices are the ids of the banned and deleted devices of a list.
+func bannedDevices(devices []any) map[string]bool {
+	out := map[string]bool{}
+	for _, d := range devices {
+		if device := asObject(d); idOf(device) != "" && (truthy(device.Get("banned")) || truthy(device.Get("soft_deleted"))) {
+			out[idOf(device)] = true
+		}
+	}
+	return out
+}
+
+// withoutBanned compares the merge of every device with Node's answer
+// where the fix of BUGS DGR1 changes it: Node added the banned and deleted
+// devices back as peers, the fix leaves them out with their tags. The book
+// must be Node's without those peers, and its tags exactly the book's own
+// and its peers' tags. It returns what differs, "" for nothing.
+func withoutBanned(t *testing.T, data any, got, node string, banned map[string]bool) string {
+	t.Helper()
+	book, _ := parsed(t, []byte(got)).(*goapi.Object)
+	want, _ := parsed(t, []byte(node)).(*goapi.Object)
+	if book == nil || want == nil {
+		return "not an object"
+	}
+	var kept []any
+	for _, p := range want.Get("peers").([]any) {
+		if !banned[idOf(asObject(p))] {
+			kept = append(kept, p)
+		}
+	}
+	if kept == nil {
+		kept = []any{}
+	}
+	tags := map[string]bool{}
+	for _, tag := range NormalizeTags(ParseAddressBookData(data).Get("tags")) {
+		tags[tag] = true
+	}
+	for _, p := range kept {
+		for _, tag := range tagStrings(t, "a peer", asObject(p).Get("tags")) {
+			tags[tag] = true
+		}
+	}
+	gotTags := tagStrings(t, "the book", book.Get("tags"))
+	if len(gotTags) != len(tags) {
+		return fmt.Sprintf("tags %q, want the %d tags of the book and its peers", gotTags, len(tags))
+	}
+	for _, tag := range gotTags {
+		if !tags[tag] {
+			return fmt.Sprintf("tag %q is neither the book's nor a peer's", tag)
+		}
+	}
+	want.Set("peers", kept)
+	want.Set("tags", book.Get("tags"))
+	if stringify(book) != stringify(want) {
+		return "the book is not Node's without the banned devices"
+	}
+	return ""
 }
 
 func TestOperatorLookupsFailAsTheyAlwaysDid(t *testing.T) {

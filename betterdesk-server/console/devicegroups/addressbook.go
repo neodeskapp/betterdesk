@@ -186,7 +186,8 @@ type MergeOptions struct {
 // MergeAddressBookData brings address book data in line with the devices
 // and returns it as JSON text:
 //
-//   - peers that are banned or deleted devices leave the book
+//   - peers that are banned or deleted devices leave the book, and such
+//     devices do not come in again
 //   - every peer's tags are normalised, and a device's tags are added to
 //     the tags of its peer
 //   - a device that is not in the book is added as a peer, with its user,
@@ -225,7 +226,7 @@ func MergeAddressBookData(data any, opts MergeOptions) string {
 	for _, d := range opts.Devices {
 		device := asObject(d)
 		id := idOf(device)
-		if id == "" {
+		if id == "" || banned[id] {
 			continue
 		}
 		existing := byID[id]

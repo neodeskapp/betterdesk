@@ -50,9 +50,9 @@ func tagStrings(t *testing.T, what string, v any) []string {
 
 // FuzzAddressBook reads arbitrary text as address book data and as a
 // device list. Nothing may panic; a merged book is JSON with a list of
-// peers that are objects with an id, none of them a banned device when
-// only known peers are merged, every
-// tag list is clean, and every tag of a peer is in the book's own list.
+// peers that are objects with an id, none of them a banned or deleted
+// device, every tag list is clean, and every tag of a peer is in the
+// book's own list.
 func FuzzAddressBook(f *testing.F) {
 	for _, seed := range [][2]string{
 		{`{"peers":[{"id":"dev-1","tags":["lab"," x "]},{"id":"typed"}],"tags":"a,b"}`, `[{"id":"dev-1","tags":"lab,office","banned":false},{"id":"dev-2","hostname":"h"}]`},
@@ -93,10 +93,7 @@ func FuzzAddressBook(f *testing.F) {
 			for _, p := range peers {
 				peer := asObject(p)
 				id := idOf(peer)
-				// With every device merged in, a banned device comes back as
-				// a new peer (BUGS DGR1); only a merge of known peers keeps
-				// it out.
-				if id == "" || knownOnly && banned[id] {
+				if id == "" || banned[id] {
 					t.Fatalf("peer %q is in the merged book: %s", id, out)
 				}
 				tags := tagStrings(t, "peer "+id, peer.Get("tags"))
