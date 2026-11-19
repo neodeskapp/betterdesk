@@ -42,7 +42,7 @@ type panelSection struct {
 var panelSectionCatalog = []panelSection{
 	{Key: "dashboard", Label: "Dashboard", Group: "core", ReadPermission: auth.PermDeviceView},
 	{Key: "devices", Label: "Devices", Group: "core", ReadPermission: auth.PermDeviceView, WritePermission: auth.PermDeviceEdit},
-	{Key: "registrations", Label: "Registrations", Group: "core", ReadPermission: auth.PermEnrollmentApprove, WritePermission: auth.PermEnrollmentManage},
+	{Key: "registrations", Label: "Registrations", Group: "core", ReadPermission: auth.PermEnrollmentApprove, WritePermission: auth.PermEnrollmentApprove},
 	{Key: "remote", Label: "Remote access", Group: "core", ReadPermission: auth.PermRemoteTargetView, WritePermission: auth.PermRemoteTargetConnect},
 	{Key: "users", Label: "Users", Group: "administration", ReadPermission: auth.PermUserView, WritePermission: auth.PermUserEdit},
 	{Key: "organizations", Label: "Organizations", Group: "administration", ReadPermission: auth.PermUserView, WritePermission: auth.PermOrgManageDevices},

@@ -216,7 +216,7 @@
         "key": "registrations",
         "label": "Registrations",
         "readPermission": "enrollment.approve",
-        "writePermission": "enrollment.manage"
+        "writePermission": "enrollment.approve"
        },
        {
         "group": "core",

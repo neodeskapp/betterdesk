@@ -98,7 +98,7 @@
        {
         "key": "registrations",
         "read": "enrollment.approve",
-        "write": "enrollment.manage"
+        "write": "enrollment.approve"
        },
        {
         "key": "remote",
@@ -945,7 +945,7 @@
        {
         "key": "registrations",
         "read": "enrollment.approve",
-        "write": "enrollment.manage"
+        "write": "enrollment.approve"
        },
        {
         "key": "remote",

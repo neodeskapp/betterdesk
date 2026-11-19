@@ -1269,8 +1269,8 @@
         "source": "role"
        },
        "registrations": {
-        "access": "write",
-        "role_ceiling": "write",
+        "access": "none",
+        "role_ceiling": "none",
         "source": "role"
        },
        "remote": {

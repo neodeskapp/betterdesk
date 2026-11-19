@@ -94,6 +94,10 @@ func TestLegacySectionCeiling(t *testing.T) {
 		{"devices", newPermissionSet([]string{"device.edit"}).Has, false, LevelWrite}, // write does not need read
 		{"toolkit", newPermissionSet([]string{"server.config"}).Has, false, LevelNone},
 		{"toolkit", newPermissionSet([]string{"device.connect"}).Has, false, LevelWrite}, // device.connect for both (F7)
+		// enrollment.approve for both (UM12, F10): server_admin's
+		// enrollment.manage alone reaches nothing
+		{"registrations", newPermissionSet([]string{"enrollment.manage"}).Has, false, LevelNone},
+		{"registrations", newPermissionSet([]string{"enrollment.approve", "enrollment.manage"}).Has, false, LevelWrite},
 		{"nope", has, false, LevelNone},
 		{"nope", never, true, LevelWrite},
 	}

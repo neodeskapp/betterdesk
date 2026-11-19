@@ -99,7 +99,7 @@
        {
         "key": "registrations",
         "read": "enrollment.approve",
-        "write": "enrollment.manage"
+        "write": "enrollment.approve"
        },
        {
         "key": "remote",
@@ -885,7 +885,7 @@
        {
         "key": "registrations",
         "read": "enrollment.approve",
-        "write": "enrollment.manage"
+        "write": "enrollment.approve"
        },
        {
         "key": "remote",
@@ -1732,7 +1732,7 @@
        {
         "key": "registrations",
         "read": "enrollment.approve",
-        "write": "enrollment.manage"
+        "write": "enrollment.approve"
        },
        {
         "key": "remote",
@@ -2668,7 +2668,7 @@
        {
         "key": "registrations",
         "read": "enrollment.approve",
-        "write": "enrollment.manage"
+        "write": "enrollment.approve"
        },
        {
         "key": "remote",
@@ -3705,7 +3705,7 @@
        {
         "key": "registrations",
         "read": "enrollment.approve",
-        "write": "enrollment.manage"
+        "write": "enrollment.approve"
        },
        {
         "key": "remote",
@@ -4004,7 +4004,7 @@
        "network": "write",
        "organizations": "read",
        "permissions": "write",
-       "registrations": "write",
+       "registrations": "none",
        "remote": "read",
        "reports": "write",
        "resource-control": "write",
@@ -4743,7 +4743,7 @@
        {
         "key": "registrations",
         "read": "enrollment.approve",
-        "write": "enrollment.manage"
+        "write": "enrollment.approve"
        },
        {
         "key": "remote",
@@ -5954,7 +5954,7 @@
        {
         "key": "registrations",
         "read": "enrollment.approve",
-        "write": "enrollment.manage"
+        "write": "enrollment.approve"
        },
        {
         "key": "remote",

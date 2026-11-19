@@ -119,6 +119,9 @@ var sectionFixes = []sectionFix{
 	{bug: "PA3 (F6), RP1", key: "reports", read: "audit.view", write: "audit.view"},
 	// All server attestation routes ask server.attestation.
 	{bug: "PA5 (F9)", key: "server-attestation", read: "server.attestation", write: "server.attestation"},
+	// Listing, approving and rejecting registrations ask
+	// enrollment.approve, so enrollment.manage alone gives no level.
+	{bug: "UM12 (F10)", key: "registrations", read: "enrollment.approve", write: "enrollment.approve"},
 }
 
 // nodeTables returns the guard's rules and the catalog's sections as the

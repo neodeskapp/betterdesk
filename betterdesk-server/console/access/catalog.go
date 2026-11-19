@@ -94,7 +94,7 @@ type ClientFeature struct {
 var Catalog = []Section{
 	{"dashboard", "Dashboard", "core", "device.view", ""},
 	{"devices", "Devices", "core", "device.view", "device.edit"},
-	{"registrations", "Registrations", "core", "enrollment.approve", "enrollment.manage"},
+	{"registrations", "Registrations", "core", "enrollment.approve", "enrollment.approve"},
 	{"remote", "Remote access", "core", "remote_target.view", "remote_target.connect"},
 	{"users", "Users", "administration", "user.view", "user.edit"},
 	{"organizations", "Organizations", "administration", "user.view", "org.manage_devices"},
