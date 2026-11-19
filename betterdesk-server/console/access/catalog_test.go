@@ -179,8 +179,14 @@ func TestEverySectionAtEveryLevel(t *testing.T) {
 			c := &Context{UserID: 1, HasUser: true, Role: "nobody", Section: key, Policy: policy, Loaded: true, Permissions: holds}
 			lacks := &Context{UserID: 1, HasUser: true, Role: "nobody", Section: key, Policy: policy, Loaded: true, Permissions: PermissionSet{}}
 			if entry.WritePermission != "" {
-				if got := c.HasPermission(string(entry.WritePermission)); got != wantWrite {
-					t.Errorf("%s at %s: write permission %s granted %v, want %v", key, level, entry.WritePermission, got, wantWrite)
+				// A permission that is the read permission too needs read
+				// only (S14); the guard asks write for writes.
+				want := wantWrite
+				if entry.WritePermission == entry.ReadPermission {
+					want = wantRead
+				}
+				if got := c.HasPermission(string(entry.WritePermission)); got != want {
+					t.Errorf("%s at %s: write permission %s granted %v, want %v", key, level, entry.WritePermission, got, want)
 				}
 				if lacks.HasPermission(string(entry.WritePermission)) {
 					t.Errorf("%s at %s: write permission %s granted to a role without it", key, level, entry.WritePermission)

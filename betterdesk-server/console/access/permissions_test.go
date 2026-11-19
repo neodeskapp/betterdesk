@@ -151,8 +151,9 @@ func TestHasPermissionRules(t *testing.T) {
 		{"read level lets the read permission through", Context{Role: "viewer", Section: "devices", Policy: policyWith("devices", LevelRead), Permissions: set("device.view")}, "device.view", true},
 		{"read level refuses the write permission", Context{Role: "operator", Section: "devices", Policy: policyWith("devices", LevelRead), Permissions: set("device.edit")}, "device.edit", false},
 		{"none refuses the read permission the role has", Context{Role: "operator", Section: "devices", Policy: policyWith("devices", LevelNone), Permissions: set("device.view")}, "device.view", false},
-		{"a section with one permission for both needs write", Context{Role: "operator", Section: "guests", Policy: policyWith("guests", LevelRead), Permissions: set("guest.create")}, "guest.create", false},
-		{"and gets it at write", Context{Role: "operator", Section: "guests", Policy: policyWith("guests", LevelWrite), Permissions: set("guest.create")}, "guest.create", true},
+		{"a section with one permission for both lets it through at read (S14)", Context{Role: "operator", Section: "guests", Policy: policyWith("guests", LevelRead), Permissions: set("guest.create")}, "guest.create", true},
+		{"and at write", Context{Role: "operator", Section: "guests", Policy: policyWith("guests", LevelWrite), Permissions: set("guest.create")}, "guest.create", true},
+		{"and not at none", Context{Role: "operator", Section: "guests", Policy: policyWith("guests", LevelNone), Permissions: set("guest.create")}, "guest.create", false},
 		{"other permissions are not the section's business", Context{Role: "operator", Section: "devices", Policy: policyWith("devices", LevelNone), Permissions: set("user.view")}, "user.view", true},
 		{"a section without a write permission", Context{Role: "viewer", Section: "reports", Policy: policyWith("reports", LevelRead), Permissions: set("metrics.view")}, "metrics.view", true},
 		{"toolkit's permissions", Context{Role: "viewer", Section: "toolkit", Policy: policyWith("toolkit", LevelRead), Permissions: set("device.connect", "device.edit")}, "device.edit", false},
@@ -195,5 +196,34 @@ func TestGrantedUIPermissions(t *testing.T) {
 		if !auth.ValidPermission(p) {
 			t.Errorf("UI permission %q is unknown to the server", p)
 		}
+	}
+}
+
+// S14 (analysis C1): in a section whose read and write permission are the
+// same, a row at read must let the account read: the permission check
+// needs read for that permission, and the guard still refuses writes.
+func TestReadLevelPassesReadsInOnePermissionSections(t *testing.T) {
+	checked := 0
+	for _, entry := range Catalog {
+		if entry.ReadPermission == "" || entry.ReadPermission != entry.WritePermission {
+			continue
+		}
+		checked++
+		permission := string(entry.ReadPermission)
+		c := &Context{UserID: 7, HasUser: true, Role: "operator", Loaded: true,
+			Permissions: newPermissionSet([]string{permission}), Section: entry.Key, Policy: policyWith(entry.Key, LevelRead)}
+		if !c.HasPermission(permission) {
+			t.Errorf("%s at read: %s refused", entry.Key, permission)
+		}
+		if !AccessAllows(c.Policy, entry.Key, RequiredLevel("GET")) || AccessAllows(c.Policy, entry.Key, RequiredLevel("POST")) {
+			t.Errorf("%s at read: the guard must let reads through and refuse writes", entry.Key)
+		}
+		c.Policy = policyWith(entry.Key, LevelNone)
+		if c.HasPermission(permission) {
+			t.Errorf("%s at none: %s granted", entry.Key, permission)
+		}
+	}
+	if checked < 5 {
+		t.Fatalf("only %d sections with one permission for both", checked)
 	}
 }

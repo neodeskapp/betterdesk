@@ -335,10 +335,21 @@ func TestOracleRequestHasPermission(t *testing.T) {
 	}
 	loadVectors(t, "request_has_permission", &v)
 	withNodeTables(t)
+	// S14: in a section whose read and write permission are the same, Node
+	// asked level write for it; Go asks read. At read Go answers what Node
+	// answered at write.
+	writeState := -1
+	for si, state := range v.PolicyStates {
+		if state == "write" {
+			writeState = si
+		}
+	}
+	stride := len(v.Permissions) * len(v.EffectiveStates) * len(v.LoadStates)
+	differ := 0
 	i := 0
 	for _, role := range v.Roles {
 		for _, section := range v.Sections {
-			for _, state := range v.PolicyStates {
+			for si, state := range v.PolicyStates {
 				for _, permission := range v.Permissions {
 					for _, effective := range v.EffectiveStates {
 						for _, load := range v.LoadStates {
@@ -376,6 +387,11 @@ func TestOracleRequestHasPermission(t *testing.T) {
 								c.PermissionErr = errors.New("boom")
 							}
 							want := v.Bits[i] == '1'
+							if entry, ok := CatalogEntry(c.Section); ok && string(entry.ReadPermission) == permission &&
+								entry.WritePermission == entry.ReadPermission && NormalizeLevel(state) == LevelRead && state != "no access value" {
+								want = v.Bits[i+(writeState-si)*stride] == '1'
+								differ++
+							}
 							i++
 							if got := c.HasPermission(permission); got != want {
 								t.Fatalf("HasPermission(%q) = %v, Node says %v\n role %v section %v policy %q effective %q load %+v",
@@ -389,6 +405,9 @@ func TestOracleRequestHasPermission(t *testing.T) {
 	}
 	if i != len(v.Bits) || i < 200000 {
 		t.Fatalf("ran %d of %d vectors", i, len(v.Bits))
+	}
+	if writeState < 0 || differ == 0 {
+		t.Errorf("no vector of a one-permission section at read ran (%d), or no write state (%d)", differ, writeState)
 	}
 }
 
@@ -753,7 +772,7 @@ func TestOracleRequireGuards(t *testing.T) {
 	}
 	loadVectors(t, "require_guards", &v)
 	withNodeTables(t)
-	i := 0
+	i, oneSectionReads := 0, 0
 	for _, guard := range v.Guards {
 		arg := ""
 		if guard.Arg != nil {
@@ -767,7 +786,7 @@ func TestOracleRequireGuards(t *testing.T) {
 				}
 				returnQuery, _ := u.Query.Return.(string)
 				for _, load := range v.LoadStates {
-					for _, section := range v.Contexts {
+					for ci, section := range v.Contexts {
 						c := session.context()
 						c.Loaded = load.Loaded
 						if load.LoadError {
@@ -796,6 +815,17 @@ func TestOracleRequireGuards(t *testing.T) {
 							t.Fatalf("unknown guard %s", guard.Name)
 						}
 						want := v.Outcomes[v.Results[i]]
+						// S14: the read level lets a one-permission section's
+						// permission through, as Node did at write.
+						if entry, ok := CatalogEntry(section.Section); ok && arg != "" && string(entry.ReadPermission) == arg &&
+							entry.WritePermission == entry.ReadPermission && NormalizeLevel(section.Level) == LevelRead {
+							for cw, other := range v.Contexts {
+								if other.Section == section.Section && other.Level == LevelWrite {
+									want = v.Outcomes[v.Results[i+cw-ci]]
+									oneSectionReads++
+								}
+							}
+						}
 						i++
 						label := func() string {
 							return guard.Name + "(" + arg + ") " + originalURL + " session " + jsJSON(t, v.Sessions[si]) +
@@ -807,6 +837,9 @@ func TestOracleRequireGuards(t *testing.T) {
 				}
 			}
 		}
+	}
+	if oneSectionReads == 0 {
+		t.Error("no vector of a one-permission section at read ran")
 	}
 	if i != len(v.Results) || i < 50000 {
 		t.Fatalf("ran %d of %d vectors", i, len(v.Results))

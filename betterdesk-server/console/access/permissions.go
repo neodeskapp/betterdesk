@@ -103,10 +103,10 @@ func (c *Context) permissionLookupFailed() bool {
 //     they were loaded, never when loading them failed, else in the
 //     built-in role map.
 //  4. On a path with a panel section, the section's own two permissions
-//     also need the account's level there: the write permission needs
-//     write, the read permission needs read. The write permission is
-//     looked at first, so a section whose two permissions are the same
-//     needs write for both.
+//     also need the account's level there: the read permission needs
+//     read, the write permission needs write. The read permission is
+//     looked at first, so in a section whose two permissions are the
+//     same the permission needs read; the guard asks write for writes.
 func (c *Context) HasPermission(permission string) bool {
 	if ProRoleBlocksPermission(c.Role, permission) {
 		return false
@@ -119,11 +119,11 @@ func (c *Context) HasPermission(permission string) bool {
 	}
 	if level, ok := c.sectionLevel(); ok {
 		if entry, known := CatalogEntry(c.Section); known {
-			if entry.WritePermission != "" && string(entry.WritePermission) == permission {
-				return rank(level) >= rank(LevelWrite)
-			}
 			if entry.ReadPermission != "" && string(entry.ReadPermission) == permission {
 				return rank(level) >= rank(LevelRead)
+			}
+			if entry.WritePermission != "" && string(entry.WritePermission) == permission {
+				return rank(level) >= rank(LevelWrite)
 			}
 		}
 	}
