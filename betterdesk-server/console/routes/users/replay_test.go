@@ -268,6 +268,7 @@ func (p *replayer) run() {
 		if haveCalls := p.api.Calls(); !sameCalls(wantCalls, haveCalls) {
 			report("step %d %q: calls to the API server\n   node: %q\n     go: %q", i, step.Name, wantCalls, haveCalls)
 		}
+		p.nodeGUIDs(step)
 		if fixed && f.node != nil {
 			f.node(&nodeWrites{p: p, step: step})
 		}

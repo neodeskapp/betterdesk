@@ -4,10 +4,12 @@ import (
 	"context"
 	"crypto/rand"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
@@ -262,15 +264,59 @@ func (n *nodeWrites) createdAccount(id int64, stored, sent string) {
 	n.audit("user_created", "Created user: "+sent+" (viewer)")
 }
 
-// guid gives an account a random guid, as crypto.randomUUID makes them.
+// guid gives an account a random guid.
 func (n *nodeWrites) guid(id int64) {
 	n.p.t.Helper()
+	n.exec(`UPDATE users SET guid = ? WHERE id = ?`, randomGUID(n.p.t), id)
+}
+
+// randomGUID is a random guid as crypto.randomUUID makes them.
+func randomGUID(t *testing.T) string {
+	t.Helper()
 	var b [16]byte
 	if _, err := rand.Read(b[:]); err != nil {
-		n.p.t.Fatal(err)
+		t.Fatal(err)
 	}
 	b[6], b[8] = b[6]&0x0f|0x40, b[8]&0x3f|0x80
-	n.exec(`UPDATE users SET guid = ? WHERE id = ?`, fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16]), id)
+	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
+}
+
+// nodeGUIDs gives every account a recorded answer showed with its
+// strategy (the list, the answer to a change) a guid when it has none, as
+// Node did: it read the strategy through a call that made the guid (BUGS
+// US8). The Go console gives an account its guid only when a strategy is
+// assigned to it.
+func (p *replayer) nodeGUIDs(step recordedStep) {
+	p.t.Helper()
+	if step.Status != http.StatusOK {
+		return
+	}
+	var answer struct {
+		Data json.RawMessage `json:"data"`
+	}
+	if json.Unmarshal([]byte(step.Answer), &answer) != nil || answer.Data == nil {
+		return
+	}
+	accounts := []json.RawMessage{answer.Data}
+	var list struct {
+		Users []json.RawMessage `json:"users"`
+	}
+	if json.Unmarshal(answer.Data, &list) == nil && list.Users != nil {
+		accounts = list.Users
+	}
+	for _, raw := range accounts {
+		var account map[string]json.RawMessage
+		if json.Unmarshal(raw, &account) != nil {
+			continue
+		}
+		if _, shown := account["strategy_guid"]; !shown {
+			continue
+		}
+		id := strings.Trim(string(account["id"]), `"`)
+		if _, err := p.db.Exec(context.Background(), `UPDATE users SET guid = ? WHERE CAST(id AS TEXT) = ? AND (guid IS NULL OR guid = '')`, randomGUID(p.t), id); err != nil {
+			p.t.Fatalf("step %q, Node's guid of account %s: %v", step.Name, id, err)
+		}
+	}
 }
 
 // deleteAccount deletes an account as the route does: its panel access

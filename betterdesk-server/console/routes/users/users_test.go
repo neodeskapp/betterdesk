@@ -74,19 +74,12 @@ func TestUsernameTakenInTheMeantime(t *testing.T) {
 }
 
 // A role the role_permissions table takes user.view from cannot list the
-// accounts, and the list is not read: no account gets its strategy guid.
+// accounts.
 func TestListRefusedByRoleOverride(t *testing.T) {
 	w := world(t, nil, routetest.Options{Roles: routetest.Overrides{"operator": {"user.view": false}}})
 	got := w.As("operator").Do("GET", "/api/users", "")
 	if got.Status != http.StatusForbidden {
 		t.Fatalf("list: %d %s, want 403", got.Status, got.Body)
-	}
-	var guids int
-	if err := w.DB.QueryRow(context.Background(), `SELECT COUNT(*) FROM users WHERE guid <> ''`).Scan(&guids); err != nil {
-		t.Fatal(err)
-	}
-	if guids != 0 {
-		t.Errorf("%d accounts got a guid: the list was read", guids)
 	}
 	if got := w.As("admin").Do("GET", "/api/users", ""); got.Status != http.StatusOK {
 		t.Errorf("list as admin: %d", got.Status)
@@ -385,6 +378,40 @@ func TestCreateAnswersStoredGroups(t *testing.T) {
 		want := `"username":"grouped","role":"viewer","email":"","user_groups":["g-a","g-b"],"folder_ids":[],"peer_grants":[]}}`
 		if got.Status != http.StatusOK || !strings.HasSuffix(got.Body, want) {
 			t.Errorf("create: %d %s, want the answer to end with %s", got.Status, got.Body, want)
+		}
+	})
+}
+
+// Reading accounts writes nothing: an account without a guid has none
+// after the list and after the answer to a change, and gets one when a
+// strategy is assigned to it (BUGS US8).
+func TestListWritesNothing(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		w := world(t, storetest.Prepare(t, db, storetest.GoServerFirst), routetest.Options{})
+		ctx := context.Background()
+		if _, err := db.Exec(ctx, `INSERT INTO strategies (guid, name) VALUES ('st-1', 'Strategy one')`); err != nil {
+			t.Fatal(err)
+		}
+		withGUID := func() int {
+			t.Helper()
+			var n int
+			if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE COALESCE(guid, '') <> ''`).Scan(&n); err != nil {
+				t.Fatal(err)
+			}
+			return n
+		}
+		admin := w.As("admin")
+		expect(t, "list", admin.Do("GET", "/api/users", ""), 200, "")
+		expect(t, "change", admin.Do("PATCH", "/api/users/5", `{"email":"op@example.invalid"}`), 200, "")
+		if n := withGUID(); n != 0 {
+			t.Errorf("%d accounts got a guid from reading them", n)
+		}
+		got := admin.Do("PATCH", "/api/users/5", `{"strategyGuid":"st-1"}`)
+		if got.Status != http.StatusOK || !strings.Contains(got.Body, `"strategy_guid":"st-1"`) {
+			t.Errorf("assign: %d %s", got.Status, got.Body)
+		}
+		if n := withGUID(); n != 1 {
+			t.Errorf("%d accounts have a guid after one strategy was assigned, want 1", n)
 		}
 	})
 }

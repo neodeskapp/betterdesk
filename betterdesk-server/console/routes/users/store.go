@@ -344,14 +344,22 @@ func ensureAccountGUID(ctx context.Context, db *store.DB, id int64) (string, err
 }
 
 // strategyOf returns the guid of the strategy assigned to an account, ""
-// for none (getUserStrategyGuid). The account gets its guid on the way.
+// for none (getUserStrategyGuid). It writes nothing: an account without a
+// guid has no strategy, and gets its guid when one is assigned.
 func strategyOf(ctx context.Context, db *store.DB, id int64) (string, error) {
-	guid, err := ensureAccountGUID(ctx, db, id)
-	if err != nil || guid == "" {
-		return "", err
+	var guid sql.NullString
+	err := db.QueryRow(ctx, `SELECT guid FROM users WHERE id = ?`, id).Scan(&guid)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", nil
+	}
+	if err != nil {
+		return "", fmt.Errorf("load guid of user %d: %w", id, err)
+	}
+	if guid.String == "" {
+		return "", nil
 	}
 	var strategy sql.NullString
-	err = db.QueryRow(ctx, `SELECT strategy_guid FROM strategy_assignments WHERE target_type = 'user' AND target_key = ? LIMIT 1`, guid).Scan(&strategy)
+	err = db.QueryRow(ctx, `SELECT strategy_guid FROM strategy_assignments WHERE target_type = 'user' AND target_key = ? LIMIT 1`, guid.String).Scan(&strategy)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", nil
 	}
