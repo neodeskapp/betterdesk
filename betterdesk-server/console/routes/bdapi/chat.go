@@ -1,27 +1,27 @@
 package bdapi
 
 import (
-	"errors"
+	"math"
 	"net/http"
+	"strconv"
 
+	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
 )
 
-// The chat of an agent with the operators. The route file called two
-// functions of the API client that do not exist (sendChatMessage and
-// getChatHistory), so a message that passes the checks is never sent, and
-// a history request that passes them ended the console's process (BUGS
-// BD1, BD2). Both stay as they were: the send answers 500, and the history
-// request is dropped without an answer (DECISIONS A19).
-
-// errNoChatClient is the TypeError of the missing function.
-var errNoChatClient = errors.New("betterdeskApi.sendChatMessage is not a function")
+// The chat of an agent with the operators. The messages live on the API
+// server, in the conversation named by the device id, as the chat
+// sockets keep them.
 
 // chatSend answers POST /api/bd/chat/send {device_id, sender, content,
-// timestamp} from a device.
+// timestamp} from a device: the message goes into the device's
+// conversation, from the device, under the sender's name (the device id
+// when sender is no text). 502 when the API server does not take it.
 func (h *handlers) chatSend(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
-	if id, ok := jsreq.Prop(body, "device_id").(string); !ok || id == "" {
+	id, ok := jsreq.Prop(body, "device_id").(string)
+	if !ok || id == "" {
 		fail(w, r, http.StatusBadRequest, "Missing device_id")
 		return
 	}
@@ -34,21 +34,72 @@ func (h *handlers) chatSend(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "Message too long (max 4096 chars)")
 		return
 	}
-	h.serverError(w, r, "Chat send error:", errNoChatClient, "Failed to send message")
+	device := cut(id, 64)
+	sender := device
+	if s, isText := jsreq.Prop(body, "sender").(string); isText {
+		sender = cut(trim(s), 128)
+	}
+	res, err := h.d.GoAPI.Post(r.Context(), "/chat/messages", goapi.Body(goapi.NewObject(
+		"conversation_id", device,
+		"from_id", device,
+		"from_name", sender,
+		"to_id", "",
+		"text", cut(trim(content), 4096),
+	)))
+	if err != nil {
+		h.log.Warn("Chat send Go proxy failed:", err.Error())
+		fail(w, r, http.StatusBadGateway, "Failed to send message")
+		return
+	}
+	messageID := ""
+	data := res.Data()
+	if v := orValue(jsreq.Prop(data, "id"), jsreq.Prop(data, "message_id")); goapi.Truthy(v) {
+		messageID, _ = text(v)
+	}
+	if messageID == "" {
+		messageID = strconv.FormatInt(h.now().UnixMilli(), 10)
+	}
+	kit.JSON(w, r, http.StatusOK, goapi.NewObject("success", true, "message_id", messageID))
 }
 
 // chatHistory answers GET /api/bd/chat/history?device_id=&limit= from a
-// device: 400 without a device id, and no answer at all otherwise.
+// device: the newest messages of its conversation (100 unless limit says
+// otherwise, at most 200), oldest first, as {id, device_id, sender,
+// content, timestamp}. An empty list when the API server fails.
 func (h *handlers) chatHistory(w http.ResponseWriter, r *http.Request) {
 	id, err := textOr(jsreq.Query(r, "device_id"), "")
-	if err != nil {
-		h.log.Error("Chat history error:", err)
-		panic(http.ErrAbortHandler)
-	}
-	if cut(id, 64) == "" {
+	device := cut(id, 64)
+	if err != nil || device == "" {
 		fail(w, r, http.StatusBadRequest, "Missing device_id")
 		return
 	}
-	h.log.Error("Chat history error:", errors.New("betterdeskApi.getChatHistory is not a function"))
-	panic(http.ErrAbortHandler)
+	limit := 100
+	if n, ok := jsreq.ParseInt(jsreq.Query(r, "limit"), 10); ok && n >= 1 {
+		limit = int(math.Min(n, 200))
+	}
+	res, err := h.d.GoAPI.Get(r.Context(), "/chat/history/"+goapi.EncodeURIComponent(device), goapi.Query("limit", limit))
+	if err != nil {
+		h.log.Warn("Chat history Go proxy failed:", err.Error())
+		kit.JSON(w, r, http.StatusOK, []any{})
+		return
+	}
+	messages, _ := goapi.Dig(res.Data(), "messages").([]any)
+	history := make([]any, 0, len(messages))
+	for _, m := range messages {
+		if _, isObject := m.(*goapi.Object); !isObject {
+			continue
+		}
+		messageID, _ := text(jsreq.Prop(m, "id"))
+		history = append(history, goapi.NewObject(
+			"id", messageID,
+			"device_id", orValue(jsreq.Prop(m, "conversation_id"), device),
+			"sender", orValue(jsreq.Prop(m, "from_name"), orValue(jsreq.Prop(m, "from_id"), "")),
+			"content", orValue(jsreq.Prop(m, "text"), ""),
+			"timestamp", orValue(jsreq.Prop(m, "created_at"), isoTime(float64(h.now().UnixMilli()))),
+		))
+	}
+	if len(history) > limit {
+		history = history[len(history)-limit:]
+	}
+	kit.JSON(w, r, http.StatusOK, history)
 }

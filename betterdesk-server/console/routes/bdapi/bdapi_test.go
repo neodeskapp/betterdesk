@@ -7,7 +7,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -64,22 +63,54 @@ func TestOpenRegistration(t *testing.T) {
 	}
 }
 
-// A history request that passes its checks ended the old console's
-// process. The Go console drops the connection without an answer and
-// goes on.
-func TestChatHistoryDropsTheConnection(t *testing.T) {
-	w := routetest.New(t, routetest.Options{})
+// A device's chat goes through the API server's chat routes, in the
+// conversation named by the device: a message is stored and answered with
+// its id, and the history comes back as the device API's list (BUGS BD1,
+// BD2, G2).
+func TestChatGoesThroughTheAPIServer(t *testing.T) {
+	api := routetest.NewAPI().
+		On("POST /api/chat/messages", http.StatusOK, `{"id":7,"conversation_id":"DEV1","from_id":"DEV1","from_name":"Front desk","text":"hello"}`).
+		On("GET /api/chat/history/DEV1?limit=100", http.StatusOK, `{"conversation_id":"DEV1","messages":[`+
+			`{"id":5,"conversation_id":"DEV1","from_id":"operator:alice","from_name":"Alice","text":"hi","read":false,"created_at":"2026-11-18T10:00:00Z"},`+
+			`{"id":7,"conversation_id":"DEV1","from_id":"DEV1","from_name":"","text":"hello","read":false,"created_at":"2026-11-18T10:01:00Z"}]}`).
+		On("GET /api/chat/history/DEV1?limit=1", http.StatusOK, `{"conversation_id":"DEV1","messages":[]}`)
+	w := routetest.New(t, routetest.Options{API: api})
 	token := deviceToken(t, w, "tok-chat-0123456789", "DEV1")
-	req, _ := http.NewRequest(http.MethodGet, "http://"+w.Addr()+"/api/bd/chat/history?device_id=DEV1", nil)
-	req.Header.Set("Authorization", "Bearer "+token)
-	res, err := http.DefaultClient.Do(req)
-	if err == nil {
-		body, _ := io.ReadAll(res.Body)
-		res.Body.Close()
-		t.Fatalf("an answer: %d %s", res.StatusCode, body)
+	auth := []string{"Authorization", "Bearer " + token}
+
+	got := w.SignedOut().Do("POST", "/api/bd/chat/send", `{"device_id":"DEV1","sender":" Front desk ","content":" hello "}`, auth...)
+	if got.Status != 200 || got.Body != `{"success":true,"message_id":"7"}` {
+		t.Errorf("send: %d %s", got.Status, got.Body)
 	}
-	if got := w.SignedOut().Do("GET", "/api/bd/chat/history", "", "Authorization", "Bearer "+token); got.Status != 400 {
+	if calls := api.Calls(); len(calls) != 1 || calls[0] != `POST /api/chat/messages {"conversation_id":"DEV1","from_id":"DEV1","from_name":"Front desk","to_id":"","text":"hello"}` {
+		t.Errorf("send called %q", calls)
+	}
+
+	got = w.SignedOut().Do("GET", "/api/bd/chat/history?device_id=DEV1", "", auth...)
+	want := `[{"id":"5","device_id":"DEV1","sender":"Alice","content":"hi","timestamp":"2026-11-18T10:00:00Z"},` +
+		`{"id":"7","device_id":"DEV1","sender":"DEV1","content":"hello","timestamp":"2026-11-18T10:01:00Z"}]`
+	if got.Status != 200 || got.Body != want {
+		t.Errorf("history: %d %s, want %s", got.Status, got.Body, want)
+	}
+	if got := w.SignedOut().Do("GET", "/api/bd/chat/history?device_id=DEV1&limit=1", "", auth...); got.Status != 200 || got.Body != `[]` {
+		t.Errorf("history of one: %d %s", got.Status, got.Body)
+	}
+	if got := w.SignedOut().Do("GET", "/api/bd/chat/history", "", auth...); got.Status != 400 {
 		t.Errorf("without a device id: %d %s", got.Status, got.Body)
+	}
+	if got := w.SignedOut().Do("GET", "/api/bd/chat/history?device_id[toString]=x", "", auth...); got.Status == 200 {
+		t.Errorf("a device id without text: %d %s", got.Status, got.Body)
+	}
+
+	// The API server refuses: the send is a 502, the history empty
+	refusing := routetest.New(t, routetest.Options{})
+	token = deviceToken(t, refusing, "tok-chat-9876543210", "DEV1")
+	auth = []string{"Authorization", "Bearer " + token}
+	if got := refusing.SignedOut().Do("POST", "/api/bd/chat/send", `{"device_id":"DEV1","content":"x"}`, auth...); got.Status != 502 || got.Body != `{"error":"Failed to send message"}` {
+		t.Errorf("send refused: %d %s", got.Status, got.Body)
+	}
+	if got := refusing.SignedOut().Do("GET", "/api/bd/chat/history?device_id=DEV1", "", auth...); got.Status != 200 || got.Body != `[]` {
+		t.Errorf("history refused: %d %s", got.Status, got.Body)
 	}
 }
 
