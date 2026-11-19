@@ -3,6 +3,10 @@
  * Dev-only: fill a local BetterDesk console with fake data so UI work
  * has something to show. Never run this against a real server.
  *
+ * The Go command betterdesk-server/cmd/devseed writes the same data, on
+ * SQLite and PostgreSQL, without Node: "go run ./cmd/devseed demo" (see
+ * "go doc ./cmd/devseed" for running it in a container).
+ *
  * Run inside the container (or wherever the console and Go server run):
  *
  *   docker compose exec -u betterdesk betterdesk \

@@ -209,7 +209,7 @@ The value comes from one of two places:
   file there is a secret named after the file, its content without white
   space around it. A test instance has `device_token` (bound to device
   `900100001`) and `device_token_other` (bound to `900100002`), made by
-  `stack/make-accounts.js`.
+  `devseed accounts` (`betterdesk-server/cmd/devseed`).
 - **An earlier answer of the same turn**, taken with `CaptureSecret`
   (same sources as `Capture`). The value must be text, or a number, of at
   least eight characters.

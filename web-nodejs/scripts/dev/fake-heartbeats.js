@@ -2,6 +2,8 @@
 /**
  * Dev-only: keep the demo devices from seed-ui-data.js online by sending
  * RustDesk RegisterPeer heartbeats over UDP to the local signal server.
+ * The Go command does the same without Node: "go run ./cmd/devseed
+ * heartbeats" in betterdesk-server.
  *
  *   docker compose exec -d -u betterdesk betterdesk \
  *     node /app/scripts/dev/fake-heartbeats.js

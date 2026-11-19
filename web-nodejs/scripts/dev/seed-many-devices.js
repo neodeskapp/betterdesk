@@ -2,7 +2,8 @@
 /**
  * Dev-only: add many fake devices for performance checks of the device
  * list (the Svelte console's budget is measured with 5,000). Never run this
- * against a real server.
+ * against a real server. The Go command does the same without Node:
+ * "go run ./cmd/devseed many-devices" in betterdesk-server.
  *
  *   docker compose exec -u betterdesk betterdesk \
  *     node /app/scripts/dev/seed-many-devices.js --count 5000
