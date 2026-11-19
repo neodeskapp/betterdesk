@@ -268,8 +268,6 @@ func (h *Handlers) Delete(w http.ResponseWriter, r *http.Request) {
 
 var stringsCode = regexp.MustCompile(`^[a-z]{2,3}(-[A-Za-z]{2,4})?$`)
 
-var wordGzip = regexp.MustCompile(`\bgzip\b`)
-
 // stringsEntry is one language's merged texts as sent to the web app. It
 // is made on first use and kept until an upload or a delete changes the
 // language, or the default language that fills it.
@@ -336,8 +334,10 @@ func (h *Handlers) StringsURL(lang string) string {
 // merged over the default language, as plain JSON without an envelope.
 //
 // The ETag is the revision in quotes. With ?v=<revision> the answer may be
-// cached for a year, otherwise it must be revalidated. The body goes out
-// gzip-compressed when Accept-Encoding names gzip. An unknown code is 404.
+// cached for a year, otherwise it must be revalidated. A request that
+// names the tag (httpx.Fresh) gets 304 without a body. The body goes out
+// gzip-compressed when Accept-Encoding allows gzip. An unknown code is
+// 404.
 func (h *Handlers) Strings(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
 	if !stringsCode.MatchString(code) || !h.Bundle.Has(code) {
@@ -355,19 +355,15 @@ func (h *Handlers) Strings(w http.ResponseWriter, r *http.Request) {
 		head.Set("Cache-Control", "no-cache")
 	}
 	head.Set("Vary", "Accept-Encoding")
-	if strings.Join(r.Header.Values("If-None-Match"), ", ") == etag {
-		w.WriteHeader(http.StatusNotModified)
-		return
-	}
-	body := entry.body
-	if wordGzip.MatchString(strings.Join(r.Header.Values("Accept-Encoding"), ", ")) {
-		head.Set("Content-Encoding", "gzip")
-		body = h.gzipped(entry)
-	}
 	if httpx.Fresh(r, etag, time.Time{}) {
 		head.Del("Content-Type")
 		w.WriteHeader(http.StatusNotModified)
 		return
+	}
+	body := entry.body
+	if httpx.AcceptsGzip(strings.Join(r.Header.Values("Accept-Encoding"), ", ")) {
+		head.Set("Content-Encoding", "gzip")
+		body = h.gzipped(entry)
 	}
 	head.Set("Content-Length", strconv.Itoa(len(body)))
 	w.WriteHeader(http.StatusOK)

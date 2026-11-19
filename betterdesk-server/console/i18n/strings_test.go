@@ -91,53 +91,63 @@ func TestStringsUnknownCodes(t *testing.T) {
 	}
 }
 
-func TestStringsNotModified(t *testing.T) {
+// Freshness is decided once, before the encoding, by the rules of every
+// JSON answer: the exact tag, its weak form, a list naming it and * all
+// get the same 304, without Content-Type and Content-Encoding, and a
+// client that says no-cache gets the strings. Accept-Encoding is read
+// with its q values (BUGS.md L20).
+func TestStringsNotModifiedIsTheSameForEveryTagForm(t *testing.T) {
 	h, srv := stringsServer(t)
 	first := do(t, srv.URL, "GET", "/api/console/strings/de", nil, nil, 0)
 	etag := first.header.Get("ETag")
-	cases := []struct {
-		name            string
-		headers         map[string]string
-		status          int
-		contentType     string
-		contentEncoding string
-	}{
-		{"the exact tag", map[string]string{"If-None-Match": etag}, 304, "application/json; charset=utf-8", ""},
-		{"the exact tag with gzip offered", map[string]string{"If-None-Match": etag, "Accept-Encoding": "gzip"}, 304, "application/json; charset=utf-8", ""},
-		{"the exact tag although the client says no-cache", map[string]string{"If-None-Match": etag, "Cache-Control": "no-cache"}, 304, "application/json; charset=utf-8", ""},
-		{"the weak form", map[string]string{"If-None-Match": "W/" + etag}, 304, "", ""},
-		{"the weak form with gzip offered", map[string]string{"If-None-Match": "W/" + etag, "Accept-Encoding": "gzip"}, 304, "", "gzip"},
-		{"a list", map[string]string{"If-None-Match": `"other", ` + etag}, 304, "", ""},
-		{"a star", map[string]string{"If-None-Match": "*"}, 304, "", ""},
-		{"the weak form with no-cache", map[string]string{"If-None-Match": "W/" + etag, "Cache-Control": "no-cache"}, 200, "application/json; charset=utf-8", ""},
-		{"another tag", map[string]string{"If-None-Match": `"0000000000000000"`}, 200, "application/json; charset=utf-8", ""},
+	for _, tag := range []string{etag, "W/" + etag, `"other", ` + etag, "*", `"other"`} {
+		for _, accept := range []string{"", "gzip"} {
+			for _, noCache := range []bool{false, true} {
+				headers := map[string]string{"If-None-Match": tag}
+				if accept != "" {
+					headers["Accept-Encoding"] = accept
+				}
+				if noCache {
+					headers["Cache-Control"] = "no-cache"
+				}
+				label := "If-None-Match " + tag + ", Accept-Encoding " + accept
+				if noCache {
+					label += ", no-cache"
+				}
+				wantStatus := 304
+				if noCache || tag == `"other"` {
+					wantStatus = 200
+				}
+				got := do(t, srv.URL, "GET", "/api/console/strings/de", headers, nil, 0)
+				// What the handler itself sets, before the server drops
+				// Content-Type from a 304
+				rec := httptest.NewRecorder()
+				req := httptest.NewRequest("GET", "/api/console/strings/de", nil)
+				req.SetPathValue("code", "de")
+				for k, v := range headers {
+					req.Header.Set(k, v)
+				}
+				h.Strings(rec, req)
+				if got.status != wantStatus || rec.Code != wantStatus {
+					t.Errorf("%s: status %d (handler %d), want %d", label, got.status, rec.Code, wantStatus)
+					continue
+				}
+				if got.header.Get("ETag") != etag || got.header.Get("Vary") != "Accept-Encoding" || got.header.Get("Cache-Control") != "no-cache" {
+					t.Errorf("%s: headers %v", label, got.header)
+				}
+				if wantStatus == 304 && (rec.Header().Get("Content-Type") != "" || rec.Header().Get("Content-Encoding") != "" || got.body != "") {
+					t.Errorf("%s: 304 with Content-Type %q, Content-Encoding %q, body %q", label, rec.Header().Get("Content-Type"), rec.Header().Get("Content-Encoding"), got.body)
+				}
+				if wantStatus == 200 && (got.body != first.body || got.header.Get("Content-Encoding") != accept) {
+					t.Errorf("%s: 200 with Content-Encoding %q and the body %v", label, got.header.Get("Content-Encoding"), got.body == first.body)
+				}
+			}
+		}
 	}
-	for _, c := range cases {
-		got := do(t, srv.URL, "GET", "/api/console/strings/de", c.headers, nil, 0)
-		if got.status != c.status {
-			t.Errorf("%s: status %d, want %d", c.name, got.status, c.status)
-			continue
-		}
-		// Go's HTTP server drops Content-Type from every 304, so what the
-		// handler itself sets is read from a recorder.
-		rec := httptest.NewRecorder()
-		req := httptest.NewRequest("GET", "/api/console/strings/de", nil)
-		req.SetPathValue("code", "de")
-		for k, v := range c.headers {
-			req.Header.Set(k, v)
-		}
-		h.Strings(rec, req)
-		if g := rec.Header().Get("Content-Type"); rec.Code != c.status || g != c.contentType {
-			t.Errorf("%s: the handler set status %d and Content-Type %q, want %d and %q", c.name, rec.Code, g, c.status, c.contentType)
-		}
-		if c.status == 304 && got.header.Get("Content-Type") != "" {
-			t.Errorf("%s: Content-Type %q on a 304 from the server", c.name, got.header.Get("Content-Type"))
-		}
-		if g := got.header.Get("Content-Encoding"); g != c.contentEncoding {
-			t.Errorf("%s: Content-Encoding %q, want %q", c.name, g, c.contentEncoding)
-		}
-		if c.status == 304 && (got.body != "" || got.header.Get("ETag") != etag || got.header.Get("Vary") != "Accept-Encoding" || got.header.Get("Cache-Control") != "no-cache") {
-			t.Errorf("%s: 304 with body %q and headers %v", c.name, got.body, got.header)
+	for accept, want := range map[string]string{"gzip;q=0": "", "gzip;q=0.5": "gzip", "GZIP": "gzip", "deflate, gzip;q=0": "", "x-gzip": "", "br;q=1, gzip;q=0.1": "gzip"} {
+		got := do(t, srv.URL, "GET", "/api/console/strings/de", map[string]string{"Accept-Encoding": accept}, nil, 0)
+		if got.status != 200 || got.header.Get("Content-Encoding") != want || got.body != first.body {
+			t.Errorf("Accept-Encoding %q: %d, Content-Encoding %q, want %q", accept, got.status, got.header.Get("Content-Encoding"), want)
 		}
 	}
 }
@@ -148,9 +158,9 @@ func TestStringsCompression(t *testing.T) {
 	cases := map[string]string{
 		"gzip":              "gzip",
 		"gzip, deflate, br": "gzip",
-		"deflate, gzip;q=0": "gzip", // the old code looked for the word only
-		"x-gzip":            "gzip",
-		"GZIP":              "",
+		"deflate, gzip;q=0": "",
+		"x-gzip":            "",
+		"GZIP":              "gzip",
 		"br":                "", // Node sent brotli here
 		"identity":          "",
 		"gzipped":           "",
