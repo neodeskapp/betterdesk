@@ -233,7 +233,11 @@ func TestOracleStore(t *testing.T) {
 			var cssValue any = css
 			if got := outcome(cssValue, cssErr); true {
 				if want, same := sameOutcome(got, property(state, "css")); !same {
-					differ("css", got, want)
+					if fixedCSS(s.GetBranding(), got, property(state, "css")) {
+						fixes.fixed["BR2"]++
+					} else {
+						differ("css", got, want)
+					}
 				}
 			}
 			branding := s.GetBranding()

@@ -56,6 +56,16 @@ func SanitizeFontName(family any) (name string, err error) {
 }
 
 func sanitizeFontName(family any) string {
+	safe, ok := fontFolderName(family)
+	if !ok {
+		throw("Invalid font family name")
+	}
+	return safe
+}
+
+// fontFolderName is sanitizeFontName without the throw: ok is false for
+// a family that leaves no folder name.
+func fontFolderName(family any) (string, bool) {
 	var kept strings.Builder
 	for _, r := range toString(or(family, "")) {
 		if r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || r == '-' || isJSSpace(r) {
@@ -63,10 +73,7 @@ func sanitizeFontName(family any) string {
 		}
 	}
 	safe := strings.ToLower(reSpaceRun.ReplaceAllLiteralString(kept.String(), "-"))
-	if safe == "" {
-		throw("Invalid font family name")
-	}
-	return safe
+	return safe, safe != ""
 }
 
 // EscapeCSSString makes text safe inside a quoted CSS string: quotes and
@@ -290,14 +297,18 @@ func (s *Service) SearchGoogleFonts(query, category string) (fonts []any, err er
 
 // GetLocalFont describes an installed font: its stylesheet, the weights
 // of its .woff2 files and their number. It answers nil when the font has
-// no font.css.
+// no font.css, and for a name that gives no folder name (no ASCII letter
+// or digit), which no installed font can have.
 func (s *Service) GetLocalFont(family any) (font *Object, err error) {
 	defer catch(&err)
 	return s.getLocalFont(family), nil
 }
 
 func (s *Service) getLocalFont(family any) *Object {
-	safeName := sanitizeFontName(family)
+	safeName, ok := fontFolderName(family)
+	if !ok {
+		return nil
+	}
 	dir := s.fontDir(safeName)
 	if !exists(s.fontFile(safeName, "font.css")) {
 		return nil

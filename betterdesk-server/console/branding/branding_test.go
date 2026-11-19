@@ -602,9 +602,14 @@ func TestFontCSS(t *testing.T) {
 	if err != nil || Stringify(local) != `{"available":true,"cssPath":"/fonts/my-font/font.css","weights":["400","700"],"fileCount":2}` {
 		t.Errorf("GetLocalFont = %s, %v", Stringify(local), err)
 	}
-	// a font whose name has no ASCII letter or digit breaks the stylesheet (BUGS BR2)
-	if _, err := s.GenerateFontCSS("微软雅黑", ""); Message(err) != "Invalid font family name" {
-		t.Errorf("a font name without ASCII: %v", err)
+	// a font whose name has no ASCII letter or digit is not installed, and
+	// the stylesheet names it (BUGS BR2)
+	if css, err := s.GenerateFontCSS("微软雅黑", "Шрифт"); err != nil || strings.Contains(css, "@import") ||
+		!strings.Contains(css, "--font-heading: '微软雅黑', sans-serif;") || !strings.Contains(css, "--font-family: 'Шрифт', -apple-system") {
+		t.Errorf("font names without ASCII: %q, %v", css, err)
+	}
+	if font, err := s.GetLocalFont("你好"); font != nil || err != nil {
+		t.Errorf("GetLocalFont of a name without ASCII: %s, %v", Stringify(font), err)
 	}
 }
 

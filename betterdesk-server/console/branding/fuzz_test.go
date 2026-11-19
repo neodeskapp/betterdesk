@@ -376,11 +376,7 @@ func FuzzBrandingSettings(f *testing.F) {
 
 		css, err := s.GenerateThemeCSS()
 		if err != nil {
-			// a font whose name has no ASCII letter or digit (BUGS BR2)
-			if Message(err) != "Invalid font family name" {
-				t.Fatalf("GenerateThemeCSS: %v", err)
-			}
-			return
+			t.Fatalf("GenerateThemeCSS: %v", err)
 		}
 		custom, err := SanitizeCustomCSS(branding.Text("customCss"))
 		if err != nil {

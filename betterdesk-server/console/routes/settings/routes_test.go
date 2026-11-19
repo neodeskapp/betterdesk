@@ -236,18 +236,17 @@ func TestStylesheetsAndFavicon(t *testing.T) {
 			t.Errorf("favicon: %v %.40s", icon.Header, icon.Body)
 		}
 
-		// A heading font whose name has no ASCII letter breaks the
-		// stylesheet (BUGS BR2): the answer is a comment, without the
-		// caching headers and the revision
+		// A heading font whose name has no ASCII letter is no installed
+		// font; the stylesheet names it and keeps everything else (BUGS BR2)
 		exec(t, db, "INSERT INTO branding_config (key, value, updated_at) VALUES ('fontHeading', ?, '2026-01-02 03:04:05')", "你好")
 		w.Server.Deps().Branding.LoadBranding(context.Background())
-		broken := visitor.Do("GET", "/css/branding.css", "")
-		if broken.Status != http.StatusOK || broken.Body != "/* branding error */" || broken.Header.Get("Cache-Control") != "public, max-age=3600" ||
-			broken.Header.Get("X-Branding-Revision") != "" || broken.Header.Get("Content-Type") != "text/css; charset=utf-8" {
-			t.Errorf("broken branding.css: %d %v %q", broken.Status, broken.Header, broken.Body)
+		withFont := visitor.Do("GET", "/css/branding.css", "")
+		if withFont.Status != http.StatusOK || !strings.Contains(withFont.Body, "--font-heading: '你好', sans-serif;") || !strings.Contains(withFont.Body, "--bg-primary:") ||
+			withFont.Header.Get("X-Branding-Revision") == "" {
+			t.Errorf("branding.css with a font without ASCII letters: %d %v %.200q", withFont.Status, withFont.Header, withFont.Body)
 		}
-		if broken := visitor.Do("GET", "/css/theme.css", ""); broken.Body != "/* theme error */" {
-			t.Errorf("broken theme.css: %q", broken.Body)
+		if theme := visitor.Do("GET", "/css/theme.css", ""); theme.Body != withFont.Body {
+			t.Errorf("theme.css with a font without ASCII letters: %.200q", theme.Body)
 		}
 	})
 }

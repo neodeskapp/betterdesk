@@ -50,6 +50,52 @@ func fixedPure(name string, a []any, got string) string {
 	return ""
 }
 
+// noFontFolder is the answer of Node for a font name without an ASCII
+// letter or digit, where the console finds no installed font (BR2).
+const noFontFolder = "throws Error: Invalid font family name"
+
+// fixedFontStep checks a font step of TestOracleFiles whose answer a fix
+// changes on purpose, and returns the bug id when Go answered as the fix
+// says.
+func fixedFontStep(step any, want string, value any, err error) string {
+	if want != noFontFolder || err != nil || property(step, "op") != "call" {
+		return ""
+	}
+	switch property(step, "fn") {
+	case "getLocalFont":
+		if value == nil {
+			return "BR2"
+		}
+	case "generateFontCss":
+		if css, ok := value.(string); ok && strings.Contains(css, ":root {") {
+			return "BR2"
+		}
+	}
+	return ""
+}
+
+// fixedCSS reports BR2 for the stylesheet of TestOracleStore (got is its
+// outcome, the stylesheet as JSON text): where Node threw for a font
+// without an ASCII letter or digit, the console writes the stylesheet
+// with that font named.
+func fixedCSS(branding *Object, got string, recorded any) bool {
+	want, _ := expected(recorded)
+	parsed, err := parseJSON(got)
+	css, isText := parsed.(string)
+	if want != noFontFolder || err != nil || !isText {
+		return false
+	}
+	for _, key := range []string{"fontHeading", "fontBody"} {
+		if font := trim(branding.Text(key)); font != "" {
+			asciiName := strings.ContainsFunc(font, func(r rune) bool { return r < 0x80 && (r == '-' || isASCIIAlpha(byte(r)) || isASCIIDigit(byte(r))) })
+			if !asciiName && strings.Contains(css, "'"+escapeCSSString(font)+"'") {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // storeFixes follows TestOracleStore through the steps a fix changes on
 // purpose. Such a step leaves another state than Node's, which stays until
 // a later step makes it Node's again (a reset, rows written straight, the
@@ -163,7 +209,7 @@ func (f *storeFixes) recordedProfiles(recorded any) any {
 // that the state was Node's again soon after each.
 func (f *storeFixes) check() {
 	f.t.Helper()
-	for bug, atLeast := range map[string]int{"BR1": 5} {
+	for bug, atLeast := range map[string]int{"BR1": 5, "BR2": 1} {
 		if f.fixed[bug] < atLeast {
 			f.t.Errorf("%d steps of the scenario are changed by the fix of %s, the recording has more", f.fixed[bug], bug)
 		}

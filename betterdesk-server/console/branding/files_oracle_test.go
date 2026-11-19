@@ -182,11 +182,14 @@ type filesReplay struct {
 	// renamed counts the uploads stored under another name than Node's
 	// (BUGS I9, see renameAsNode)
 	renamed int
+	// fixed counts the steps whose answer a fix changes, by bug
+	// (fixedFontStep)
+	fixed map[string]int
 }
 
 func newFilesReplay(t *testing.T) *filesReplay {
 	t.Helper()
-	r := &filesReplay{t: t, dir: t.TempDir(), google: &fakeGoogle{answers: map[string]*Object{}}, data: loadVectors(t, "files"), clock: fixedNow}
+	r := &filesReplay{t: t, dir: t.TempDir(), google: &fakeGoogle{answers: map[string]*Object{}}, data: loadVectors(t, "files"), clock: fixedNow, fixed: map[string]int{}}
 	opts := fixtureOptions(r.dir)
 	opts.DB = storetest.Migrated(t)
 	opts.HTTP = r.google
@@ -342,7 +345,11 @@ func (r *filesReplay) fontSteps() {
 			want += " tmpLeft=" + toString(left)
 		}
 		if got := r.result(value, err) + extra; got != want {
-			t.Errorf("font step %d %s\n got  %s\n want %s", i, clip(Stringify(step)), clip(got), clip(want))
+			if bug := fixedFontStep(step, want, value, err); bug != "" {
+				r.fixed[bug]++
+			} else {
+				t.Errorf("font step %d %s\n got  %s\n want %s", i, clip(Stringify(step)), clip(got), clip(want))
+			}
 		}
 		asked := r.google.requests
 		if asked == nil {
@@ -655,7 +662,13 @@ func (r *filesReplay) supporters() {
 
 func TestOracleFiles(t *testing.T) {
 	r := newFilesReplay(t)
-	t.Run("fonts", func(t *testing.T) { r.t = t; r.fontSteps() })
+	t.Run("fonts", func(t *testing.T) {
+		r.t = t
+		r.fontSteps()
+		if r.fixed["BR2"] == 0 {
+			t.Error("no font step looks up a name without ASCII letters, the recording has some (BUGS BR2)")
+		}
+	})
 	t.Run("uploads", func(t *testing.T) {
 		r.t = t
 		r.uploadSteps()
