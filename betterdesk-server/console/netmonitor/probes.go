@@ -150,7 +150,6 @@ func utf16Length(s string) int {
 // prober runs the checks. It holds what they reach the outside with.
 type prober struct {
 	guard     *ssrfguard.Guard
-	resolver  Resolver
 	dialer    Dialer
 	transport http.RoundTripper
 	ping      PingRunner
@@ -179,33 +178,39 @@ func timerDuration(ms Number, name string) (time.Duration, string) {
 	return time.Duration(f * float64(time.Millisecond)), ""
 }
 
-// resolveHost is resolveHost(host): the first address of a host that
-// passes the guard.
-func (p *prober) resolveHost(ctx context.Context, host string) (string, error) {
+// check asks the guard about the host of a ping or TCP check or a lookup.
+// What follows goes to an address the guard checked, never to the name,
+// which could answer with another address the second time.
+func (p *prober) check(ctx context.Context, host string) (ssrfguard.Host, error) {
 	if !isValidHost(host) {
-		return "", errors.New(invalidHost)
+		return ssrfguard.Host{}, errors.New(invalidHost)
 	}
-	clean, err := p.guard.SafeResolvedHost(ctx, host, tools)
+	return p.guard.CheckHost(ctx, host, tools)
+}
+
+// resolveHost is resolveHost(host): the first address of a host that
+// passes the guard, of the ones the guard checked.
+func (p *prober) resolveHost(ctx context.Context, host string) (string, error) {
+	checked, err := p.check(ctx, host)
 	if err != nil {
 		return "", err
 	}
-	return lookupFirst(ctx, p.resolver, clean)
+	return checked.Addresses[0], nil
 }
 
 // pingHost is pingHost(host, timeoutMs): one echo request with the
-// system's ping command.
+// system's ping command, to the first address the guard checked.
 func (p *prober) pingHost(ctx context.Context, host string, timeoutMs Number) Result {
-	if !isValidHost(host) {
-		return failed(invalidHost)
-	}
-	if _, err := p.guard.SafeResolvedHost(ctx, host, tools); err != nil {
+	checked, err := p.check(ctx, host)
+	if err != nil {
 		return failed(err.Error())
 	}
+	address := checked.Addresses[0]
 	var args []string
 	if p.windows {
-		args = []string{"-n", "1", "-w", timeoutMs.String(), host}
+		args = []string{"-n", "1", "-w", timeoutMs.String(), address}
 	} else {
-		args = []string{"-c", "1", "-W", Number(math.Ceil(float64(timeoutMs) / 1000)).String(), host}
+		args = []string{"-c", "1", "-W", Number(math.Ceil(float64(timeoutMs) / 1000)).String(), address}
 	}
 
 	// The process may run two seconds longer than the ping waits
@@ -221,7 +226,6 @@ func (p *prober) pingHost(ctx context.Context, host string, timeoutMs Number) Re
 	var (
 		stdout []byte
 		code   int
-		err    error
 	)
 	if limit == 0 {
 		// Node sets no timer for a limit of zero
@@ -252,18 +256,14 @@ func (p *prober) pingHost(ctx context.Context, host string, timeoutMs Number) Re
 }
 
 // checkTCPPort is checkTcpPort(host, port, timeoutMs): it opens a
-// connection to the port and closes it.
+// connection to the port of the first address the guard checked and
+// closes it.
 func (p *prober) checkTCPPort(ctx context.Context, host string, port, timeoutMs Number) Result {
-	if !isValidHost(host) {
-		return failed(invalidHost)
-	}
-	if _, err := p.guard.SafeResolvedHost(ctx, host, tools); err != nil {
-		return failed(err.Error())
-	}
-	address, err := p.resolveHost(ctx, host)
+	checked, err := p.check(ctx, host)
 	if err != nil {
 		return failed(err.Error())
 	}
+	address := checked.Addresses[0]
 	timeout, problem := timerDuration(timeoutMs, "msecs")
 	if problem != "" {
 		return failed(problem)
@@ -299,7 +299,7 @@ func isTimeout(err error) bool {
 // checkHTTP is checkHttp(url, timeoutMs): one GET request. Any status
 // from 200 to 399 counts as success; redirects are not followed.
 func (p *prober) checkHTTP(ctx context.Context, rawURL string, timeoutMs Number) Result {
-	parsed, err := p.guard.SafeMonitoringURL(ctx, rawURL)
+	parsed, checked, err := p.guard.CheckHTTPURL(ctx, rawURL, tools)
 	if err != nil {
 		return failedHTTP(err.Error())
 	}
@@ -316,7 +316,8 @@ func (p *prober) checkHTTP(ctx context.Context, rawURL string, timeoutMs Number)
 	if parsed.Port != "" {
 		host += ":" + parsed.Port
 	}
-	reqCtx, cancel := context.WithCancel(ctx)
+	// The connection goes to an address the guard checked (connector.dial)
+	reqCtx, cancel := context.WithCancel(context.WithValue(ctx, checkedHost{}, checked))
 	defer cancel()
 	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, scheme+"://"+host+"/", nil)
 	if err != nil {
@@ -474,20 +475,28 @@ type certError struct {
 
 func (e *certError) Error() string { return e.message }
 
+// checkedHost is the key of the host the guard checked for an HTTP check,
+// in the context of its request.
+type checkedHost struct{}
+
+// errNotChecked is a connection to a host the guard was not asked about
+// for the request. The HTTP checks never ask for one.
+var errNotChecked = errors.New("connection to a host the guard has not checked")
+
 // connector opens the connections of the HTTP checks.
 type connector struct {
-	dialer   Dialer
-	resolver Resolver
+	dialer Dialer
 	// roots are the trusted authorities, nil for the system's.
 	roots           *x509.CertPool
 	allowSelfSigned bool
 	now             func() time.Time
 }
 
-// dial connects to host:port. A name is looked up again here; with
-// several addresses each gets a quarter of a second before the next is
-// tried, the families taking turns. An IPv6 address fails: the old checks
-// looked it up as a name, brackets included (BUGS.md NM5).
+// dial connects to host:port at the addresses the guard checked for the
+// request (in ctx), and nowhere else. With several addresses each gets a
+// quarter of a second before the next is tried, the families taking
+// turns. An IPv6 address fails: the old checks looked it up as a name,
+// brackets included (BUGS.md NM5).
 func (c *connector) dial(ctx context.Context, network, address string) (net.Conn, error) {
 	host, portText, err := net.SplitHostPort(address)
 	if err != nil {
@@ -497,10 +506,11 @@ func (c *connector) dial(ctx context.Context, network, address string) (net.Conn
 	if strings.Contains(host, ":") {
 		return nil, &ssrfguard.LookupError{Code: "ENOTFOUND", Host: "[" + host + "]"}
 	}
-	addresses, err := lookupAll(ctx, c.resolver, host)
-	if err != nil {
-		return nil, err
+	checked, ok := ctx.Value(checkedHost{}).(ssrfguard.Host)
+	if !ok || checked.Name != host {
+		return nil, errNotChecked
 	}
+	addresses := checked.Addresses
 	switch len(addresses) {
 	case 0:
 		return nil, &ssrfguard.LookupError{Code: "ENOTFOUND", Host: host}

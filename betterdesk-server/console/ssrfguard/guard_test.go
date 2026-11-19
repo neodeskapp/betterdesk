@@ -3,6 +3,7 @@ package ssrfguard
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 )
 
@@ -299,6 +300,35 @@ func TestAllowPrivateStillBlocksThisNetwork(t *testing.T) {
 		if _, err := noLookup(t).SafeMonitoringURL(ctx, url); message(err) != want {
 			t.Errorf("%s: %v, want %q", url, err, want)
 		}
+	}
+}
+
+// The guard hands back the addresses it checked, for the connection that
+// follows; a second lookup could answer with another one (BUGS.md SC4).
+func TestCheckHostReturnsTheAddressesItChecked(t *testing.T) {
+	ctx := context.Background()
+	answers := [][]string{{"93.184.216.34", "2606:2800:220:1::1"}, {"127.0.0.1"}}
+	lookups := 0
+	g := &Guard{Lookup: func(context.Context, string) ([]string, error) {
+		lookups++
+		return answers[min(lookups, len(answers))-1], nil
+	}}
+	checked, err := g.CheckHost(ctx, " Rebind.Example ", Options{})
+	if err != nil || checked.Name != "rebind.example" || strings.Join(checked.Addresses, " ") != "93.184.216.34 2606:2800:220:1::1" || lookups != 1 {
+		t.Errorf("a name: %+v, %v, %d lookups", checked, err, lookups)
+	}
+	if checked, err := noLookup(t).CheckHost(ctx, "[2001:DB8::1]", Options{}); err != nil || checked.Name != "2001:db8::1" || strings.Join(checked.Addresses, " ") != "2001:db8::1" {
+		t.Errorf("an address: %+v, %v", checked, err)
+	}
+	if _, err := g.CheckHost(ctx, "rebind.example", Options{}); message(err) != "Hostname rebind.example resolves to blocked address 127.0.0.1" {
+		t.Errorf("the second lookup: %v", err)
+	}
+	parsed, checked, err := fixed("10.0.0.7").CheckHTTPURL(ctx, "http://NAS.lan:8080/x", Options{AllowPrivate: true})
+	if err != nil || parsed.Href != "http://nas.lan:8080/x" || checked.Name != "nas.lan" || strings.Join(checked.Addresses, " ") != "10.0.0.7" {
+		t.Errorf("a URL: %+v, %+v, %v", parsed, checked, err)
+	}
+	if _, checked, err := noLookup(t).CheckHTTPURL(ctx, "http://127.0.0.1/", Options{AllowPrivate: true}); message(err) != "Blocked IP address: 127.0.0.1" || checked.Addresses != nil {
+		t.Errorf("a refused URL: %+v, %v", checked, err)
 	}
 }
 

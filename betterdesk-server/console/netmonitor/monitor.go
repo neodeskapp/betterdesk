@@ -47,7 +47,7 @@ type Options struct {
 	// net.Dialer.
 	Dialer Dialer
 	// Transport sends the requests of HTTP checks. Default: a transport
-	// on Dialer and Resolver without proxy, compression and HTTP/2.
+	// on Dialer without proxy, compression and HTTP/2.
 	Transport http.RoundTripper
 	// Ping runs the ping command. Default: the system's.
 	Ping PingRunner
@@ -106,7 +106,6 @@ func New(opts Options) *Monitor {
 	if opts.Transport == nil {
 		opts.Transport = newTransport(&connector{
 			dialer:          opts.Dialer,
-			resolver:        opts.Resolver,
 			allowSelfSigned: opts.AllowSelfSignedCerts,
 			now:             opts.Now,
 		})
@@ -125,7 +124,6 @@ func New(opts Options) *Monitor {
 		db: opts.Store,
 		probe: prober{
 			guard:     newGuard(opts.Resolver),
-			resolver:  opts.Resolver,
 			dialer:    opts.Dialer,
 			transport: opts.Transport,
 			ping:      opts.Ping,

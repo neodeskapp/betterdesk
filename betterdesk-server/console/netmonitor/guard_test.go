@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/ssrfguard"
@@ -267,7 +268,7 @@ func TestNodeResolveHost(t *testing.T) {
 		t.Fatalf("only %d vectors", len(v.Resolve))
 	}
 	resolver := newTableResolver(t, v.DNS)
-	p := prober{guard: newGuard(resolver), resolver: resolver}
+	p := prober{guard: newGuard(resolver)}
 	changed := differences{}
 	for _, row := range v.Resolve {
 		host := decode[string](t, row[0])
@@ -350,6 +351,71 @@ func TestChecksRefuseThisNetwork(t *testing.T) {
 		if res := m.CheckHTTP(ctx, url, 1000); errText(res) != want {
 			t.Errorf("http %s: %s, want %q", url, errText(res), want)
 		}
+	}
+}
+
+// rebinding answers its first lookup with a public address and every
+// later one with loopback.
+type rebinding struct {
+	mu      sync.Mutex
+	lookups int
+}
+
+func (r *rebinding) LookupIPAddr(context.Context, string) ([]net.IPAddr, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.lookups++
+	if r.lookups == 1 {
+		return []net.IPAddr{{IP: net.ParseIP("192.0.2.50")}}, nil
+	}
+	return []net.IPAddr{{IP: net.ParseIP("127.0.0.1")}}, nil
+}
+
+// A check goes to the address the guard checked. A name that answers the
+// guard with a public address and the next lookup with loopback does not
+// lead it to loopback (BUGS.md SC4).
+func TestChecksGoToTheAddressesTheGuardChecked(t *testing.T) {
+	var mu sync.Mutex
+	var dialed, pinged []string
+	refuse := dialerFunc(func(_ context.Context, network, address string) (net.Conn, error) {
+		mu.Lock()
+		dialed = append(dialed, address)
+		mu.Unlock()
+		return nil, &net.OpError{Op: "dial", Net: network, Err: os.NewSyscallError("connect", syscall.ECONNREFUSED)}
+	})
+	ping := func(_ context.Context, _ string, args ...string) ([]byte, int, error) {
+		pinged = append(pinged, args[len(args)-1])
+		return []byte("time=1.5 ms\n"), 0, nil
+	}
+	no := false
+	ctx := context.Background()
+	check := func(name string, run func(m *Monitor) Result, want string) {
+		t.Helper()
+		resolver := &rebinding{}
+		dialed, pinged = nil, nil
+		res := run(New(Options{Resolver: resolver, Dialer: refuse, Windows: &no, Ping: ping}))
+		if errText(res) != want {
+			t.Errorf("%s: %s, want %s", name, errText(res), want)
+		}
+		if resolver.lookups != 1 {
+			t.Errorf("%s: %d lookups, want the guard's one", name, resolver.lookups)
+		}
+	}
+	check("tcp", func(m *Monitor) Result { return m.CheckTCPPort(ctx, "rebind.test", 80, 1000) }, "connect ECONNREFUSED 192.0.2.50:80")
+	if len(dialed) != 1 || dialed[0] != "192.0.2.50:80" {
+		t.Errorf("tcp went to %q", dialed)
+	}
+	check("http", func(m *Monitor) Result { return m.CheckHTTP(ctx, "http://rebind.test:8080/", 1000) }, "connect ECONNREFUSED 192.0.2.50:8080")
+	if len(dialed) != 1 || dialed[0] != "192.0.2.50:8080" {
+		t.Errorf("http went to %q", dialed)
+	}
+	check("ping", func(m *Monitor) Result { return m.PingHost(ctx, "rebind.test", 1000) }, "no error")
+	if len(pinged) != 1 || pinged[0] != "192.0.2.50" {
+		t.Errorf("ping went to %q", pinged)
+	}
+	resolver := &rebinding{}
+	if address, err := New(Options{Resolver: resolver, Dialer: refuse}).ResolveHost(ctx, "rebind.test"); err != nil || address != "192.0.2.50" || resolver.lookups != 1 {
+		t.Errorf("resolve: %q, %v, %d lookups", address, err, resolver.lookups)
 	}
 }
 

@@ -4,9 +4,9 @@
 //
 // An address is parsed and refused by its range (IsBlockedIP); a name is
 // resolved once and every address it resolves to is checked the same way.
-// Nothing here opens a connection, and nothing ties a later connection to
-// the addresses that were checked: a caller that dials the returned name
-// resolves it a second time.
+// Nothing here opens a connection. A caller that connects goes to the
+// addresses that were checked (CheckHost, CheckHTTPURL), so a name that
+// answers with another address the second time cannot lead it elsewhere.
 package ssrfguard
 
 import (
@@ -172,37 +172,53 @@ func (g *Guard) lookup(ctx context.Context, host string) ([]string, error) {
 	return SystemLookup(ctx, host)
 }
 
-// SafeResolvedHost is SafeHostname followed, for a name, by one lookup
+// Host is a host that passed the guard.
+type Host struct {
+	// Name is the host trimmed, in lower case, without the brackets of an
+	// IPv6 literal.
+	Name string
+	// Addresses are the addresses that were checked: the address itself
+	// for a literal, every address of a name in the order the resolver
+	// gave them. A connection to the host goes to one of these, never to
+	// the name: looked up again, a name may answer with another address.
+	Addresses []string
+}
+
+// CheckHost is SafeHostname followed, for a name, by one lookup
 // (assertSafeResolvedHost): every address the name resolves to must pass
 // IsBlockedIP. An address literal is not looked up.
 //
 //	the lookup fails           DNS lookup failed for <name>: <error>
 //	no addresses               No DNS records for <name>
 //	a blocked address          Hostname <name> resolves to blocked address <address>
-//
-// The addresses are checked and then forgotten. Whoever connects to the
-// returned name resolves it again and may get other addresses.
-func (g *Guard) SafeResolvedHost(ctx context.Context, host string, opts Options) (string, error) {
+func (g *Guard) CheckHost(ctx context.Context, host string, opts Options) (Host, error) {
 	clean, err := SafeHostname(host, opts)
 	if err != nil {
-		return "", err
+		return Host{}, err
 	}
 	if IsIP(clean) != 0 {
-		return clean, nil
+		return Host{Name: clean, Addresses: []string{clean}}, nil
 	}
 	records, err := g.lookup(ctx, clean)
 	if err != nil {
-		return "", blocked("DNS lookup failed for " + clean + ": " + err.Error())
+		return Host{}, blocked("DNS lookup failed for " + clean + ": " + err.Error())
 	}
 	if len(records) == 0 {
-		return "", blocked("No DNS records for " + clean)
+		return Host{}, blocked("No DNS records for " + clean)
 	}
 	for _, address := range records {
 		if IsBlockedIP(address, opts) {
-			return "", blocked("Hostname " + clean + " resolves to blocked address " + address)
+			return Host{}, blocked("Hostname " + clean + " resolves to blocked address " + address)
 		}
 	}
-	return clean, nil
+	return Host{Name: clean, Addresses: records}, nil
+}
+
+// SafeResolvedHost is CheckHost for a caller that connects to nothing: it
+// returns the host's name only.
+func (g *Guard) SafeResolvedHost(ctx context.Context, host string, opts Options) (string, error) {
+	checked, err := g.CheckHost(ctx, host, opts)
+	return checked.Name, err
 }
 
 // SafeHTTPURL checks a URL before the console fetches it
@@ -214,25 +230,33 @@ func (g *Guard) SafeResolvedHost(ctx context.Context, host string, opts Options)
 //	not http or https          Only http and https URLs are allowed
 //	user name or password      Credentials in URL are not allowed
 //
-// and then the refusals of SafeResolvedHost for the host.
+// and then the refusals of CheckHost for the host.
 func (g *Guard) SafeHTTPURL(ctx context.Context, raw string, opts Options) (*URL, error) {
+	parsed, _, err := g.CheckHTTPURL(ctx, raw, opts)
+	return parsed, err
+}
+
+// CheckHTTPURL is SafeHTTPURL that also returns the addresses the host of
+// the URL was checked at, for a caller that connects to them.
+func (g *Guard) CheckHTTPURL(ctx context.Context, raw string, opts Options) (*URL, Host, error) {
 	if raw == "" {
-		return nil, blocked("URL is required")
+		return nil, Host{}, blocked("URL is required")
 	}
 	parsed, ok := ParseURL(raw)
 	if !ok {
-		return nil, blocked("Invalid URL")
+		return nil, Host{}, blocked("Invalid URL")
 	}
 	if parsed.Protocol != "http:" && parsed.Protocol != "https:" {
-		return nil, blocked("Only http and https URLs are allowed")
+		return nil, Host{}, blocked("Only http and https URLs are allowed")
 	}
 	if parsed.Username != "" || parsed.Password != "" {
-		return nil, blocked("Credentials in URL are not allowed")
+		return nil, Host{}, blocked("Credentials in URL are not allowed")
 	}
-	if _, err := g.SafeResolvedHost(ctx, parsed.Hostname, opts); err != nil {
-		return nil, err
+	checked, err := g.CheckHost(ctx, parsed.Hostname, opts)
+	if err != nil {
+		return nil, Host{}, err
 	}
-	return parsed, nil
+	return parsed, checked, nil
 }
 
 // SafeMonitoringURL is SafeHTTPURL for the network tools of an

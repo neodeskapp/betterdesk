@@ -147,8 +147,8 @@ func TestNodeSSLVectors(t *testing.T) {
 				s := newSite(t, Options{
 					Network: Network{
 						Roots: rootsOf(t, v.Trusted),
-						Handshake: func(_ context.Context, host string, port int) (*tls.ConnectionState, error) {
-							asked = fmt.Sprintf("%s:%d", host, port)
+						Handshake: func(_ context.Context, _ string, addresses []string, port int) (*tls.ConnectionState, error) {
+							asked = fmt.Sprintf("%s:%d", strings.Join(addresses, ","), port)
 							return &tls.ConnectionState{PeerCertificates: sentBy(t, v.Server), Version: tls.VersionTLS13, CipherSuite: tls.TLS_AES_256_GCM_SHA384}, nil
 						},
 					},

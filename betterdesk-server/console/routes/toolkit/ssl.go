@@ -96,7 +96,8 @@ func (h *handlers) ssl(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusBadRequest, "Invalid hostname")
 		return
 	}
-	if _, err := h.guard.SafeResolvedHost(r.Context(), target, ssrfguard.Options{AllowPrivate: true}); err != nil {
+	checked, err := h.guard.CheckHost(r.Context(), target, ssrfguard.Options{AllowPrivate: true})
+	if err != nil {
 		kit.Fail(w, r, http.StatusBadRequest, refusalText(err, "Invalid hostname"))
 		return
 	}
@@ -111,7 +112,7 @@ func (h *handlers) ssl(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := context.WithTimeout(r.Context(), h.sslTimeout)
 	defer cancel()
-	state, err := h.net.Handshake(ctx, target, int(port))
+	state, err := h.net.Handshake(ctx, target, checked.Addresses, int(port))
 	if err != nil {
 		message := err.Error()
 		if ctx.Err() != nil || errors.Is(err, context.DeadlineExceeded) {
@@ -142,28 +143,17 @@ type connectError struct{ message string }
 
 func (e *connectError) Error() string { return e.message }
 
-// handshake connects to host:port and runs a TLS handshake that accepts
-// any certificate. The name is resolved here a second time, after the
-// guard's own lookup, and every address it has is tried in turn.
+// handshake connects to port of the addresses the guard checked for host,
+// trying each in turn, and runs a TLS handshake that accepts any
+// certificate. The name is not looked up again: a second answer could
+// name an address the guard never saw.
 //
 // The messages are Node's where Node's had a fixed form:
 //
-//	the name does not resolve       getaddrinfo ENOTFOUND <host>
 //	one address, not reachable      connect ECONNREFUSED <address>:<port>
 //	several addresses, none works   "" (Node's collected error has no text)
 //	the server hangs up or resets   Client network socket disconnected before secure TLS connection was established
-func (h *handlers) handshake(ctx context.Context, host string, port int) (*tls.ConnectionState, error) {
-	addresses := []string{host}
-	if ssrfguard.IsIP(host) == 0 {
-		found, err := h.net.Lookup(ctx, host)
-		if err != nil {
-			return nil, err
-		}
-		if len(found) == 0 {
-			return nil, &ssrfguard.LookupError{Code: "ENOTFOUND", Host: host}
-		}
-		addresses = found
-	}
+func (h *handlers) handshake(ctx context.Context, host string, addresses []string, port int) (*tls.ConnectionState, error) {
 	var conn net.Conn
 	for _, address := range addresses {
 		ip, _, _ := strings.Cut(address, "%")

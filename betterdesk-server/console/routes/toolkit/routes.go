@@ -32,15 +32,15 @@ type Records interface {
 // they need; a nil part is the real one.
 type Network struct {
 	// Lookup resolves a host name to its addresses, for the guard and for
-	// connecting. Default: ssrfguard.SystemLookup.
+	// the broadcast of wake-on-LAN. Default: ssrfguard.SystemLookup.
 	Lookup ssrfguard.LookupFunc
 	// Dial opens the TCP connection of a certificate check. Default: a
 	// net.Dialer.
 	Dial func(ctx context.Context, network, address string) (net.Conn, error)
-	// Handshake connects to host:port and returns the state of the TLS
-	// connection it got, whatever certificate the server shows. Default:
-	// Lookup for the addresses of a name, Dial, and crypto/tls.
-	Handshake func(ctx context.Context, host string, port int) (*tls.ConnectionState, error)
+	// Handshake connects to port of one of the addresses the guard checked
+	// for host and returns the state of the TLS connection it got, whatever
+	// certificate the server shows. Default: Dial and crypto/tls.
+	Handshake func(ctx context.Context, host string, addresses []string, port int) (*tls.ConnectionState, error)
 	// Roots are the certificate authorities a certificate check trusts.
 	// nil means the system's.
 	Roots *x509.CertPool

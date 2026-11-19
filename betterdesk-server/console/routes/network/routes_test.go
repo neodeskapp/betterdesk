@@ -485,14 +485,15 @@ func firstDifference(got, want string) string {
 }
 
 // The ping tool waits five seconds unless the body names a timeout, and
-// hands the host to the command as it came.
+// hands the command the address the guard checked for the host (BUGS.md
+// SC4).
 func TestPingToolArguments(t *testing.T) {
 	w := newWorld(t, storetest.Migrated(t), names{"internal.corp": json.RawMessage(`["10.1.2.3"]`)})
 	for body, want := range map[string]string{
 		`{"host":"10.1.2.3"}`:                       "-c 1 -W 5 10.1.2.3",
 		`{"host":"10.1.2.3","timeout":"2500ms"}`:    "-c 1 -W 3 10.1.2.3",
 		`{"host":"10.1.2.3","timeout":0}`:           "-c 1 -W 5 10.1.2.3",
-		`{"host":"Internal.Corp","timeout":[1000]}`: "-c 1 -W 1 Internal.Corp",
+		`{"host":"Internal.Corp","timeout":[1000]}`: "-c 1 -W 1 10.1.2.3",
 		`{"host":"10.1.2.3","timeout":"soon"}`:      "-c 1 -W 5 10.1.2.3",
 	} {
 		w.pinged = nil

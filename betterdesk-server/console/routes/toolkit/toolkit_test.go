@@ -184,9 +184,41 @@ func TestSSLDescribesTheCertificateOfAName(t *testing.T) {
 	if len(d.Chain) != 3 || d.Chain[2].Subject != "Live Test Root" || d.Chain[2].Serial != "0A0B0C" {
 		t.Errorf("chain: %+v", d.Chain)
 	}
-	// The guard resolves the name, and the connection resolves it again
-	if lookups != 2 || len(asked) != 1 || asked[0] != "93.184.216.34:8443" {
+	// The guard resolves the name, and the connection goes to the address
+	// it checked
+	if lookups != 1 || len(asked) != 1 || asked[0] != "93.184.216.34:8443" {
 		t.Errorf("%d lookups, connections to %q", lookups, asked)
+	}
+}
+
+// A name that answers a public address to the guard and loopback to the
+// next lookup does not lead the certificate check to loopback: the check
+// connects to the address the guard checked (BUGS.md SC4).
+func TestSSLConnectsToTheAddressItChecked(t *testing.T) {
+	chain := newLiveChain(t)
+	port := chain.serve(t, &tls.Config{})
+	var asked []string
+	lookups := 0
+	s := newSite(t, Options{Now: func() time.Time { return oracleNow }, Network: Network{
+		Lookup: func(context.Context, string) ([]string, error) {
+			lookups++
+			if lookups == 1 {
+				return []string{"93.184.216.34"}, nil
+			}
+			return []string{"127.0.0.1"}, nil
+		},
+		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+			asked = append(asked, address)
+			return dialTo(port)(ctx, network, address)
+		},
+		Roots: chain.roots(),
+	}})
+	status, answer := s.post(s.signIn("admin"), "/api/toolkit/ssl", `{"host":"live.test"}`)
+	if status != 200 || !strings.Contains(answer, `"subject":"live.test"`) {
+		t.Errorf("%d %s", status, answer)
+	}
+	if lookups != 1 || len(asked) != 1 || asked[0] != "93.184.216.34:443" {
+		t.Errorf("%d lookups, connections to %q, want one lookup and 93.184.216.34:443", lookups, asked)
 	}
 }
 

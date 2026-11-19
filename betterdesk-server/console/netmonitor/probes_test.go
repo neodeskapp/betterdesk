@@ -306,6 +306,16 @@ func (w *world) ping(ctx context.Context, name string, args ...string) ([]byte, 
 	w.pingArgs = append(w.pingArgs, strings.Join(args, " "))
 	w.mu.Unlock()
 	p, ok := w.v.Pings[args[len(args)-1]]
+	if !ok && ssrfguard.IsIP(args[len(args)-1]) != 0 {
+		// The ping of a name goes to the address the guard checked (SC4);
+		// the script's command knew names, so this one answers for the
+		// name the guard looked up
+		w.resolver.mu.Lock()
+		if n := len(w.resolver.lookups); n > 0 {
+			p, ok = w.v.Pings[w.resolver.lookups[n-1]]
+		}
+		w.resolver.mu.Unlock()
+	}
 	if !ok {
 		return nil, 2, nil
 	}
@@ -325,11 +335,10 @@ func (w *world) prober(allowSelfSigned bool) *prober {
 }
 
 func (w *world) proberFor(allowSelfSigned bool, windows *bool) *prober {
-	transport := newTransport(&connector{dialer: w, resolver: w.resolver, roots: w.roots, allowSelfSigned: allowSelfSigned, now: time.Now})
+	transport := newTransport(&connector{dialer: w, roots: w.roots, allowSelfSigned: allowSelfSigned, now: time.Now})
 	w.t.Cleanup(transport.CloseIdleConnections)
 	return &prober{
 		guard:     newGuard(w.resolver),
-		resolver:  w.resolver,
 		dialer:    w,
 		transport: transport,
 		ping:      w.ping,
@@ -432,6 +441,37 @@ func namesOnly(lookups []string) []string {
 	return names
 }
 
+// once is the lookups of Node with a name asked again right after itself
+// left out: Node looked a name up again to connect or ping, the checks
+// here go to the addresses the guard checked (BUGS.md SC4).
+func once(names []string) []string {
+	out := []string{}
+	for i, name := range names {
+		if i == 0 || name != names[i-1] {
+			out = append(out, name)
+		}
+	}
+	return out
+}
+
+// atAddress is the arguments Node gave the ping command with the host, a
+// name, replaced by its first address: the ping goes to the address the
+// guard checked (BUGS.md SC4).
+func (w *world) atAddress(pings []string) []string {
+	if pings == nil {
+		return nil
+	}
+	out := make([]string, len(pings))
+	for i, line := range pings {
+		fields := strings.Fields(line)
+		if addresses := w.resolver.names[strings.ToLower(fields[len(fields)-1])]; len(addresses) > 0 {
+			fields[len(fields)-1] = addresses[0]
+		}
+		out[i] = strings.Join(fields, " ")
+	}
+	return out
+}
+
 // Where the Go checks answer something else than Node's, and why.
 var probeDifferences = map[string]string{
 	// Node never answers: the request has no listener for a connection
@@ -446,6 +486,10 @@ var probeDifferences = map[string]string{
 	// them. Node looked :: up as a name (NM5), and 256 is 0.0.1.0.
 	"http v6 any address": `{"success":false,"rtt_ms":null,"status_code":null,"error":"Blocked IP address: ::"}`,
 	"resolve 256":         "thrown: Hostname 256 resolves to blocked address 0.0.1.0",
+	// SC4: the ping goes to the address the guard checked for the name, so
+	// the command no longer sees the name in capitals, which the script's
+	// command did not know
+	"ping in capitals": `{"success":true,"rtt_ms":"number","error":null}`,
 	// Go's server refuses a request line with a "%" that starts no escape
 	// before the handler sees it; Node's server passes it on. The check
 	// sends the same line to both.
@@ -533,10 +577,10 @@ func TestNodeProbes(t *testing.T) {
 				}
 			}
 		}
-		if got, want := fmt.Sprint(namesOnly(w.resolver.lookups)), fmt.Sprint(namesOnly(rec.Lookups)); got != want {
+		if got, want := fmt.Sprint(namesOnly(w.resolver.lookups)), fmt.Sprint(once(namesOnly(rec.Lookups))); got != want {
 			t.Errorf("%s: lookups %s, Node's %s", rec.Name, got, want)
 		}
-		if fmt.Sprint(pingArgs) != fmt.Sprint(rec.PingArgs) {
+		if fmt.Sprint(pingArgs) != fmt.Sprint(w.atAddress(rec.PingArgs)) {
 			t.Errorf("%s: ping got %q, Node's got %q", rec.Name, pingArgs, rec.PingArgs)
 		}
 	}
@@ -654,7 +698,7 @@ func TestPingOnWindows(t *testing.T) {
 	if res.RTT == nil || *res.RTT != 14 || !res.Success {
 		t.Errorf("result %+v, want a round trip of 14 ms", res)
 	}
-	if fmt.Sprint(w.pingArgs) != "[-n 1 -w 2500 ping-windows.test]" {
+	if fmt.Sprint(w.pingArgs) != "[-n 1 -w 2500 192.0.2.10]" {
 		t.Errorf("arguments %q", w.pingArgs)
 	}
 	// "time<1ms" is the form for less than a millisecond
@@ -833,7 +877,7 @@ func TestNodeCheckTarget(t *testing.T) {
 			w.mu.Lock()
 			pingArgs := w.pingArgs
 			w.mu.Unlock()
-			if fmt.Sprint(pingArgs) != fmt.Sprint(check.PingArgs) {
+			if fmt.Sprint(pingArgs) != fmt.Sprint(w.atAddress(check.PingArgs)) {
 				t.Errorf("%s: ping got %q, Node's got %q", name, pingArgs, check.PingArgs)
 			}
 
@@ -925,7 +969,7 @@ func TestHTTPCheckTriesEveryAddress(t *testing.T) {
 	w := newWorld(t)
 	w.resolver.names["two.test"] = []string{"192.0.2.50", standIn}
 	dialer := &refusing{ip: "192.0.2.50"}
-	transport := newTransport(&connector{dialer: dialer, resolver: w.resolver, now: time.Now})
+	transport := newTransport(&connector{dialer: dialer, now: time.Now})
 	t.Cleanup(transport.CloseIdleConnections)
 	p := w.prober(false)
 	p.transport = transport
@@ -1033,7 +1077,7 @@ func TestHTTPCheckTriesFamiliesInTurn(t *testing.T) {
 		dialer.mu.Unlock()
 		return w.DialContext(ctx, network, address)
 	})
-	transport := newTransport(&connector{dialer: record, resolver: w.resolver, now: time.Now})
+	transport := newTransport(&connector{dialer: record, now: time.Now})
 	t.Cleanup(transport.CloseIdleConnections)
 	p := w.prober(false)
 	p.transport = transport
