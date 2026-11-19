@@ -506,3 +506,73 @@ func TestHeartbeatDropsAPeerThatDoesNotAnswer(t *testing.T) {
 	reg.Close()
 	check()
 }
+
+// TestHeartbeatCountsMissesInARow: a peer that leaves every other ping
+// unanswered is never dropped, since no two misses come in a row.
+func TestHeartbeatCountsMissesInARow(t *testing.T) {
+	check := wstest.Goroutines(t)
+	const interval = 30 * time.Millisecond
+	ended := make(chan struct{})
+	reg := ws.New(ws.Options{})
+	reg.Handle("/ws/x", func(u *ws.Upgrade) {
+		conn, ok := u.Accept(ws.AcceptOptions{})
+		if !ok {
+			return
+		}
+		defer conn.Wait()
+		conn.Heartbeat(interval)
+		_ = conn.Discard()
+		close(ended)
+	})
+	srv := httptest.NewServer(reg)
+	conn, err := net.Dial("tcp", strings.TrimPrefix(srv.URL, "http://"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _ = io.WriteString(conn, "GET /ws/x HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"+
+		"Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n")
+	br := bufio.NewReader(conn)
+	if head, err := br.ReadString('\n'); err != nil || !strings.HasPrefix(head, "HTTP/1.1 101") {
+		t.Fatalf("%q %v", head, err)
+	}
+	for line := ""; line != "\r\n"; {
+		if line, err = br.ReadString('\n'); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var pings atomic.Int32
+	go func() {
+		for {
+			var head [2]byte
+			if _, err := io.ReadFull(br, head[:]); err != nil {
+				return
+			}
+			payload := make([]byte, head[1]&0x7f)
+			if _, err := io.ReadFull(br, payload); err != nil {
+				return
+			}
+			if head[0]&0x0f != 0x9 {
+				continue
+			}
+			// Every second ping gets its pong (masked with a zero key)
+			if pings.Add(1)%2 == 0 {
+				_, _ = conn.Write(append([]byte{0x8a, 0x80 | byte(len(payload)), 0, 0, 0, 0}, payload...))
+			}
+		}
+	}()
+	deadline := time.Now().Add(3 * time.Second)
+	for pings.Load() < 8 && time.Now().Before(deadline) {
+		select {
+		case <-ended:
+			t.Fatalf("dropped after %d pings, every second one answered", pings.Load())
+		case <-time.After(interval):
+		}
+	}
+	if pings.Load() < 8 {
+		t.Fatalf("only %d pings", pings.Load())
+	}
+	conn.Close()
+	srv.Close()
+	reg.Close()
+	check()
+}

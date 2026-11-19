@@ -2,6 +2,7 @@ package statuspush
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +13,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/devicegroups"
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 	"github.com/unitronix/betterdesk-server/console/ws"
@@ -213,4 +215,49 @@ func TestHelpRequestDataCannotChangeTheType(t *testing.T) {
 			t.Errorf("%s\n got %s\nwant %s", frame, got, want)
 		}
 	}
+}
+
+// TestFailedScopeCheckSendsNothing: when an account's scope cannot be
+// read, its sockets get nothing; the other accounts still get the
+// message.
+func TestFailedScopeCheckSendsNothing(t *testing.T) {
+	check := wstest.Goroutines(t)
+	reg := ws.New(ws.Options{Session: wstest.OracleSession, Permission: func(context.Context, string, string) (bool, error) {
+		return true, nil
+	}})
+	svc := New(Options{})
+	svc.Register(reg, Scope{
+		Device: func(_ context.Context, id string) *goapi.Object { return goapi.NewObject("id", id) },
+		Of: func(_ context.Context, user *session.User, _ []*goapi.Object) (*access.DeviceScope, error) {
+			if user.ID == 9 {
+				return nil, errors.New("database down")
+			}
+			return nil, nil
+		},
+	})
+	srv := httptest.NewServer(reg)
+	addr := strings.TrimPrefix(srv.URL, "http://")
+	dial := func(session string) *wstest.Client {
+		c, _, err := wstest.Dial(addr, "/ws/device-status", http.Header{"X-Oracle-Session": {session}})
+		if err != nil || c == nil {
+			t.Fatalf("dial: %v", err)
+		}
+		return c
+	}
+	broken := dial(`{"userId":9,"user":{"id":9,"role":"operator"}}`)
+	fine := dial(`{"userId":5,"user":{"id":5,"role":"operator"}}`)
+	waitClients(t, svc, 2, 0)
+	svc.Handle(context.Background(), parse(t, `{"type":"peer_online","timestamp":"t1","data":{"id":"dev1"}}`))
+	if !fine.Wait(3*time.Second, func(f []wstest.Frame, _ bool) bool { return len(f) == 1 }) {
+		t.Fatal("the account whose scope was read got nothing")
+	}
+	time.Sleep(100 * time.Millisecond)
+	if n := len(broken.Frames()); n != 0 {
+		t.Errorf("the account whose scope check failed got %d messages", n)
+	}
+	srv.Close()
+	reg.Close()
+	broken.Drop()
+	fine.Drop()
+	check()
 }

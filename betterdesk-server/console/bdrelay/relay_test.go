@@ -63,9 +63,12 @@ func TestAddressLimitCountsTheTrustedAddress(t *testing.T) {
 		name      string
 		clientIP  func(*http.Request) string
 		otherGets bool
+		// relayCode is the close of a relay socket that says it is
+		// 10.0.0.2 and names no session: the limit (4429) is checked first
+		relayCode int
 	}{
-		{"trust nobody", nil, false},
-		{"trust loopback", loopback.ClientIP, true},
+		{"trust nobody", nil, false, 4429},
+		{"trust loopback", loopback.ClientIP, true, 4404},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			svc := New(Options{VerifyDevice: oracleVerify})
@@ -94,6 +97,17 @@ func TestAddressLimitCountsTheTrustedAddress(t *testing.T) {
 			defer other.Drop()
 			if ok != c.otherGets {
 				t.Errorf("a socket that says it is 10.0.0.2: welcomed %v (closed with %d), want %v", ok, code, c.otherGets)
+			}
+			relay, _, err := wstest.Dial(addr, "/ws/bd-relay?session=none&token=x&role=initiator", from("10.0.0.2"))
+			if err != nil || relay == nil {
+				t.Fatalf("dial: %v", err)
+			}
+			defer relay.Drop()
+			if !relay.Wait(3*time.Second, func(_ []wstest.Frame, closed bool) bool { return closed }) {
+				t.Fatal("the relay socket stayed open")
+			}
+			if _, code, _ := relay.Closed(); code != c.relayCode {
+				t.Errorf("a relay socket that says it is 10.0.0.2 closed with %d, want %d", code, c.relayCode)
 			}
 		})
 	}
