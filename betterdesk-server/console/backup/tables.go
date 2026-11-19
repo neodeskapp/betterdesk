@@ -24,20 +24,18 @@ type ImportResult struct {
 
 // ImportAllTables puts a dump back (importAllTables of the old adapter).
 // Each table of the dump that exists in the database is emptied and filled
-// with the dumped rows, in one transaction per table, so a table that
-// fails is left as it was and the others go on. Only the columns the table
-// has are written. Values are bound as the old console's driver bound
-// them, so the database accepts and refuses what it did, but for a list in
-// a json or jsonb column, which goes in as its JSON text.
+// with the dumped rows; a table that fails is left as it was and the
+// others go on. Only the columns the table has are written. Values are
+// bound as the old console's driver bound them, so the database accepts
+// and refuses what it did, but for a list in a json or jsonb column, which
+// goes in as its JSON text.
 //
-// SQLite: foreign keys are off for the whole run and rows are written with
-// INSERT OR REPLACE. PostgreSQL: each transaction asks for
-// session_replication_role = replica, which switches foreign keys and
-// their cascades off for a superuser and is refused (and ignored) for
-// anyone else; rows are written with a plain INSERT.
+// SQLite: foreign keys are off for the whole run, each table is replaced
+// in a transaction of its own and rows are written with INSERT OR REPLACE.
+// PostgreSQL: see replacePostgresTables.
 //
-// An error is returned when the run stops before the end, after the
-// tables up to that point were replaced.
+// An error is returned when the run stops before the end; on SQLite the
+// tables up to that point are replaced, on PostgreSQL none is.
 func ImportAllTables(ctx context.Context, db *store.DB, dump any) (ImportResult, error) {
 	res := ImportResult{Restored: []string{}, Skipped: []string{}, Warnings: []string{}}
 	var tables any = branding.NewObject()
@@ -60,13 +58,7 @@ func ImportAllTables(ctx context.Context, db *store.DB, dump any) (ImportResult,
 		live[n] = true
 	}
 
-	if !db.IsPostgres() {
-		if _, err := db.Exec(ctx, `PRAGMA foreign_keys = OFF`); err != nil {
-			return res, fmt.Errorf("switch foreign keys off: %w", err)
-		}
-		defer func() { _, _ = db.Exec(context.WithoutCancel(ctx), `PRAGMA foreign_keys = ON`) }()
-	}
-
+	var jobs []*tableJob
 	for _, e := range entriesOf(tables) {
 		rows, isList := e.value.([]any)
 		if !isSafeIdent(e.key) || !live[e.key] || !isList {
@@ -77,13 +69,44 @@ func ImportAllTables(ctx context.Context, db *store.DB, dump any) (ImportResult,
 		if err != nil {
 			return res, fmt.Errorf("columns of %s: %w", e.key, err)
 		}
-		if err := replaceTable(ctx, db, e.key, cols, rows); err != nil {
-			res.Warnings = append(res.Warnings, "Table "+e.key+": "+driverMessage(err))
+		jobs = append(jobs, &tableJob{name: e.key, cols: cols, rows: rows})
+	}
+
+	if db.IsPostgres() {
+		if err := replacePostgresTables(ctx, db, jobs); err != nil {
+			return res, err
+		}
+	} else {
+		if _, err := db.Exec(ctx, `PRAGMA foreign_keys = OFF`); err != nil {
+			return res, fmt.Errorf("switch foreign keys off: %w", err)
+		}
+		defer func() { _, _ = db.Exec(context.WithoutCancel(ctx), `PRAGMA foreign_keys = ON`) }()
+		for _, j := range jobs {
+			j.err = db.InTx(ctx, func(tx *store.Tx) error {
+				if _, err := tx.Exec(ctx, `DELETE FROM `+quoteIdent(j.name)); err != nil {
+					return err
+				}
+				return writeRows(ctx, tx, j)
+			})
+		}
+	}
+	for _, j := range jobs {
+		if j.err != nil {
+			res.Warnings = append(res.Warnings, "Table "+j.name+": "+driverMessage(j.err))
 			continue
 		}
-		res.Restored = append(res.Restored, e.key)
+		res.Restored = append(res.Restored, j.name)
 	}
 	return res, nil
+}
+
+// tableJob is a table of the dump to replace: its columns, the dumped
+// rows and the error that left it as it was.
+type tableJob struct {
+	name string
+	cols map[string]string
+	rows []any
+	err  error
 }
 
 type entry struct {
@@ -163,65 +186,219 @@ func sqliteColumns(ctx context.Context, q store.Querier, table string) ([]string
 	return out, rows.Err()
 }
 
-// replaceTable empties a table and writes the rows in one transaction. A
-// list for a json or jsonb column is sent as its JSON text, as an object
-// is (pgArg would make it an array literal, which JSON refuses).
-func replaceTable(ctx context.Context, db *store.DB, table string, cols map[string]string, rows []any) error {
-	return db.InTx(ctx, func(tx *store.Tx) error {
-		if db.IsPostgres() {
-			if _, err := tx.Exec(ctx, `SAVEPOINT replica`); err != nil {
-				return err
-			}
-			if _, err := tx.Exec(ctx, `SET LOCAL session_replication_role = 'replica'`); err != nil {
-				if _, err := tx.Exec(ctx, `ROLLBACK TO SAVEPOINT replica`); err != nil {
-					return err
-				}
-			}
-		}
-		if _, err := tx.Exec(ctx, `DELETE FROM `+quoteIdent(table)); err != nil {
+// writeRows writes the dumped rows of a table that was emptied. A list
+// for a json or jsonb column is sent as its JSON text, as an object is
+// (pgArg would make it an array literal, which JSON refuses).
+func writeRows(ctx context.Context, tx *store.Tx, j *tableJob) error {
+	verb := "INSERT OR REPLACE INTO "
+	if tx.Dialect() == store.Postgres {
+		verb = "INSERT INTO "
+	}
+	for _, row := range j.rows {
+		keys, err := objectKeys(row)
+		if err != nil {
 			return err
 		}
-		verb := "INSERT OR REPLACE INTO "
-		if db.IsPostgres() {
-			verb = "INSERT INTO "
-		}
-		for _, row := range rows {
-			keys, err := objectKeys(row)
-			if err != nil {
-				return err
-			}
-			var names []string
-			var values []any
-			for _, k := range keys {
-				typ, has := cols[k]
-				if !has || !isSafeIdent(k) {
-					continue
-				}
-				names = append(names, quoteIdent(k))
-				v := prop(row, k)
-				if text, ok := isBufferObject(v); ok {
-					v = buffer(nodeBase64(text))
-				}
-				if list, isList := v.([]any); isList && (typ == "json" || typ == "jsonb") {
-					v = branding.Stringify(list)
-				}
-				values = append(values, v)
-			}
-			if len(names) == 0 {
+		var names []string
+		var values []any
+		for _, k := range keys {
+			typ, has := j.cols[k]
+			if !has || !isSafeIdent(k) {
 				continue
 			}
-			args, err := bindArgs(db, len(names), values)
-			if err != nil {
+			names = append(names, quoteIdent(k))
+			v := prop(row, k)
+			if text, ok := isBufferObject(v); ok {
+				v = buffer(nodeBase64(text))
+			}
+			if list, isList := v.([]any); isList && (typ == "json" || typ == "jsonb") {
+				v = branding.Stringify(list)
+			}
+			values = append(values, v)
+		}
+		if len(names) == 0 {
+			continue
+		}
+		args, err := bindArgs(tx, len(names), values)
+		if err != nil {
+			return err
+		}
+		marks := strings.TrimSuffix(strings.Repeat("?, ", len(names)), ", ")
+		query := verb + quoteIdent(j.name) + ` (` + strings.Join(names, ", ") + `) VALUES (` + marks + `)`
+		if _, err := tx.Exec(ctx, query, args...); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// replacePostgresTables replaces the tables of jobs in one transaction.
+// It asks for session_replication_role = replica, which switches foreign
+// keys and their cascades off for a superuser and is refused (and
+// ignored) for anyone else. So that the restore holds for anyone else
+// too, the tables are emptied children first and filled parents first, in
+// the order of their foreign keys: no cascade removes restored rows and no
+// child row comes before its parent. Each step of a table has its own
+// savepoint: a table that cannot be emptied keeps its rows, and one whose
+// rows fail gets its rows from before back (kept in a temporary table).
+// With its rows, every sequence of a serial column of the table is moved
+// to the column's largest value, so the next row gets a free id; a table
+// whose sequence cannot be moved counts as failed.
+func replacePostgresTables(ctx context.Context, db *store.DB, jobs []*tableJob) error {
+	order, err := parentsFirst(ctx, db, jobs)
+	if err != nil {
+		return err
+	}
+	return db.InTx(ctx, func(tx *store.Tx) error {
+		if _, err := tx.Exec(ctx, `SAVEPOINT replica`); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(ctx, `SET LOCAL session_replication_role = 'replica'`); err != nil {
+			if _, err := tx.Exec(ctx, `ROLLBACK TO SAVEPOINT replica`); err != nil {
 				return err
 			}
-			marks := strings.TrimSuffix(strings.Repeat("?, ", len(names)), ", ")
-			query := verb + quoteIdent(table) + ` (` + strings.Join(names, ", ") + `) VALUES (` + marks + `)`
-			if _, err := tx.Exec(ctx, query, args...); err != nil {
+		}
+		kept := func(i int) string { return "backup_kept_" + strconv.Itoa(i) }
+		for i := len(order) - 1; i >= 0; i-- {
+			j := order[i]
+			j.err = inSavepoint(ctx, tx, func() error {
+				if _, err := tx.Exec(ctx, `CREATE TEMP TABLE `+kept(i)+` ON COMMIT DROP AS SELECT * FROM `+quoteIdent(j.name)); err != nil {
+					return err
+				}
+				_, err := tx.Exec(ctx, `DELETE FROM `+quoteIdent(j.name))
 				return err
+			})
+		}
+		for i, j := range order {
+			if j.err != nil {
+				continue
+			}
+			j.err = inSavepoint(ctx, tx, func() error {
+				if err := writeRows(ctx, tx, j); err != nil {
+					return err
+				}
+				return moveSequences(ctx, tx, j.name)
+			})
+			if j.err != nil {
+				_ = inSavepoint(ctx, tx, func() error {
+					_, err := tx.Exec(ctx, `INSERT INTO `+quoteIdent(j.name)+` SELECT * FROM `+kept(i))
+					return err
+				})
 			}
 		}
 		return nil
 	})
+}
+
+// inSavepoint runs fn in a savepoint, which is rolled back when fn fails,
+// so that the transaction goes on.
+func inSavepoint(ctx context.Context, tx *store.Tx, fn func() error) error {
+	if _, err := tx.Exec(ctx, `SAVEPOINT backup_table`); err != nil {
+		return err
+	}
+	if err := fn(); err != nil {
+		if _, rerr := tx.Exec(ctx, `ROLLBACK TO SAVEPOINT backup_table`); rerr != nil {
+			return errors.Join(err, rerr)
+		}
+		_, _ = tx.Exec(ctx, `RELEASE SAVEPOINT backup_table`)
+		return err
+	}
+	_, err := tx.Exec(ctx, `RELEASE SAVEPOINT backup_table`)
+	return err
+}
+
+// parentsFirst orders the tables of jobs so that a table comes after the
+// tables its foreign keys point to (pg_constraint), and otherwise in the
+// order of the dump. When the tables left all wait for each other (keys
+// in a circle), the first of them comes next.
+func parentsFirst(ctx context.Context, db *store.DB, jobs []*tableJob) ([]*tableJob, error) {
+	rows, err := db.Query(ctx, `SELECT c.relname, p.relname FROM pg_constraint k
+		JOIN pg_class c ON c.oid = k.conrelid
+		JOIN pg_class p ON p.oid = k.confrelid
+		WHERE k.contype = 'f' AND c.relnamespace = current_schema()::regnamespace`)
+	if err != nil {
+		return nil, fmt.Errorf("read the foreign keys: %w", err)
+	}
+	defer rows.Close()
+	parents := map[string][]string{}
+	for rows.Next() {
+		var child, parent string
+		if err := rows.Scan(&child, &parent); err != nil {
+			return nil, err
+		}
+		if child != parent {
+			parents[child] = append(parents[child], parent)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("read the foreign keys: %w", err)
+	}
+	waiting := map[string]bool{}
+	for _, j := range jobs {
+		waiting[j.name] = true
+	}
+	ready := func(j *tableJob) bool {
+		for _, p := range parents[j.name] {
+			if waiting[p] {
+				return false
+			}
+		}
+		return true
+	}
+	order := make([]*tableJob, 0, len(jobs))
+	for len(order) < len(jobs) {
+		var next *tableJob
+		for _, j := range jobs {
+			if !waiting[j.name] {
+				continue
+			}
+			if next == nil {
+				next = j
+			}
+			if ready(j) {
+				next = j
+				break
+			}
+		}
+		order = append(order, next)
+		waiting[next.name] = false
+	}
+	return order, nil
+}
+
+// moveSequences sets the sequence of each serial column of a table to the
+// column's largest value. A table without rows leaves it as it is.
+func moveSequences(ctx context.Context, tx *store.Tx, table string) error {
+	rows, err := tx.Query(ctx, `SELECT a.attname, pg_get_serial_sequence(quote_ident(c.relname), a.attname)
+		FROM pg_attribute a JOIN pg_class c ON c.oid = a.attrelid
+		WHERE c.relname = ? AND c.relnamespace = current_schema()::regnamespace
+			AND a.attnum > 0 AND NOT a.attisdropped
+			AND pg_get_serial_sequence(quote_ident(c.relname), a.attname) IS NOT NULL`, table)
+	if err != nil {
+		return fmt.Errorf("find the sequences of %s: %w", table, err)
+	}
+	type serial struct{ column, sequence string }
+	var serials []serial
+	for rows.Next() {
+		var s serial
+		if err := rows.Scan(&s.column, &s.sequence); err != nil {
+			rows.Close()
+			return err
+		}
+		serials = append(serials, s)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	for _, s := range serials {
+		col := quoteIdent(s.column)
+		// setval of NULL, the MAX of an empty table, changes nothing
+		if _, err := tx.Exec(ctx, `SELECT setval(?::regclass, MAX(`+col+`)) FROM `+quoteIdent(table), s.sequence); err != nil {
+			return fmt.Errorf("move the sequence of %s.%s: %w", table, s.column, err)
+		}
+	}
+	return nil
 }
 
 // bindArgs binds values for a statement with n placeholders the way the
