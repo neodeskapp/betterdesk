@@ -221,3 +221,17 @@ func TestNetworkReadsAndTools(t *testing.T) {
 		{"POST", "/api/network/targets/1/check", "device.connect", [5]string{"guard", "guard", "guard", "guard", "route"}},
 	})
 }
+
+// PA3 (F7): the toolkit is one section that asks device.connect for
+// reading and writing, as its page and wake-on-LAN route do.
+func TestToolkitAsksDeviceConnect(t *testing.T) {
+	// viewer, operator, guest_issuer, global_admin, server_admin
+	checkRouteCases(t, []routeCase{
+		{"POST", "/api/toolkit/wol", "device.connect", [5]string{"guard", "ok", "guard", "ok", "guard"}},
+	})
+	// An account with device.connect and without device.edit reaches write.
+	c := &Context{UserID: 7, HasUser: true, Role: "operator", Loaded: true, Permissions: newPermissionSet([]string{"device.connect"})}
+	if got := ceilingFor(c.Permissions)["toolkit"]; got != LevelWrite {
+		t.Errorf("toolkit with device.connect alone: %s, want write", got)
+	}
+}

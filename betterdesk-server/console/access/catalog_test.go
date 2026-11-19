@@ -93,7 +93,7 @@ func TestLegacySectionCeiling(t *testing.T) {
 		{"devices", newPermissionSet([]string{"device.view"}).Has, false, LevelRead},  // read only
 		{"devices", newPermissionSet([]string{"device.edit"}).Has, false, LevelWrite}, // write does not need read
 		{"toolkit", newPermissionSet([]string{"server.config"}).Has, false, LevelNone},
-		{"toolkit", newPermissionSet([]string{"device.connect"}).Has, false, LevelRead},
+		{"toolkit", newPermissionSet([]string{"device.connect"}).Has, false, LevelWrite}, // device.connect for both (F7)
 		{"nope", has, false, LevelNone},
 		{"nope", never, true, LevelWrite},
 	}
@@ -126,7 +126,7 @@ func TestCatalogContents(t *testing.T) {
 
 	// Every key is listed once; toolkit is in the operations group.
 	toolkit, _ := CatalogEntry("toolkit")
-	if toolkit.Group != "operations" || toolkit.ReadPermission != "device.connect" || toolkit.WritePermission != "device.edit" {
+	if toolkit.Group != "operations" || toolkit.ReadPermission != "device.connect" || toolkit.WritePermission != "device.connect" {
 		t.Errorf("toolkit: lookup finds %+v", toolkit)
 	}
 	if len(Catalog) != 33 || len(catalogKeys()) != 33 {

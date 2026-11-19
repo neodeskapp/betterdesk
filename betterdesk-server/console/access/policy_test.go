@@ -200,13 +200,13 @@ func TestMergeUserPolicyRules(t *testing.T) {
 			"users", SectionAccess{LevelRead, SourceGroup, LevelWrite}},
 		{"toolkit follows a row for its catalog group",
 			userPolicyRows{sections: []SectionRow{{"group:operations", "none"}}},
-			"toolkit", SectionAccess{LevelNone, SourceUser, LevelRead}},
+			"toolkit", SectionAccess{LevelNone, SourceUser, LevelWrite}},
 		{"toolkit ignores a row for the commercialization group",
 			userPolicyRows{sections: []SectionRow{{"group:commercialization", "none"}}},
-			"toolkit", SectionAccess{LevelRead, SourceRole, LevelRead}},
-		{"toolkit's own row wins and is capped",
-			userPolicyRows{sections: []SectionRow{{"toolkit", "write"}, {"group:operations", "none"}}},
-			"toolkit", SectionAccess{LevelRead, SourceUser, LevelRead}},
+			"toolkit", SectionAccess{LevelWrite, SourceRole, LevelWrite}},
+		{"toolkit's own row wins",
+			userPolicyRows{sections: []SectionRow{{"toolkit", "read"}, {"group:operations", "none"}}},
+			"toolkit", SectionAccess{LevelRead, SourceUser, LevelWrite}},
 	}
 	for _, c := range cases {
 		policy := mergeUserPolicy("1", ceiling, c.rows)

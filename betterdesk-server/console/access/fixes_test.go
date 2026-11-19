@@ -90,6 +90,8 @@ var sectionFixes = []sectionFix{
 	// Reading targets and status asks device.view, changing them
 	// server.config.
 	{bug: "PA3 (F4)", key: "network", read: "device.view", write: "server.config"},
+	// The toolkit page and its wake-on-LAN route ask device.connect.
+	{bug: "PA3 (F7)", key: "toolkit", read: "device.connect", write: "device.connect"},
 	// Every reports route asks audit.view, also the writes.
 	{bug: "PA3 (F6), RP1", key: "reports", read: "audit.view", write: "audit.view"},
 }

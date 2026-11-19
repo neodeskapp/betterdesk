@@ -113,7 +113,7 @@ var Catalog = []Section{
 	{"dataguard", "Data guard", "operations", "server.config", "server.config"},
 	{"reports", "Reports", "operations", "audit.view", "audit.view"},
 	{"agents", "Agents", "operations", "device.view", "device.edit"},
-	{"toolkit", "Toolkit", "operations", "device.connect", "device.edit"},
+	{"toolkit", "Toolkit", "operations", "device.connect", "device.connect"},
 	{"commercialization", "Commercialization", "commercialization", "billing.view", "billing.manage"},
 	{"scaling", "Scaling", "commercialization", "server.config", "server.config"},
 	{"cross-platform", "Cross-platform", "commercialization", "device.view", "device.edit"},

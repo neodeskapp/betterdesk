@@ -188,7 +188,7 @@
        {
         "key": "toolkit",
         "read": "device.connect",
-        "write": "device.edit"
+        "write": "device.connect"
        },
        {
         "key": "commercialization",
@@ -1035,7 +1035,7 @@
        {
         "key": "toolkit",
         "read": "device.connect",
-        "write": "device.edit"
+        "write": "device.connect"
        },
        {
         "key": "commercialization",

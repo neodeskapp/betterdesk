@@ -349,7 +349,7 @@
         "key": "toolkit",
         "label": "Toolkit",
         "readPermission": "device.connect",
-        "writePermission": "device.edit"
+        "writePermission": "device.connect"
        },
        {
         "group": "commercialization",
