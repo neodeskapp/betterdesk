@@ -604,3 +604,66 @@ func TestPanelLanguagesReadsFileWithByteOrderMark(t *testing.T) {
 		}
 	}
 }
+
+// panelRows are the rows of an overview by code, as JSON.
+func panelRows(t testing.TB, body string) (rows map[string]string, total float64) {
+	t.Helper()
+	rows = map[string]string{}
+	answer := mustParse(t, body)
+	for _, row := range list(answer, "languages") {
+		rows[str(row, "code")] = stringify(row, "")
+	}
+	return rows, num(answer, "refKeyCount")
+}
+
+// One broken file no longer takes the whole overview down: a file that
+// holds null gets a row with its error as other broken files do, and a
+// broken reference file (en.json, pl.json) gets one too while the others
+// are counted against the reference that loads. The missing keys are
+// counted against it as well (BUGS.md L13).
+func TestPanelLanguagesKeepsTheListWithABrokenFile(t *testing.T) {
+	for _, c := range []struct{ file, content, error string }{
+		{"fr.json", "null", "Cannot convert undefined or null to object"},
+		{"pl.json", "null", "Cannot convert undefined or null to object"},
+		{"pl.json", `{"a": 1,}`, ""},
+		{"en.json", "null", "Cannot convert undefined or null to object"},
+		{"en.json", `{"a"`, ""},
+	} {
+		name := c.file + " " + c.content
+		broken := copyDir(t, "testdata/lang-upload")
+		if err := os.WriteFile(filepath.Join(broken, c.file), []byte(c.content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		without := copyDir(t, "testdata/lang-upload")
+		if err := os.Remove(filepath.Join(without, c.file)); err != nil && !os.IsNotExist(err) {
+			t.Fatal(err)
+		}
+		gotOverview, gotMissing := panelAnswers(t, broken, "de")
+		wantOverview, wantMissing := panelAnswers(t, without, "de")
+		if gotOverview.status != 200 || gotMissing.status != 200 {
+			t.Errorf("%s: overview %d %s, missing keys %d %s", name, gotOverview.status, gotOverview.body, gotMissing.status, gotMissing.body)
+			continue
+		}
+		if gotMissing.body != wantMissing.body {
+			t.Errorf("%s: missing keys\n got  %s\n want %s", name, short(gotMissing.body), short(wantMissing.body))
+		}
+		got, gotTotal := panelRows(t, gotOverview.body)
+		want, wantTotal := panelRows(t, wantOverview.body)
+		if gotTotal != wantTotal || gotTotal == 0 {
+			t.Errorf("%s: %v reference keys, %v without the file", name, gotTotal, wantTotal)
+		}
+		code := strings.TrimSuffix(c.file, ".json")
+		for other, row := range want {
+			if got[other] != row {
+				t.Errorf("%s: the row of %s\n got  %s\n want %s", name, other, got[other], row)
+			}
+		}
+		row := mustParse(t, got[code])
+		if message := str(row, "error"); message == "" || (c.error != "" && message != c.error) {
+			t.Errorf("%s: the file's row %s", name, got[code])
+		}
+		if flag(row, "is_reference") != (code == "en" || code == "pl") {
+			t.Errorf("%s: is_reference in %s", name, got[code])
+		}
+	}
+}

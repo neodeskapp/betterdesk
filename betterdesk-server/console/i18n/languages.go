@@ -13,7 +13,9 @@ import (
 // language folder directly, every *.json file and not only the known
 // languages, and compare them with English and Polish together.
 
-var errNotData = errors.New("cannot read the keys of null")
+// errNullFile is the error of a file that holds null, in the words of
+// JavaScript's Object.entries(null).
+var errNullFile = errors.New("Cannot convert undefined or null to object")
 
 // flatKeys lists the texts of a file as dot paths with their values as
 // text, in file order. A repeated path keeps its first place and its last
@@ -33,7 +35,7 @@ func (f *flatKeys) set(key, value string) {
 // flatten walks data. It fails for null, as Object.entries(null) does.
 func flatten(data any, prefix string, out *flatKeys) error {
 	if data == nil {
-		return errNotData
+		return errNullFile
 	}
 	var failed error
 	entries(data, func(key string, value any) {
@@ -85,20 +87,22 @@ type references struct {
 	has  map[string]bool
 }
 
-func (h *Handlers) loadReferences() (*references, error) {
+// loadReferences reads English and Polish. A reference file that is
+// missing, broken or holds null counts with no keys.
+func (h *Handlers) loadReferences() *references {
 	refs := &references{byCode: map[string]*flatKeys{}, has: map[string]bool{}}
 	for _, code := range []string{"en", "pl"} {
 		path := filepath.Join(h.Bundle.Dir, code+".json")
 		if err := h.Bundle.stat(path); err != nil {
 			continue
 		}
-		data, message, ok := h.Bundle.readJSONFile(path)
+		data, _, ok := h.Bundle.readJSONFile(path)
 		if !ok {
-			return nil, errors.New(message)
+			continue
 		}
 		keys := newFlatKeys()
 		if err := flatten(data, "", keys); err != nil {
-			return nil, err
+			continue
 		}
 		refs.byCode[code] = keys
 		for _, k := range keys.order {
@@ -108,7 +112,7 @@ func (h *Handlers) loadReferences() (*references, error) {
 			}
 		}
 	}
-	return refs, nil
+	return refs
 }
 
 func (b *Bundle) jsonNames() ([]string, error) {
@@ -150,11 +154,11 @@ func (h *Handlers) PanelLanguages(w http.ResponseWriter, r *http.Request) {
 	send(w, r, http.StatusOK, obj("languages", languages, "refKeyCount", float64(total)))
 }
 
+// panelLanguages lists every language file. A file that cannot be read,
+// does not parse or holds null gets a row with its error; a broken
+// reference file gets one too and leaves the keys of the other reference.
 func (h *Handlers) panelLanguages() ([]any, int, error) {
-	refs, err := h.loadReferences()
-	if err != nil {
-		return nil, 0, err
-	}
+	refs := h.loadReferences()
 	languages := []any{}
 	if len(refs.keys) == 0 {
 		return languages, 0, nil
@@ -167,16 +171,21 @@ func (h *Handlers) panelLanguages() ([]any, int, error) {
 	for _, file := range names {
 		code := strings.Replace(decodeUTF8([]byte(file)), ".json", "", 1)
 		reference := code == "en" || code == "pl"
-		data, message, ok := h.Bundle.readJSONFile(filepath.Join(h.Bundle.Dir, file))
-		if !ok {
+		broken := func(message string) {
 			languages = append(languages, obj(
 				"code", code, "name", code, "native", code, "flag", "", "rtl", false, "needs_review", true,
 				"is_reference", reference, "total_keys", 0.0, "missing_keys", float64(total), "extra_keys", 0.0,
 				"empty_keys", 0.0, "coverage", 0.0, "error", message))
+		}
+		data, message, ok := h.Bundle.readJSONFile(filepath.Join(h.Bundle.Dir, file))
+		if !ok {
+			broken(message)
 			continue
 		}
-		if data == nil {
-			return nil, 0, errNotData
+		keys := newFlatKeys()
+		if err := flatten(data, "", keys); err != nil {
+			broken(err.Error())
+			continue
 		}
 		meta := property(data, "_meta")
 		if !truthy(meta) {
@@ -189,10 +198,6 @@ func (h *Handlers) panelLanguages() ([]any, int, error) {
 				}
 			}
 			return fallback
-		}
-		keys := newFlatKeys()
-		if err := flatten(data, "", keys); err != nil {
-			return nil, 0, err
 		}
 		missing, extra, empty := 0, 0, 0
 		for _, k := range refs.keys {
@@ -263,10 +268,7 @@ func (h *Handlers) panelMissing(code string) (*Object, int) {
 	if err := h.Bundle.stat(path); err != nil {
 		return nil, http.StatusNotFound
 	}
-	refs, err := h.loadReferences()
-	if err != nil {
-		return nil, http.StatusInternalServerError
-	}
+	refs := h.loadReferences()
 	data, _, ok := h.Bundle.readJSONFile(path)
 	if !ok {
 		return nil, http.StatusInternalServerError

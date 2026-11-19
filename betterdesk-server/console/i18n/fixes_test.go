@@ -71,6 +71,10 @@ var vectorFixes = []vectorFix{
 	// The translations page reads a file with a byte order mark as it
 	// reads the same file without one.
 	{"L12", "panel-edge.json", markedFileRead},
+
+	// A file that holds null and a broken reference file get a row with
+	// their error instead of a 500 for the whole page.
+	{"L13", "panel-edge.json", brokenFilesListed},
 }
 
 // fixedVectors reads a file of vectors with every fix applied.
@@ -375,7 +379,7 @@ func markedFileRead(t testing.TB, file any) int {
 		dir := panelFolder(t, c)
 		de := filepath.Join(dir, "de.json")
 		raw, err := os.ReadFile(de)
-		if err != nil || !strings.HasPrefix(string(raw), byteOrderMark) {
+		if err != nil || !strings.HasPrefix(string(raw), byteOrderMark) || len(brokenFiles(t, dir, c)) > 0 {
 			continue
 		}
 		if err := os.WriteFile(de, raw[len(byteOrderMark):], 0o644); err != nil {
@@ -394,6 +398,93 @@ func markedFileRead(t testing.TB, file any) int {
 		}
 	}
 	return n
+}
+
+// brokenFilesListed rewrites the answers Node failed with 500 because a
+// file held null or a reference file (en.json, pl.json) was broken. The
+// answers are those for the folder without these files, and the overview
+// has a row with the error for each of them.
+func brokenFilesListed(t testing.TB, file any) int {
+	n := 0
+	for _, c := range list(file) {
+		if num(c, "status") != 500 {
+			continue
+		}
+		dir := panelFolder(t, c)
+		errs := brokenFiles(t, dir, c)
+		target, isMissing := strings.CutSuffix(strings.TrimPrefix(str(c, "path"), "/api/panel/languages/"), "/missing")
+		if _, broken := errs[target]; len(errs) == 0 || (isMissing && broken) {
+			continue
+		}
+		for code := range errs {
+			if err := os.Remove(filepath.Join(dir, code+".json")); err != nil {
+				t.Fatal(err)
+			}
+		}
+		without := panelAnswer(t, dir, c)
+		if without.status != 200 {
+			continue
+		}
+		body := without.body
+		if isOverview(c) {
+			body = withErrorRows(t, body, errs)
+		}
+		if answerPanel(c, 200, body) {
+			n++
+		}
+	}
+	return n
+}
+
+// brokenFiles are the files of dir that made Node's answer to the vector c
+// fail: in the overview a file that holds null, and en.json or pl.json
+// when it holds null or does not parse; for the missing keys only the
+// latter. They map the language code to the error.
+func brokenFiles(t testing.TB, dir string, c any) map[string]string {
+	t.Helper()
+	errs := map[string]string{}
+	items, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, item := range items {
+		name := item.Name()
+		code, isJSON := strings.CutSuffix(name, ".json")
+		if !isOverview(c) && code != "en" && code != "pl" {
+			continue
+		}
+		raw, err := os.ReadFile(filepath.Join(dir, name))
+		if !isJSON || err != nil {
+			continue
+		}
+		data, err := parseJSON(strings.TrimPrefix(decodeUTF8(raw), byteOrderMark))
+		switch {
+		case err == nil && data == nil:
+			errs[code] = "Cannot convert undefined or null to object"
+		case err != nil && (code == "en" || code == "pl"):
+			errs[code] = err.Error()
+		}
+	}
+	return errs
+}
+
+// withErrorRows adds the rows of broken files to an overview, in file name
+// order.
+func withErrorRows(t testing.TB, body string, errs map[string]string) string {
+	t.Helper()
+	overview := mustParse(t, body)
+	total := num(overview, "refKeyCount")
+	rows := list(overview, "languages")
+	if total == 0 {
+		return body
+	}
+	for code, message := range errs {
+		rows = append(rows, obj("code", code, "name", code, "native", code, "flag", "", "rtl", false, "needs_review", true,
+			"is_reference", code == "en" || code == "pl", "total_keys", 0.0, "missing_keys", total, "extra_keys", 0.0,
+			"empty_keys", 0.0, "coverage", 0.0, "error", message))
+	}
+	slices.SortStableFunc(rows, func(a, b any) int { return strings.Compare(str(a, "code")+".json", str(b, "code")+".json") })
+	return stringify(obj("languages", rows, "refKeyCount", total), "")
 }
 
 // --- the request language (L1, L2, L4) ---
