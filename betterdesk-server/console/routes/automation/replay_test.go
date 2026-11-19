@@ -102,7 +102,7 @@ func TestNodeAnswers(t *testing.T) {
 
 // createdOnSQLite is the number of rules and commands the recording on
 // SQLite creates.
-const createdOnSQLite = 333
+const createdOnSQLite = 297
 
 // answersTheRow checks the answer to a new rule or command on SQLite: it
 // has Node's id and is the row as a read of it gives it.

@@ -4,6 +4,7 @@ import (
 	"math"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/unitronix/betterdesk-server/console/mail"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 )
 
@@ -16,9 +17,10 @@ const maxCooldown = 2147483647
 var typedFields = []string{"description", "condition_value", "scope_device_id", "cooldown_secs", "notify_emails"}
 
 // wrongType returns the answer for the first field of a rule's body that
-// has the wrong type, "" when each has its type: text for description,
-// scope_device_id and notify_emails, a finite number for condition_value,
-// a whole number of seconds from 0 for cooldown_secs. null stands for a
+// has the wrong type, "" when each has its type: text for description and
+// scope_device_id, a finite number for condition_value, a whole number of
+// seconds from 0 for cooldown_secs, and plain addresses separated by
+// commas for notify_emails (mail.PlainAddressList). null stands for a
 // field that is not given. The alert engine and the alert mail work with
 // what is stored, and the databases would store another type each in
 // their own way or fail.
@@ -34,6 +36,8 @@ func wrongType(body middleware.JSONObject) string {
 			ok = ok || finite(v)
 		case "cooldown_secs":
 			ok = ok || finite(v) && v.ToNumber() == math.Trunc(v.ToNumber()) && v.ToNumber() >= 0 && v.ToNumber() <= maxCooldown
+		case "notify_emails":
+			ok = ok || v.IsString() && mail.PlainAddressList(v.Str())
 		default:
 			ok = ok || v.IsString()
 		}
