@@ -505,3 +505,61 @@ func TestOperatorLogin(t *testing.T) {
 		}
 	})
 }
+
+// sessionRows writes start and end rows of the connection audit: host,
+// session, action, and the time as each database stores it.
+func sessionRows(t *testing.T, db *store.DB, rows [][4]string) {
+	t.Helper()
+	for _, row := range rows {
+		at := row[3]
+		if db.IsPostgres() {
+			at += "+00"
+		} else if i := strings.IndexByte(at, '.'); i >= 0 {
+			at = at[:i]
+		}
+		if _, err := db.Exec(context.Background(), `INSERT INTO audit_connections (host_id, host_uuid, peer_id, peer_name, action, conn_type, session_id, ip, created_at)
+			VALUES (?, '', 'DEV1', 'pc-1', ?, 1, ?, '', ?)`, row[0], row[2], row[1], at); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+// operatorToken adds a live access token of the operator account.
+func operatorToken(t *testing.T, w *routetest.World, token string) string {
+	t.Helper()
+	sum := sha256.Sum256([]byte(token))
+	if _, err := w.DB.Exec(context.Background(), `INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at)
+		VALUES (?, ?, 5, 'OPDESK', '', '2999-01-01 00:00:00')`, token, hex.EncodeToString(sum[:])); err != nil {
+		t.Fatal(err)
+	}
+	return token
+}
+
+// The session history lists the calling operator's own sessions, one per
+// host and session id (BUGS BD12).
+func TestSessionHistoryIsTheOperatorsOwn(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		sessionRows(t, db, [][4]string{
+			{"e2e_operator", "s-1", "session_start", "2026-11-18 10:00:00"},
+			{"e2e_admin", "s-1", "session_start", "2026-11-18 10:01:00"},
+			{"e2e_admin", "s-2", "session_start", "2026-11-18 10:02:00"},
+			{"e2e_operator", "s-1", "session_end", "2026-11-18 10:03:00"},
+		})
+		token := operatorToken(t, w, "tok-history-own-01")
+		got := w.SignedOut().Do("GET", "/api/bd/operator/sessions", "", "Authorization", "Bearer "+token)
+		var answer struct {
+			Sessions []struct {
+				ID       string `json:"id"`
+				Operator string `json:"operator"`
+				Action   string `json:"action"`
+			} `json:"sessions"`
+		}
+		if err := json.Unmarshal([]byte(got.Body), &answer); err != nil || got.Status != 200 {
+			t.Fatalf("%d %s", got.Status, got.Body)
+		}
+		if len(answer.Sessions) != 1 || answer.Sessions[0].ID != "s-1" || answer.Sessions[0].Operator != "e2e_operator" || answer.Sessions[0].Action != "session_end" {
+			t.Errorf("sessions: %s", got.Body)
+		}
+	})
+}

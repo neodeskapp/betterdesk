@@ -272,10 +272,10 @@ type historyAnswer struct {
 }
 
 // sessionHistory answers GET /api/bd/operator/sessions?limit=: the
-// operator sessions put together from the newest rows of the connection
-// audit (four rows for each session asked for), the newest first, 100
-// unless limit says otherwise, at most 200. Every connection of the audit
-// counts, not only the operator's own.
+// calling operator's sessions put together from the newest rows of the
+// connection audit that the operator recorded (four rows for each session
+// asked for), the newest first, 100 unless limit says otherwise, at most
+// 200.
 func (h *handlers) sessionHistory(w http.ResponseWriter, r *http.Request) {
 	limit := 100
 	raw := jsreq.Query(r, "limit")
@@ -288,7 +288,11 @@ func (h *handlers) sessionHistory(w http.ResponseWriter, r *http.Request) {
 	if n, ok := jsreq.ParseInt(raw, 10); ok && !math.IsInf(n, 0) {
 		limit = int(math.Min(math.Max(n, 1), 200))
 	}
-	rows, err := auditConnections(r.Context(), h.d.Store, limit*4)
+	operator := "operator"
+	if c := callerOf(r); c.user != nil && c.user.Username != "" {
+		operator = c.user.Username
+	}
+	rows, err := auditConnections(r.Context(), h.d.Store, operator, limit*4)
 	if err != nil {
 		h.serverError(w, r, "Session history error:", err, "Failed to fetch session history")
 		return
@@ -319,7 +323,7 @@ func (h *handlers) createdAt(t store.Time) (string, float64) {
 }
 
 // buildHistory is buildSessionHistory: the start and end rows grouped by
-// session (by session id, else host, device and row id), oldest first,
+// host and session (by session id, else device and row id), oldest first,
 // each session with the time of its start and its end as the audit wrote
 // them and its length in seconds up to now when it has not ended.
 func (h *handlers) buildHistory(entries []auditEntry, limit int) []*historyEntry {
@@ -344,14 +348,15 @@ func (h *handlers) buildHistory(entries []auditEntry, limit int) []*historyEntry
 	grouped := map[string]*historyEntry{}
 	for _, rw := range rows {
 		e := rw.e
-		key := e.sess.ToString()
+		id := e.sess.ToString()
 		if !e.sess.Truthy() {
-			key = e.hostID.ToString() + ":" + e.peerID.ToString() + ":" + e.id.ToString()
+			id = e.hostID.ToString() + ":" + e.peerID.ToString() + ":" + e.id.ToString()
 		}
+		key := e.hostID.ToString() + "\n" + id
 		entry := grouped[key]
 		if entry == nil {
 			entry = &historyEntry{
-				ID:       key,
+				ID:       id,
 				DeviceID: valueOr(e.peerID, ""),
 				Hostname: valueOr(e.peerName, ""),
 				Operator: valueOr(e.hostID, "operator"),
