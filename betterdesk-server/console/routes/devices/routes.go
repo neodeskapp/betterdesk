@@ -9,8 +9,9 @@
 // (kit.RequireDeviceInScope, added with Use where the old console mounted
 // it) refuses a device the account may not see with 403, before the
 // route's own sign-in and permission checks; a device that does not exist
-// goes on. The check covers the routes added after it, in this group and
-// in the folder group (PATCH /api/devices/{id}/folder). Every route that
+// goes on, and so does the bulk delete, whose path names no device. The
+// check covers the routes added after it, in this group and in the
+// folder group (PATCH /api/devices/{id}/folder). Every route that
 // names a device then checks again that it exists and that the account
 // may see it (the device scope of console/access), and answers 404 and
 // 403 in that order.
@@ -30,6 +31,7 @@ package devices
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/devicegroups"
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -72,7 +74,7 @@ func Register(d *kit.Deps) {
 	r.Post("/api/device-groups", h.saveDeviceGroup, d.RequireAuth, edit)
 	r.Delete("/api/device-groups/{guid}", h.deleteDeviceGroup, d.RequireAuth, edit)
 
-	r.Use("/api/devices/{id}", d.RequireDeviceInScope)
+	r.Use("/api/devices/{id}", h.deviceInScope)
 	r.Get("/api/devices/{id}/groups", h.memberships, d.RequireAuth, view)
 	r.Put("/api/devices/{id}/groups", h.setMemberships, d.RequireAuth, edit)
 
@@ -123,6 +125,22 @@ func Register(d *kit.Deps) {
 	r.Post("/api/panel/strategies/{guid}/assign", h.assignStrategy, d.RequireAuth, edit)
 	r.Post("/api/panel/strategies/unassign", h.unassignStrategy, d.RequireAuth, edit)
 	r.Delete("/api/panel/strategies/{guid}", h.deleteStrategy, d.RequireAuth, edit)
+}
+
+// deviceInScope is the scope check of kit.RequireDeviceInScope in front of
+// the addresses below /api/devices/{id}, except for POST
+// /api/devices/bulk-delete (in any letter case, with or without a slash at
+// its end): there bulk-delete names no device, and the route checks each
+// device of its list itself.
+func (h *handlers) deviceInScope(next http.Handler) http.Handler {
+	checked := h.d.RequireDeviceInScope(next)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && strings.EqualFold(strings.TrimSuffix(kit.RoutePath(r), "/"), "/api/devices/bulk-delete") {
+			next.ServeHTTP(w, r)
+			return
+		}
+		checked.ServeHTTP(w, r)
+	})
 }
 
 // serverError logs what failed and answers 500 with the request

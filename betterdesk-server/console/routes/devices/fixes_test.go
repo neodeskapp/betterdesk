@@ -298,6 +298,41 @@ func TestCascadeChecksTheLinkedDevices(t *testing.T) {
 	}
 }
 
+// TestBulkDeleteIsNoDeviceID: the scope check in front of the addresses
+// below /api/devices/{id} does not take bulk-delete for a device id on the
+// bulk delete, which checks each device of its list itself. A device named
+// bulk-delete outside the account's scope does not refuse the account's
+// bulk deletes, and none is looked up; the routes of such a device keep
+// the check (BUGS UM35).
+func TestBulkDeleteIsNoDeviceID(t *testing.T) {
+	db := storetest.Migrated(t)
+	w, api := world(t, db, routetest.Overrides{"operator": {"device.delete": true}}, nil)
+	if _, err := db.Exec(context.Background(), `INSERT INTO device_group_members (device_group_id, peer_id) SELECT id, 'bulk-delete' FROM device_groups WHERE guid = 'g-viewer'`); err != nil {
+		t.Fatal(err)
+	}
+	api.On("GET /api/peers/bulk-delete", 200, `{"id":"bulk-delete","hostname":"h"}`)
+	operator := w.As("operator")
+	api.Calls()
+	for _, path := range []string{"/api/devices/bulk-delete", "/API/Devices/Bulk-Delete/"} {
+		if got := operator.Do("POST", path, `{"ids":["A"]}`); got.Status != http.StatusOK || got.Body != `{"success":true,"data":{"deleted":1}}` {
+			t.Errorf("POST %s of a device in scope, as operator: %d %s", path, got.Status, got.Body)
+		}
+		if calls := strings.Join(api.Calls(), "\n"); calls != "GET /api/peers/A\nDELETE /api/peers/A" {
+			t.Errorf("POST %s of a device in scope, as operator, called %q", path, calls)
+		}
+	}
+	forbidden := `{"success":false,"error":"You don't have access to this device."}`
+	for _, c := range []struct{ method, path string }{
+		{"GET", "/api/devices/bulk-delete"},
+		{"POST", "/api/devices/bulk-delete/restore"},
+		{"DELETE", "/api/devices/bulk-delete"},
+	} {
+		if got := operator.Do(c.method, c.path, `{}`); got.Status != http.StatusForbidden || got.Body != forbidden {
+			t.Errorf("%s %s, a device outside the operator's scope: %d %s, want 403", c.method, c.path, got.Status, got.Body)
+		}
+	}
+}
+
 // TestListIgnoresQueryLists: search and sortOrder given as a list or an
 // object are ignored like the other parameters, and the list answers
 // (BUGS DE4).

@@ -72,6 +72,12 @@ var fixedSteps = []fixedStep{
 	{"node_agent", `55 GET /api/devices/A1001/services as admin agent {"ok":false,"error":"agent_offline"}`, "WS8"},
 	// The audit log after the steps of DE5 and DE6
 	{"node", "459 audit", "DE5, DE6"},
+	// The scope check does not take bulk-delete for a device id: no lookup
+	// of a device of that name, and the made-up server's bulk-delete device
+	// outside the operator's scope no longer refuses the bulk delete before
+	// its permission check does.
+	{"node", `384 POST /api/devices/bulk-delete {"ids":["A1001"]} as operator`, "UM35"},
+	{"node", `385 POST /api/devices/bulk-delete {"ids":["C1003"]} as operator`, "UM35"},
 }
 
 // fixedStep is a step of a recording that the fix of a bug changed. The

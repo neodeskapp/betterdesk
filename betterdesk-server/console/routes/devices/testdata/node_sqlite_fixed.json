@@ -116,6 +116,20 @@
    "answer": "{\"success\":false,\"error\":\"Invalid device ID (6-16 characters required)\"}"
   }
  },
+ "384 POST /api/devices/bulk-delete {\"ids\":[\"A1001\"]} as operator": {
+  "bug": "UM35",
+  "answer": {
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"Permission denied: device.delete\"}"
+  }
+ },
+ "385 POST /api/devices/bulk-delete {\"ids\":[\"C1003\"]} as operator": {
+  "bug": "UM35",
+  "answer": {
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"Permission denied: device.delete\"}"
+  }
+ },
  "403 PATCH /api/devices/A1001/folder {\"folderId\":999} as operator": {
   "bug": "DE1",
   "answer": {
