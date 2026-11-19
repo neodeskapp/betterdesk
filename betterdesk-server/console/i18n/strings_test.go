@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -344,6 +345,36 @@ func TestUploadFormRefusalsAre4xx(t *testing.T) {
 		}
 		if lines := l.take(); len(lines) != 0 {
 			t.Errorf("production %v: log lines %q", production, lines)
+		}
+	}
+}
+
+// The form may have at most 10 text fields and 12 parts; the parser stops
+// at the first one over and answers 413 (BUGS.md L9).
+func TestUploadRefusesTooManyParts(t *testing.T) {
+	field := `Content-Disposition: form-data; name="note"` + "\r\n\r\nx"
+	skipped := "X-Other: 1\r\n\r\nx"
+	cases := []struct {
+		name    string
+		parts   []string
+		status  int
+		message string
+	}{
+		{"10 fields", append(slices.Repeat([]string{field}, 10), filePart("fr.json", `{"a":1}`)), 200, ""},
+		{"11 fields", append(slices.Repeat([]string{field}, 11), filePart("fr.json", `{"a":1}`)), 413, "Too many fields"},
+		{"12 parts", append(slices.Repeat([]string{skipped}, 11), filePart("fr.json", `{"a":1}`)), 200, ""},
+		{"13 parts", append(slices.Repeat([]string{skipped}, 12), filePart("fr.json", `{"a":1}`)), 413, "Too many parts"},
+		{"13 parts with the file first", append([]string{filePart("fr.json", `{"a":1}`)}, slices.Repeat([]string{skipped}, 12)...), 413, "Too many parts"},
+	}
+	for _, c := range cases {
+		dir := copyDir(t, "testdata/lang-upload")
+		h, _, _ := handlersFor(t, dir, time.Now())
+		got := postForm(t, h, c.parts...)
+		if got.status != c.status || (c.message != "" && got.body != `{"success":false,"error":"`+c.message+`"}`) {
+			t.Errorf("%s: %d %s; want %d %s", c.name, got.status, got.body, c.status, c.message)
+		}
+		if _, err := os.Stat(filepath.Join(dir, "fr.json")); (err == nil) != (c.status == 200) {
+			t.Errorf("%s: fr.json written: %v", c.name, err == nil)
 		}
 	}
 }

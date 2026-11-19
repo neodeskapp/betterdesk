@@ -21,6 +21,10 @@ const (
 	// One byte more than allowed is read, so that the limit itself passes.
 	uploadFileLimit  = 1024*1024 + 1
 	uploadFieldLimit = 1024*1024 + 1
+	// The form has one file and a code field; the parser stops at the
+	// first part or text field over these.
+	uploadMaxParts  = 12
+	uploadMaxFields = 10
 
 	maxPartHeaderBytes = 16 * 1024
 	maxPartHeaderPairs = 2000
@@ -37,7 +41,8 @@ type upload struct {
 	code any
 	// failure is the message of the error that stopped the parser, which
 	// the route answers with status 400, or 413 when tooLarge is set: a
-	// part was over its size limit.
+	// part was over its size limit, or the form had too many parts or
+	// fields.
 	failure  string
 	tooLarge bool
 }
@@ -167,6 +172,8 @@ type formParser struct {
 	fieldTruncated  bool
 
 	fileSlots  int
+	parts      int
+	fields     int
 	stored     bool
 	storedName string
 	storedData []byte
@@ -179,7 +186,8 @@ func (p *formParser) fail(message string) {
 	}
 }
 
-// failTooLarge is fail for a part over its size limit.
+// failTooLarge is fail for a part over its size limit, or a part or field
+// too many.
 func (p *formParser) failTooLarge(message string) {
 	if p.failure == "" {
 		p.failure, p.tooLarge = message, true
@@ -376,6 +384,11 @@ func (p *formParser) boundary() {
 // startPart decides from a part's header what the part is.
 func (p *formParser) startPart(header map[string][]string) {
 	p.skipPart = false
+	if p.parts == uploadMaxParts {
+		p.failTooLarge("Too many parts")
+		return
+	}
+	p.parts++
 	partType, charset := "text/plain", "utf8"
 	disposition := header["content-disposition"]
 	if len(disposition) == 0 {
@@ -407,6 +420,11 @@ func (p *formParser) startPart(header map[string][]string) {
 	}
 	name = formDataEscapes.Replace(name)
 	if partType != "application/octet-stream" && !isFile {
+		if p.fields == uploadMaxFields {
+			p.failTooLarge("Too many fields")
+			return
+		}
+		p.fields++
 		p.inField = true
 		p.fieldName, p.fieldNamed, p.fieldCharset = name, named, charset
 		p.fieldData, p.fieldSize, p.fieldTruncated = nil, 0, false
