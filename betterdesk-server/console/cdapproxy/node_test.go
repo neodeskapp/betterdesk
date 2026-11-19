@@ -44,7 +44,7 @@ func describeHandshake(r *http.Request) wstest.Event {
 func TestNodeScenarios(t *testing.T) {
 	wstest.PlayProxy(t, filepath.Join("testdata", "node_proxy.json"), wstest.ProxySetup{
 		Register: func(reg *ws.Registry, api http.Handler) {
-			New(Options{API: api}).Register(reg)
+			New(Options{API: api, Devices: knownDevices{}, CanAccess: everyDevice}).Register(reg)
 		},
 		Permissions: oraclePermissions,
 		Describe:    describeHandshake,

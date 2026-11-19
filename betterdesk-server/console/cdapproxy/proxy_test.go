@@ -48,7 +48,7 @@ func TestBadNameAfterTheHandshakeChecks(t *testing.T) {
 		Session:    wstest.OracleSession,
 		Permission: func(context.Context, string, string) (bool, error) { return true, nil },
 	})
-	New(Options{API: http.NotFoundHandler()}).Register(reg)
+	New(Options{API: http.NotFoundHandler(), Devices: knownDevices{}, CanAccess: everyDevice}).Register(reg)
 	srv := httptest.NewServer(reg)
 	addr := strings.TrimPrefix(srv.URL, "http://")
 	request := func(key string) string {

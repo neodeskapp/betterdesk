@@ -40,24 +40,9 @@
     "super_admin",
     "admin"
    ],
-   "status": 101,
+   "status": 404,
    "body": {
-    "kind": "json",
-    "json": {
-     "closed": {
-      "code": 1005,
-      "reason": ""
-     },
-     "messages": [
-      {
-       "binary": {
-        "length": 75,
-        "sha256": "2763c3577e8ecb975ef1667cb1da4784b0979ab87c04abebc56d51633613faab"
-       }
-      }
-     ],
-     "protocol": "cdap-terminal"
-    }
+    "kind": "empty"
    }
   }
  ]

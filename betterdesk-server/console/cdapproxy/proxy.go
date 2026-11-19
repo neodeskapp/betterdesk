@@ -3,18 +3,20 @@
 // (services/cdapTerminalProxy.js and services/cdapMediaProxy.js of the
 // old console). Each is passed on to the API server's socket of the same
 // path, in this process, after the console's own checks: the origin, a
-// signed-in session, and the channel's permission with the role
-// overrides applied.
-//
-// The console does not check the device's scope and sets no limits of
-// its own (BUGS SK1): the API server decides what the device does.
+// signed-in session, the channel's permission with the role overrides
+// applied, the account's device scope, and a limit of sockets per
+// account. An open socket is pinged, and closed when its client stops
+// answering (limits.go).
 package cdapproxy
 
 import (
 	"context"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/ws"
 	"github.com/unitronix/betterdesk-server/logging"
 )
@@ -54,16 +56,32 @@ type Options struct {
 	// (goapi.Client.Handler): calls through it act as the console's API
 	// key.
 	API http.Handler
+	// Devices looks the device of a socket up (goapi.Backend).
+	Devices Devices
+	// CanAccess is the account's device scope
+	// (devicegroups.Service.UserCanAccessDevice).
+	CanAccess func(ctx context.Context, user *session.User, device *goapi.Object) (bool, error)
+	// PingInterval overrides PingInterval (tests).
+	PingInterval time.Duration
+}
+
+// Devices finds a device by id; nil when there is none.
+type Devices interface {
+	GetDeviceByID(ctx context.Context, id string, includeDeleted bool) *goapi.Object
 }
 
 // Proxy passes the device sockets on to the API server.
 type Proxy struct {
-	api http.Handler
+	opts Options
+	open sockets
 }
 
 // New returns the proxy.
 func New(opts Options) *Proxy {
-	return &Proxy{api: opts.API}
+	if opts.PingInterval <= 0 {
+		opts.PingInterval = PingInterval
+	}
+	return &Proxy{opts: opts}
 }
 
 // Register adds the five sockets. A device id is 1 to 64 letters, digits,
@@ -74,10 +92,12 @@ func (p *Proxy) Register(reg *ws.Registry) {
 	}
 }
 
-// serve runs the checks in the old order, each a bare status line: a
-// foreign origin 403, no signed-in session 401, the channel's permission
-// missing or its lookup failing 403. Then the handshake, and the socket
-// is passed on.
+// serve runs the checks, each a bare status line: a foreign origin 403,
+// no signed-in session 401, the channel's permission missing or its
+// lookup failing 403 (the old proxy's checks, in its order); then a
+// device that is unknown or outside the account's scope 404, the scope
+// check failing 403, the account's MaxSocketsPerAccount sockets of the
+// channel open 429. Then the handshake, and the socket is passed on.
 func (p *Proxy) serve(u *ws.Upgrade, ch Channel) {
 	deviceID := u.Param("id")
 	if !u.CheckOrigin("cdap-" + ch.Name + " " + u.Path) {
@@ -100,6 +120,18 @@ func (p *Proxy) serve(u *ws.Upgrade, ch Channel) {
 		u.Refuse(http.StatusForbidden)
 		return
 	}
+	if status := p.inScope(u.R.Context(), session.User(), deviceID); status != 0 {
+		logf("WARN: [CDAP %s] %d upgrade rejected for %s (device scope)", ch.Label, status, u.Path)
+		u.Refuse(status)
+		return
+	}
+	key := accountChannel{account: session.UserID(), channel: ch.Name}
+	if !p.open.take(key) {
+		logf("WARN: [CDAP %s] 429 upgrade rejected for %s (%d sockets open)", ch.Label, u.Path, MaxSocketsPerAccount)
+		u.Refuse(http.StatusTooManyRequests)
+		return
+	}
+	defer p.open.release(key)
 	if (!headerText(name) || !headerText(role)) && u.HandshakeValid() {
 		// The old proxy's HTTP client threw on such a header right after the
 		// handshake, and the process ended before the answer went out (BUGS
@@ -108,11 +140,15 @@ func (p *Proxy) serve(u *ws.Upgrade, ch Channel) {
 		u.Drop()
 		return
 	}
+	var client heard
+	client.listen(u)
 	conn, ok := u.Accept(ws.AcceptOptions{})
 	if !ok {
 		return
 	}
 	defer conn.Wait()
+	conn.KeepAlive(p.opts.PingInterval)
+	defer client.closeSilent(conn, 2*p.opts.PingInterval)()
 	logf("[CDAP %s] Proxy started for device %s (role=%s)", ch.Label, deviceID, role)
 	header := http.Header{}
 	header.Set("X-Username", latin1(name))
@@ -120,7 +156,7 @@ func (p *Proxy) serve(u *ws.Upgrade, ch Channel) {
 	target := "/api/cdap/devices/" + deviceID + "/" + ch.Name
 	ws.Pass(conn, ws.PassOptions{
 		Dial: func(ctx context.Context) (*ws.Upstream, error) {
-			return ws.DialHandler(ctx, p.api, target, ws.DialOptions{Header: header, Subprotocols: []string{ch.Subprotocol}})
+			return ws.DialHandler(ctx, p.opts.API, target, ws.DialOptions{Header: header, Subprotocols: []string{ch.Subprotocol}})
 		},
 		Queue:    true,
 		Binary:   ch.Binary,
@@ -129,6 +165,31 @@ func (p *Proxy) serve(u *ws.Upgrade, ch Channel) {
 			logf("ERROR: [CDAP %s] Go WS error for %s: %v", ch.Label, deviceID, err)
 		},
 	})
+}
+
+// inScope checks the device of a socket as /ws/remote-viewer does: 0 when
+// the account sees it, 404 for a device that is unknown or outside the
+// account's scope, 403 when the scope check fails.
+func (p *Proxy) inScope(ctx context.Context, user *session.User, id string) int {
+	var device *goapi.Object
+	if p.opts.Devices != nil {
+		device = p.opts.Devices.GetDeviceByID(ctx, id, false)
+	}
+	if device == nil {
+		return http.StatusNotFound
+	}
+	if p.opts.CanAccess == nil {
+		return http.StatusForbidden
+	}
+	visible, err := p.opts.CanAccess(ctx, user, device)
+	switch {
+	case err != nil:
+		logf("WARN: [CDAP] device scope check failed for %s: %v", id, err)
+		return http.StatusForbidden
+	case !visible:
+		return http.StatusNotFound
+	}
+	return 0
 }
 
 // headerText reports whether Node's HTTP client took s as a header value:
