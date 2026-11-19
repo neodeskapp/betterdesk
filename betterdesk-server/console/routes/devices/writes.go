@@ -1,8 +1,6 @@
 package devices
 
 import (
-	"context"
-	"math"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -284,76 +282,34 @@ const goIDReservedDeleted = "This ID belongs to a deleted device. Restore or per
 
 var newIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
 
-// newIDLength is newId.length as a number for the comparisons of the
-// check: the length of text or a list, the member length of an object
-// (null is 0, a flag 0 or 1, text its number), and NaN, which compares
-// false, for numbers, flags and objects without one.
-func newIDLength(v any) float64 {
-	switch t := v.(type) {
-	case string:
-		return float64(length(t))
-	case []any:
-		return float64(len(t))
-	case *goapi.Object:
-		if t == nil || !t.Has("length") {
-			return math.NaN()
-		}
-		switch n := t.Get("length").(type) {
-		case float64:
-			return n
-		case nil:
-			return 0
-		case bool:
-			if n {
-				return 1
-			}
-			return 0
-		case string:
-			return jsreq.Number(n)
-		}
-	}
-	return math.NaN()
-}
-
-// changeID answers POST /api/devices/{id}/change-id with {newId}: 6 to 16
-// letters, digits, - and _, not taken by a device, also not by a deleted
-// one. The console's tables follow the new id.
+// changeID answers POST /api/devices/{id}/change-id with {newId}: text of
+// 6 to 16 letters, digits, - and _, not taken by a device, also not by a
+// deleted one. Anything but text is refused like an id of the wrong
+// length. The console's tables follow the new id.
 func (h *handlers) changeID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	oldID := r.PathValue("id")
-	newID := value(r, "newId")
-	if n := newIDLength(newID); !goapi.Truthy(newID) || n < 6 || n > 16 {
+	newID, isText := value(r, "newId").(string)
+	if n := length(newID); !isText || n < 6 || n > 16 {
 		fail(w, r, http.StatusBadRequest, "devices.invalid_id")
 		return
 	}
-	newText, err := text(newID)
-	if err != nil {
-		h.serverError(w, r, "Change ID error:", err)
-		return
-	}
-	if !newIDPattern.MatchString(newText) {
+	if !newIDPattern.MatchString(newID) {
 		fail(w, r, http.StatusBadRequest, "devices.invalid_id_format")
 		return
 	}
 	if _, ok := h.found(w, r, "Change ID error:"); !ok {
 		return
 	}
-	if h.backend.GetDeviceByID(ctx, newText, false) != nil {
+	if h.backend.GetDeviceByID(ctx, newID, false) != nil {
 		fail(w, r, http.StatusBadRequest, "devices.id_exists")
 		return
 	}
-	// The server's list of deleted devices is searched for the id as it
-	// came: a number or a flag is never equal to a device's id
-	if _, isText := newID.(string); isText {
-		if existing := h.backend.GetDeviceByID(ctx, newText, true); existing != nil && existing.Bool("soft_deleted") {
-			fail(w, r, http.StatusBadRequest, "devices.id_reserved_deleted")
-			return
-		}
-	} else {
-		h.api.GetPeer(ctx, newText)
-		h.api.GetAllPeers(ctx, true)
+	if existing := h.backend.GetDeviceByID(ctx, newID, true); existing != nil && existing.Bool("soft_deleted") {
+		fail(w, r, http.StatusBadRequest, "devices.id_reserved_deleted")
+		return
 	}
-	result := h.changePeerID(ctx, oldID, newID)
+	result := h.backend.ChangePeerID(ctx, oldID, newID)
 	if !result.Bool("success") {
 		message, err := changeIDError(r, result.Get("error"))
 		if err != nil {
@@ -363,39 +319,12 @@ func (h *handlers) changeID(w http.ResponseWriter, r *http.Request) {
 		answer(w, r, http.StatusBadRequest, failure{Error: message})
 		return
 	}
-	h.groups.CascadePeerIDChange(ctx, oldID, newText)
-	if err := h.d.LogAction(r, "device_id_changed", "Device ID changed from "+oldID+" to "+newText); err != nil {
+	h.groups.CascadePeerIDChange(ctx, oldID, newID)
+	if err := h.d.LogAction(r, "device_id_changed", "Device ID changed from "+oldID+" to "+newID); err != nil {
 		h.serverError(w, r, "Change ID error:", err)
 		return
 	}
 	answer(w, r, http.StatusOK, done{Success: true})
-}
-
-// changePeerID is Client.ChangePeerID with the new id as the body gave
-// it: a number or a flag goes to the server as it is, which refuses it.
-func (h *handlers) changePeerID(ctx context.Context, oldID string, newID any) *goapi.Object {
-	if s, ok := newID.(string); ok {
-		return h.backend.ChangePeerID(ctx, oldID, s)
-	}
-	resp, err := h.api.Post(ctx, "/peers/"+goapi.EncodeURIComponent(oldID)+"/change-id", goapi.Body(goapi.NewObject("new_id", newID)))
-	if err != nil {
-		e := goapi.AsError(err)
-		if e != nil && goapi.Truthy(e.Data()) {
-			return wrapped(e.Data())
-		}
-		message := err.Error()
-		return goapi.NewObject("success", false, "error", message)
-	}
-	return wrapped(resp.Data())
-}
-
-// wrapped is the API client's wrap(): {success:true, data}, or
-// {success:false, error} for an answer that names an error.
-func wrapped(data any) *goapi.Object {
-	if o, ok := data.(*goapi.Object); ok && o != nil && o.Has("error") {
-		return goapi.NewObject("success", false, "error", o.Get("error"))
-	}
-	return goapi.NewObject("success", true, "data", data)
 }
 
 // changeIDError is mapChangeIdError: the server's refusals in the request

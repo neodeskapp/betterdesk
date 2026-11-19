@@ -45,6 +45,16 @@ var fixedSteps = []fixedStep{
 	{"node", "10 GET /api/devices?search[a]=1 as admin", "DE4"},
 	{"node", "18 GET /api/devices?sortOrder[]=asc as admin", "DE4"},
 	{"node", "19 GET /api/devices?sortOrder[x]=1 as admin", "DE4"},
+	// A new id that is no text is refused as an invalid id before
+	// anything is asked, so the made-up server never renames A1001 to
+	// 1234567 or true, and the audit log has no entries of it.
+	{"node", `291 POST /api/devices/A1001/change-id {"newId":1234567} as admin`, "DE5"},
+	{"node", `292 POST /api/devices/A1001/change-id {"newId":true} as admin`, "DE5"},
+	{"node", `294 POST /api/devices/A1001/change-id {"newId":["a","b","c","d","e","f"]} as admin`, "DE5"},
+	{"node", `296 POST /api/devices/A1001/change-id {"newId":{"length":8}} as admin`, "DE5"},
+	{"node", `297 POST /api/devices/A1001/change-id {"newId":{"length":"7"}} as admin`, "DE5"},
+	{"node", `300 POST /api/devices/A1001/change-id {"newId":{"a":1}} as admin`, "DE5"},
+	{"node", "459 audit", "DE5"},
 }
 
 // fixedStep is a step of a recording that the fix of a bug changed. The

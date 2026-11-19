@@ -187,3 +187,28 @@ func TestListIgnoresQueryLists(t *testing.T) {
 		}
 	}
 }
+
+// TestChangeIDTakesTextOnly: a new id that is no text is refused like one
+// of the wrong length, before anything reaches the server (BUGS DE5).
+func TestChangeIDTakesTextOnly(t *testing.T) {
+	w, api := world(t, storetest.Migrated(t), nil, nil)
+	admin := w.As("admin")
+	refused := admin.Do("POST", "/api/devices/A/change-id", `{"newId":"abc"}`)
+	if refused.Status != http.StatusBadRequest {
+		t.Fatalf("a short id: %d %s", refused.Status, refused.Body)
+	}
+	for _, body := range []string{`{"newId":1234567}`, `{"newId":true}`, `{"newId":{"length":8}}`, `{"newId":["ABCDEFG"]}`, `{"newId":null}`} {
+		api.Calls()
+		if got := admin.Do("POST", "/api/devices/A/change-id", body); got.Status != refused.Status || got.Body != refused.Body {
+			t.Errorf("%s: %d %s, want %d %s", body, got.Status, got.Body, refused.Status, refused.Body)
+		}
+		for _, call := range api.Calls() {
+			if !strings.HasPrefix(call, "GET /api/peers/A") {
+				t.Errorf("%s reached the server: %s", body, call)
+			}
+		}
+	}
+	if got := admin.Do("POST", "/api/devices/A/change-id", `{"newId":"NEWID1"}`); got.Status != http.StatusOK {
+		t.Errorf("a new id as text: %d %s", got.Status, got.Body)
+	}
+}
