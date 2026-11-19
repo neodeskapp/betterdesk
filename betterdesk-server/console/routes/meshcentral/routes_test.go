@@ -1,9 +1,7 @@
 package meshcentral
 
 import (
-	"errors"
 	"io"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -538,28 +536,22 @@ func TestDesktopWithoutALinkNeedsTheSession(t *testing.T) {
 }
 
 // A token that cannot be turned into text ended the old console's process
-// (BUGS.md MC1). Here the connection closes without an answer and the
-// server goes on.
-func TestDesktopTokenWithoutATextClosesTheConnection(t *testing.T) {
+// (BUGS.md MC1). It is refused with 400 before the API server is asked,
+// for anyone: the same answer the guest routes give.
+func TestDesktopTokenWithoutATextIsRefused(t *testing.T) {
 	w := newWorld(t, notConnected)
-	server := httptest.NewServer(w.handler)
-	defer server.Close()
-	for _, query := range []string{"mesh_share[toString]=x", "guest[toString]=x", "t[toString]=x", "guest[]=a&guest[][toString]=x", "mesh_share=abc&t[toString]=x"} {
-		req, err := http.NewRequest("POST", server.URL+"/api/mesh/devices/d1/desktop?"+query, strings.NewReader("{}"))
-		if err != nil {
-			t.Fatal(err)
-		}
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("X-Test-Role", "admin")
-		resp, err := http.DefaultClient.Do(req)
-		if err == nil {
-			resp.Body.Close()
-			t.Errorf("%s: got the answer %d, want a closed connection", query, resp.StatusCode)
-			continue
-		}
-		var netErr net.Error
-		if !errors.Is(err, io.EOF) && !errors.As(err, &netErr) {
-			t.Errorf("%s: %v", query, err)
+	const badShare, badGuest = `{"error":"Invalid share token"}`, `{"error":"Invalid guest token"}`
+	cases := []struct{ query, body string }{
+		{"mesh_share[toString]=x", badShare},
+		{"guest[toString]=x", badGuest},
+		{"t[toString]=x", badGuest},
+		{"guest[]=a&guest[][toString]=x", badGuest},
+		{"mesh_share=abc&t[toString]=x", badGuest},
+		{"mesh_share[toString]=x&guest[toString]=x", badShare},
+	}
+	for _, role := range []string{"", "operator"} {
+		for _, c := range cases {
+			expect(t, c.query+" as "+role, w.do(role, "POST", "/api/mesh/devices/d1/desktop?"+c.query, "{}"), 400, c.body)
 		}
 	}
 	if got := w.sent(); got != "" {
@@ -569,14 +561,6 @@ func TestDesktopTokenWithoutATextClosesTheConnection(t *testing.T) {
 	expect(t, "t behind a guest text", w.do("", "POST", "/api/mesh/devices/d1/desktop?guest=abc&t[toString]=x", "{}"), 403, `{"error":"Invalid or expired share link"}`)
 	if got := w.sent(); got != "GET /guest/access-links/validate?token=abc&peer_id=d1" {
 		t.Errorf("t behind a guest text: the API server got %q", got)
-	}
-	resp, err := http.Get(server.URL + "/api/mesh/share/validate?token=a&peer_id=b")
-	if err != nil {
-		t.Fatalf("the server stopped: %v", err)
-	}
-	resp.Body.Close()
-	if resp.StatusCode != 400 {
-		t.Errorf("after the closed connections: %d", resp.StatusCode)
 	}
 }
 

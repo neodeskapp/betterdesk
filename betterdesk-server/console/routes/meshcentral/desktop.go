@@ -21,16 +21,20 @@ import (
 //   - Someone signed in with device.connect. The query is not passed on.
 //
 // A share token wins over a guest token; the guest token is then not
-// checked here.
+// checked here. A token that cannot be turned into text is refused with
+// 400, as the guest routes refuse it.
 func (h *handlers) desktop(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	query := requestQuery(r)
 	share, shareIsText := trimmedText(query.get("mesh_share"))
+	if !shareIsText {
+		kit.JSON(w, r, http.StatusBadRequest, apiFailure{Error: "Invalid share token"})
+		return
+	}
 	guest, guestIsText := trimmedText(orValue(query.get("guest"), query.get("t")))
-	if !shareIsText || !guestIsText {
-		// The old console stopped at such a token (BUGS.md MC1) and the
-		// client's connection closed without an answer.
-		panic(http.ErrAbortHandler)
+	if !guestIsText {
+		kit.JSON(w, r, http.StatusBadRequest, apiFailure{Error: "Invalid guest token"})
+		return
 	}
 	if share == "" && guest == "" {
 		h.desktopForSession.ServeHTTP(w, r)

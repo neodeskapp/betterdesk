@@ -215,22 +215,32 @@ func (h *handlers) validate(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// token is the request's guest token. The old console stopped at a token
-// that cannot be turned into text (BUGS.md MC1); the connection is closed
-// without an answer.
-func (h *handlers) token(r *http.Request) string {
+// The answers to a token that cannot be turned into text, the same as
+// the mesh desktop route gives.
+var (
+	badGuestToken = failure{Error: "Invalid guest token"}
+	badShareToken = failure{Error: "Invalid share token"}
+)
+
+// token is the request's guest token. A token that cannot be turned into
+// text is answered with 400 here, and ok is false.
+func (h *handlers) token(w http.ResponseWriter, r *http.Request) (token string, ok bool) {
 	token, err := h.guests.Token(r)
 	if err != nil {
-		panic(http.ErrAbortHandler)
+		kit.JSON(w, r, http.StatusBadRequest, badGuestToken)
+		return "", false
 	}
-	return token
+	return token, true
 }
 
 // peers answers GET /api/guest/access-links/peers: the devices a link
 // reaches, for the guest page. The token comes from ?guest=, ?t= or the
 // guest cookie; a good link is stored in the cookie.
 func (h *handlers) peers(w http.ResponseWriter, r *http.Request) {
-	token := h.token(r)
+	token, ok := h.token(w, r)
+	if !ok {
+		return
+	}
 	if token == "" {
 		kit.JSON(w, r, http.StatusBadRequest, failure{Error: "token required"})
 		return
@@ -260,13 +270,17 @@ func (h *handlers) peers(w http.ResponseWriter, r *http.Request) {
 // view_only=1 when the link only allows watching.
 func (h *handlers) desktop(w http.ResponseWriter, r *http.Request) {
 	peerID := r.PathValue("id")
-	guest := h.token(r)
+	guest, ok := h.token(w, r)
+	if !ok {
+		return
+	}
 	query := reqquery.Of(r)
 	share := ""
 	if value := query.Get("mesh_share"); value.Truthy() {
 		text, ok := value.Text()
 		if !ok {
-			panic(http.ErrAbortHandler)
+			kit.JSON(w, r, http.StatusBadRequest, badShareToken)
+			return
 		}
 		share = trim(text)
 	}
@@ -275,7 +289,8 @@ func (h *handlers) desktop(w http.ResponseWriter, r *http.Request) {
 	if guest != "" {
 		grant, err := h.guests.AttachGrant(r.Context(), r, peerID)
 		if err != nil {
-			panic(http.ErrAbortHandler)
+			kit.JSON(w, r, http.StatusBadRequest, badGuestToken)
+			return
 		}
 		allowed := false
 		if grant != nil {

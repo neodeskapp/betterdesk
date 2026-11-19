@@ -287,42 +287,46 @@ func aborted(t *testing.T, w *world, req proxytest.Request, api *proxytest.Answe
 	return false, rec
 }
 
-// TestTokensWithoutATextCloseTheConnection covers the requests the old
-// console stopped at (BUGS.md MC1), which no vector can hold: the Go
-// console closes the connection and stays up.
-func TestTokensWithoutATextCloseTheConnection(t *testing.T) {
+// TestTokensWithoutATextAreRefused covers the requests the old console
+// stopped at (BUGS.md MC1, GA1), which no vector can hold: a guest token,
+// share token or guest cookie that is no text is refused with 400 before
+// the API server is asked, as the mesh desktop route refuses it.
+func TestTokensWithoutATextAreRefused(t *testing.T) {
 	w := newWorld(t)
 	grant := &proxytest.Answer{Status: 200, Type: "application/json", Body: `{"valid":true,"peer_ids":["dev-1"]}`}
+	const badGuest, badShare = `{"error":"Invalid guest token"}`, `{"error":"Invalid share token"}`
 	body := "{}"
+	refused := func(what string, req proxytest.Request, want string) {
+		t.Helper()
+		rec, calls := w.Do(req, grant)
+		if rec.Code != 400 || rec.Body.String() != want || len(calls) != 0 {
+			t.Errorf("%s: %d %s, %d calls; want 400 %s", what, rec.Code, rec.Body, len(calls), want)
+		}
+	}
 	for _, target := range []string{
 		"/api/guest/access-links/peers?guest[toString]=x",
 		"/api/guest/access-links/peers?t[toString]=x",
 		"/api/guest/access-links/peers?guest[][toString]=x",
 	} {
-		if closed, rec := aborted(t, w, proxytest.Request{Path: target}, grant); !closed {
-			t.Errorf("GET %s was answered with %d %s", target, rec.Code, rec.Body)
-		}
+		refused("GET "+target, proxytest.Request{Path: target}, badGuest)
 	}
-	for _, query := range []string{"guest[toString]=x", "t[toString]=x", "mesh_share[toString]=x", "guest=tok&mesh_share[toString]=x"} {
-		req := proxytest.Request{Method: "POST", Path: "/api/guest/mesh/devices/dev-1/desktop?" + query, Type: "application/json", Body: &body}
-		if closed, rec := aborted(t, w, req, grant); !closed {
-			t.Errorf("POST with ?%s was answered with %d %s", query, rec.Code, rec.Body)
-		}
+	for query, want := range map[string]string{
+		"guest[toString]=x":                badGuest,
+		"t[toString]=x":                    badGuest,
+		"mesh_share[toString]=x":           badShare,
+		"guest=tok&mesh_share[toString]=x": badShare,
+	} {
+		refused("POST ?"+query, proxytest.Request{Method: "POST", Path: "/api/guest/mesh/devices/dev-1/desktop?" + query, Type: "application/json", Body: &body}, want)
 	}
-	cookie := proxytest.Request{Path: "/api/guest/access-links/peers", Headers: map[string]string{"Cookie": `bd.guest=j:{"toString":1}`}}
-	if closed, rec := aborted(t, w, cookie, grant); !closed {
-		t.Errorf("a cookie without a text was answered with %d %s", rec.Code, rec.Body)
-	}
+	cookie := map[string]string{"Cookie": `bd.guest=j:{"toString":1}`}
+	refused("a cookie without a text", proxytest.Request{Path: "/api/guest/access-links/peers", Headers: cookie}, badGuest)
+	refused("a cookie without a text on the desktop route", proxytest.Request{Method: "POST", Path: "/api/guest/mesh/devices/dev-1/desktop", Headers: cookie, Type: "application/json", Body: &body}, badGuest)
 	// A link whose list of devices is neither a list nor a text
 	for _, bad := range []string{`{"valid":true,"peer_ids":5}`, `{"valid":true,"peer_ids":{"0":"dev-1"}}`, `{"valid":true,"allowed_peer_ids":true}`} {
 		req := proxytest.Request{Method: "POST", Path: "/api/guest/mesh/devices/dev-1/desktop?guest=tok", Type: "application/json", Body: &body}
 		if closed, rec := aborted(t, w, req, &proxytest.Answer{Status: 200, Type: "application/json", Body: bad}); !closed {
 			t.Errorf("a link with %s was answered with %d %s", bad, rec.Code, rec.Body)
 		}
-	}
-	// The console is still there
-	if closed, rec := aborted(t, w, proxytest.Request{Path: "/api/guest/access-links/peers?t=tok"}, grant); closed || rec.Code != 200 {
-		t.Errorf("a plain request afterwards: closed %v", closed)
 	}
 }
 
