@@ -58,12 +58,9 @@ func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		w.Vars["<UPLOADS>"] = uploads(w)
-		used := map[string]int{}
-		defer ticketFixes.unused(t, used)
-		w.Run(replay.Load(t, db, "node"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		defer ticketFixes.Unused(t)
+		w.Run(replay.Load(t, db, "node"), ticketFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			switch {
-			case ticketFixes.apply(t, w, step, got, used):
-				return true
 			case step.Files != nil:
 				if have := storedFiles(t, w); strings.Join(have, "\n") != strings.Join(step.Files, "\n") {
 					t.Errorf("files left in the attachment folder:\n   node: %q\n     go: %q", step.Files, have)
@@ -76,7 +73,7 @@ func TestNodeAnswers(t *testing.T) {
 				return true
 			}
 			return false
-		})
+		}))
 	})
 }
 
@@ -127,11 +124,8 @@ func download(t *testing.T, step replay.Step, got replay.Answer) {
 func TestNodeDeviceAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
-		used := map[string]int{}
-		defer deviceFixes.unused(t, used)
-		w.Run(replay.Load(t, db, "node_device"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
-			return deviceFixes.apply(t, w, step, got, used)
-		})
+		defer deviceFixes.Unused(t)
+		w.Run(replay.Load(t, db, "node_device"), deviceFixes.Check(w, nil))
 	})
 }
 
