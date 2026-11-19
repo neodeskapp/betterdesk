@@ -65,6 +65,11 @@ var ruleFixes = []ruleFix{
 	{bug: "PA3 (F3)", add: Rule{Prefix: "/api/users/me"}},
 	{bug: "PA3 (F3)", add: Rule{Prefix: "/api/users/avatars"}},
 	{bug: "PA3 (F3)", add: Rule{Prefix: "/api/panel/access/effective"}},
+	// The network tools belong to the toolkit.
+	{bug: "PA3 (F4)", add: Rule{Prefix: "/api/network/ping", Section: "toolkit"}},
+	{bug: "PA3 (F4)", add: Rule{Prefix: "/api/network/tcp", Section: "toolkit"}},
+	{bug: "PA3 (F4)", add: Rule{Prefix: "/api/network/http", Section: "toolkit"}},
+	{bug: "PA3 (F4)", add: Rule{Prefix: "/api/network/resolve", Section: "toolkit"}},
 }
 
 // sectionFix is a catalog section whose permissions differ from Node's.
@@ -80,6 +85,9 @@ var sectionFixes = []sectionFix{
 	{bug: "PA4, G16", key: "organizations", read: "user.view", write: "org.manage_devices"},
 	// The cross-platform routes and menu entry ask device.view.
 	{bug: "PA4", key: "cross-platform", read: "device.view", write: "device.edit"},
+	// Reading targets and status asks device.view, changing them
+	// server.config.
+	{bug: "PA3 (F4)", key: "network", read: "device.view", write: "server.config"},
 }
 
 // nodeTables returns the guard's rules and the catalog's sections as the

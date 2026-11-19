@@ -141,7 +141,7 @@
        },
        {
         "key": "network",
-        "read": "server.config",
+        "read": "device.view",
         "write": "server.config"
        },
        {
@@ -367,7 +367,7 @@
        "guests": "none",
        "help-requests": "read",
        "languages": "none",
-       "network": "none",
+       "network": "read",
        "organizations": "none",
        "permissions": "none",
        "registrations": "none",
@@ -627,6 +627,16 @@
          "keywords": "hardware software",
          "page": "inventory",
          "text": "Inventar"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/network",
+         "keywords": "ping monitor latency targets",
+         "page": "network",
+         "text": "Netzwerküberwachung"
         },
         {
          "core": false,
@@ -982,7 +992,7 @@
        },
        {
         "key": "network",
-        "read": "server.config",
+        "read": "device.view",
         "write": "server.config"
        },
        {
@@ -1208,7 +1218,7 @@
        "guests": "write",
        "help-requests": "write",
        "languages": "none",
-       "network": "none",
+       "network": "read",
        "organizations": "write",
        "permissions": "none",
        "registrations": "none",
@@ -1478,6 +1488,16 @@
          "keywords": "hardware software",
          "page": "inventory",
          "text": "Inventar"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/network",
+         "keywords": "ping monitor latency targets",
+         "page": "network",
+         "text": "Netzwerküberwachung"
         },
         {
          "core": false,
@@ -1912,7 +1932,7 @@
        },
        {
         "key": "network",
-        "read": "server.config",
+        "read": "device.view",
         "write": "server.config"
        },
        {
@@ -2138,7 +2158,7 @@
        "guests": "write",
        "help-requests": "write",
        "languages": "none",
-       "network": "none",
+       "network": "read",
        "organizations": "write",
        "permissions": "none",
        "registrations": "write",
@@ -2428,6 +2448,16 @@
          "keywords": "hardware software",
          "page": "inventory",
          "text": "Inventar"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/network",
+         "keywords": "ping monitor latency targets",
+         "page": "network",
+         "text": "Netzwerküberwachung"
         },
         {
          "core": false,
@@ -2943,7 +2973,7 @@
        },
        {
         "key": "network",
-        "read": "server.config",
+        "read": "device.view",
         "write": "server.config"
        },
        {

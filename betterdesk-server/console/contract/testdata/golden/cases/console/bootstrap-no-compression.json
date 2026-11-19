@@ -173,7 +173,7 @@
        },
        {
         "key": "network",
-        "read": "server.config",
+        "read": "device.view",
         "write": "server.config"
        },
        {
@@ -399,7 +399,7 @@
        "guests": "none",
        "help-requests": "read",
        "languages": "none",
-       "network": "none",
+       "network": "read",
        "organizations": "none",
        "permissions": "none",
        "registrations": "none",
@@ -659,6 +659,16 @@
          "keywords": "hardware software",
          "page": "inventory",
          "text": "Inventory"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/network",
+         "keywords": "ping monitor latency targets",
+         "page": "network",
+         "text": "Network monitoring"
         },
         {
          "core": false,
@@ -1012,7 +1022,7 @@
        },
        {
         "key": "network",
-        "read": "server.config",
+        "read": "device.view",
         "write": "server.config"
        },
        {

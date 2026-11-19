@@ -208,8 +208,8 @@
          "source": "role"
         },
         "network": {
-         "access": "none",
-         "role_ceiling": "none",
+         "access": "read",
+         "role_ceiling": "read",
          "source": "role"
         },
         "organizations": {

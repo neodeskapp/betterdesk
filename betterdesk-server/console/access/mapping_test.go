@@ -180,3 +180,18 @@ func TestOwnProfileIsForEveryAccount(t *testing.T) {
 		{"GET", "/api/users", "user.view", [5]string{"guard", "ok", "guard", "ok", "ok"}},
 	})
 }
+
+// PA3 (F4): network targets and status are read with device.view and
+// changed with server.config; the four tools ask device.connect, as the
+// toolkit does. server_admin keeps no tools (DECISIONS A46).
+func TestNetworkReadsAndTools(t *testing.T) {
+	// viewer, operator, guest_issuer, global_admin, server_admin
+	checkRouteCases(t, []routeCase{
+		{"GET", "/api/network/targets", "device.view", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/network/monitor/status", "device.view", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"POST", "/api/network/targets", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
+		{"POST", "/api/network/ping", "device.connect", [5]string{"guard", "ok", "guard", "ok", "guard"}},
+		{"POST", "/api/network/resolve", "device.connect", [5]string{"guard", "ok", "guard", "ok", "guard"}},
+		{"POST", "/api/network/targets/1/check", "device.connect", [5]string{"guard", "guard", "guard", "guard", "route"}},
+	})
+}

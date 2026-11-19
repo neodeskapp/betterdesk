@@ -46,7 +46,8 @@
   },
   {
    "roles": [
-    "viewer"
+    "viewer",
+    "server_admin"
    ],
    "status": 403,
    "headers": {
@@ -69,14 +70,13 @@
     "kind": "json",
     "json": {
      "code": "panel_access_denied",
-     "error": "Panel access denied: network",
+     "error": "Panel access denied: toolkit",
      "success": false
     }
    }
   },
   {
    "roles": [
-    "server_admin",
     "admin"
    ],
    "status": 403,

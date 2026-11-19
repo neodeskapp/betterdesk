@@ -119,6 +119,11 @@ var RouteRules = []Rule{
 	{Prefix: "/api/users/me"},
 	{Prefix: "/api/users/avatars"},
 	{Prefix: "/api/panel/access/effective"},
+	// The network page's four tools ask device.connect, as the toolkit does.
+	{Prefix: "/api/network/ping", Section: "toolkit"},
+	{Prefix: "/api/network/tcp", Section: "toolkit"},
+	{Prefix: "/api/network/http", Section: "toolkit"},
+	{Prefix: "/api/network/resolve", Section: "toolkit"},
 }
 
 const apiPrefix = "/api/"
