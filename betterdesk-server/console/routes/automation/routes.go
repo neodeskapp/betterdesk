@@ -11,11 +11,11 @@
 //     commands answers first) and reports a command's result (POST
 //     commands/{id}/result, at both mounts).
 //
-// The routes check little and hand what the request gives them to the
-// database, so an answer can depend on the database: a number in a text
-// field is stored as "5.0" on SQLite and as "5" on PostgreSQL, a flag
-// there fails on SQLite and is the text "true" on PostgreSQL. Package
-// jsbind keeps both behaviours. A new rule or command is answered with
+// The fields of a rule that hold text or a number take only their type
+// (rulecheck.go). Other values go to the database as the request gives
+// them, bound by package jsbind as the old console's drivers bound them,
+// so a command's device that is a number is stored as "5.0" on SQLite and
+// as "5" on PostgreSQL. A new rule or command is answered with
 // the values of the request on SQLite and with the stored row on
 // PostgreSQL. The SMTP settings routes hand their work to package mail.
 package automation
@@ -149,9 +149,9 @@ type ruleCreated struct {
 // scope_device_id?, cooldown_secs?, notify_emails?, enabled?}.
 //
 // The name has to be a text that is not blank, the type one of six and
-// the comparison, when given, one of six. A severity that is none of the
-// three is "warning". Everything else is stored as it came, or fails in
-// the database. A rule is on unless enabled is false, 0, "0" or "false".
+// the comparison, when given, one of six, and the fields of wrongType
+// have their type. A severity that is none of the three is "warning". A
+// rule is on unless enabled is false, 0, "0" or "false".
 func (h *handlers) createRule(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	name := member(body, "name")
@@ -167,6 +167,10 @@ func (h *handlers) createRule(w http.ResponseWriter, r *http.Request) {
 	op := member(body, "condition_op")
 	if op.value.Truthy() && !oneOf(operators, op.value) {
 		fail(w, r, http.StatusBadRequest, "Invalid condition_op. Valid: gt, gte, lt, lte, eq, neq")
+		return
+	}
+	if refused := wrongType(body); refused != "" {
+		fail(w, r, http.StatusBadRequest, refused)
 		return
 	}
 
@@ -217,8 +221,9 @@ func (h *handlers) rule(w http.ResponseWriter, r *http.Request) {
 
 // updateRule answers PATCH rules/{id}: every member of the body that
 // names a field of a rule is written, null included. The name has to be a
-// text, and the type and the comparison one of theirs. enabled is stored
-// by its truth, so "false" turns a rule on.
+// text, the type and the comparison one of theirs, and the fields of
+// wrongType have their type. enabled is stored by its truth, so "false"
+// turns a rule on.
 func (h *handlers) updateRule(w http.ResponseWriter, r *http.Request) {
 	rule, err := ruleByID(r.Context(), h.db, number(r, "id"))
 	if err != nil {
@@ -257,6 +262,10 @@ func (h *handlers) updateRule(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		changes = append(changes, change{"condition_op", op})
+	}
+	if refused := wrongType(body); refused != "" {
+		fail(w, r, http.StatusBadRequest, refused)
+		return
 	}
 	for _, column := range []string{"condition_value", "severity", "scope_device_id", "cooldown_secs", "notify_emails"} {
 		if body.Has(column) {

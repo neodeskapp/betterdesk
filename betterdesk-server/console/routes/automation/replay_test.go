@@ -357,17 +357,17 @@ func TestWhatANewRuleAndANewCommandAreAnsweredWith(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/automation/rules",
-			Body: replay.Text(`{"name":" Types ","condition_type":"custom","description":5,"condition_value":"12.50","severity":"fatal","scope_device_id":7,"cooldown_secs":"900","notify_emails":0,"enabled":"0"}`)})
+			Body: replay.Text(`{"name":" Types ","condition_type":"custom","description":"text","condition_value":12.5,"severity":"fatal","scope_device_id":"D7","cooldown_secs":900,"notify_emails":"","enabled":"0"}`)})
 		want := db.Pick(
-			`{"success":true,"rule":{"id":1,"name":"Types","description":5,"condition_type":"custom","condition_op":"gt","condition_value":"12.50","severity":"warning","scope_device_id":7,"cooldown_secs":"900","notify_emails":"","enabled":false,"created_by":"e2e_admin"}}`,
-			`{"success":true,"rule":{"id":1,"name":"Types","description":"5","enabled":false,"condition_type":"custom","condition_op":"gt","condition_value":12.5,"severity":"warning","scope_device_id":"7","cooldown_secs":900,"notify_emails":"","created_by":"e2e_admin","created_at":"<now, ISO form>","updated_at":"<now, ISO form>"}}`)
+			`{"success":true,"rule":{"id":1,"name":"Types","description":"text","condition_type":"custom","condition_op":"gt","condition_value":12.5,"severity":"warning","scope_device_id":"D7","cooldown_secs":900,"notify_emails":"","enabled":false,"created_by":"e2e_admin"}}`,
+			`{"success":true,"rule":{"id":1,"name":"Types","description":"text","enabled":false,"condition_type":"custom","condition_op":"gt","condition_value":12.5,"severity":"warning","scope_device_id":"D7","cooldown_secs":900,"notify_emails":"","created_by":"e2e_admin","created_at":"<now, ISO form>","updated_at":"<now, ISO form>"}}`)
 		if have := replay.Normalize(got.Body); got.Status != 201 || have != want {
 			t.Errorf("new rule: %d %s\nwant 201 %s", got.Status, have, want)
 		}
 		got = w.Do(replay.Request{Role: "admin", Path: "/api/automation/rules/1"})
 		want = db.Pick(
-			`{"id":1,"name":"Types","description":"5.0","enabled":0,"condition_type":"custom","condition_op":"gt","condition_value":12.5,"severity":"warning","scope_device_id":"7.0","cooldown_secs":900,"notify_emails":"","created_by":"e2e_admin","created_at":"<now, SQLite form>","updated_at":"<now, SQLite form>"}`,
-			`{"id":1,"name":"Types","description":"5","enabled":false,"condition_type":"custom","condition_op":"gt","condition_value":12.5,"severity":"warning","scope_device_id":"7","cooldown_secs":900,"notify_emails":"","created_by":"e2e_admin","created_at":"<now, ISO form>","updated_at":"<now, ISO form>"}`)
+			`{"id":1,"name":"Types","description":"text","enabled":0,"condition_type":"custom","condition_op":"gt","condition_value":12.5,"severity":"warning","scope_device_id":"D7","cooldown_secs":900,"notify_emails":"","created_by":"e2e_admin","created_at":"<now, SQLite form>","updated_at":"<now, SQLite form>"}`,
+			`{"id":1,"name":"Types","description":"text","enabled":false,"condition_type":"custom","condition_op":"gt","condition_value":12.5,"severity":"warning","scope_device_id":"D7","cooldown_secs":900,"notify_emails":"","created_by":"e2e_admin","created_at":"<now, ISO form>","updated_at":"<now, ISO form>"}`)
 		if have := replay.Normalize(got.Body); got.Status != 200 || have != want {
 			t.Errorf("the rule read back: %d %s\nwant 200 %s", got.Status, have, want)
 		}

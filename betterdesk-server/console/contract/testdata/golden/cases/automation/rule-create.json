@@ -200,7 +200,7 @@
       "created_by": "e2e_admin",
       "description": "CPU over 90 percent",
       "enabled": false,
-      "id": 6,
+      "id": 3,
       "name": "CPU high",
       "notify_emails": "ops@example.com",
       "scope_device_id": "900100001",
