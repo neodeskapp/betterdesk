@@ -89,6 +89,10 @@ func TestValidateBrandingMatchesNode(t *testing.T) {
 			t.Errorf("case %d %s: go failed with %v", i, deref(c.Input), err)
 			continue
 		}
+		if host, fixed := ipv6HostVectors[i]; fixed {
+			c.Normalized, c.Errors, c.Hash = withIPv6Host(t, c.Normalized, c.Errors, host)
+			c.Valid = len(c.Errors) == 0
+		}
 		if fixed, changed := withFixedRelay(c.Normalized, "relay_host"); changed {
 			v, err := parseJSON(fixed)
 			if err != nil {

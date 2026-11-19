@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -120,4 +121,45 @@ func withFixedRelay(text, key string) (string, bool) {
 		}
 	}
 	return text, false
+}
+
+// ipv6HostVectors are the validate_branding vectors whose server host is
+// an IPv6 address, by index (SI3): Node cut "http://[::1]:80" at its
+// first colon and refused it; Go reads the address "::1".
+var ipv6HostVectors = map[int]string{304: "::1", 950: "::1", 1240: "::1"}
+
+// withIPv6Host is a recorded result of such a vector as Go gives it: the
+// host error gone and the address as the server host.
+func withIPv6Host(t *testing.T, normalized string, errs []string, host string) (string, []string, string) {
+	t.Helper()
+	v, err := parseJSON(normalized)
+	if err != nil {
+		t.Fatal(err)
+	}
+	o := v.(*goapi.Object)
+	o.Set("server_host", host)
+	kept := []string{}
+	for _, e := range errs {
+		if e != "server_host_invalid" {
+			kept = append(kept, e)
+		}
+	}
+	return stringify(o), kept, HashBranding(o)
+}
+
+// TestIPv6ServerHostInAPIAddress puts an IPv6 server host in brackets in
+// the API address a profile and a template build name (BUGS SI3).
+func TestIPv6ServerHostInAPIAddress(t *testing.T) {
+	s := New(Options{ServerInfo: fakeServerInfo{}, DataDir: t.TempDir(), Env: func() []string { return nil }})
+	v, err := ValidateBranding(goapi.NewObject("server_host", "[2001:db8::1]:21116", "use_https", false), nil)
+	if err != nil || !v.Valid {
+		t.Fatalf("%v %v", err, v.Errors)
+	}
+	finalized := s.FinalizeSupportBranding(context.Background(), v.Normalized)
+	if got := finalized.Get("api_server"); got != "http://[2001:db8::1]:21114" {
+		t.Errorf("profile's API address %v", got)
+	}
+	if got := s.buildAPIServer(goapi.NewObject("server_host", "::1", "use_https", true, "api_port", "443")); got != "https://[::1]" {
+		t.Errorf("template build's API address %q", got)
+	}
 }

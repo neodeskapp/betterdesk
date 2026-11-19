@@ -43,7 +43,10 @@ func TestHostHelpersAgainstNode(t *testing.T) {
 	m := &mismatches{t: t}
 
 	valid := 0
+	ipv6 := &ipv6Cases{t: t}
+	all := m
 	for _, c := range v.NormalizeServerHost {
+		m := ipv6.mismatches(all, c.In)
 		if c.Out.Valid {
 			valid++
 		}
@@ -55,6 +58,7 @@ func TestHostHelpersAgainstNode(t *testing.T) {
 		t.Fatalf("%d of %d hosts are valid: the vectors do not test both answers", valid, len(v.NormalizeServerHost))
 	}
 	for _, c := range v.NormalizeHostInput {
+		m := ipv6.mismatches(all, c.In)
 		if got := NormalizeHostInput(c.In); got != c.Out {
 			m.errorf("NormalizeHostInput(%q) = %q, Node answers %q", c.In, got, c.Out)
 		}
@@ -200,8 +204,11 @@ func TestResolveEndpointsAgainstNode(t *testing.T) {
 	base := t.TempDir()
 	m := &mismatches{t: t}
 	sources := map[string]int{}
+	ipv6 := &ipv6Cases{t: t}
+	all := m
 	for i, c := range v.Resolve {
 		label := "case " + strconv.Itoa(i)
+		m := ipv6.mismatches(all, c.Cfg, c.Env, c.Durable, c.Legacy, c.Headers, c.QueryHost)
 		st := stageEndpoints(t, filepath.Join(base, strconv.Itoa(i)), c.Durable, c.Legacy, false)
 		opts := c.Cfg.options()
 		opts.DataDir, opts.EnvPath = st.dataDir, st.envPath
@@ -282,5 +289,51 @@ func TestRequestHostOfJoinsHeaders(t *testing.T) {
 	}
 	if RequestHostOf(nil) != nil {
 		t.Fatal("a nil request gives a host")
+	}
+}
+
+// TestNormalizeServerHostKeepsIPv6 reads an IPv6 address, bare or in
+// brackets with a port, as one host, and puts it in brackets in the API
+// address (BUGS SI3: it was cut at its first colon, and a bare address
+// went into the API address as it was).
+func TestNormalizeServerHostKeepsIPv6(t *testing.T) {
+	for in, want := range map[string]HostResult{
+		"2001:db8::1":                   {Valid: true, Host: "2001:db8::1"},
+		"[2001:db8::1]":                 {Valid: true, Host: "2001:db8::1"},
+		"[2001:db8::1]:21116":           {Valid: true, Host: "2001:db8::1"},
+		" https://[2001:DB8::1]:443/x ": {Valid: true, Host: "2001:DB8::1"},
+		"::1":                           {Valid: true, Host: "::1"},
+		"::ffff:192.0.2.1":              {Valid: true, Host: "::ffff:192.0.2.1"},
+		"desk.example.com:21116":        {Valid: true, Host: "desk.example.com"},
+		"192.0.2.1:21116":               {Valid: true, Host: "192.0.2.1"},
+	} {
+		if got := NormalizeServerHost(in); got != want {
+			t.Errorf("NormalizeServerHost(%q) = %+v, want %+v", in, got, want)
+		}
+	}
+	s := New(Options{GoAPIPort: 21114})
+	for host, want := range map[string]string{
+		"2001:db8::1": "http://[2001:db8::1]:21114",
+		"::1":         "http://[::1]:21114",
+		"192.0.2.1":   "http://192.0.2.1:21114",
+		"desk":        "http://desk:21114",
+	} {
+		if got := s.APIURLForHost(host, false); got != want {
+			t.Errorf("APIURLForHost(%q) = %q, want %q", host, got, want)
+		}
+	}
+}
+
+// TestResolveIPv6Endpoints gives clients an IPv6 host whole, its relay
+// and API address with the address in brackets (BUGS SI3).
+func TestResolveIPv6Endpoints(t *testing.T) {
+	s := New(Options{APIURL: "not a url", GoAPIPort: 21114, DataDir: t.TempDir(), EnvPath: filepath.Join(t.TempDir(), ".env"), Getenv: envMap(nil)})
+	got := s.ResolveRustDeskEndpoints(nil, "[2001:db8::1]:21116")
+	if got.Host != "2001:db8::1" || got.Relay != "[2001:db8::1]:21117" || got.API != "http://[2001:db8::1]:21114" {
+		t.Errorf("for the query host: %+v", got)
+	}
+	got = s.ResolveRustDeskEndpoints(&RequestHost{Host: "[::1]:5000"}, "")
+	if got.Host != "::1" || got.Relay != "[::1]:21117" || got.API != "http://[::1]:21114" || got.Sources.Host != SourceRequest {
+		t.Errorf("for the request's host: %+v", got)
 	}
 }

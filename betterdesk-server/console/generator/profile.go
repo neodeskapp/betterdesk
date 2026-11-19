@@ -104,9 +104,9 @@ func (s *Service) FinalizeSupportBranding(ctx context.Context, input any) *goapi
 		scheme = "https"
 	}
 	omitPort := (scheme == "https" && apiPort == "443") || (scheme == "http" && apiPort == "80")
-	address := scheme + "://" + host + ":" + apiPort
+	address := scheme + "://" + serverinfo.HostForURL(host) + ":" + apiPort
 	if omitPort {
-		address = scheme + "://" + host
+		address = scheme + "://" + serverinfo.HostForURL(host)
 	}
 	apiServer := or(branding.Get("api_server"), address)
 	pubKey := or(or(string(si.ResolvePublicKey(ctx)), branding.Get("public_key")), "")

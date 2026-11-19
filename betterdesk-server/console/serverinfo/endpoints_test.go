@@ -86,7 +86,10 @@ func TestNormalizeSettingsAgainstNode(t *testing.T) {
 			accepted++
 		}
 	}
+	ipv6 := &ipv6Cases{t: t}
+	all := m
 	for _, c := range v.Normalize {
+		m = ipv6.mismatches(all, c.Raw)
 		in := endpointsInput(c.Raw)
 		got, err := NormalizeSettings(in)
 		check("NormalizeSettings", c.Raw, got, err, c.Normalize.Out, c.Normalize.Err)
@@ -191,8 +194,11 @@ func TestWritePublicEndpointsAgainstNode(t *testing.T) {
 	base := t.TempDir()
 	m := &mismatches{t: t}
 	written, refused := 0, 0
+	ipv6 := &ipv6Cases{t: t}
+	all := m
 	for i, c := range v.Write {
 		label := "case " + strconv.Itoa(i)
+		m := ipv6.mismatches(all, c.Raw, c.Env, c.Durable, c.Legacy)
 		st := stageEndpoints(t, filepath.Join(base, strconv.Itoa(i)), c.Durable, c.Legacy, c.Options.NoDataDir)
 		s := New(Options{DataDir: st.dataDir, EnvPath: st.envPath, Getenv: envMap(c.Env), Logger: &recordingLogger{}})
 

@@ -1,9 +1,12 @@
 package serverinfo
 
 import (
+	"encoding/json"
+	"net/netip"
 	"regexp"
 	"strconv"
 	"strings"
+	"testing"
 )
 
 // The recorded Node answers that the Go console gives otherwise on
@@ -106,3 +109,86 @@ var (
 	nodeRelayHostPort = regexp.MustCompile(`^([^:/\t\n\v\f\r \x{a0}\x{1680}\x{2000}-\x{200a}\x{2028}\x{2029}\x{202f}\x{205f}\x{3000}\x{feff}]+):([0-9]{1,5})$`)
 	nodeRelayIPv6     = regexp.MustCompile(`^\[([0-9a-fA-F:]+)\](?::([0-9]{1,5}))?$`)
 )
+
+// holdsIPv6Host reports whether the input of a recorded case holds an
+// IPv6 address as a host: a text, or a part of one between white space,
+// commas and "=", that is such an address after a scheme, a path and a
+// port in brackets are cut off. Node cut such a host at its first colon;
+// the SI3 fix reads it whole. Those cases may differ from Node's answers;
+// TestNormalizeServerHostKeepsIPv6 and TestResolveIPv6Endpoints check
+// what Go does with them.
+func holdsIPv6Host(t testing.TB, input ...any) bool {
+	t.Helper()
+	raw, err := json.Marshal(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var decoded any
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		t.Fatal(err)
+	}
+	return anyIPv6Host(decoded)
+}
+
+func anyIPv6Host(v any) bool {
+	switch t := v.(type) {
+	case string:
+		for _, part := range hostSeparators.Split(t, -1) {
+			if isIPv6HostText(part) {
+				return true
+			}
+		}
+	case []any:
+		for _, e := range t {
+			if anyIPv6Host(e) {
+				return true
+			}
+		}
+	case map[string]any:
+		for _, e := range t {
+			if anyIPv6Host(e) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+var (
+	hostSeparators = regexp.MustCompile(`[\s\p{Z},=\x{feff}]+`)
+	schemePrefix   = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9+.-]*://`)
+	bracketedHost  = regexp.MustCompile(`^\[([^\]]*)\](:[0-9]*)?$`)
+)
+
+func isIPv6HostText(text string) bool {
+	host := schemePrefix.ReplaceAllString(text, "")
+	host, _, _ = strings.Cut(host, "/")
+	if m := bracketedHost.FindStringSubmatch(host); m != nil {
+		host = m[1]
+	}
+	addr, err := netip.ParseAddr(host)
+	return err == nil && addr.Is6()
+}
+
+// ipv6Cases lets the recorded cases whose input holds an IPv6 host
+// differ from Node's answers (SI3); every other case must match them.
+type ipv6Cases struct {
+	t testing.TB
+}
+
+// mismatches is m for a case without an IPv6 host, and for a case with
+// one a collector that drops its differences.
+func (c *ipv6Cases) mismatches(m *mismatches, input ...any) *mismatches {
+	c.t.Helper()
+	if !holdsIPv6Host(c.t, input...) {
+		return m
+	}
+	return &mismatches{t: dropped{c.t}}
+}
+
+// dropped takes the differences of a case with an IPv6 host.
+type dropped struct{ testing.TB }
+
+func (dropped) Helper()               {}
+func (dropped) Errorf(string, ...any) {}
+func (dropped) Fatalf(string, ...any) {}

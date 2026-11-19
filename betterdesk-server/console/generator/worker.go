@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/serverinfo"
 )
 
 // The build queue (services/clientTemplateWorker.js). A bundle's
@@ -762,10 +763,11 @@ func (s *Service) buildAPIServer(branding any) string {
 	if useHTTPS {
 		scheme = "https"
 	}
+	address := serverinfo.HostForURL(jsString(host))
 	if (scheme == "https" && port == "443") || (scheme == "http" && port == "80") {
-		return scheme + "://" + jsString(host)
+		return scheme + "://" + address
 	}
-	return scheme + "://" + jsString(host) + ":" + port
+	return scheme + "://" + address + ":" + port
 }
 
 // BuildCustomTxtContent signs the custom.txt of a bundle's profile with

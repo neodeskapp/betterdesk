@@ -250,7 +250,10 @@ func TestConfigPayloadAgainstNode(t *testing.T) {
 	pubKey := filepath.Join(t.TempDir(), "id_ed25519.pub")
 	m := &mismatches{t: t}
 	withKey := 0
+	ipv6 := &ipv6Cases{t: t}
+	all := m
 	for i, c := range v.Payload {
+		m := ipv6.mismatches(all, c.Cfg, c.Arg.Endpoints)
 		putKeyFile(t, pubKey, c.FileKey)
 		opts := c.Cfg.options()
 		opts.PubKeyPath = pubKey
@@ -397,6 +400,8 @@ func TestKeyRunsAgainstNode(t *testing.T) {
 	pubKey, apiKey := filepath.Join(dir, "id_ed25519.pub"), filepath.Join(dir, ".api_key")
 	m := &mismatches{t: t}
 	fetched, cached := 0, 0
+	ipv6 := &ipv6Cases{t: t}
+	all := m
 	for r, run := range v.Runs {
 		api := &stubAPI{}
 		clock := time.UnixMilli(1_700_000_000_000)
@@ -445,6 +450,7 @@ func TestKeyRunsAgainstNode(t *testing.T) {
 				t.Fatalf("unknown call %q", step.Call)
 			}
 			label := "run " + strconv.Itoa(r) + " step " + strconv.Itoa(i) + " " + step.Call
+			m := ipv6.mismatches(all, run.Cfg, step.Arg.Endpoints)
 			if text := jsonText(t, got); text != fixedKeyRunAnswer(string(step.Out)) {
 				m.errorf("%s: answer\n%s\nNode answers\n%s", label, text, step.Out)
 			}

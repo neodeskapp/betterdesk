@@ -2,6 +2,7 @@ package serverinfo
 
 import (
 	"net/http"
+	"net/netip"
 	"regexp"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 )
 
 var (
+	portSuffix  = regexp.MustCompile(`^:[0-9]+$`)
 	hostPattern = regexp.MustCompile(`^[a-zA-Z0-9](?:[a-zA-Z0-9.-]{0,253}[a-zA-Z0-9])?$`)
 	ipv4Pattern = regexp.MustCompile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`)
 )
@@ -22,11 +24,13 @@ type HostResult struct {
 	Host  string `json:"host"`
 }
 
-// NormalizeServerHost reads a host name or IPv4 address out of what an
-// operator typed: white space around it, a leading "http://" or
-// "https://", and everything from the first "/" or ":" on are dropped. At
-// most 253 characters of the input are read. An IPv6 address is not a
-// valid host here.
+// NormalizeServerHost reads a host name, an IPv4 address or an IPv6
+// address out of what an operator typed: white space around it, a
+// leading "http://" or "https://", everything from the first "/" on and a
+// port after the host are dropped. An IPv6 address, bare or in brackets
+// ("[2001:db8::1]:21116"), is the address without brackets; any other
+// text loses everything from its first ":" on. At most 253 characters of
+// the input are read.
 func NormalizeServerHost(input string) HostResult {
 	host := sliceUnits(jsTrim(input), 0, 253)
 	if host == "" {
@@ -35,6 +39,9 @@ func NormalizeServerHost(input string) HostResult {
 	host = trimHTTPScheme(host)
 	if i := strings.IndexByte(host, '/'); i >= 0 {
 		host = host[:i]
+	}
+	if addr, ok := ipv6Host(host); ok {
+		return HostResult{Valid: true, Host: addr}
 	}
 	if i := strings.IndexByte(host, ':'); i >= 0 {
 		host = host[:i]
@@ -46,6 +53,37 @@ func NormalizeServerHost(input string) HostResult {
 		return HostResult{Error: "server_host_invalid"}
 	}
 	return HostResult{Valid: true, Host: host}
+}
+
+// ipv6Host reads an IPv6 address without a zone, bare ("2001:db8::1") or
+// in brackets with a port or without ("[2001:db8::1]:21116"), and returns
+// it without the brackets.
+func ipv6Host(host string) (string, bool) {
+	text := host
+	if strings.HasPrefix(host, "[") {
+		end := strings.IndexByte(host, ']')
+		if end < 0 {
+			return "", false
+		}
+		if rest := host[end+1:]; rest != "" && !portSuffix.MatchString(rest) {
+			return "", false
+		}
+		text = host[1:end]
+	}
+	addr, err := netip.ParseAddr(text)
+	if err != nil || !addr.Is6() || addr.Zone() != "" {
+		return "", false
+	}
+	return text, true
+}
+
+// HostForURL is a host as it stands in a URL: an IPv6 address without a
+// zone in brackets, anything else as it is.
+func HostForURL(host string) string {
+	if addr, err := netip.ParseAddr(host); err == nil && addr.Is6() && addr.Zone() == "" {
+		return "[" + host + "]"
+	}
+	return host
 }
 
 // trimHTTPScheme removes "http://" or "https://" in any letter case from

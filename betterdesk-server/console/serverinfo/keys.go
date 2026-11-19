@@ -172,8 +172,10 @@ func NormalizeHostInput(serverHost string) string {
 }
 
 // APIURLForHost returns the address of the server's API on host: http or
-// https, with the API port unless it is the scheme's own.
+// https, with the API port unless it is the scheme's own, and an IPv6
+// address in brackets.
 func (s *Service) APIURLForHost(host string, useHTTPS bool) string {
+	host = HostForURL(host)
 	port := s.opts.GoAPIPort
 	if port == 0 {
 		port = s.opts.APIPort
