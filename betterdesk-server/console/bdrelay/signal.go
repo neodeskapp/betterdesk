@@ -29,7 +29,8 @@ func (s *Service) Register(reg *ws.Registry) {
 // with 4409 "Replaced by new connection".
 //
 // Messages the agent sends before the socket is accepted are dropped, as
-// they were when no message listener was attached yet.
+// they were when no message listener was attached yet. A socket that ends
+// while its token is checked leaves no trace.
 func (s *Service) serveSignal(u *ws.Upgrade) {
 	if !u.CheckOrigin("bd-signal /ws/bd-signal") {
 		return
@@ -83,17 +84,17 @@ func (s *Service) serveSignal(u *ws.Upgrade) {
 		return
 	}
 
-	s.mu.Lock()
-	var endedEarly error
 	select {
-	case endedEarly = <-ended:
+	case <-ended:
+		// The socket ended while its token was checked: it is neither
+		// counted nor listed, and replaces nothing.
+		return
 	default:
 	}
+	s.mu.Lock()
 	if s.perIP.Count(ip) >= MaxRelayPerIP {
 		s.mu.Unlock()
-		if endedEarly == nil {
-			refuse(4429, "Too many connections")
-		}
+		refuse(4429, "Too many connections")
 		return
 	}
 	s.perIP.Add(ip)
@@ -102,12 +103,6 @@ func (s *Service) serveSignal(u *ws.Upgrade) {
 	}
 	s.online.set(deviceID, conn)
 	s.mu.Unlock()
-	if endedEarly != nil {
-		// The socket ended while its token was checked, before anything
-		// listened for its end: the old relay counted it for good and
-		// listed it until the sweep.
-		return
-	}
 	attached.Store(true)
 	conn.KeepAlive(s.opts.PingInterval)
 	conn.SendText(`{"type":"welcome","device_id":` + quote(deviceID) + `}`)

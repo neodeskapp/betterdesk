@@ -453,3 +453,63 @@ func TestAnErrorCountsDownOnce(t *testing.T) {
 		}
 	})
 }
+
+// TestSignalEndedDuringTheCheckIsNotCounted: a signal socket that ends
+// while its token is checked is neither counted for its address nor
+// listed as online, and does not replace the device's open socket: ten of
+// them leave the address its whole budget.
+func TestSignalEndedDuringTheCheckIsNotCounted(t *testing.T) {
+	t.Cleanup(wstest.Goroutines(t))
+	release := make(chan struct{})
+	checking := make(chan struct{}, MaxRelayPerIP)
+	svc := New(Options{VerifyDevice: func(ctx context.Context, deviceID, token string) (bool, error) {
+		if token != "slow" {
+			return oracleVerify(ctx, deviceID, token)
+		}
+		checking <- struct{}{}
+		<-release
+		return true, nil
+	}})
+	reg := ws.New(ws.Options{})
+	svc.Register(reg)
+	srv := httptest.NewServer(reg)
+	t.Cleanup(func() {
+		srv.Close()
+		reg.Close()
+	})
+	addr := strings.TrimPrefix(srv.URL, "http://")
+
+	first, ok, code := openSignal(t, addr, "dev0", nil)
+	if !ok {
+		t.Fatalf("dev0 closed with %d", code)
+	}
+	defer first.Close(1000)
+	for i := range MaxRelayPerIP {
+		c, _, err := wstest.Dial(addr, fmt.Sprintf("/ws/bd-signal?device_id=dev%d&token=slow", i), nil)
+		if err != nil || c == nil {
+			t.Fatalf("dial: %v", err)
+		}
+		<-checking
+		c.Drop()
+	}
+	time.Sleep(200 * time.Millisecond)
+	close(release)
+	waitCount(t, svc, 1)
+	if online := svc.OnlineDeviceIDs(); len(online) != 1 || online[0] != "dev0" {
+		t.Errorf("online %v, want [dev0]", online)
+	}
+	if closed, code, reason := first.Closed(); closed {
+		t.Errorf("dev0's socket was closed with %d %q", code, reason)
+	}
+	var open []*wstest.Client
+	for i := 1; i < MaxRelayPerIP; i++ {
+		c, ok, code := openSignal(t, addr, fmt.Sprintf("dev%d", 20+i), nil)
+		if !ok {
+			t.Fatalf("socket %d after the ended ones closed with %d", i, code)
+		}
+		open = append(open, c)
+	}
+	for _, c := range open {
+		c.Close(1000)
+	}
+}
