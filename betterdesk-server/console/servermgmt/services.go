@@ -47,8 +47,7 @@ var (
 )
 
 // StartError is a service command that could not be started at all
-// (systemctl or powershell missing). The old console had no handler for
-// it and ended; a route drops the request.
+// (systemctl or powershell missing). The route answers 500.
 type StartError struct{ Err error }
 
 func (e *StartError) Error() string { return "start service command: " + e.Err.Error() }

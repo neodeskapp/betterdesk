@@ -295,9 +295,8 @@ func TestBodyChecks(t *testing.T) {
 }
 
 // A service action runs the command, answers its result and writes the
-// audit entry with the exit code; a command that cannot start drops the
-// request, where the old console ended (DECISIONS A19); the console's own
-// service restarts by the process's exit when RestartSelf says so.
+// audit entry with the exit code; a command that cannot start answers 500
+// with a fixed text and writes no audit entry.
 func TestServiceRoutes(t *testing.T) {
 	db := storetest.Migrated(t)
 	s := newSite(t, db)
@@ -311,16 +310,12 @@ func TestServiceRoutes(t *testing.T) {
 		t.Errorf("audits %v", got)
 	}
 	s.run.err = errors.New("exec: systemctl not found")
-	func() {
-		defer func() {
-			if p := recover(); p != http.ErrAbortHandler {
-				t.Errorf("a command that cannot start: %v", p)
-			}
-		}()
-		s.call(admin, "POST", "/api/server-management/services/hbbs/restart", "{}")
-	}()
+	rec = s.call(admin, "POST", "/api/server-management/services/hbbs/restart", "{}")
+	if rec.Code != 500 || strings.TrimSpace(rec.Body.String()) != `{"success":false,"error":"Service command could not be started"}` {
+		t.Errorf("a command that cannot start: %d %s", rec.Code, rec.Body.String())
+	}
 	if len(audits(t, db)) != 1 {
-		t.Error("a dropped request wrote an audit entry")
+		t.Error("a command that could not start wrote an audit entry")
 	}
 
 	s.run.stdout, s.run.code, s.run.err = "betterdesk-server.service loaded active running BetterDesk\nsshd.service loaded active running SSH\nhbbs.service loaded inactive dead\n", 0, nil

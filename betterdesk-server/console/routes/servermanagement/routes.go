@@ -18,11 +18,12 @@ const permission = "server.config"
 type handlers struct {
 	d   *kit.Deps
 	svc *servermgmt.Service
+	log *kit.Logger
 }
 
 // Register adds the group's routes.
 func Register(d *kit.Deps) {
-	h := &handlers{d: d, svc: d.ServerMgmt}
+	h := &handlers{d: d, svc: d.ServerMgmt, log: d.Log.Child("SERVER-MGMT")}
 	auth := []kit.Middleware{d.RequireAuth, d.RequirePermission(permission)}
 	r := d.Router
 	r.Get("/api/server-management/info", h.info, auth...)

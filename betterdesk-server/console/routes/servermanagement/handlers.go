@@ -288,9 +288,9 @@ func (h *handlers) control(w http.ResponseWriter, r *http.Request) {
 	result, err := h.svc.ControlService(r.Context(), name, action)
 	var notStarted *servermgmt.StartError
 	if errors.As(err, &notStarted) {
-		// The old console ended on a command that could not start
-		// (DECISIONS A19): drop the request.
-		panic(http.ErrAbortHandler)
+		h.log.Error("Service command could not be started:", err)
+		kit.Fail(w, r, http.StatusInternalServerError, "Service command could not be started")
+		return
 	}
 	if err != nil {
 		fail(w, r, http.StatusBadRequest, err, "control_failed")
