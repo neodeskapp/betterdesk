@@ -490,6 +490,9 @@ var probeDifferences = map[string]string{
 	// the command no longer sees the name in capitals, which the script's
 	// command did not know
 	"ping in capitals": `{"success":true,"rtt_ms":"number","error":null}`,
+	// NM5: the check connects to an IPv6 address the guard passed; Node
+	// looked it up as a name, brackets included
+	"http v6 address": `{"success":false,"rtt_ms":null,"status_code":null,"error":"connect ENETUNREACH 2001:db8::1:8080 - Local (:::0)"}`,
 	// NM9: when every address of a name fails, the message is the first one's
 	"http name with a v6 and a v4 address": `{"success":false,"rtt_ms":null,"status_code":null,"error":"connect ENETUNREACH 2001:db8::1:8080 - Local (:::0)"}`,
 	// Go's server refuses a request line with a "%" that starts no escape
@@ -1096,4 +1099,31 @@ type dialerFunc func(ctx context.Context, network, address string) (net.Conn, er
 
 func (f dialerFunc) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
 	return f(ctx, network, address)
+}
+
+// An HTTP check of a URL with an IPv6 address connects to that address
+// once the guard has passed it (BUGS.md NM5).
+func TestHTTPCheckOfAnIPv6Address(t *testing.T) {
+	w := newWorld(t)
+	var dialed []string
+	toLocal := dialerFunc(func(ctx context.Context, network, address string) (net.Conn, error) {
+		dialed = append(dialed, address)
+		_, port, _ := net.SplitHostPort(address)
+		return (&net.Dialer{}).DialContext(ctx, network, net.JoinHostPort("127.0.0.1", port))
+	})
+	transport := newTransport(&connector{dialer: toLocal, now: time.Now})
+	t.Cleanup(transport.CloseIdleConnections)
+	p := w.prober(false)
+	p.transport = transport
+	res := p.checkHTTP(context.Background(), w.fill("http://[2001:DB8::10]:{http}/ok"), 5000)
+	if got := w.resultJSON(res); got != `{"success":true,"rtt_ms":"number","status_code":200,"error":null}` {
+		t.Errorf("result %s", got)
+	}
+	if want := w.fill("[[2001:db8::10]:{http}]"); fmt.Sprint(dialed) != want {
+		t.Errorf("dialed %v, want %s", dialed, want)
+	}
+	// What the guard refuses is still refused
+	if got := w.resultJSON(p.checkHTTP(context.Background(), "http://[::ffff:127.0.0.1]:80/", 5000)); got != `{"success":false,"rtt_ms":null,"status_code":null,"error":"Blocked IP address: ::ffff:7f00:1"}` {
+		t.Errorf("mapped loopback: %s", got)
+	}
 }

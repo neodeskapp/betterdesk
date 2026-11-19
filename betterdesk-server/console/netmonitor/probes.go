@@ -488,19 +488,15 @@ type connector struct {
 }
 
 // dial connects to host:port at the addresses the guard checked for the
-// request (in ctx), and nowhere else. With several addresses each gets a
-// quarter of a second before the next is tried, the families taking
-// turns. An IPv6 address fails: the old checks looked it up as a name,
-// brackets included (BUGS.md NM5).
+// request (in ctx), and nowhere else; for an address that is the address
+// itself. With several addresses each gets a quarter of a second before
+// the next is tried, the families taking turns.
 func (c *connector) dial(ctx context.Context, network, address string) (net.Conn, error) {
 	host, portText, err := net.SplitHostPort(address)
 	if err != nil {
 		return nil, err
 	}
 	port, _ := strconv.Atoi(portText)
-	if strings.Contains(host, ":") {
-		return nil, &ssrfguard.LookupError{Code: "ENOTFOUND", Host: "[" + host + "]"}
-	}
 	checked, ok := ctx.Value(checkedHost{}).(ssrfguard.Host)
 	if !ok || checked.Name != host {
 		return nil, errNotChecked
