@@ -413,6 +413,73 @@ func TestTitleAndCommentThatAreNoText(t *testing.T) {
 	})
 }
 
+// Every member of a ticket has its type, on create and in a change, so a
+// value goes in the same on both databases or not at all (BUGS TK1).
+func TestTicketMembersOfTheWrongType(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		g := newGroup(t, db)
+		for body, want := range map[string]string{
+			`{"title":"x","description":5}`:                        `{"error":"Invalid description"}`,
+			`{"title":"x","description":true}`:                     `{"error":"Invalid description"}`,
+			`{"title":"x","description":{},"device_id":["a","b"]}`: `{"error":"Invalid description"}`,
+			`{"title":"x","device_id":["a","b"]}`:                  `{"error":"Invalid device_id"}`,
+			`{"title":"x","device_id":0}`:                          `{"error":"Invalid device_id"}`,
+			`{"title":"x","assigned_to":7}`:                        `{"error":"Invalid assigned_to"}`,
+			`{"title":"x","assigned_to":{"a":1}}`:                  `{"error":"Invalid assigned_to"}`,
+		} {
+			g.want(g.do("admin", "POST", "/api/tickets", body), 400, want)
+		}
+		var n int
+		if err := db.QueryRow(context.Background(), "SELECT COUNT(*) FROM tickets").Scan(&n); err != nil || n != 0 {
+			t.Fatalf("tickets stored: %d, %v", n, err)
+		}
+		g.want(g.do("admin", "POST", "/api/tickets", `{"title":"Kept","description":null,"device_id":"","assigned_to":null}`), 201, "")
+		for body, want := range map[string]string{
+			`{"description":5}`:              `{"error":"Invalid description"}`,
+			`{"description":["a"]}`:          `{"error":"Invalid description"}`,
+			`{"assigned_to":7}`:              `{"error":"Invalid assigned_to"}`,
+			`{"category":"anything goes"}`:   `{"error":"Invalid category. Valid: general, hardware, software, network, access, other"}`,
+			`{"category":null}`:              `{"error":"Invalid category. Valid: general, hardware, software, network, access, other"}`,
+			`{"sla_due_at":"x"}`:             `{"error":"Invalid sla_due_at"}`,
+			`{"sla_due_at":""}`:              `{"error":"Invalid sla_due_at"}`,
+			`{"sla_due_at":5}`:               `{"error":"Invalid sla_due_at"}`,
+			`{"sla_due_at":"2031-05-06"}`:    `{"error":"Invalid sla_due_at"}`,
+			`{"status":"open","category":5}`: `{"error":"Invalid category. Valid: general, hardware, software, network, access, other"}`,
+		} {
+			g.want(g.do("admin", "PATCH", "/api/tickets/1", body), 400, want)
+		}
+		type row struct {
+			Category, Due string
+			Description   store.NullString
+			Assigned      store.NullString
+		}
+		read := func() row {
+			var r row
+			var due store.Time
+			if err := store.SelectRow(context.Background(), db, "SELECT description, category, assigned_to, sla_due_at FROM tickets WHERE id = 1").Scan(&r.Description, &r.Category, &r.Assigned, &due); err != nil {
+				t.Fatal(err)
+			}
+			text, _ := json.Marshal(due)
+			r.Due = string(text)
+			return r
+		}
+		before := read()
+		if before.Description.String != "" || before.Category != "general" || before.Assigned.Valid {
+			t.Errorf("the ticket as created: %+v", before)
+		}
+		// A time is stored in UTC with milliseconds, on both databases
+		g.want(g.do("admin", "PATCH", "/api/tickets/1", `{"sla_due_at":"2031-05-06T09:08:09+02:00","description":null,"category":"network","assigned_to":"e2e_viewer"}`), 200, `{"success":true}`)
+		after := read()
+		if after.Due != `"2031-05-06T07:08:09.000Z"` || after.Category != "network" || after.Assigned.String != "e2e_viewer" {
+			t.Errorf("the ticket after a change: %+v", after)
+		}
+		g.want(g.do("admin", "PATCH", "/api/tickets/1", `{"sla_due_at":null}`), 200, `{"success":true}`)
+		if got := read(); got.Due != "null" {
+			t.Errorf("sla_due_at after null: %s", got.Due)
+		}
+	})
+}
+
 // unread is a request body that counts what is read of it.
 type unread struct {
 	left int64

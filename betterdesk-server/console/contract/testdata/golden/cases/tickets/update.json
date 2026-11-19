@@ -5,7 +5,7 @@
   "path": "/api/tickets/{own}",
   "body": {
    "assigned_to": "e2e_operator",
-   "category": "anything goes",
+   "category": "software",
    "description": "now with text",
    "device_id": " 900100002 ",
    "priority": "low",

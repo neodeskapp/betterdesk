@@ -140,7 +140,7 @@
        "uploaded_by": "e2e_operator"
       }
      ],
-     "category": "anything goes",
+     "category": "software",
      "closed_at": null,
      "comments": [],
      "created_at": "<volatile>",
@@ -221,7 +221,7 @@
        "uploaded_by": "e2e_global_admin"
       }
      ],
-     "category": "anything goes",
+     "category": "software",
      "closed_at": null,
      "comments": [],
      "created_at": "<volatile>",
@@ -302,7 +302,7 @@
        "uploaded_by": "e2e_super_admin"
       }
      ],
-     "category": "anything goes",
+     "category": "software",
      "closed_at": null,
      "comments": [],
      "created_at": "<volatile>",
@@ -391,7 +391,7 @@
        "uploaded_by": "e2e_admin"
       }
      ],
-     "category": "anything goes",
+     "category": "software",
      "closed_at": null,
      "comments": [],
      "created_at": "<volatile>",

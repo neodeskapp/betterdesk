@@ -172,7 +172,7 @@ func init() {
 			Name: "update", Method: "PATCH", Path: "/api/tickets/{own}",
 			Body: map[string]any{
 				"title": "  Role ticket, renamed ", "description": "now with text", "status": "in_progress", "priority": "low",
-				"category": "anything goes", "assigned_to": "e2e_operator", "sla_due_at": "2031-05-06T07:08:09.000Z", "device_id": " 900100002 ",
+				"category": "software", "assigned_to": "e2e_operator", "sla_due_at": "2031-05-06T07:08:09.000Z", "device_id": " 900100002 ",
 			},
 		},
 		contract.Case{Name: "read-own-after-update", Path: "/api/tickets/{own}"},

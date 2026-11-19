@@ -2,6 +2,7 @@ package tickets_test
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -177,6 +178,118 @@ var _ = deviceFixes.add("DV5", map[string]fix{
 		after: resendBy("", `{"title":"Description object","description":"{\"a\":1}"}`)},
 	` POST /api/tickets/bd {"title":"Description true","description":true}`: {status: 400, answer: `{"error":"Invalid description"}`,
 		after: resendBy("", `{"title":"Description true","description":"true"}`)},
+})
+
+// failed stands for a value Node failed to store on a database: its
+// request wrote nothing there.
+const failed = "\x00failed"
+
+// createdAs makes the ticket Node made of a member of the wrong type: the
+// same title, the member with the text Node stored on each database (nil
+// for none).
+func createdAs(title, member string, sqlite, postgres any) func(t *testing.T, w *replay.World, step replay.Step) {
+	body := func(value any) string {
+		switch value {
+		case failed:
+			return ""
+		case nil:
+			return `{"title":"` + title + `"}`
+		}
+		text, _ := json.Marshal(value)
+		return `{"title":"` + title + `","` + member + `":` + string(text) + `}`
+	}
+	return resendBy(body(sqlite), body(postgres))
+}
+
+// set writes the value Node stored in a column of ticket 2 on each
+// database, with the audit entry of the change.
+func set(column string, sqlite, postgres any) func(t *testing.T, w *replay.World, step replay.Step) {
+	return func(t *testing.T, w *replay.World, step replay.Step) {
+		t.Helper()
+		value := sqlite
+		if w.DB.IsPostgres() {
+			value = postgres
+		}
+		if value == failed {
+			return
+		}
+		w.Exec("UPDATE tickets SET "+column+" = ?, updated_at = "+store.NowSQL(w.DB.Dialect())+" WHERE id = 2", []any{value})
+		w.Exec(updated("2", column), nil)
+	}
+}
+
+var (
+	invalidDescription = `{"error":"Invalid description"}`
+	invalidDevice      = `{"error":"Invalid device_id"}`
+	invalidAssignee    = `{"error":"Invalid assigned_to"}`
+	invalidCategory    = `{"error":"Invalid category. Valid: general, hardware, software, network, access, other"}`
+	invalidDue         = `{"error":"Invalid sla_due_at"}`
+)
+
+// TK1: every member of a ticket has its type, on create and in a change.
+var _ = ticketFixes.add("TK1", map[string]fix{
+	`admin POST /api/tickets {"title":"Ticket 3","description":0}`:          {status: 400, answer: invalidDescription, after: createdAs("Ticket 3", "description", nil, nil)},
+	`admin POST /api/tickets {"title":"Ticket 4","description":5}`:          {status: 400, answer: invalidDescription, after: createdAs("Ticket 4", "description", "5.0", "5")},
+	`admin POST /api/tickets {"title":"Ticket 5","description":1.5}`:        {status: 400, answer: invalidDescription, after: createdAs("Ticket 5", "description", "1.5", "1.5")},
+	`admin POST /api/tickets {"title":"Ticket 6","description":true}`:       {status: 400, answer: invalidDescription, after: createdAs("Ticket 6", "description", failed, "true")},
+	`admin POST /api/tickets {"title":"Ticket 7","description":false}`:      {status: 400, answer: invalidDescription, after: createdAs("Ticket 7", "description", nil, nil)},
+	`admin POST /api/tickets {"title":"Ticket 9","description":["one"]}`:    {status: 400, answer: invalidDescription, after: createdAs("Ticket 9", "description", "one", `{"one"}`)},
+	`admin POST /api/tickets {"title":"Ticket 10","description":["a","b"]}`: {status: 400, answer: invalidDescription, after: createdAs("Ticket 10", "description", failed, `{"a","b"}`)},
+	`admin POST /api/tickets {"title":"Ticket 11","description":[]}`:        {status: 400, answer: invalidDescription, after: createdAs("Ticket 11", "description", failed, "{}")},
+	`admin POST /api/tickets {"title":"Ticket 12","description":[7]}`:       {status: 400, answer: invalidDescription, after: createdAs("Ticket 12", "description", "7.0", `{"7"}`)},
+	`admin POST /api/tickets {"title":"Ticket 13","description":{}}`:        {status: 400, answer: invalidDescription, after: createdAs("Ticket 13", "description", failed, "{}")},
+	`admin POST /api/tickets {"title":"Ticket 14","description":{"a":1}}`:   {status: 400, answer: invalidDescription, after: createdAs("Ticket 14", "description", failed, `{"a":1}`)},
+
+	`admin POST /api/tickets {"title":"Ticket 17","device_id":0}`:         {status: 400, answer: invalidDevice, after: createdAs("Ticket 17", "device_id", nil, nil)},
+	`admin POST /api/tickets {"title":"Ticket 18","device_id":5}`:         {status: 400, answer: invalidDevice, after: createdAs("Ticket 18", "device_id", "5.0", "5")},
+	`admin POST /api/tickets {"title":"Ticket 19","device_id":1.5}`:       {status: 400, answer: invalidDevice, after: createdAs("Ticket 19", "device_id", "1.5", "1.5")},
+	`admin POST /api/tickets {"title":"Ticket 20","device_id":true}`:      {status: 400, answer: invalidDevice, after: createdAs("Ticket 20", "device_id", failed, "true")},
+	`admin POST /api/tickets {"title":"Ticket 21","device_id":false}`:     {status: 400, answer: invalidDevice, after: createdAs("Ticket 21", "device_id", nil, nil)},
+	`admin POST /api/tickets {"title":"Ticket 23","device_id":["one"]}`:   {status: 400, answer: invalidDevice, after: createdAs("Ticket 23", "device_id", "one", `{"one"}`)},
+	`admin POST /api/tickets {"title":"Ticket 24","device_id":["a","b"]}`: {status: 400, answer: invalidDevice, after: createdAs("Ticket 24", "device_id", failed, `{"a","b"}`)},
+	`admin POST /api/tickets {"title":"Ticket 25","device_id":[]}`:        {status: 400, answer: invalidDevice, after: createdAs("Ticket 25", "device_id", failed, "{}")},
+	`admin POST /api/tickets {"title":"Ticket 26","device_id":[7]}`:       {status: 400, answer: invalidDevice, after: createdAs("Ticket 26", "device_id", "7.0", `{"7"}`)},
+	`admin POST /api/tickets {"title":"Ticket 27","device_id":{}}`:        {status: 400, answer: invalidDevice, after: createdAs("Ticket 27", "device_id", failed, "{}")},
+	`admin POST /api/tickets {"title":"Ticket 28","device_id":{"a":1}}`:   {status: 400, answer: invalidDevice, after: createdAs("Ticket 28", "device_id", failed, `{"a":1}`)},
+
+	`admin POST /api/tickets {"title":"Ticket 31","assigned_to":0}`:         {status: 400, answer: invalidAssignee, after: createdAs("Ticket 31", "assigned_to", nil, nil)},
+	`admin POST /api/tickets {"title":"Ticket 32","assigned_to":5}`:         {status: 400, answer: invalidAssignee, after: createdAs("Ticket 32", "assigned_to", "5.0", "5")},
+	`admin POST /api/tickets {"title":"Ticket 33","assigned_to":1.5}`:       {status: 400, answer: invalidAssignee, after: createdAs("Ticket 33", "assigned_to", "1.5", "1.5")},
+	`admin POST /api/tickets {"title":"Ticket 34","assigned_to":true}`:      {status: 400, answer: invalidAssignee, after: createdAs("Ticket 34", "assigned_to", failed, "true")},
+	`admin POST /api/tickets {"title":"Ticket 35","assigned_to":false}`:     {status: 400, answer: invalidAssignee, after: createdAs("Ticket 35", "assigned_to", nil, nil)},
+	`admin POST /api/tickets {"title":"Ticket 37","assigned_to":["one"]}`:   {status: 400, answer: invalidAssignee, after: createdAs("Ticket 37", "assigned_to", "one", `{"one"}`)},
+	`admin POST /api/tickets {"title":"Ticket 38","assigned_to":["a","b"]}`: {status: 400, answer: invalidAssignee, after: createdAs("Ticket 38", "assigned_to", failed, `{"a","b"}`)},
+	`admin POST /api/tickets {"title":"Ticket 39","assigned_to":[]}`:        {status: 400, answer: invalidAssignee, after: createdAs("Ticket 39", "assigned_to", failed, "{}")},
+	`admin POST /api/tickets {"title":"Ticket 40","assigned_to":[7]}`:       {status: 400, answer: invalidAssignee, after: createdAs("Ticket 40", "assigned_to", "7.0", `{"7"}`)},
+	`admin POST /api/tickets {"title":"Ticket 41","assigned_to":{}}`:        {status: 400, answer: invalidAssignee, after: createdAs("Ticket 41", "assigned_to", failed, "{}")},
+	`admin POST /api/tickets {"title":"Ticket 42","assigned_to":{"a":1}}`:   {status: 400, answer: invalidAssignee, after: createdAs("Ticket 42", "assigned_to", failed, `{"a":1}`)},
+
+	// SQLite spread the list over the statement's parameters: the
+	// description took the priority, the priority the category, and the
+	// two device ids the category and the device
+	`admin POST /api/tickets {"title":"Ticket 69","description":{},"device_id":["a","b"]}`: {status: 400, answer: invalidDescription, after: func(t *testing.T, w *replay.World, step replay.Step) {
+		t.Helper()
+		if w.DB.IsPostgres() {
+			resend(`{"title":"Ticket 69","description":"{}","device_id":"{\"a\",\"b\"}"}`)(t, w, step)
+			return
+		}
+		w.Exec("INSERT INTO tickets (title, description, priority, category, device_id, created_by, assigned_to, sla_due_at) VALUES ('Ticket 69', 'medium', 'general', 'a', 'b', 'e2e_admin', NULL, '2030-01-01T00:00:00.000Z')", nil)
+		w.Exec("INSERT INTO audit_log (user_id, action, details, ip_address) VALUES (1, 'ticket_created', 'Ticket #55: Ticket 69', '203.0.113.7')", nil)
+	}},
+
+	`admin PATCH /api/tickets/2 {"description":5}`:                {status: 400, answer: invalidDescription, after: resendBy(`{"description":"5.0"}`, `{"description":"5"}`)},
+	`admin PATCH /api/tickets/2 {"description":["a"]}`:            {status: 400, answer: invalidDescription, after: resendBy(`{"description":"a"}`, `{"description":"{\"a\"}"}`)},
+	`admin PATCH /api/tickets/2 {"description":["a","b"]}`:        {status: 400, answer: invalidDescription, after: resendBy("", `{"description":"{\"a\",\"b\"}"}`)},
+	`admin PATCH /api/tickets/2 {"description":{}}`:               {status: 400, answer: invalidDescription, after: resendBy("", `{"description":"{}"}`)},
+	`admin PATCH /api/tickets/2 {"description":true}`:             {status: 400, answer: invalidDescription, after: resendBy("", `{"description":"true"}`)},
+	`admin PATCH /api/tickets/2 {"category":"whatever you like"}`: {status: 400, answer: invalidCategory, after: set("category", "whatever you like", "whatever you like")},
+	`admin PATCH /api/tickets/2 {"category":5}`:                   {status: 400, answer: invalidCategory, after: set("category", "5.0", "5")},
+	`admin PATCH /api/tickets/2 {"category":null}`:                {status: 400, answer: invalidCategory, after: set("category", nil, nil)},
+	`admin PATCH /api/tickets/2 {"category":true}`:                {status: 400, answer: invalidCategory, after: set("category", failed, "true")},
+	`admin PATCH /api/tickets/2 {"assigned_to":7}`:                {status: 400, answer: invalidAssignee, after: resendBy(`{"assigned_to":"7.0"}`, `{"assigned_to":"7"}`)},
+	`admin PATCH /api/tickets/2 {"sla_due_at":"not a date"}`:      {status: 400, answer: invalidDue, after: set("sla_due_at", "not a date", failed)},
+	`admin PATCH /api/tickets/2 {"sla_due_at":5}`:                 {status: 400, answer: invalidDue, after: set("sla_due_at", "5.0", failed)},
+	`admin PATCH /api/tickets/2 {"sla_due_at":""}`:                {status: 400, answer: invalidDue, after: set("sla_due_at", "", failed)},
 })
 
 // apply compares a step on the list with the answer its bug fix

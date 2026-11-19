@@ -234,6 +234,9 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "Invalid category. Valid: "+strings.Join(validCategories, ", "))
 		return
 	}
+	if !h.textMembers(w, r, "description", "device_id", "assigned_to") {
+		return
+	}
 	user := kit.User(r)
 	effective := priority.Or(jsbind.String("medium"))
 	id, err := createTicket(r.Context(), h.db, newTicket{
@@ -253,6 +256,31 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	h.audit(r, "ticket_created", "Ticket #"+number(id)+": "+rawTitle.Str())
 	h.log.Info("#" + number(id) + " created by " + user.Username + ": " + rawTitle.Str())
 	kit.JSON(w, r, http.StatusCreated, created{Success: true, Ticket: createdTicket{ID: id, Title: title}})
+}
+
+// textMembers checks that the members of the body are text, null or
+// missing, and answers 400 naming the first that is not.
+func (h *handlers) textMembers(w http.ResponseWriter, r *http.Request, members ...string) bool {
+	for _, member := range members {
+		if !optionalText(jsbind.Of(kit.Body(r).Get(member))) {
+			fail(w, r, http.StatusBadRequest, "Invalid "+member)
+			return false
+		}
+	}
+	return true
+}
+
+// dueTime reads the time a ticket is due as the route stores it: an RFC
+// 3339 time, written in UTC with milliseconds.
+func dueTime(v jsbind.Value) (string, bool) {
+	if !v.IsString() {
+		return "", false
+	}
+	t, err := time.Parse(time.RFC3339Nano, v.Str())
+	if err != nil {
+		return "", false
+	}
+	return store.ISOTime(t), true
 }
 
 type ticketDetail struct {
@@ -300,8 +328,11 @@ func (h *handlers) get(w http.ResponseWriter, r *http.Request) {
 
 // update answers PATCH /api/tickets/{id}: every member of the body that
 // names one of title, description, status, priority, category,
-// assigned_to, sla_due_at and device_id is written. Status, priority,
-// device_id and the title are checked.
+// assigned_to, sla_due_at and device_id is written, each checked: the
+// title is text that is not empty, description and assigned_to are text
+// or null, category is one of the known ones, and so are status and
+// priority when they are not empty; device_id is a device id, empty or
+// null, and sla_due_at a time or null.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	t, err := ticketByID(r.Context(), h.db, ticketID(r, "id"))
 	if err != nil {
@@ -332,6 +363,20 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "Title is required")
 		return
 	}
+	if !h.textMembers(w, r, "description", "assigned_to") {
+		return
+	}
+	if body.Has("category") && !oneOf(jsbind.Of(body.Get("category")), validCategories) {
+		fail(w, r, http.StatusBadRequest, "Invalid category. Valid: "+strings.Join(validCategories, ", "))
+		return
+	}
+	// The time a ticket is due, or null for none
+	if due := jsbind.Of(body.Get("sla_due_at")); body.Has("sla_due_at") && !due.IsNull() {
+		if _, ok := dueTime(due); !ok {
+			fail(w, r, http.StatusBadRequest, "Invalid sla_due_at")
+			return
+		}
+	}
 
 	var changes []change
 	for _, column := range []string{"title", "description", "status", "priority", "category", "assigned_to", "sla_due_at", "device_id"} {
@@ -342,6 +387,10 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 		switch column {
 		case "title":
 			value = jsbind.String(jsbind.Trim(value.Str()))
+		case "sla_due_at":
+			if due, ok := dueTime(value); ok {
+				value = jsbind.String(due)
+			}
 		case "device_id":
 			if trimmed := jsbind.Trim(value.Str()); trimmed != "" {
 				value = jsbind.String(trimmed)
