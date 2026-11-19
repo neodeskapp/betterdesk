@@ -534,6 +534,41 @@ func TestEngineAsNodeWithoutDatabase(t *testing.T) {
 			}
 			c.Created = created
 		}
+		badLimit, badCooldown := oddRules(t, c.Rules)
+		touched := slices.ContainsFunc(c.RecentCalls, func(call [3]string) bool { return badLimit[call[0]] || badCooldown[call[0]] })
+		if touched && c.Throws == nil && c.Create != "throws" && c.Mail != "throws" {
+			// BUGS AE3: Node checked a rule whose limit is no finite number,
+			// or used a cooldown that is no whole number above 0
+			counts["AE3: a rule whose limit or cooldown Node read as it was"]++
+			if problem := expectAE3(t, c, mem.recent, badLimit, badCooldown); problem != "" {
+				t.Fatalf("case %d %s: %s", i, describe(), problem)
+			}
+		} else if touched || c.Throws != nil && len(badLimit) > 0 {
+			// The same where Node threw or a failure ended its loop over
+			// the rules early: the Go console raises nothing for the first
+			// kind of rule and takes 300 seconds for the second, so it
+			// raises no alert Node did not.
+			counts["AE3: the same where Node threw"]++
+			if err != nil && (c.Throws == nil || err.Error() != *c.Throws) {
+				t.Fatalf("case %d %s: error %v, Node threw %s", i, describe(), err, show(c.Throws))
+			}
+			var want []string
+			for _, alert := range c.Created {
+				want = append(want, alert.Alert)
+			}
+			if !subsequence(mem.created, want) {
+				t.Fatalf("case %d %s: alerts %q, Node: %v", i, describe(), mem.created, c.Created)
+			}
+			for _, call := range mem.recent {
+				if badLimit[call[0]] {
+					t.Fatalf("case %d %s: rule %s with a limit that is no finite number was checked", i, describe(), call[0])
+				}
+				if secs, err := strconv.ParseFloat(call[2], 64); badCooldown[call[0]] && (err != nil || secs < DefaultCooldownSecs) {
+					t.Fatalf("case %d %s: rule %s checked with the cooldown %s", i, describe(), call[0], call[2])
+				}
+			}
+			continue
+		}
 		if (err == nil) != (c.Throws == nil) || (err != nil && err.Error() != *c.Throws) {
 			t.Fatalf("case %d %s: error %v, Node threw %s", i, describe(), err, show(c.Throws))
 		}
@@ -593,7 +628,8 @@ func TestEngineAsNodeWithoutDatabase(t *testing.T) {
 			t.Fatalf("case %d %s: logs %q\nNode: %q", i, describe(), logs.lines, c.Logs)
 		}
 	}
-	for _, name := range []string{"rules", "telemetry", "sweep", "odd ids", "thrown", "alerts", "mails", "AE2: a rule with an object's member as its operator", "AE1: a device never online in the sweep"} {
+	for _, name := range []string{"rules", "telemetry", "sweep", "odd ids", "thrown", "alerts", "mails", "AE2: a rule with an object's member as its operator", "AE1: a device never online in the sweep",
+		"AE3: a rule whose limit or cooldown Node read as it was", "AE3: the same where Node threw"} {
 		if counts[name] == 0 {
 			t.Errorf("the recording has no %q", name)
 		}
@@ -818,6 +854,29 @@ func TestEngineAsNodeOnRows(t *testing.T) {
 				c.Logs = withoutDevices(c.Logs, never, func(line [2]string) string { return line[1] })
 				c.Triggered = c.Triggered[:len(c.Rows)]
 			}
+			var fields []map[string]string
+			for _, rule := range c.Rules {
+				fields = append(fields, map[string]string{"id": strconv.Itoa(rule.ID), "condition_value": rule.Cols["condition_value"], "cooldown_secs": rule.Cols["cooldown_secs"]})
+			}
+			if badLimit, badCooldown := oddRules(t, fields); c.Throws != nil && len(badLimit)+len(badCooldown) > 0 || slices.ContainsFunc(c.Rows, func(row string) bool {
+				id, _, _ := strings.Cut(strings.TrimPrefix(row, "["), ",")
+				return badLimit[id] || badCooldown[id]
+			}) {
+				// BUGS AE3, as in TestEngineAsNodeWithoutDatabase: the
+				// cooldown of 300 seconds holds back alerts that Node's
+				// cooldown let through
+				counts["AE3: a rule whose limit or cooldown Node read as it was"]++
+				if err != nil && (c.Throws == nil || err.Error() != *c.Throws) {
+					t.Fatalf("case %d %s: error %v, Node threw %s", i, describe(), err, show(c.Throws))
+				}
+				if !subsequence(rows, c.Rows) || slices.ContainsFunc(rows, func(row string) bool {
+					id, _, _ := strings.Cut(strings.TrimPrefix(row, "["), ",")
+					return badLimit[id]
+				}) {
+					t.Fatalf("case %d %s: alerts %q\nNode: %q", i, describe(), rows, c.Rows)
+				}
+				continue
+			}
 			if (err == nil) != (c.Throws == nil) || (err != nil && err.Error() != *c.Throws) {
 				t.Fatalf("case %d %s: error %v, Node threw %s", i, describe(), err, show(c.Throws))
 			}
@@ -872,7 +931,8 @@ func TestEngineAsNodeOnRows(t *testing.T) {
 				t.Fatalf("case %d %s: logs %q\nNode: %q", i, describe(), logs.lines, c.Logs)
 			}
 		}
-		for _, name := range []string{"rules", "telemetry", "sweep", "alerts", "mails", "held back by the cooldown", "AE1: a device never online in the sweep"} {
+		for _, name := range []string{"rules", "telemetry", "sweep", "alerts", "mails", "held back by the cooldown", "AE1: a device never online in the sweep",
+			"AE3: a rule whose limit or cooldown Node read as it was"} {
 			if counts[name] == 0 {
 				t.Errorf("the recording has no %q", name)
 			}

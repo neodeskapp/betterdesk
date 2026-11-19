@@ -12,9 +12,10 @@
 //	offline_duration  seconds since a device was last seen, from the sweep
 //	custom            never checked: it has nothing to compare
 //
-// The operators are gt, gte, lt, lte, eq and neq. A rule can be limited
-// to one device, and it stays quiet for its cooldown (300 seconds unless
-// set) after it raised an alert for a device.
+// The operators are gt, gte, lt, lte, eq and neq. A rule whose value is no
+// finite number holds for nothing. A rule can be limited to one device,
+// and it stays quiet for its cooldown (300 seconds unless it sets a whole
+// number above 0) after it raised an alert for a device.
 //
 // The device routes hand the engine request values unchecked, and the
 // rules are rows with whatever the database holds, so the engine works on
@@ -224,8 +225,13 @@ func (e *Engine) evaluateAgainst(ctx context.Context, rules []Rule, deviceID jsb
 		if !triggered {
 			continue
 		}
+		// A limit that is no finite number (text on SQLite, an infinity on
+		// PostgreSQL) holds for nothing; EvalCondition has read it already
+		if limit, _ := jsNumber(rule.ConditionValue); math.IsNaN(limit) || math.IsInf(limit, 0) {
+			continue
+		}
 
-		cooldown, err := jsNumber(rule.CooldownSecs.Or(jsbind.Number(DefaultCooldownSecs)))
+		cooldown, err := ruleCooldown(rule.CooldownSecs)
 		if err != nil {
 			return err
 		}
@@ -268,6 +274,21 @@ func (e *Engine) evaluateAgainst(ctx context.Context, rules []Rule, deviceID jsb
 		}
 	}
 	return nil
+}
+
+// ruleCooldown is a rule's cooldown in seconds: the stored value when it is
+// a whole number above 0 (also text of one, which SQLite can hold), else
+// DefaultCooldownSecs, also for 0, which a new rule stores as 300. The
+// error is the TypeError for a value JavaScript cannot make a number of.
+func ruleCooldown(stored jsbind.Value) (float64, error) {
+	secs, err := jsNumber(stored)
+	if err != nil {
+		return 0, err
+	}
+	if secs <= 0 || secs != math.Trunc(secs) || math.IsInf(secs, 0) {
+		return DefaultCooldownSecs, nil
+	}
+	return secs, nil
 }
 
 // mailAlert sends the alert mail beside the evaluation, which does not
