@@ -4,11 +4,11 @@
   "method": "PUT",
   "path": "/api/settings/backup/schedule",
   "body": {
-   "destinationPath": "/app/backups",
+   "destinationPath": "/repo/web-nodejs/backups",
    "destinationType": "path"
   }
  },
- "recordings": 2,
+ "recordings": 3,
  "answers": [
   {
    "roles": [
