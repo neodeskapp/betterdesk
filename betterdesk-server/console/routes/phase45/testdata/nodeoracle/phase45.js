@@ -24,6 +24,11 @@ const seed = [
         ['', 'Only', '', '', '', 'https://pictures.example.test/a.png', 2]],
     ['UPDATE users SET first_name = NULL, last_name = NULL, email = NULL, phone = NULL, role_display = NULL, avatar_url = NULL WHERE id = ?', [4]],
 ];
+// Two templates with tokens of their own, one whose configuration is no JSON
+seed.push(['INSERT INTO agent_templates (name, description, config_json, enrollment_token, created_by) VALUES (?, ?, ?, ?, ?)',
+    ['Seeded', 'one', '{"tags":["s"],"n":1,"z":1e21}', 'seed-token-one', 1]]);
+seed.push(['INSERT INTO agent_templates (name, description, config_json, enrollment_token, created_by) VALUES (?, ?, ?, ?, ?)',
+    ['Broken config', '', 'not json', 'seed-token-two', null]]);
 // Texts that look like numbers, "0" among them, which is no empty field
 seed.push(['UPDATE users SET first_name = ?, last_name = ?, phone = ? WHERE id = ?', ['42', '1.5', '0', 5]]);
 
@@ -92,6 +97,10 @@ for (const body of [
     step('POST', '/api/agent-templates', body);
 }
 step('POST', '/api/agent-templates', '[1,2]', 'admin', true);
+step('POST', '/api/agent-templates', { name: 'Kiosk', description: 'again' });
+step('POST', '/api/agent-templates', { name: '  Arrays  ', description: 'd'.repeat(600), config: [1, { a: null }] });
+step('GET', '/api/agent-templates');
+steps.push({ name: 'templates', sql: 'SELECT name, description, config_json, created_by FROM agent_templates ORDER BY id', params: [] });
 for (const id of ['1', '0', '-1', 'abc', '12abc', '0x10', '99999999999999999999999', '%205', '0.5', '1e3', '%2B7', 'Infinity']) {
     step('DELETE', `/api/agent-templates/${id}`);
 }
@@ -99,6 +108,9 @@ for (const body of [
     {}, { enrollment_token: 't' }, { device_id: 'd' }, { enrollment_token: 't', device_id: 'd' }, { enrollment_token: 1, device_id: 2 },
     { enrollment_token: 0, device_id: 'd' }, { enrollment_token: toString, device_id: 'd' }, { enrollment_token: 't', device_id: toString },
     { enrollment_token: 'x'.repeat(100), device_id: 'y'.repeat(100) }, { enrollment_token: ['a'], device_id: [[]] },
+    { enrollment_token: 'seed-token-one', device_id: 'dev-1' }, { enrollment_token: '  seed-token-one  ', device_id: 'dev-2' },
+    { enrollment_token: 'seed-token-two', device_id: 'dev-3' }, { enrollment_token: 'SEED-TOKEN-ONE', device_id: 'dev-4' },
+    { enrollment_token: '   ', device_id: 'dev-5' },
 ]) {
     step('POST', '/api/bd/enroll', body, '');
 }

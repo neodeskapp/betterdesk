@@ -26,8 +26,8 @@ func TestMigrateFreshEqualsNodeDump(t *testing.T) {
 		storetest.NodeSchema(t, node)
 		want := readCatalog(t, node).without(sessionTable)
 
-		if n := len(want.tables()); n != 54 {
-			t.Fatalf("the Node dump has %d tables besides %s, want 54", n, sessionTable)
+		if n := len(want.tables()); n != 55 {
+			t.Fatalf("the Node dump has %d tables besides %s, want 55", n, sessionTable)
 		}
 		requireSameCatalog(t, "fresh database against the Node dump", want, got)
 
@@ -47,8 +47,8 @@ func TestMigrateLeavesNodeDatabaseAlone(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		storetest.NodeSchema(t, db)
 		tables := readCatalog(t, db).tables()
-		if len(tables) != 55 {
-			t.Fatalf("the Node dump has %d tables, want 55", len(tables))
+		if len(tables) != 56 {
+			t.Fatalf("the Node dump has %d tables, want 56", len(tables))
 		}
 		fillTables(t, db, tables, 2)
 		catalogBefore := readCatalog(t, db)
@@ -88,8 +88,8 @@ func TestMigrateTwiceChangesNothing(t *testing.T) {
 // The databases storetest hands to other packages have the console's
 // schema and a shape to ask.
 func TestStoretestMigratedDatabases(t *testing.T) {
-	if n := len(storetest.Migrated(t).Shape().Tables()); n != 54 {
-		t.Errorf("storetest.Migrated has %d tables, want 54", n)
+	if n := len(storetest.Migrated(t).Shape().Tables()); n != 55 {
+		t.Errorf("storetest.Migrated has %d tables, want 55", n)
 	}
 	ran := map[store.Dialect]bool{}
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {

@@ -4,7 +4,7 @@
 PostgreSQL. It does what the Node console's start code did
 (`web-nodejs/services/dbAdapter.js`, `init()`), statement for statement and in
 the same order, so a database made by Go is the database made by Node at
-version 3.5.224, and an older database is upgraded the same way.
+version 3.5.264, and an older database is upgraded the same way.
 
 This file lists every step, says how the two databases and the three ways a
 database comes to exist differ, and documents the value types that make a row
@@ -12,10 +12,13 @@ look in JSON as it did from Node.
 
 ## What Migrate does
 
-- It creates the 54 tables and their indexes when they are missing, from the
+- It creates the 55 tables and their indexes when they are missing, from the
   files in `schema/sqlite` and `schema/postgres` (one file per table).
   `panel_sessions` is not among them: the session package creates it.
-  `agent_templates` is not either: nothing created it at start (BUGS.md D11).
+  `agent_templates` is among them since upstream 3.5.264 created it at start
+  (before that only the first request of a template route made it, BUGS D11):
+  on SQLite without its two binding columns when an older table is there, as
+  Node left it; on PostgreSQL with them.
 - It adds the columns later versions added, in the order and with the
   definition Node used.
 - It runs the data fixes that came with those columns: token hashes, bundle
@@ -40,7 +43,7 @@ process waits until the first is finished.
 
 Migrate logs through the `logging` package with the component `DB`:
 
-    [DB] Migration: created 54 tables: peer, device_inventory, ...
+    [DB] Migration: created 55 tables: peer, device_inventory, ...
     [DB] Migration: added users.first_name
     [DB] Migration: added the default row to user_groups
     [DB] Migration: hashed 3 access tokens
@@ -68,9 +71,9 @@ Order on SQLite: peer, device_inventory, device_telemetry, activity_sessions,
 activity_summaries, tickets, ticket_comments, ticket_attachments, alert_rules,
 alert_history, remote_commands, network_targets, network_checks, dlp_policies,
 dlp_events, saved_reports, studio_flows, tenants, tenant_devices,
-tenant_users, pending_registrations, agent_bundles, agent_bundle_builds, then
-users, audit_log, access_tokens, login_attempts, account_lockouts, folders,
-address_books, settings, branding_config, branding_profiles, relay_sessions,
+tenant_users, pending_registrations, agent_bundles, agent_templates,
+agent_bundle_builds, then users, audit_log, access_tokens, login_attempts,
+account_lockouts, folders, address_books, settings, branding_config, branding_profiles, relay_sessions,
 device_folder_assignments, peer_sysinfo, peer_metrics, audit_connections,
 audit_files, audit_alarms, user_groups, panel_access_policies,
 client_feature_policies, user_group_members, device_groups,
@@ -86,7 +89,8 @@ relay_sessions, device_inventory, device_telemetry, tickets, ticket_comments,
 ticket_attachments, activity_sessions, activity_summaries, alert_rules,
 alert_history, remote_commands, network_targets, network_checks,
 dlp_policies, dlp_events, saved_reports, studio_flows, tenants,
-tenant_devices, tenant_users, pending_registrations, agent_bundles,
+tenant_devices, tenant_users, pending_registrations, agent_templates (then its
+columns enrolled_device_id and enrolled_at and its index), agent_bundles,
 agent_bundle_builds, device_folder_assignments, peer_sysinfo, peer_metrics,
 audit_connections, audit_files, audit_alarms, user_groups,
 panel_access_policies, client_feature_policies, user_group_members,
@@ -103,6 +107,7 @@ user_peer_grants, user_avatars.
 | address_books | 405 | 4224 |
 | agent_bundle_builds | 1103 | 4703 |
 | agent_bundles | 1083 | 4621 |
+| agent_templates | 1065 of 3.5.264 | 4617 of 3.5.264 (columns and index 4630-4632) |
 | alert_history | 850 | 4411 |
 | alert_rules | 834 | 4392 |
 | audit_alarms | 505 | 4812 |
@@ -155,7 +160,7 @@ On SQLite the files hold the statement text byte for byte as Node ran it,
 because SQLite keeps that text in `sqlite_master`. A Go-made SQLite file
 therefore has the same `.schema` output as a Node-made one.
 
-On PostgreSQL four groups of indexes are created apart from their tables, at
+On PostgreSQL five groups of indexes are created apart from their tables, at
 the place Node created them:
 
 | Step | What | Condition | SQLite | PostgreSQL | Lines |
@@ -164,6 +169,7 @@ the place Node created them:
 | `run indexes_tenants` | `idx_tenant_devices_tenant`, `idx_tenant_devices_device`, `idx_tenant_users_tenant` | `IF NOT EXISTS` | with their tables | after tenant_users | 4589-4591 |
 | `run indexes_agent_bundles` | `idx_agent_bundles_bundle_id`, `idx_agent_bundles_hash` | `IF NOT EXISTS` | with the table | after the three agent_bundles columns | 4642-4643 |
 | `run indexes_agent_bundle_builds` | `idx_agent_bundle_builds_hash`, `idx_agent_bundle_builds_status` | `IF NOT EXISTS` | with the table | after the five agent_bundle_builds columns | 4731-4732 |
+| `run indexes_agent_templates` | `idx_agent_templates_token` | `IF NOT EXISTS` | with the table | after the two agent_templates columns | 4632 of 3.5.264 |
 
 ### Added columns
 
@@ -185,6 +191,8 @@ and does not have the column. Existing rows get the column's default.
 | `add dlp_policies.policy_type` | `TEXT DEFAULT ''` | same | after dlp_events, tolerated | after dlp_policies | 948-953, 4502-4506 |
 | `add dlp_policies.action` | `TEXT DEFAULT 'log'` | same | tolerated | | 948-953, 4502-4506 |
 | `add dlp_policies.scope` | `TEXT DEFAULT ''` | same | tolerated | | 948-953, 4502-4506 |
+| `add agent_templates.enrolled_device_id` | no step: an older SQLite table keeps the columns it has, as Node left it | `TEXT DEFAULT NULL` | | after agent_templates | 4630 of 3.5.264 |
+| `add agent_templates.enrolled_at` | no step | `TIMESTAMPTZ DEFAULT NULL` | | | 4631 of 3.5.264 |
 | `add agent_bundles.config_fingerprint` | `TEXT NOT NULL DEFAULT ''` | same | after agent_bundle_builds | after agent_bundles | 1128-1139, 4639 |
 | `add agent_bundles.client_commit` | `TEXT DEFAULT NULL` | same | | | 1128-1139, 4640 |
 | `add agent_bundles.active_generation_hash` | `TEXT DEFAULT NULL` | same | | | 1128-1139, 4641 |

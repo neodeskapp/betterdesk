@@ -1,5 +1,5 @@
 -- Node console schema on an empty SQLite file (fresh install: one file, db_v2.sqlite3, no auth.db).
--- Worktree betterdesk-go, dumped 2026-11-10 at commit 569710e2; 948fb226 changes no schema code.
+-- Worktree betterdesk-go, dumped 2026-11-19 on 3f4ffd70 plus the change that adds agent_templates to store.Migrate (upstream 3.5.264 merged).
 -- Produced by adapter.init() of web-nodejs/services/dbAdapter.js plus the DatabaseSessionStore, then: sqlite3 <file> .schema  (SQLite 3 CLI of the dev image, statements in creation order, text as stored in sqlite_master)
 -- Do not edit: regenerate (see data.md, section "How the schema dumps were produced").
 
@@ -294,6 +294,19 @@ CREATE TABLE agent_bundles (
             );
 CREATE INDEX idx_agent_bundles_bundle_id ON agent_bundles (bundle_id);
 CREATE INDEX idx_agent_bundles_hash ON agent_bundles (branding_hash);
+CREATE TABLE agent_templates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                description TEXT NOT NULL DEFAULT '',
+                config_json TEXT NOT NULL DEFAULT '{}',
+                enrollment_token TEXT NOT NULL UNIQUE,
+                enrolled_device_id TEXT DEFAULT NULL,
+                enrolled_at TEXT DEFAULT NULL,
+                created_by INTEGER DEFAULT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+CREATE INDEX idx_agent_templates_token ON agent_templates (enrollment_token);
 CREATE TABLE agent_bundle_builds (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 branding_hash TEXT NOT NULL,

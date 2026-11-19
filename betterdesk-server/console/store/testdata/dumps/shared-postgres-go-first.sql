@@ -1,5 +1,5 @@
 -- One PostgreSQL database used by both: Go server started first, then the Node console initialised.
--- Worktree betterdesk-go, dumped 2026-11-10 at commit 569710e2; 948fb226 changes no schema code.
+-- Worktree betterdesk-go, dumped 2026-11-19 on 3f4ffd70 plus the change that adds agent_templates to store.Migrate (upstream 3.5.264 merged).
 -- pg_dump --schema-only --no-owner --no-privileges --no-comments  (PostgreSQL 16)
 -- Do not edit: regenerate (see data.md, section "How the schema dumps were produced").
 
@@ -7,7 +7,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict uAPvJNVNrVVqPwhkvJ9EJFP6vtdWmUHdH5yo6jUJBMvi3ySQNhE3IorIWtz4W71
+\restrict jzaJ8JAtqfTOQoA4whrpgjqGpcR3VuUOolq32bteFUB1oap8ua1CGAltuo2S9qO
 
 -- Dumped from database version 16.15
 -- Dumped by pg_dump version 16.15
@@ -290,6 +290,44 @@ CREATE SEQUENCE public.agent_bundles_id_seq
 --
 
 ALTER SEQUENCE public.agent_bundles_id_seq OWNED BY public.agent_bundles.id;
+
+
+--
+-- Name: agent_templates; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.agent_templates (
+    id integer NOT NULL,
+    name text NOT NULL,
+    description text DEFAULT ''::text NOT NULL,
+    config_json text DEFAULT '{}'::text NOT NULL,
+    enrollment_token text NOT NULL,
+    enrolled_device_id text,
+    enrolled_at timestamp with time zone,
+    created_by integer,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: agent_templates_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.agent_templates_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: agent_templates_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.agent_templates_id_seq OWNED BY public.agent_templates.id;
 
 
 --
@@ -2487,6 +2525,13 @@ ALTER TABLE ONLY public.agent_bundles ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: agent_templates id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_templates ALTER COLUMN id SET DEFAULT nextval('public.agent_templates_id_seq'::regclass);
+
+
+--
 -- Name: alert_history id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -2896,6 +2941,30 @@ ALTER TABLE ONLY public.agent_bundles
 
 ALTER TABLE ONLY public.agent_bundles
     ADD CONSTRAINT agent_bundles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: agent_templates agent_templates_enrollment_token_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_templates
+    ADD CONSTRAINT agent_templates_enrollment_token_key UNIQUE (enrollment_token);
+
+
+--
+-- Name: agent_templates agent_templates_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_templates
+    ADD CONSTRAINT agent_templates_name_key UNIQUE (name);
+
+
+--
+-- Name: agent_templates agent_templates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_templates
+    ADD CONSTRAINT agent_templates_pkey PRIMARY KEY (id);
 
 
 --
@@ -3779,6 +3848,13 @@ CREATE UNIQUE INDEX idx_agent_bundles_slug ON public.agent_bundles USING btree (
 
 
 --
+-- Name: idx_agent_templates_token; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_agent_templates_token ON public.agent_templates USING btree (enrollment_token);
+
+
+--
 -- Name: idx_alert_history_device; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4559,5 +4635,5 @@ ALTER TABLE ONLY public.user_peer_grants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict uAPvJNVNrVVqPwhkvJ9EJFP6vtdWmUHdH5yo6jUJBMvi3ySQNhE3IorIWtz4W71
+\unrestrict jzaJ8JAtqfTOQoA4whrpgjqGpcR3VuUOolq32bteFUB1oap8ua1CGAltuo2S9qO
 

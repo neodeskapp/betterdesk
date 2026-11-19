@@ -99,9 +99,12 @@ func itoa(n int64) string {
 // static file has: its type, validators and ranges.
 func TestDownload(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"FILE_ACCESS_RATE_LIMIT_MAX": "4"}})
-		if res := w.SignedOut().Do("GET", "/api/portal/installers", ""); res.Body != `{"success":true,"release":null,"reason":"no_release_imported","installers":[]}` {
-			t.Errorf("installers without a cache: %s", res.Body)
+		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"FILE_ACCESS_RATE_LIMIT_MAX": "5"}})
+		// The installer list counts against the file limit too (upstream
+		// 3.5.264, CodeQL 365)
+		if res := w.SignedOut().Do("GET", "/api/portal/installers", ""); res.Body != `{"success":true,"release":null,"reason":"no_release_imported","installers":[]}` ||
+			res.Header.Get("RateLimit-Limit") != "5" || res.Header.Get("RateLimit-Remaining") != "4" {
+			t.Errorf("installers without a cache: %s, limit %q, remaining %q", res.Body, res.Header.Get("RateLimit-Limit"), res.Header.Get("RateLimit-Remaining"))
 		}
 		dir := filepath.Join(w.DataDir, "modules", "betterdesk-support-releases", "support-v1.0.0")
 		if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -127,15 +130,32 @@ func TestDownload(t *testing.T) {
 		if missing.Status != http.StatusNotFound || missing.Body != "Agent release asset not found" || missing.Header.Get("Content-Type") != "text/html; charset=utf-8" {
 			t.Errorf("missing: %d %v %q", missing.Status, missing.Header, missing.Body)
 		}
-		// Downloads share the file limit: four a minute here
+		// Downloads and the installer list share the file limit: five a
+		// minute here
 		if limited := visitor.Do("GET", "/downloads/generic-agent/support-v1.0.0/agent.zip", ""); limited.Status != http.StatusTooManyRequests {
-			t.Errorf("fifth download in a minute: %d %s", limited.Status, limited.Body)
+			t.Errorf("sixth file request in a minute: %d %s", limited.Status, limited.Body)
 		}
 		installers := visitor.Do("GET", "/api/portal/installers", "")
-		if installers.Status != http.StatusOK || installers.Body != `{"success":true,"release":null,"reason":"release_cache_incomplete","installers":[]}` {
-			t.Errorf("installers without a manifest: %s", installers.Body)
+		if installers.Status != http.StatusTooManyRequests || installers.Body != `{"success":false,"error":"Too many file requests. Please try again later."}` {
+			t.Errorf("installers over the file limit: %d %s", installers.Status, installers.Body)
 		}
 	})
+}
+
+// A release cache without a manifest is reported as incomplete.
+func TestInstallersOfAnIncompleteCache(t *testing.T) {
+	w := routetest.New(t, routetest.Options{DB: storetest.Migrated(t)})
+	dir := filepath.Join(w.DataDir, "modules", "betterdesk-support-releases", "support-v1.0.0")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "agent.zip"), []byte("0123456789"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	installers := w.SignedOut().Do("GET", "/api/portal/installers", "")
+	if installers.Status != http.StatusOK || installers.Body != `{"success":true,"release":null,"reason":"release_cache_incomplete","installers":[]}` {
+		t.Errorf("installers without a manifest: %d %s", installers.Status, installers.Body)
+	}
 }
 
 // A web address saved as the profile picture is fetched and stored by the
@@ -153,6 +173,25 @@ func TestProfilePicture(t *testing.T) {
 		}
 		if got := save(`{"first_name":"Alice"}`); got != `{"success":true,"avatar":"unchanged"}` {
 			t.Errorf("without an address: %s", got)
+		}
+	})
+}
+
+// Without the template table (a database the console has not migrated
+// yet), enrollment finds no token, as Node's getAgentTemplateByToken does,
+// and the list answers 500 with the database's message.
+func TestTemplatesWithoutTheirTable(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		if _, err := db.Exec(context.Background(), "DROP TABLE agent_templates"); err != nil {
+			t.Fatal(err)
+		}
+		if res := w.SignedOut().Do("POST", "/api/bd/enroll", `{"enrollment_token":"tok","device_id":"dev"}`); res.Status != http.StatusUnauthorized || res.Body != `{"success":false,"error":"invalid_token"}` {
+			t.Errorf("enroll: %d %s", res.Status, res.Body)
+		}
+		res := w.As("admin").Do("GET", "/api/agent-templates", "")
+		if res.Status != http.StatusInternalServerError || !strings.HasPrefix(res.Body, `{"success":false,"error":"`) || !strings.HasSuffix(res.Body, `","templates":[]}`) || !strings.Contains(res.Body, "agent_templates") {
+			t.Errorf("list: %d %s", res.Status, res.Body)
 		}
 	})
 }

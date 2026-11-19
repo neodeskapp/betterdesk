@@ -120,7 +120,7 @@ func TestShapeOfEveryVariant(t *testing.T) {
 			t.Errorf("the signal server's peers table exists = %v, want %v", got, want)
 		}
 		tables := shape.Tables()
-		wantTables := map[storetest.Origin]int{storetest.ConsoleFirst: 54, storetest.NodeFirst: 55, storetest.GoServerFirst: 86}[origin]
+		wantTables := map[storetest.Origin]int{storetest.ConsoleFirst: 55, storetest.NodeFirst: 56, storetest.GoServerFirst: 87}[origin]
 		if len(tables) != wantTables || !sortedStrings(tables) {
 			t.Errorf("%d tables (sorted %v), want %d", len(tables), sortedStrings(tables), wantTables)
 		}
@@ -181,7 +181,7 @@ func TestShapeLifecycle(t *testing.T) {
 
 		mustMigrate(t, db)
 		migrated := db.Shape()
-		if migrated == empty || len(migrated.Tables()) != 54 || len(empty.Tables()) != 0 {
+		if migrated == empty || len(migrated.Tables()) != 55 || len(empty.Tables()) != 0 {
 			t.Errorf("after Migrate: %d tables in the new shape, %d in the old one", len(migrated.Tables()), len(empty.Tables()))
 		}
 
@@ -329,8 +329,8 @@ func TestShapeOfSharedDumps(t *testing.T) {
 				if got, want := shape.Table("users").Column("totp_secret").NotNull, pg && goFirst; got != want {
 					t.Errorf("users.totp_secret NOT NULL = %v, want %v", got, want)
 				}
-				if n := len(shape.Tables()); n != 87 {
-					t.Errorf("%d tables in the dump, want 87", n)
+				if n := len(shape.Tables()); n != 88 {
+					t.Errorf("%d tables in the dump, want 88", n)
 				}
 			})
 		})
@@ -353,8 +353,8 @@ func TestShapeOfSignalServerDatabase(t *testing.T) {
 		if shape.Table("peer").Exists() || shape.Table("tickets").Exists() || !shape.Table("peers").Exists() {
 			t.Error("a console table exists, or the signal server's peers table does not")
 		}
-		if got := shape.Table("folders").Exists(); got != db.IsPostgres() {
-			t.Errorf("folders exists = %v; the signal server creates it on PostgreSQL only", got)
+		if !shape.Table("folders").Exists() {
+			t.Error("no folders: the signal server creates it on both databases (on SQLite since upstream 3.5.264)")
 		}
 		if !shape.Table("address_books").Has("username") {
 			t.Error("the signal server's address_books has no username column")

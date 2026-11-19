@@ -1,5 +1,5 @@
 -- One SQLite file used by both: Go server started first, then the Node console initialised on the same file.
--- Worktree betterdesk-go, dumped 2026-11-10 at commit 569710e2; 948fb226 changes no schema code.
+-- Worktree betterdesk-go, dumped 2026-11-19 on 3f4ffd70 plus the change that adds agent_templates to store.Migrate (upstream 3.5.264 merged).
 -- sqlite3 <file> .schema  (SQLite 3 CLI of the dev image, statements in creation order, text as stored in sqlite_master)
 -- Do not edit: regenerate (see data.md, section "How the schema dumps were produced").
 
@@ -506,6 +506,60 @@ CREATE TABLE device_groups (
 			tag_filter TEXT DEFAULT '',
 			created_at TEXT DEFAULT (datetime('now'))
 		);
+CREATE TABLE device_group_members (
+			device_group_id INTEGER NOT NULL,
+			peer_id TEXT NOT NULL,
+			created_at TEXT DEFAULT (datetime('now')),
+			PRIMARY KEY (device_group_id, peer_id),
+			FOREIGN KEY (device_group_id) REFERENCES device_groups(id) ON DELETE CASCADE
+		);
+CREATE INDEX idx_device_group_members_peer ON device_group_members (peer_id);
+CREATE TABLE user_group_members (
+			user_group_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL,
+			created_at TEXT DEFAULT (datetime('now')),
+			PRIMARY KEY (user_group_id, user_id),
+			FOREIGN KEY (user_group_id) REFERENCES user_groups(id) ON DELETE CASCADE,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		);
+CREATE TABLE device_group_user_access (
+			device_group_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL,
+			created_at TEXT DEFAULT (datetime('now')),
+			PRIMARY KEY (device_group_id, user_id),
+			FOREIGN KEY (device_group_id) REFERENCES device_groups(id) ON DELETE CASCADE,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		);
+CREATE TABLE device_group_user_group_access (
+			device_group_id INTEGER NOT NULL,
+			user_group_id INTEGER NOT NULL,
+			created_at TEXT DEFAULT (datetime('now')),
+			PRIMARY KEY (device_group_id, user_group_id),
+			FOREIGN KEY (device_group_id) REFERENCES device_groups(id) ON DELETE CASCADE,
+			FOREIGN KEY (user_group_id) REFERENCES user_groups(id) ON DELETE CASCADE
+		);
+CREATE TABLE folders (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			color TEXT DEFAULT '#6366f1',
+			icon TEXT DEFAULT 'folder',
+			sort_order INTEGER DEFAULT 0,
+			created_at TEXT DEFAULT (datetime('now'))
+		);
+CREATE TABLE device_folder_assignments (
+			device_id TEXT PRIMARY KEY NOT NULL,
+			folder_id INTEGER NOT NULL,
+			assigned_at TEXT DEFAULT (datetime('now')),
+			FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE CASCADE
+		);
+CREATE TABLE user_peer_grants (
+			user_id INTEGER NOT NULL,
+			peer_id TEXT NOT NULL,
+			granted_at TEXT DEFAULT (datetime('now')),
+			PRIMARY KEY (user_id, peer_id),
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		);
+CREATE INDEX idx_user_peer_grants_user ON user_peer_grants (user_id);
 CREATE TABLE strategies (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			guid TEXT UNIQUE NOT NULL,
@@ -820,6 +874,19 @@ CREATE TABLE agent_bundles (
             );
 CREATE INDEX idx_agent_bundles_bundle_id ON agent_bundles (bundle_id);
 CREATE INDEX idx_agent_bundles_hash ON agent_bundles (branding_hash);
+CREATE TABLE agent_templates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                description TEXT NOT NULL DEFAULT '',
+                config_json TEXT NOT NULL DEFAULT '{}',
+                enrollment_token TEXT NOT NULL UNIQUE,
+                enrolled_device_id TEXT DEFAULT NULL,
+                enrolled_at TEXT DEFAULT NULL,
+                created_by INTEGER DEFAULT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+CREATE INDEX idx_agent_templates_token ON agent_templates (enrollment_token);
 CREATE TABLE agent_bundle_builds (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 branding_hash TEXT NOT NULL,
@@ -883,14 +950,6 @@ CREATE TABLE account_lockouts (
                 attempt_count INTEGER DEFAULT 0,
                 created_at TEXT DEFAULT (datetime('now'))
             );
-CREATE TABLE folders (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                color TEXT DEFAULT '#6366f1',
-                icon TEXT DEFAULT 'folder',
-                sort_order INTEGER DEFAULT 0,
-                created_at TEXT DEFAULT (datetime('now'))
-            );
 CREATE TABLE settings (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL,
@@ -919,12 +978,6 @@ CREATE TABLE relay_sessions (
                 status TEXT DEFAULT 'pending',
                 created_at TEXT DEFAULT (datetime('now')),
                 expires_at TEXT NOT NULL
-            );
-CREATE TABLE device_folder_assignments (
-                device_id TEXT PRIMARY KEY NOT NULL,
-                folder_id INTEGER NOT NULL,
-                assigned_at TEXT DEFAULT (datetime('now')),
-                FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE CASCADE
             );
 CREATE TABLE peer_sysinfo (
                 peer_id TEXT PRIMARY KEY,
@@ -965,45 +1018,6 @@ CREATE TABLE client_feature_policies (
             );
 CREATE INDEX idx_client_feature_policies_subject
                 ON client_feature_policies (subject_type, subject_id);
-CREATE TABLE user_group_members (
-                user_group_id INTEGER NOT NULL,
-                user_id INTEGER NOT NULL,
-                created_at TEXT DEFAULT (datetime('now')),
-                PRIMARY KEY (user_group_id, user_id),
-                FOREIGN KEY (user_group_id) REFERENCES user_groups(id) ON DELETE CASCADE,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            );
-CREATE TABLE device_group_members (
-                device_group_id INTEGER NOT NULL,
-                peer_id TEXT NOT NULL,
-                created_at TEXT DEFAULT (datetime('now')),
-                PRIMARY KEY (device_group_id, peer_id),
-                FOREIGN KEY (device_group_id) REFERENCES device_groups(id) ON DELETE CASCADE
-            );
-CREATE TABLE device_group_user_access (
-                device_group_id INTEGER NOT NULL,
-                user_id INTEGER NOT NULL,
-                created_at TEXT DEFAULT (datetime('now')),
-                PRIMARY KEY (device_group_id, user_id),
-                FOREIGN KEY (device_group_id) REFERENCES device_groups(id) ON DELETE CASCADE,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            );
-CREATE TABLE device_group_user_group_access (
-                device_group_id INTEGER NOT NULL,
-                user_group_id INTEGER NOT NULL,
-                created_at TEXT DEFAULT (datetime('now')),
-                PRIMARY KEY (device_group_id, user_group_id),
-                FOREIGN KEY (device_group_id) REFERENCES device_groups(id) ON DELETE CASCADE,
-                FOREIGN KEY (user_group_id) REFERENCES user_groups(id) ON DELETE CASCADE
-            );
-CREATE TABLE user_peer_grants (
-                user_id INTEGER NOT NULL,
-                peer_id TEXT NOT NULL,
-                granted_at TEXT DEFAULT (datetime('now')),
-                PRIMARY KEY (user_id, peer_id),
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            );
-CREATE INDEX idx_user_peer_grants_user ON user_peer_grants (user_id);
 CREATE TABLE notification_reads (
                 user_id INTEGER NOT NULL,
                 notification_id TEXT NOT NULL,

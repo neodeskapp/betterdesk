@@ -118,7 +118,7 @@ func TestMigrateAddsEachMissingColumn(t *testing.T) {
 				requireColumnDefault(t, db, table, col)
 			})
 		}
-		if wantSteps := map[store.Dialect]int{store.SQLite: 37, store.Postgres: 27}[db.Dialect()]; added != wantSteps {
+		if wantSteps := map[store.Dialect]int{store.SQLite: 37, store.Postgres: 29}[db.Dialect()]; added != wantSteps {
 			t.Errorf("%d column steps on %s, want %d", added, db.Dialect(), wantSteps)
 		}
 	})
@@ -522,8 +522,8 @@ func TestMigrateWaitsForTheSchemaLock(t *testing.T) {
 	if err := <-migrated; err != nil {
 		t.Fatalf("Migrate after the lock was released: %v", err)
 	}
-	if tables := readCatalog(t, db).tables(); len(tables) != 54 {
-		t.Errorf("%d tables after Migrate, want 54", len(tables))
+	if tables := readCatalog(t, db).tables(); len(tables) != 55 {
+		t.Errorf("%d tables after Migrate, want 55", len(tables))
 	}
 }
 
@@ -544,7 +544,7 @@ func TestMigrateReportsWhatItDid(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		first := captureLog(t, func() { mustMigrate(t, db) })
 		for _, want := range []string{
-			"[DB] Migration: created 54 tables: peer, ",
+			"[DB] Migration: created 55 tables: peer, ",
 			"[DB] Migration: added users.first_name\n",
 			"[DB] Migration: added the default row to user_groups\n",
 		} {
@@ -682,8 +682,8 @@ func TestMigrateToleratedFailureKeepsItsNeighbours(t *testing.T) {
 		t.Errorf("no warning about peer.tags:\n%s", out)
 	}
 	shape := db.Shape()
-	if n := len(shape.Tables()); n != 54 {
-		t.Errorf("%d tables after a tolerated failure, want all 54", n)
+	if n := len(shape.Tables()); n != 55 {
+		t.Errorf("%d tables after a tolerated failure, want all 55", n)
 	}
 	for _, table := range []string{"device_inventory", "dlp_events", "users"} {
 		if !shape.Table(table).Exists() {

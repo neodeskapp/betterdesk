@@ -48,7 +48,7 @@ func Register(d *kit.Deps) {
 	r.Post("/api/agent-pairing/activate", h.activate, d.RequireAuth, approve)
 	r.Get("/downloads/generic-agent/{tag}/{name}", h.download, d.Limits.FileAccess.Middleware)
 	r.Post("/api/bd/enroll", h.enroll)
-	r.Get("/api/portal/installers", h.installers)
+	r.Get("/api/portal/installers", h.installers, d.Limits.FileAccess.Middleware)
 }
 
 // field is req.body?.[key] as JavaScript saw it: Undefined when the body

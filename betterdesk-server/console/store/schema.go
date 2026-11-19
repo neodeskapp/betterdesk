@@ -194,7 +194,7 @@ func sqliteSteps() []step {
 		"saved_reports", "studio_flows",
 		"tenants", "tenant_devices", "tenant_users",
 		"pending_registrations",
-		"agent_bundles", "agent_bundle_builds",
+		"agent_bundles", "agent_templates", "agent_bundle_builds",
 	)...)
 	s = append(s, addColumns(strict, "agent_bundles",
 		"config_fingerprint", "TEXT NOT NULL DEFAULT ''",
@@ -273,7 +273,14 @@ func postgresSteps() []step {
 	)...)
 	s = append(s, createTables("dlp_events", "saved_reports", "studio_flows", "tenants", "tenant_devices", "tenant_users")...)
 	s = append(s, runScript("indexes_tenants"))
-	s = append(s, createTables("pending_registrations", "agent_bundles")...)
+	s = append(s, createTable("pending_registrations"))
+	s = append(s, createTable("agent_templates"))
+	s = append(s, addColumns(strict, "agent_templates",
+		"enrolled_device_id", "TEXT DEFAULT NULL",
+		"enrolled_at", "TIMESTAMPTZ DEFAULT NULL",
+	)...)
+	s = append(s, runScript("indexes_agent_templates"))
+	s = append(s, createTable("agent_bundles"))
 	s = append(s, addColumns(strict, "agent_bundles",
 		"config_fingerprint", "TEXT NOT NULL DEFAULT ''",
 		"client_commit", "TEXT DEFAULT NULL",

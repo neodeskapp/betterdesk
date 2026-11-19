@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -58,6 +59,15 @@ func TestNodeAnswers(t *testing.T) {
 		w := replay.NewWorld(t, db, nil)
 		writeReleaseCache(t, w.Config.DataDir)
 		w.Run(replay.Load(t, db, "node"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
+			// A new template's token is random: 48 hex digits in place of
+			// each other
+			if strings.HasPrefix(step.Path, "/api/agent-templates") {
+				want, have := randomToken.ReplaceAllString(replay.Normalize(step.Answer), "<token>"), randomToken.ReplaceAllString(replay.Normalize(got.Body), "<token>")
+				if got.Status != step.Status || have != want {
+					t.Errorf("step %q: %d %s\n   node: %d %s", step.Name, got.Status, have, step.Status, want)
+				}
+				return true
+			}
 			raw, ok := step.Extra["headers"]
 			if !ok {
 				return false
@@ -107,3 +117,6 @@ func deref(s *string) any {
 	}
 	return *s
 }
+
+// randomToken is an enrollment token as a new template gets it.
+var randomToken = regexp.MustCompile(`"[0-9a-f]{48}"`)

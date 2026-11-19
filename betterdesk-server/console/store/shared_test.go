@@ -40,8 +40,8 @@ func TestSharedDatabaseStartOrders(t *testing.T) {
 				}
 				storetest.ApplyDump(t, reference, readTestdata(t, "dumps/shared-"+db.Dialect().String()+"-"+order.dump+".sql"))
 				want := readCatalog(t, reference).without(sessionTable)
-				if n := len(want.tables()); n != 86 {
-					t.Fatalf("the shared dump has %d tables besides %s, want 86", n, sessionTable)
+				if n := len(want.tables()); n != 87 {
+					t.Fatalf("the shared dump has %d tables besides %s, want 87", n, sessionTable)
 				}
 				requireSameCatalog(t, "shared database against the dump", want, got)
 

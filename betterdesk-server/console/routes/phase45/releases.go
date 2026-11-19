@@ -162,7 +162,8 @@ type installerList struct {
 // installers answers GET /api/portal/installers, for the public portal:
 // the files of the newest cached release with their addresses on this
 // server. An empty list says why: no release was ever imported (no
-// cache folder), or the cache holds no usable release.
+// cache folder), or the cache holds no usable release. It counts against
+// the file limit (fileAccessLimiter), as the downloads do.
 func (h *handlers) installers(w http.ResponseWriter, r *http.Request) {
 	scheme := "http"
 	if kit.Secure(r) {

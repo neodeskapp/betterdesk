@@ -32,6 +32,26 @@
    ]
   ],
   [
+   "INSERT INTO agent_templates (name, description, config_json, enrollment_token, created_by) VALUES (?, ?, ?, ?, ?)",
+   [
+    "Seeded",
+    "one",
+    "{\"tags\":[\"s\"],\"n\":1,\"z\":1e21}",
+    "seed-token-one",
+    1
+   ]
+  ],
+  [
+   "INSERT INTO agent_templates (name, description, config_json, enrollment_token, created_by) VALUES (?, ?, ?, ?, ?)",
+   [
+    "Broken config",
+    "",
+    "not json",
+    "seed-token-two",
+    null
+   ]
+  ],
+  [
    "UPDATE users SET first_name = ?, last_name = ?, phone = ? WHERE id = ?",
    [
     "42",
@@ -2291,7 +2311,7 @@
     "Host": "console.test"
    },
    "status": 200,
-   "answer": "{\"success\":true,\"templates\":[]}",
+   "answer": "{\"success\":true,\"templates\":[{\"id\":2,\"name\":\"Broken config\",\"description\":\"\",\"enrollment_token\":\"seed-token-two\",\"created_at\":\"2026-11-19 03:36:55\",\"updated_at\":\"2026-11-19 03:36:55\"},{\"id\":1,\"name\":\"Seeded\",\"description\":\"one\",\"enrollment_token\":\"seed-token-one\",\"created_at\":\"2026-11-19 03:36:55\",\"updated_at\":\"2026-11-19 03:36:55\"}]}",
    "extra": {}
   },
   {
@@ -2342,8 +2362,8 @@
     "Host": "console.test"
    },
    "body": "{\"name\":\"Kiosk\",\"description\":\"front desk\",\"config\":{\"tags\":[\"k\"]}}",
-   "status": 501,
-   "answer": "{\"success\":false,\"error\":\"db_backend_missing_run\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"enrollment_token\":\"0ed1601e1f95278262cae91cef6982cdba24c7c97dc6cbbe\"}",
    "extra": {}
   },
   {
@@ -2355,8 +2375,8 @@
     "Host": "console.test"
    },
    "body": "{\"name\":7}",
-   "status": 501,
-   "answer": "{\"success\":false,\"error\":\"db_backend_missing_run\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"enrollment_token\":\"694c29fd82d3b54fcd0ef1920dc0197f6e194333f29a3304\"}",
    "extra": {}
   },
   {
@@ -2381,8 +2401,8 @@
     "Host": "console.test"
    },
    "body": "{\"name\":[\"a\",\"b\"]}",
-   "status": 501,
-   "answer": "{\"success\":false,\"error\":\"db_backend_missing_run\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"enrollment_token\":\"b563632cf7b72777e01bb617ba436ae15ab0e1877ab36355\"}",
    "extra": {}
   },
   {
@@ -2420,8 +2440,8 @@
     "Host": "console.test"
    },
    "body": "{\"name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
-   "status": 501,
-   "answer": "{\"success\":false,\"error\":\"db_backend_missing_run\"}",
+   "status": 201,
+   "answer": "{\"success\":true,\"enrollment_token\":\"992c86b9bf7afd82efe424a6ac3381b9d60ca3b22a8da2f0\"}",
    "extra": {}
   },
   {
@@ -2464,7 +2484,51 @@
    "extra": {}
   },
   {
-   "name": "196 DELETE /api/agent-templates/1",
+   "name": "196 POST /api/agent-templates",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"name\":\"Kiosk\",\"description\":\"again\"}",
+   "status": 409,
+   "answer": "{\"success\":false,\"error\":\"name_exists\"}",
+   "extra": {}
+  },
+  {
+   "name": "197 POST /api/agent-templates",
+   "role": "admin",
+   "method": "POST",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"name\":\"  Arrays  \",\"description\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"config\":[1,{\"a\":null}]}",
+   "status": 201,
+   "answer": "{\"success\":true,\"enrollment_token\":\"7f17cfcbfc4883ced42b16bd593c3ea9559be7bac00fae3b\"}",
+   "extra": {}
+  },
+  {
+   "name": "198 GET /api/agent-templates",
+   "role": "admin",
+   "method": "GET",
+   "path": "/api/agent-templates",
+   "headers": {
+    "Host": "console.test"
+   },
+   "status": 200,
+   "answer": "{\"success\":true,\"templates\":[{\"id\":7,\"name\":\"Arrays\",\"description\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"enrollment_token\":\"7f17cfcbfc4883ced42b16bd593c3ea9559be7bac00fae3b\",\"created_at\":\"2026-11-19 03:36:56\",\"updated_at\":\"2026-11-19 03:36:56\"},{\"id\":6,\"name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"description\":\"\",\"enrollment_token\":\"992c86b9bf7afd82efe424a6ac3381b9d60ca3b22a8da2f0\",\"created_at\":\"2026-11-19 03:36:56\",\"updated_at\":\"2026-11-19 03:36:56\"},{\"id\":5,\"name\":\"a,b\",\"description\":\"\",\"enrollment_token\":\"b563632cf7b72777e01bb617ba436ae15ab0e1877ab36355\",\"created_at\":\"2026-11-19 03:36:56\",\"updated_at\":\"2026-11-19 03:36:56\"},{\"id\":4,\"name\":\"7\",\"description\":\"\",\"enrollment_token\":\"694c29fd82d3b54fcd0ef1920dc0197f6e194333f29a3304\",\"created_at\":\"2026-11-19 03:36:56\",\"updated_at\":\"2026-11-19 03:36:56\"},{\"id\":3,\"name\":\"Kiosk\",\"description\":\"front desk\",\"enrollment_token\":\"0ed1601e1f95278262cae91cef6982cdba24c7c97dc6cbbe\",\"created_at\":\"2026-11-19 03:36:56\",\"updated_at\":\"2026-11-19 03:36:56\"},{\"id\":2,\"name\":\"Broken config\",\"description\":\"\",\"enrollment_token\":\"seed-token-two\",\"created_at\":\"2026-11-19 03:36:55\",\"updated_at\":\"2026-11-19 03:36:55\"},{\"id\":1,\"name\":\"Seeded\",\"description\":\"one\",\"enrollment_token\":\"seed-token-one\",\"created_at\":\"2026-11-19 03:36:55\",\"updated_at\":\"2026-11-19 03:36:55\"}]}",
+   "extra": {}
+  },
+  {
+   "name": "templates",
+   "sql": "SELECT name, description, config_json, created_by FROM agent_templates ORDER BY id",
+   "params": [],
+   "rows": "[{\"name\":\"Seeded\",\"description\":\"one\",\"config_json\":\"{\\\"tags\\\":[\\\"s\\\"],\\\"n\\\":1,\\\"z\\\":1e21}\",\"created_by\":1},{\"name\":\"Broken config\",\"description\":\"\",\"config_json\":\"not json\",\"created_by\":null},{\"name\":\"Kiosk\",\"description\":\"front desk\",\"config_json\":\"{\\\"tags\\\":[\\\"k\\\"]}\",\"created_by\":1},{\"name\":\"7\",\"description\":\"\",\"config_json\":\"{}\",\"created_by\":1},{\"name\":\"a,b\",\"description\":\"\",\"config_json\":\"{}\",\"created_by\":1},{\"name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"description\":\"\",\"config_json\":\"{}\",\"created_by\":1},{\"name\":\"Arrays\",\"description\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"config_json\":\"[1,{\\\"a\\\":null}]\",\"created_by\":1}]"
+  },
+  {
+   "name": "199 DELETE /api/agent-templates/1",
    "role": "admin",
    "method": "DELETE",
    "path": "/api/agent-templates/1",
@@ -2476,7 +2540,7 @@
    "extra": {}
   },
   {
-   "name": "197 DELETE /api/agent-templates/0",
+   "name": "200 DELETE /api/agent-templates/0",
    "role": "admin",
    "method": "DELETE",
    "path": "/api/agent-templates/0",
@@ -2488,7 +2552,7 @@
    "extra": {}
   },
   {
-   "name": "198 DELETE /api/agent-templates/-1",
+   "name": "201 DELETE /api/agent-templates/-1",
    "role": "admin",
    "method": "DELETE",
    "path": "/api/agent-templates/-1",
@@ -2500,7 +2564,7 @@
    "extra": {}
   },
   {
-   "name": "199 DELETE /api/agent-templates/abc",
+   "name": "202 DELETE /api/agent-templates/abc",
    "role": "admin",
    "method": "DELETE",
    "path": "/api/agent-templates/abc",
@@ -2512,7 +2576,7 @@
    "extra": {}
   },
   {
-   "name": "200 DELETE /api/agent-templates/12abc",
+   "name": "203 DELETE /api/agent-templates/12abc",
    "role": "admin",
    "method": "DELETE",
    "path": "/api/agent-templates/12abc",
@@ -2524,7 +2588,7 @@
    "extra": {}
   },
   {
-   "name": "201 DELETE /api/agent-templates/0x10",
+   "name": "204 DELETE /api/agent-templates/0x10",
    "role": "admin",
    "method": "DELETE",
    "path": "/api/agent-templates/0x10",
@@ -2536,7 +2600,7 @@
    "extra": {}
   },
   {
-   "name": "202 DELETE /api/agent-templates/99999999999999999999999",
+   "name": "205 DELETE /api/agent-templates/99999999999999999999999",
    "role": "admin",
    "method": "DELETE",
    "path": "/api/agent-templates/99999999999999999999999",
@@ -2548,7 +2612,7 @@
    "extra": {}
   },
   {
-   "name": "203 DELETE /api/agent-templates/%205",
+   "name": "206 DELETE /api/agent-templates/%205",
    "role": "admin",
    "method": "DELETE",
    "path": "/api/agent-templates/%205",
@@ -2560,7 +2624,7 @@
    "extra": {}
   },
   {
-   "name": "204 DELETE /api/agent-templates/0.5",
+   "name": "207 DELETE /api/agent-templates/0.5",
    "role": "admin",
    "method": "DELETE",
    "path": "/api/agent-templates/0.5",
@@ -2572,7 +2636,7 @@
    "extra": {}
   },
   {
-   "name": "205 DELETE /api/agent-templates/1e3",
+   "name": "208 DELETE /api/agent-templates/1e3",
    "role": "admin",
    "method": "DELETE",
    "path": "/api/agent-templates/1e3",
@@ -2584,7 +2648,7 @@
    "extra": {}
   },
   {
-   "name": "206 DELETE /api/agent-templates/%2B7",
+   "name": "209 DELETE /api/agent-templates/%2B7",
    "role": "admin",
    "method": "DELETE",
    "path": "/api/agent-templates/%2B7",
@@ -2596,7 +2660,7 @@
    "extra": {}
   },
   {
-   "name": "207 DELETE /api/agent-templates/Infinity",
+   "name": "210 DELETE /api/agent-templates/Infinity",
    "role": "admin",
    "method": "DELETE",
    "path": "/api/agent-templates/Infinity",
@@ -2608,7 +2672,7 @@
    "extra": {}
   },
   {
-   "name": "208 POST /api/bd/enroll",
+   "name": "211 POST /api/bd/enroll",
    "role": "",
    "method": "POST",
    "path": "/api/bd/enroll",
@@ -2621,7 +2685,7 @@
    "extra": {}
   },
   {
-   "name": "209 POST /api/bd/enroll",
+   "name": "212 POST /api/bd/enroll",
    "role": "",
    "method": "POST",
    "path": "/api/bd/enroll",
@@ -2634,7 +2698,7 @@
    "extra": {}
   },
   {
-   "name": "210 POST /api/bd/enroll",
+   "name": "213 POST /api/bd/enroll",
    "role": "",
    "method": "POST",
    "path": "/api/bd/enroll",
@@ -2647,7 +2711,7 @@
    "extra": {}
   },
   {
-   "name": "211 POST /api/bd/enroll",
+   "name": "214 POST /api/bd/enroll",
    "role": "",
    "method": "POST",
    "path": "/api/bd/enroll",
@@ -2660,7 +2724,7 @@
    "extra": {}
   },
   {
-   "name": "212 POST /api/bd/enroll",
+   "name": "215 POST /api/bd/enroll",
    "role": "",
    "method": "POST",
    "path": "/api/bd/enroll",
@@ -2673,7 +2737,7 @@
    "extra": {}
   },
   {
-   "name": "213 POST /api/bd/enroll",
+   "name": "216 POST /api/bd/enroll",
    "role": "",
    "method": "POST",
    "path": "/api/bd/enroll",
@@ -2686,7 +2750,7 @@
    "extra": {}
   },
   {
-   "name": "214 POST /api/bd/enroll",
+   "name": "217 POST /api/bd/enroll",
    "role": "",
    "method": "POST",
    "path": "/api/bd/enroll",
@@ -2699,7 +2763,7 @@
    "extra": {}
   },
   {
-   "name": "215 POST /api/bd/enroll",
+   "name": "218 POST /api/bd/enroll",
    "role": "",
    "method": "POST",
    "path": "/api/bd/enroll",
@@ -2712,7 +2776,7 @@
    "extra": {}
   },
   {
-   "name": "216 POST /api/bd/enroll",
+   "name": "219 POST /api/bd/enroll",
    "role": "",
    "method": "POST",
    "path": "/api/bd/enroll",
@@ -2725,7 +2789,7 @@
    "extra": {}
   },
   {
-   "name": "217 POST /api/bd/enroll",
+   "name": "220 POST /api/bd/enroll",
    "role": "",
    "method": "POST",
    "path": "/api/bd/enroll",
@@ -2738,7 +2802,72 @@
    "extra": {}
   },
   {
-   "name": "218 GET /api/agent-releases",
+   "name": "221 POST /api/bd/enroll",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/enroll",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"enrollment_token\":\"seed-token-one\",\"device_id\":\"dev-1\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"template_name\":\"Seeded\",\"preset_config\":{\"tags\":[\"s\"],\"n\":1,\"z\":1e+21}}",
+   "extra": {}
+  },
+  {
+   "name": "222 POST /api/bd/enroll",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/enroll",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"enrollment_token\":\"  seed-token-one  \",\"device_id\":\"dev-2\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"template_name\":\"Seeded\",\"preset_config\":{\"tags\":[\"s\"],\"n\":1,\"z\":1e+21}}",
+   "extra": {}
+  },
+  {
+   "name": "223 POST /api/bd/enroll",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/enroll",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"enrollment_token\":\"seed-token-two\",\"device_id\":\"dev-3\"}",
+   "status": 200,
+   "answer": "{\"success\":true,\"template_name\":\"Broken config\",\"preset_config\":{}}",
+   "extra": {}
+  },
+  {
+   "name": "224 POST /api/bd/enroll",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/enroll",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"enrollment_token\":\"SEED-TOKEN-ONE\",\"device_id\":\"dev-4\"}",
+   "status": 401,
+   "answer": "{\"success\":false,\"error\":\"invalid_token\"}",
+   "extra": {}
+  },
+  {
+   "name": "225 POST /api/bd/enroll",
+   "role": "",
+   "method": "POST",
+   "path": "/api/bd/enroll",
+   "headers": {
+    "Host": "console.test"
+   },
+   "body": "{\"enrollment_token\":\"   \",\"device_id\":\"dev-5\"}",
+   "status": 401,
+   "answer": "{\"success\":false,\"error\":\"invalid_token\"}",
+   "extra": {}
+  },
+  {
+   "name": "226 GET /api/agent-releases",
    "role": "admin",
    "method": "GET",
    "path": "/api/agent-releases",
@@ -2750,7 +2879,7 @@
    "extra": {}
   },
   {
-   "name": "219 GET /api/agent-releases/signing-status",
+   "name": "227 GET /api/agent-releases/signing-status",
    "role": "admin",
    "method": "GET",
    "path": "/api/agent-releases/signing-status",
@@ -2762,7 +2891,7 @@
    "extra": {}
   },
   {
-   "name": "220 GET /api/portal/installers",
+   "name": "228 GET /api/portal/installers",
    "role": "",
    "method": "GET",
    "path": "/api/portal/installers",
@@ -2774,7 +2903,7 @@
    "extra": {}
   },
   {
-   "name": "221 GET /downloads/generic-agent/support-v1.2.0/agent-windows.zip",
+   "name": "229 GET /downloads/generic-agent/support-v1.2.0/agent-windows.zip",
    "role": "",
    "method": "GET",
    "path": "/downloads/generic-agent/support-v1.2.0/agent-windows.zip",
@@ -2788,7 +2917,7 @@
    }
   },
   {
-   "name": "222 GET /downloads/generic-agent/support-v1.2.0/agent%2Dlinux.tar.gz",
+   "name": "230 GET /downloads/generic-agent/support-v1.2.0/agent%2Dlinux.tar.gz",
    "role": "",
    "method": "GET",
    "path": "/downloads/generic-agent/support-v1.2.0/agent%2Dlinux.tar.gz",
@@ -2802,7 +2931,7 @@
    }
   },
   {
-   "name": "223 GET /downloads/generic-agent/support-v1.2.0/missing.zip",
+   "name": "231 GET /downloads/generic-agent/support-v1.2.0/missing.zip",
    "role": "",
    "method": "GET",
    "path": "/downloads/generic-agent/support-v1.2.0/missing.zip",
@@ -2816,7 +2945,7 @@
    }
   },
   {
-   "name": "224 GET /downloads/generic-agent/support-v1.2.0/..",
+   "name": "232 GET /downloads/generic-agent/support-v1.2.0/..",
    "role": "",
    "method": "GET",
    "path": "/downloads/generic-agent/support-v1.2.0/..",
@@ -2830,7 +2959,7 @@
    }
   },
   {
-   "name": "225 GET /downloads/generic-agent/support-v1.2.0/.",
+   "name": "233 GET /downloads/generic-agent/support-v1.2.0/.",
    "role": "",
    "method": "GET",
    "path": "/downloads/generic-agent/support-v1.2.0/.",
@@ -2844,7 +2973,7 @@
    }
   },
   {
-   "name": "226 GET /downloads/generic-agent/./top.txt",
+   "name": "234 GET /downloads/generic-agent/./top.txt",
    "role": "",
    "method": "GET",
    "path": "/downloads/generic-agent/./top.txt",
@@ -2858,7 +2987,7 @@
    }
   },
   {
-   "name": "227 GET /downloads/generic-agent/support-v1.2.0/manifest.json",
+   "name": "235 GET /downloads/generic-agent/support-v1.2.0/manifest.json",
    "role": "",
    "method": "GET",
    "path": "/downloads/generic-agent/support-v1.2.0/manifest.json",
@@ -2872,7 +3001,7 @@
    }
   },
   {
-   "name": "228 GET /downloads/generic-agent/support-v1.2.0/a%20b.zip",
+   "name": "236 GET /downloads/generic-agent/support-v1.2.0/a%20b.zip",
    "role": "",
    "method": "GET",
    "path": "/downloads/generic-agent/support-v1.2.0/a%20b.zip",
@@ -2886,7 +3015,7 @@
    }
   },
   {
-   "name": "229 GET /downloads/generic-agent/support-v1.2.0/sub",
+   "name": "237 GET /downloads/generic-agent/support-v1.2.0/sub",
    "role": "",
    "method": "GET",
    "path": "/downloads/generic-agent/support-v1.2.0/sub",
@@ -2900,7 +3029,7 @@
    }
   },
   {
-   "name": "230 GET /downloads/generic-agent/no-manifest/file.bin",
+   "name": "238 GET /downloads/generic-agent/no-manifest/file.bin",
    "role": "",
    "method": "GET",
    "path": "/downloads/generic-agent/no-manifest/file.bin",

@@ -169,8 +169,8 @@ func TestNodeSchemaFreshEqualsNode(t *testing.T) {
 		byNode := fresh()
 		byNode.node(t, "init")
 		want := readCatalog(t, byNode.db)
-		if n := len(want.tables()); n != 54 {
-			t.Fatalf("Node's init created %d tables, want 54", n)
+		if n := len(want.tables()); n != 55 {
+			t.Fatalf("Node's init created %d tables, want 55", n)
 		}
 
 		byGo := fresh()
@@ -238,7 +238,7 @@ func TestNodeSchemaRollbackAfterMigrate(t *testing.T) {
 				t.Errorf("Node read %s returned nothing; the fixture should give it rows", name)
 			}
 		}
-		if len(before.Reads) < 25 || len(before.Tables) != 54 {
+		if len(before.Reads) < 25 || len(before.Tables) != 55 {
 			t.Fatalf("snapshot has %d reads and %d tables", len(before.Reads), len(before.Tables))
 		}
 
