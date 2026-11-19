@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"sort"
 
 	"github.com/unitronix/betterdesk-server/auth"
 )
@@ -42,14 +43,9 @@ func (s *Server) handleListRoles(w http.ResponseWriter, r *http.Request) {
 
 	result := make([]roleInfo, 0, len(roles))
 	for _, role := range roles {
-		perms := make([]string, 0)
-		if auth.IsSuperAdminRole(role) {
-			perms = auth.AllPermissions
-		} else {
-			defMap := auth.DefaultRolePermissions[role]
-			for p := range defMap {
-				perms = append(perms, p)
-			}
+		perms := auth.AllPermissions
+		if !auth.IsSuperAdminRole(role) {
+			perms = inPermissionOrder(auth.DefaultRolePermissions[role])
 		}
 		result = append(result, roleInfo{
 			Name:          role,
@@ -104,18 +100,34 @@ func (s *Server) handleGetRolePermissions(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	// Build response
-	permissions := make([]string, 0)
-	for p, granted := range effective {
-		if granted {
-			permissions = append(permissions, p)
-		}
-	}
-
 	writeJSON(w, http.StatusOK, map[string]any{
 		"role":        role,
-		"permissions": permissions,
+		"permissions": inPermissionOrder(effective),
 	})
+}
+
+// inPermissionOrder lists the granted permissions of a set in the order of
+// auth.AllPermissions, then the names the server does not know, sorted, so
+// two calls answer the same list.
+func inPermissionOrder(set map[string]bool) []string {
+	out := make([]string, 0, len(set))
+	for _, p := range auth.AllPermissions {
+		if set[p] {
+			out = append(out, p)
+		}
+	}
+	known := make(map[string]bool, len(auth.AllPermissions))
+	for _, p := range auth.AllPermissions {
+		known[p] = true
+	}
+	var extra []string
+	for p, granted := range set {
+		if granted && !known[p] {
+			extra = append(extra, p)
+		}
+	}
+	sort.Strings(extra)
+	return append(out, extra...)
 }
 
 // handleListRolePermissionOverrides returns all custom permission overrides from the DB.
