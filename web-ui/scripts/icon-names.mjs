@@ -9,7 +9,7 @@
  * or through the icon props of Button, IconButton, MenuItem and the rest;
  * by the remote viewer's file sheet (static/rdclient, plain JS that builds
  * icon spans); and by the sidebar from the section icons the server sends
- * (web-nodejs/lib/consoleNav.js).
+ * (betterdesk-server/console/access/nav.go).
  *
  * A name counts where it is written as a quoted literal in an icon place.
  * "Named like icon" means an identifier with icon, Icon or ICON in it
@@ -34,8 +34,11 @@ import { fileURLToPath } from 'node:url';
 
 const UI = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-/** Folders that draw icons, from web-ui; web-nodejs is missing when web-ui is checked out alone */
-const SCAN_ROOTS = ['src', 'static', '../web-nodejs'];
+/**
+ * Folders and files that draw icons, from web-ui; the server's navigation
+ * is missing when web-ui is checked out alone
+ */
+const SCAN_ROOTS = ['src', 'static', '../betterdesk-server/console/access/nav.go'];
 const SCAN_EXTS = new Set(['.js', '.mjs', '.ts', '.svelte', '.html', '.css']);
 const SKIP_DIRS = new Set(['node_modules', '.git', 'coverage', 'vendor', 'generated', 'tests', 'data']);
 
@@ -337,7 +340,7 @@ export function collectCandidateIcons() {
 	for (const root of SCAN_ROOTS) {
 		const dir = path.join(UI, root);
 		if (!fs.existsSync(dir)) continue;
-		for (const file of walkFiles(dir)) {
+		for (const file of fs.statSync(dir).isDirectory() ? walkFiles(dir) : [dir]) {
 			const rel = path.relative(UI, file).split(path.sep).join('/');
 			// The Icon component turns meanings ("copy") into glyphs; the plain JS under static/ writes glyphs
 			const glyph = rel.startsWith('static/') ? (n) => n : (n) => meanings[n] ?? n;

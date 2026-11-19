@@ -1,13 +1,14 @@
 # BetterDesk console (web-ui)
 
 The web console's frontend: Svelte 5 (runes), SvelteKit 3 as a single-page
-app (adapter-static, `ssr = false`), Vite 8, TypeScript (strict). The
-Express server in `web-nodejs/` serves the build and the JSON API.
+app (adapter-static, `ssr = false`), Vite 8, TypeScript (strict). The Go
+server (`betterdesk-server`) carries the build in its binary and serves it
+with the JSON API.
 
 The app lives at the root: its pages have the console's addresses
 (`/devices`, `/settings?tab=auth`). The build writes `routes.json` next to
-`index.html` (`vite-plugins/routes.ts`), and Express answers an address no
-page has with 404. `BD_UI_BASE=/path` builds it for another base.
+`index.html` (`vite-plugins/routes.ts`), and the server answers an address
+no page has with 404. `BD_UI_BASE=/path` builds it for another base.
 
 ## Commands
 
@@ -23,7 +24,7 @@ docker run --rm -v "$PWD/web-ui:/w" -v bd-webui-nm:/w/node_modules -w /w node:22
 Scripts: `build`, `check` (svelte-check, fails on warnings), `lint`
 (ESLint and Prettier), `format`, `test` (Vitest), `e2e` (Playwright),
 `dev` (Vite on :5173, proxies the API and the server's own addresses to
-Express on :5000; set `BD_BACKEND=http://host.docker.internal:5000` in a
+the Go server's console on :5000; set `BD_BACKEND=http://host.docker.internal:5000` in a
 container).
 
 ## Layout
