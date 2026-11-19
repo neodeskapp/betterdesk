@@ -241,6 +241,44 @@ func TestSSLConnectsToTheAddressItChecked(t *testing.T) {
 	}
 }
 
+// An IPv6 address reaches the guard whole, in brackets with or without a
+// port, or bare (BUGS.md SC7).
+func TestSSLOfAnIPv6Address(t *testing.T) {
+	var asked []string
+	s := newSite(t, Options{Network: Network{
+		Lookup: func(_ context.Context, host string) ([]string, error) {
+			t.Errorf("lookup of %q", host)
+			return nil, &ssrfguard.LookupError{Code: "ENOTFOUND", Host: host}
+		},
+		Dial: func(_ context.Context, _, address string) (net.Conn, error) {
+			asked = append(asked, address)
+			return nil, syscall.ECONNREFUSED
+		},
+	}})
+	admin := s.signIn("admin")
+	for body, want := range map[string]string{
+		`{"host":"[2001:db8::1]"}`:                            "[2001:db8::1]:443",
+		`{"host":"[2001:DB8::1]:8443","port":8443}`:           "[2001:db8::1]:8443",
+		`{"host":"https://[2001:db8::1]:9443/x","port":9443}`: "[2001:db8::1]:9443",
+		`{"host":" 2001:db8::1 "}`:                            "[2001:db8::1]:443",
+	} {
+		asked = nil
+		status, answer := s.post(admin, "/api/toolkit/ssl", body)
+		if status != 200 || !strings.HasPrefix(answer, `{"success":false,"error":"connect ECONNREFUSED 2001:`) || len(asked) != 1 || asked[0] != want {
+			t.Errorf("%s: %d %s, connections %q, want one to %s", body, status, answer, asked, want)
+		}
+	}
+	for body, want := range map[string]string{
+		`{"host":"[::1]:443"}`:           "Blocked IP address: ::1",
+		`{"host":"[::ffff:127.0.0.1]"}`:  "Blocked IP address: ::ffff:127.0.0.1",
+		`{"host":"https://[fe80::1]/x"}`: "Blocked IP address: fe80::1",
+	} {
+		if status, answer := s.post(admin, "/api/toolkit/ssl", body); status != 400 || answer != `{"success":false,"error":"`+want+`"}` {
+			t.Errorf("%s: %d %s, want 400 %s", body, status, answer, want)
+		}
+	}
+}
+
 func TestSSLRefusals(t *testing.T) {
 	s := newSite(t, Options{Network: Network{
 		Lookup: resolving(map[string][]string{"inside.test": {"127.0.0.1"}, "rebind.test": {"8.8.8.8", "169.254.169.254"}, "lan.test": {"10.0.0.9"}}),

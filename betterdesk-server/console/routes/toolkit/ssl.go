@@ -62,8 +62,10 @@ type failed struct {
 	Error   string `json:"error"`
 }
 
-// cleanTarget cuts a host name out of what someone typed or pasted: a
-// leading http:// or https://, a path and a port are dropped.
+// cleanTarget cuts a host name or address out of what someone typed or
+// pasted: a leading http:// or https://, a path and a port are dropped.
+// An IPv6 address is taken whole: out of its brackets, which a port may
+// follow, or bare, which no port can follow.
 func cleanTarget(text string) string {
 	if rest, ok := strings.CutPrefix(text, "https://"); ok {
 		text = rest
@@ -71,6 +73,15 @@ func cleanTarget(text string) string {
 		text = rest
 	}
 	text, _, _ = strings.Cut(text, "/")
+	text = strings.TrimFunc(text, isJSSpace)
+	if rest, ok := strings.CutPrefix(text, "["); ok {
+		if address, _, closed := strings.Cut(rest, "]"); closed {
+			return address
+		}
+	}
+	if strings.Count(text, ":") > 1 {
+		return text
+	}
 	text, _, _ = strings.Cut(text, ":")
 	return strings.TrimFunc(text, isJSSpace)
 }
