@@ -165,10 +165,11 @@ func (q *query) row(ctx context.Context, db *store.DB, doing string) (*record, e
 	return &rows[0], nil
 }
 
-// listRules returns every alert rule, the one created last first.
+// listRules returns every alert rule, the one created last first, and of
+// rules created in the same second the one with the higher id.
 func listRules(ctx context.Context, db *store.DB) ([]record, error) {
 	var q query
-	q.add("SELECT * FROM alert_rules WHERE 1=1 ORDER BY created_at DESC")
+	q.add("SELECT * FROM alert_rules WHERE 1=1 ORDER BY created_at DESC, id DESC")
 	return q.rows(ctx, db, "list alert rules")
 }
 
@@ -325,7 +326,8 @@ type commandFilter struct {
 	Limit int
 }
 
-// listCommands returns the commands, the one created last first.
+// listCommands returns the commands, the one created last first, and of
+// commands created in the same second the one with the higher id.
 func listCommands(ctx context.Context, db *store.DB, filter commandFilter) ([]record, error) {
 	var q query
 	q.add("SELECT * FROM remote_commands WHERE 1=1")
@@ -335,7 +337,7 @@ func listCommands(ctx context.Context, db *store.DB, filter commandFilter) ([]re
 	if filter.Status != "" {
 		q.add(" AND status = ?", jsbind.String(filter.Status))
 	}
-	q.add(" ORDER BY created_at DESC")
+	q.add(" ORDER BY created_at DESC, id DESC")
 	if filter.Limit > 0 {
 		q.add(" LIMIT ?", jsbind.Number(float64(filter.Limit)))
 	}
@@ -350,10 +352,11 @@ func commandByID(ctx context.Context, db *store.DB, id jsbind.Value) (*record, e
 }
 
 // pendingCommandsOf is getPendingCommands(deviceId): the device's
-// commands that wait for its agent, the one created first first.
+// commands that wait for its agent, the one created first first, and of
+// commands created in the same second the one with the lower id.
 func pendingCommandsOf(ctx context.Context, db *store.DB, device string) ([]record, error) {
 	var q query
-	q.add("SELECT * FROM remote_commands WHERE device_id = ? AND status = 'pending' ORDER BY created_at ASC", jsbind.String(device))
+	q.add("SELECT * FROM remote_commands WHERE device_id = ? AND status = 'pending' ORDER BY created_at ASC, id ASC", jsbind.String(device))
 	return q.rows(ctx, db, "list the pending commands of device "+device)
 }
 
