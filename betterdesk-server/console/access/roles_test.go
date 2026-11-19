@@ -116,10 +116,37 @@ func TestDBRoleSourceOverrides(t *testing.T) {
 		t.Errorf("padded role: %v, %v", got, err)
 	}
 
-	// A failed read of the overrides answers the built-in set.
-	store.failList = true
-	if got, err := source.RolePermissions(ctx, "viewer"); err != nil || !reflect.DeepEqual(sortedStrings(got), sortedStrings(consoleRoleMap["viewer"])) {
-		t.Errorf("failed override read: %v, %v; want the built-in set", got, err)
+}
+
+// PA6: while the overrides cannot be read, a permission an override took
+// away must not come back. The lookup fails, so the checks refuse with
+// their 503 and the guard with its own.
+func TestRolePermissionsFailWhenOverridesCannotBeRead(t *testing.T) {
+	ctx := context.Background()
+	store := &memoryOverrides{rows: map[string]map[string]bool{"operator": {"device.connect": false}}, failList: true}
+	source := NewDBRoleSource(store)
+	if got, err := source.RolePermissions(ctx, "operator"); err == nil {
+		t.Fatalf("failed override read answered %v", got)
+	}
+
+	s := &Service{roles: newRoleCache(source, time.Now), now: time.Now}
+	s.data = &fakeData{}
+	c := s.Load(ctx, Session{UserID: 7, HasUser: true, Role: "operator"})
+	if c.PermissionErr == nil || c.Permissions != nil || c.PolicyErr == nil {
+		t.Fatalf("load with unreadable overrides: permissions %v (%v), policy error %v", c.Permissions, c.PermissionErr, c.PolicyErr)
+	}
+	if d := c.RequirePermission("device.connect", "/api/remote/desk"); d.Status != 503 || d.Body == nil || d.Body.Code != CodePermissionService {
+		t.Errorf("device.connect: %+v, want the 503 of the permission service", d)
+	}
+	if got := c.Guard("GET", "/api/devices"); got.Verdict != VerdictUnavailable || got.Decision.Status != 503 {
+		t.Errorf("guard: %+v, want 503", got)
+	}
+
+	// Once the overrides can be read again, the override holds.
+	store.failList = false
+	s.ClearRoleCache()
+	if ok, err := s.RoleHasEffectivePermission(ctx, "operator", "device.connect"); err != nil || ok {
+		t.Errorf("device.connect after the database is back: %v, %v; the override takes it away", ok, err)
 	}
 }
 

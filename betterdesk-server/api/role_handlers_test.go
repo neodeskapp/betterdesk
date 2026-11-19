@@ -66,3 +66,27 @@ func TestRolePermissionOverridesNeedSuperAdmin(t *testing.T) {
 		t.Fatalf("admin delete override: status %d, want 200", code)
 	}
 }
+
+// PA6: while the overrides cannot be read, the built-in set would give
+// back a permission an override took away. The answer is an error.
+func TestRolePermissionsFailWhenOverridesCannotBeRead(t *testing.T) {
+	database := testSetupDB(t)
+	srv := New(config.DefaultConfig(), database, peer.NewMap(), nil, "test")
+	if err := database.SetRolePermission(auth.RoleOperator, auth.PermDeviceConnect, false); err != nil {
+		t.Fatal(err)
+	}
+	get := func() (int, string) {
+		req := httptest.NewRequest(http.MethodGet, "/api/roles/operator/permissions", nil)
+		req.SetPathValue("role", auth.RoleOperator)
+		rec := httptest.NewRecorder()
+		srv.handleGetRolePermissions(rec, req)
+		return rec.Code, rec.Body.String()
+	}
+	if code, body := get(); code != http.StatusOK || strings.Contains(body, `"`+auth.PermDeviceConnect+`"`) {
+		t.Fatalf("with the override: %d %s", code, body)
+	}
+	database.Close()
+	if code, body := get(); code != http.StatusInternalServerError || strings.Contains(body, `"`+auth.PermDeviceConnect+`"`) {
+		t.Errorf("overrides unreadable: %d %s, want 500", code, body)
+	}
+}

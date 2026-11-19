@@ -11,6 +11,7 @@ package api
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/unitronix/betterdesk-server/auth"
@@ -89,13 +90,17 @@ func (s *Server) handleGetRolePermissions(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	// Apply custom overrides from DB
+	// Apply custom overrides from DB. Without them the built-in set would
+	// give back what an override took away, so a failed read is an error.
 	if s.db != nil {
 		overrides, err := s.db.ListRolePermissions(role)
-		if err == nil {
-			for _, o := range overrides {
-				effective[o.Permission] = o.Granted
-			}
+		if err != nil {
+			log.Printf("[api] Failed to read the permission overrides of role %s: %v", role, err)
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to read role permissions"})
+			return
+		}
+		for _, o := range overrides {
+			effective[o.Permission] = o.Granted
 		}
 	}
 

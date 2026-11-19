@@ -133,8 +133,8 @@ func defaultPermissions(role string) []string {
 
 // RolePermissions returns the effective permissions of a role: its built-in
 // set with each stored override applied. A role the server does not know is
-// an error. A failure to read the overrides is not: the built-in set is
-// answered alone.
+// an error, and so is a failure to read the overrides: the built-in set
+// alone would give back what an override took away.
 func (s *DBRoleSource) RolePermissions(_ context.Context, role string) ([]string, error) {
 	role, err := SafeAPIID(role, "role")
 	if err != nil {
@@ -148,10 +148,12 @@ func (s *DBRoleSource) RolePermissions(_ context.Context, role string) ([]string
 		effective[p] = true
 	}
 	if s.store != nil {
-		if overrides, err := s.store.ListRolePermissions(role); err == nil {
-			for _, o := range overrides {
-				effective[o.Permission] = o.Granted
-			}
+		overrides, err := s.store.ListRolePermissions(role)
+		if err != nil {
+			return nil, fmt.Errorf("read the permission overrides of role %s: %w", role, err)
+		}
+		for _, o := range overrides {
+			effective[o.Permission] = o.Granted
 		}
 	}
 	out := make([]string, 0, len(effective))
