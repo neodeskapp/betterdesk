@@ -218,33 +218,6 @@ func TestServerTLSFloor(t *testing.T) {
 	}
 }
 
-func TestHostnameAndAddress(t *testing.T) {
-	for host, want := range map[string]string{
-		"example.com": "example.com", "example.com:80": "example.com", "[::1]": "[::1]", "[::1]:80": "[::1]",
-		"[::1": "[", "a:b:c": "a", "": "", "host,other": "host,other",
-	} {
-		if got := hostname(host); got != want {
-			t.Errorf("hostname(%q) = %q, want %q", host, got, want)
-		}
-	}
-	for _, c := range []struct {
-		host   string
-		port   int
-		target string
-		want   string
-	}{
-		{"h", 443, "/x", "https://h/x"},
-		{"h", 5443, "/x", "https://h:5443/x"},
-		{"", 5443, "/x", "https://localhost:5443/x"},
-		{"h", 5443, "", "https://h:5443/"},
-		{"h", 0, "*", "https://h*"},
-	} {
-		if got := HTTPSURL(c.host, c.port, c.target); got != c.want {
-			t.Errorf("HTTPSURL(%q, %d, %q) = %q, want %q", c.host, c.port, c.target, got, c.want)
-		}
-	}
-}
-
 // expressLocation keeps the address unencoded where encoding would move
 // the host url.parse sees: a "$" in the host name before the port.
 func TestExpressLocation(t *testing.T) {

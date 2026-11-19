@@ -37,10 +37,10 @@ import (
 
 // The recording listen/testdata/node_listeners.json holds what the Node
 // console's listeners (server.js) answered over real sockets: the client
-// API port in proxy and local mode and with TLS, the console on HTTPS with
-// its redirect listener, the fallbacks and the start failures. The tests
-// below start the Go console with the same settings and send the same
-// bytes.
+// API port in proxy and local mode and with TLS, the console on HTTPS, the
+// fallbacks and the start failures; listen/testdata/node_redirect.json
+// holds the redirect listener of upstream 3.5.264. The tests below start
+// the Go console with the same settings and send the same bytes.
 
 type oracleFile struct {
 	Ports     map[string]int   `json:"ports"`
@@ -48,19 +48,22 @@ type oracleFile struct {
 }
 
 type oracleScenario struct {
-	Name           string            `json:"name"`
-	Env            map[string]string `json:"env"`
-	Exchanges      []oracleExchange  `json:"exchanges"`
-	Ciphers        []oracleCipher    `json:"ciphers"`
-	Chain          []string          `json:"chain"`
-	APIChain       []string          `json:"apiChain"`
-	Exit           *int              `json:"exit"`
-	ExitCode       *int              `json:"exitCode"`
-	PlainPortOpen  *bool             `json:"plainPortOpen"`
-	HTTPSPortOpen  *bool             `json:"httpsPortOpen"`
-	APIPortOpen    *bool             `json:"apiPortOpen"`
-	ConsoleOpen    *bool             `json:"consoleOpen"`
-	RecordedPrefix string            `json:"-"`
+	Name          string            `json:"name"`
+	Env           map[string]string `json:"env"`
+	Exchanges     []oracleExchange  `json:"exchanges"`
+	Ciphers       []oracleCipher    `json:"ciphers"`
+	Chain         []string          `json:"chain"`
+	APIChain      []string          `json:"apiChain"`
+	Exit          *int              `json:"exit"`
+	ExitCode      *int              `json:"exitCode"`
+	PlainPortOpen *bool             `json:"plainPortOpen"`
+	HTTPSPortOpen *bool             `json:"httpsPortOpen"`
+	APIPortOpen   *bool             `json:"apiPortOpen"`
+	ConsoleOpen   *bool             `json:"consoleOpen"`
+	// Durable is the public endpoints file (DATA_DIR/public-endpoints.env)
+	// of the redirect recording, written before the start
+	Durable        *string `json:"durable"`
+	RecordedPrefix string  `json:"-"`
 }
 
 type oracleExchange struct {
@@ -230,7 +233,7 @@ type goStack struct {
 // replayEnv are the variables of a scenario the console reads, with the
 // paths of this run.
 var replayEnvKeys = []string{"HTTPS_ENABLED", "HTTP_REDIRECT_HTTPS", "SSL_CERT_PATH", "SSL_KEY_PATH", "SSL_CA_PATH",
-	"API_ENABLED", "RUSTDESK_API_PROXY", "RUSTDESK_API_TLS", "TRUST_PROXY"}
+	"API_ENABLED", "RUSTDESK_API_PROXY", "RUSTDESK_API_TLS", "TRUST_PROXY", "PANEL_PUBLIC_HOST"}
 
 // newGoStack makes the console of a scenario. held are ports taken by
 // something else, by listener name (console, https, api).
@@ -255,7 +258,15 @@ func newGoStack(t *testing.T, db *store.DB, scenario oracleScenario, certs *test
 		t.Fatal(err)
 	}
 	data := t.TempDir()
+	if scenario.Durable != nil {
+		if err := os.WriteFile(filepath.Join(data, "public-endpoints.env"), []byte(*scenario.Durable), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
 	cfg.Host, cfg.Port, cfg.HTTPSPort, cfg.APIPort, cfg.ClientAPIHost = "127.0.0.1", held["console"], held["https"], held["api"], "127.0.0.1"
+	if host, ok := scenario.Env["HOST"]; ok {
+		cfg.Host = host
+	}
 	cfg.DataDir, cfg.UploadsDir = data, filepath.Join(data, "uploads")
 	cfg.LangDir = filepath.Join("..", "..", "web-nodejs", "lang")
 	cfg.WebUIDir = filepath.Join(data, "no-build")

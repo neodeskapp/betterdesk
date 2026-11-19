@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/base64"
-	"fmt"
+	"encoding/json"
 	"io"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -219,7 +222,7 @@ func checkConsoleCookies(t *testing.T, g *goStack, name string, exchanges []orac
 // knownRedirect are the redirect requests where Go answers otherwise.
 var knownRedirect = map[string]func(t *testing.T, got []reply, closed bool) string{
 	// A Host header that is no host name or two Host headers: net/http
-	// refuses them with 400 where Node redirected to what the client sent
+	// refuses them with 400 where Node redirected (to its own host)
 	`redirect host "evil.com@good.com"`: statusIs(http.StatusBadRequest),
 	`redirect host "good.com/evil"`:     statusIs(http.StatusBadRequest),
 	`redirect host "good.com?x"`:        statusIs(http.StatusBadRequest),
@@ -234,10 +237,55 @@ var knownRedirect = map[string]func(t *testing.T, got []reply, closed bool) stri
 	// body) and a broken escape (Node redirected to it encoded)
 	`redirect target "/a b"`: statusIs(http.StatusBadRequest),
 	`redirect target "/%zz"`: statusIs(http.StatusBadRequest),
-	// A whole address as the request target: Node took the host from the
-	// Host header, net/http from the address
-	`redirect target "http://evil.com/x"`:        locationIs("https://evil.com:25443http://evil.com/x"),
-	`redirect target "https://evil.com:444/y?z"`: locationIs("https://evil.com:25443https://evil.com:444/y?z"),
+}
+
+// loadRedirectOracle is listen/testdata/node_redirect.json: the plain
+// port of upstream 3.5.264's server.js (audit H5) with different public
+// hosts, recorded by listen/testdata/nodeoracle/redirect.js.
+var loadRedirectOracle = sync.OnceValues(func() (*oracleFile, error) {
+	raw, err := os.ReadFile(filepath.Join("listen", "testdata", "node_redirect.json"))
+	if err != nil {
+		return nil, err
+	}
+	var f oracleFile
+	err = json.Unmarshal(raw, &f)
+	return &f, err
+})
+
+// TestRedirectAgainstNode replays the redirect recording: the plain port
+// sends every request to the host chosen at the start (PANEL_PUBLIC_HOST
+// from the environment, else from the public endpoints file, else the
+// bound address, else localhost), whatever Host header and target the
+// request had.
+func TestRedirectAgainstNode(t *testing.T) {
+	certs := makeTestCerts(t)
+	db := storetest.Migrated(t)
+	f, err := loadRedirectOracle()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(f.Scenarios) < 11 {
+		t.Fatalf("only %d redirect scenarios", len(f.Scenarios))
+	}
+	for _, scenario := range f.Scenarios {
+		t.Run(scenario.Name, func(t *testing.T) {
+			g, err := newGoStack(t, db, scenario, certs, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if g.ports["redirect"] == "" || g.ports["https"] == "" {
+				t.Fatalf("listeners %v", g.ports)
+			}
+			// The redirects name the recording's HTTPS port
+			_, httpsPort, _ := net.SplitHostPort(g.ports["https"])
+			g.ports["redirect"] = portRewriter(t, g.ports["redirect"], ":"+httpsPort, ":25443")
+			res := g.replayExchanges(t, scenario, knownRedirect)
+			checkReplay(t, scenario.Name, res)
+			if res.same < len(scenario.Exchanges)*3/4 {
+				t.Errorf("only %d of %d redirects compared", res.same, len(scenario.Exchanges))
+			}
+		})
+	}
 }
 
 func TestConsoleHTTPSAgainstNode(t *testing.T) {
@@ -250,15 +298,6 @@ func TestConsoleHTTPSAgainstNode(t *testing.T) {
 	}
 	if g.ports["redirect"] == "" || g.ports["https"] == "" {
 		t.Fatalf("listeners %v", g.ports)
-	}
-	_, httpsPort, _ := net.SplitHostPort(g.ports["https"])
-	redirects := oracleScenario{Exchanges: filter(scenario.Exchanges, func(e oracleExchange) bool { return e.Listener == "redirect" })}
-	// The redirects name the recording's HTTPS port
-	g.ports["redirect"] = portRewriter(t, g.ports["redirect"], ":"+httpsPort, ":25443")
-	res := g.replayExchanges(t, redirects, knownRedirect)
-	checkReplay(t, "https redirects", res)
-	if res.same < 60 {
-		t.Errorf("only %d redirects compared", res.same)
 	}
 	checkConsoleCookies(t, g, "https", filter(scenario.Exchanges, func(e oracleExchange) bool { return e.Listener == "https" && e.Secure }), "https")
 	plainOnTLS(t, g, scenario, "https")
@@ -339,14 +378,7 @@ func TestHTTPSSettingsAgainstNode(t *testing.T) {
 			t.Errorf("%s: redirect listener %v, Node %v", name, open, *scenario.PlainPortOpen)
 		}
 	}
-	scenario := oracleScenarioNamed(t, "https HTTPS_ENABLED=True")
-	g, err := newGoStack(t, db, scenario, certs, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, httpsPort, _ := net.SplitHostPort(g.ports["https"])
-	g.ports["redirect"] = portRewriter(t, g.ports["redirect"], ":"+httpsPort, ":25443")
-	checkReplay(t, scenario.Name, g.replayExchanges(t, scenario, nil))
+	// HTTPS_ENABLED=True with HTTP_REDIRECT_HTTPS=TRUE: TestRedirectAgainstNode
 }
 
 // TestFallbackAgainstNode: HTTPS mode without usable certificate files
@@ -459,14 +491,5 @@ func TestTrailerHeaderAgainstNode(t *testing.T) {
 	got, _, _ := send(g.ports["api"], false, []oraclePart{{Data: &options}}, 3*time.Second)
 	if !bytes.HasPrefix(got, []byte("HTTP/1.1 204")) {
 		t.Errorf("after the Trailer request the port answered %q", got)
-	}
-}
-
-func locationIs(want string) func(t *testing.T, got []reply, closed bool) string {
-	return func(_ *testing.T, got []reply, _ bool) string {
-		if len(got) != 1 || got[0].status != http.StatusTemporaryRedirect || got[0].header.Get("Location") != want {
-			return fmt.Sprintf("want 307 to %q, got %v", want, statuses(got))
-		}
-		return ""
 	}
 }

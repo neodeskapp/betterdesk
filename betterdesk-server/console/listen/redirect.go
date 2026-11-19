@@ -10,18 +10,15 @@ import (
 )
 
 // Redirect is the plain port of a console in HTTPS mode: every request,
-// whatever its method, is answered 307 to the same target on
-// https://<host>:<httpsPort> (the port left out when it is 443). The host
-// is the request's Host without its port, "localhost" without one; the
-// target is the request target as the client wrote it. The answer is
-// res.redirect(307) of a bare Express app: Cache-Control: no-store,
-// X-Powered-By: Express, a short body in the type the Accept header
-// prefers. CONNECT is closed without an answer.
-//
-// The address comes from the client's own Host header and only goes back
-// to that client, so it cannot send anyone else elsewhere. Hosts that are
-// not valid host names never get here: the server refuses them with 400.
-func Redirect(httpsPort int) http.Handler {
+// whatever its method, is answered 307 to https://<host>:<httpsPort>
+// (the port left out when it is 443) and the request target when that is
+// a path (see SafeRedirectURL). host is the one RedirectHost chose when
+// the listener was made; the request's Host header never reaches the
+// answer. The answer is res.redirect(307) of a bare Express app:
+// Cache-Control: no-store, X-Powered-By: Express, a short body in the
+// type the Accept header prefers. CONNECT is closed without an answer.
+func Redirect(host string, httpsPort int) http.Handler {
+	origin := redirectOrigin(host, httpsPort)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		Served(r)
 		if r.Method == http.MethodConnect {
@@ -32,7 +29,7 @@ func Redirect(httpsPort int) http.Handler {
 			badRequest(w)
 			return
 		}
-		location := expressLocation(HTTPSURL(hostname(r.Host), httpsPort, r.RequestURI))
+		location := expressLocation(origin + samePath(r.RequestURI))
 		h := w.Header()
 		h.Set("X-Powered-By", "Express")
 		h.Set("Cache-Control", "no-store")
@@ -53,35 +50,6 @@ func Redirect(httpsPort int) http.Handler {
 			_, _ = io.WriteString(w, body)
 		}
 	})
-}
-
-// HTTPSURL is the address the redirect sends a client to
-// (formatHttpsRedirectUrl in lib/privilegedPorts.js).
-func HTTPSURL(host string, httpsPort int, target string) string {
-	if host == "" {
-		host = "localhost"
-	}
-	if target == "" {
-		target = "/"
-	}
-	suffix := ""
-	if httpsPort > 0 && httpsPort != 443 {
-		suffix = ":" + strconv.Itoa(httpsPort)
-	}
-	return "https://" + host + suffix + target
-}
-
-// hostname is req.hostname of Express without trusted proxies: the Host
-// header up to its port, an IPv6 literal kept whole.
-func hostname(host string) string {
-	offset := 0
-	if strings.HasPrefix(host, "[") {
-		offset = strings.IndexByte(host, ']') + 1
-	}
-	if i := strings.IndexByte(host[offset:], ':'); i >= 0 {
-		return host[:offset+i]
-	}
-	return host
 }
 
 // expressLocation is the Location header res.location made of an
