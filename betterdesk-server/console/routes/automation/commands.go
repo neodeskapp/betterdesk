@@ -15,9 +15,9 @@ type commandSent struct {
 // sendCommand answers POST commands with the body {device_id, payload,
 // command_type?}: the command waits for the device's agent to fetch it.
 //
-// The payload has to be a text and the type, when given, one of five.
-// The device can be anything that is not empty: the database decides what
-// it stores for a number or a list.
+// The payload has to be a text that is not blank and the type, when
+// given, one of five. The device can be anything that is not empty: the
+// database decides what it stores for a number or a list.
 //
 // A device that JavaScript cannot make text of (an object with a member
 // named toString) gets its command stored on PostgreSQL and the request
@@ -31,15 +31,7 @@ func (h *handlers) sendCommand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	payload := jsbind.Of(body.Get("payload"))
-	if !payload.Truthy() {
-		fail(w, r, http.StatusBadRequest, "payload is required")
-		return
-	}
-	if !payload.IsString() {
-		h.serverError(w, r, "Command create error", errNotAFunction("payload.trim"))
-		return
-	}
-	if jsbind.Trim(payload.Str()) == "" {
+	if !payload.IsString() || jsbind.Trim(payload.Str()) == "" {
 		fail(w, r, http.StatusBadRequest, "payload is required")
 		return
 	}

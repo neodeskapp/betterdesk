@@ -84,12 +84,6 @@ func asText(raw middleware.Value) (string, error) {
 	return jsbind.Of(raw).ToString(), nil
 }
 
-// errNotAFunction is the TypeError of a method call on a value that has
-// no such method: name.trim() for a name that is no text.
-type errNotAFunction string
-
-func (e errNotAFunction) Error() string { return string(e) + " is not a function" }
-
 // turnedOff is enabled === false || enabled === 0 || enabled === '0' ||
 // enabled === 'false'.
 func turnedOff(v jsbind.Value) bool {

@@ -148,22 +148,14 @@ type ruleCreated struct {
 // description?, condition_op?, condition_value?, severity?,
 // scope_device_id?, cooldown_secs?, notify_emails?, enabled?}.
 //
-// The name has to be a text, the type one of six and the comparison, when
-// given, one of six. A severity that is none of the three is "warning".
-// Everything else is stored as it came, or fails in the database. A rule
-// is on unless enabled is false, 0, "0" or "false".
+// The name has to be a text that is not blank, the type one of six and
+// the comparison, when given, one of six. A severity that is none of the
+// three is "warning". Everything else is stored as it came, or fails in
+// the database. A rule is on unless enabled is false, 0, "0" or "false".
 func (h *handlers) createRule(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	name := member(body, "name")
-	if !name.value.Truthy() {
-		fail(w, r, http.StatusBadRequest, "Rule name is required")
-		return
-	}
-	if !name.value.IsString() {
-		h.serverError(w, r, "Rule create error", errNotAFunction("name.trim"))
-		return
-	}
-	if jsbind.Trim(name.value.Str()) == "" {
+	if !name.value.IsString() || jsbind.Trim(name.value.Str()) == "" {
 		fail(w, r, http.StatusBadRequest, "Rule name is required")
 		return
 	}
@@ -242,7 +234,7 @@ func (h *handlers) updateRule(w http.ResponseWriter, r *http.Request) {
 	if body.Has("name") {
 		name := jsbind.Of(body.Get("name"))
 		if !name.IsString() {
-			h.serverError(w, r, "Rule update error", errNotAFunction("name.trim"))
+			fail(w, r, http.StatusBadRequest, "Rule name is required")
 			return
 		}
 		changes = append(changes, change{"name", jsbind.String(jsbind.Trim(name.Str()))})
