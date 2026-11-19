@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -209,10 +210,118 @@ func normalize(v any, base, sys string, uid, gid float64) any {
 	return v
 }
 
+// fileChange is a step of the recording that the Go file browser answers
+// otherwise on purpose, fixing the bug it names.
+type fileChange struct {
+	bug string
+	// err is the error the step gives now; result makes the answer it
+	// gives now from the recorded one, in the recording's form ({B} for
+	// the base)
+	err    string
+	result func(recorded any) any
+	// unchanged: the step changes nothing now, so the tree stays as it was
+	// before it
+	unchanged bool
+	// drop, keep and add edit the recorded tree of this step and of every
+	// later one: the entries at or below a dropped path go, those at or
+	// below a kept path come back as they were before the scenario's first
+	// step, and the added entries come in
+	drop, keep []string
+	add        [][]any
+}
+
+// fileChanges are the steps of the recording where the Go file browser
+// differs on purpose, by scenario and step:
+//
+//   - SM5: a write does not go through a link, also not one that points
+//     nowhere (the recording created server/nothing, and outside/planted.txt
+//     outside every folder) or to itself.
+var fileChanges = map[string]map[int]fileChange{
+	"writes": {
+		17: {bug: "SM5", err: "Not a regular file", drop: []string{"server/nothing"}},
+		18: {bug: "SM5", err: "Not a regular file", drop: []string{"outside/planted.txt"}},
+		19: {bug: "SM5", err: "Not a regular file"},
+		38: {bug: "SM5", result: writesListing},
+	},
+}
+
+// writesListing is the list of the server's folder at the end of the
+// writes: server/nothing was never made, and dangling-out still points
+// nowhere, so it is listed as a link (the old console left it out once it
+// pointed out of the folder).
+func writesListing(recorded any) any {
+	out := maps.Clone(recorded.(map[string]any))
+	var items []any
+	for _, item := range out["items"].([]any) {
+		entry := item.(map[string]any)
+		switch entry["name"] {
+		case "nothing":
+			continue
+		case "dangling":
+			link := maps.Clone(entry)
+			link["name"], link["path"], link["size"] = "dangling-out", "{B}/server/dangling-out", float64(len("../outside/planted.txt"))
+			items = append(items, item, link)
+			continue
+		}
+		items = append(items, item)
+	}
+	out["items"] = items
+	return out
+}
+
+// below reports whether a tree entry's path is p or lies below it.
+func below(entry []any, p string) bool {
+	name := entry[0].(string)
+	return name == p || strings.HasPrefix(name, p+"/")
+}
+
+// editTree applies the edits of the changes so far to a recorded tree,
+// and keeps the snapshot's order: by path, part by part.
+func editTree(recorded any, start []any, changes []fileChange) []any {
+	var tree [][]any
+	for _, e := range recorded.([]any) {
+		tree = append(tree, e.([]any))
+	}
+	for _, c := range changes {
+		for _, p := range append(append([]string(nil), c.drop...), c.keep...) {
+			var kept [][]any
+			for _, e := range tree {
+				if !below(e, p) {
+					kept = append(kept, e)
+				}
+			}
+			tree = kept
+		}
+		for _, p := range c.keep {
+			for _, e := range start {
+				if below(e.([]any), p) {
+					tree = append(tree, e.([]any))
+				}
+			}
+		}
+		tree = append(tree, c.add...)
+	}
+	sort.SliceStable(tree, func(i, j int) bool {
+		a, b := strings.Split(tree[i][0].(string), "/"), strings.Split(tree[j][0].(string), "/")
+		for k := 0; k < len(a) && k < len(b); k++ {
+			if a[k] != b[k] {
+				return a[k] < b[k]
+			}
+		}
+		return len(a) < len(b)
+	})
+	out := make([]any, len(tree))
+	for i, e := range tree {
+		out[i] = e
+	}
+	return out
+}
+
 // TestNodeFileVectors replays every call the oracle made of the old
 // serverManagement.js on the same tree and the same environment: folder
 // lists, list, read, write, mkdir, rename and delete must answer the same
-// values and errors and leave the same tree.
+// values and errors and leave the same tree, except where fileChanges
+// says otherwise.
 func TestNodeFileVectors(t *testing.T) {
 	raw, err := os.ReadFile("testdata/node_files.json")
 	if err != nil {
@@ -260,8 +369,22 @@ func TestNodeFileVectors(t *testing.T) {
 				LogDir: sys + "/var/log", TempDirs: []string{sys + "/tmp", sys + "/var/tmp"},
 				beforeChange: onlyBelow(t, base),
 			})
+			start := normalize(treeSnapshot(t, base), base, sys, uid, gid).([]any)
+			var changes []fileChange
+			var lastTree any = start
 			for i, step := range sc.Steps {
 				steps++
+				change, changed := fileChanges[sc.Name][i]
+				wantErr, wantResult := step.Error, step.Result
+				if changed {
+					changes = append(changes, change)
+					if change.err != "" {
+						wantErr, wantResult = change.err, nil
+					}
+					if change.result != nil {
+						wantErr, wantResult = "", change.result(step.Result)
+					}
+				}
 				args := make([]string, len(step.Args))
 				for j, a := range step.Args {
 					args[j] = real(a)
@@ -287,20 +410,23 @@ func TestNodeFileVectors(t *testing.T) {
 					t.Fatalf("unknown op %s", step.Op)
 				}
 				where := fmt.Sprintf("step %d: %s %q", i, step.Op, step.Args)
-				if step.Error != "" || err != nil {
+				if changed {
+					where += " (changed by " + change.bug + ")"
+				}
+				if wantErr != "" || err != nil {
 					got := ""
 					if err != nil {
 						got = normalize(err.Error(), base, sys, uid, gid).(string)
 					}
-					if got != step.Error {
-						t.Errorf("%s: error %q, want %q", where, got, step.Error)
+					if got != wantErr {
+						t.Errorf("%s: error %q, want %q", where, got, wantErr)
 					}
 				} else {
 					b, _ := json.Marshal(result)
 					var got any
 					_ = json.Unmarshal(b, &got)
 					got = normalize(got, base, sys, uid, gid)
-					want := normalize(step.Result, "\x00", "\x01", -1, -1)
+					want := normalize(wantResult, "\x00", "\x01", -1, -1)
 					if !reflect.DeepEqual(got, want) {
 						gb, _ := json.Marshal(got)
 						wb, _ := json.Marshal(want)
@@ -308,10 +434,18 @@ func TestNodeFileVectors(t *testing.T) {
 					}
 				}
 				if step.Tree != nil {
+					want := step.Tree
+					switch {
+					case changed && change.unchanged:
+						want = lastTree
+					case len(changes) > 0:
+						want = editTree(step.Tree, start, changes)
+					}
+					lastTree = want
 					got := normalize(treeSnapshot(t, base), base, sys, uid, gid)
-					if !reflect.DeepEqual(got, step.Tree) {
+					if !reflect.DeepEqual(got, want) {
 						gb, _ := json.Marshal(got)
-						wb, _ := json.Marshal(step.Tree)
+						wb, _ := json.Marshal(want)
 						t.Errorf("%s: tree\n got %.3000s\nwant %.3000s", where, gb, wb)
 					}
 				}

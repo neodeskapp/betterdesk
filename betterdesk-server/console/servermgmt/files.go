@@ -184,7 +184,9 @@ type Written struct {
 }
 
 // WriteFile writes content as UTF-8 to a file the browser may change,
-// creating it or replacing what it held.
+// creating it or replacing what it held. A link, also one that points
+// nowhere, is not written through, and a FIFO, a socket or a device is not
+// opened: ErrNotRegularFile. A folder fails at the open.
 func (s *Service) WriteFile(p, content string) (*Written, error) {
 	abs, err := s.within(p, s.WriteRoots())
 	if err != nil {
@@ -193,10 +195,13 @@ func (s *Service) WriteFile(p, content string) (*Written, error) {
 	if len(content) > FileMaxBytes {
 		return nil, ErrContentTooBig
 	}
+	if st, err := os.Lstat(abs); err == nil && !st.Mode().IsRegular() && !st.IsDir() {
+		return nil, ErrNotRegularFile
+	}
 	if err := s.guard(abs); err != nil {
 		return nil, err
 	}
-	f, err := os.OpenFile(abs, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o666)
+	f, err := openForWrite(abs)
 	if err != nil {
 		return nil, fileError(err, "open", abs)
 	}
