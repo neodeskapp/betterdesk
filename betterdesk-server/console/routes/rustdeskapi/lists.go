@@ -11,7 +11,6 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/devicegroups"
 	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
@@ -329,16 +328,21 @@ type accessibleGroupPayload struct {
 	Sort int    `json:"sort"`
 }
 
-// sendDeviceGroups is sendRustDeskDeviceGroups. Which form the list has
-// depends on the path as the client wrote it: one that contains
-// /device-group/accessible (in that letter case) gets the short form.
-func (h *handlers) sendDeviceGroups(w http.ResponseWriter, r *http.Request) {
+// sendDeviceGroups is sendRustDeskDeviceGroups for a route: accessible
+// gives the short form of the list (the accessible route), else the long
+// one.
+func (h *handlers) sendDeviceGroups(accessible bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		h.deviceGroupList(w, r, accessible)
+	}
+}
+
+func (h *handlers) deviceGroupList(w http.ResponseWriter, r *http.Request, accessible bool) {
 	user := authUser(r)
 	if user.isPro() {
 		kit.JSON(w, r, http.StatusOK, listMsgAnswer{Data: []any{}, Msg: "success"})
 		return
 	}
-	accessible := strings.Contains(httpx.RawPath(r), "/device-group/accessible")
 	groups := h.deviceGroups(r.Context(), user)
 	var data []any
 	for i, g := range groups {

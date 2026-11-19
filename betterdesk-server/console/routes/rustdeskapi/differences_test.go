@@ -63,6 +63,8 @@ var fixedSteps = []fixedStep{
 	{"node", "the tokens", "RD7"},
 	{"node", "the tokens after sign-out", "RD7"},
 	{"node", "the audit entries", "RD7"},
+	// The accessible route gives the short form in any letter case.
+	{"node", "609 GET /API/Device-Group/Accessible", "RD11"},
 }
 
 // fixedStep is a step of the recordings of both databases ("node",

@@ -904,3 +904,33 @@ func TestADatabaseFailureAnswers500(t *testing.T) {
 		}
 	}
 }
+
+// The list form of the device groups follows the route, not the letter
+// case of the address: the accessible route gives the short form (name,
+// guid, note, sort) in any spelling, the other group routes the long one.
+func TestDeviceGroupFormFollowsTheRoute(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db, nil)
+		for path, short := range map[string]bool{
+			"/api/device-group/accessible":  true,
+			"/API/Device-Group/Accessible":  true,
+			"/api/device-group/accessible/": true,
+			"/api/device-group":             false,
+			"/API/Device-Group":             false,
+			"/api/group":                    false,
+			"/api/group/get":                false,
+		} {
+			got := w.Do(replay.Request{Path: path, Headers: bearer(viewerToken)})
+			var list struct {
+				Data []map[string]json.RawMessage `json:"data"`
+			}
+			if err := json.Unmarshal([]byte(got.Body), &list); err != nil || got.Status != http.StatusOK || len(list.Data) == 0 {
+				t.Fatalf("%s: %d %s", path, got.Status, got.Body)
+			}
+			_, team := list.Data[0]["team"]
+			if _, sort := list.Data[0]["sort"]; team == short || !sort {
+				t.Errorf("%s: %s, want the short form %t", path, got.Body, short)
+			}
+		}
+	})
+}

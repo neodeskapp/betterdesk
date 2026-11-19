@@ -87,6 +87,17 @@
   },
   "bug": "RD7"
  },
+ "609 GET /API/Device-Group/Accessible": {
+  "answer": {
+   "answer": "{\"data\":[{\"name\":\"Default\",\"guid\":\"<uuid>\",\"note\":\"Default device group\",\"sort\":0},{\"name\":\"Lab devices\",\"guid\":\"dg-lab\",\"note\":\"\",\"sort\":1},{\"name\":\"Manual\",\"guid\":\"dg-manual\",\"note\":\"m\",\"sort\":2},{\"name\":\"Private\",\"guid\":\"g-private\",\"note\":\"\",\"sort\":3},{\"name\":\"Lab\",\"guid\":\"folder_2\",\"note\":\"\",\"sort\":4},{\"name\":\"Office\",\"guid\":\"folder_1\",\"note\":\"\",\"sort\":5}],\"total\":6,\"msg\":\"success\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RD11"
+ },
  "666 PUT /api/strategies/s-fixed-1/status": {
   "answer": {
    "answer": "{\"error\":\"enabled must be true or false\"}",
