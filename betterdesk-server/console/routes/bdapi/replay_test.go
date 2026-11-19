@@ -296,6 +296,17 @@ var fixes = []fix{
 	{bug: "BD6", dialect: "postgres", steps: []string{"38 known devices after"}, edits: []string{
 		`{"id":"KEYDEV","uuid":"uuid-k",`, `{"id":"KEYDEV","uuid":"uuid-k2",`,
 	}},
+	// A registration without a uuid keeps the stored one on SQLite too
+	{bug: "BD7", dialect: "sqlite", steps: []string{"38 known devices after"}, edits: []string{
+		`{"id":"DEV3","uuid":"",`, `{"id":"DEV3","uuid":"uuid-3",`,
+		`{"id":"KEYDEV","uuid":"",`, `{"id":"KEYDEV","uuid":"uuid-k2",`,
+	}},
+	{bug: "BD7", dialect: "sqlite", steps: []string{"46 renamed devices after"}, edits: []string{
+		`{"id":"NEWID2","uuid":"",`, `{"id":"NEWID2","uuid":"uuid-n2",`,
+	}},
+	{bug: "BD7", dialect: "sqlite", steps: []string{"128 odd values after"}, edits: []string{
+		`{"id":"DEV3","uuid":"",`, `{"id":"DEV3","uuid":"uuid-3",`,
+	}},
 }
 
 // fixedSteps returns the steps as the Go console answers them since the

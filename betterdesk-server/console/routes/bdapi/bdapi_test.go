@@ -275,3 +275,29 @@ func TestStoredKeyAsBytes(t *testing.T) {
 		}
 	})
 }
+
+// A registration without a uuid keeps the uuid the device has, on SQLite
+// as on PostgreSQL, so the identity check still compares the next uuid
+// with it (BUGS BD7, the part that changes nothing for an agent).
+func TestRegistrationWithoutUUIDKeepsTheStoredOne(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		ctx := context.Background()
+		if _, err := w.DB.Exec(ctx, "INSERT INTO peer (id, uuid, info) VALUES ('UUIDDEV1', 'uuid-1', '{}')"); err != nil {
+			t.Fatal(err)
+		}
+		for _, body := range []string{`{}`, `{"uuid":""}`} {
+			if got := w.SignedOut().Do("POST", "/api/bd/register", body, "X-Device-Id", "UUIDDEV1"); got.Status != 200 {
+				t.Fatalf("%s: %d %s", body, got.Status, got.Body)
+			}
+			var uuid string
+			if err := w.DB.QueryRow(ctx, "SELECT uuid FROM peer WHERE id = 'UUIDDEV1'").Scan(&uuid); err != nil || uuid != "uuid-1" {
+				t.Errorf("%s: stored uuid %q (%v), want uuid-1", body, uuid, err)
+			}
+		}
+		got := w.SignedOut().Do("POST", "/api/bd/register", `{"uuid":"uuid-2"}`, "X-Device-Id", "UUIDDEV1")
+		if got.Status != 409 || !strings.Contains(got.Body, "identity_change_not_allowed") {
+			t.Errorf("another uuid afterwards: %d %s", got.Status, got.Body)
+		}
+	})
+}

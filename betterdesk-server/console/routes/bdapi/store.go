@@ -70,7 +70,8 @@ func oneOrTrue(v jsbind.Value) bool {
 
 // upsertPeer is upsertPeer({id, uuid, pk, info, ip}) of both adapters:
 // a new row online, or the row of the id with what the registration says
-// and no longer deleted. The values go to the database as the drivers
+// and no longer deleted. A registration without a uuid keeps the stored
+// one on both databases. The values go to the database as the drivers
 // bound them.
 func upsertPeer(ctx context.Context, db *store.DB, id string, uuid, pk jsbind.Value, info, ip string) error {
 	if !uuid.Truthy() {
@@ -98,7 +99,7 @@ func upsertPeer(ctx context.Context, db *store.DB, id string, uuid, pk jsbind.Va
 		query = `INSERT INTO peer (id, uuid, pk, info, ip, status_online, created_at)
                 VALUES (?, ?, ?, ?, ?, 1, datetime('now'))
                 ON CONFLICT(id) DO UPDATE SET
-                    uuid = COALESCE(excluded.uuid, uuid),
+                    uuid = COALESCE(NULLIF(excluded.uuid, ''), uuid),
                     pk = COALESCE(excluded.pk, pk),
                     info = COALESCE(excluded.info, info),
                     ip = COALESCE(excluded.ip, ip),
