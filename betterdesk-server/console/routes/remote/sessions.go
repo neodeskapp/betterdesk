@@ -3,10 +3,7 @@ package remote
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/guestaccess"
 	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/middleware"
 )
 
 type sessionList struct {
@@ -54,20 +51,20 @@ type agentToken struct {
 
 // remoteAgentToken answers POST /api/bd/remote-agent-token: the
 // single-use token an agent opens its remote relay socket with, for the
-// device of its device token. The body's device_id, when JavaScript finds
-// it true, must be that device's id as text; the device guards in front
-// already compared it as String() writes it.
+// device of its device token. The body's device_id, when it is not the
+// empty text, must be that device's id; the device guards in front refuse
+// one that is no text.
 func (h *handlers) remoteAgentToken(w http.ResponseWriter, r *http.Request) {
 	deviceID := kit.Device(r).DeviceID
-	id, isText := deviceID, true
-	if claim := kit.Body(r).Get("device_id"); claim.Truthy() {
-		id, isText = claimText(claim)
+	id := deviceID
+	if claim, isText := kit.Body(r).Get("device_id").Str(); isText && claim != "" {
+		id = claim
 	}
 	if id == "" || !deviceIDPattern.MatchString(id) {
 		kit.JSON(w, r, http.StatusBadRequest, sessionFailure{Error: "device_id is required"})
 		return
 	}
-	if !isText || id != deviceID {
+	if id != deviceID {
 		kit.JSON(w, r, http.StatusForbidden, sessionFailure{Error: "device_id mismatch"})
 		return
 	}
@@ -78,22 +75,4 @@ func (h *handlers) remoteAgentToken(w http.ResponseWriter, r *http.Request) {
 	}
 	token, expiresIn := h.src.relay.IssueRemoteAgentToken(id)
 	kit.JSON(w, r, http.StatusOK, agentToken{Success: true, DeviceID: id, Token: token, ExpiresIn: expiresIn})
-}
-
-// claimText is the body's device_id as RegExp.prototype.test reads it
-// (String()), and whether it is text itself, which the strict comparison
-// with the token's device needs.
-func claimText(claim middleware.Value) (text string, isText bool) {
-	if s, ok := claim.Str(); ok {
-		return s, true
-	}
-	value, err := goapi.Parse(claim.Raw())
-	if err != nil {
-		return "", false
-	}
-	text, ok := guestaccess.JSText(value)
-	if !ok {
-		abort()
-	}
-	return text, false
 }

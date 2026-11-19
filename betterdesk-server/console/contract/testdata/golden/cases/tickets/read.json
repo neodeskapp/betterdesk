@@ -112,7 +112,7 @@
        "created_at": "<volatile>",
        "id": 12,
        "is_internal": 0,
-       "ticket_id": 12
+       "ticket_id": 13
       },
       {
        "author": "e2e_admin",
@@ -120,14 +120,14 @@
        "created_at": "<volatile>",
        "id": 13,
        "is_internal": 1,
-       "ticket_id": 12
+       "ticket_id": 13
       }
      ],
      "created_at": "<volatile>",
      "created_by": "e2e_admin",
      "description": "Made by the contract cases",
      "device_id": "900100001",
-     "id": 12,
+     "id": 13,
      "priority": "high",
      "resolved_at": null,
      "sla_due_at": "<volatile>",
@@ -210,14 +210,14 @@
        "created_at": "<volatile>",
        "id": 14,
        "is_internal": 0,
-       "ticket_id": 13
+       "ticket_id": 14
       }
      ],
      "created_at": "<volatile>",
      "created_by": "e2e_admin",
      "description": "Made by the contract cases",
      "device_id": "900100001",
-     "id": 13,
+     "id": 14,
      "priority": "high",
      "resolved_at": null,
      "sla_due_at": "<volatile>",
@@ -300,7 +300,7 @@
        "created_at": "<volatile>",
        "id": 16,
        "is_internal": 0,
-       "ticket_id": 14
+       "ticket_id": 15
       },
       {
        "author": "e2e_admin",
@@ -308,14 +308,14 @@
        "created_at": "<volatile>",
        "id": 17,
        "is_internal": 1,
-       "ticket_id": 14
+       "ticket_id": 15
       }
      ],
      "created_at": "<volatile>",
      "created_by": "e2e_admin",
      "description": "Made by the contract cases",
      "device_id": "900100001",
-     "id": 14,
+     "id": 15,
      "priority": "high",
      "resolved_at": null,
      "sla_due_at": "<volatile>",
@@ -398,7 +398,7 @@
        "created_at": "<volatile>",
        "id": 19,
        "is_internal": 0,
-       "ticket_id": 16
+       "ticket_id": 17
       },
       {
        "author": "e2e_admin",
@@ -406,14 +406,14 @@
        "created_at": "<volatile>",
        "id": 20,
        "is_internal": 1,
-       "ticket_id": 16
+       "ticket_id": 17
       }
      ],
      "created_at": "<volatile>",
      "created_by": "e2e_admin",
      "description": "Made by the contract cases",
      "device_id": "900100001",
-     "id": 16,
+     "id": 17,
      "priority": "high",
      "resolved_at": null,
      "sla_due_at": "<volatile>",
@@ -496,7 +496,7 @@
        "created_at": "<volatile>",
        "id": 22,
        "is_internal": 0,
-       "ticket_id": 18
+       "ticket_id": 19
       },
       {
        "author": "e2e_admin",
@@ -504,14 +504,14 @@
        "created_at": "<volatile>",
        "id": 23,
        "is_internal": 1,
-       "ticket_id": 18
+       "ticket_id": 19
       }
      ],
      "created_at": "<volatile>",
      "created_by": "e2e_admin",
      "description": "Made by the contract cases",
      "device_id": "900100001",
-     "id": 18,
+     "id": 19,
      "priority": "high",
      "resolved_at": null,
      "sla_due_at": "<volatile>",
@@ -594,7 +594,7 @@
        "created_at": "<volatile>",
        "id": 24,
        "is_internal": 0,
-       "ticket_id": 19
+       "ticket_id": 20
       },
       {
        "author": "e2e_admin",
@@ -602,14 +602,14 @@
        "created_at": "<volatile>",
        "id": 25,
        "is_internal": 1,
-       "ticket_id": 19
+       "ticket_id": 20
       }
      ],
      "created_at": "<volatile>",
      "created_by": "e2e_admin",
      "description": "Made by the contract cases",
      "device_id": "900100001",
-     "id": 19,
+     "id": 20,
      "priority": "high",
      "resolved_at": null,
      "sla_due_at": "<volatile>",
@@ -692,7 +692,7 @@
        "created_at": "<volatile>",
        "id": 27,
        "is_internal": 0,
-       "ticket_id": 21
+       "ticket_id": 22
       },
       {
        "author": "e2e_admin",
@@ -700,14 +700,14 @@
        "created_at": "<volatile>",
        "id": 28,
        "is_internal": 1,
-       "ticket_id": 21
+       "ticket_id": 22
       }
      ],
      "created_at": "<volatile>",
      "created_by": "e2e_admin",
      "description": "Made by the contract cases",
      "device_id": "900100001",
-     "id": 21,
+     "id": 22,
      "priority": "high",
      "resolved_at": null,
      "sla_due_at": "<volatile>",

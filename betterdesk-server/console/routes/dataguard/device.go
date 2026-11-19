@@ -8,9 +8,9 @@ import (
 )
 
 // The two routes of the desktop agent, which takes its device token
-// instead of a session. At /api/bd a write passes the CSRF gate without
-// a token when no one is signed in; at /api/dataguard it needs one like
-// any other write.
+// instead of a session. At both mounts a write with the device token
+// passes the CSRF gate without a CSRF token when no one is signed in; with
+// a session it needs one like any other write.
 
 // activePolicies answers GET dlp-policies: the policies that are on, each
 // as {id, name, rules}. The rules of a policy that is off are not read.

@@ -74,9 +74,9 @@
     "json": {
      "closed": 2,
      "in_progress": 2,
-     "open": 5,
+     "open": 6,
      "resolved": 1,
-     "total": 10
+     "total": 11
     }
    }
   },
@@ -116,9 +116,9 @@
     "json": {
      "closed": 3,
      "in_progress": 2,
-     "open": 5,
+     "open": 6,
      "resolved": 1,
-     "total": 11
+     "total": 12
     }
    }
   }

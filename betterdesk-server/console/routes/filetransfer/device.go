@@ -12,10 +12,10 @@ import (
 // someone starts in the console is the one the device sends its chunks to,
 // and a transfer a device announces is listed in the console.
 //
-// Under /api/bd a write without a session needs no CSRF token; under
-// /api/files it needs one like a browser's write (BUGS DV2). A request
-// that also carries a session goes through the panel access guard of
-// /api/files there.
+// A write with the device token and without a session needs no CSRF token
+// at either mount; with a session it needs one like a browser's write. A
+// request that also carries a session goes through the panel access guard
+// of /api/files there.
 
 // deviceMessage answers POST /file-transfer: a message of the device about
 // its transfers, the body as it came ({action, transfer_id, chunk_index,

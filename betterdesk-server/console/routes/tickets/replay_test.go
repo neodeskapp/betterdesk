@@ -169,28 +169,30 @@ func TestAgentTicketWithANumberTitleIs400(t *testing.T) {
 	})
 }
 
-// A device that writes to /api/tickets/bd needs a CSRF token like a
-// browser: the mount is not below /api/bd/, where the gate lets requests
-// without a session through. The Node console answers the same (contract
-// case tickets/device-create-without-csrf-token).
-func TestADeviceWriteNeedsTheCSRFToken(t *testing.T) {
+// A device that writes to /api/tickets/bd with its token and no session
+// needs no CSRF token, as below /api/bd/ (BUGS DV2). A signed-in browser
+// needs it there like anywhere.
+func TestADeviceWriteNeedsNoCSRFToken(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at) VALUES (?, ?, 5, 'device-a', '2999-01-01 00:00:00')",
 			[]any{"tok-device-a", "a70dc32ded6e642ec955672a88edb7cc9d6d9e2abb6bf78146a63491adb24155"})
 		device := map[string]string{"Authorization": "Bearer tok-device-a"}
 		refused := `{"success":false,"error":"Invalid CSRF token. Please refresh the page and try again. If you recently disabled SSL, clear your browser cookies for this site and reload."}`
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/bd", Body: replay.Text(`{"title":"x"}`), Headers: device, NoCSRF: true}); got.Status != 403 || got.Body != refused {
-			t.Errorf("without the token: %d %s", got.Status, got.Body)
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/bd", Body: replay.Text(`{"title":"x"}`), Headers: device, NoCSRF: true}); got.Status != 201 || got.Body != `{"success":true,"ticket_id":1}` {
+			t.Errorf("without the CSRF token: %d %s", got.Status, got.Body)
 		}
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/bd", Body: replay.Text(`{"title":"x"}`), Headers: map[string]string{"Authorization": "Bearer nope"}}); got.Status != 401 {
-			t.Errorf("with the CSRF token and an unknown device token: %d %s", got.Status, got.Body)
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/bd", Body: replay.Text(`{"title":"x"}`), Headers: map[string]string{"Authorization": "Bearer nope"}, NoCSRF: true}); got.Status != 401 {
+			t.Errorf("with an unknown device token: %d %s", got.Status, got.Body)
 		}
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/bd", Body: replay.Text(`{"title":"x"}`), Headers: device}); got.Status != 201 || got.Body != `{"success":true,"ticket_id":1}` {
+		if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tickets/bd", Body: replay.Text(`{"title":"x"}`), Headers: device, NoCSRF: true}); got.Status != 403 || got.Body != refused {
+			t.Errorf("with a session and without the CSRF token: %d %s", got.Status, got.Body)
+		}
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/bd", Body: replay.Text(`{"title":"x"}`), Headers: device}); got.Status != 201 || got.Body != `{"success":true,"ticket_id":2}` {
 			t.Errorf("with both tokens: %d %s", got.Status, got.Body)
 		}
 		// A read needs none
-		if got := w.Do(replay.Request{Path: "/api/tickets/bd", Headers: device}); got.Status != 200 || !strings.Contains(got.Body, `"total":1`) {
+		if got := w.Do(replay.Request{Path: "/api/tickets/bd", Headers: device}); got.Status != 200 || !strings.Contains(got.Body, `"total":2`) {
 			t.Errorf("the list: %d %s", got.Status, got.Body)
 		}
 	})

@@ -144,11 +144,9 @@ func TestNodeDeviceAnswers(t *testing.T) {
 	})
 }
 
-// The CSRF gate lets a write below /api/bd/ through without a token when
-// nobody is signed in; at /api/dataguard a device needs the CSRF token
-// like a browser, and below /api/bd/ a signed-in session needs it too.
-// The Node console answers the same (contract cases
-// dataguard/device-event-*-csrf-*).
+// The CSRF gate lets a device's write with its token through without a
+// CSRF token when nobody is signed in, at both mounts (BUGS DV2); a
+// signed-in session needs the CSRF token at both.
 func TestTheCSRFGateAtEachMount(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
@@ -163,7 +161,7 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 			body             string
 		}{
 			{"at /api/bd without a session", "", "/api/bd/dlp-events", 201, `{"ok":true,"id":1}`},
-			{"at /api/dataguard without a session", "", "/api/dataguard/dlp-events", 403, refused},
+			{"at /api/dataguard without a session", "", "/api/dataguard/dlp-events", 201, `{"ok":true,"id":2}`},
 			{"at /api/bd with a session", "operator", "/api/bd/dlp-events", 403, refused},
 			{"at /api/dataguard with a session", "admin", "/api/dataguard/dlp-events", 403, refused},
 		} {
@@ -172,7 +170,7 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 				t.Errorf("%s: %d %s, want %d %s", c.name, got.Status, got.Body, c.status, c.body)
 			}
 		}
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/dataguard/dlp-events", Body: event, Headers: device}); got.Status != 201 || got.Body != `{"ok":true,"id":2}` {
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/dataguard/dlp-events", Body: event, Headers: device}); got.Status != 201 || got.Body != `{"ok":true,"id":3}` {
 			t.Errorf("at /api/dataguard with the CSRF token: %d %s", got.Status, got.Body)
 		}
 	})

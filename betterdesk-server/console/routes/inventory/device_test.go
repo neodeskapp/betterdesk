@@ -87,9 +87,9 @@ var deviceA = map[string]string{"Authorization": "Bearer tok-device-a"}
 // csrfRefused is the CSRF gate's answer.
 const csrfRefused = `{"success":false,"error":"Invalid CSRF token. Please refresh the page and try again. If you recently disabled SSL, clear your browser cookies for this site and reload."}`
 
-// A device that writes to /api/inventory needs a CSRF token like a
-// browser; at /api/bd it does not while nobody is signed in (BUGS DV2). A
-// signed-in browser needs the token at both mounts. No role is refused by
+// A device that writes with its token and no session needs no CSRF token
+// at either mount (BUGS DV2). A signed-in browser needs the token at both
+// mounts. No role is refused by
 // the panel access guard in front of the group.
 func TestTheCSRFGateAtEachMount(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
@@ -106,8 +106,8 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 		}{
 			{"inventory at /api/bd without a session", "", "/api/bd/inventory", report, 200, stored},
 			{"telemetry at /api/bd without a session", "", "/api/bd/telemetry", telemetry, 200, stored},
-			{"inventory at /api/inventory without a session", "", "/api/inventory/inventory", report, 403, csrfRefused},
-			{"telemetry at /api/inventory without a session", "", "/api/inventory/telemetry", telemetry, 403, csrfRefused},
+			{"inventory at /api/inventory without a session", "", "/api/inventory/inventory", report, 200, stored},
+			{"telemetry at /api/inventory without a session", "", "/api/inventory/telemetry", telemetry, 200, stored},
 			{"inventory at /api/bd with a session", "operator", "/api/bd/inventory", report, 403, csrfRefused},
 			{"inventory at /api/inventory with a session", "admin", "/api/inventory/inventory", report, 403, csrfRefused},
 		} {

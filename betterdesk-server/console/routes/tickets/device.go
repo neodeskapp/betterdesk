@@ -8,8 +8,9 @@ import (
 )
 
 // The two routes of the desktop agent, which takes its device token
-// instead of a session. Both are below the mount /api/tickets, behind the
-// CSRF gate: a write needs the CSRF token like any other.
+// instead of a session. Both are below the mount /api/tickets. A write
+// with the device token and without a session passes the CSRF gate
+// without a CSRF token; with a session it needs one like any other.
 
 type agentCreated struct {
 	Success  bool        `json:"success"`

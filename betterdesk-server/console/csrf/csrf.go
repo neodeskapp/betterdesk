@@ -51,7 +51,8 @@ const (
 	tokenBytes = 64
 	// bodyLimit is how much of a body is read to find the _csrf field.
 	bodyLimit = 2 << 20
-	// devicePrefix is where device agents call in with bearer tokens.
+	// devicePrefix is where device agents call in, some routes without a
+	// bearer token (registration).
 	devicePrefix = "/api/bd/"
 )
 
@@ -63,7 +64,7 @@ type Options struct {
 	// picks the cookie's name and marks the cookie Secure.
 	HTTPS bool
 	// SignedIn reports whether a request carries a signed-in session. Gate
-	// asks it for requests under /api/bd/.
+	// asks it for requests under /api/bd/ and requests with a bearer token.
 	SignedIn func(r *http.Request) bool
 	// BodyToken returns the _csrf field of a request's body, "" when the
 	// body has none. Set it where something in front of the protector has
@@ -155,13 +156,16 @@ func (p *Protector) Provider(next http.Handler) http.Handler {
 	})
 }
 
-// Gate refuses writes without a good token through OnError. Requests under
-// /api/bd/ without a signed-in session pass unchecked: device agents call
-// there with bearer tokens. With a session such a request is a browser and
-// is checked like any other.
+// Gate refuses writes without a good token through OnError. A request
+// without a signed-in session passes unchecked when its path starts with
+// /api/bd/, where device agents call in, or when it carries a bearer token
+// in its Authorization header, on any path: device agents send one, a
+// browser cannot send it to another site without asking first, and
+// without a session there is nothing to forge. With a session a request is
+// a browser and is checked like any other.
 func (p *Protector) Gate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.EscapedPath(), devicePrefix) && !p.signedIn(r) {
+		if (strings.HasPrefix(r.URL.EscapedPath(), devicePrefix) || bearer(r)) && !p.signedIn(r) {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -191,6 +195,12 @@ func (p *Protector) Check(r *http.Request) error {
 		return ErrInvalidToken
 	}
 	return nil
+}
+
+// bearer reports whether the request's Authorization header holds a bearer
+// token: it starts with "Bearer", as the device guards want it.
+func bearer(r *http.Request) bool {
+	return strings.HasPrefix(r.Header.Get("Authorization"), "Bearer")
 }
 
 func safeMethod(method string) bool {

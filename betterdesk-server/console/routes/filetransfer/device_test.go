@@ -232,9 +232,9 @@ func TestAnyDeviceCanWriteIntoAndCancelAnyTransfer(t *testing.T) {
 	})
 }
 
-// A device that writes needs no CSRF token under /api/bd when it has no
-// session, and one under /api/files, like a browser (BUGS DV2). The Node
-// console answers the same (contract cases filetransfer/device-*).
+// A device that writes with its token and no session needs no CSRF token
+// under /api/bd or /api/files (BUGS DV2). With a session it needs one, like
+// a browser.
 func TestTheCSRFGateAtEachMount(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := deviceWorld(t, db)
@@ -243,7 +243,7 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 		if got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/file-transfer", Body: &body, Headers: device, NoCSRF: true}); got.Status != 200 {
 			t.Errorf("/api/bd without the CSRF token: %d %s", got.Status, got.Body)
 		}
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/files/file-transfer", Body: &body, Headers: device, NoCSRF: true}); got.Status != 403 || !strings.Contains(got.Body, "Invalid CSRF token") {
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/files/file-transfer", Body: &body, Headers: device, NoCSRF: true}); got.Status != 200 {
 			t.Errorf("/api/files without the CSRF token: %d %s", got.Status, got.Body)
 		}
 		if got := w.Do(replay.Request{Method: "POST", Path: "/api/files/file-transfer", Body: &body, Headers: device}); got.Status != 200 {

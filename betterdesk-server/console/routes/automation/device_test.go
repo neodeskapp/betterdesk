@@ -93,9 +93,9 @@ func deviceWorld(t *testing.T, db *store.DB) *replay.World {
 
 var deviceA = map[string]string{"Authorization": "Bearer tok-device-a"}
 
-// A device that reports a result to /api/automation needs a CSRF token
-// like a browser; at /api/bd it does not while nobody is signed in (BUGS
-// DV2). A signed-in browser needs the token at both mounts, and at
+// A device that reports a result with its token and no session needs no
+// CSRF token at either mount (BUGS DV2). A signed-in browser needs the
+// token at both mounts, and at
 // /api/automation the panel access guard of the automation section comes
 // first: it refuses a write from every role that may not edit devices and
 // from a server admin.
@@ -111,7 +111,7 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 			answer           string
 		}{
 			{"at /api/bd without a session", "", "/api/bd/commands/1/result", 200, stored},
-			{"at /api/automation without a session", "", "/api/automation/commands/1/result", 403, refused},
+			{"at /api/automation without a session", "", "/api/automation/commands/1/result", 200, stored},
 			{"at /api/bd with a session", "operator", "/api/bd/commands/1/result", 403, refused},
 			{"at /api/automation with a session", "admin", "/api/automation/commands/1/result", 403, refused},
 		} {

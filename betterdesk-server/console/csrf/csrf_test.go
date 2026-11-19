@@ -403,6 +403,41 @@ func TestGateDeviceAPIException(t *testing.T) {
 	}
 }
 
+// TestABearerWriteWithoutASessionPasses: a write with a bearer token in
+// its Authorization header and no session passes without a CSRF token on
+// any path, so a device reaches its routes outside /api/bd/ and in any
+// spelling of it. A browser cannot send that header to another site
+// without asking first, and without a session there is nothing to forge.
+// With a session the write is checked (BUGS DV2, DV9).
+func TestABearerWriteWithoutASessionPasses(t *testing.T) {
+	f := newFixture(t)
+	bearer := func(path, authorization, cookie, token string) *http.Request {
+		r := req("POST", path, cookie, token)
+		if authorization != "" {
+			r.Header.Set("Authorization", authorization)
+		}
+		return r
+	}
+	f.signedIn = false
+	for _, path := range []string{"/api/tickets/bd", "/api/dataguard/dlp-events", "/api/activity/activity", "/API/BD/Activity/", "/api/bd", "/api/devices"} {
+		if !f.gate(bearer(path, "Bearer tok-device-a", "", "")) {
+			t.Errorf("%s with a bearer token and no session was checked", path)
+		}
+	}
+	for _, authorization := range []string{"", "Basic dG9rOng=", "bearer tok-device-a", "Token Bearer x"} {
+		if f.gate(bearer("/api/tickets/bd", authorization, "", "")) {
+			t.Errorf("/api/tickets/bd with Authorization %q and no session passed unchecked", authorization)
+		}
+	}
+	f.signedIn = true
+	if f.gate(bearer("/api/tickets/bd", "Bearer tok-device-a", "", "")) {
+		t.Error("a signed-in browser with a bearer token wrote without the CSRF token")
+	}
+	if !f.gate(bearer("/api/tickets/bd", "Bearer tok-device-a", vectorPair, vectorToken)) {
+		t.Error("a signed-in browser with a bearer token and the CSRF token was refused")
+	}
+}
+
 func TestProviderThenGate(t *testing.T) {
 	f := newFixture(t)
 	token, rec := f.provide(req("GET", "/api/auth/login-page", "", ""))

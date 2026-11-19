@@ -86,9 +86,9 @@ func tokenDeviceA(w *replay.World) {
 
 var deviceA = map[string]string{"Authorization": "Bearer tok-device-a"}
 
-// A device that reports to /api/activity needs a CSRF token like a
-// browser; at /api/bd it does not while nobody is signed in (BUGS DV2). A
-// signed-in browser needs the token at both mounts, and at
+// A device that reports with its token and no session needs no CSRF token
+// at either mount (BUGS DV2). A signed-in browser needs the token at both
+// mounts, and at
 // /api/activity the panel access guard of the activity section comes
 // first: it refuses a report from every role that may not see the audit
 // log, and from a guest issuer.
@@ -105,7 +105,7 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 			answer           string
 		}{
 			{"at /api/bd without a session", "", "/api/bd/activity", 200, stored},
-			{"at /api/activity without a session", "", "/api/activity/activity", 403, refused},
+			{"at /api/activity without a session", "", "/api/activity/activity", 200, stored},
 			{"at /api/bd with a session", "operator", "/api/bd/activity", 403, refused},
 			{"at /api/activity with a session", "admin", "/api/activity/activity", 403, refused},
 		} {
