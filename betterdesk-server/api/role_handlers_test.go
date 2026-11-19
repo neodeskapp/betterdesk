@@ -92,6 +92,27 @@ func TestRolePermissionsFailWhenOverridesCannotBeRead(t *testing.T) {
 	}
 }
 
+// PA7: guest_issuer takes overrides (auth.ValidRole), so the role list and
+// the override list show it.
+func TestRoleListsIncludeGuestIssuer(t *testing.T) {
+	database := testSetupDB(t)
+	defer database.Close()
+	srv := New(config.DefaultConfig(), database, peer.NewMap(), nil, "test")
+	if err := database.SetRolePermission(auth.RoleGuestIssuer, auth.PermChatAccess, true); err != nil {
+		t.Fatal(err)
+	}
+	rec := httptest.NewRecorder()
+	srv.handleListRoles(rec, httptest.NewRequest(http.MethodGet, "/api/roles", nil))
+	if !strings.Contains(rec.Body.String(), `"name":"guest_issuer"`) {
+		t.Errorf("role list without guest_issuer: %s", rec.Body.String())
+	}
+	rec = httptest.NewRecorder()
+	srv.handleListRolePermissionOverrides(rec, httptest.NewRequest(http.MethodGet, "/api/role-permissions", nil))
+	if !strings.Contains(rec.Body.String(), `{"role":"guest_issuer","permission":"chat.access","granted":true}`) {
+		t.Errorf("override list without guest_issuer's override: %s", rec.Body.String())
+	}
+}
+
 // G21: the permission lists come in the order of auth.AllPermissions, the
 // same on every call; they were built by ranging over a map.
 func TestRolePermissionsKeepTheirOrder(t *testing.T) {

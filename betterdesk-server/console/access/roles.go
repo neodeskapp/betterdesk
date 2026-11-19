@@ -76,11 +76,11 @@ type RoleOverride struct {
 	Granted    bool   `json:"granted"`
 }
 
-// listedRoles are the roles the role list and the override list cover.
-// guest_issuer is a valid role for overrides but is in neither list.
+// listedRoles are the roles the role list and the override list cover:
+// every role that takes overrides.
 var listedRoles = []string{
 	auth.RoleSuperAdmin, auth.RoleAdmin, auth.RoleServerAdmin,
-	auth.RoleGlobalAdmin, auth.RoleOperator, auth.RoleViewer, auth.RolePro,
+	auth.RoleGlobalAdmin, auth.RoleOperator, auth.RoleViewer, auth.RoleGuestIssuer, auth.RolePro,
 }
 
 var safeAPISegment = regexp.MustCompile(`^[a-zA-Z0-9._:@%+-]{1,256}$`)

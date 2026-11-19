@@ -216,6 +216,13 @@
        {
         "is_server_level": false,
         "is_super_admin": false,
+        "level": 1,
+        "name": "guest_issuer",
+        "permissions": []
+       },
+       {
+        "is_server_level": false,
+        "is_super_admin": false,
         "level": 0,
         "name": "pro",
         "permissions": []

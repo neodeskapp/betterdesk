@@ -38,6 +38,7 @@ func (s *Server) handleListRoles(w http.ResponseWriter, r *http.Request) {
 		auth.RoleGlobalAdmin,
 		auth.RoleOperator,
 		auth.RoleViewer,
+		auth.RoleGuestIssuer,
 		auth.RolePro,
 	}
 
@@ -146,7 +147,7 @@ func (s *Server) handleListRolePermissionOverrides(w http.ResponseWriter, r *htt
 
 	roles := []string{
 		auth.RoleSuperAdmin, auth.RoleAdmin, auth.RoleServerAdmin,
-		auth.RoleGlobalAdmin, auth.RoleOperator, auth.RoleViewer, auth.RolePro,
+		auth.RoleGlobalAdmin, auth.RoleOperator, auth.RoleViewer, auth.RoleGuestIssuer, auth.RolePro,
 	}
 
 	for _, role := range roles {

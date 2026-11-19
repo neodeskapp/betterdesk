@@ -186,8 +186,8 @@ func TestRoleCatalogueLists(t *testing.T) {
 	for _, role := range list.Roles {
 		names = append(names, role.Name)
 	}
-	// guest_issuer is not listed.
-	if want := []string{"super_admin", "admin", "server_admin", "global_admin", "operator", "viewer", "pro"}; !reflect.DeepEqual(names, want) {
+	// guest_issuer takes overrides, so it is listed (PA7).
+	if want := []string{"super_admin", "admin", "server_admin", "global_admin", "operator", "viewer", "guest_issuer", "pro"}; !reflect.DeepEqual(names, want) {
 		t.Errorf("roles: %v, want %v", names, want)
 	}
 	if !reflect.DeepEqual(list.AllPermissions, auth.AllPermissions) {
@@ -210,7 +210,10 @@ func TestRoleCatalogueLists(t *testing.T) {
 			}
 		}
 	}
-	if got := jsJSON(t, list.Roles[6]); got != `{"name":"pro","level":0,"is_super_admin":false,"is_server_level":false,"permissions":[]}` {
+	if got := jsJSON(t, list.Roles[6]); got != `{"name":"guest_issuer","level":1,"is_super_admin":false,"is_server_level":false,"permissions":["device.view","guest.create"]}` {
+		t.Errorf("role JSON: %s", got)
+	}
+	if got := jsJSON(t, list.Roles[7]); got != `{"name":"pro","level":0,"is_super_admin":false,"is_server_level":false,"permissions":[]}` {
 		t.Errorf("role JSON: %s", got)
 	}
 
@@ -218,8 +221,8 @@ func TestRoleCatalogueLists(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// In the order of the listed roles; guest_issuer's override is not listed.
-	want := `[{"role":"operator","permission":"chat.access","granted":false},{"role":"operator","permission":"device.delete","granted":true},{"role":"viewer","permission":"server.config","granted":true}]`
+	// In the order of the listed roles, guest_issuer's among them (PA7).
+	want := `[{"role":"operator","permission":"chat.access","granted":false},{"role":"operator","permission":"device.delete","granted":true},{"role":"viewer","permission":"server.config","granted":true},{"role":"guest_issuer","permission":"chat.access","granted":true}]`
 	if got := jsJSON(t, overrides); got != want {
 		t.Errorf("overrides:\n got  %s\n want %s", got, want)
 	}
