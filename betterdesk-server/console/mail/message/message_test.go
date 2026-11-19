@@ -838,7 +838,9 @@ func TestParseBack(t *testing.T) {
 		var body io.Reader = p
 		switch encoding := p.Header.Get("Content-Transfer-Encoding"); encoding {
 		case transferQP:
+			// every line end of the text comes back as CR LF (BUGS EM15)
 			body = quotedprintable.NewReader(p)
+			want.body = crlfText(want.body)
 		case transferBase64:
 			body = base64.NewDecoder(base64.StdEncoding, p)
 		default:
