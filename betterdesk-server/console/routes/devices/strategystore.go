@@ -145,16 +145,17 @@ func isUUID(s string) bool {
 
 // resolvePeerAssignmentKey returns the guid a device's assignments are
 // stored under, the device found among the server's by id, guid or uuid.
-// A device without a guid gets its uuid in lower case when that looks
-// like one, else a random one, and keeps it.
-func resolvePeerAssignmentKey(ctx context.Context, db *store.DB, key string) (string, error) {
+// With write, a device without a guid gets its uuid in lower case when
+// that looks like one, else a random one, and keeps it; without, its key
+// is "".
+func resolvePeerAssignmentKey(ctx context.Context, db *store.DB, key string, write bool) (string, error) {
 	if key == "" {
-		return "", errors.New("empty peer reference")
+		return "", refusal("empty peer reference")
 	}
 	var id string
 	err := db.QueryRow(ctx, `SELECT id FROM peers WHERE id = ? OR guid = ? OR uuid = ? LIMIT 1`, key, key, key).Scan(&id)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", errors.New("peer not found")
+		return "", refusal("peer not found")
 	}
 	if err != nil {
 		return "", err
@@ -162,12 +163,12 @@ func resolvePeerAssignmentKey(ctx context.Context, db *store.DB, key string) (st
 	var uuid, guid string
 	err = db.QueryRow(ctx, `SELECT COALESCE(uuid, '') AS uuid, COALESCE(guid, '') AS guid FROM peers WHERE id = ?`, id).Scan(&uuid, &guid)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", errors.New("peer not found")
+		return "", refusal("peer not found")
 	}
 	if err != nil {
 		return "", err
 	}
-	if guid != "" {
+	if guid != "" || !write {
 		return guid, nil
 	}
 	if isUUID(uuid) {
@@ -182,11 +183,12 @@ func resolvePeerAssignmentKey(ctx context.Context, db *store.DB, key string) (st
 }
 
 // resolveUserAssignmentKey returns the guid an account's assignments are
-// stored under, the account found by guid, username or id. An account
-// without a guid gets a random one and keeps it.
-func resolveUserAssignmentKey(ctx context.Context, db *store.DB, key string) (string, error) {
+// stored under, the account found by guid, username or id. With write,
+// an account without a guid gets a random one and keeps it; without, its
+// key is "".
+func resolveUserAssignmentKey(ctx context.Context, db *store.DB, key string, write bool) (string, error) {
 	if key == "" {
-		return "", errors.New("empty user reference")
+		return "", refusal("empty user reference")
 	}
 	var id any
 	var guid string
@@ -195,12 +197,12 @@ func resolveUserAssignmentKey(ctx context.Context, db *store.DB, key string) (st
 		`SELECT id, COALESCE(guid, '') AS guid FROM users WHERE guid = ? OR username = ? OR id::text = ? LIMIT 1`)
 	err := db.QueryRow(ctx, query, key, key, key).Scan(&id, &guid)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", errors.New("user not found")
+		return "", refusal("user not found")
 	}
 	if err != nil {
 		return "", err
 	}
-	if guid != "" {
+	if guid != "" || !write {
 		return guid, nil
 	}
 	if guid, err = randomUUID(); err != nil {
@@ -213,15 +215,15 @@ func resolveUserAssignmentKey(ctx context.Context, db *store.DB, key string) (st
 }
 
 // resolveDeviceGroupAssignmentKey returns the guid of the device group
-// with the guid or the name.
-func resolveDeviceGroupAssignmentKey(ctx context.Context, db *store.DB, key string) (string, error) {
+// with the guid or the name. It writes nothing, with write or without.
+func resolveDeviceGroupAssignmentKey(ctx context.Context, db *store.DB, key string, _ bool) (string, error) {
 	if key == "" {
-		return "", errors.New("empty device group reference")
+		return "", refusal("empty device group reference")
 	}
 	var guid string
 	err := db.QueryRow(ctx, `SELECT guid FROM device_groups WHERE guid = ? OR name = ? LIMIT 1`, key, key).Scan(&guid)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", errors.New("device group not found")
+		return "", refusal("device group not found")
 	}
 	if err != nil {
 		return "", err
@@ -239,7 +241,7 @@ func assign(ctx context.Context, db *store.DB, strategyGUID string, keys resolve
 			return err
 		}
 		if existing == nil {
-			return errors.New("strategy not found")
+			return refusal("strategy not found")
 		}
 	}
 	upsert := `INSERT INTO strategy_assignments (target_type, target_key, strategy_guid, updated_at)

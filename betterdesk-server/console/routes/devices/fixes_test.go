@@ -247,3 +247,76 @@ func TestSetGroupsNeedsAList(t *testing.T) {
 		}
 	})
 }
+
+// TestAssignChecksEveryReferenceFirst: an assignment checks every
+// reference (text, not empty, found) before it writes a guid, and answers
+// 400 with a fixed text for each bad one, on assign and unassign; a
+// failure of the database is 500 on both (BUGS DE7).
+func TestAssignChecksEveryReferenceFirst(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w, _ := world(t, db, nil, nil)
+		ctx := context.Background()
+		for _, q := range []string{
+			`CREATE TABLE IF NOT EXISTS peers (id TEXT PRIMARY KEY, uuid TEXT DEFAULT '', guid TEXT DEFAULT '')`,
+			`INSERT INTO peers (id, uuid, guid) VALUES ('A', 'not-a-uuid', '')`,
+			`UPDATE users SET guid = '' WHERE username = 'e2e_viewer'`,
+		} {
+			if _, err := db.Exec(ctx, q); err != nil {
+				t.Fatalf("%s: %v", q, err)
+			}
+		}
+		guids := func() string {
+			var peer, user string
+			if err := db.QueryRow(ctx, `SELECT COALESCE(guid, '') FROM peers WHERE id = 'A'`).Scan(&peer); err != nil {
+				t.Fatal(err)
+			}
+			if err := db.QueryRow(ctx, `SELECT COALESCE(guid, '') FROM users WHERE username = 'e2e_viewer'`).Scan(&user); err != nil {
+				t.Fatal(err)
+			}
+			return peer + "|" + user
+		}
+		admin := w.As("admin")
+		created := admin.Do("POST", "/api/panel/strategies", `{"name":"Night"}`)
+		m := strategyGUIDField.FindStringSubmatch(created.Body)
+		if m == nil {
+			t.Fatalf("create: %d %s", created.Status, created.Body)
+		}
+		assign := "/api/panel/strategies/" + m[1] + "/assign"
+		for _, c := range []struct{ body, error string }{
+			{`{"peers":[""]}`, "empty peer reference"},
+			{`{"peers":["  "]}`, "empty peer reference"},
+			{`{"peers":{"length":2}}`, "peers must be a list"},
+			{`{"peers":5,"users":["e2e_viewer"]}`, "peers must be a list"},
+			{`{"peers":[5]}`, "invalid peer reference"},
+			{`{"peers":["A","nope"]}`, "peer not found"},
+			{`{"peers":["A"],"users":["nobody"]}`, "user not found"},
+			{`{"peers":["A"],"users":[""]}`, "empty user reference"},
+			{`{"users":["e2e_viewer"],"groups":["no such group"]}`, "device group not found"},
+			{`{"users":["e2e_viewer"],"groups":[{"x":1}]}`, "invalid device group reference"},
+		} {
+			want := `{"success":false,"error":"` + c.error + `"}`
+			for _, path := range []string{assign, "/api/panel/strategies/unassign"} {
+				if got := admin.Do("POST", path, c.body); got.Status != http.StatusBadRequest || got.Body != want {
+					t.Errorf("%s %s: %d %s, want 400 %s", path, c.body, got.Status, got.Body, want)
+				}
+				if got := guids(); got != "|" {
+					t.Fatalf("%s %s wrote the guids %s", path, c.body, got)
+				}
+			}
+		}
+		if got := admin.Do("POST", assign, `{"peers":["A"],"users":["e2e_viewer"]}`); got.Status != http.StatusOK {
+			t.Errorf("good references: %d %s", got.Status, got.Body)
+		}
+		if peer, user, _ := strings.Cut(guids(), "|"); peer == "" || user == "" {
+			t.Errorf("guids after a good assignment: %q and %q, want both", peer, user)
+		}
+		if _, err := db.Exec(ctx, `DROP TABLE strategy_assignments`); err != nil {
+			t.Fatal(err)
+		}
+		for _, path := range []string{assign, "/api/panel/strategies/unassign"} {
+			if got := admin.Do("POST", path, `{"peers":["A"]}`); got.Status != http.StatusInternalServerError || strings.Contains(got.Body, "strategy_assignments") {
+				t.Errorf("%s without the table: %d %s, want 500 without the database's text", path, got.Status, got.Body)
+			}
+		}
+	})
+}

@@ -154,6 +154,20 @@
    "answer": "{\"success\":true,\"data\":{\"strategy\":{\"guid\":\"s-one\",\"name\":\"Rule one!\",\"user_group_guid\":\"ug-ops\",\"device_group_guid\":\"g-open\",\"enabled\":false,\"permissions\":{\"enable-camera\":\"Y\"},\"permission_keys\":[\"enable-file-transfer\",\"disable-clipboard\",\"enable-clipboard\",\"enable-audio\",\"enable-tunnel\",\"enable-camera\",\"enable-remote-restart\",\"enable-block-input\"],\"created_at\":\"<now, SQLite form>\",\"updated_at\":\"<now, SQLite form>\"}}}"
   }
  },
+ "436 POST /api/panel/strategies/s-two/assign {\"peers\":{\"length\":2}} as admin": {
+  "bug": "DE7",
+  "answer": {
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"peers must be a list\"}"
+  }
+ },
+ "438 POST /api/panel/strategies/s-two/assign {\"peers\":[\"\"]} as admin": {
+  "bug": "DE7",
+  "answer": {
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"empty peer reference\"}"
+  }
+ },
  "445 GET /api/panel/strategies/s-one as admin": {
   "bug": "DE2",
   "answer": {

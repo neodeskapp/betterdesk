@@ -14,7 +14,8 @@ var uuidV4 = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-
 // TestAssignmentKeys resolves the references of an assignment: a device
 // by id, guid or uuid, getting the lower case of a uuid-shaped uuid as
 // its guid and a random one otherwise, and keeping it; an account by
-// guid, username or id.
+// guid, username or id. A check without write finds the same references
+// and gives nothing a guid.
 func TestAssignmentKeys(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		ctx := context.Background()
@@ -29,8 +30,20 @@ func TestAssignmentKeys(t *testing.T) {
 				t.Fatalf("%s: %v", q, err)
 			}
 		}
+		for _, ref := range []string{"U", "N", "G"} {
+			if got, err := resolvePeerAssignmentKey(ctx, db, ref, false); err != nil || (got != "" && got != "g1") {
+				t.Errorf("checking device %s: %q, %v", ref, got, err)
+			}
+		}
+		if got, err := resolveUserAssignmentKey(ctx, db, "ann", false); err != nil || got != "" {
+			t.Errorf("checking account ann: %q, %v", got, err)
+		}
+		var written int
+		if err := db.QueryRow(ctx, `SELECT (SELECT COUNT(*) FROM peers WHERE guid <> '') + (SELECT COUNT(*) FROM users WHERE username = 'ann' AND guid <> '')`).Scan(&written); err != nil || written != 1 {
+			t.Errorf("guids after the checks: %d, %v; want only G's", written, err)
+		}
 		key := func(ref string) string {
-			got, err := resolvePeerAssignmentKey(ctx, db, ref)
+			got, err := resolvePeerAssignmentKey(ctx, db, ref, true)
 			if err != nil {
 				return "error: " + err.Error()
 			}
@@ -55,7 +68,7 @@ func TestAssignmentKeys(t *testing.T) {
 			}
 		}
 		user := func(ref string) string {
-			got, err := resolveUserAssignmentKey(ctx, db, ref)
+			got, err := resolveUserAssignmentKey(ctx, db, ref, true)
 			if err != nil {
 				return "error: " + err.Error()
 			}

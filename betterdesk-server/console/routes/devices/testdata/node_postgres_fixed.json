@@ -126,6 +126,20 @@
    ]
   }
  },
+ "436 POST /api/panel/strategies/s-two/assign {\"peers\":{\"length\":2}} as admin": {
+  "bug": "DE7",
+  "answer": {
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"peers must be a list\"}"
+  }
+ },
+ "438 POST /api/panel/strategies/s-two/assign {\"peers\":[\"\"]} as admin": {
+  "bug": "DE7",
+  "answer": {
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"empty peer reference\"}"
+  }
+ },
  "459 audit": {
   "bug": "DE5, DE6",
   "answer": {

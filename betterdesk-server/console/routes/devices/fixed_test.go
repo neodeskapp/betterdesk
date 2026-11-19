@@ -58,6 +58,10 @@ var fixedSteps = []fixedStep{
 	// log has no entry of it.
 	{"node", `226 PUT /api/devices/A1001/groups {"groupGuids":"g-open"} as admin`, "DE6"},
 	{"node", "232 PUT /api/devices/A1001/groups {} as admin", "DE6"},
+	// A list that is no list and an empty reference are refused with 400
+	// and their text, where Node answered 500.
+	{"node", `436 POST /api/panel/strategies/s-two/assign {"peers":{"length":2}} as admin`, "DE7"},
+	{"node", `438 POST /api/panel/strategies/s-two/assign {"peers":[""]} as admin`, "DE7"},
 	// The audit log after the steps of DE5 and DE6
 	{"node", "459 audit", "DE5, DE6"},
 }

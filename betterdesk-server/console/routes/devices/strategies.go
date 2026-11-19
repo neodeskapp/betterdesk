@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
@@ -315,28 +314,33 @@ func lengthHolder(v any) any {
 	return v
 }
 
-// errNotIterable is the TypeError of for...of over a value that is no
-// list or text.
-var errNotIterable = errors.New("is not iterable")
-
 // refs is for (const ref of v || []): the elements of a list, the
-// characters of text, nothing for a falsy value; anything else fails.
-func refs(v any) ([]any, error) {
+// characters of text, nothing for a falsy value. ok is false for anything
+// else, which cannot be iterated.
+func refs(v any) (items []any, ok bool) {
 	if !goapi.Truthy(v) {
-		return nil, nil
+		return nil, true
 	}
 	switch t := v.(type) {
 	case []any:
-		return t, nil
+		return t, true
 	case string:
 		var out []any
 		for _, r := range t {
 			out = append(out, string(r))
 		}
-		return out, nil
+		return out, true
 	}
-	return nil, errNotIterable
+	return nil, false
 }
+
+// refusal is an assignment its body or the rule cannot have: a list of
+// references that is no list, a reference that is no text, is empty or
+// names nothing, or a rule that is gone. It is answered with 400 and its
+// text.
+type refusal string
+
+func (e refusal) Error() string { return string(e) }
 
 // resolved are the stored keys of an assignment's targets.
 type resolved struct {
@@ -344,30 +348,42 @@ type resolved struct {
 }
 
 // resolveAssignKeys turns the references of an assignment body into the
-// keys the assignments are stored under, one after the other; the first
-// that cannot be resolved ends it (guids written before stay).
+// keys the assignments are stored under. Every reference is checked
+// before the first device or account gets a guid; the first bad one is
+// the refusal.
 func resolveAssignKeys(ctx context.Context, db *store.DB, t targets) (resolved, error) {
+	if _, err := resolveRefs(ctx, db, t, false); err != nil {
+		return resolved{}, err
+	}
+	return resolveRefs(ctx, db, t, true)
+}
+
+// resolveRefs resolves the references of the three lists in order. With
+// write false it only checks them: a device or an account without a guid
+// gets none, and its key is "".
+func resolveRefs(ctx context.Context, db *store.DB, t targets, write bool) (resolved, error) {
 	var out resolved
 	steps := []struct {
-		list    any
-		resolve func(context.Context, *store.DB, string) (string, error)
-		into    *[]string
+		kind, list string
+		refs       any
+		resolve    func(context.Context, *store.DB, string, bool) (string, error)
+		into       *[]string
 	}{
-		{t.peers, resolvePeerAssignmentKey, &out.peers},
-		{t.users, resolveUserAssignmentKey, &out.users},
-		{t.groups, resolveDeviceGroupAssignmentKey, &out.groups},
+		{"peer", "peers", t.peers, resolvePeerAssignmentKey, &out.peers},
+		{"user", "users", t.users, resolveUserAssignmentKey, &out.users},
+		{"device group", "groups", t.groups, resolveDeviceGroupAssignmentKey, &out.groups},
 	}
 	for _, step := range steps {
-		items, err := refs(step.list)
-		if err != nil {
-			return out, err
+		items, ok := refs(step.refs)
+		if !ok {
+			return out, refusal(step.list + " must be a list")
 		}
 		for _, item := range items {
-			key, err := textOr(item, "")
-			if err != nil {
-				return out, err
+			key, isText := item.(string)
+			if !isText {
+				return out, refusal("invalid " + step.kind + " reference")
 			}
-			resolvedKey, err := step.resolve(ctx, db, jsTrim(key))
+			resolvedKey, err := step.resolve(ctx, db, jsTrim(key), write)
 			if err != nil {
 				return out, err
 			}
@@ -400,7 +416,7 @@ func (h *handlers) assignStrategy(w http.ResponseWriter, r *http.Request) {
 	}
 	existing, err := strategyByGUID(ctx, h.d.Store, guid)
 	if err != nil {
-		h.assignFailure(w, r, err)
+		h.assignFailure(w, r, "Assign strategy error:", err)
 		return
 	}
 	if existing == nil {
@@ -429,7 +445,7 @@ func (h *handlers) assignStrategy(w http.ResponseWriter, r *http.Request) {
 		err = h.d.LogAction(r, "strategy_assigned", "Assigned strategy: "+name)
 	}
 	if err != nil {
-		h.assignFailure(w, r, err)
+		h.assignFailure(w, r, "Assign strategy error:", err)
 		return
 	}
 	answer(w, r, http.StatusOK, withData{Success: true, Data: summaryAnswer{Summary: summary}})
@@ -439,20 +455,20 @@ type summaryAnswer struct {
 	Summary *goapi.Object `json:"summary"`
 }
 
-// assignFailure is the catch of the assignment: 400 with the text of a
-// reference that names nothing, else 500.
-func (h *handlers) assignFailure(w http.ResponseWriter, r *http.Request, err error) {
-	h.log.Error("Assign strategy error:", err)
-	if strings.Contains(err.Error(), "not found") {
-		answer(w, r, http.StatusBadRequest, failure{Error: err.Error()})
+// assignFailure answers a failed assignment or removal: 400 with the
+// text of a refusal, 500 for anything else.
+func (h *handlers) assignFailure(w http.ResponseWriter, r *http.Request, what string, err error) {
+	h.log.Error(what, err)
+	var refused refusal
+	if errors.As(err, &refused) {
+		answer(w, r, http.StatusBadRequest, failure{Error: string(refused)})
 		return
 	}
 	fail(w, r, http.StatusInternalServerError, "errors.server_error")
 }
 
 // unassignStrategy answers POST /api/panel/strategies/unassign with
-// {peers, users, groups}: their direct assignments are removed. Every
-// failure is 400 with its text.
+// {peers, users, groups}: their direct assignments are removed.
 func (h *handlers) unassignStrategy(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	t := targetsOf(plainBody(r))
@@ -465,12 +481,7 @@ func (h *handlers) unassignStrategy(w http.ResponseWriter, r *http.Request) {
 		err = assign(ctx, h.d.Store, "", keys)
 	}
 	if err != nil {
-		h.log.Error("Unassign strategy error:", err)
-		message := err.Error()
-		if message == "" {
-			message = kit.T(r, "errors.server_error", nil)
-		}
-		answer(w, r, http.StatusBadRequest, failure{Error: message})
+		h.assignFailure(w, r, "Unassign strategy error:", err)
 		return
 	}
 	h.syncAssignToServer(ctx, "", t)
