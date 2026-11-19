@@ -191,6 +191,9 @@ func TestNodeScenarios(t *testing.T) {
 				}
 				got := p.Take()
 				node := wstest.RecordedEvents(t, s.Events)
+				if fixed, ok := fixedEvents(t, sc.Name, i, node); ok {
+					node = fixed
+				}
 				if sc.Crash && hasCrash(node) {
 					checkDropped(t, i, st.Send, got)
 					continue
@@ -204,6 +207,70 @@ func TestNodeScenarios(t *testing.T) {
 			reg.Close()
 			check()
 		})
+	}
+}
+
+// fix is a step of the recording that a bug fix changed on purpose: what
+// the Go relay does there since the fix, as the events the oracle would
+// have noted.
+type fix struct {
+	bug, scenario string
+	step          int
+	events        string
+}
+
+// fixes are the steps the bug fixes changed. The tests of each fix pin
+// what it does; here the steps say only what the replay sees instead.
+var fixes = []fix{
+	// An agent gets the contacts of its own device only, and reads the
+	// history of its own conversations only: its device's and the groups
+	// it is in, which it asks the API server for
+	{"SK4", "agent session", 27, `[]`},
+	{"SK4", "agent session", 30, `[{"api":{"method":"GET","path":"/chat/groups/dev1"}}]`},
+	{"SK4", "fallbacks and odd answers", 17, `[]`},
+	{"SK4", "conversation ids the API path cannot take", 13, `[]`},
+	{"SK4", "conversation ids the API path cannot take", 14, `[{"api":{"method":"GET","path":"/chat/groups/dev1"}}]`},
+}
+
+// fixedEvents is what a step of the recording looks like since the fixes:
+// ok is false for a step no fix changed. A fix whose events are the ones
+// Node noted is stale and fails the test.
+func fixedEvents(t *testing.T, scenario string, step int, node []wstest.Event) ([]wstest.Event, bool) {
+	t.Helper()
+	for _, f := range fixes {
+		if f.scenario != scenario || f.step != step {
+			continue
+		}
+		var events []wstest.Event
+		if err := json.Unmarshal([]byte(f.events), &events); err != nil {
+			t.Fatalf("the %s fix of %q step %d: %v", f.bug, scenario, step, err)
+		}
+		if wstest.SameStreams(node, events) == nil {
+			t.Errorf("the %s fix of %q step %d changes nothing", f.bug, scenario, step)
+		}
+		return events, true
+	}
+	return nil, false
+}
+
+// TestFixesNameRecordedSteps: every fix names a step of the recording.
+func TestFixesNameRecordedSteps(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("testdata", "node_relay.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var rec relayRecording
+	if err := json.Unmarshal(raw, &rec); err != nil {
+		t.Fatal(err)
+	}
+	steps := map[string]int{}
+	for _, sc := range rec.Scenarios {
+		steps[sc.Name] = len(sc.Steps)
+	}
+	for _, f := range fixes {
+		if n, ok := steps[f.scenario]; !ok || f.step < 0 || f.step >= n {
+			t.Errorf("the %s fix names step %d of %q, which the recording does not have", f.bug, f.step, f.scenario)
+		}
 	}
 }
 

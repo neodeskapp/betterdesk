@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -56,18 +58,159 @@ func realScope(t *testing.T, db *store.DB) Scope {
 	}
 	scopes := access.New(db, access.NewDBRoleSource(nil), access.Options{DeviceScopeDefault: "restricted"})
 	groups := devicegroups.New(devicegroups.Options{DB: db, Access: scopes})
+	device := func(id string) *goapi.Object {
+		d := goapi.NewObject()
+		d.Set("id", id)
+		return d
+	}
 	return Scope{
 		Device: func(_ context.Context, id string) *goapi.Object {
 			for _, known := range scopeDevices {
 				if id == known {
-					device := goapi.NewObject()
-					device.Set("id", id)
-					return device
+					return device(id)
 				}
 			}
 			return nil
 		},
+		Devices: func(context.Context) []*goapi.Object {
+			var all []*goapi.Object
+			for _, id := range scopeDevices {
+				all = append(all, device(id))
+			}
+			return all
+		},
 		Of: groups.DeviceScopeForUser,
+	}
+}
+
+// TestScopedOperator: an operator opens the rooms of the devices in its
+// scope only, names no other device's conversation in a frame, and gets
+// in the inbox what concerns its devices only: their status, messages,
+// contacts and history.
+func TestScopedOperator(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		files := t.TempDir()
+		if err := os.WriteFile(filepath.Join(files, firstID+".txt"), []byte("x"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := addLink(files, firstID, link{Owner: scopeAccounts["anna"].ID}); err != nil {
+			t.Fatal(err)
+		}
+		relay := startRelay(t, RelayOptions{Scope: realScope(t, db), FilesDir: files})
+		relay.api.answer("GET /chat/contacts/panel", `{"contacts":[{"id":"dev1"},{"id":"dev2"},{"id":"dev3"},{"id":"operator:admin"}]}`)
+		relay.api.answer("GET /chat/history/operator?limit=100", `{"messages":[{"id":1,"from_id":"dev1"},{"id":2,"from_id":"dev2"},`+
+			`{"id":3,"from_id":"operator:admin","to_id":"dev2"},{"id":4,"from_id":"operator:admin"}]}`)
+
+		for _, refused := range []struct{ who, room string }{{"anna", "dev2"}, {"anna", "dev3"}, {"anna", "nobody"}, {"admin", "nobody"}} {
+			if s, status := relay.dial(t, refused.who, "/ws/chat-operator/"+refused.room); s != nil || status != 404 {
+				t.Errorf("%s in the room of %s: %d, want 404", refused.who, refused.room, status)
+			}
+		}
+		relay.open(t, "anna", "dev1")
+		relay.open(t, "admin", "dev2")
+
+		anna := relay.open(t, "anna", "panel")
+		ben := relay.open(t, "ben", "panel")
+		want(t, "anna's inbox", anna.take(), `{"type":"status","agent_connected":false}`,
+			`{"type":"contacts","contacts":[{"id":"dev1"},{"id":"operator:admin"}]}`)
+		want(t, "ben's inbox", ben.take(), `{"type":"status","agent_connected":false}`,
+			`{"type":"contacts","contacts":[{"id":"dev2"},{"id":"operator:admin"}]}`)
+
+		dev1 := relay.agent(t, "dev1")
+		dev2 := relay.agent(t, "dev2")
+		dev1.take()
+		dev2.take()
+		want(t, "anna sees dev1 come", anna.take(), `{"type":"status","device_id":"dev1","agent_connected":true}`,
+			`{"type":"presence","device_id":"dev1","online":true}`)
+		want(t, "ben sees dev2 come", ben.take(), `{"type":"status","device_id":"dev2","agent_connected":true}`,
+			`{"type":"presence","device_id":"dev2","online":true}`)
+
+		dev1.send(t, `{"type":"typing"}`)
+		dev1.sync(t)
+		want(t, "anna gets dev1's typing", anna.take(), `{"type":"typing","from":"dev1","conversation_id":"operator"}`)
+		want(t, "ben gets nothing of dev1", ben.take())
+
+		relay.api.taken()
+		for _, frame := range []string{
+			`{"type":"message","text":"to dev2","conversation_id":"dev2"}`,
+			`{"type":"typing","conversation_id":"dev2"}`,
+			`{"type":"file_share","conversation_id":"dev2","file_id":"` + firstID + `"}`,
+			`{"type":"reaction","conversation_id":"dev2","message_id":"1","emoji":"x"}`,
+			`{"type":"read_receipt","conversation_id":"dev2","message_ids":[1]}`,
+			`{"type":"mark_read","conversation_id":"dev2"}`,
+			`{"type":"get_history","conversation_id":"dev2"}`,
+			`{"type":"get_contacts","device_id":"dev2"}`,
+			`{"type":"get_groups","device_id":"dev2"}`,
+		} {
+			anna.send(t, frame)
+		}
+		anna.sync(t)
+		want(t, "anna on dev2", anna.take())
+		want(t, "dev2 from anna", dev2.take())
+		want(t, "ben from anna", ben.take())
+		if calls := relay.api.taken(); len(calls) != 0 {
+			t.Errorf("anna's frames on dev2 reached the API server: %q", calls)
+		}
+		if links, err := readLinks(files, firstID); err != nil || len(links.conversations) != 0 {
+			t.Errorf("anna's file was linked to %q (%v)", links.conversations, err)
+		}
+
+		// Without the API server's contacts, the connected devices she sees
+		anna.send(t, `{"type":"get_contacts","device_id":"operator:anna"}`)
+		anna.sync(t)
+		if got := anna.take(); len(got) != 1 || !strings.Contains(got[0], `"id":"dev1"`) || strings.Contains(got[0], `"id":"dev2"`) {
+			t.Errorf("anna's contacts without the API server: %q, want dev1 and not dev2", got)
+		}
+
+		anna.send(t, `{"type":"message","text":"to dev1","conversation_id":"dev1"}`)
+		anna.send(t, `{"type":"typing","conversation_id":"group:team"}`)
+		anna.send(t, `{"type":"get_history","conversation_id":"operator"}`)
+		anna.sync(t)
+		if got := dev1.take(); len(got) != 1 || !strings.Contains(got[0], `"text":"to dev1"`) {
+			t.Errorf("dev1 got %q, want anna's message", got)
+		}
+		want(t, "ben gets the typing of a group", ben.take(), `{"type":"typing","from":"operator","operator":"anna","conversation_id":"group:team"}`)
+		got := anna.take()
+		if len(got) != 2 || got[1] != `{"type":"history","conversation_id":"operator","messages":[{"id":1,"from_id":"dev1"},{"id":4,"from_id":"operator:admin"}]}` {
+			t.Errorf("anna got %q, want her message and the history without dev2", got)
+		}
+	})
+}
+
+// TestAgentReadsItsOwnConversations: an agent reads the history of its
+// device and of the groups it is in, and its own contacts.
+func TestAgentReadsItsOwnConversations(t *testing.T) {
+	relay := startRelay(t, RelayOptions{})
+	relay.api.answer("GET /chat/groups/dev1", `{"groups":[{"id":"group:g1"}]}`)
+	relay.api.answer("GET /chat/history/group%3Ag1?limit=100", `{"messages":[{"id":1}]}`)
+	relay.api.answer("GET /chat/history/dev2?limit=100", `{"messages":[{"id":2}]}`)
+	relay.api.answer("GET /chat/contacts/dev1", `{"contacts":[{"id":"dev2"}]}`)
+	dev1 := relay.agent(t, "dev1")
+	dev1.take()
+	for _, frame := range []string{
+		`{"type":"get_history","conversation_id":"dev2"}`,
+		`{"type":"get_history","conversation_id":"operator"}`,
+		`{"type":"get_contacts","device_id":"dev2"}`,
+		`{"type":"get_history","conversation_id":"group:g1"}`,
+		`{"type":"get_contacts"}`,
+	} {
+		dev1.send(t, frame)
+	}
+	dev1.sync(t)
+	want(t, "dev1", dev1.take(), `{"type":"history","conversation_id":"group:g1","messages":[{"id":1}]}`,
+		`{"type":"contacts","contacts":[{"id":"dev2"}]}`)
+	for _, call := range relay.api.taken() {
+		if strings.Contains(call, "dev2") || strings.Contains(call, "history/operator") {
+			t.Errorf("the API server was asked %s", call)
+		}
+	}
+}
+
+// want compares the messages a socket got with the ones it should have.
+func want(t *testing.T, what string, got []string, messages ...string) {
+	t.Helper()
+	if strings.Join(got, "\n") != strings.Join(messages, "\n") {
+		t.Errorf("%s:\n got %q\nwant %q", what, got, messages)
 	}
 }
 
@@ -153,6 +296,22 @@ func (a *recordingAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(answer))
 }
 
+// answer sets the answer to a call ("GET /chat/contacts/panel").
+func (a *recordingAPI) answer(call, body string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.answers[call] = body
+}
+
+// taken returns the calls so far and forgets them.
+func (a *recordingAPI) taken() []string {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	calls := a.calls
+	a.calls = nil
+	return calls
+}
+
 func startRelay(t *testing.T, opts RelayOptions) *testRelay {
 	t.Helper()
 	check := wstest.Goroutines(t)
@@ -193,6 +352,16 @@ func (tr *testRelay) open(t *testing.T, who, room string) *testSocket {
 	s, status := tr.dial(t, who, "/ws/chat-operator/"+room)
 	if s == nil {
 		t.Fatalf("%s in %s: refused with %d", who, room, status)
+	}
+	return s
+}
+
+// agent opens a device's socket with its token.
+func (tr *testRelay) agent(t *testing.T, device string) *testSocket {
+	t.Helper()
+	s, status := tr.dial(t, "", "/ws/chat/"+device+"?token=tok-"+device)
+	if s == nil {
+		t.Fatalf("the agent of %s: refused with %d", device, status)
 	}
 	return s
 }
@@ -245,6 +414,17 @@ func (s *testSocket) send(t *testing.T, text string) {
 	if err := s.conn.Write(ctx, websocket.MessageText, []byte(text)); err != nil {
 		t.Fatalf("send %s: %v", text, err)
 	}
+}
+
+// take waits a moment for what is on its way and returns the messages so
+// far, forgetting them.
+func (s *testSocket) take() []string {
+	time.Sleep(150 * time.Millisecond)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	got := s.got
+	s.got = nil
+	return got
 }
 
 // sync waits until the relay has handled what the socket sent before: it

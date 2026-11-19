@@ -94,8 +94,8 @@ func (r *Relay) agentFrame(c *client, frame jsjson.Value) error {
 		rm := r.roomLocked(c.id)
 		rm.appendLocked(out)
 		rm.broadcastLocked(string(out), c.conn)
-		r.toPanelLocked(string(out), c.conn, rm)
 		r.mu.Unlock()
+		r.toPanel(c.api, c.id, c.conn, rm, string(out))
 		c.persist(conversation, id, fromName, jsjson.Value{}, msgText)
 
 	case "typing":
@@ -103,7 +103,11 @@ func (r *Relay) agentFrame(c *client, frame jsjson.Value) error {
 			val("conversation_id", or(frame.Get("conversation_id"), text("operator"))))
 
 	case "get_contacts":
+		// An agent gets its own contacts only
 		target := or(frame.Get("device_id"), id)
+		if own, err := target.Text(); err != nil || own != c.id {
+			return nil
+		}
 		c.later(func(ctx context.Context) {
 			data, ok := loadContacts(ctx, r.opts.API, target)
 			contacts := data.Get("contacts")
@@ -111,12 +115,15 @@ func (r *Relay) agentFrame(c *client, frame jsjson.Value) error {
 				c.send(newObject().str("type", "contacts").val("contacts", contacts))
 				return
 			}
-			c.send(newObject().str("type", "contacts").raw("contacts", r.fallbackContacts(c.id)))
+			c.send(newObject().str("type", "contacts").raw("contacts", r.fallbackContacts(c.id, nil)))
 		})
 
 	case "get_history":
 		conversation := frame.Get("conversation_id")
 		c.later(func(ctx context.Context) {
+			if !r.agentIn(ctx, c, or(conversation, id)) {
+				return
+			}
 			data, ok := loadHistory(ctx, r.opts.API, or(conversation, id))
 			if ok && data.Truthy() && data.Get("messages").Truthy() {
 				c.send(newObject().str("type", "history").val("conversation_id", conversation).val("messages", data.Get("messages")))
@@ -168,14 +175,36 @@ func (r *Relay) agentFrame(c *client, frame jsjson.Value) error {
 	return nil
 }
 
+// agentIn reports whether a conversation is the agent's own: its device's,
+// or one of the groups it is a member of.
+func (r *Relay) agentIn(ctx context.Context, c *client, conversation jsjson.Value) bool {
+	asked, err := conversation.Text()
+	if err != nil {
+		return false
+	}
+	if asked == c.id {
+		return true
+	}
+	data, ok := loadGroups(ctx, r.opts.API, text(c.id))
+	if !ok {
+		return false
+	}
+	for _, group := range data.Get("groups").Items() {
+		if g := group.Get("id"); g.Kind() == jsjson.String && g.Str() == asked {
+			return true
+		}
+	}
+	return false
+}
+
 // toAgentRoom sends what an agent says to its room and to the inbox.
 func (r *Relay) toAgentRoom(c *client, o *object) {
 	out := o.text()
 	r.mu.Lock()
-	defer r.mu.Unlock()
 	rm := r.roomLocked(c.id)
 	rm.broadcastLocked(out, c.conn)
-	r.toPanelLocked(out, c.conn, rm)
+	r.mu.Unlock()
+	r.toPanel(c.api, c.id, c.conn, rm, out)
 }
 
 // fileShare is the message that passes on an encrypted file's metadata.
@@ -205,7 +234,9 @@ func isFalse(v jsjson.Value) bool {
 // operatorFrame handles one message of an operator. A message for a
 // conversation that has a room other than the operator's goes to that
 // room; otherwise an inbox operator's goes to the other inbox operators
-// and a room operator's to the room.
+// and a room operator's to the room. A frame that names a conversation
+// or device the operator does not see is left alone, and the inbox's
+// operators get what concerns a conversation only when they see it.
 func (r *Relay) operatorFrame(c *client, frame jsjson.Value) error {
 	typ, err := typeOf(frame)
 	if err != nil {
@@ -220,13 +251,19 @@ func (r *Relay) operatorFrame(c *client, frame jsjson.Value) error {
 
 	case "get_contacts":
 		target := or(frame.Get("device_id"), id)
+		if !r.sees(c, target) {
+			return nil
+		}
 		c.later(func(ctx context.Context) {
 			data, ok := loadContacts(ctx, r.opts.API, target)
-			r.sendContacts(c, data, ok)
+			r.sendContacts(ctx, c, data, ok)
 		})
 
 	case "get_groups":
 		target := or(frame.Get("device_id"), id)
+		if !r.sees(c, target) {
+			return nil
+		}
 		c.later(func(ctx context.Context) {
 			data, ok := loadGroups(ctx, r.opts.API, target)
 			r.sendGroups(c, data, ok)
@@ -234,10 +271,13 @@ func (r *Relay) operatorFrame(c *client, frame jsjson.Value) error {
 
 	case "get_history":
 		asked := frame.Get("conversation_id")
+		if !r.sees(c, conversation) {
+			return nil
+		}
 		c.later(func(ctx context.Context) {
 			data, ok := loadHistory(ctx, r.opts.API, conversation)
 			if ok && data.Truthy() && data.Get("messages").Truthy() {
-				c.send(newObject().str("type", "history").val("conversation_id", asked).val("messages", data.Get("messages")))
+				c.send(newObject().str("type", "history").val("conversation_id", asked).raw("messages", r.operatorView(ctx, c).messages(data.Get("messages"))))
 				return
 			}
 			if asked.Kind() == jsjson.String && asked.Str() == c.id {
@@ -251,6 +291,9 @@ func (r *Relay) operatorFrame(c *client, frame jsjson.Value) error {
 		if err != nil {
 			return errDrop
 		}
+		if !r.sees(c, conversation) {
+			return nil
+		}
 		msg := newObject().str("type", "message").num("id", msgID).str("from", "operator").str("from_name", c.operator).
 			val("conversation_id", conversation).str("operator", c.operator).val("to_id", conversation).
 			str("text", msgText).num("timestamp", r.nowMillis())
@@ -263,8 +306,11 @@ func (r *Relay) operatorFrame(c *client, frame jsjson.Value) error {
 		} else {
 			rm.appendLocked([]byte(out))
 		}
-		r.routeLocked(c, rm, target, out)
+		panel := r.routeLocked(c, rm, target, out)
 		r.mu.Unlock()
+		if panel {
+			r.toPanel(c.api, subject(conversation), c.conn, nil, out)
+		}
 		c.send(msg)
 		c.persist(conversation, text("operator"), name, conversation, msgText)
 
@@ -277,6 +323,9 @@ func (r *Relay) operatorFrame(c *client, frame jsjson.Value) error {
 			val("public_key", frame.Get("public_key")).val("conversation_id", conversation))
 
 	case "read_receipt":
+		if !r.sees(c, conversation) {
+			return nil
+		}
 		ids := listOr(frame.Get("message_ids"))
 		r.route(c, conversation, newObject().str("type", "read_receipt").str("from", "operator").str("operator", c.operator).
 			raw("message_ids", ids).val("conversation_id", conversation).num("timestamp", r.nowMillis()))
@@ -284,7 +333,7 @@ func (r *Relay) operatorFrame(c *client, frame jsjson.Value) error {
 		c.later(func(ctx context.Context) { markRead(ctx, r.opts.API, body) })
 
 	case "mark_read":
-		if asked := frame.Get("conversation_id"); asked.Truthy() {
+		if asked := frame.Get("conversation_id"); asked.Truthy() && r.sees(c, asked) {
 			body := newObject().val("conversation_id", asked).str("reader_id", c.operator).json()
 			c.later(func(ctx context.Context) { markRead(ctx, r.opts.API, body) })
 		}
@@ -312,18 +361,21 @@ func (r *Relay) operatorFrame(c *client, frame jsjson.Value) error {
 		presence := newObject().str("type", "presence").str("device_id", "operator:"+c.operator).
 			boolean("online", !isFalse(frame.Get("online"))).val("status", or(frame.Get("status"), text("available"))).
 			num("timestamp", r.nowMillis()).text()
-		r.mu.Lock()
 		if c.id == panelID {
-			r.toPanelLocked(presence, c.conn, nil)
-		} else {
-			r.roomLocked(c.id).broadcastLocked(presence, c.conn)
+			r.toPanel(c.api, "", c.conn, nil, presence)
+			return nil
 		}
+		r.mu.Lock()
+		r.roomLocked(c.id).broadcastLocked(presence, c.conn)
 		r.mu.Unlock()
 
 	case "reaction":
 		return r.reaction(c, frame)
 
 	case "file_share":
+		if !r.sees(c, conversation) {
+			return nil
+		}
 		r.linkFile(c, frame.Get("file_id"), conversation)
 		r.route(c, conversation, r.fileShare(frame, text("operator"), name, conversation))
 	}
@@ -344,23 +396,42 @@ func (r *Relay) linkFile(c *client, fileID, conversation jsjson.Value) {
 }
 
 // route sends what an operator says (typing, keys, receipts, files) where
-// its conversation is: see operatorFrame.
+// its conversation is (see operatorFrame), when the operator sees it.
 func (r *Relay) route(c *client, conversation jsjson.Value, o *object) {
+	if !r.sees(c, conversation) {
+		return
+	}
 	out := o.text()
 	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.routeLocked(c, r.roomLocked(c.id), r.findLocked(conversation), out)
+	panel := r.routeLocked(c, r.roomLocked(c.id), r.findLocked(conversation), out)
+	r.mu.Unlock()
+	if panel {
+		r.toPanel(c.api, subject(conversation), c.conn, nil, out)
+	}
 }
 
-func (r *Relay) routeLocked(c *client, rm, target *room, out string) {
+// routeLocked sends out to the room of the conversation or to the
+// operator's room, or reports that it goes to the inbox.
+func (r *Relay) routeLocked(c *client, rm, target *room, out string) (toPanel bool) {
 	switch {
 	case target != nil && target != rm:
 		target.broadcastLocked(out, c.conn)
 	case c.id == panelID:
-		r.toPanelLocked(out, c.conn, nil)
+		return true
 	default:
 		rm.broadcastLocked(out, c.conn)
 	}
+	return false
+}
+
+// subject is the text of the conversation id a message is about, "" when
+// it has none.
+func subject(conversation jsjson.Value) string {
+	s, err := conversation.Text()
+	if err != nil {
+		return ""
+	}
+	return s
 }
 
 // reaction passes an operator's reaction to a message on: to the room of
@@ -382,7 +453,7 @@ func (r *Relay) reaction(c *client, frame jsjson.Value) error {
 		return errDrop
 	}
 	emoji = jsjson.Slice(emoji, 16)
-	if messageID == "" || emoji == "" {
+	if messageID == "" || emoji == "" || !r.sees(c, text(conversation)) {
 		return nil
 	}
 	reaction := newObject().str("type", "reaction").str("from", c.operator).str("operator", c.operator).
@@ -393,12 +464,13 @@ func (r *Relay) reaction(c *client, frame jsjson.Value) error {
 	if target := r.rooms[conversation]; target != nil && target != rm {
 		target.broadcastLocked(out, c.conn)
 	}
-	if c.id == panelID {
-		r.toPanelLocked(out, c.conn, nil)
-	} else {
+	if c.id != panelID {
 		rm.broadcastLocked(out, c.conn)
 	}
 	r.mu.Unlock()
+	if c.id == panelID {
+		r.toPanel(c.api, conversation, c.conn, nil, out)
+	}
 	c.send(reaction)
 	return nil
 }

@@ -67,7 +67,7 @@ type Relay struct {
 	// order is the ids of the rooms in the order they were made
 	order []string
 	// panel are the inbox's operators, in the order they came
-	panel []*ws.Conn
+	panel []*client
 }
 
 // room is one device's conversation: its agent, its operators in the
@@ -136,9 +136,10 @@ func (r *Relay) serveAgent(u *ws.Upgrade) {
 
 // serveOperator is a console user's socket. Before the handshake: a
 // foreign origin 403, no signed-in session 401, the role without
-// chat.access (or its lookup failing) 403. The operator's name is the
-// session's user name, "operator" without one. Nothing checks that the
-// user may see the device of the room.
+// chat.access (or its lookup failing) 403, a room that is no device in
+// the account's device scope 404 (the inbox is open to every account).
+// The operator's name is the session's user name, "operator" without
+// one.
 func (r *Relay) serveOperator(u *ws.Upgrade) {
 	if !u.CheckOrigin("chat-operator " + u.Path) {
 		return
@@ -151,6 +152,10 @@ func (r *Relay) serveOperator(u *ws.Upgrade) {
 	allowed, err := u.RoleHasPermission(session.UserRole(), "chat.access")
 	if err != nil || !allowed {
 		u.Refuse(http.StatusForbidden)
+		return
+	}
+	if id := u.Param("id"); id != panelID && !r.opts.Scope.room(u.R.Context(), session.User(), id) {
+		u.Refuse(http.StatusNotFound)
 		return
 	}
 	conn, accepted := u.Accept(ws.AcceptOptions{})
@@ -299,26 +304,44 @@ func (rm *room) hasOperator(c *ws.Conn) bool {
 	return false
 }
 
-// toPanelLocked sends text to the inbox's operators, except to one
-// socket and to those in rm, which get it through their room.
-func (r *Relay) toPanelLocked(text string, except *ws.Conn, rm *room) {
-	for _, c := range r.panel {
-		if c == except || (rm != nil && rm.hasOperator(c)) {
+// toPanel sends texts to the inbox's operators that see subject (the id
+// of the device or conversation they are about; "" is no device's),
+// except to one socket and to those in rm, which get them through their
+// room. The scope is checked outside the relay's lock.
+func (r *Relay) toPanel(ctx context.Context, subject string, except *ws.Conn, rm *room, texts ...string) {
+	r.mu.Lock()
+	var targets []*client
+	for _, op := range r.panel {
+		if op.conn == except || (rm != nil && rm.hasOperator(op.conn)) {
 			continue
 		}
-		c.SendText(text)
+		targets = append(targets, op)
+	}
+	r.mu.Unlock()
+	if len(targets) == 0 {
+		return
+	}
+	device := r.opts.Scope.device(ctx, subject)
+	for _, op := range targets {
+		if !r.opts.Scope.reaches(ctx, op.user, device) {
+			continue
+		}
+		for _, text := range texts {
+			op.conn.SendText(text)
+		}
 	}
 }
 
 // fallbackContacts is the contact list when the API server gives none:
-// the support operator and every other device whose agent is connected.
-func (r *Relay) fallbackContacts(current string) []byte {
+// the support operator and every other device whose agent is connected,
+// without those the view hides.
+func (r *Relay) fallbackContacts(current string, v *view) []byte {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	contacts := [][]byte{supportContact(r.nowMillis())}
 	for _, id := range r.order {
 		rm := r.rooms[id]
-		if id == current || rm.agent == nil || !rm.agent.Open() {
+		if id == current || rm.agent == nil || !rm.agent.Open() || v.hides(id) {
 			continue
 		}
 		contacts = append(contacts, newObject().str("id", id).str("name", id).str("hostname", "").
@@ -348,14 +371,15 @@ func (r *Relay) agentJoins(c *client) {
 	logging.Logf("console", "[Chat] Agent connected: %s", c.id)
 	rm.broadcastLocked(newObject().str("type", "status").boolean("agent_connected", true).text(), c.conn)
 	rm.broadcastLocked(newObject().str("type", "presence").str("device_id", c.id).boolean("online", true).text(), c.conn)
-	r.toPanelLocked(newObject().str("type", "status").str("device_id", c.id).boolean("agent_connected", true).text(), nil, rm)
-	r.toPanelLocked(newObject().str("type", "presence").str("device_id", c.id).boolean("online", true).text(), nil, rm)
 	r.mu.Unlock()
+	r.toPanel(c.api, c.id, nil, rm,
+		newObject().str("type", "status").str("device_id", c.id).boolean("agent_connected", true).text(),
+		newObject().str("type", "presence").str("device_id", c.id).boolean("online", true).text())
 
 	id := jsjson.OfText(c.id)
 	c.later(func(ctx context.Context) {
 		data, ok := loadHistory(ctx, r.opts.API, id)
-		r.sendHistory(c, data, ok, id)
+		r.sendHistory(ctx, c, data, ok, id)
 	})
 	c.later(func(ctx context.Context) {
 		data, ok := loadContacts(ctx, r.opts.API, id)
@@ -376,11 +400,11 @@ func (r *Relay) agentJoins(c *client) {
 
 // sendHistory sends a room's history: the API server's messages for the
 // conversation, else the messages the room keeps in memory (without a
-// conversation id).
-func (r *Relay) sendHistory(c *client, data jsjson.Value, ok bool, conversation jsjson.Value) {
+// conversation id). An operator gets the messages of devices it sees.
+func (r *Relay) sendHistory(ctx context.Context, c *client, data jsjson.Value, ok bool, conversation jsjson.Value) {
 	messages := data.Get("messages")
 	if ok && data.Truthy() && messages.Truthy() {
-		c.send(newObject().str("type", "history").val("conversation_id", conversation).val("messages", messages))
+		c.send(newObject().str("type", "history").val("conversation_id", conversation).raw("messages", r.operatorView(ctx, c).messages(messages)))
 		return
 	}
 	c.send(newObject().str("type", "history").raw("messages", r.memory(c.id)))
@@ -398,17 +422,19 @@ func (r *Relay) memory(id string) []byte {
 // replaced it, and tells the room and the inbox.
 func (r *Relay) agentLeaves(c *client) {
 	r.mu.Lock()
-	defer r.mu.Unlock()
 	rm := r.rooms[c.id]
 	if rm.agent != c.conn {
+		r.mu.Unlock()
 		return
 	}
 	rm.agent = nil
 	logging.Logf("console", "[Chat] Agent disconnected: %s", c.id)
 	rm.broadcastLocked(newObject().str("type", "status").boolean("agent_connected", false).text(), nil)
 	rm.broadcastLocked(newObject().str("type", "presence").str("device_id", c.id).boolean("online", false).text(), nil)
-	r.toPanelLocked(newObject().str("type", "status").str("device_id", c.id).boolean("agent_connected", false).text(), nil, rm)
-	r.toPanelLocked(newObject().str("type", "presence").str("device_id", c.id).boolean("online", false).text(), nil, rm)
+	r.mu.Unlock()
+	r.toPanel(c.api, c.id, nil, rm,
+		newObject().str("type", "status").str("device_id", c.id).boolean("agent_connected", false).text(),
+		newObject().str("type", "presence").str("device_id", c.id).boolean("online", false).text())
 }
 
 // operatorJoins puts the operator into its room (and the inbox for the
@@ -419,7 +445,7 @@ func (r *Relay) operatorJoins(c *client) {
 	rm := r.roomLocked(c.id)
 	rm.operators = append(rm.operators, c.conn)
 	if c.id == panelID {
-		r.panel = append(r.panel, c.conn)
+		r.panel = append(r.panel, c)
 	}
 	connected := rm.agent != nil && rm.agent.Open()
 	r.mu.Unlock()
@@ -430,7 +456,7 @@ func (r *Relay) operatorJoins(c *client) {
 	if c.id == panelID {
 		c.later(func(ctx context.Context) {
 			data, ok := loadContacts(ctx, r.opts.API, id)
-			r.sendContacts(c, data, ok)
+			r.sendContacts(ctx, c, data, ok)
 		})
 		c.later(func(ctx context.Context) {
 			data, ok := loadGroups(ctx, r.opts.API, id)
@@ -440,19 +466,39 @@ func (r *Relay) operatorJoins(c *client) {
 	}
 	c.later(func(ctx context.Context) {
 		data, ok := loadHistory(ctx, r.opts.API, id)
-		r.sendHistory(c, data, ok, id)
+		r.sendHistory(ctx, c, data, ok, id)
 	})
 }
 
 // sendContacts sends the API server's contacts when there are some, else
-// the fallback list (an operator's get_contacts and the panel).
-func (r *Relay) sendContacts(c *client, data jsjson.Value, ok bool) {
+// the fallback list (an operator's get_contacts and the panel), without
+// the devices the operator does not see.
+func (r *Relay) sendContacts(ctx context.Context, c *client, data jsjson.Value, ok bool) {
+	v := r.operatorView(ctx, c)
 	contacts := data.Get("contacts")
 	if ok && contacts.Get("length").Truthy() {
-		c.send(newObject().str("type", "contacts").val("contacts", contacts))
+		c.send(newObject().str("type", "contacts").raw("contacts", v.contacts(contacts)))
 		return
 	}
-	c.send(newObject().str("type", "contacts").raw("contacts", r.fallbackContacts(c.id)))
+	c.send(newObject().str("type", "contacts").raw("contacts", r.fallbackContacts(c.id, v)))
+}
+
+// operatorView is what an operator sees of the devices, nil for an agent.
+func (r *Relay) operatorView(ctx context.Context, c *client) *view {
+	if c.operator == "" {
+		return nil
+	}
+	return r.opts.Scope.viewOf(ctx, c.user)
+}
+
+// sees reports whether an operator sees the conversation or device id a
+// frame names: its text (String()), which cannot be one it does not see.
+func (r *Relay) sees(c *client, id jsjson.Value) bool {
+	if r.opts.Scope.Of == nil {
+		return true
+	}
+	text, err := id.Text()
+	return err == nil && r.opts.Scope.sees(c.conn.Context(), c.user, text)
 }
 
 // sendGroups sends the groups when the answer has some.
@@ -468,7 +514,13 @@ func (r *Relay) operatorLeaves(c *client) {
 	defer r.mu.Unlock()
 	rm := r.rooms[c.id]
 	rm.operators = without(rm.operators, c.conn)
-	r.panel = without(r.panel, c.conn)
+	panel := r.panel[:0:0]
+	for _, op := range r.panel {
+		if op != c {
+			panel = append(panel, op)
+		}
+	}
+	r.panel = panel
 	logging.Logf("console", "[Chat] Operator %s left %s", c.operator, c.id)
 }
 
