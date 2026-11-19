@@ -46,6 +46,10 @@ var fixedSteps = []fixedStep{
 	{"node_postgres", "527 GET /api/strategies", "RD3"},
 	{"node_postgres", "668 GET /api/strategies", "RD3"},
 	{"flow_postgres", "admin-strategies", "RD3"},
+	// A page of the device list holds at most pageSize devices (the
+	// PostgreSQL instance has none in the console's table).
+	{"flow_sqlite", "viewer-devices", "RD4"},
+	{"flow_sqlite", "admin-devices-page", "RD4"},
 }
 
 // fixedStep is a step of the recordings of both databases ("node",

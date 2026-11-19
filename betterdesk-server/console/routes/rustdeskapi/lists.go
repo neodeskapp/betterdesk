@@ -759,18 +759,28 @@ type devicesAnswer struct {
 	Data  []deviceRef `json:"data"`
 }
 
-// devices answers GET /api/devices with a bearer token: every device of
-// the console's table with its guid. pageSize is read and not applied
-// (BUGS RD4).
+// devices answers GET /api/devices with a bearer token: one page of the
+// devices of the console's table with their guids. A page holds pageSize
+// devices (50 when it is not a number, at most 1000) and current counts
+// pages from 1; total counts the devices of every page.
 func (h *handlers) devices(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	q := reqquery.Of(r)
 	id := sanitize(or(q.Get("id").JSON(), ""), 64)
-	if size := q.Get("pageSize"); size.Defined() {
-		if _, ok := size.Text(); !ok {
+	size := 50.0
+	if value := q.Get("pageSize"); value.Defined() {
+		text, ok := value.Text()
+		if !ok {
 			kit.JSON(w, r, http.StatusOK, devicesAnswer{Data: []deviceRef{}})
 			return
 		}
+		if n := parseIntText(text); !math.IsNaN(n) && n != 0 {
+			size = math.Min(math.Max(n, 1), 1000)
+		}
+	}
+	current := parseInt10(q.Get("current").JSON())
+	if math.IsNaN(current) || current < 1 {
+		current = 1
 	}
 	peers, err := h.store.allPeers(ctx)
 	if err != nil {
@@ -786,6 +796,12 @@ func (h *handlers) devices(w http.ResponseWriter, r *http.Request) {
 		}
 		rows = append(rows, ref)
 	}
+	total := len(rows)
+	if start := (current - 1) * size; start >= float64(total) {
+		rows = rows[:0]
+	} else {
+		rows = rows[int(start):int(math.Min(start+size, float64(total)))]
+	}
 	for i := range rows {
 		if truthy(rows[i].GUID) {
 			continue
@@ -794,7 +810,7 @@ func (h *handlers) devices(w http.ResponseWriter, r *http.Request) {
 			rows[i].GUID = guid
 		}
 	}
-	kit.JSON(w, r, http.StatusOK, devicesAnswer{Total: len(rows), Data: rows})
+	kit.JSON(w, r, http.StatusOK, devicesAnswer{Total: total, Data: rows})
 }
 
 type peerKeyAnswer struct {

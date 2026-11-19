@@ -715,3 +715,54 @@ func TestTheGuardsOfTheWrites(t *testing.T) {
 		}
 	}
 }
+
+// GET /api/devices answers one page: at most pageSize devices (50 when it
+// is missing or not a number, 1000 at most) of page current, and total
+// counts the devices of every page.
+func TestDevicesComePageByPage(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db, nil)
+		for i := 1; i <= 7; i++ {
+			w.Exec("INSERT INTO peer (id, uuid) VALUES (?, ?)", []any{fmt.Sprintf("90040000%d", i), fmt.Sprintf("u-%d", i)})
+		}
+		page := func(query string) (int, string) {
+			got := w.Do(replay.Request{Path: "/api/devices" + query, Headers: bearer(viewerToken)})
+			var list struct {
+				Total int `json:"total"`
+				Data  []struct {
+					ID string `json:"id"`
+				} `json:"data"`
+			}
+			if err := json.Unmarshal([]byte(got.Body), &list); err != nil || got.Status != http.StatusOK {
+				t.Fatalf("GET /api/devices%s: %d %s", query, got.Status, got.Body)
+			}
+			var ids []string
+			for _, d := range list.Data {
+				ids = append(ids, strings.TrimPrefix(d.ID, "90040000"))
+			}
+			return list.Total, strings.Join(ids, ",")
+		}
+		for query, want := range map[string]string{
+			"?pageSize=3":                        "1,2,3",
+			"?pageSize=3&current=2":              "4,5,6",
+			"?pageSize=3&current=3":              "7",
+			"?pageSize=3&current=4":              "",
+			"?pageSize=3&current=0":              "1,2,3",
+			"?pageSize=3&current=x":              "1,2,3",
+			"?pageSize=0":                        "1,2,3,4,5,6,7",
+			"?pageSize=abc":                      "1,2,3,4,5,6,7",
+			"":                                   "1,2,3,4,5,6,7",
+			"?pageSize=2&current=2&current=9":    "3,4",
+			"?id=900400005&pageSize=1&current=1": "5",
+		} {
+			total, ids := page(query)
+			wantTotal := 7
+			if strings.Contains(query, "id=") {
+				wantTotal = 1
+			}
+			if total != wantTotal || ids != want {
+				t.Errorf("%q: total %d, devices %q; want %d and %q", query, total, ids, wantTotal, want)
+			}
+		}
+	})
+}
