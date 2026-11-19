@@ -98,8 +98,8 @@ func ScopeGroup(row *goapi.Object) access.DeviceGroup {
 		TagFilter: textOr(row.Get("tag_filter"), ""),
 	}
 	g.SourceType = textOr(row.Get("source_type"), "manual")
-	g.AllowedUsers = access.NormalizeUsernames(Plain(row.Get("allowed_users")))
-	g.AllowedGroups = access.NormalizeGroupGUIDs(Plain(orValue(row.Get("allowed_groups"), row.Get("allowed_user_groups"))))
+	g.AllowedUsers = access.StoredUsernames(Plain(row.Get("allowed_users")))
+	g.AllowedGroups = access.StoredGroupGUIDs(Plain(orValue(row.Get("allowed_groups"), row.Get("allowed_user_groups"))))
 	return g
 }
 

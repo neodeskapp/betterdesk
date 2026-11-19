@@ -193,7 +193,7 @@ func uniqueTrimmed(items []string, limit int) []string {
 		seen[item] = struct{}{}
 		out = append(out, item)
 	}
-	if len(out) > limit {
+	if limit > 0 && len(out) > limit {
 		out = out[:limit]
 	}
 	return out

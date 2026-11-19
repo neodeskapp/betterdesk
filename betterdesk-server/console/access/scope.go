@@ -136,19 +136,38 @@ func NormalizeTags(value any) []string {
 	return []string{}
 }
 
-// NormalizeUsernames reads an access list of usernames from a list or
-// comma-separated text: trimmed, without repeats, at most 100.
+// NormalizeUsernames reads a submitted access list of usernames from a
+// list or comma-separated text: trimmed, without repeats, at most 100.
 func NormalizeUsernames(value any) []string {
 	return uniqueTrimmed(listOrSplit(value), maxAccessListEntries)
 }
 
-// NormalizeGroupGUIDs reads a list of user group guids from a list (of
-// guids or of objects with a guid) or comma-separated text: trimmed,
-// without repeats, at most 100.
+// StoredUsernames reads a stored access list of usernames the way
+// NormalizeUsernames does, keeping every entry: a check must see the
+// whole list.
+func StoredUsernames(value any) []string {
+	return uniqueTrimmed(listOrSplit(value), 0)
+}
+
+// NormalizeGroupGUIDs reads a submitted list of user group guids from a
+// list (of guids or of objects with a guid) or comma-separated text:
+// trimmed, without repeats, at most 100.
 func NormalizeGroupGUIDs(value any) []string {
+	return groupGUIDs(value, maxAccessListEntries)
+}
+
+// StoredGroupGUIDs reads a stored list of user group guids the way
+// NormalizeGroupGUIDs does, keeping every entry.
+func StoredGroupGUIDs(value any) []string {
+	return groupGUIDs(value, 0)
+}
+
+// groupGUIDs reads a list of user group guids, at most limit of them (0
+// for every one).
+func groupGUIDs(value any, limit int) []string {
 	list, ok := value.([]any)
 	if !ok {
-		return uniqueTrimmed(listOrSplit(value), maxAccessListEntries)
+		return uniqueTrimmed(listOrSplit(value), limit)
 	}
 	items := make([]string, len(list))
 	for i, item := range list {
@@ -161,7 +180,7 @@ func NormalizeGroupGUIDs(value any) []string {
 			items[i] = jsStringOrEmpty(item)
 		}
 	}
-	return uniqueTrimmed(items, maxAccessListEntries)
+	return uniqueTrimmed(items, limit)
 }
 
 var folderGroupGUID = regexp.MustCompile(`^(?i)folder_(\d+)$`)
@@ -206,13 +225,14 @@ func hasTag(device Device, tag string) bool {
 
 // GroupAllowedForUser reports whether a device group is open to an account:
 // the group has no access list, names the account, or names one of the
-// account's user groups. Admin roles and a nil user pass.
+// account's user groups. Admin roles and a nil user pass. The whole lists
+// count, however long.
 func GroupAllowedForUser(group DeviceGroup, user *ScopeUser) bool {
 	if user == nil || scopeExempt(user.Role) {
 		return true
 	}
-	allowedUsers := uniqueTrimmed(group.AllowedUsers, maxAccessListEntries)
-	allowedGroups := uniqueTrimmed(group.AllowedGroups, maxAccessListEntries)
+	allowedUsers := uniqueTrimmed(group.AllowedUsers, 0)
+	allowedGroups := uniqueTrimmed(group.AllowedGroups, 0)
 	if len(allowedUsers) == 0 && len(allowedGroups) == 0 {
 		return true
 	}
@@ -222,7 +242,7 @@ func GroupAllowedForUser(group DeviceGroup, user *ScopeUser) bool {
 		}
 	}
 	mine := make(map[string]struct{})
-	for _, guid := range uniqueTrimmed(user.UserGroups, maxAccessListEntries) {
+	for _, guid := range uniqueTrimmed(user.UserGroups, 0) {
 		mine[guid] = struct{}{}
 	}
 	for _, guid := range allowedGroups {
@@ -235,8 +255,8 @@ func GroupAllowedForUser(group DeviceGroup, user *ScopeUser) bool {
 
 // hasAccessList reports whether a device group limits who may see it.
 func hasAccessList(group DeviceGroup) bool {
-	return len(uniqueTrimmed(group.AllowedUsers, maxAccessListEntries)) > 0 ||
-		len(uniqueTrimmed(group.AllowedGroups, maxAccessListEntries)) > 0
+	return len(uniqueTrimmed(group.AllowedUsers, 0)) > 0 ||
+		len(uniqueTrimmed(group.AllowedGroups, 0)) > 0
 }
 
 // UserAccessContext returns the account with its user groups filled in.
@@ -548,7 +568,7 @@ func (s *Service) UserFolderIDs(ctx context.Context, username string) ([]int64, 
 		if group == nil {
 			continue
 		}
-		for _, name := range uniqueTrimmed(group.AllowedUsers, maxAccessListEntries) {
+		for _, name := range uniqueTrimmed(group.AllowedUsers, 0) {
 			if name == username {
 				out = append(out, folder.ID)
 				break
@@ -601,7 +621,7 @@ func (s *Service) SyncUserFolderAccess(ctx context.Context, username string, fol
 		if group == nil {
 			continue
 		}
-		current := uniqueTrimmed(group.AllowedUsers, maxAccessListEntries)
+		current := uniqueTrimmed(group.AllowedUsers, 0)
 		has := false
 		without := make([]string, 0, len(current))
 		for _, name := range current {

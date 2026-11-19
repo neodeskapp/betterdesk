@@ -5,6 +5,7 @@ import (
 	"context"
 	"log"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -546,4 +547,43 @@ func TestSetUserPeerGrantsKeepsTheOldGrantsWhenStoringFails(t *testing.T) {
 			t.Errorf("grants after the failed store: %v, want the old a,b", got)
 		}
 	})
+}
+
+// PA10: an access list is checked whole. The 101st account of a list and
+// the 101st user group are on it; reading a stored list keeps every entry.
+func TestGroupAllowedForUserReadsTheWholeList(t *testing.T) {
+	var names, guids []string
+	for i := 0; i < 150; i++ {
+		names = append(names, "user"+strconv.Itoa(i))
+		guids = append(guids, "ug"+strconv.Itoa(i))
+	}
+	group := DeviceGroup{AllowedUsers: names}
+	if !GroupAllowedForUser(group, &ScopeUser{ID: 9, Username: "user120", Role: "viewer"}) {
+		t.Error("the 121st name of the list is not on it")
+	}
+	if GroupAllowedForUser(group, &ScopeUser{ID: 9, Username: "user150", Role: "viewer"}) {
+		t.Error("a name the list does not have is on it")
+	}
+	byGroup := DeviceGroup{AllowedGroups: guids}
+	if !GroupAllowedForUser(byGroup, &ScopeUser{ID: 9, Username: "x", Role: "viewer", UserGroups: []string{"ug140"}}) {
+		t.Error("the 141st user group of the list is not on it")
+	}
+	if got := StoredUsernames(names); len(got) != 150 {
+		t.Errorf("stored list read with %d names, want 150", len(got))
+	}
+	if got := StoredGroupGUIDs(anyList(guids)); len(got) != 150 {
+		t.Errorf("stored list read with %d groups, want 150", len(got))
+	}
+	// A submitted list is still cut at 100 when it is saved.
+	if got := NormalizeUsernames(anyList(names)); len(got) != 100 {
+		t.Errorf("submitted list kept %d names, want 100", len(got))
+	}
+}
+
+func anyList(items []string) []any {
+	out := make([]any, len(items))
+	for i, item := range items {
+		out[i] = item
+	}
+	return out
 }
