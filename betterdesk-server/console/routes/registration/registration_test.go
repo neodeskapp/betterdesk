@@ -643,3 +643,32 @@ func TestLostRaceIsRefused(t *testing.T) {
 		}
 	})
 }
+
+// An accept through another spelling of the id ("021") names the request
+// the API server answered for (21), in the audit entry and in the list
+// (BUGS RG11).
+func TestHelpActionNamesTheServersID(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		api := routetest.NewAPI().
+			On("POST /api/help/requests/021/acknowledge", http.StatusOK, `{"id":21}`).
+			On("POST /api/help/requests/022/resolve", http.StatusOK, `{}`).
+			On("GET /api/help/requests?limit=200", http.StatusOK,
+				`[{"id":21,"device_id":"900100001","status":"acknowledged","handled_by":"apikey:console-bridge","created_at":"2026-11-08T10:00:00Z"},`+
+					`{"id":22,"device_id":"900100002","status":"resolved","handled_by":"apikey:console-bridge","created_at":"2026-11-08T10:00:00Z"}]`)
+		w := routetest.New(t, routetest.Options{DB: db, API: api})
+		operator := w.As("operator")
+		for _, path := range []string{"/api/help/requests/021/accept", "/api/help/requests/022/resolve"} {
+			if got := operator.Do(http.MethodPost, path, "{}"); got.Status != http.StatusOK {
+				t.Fatalf("%s: %d %s", path, got.Status, got.Body)
+			}
+		}
+		rows := w.AuditRows()
+		if len(rows) != 2 || !strings.HasPrefix(rows[0], "help_request_accepted|Help request 21 accepted|") || !strings.HasPrefix(rows[1], "help_request_resolved|Help request 22 resolved|") {
+			t.Errorf("audit %q", rows)
+		}
+		names := acceptedBy(t, w.As("viewer").Do(http.MethodGet, "/api/help/requests", "").Body)
+		if names["21"] != "e2e_operator|" || names["22"] != "|e2e_operator" {
+			t.Errorf("names %v", names)
+		}
+	})
+}

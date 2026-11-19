@@ -6,6 +6,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/unitronix/betterdesk-server/console/jsbind"
 )
 
 // The list maps only the API server's "acknowledged" to "accepted" and
@@ -35,5 +36,24 @@ func TestNormalizeHelpRequest(t *testing.T) {
 		if string(got) != c.want {
 			t.Errorf("%s: %s, want %s", c.in, got, c.want)
 		}
+	}
+}
+
+// The memory of who accepted or resolved a help request keeps the newest
+// names only (BUGS RG11); the audit log answers for the others.
+func TestHelpActorsAreBounded(t *testing.T) {
+	a := newHelpActors()
+	for i := 0; i <= maxHelpActors; i++ {
+		a.set("help_request_accepted:"+jsbind.NumberString(float64(i)), "op")
+	}
+	if _, ok := a.get("help_request_accepted:0"); ok {
+		t.Error("the oldest name is still kept")
+	}
+	if name, ok := a.get("help_request_accepted:" + jsbind.NumberString(maxHelpActors)); !ok || name != "op" {
+		t.Error("the newest name is gone")
+	}
+	a.set("help_request_accepted:1", "other")
+	if name, _ := a.get("help_request_accepted:1"); name != "other" || len(a.names) != maxHelpActors {
+		t.Errorf("a known key set again: %q, %d names", name, len(a.names))
 	}
 }

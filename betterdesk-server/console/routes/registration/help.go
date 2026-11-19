@@ -5,6 +5,7 @@ import (
 	"math"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -25,12 +26,17 @@ const (
 	helpResolved = "help_request_resolved"
 )
 
+// maxHelpActors is how many names the memory of help request handlers
+// keeps; the oldest goes first, and the audit log answers for it.
+const maxHelpActors = 500
+
 // helpActors is the console's memory of who accepted or resolved which
 // help request: action and request id to the account's name, "" for one
-// nobody knows. Entries are never dropped, as in the old console.
+// nobody knows, at most maxHelpActors of them.
 type helpActors struct {
 	mu    sync.Mutex
 	names map[string]string
+	order []string
 }
 
 func newHelpActors() *helpActors {
@@ -47,6 +53,13 @@ func (a *helpActors) get(key string) (string, bool) {
 func (a *helpActors) set(key, name string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if _, known := a.names[key]; !known {
+		a.order = append(a.order, key)
+		if len(a.order) > maxHelpActors {
+			delete(a.names, a.order[0])
+			a.order = a.order[1:]
+		}
+	}
 	a.names[key] = name
 }
 
@@ -131,6 +144,20 @@ func helpStatus(status any) any {
 		return "accepted"
 	}
 	return orValue(status, "pending")
+}
+
+// helpActionID is the id of the request an accept or resolve was for, as
+// the list shows it: the id in the API server's answer, else the
+// address's id read as a whole number ("021" is 21), else the address's
+// id as it is.
+func helpActionID(pathID string, data any) string {
+	if id := helpRequestID(jsreq.Prop(data, "id")); id != "" {
+		return id
+	}
+	if n, err := strconv.ParseInt(pathID, 10, 64); err == nil {
+		return strconv.FormatInt(n, 10)
+	}
+	return pathID
 }
 
 // helpRequestID is the id of a help request as text: the API server's id
@@ -269,14 +296,15 @@ func (h *handlers) helpResolve(w http.ResponseWriter, r *http.Request) {
 
 // helpAction asks the API server to accept or resolve a request; 502 with
 // its error when it does not. The console writes its own audit entry and
-// remembers the account's name for the list.
+// remembers the account's name for the list, both under the request's id
+// as the list shows it (helpActionID).
 func (h *handlers) helpAction(w http.ResponseWriter, r *http.Request, action string, call func(context.Context, string) *goapi.Object, fallback string) {
-	id := r.PathValue("id")
-	result := call(r.Context(), id)
+	result := call(r.Context(), r.PathValue("id"))
 	if !result.Bool("success") {
 		failure(w, r, http.StatusBadGateway, orValue(result.Get("error"), fallback))
 		return
 	}
+	id := helpActionID(r.PathValue("id"), result.Get("data"))
 	h.audit(r, action, helpAuditDetails(action, id))
 	name := ""
 	if user := kit.User(r); user != nil {
