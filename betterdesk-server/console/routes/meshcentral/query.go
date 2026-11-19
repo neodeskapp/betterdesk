@@ -2,6 +2,7 @@ package meshcentral
 
 import (
 	"net/http"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -42,6 +43,11 @@ func (q *query) get(name string) any {
 // set gives a parameter a text value. A new parameter goes to the end.
 func (q *query) set(name, value string) {
 	q.values.set(name, value)
+}
+
+// delete removes a parameter.
+func (q *query) delete(name string) {
+	q.values.delete(name)
 }
 
 // search writes the query as the text that goes to the API server: one
@@ -144,6 +150,14 @@ func (o *object) set(key string, value any) {
 		o.order = append(o.order, key)
 	}
 	o.m[key] = value
+}
+
+func (o *object) delete(key string) {
+	if _, ok := o.m[key]; !ok {
+		return
+	}
+	delete(o.m, key)
+	o.order = slices.DeleteFunc(o.order, func(k string) bool { return k == key })
 }
 
 func (o *object) keys() []string {

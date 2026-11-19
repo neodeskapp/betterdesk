@@ -255,7 +255,8 @@ func (h *handlers) peers(w http.ResponseWriter, r *http.Request) {
 // (?guest=, ?t= or the guest cookie) or a share link (?mesh_share=). The
 // API server says whether the link is good for this device, and the
 // request goes on with its query. With a guest link the query goes on
-// without "t", with the token as "guest" unless it names one, and with
+// without "t", with the checked token as "guest", so the API server
+// checks the link again and writes the tunnel to its creator, and with
 // view_only=1 when the link only allows watching.
 func (h *handlers) desktop(w http.ResponseWriter, r *http.Request) {
 	peerID := r.PathValue("id")
@@ -288,9 +289,7 @@ func (h *handlers) desktop(w http.ResponseWriter, r *http.Request) {
 		}
 		goapipath.ProxyToGo(h.api, w, r, http.MethodPost, func() (string, error) {
 			query.Delete("t")
-			if !query.Has("guest") {
-				query.Set("guest", guest)
-			}
+			query.Set("guest", guest)
 			if grant.ViewOnly() {
 				query.Set("view_only", "1")
 			}

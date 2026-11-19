@@ -154,7 +154,9 @@ func describeCalls(calls []proxytest.Call) string {
 
 // TestVectors replays what routes/guest.routes.js of the Node console
 // answered, asked the API server, asked the device scope and told the
-// socket relay (testdata/nodeoracle/run.js).
+// socket relay (testdata/nodeoracle/run.js). The vectors a bug fix
+// changed on purpose (fixedVectors) are compared with what the fix
+// answers instead.
 func TestVectors(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("testdata", "vectors.json"))
 	if err != nil {
@@ -169,7 +171,15 @@ func TestVectors(t *testing.T) {
 	}
 	w := newWorld(t)
 	failures, spelledDifferently := 0, 0
+	used := map[string]bool{}
 	for i, v := range vectors {
+		key := vectorKey(v)
+		for bug, fixes := range fixedVectors {
+			if fix, ok := fixes[key]; ok {
+				fix(&v)
+				used[bug+" "+key] = true
+			}
+		}
 		w.scope, w.asked, w.revoked = v.Scope, nil, nil
 		rec, calls := w.Do(v.Request, v.API)
 		var problems []string
@@ -228,6 +238,13 @@ func TestVectors(t *testing.T) {
 	}
 	if failures > 20 {
 		t.Errorf("%d of %d vectors differ; the first 20 are shown", failures, len(vectors))
+	}
+	for bug, fixes := range fixedVectors {
+		for key := range fixes {
+			if !used[bug+" "+key] {
+				t.Errorf("%s: no vector %q", bug, key)
+			}
+		}
 	}
 	t.Logf("%d vectors, %d of them with a call for the API server spelled differently", len(vectors), spelledDifferently)
 }
@@ -306,6 +323,37 @@ func TestTokensWithoutATextCloseTheConnection(t *testing.T) {
 	// The console is still there
 	if closed, rec := aborted(t, w, proxytest.Request{Path: "/api/guest/access-links/peers?t=tok"}, grant); closed || rec.Code != 200 {
 		t.Errorf("a plain request afterwards: closed %v", closed)
+	}
+}
+
+// TestDesktopSendsTheCheckedTokenAsGuest: the desktop route passes the
+// token it checked on as guest, also where the query has an empty or
+// blank guest beside it, so the API server checks the link again and
+// writes the tunnel to the link's creator (BUGS.md MC3).
+func TestDesktopSendsTheCheckedTokenAsGuest(t *testing.T) {
+	w := newWorld(t)
+	body := "{}"
+	cases := []struct {
+		query, cookie, grant, sent string
+	}{
+		{"guest=&t=tok", "", `{"valid":true,"peer_ids":["dev-1"]}`, "guest=tok"},
+		{"guest=%20&x=1", "bd.guest=tok", `{"valid":true,"peer_ids":["dev-1"]}`, "guest=tok&x=1"},
+		{"t=tok&view_only=0", "", `{"valid":true,"peer_ids":["dev-1"],"view_only":true}`, "view_only=1&guest=tok"},
+		{"guest=%20tok%20", "", `{"valid":true,"peer_ids":["dev-1"]}`, "guest=tok"},
+	}
+	for _, c := range cases {
+		req := proxytest.Request{Method: "POST", Path: "/api/guest/mesh/devices/dev-1/desktop?" + c.query, Type: "application/json", Body: &body}
+		if c.cookie != "" {
+			req.Headers = map[string]string{"Cookie": c.cookie}
+		}
+		rec, calls := w.Do(req, &proxytest.Answer{Status: 200, Type: "application/json", Body: c.grant})
+		if rec.Code != 200 || len(calls) != 2 {
+			t.Errorf("?%s: %d %s, %d calls", c.query, rec.Code, rec.Body, len(calls))
+			continue
+		}
+		if got, want := calls[1].URL, "/api/mesh/devices/dev-1/desktop?"+c.sent; got != want {
+			t.Errorf("?%s: the API server got %s, want %s", c.query, got, want)
+		}
 	}
 }
 

@@ -14,9 +14,10 @@ import (
 //   - Someone with a link, signed in or not: ?mesh_share=<token> for a
 //     share link, ?guest=<token> or ?t=<token> for a guest link. The API
 //     server says whether the token is good for this device, and the
-//     request goes on with the whole query. A guest link that only allows
-//     watching adds view_only=1 unless the query already has a value for
-//     it.
+//     request goes on with the whole query. A guest link's token goes on
+//     as guest, without t, so the API server checks the link again and
+//     writes the tunnel to the link's creator; a link that only allows
+//     watching sets view_only=1, whatever the query says.
 //   - Someone signed in with device.connect. The query is not passed on.
 //
 // A share token wins over a guest token; the guest token is then not
@@ -56,7 +57,9 @@ func (h *handlers) desktop(w http.ResponseWriter, r *http.Request) {
 			kit.JSON(w, r, http.StatusForbidden, apiFailure{Error: badGuest})
 			return
 		}
-		if goapi.Truthy(goapi.Dig(grant, "view_only")) && !truthy(query.get("view_only")) {
+		query.delete("t")
+		query.set("guest", guest)
+		if goapi.Truthy(goapi.Dig(grant, "view_only")) {
 			query.set("view_only", "1")
 		}
 	}
