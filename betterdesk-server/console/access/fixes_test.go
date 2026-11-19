@@ -74,6 +74,15 @@ var ruleFixes = []ruleFix{
 	{bug: "PA3 (F11)", add: Rule{Prefix: "/api/panel/billing/timesync"}},
 	{bug: "PA3 (F11)", add: Rule{Prefix: "/api/panel/billing/clock"}},
 	{bug: "PA3 (F11)", add: Rule{Prefix: "/api/panel/commercialization", Section: "commercialization"}},
+	// The guest link routes authenticate by the link; remote targets are
+	// what the remote section's permissions are about.
+	{bug: "PA14 (F12)", add: Rule{Prefix: "/api/guest/access-links/validate"}},
+	{bug: "PA14 (F12)", add: Rule{Prefix: "/api/guest/access-links/peers"}},
+	{bug: "PA14 (F12)", add: Rule{Prefix: "/api/guest/mesh"}},
+	{bug: "PA14 (F12)", add: Rule{Prefix: "/api/remote/guest-info"}},
+	{bug: "PA14 (F12)", add: Rule{Prefix: "/api/remote/viewer"}},
+	{bug: "PA14 (F12)", add: Rule{Prefix: "/api/remote/login-info"}},
+	{bug: "PA14 (F12)", add: Rule{Prefix: "/api/remote-targets", Section: "remote"}},
 	// The reports page was listed twice.
 	{bug: "PA3 (F6), RP1", remove: Rule{Prefix: "/reports", Section: "reports"}},
 	// /attestation is the device identity page; the server attestation

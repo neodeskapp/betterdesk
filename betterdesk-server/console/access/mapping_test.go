@@ -268,3 +268,21 @@ func TestCommercializationWritesAndTheClock(t *testing.T) {
 		{"GET", "/api/panel/commercialization/plans", "billing.view", [5]string{"guard", "ok", "guard", "ok", "guard"}},
 	})
 }
+
+// PA14 (F12): the routes a guest link holder calls authenticate by the
+// link, so a signed-in account is not refused there by its sections; the
+// remote targets belong to the remote section.
+func TestGuestLinkRoutesAreExempt(t *testing.T) {
+	// viewer, operator, guest_issuer, global_admin, server_admin
+	checkRouteCases(t, []routeCase{
+		{"GET", "/api/guest/access-links/validate", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/guest/access-links/peers", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"POST", "/api/guest/mesh/devices/1/desktop", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/remote/guest-info", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/remote/viewer/D1", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/remote/login-info", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/guest/access-links", "guest.create", [5]string{"guard", "ok", "ok", "ok", "guard"}},
+		{"GET", "/api/remote-targets", "remote_target.view", [5]string{"ok", "ok", "guard", "ok", "ok"}},
+		{"POST", "/api/remote-targets", "remote_target.edit", [5]string{"guard", "route", "guard", "ok", "guard"}},
+	})
+}

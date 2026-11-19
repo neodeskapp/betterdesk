@@ -48,7 +48,7 @@ var guardPaths = []struct {
 	{"/api/settings/fonts/local", ""}, {"/api/settings/restart-status", ""}, {"/api/settings/brandingx", "settings"},
 	{"/api/settings/ldap", "settings"}, {"/api/settings/backup/stats", "settings"}, {"/api/settings/infos", "settings"},
 	{"/api/devices/ABC/rename", "devices"}, {"/api/guest/links", "guests"}, {"/devices//x", "devices"},
-	{"/api/remote/viewer/abc", "remote"}, {"/remote/login", "remote"}, {"/remote/abc", "remote"},
+	{"/api/remote/sessions", "remote"}, {"/remote/login", "remote"}, {"/remote/abc", "remote"},
 	{"/cdap/devices/1", "cdap"}, {"/server-management/", "server-management"},
 
 	// the longest rule wins
@@ -57,7 +57,7 @@ var guardPaths = []struct {
 
 	// near misses: a prefix matches only whole path segments
 	{"/devicesX", ""}, {"/usersX", ""}, {"/users-extra", ""}, {"/users.json", ""}, {"/api/usersX", ""},
-	{"/api/panel/accessories", ""}, {"/api/remote-targets", ""}, {"/api/remote-targets/1", ""},
+	{"/api/panel/accessories", ""}, {"/api/remote-targetsx", ""},
 	{"/reportsX", ""}, {"/cdapX", ""}, {"/cdap-studioX", ""}, {"/setting", ""}, {"/api/setting", ""},
 	{"/x/users", ""}, {"/app/users", ""}, {"users", ""}, {"/users%2Fx", ""}, {" /users", ""},
 	{"/users ", ""}, {"/users?tab=1", ""}, {"", ""}, {"//", ""}, {"/index", ""},

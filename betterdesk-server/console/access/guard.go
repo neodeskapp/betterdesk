@@ -128,6 +128,14 @@ var RouteRules = []Rule{
 	{Prefix: "/api/panel/billing/timesync"},
 	{Prefix: "/api/panel/billing/clock"},
 	{Prefix: "/api/panel/commercialization", Section: "commercialization"},
+	// The routes a guest link holder calls authenticate by the link.
+	{Prefix: "/api/guest/access-links/validate"},
+	{Prefix: "/api/guest/access-links/peers"},
+	{Prefix: "/api/guest/mesh"},
+	{Prefix: "/api/remote/guest-info"},
+	{Prefix: "/api/remote/viewer"},
+	{Prefix: "/api/remote/login-info"},
+	{Prefix: "/api/remote-targets", Section: "remote"},
 }
 
 const apiPrefix = "/api/"

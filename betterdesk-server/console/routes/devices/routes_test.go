@@ -191,9 +191,11 @@ func TestPermissions(t *testing.T) {
 		{"operator", "DELETE", "/api/remote-targets/rt_1/credentials", "", "remote_target.edit"},
 		{"operator", "DELETE", "/api/remote-targets/rt_1", "", "remote_target.delete"},
 		{"viewer", "GET", "/api/devices/A/connect-password", "", "device.connect"},
-		{"guest_issuer", "GET", "/api/remote-targets", "", "remote_target.view"},
-		{"guest_issuer", "GET", "/api/remote-targets/rt_1", "", "remote_target.view"},
-		{"guest_issuer", "GET", "/api/remote-targets/rt_1/credentials", "", "remote_target.view"},
+		// The remote section of the panel access guard refuses an account
+		// without remote_target.view first (PA14, F12).
+		{"guest_issuer", "GET", "/api/remote-targets", "", "section:remote"},
+		{"guest_issuer", "GET", "/api/remote-targets/rt_1", "", "section:remote"},
+		{"guest_issuer", "GET", "/api/remote-targets/rt_1/credentials", "", "section:remote"},
 	} {
 		a := agents[c.role]
 		if a == nil {
@@ -207,6 +209,9 @@ func TestPermissions(t *testing.T) {
 		api.Calls()
 		got := a.Do(c.method, c.path, c.body)
 		want := `{"success":false,"error":"Permission denied: ` + c.permission + `"}`
+		if section, guarded := strings.CutPrefix(c.permission, "section:"); guarded {
+			want = `{"success":false,"error":"Panel access denied: ` + section + `","code":"panel_access_denied"}`
+		}
 		status := http.StatusForbidden
 		if c.permission == "" {
 			want, status = `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`, http.StatusUnauthorized
