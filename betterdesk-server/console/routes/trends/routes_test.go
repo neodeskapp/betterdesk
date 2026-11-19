@@ -144,7 +144,8 @@ func TestTrendsNeedsAuditView(t *testing.T) {
 	api := routetest.NewAPI()
 	api.On("GET /api/peers", 200, `[]`)
 	w := routetest.New(t, routetest.Options{API: api, Roles: routetest.Overrides{"operator": {"audit.view": false}}})
-	if got := w.As("operator").Do("GET", "/api/reports/trends", ""); got.Status != 403 || got.Body != `{"success":false,"error":"Permission denied: audit.view"}` {
+	// The reports section of the panel access guard asks audit.view (PA3, F6).
+	if got := w.As("operator").Do("GET", "/api/reports/trends", ""); got.Status != 403 || got.Body != `{"success":false,"error":"Panel access denied: reports","code":"panel_access_denied"}` {
 		t.Errorf("without audit.view: %d %s", got.Status, got.Body)
 	}
 	if calls := api.Calls(); calls != nil {

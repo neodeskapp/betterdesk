@@ -201,8 +201,8 @@
          "source": "role"
         },
         "reports": {
-         "access": "read",
-         "role_ceiling": "read",
+         "access": "write",
+         "role_ceiling": "write",
          "source": "role"
         },
         "resource-control": {
@@ -467,8 +467,8 @@
          "source": "role"
         },
         "reports": {
-         "access": "read",
-         "role_ceiling": "read",
+         "access": "write",
+         "role_ceiling": "write",
          "source": "role"
         },
         "resource-control": {

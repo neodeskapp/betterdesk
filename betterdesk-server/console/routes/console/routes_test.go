@@ -371,7 +371,7 @@ func TestSupportersAndBootScript(t *testing.T) {
 // the navigation pages those fixes show or hide. The comparison leaves
 // them out on both sides.
 var (
-	fixedSections = map[string]string{"organizations": "PA4, G16", "cross-platform": "PA4", "network": "PA3 (F4)"}
+	fixedSections = map[string]string{"organizations": "PA4, G16", "cross-platform": "PA4", "reports": "PA3 (F6)", "network": "PA3 (F4)"}
 	fixedRules    = map[string]string{"/settings": "PA3 (F1)", "/keys": "PA3 (F1)", "/tokens": "PA3 (F1)", "/policies": "PA3 (F1)", "/client-branding": "PA3 (F1)"}
 	fixedPages    = map[string]string{
 		"cross-platform": "PA4", "network": "PA3 (F4)", "settings:general": "PA3 (F1)", "settings:branding": "PA3 (F1)", "settings:auth": "PA3 (F1)",

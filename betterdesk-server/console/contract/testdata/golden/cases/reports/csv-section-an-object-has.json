@@ -46,46 +46,14 @@
   },
   {
    "roles": [
-    "viewer"
-   ],
-   "status": 403,
-   "headers": {
-    "cache-control": "no-store",
-    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "application/json; charset=utf-8",
-    "cross-origin-resource-policy": "same-origin",
-    "etag": "<present>",
-    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
-    "x-content-type-options": "nosniff",
-    "x-dns-prefetch-control": "off",
-    "x-download-options": "noopen",
-    "x-frame-options": "DENY",
-    "x-permitted-cross-domain-policies": "none",
-    "x-xss-protection": "0"
-   },
-   "volatileHeaders": [
-    "content-disposition"
-   ],
-   "body": {
-    "kind": "json",
-    "json": {
-     "code": "panel_access_denied",
-     "error": "Panel access denied: reports",
-     "success": false
-    }
-   }
-  },
-  {
-   "roles": [
+    "viewer",
     "super_admin",
     "admin"
    ],
    "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\"",
+    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-19.csv\"",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "text/csv; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",

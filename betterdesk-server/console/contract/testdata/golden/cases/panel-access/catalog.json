@@ -334,8 +334,8 @@
         "group": "operations",
         "key": "reports",
         "label": "Reports",
-        "readPermission": "metrics.view",
-        "writePermission": null
+        "readPermission": "audit.view",
+        "writePermission": "audit.view"
        },
        {
         "group": "operations",

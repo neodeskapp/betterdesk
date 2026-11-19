@@ -155,7 +155,7 @@ func TestHasPermissionRules(t *testing.T) {
 		{"and at write", Context{Role: "operator", Section: "guests", Policy: policyWith("guests", LevelWrite), Permissions: set("guest.create")}, "guest.create", true},
 		{"and not at none", Context{Role: "operator", Section: "guests", Policy: policyWith("guests", LevelNone), Permissions: set("guest.create")}, "guest.create", false},
 		{"other permissions are not the section's business", Context{Role: "operator", Section: "devices", Policy: policyWith("devices", LevelNone), Permissions: set("user.view")}, "user.view", true},
-		{"a section without a write permission", Context{Role: "viewer", Section: "reports", Policy: policyWith("reports", LevelRead), Permissions: set("metrics.view")}, "metrics.view", true},
+		{"a section without a write permission", Context{Role: "viewer", Section: "activity", Policy: policyWith("activity", LevelRead), Permissions: set("audit.view")}, "audit.view", true},
 		{"toolkit's permissions", Context{Role: "viewer", Section: "toolkit", Policy: policyWith("toolkit", LevelRead), Permissions: set("device.connect", "device.edit")}, "device.edit", false},
 		{"a level in odd spelling counts", Context{Role: "viewer", Section: "devices", Policy: policyWith("devices", " WRITE "), Permissions: set("device.edit")}, "device.edit", true},
 		{"a section the policy lacks falls through", Context{Role: "viewer", Section: "devices", Policy: &Policy{}, Permissions: set("device.edit")}, "device.edit", true},

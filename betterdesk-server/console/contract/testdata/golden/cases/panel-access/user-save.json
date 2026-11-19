@@ -338,8 +338,8 @@
          "source": "role"
         },
         "reports": {
-         "access": "read",
-         "role_ceiling": "read",
+         "access": "write",
+         "role_ceiling": "write",
          "source": "user"
         },
         "resource-control": {
@@ -441,7 +441,7 @@
         "resource_key": "tickets"
        },
        {
-        "access_level": "read",
+        "access_level": "write",
         "resource_key": "reports"
        },
        {

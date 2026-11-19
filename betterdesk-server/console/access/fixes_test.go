@@ -70,6 +70,8 @@ var ruleFixes = []ruleFix{
 	{bug: "PA3 (F4)", add: Rule{Prefix: "/api/network/tcp", Section: "toolkit"}},
 	{bug: "PA3 (F4)", add: Rule{Prefix: "/api/network/http", Section: "toolkit"}},
 	{bug: "PA3 (F4)", add: Rule{Prefix: "/api/network/resolve", Section: "toolkit"}},
+	// The reports page was listed twice.
+	{bug: "PA3 (F6), RP1", remove: Rule{Prefix: "/reports", Section: "reports"}},
 }
 
 // sectionFix is a catalog section whose permissions differ from Node's.
@@ -88,6 +90,8 @@ var sectionFixes = []sectionFix{
 	// Reading targets and status asks device.view, changing them
 	// server.config.
 	{bug: "PA3 (F4)", key: "network", read: "device.view", write: "server.config"},
+	// Every reports route asks audit.view, also the writes.
+	{bug: "PA3 (F6), RP1", key: "reports", read: "audit.view", write: "audit.view"},
 }
 
 // nodeTables returns the guard's rules and the catalog's sections as the

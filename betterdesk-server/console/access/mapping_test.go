@@ -166,6 +166,32 @@ func TestSettingsAuditIsTheSecurityAuditsTrail(t *testing.T) {
 	}
 }
 
+// PA3 (F6) with the guard half of RP1: every reports route asks
+// audit.view, the generating POSTs too, so the reports section is
+// audit.view for reading and writing. global_admin, whom the save and
+// delete routes let in, passes the guard.
+func TestReportsAskAuditView(t *testing.T) {
+	// viewer, operator, guest_issuer, global_admin, server_admin
+	checkRouteCases(t, []routeCase{
+		{"GET", "/api/reports/types", "audit.view", [5]string{"ok", "ok", "guard", "ok", "ok"}},
+		{"POST", "/api/reports/generate", "audit.view", [5]string{"ok", "ok", "guard", "ok", "ok"}},
+		{"POST", "/api/reports/generate/csv", "audit.view", [5]string{"ok", "ok", "guard", "ok", "ok"}},
+		{"POST", "/api/reports/save", "", [5]string{"ok", "ok", "guard", "ok", "ok"}},
+		{"DELETE", "/api/reports/saved/1", "", [5]string{"ok", "ok", "guard", "ok", "ok"}},
+	})
+	if got := PageRules(); len(got) == 0 || func() int {
+		n := 0
+		for _, rule := range got {
+			if rule.Prefix == "/reports" {
+				n++
+			}
+		}
+		return n
+	}() != 1 {
+		t.Errorf("the reports page must have one rule: %+v", got)
+	}
+}
+
 // PA3 (F3): a person's own profile, the profile pictures and the person's
 // own effective policy need a session only; another account's picture
 // stays in the users section.

@@ -24,8 +24,9 @@ var reads = []struct{ method, path, body string }{
 
 // TestReadsNeedAuditView: reading and generating reports needs audit.view,
 // as the Reports page does. A guest link issuer and a pro account get 403
-// everywhere; an account whose role lost audit.view gets the route's own
-// 403; roles that have it list the types.
+// everywhere; an account whose role lost audit.view is refused by the
+// reports section of the panel access guard, which asks audit.view too
+// (PA3, F6); roles that have it list the types.
 func TestReadsNeedAuditView(t *testing.T) {
 	w := routetest.New(t, routetest.Options{Roles: replay.RoleOverrides{"operator": {"audit.view": false}, "admin": {"audit.view": false}}})
 	for _, role := range []string{"guest_issuer", "pro"} {
@@ -42,7 +43,7 @@ func TestReadsNeedAuditView(t *testing.T) {
 			continue
 		}
 		got := operator.Do(r.method, r.path, r.body)
-		if got.Status != 403 || got.Body != `{"success":false,"error":"Permission denied: audit.view"}` {
+		if got.Status != 403 || got.Body != `{"success":false,"error":"Panel access denied: reports","code":"panel_access_denied"}` {
 			t.Errorf("%s %s as operator without audit.view: %d %s", r.method, r.path, got.Status, got.Body)
 		}
 	}
@@ -110,12 +111,12 @@ func TestSaveAndDeleteCheckTheRoleOnly(t *testing.T) {
 	}
 }
 
-// TestNoPolicyOpensReportWritesBelowTheSuperAdmins: a panel access row
-// that sets the reports section to write is capped at the role's level,
-// and reports has no write permission, so the role reaches read at most.
-// The panel guard refuses every write for global_admin and server_admin,
-// before the route's own role check; the super admins save and delete.
-func TestNoPolicyOpensReportWritesBelowTheSuperAdmins(t *testing.T) {
+// TestReportWritesFollowTheRouteRoles: the reports section asks audit.view
+// for writing too (PA3, F6, the guard half of RP1), so a panel access row
+// at write lets global_admin and server_admin past the guard, and the
+// route's own role check decides: global_admin saves and deletes,
+// server_admin is refused.
+func TestReportWritesFollowTheRouteRoles(t *testing.T) {
 	w := routetest.New(t, routetest.Options{})
 	for _, id := range []string{"3", "4"} {
 		if _, err := w.DB.Exec(context.Background(), `INSERT INTO panel_access_policies (subject_type, subject_id, resource_key, access_level, updated_at)
@@ -134,17 +135,19 @@ func TestNoPolicyOpensReportWritesBelowTheSuperAdmins(t *testing.T) {
 		t.Fatal(err)
 	}
 	path := "/api/reports/saved/" + jsonNumber(saved.ID)
-	denied := `{"success":false,"error":"Panel access denied: reports","code":"panel_access_denied"}`
-	for _, role := range []string{"global_admin", "server_admin"} {
-		if got := w.As(role).Do("POST", "/api/reports/save", `{"type":"alerts"}`); got.Status != 403 || got.Body != denied {
-			t.Errorf("save as %s: %d %s", role, got.Status, got.Body)
-		}
-		if got := w.As(role).Do("DELETE", path, ""); got.Status != 403 || got.Body != denied {
-			t.Errorf("delete as %s: %d %s", role, got.Status, got.Body)
-		}
+	server := w.As("server_admin")
+	if got := server.Do("POST", "/api/reports/save", `{"type":"alerts"}`); got.Status != 403 || got.Body != `{"error":"Admin access required"}` {
+		t.Errorf("save as server_admin: %d %s", got.Status, got.Body)
 	}
-	if got := w.As("super_admin").Do("DELETE", path, ""); got.Status != 200 || got.Body != `{"ok":true}` {
-		t.Errorf("delete as super_admin: %d %s", got.Status, got.Body)
+	if got := server.Do("DELETE", path, ""); got.Status != 403 || got.Body != `{"error":"Admin access required"}` {
+		t.Errorf("delete as server_admin: %d %s", got.Status, got.Body)
+	}
+	global := w.As("global_admin")
+	if got := global.Do("POST", "/api/reports/save", `{"type":"alerts"}`); got.Status != 201 || !strings.Contains(got.Body, `"created_by":"e2e_global_admin"`) {
+		t.Errorf("save as global_admin: %d %s", got.Status, got.Body)
+	}
+	if got := global.Do("DELETE", path, ""); got.Status != 200 || got.Body != `{"ok":true}` {
+		t.Errorf("delete as global_admin: %d %s", got.Status, got.Body)
 	}
 }
 

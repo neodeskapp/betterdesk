@@ -89,7 +89,7 @@ func TestLegacySectionCeiling(t *testing.T) {
 		{"activity", has, false, LevelNone},
 		{"devices", never, true, LevelWrite},
 		{"dashboard", has, false, LevelRead},                                          // no write permission exists
-		{"reports", newPermissionSet([]string{"metrics.view"}).Has, false, LevelRead}, // no write permission exists
+		{"activity", newPermissionSet([]string{"audit.view"}).Has, false, LevelRead},  // no write permission exists
 		{"devices", newPermissionSet([]string{"device.view"}).Has, false, LevelRead},  // read only
 		{"devices", newPermissionSet([]string{"device.edit"}).Has, false, LevelWrite}, // write does not need read
 		{"toolkit", newPermissionSet([]string{"server.config"}).Has, false, LevelNone},
@@ -134,7 +134,7 @@ func TestCatalogContents(t *testing.T) {
 	}
 
 	// Sections without a write permission say null in JSON.
-	for _, key := range []string{"dashboard", "activity", "reports"} {
+	for _, key := range []string{"dashboard", "activity"} {
 		entry, _ := CatalogEntry(key)
 		body, err := json.Marshal(entry)
 		if err != nil {

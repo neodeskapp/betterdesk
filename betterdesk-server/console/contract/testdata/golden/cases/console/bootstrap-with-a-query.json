@@ -182,8 +182,8 @@
        },
        {
         "key": "reports",
-        "read": "metrics.view",
-        "write": null
+        "read": "audit.view",
+        "write": "audit.view"
        },
        {
         "key": "agents",
@@ -373,10 +373,6 @@
         "section": "commercialization"
        },
        {
-        "prefix": "/reports",
-        "section": "reports"
-       },
-       {
         "prefix": "/activity",
         "section": "activity"
        }
@@ -403,7 +399,7 @@
        "permissions": "none",
        "registrations": "none",
        "remote": "read",
-       "reports": "read",
+       "reports": "write",
        "resource-control": "none",
        "scaling": "none",
        "security-audit": "read",
@@ -1033,8 +1029,8 @@
        },
        {
         "key": "reports",
-        "read": "metrics.view",
-        "write": null
+        "read": "audit.view",
+        "write": "audit.view"
        },
        {
         "key": "agents",
@@ -1222,10 +1218,6 @@
        {
         "prefix": "/commercialization",
         "section": "commercialization"
-       },
-       {
-        "prefix": "/reports",
-        "section": "reports"
        },
        {
         "prefix": "/activity",
