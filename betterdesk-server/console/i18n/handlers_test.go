@@ -574,3 +574,33 @@ func TestPanelRoutesOnRealFilesLikeNode(t *testing.T) {
 		}
 	}
 }
+
+// panelAnswers sends the overview and the missing keys of one language to
+// handlers on dir.
+func panelAnswers(t testing.TB, dir, code string) (overview, missing answer) {
+	t.Helper()
+	h, _, _ := handlersFor(t, dir, time.Now())
+	srv := httptest.NewServer(routes(h))
+	defer srv.Close()
+	return do(t, srv.URL, "GET", "/api/panel/languages", nil, nil, 0), do(t, srv.URL, "GET", "/api/panel/languages/"+code+"/missing", nil, nil, 0)
+}
+
+// A language file with a byte order mark reads on the translations page as
+// it does without one, as the loader reads it (BUGS.md L12).
+func TestPanelLanguagesReadsFileWithByteOrderMark(t *testing.T) {
+	content := `{"meta":{"name":"French","native_name":"Français"},"a":"A-fr","extra":"x"}`
+	var answers [2][2]answer
+	for i, text := range []string{content, byteOrderMark + content} {
+		dir := copyDir(t, "testdata/lang-upload")
+		if err := os.WriteFile(filepath.Join(dir, "fr.json"), []byte(text), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		answers[i][0], answers[i][1] = panelAnswers(t, dir, "fr")
+	}
+	plain, marked := answers[0], answers[1]
+	for i, what := range []string{"overview", "missing keys"} {
+		if marked[i].status != 200 || marked[i].status != plain[i].status || marked[i].body != plain[i].body {
+			t.Errorf("%s with the mark: %d %s\nwithout: %d %s", what, marked[i].status, short(marked[i].body), plain[i].status, short(plain[i].body))
+		}
+	}
+}

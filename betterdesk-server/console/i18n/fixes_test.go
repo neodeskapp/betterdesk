@@ -1,6 +1,9 @@
 package i18n
 
 import (
+	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -64,6 +67,10 @@ var vectorFixes = []vectorFix{
 		"extended file name other charset": "extended file name",
 		"code with other charset":          "code latin1",
 	})},
+
+	// The translations page reads a file with a byte order mark as it
+	// reads the same file without one.
+	{"L12", "panel-edge.json", markedFileRead},
 }
 
 // fixedVectors reads a file of vectors with every fix applied.
@@ -294,6 +301,96 @@ func parserRefusalsAre4xx(t testing.TB, file any) int {
 		}
 		if ok && setAll(c, "status", float64(status), "body", `{"success":false,"error":"`+message+`"}`) {
 			n++
+		}
+	}
+	return n
+}
+
+// --- the translations page ---
+
+// panelFolder makes the folder of a vector of panel-edge.json: the edge
+// fixture with the vector's files removed and written.
+func panelFolder(t testing.TB, c any) string {
+	t.Helper()
+	dir := copyDir(t, "testdata/lang-edge")
+	for _, f := range strs(c, "removeFiles") {
+		if err := os.RemoveAll(filepath.Join(dir, f)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if o, ok := at(c, "write").(*Object); ok {
+		for _, k := range o.Keys() {
+			if err := os.WriteFile(filepath.Join(dir, k), []byte(str(o, k)), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	return dir
+}
+
+// panelAnswer is the answer to the vector's request on dir.
+func panelAnswer(t testing.TB, dir string, c any) answer {
+	t.Helper()
+	h, _, _ := handlersFor(t, dir, time.Now())
+	srv := httptest.NewServer(routes(h))
+	defer srv.Close()
+	return do(t, srv.URL, str(c, "method"), str(c, "path"), nil, nil, 0)
+}
+
+func isOverview(c any) bool {
+	return str(c, "method") == "GET" && str(c, "path") == "/api/panel/languages"
+}
+
+// answerPanel sets a panel vector's answer.
+func answerPanel(c any, status int, body string) bool {
+	return setAll(c, "status", float64(status), "body", body, "etag", httpx.ETag([]byte(body)))
+}
+
+// withRow is an overview's body with the row of code taken from another
+// overview of the same folder.
+func withRow(t testing.TB, body, from, code string) string {
+	t.Helper()
+	rowOf := func(overview any) (int, any) {
+		for i, row := range list(overview, "languages") {
+			if str(row, "code") == code {
+				return i, row
+			}
+		}
+		t.Fatalf("no row of %s in %s", code, short(stringify(overview, "")))
+		return 0, nil
+	}
+	out, source := mustParse(t, body), mustParse(t, from)
+	i, _ := rowOf(out)
+	_, row := rowOf(source)
+	list(out, "languages")[i] = row
+	return stringify(out, "")
+}
+
+// markedFileRead rewrites what the edge fixture's de.json, which starts
+// with a byte order mark, changes: its row in the overview and its
+// missing keys are those of the same file without the mark.
+func markedFileRead(t testing.TB, file any) int {
+	n := 0
+	for _, c := range list(file) {
+		dir := panelFolder(t, c)
+		de := filepath.Join(dir, "de.json")
+		raw, err := os.ReadFile(de)
+		if err != nil || !strings.HasPrefix(string(raw), byteOrderMark) {
+			continue
+		}
+		if err := os.WriteFile(de, raw[len(byteOrderMark):], 0o644); err != nil {
+			t.Fatal(err)
+		}
+		plain := panelAnswer(t, dir, c)
+		switch {
+		case isOverview(c) && num(c, "status") == 200 && plain.status == 200 && strings.Contains(str(c, "body"), `"code":"de"`):
+			if answerPanel(c, 200, withRow(t, str(c, "body"), plain.body, "de")) {
+				n++
+			}
+		case str(c, "path") == "/api/panel/languages/de/missing" && num(c, "status") == 500 && plain.status == 200:
+			if answerPanel(c, 200, plain.body) {
+				n++
+			}
 		}
 	}
 	return n

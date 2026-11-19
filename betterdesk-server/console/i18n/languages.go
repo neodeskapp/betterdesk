@@ -63,14 +63,14 @@ func flatten(data any, prefix string, out *flatKeys) error {
 
 func newFlatKeys() *flatKeys { return &flatKeys{values: map[string]string{}} }
 
-// readJSONFile reads and parses a file without dropping a byte order mark,
-// so a file with one does not parse. message is the error in Node's words.
+// readJSONFile reads and parses a file; a byte order mark at its start is
+// dropped, as the loader drops it. message is the error in Node's words.
 func (b *Bundle) readJSONFile(path string) (data any, message string, ok bool) {
 	raw, err := b.readFile(path)
 	if err != nil {
 		return nil, nodeFSMessage(err, "read", path), false
 	}
-	data, err = parseJSON(decodeUTF8(raw))
+	data, err = parseJSON(strings.TrimPrefix(decodeUTF8(raw), byteOrderMark))
 	if err != nil {
 		return nil, err.Error(), false
 	}
