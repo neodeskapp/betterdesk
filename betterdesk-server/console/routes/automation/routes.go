@@ -221,10 +221,11 @@ func (h *handlers) rule(w http.ResponseWriter, r *http.Request) {
 }
 
 // updateRule answers PATCH rules/{id}: every member of the body that
-// names a field of a rule is written, null included. The name has to be a
-// text, the type and the comparison one of theirs, and the fields of
-// wrongType have their type. enabled is stored by its truth, so "false"
-// turns a rule on.
+// names a field of a rule is written, null included, with the checks of
+// the create. The name has to be a text that is not blank, the type, the
+// comparison and the severity one of theirs, the fields of wrongType have
+// their type, and condition_value is not null. enabled is read as on a
+// new rule: off for false, 0, "0" and "false".
 func (h *handlers) updateRule(w http.ResponseWriter, r *http.Request) {
 	rule, err := ruleByID(r.Context(), h.db, number(r, "id"))
 	if err != nil {
@@ -239,7 +240,7 @@ func (h *handlers) updateRule(w http.ResponseWriter, r *http.Request) {
 	var changes []change
 	if body.Has("name") {
 		name := jsbind.Of(body.Get("name"))
-		if !name.IsString() {
+		if !name.IsString() || jsbind.Trim(name.Str()) == "" {
 			fail(w, r, http.StatusBadRequest, "Rule name is required")
 			return
 		}
@@ -268,13 +269,22 @@ func (h *handlers) updateRule(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, refused)
 		return
 	}
+	if body.Has("severity") && !oneOf(severities, jsbind.Of(body.Get("severity"))) {
+		fail(w, r, http.StatusBadRequest, "Invalid severity")
+		return
+	}
+	// The column takes no NULL
+	if body.Has("condition_value") && jsbind.Of(body.Get("condition_value")).IsNull() {
+		fail(w, r, http.StatusBadRequest, "Invalid condition_value")
+		return
+	}
 	for _, column := range []string{"condition_value", "severity", "scope_device_id", "cooldown_secs", "notify_emails"} {
 		if body.Has(column) {
 			changes = append(changes, change{column, jsbind.Of(body.Get(column))})
 		}
 	}
 	if body.Has("enabled") {
-		changes = append(changes, change{"enabled", flag(h.db, body.Truthy("enabled"))})
+		changes = append(changes, change{"enabled", flag(h.db, !turnedOff(jsbind.Of(body.Get("enabled"))))})
 	}
 	if err := updateRule(r.Context(), h.db, rule.number("id"), changes); err != nil {
 		h.serverError(w, r, "Rule update error", err)
