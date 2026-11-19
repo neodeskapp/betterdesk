@@ -25,4 +25,8 @@ var fixes = map[string]fix{
 			`"capabilities":{"desktop":true,"files":true,"clipboard":true,"audio":true,"terminal":true,"restart":true},"default_lang":"en",` +
 			`"server_host":"h.example","use_https":true,"server":{"address":"https://h.example:21114","api_url":"https://h.example:21114",` +
 			`"public_key":"AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwM="}}},"errors":["accent_color_invalid"]}`},
+	// A change without a profile of a bundle whose stored profile is null
+	// starts from the default profile, which asks for the server's host.
+	"148 PUT /api/generator/bundles/nullbr00001": {bug: "GN3", status: 400,
+		answer: `{"success":false,"error":"Validation failed","errors":["server_host_required"],"details":["server_host_required"]}`},
 }

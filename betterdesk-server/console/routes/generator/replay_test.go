@@ -330,3 +330,28 @@ func TestChangedBundleWithoutSlugGetsOne(t *testing.T) {
 	})
 }
 
+// TestUpdateBundleWithNullProfile starts a change that brings no profile
+// from the default profile when the stored one is JSON but no object, as
+// for stored text that is no JSON, so the server's host is asked for
+// (BUGS GN3: a stored null answered 500). With a profile the change goes
+// through.
+func TestUpdateBundleWithNullProfile(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		var dataDir string
+		w := replay.NewWorld(t, db, func(cfg *config.Config) { dataDir = cfg.DataDir })
+		ready(t, w, dataDir)
+		const hostRequired = `{"success":false,"error":"Validation failed","errors":["server_host_required"],"details":["server_host_required"]}`
+		for i, stored := range []string{"null", "[]", "5", `"text"`, "no json"} {
+			id := "nullbr0000" + strconv.Itoa(i)
+			w.Exec(`INSERT INTO agent_bundles (bundle_id, slug, name, branding, branding_hash) VALUES (?, ?, 'Null', ?, '')`, []any{id, "null-" + strconv.Itoa(i), stored})
+			if got := w.Do(replay.Request{Role: "admin", Method: "PUT", Path: "/api/generator/bundles/" + id, Body: replay.Text(`{"name":"Null changed"}`)}); got.Status != 400 || got.Body != hostRequired {
+				t.Errorf("stored %s: %d %s", stored, got.Status, got.Body)
+			}
+		}
+		got := w.Do(replay.Request{Role: "admin", Method: "PUT", Path: "/api/generator/bundles/nullbr00000",
+			Body: replay.Text(`{"name":"Null changed","branding":{"server_host":"h.example"}}`)})
+		if slug, _ := bundleSlug(t, got); slug != "null-0" {
+			t.Errorf("with a profile: %d %s", got.Status, got.Body)
+		}
+	})
+}

@@ -441,7 +441,7 @@ func (h *handlers) updateBundle(w http.ResponseWriter, r *http.Request) {
 		h.fail(w, r, http.StatusBadRequest, "generator.errors.name_required")
 		return
 	}
-	validation, err := gen.ValidateBranding(or(prop(body, "branding"), gen.ParseStoredBranding(existing.Branding)), h.serverInfo.DefaultRelayPort)
+	validation, err := gen.ValidateBranding(or(prop(body, "branding"), gen.StoredProfile(existing.Branding)), h.serverInfo.DefaultRelayPort)
 	if err != nil {
 		h.serverError(w, r, "update bundle", err)
 		return

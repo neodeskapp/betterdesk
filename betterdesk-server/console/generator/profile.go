@@ -66,6 +66,16 @@ func ParseStoredBranding(text string) any {
 	return v
 }
 
+// StoredProfile is the profile a change of a bundle starts from when the
+// request brings none: the stored one when it is an object, else the
+// default profile, as for a column that is no JSON.
+func StoredProfile(text string) any {
+	if v, isObject := ParseStoredBranding(text).(*goapi.Object); isObject && v != nil {
+		return v
+	}
+	return DefaultBranding()
+}
+
 // PlatformList is platforms as a request lists them.
 func PlatformList(platforms []Platform) []any { return platformList(platforms) }
 
