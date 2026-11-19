@@ -4,10 +4,8 @@
 //
 // The console and the signal server share one users table, so nothing is
 // copied to the signal server: a write here is the write the server
-// sees. Values of a request go to the database as the request gave them,
-// as they always did: a username that is a number or a list passes the
-// username rule by its text and is stored the way each database's driver
-// stores such a value.
+// sees. A new account's username is text: a number, a flag, a list or an
+// object is refused.
 //
 // Creating an account and resetting a password count against the limit
 // of password changes (three in five minutes per address), which the

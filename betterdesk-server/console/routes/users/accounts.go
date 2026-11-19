@@ -231,7 +231,7 @@ var usernamePattern = regexp.MustCompile(`^[A-Za-z0-9_.@-]{3,64}$`)
 // createdAccount is the answer to a new account.
 type createdAccount struct {
 	ID         store.Int64String `json:"id"`
-	Username   json.RawMessage   `json:"username"`
+	Username   string            `json:"username"`
 	Role       string            `json:"role"`
 	Email      *string           `json:"email,omitempty"`
 	UserGroups []string          `json:"user_groups"`
@@ -253,8 +253,8 @@ func isUniqueViolation(err error) bool {
 
 // create answers POST /api/users with the body {"username", "password",
 // "role", "email", "groupGuids", "folderIds", "peerIds", "strategyGuid"}.
-// What it checks, in order: both given, the username's form, that it is
-// free, the user group guids, the password's strength, the role the
+// What it checks, in order: both given, the username's form (text only),
+// that it is free, the user group guids, the password's strength, the role the
 // caller may give. Then the account is written, its groups, its email
 // (which is checked only then), its device scope, and the audit entry.
 func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
@@ -285,14 +285,11 @@ func (h *handlers) createAccount(r *http.Request) (*createdAccount, error) {
 	if !username.Truthy() || !password.Truthy() {
 		return nil, sayKey(r, http.StatusBadRequest, "users.fill_required")
 	}
-	name, err := text(username)
-	if err != nil {
-		return nil, err
-	}
-	if !usernamePattern.MatchString(name) {
+	if !username.IsString() || !usernamePattern.MatchString(username.Str()) {
 		return nil, sayKey(r, http.StatusBadRequest, "users.invalid_username")
 	}
-	taken, err := usernameTaken(ctx, h.d.Store, username)
+	name := username.Str()
+	taken, err := usernameTaken(ctx, h.d.Store, name)
 	if err != nil {
 		return nil, err
 	}
@@ -324,7 +321,7 @@ func (h *handlers) createAccount(r *http.Request) (*createdAccount, error) {
 	if err != nil {
 		return nil, err
 	}
-	id, err := insertAccount(ctx, h.d.Store, username, hash, assigned)
+	id, err := insertAccount(ctx, h.d.Store, name, hash, assigned)
 	if err != nil {
 		return nil, err
 	}
@@ -349,15 +346,9 @@ func (h *handlers) createAccount(r *http.Request) (*createdAccount, error) {
 	if err := h.d.LogAction(r, "user_created", "Created user: "+name+" ("+assigned+")"); err != nil {
 		return nil, err
 	}
-	out := &createdAccount{
-		ID: id, Username: json.RawMessage(username.JSON()), Role: assigned, Email: saved, UserGroups: groups,
-		FolderIDs: []int64{},
-	}
-	// Access lists hold text: a username of another type is on none
-	if username.IsString() {
-		if out.FolderIDs, err = h.d.Access.UserFolderIDs(ctx, username.Str()); err != nil {
-			return nil, err
-		}
+	out := &createdAccount{ID: id, Username: name, Role: assigned, Email: saved, UserGroups: groups}
+	if out.FolderIDs, err = h.d.Access.UserFolderIDs(ctx, name); err != nil {
+		return nil, err
 	}
 	if out.PeerGrants, err = h.d.Access.UserPeerGrantIDs(ctx, id.V); err != nil {
 		return nil, err

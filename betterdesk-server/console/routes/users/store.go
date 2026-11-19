@@ -13,8 +13,7 @@ import (
 )
 
 // The queries on accounts and their strategy assignments that only this
-// group makes. Values that came from a request are jsbind values and are
-// bound as the old console's driver bound them.
+// group makes.
 
 // account is a row of the users table with the columns the routes read,
 // each as the database's driver handed it to the old console.
@@ -91,15 +90,11 @@ func accountByID(ctx context.Context, db *store.DB, id float64) (*account, error
 	return accounts[0], nil
 }
 
-// usernameTaken reports whether an account has the username, given as the
-// request gave it (getUserByUsername).
-func usernameTaken(ctx context.Context, db *store.DB, username jsbind.Value) (bool, error) {
-	args, err := jsbind.Args(db.Dialect(), 1, username)
-	if err != nil {
-		return false, err
-	}
+// usernameTaken reports whether an account has the username
+// (getUserByUsername).
+func usernameTaken(ctx context.Context, db *store.DB, username string) (bool, error) {
 	var one int
-	err = db.QueryRow(ctx, `SELECT 1 FROM users WHERE username = ?`, args...).Scan(&one)
+	err := db.QueryRow(ctx, `SELECT 1 FROM users WHERE username = ?`, username).Scan(&one)
 	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil
 	}
@@ -111,12 +106,8 @@ func usernameTaken(ctx context.Context, db *store.DB, username jsbind.Value) (bo
 
 // insertAccount stores a local account and returns its id as the users
 // table's id column sends it (createUser).
-func insertAccount(ctx context.Context, db *store.DB, username jsbind.Value, passwordHash, role string) (store.Int64String, error) {
-	args, err := jsbind.Args(db.Dialect(), 4, username, jsbind.String(passwordHash), jsbind.String(role), jsbind.String("local"))
-	if err != nil {
-		return store.Int64String{}, err
-	}
-	id, err := db.Insert(ctx, `INSERT INTO users (username, password_hash, role, auth_provider) VALUES (?, ?, ?, ?)`, args...)
+func insertAccount(ctx context.Context, db *store.DB, username, passwordHash, role string) (store.Int64String, error) {
+	id, err := db.Insert(ctx, `INSERT INTO users (username, password_hash, role, auth_provider) VALUES (?, ?, ?, 'local')`, username, passwordHash, role)
 	if err != nil {
 		return store.Int64String{}, fmt.Errorf("create user: %w", err)
 	}

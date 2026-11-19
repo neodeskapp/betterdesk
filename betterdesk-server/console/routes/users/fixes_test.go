@@ -29,12 +29,37 @@ type fix struct {
 // is answers the same text on every database.
 func is(answer string) func(string) string { return func(string) string { return answer } }
 
-const roleAboveOwn = `{"success":false,"error":"Cannot assign a role higher than your own"}`
+const (
+	roleAboveOwn    = `{"success":false,"error":"Cannot assign a role higher than your own"}`
+	invalidUsername = `{"success":false,"error":"A username has 3 to 32 characters: letters, numbers and underscores only."}`
+)
 
 // fixes are the steps the Go console answers otherwise, by the step's
 // name. The names of the steps before the renames (section 9 of the
 // oracle) are the same on every database shape.
 var fixes = map[string]fix{
+	// A username that is no text: Node created viewers named as each
+	// database's driver stored the value; true failed on SQLite.
+	"190 POST /api/users": {bug: "US6", status: http.StatusBadRequest, answer: is(invalidUsername), node: func(n *nodeWrites) {
+		n.createdAccount(22, n.pick("12345.0", "12345"), "12345")
+	}},
+	"191 POST /api/users": {bug: "US6", status: http.StatusBadRequest, answer: is(invalidUsername), node: func(n *nodeWrites) {
+		n.createdAccount(23, "1.5", "1.5")
+	}},
+	"192 POST /api/users": {bug: "US6", status: http.StatusBadRequest, answer: is(invalidUsername), node: func(n *nodeWrites) {
+		if n.p.db.IsPostgres() {
+			n.createdAccount(24, "true", "true")
+		}
+	}},
+	"193 POST /api/users": {bug: "US6", status: http.StatusBadRequest, answer: is(invalidUsername), node: func(n *nodeWrites) {
+		if n.p.db.IsPostgres() {
+			n.createdAccount(25, `{"abc"}`, "abc")
+		} else {
+			n.createdAccount(24, "abc", "abc")
+		}
+	}},
+	"196 POST /api/users": {bug: "US6", status: http.StatusBadRequest, answer: is(invalidUsername)},
+
 	// global_admin changes and deletes accounts above its own role. Once
 	// Node made target_super a viewer, global_admin may change it.
 	"363 PATCH /api/users/12": {bug: "US1", status: http.StatusForbidden, answer: is(roleAboveOwn), node: func(n *nodeWrites) {
@@ -76,6 +101,26 @@ func (n *nodeWrites) audit(action, details string) {
 	if err := d.Audit.Write(context.Background(), routetest.RoleIDs[n.step.Role], action, details, n.step.Headers["X-Forwarded-For"]); err != nil {
 		n.p.t.Fatalf("step %q, Node's audit entry: %v", n.step.Name, err)
 	}
+}
+
+// pick is the value for SQLite or for PostgreSQL.
+func (n *nodeWrites) pick(sqlite, postgres string) string {
+	if n.p.db.IsPostgres() {
+		return postgres
+	}
+	return sqlite
+}
+
+// createdAccount stores the viewer a create made, with its id, as the
+// username was stored and with the audit entry that names it as it was
+// sent. PostgreSQL's id sequence moves past it.
+func (n *nodeWrites) createdAccount(id int64, stored, sent string) {
+	n.p.t.Helper()
+	n.exec(`INSERT INTO users (id, username, password_hash, role, auth_provider) VALUES (?, ?, 'set by Node', 'viewer', 'local')`, id, stored)
+	if n.p.db.IsPostgres() {
+		n.exec(`SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users))`)
+	}
+	n.audit("user_created", "Created user: "+sent+" (viewer)")
 }
 
 // deleteAccount deletes an account as the route does: its panel access

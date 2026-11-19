@@ -217,6 +217,47 @@ func TestCannotChangeAnAccountAboveYourRole(t *testing.T) {
 	})
 }
 
+// A new account's username is text: a number, flag, list or object is
+// refused before anything is looked up or written, so a list named like
+// an existing account cannot get past the "taken" check on PostgreSQL
+// and empty that account's folders (BUGS US6).
+func TestUsernameMustBeText(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		w := world(t, storetest.Prepare(t, db, storetest.GoServerFirst), routetest.Options{})
+		ctx := context.Background()
+		if db.IsPostgres() {
+			if _, err := db.Exec(ctx, `SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users))`); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if _, err := db.Exec(ctx, `INSERT INTO folders (name) VALUES ('Office')`); err != nil {
+			t.Fatal(err)
+		}
+		admin := w.As("admin")
+		expect(t, "abc", admin.Do("POST", "/api/users", `{"username":"abc","password":"Strong-Pass-1!","folderIds":[1]}`, "X-Forwarded-For", "10.4.0.1"), 200, "")
+		var before int
+		if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM users`).Scan(&before); err != nil {
+			t.Fatal(err)
+		}
+		const invalid = `{"success":false,"error":"A username has 3 to 32 characters: letters, numbers and underscores only."}`
+		for i, username := range []string{`12345`, `1.5`, `true`, `["abc"]`, `["ab","cd"]`, `{}`, `{"toString":"x"}`} {
+			got := admin.Do("POST", "/api/users", `{"username":`+username+`,"password":"Strong-Pass-1!","folderIds":[]}`, "X-Forwarded-For", "10.4.1."+strconv.Itoa(i+1))
+			expect(t, username, got, 400, invalid)
+		}
+		var after int
+		if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM users`).Scan(&after); err != nil {
+			t.Fatal(err)
+		}
+		if after != before {
+			t.Errorf("%d accounts were created", after-before)
+		}
+		if got := admin.Do("GET", "/api/users", ""); !strings.Contains(got.Body, `"username":"abc","role":"viewer","email":"","auth_provider":"local","created_at":`) ||
+			!strings.Contains(got.Body, `"folder_ids":[1]`) {
+			t.Errorf("abc lost its folder: %s", got.Body)
+		}
+	})
+}
+
 // String() of an object whose own toString member hides the method
 // throws: folder and device ids made of such values are a server error,
 // and nothing is written. An object as folderIds is no list and takes the
