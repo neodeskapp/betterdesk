@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"golang.org/x/text/encoding/htmlindex"
 )
 
 // The upload form is read the way multer on busboy reads one, so that the
@@ -459,8 +461,10 @@ func baseName(path string) string {
 }
 
 // decodeField turns a text field's bytes into a string by the charset of
-// its part. An unknown charset gives undefined.
-func decodeField(data []byte, charset string) any {
+// its part. A charset of none of the families below is decoded by its
+// WHATWG name (shift_jis, gbk, windows-1251), and read as UTF-8 when the
+// name is unknown.
+func decodeField(data []byte, charset string) string {
 	switch charsetFamily(charset) {
 	case "utf8":
 		return decodeUTF8(data)
@@ -475,7 +479,12 @@ func decodeField(data []byte, charset string) any {
 	case "base64":
 		return base64.StdEncoding.EncodeToString(data)
 	}
-	return undefined
+	if enc, err := htmlindex.Get(charset); err == nil {
+		if text, err := enc.NewDecoder().Bytes(data); err == nil {
+			return decodeUTF8(text)
+		}
+	}
+	return decodeUTF8(data)
 }
 
 func charsetFamily(charset string) string {
@@ -777,11 +786,7 @@ func parseParams(s []rune, i int, params map[string]string, extended bool) bool 
 				raw = append(raw, rune(hi<<4|lo))
 				i += 2
 			}
-			decoded, ok := decodeParam(raw, charset)
-			if !ok {
-				return false
-			}
-			value = decoded
+			value = decodeParam(raw, charset)
 		} else {
 			i++
 			if i == n {
@@ -850,27 +855,16 @@ func parseParams(s []rune, i int, params map[string]string, extended bool) bool 
 }
 
 // decodeParam decodes an extended parameter value, given as one rune per
-// byte, by its charset.
-func decodeParam(raw []rune, charset string) (string, bool) {
+// byte, by its charset as decodeField does.
+func decodeParam(raw []rune, charset string) string {
 	if len(raw) == 0 {
-		return "", true
+		return ""
 	}
 	bytes := make([]byte, len(raw))
 	for i, r := range raw {
 		bytes[i] = byte(r)
 	}
-	switch charsetFamily(charset) {
-	case "utf8":
-		return decodeUTF8(bytes), true
-	case "latin1":
-		return string(raw), true
-	case "utf16le":
-		v, _ := decodeField(bytes, "utf16le").(string)
-		return v, true
-	case "base64":
-		return base64.StdEncoding.EncodeToString(bytes), true
-	}
-	return "", false
+	return decodeField(bytes, charset)
 }
 
 // --- the form's text fields ---

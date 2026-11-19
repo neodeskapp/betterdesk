@@ -450,6 +450,49 @@ func TestUploadCodeChecks(t *testing.T) {
 	}
 }
 
+// A text field or a filename* in a charset other than UTF-8, Latin-1,
+// UTF-16LE or base64 is decoded by its charset, or read as UTF-8 when the
+// charset is unknown, instead of being dropped (BUGS.md L11).
+func TestUploadFieldInShiftJIS(t *testing.T) {
+	if got := decodeField([]byte{0x93, 0xfa, 0x96, 0x7b}, "shift_jis"); got != "日本" {
+		t.Errorf("Shift JIS field = %#v", got)
+	}
+	if got := decodeParam([]rune{0x93, 0xfa, 0x96, 0x7b}, "Shift_JIS"); got != "日本" {
+		t.Errorf("Shift JIS parameter = %q", got)
+	}
+	if got := decodeField([]byte("日本"), "x-no-such-charset"); got != "日本" {
+		t.Errorf("field in an unknown charset = %#v", got)
+	}
+	file := func(disposition string) string {
+		return "Content-Disposition: form-data; name=\"file\"; " + disposition + "\r\nContent-Type: application/json\r\n\r\n{\"a\":1}"
+	}
+	for _, c := range []struct {
+		parts []string
+		code  string
+	}{
+		{[]string{"Content-Disposition: form-data; name=\"code\"\r\nContent-Type: text/plain; charset=shift_jis\r\n\r\nes", filePart("it.json", `{"a":1}`)}, "es"},
+		{[]string{"Content-Disposition: form-data; name=\"code\"\r\nContent-Type: text/plain; charset=x-no-such-charset\r\n\r\nes", filePart("it.json", `{"a":1}`)}, "es"},
+		{[]string{file("filename*=shift_jis''it.json")}, "it"},
+		{[]string{file("filename*=x-no-such-charset''nl.json")}, "nl"},
+	} {
+		dir := copyDir(t, "testdata/lang-upload")
+		h, _, _ := handlersFor(t, dir, time.Now())
+		got := postForm(t, h, c.parts...)
+		if got.status != 200 || str(mustParse(t, got.body), "data", "code") != c.code {
+			t.Errorf("%q: %d %s; want the code %s", c.parts, got.status, got.body, c.code)
+		}
+	}
+}
+
+func mustParse(t testing.TB, text string) any {
+	t.Helper()
+	v, err := parseJSON(text)
+	if err != nil {
+		t.Fatalf("parse %q: %v", text, err)
+	}
+	return v
+}
+
 // The translations page's routes against Node, on the odd fixture files
 // and with files added and removed.
 func TestPanelRoutesLikeNode(t *testing.T) {

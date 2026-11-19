@@ -57,6 +57,13 @@ var vectorFixes = []vectorFix{
 	{"L10", "upload.json", uploadsRefused(400, "Invalid language code",
 		"meta code number", "meta code array of two", "meta code true", "meta code object",
 		"code twice", "code object", "code index three", "code then code object", "code object then code")},
+
+	// A field or filename* in another charset is decoded instead of
+	// dropped: these upload as the same form in UTF-8 or Latin-1 does.
+	{"L11", "upload.json", uploadsAnswerAs(map[string]string{
+		"extended file name other charset": "extended file name",
+		"code with other charset":          "code latin1",
+	})},
 }
 
 // fixedVectors reads a file of vectors with every fix applied.
@@ -225,6 +232,32 @@ func uploadsRefused(status int, message string, names ...string) func(t testing.
 		}
 		if n != len(names) {
 			t.Errorf("%d of the %d named vectors found", n, len(names))
+		}
+		return n
+	}
+}
+
+// uploadsAnswerAs rewrites each named vector of upload.json into the
+// answer of the vector it maps to.
+func uploadsAnswerAs(like map[string]string) func(t testing.TB, file any) int {
+	return func(t testing.TB, file any) int {
+		byName := map[string]any{}
+		for _, c := range list(file) {
+			byName[str(c, "name")] = c
+		}
+		n := 0
+		for name, other := range like {
+			c, model := byName[name], byName[other]
+			if c == nil || model == nil {
+				t.Fatalf("no vector %q or %q", name, other)
+			}
+			var pairs []any
+			for _, key := range []string{"status", "body", "contentTypeOut", "changed", "audit", "available"} {
+				pairs = append(pairs, key, at(model, key))
+			}
+			if setAll(c, pairs...) {
+				n++
+			}
 		}
 		return n
 	}
