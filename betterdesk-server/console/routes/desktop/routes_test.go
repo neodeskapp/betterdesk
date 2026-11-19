@@ -424,3 +424,32 @@ func TestWallpaperAloneKeepsTheLayout(t *testing.T) {
 		t.Errorf("load from the fallback file: %s", got.Body)
 	}
 }
+
+// TestASaveToTheDatabaseRemovesTheFallback: once a layout reached the
+// database, the file written on a day the database failed is gone, and
+// it does not come back when the stored layout is missing.
+func TestASaveToTheDatabaseRemovesTheFallback(t *testing.T) {
+	eachDB(t, func(t *testing.T, w *routetest.World) {
+		admin := w.As("admin")
+		dir := filepath.Join(w.DataDir, "desktop-layouts")
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		file := filepath.Join(dir, "1.json")
+		if err := os.WriteFile(file, []byte(`{"widgets":[{"id":"f"}],"wallpaper":"/wallpapers/7.png"}`), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if got := admin.Do("POST", "/api/desktop/layout", `{"widgets":[{"id":"w","type":"clock","x":0,"y":0,"w":1,"h":1}],"wallpaper":""}`); got.Status != 200 {
+			t.Fatal(got.Body)
+		}
+		if _, err := os.Stat(file); !os.IsNotExist(err) {
+			t.Errorf("the fallback file is still there: %v", err)
+		}
+		if _, err := w.DB.Exec(context.Background(), "DELETE FROM settings WHERE key = 'desktop_layout_1'"); err != nil {
+			t.Fatal(err)
+		}
+		if got := admin.Do("GET", "/api/desktop/layout", ""); got.Body != empty {
+			t.Errorf("load without a stored layout: %s", got.Body)
+		}
+	})
+}

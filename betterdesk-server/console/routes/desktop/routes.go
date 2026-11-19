@@ -5,11 +5,14 @@
 // and the wallpaper under desktop_wallpaper_<user id>. When the database
 // refuses the write, the layout goes to the file
 // DATA_DIR/desktop-layouts/<user id>.json, which is read when the database
-// holds no layout. A save changes only what its body names.
+// holds no layout, until a layout reaches the database again. A save
+// changes only what its body names.
 package desktop
 
 import (
 	"encoding/json"
+	"errors"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -140,6 +143,12 @@ func (h *handlers) save(w http.ResponseWriter, r *http.Request) {
 			h.log.Error("Save layout error:", err)
 			kit.Fail(w, r, http.StatusInternalServerError, "Failed to save layout")
 			return
+		}
+	} else if hasWidgets {
+		// The layout is stored: the file of a day the database failed
+		// would come back whenever the stored layout is empty
+		if err := os.Remove(h.fallbackPath(user)); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			h.log.Warn("Remove layout fallback file failed:", err)
 		}
 	}
 	kit.OK(w, r, nil)
