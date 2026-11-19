@@ -125,6 +125,7 @@ func TestOracleStore(t *testing.T) {
 				t.Errorf("step %d %s: %s\n got  %s\n want %s", i, clip(Stringify(step)), what, clip(got), clip(want))
 			}
 		}
+		fixes := newStoreFixes(t, ctx, db)
 		for i, entry := range steps {
 			step := property(entry, "step")
 			get := func(key string) any { return property(step, key) }
@@ -132,6 +133,7 @@ func TestOracleStore(t *testing.T) {
 				n, _ := get("id").(float64)
 				return int64(n)
 			}
+			fixes.before(step)
 			var value any = Undefined
 			var err error
 			switch op := toString(get("op")); op {
@@ -198,6 +200,7 @@ func TestOracleStore(t *testing.T) {
 				}
 				value = items
 			}
+			fixes.after(step, value)
 
 			// the answer of the call
 			result := property(entry, "result")
@@ -213,22 +216,24 @@ func TestOracleStore(t *testing.T) {
 			}
 
 			// what is stored and what follows from it
+			var mismatches [][3]string
+			differ := func(what, got, want string) { mismatches = append(mismatches, [3]string{what, got, want}) }
 			state := property(entry, "state")
 			rows, queryErr := getBrandingConfigSorted(ctx, db)
 			if queryErr != nil {
 				t.Fatal(queryErr)
 			}
 			if want, same := sameText(Stringify(rows), property(state, "rows")); !same {
-				fail(i, step, "rows", Stringify(rows), want)
+				differ("rows", Stringify(rows), want)
 			}
 			if want, same := sameText(Stringify(s.GetBranding()), property(state, "branding")); !same {
-				fail(i, step, "branding", Stringify(s.GetBranding()), want)
+				differ("branding", Stringify(s.GetBranding()), want)
 			}
 			css, cssErr := s.GenerateThemeCSS()
 			var cssValue any = css
 			if got := outcome(cssValue, cssErr); true {
 				if want, same := sameOutcome(got, property(state, "css")); !same {
-					fail(i, step, "css", got, want)
+					differ("css", got, want)
 				}
 			}
 			branding := s.GetBranding()
@@ -249,11 +254,11 @@ func TestOracleStore(t *testing.T) {
 			switch recorded := property(state, "derived").(type) {
 			case string:
 				if sha256Hex(derived) != recorded {
-					fail(i, step, "derived (appearance, readability, public, export, favicon)", derived, "sha256 "+recorded)
+					differ("derived (appearance, readability, public, export, favicon)", derived, "sha256 "+recorded)
 				}
 			case []any:
 				if want := joinValues(recorded, "\n"); derived != want {
-					fail(i, step, "derived (appearance, readability, public, export, favicon)", derived, want)
+					differ("derived (appearance, readability, public, export, favicon)", derived, want)
 				}
 			}
 
@@ -263,23 +268,30 @@ func TestOracleStore(t *testing.T) {
 			goNewest, goHas := newestChange(t, ctx, db)
 			goKind := revisionKind(db.Dialect(), s.Revision(), goNewest, goHas)
 			if goKind != nodeKind || strings.HasPrefix(nodeKind, "un") {
-				fail(i, step, "revision", goKind+" ("+s.Revision()+")", nodeKind+" ("+toString(property(state, "revision"))+")")
+				differ("revision", goKind+" ("+s.Revision()+")", nodeKind+" ("+toString(property(state, "revision"))+")")
 			}
 			if goKind == "clock" && s.Revision() != strconv.FormatInt(fixedNow.UnixMilli(), 36) {
-				fail(i, step, "revision from the clock", s.Revision(), strconv.FormatInt(fixedNow.UnixMilli(), 36))
+				differ("revision from the clock", s.Revision(), strconv.FormatInt(fixedNow.UnixMilli(), 36))
 			}
 
 			if recorded := property(entry, "profiles"); recorded != Undefined {
-				got := profileRows(t, ctx, db)
-				want := maskTimes(Stringify(recorded))
+				got := profileRows(t, ctx, db, fixes.profiles)
+				want := maskTimes(Stringify(fixes.recordedProfiles(recorded)))
 				if got != want {
-					fail(i, step, "profile rows", got, want)
+					differ("profile rows", got, want)
+				}
+			}
+
+			if fixes.compared(len(mismatches) == 0, rows) {
+				for _, m := range mismatches {
+					fail(i, step, m[0], m[1], m[2])
 				}
 			}
 		}
 		if failures > 12 {
 			t.Errorf("%d differences in %d steps", failures, len(steps))
 		}
+		fixes.check()
 	})
 }
 
@@ -326,8 +338,9 @@ func newestChange(t testing.TB, ctx context.Context, db *store.DB) (string, bool
 }
 
 // profileRows is the profile table as the oracle records it, with the
-// times masked and the stored settings hashed when long.
-func profileRows(t testing.TB, ctx context.Context, db *store.DB) string {
+// times masked and the stored settings hashed when long, without the
+// profiles skip names.
+func profileRows(t testing.TB, ctx context.Context, db *store.DB, skip map[int64]string) string {
 	t.Helper()
 	rows, err := store.Select(ctx, db, "SELECT id, name, description, data, is_active, created_at, updated_at FROM branding_profiles ORDER BY id")
 	if err != nil {
@@ -343,6 +356,9 @@ func profileRows(t testing.TB, ctx context.Context, db *store.DB) string {
 		var created, updated store.Time
 		if err := rows.Scan(&id, &name, &description, &data, &active, &created, &updated); err != nil {
 			t.Fatal(err)
+		}
+		if skip[id] != "" {
+			continue
 		}
 		timeFormat := reSQLiteTime
 		if db.IsPostgres() {

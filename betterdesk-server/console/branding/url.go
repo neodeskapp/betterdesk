@@ -8,10 +8,12 @@ import (
 
 // ValidateBrandingURL checks the address of a logo, background or slide
 // picture. It accepts an address on this server (one leading slash, no
-// ".." anywhere), which is returned as written, and an http or https URL,
-// which is returned the way a browser writes it out. Nothing and the empty
-// text give "". ok is false for everything else: other schemes,
-// "//host/..." and text that is no URL.
+// ".." and no control character anywhere), which is returned as written,
+// and an http or https URL, which is returned the way a browser writes it
+// out. Nothing and the empty text give "". ok is false for everything
+// else: other schemes, "//host/..." and text that is no URL. A control
+// character would end the quoted url("...") of a background in the
+// stylesheet.
 func ValidateBrandingURL(value any) (url string, ok bool, err error) {
 	defer catch(&err)
 	url, ok = validateBrandingURL(value)
@@ -30,13 +32,16 @@ func validateBrandingURL(value any) (string, bool) {
 		return "", false
 	}
 	if strings.HasPrefix(trimmed, "/") {
-		if strings.Contains(trimmed, "..") {
+		if strings.Contains(trimmed, "..") || strings.ContainsFunc(trimmed, isControl) {
 			return "", false
 		}
 		return trimmed, true
 	}
 	return parseHTTPURL(trimmed)
 }
+
+// isControl reports the C0 control characters and DEL.
+func isControl(r rune) bool { return r < 0x20 || r == 0x7f }
 
 // The sets of ASCII characters each part of a URL writes as %XX. Every
 // byte above 0x7E and every control character is written that way too.

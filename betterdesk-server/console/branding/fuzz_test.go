@@ -49,8 +49,7 @@ var (
 )
 
 // errBrokenString is what cssStructure answers when a quoted string of the
-// stylesheet is cut by a line break. Only the address of a background
-// picture can do that (BUGS BR1).
+// stylesheet is cut by a line break.
 var errBrokenString = errors.New("a line break inside a quoted string")
 
 // cssStructure checks the invariant of the generated stylesheet, for
@@ -181,18 +180,18 @@ func TestCSSStructureCheckerNoticesBreakouts(t *testing.T) {
 		t.Fatalf("the default stylesheet: %v", err)
 	}
 	for name, bad := range map[string]string{
-		"an extra rule":              strings.Replace(good, "html {", "body{x:y}\nhtml {", 1),
-		"a closed block":             strings.Replace(good, "--bg-primary: #ffffff;", "--bg-primary: red;}body{x:y", 1),
-		"a second declaration":       strings.Replace(good, "--bg-primary: #ffffff;", "--bg-primary: red; behavior: url(x);", 1),
-		"a colon in a value":         strings.Replace(good, "--bg-primary: #ffffff;", "--bg-primary: red\n color:blue;", 1),
-		"a tag":                      strings.Replace(good, "--bg-primary: #ffffff;", "--bg-primary: </style>;", 1),
-		"a nested block":             strings.Replace(good, "--bg-primary: #ffffff;", "--bg-primary: x; html { y: z }", 1),
-		"an import of something":     "@import url(http://evil.example/x.css);\n" + good,
-		"text at the end":            good + "x",
-		"an unclosed block":          good + ":root {",
-		"a string that runs on":      good + ":root { --x: 'abc; }",
-		"a custom part not at end":   good + "\n/* --- custom branding CSS --- */\nx{}\n",
-		"a broken string (BUGS BR1)": strings.Replace(good, "html {", ":root { background: url(\"/a\n}\nbody{x:y}\"); }\nhtml {", 1),
+		"an extra rule":            strings.Replace(good, "html {", "body{x:y}\nhtml {", 1),
+		"a closed block":           strings.Replace(good, "--bg-primary: #ffffff;", "--bg-primary: red;}body{x:y", 1),
+		"a second declaration":     strings.Replace(good, "--bg-primary: #ffffff;", "--bg-primary: red; behavior: url(x);", 1),
+		"a colon in a value":       strings.Replace(good, "--bg-primary: #ffffff;", "--bg-primary: red\n color:blue;", 1),
+		"a tag":                    strings.Replace(good, "--bg-primary: #ffffff;", "--bg-primary: </style>;", 1),
+		"a nested block":           strings.Replace(good, "--bg-primary: #ffffff;", "--bg-primary: x; html { y: z }", 1),
+		"an import of something":   "@import url(http://evil.example/x.css);\n" + good,
+		"text at the end":          good + "x",
+		"an unclosed block":        good + ":root {",
+		"a string that runs on":    good + ":root { --x: 'abc; }",
+		"a custom part not at end": good + "\n/* --- custom branding CSS --- */\nx{}\n",
+		"a broken string":          strings.Replace(good, "html {", ":root { background: url(\"/a\n}\nbody{x:y}\"); }\nhtml {", 1),
 	} {
 		if err := cssStructure(bad, ""); err == nil {
 			t.Errorf("%s was not noticed", name)
@@ -387,19 +386,7 @@ func FuzzBrandingSettings(f *testing.F) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		switch err := cssStructure(css, custom); {
-		case err == nil:
-		case errors.Is(err, errBrokenString):
-			// BUGS BR1: the address of a background picture on this server
-			// is stored with its line breaks
-			broken := false
-			for _, key := range []string{"bgImageUrl", "loginBgImageUrl", "rdclientBgImageUrl"} {
-				broken = broken || strings.ContainsAny(branding.Text(key), "\n\r\f")
-			}
-			if !broken {
-				t.Fatalf("%v, and no picture address has a line break:\n%s", err, css)
-			}
-		default:
+		if err := cssStructure(css, custom); err != nil {
 			t.Fatalf("%v in:\n%s", err, css)
 		}
 	})

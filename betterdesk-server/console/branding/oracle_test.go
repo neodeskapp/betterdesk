@@ -208,7 +208,12 @@ var pureCalls = map[string]func(s *Service, a []any) (any, error){
 
 // TestOraclePure replays the functions that need no database.
 func TestOraclePure(t *testing.T) {
-	replayCalls(t, "pure", 30000)
+	fixed := replayCalls(t, "pure", 30000)
+	for bug, atLeast := range map[string]int{"BR1": 60} {
+		if fixed[bug] < atLeast {
+			t.Errorf("%d calls answer as the fix of %s says, the recording has more", fixed[bug], bug)
+		}
+	}
 }
 
 // TestOracleHosts replays URLs whose host has characters outside ASCII
@@ -218,11 +223,13 @@ func TestOracleHosts(t *testing.T) {
 }
 
 // replayCalls replays a file of recorded calls: for each function its
-// list of vectors.
-func replayCalls(t *testing.T, file string, atLeast int) {
+// list of vectors. A call whose answer a fix changes (fixedPure) is
+// counted by bug instead of compared.
+func replayCalls(t *testing.T, file string, atLeast int) map[string]int {
 	data := loadVectors(t, file)
 	s := oracleService(t)
 	total := 0
+	fixed := map[string]int{}
 	for _, name := range data.(*Object).Keys() {
 		if name == "constants" {
 			continue
@@ -243,6 +250,10 @@ func replayCalls(t *testing.T, file string, atLeast int) {
 				value, err := call(s, a)
 				got := outcome(value, err)
 				if want, same := sameOutcome(got, vector); !same {
+					if bug := fixedPure(name, a, got); bug != "" {
+						fixed[bug]++
+						continue
+					}
 					failures++
 					if failures <= maxShown {
 						t.Errorf("vector %d: %s(%s)\n got  %s\n want %s", i, name, clip(Stringify(a)), clip(got), clip(want))
@@ -258,6 +269,7 @@ func replayCalls(t *testing.T, file string, atLeast int) {
 	if total < atLeast {
 		t.Errorf("replayed %d vectors, the recorded file should hold at least %d", total, atLeast)
 	}
+	return fixed
 }
 
 // TestOracleConstants compares the fixed values the module exports.
