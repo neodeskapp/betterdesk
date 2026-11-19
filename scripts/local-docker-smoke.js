@@ -243,7 +243,7 @@ async function run(options) {
 
     const environment = [
         'NODE_ENV=production',
-        'PORT=5000',
+        'CONSOLE_PORT=5000',
         'HOST=0.0.0.0',
         'API_HOST=0.0.0.0',
         'API_ENABLED=false',
@@ -254,7 +254,6 @@ async function run(options) {
         'DATA_DIR=/app/data',
         'DB_PATH=/opt/rustdesk/db_v2.sqlite3',
         'AUTH_DB_PATH=/app/data/auth.db',
-        'SQLITE_AUTH_DB_MODE=',
         'ADMIN_PASSWORD=' + PASSWORD,
         'INIT_ADMIN_USER=admin',
         'INIT_ADMIN_PASS=' + PASSWORD,
@@ -301,21 +300,17 @@ async function run(options) {
             .trim();
         if (!firstKey) throw new Error('container did not create an API key');
 
-        const protocol = spawnSync(process.execPath, [
-            require('path').join(__dirname, 'installer-protocol-check.js'),
-            '--api-url', `${apiUrl}/api/health`,
-            '--panel-url', `${panelUrl}/health`,
-            '--port', `127.0.0.1:${apiPort}`,
-        ], {
-            cwd: ROOT,
-            encoding: 'utf8',
-            windowsHide: true,
-            maxBuffer: 2 * 1024 * 1024,
-        });
+        // The server's own protocol check, inside the container
+        const protocol = docker([
+            'exec', '-u', 'betterdesk', container, '/usr/local/bin/betterdesk-server', 'check',
+            '--api', 'http://127.0.0.1:21121/api/health',
+            '--panel', 'http://127.0.0.1:5000/health',
+            '--port', '127.0.0.1:21121',
+        ], { allowFailure: true });
         process.stdout.write(protocol.stdout || '');
         process.stderr.write(protocol.stderr || '');
-        if (protocol.error || protocol.status !== 0) {
-            throw new Error(`installer protocol check failed with exit code ${protocol.status}`);
+        if (protocol.status !== 0) {
+            throw new Error(`betterdesk-server check failed with exit code ${protocol.status}`);
         }
 
         docker(['restart', container]);

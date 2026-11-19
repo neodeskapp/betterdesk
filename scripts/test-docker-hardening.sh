@@ -37,12 +37,15 @@ fail() {
     exit 1
 }
 
+# The server made the first admin: the database has a user
 wait_for_bootstrap_admin() {
-    for _ in {1..30}; do
-        if docker compose -p "$PROJECT" \
+    local users
+    for _ in {1..60}; do
+        users=$(docker compose -p "$PROJECT" \
             -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
-            -f "$OVERRIDE_FILE" logs 2>&1 \
-            | grep -Eq 'INITIAL ADMIN CREDENTIALS|Admin password hash migrated|Default admin user created'; then
+            -f "$OVERRIDE_FILE" exec -T -u betterdesk betterdesk \
+            sqlite3 /opt/rustdesk/db_v2.sqlite3 "SELECT COUNT(*) FROM users;" 2>/dev/null | tr -d '\r\n' || true)
+        if [ -n "$users" ] && [ "$users" -gt 0 ] 2>/dev/null; then
             return 0
         fi
         sleep 1
@@ -130,11 +133,14 @@ docker compose -p "$PROJECT" \
 
 [ ! -e "$TEST_DIR/rustdesk/.admin_credentials" ] \
     || fail "bootstrap recreated credentials for an existing database"
-if docker compose -p "$PROJECT" \
+# One process: betterdesk-server as betterdesk under tini, nothing else
+processes=$(docker compose -p "$PROJECT" \
     -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
-    -f "$OVERRIDE_FILE" logs 2>&1 \
-    | grep -Eq 'Format string .*ENV_(DEFAULT_ADMIN|INIT_ADMIN)'; then
-    fail "supervisord failed to expand admin environment variables"
+    -f "$OVERRIDE_FILE" exec -T betterdesk ps -o user,args | tr -d '\r')
+printf '%s\n' "$processes" | grep -Eq '^betterde[a-z]* +/usr/local/bin/betterdesk-server ' \
+    || fail "betterdesk-server does not run as betterdesk: $processes"
+if printf '%s\n' "$processes" | grep -Eq 'node|supervisord'; then
+    fail "the container runs more than the server: $processes"
 fi
 
 printf 'PASS: hardened Docker startup regression tests\n'
