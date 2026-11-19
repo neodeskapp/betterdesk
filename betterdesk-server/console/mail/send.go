@@ -3,6 +3,9 @@ package mail
 import (
 	"context"
 	"errors"
+	"net/netip"
+	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -177,8 +180,9 @@ func (s *Service) TestConnection(ctx context.Context) (TestResult, error) {
 
 // GetPanelBaseURL returns the address people reach the console at, for
 // links in mails: PANEL_PUBLIC_URL, else PUBLIC_URL, without one trailing
-// slash; else http or https (with HTTPRedirect) on the console's host and
-// port, where the host 0.0.0.0 reads 127.0.0.1.
+// slash; else the panel's public host (PanelHost), with https and
+// HTTPSPort when the console serves HTTPS and http and Port when it does
+// not, where 443 and 80 are left out; else "", for no link.
 func (s *Service) GetPanelBaseURL() string {
 	explicit := s.getenv("PANEL_PUBLIC_URL")
 	if explicit == "" {
@@ -187,15 +191,50 @@ func (s *Service) GetPanelBaseURL() string {
 	if explicit != "" {
 		return strings.TrimSuffix(explicit, "/")
 	}
-	host := s.opts.Host
-	if host == "0.0.0.0" {
-		host = "127.0.0.1"
+	host := ""
+	if s.opts.PanelHost != nil {
+		host = publicHost(s.opts.PanelHost())
 	}
-	protocol := "http"
-	if s.opts.HTTPRedirect {
-		protocol = "https"
+	if host == "" {
+		return ""
 	}
-	return protocol + "://" + host + ":" + strconv.Itoa(s.opts.Port)
+	if strings.Contains(host, ":") {
+		host = "[" + host + "]"
+	}
+	scheme, port, standard := "http", s.opts.Port, 80
+	if s.opts.ServesHTTPS != nil && s.opts.ServesHTTPS() {
+		scheme, port, standard = "https", s.opts.HTTPSPort, 443
+	}
+	if port > 0 && port != standard {
+		host += ":" + strconv.Itoa(port)
+	}
+	return scheme + "://" + host
+}
+
+// hostName is a host name of ASCII letters, digits and inner hyphens in
+// labels joined by dots, in lower case.
+var hostName = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$`)
+
+// publicHost is the host a PANEL_PUBLIC_HOST value names, in lower case and
+// without brackets, or "" when it names none: a value written as a URL
+// gives the URL's host; then it has to be an IP address or a host name.
+func publicHost(value string) string {
+	value = jsbind.Trim(value)
+	if strings.Contains(value, "://") {
+		u, err := url.Parse(value)
+		if err != nil {
+			return ""
+		}
+		value = u.Hostname()
+	}
+	value = strings.ToLower(strings.TrimSuffix(strings.TrimPrefix(value, "["), "]"))
+	if addr, err := netip.ParseAddr(value); err == nil && addr.Zone() == "" {
+		return addr.String()
+	}
+	if len(value) > 253 || !hostName.MatchString(value) {
+		return ""
+	}
+	return value
 }
 
 // escapeHTML is the console's escapeHtml: &, <, > and the double quote.
@@ -408,6 +447,7 @@ type HelpRequestEmail struct {
 }
 
 // helpRequestMail builds subject, text and HTML of a help request mail.
+// Without a baseURL the mail has no link to the console.
 func helpRequestMail(help HelpRequest, folderName jsbind.Value, baseURL string) (subject, text, html string, err error) {
 	var t texts
 	hostname := "Unknown device"
@@ -440,7 +480,13 @@ func helpRequestMail(help HelpRequest, folderName jsbind.Value, baseURL string) 
 	if hasFolder {
 		lines = append(lines, "Folder: "+folder)
 	}
-	lines = append(lines, "", "Message: "+message, "", "Open in panel: "+link)
+	lines = append(lines, "", "Message: "+message)
+	linkRow := ""
+	if baseURL != "" {
+		lines = append(lines, "", "Open in panel: "+link)
+		linkRow = `
+            <p style="margin-top: 16px;"><a href="` + escapeHTML(link) + `">Open help requests in BetterDesk</a></p>`
+	}
 	text = strings.Join(lines, "\n")
 
 	deviceRow, folderRow := "", ""
@@ -460,15 +506,15 @@ func helpRequestMail(help HelpRequest, folderName jsbind.Value, baseURL string) 
                 ` + folderRow + `
                 <tr><td style="padding: 8px; font-weight: bold;">Message</td>
                     <td style="padding: 8px;">` + escapeHTML(message) + `</td></tr>
-            </table>
-            <p style="margin-top: 16px;"><a href="` + escapeHTML(link) + `">Open help requests in BetterDesk</a></p>
+            </table>` + linkRow + `
         </div>`
 	return subject, text, html, nil
 }
 
 // SendHelpRequestEmail sends the notification for a help request and
 // reports whether it was sent. The link in it is GetPanelBaseURL with
-// /help-requests. The error is as for SendAlertEmail.
+// /help-requests; without that address the mail has no link. The error is
+// as for SendAlertEmail.
 func (s *Service) SendHelpRequestEmail(ctx context.Context, m HelpRequestEmail) (bool, error) {
 	subject, text, html, err := helpRequestMail(m.HelpRequest, m.FolderName, s.GetPanelBaseURL())
 	if err != nil {

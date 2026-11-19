@@ -314,8 +314,12 @@ func replayEndToEnd(t *testing.T, sess *e2eSession, panelBaseURL string, roots *
 		transport.Now, transport.Rand = now, random
 	}
 	logged := &logLines{}
+	// Node built the address of the recordings from the listen address
+	// 0.0.0.0, port 5000 and HTTP_REDIRECT_HTTPS; the Go console takes the
+	// panel's public host and its HTTPS port instead (BUGS EM8)
 	svc := mail.New(mail.Options{
-		DB: db, Transport: transport, Host: "0.0.0.0", Port: 5000, HTTPRedirect: true, Logger: logged,
+		DB: db, Transport: transport, Logger: logged, HTTPSPort: 5000,
+		PanelHost: func() string { return "127.0.0.1" }, ServesHTTPS: func() bool { return true },
 	})
 	if got := svc.GetPanelBaseURL(); got != panelBaseURL {
 		t.Errorf("the console's address in mails is %q, want %q", got, panelBaseURL)

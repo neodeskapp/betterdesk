@@ -789,17 +789,33 @@ func (r *replay) run(i int, step oracleStep) {
 			Message:  bindValue(t, step.Help["message"]),
 		}
 		if len(step.Sent) > 0 {
+			step.Sent = append(step.Sent[:0:0], step.Sent...)
 			if text, _ := optional(step.Sent[0].Text); text != nil {
 				r.counts["EM7: a help request mail with its blank lines"]++
-				step.Sent = append(step.Sent[:0:0], step.Sent...)
-				step.Sent[0].Text = marshal(t, spacedHelpText(t, help, *text))
+				spaced := spacedHelpText(t, help, *text)
+				if r.noPublicURL() {
+					// BUGS EM8: without a public address the mail has no link
+					r.counts["EM8: a help request mail without a link"]++
+					spaced, _, _ = strings.Cut(spaced, "\n\nOpen in panel: ")
+				}
+				step.Sent[0].Text = marshal(t, spaced)
+			}
+			if html, _ := optional(step.Sent[0].HTML); html != nil && r.noPublicURL() {
+				step.Sent[0].HTML = marshal(t, helpLinkRow.ReplaceAllString(*html, ""))
 			}
 		}
 		got, err := r.service.SendHelpRequestEmail(ctx, HelpRequestEmail{To: to, ToList: list, HelpRequest: help, FolderName: bindValue(t, step.Folder)})
 		r.checkSend(i, step, got, err)
 	case "baseurl":
-		if got := r.service.GetPanelBaseURL(); got != step.URL {
-			t.Fatalf("step %d: base URL %q, Node: %q (env %v)", i, got, step.URL, r.env)
+		want := step.URL
+		if r.noPublicURL() {
+			// BUGS EM8: Node built the address from the listen address; the
+			// Go console has none without a public URL or host
+			r.counts["EM8: no address without a public URL"]++
+			want = ""
+		}
+		if got := r.service.GetPanelBaseURL(); got != want {
+			t.Fatalf("step %d: base URL %q, want %q, Node: %q (env %v)", i, got, want, step.URL, r.env)
 		}
 	case "put":
 		body := middleware.JSONObject{}
@@ -915,6 +931,16 @@ func escapedAlertCells(alert Alert, html string) string {
 	return html
 }
 
+// noPublicURL reports whether the environment of the replay names no
+// public URL. The replay's service has no public host, so its mails have
+// no link then (BUGS EM8).
+func (r *replay) noPublicURL() bool {
+	return r.env["PANEL_PUBLIC_URL"] == "" && r.env["PUBLIC_URL"] == ""
+}
+
+// helpLinkRow is the link of a help request mail's HTML.
+var helpLinkRow = regexp.MustCompile(`\n            <p style="margin-top: 16px;"><a href="[^"]*">Open help requests in BetterDesk</a></p>`)
+
 // spacedHelpText is the text of a help request mail Node sent, with the
 // blank lines Node dropped (BUGS EM7): after the first line, and before
 // the message and the link.
@@ -988,7 +1014,8 @@ func TestNodeRecording(t *testing.T) {
 			"credentials that are no text", "a sender that is no text", "a sender that is no text, sent as text",
 			"recipients that are no text", "EM1: a stored tlsVerify that is no flag", "EM3: an alert value with markup is escaped",
 			"EM7: a help request mail with its blank lines", "EM4: a stored configuration that is invalid",
-			"EM5: a save with a member of the wrong type", "EM5: a read after a refused save"} {
+			"EM5: a save with a member of the wrong type", "EM5: a read after a refused save",
+			"EM8: no address without a public URL", "EM8: a help request mail without a link"} {
 			if r.counts[name] == 0 {
 				t.Errorf("the recording has no %q", name)
 			}

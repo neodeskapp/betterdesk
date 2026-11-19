@@ -96,14 +96,21 @@ type Options struct {
 	// configuration. The console sets it from SMTP_REQUIRE_TLS, which is on
 	// unless the variable is "false".
 	RequireTLS bool
-	// Host is config.host: HOST, default "127.0.0.1".
-	Host string
-	// Port is config.port: the port the console listens on (PORT, default
-	// 5000).
-	Port int
-	// HTTPRedirect is config.httpRedirect: HTTP_REDIRECT_HTTPS (ParseFlag
-	// with the default "true").
+	// Host and HTTPRedirect are not read: the address in mails comes from
+	// PanelHost, ServesHTTPS and the ports.
+	Host         string
 	HTTPRedirect bool
+	// Port is the port the console serves plain HTTP on.
+	Port int
+	// PanelHost reads PANEL_PUBLIC_HOST, the host people reach the console
+	// at, as the console keeps it (serverinfo ReadPanelPublicHostValue).
+	// Nil means none is set.
+	PanelHost func() string
+	// ServesHTTPS reports whether the console serves HTTPS, on HTTPSPort.
+	// Nil means it serves plain HTTP on Port.
+	ServesHTTPS func() bool
+	// HTTPSPort is the port of the console's HTTPS listener.
+	HTTPSPort int
 	// Logger takes what the service logs. Nil logs through the logging
 	// package under "Email".
 	Logger Logger
