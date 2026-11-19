@@ -95,6 +95,10 @@ var RouteRules = []Rule{
 	{Prefix: "/commercialization", Section: "commercialization"},
 	{Prefix: "/reports", Section: "reports"},
 	{Prefix: "/activity", Section: "activity"},
+	// The file transfer group answers at /api/bd too, with the routes for
+	// people beside the device routes.
+	{Prefix: "/api/bd/transfer", Section: "files"},
+	{Prefix: "/api/bd/transfers", Section: "files"},
 }
 
 const apiPrefix = "/api/"

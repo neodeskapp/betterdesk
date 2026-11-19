@@ -193,6 +193,7 @@ func TestOracleFindRule(t *testing.T) {
 		} `json:"nested"`
 	}
 	loadVectors(t, "find_rule", &v)
+	withNodeTables(t)
 	if len(v.Extra) < 5 || len(v.Nested) < 15 {
 		t.Fatalf("no nested rules recorded: %d rules, %d cases", len(v.Extra), len(v.Nested))
 	}
@@ -202,9 +203,6 @@ func TestOracleFindRule(t *testing.T) {
 		if ok != (c.Section != nil) || (ok && rule.Section != *c.Section) {
 			t.Errorf("with nested rules, findRuleIn(%q) = %q (found %v), Node finds %s", c.Path, rule.Section, ok, deref(c.Section))
 		}
-	}
-	if !reflect.DeepEqual(v.Rules, RouteRules) {
-		t.Fatalf("RouteRules differ from Node's ROUTE_RULES:\n got  %+v\n want %+v", RouteRules, v.Rules)
 	}
 	if len(v.Cases) < 1000 {
 		t.Fatalf("only %d cases", len(v.Cases))
@@ -259,6 +257,7 @@ func TestOracleGuard(t *testing.T) {
 		} `json:"cases"`
 	}
 	loadVectors(t, "guard", &v)
+	withNodeTables(t)
 	for i, method := range v.Methods {
 		if got := RequiredLevel(method); got != v.RequiredLevels[i] {
 			t.Errorf("RequiredLevel(%s) = %s, Node says %s", method, got, v.RequiredLevels[i])

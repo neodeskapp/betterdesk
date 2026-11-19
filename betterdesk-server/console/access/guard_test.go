@@ -58,6 +58,10 @@ var guardPaths = []struct {
 	// letter case is exact
 	{"/USERS", ""}, {"/Users", ""}, {"/API/users", ""}, {"/api/Users", ""}, {"/api/USERS/1", ""}, {"/Settings", ""},
 
+	// the second mount below /api/bd of the file transfer routes (FT8)
+	{"/api/bd/transfer", "files"}, {"/api/bd/transfers", "files"}, {"/api/bd/transfers/abc/download", "files"},
+	{"/api/bd/file-transfer", ""}, {"/api/bd/transfersx", ""},
+
 	// API paths without a rule
 	{"/api", ""}, {"/api/", ""}, {"/api/panel", ""}, {"/api/panel/org/1", ""}, {"/api/panel/fleet/tasks", ""},
 	{"/api/panel/roles", ""}, {"/api/panel/role-permissions", ""}, {"/api/panel/scaling/relays", ""},
@@ -312,5 +316,30 @@ func TestGuardWithoutPolicy(t *testing.T) {
 	ctx := &Context{UserID: 7, HasUser: true, Role: "admin"}
 	if got := ctx.Guard("GET", "/api/users"); got.Verdict != VerdictDenied {
 		t.Errorf("no policy: %+v", got)
+	}
+}
+
+// FT8: the file transfer routes for people that answer a second time
+// below /api/bd keep the section of their first address.
+func TestGuardCoversTheBDMounts(t *testing.T) {
+	closed := func() *Context {
+		return &Context{UserID: 7, HasUser: true, Role: "global_admin", Policy: policyWith("files", LevelNone)}
+	}
+	for _, c := range []struct{ method, path, section string }{
+		{"POST", "/api/bd/transfer", "files"}, {"GET", "/api/bd/transfers", "files"},
+		{"GET", "/api/bd/transfers/t1", "files"}, {"POST", "/api/bd/transfers/t1/cancel", "files"},
+		{"GET", "/api/bd/transfers/t1/download", "files"},
+	} {
+		got := closed().Guard(c.method, c.path)
+		if got.Verdict != VerdictDenied || got.Section != c.section || got.Decision.Status != 403 {
+			t.Errorf("%s %s: %+v, want refused in %s", c.method, c.path, got, c.section)
+		}
+	}
+	// The device routes beside them have no section: devices call them
+	// without a session.
+	for _, path := range []string{"/api/bd/file-transfer", "/api/bd/file-transfer/t1", "/api/bd/commands", "/api/bd/inventory"} {
+		if got := closed().Guard("POST", path); got.Verdict != VerdictNoRule {
+			t.Errorf("POST %s: %+v, want no rule", path, got)
+		}
 	}
 }
