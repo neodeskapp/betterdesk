@@ -2512,9 +2512,7 @@ merge_console_env() {
         printf 'INIT_ADMIN_PASS=%s\n' "$admin_password" >> "$env_file"
     fi
     # The update channel the installer was given, over the template's main
-    if [ -n "${UPDATE_GITHUB_BRANCH_GIVEN:-}" ]; then
-        _upsert_env_line "$env_file" UPDATE_GITHUB_BRANCH "$UPDATE_GITHUB_BRANCH_GIVEN"
-    fi
+    save_given_update_channel
 
     if ! BETTERDESK_ENV_FILE='' "$bin" upgrade-env --from "$env_file" --write --supervisor systemd >/dev/null; then
         print_error "betterdesk-server upgrade-env could not finish .env"
@@ -4537,6 +4535,7 @@ upgrade_node_install_to_go() {
     [ -f "$env_file.pre-go" ] || cp -p "$env_file" "$env_file.pre-go"
     carry_unit_environment "$LEGACY_CONSOLE_UNIT" "$env_file"
     carry_unit_environment "$SERVER_UNIT" "$env_file"
+    save_given_update_channel
     if [ -n "$db_flag" ] && ! grep -q '^DB_URL=' "$env_file"; then
         printf 'DB_URL=%s\n' "$db_flag" >> "$env_file"
         print_info "  move     -db -> DB_URL"
@@ -4721,6 +4720,8 @@ update_go_install() {
     before=$(sha256sum "$bin" 2>/dev/null | awk '{ print $1 }')
     print_info "Creating backup before update..."
     do_backup_silent
+    # The server's updater reads the channel from .env
+    save_given_update_channel
 
     if [ -n "$SERVER_BINARY_FILE" ] || [ "$FROM_SOURCE" = true ] || [ -n "${RELEASE_BASE_URL:-}" ]; then
         obtain_server_binary || { rm -rf "${STAGED_SERVER_DIR:-}"; return 1; }
@@ -4972,6 +4973,15 @@ UPDATE_GITHUB_REPO="${UPDATE_GITHUB_REPO:-BetterDesk}"
 # installed) wins over .env and is written into it
 UPDATE_GITHUB_BRANCH_GIVEN="${UPDATE_GITHUB_BRANCH:-}"
 UPDATE_GITHUB_BRANCH="${UPDATE_GITHUB_BRANCH:-main}"
+
+# save_given_update_channel: the channel the installer was given goes into
+# .env, where the server's updater reads it
+save_given_update_channel() {
+    if [ -n "${UPDATE_GITHUB_BRANCH_GIVEN:-}" ] && [ -f "${CONSOLE_PATH:-}/.env" ]; then
+        _upsert_env_line "$CONSOLE_PATH/.env" UPDATE_GITHUB_BRANCH "$UPDATE_GITHUB_BRANCH_GIVEN"
+    fi
+    return 0
+}
 
 read_update_github_branch_from_env() {
     local env_file="${CONSOLE_PATH:-}/.env"

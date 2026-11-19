@@ -219,6 +219,28 @@ FAKE
     rm -rf "$TEST_DIR"
 )
 
+# The server's own updater reads the channel from .env, so a given channel
+# is in .env before betterdesk-server update runs
+test_update_channel_before_server_update() (
+    export UPDATE_GITHUB_BRANCH=dev
+    load
+    printf 'UPDATE_GITHUB_BRANCH=main\n' > "$CONSOLE_PATH/.env"
+    do_backup_silent() { :; }
+    print_step() { :; }
+    print_error() { :; }
+    SERVER_BINARY_FILE=""
+    FROM_SOURCE=false
+    unset RELEASE_BASE_URL
+    server_cmd() {
+        grep '^UPDATE_GITHUB_BRANCH=' "$CONSOLE_PATH/.env" > "$TEST_DIR/seen"
+        return 1
+    }
+    update_go_install >/dev/null 2>&1 || true
+    [ "$(cat "$TEST_DIR/seen" 2>/dev/null)" = "UPDATE_GITHUB_BRANCH=dev" ] \
+        || fail "betterdesk-server update ran with $(cat "$TEST_DIR/seen" 2>/dev/null || echo 'no channel') in .env"
+    rm -rf "$TEST_DIR"
+)
+
 test_update_channel_kept_without_one() (
     unset UPDATE_GITHUB_BRANCH
     load
@@ -246,5 +268,6 @@ test_node_era_detection
 test_kill_stale_processes
 test_fresh_env_admin_password
 test_update_channel_in_env
+test_update_channel_before_server_update
 test_update_channel_kept_without_one
 echo "Go installer unit checks passed"
