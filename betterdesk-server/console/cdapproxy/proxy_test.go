@@ -1,11 +1,12 @@
 package cdapproxy
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/ws"
 	"github.com/unitronix/betterdesk-server/console/ws/wstest"
@@ -38,39 +39,44 @@ func TestOnlyDeviceIDsAreServed(t *testing.T) {
 	}
 }
 
-// TestBadNameAfterTheHandshakeChecks: a name that cannot go into a
-// header drops the connection only for a handshake the library would
-// take; a bad handshake gets the library's answer first, as in Node,
-// where the throw came after the handshake checks.
-func TestBadNameAfterTheHandshakeChecks(t *testing.T) {
-	check := wstest.Goroutines(t)
-	reg := ws.New(ws.Options{
-		Session:    wstest.OracleSession,
-		Permission: func(context.Context, string, string) (bool, error) { return true, nil },
+// TestAnyNameOpensTheSocket: the account's name and role do not go to the
+// API server, which never read them, so a name with a control character
+// or a character outside Latin-1 opens the socket like any other.
+func TestAnyNameOpensTheSocket(t *testing.T) {
+	var mu sync.Mutex
+	var seen []http.Header
+	echo := echoAPI()
+	addr := proxyAt(t, Options{
+		Devices:   knownDevices{},
+		CanAccess: everyDevice,
+		API: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			mu.Lock()
+			seen = append(seen, r.Header.Clone())
+			mu.Unlock()
+			echo.ServeHTTP(w, r)
+		}),
 	})
-	New(Options{API: http.NotFoundHandler(), Devices: knownDevices{}, CanAccess: everyDevice}).Register(reg)
-	srv := httptest.NewServer(reg)
-	addr := strings.TrimPrefix(srv.URL, "http://")
-	request := func(key string) string {
-		return "GET /api/cdap/devices/x/terminal HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n" +
-			"Sec-WebSocket-Key: " + key + "\r\nSec-WebSocket-Version: 13\r\n" +
-			`X-Oracle-Session: {"userId":7,"user":{"username":"a\u0001b","role":"admin"}}` + "\r\n\r\n"
+	for i, name := range []string{"a\u0001b", "Zh中", "anna"} {
+		c, status := open(t, addr, "/api/cdap/devices/dev1/terminal", as(int64(10+i), name))
+		if c == nil {
+			t.Errorf("%q: %d, want an open socket", name, status)
+			continue
+		}
+		if err := c.Binary([]byte("ping")); err != nil {
+			t.Fatal(err)
+		}
+		if !c.Wait(5*time.Second, func(frames []wstest.Frame, _ bool) bool { return len(frames) == 1 }) {
+			t.Errorf("%q: the API server did not answer: %v", name, c.Frames())
+		}
 	}
-	got, err := wstest.Raw(addr, request("short"))
-	if err != nil {
-		t.Fatal(err)
+	mu.Lock()
+	defer mu.Unlock()
+	if len(seen) != 3 {
+		t.Fatalf("the API server got %d sockets, want 3", len(seen))
 	}
-	if !strings.HasPrefix(got, "HTTP/1.1 400 Bad Request") || !strings.HasSuffix(got, "Missing or invalid Sec-WebSocket-Key header") {
-		t.Errorf("bad key: %q", got)
+	for _, h := range seen {
+		if h.Get("X-Username") != "" || h.Get("X-Role") != "" {
+			t.Errorf("the API server got X-Username %q and X-Role %q", h.Get("X-Username"), h.Get("X-Role"))
+		}
 	}
-	got, err = wstest.Raw(addr, request("dGhlIHNhbXBsZSBub25jZQ=="))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got != "" {
-		t.Errorf("good key: %q, want the connection to end without an answer", got)
-	}
-	srv.Close()
-	reg.Close()
-	check()
 }

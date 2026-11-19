@@ -12,7 +12,6 @@ package cdapproxy
 import (
 	"context"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -110,10 +109,6 @@ func (p *Proxy) serve(u *ws.Upgrade, ch Channel) {
 		return
 	}
 	role := session.Role()
-	name := session.Username()
-	if name == "" {
-		name = "user#" + strconv.FormatInt(session.UserID(), 10)
-	}
 	allowed, err := u.RoleHasPermission(role, ch.Permission)
 	if err != nil || !allowed {
 		logf("WARN: [CDAP %s] 403 upgrade rejected for %s (role=%s needs %s)", ch.Label, u.Path, role, ch.Permission)
@@ -132,14 +127,6 @@ func (p *Proxy) serve(u *ws.Upgrade, ch Channel) {
 		return
 	}
 	defer p.open.release(key)
-	if (!headerText(name) || !headerText(role)) && u.HandshakeValid() {
-		// The old proxy's HTTP client threw on such a header right after the
-		// handshake, and the process ended before the answer went out (BUGS
-		// SK2); this console drops the connection and goes on.
-		logf("WARN: [CDAP %s] the account's name cannot be sent in a header, connection dropped", ch.Label)
-		u.Drop()
-		return
-	}
 	var client heard
 	client.listen(u)
 	conn, ok := u.Accept(ws.AcceptOptions{})
@@ -150,13 +137,10 @@ func (p *Proxy) serve(u *ws.Upgrade, ch Channel) {
 	conn.KeepAlive(p.opts.PingInterval)
 	defer client.closeSilent(conn, 2*p.opts.PingInterval)()
 	logf("[CDAP %s] Proxy started for device %s (role=%s)", ch.Label, deviceID, role)
-	header := http.Header{}
-	header.Set("X-Username", latin1(name))
-	header.Set("X-Role", latin1(role))
 	target := "/api/cdap/devices/" + deviceID + "/" + ch.Name
 	ws.Pass(conn, ws.PassOptions{
 		Dial: func(ctx context.Context) (*ws.Upstream, error) {
-			return ws.DialHandler(ctx, p.opts.API, target, ws.DialOptions{Header: header, Subprotocols: []string{ch.Subprotocol}})
+			return ws.DialHandler(ctx, p.opts.API, target, ws.DialOptions{Subprotocols: []string{ch.Subprotocol}})
 		},
 		Queue:    true,
 		Binary:   ch.Binary,
@@ -190,27 +174,6 @@ func (p *Proxy) inScope(ctx context.Context, user *session.User, id string) int 
 		return http.StatusNotFound
 	}
 	return 0
-}
-
-// headerText reports whether Node's HTTP client took s as a header value:
-// tabs, printable ASCII and the characters U+0080 to U+00FF.
-func headerText(s string) bool {
-	for _, r := range s {
-		if r != '\t' && (r < 0x20 || r == 0x7f || r > 0xff) {
-			return false
-		}
-	}
-	return true
-}
-
-// latin1 is s as Node's HTTP client wrote a header value: one byte per
-// character, for a text headerText takes.
-func latin1(s string) string {
-	b := make([]byte, 0, len(s))
-	for _, r := range s {
-		b = append(b, byte(r))
-	}
-	return string(b)
 }
 
 func logf(format string, args ...any) { logging.Logf("console", format, args...) }
