@@ -504,7 +504,21 @@ func TestNegativeZeroIsWrittenAsZero(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(string(raw), "-0") || !strings.Contains(string(raw), `"n": 0`) {
+	// only the values the test wrote: the id and the times may hold "-0"
+	var state struct {
+		Changes []struct {
+			Rollback struct {
+				Value struct {
+					N    json.Number   `json:"n"`
+					List []json.Number `json:"list"`
+				} `json:"value"`
+			} `json:"rollback"`
+		} `json:"changes"`
+	}
+	if err := json.Unmarshal(raw, &state); err != nil || len(state.Changes) != 1 {
+		t.Fatalf("the file: %v\n%s", err, raw)
+	}
+	if value := state.Changes[0].Rollback.Value; value.N != "0" || len(value.List) != 1 || value.List[0] != "0" {
 		t.Errorf("the file holds a negative zero:\n%s", raw)
 	}
 	public := &Public{fields: goapi.NewObject("id", negativeZero.(*goapi.Object).Get("value"))}
