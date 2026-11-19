@@ -117,16 +117,46 @@ func TestDeviceScopeRules(t *testing.T) {
 		t.Errorf("restricted, no rules: want the empty scope")
 	}
 
-	// A failure to load the device groups is an error; failed grants, members
-	// and user groups count as none.
-	if _, err := fakeService(&fakeData{failing: "deviceGroups"}, &fakeRoles{}).DeviceScopeForUser(ctx, plain, devices); err == nil {
-		t.Error("unreadable device groups must fail")
-	}
-	for _, failing := range []string{"grants", "members", "userGroups"} {
+	// A failure to read the device groups, their members, the account's
+	// user groups or its grants is an error (PA9).
+	for _, failing := range []string{"deviceGroups", "grants", "members", "userGroups"} {
 		data := &fakeData{deviceGroups: groups, members: members, grants: []string{"D"}, userGroups: []UserGroup{{GUID: "ug-ops"}}, failing: failing}
-		if _, err := fakeService(data, &fakeRoles{}).DeviceScopeForUser(ctx, plain, devices); err != nil {
-			t.Errorf("failing %s: %v", failing, err)
+		if scope, err := fakeService(data, &fakeRoles{}).DeviceScopeForUser(ctx, plain, devices); err == nil {
+			t.Errorf("failing %s: scope %v, want an error", failing, scope.IDs())
 		}
+	}
+}
+
+// PA9: in the open default a device group with an access list hides its
+// devices from everyone else. While its members cannot be read, those
+// devices must not show; the request fails instead.
+func TestDeviceScopeFailsOnEveryReadError(t *testing.T) {
+	ctx := context.Background()
+	devices := []Device{{ID: "secret"}, {ID: "public"}}
+	closedGroup := []DeviceGroup{{GUID: "board", AllowedUsers: []string{"ceo"}}}
+	someone := &ScopeUser{ID: 9, Username: "someone", Role: "operator"}
+	data := &fakeData{deviceGroups: closedGroup, members: map[string][]string{"board": {"secret"}}}
+	scope, err := fakeService(data, &fakeRoles{}).DeviceScopeForUser(ctx, someone, devices)
+	if err != nil || scope.Has("secret") || !scope.Has("public") {
+		t.Fatalf("readable members: %v, %v", scope.IDs(), err)
+	}
+	for _, failing := range []string{"members", "userGroups", "grants"} {
+		data.failing = failing
+		s := fakeService(data, &fakeRoles{})
+		if scope, err := s.DeviceScopeForUser(ctx, someone, devices); err == nil {
+			t.Errorf("unreadable %s: scope %v, want an error", failing, scope.IDs())
+		}
+		if ok, err := s.UserCanAccessDevice(ctx, someone, &devices[0], devices); err == nil || ok {
+			t.Errorf("unreadable %s: access to the closed group's device %v, %v", failing, ok, err)
+		}
+		if _, err := s.CountEffectiveScope(ctx, someone, devices); err == nil {
+			t.Errorf("unreadable %s: the count must fail", failing)
+		}
+	}
+	// Admin roles read nothing and see everything.
+	data.failing = "members"
+	if scope, err := fakeService(data, &fakeRoles{}).DeviceScopeForUser(ctx, &ScopeUser{ID: 1, Role: "server_admin"}, devices); err != nil || scope != nil {
+		t.Errorf("admin: %v, %v", scope.IDs(), err)
 	}
 }
 

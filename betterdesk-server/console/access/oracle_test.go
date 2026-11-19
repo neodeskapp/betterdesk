@@ -1119,7 +1119,7 @@ func TestOracleScope(t *testing.T) {
 		t.Fatalf("only %d scope cases", len(v.Scopes))
 	}
 	ctx := context.Background()
-	limited := 0
+	limited, failedReads := 0, 0
 	for i, c := range v.Scopes {
 		data := &fakeData{members: c.Members, grants: c.Grants}
 		if c.Setting != nil {
@@ -1147,9 +1147,21 @@ func TestOracleScope(t *testing.T) {
 		user := c.User.scopeUser()
 		label := "scope case " + jsJSON(t, i)
 
+		// PA9: where Node read a failed members, user groups or grants
+		// lookup as none, Go fails the scope.
+		failsInGo := func(err error) bool {
+			if err == nil {
+				return false
+			}
+			if c.Failing == nil || (*c.Failing != "members" && *c.Failing != "userGroups" && *c.Failing != "grants") {
+				t.Fatalf("%s: %v", label, err)
+			}
+			failedReads++
+			return true
+		}
 		scope, err := service().DeviceScopeForUser(ctx, user, devices)
-		if err != nil {
-			t.Fatalf("%s: %v", label, err)
+		if failsInGo(err) {
+			continue
 		}
 		if (scope == nil) != (c.Expected.Scope == nil) {
 			t.Fatalf("%s: unlimited %v, Node says %v\n %s", label, scope == nil, c.Expected.Scope == nil, jsJSON(t, c))
@@ -1172,7 +1184,7 @@ func TestOracleScope(t *testing.T) {
 		if c.Target != nil {
 			target = &toDevices([]oracleDevice{*c.Target})[0]
 		}
-		if got, err := service().UserCanAccessDevice(ctx, user, target, nil); err != nil || got != c.Expected.CanAccessAlone {
+		if got, err := service().UserCanAccessDevice(ctx, user, target, nil); !failsInGo(err) && (err != nil || got != c.Expected.CanAccessAlone) {
 			t.Fatalf("%s: UserCanAccessDevice alone = %v, %v; Node says %v\n %s", label, got, err, c.Expected.CanAccessAlone, jsJSON(t, c))
 		}
 		if got, err := service().UserCanAccessDevice(ctx, user, target, devices); err != nil || got != c.Expected.CanAccessAmongAll {
@@ -1191,6 +1203,9 @@ func TestOracleScope(t *testing.T) {
 	}
 	if limited < 200 {
 		t.Fatalf("only %d cases with a limited scope", limited)
+	}
+	if failedReads == 0 {
+		t.Error("no case with a failed members, user groups or grants read ran")
 	}
 }
 

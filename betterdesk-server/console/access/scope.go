@@ -3,6 +3,7 @@ package access
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"sort"
 	"strconv"
@@ -242,12 +243,21 @@ func hasAccessList(group DeviceGroup) bool {
 // Admin roles and accounts whose groups are already known come back as they
 // are; so does the account when the lookup fails.
 func (s *Service) UserAccessContext(ctx context.Context, user *ScopeUser) *ScopeUser {
-	if user == nil || user.ID == 0 || scopeExempt(user.Role) || user.UserGroups != nil {
+	filled, err := s.withUserGroups(ctx, user)
+	if err != nil {
 		return user
+	}
+	return filled
+}
+
+// withUserGroups is UserAccessContext with the failed lookup as an error.
+func (s *Service) withUserGroups(ctx context.Context, user *ScopeUser) (*ScopeUser, error) {
+	if user == nil || user.ID == 0 || scopeExempt(user.Role) || user.UserGroups != nil {
+		return user, nil
 	}
 	groups, err := s.data.UserGroupsForUser(ctx, user.ID)
 	if err != nil {
-		return user
+		return nil, fmt.Errorf("read the user groups of account %d: %w", user.ID, err)
 	}
 	filled := *user
 	filled.UserGroups = make([]string, 0, len(groups))
@@ -256,14 +266,22 @@ func (s *Service) UserAccessContext(ctx context.Context, user *ScopeUser) *Scope
 			filled.UserGroups = append(filled.UserGroups, group.GUID)
 		}
 	}
-	return &filled
+	return &filled, nil
 }
 
 // GroupPeerIDs returns the ids of the devices in a device group. A group
 // that mirrors a folder has the devices of that folder and nothing else.
 // Any other group has its stored members and, when it follows a tag, every
-// device carrying the tag.
+// device carrying the tag. A failed read of the stored members counts as
+// none here, where the answer is only counted.
 func (s *Service) GroupPeerIDs(ctx context.Context, group DeviceGroup, devices []Device) map[string]struct{} {
+	ids, _ := s.groupPeerIDs(ctx, group, devices)
+	return ids
+}
+
+// groupPeerIDs is GroupPeerIDs with a failed read of the stored members as
+// an error.
+func (s *Service) groupPeerIDs(ctx context.Context, group DeviceGroup, devices []Device) (map[string]struct{}, error) {
 	ids := make(map[string]struct{})
 	if folderID, ok := groupFolderID(group); ok {
 		for _, device := range devices {
@@ -271,13 +289,16 @@ func (s *Service) GroupPeerIDs(ctx context.Context, group DeviceGroup, devices [
 				ids[device.ID] = struct{}{}
 			}
 		}
-		return ids
+		return ids, nil
 	}
+	var err error
 	if group.GUID != "" {
-		if members, err := s.data.DeviceGroupMembers(ctx, group.GUID); err == nil {
-			for _, id := range members {
-				ids[id] = struct{}{}
-			}
+		var members []string
+		if members, err = s.data.DeviceGroupMembers(ctx, group.GUID); err != nil {
+			err = fmt.Errorf("read the members of device group %s: %w", group.GUID, err)
+		}
+		for _, id := range members {
+			ids[id] = struct{}{}
 		}
 	}
 	if group.SourceType == "tag" && group.TagFilter != "" {
@@ -287,7 +308,7 @@ func (s *Service) GroupPeerIDs(ctx context.Context, group DeviceGroup, devices [
 			}
 		}
 	}
-	return ids
+	return ids, err
 }
 
 // EnrichGroups returns the groups with MemberCount set to the number of
@@ -352,12 +373,19 @@ func (s *Service) DeviceScopeEnvRestricted() bool { return s.scopeEnvRestricted 
 // plus its grants; an open default gives every listed device that is not
 // in a group closed to the account, plus those in a group open to it or
 // granted to it.
+//
+// A failed read of the device groups, a group's members, the account's
+// user groups or its grants is an error: without them the devices of a
+// group closed to the account could show.
 func (s *Service) DeviceScopeForUser(ctx context.Context, user *ScopeUser, devices []Device) (*DeviceScope, error) {
 	if user == nil || user.ID == 0 || scopeExempt(user.Role) {
 		return nil, nil
 	}
 	restrictedDefault := s.DeviceScopeRestrictedDefault(ctx)
-	accessUser := s.UserAccessContext(ctx, user)
+	accessUser, err := s.withUserGroups(ctx, user)
+	if err != nil {
+		return nil, err
+	}
 	groups, err := s.data.AllDeviceGroups(ctx)
 	if err != nil {
 		return nil, err
@@ -370,7 +398,7 @@ func (s *Service) DeviceScopeForUser(ctx context.Context, user *ScopeUser, devic
 	}
 	grants, err := s.data.UserPeerGrants(ctx, user.ID)
 	if err != nil {
-		grants = nil
+		return nil, fmt.Errorf("read the device grants of account %d: %w", user.ID, err)
 	}
 	if len(listed) == 0 && len(grants) == 0 {
 		if restrictedDefault {
@@ -382,7 +410,10 @@ func (s *Service) DeviceScopeForUser(ctx context.Context, user *ScopeUser, devic
 	allowed := newDeviceScope()
 	closed := make(map[string]struct{})
 	for _, group := range listed {
-		ids := s.GroupPeerIDs(ctx, group, devices)
+		ids, err := s.groupPeerIDs(ctx, group, devices)
+		if err != nil {
+			return nil, err
+		}
 		open := GroupAllowedForUser(group, accessUser)
 		for id := range ids {
 			if open {
