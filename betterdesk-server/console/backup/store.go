@@ -297,6 +297,24 @@ func createStrategy(ctx context.Context, db *store.DB, guid, name, userGroupGUID
 	return err
 }
 
+// saveAddressBookOf saves the address book of the account named username;
+// nothing happens for an unknown name.
+func saveAddressBookOf(ctx context.Context, db *store.DB, username, abType, data any) error {
+	args, err := bindArgs(db, 1, []any{username})
+	if err != nil {
+		return err
+	}
+	var id int64
+	err = db.QueryRow(ctx, `SELECT id FROM users WHERE username = ?`, args...).Scan(&id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("find the account of an address book: %w", err)
+	}
+	return saveAddressBook(ctx, db, float64(id), abType, data)
+}
+
 // saveAddressBook is the adapters' saveAddressBook(userId, abType, data):
 // nothing happens for an unknown user.
 func saveAddressBook(ctx context.Context, db *store.DB, userID, abType, data any) error {

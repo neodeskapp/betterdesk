@@ -3,6 +3,7 @@ package backup
 import (
 	"context"
 	"database/sql"
+	"slices"
 	"strings"
 	"testing"
 
@@ -44,6 +45,57 @@ func restoreSettings(t *testing.T, s *Service, snapshot string) RestoreResult {
 		t.Fatal(err)
 	}
 	return s.RestoreBackup(context.Background(), parsed, SnapshotOptions{Settings: true})
+}
+
+func addressBooks(t *testing.T, in *install) string {
+	t.Helper()
+	rows, err := readStrings(context.Background(), in.db, `SELECT username || '|' || ab_type || '|' || data FROM address_books ORDER BY username, ab_type`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return strings.Join(rows, "\n")
+}
+
+// BK1: a snapshot's address books come back with their type and data in
+// place, also from a snapshot made on PostgreSQL, whose rows name the
+// account instead of its id.
+func TestSnapshotRestoresAddressBooks(t *testing.T) {
+	dialects(t, func(t *testing.T, dialect string) {
+		ctx := context.Background()
+		in := newInstall(t, dialect)
+		in.seed(t)
+		s := in.snapshotService(t)
+		snapshot := parsedJSON(t, `{"_format":"betterdesk-backup","_version":1,"console":{"addressBooks":[`+
+			`{"user_id":50,"ab_type":"legacy","data":"{\"tags\":[\"a\"]}"},`+
+			`{"username":"second","ab_type":"personal","data":"{\"peers\":[]}"},`+
+			`{"username":"nobody","ab_type":"legacy","data":"{}"},`+
+			`{"user_id":51,"ab_type":"shared"}]}}`)
+		if res := s.RestoreBackup(ctx, snapshot, SnapshotOptions{AddressBooks: true}); len(res.Warnings) != 0 || !slices.Contains(res.Restored, "addressBooks") {
+			t.Fatalf("restore: %+v", res)
+		}
+		want := "second|personal|{\"peers\":[]}\nsecond|shared|{}\nseed_admin|legacy|{\"tags\":[\"a\"]}"
+		if got := addressBooks(t, in); got != want {
+			t.Errorf("address books:\n%s\nwant\n%s", got, want)
+		}
+
+		// a snapshot of this install restored into another one
+		made, err := s.CreateBackup(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		text, err := SnapshotJSON(made)
+		if err != nil {
+			t.Fatal(err)
+		}
+		other := newInstall(t, dialect)
+		other.seed(t)
+		if res := other.snapshotService(t).RestoreBackup(ctx, parsedJSON(t, string(text)), SnapshotOptions{AddressBooks: true}); len(res.Warnings) != 0 {
+			t.Fatalf("restore of the made snapshot: %+v", res)
+		}
+		if got := addressBooks(t, other); got != want {
+			t.Errorf("address books from the made snapshot:\n%s\nwant\n%s", got, want)
+		}
+	})
 }
 
 // EM2: the snapshot is a file people keep; the SMTP password stays in the

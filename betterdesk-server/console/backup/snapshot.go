@@ -211,8 +211,9 @@ type SnapshotOptions struct {
 //   - folders: those whose name is not taken yet are added;
 //   - groups: user groups, device groups and rules whose guid is not taken
 //     yet are added, failures of single ones are ignored;
-//   - address books: saved with the type and the data swapped, as the old
-//     call to the facade did (BUGS.md BK1).
+//   - address books: saved for the account the row names by user_id, or
+//     by username in a snapshot made on PostgreSQL; a row for an account
+//     that does not exist is skipped.
 func (s *Service) RestoreBackup(ctx context.Context, data any, o SnapshotOptions) RestoreResult {
 	res := RestoreResult{Restored: []string{}, Skipped: []string{}, Warnings: []string{}}
 	db := s.o.Store
@@ -292,13 +293,20 @@ func (s *Service) RestoreBackup(ctx context.Context, data any, o SnapshotOptions
 					return err
 				}
 				abType := prop(ab, "ab_type")
-				if !truthy(userID) || !truthy(abType) {
+				if !truthy(abType) {
 					continue
 				}
-				// db.saveAddressBook(userId, data, abType) was called with
-				// (user_id, ab_type, data): the facade stores the data as
-				// the type and the type as the data.
-				if err := saveAddressBook(ctx, db, userID, orValue(orValue(prop(ab, "data"), "{}"), "legacy"), abType); err != nil {
+				data := orValue(prop(ab, "data"), "{}")
+				switch username := prop(ab, "username"); {
+				case truthy(userID):
+					err = saveAddressBook(ctx, db, userID, abType, data)
+				case truthy(username):
+					// a snapshot made on PostgreSQL names the account
+					err = saveAddressBookOf(ctx, db, username, abType, data)
+				default:
+					continue
+				}
+				if err != nil {
 					return err
 				}
 			}
