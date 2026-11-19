@@ -60,13 +60,10 @@ func RequestBody(r *http.Request) any {
 }
 
 // Body is the body of a call for the value v, a parsed JSON value
-// (RequestBody, goapi.Parse), written as JSON.stringify writes it. Members
-// named __proto__, constructor and prototype are left out, in the object
-// itself and in the objects it holds directly or through other objects; a
-// list is sent as it is, with whatever its objects hold. The console has
-// always sent its bodies to the API server this way.
+// (RequestBody, goapi.Parse), written as JSON.stringify writes it, with
+// every member it has.
 func Body(v any) goapi.CallOption {
-	body, err := stringify(outgoing(v, true))
+	body, err := stringify(Plain(v))
 	if err != nil {
 		return goapi.Body(v)
 	}
@@ -77,12 +74,6 @@ func Body(v any) goapi.CallOption {
 // is how JSON.stringify writes one. WriteJSON does it for a whole answer;
 // a route that picks values out of an answer uses it on those.
 func Plain(v any) any {
-	return outgoing(v, false)
-}
-
-// outgoing copies a parsed JSON value with every negative zero as 0.
-// guarded says the value sits where the three member names are left out.
-func outgoing(v any, guarded bool) any {
 	switch t := v.(type) {
 	case float64:
 		if t == 0 {
@@ -91,7 +82,7 @@ func outgoing(v any, guarded bool) any {
 	case []any:
 		out := make([]any, len(t))
 		for i, element := range t {
-			out[i] = outgoing(element, false)
+			out[i] = Plain(element)
 		}
 		return out
 	case *goapi.Object:
@@ -100,10 +91,7 @@ func outgoing(v any, guarded bool) any {
 		}
 		out := goapi.NewObject()
 		for _, key := range t.Keys() {
-			if guarded && (key == "__proto__" || key == "constructor" || key == "prototype") {
-				continue
-			}
-			out.Set(key, outgoing(t.Get(key), guarded))
+			out.Set(key, Plain(t.Get(key)))
 		}
 		return out
 	}

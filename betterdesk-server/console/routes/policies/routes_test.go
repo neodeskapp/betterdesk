@@ -57,6 +57,10 @@ var fixes = slices.Concat(proxytest.Fixes("FL4",
 	// The policy writes check the session first: signed out is 401 with
 	// session_required, a pro account is refused as on the other routes.
 	16, 17, 24, 25, 32, 33, 40, 41, 48, 49, 56, 57, 64, 65, 72, 73, 80, 81, 88, 89,
+), proxytest.Fixes("FL6",
+	// The body goes to the API server with every member, also __proto__,
+	// constructor and prototype.
+	868,
 ))
 
 // TestVectors replays what routes/policies.routes.js of the Node console

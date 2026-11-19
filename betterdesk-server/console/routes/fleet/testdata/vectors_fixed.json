@@ -475,5 +475,69 @@
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Invalid status\"}",
   "calls": []
+ },
+ {
+  "vector": 2796,
+  "bug": "FL6",
+  "request": "POST /api/panel/fleet/tasks",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true,\"items\":[]}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/tasks",
+    "type": "application/json",
+    "body": "{\"__proto__\":{\"x\":1},\"constructor\":2,\"prototype\":3,\"keep\":{\"constructor\":4},\"created_by\":\"e2e_global_admin\"}"
+   }
+  ]
+ },
+ {
+  "vector": 2797,
+  "bug": "FL6",
+  "request": "POST /api/panel/fleet/workflows",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true,\"items\":[]}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/workflows",
+    "type": "application/json",
+    "body": "{\"__proto__\":{\"x\":1},\"constructor\":2,\"prototype\":3,\"keep\":{\"constructor\":4},\"created_by\":\"e2e_global_admin\"}"
+   }
+  ]
+ },
+ {
+  "vector": 2798,
+  "bug": "FL6",
+  "request": "POST /api/panel/fleet/resources/acme",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true,\"items\":[]}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/resources/acme",
+    "type": "application/json",
+    "body": "{\"__proto__\":{\"x\":1},\"constructor\":2,\"prototype\":3,\"keep\":{\"constructor\":4}}"
+   }
+  ]
+ },
+ {
+  "vector": 2799,
+  "bug": "FL6",
+  "request": "POST /api/bd/api/panel/fleet/workflows/wf-1/execute",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true,\"items\":[]}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/workflows/wf-1/execute",
+    "type": "application/json",
+    "body": "{\"__proto__\":{\"x\":1},\"constructor\":2,\"prototype\":3,\"keep\":{\"constructor\":4}}"
+   }
+  ]
  }
 ]

@@ -43,10 +43,11 @@ func TestPassingOn(t *testing.T) {
 	want(t, "settings, as an operator", reader.Do("GET", "/api/panel/org/o1/settings", ""), 200, `{"timezone":"UTC"}`)
 	calls(t, "reads", api, "GET /api/org", "GET /api/org/o1/settings")
 
-	// A write goes on with the body; the API server's refusal comes back
+	// A write goes on with the body, every member of it (BUGS FL6); the API
+	// server's refusal comes back
 	api.On("PUT /api/org/o1", 409, `{"error":"slug taken"}`)
 	want(t, "update", admin.Do("PUT", "/api/panel/org/o1", `{"name":"x","__proto__":{"a":1}}`), 409, `{"error":"slug taken"}`)
-	calls(t, "update", api, `PUT /api/org/o1 {"name":"x"}`)
+	calls(t, "update", api, `PUT /api/org/o1 {"name":"x","__proto__":{"a":1}}`)
 	// No body from the API server, or no answer at all
 	api.On("DELETE /api/org/o1", 503, ``)
 	want(t, "delete", admin.Do("DELETE", "/api/panel/org/o1", ""), 503, `{"error":"Go server unreachable"}`)

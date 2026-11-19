@@ -434,6 +434,22 @@
   "calls": []
  },
  {
+  "vector": 97,
+  "bug": "FL6",
+  "request": "POST /api/bd/attestation",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/peers/device-a/attestation",
+    "type": "application/json",
+    "body": "{\"fingerprint\":{\"sha\":\"x\",\"__proto__\":{\"y\":1},\"constructor\":2},\"platform_data\":[1,{\"prototype\":3}]}"
+   }
+  ]
+ },
+ {
   "vector": 114,
   "bug": "DV4",
   "request": "POST /api/bd/api/bd/attestation",
@@ -450,5 +466,21 @@
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
   "calls": []
+ },
+ {
+  "vector": 119,
+  "bug": "FL6",
+  "request": "POST /api/bd/api/bd/attestation",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/peers/device-a/attestation",
+    "type": "application/json",
+    "body": "{\"fingerprint\":{\"sha\":\"x\",\"__proto__\":{\"y\":1},\"constructor\":2},\"platform_data\":[1,{\"prototype\":3}]}"
+   }
+  ]
  }
 ]

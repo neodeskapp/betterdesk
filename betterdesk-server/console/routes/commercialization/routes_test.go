@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -83,12 +84,42 @@ func TestTwoDotsVectorsAreListed(t *testing.T) {
 	}
 }
 
+// namedMember finds a member named __proto__, constructor or prototype in
+// a JSON body.
+var namedMember = regexp.MustCompile(`"(__proto__|constructor|prototype)":`)
+
+// everyMember changes the vectors whose body has a member named
+// __proto__, constructor or prototype into the call the console makes
+// now, with the body as the client sent it (BUGS FL6), where Node's API
+// client left those members out. It reports whether v is one of them.
+func everyMember(v *proxytest.Vector) bool {
+	if v.Request.Body == nil || !namedMember.MatchString(*v.Request.Body) || len(v.Calls) != 1 ||
+		v.Calls[0].Body == "" || v.Calls[0].Body == *v.Request.Body {
+		return false
+	}
+	v.Calls[0].Body = *v.Request.Body
+	return true
+}
+
+func TestEveryMemberVectorsAreCounted(t *testing.T) {
+	changed := 0
+	for _, v := range proxytest.Load(t, filepath.Join("testdata", "vectors.json")) {
+		if everyMember(&v) {
+			changed++
+		}
+	}
+	if changed != 6 {
+		t.Errorf("%d vectors send a body with __proto__, constructor or prototype, want 6", changed)
+	}
+}
+
 func replay(t *testing.T, keep func(proxytest.Vector) bool) {
 	t.Helper()
 	var kept []proxytest.Vector
 	for _, v := range proxytest.Load(t, filepath.Join("testdata", "vectors.json")) {
 		if keep(v) {
 			fixed(&v)
+			everyMember(&v)
 			kept = append(kept, v)
 		}
 	}

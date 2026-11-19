@@ -52,5 +52,101 @@
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Invalid a\"}",
   "calls": []
+ },
+ {
+  "vector": 135,
+  "bug": "FL6",
+  "request": "POST /json/one",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/x/one",
+    "type": "application/json",
+    "body": "{\"__proto__\":{\"x\":1},\"constructor\":2}"
+   }
+  ]
+ },
+ {
+  "vector": 136,
+  "bug": "FL6",
+  "request": "POST /json/one",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/x/one",
+    "type": "application/json",
+    "body": "{\"keep\":{\"prototype\":1,\"inner\":{\"constructor\":2,\"ok\":0}},\"list\":[{\"__proto__\":3,\"constructor\":4,\"deep\":{\"prototype\":5}}],\"prototype\":6}"
+   }
+  ]
+ },
+ {
+  "vector": 148,
+  "bug": "FL6",
+  "request": "PUT /json/one",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "PUT",
+    "url": "/api/x/one",
+    "type": "application/json",
+    "body": "{\"__proto__\":{\"x\":1},\"constructor\":2}"
+   }
+  ]
+ },
+ {
+  "vector": 149,
+  "bug": "FL6",
+  "request": "PUT /json/one",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "PUT",
+    "url": "/api/x/one",
+    "type": "application/json",
+    "body": "{\"keep\":{\"prototype\":1,\"inner\":{\"constructor\":2,\"ok\":0}},\"list\":[{\"__proto__\":3,\"constructor\":4,\"deep\":{\"prototype\":5}}],\"prototype\":6}"
+   }
+  ]
+ },
+ {
+  "vector": 161,
+  "bug": "FL6",
+  "request": "PATCH /json/one",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "PATCH",
+    "url": "/api/x/one",
+    "type": "application/json",
+    "body": "{\"__proto__\":{\"x\":1},\"constructor\":2}"
+   }
+  ]
+ },
+ {
+  "vector": 162,
+  "bug": "FL6",
+  "request": "PATCH /json/one",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "PATCH",
+    "url": "/api/x/one",
+    "type": "application/json",
+    "body": "{\"keep\":{\"prototype\":1,\"inner\":{\"constructor\":2,\"ok\":0}},\"list\":[{\"__proto__\":3,\"constructor\":4,\"deep\":{\"prototype\":5}}],\"prototype\":6}"
+   }
+  ]
  }
 ]

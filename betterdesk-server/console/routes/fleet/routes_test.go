@@ -31,6 +31,10 @@ var fixes = slices.Concat(proxytest.Fixes("FL4",
 	1306, 1307, 1310, 1311, 1312, 1313, 1316, 1317, 1318, 1319, 1322, 1324, 1326, 1328,
 	1342, 1368, 1369, 1370, 1450, 1570, 1571, 1680, 1722, 1723, 1774, 1996, 2030, 2256,
 	2316, 2370, 2371, 2632, 2726,
+), proxytest.Fixes("FL6",
+	// The body goes to the API server with every member, also __proto__,
+	// constructor and prototype.
+	2796, 2797, 2798, 2799,
 ))
 
 // TestVectors replays what routes/fleet.routes.js of the Node console

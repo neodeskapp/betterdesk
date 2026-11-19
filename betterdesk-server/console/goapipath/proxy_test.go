@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -37,10 +38,14 @@ func register(d *kit.Deps) {
 
 // proxyFixes are the vectors of proxy.json whose answer a bug fix of
 // BUGS.md changed on purpose (proxytest.Replay).
-var proxyFixes = proxytest.Fixes("FL4",
+var proxyFixes = slices.Concat(proxytest.Fixes("FL4",
 	// An id with two dots in it is refused before a call is built.
 	60, 61, 62, 63, 64, 65,
-)
+), proxytest.Fixes("FL6",
+	// The body goes to the API server with every member, also __proto__,
+	// constructor and prototype.
+	135, 136, 148, 149, 161, 162,
+))
 
 func TestProxyVectors(t *testing.T) {
 	proxytest.Replay(t, filepath.Join("testdata", "proxy.json"), register, proxyFixes...)
@@ -75,5 +80,24 @@ func TestProxyAnswersWhenTheCallNeverLeaves(t *testing.T) {
 	rec, calls = w.Do(proxytest.Request{Path: "/fixed?path=/a%5Cb"}, nil)
 	if rec.Code != 400 || rec.Body.String() != `{"error":"Invalid API path"}` || len(calls) != 0 {
 		t.Errorf("got %d %s after %d calls", rec.Code, rec.Body.String(), len(calls))
+	}
+}
+
+// TestBodyKeepsEveryMember: a body goes to the API server with every
+// member the client sent, also __proto__, constructor and prototype, at
+// any depth (BUGS.md FL6).
+func TestBodyKeepsEveryMember(t *testing.T) {
+	w := proxytest.NewWorld(t, register)
+	ok := &proxytest.Answer{Status: 200, Type: "application/json", Body: `{"ok":true}`}
+	for _, body := range []string{
+		`{"constructor":"x","keep":1}`,
+		`{"__proto__":{"x":1},"prototype":2}`,
+		`{"keep":{"prototype":1,"inner":{"constructor":2}},"list":[{"__proto__":3}]}`,
+	} {
+		sent := body
+		rec, calls := w.Do(proxytest.Request{Method: "PUT", Path: "/json/one", Type: "application/json", Body: &sent}, ok)
+		if rec.Code != 200 || len(calls) != 1 || calls[0].Body != body {
+			t.Errorf("PUT %s: %d, the API server got %+v", body, rec.Code, calls)
+		}
 	}
 }

@@ -1843,6 +1843,22 @@
   "calls": []
  },
  {
+  "vector": 868,
+  "bug": "FL6",
+  "request": "PUT /api/panel/policies/org-1/security",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true,\"connection\":{},\"entries\":null}",
+  "calls": [
+   {
+    "method": "PUT",
+    "url": "/api/org/org-1/policy/security",
+    "type": "application/json",
+    "body": "{\"__proto__\":{\"x\":1},\"constructor\":2,\"prototype\":3,\"keep\":{\"constructor\":4}}"
+   }
+  ]
+ },
+ {
   "vector": 879,
   "bug": "FL8",
   "request": "GET /api/panel/attestation?limit=-5&offset=-7",

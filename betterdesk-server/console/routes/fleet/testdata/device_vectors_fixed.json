@@ -27,6 +27,22 @@
   "calls": []
  },
  {
+  "vector": 19,
+  "bug": "FL6",
+  "request": "POST /api/bd/fleet/task-result",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/task-result",
+    "type": "application/json",
+    "body": "{\"device_id\":\"device-a\",\"__proto__\":{\"x\":1},\"constructor\":2,\"nested\":{\"prototype\":3,\"keep\":4},\"list\":[{\"__proto__\":5}]}"
+   }
+  ]
+ },
+ {
   "vector": 35,
   "bug": "DV4",
   "request": "POST /api/bd/fleet/software",
@@ -52,6 +68,22 @@
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
   "calls": []
+ },
+ {
+  "vector": 41,
+  "bug": "FL6",
+  "request": "POST /api/bd/fleet/software",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/software",
+    "type": "application/json",
+    "body": "{\"device_id\":\"device-a\",\"__proto__\":{\"x\":1},\"constructor\":2,\"nested\":{\"prototype\":3,\"keep\":4},\"list\":[{\"__proto__\":5}]}"
+   }
+  ]
  },
  {
   "vector": 57,
@@ -81,6 +113,22 @@
   "calls": []
  },
  {
+  "vector": 63,
+  "bug": "FL6",
+  "request": "POST /api/bd/api/bd/fleet/task-result",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/task-result",
+    "type": "application/json",
+    "body": "{\"device_id\":\"device-a\",\"__proto__\":{\"x\":1},\"constructor\":2,\"nested\":{\"prototype\":3,\"keep\":4},\"list\":[{\"__proto__\":5}]}"
+   }
+  ]
+ },
+ {
   "vector": 79,
   "bug": "DV4",
   "request": "POST /api/bd/api/bd/fleet/software",
@@ -106,5 +154,21 @@
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
   "calls": []
+ },
+ {
+  "vector": 85,
+  "bug": "FL6",
+  "request": "POST /api/bd/api/bd/fleet/software",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/software",
+    "type": "application/json",
+    "body": "{\"device_id\":\"device-a\",\"__proto__\":{\"x\":1},\"constructor\":2,\"nested\":{\"prototype\":3,\"keep\":4},\"list\":[{\"__proto__\":5}]}"
+   }
+  ]
  }
 ]

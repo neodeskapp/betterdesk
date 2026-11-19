@@ -47,6 +47,10 @@ var deviceFixes = slices.Concat(proxytest.Fixes("DV3",
 	// Only text names a device: a number or a list is refused as another
 	// device, where Node compared the text String() made of it.
 	13, 14, 35, 36, 57, 58, 79, 80,
+), proxytest.Fixes("FL6",
+	// The body goes to the API server with every member, also __proto__,
+	// constructor and prototype.
+	19, 41, 63, 85,
 ))
 
 // TestDeviceVectors replays what the device routes of the Node file

@@ -566,6 +566,38 @@
   "calls": []
  },
  {
+  "vector": 550,
+  "bug": "FL6",
+  "request": "POST /api/panel/resource-control/policies/900100001/usb",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true,\"usb\":{\"mode\":\"block\"}}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/devices/900100001/resources/usb",
+    "type": "application/json",
+    "body": "{\"__proto__\":{\"x\":1},\"constructor\":2,\"prototype\":3,\"keep\":{\"constructor\":4}}"
+   }
+  ]
+ },
+ {
+  "vector": 551,
+  "bug": "FL6",
+  "request": "PUT /api/bd/api/panel/resource-control/org-policy",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true,\"usb\":{\"mode\":\"block\"}}",
+  "calls": [
+   {
+    "method": "PUT",
+    "url": "/api/org/default/resource-policy",
+    "type": "application/json",
+    "body": "{\"__proto__\":{\"x\":1},\"constructor\":2,\"prototype\":3,\"keep\":{\"constructor\":4}}"
+   }
+  ]
+ },
+ {
   "vector": 559,
   "bug": "FL7",
   "request": "GET /api/panel/resource-control/devices",
