@@ -258,14 +258,14 @@ func deleteRule(ctx context.Context, db *store.DB, id jsbind.Value) error {
 	return q.exec(ctx, db, "delete alert rule "+id.ToString())
 }
 
-// alertFilter narrows the alert history. A value that is empty or
-// undefined does not filter.
+// alertFilter narrows the alert history. A text that is
+// "" does not filter.
 type alertFilter struct {
-	DeviceID, Severity jsbind.Value
+	DeviceID, Severity string
 	// Acknowledged is the flag to look for, undefined for both
 	Acknowledged jsbind.Value
-	// Limit is the number of rows, undefined for all
-	Limit jsbind.Value
+	// Limit is the number of rows, 0 for all
+	Limit int
 }
 
 // listAlerts returns the alert history with the name of each alert's
@@ -273,18 +273,18 @@ type alertFilter struct {
 func listAlerts(ctx context.Context, db *store.DB, filter alertFilter) ([]record, error) {
 	var q query
 	q.add("SELECT h.*, r.name as rule_name FROM alert_history h LEFT JOIN alert_rules r ON h.rule_id = r.id WHERE 1=1")
-	if filter.DeviceID.Truthy() {
-		q.add(" AND h.device_id = ?", filter.DeviceID)
+	if filter.DeviceID != "" {
+		q.add(" AND h.device_id = ?", jsbind.String(filter.DeviceID))
 	}
-	if filter.Severity.Truthy() {
-		q.add(" AND h.severity = ?", filter.Severity)
+	if filter.Severity != "" {
+		q.add(" AND h.severity = ?", jsbind.String(filter.Severity))
 	}
 	if !filter.Acknowledged.IsUndefined() {
 		q.add(" AND h.acknowledged = ?", filter.Acknowledged)
 	}
 	q.add(" ORDER BY h.triggered_at DESC")
-	if filter.Limit.IsNumber() && counts(filter.Limit.ToNumber()) {
-		q.add(" LIMIT ?", filter.Limit)
+	if filter.Limit > 0 {
+		q.add(" LIMIT ?", jsbind.Number(float64(filter.Limit)))
 	}
 	return q.rows(ctx, db, "list the alert history")
 }
@@ -339,27 +339,27 @@ func createCommand(ctx context.Context, db *store.DB, command newCommand) (any, 
 	return createdCommand{ID: id, DeviceID: command.DeviceID, Status: "pending"}, nil
 }
 
-// commandFilter narrows the command list. A value that is empty or
-// undefined does not filter.
+// commandFilter narrows the command list. A text that is
+// "" does not filter.
 type commandFilter struct {
-	DeviceID, Status jsbind.Value
-	// Limit is the number of rows, undefined for all
-	Limit jsbind.Value
+	DeviceID, Status string
+	// Limit is the number of rows, 0 for all
+	Limit int
 }
 
 // listCommands returns the commands, the one created last first.
 func listCommands(ctx context.Context, db *store.DB, filter commandFilter) ([]record, error) {
 	var q query
 	q.add("SELECT * FROM remote_commands WHERE 1=1")
-	if filter.DeviceID.Truthy() {
-		q.add(" AND device_id = ?", filter.DeviceID)
+	if filter.DeviceID != "" {
+		q.add(" AND device_id = ?", jsbind.String(filter.DeviceID))
 	}
-	if filter.Status.Truthy() {
-		q.add(" AND status = ?", filter.Status)
+	if filter.Status != "" {
+		q.add(" AND status = ?", jsbind.String(filter.Status))
 	}
 	q.add(" ORDER BY created_at DESC")
-	if filter.Limit.IsNumber() && counts(filter.Limit.ToNumber()) {
-		q.add(" LIMIT ?", filter.Limit)
+	if filter.Limit > 0 {
+		q.add(" LIMIT ?", jsbind.Number(float64(filter.Limit)))
 	}
 	return q.rows(ctx, db, "list remote commands")
 }

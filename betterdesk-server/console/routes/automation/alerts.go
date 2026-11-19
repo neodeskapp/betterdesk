@@ -16,22 +16,28 @@ type alertList struct {
 // the alert history with the name of each alert's rule, the alert
 // triggered last first.
 //
-// acknowledged filters as soon as the query names it: "true" asks for the
-// acknowledged alerts and every other value for the rest. A limit in the
-// query is held between 1 and 500, 100 when it is 0 or no number.
+// Each filter is one text, and an empty one does not filter. acknowledged
+// is "true" for the acknowledged alerts and "false" for the rest. The
+// limit is limitOf's. Anything else is refused with 400.
 func (h *handlers) alerts(w http.ResponseWriter, r *http.Request) {
-	filter := alertFilter{DeviceID: queryValue(r, "device_id"), Severity: queryValue(r, "severity")}
-	if acknowledged := queryValue(r, "acknowledged"); !acknowledged.IsUndefined() {
-		filter.Acknowledged = flag(h.db, acknowledged.IsString() && acknowledged.Str() == "true")
+	var filter alertFilter
+	if !readFilters(w, r, filterInto{"device_id", &filter.DeviceID}, filterInto{"severity", &filter.Severity}) {
+		return
 	}
-	max, limited, err := limit(r)
-	var alerts []record
-	if err == nil {
-		if limited {
-			filter.Limit = jsbind.Number(max)
+	if text, given, err := jsbind.QueryText(r.URL.RawQuery, "acknowledged"); given {
+		if err != nil || text != "true" && text != "false" {
+			fail(w, r, http.StatusBadRequest, "Invalid acknowledged")
+			return
 		}
-		alerts, err = listAlerts(r.Context(), h.db, filter)
+		filter.Acknowledged = flag(h.db, text == "true")
 	}
+	limit, ok := limitOf(r)
+	if !ok {
+		fail(w, r, http.StatusBadRequest, "Invalid limit")
+		return
+	}
+	filter.Limit = limit
+	alerts, err := listAlerts(r.Context(), h.db, filter)
 	if err != nil {
 		h.serverError(w, r, "Alerts list error", err)
 		return

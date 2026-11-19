@@ -1,11 +1,10 @@
 package automation
 
 import (
-	"math"
 	"net/http"
+	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/goapipath"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
@@ -117,51 +116,52 @@ func flag(db *store.DB, on bool) jsbind.Value {
 	return jsbind.Number(0)
 }
 
-// queryValue is req.query[name] as text, a list or an object. The query
-// ends at a "#".
-func queryValue(r *http.Request, name string) jsbind.Value {
-	query, _, _ := strings.Cut(r.URL.RawQuery, "#")
-	return jsbind.Query(query, name)
+// filterOf reads a filter of a list from the query: one text, "" when the
+// query does not name it. ok is false when the filter is no single text
+// (given twice, in brackets or with a key).
+func filterOf(r *http.Request, name string) (text string, ok bool) {
+	text, _, err := jsbind.QueryText(r.URL.RawQuery, name)
+	return text, err == nil
 }
 
-// limit is "if (req.query.limit) Math.min(Math.max(parseInt(req.query.limit,
-// 10) || 100, 1), 500)": the limit of a request, from 1 to 500 and 100 when
-// the text gives 0 or no number, and false when the query gives none. It
-// fails where JavaScript could not make text of the value.
-func limit(r *http.Request) (n float64, ok bool, err error) {
-	value := goapipath.Query(r, "limit")
-	if !value.Truthy() {
-		return 0, false, nil
-	}
-	text, err := value.Text()
-	if err != nil {
-		return 0, false, err
-	}
-	return clampLimit(parseInt10(text)), true, nil
+// filterInto names a filter of a list and where its text goes.
+type filterInto struct {
+	name string
+	text *string
 }
 
-// clampLimit is Math.min(Math.max(n || 100, 1), 500).
-func clampLimit(n float64) float64 {
-	if n == 0 || math.IsNaN(n) {
-		n = 100
+// readFilters reads the filters in the order given and answers 400
+// "Invalid <name>" for the first that is no single text.
+func readFilters(w http.ResponseWriter, r *http.Request, filters ...filterInto) bool {
+	for _, f := range filters {
+		text, ok := filterOf(r, f.name)
+		if !ok {
+			fail(w, r, http.StatusBadRequest, "Invalid "+f.name)
+			return false
+		}
+		*f.text = text
 	}
-	return math.Min(math.Max(n, 1), 500)
+	return true
 }
 
-// parseInt10 is parseInt(text, 10): the whole number the text starts
-// with, after white space and a sign, and NaN when it starts with none.
-// "0x10" is 0, where parseInt without a base reads a hexadecimal number.
-func parseInt10(text string) float64 {
-	digits := strings.TrimLeftFunc(text, jsbind.IsSpace)
-	if digits != "" && (digits[0] == '+' || digits[0] == '-') {
-		digits = digits[1:]
-	}
-	if len(digits) > 1 && digits[0] == '0' && (digits[1] == 'x' || digits[1] == 'X') {
-		return 0
-	}
-	return goapipath.ParseInt(text)
-}
+// maxRows is the most rows a list answers.
+const maxRows = 500
 
-// counts reports whether a limit limits: "if (filters.limit)" for a
-// number.
-func counts(limit float64) bool { return limit != 0 && !math.IsNaN(limit) }
+// limitOf reads the limit of a list from the query. Without one, or with
+// an empty one, the list is not limited (n is 0). Otherwise it has to be
+// a whole number from 1, written in digits; a larger one than maxRows is
+// maxRows. ok is false for anything else.
+func limitOf(r *http.Request) (n int, ok bool) {
+	text, ok := filterOf(r, "limit")
+	if !ok || text == "" {
+		return 0, ok
+	}
+	if strings.Trim(text, "0123456789") != "" || strings.Trim(text, "0") == "" {
+		return 0, false
+	}
+	value, err := strconv.Atoi(text)
+	if err != nil || value > maxRows {
+		return maxRows, true
+	}
+	return value, true
+}

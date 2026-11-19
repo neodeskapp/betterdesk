@@ -76,18 +76,21 @@ type commandList struct {
 }
 
 // commands answers GET commands?device_id=&status=&limit=: the commands,
-// the one created last first. A limit in the query is held between 1 and
-// 500, 100 when it is 0 or no number.
+// the one created last first. Each filter is one text, and an empty one
+// does not filter; the limit is limitOf's. Anything else is refused with
+// 400.
 func (h *handlers) commands(w http.ResponseWriter, r *http.Request) {
-	filter := commandFilter{DeviceID: queryValue(r, "device_id"), Status: queryValue(r, "status")}
-	max, limited, err := limit(r)
-	var commands []record
-	if err == nil {
-		if limited {
-			filter.Limit = jsbind.Number(max)
-		}
-		commands, err = listCommands(r.Context(), h.db, filter)
+	var filter commandFilter
+	if !readFilters(w, r, filterInto{"device_id", &filter.DeviceID}, filterInto{"status", &filter.Status}) {
+		return
 	}
+	limit, ok := limitOf(r)
+	if !ok {
+		fail(w, r, http.StatusBadRequest, "Invalid limit")
+		return
+	}
+	filter.Limit = limit
+	commands, err := listCommands(r.Context(), h.db, filter)
 	if err != nil {
 		h.serverError(w, r, "Commands list error", err)
 		return

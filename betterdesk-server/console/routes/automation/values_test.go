@@ -2,18 +2,15 @@ package automation
 
 import (
 	"encoding/json"
-	"math"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
-	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/store"
 )
 
 // bodyOf is req.body for a JSON object.
@@ -27,107 +24,6 @@ func bodyOf(t testing.TB, object string) middleware.JSONObject {
 		body = middleware.Body(r)
 	})).ServeHTTP(httptest.NewRecorder(), r)
 	return body
-}
-
-func TestParseInt10(t *testing.T) {
-	nan := math.NaN()
-	for text, want := range map[string]float64{
-		"5": 5, "05": 5, " 7": 7, "\t\n7": 7, "\xc2\xa07": 7, "\xef\xbb\xbf7": 7, "\xe2\x80\x837": 7, "7 ": 7, "7abc": 7, "1.9": 1, "1e3": 1, "1,2": 1,
-		"+3": 3, "-3": -3, "--3": nan, "+-3": nan, "-": nan, "": nan, "abc": nan, ".5": nan, "Infinity": nan, "NaN": nan,
-		"0": 0, "-0": 0, "0x10": 0, "0X10": 0, "-0x10": 0, " +0xff": 0, "0x": 0, "0xzz": 0, "00x10": 0, "x10": nan, "1x10": 1,
-		"99999999999999999999": 1e20, "9007199254740993": 9007199254740992, "1" + strings.Repeat("0", 400): math.Inf(1),
-		"-1" + strings.Repeat("0", 400): math.Inf(-1),
-	} {
-		got := parseInt10(text)
-		if math.IsNaN(want) != math.IsNaN(got) || !math.IsNaN(want) && got != want {
-			t.Errorf("parseInt(%q, 10) = %v, want %v", text, got, want)
-		}
-	}
-}
-
-// What parseInt10 makes of any text: a whole number or NaN, the number
-// of the digits it starts with, and never the hexadecimal reading.
-func FuzzParseInt10(f *testing.F) {
-	for _, seed := range []string{"5", " -12abc", "0x1f", "+0X", "1e5", "  9", "", "-", "9999999999999999999999"} {
-		f.Add(seed)
-	}
-	f.Fuzz(func(t *testing.T, text string) {
-		got := parseInt10(text)
-		if !math.IsNaN(got) && !math.IsInf(got, 0) && got != math.Trunc(got) {
-			t.Fatalf("parseInt(%q, 10) = %v is no whole number", text, got)
-		}
-		digits := strings.TrimLeft(text, "0123456789")
-		if lead := text[:len(text)-len(digits)]; lead != "" {
-			want, _ := strconv.ParseFloat(lead, 64)
-			if got != want {
-				t.Fatalf("parseInt(%q, 10) = %v, want the number of its digits %v", text, got, want)
-			}
-		} else if text == "" || text[0] >= 'a' && text[0] <= 'z' {
-			if !math.IsNaN(got) {
-				t.Fatalf("parseInt(%q, 10) = %v, want NaN", text, got)
-			}
-		}
-	})
-}
-
-func TestLimit(t *testing.T) {
-	nan := math.NaN()
-	for query, want := range map[string]struct {
-		n     float64
-		given bool
-		fails bool
-	}{
-		"":                       {0, false, false},
-		"limit=":                 {0, false, false},
-		"limit":                  {0, false, false},
-		"other=5":                {0, false, false},
-		"limit=5":                {5, true, false},
-		"limit=0":                {100, true, false},
-		"limit=-3":               {1, true, false},
-		"limit=abc":              {100, true, false},
-		"limit=0x10":             {100, true, false},
-		"limit=%202rows":         {2, true, false},
-		"limit=3&limit=4":        {3, true, false},
-		"limit[]=7":              {7, true, false},
-		"limit[rows]=7":          {100, true, false},
-		"limit[toString]=7":      {0, false, true},
-		"limit[0][toString]=7":   {0, false, true},
-		"limit=5#limit=6":        {5, true, false},
-		"LIMIT=5":                {0, false, false},
-		"limit=9007199254740993": {500, true, false},
-		"limit=500":              {500, true, false},
-		"limit=501":              {500, true, false},
-		"limit=1":                {1, true, false},
-	} {
-		r := httptest.NewRequest(http.MethodGet, "/api/automation/alerts?"+query, nil)
-		n, given, err := limit(r)
-		if (err != nil) != want.fails || given != want.given || math.IsNaN(n) != math.IsNaN(want.n) || !math.IsNaN(n) && n != want.n {
-			t.Errorf("limit of %q = %v, %v, %v; want %v, %v, fails %v", query, n, given, err, want.n, want.given, want.fails)
-		}
-	}
-	for limit, want := range map[float64]bool{0: false, nan: false, 1: true, -1: true, math.Inf(1): true, 0.5: true} {
-		if got := counts(limit); got != want {
-			t.Errorf("counts(%v) = %v, want %v", limit, got, want)
-		}
-	}
-}
-
-func TestQueryValue(t *testing.T) {
-	for query, want := range map[string]string{
-		"device_id=D1":                 `"D1"`,
-		"device_id=":                   `""`,
-		"other=1":                      ``,
-		"device_id=D1&device_id=D2":    `["D1","D2"]`,
-		"device_id[]=D1":               `["D1"]`,
-		"device_id=D1#device_id=D2":    `"D1"`,
-		"device_id=a%20b+c":            `"a b c"`,
-		"x=1&device_id=D1#&device_id=": `"D1"`,
-	} {
-		r := httptest.NewRequest(http.MethodGet, "/api/automation/alerts?"+query, nil)
-		if got := queryValue(r, "device_id").JSON(); got != want {
-			t.Errorf("device_id of %q = %s, want %s", query, got, want)
-		}
-	}
 }
 
 func TestTurnedOff(t *testing.T) {
@@ -311,9 +207,9 @@ func FuzzGiven(f *testing.F) {
 	})
 }
 
-// Whatever a query string holds, reading the filters and the limit from
-// it does not fail in another way than JavaScript did, and the id rule
-// lets through digits only.
+// Whatever a query string holds, a filter is one text or refused, the
+// limit is a whole number from 1 to 500 or refused, and the id rule lets
+// through digits only.
 func FuzzQueryAndPath(f *testing.F) {
 	for _, seed := range []string{"device_id=D1&limit=5", "limit[toString]=1", "device_id[]=a&device_id[]=b", "acknowledged=true", "status[x][y]=1#limit=2", "limit=%zz", "1", "%31", "12/ack", ""} {
 		f.Add(seed)
@@ -328,19 +224,14 @@ func FuzzQueryAndPath(f *testing.F) {
 		if err != nil {
 			return
 		}
-		for _, name := range []string{"device_id", "severity", "acknowledged", "status"} {
-			v := queryValue(r, name)
-			_ = v.JSON()
-			if _, err := jsbind.Args(store.SQLite, 1, v); err != nil && v.IsString() {
-				t.Fatalf("%s of %q is text and does not bind: %v", name, text, err)
+		for _, name := range []string{"device_id", "severity", "status"} {
+			value, ok := filterOf(r, name)
+			if _, given, err := jsbind.QueryText(r.URL.RawQuery, name); ok != (err == nil) || !given && value != "" {
+				t.Fatalf("%s of %q = %q, %v", name, text, value, ok)
 			}
 		}
-		n, given, err := limit(r)
-		if err != nil && err.Error() != "Cannot convert object to primitive value" {
-			t.Fatalf("limit of %q: %v", text, err)
-		}
-		if given && !math.IsNaN(n) && !math.IsInf(n, 0) && n != math.Trunc(n) {
-			t.Fatalf("limit of %q = %v is no whole number", text, n)
+		if n, ok := limitOf(r); ok && (n < 0 || n > 500) || !ok && n != 0 {
+			t.Fatalf("limit of %q = %d, %v", text, n, ok)
 		}
 
 		if strings.ContainsAny(text, "?#") {

@@ -2,7 +2,6 @@ package automation_test
 
 import (
 	"context"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -10,21 +9,6 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
-
-// What the query parser of package jsbind does not take apart the way the
-// old console's did, in a device, a severity or a status: an index of 20
-// and more (device_id[25]=x was a list of one value), and an object beside
-// a list. An object bound no value and a list one per element, so a
-// statement could come out with the right number of values and run. The
-// Go console answers 500 on SQLite where the old one found rows.
-var beyondTheQueryParser = regexp.MustCompile(`\?(device_id|severity|status)\[25\]=|\[id\]=x(&|$)`)
-
-// On PostgreSQL the parser's "I do not take this apart" is bound as the
-// text {}, where the old console bound the JSON of the object or the list.
-// The recording has two commands whose device is that text (sent with an
-// empty object for a device), and these seven lists find them in the Go
-// console.
-var boundAsBraces = regexp.MustCompile(`/commands\?(device_id(\[id\]=D1$|\[0\]\[id\]=|\[toString\]=|\[length\]=|\[25\]=)|(device_id=D1&){20}|(device_id\[\]=D1&){21})`)
 
 // TestNodeAnswers replays what the Node console's ten panel routes
 // answered with its real database adapter, on SQLite and on PostgreSQL
@@ -35,7 +19,7 @@ var boundAsBraces = regexp.MustCompile(`/commands\?(device_id(\[id\]=D1$|\[0\]\[
 // only SQLite can hold, and at the end the rules, alerts and commands that
 // are left and the audit log.
 //
-// Five kinds of answers are not compared byte for byte:
+// Four kinds of answers are not compared byte for byte:
 //
 //   - The recording was made without the panel access guard, which sits
 //     in front of the routes in the console. It refuses the writes of a
@@ -52,13 +36,15 @@ var boundAsBraces = regexp.MustCompile(`/commands\?(device_id(\[id\]=D1$|\[0\]\[
 //   - An id that does not decode to text (%C3%28) is no id of digits, so
 //     the old routes did not answer and the stand-in said 404. The Go
 //     console refuses the address with 400 before it asks the route.
-//   - Filters the query parser does not take apart, see
-//     beyondTheQueryParser and boundAsBraces.
+//
+// The steps the bug fixes change are listed in panelFixes
+// (fixed_test.go).
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
-		guarded, elsewhere, slashes, undecoded, unparsed, braces := 0, 0, 0, 0, 0, 0
-		w.Run(replay.Load(t, db, "node"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		guarded, elsewhere, slashes, undecoded := 0, 0, 0, 0
+		defer panelFixes.Unused(t, db)
+		w.Run(replay.Load(t, db, "node"), panelFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			switch {
 			case step.Method != "GET" && got.Status == 403 && strings.Contains(got.Body, `"code":"panel_access_denied"`) &&
 				(step.Role == "guest_issuer" || step.Role == "viewer" || step.Role == "server_admin"):
@@ -86,27 +72,14 @@ func TestNodeAnswers(t *testing.T) {
 					t.Errorf("%s: status %d, want %d", step.Name, got.Status, step.Status)
 				}
 				return true
-			case !db.IsPostgres() && step.Status == 200 && got.Status == 500 && beyondTheQueryParser.MatchString(step.Path):
-				unparsed++
-				return true
-			case db.IsPostgres() && step.Status == 200 && got.Status == 200 && boundAsBraces.MatchString(step.Path) &&
-				step.Answer == `{"commands":[],"total":0}` && strings.Contains(got.Body, `"device_id":"{}"`) && strings.Contains(got.Body, `"total":2}`):
-				braces++
-				return true
 			}
 			return false
-		})
+		}))
 		if guarded != 19 {
 			t.Errorf("%d answers were the panel access guard's, want 19", guarded)
 		}
 		if elsewhere != 165 || slashes != 1 || undecoded != 1 {
 			t.Errorf("%d answers were compared by status only, %d had two slashes and %d an id that is no text, want 165, 1 and 1", elsewhere, slashes, undecoded)
-		}
-		if want := map[bool]int{false: 11, true: 0}[db.IsPostgres()]; unparsed != want {
-			t.Errorf("%d filters were beyond the query parser, want %d", unparsed, want)
-		}
-		if want := map[bool]int{false: 0, true: 7}[db.IsPostgres()]; braces != want {
-			t.Errorf("%d filters were bound as the text {}, want %d", braces, want)
 		}
 	})
 }
