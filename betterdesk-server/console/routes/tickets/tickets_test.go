@@ -623,6 +623,53 @@ func TestFailedRangeAnswersJSON(t *testing.T) {
 	}
 }
 
+// Tickets, comments and attachments made in the same second keep an order:
+// tickets newest id first, comments and attachments oldest first (BUGS
+// TK11).
+func TestListsOfTheSameSecondKeepTheirOrder(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		g := newGroup(t, db)
+		for _, title := range []string{"one", "two", "three"} {
+			g.want(g.do("admin", "POST", "/api/tickets", `{"title":"`+title+`"}`), 201, "")
+		}
+		for _, body := range []string{"first", "second", "third"} {
+			g.want(g.do("admin", "POST", "/api/tickets/1/comments", `{"body":"`+body+`"}`), 201, "")
+			g.want(g.do("admin", "POST", "/api/tickets/1/attachments", `{"filename":"`+body+`.txt","data":"aGk="}`), 201, "")
+		}
+		// The rows of each table in the reverse order of their ids, all in
+		// one second
+		for _, table := range []string{"tickets", "ticket_comments", "ticket_attachments"} {
+			if _, err := db.Exec(context.Background(), "UPDATE "+table+" SET created_at = "+db.Pick("'2001-01-01 00:00:00'", "'2001-01-01T00:00:00Z'")); err != nil {
+				t.Fatal(err)
+			}
+		}
+		var list struct {
+			Tickets []struct {
+				ID int `json:"id"`
+			} `json:"tickets"`
+		}
+		_ = json.Unmarshal(g.do("admin", "GET", "/api/tickets", "").Body.Bytes(), &list)
+		if len(list.Tickets) != 3 || list.Tickets[0].ID != 3 || list.Tickets[1].ID != 2 || list.Tickets[2].ID != 1 {
+			t.Errorf("tickets: %+v, want ids 3, 2, 1", list.Tickets)
+		}
+		var detail struct {
+			Comments []struct {
+				Body string `json:"body"`
+			} `json:"comments"`
+			Attachments []struct {
+				Filename string `json:"filename"`
+			} `json:"attachments"`
+		}
+		_ = json.Unmarshal(g.do("admin", "GET", "/api/tickets/1", "").Body.Bytes(), &detail)
+		if len(detail.Comments) != 3 || detail.Comments[0].Body != "first" || detail.Comments[2].Body != "third" {
+			t.Errorf("comments: %+v", detail.Comments)
+		}
+		if len(detail.Attachments) != 3 || detail.Attachments[0].Filename != "first.txt" || detail.Attachments[2].Filename != "third.txt" {
+			t.Errorf("attachments: %+v", detail.Attachments)
+		}
+	})
+}
+
 // unread is a request body that counts what is read of it.
 type unread struct {
 	left int64

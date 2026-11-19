@@ -68,7 +68,8 @@ type filter struct {
 }
 
 // listTickets returns the tickets that pass every filter and whose title
-// or description holds the search text, newest first. search is
+// or description holds the search text, newest first; tickets of the same
+// second by their id. search is
 // undefined for a list without a search.
 func listTickets(ctx context.Context, db *store.DB, filters []filter, search jsbind.Value) ([]ticket, error) {
 	where := "WHERE 1=1"
@@ -92,7 +93,7 @@ func listTickets(ctx context.Context, db *store.DB, filters []filter, search jsb
 	if err != nil {
 		return nil, fmt.Errorf("list tickets: %w", err)
 	}
-	rows, err := store.Select(ctx, db, "SELECT "+ticketColumns+" FROM tickets "+where+" ORDER BY created_at DESC", args...)
+	rows, err := store.Select(ctx, db, "SELECT "+ticketColumns+" FROM tickets "+where+" ORDER BY created_at DESC, id DESC", args...)
 	if err != nil {
 		return nil, fmt.Errorf("list tickets: %w", err)
 	}
@@ -247,7 +248,7 @@ func ticketComments(ctx context.Context, db *store.DB, ticketID jsbind.Value) ([
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", doing, err)
 	}
-	rows, err := store.Select(ctx, db, "SELECT id, ticket_id, author, body, is_internal, created_at FROM ticket_comments WHERE ticket_id = ? ORDER BY created_at ASC", args...)
+	rows, err := store.Select(ctx, db, "SELECT id, ticket_id, author, body, is_internal, created_at FROM ticket_comments WHERE ticket_id = ? ORDER BY created_at ASC, id ASC", args...)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", doing, err)
 	}
@@ -317,7 +318,7 @@ func ticketAttachments(ctx context.Context, db *store.DB, ticketID jsbind.Value)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", doing, err)
 	}
-	rows, err := store.Select(ctx, db, "SELECT "+attachmentColumns+" FROM ticket_attachments WHERE ticket_id = ? ORDER BY created_at ASC", args...)
+	rows, err := store.Select(ctx, db, "SELECT "+attachmentColumns+" FROM ticket_attachments WHERE ticket_id = ? ORDER BY created_at ASC, id ASC", args...)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", doing, err)
 	}
