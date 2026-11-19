@@ -72,6 +72,54 @@ func TestArchiveLimits(t *testing.T) {
 	}
 }
 
+// typed is a tar file of empty entries, header after header, where entry i
+// has the type types[i]: '0' a file, '5' a folder, '2' a link.
+func typed(t *testing.T, names []string, types string) []byte {
+	t.Helper()
+	var entries []Entry
+	for _, name := range names {
+		entries = append(entries, Entry{Name: name})
+	}
+	tar, err := buildTar(entries, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := range names {
+		h := tar[i*blockSize : (i+1)*blockSize]
+		h[156] = types[i]
+		copy(h[148:156], "        ")
+		sum := 0
+		for _, b := range h {
+			sum += int(b)
+		}
+		writeOctal(h, int64(sum), 148, 7)
+	}
+	return gzipOf(t, tar)
+}
+
+// UM43: every header counts against the entry limit, whatever its type
+// and name, so an archive of folder headers stops at the limit too.
+func TestEveryHeaderCountsAgainstTheEntryLimit(t *testing.T) {
+	for _, c := range []struct {
+		label string
+		names []string
+		types string
+	}{
+		{"folders", []string{"a/", "b/", "c/", "d/"}, "5555"},
+		{"links", []string{"a", "b", "c", "d"}, "2222"},
+		{"one name four times", []string{"a", "a", "a", "a"}, "0000"},
+		{"a file after three folders", []string{"a/", "b/", "c/", "f"}, "5550"},
+	} {
+		archive := typed(t, c.names, c.types)
+		if _, err := ExtractTarGz(archive, Limits{MaxEntries: 3}); err == nil || err.Error() != "Backup archive has more than 3 entries" {
+			t.Errorf("%s past the limit: %v", c.label, err)
+		}
+		if _, err := ExtractTarGz(archive, Limits{MaxEntries: 4}); err != nil {
+			t.Errorf("%s at the limit: %v", c.label, err)
+		}
+	}
+}
+
 // UM42: a limit from the environment is a whole number from 1 to 2^53-1.
 // Anything else gets the default and is reported, so -1 ("no limit"), a
 // fraction or Infinity no longer refuse every archive.

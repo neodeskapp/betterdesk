@@ -204,7 +204,8 @@ var ErrNoProgress = errors.New("tar entry size leads back to a header read befor
 const (
 	// DefaultMaxArchiveBytes is the largest unpacked tar file: 2 GiB.
 	DefaultMaxArchiveBytes = 2 << 30
-	// DefaultMaxEntries is the most regular files an archive may hold.
+	// DefaultMaxEntries is the most entries (headers of any type) an
+	// archive may hold.
 	DefaultMaxEntries = 50000
 )
 
@@ -218,8 +219,8 @@ type Limits struct {
 	// 1, above the largest Buffer (2^53-1) and infinite, every archive is
 	// refused with zlib's RangeError for the option.
 	MaxBytes float64
-	// MaxEntries caps the regular files: a regular file found when
-	// MaxEntries names or more are taken is refused.
+	// MaxEntries caps the entries: the header that makes more than
+	// MaxEntries is refused, whatever its type and name.
 	MaxEntries float64
 }
 
@@ -260,8 +261,9 @@ func EnvLimit(value string) (limit float64, ok bool) {
 // or NUL), names cut at the first NUL that no line break follows, a size
 // field read with parseInt in base 8 after its spaces and NULs are
 // removed. Within the limits: an archive that unpacks to more than
-// MaxBytes is zlib's RangeError, a regular file beyond MaxEntries is
-// "Backup archive has more than <n> entries", and an entry whose size
+// MaxBytes is zlib's RangeError, an entry beyond MaxEntries is "Backup
+// archive has more than <n> entries" (every header counts: folders, links
+// and repeated names too), and an entry whose size
 // runs past the end of the tar file is "Backup archive entry <name>
 // extends past the end of the archive".
 func ExtractTarGz(buf []byte, limits Limits) (*Files, error) {
@@ -278,6 +280,7 @@ func ExtractTarGz(buf []byte, limits Limits) (*Files, error) {
 	// ever, so it ends the read.
 	seen := map[int64]bool{}
 	offset := int64(0)
+	entries := 0
 	for offset+blockSize <= n {
 		if seen[offset] {
 			return nil, ErrNoProgress
@@ -291,6 +294,10 @@ func ExtractTarGz(buf []byte, limits Limits) (*Files, error) {
 		name := cutAtNUL(nodeUTF8(field(header, 0, 100)))
 		if prefix := cutAtNUL(nodeUTF8(field(header, 345, 500))); prefix != "" {
 			name = prefix + "/" + name
+		}
+		entries++
+		if float64(entries) > limits.MaxEntries {
+			return nil, errors.New("Backup archive has more than " + jsbind.NumberString(limits.MaxEntries) + " entries")
 		}
 		size := parseOctal(field(header, 124, 136))
 		// A header too short for a type counts as a regular file ('').
@@ -306,9 +313,6 @@ func ExtractTarGz(buf []byte, limits Limits) (*Files, error) {
 		data := tar[from:to]
 		offset += size + padToBlock(size)
 		if regular {
-			if float64(len(files.names)) >= limits.MaxEntries {
-				return nil, errors.New("Backup archive has more than " + jsbind.NumberString(limits.MaxEntries) + " entries")
-			}
 			files.set(name, bytes.Clone(data))
 		}
 	}

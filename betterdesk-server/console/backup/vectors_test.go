@@ -141,10 +141,16 @@ func TestExtractLimitsMatchNode(t *testing.T) {
 	if len(v.Limits) < 3000 {
 		t.Fatalf("only %d limit vectors", len(v.Limits))
 	}
-	failed, kinds := 0, map[string]int{}
+	failed, kinds, counted := 0, map[string]int{}, 0
 	for i, c := range v.Limits {
-		files, err := ExtractTarGz(unb64(t, c.Input), Limits{MaxBytes: c.Options.MaxBytes, MaxEntries: c.Options.MaxEntries})
-		if diff := extractDiff(files, err, c.Files, c.Error); diff != "" {
+		input := unb64(t, c.Input)
+		files, err := ExtractTarGz(input, Limits{MaxBytes: c.Options.MaxBytes, MaxEntries: c.Options.MaxEntries})
+		diff := extractDiff(files, err, c.Files, c.Error)
+		if diff != "" && countsEveryHeader(input, Limits{MaxBytes: c.Options.MaxBytes, MaxEntries: c.Options.MaxEntries}, err, c.Files, c.Error) {
+			counted++
+			continue
+		}
+		if diff != "" {
 			t.Errorf("limits %d %+v: %s", i, c.Options, diff)
 			failed++
 		}
@@ -161,6 +167,26 @@ func TestExtractLimitsMatchNode(t *testing.T) {
 			t.Errorf("only %d vectors refused with %q: %v", kinds[kind], kind, kinds)
 		}
 	}
+	t.Logf("%d vectors refused for their entries now (UM43)", counted)
+	if counted == 0 {
+		t.Error("no vector counts other entries than regular files")
+	}
+}
+
+// countsEveryHeader says whether Go's refusal err of an archive that
+// Node answered with files or wantErr is the intended difference of BUGS.md
+// UM43: Node counted the names of regular files against the entry limit,
+// Go counts every header, so Go refuses some archives Node took (folders,
+// links, repeated names, a fraction as the limit). It is when Go refused
+// for the entries and answers as Node did without an entry limit.
+func countsEveryHeader(input []byte, limits Limits, err error, files [][2]string, wantErr *jsErr) bool {
+	inForce := limits.orDefault()
+	if err == nil || err.Error() != "Backup archive has more than "+jsbind.NumberString(inForce.MaxEntries)+" entries" {
+		return false
+	}
+	inForce.MaxEntries = math.Inf(1)
+	unlimited, uerr := ExtractTarGz(input, inForce)
+	return extractDiff(unlimited, uerr, files, wantErr) == ""
 }
 
 // TestEnvLimitsMatchNode: BACKUP_MAX_DECOMPRESSED_BYTES and
@@ -235,8 +261,9 @@ func TestEnvLimitsMatchNode(t *testing.T) {
 		}
 		compared++
 		for k, w := range want {
-			files, err := ExtractTarGz(unb64(t, v.Env.Archives[k]), limits)
-			if diff := extractDiff(files, err, w.Files, w.Error); diff != "" {
+			input := unb64(t, v.Env.Archives[k])
+			files, err := ExtractTarGz(input, limits)
+			if diff := extractDiff(files, err, w.Files, w.Error); diff != "" && !countsEveryHeader(input, limits, err, w.Files, w.Error) {
 				t.Errorf("env %d %q archive %d: %s", i, env, k, diff)
 				failed++
 			}
