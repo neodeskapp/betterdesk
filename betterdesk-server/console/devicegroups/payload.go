@@ -38,15 +38,28 @@ type GroupPayload struct {
 	// Note and TeamID are set only when the body had the key.
 	Note   *string
 	TeamID *string
+	// NotText names the first member read as text that the body gives as
+	// something else (a list, an object, a number, a flag): name, guid,
+	// note, team_id, and for a tag group tag_filter and tag. "" when there
+	// is none; null counts as not given. A route refuses such a group.
+	NotText string
 }
 
 // NormalizeGroupPayload reads a submitted device group. A nil body reads
 // as an empty one.
 func NormalizeGroupPayload(body map[string]any) GroupPayload {
 	p := GroupPayload{SourceType: "manual"}
+	textMembers := []string{"name", "guid", "note", "team_id"}
 	if s, ok := body["source_type"].(string); ok && s == "tag" || body["dynamic"] == true {
 		p.SourceType = "tag"
 		p.TagFilter = cut(jsTrim(text(or(body["tag_filter"], body["tag"]))), 50)
+		textMembers = append(textMembers, "tag_filter", "tag")
+	}
+	for _, member := range textMembers {
+		if _, isText := body[member].(string); body[member] != nil && !isText {
+			p.NotText = member
+			break
+		}
 	}
 	if truthy(body["guid"]) {
 		p.GUID = cut(jsTrim(jsString(body["guid"])), 64)

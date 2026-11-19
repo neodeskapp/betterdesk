@@ -1,6 +1,7 @@
 package devicegroups
 
 import (
+	"encoding/json"
 	"reflect"
 	"strconv"
 	"strings"
@@ -45,6 +46,40 @@ func TestRenameKeepsEveryTag(t *testing.T) {
 	}
 	if got, changed := RewriteTagsRename(tags, "old", "t24"); !changed || len(got) != 24 || got[22] != "t24" {
 		t.Errorf("rename into a tag the device has: %q, %v", got, changed)
+	}
+}
+
+// TestGroupPayloadRefusesValuesThatAreNoText: a submitted device group
+// names the first member that is read as text but is none (a list, an
+// object, a number, a flag), so the routes can refuse it where it was
+// read with String(); null and a missing member are no refusal, and the
+// tag filter counts only for a tag group (BUGS DGR5).
+func TestGroupPayloadRefusesValuesThatAreNoText(t *testing.T) {
+	for _, c := range []struct {
+		body string
+		want string
+	}{
+		{`{"name":"Lab","guid":"g-1","note":"n","team_id":"t","source_type":"tag","tag_filter":"lab"}`, ""},
+		{`{"name":"Lab","guid":null,"note":null,"team_id":null}`, ""},
+		{`{"name":"Lab","tag_filter":5,"tag":[1]}`, ""},
+		{`{"name":["a","b"]}`, "name"},
+		{`{"name":{"a":1}}`, "name"},
+		{`{"name":"Lab","guid":1e21}`, "guid"},
+		{`{"name":"Lab","guid":false}`, "guid"},
+		{`{"name":"Lab","note":true}`, "note"},
+		{`{"name":"Lab","note":5,"team_id":[]}`, "note"},
+		{`{"name":"Lab","team_id":0}`, "team_id"},
+		{`{"name":"Lab","source_type":"tag","tag_filter":{"x":1}}`, "tag_filter"},
+		{`{"name":"Lab","dynamic":true,"tag":7}`, "tag"},
+		{`{"name":7,"guid":[]}`, "name"},
+	} {
+		var body map[string]any
+		if err := json.Unmarshal([]byte(c.body), &body); err != nil {
+			t.Fatal(err)
+		}
+		if got := NormalizeGroupPayload(body).NotText; got != c.want {
+			t.Errorf("%s: NotText %q, want %q", c.body, got, c.want)
+		}
 	}
 }
 

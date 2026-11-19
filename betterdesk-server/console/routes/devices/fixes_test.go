@@ -349,6 +349,44 @@ func TestSetTagsKeepsWholeCharacters(t *testing.T) {
 	}
 }
 
+// TestSaveGroupTakesTextOnly: a device group whose name, guid, note, team
+// id or tag filter is no text is refused with 400 before anything is
+// written, where it was saved with the value read as text (BUGS DGR5).
+func TestSaveGroupTakesTextOnly(t *testing.T) {
+	for _, node := range []bool{false, true} {
+		w, api := world(t, storetest.Migrated(t), nil, func(cfg *config.Config) { cfg.PanelGroupingNode = node })
+		admin := w.As("admin")
+		count := func() int {
+			var n int
+			if err := w.DB.QueryRow(context.Background(), `SELECT COUNT(*) FROM device_groups`).Scan(&n); err != nil {
+				t.Fatal(err)
+			}
+			return n
+		}
+		before := count()
+		for _, c := range []struct{ body, member string }{
+			{`{"name":["a","b"]}`, "name"},
+			{`{"name":{"a":1}}`, "name"},
+			{`{"name":"Lab","guid":1e21}`, "guid"},
+			{`{"name":"Lab","note":true}`, "note"},
+			{`{"name":"Lab","team_id":5}`, "team_id"},
+			{`{"name":"Lab","source_type":"tag","tag_filter":["lab"]}`, "tag_filter"},
+		} {
+			api.Calls()
+			want := `{"success":false,"error":"` + c.member + ` must be text"}`
+			if got := admin.Do("POST", "/api/device-groups", c.body); got.Status != http.StatusBadRequest || got.Body != want {
+				t.Errorf("%s (console writer %v): %d %s, want 400 %s", c.body, node, got.Status, got.Body, want)
+			}
+			if calls := api.Calls(); len(calls) > 0 || count() != before {
+				t.Errorf("%s (console writer %v) wrote: calls %q, %d groups", c.body, node, calls, count())
+			}
+		}
+		if got := admin.Do("POST", "/api/device-groups", `{"name":"Lab","note":null,"team_id":null}`); got.Status != http.StatusOK {
+			t.Errorf("a group with null note and team id (console writer %v): %d %s", node, got.Status, got.Body)
+		}
+	}
+}
+
 // TestListIgnoresQueryLists: search and sortOrder given as a list or an
 // object are ignored like the other parameters, and the list answers
 // (BUGS DE4).

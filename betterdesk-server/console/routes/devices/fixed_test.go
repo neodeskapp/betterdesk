@@ -74,8 +74,19 @@ var fixedSteps = []fixedStep{
 	// The tag cut to 50 characters stops before the emoji that does not fit
 	// whole, where Node kept half of it.
 	{"node", `135 PUT /api/devices/A1001/tags {"tags":[" a ","",5,null,"b","  ","` + strings.Repeat("c", 60) + `","` + strings.Repeat("d😀", 30) + `"]} as admin`, "DGR2"},
-	// The audit log after the steps of DE5, DE6 and DGR2
-	{"node", "459 audit", "DE5, DE6, DGR2"},
+	// A group whose name is a list and whose note is a number is refused,
+	// where Node saved it as "a,b" with the note "5". The groups made
+	// after it get other ids, and the lists leave it out.
+	{"node", `210 POST /api/device-groups {"name":["a","b"],"note":5,"team_id":null,"allowed_users":"e2e_viewer, e2e_operator ,x","allowed_groups":[{"guid":"ug-ops"},"ug-ops","missing"]} as admin`, "DGR5"},
+	{"node", `214 POST /api/device-groups {"name":"By operator","allowed_users":["e2e_operator"]} as operator`, "DGR5"},
+	{"node", "215 GET /api/device-groups as admin", "DGR5"},
+	{"node", "220 GET /api/devices/A1001/groups as admin", "DGR5"},
+	{"node", "221 GET /api/devices/A1001/groups as operator", "DGR5"},
+	{"node", "223 GET /api/devices/C1003/groups as admin", "DGR5"},
+	{"node", "237 GET /api/devices/A1001/groups as admin", "DGR5"},
+	{"node", "356 GET /api/devices/C1003/groups as viewer", "DGR5"},
+	// The audit log after the steps of DE5, DE6, DGR2 and DGR5
+	{"node", "459 audit", "DE5, DE6, DGR2, DGR5"},
 	// The scope check does not take bulk-delete for a device id: no lookup
 	// of a device of that name, and the made-up server's bulk-delete device
 	// outside the operator's scope no longer refuses the bulk delete before

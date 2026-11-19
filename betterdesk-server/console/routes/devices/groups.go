@@ -80,7 +80,8 @@ func groupData(f devicegroups.GroupFields) devicegroups.GroupData {
 }
 
 // saveDeviceGroup answers POST /api/device-groups: a group without guid
-// is created, one with a guid is changed. The API server writes it and
+// is created, one with a guid is changed; a name, guid, note, team id or
+// tag filter that is no text is refused with 400. The API server writes it and
 // answers with what it saved; with the console's own writer
 // (BACKEND_PANEL_GROUPING=node, or an API server that cannot take it),
 // allowed_users and allowed_groups replace the access lists when the body
@@ -88,6 +89,10 @@ func groupData(f devicegroups.GroupFields) devicegroups.GroupData {
 func (h *handlers) saveDeviceGroup(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	payload := devicegroups.NormalizeGroupPayload(bodyMap(r))
+	if payload.NotText != "" {
+		answer(w, r, http.StatusBadRequest, failure{Error: payload.NotText + " must be text"})
+		return
+	}
 	if payload.Name == "" {
 		fail(w, r, http.StatusBadRequest, "folders.name_required")
 		return
