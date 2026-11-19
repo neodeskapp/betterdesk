@@ -21,6 +21,10 @@ type Config struct {
 	// 5000 when CONSOLE_PORT is unset). Port 0 means the Go console is off.
 	Host string
 	Port int
+	// PortUnset says CONSOLE_PORT was not set: the console is on only
+	// because A27 turns it on, so a port that is taken leaves the server
+	// running without its console (DECISIONS A62).
+	PortUnset bool
 
 	// TrustProxy says which reverse proxies may speak for the client
 	// (TRUST_PROXY).
@@ -259,6 +263,7 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 	}
 
 	cfg.Port = defaultConsolePort
+	cfg.PortUnset = strings.TrimSpace(getenv("CONSOLE_PORT")) == ""
 	if raw := strings.TrimSpace(getenv("CONSOLE_PORT")); raw != "" {
 		port, err := strconv.Atoi(raw)
 		if err != nil || port < 0 || port > 65535 {

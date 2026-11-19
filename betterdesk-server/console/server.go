@@ -22,6 +22,7 @@ package console
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -50,6 +51,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/jobs"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/limits"
+	"github.com/unitronix/betterdesk-server/console/listen"
 	"github.com/unitronix/betterdesk-server/console/mail"
 	"github.com/unitronix/betterdesk-server/console/proxy"
 	"github.com/unitronix/betterdesk-server/console/qr"
@@ -499,6 +501,9 @@ func (s *Server) Start(ctx context.Context) error {
 	if err != nil {
 		s.closeListeners()
 		s.net.addr = ""
+		if s.cfg.PortUnset && listen.InUse(err) {
+			return fmt.Errorf("%w: %w", ErrDefaultPortTaken, err)
+		}
 		return err
 	}
 	s.jobs.Start(ctx)
@@ -509,6 +514,12 @@ func (s *Server) Start(ctx context.Context) error {
 	logging.Logf("console", "listening on %s (%s), %d Go routes", s.net.addr, target, len(s.early.Routes())+len(s.router.Routes()))
 	return nil
 }
+
+// ErrDefaultPortTaken is the error of Start when CONSOLE_PORT is not set
+// and a port of the console is taken: the server then runs without its
+// console (DECISIONS A62), as an install whose older console still holds
+// the port needs.
+var ErrDefaultPortTaken = errors.New("a port of the console is taken and CONSOLE_PORT is not set")
 
 // Addr is the address the server listens on, once started.
 func (s *Server) Addr() string {

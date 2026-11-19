@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"strconv"
@@ -57,6 +59,15 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 		return nil, err
 	}
 	if err := srv.Start(ctx); err != nil {
+		if errors.Is(err, console.ErrDefaultPortTaken) {
+			// An older console may hold the port (DECISIONS A62): signal,
+			// relay and API keep running
+			srv.Stop()
+			_ = sdb.Close()
+			log.Printf("ERROR: %v", err)
+			log.Printf("ERROR: the server runs without its console. Set CONSOLE_PORT to a free port, or CONSOLE_PORT=0 to turn the console off")
+			return func() {}, nil
+		}
 		_ = sdb.Close()
 		return nil, err
 	}

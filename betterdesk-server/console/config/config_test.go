@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -253,6 +254,10 @@ func TestConsolePort(t *testing.T) {
 		}
 		if cfg.Port != c.want {
 			t.Errorf("%v: port %d, want %d", c.env, cfg.Port, c.want)
+		}
+		// A62: only a port nobody set may give way to an older console
+		if unset := strings.TrimSpace(c.env["CONSOLE_PORT"]) == ""; cfg.PortUnset != unset {
+			t.Errorf("%v: PortUnset %v, want %v", c.env, cfg.PortUnset, unset)
 		}
 	}
 	for _, bad := range []string{"-1", "65536", "5000x", "0x10", "5 000"} {
