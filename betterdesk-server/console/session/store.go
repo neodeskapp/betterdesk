@@ -413,33 +413,34 @@ func (t *table) activate(ctx context.Context, sid string, userID int64, username
 	return replaced, nil
 }
 
+// endedRowsKeptFor is how long the row of an account's ended session
+// stays in the history, the retention of the audit log.
+const endedRowsKeptFor = 90 * 24 * time.Hour
+
 // cleanup ends active rows that are past their expiry, the absolute
-// lifetime or the idle time, and deletes rows that never belonged to an
-// account one day after they expired. Rows of accounts are kept.
+// lifetime or the idle time, with the reason max_age for a row past the
+// absolute lifetime and idle for the others. It deletes rows that never
+// belonged to an account one day after they expired, and rows of accounts
+// 90 days after they ended.
 func (t *table) cleanup(ctx context.Context) error {
 	now := t.nowMs()
-	var err error
-	if t.db.IsPostgres() {
-		_, err = t.db.Exec(ctx,
-			`UPDATE panel_sessions
-			 SET is_active = FALSE, ended_at = COALESCE(ended_at, ?), end_reason = COALESCE(end_reason, ?), updated_at = NOW()
-			 WHERE is_active = TRUE AND (
-			     expires_at <= NOW()
-			     OR (created_at IS NOT NULL AND ? - created_at > ?)
-			     OR (last_activity_at IS NOT NULL AND ? - last_activity_at > ?)
-			 )`,
-			now, ReasonIdle, now, t.policy.MaxAgeMs, now, t.policy.IdleTimeoutMs)
-	} else {
-		_, err = t.db.Exec(ctx,
-			`UPDATE panel_sessions
-			 SET is_active = 0, ended_at = COALESCE(ended_at, ?), end_reason = COALESCE(end_reason, ?), updated_at = datetime('now')
-			 WHERE is_active = 1 AND (
-			     expires_at <= ?
-			     OR (created_at IS NOT NULL AND ? - created_at > ?)
-			     OR (last_activity_at IS NOT NULL AND ? - last_activity_at > ?)
-			 )`,
-			now, ReasonIdle, now, now, t.policy.MaxAgeMs, now, t.policy.IdleTimeoutMs)
+	expired := t.db.Pick(`expires_at <= ?`, `expires_at <= NOW()`)
+	args := []any{now, now, t.policy.MaxAgeMs, ReasonMaxAge, ReasonIdle}
+	if !t.db.IsPostgres() {
+		args = append(args, now)
 	}
+	args = append(args, now, t.policy.MaxAgeMs, now, t.policy.IdleTimeoutMs)
+	_, err := t.db.Exec(ctx,
+		`UPDATE panel_sessions
+		 SET is_active = `+t.sqlFalse()+`, ended_at = COALESCE(ended_at, ?),
+		     end_reason = COALESCE(end_reason, CASE WHEN created_at IS NOT NULL AND ? - created_at > ? THEN ? ELSE ? END),
+		     updated_at = `+t.sqlNow()+`
+		 WHERE is_active = `+t.sqlTrue()+` AND (
+		     `+expired+`
+		     OR (created_at IS NOT NULL AND ? - created_at > ?)
+		     OR (last_activity_at IS NOT NULL AND ? - last_activity_at > ?)
+		 )`,
+		args...)
 	if err != nil {
 		return fmt.Errorf("end stale sessions: %w", err)
 	}
@@ -452,6 +453,12 @@ func (t *table) cleanup(ctx context.Context) error {
 	}
 	if err != nil {
 		return fmt.Errorf("delete old anonymous sessions: %w", err)
+	}
+	_, err = t.db.Exec(ctx,
+		`DELETE FROM panel_sessions WHERE user_id IS NOT NULL AND is_active = `+t.sqlFalse()+` AND ended_at <= ?`,
+		now-endedRowsKeptFor.Milliseconds())
+	if err != nil {
+		return fmt.Errorf("delete old ended sessions: %w", err)
 	}
 	return nil
 }

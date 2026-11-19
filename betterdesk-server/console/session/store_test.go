@@ -572,15 +572,20 @@ func TestCleanup(t *testing.T) {
 		set("expired", int64(1), -1000, -1000, -60_000)
 		set("idle", int64(1), -1000, -idle-60_000, 60_000)
 		set("old", int64(1), -maxAge-60_000, -1000, 60_000)
+		set("old-and-idle", int64(1), -maxAge-60_000, -idle-60_000, -60_000)
 		set("anon-live", nil, -1000, -1000, 60_000)
 		set("anon-expired-recently", nil, -1000, -1000, -day+60_000)
 		set("anon-expired-long-ago", nil, -1000, -1000, -day-60_000)
 		set("user-expired-long-ago", int64(1), -1000, -1000, -day-60_000)
 		set("logged-out", int64(1), -1000, -1000, -60_000)
+		set("logged-out-long-ago", int64(1), -91*day, -91*day, -91*day)
+		set("logged-out-89-days-ago", int64(1), -89*day, -89*day, -89*day)
 		if err := f.m.table.end(ctx, "logged-out", ReasonLogout); err != nil {
 			t.Fatal(err)
 		}
 		ended := f.row("logged-out").endedAt.Int64
+		f.exec(`UPDATE panel_sessions SET is_active = `+db.Pick("0", "FALSE")+`, end_reason = 'logout', ended_at = ? WHERE sid = ?`, now-91*day, "logged-out-long-ago")
+		f.exec(`UPDATE panel_sessions SET is_active = `+db.Pick("0", "FALSE")+`, end_reason = 'logout', ended_at = ? WHERE sid = ?`, now-89*day, "logged-out-89-days-ago")
 
 		f.clock.Advance(time.Second)
 		if err := f.m.Cleanup(ctx); err != nil {
@@ -591,11 +596,15 @@ func TestCleanup(t *testing.T) {
 				t.Errorf("%s: %+v, want active", sid, row)
 			}
 		}
-		// Every sweep reason is "idle", also for the absolute lifetime
-		for _, sid := range []string{"expired", "idle", "old", "anon-expired-recently", "user-expired-long-ago"} {
+		// A row past the absolute lifetime ends as max_age, the others
+		// past a limit as idle (BUGS.md S8)
+		for sid, reason := range map[string]string{
+			"expired": ReasonIdle, "idle": ReasonIdle, "old": ReasonMaxAge, "old-and-idle": ReasonMaxAge,
+			"anon-expired-recently": ReasonIdle, "user-expired-long-ago": ReasonIdle,
+		} {
 			row := f.row(sid)
-			if row == nil || row.active || row.reason.String != ReasonIdle || row.endedAt.Int64 != now+1000 || row.json != `{"cookie":{},"keep":1}` {
-				t.Errorf("%s: %+v, want ended as idle at the sweep with its JSON kept", sid, row)
+			if row == nil || row.active || row.reason.String != reason || row.endedAt.Int64 != now+1000 || row.json != `{"cookie":{},"keep":1}` {
+				t.Errorf("%s: %+v, want ended as %s at the sweep with its JSON kept", sid, row, reason)
 			}
 		}
 		if f.row("anon-expired-long-ago") != nil {
@@ -603,6 +612,13 @@ func TestCleanup(t *testing.T) {
 		}
 		if row := f.row("logged-out"); row.reason.String != ReasonLogout || row.endedAt.Int64 != ended {
 			t.Errorf("the sweep changed an ended row: %+v", row)
+		}
+		// The row of an account goes 90 days after its session ended
+		if f.row("logged-out-long-ago") != nil {
+			t.Error("the row of a session that ended 91 days ago was kept")
+		}
+		if f.row("logged-out-89-days-ago") == nil {
+			t.Error("the row of a session that ended 89 days ago was deleted")
 		}
 	})
 }

@@ -420,8 +420,9 @@ func (m *Manager) EndAccount(ctx context.Context, userID int64, keep string) (in
 	return m.table.endAccount(ctx, userID, keep)
 }
 
-// Cleanup ends the sessions that are past a limit and deletes old rows
-// that never belonged to an account.
+// Cleanup ends the sessions that are past a limit, deletes old rows that
+// never belonged to an account and the rows of accounts 90 days after
+// they ended.
 func (m *Manager) Cleanup(ctx context.Context) error {
 	return m.table.cleanup(ctx)
 }
