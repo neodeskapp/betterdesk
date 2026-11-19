@@ -576,11 +576,18 @@ func compareArchives(t *testing.T, goArchive, nodeArchive []byte) {
 // text.
 var bigIntegerText = regexp.MustCompile(`"-?[0-9]{16,}"`)
 
+// microsecondTime is a PostgreSQL time with microseconds in Go's dump.
+var microsecondTime = regexp.MustCompile(`("[0-9+-]+-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3})\d{3}Z"`)
+
 // dumpAsNodeWroteIt is Go's dump with the values Go writes otherwise than
 // Node on purpose put back the way Node wrote them: an integer past
 // 2^53-1 on SQLite is its exact text in Go's dump, an inexact JavaScript
-// number in Node's (BUGS.md BK2).
+// number in Node's (BUGS.md BK2); a PostgreSQL time keeps its
+// microseconds in Go's dump, Node's cut them (BUGS.md BK3).
 func dumpAsNodeWroteIt(dump []byte) []byte {
+	if !bytes.HasPrefix(dump, []byte(`{"_engine":"sqlite"`)) {
+		return microsecondTime.ReplaceAll(dump, []byte(`${1}Z"`))
+	}
 	return bigIntegerText.ReplaceAllFunc(dump, func(quoted []byte) []byte {
 		n, err := strconv.ParseInt(string(quoted[1:len(quoted)-1]), 10, 64)
 		if err != nil || (n <= maxSafeInteger && n >= -maxSafeInteger) {
@@ -702,10 +709,13 @@ func TestArchivesRoundTripWithNode(t *testing.T) {
 			t.Logf("node restore result: %s", base.result)
 			// Where Go's archive holds a table exactly and Node's does not,
 			// a restore of Go's archive, by either program, brings it back
-			// as it was (BUGS.md BK2: integers past 2^53 on SQLite).
-			exactInGoArchive := map[string]bool{}
-			if dialect == "sqlite" {
-				exactInGoArchive["device_telemetry"] = true
+			// as it was: integers past 2^53 on SQLite (BUGS.md BK2), every
+			// time on PostgreSQL (BUGS.md BK3), but for a table that failed.
+			exactInGoArchive := func(table string) bool {
+				if dialect == "postgres" {
+					return true
+				}
+				return table == "device_telemetry"
 			}
 			for label, o := range outcomes {
 				if o.result != base.result {
@@ -715,7 +725,7 @@ func TestArchivesRoundTripWithNode(t *testing.T) {
 				if strings.HasPrefix(label, "go archive") {
 					expect = map[string][]string{}
 					for table, rows := range base.tables {
-						if exactInGoArchive[table] {
+						if exactInGoArchive(table) && !strings.Contains(o.result, "Table "+table+":") {
 							rows = want[table]
 						}
 						expect[table] = rows

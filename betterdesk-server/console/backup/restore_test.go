@@ -585,6 +585,38 @@ func TestSQLiteNumbersComeBackAsTheyWere(t *testing.T) {
 	}
 }
 
+// BK3: a full backup on PostgreSQL keeps the microseconds of every time.
+func TestPostgresTimesKeepTheirMicroseconds(t *testing.T) {
+	if os.Getenv(storetest.PostgresEnv) == "" {
+		t.Skipf("%s is not set", storetest.PostgresEnv)
+	}
+	ctx := context.Background()
+	src := newInstall(t, "postgres")
+	mustExec(t, src.db, `INSERT INTO users (id, username, password_hash, role, created_at) VALUES (50, 'a', 'h', 'admin', '2026-11-10 01:05:50.694123+00')`)
+	mustExec(t, src.db, `INSERT INTO users (id, username, password_hash, role, created_at) VALUES (51, 'b', 'h', 'admin', '2026-11-10 01:05:50.694+00')`)
+	archive, _, err := src.service(t, "x").CreateFullBackup(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	files, err := ExtractTarGz(archive, Limits{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	dump, _ := files.Get("console/data.json")
+	for _, part := range []string{`"created_at":"2026-11-10T01:05:50.694123Z"`, `"created_at":"2026-11-10T01:05:50.694Z"`} {
+		if !strings.Contains(string(dump), part) {
+			t.Errorf("the dump has no %s", part)
+		}
+	}
+	dst := newInstall(t, "postgres")
+	if res, err := dst.service(t, "x").RestoreFullBackup(ctx, archive, RestoreOptions{Database: true}); err != nil {
+		t.Fatalf("restore: %+v %v", res, err)
+	}
+	if got, want := snapshot(t, dst.db)["users"], snapshot(t, src.db)["users"]; strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Errorf("users:\n got  %q\n want %q", got, want)
+	}
+}
+
 // telemetryOf is the device_telemetry part of a dump, for a failure.
 func telemetryOf(dump string) string {
 	i := strings.Index(dump, `"device_telemetry":`)

@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
@@ -28,7 +29,7 @@ import (
 //	real            number                    float4: its short form; float8: number
 //	text            string                    string
 //	blob, bytea     {"__buf__":"<base64>"}    {"__buf__":"<base64>"}
-//	time            the stored text           ISO text in UTC with milliseconds
+//	time            the stored text           ISO text in UTC, milliseconds and microseconds
 //	json, jsonb     the stored text           the parsed value
 //	boolean         -                         true, false
 //
@@ -325,10 +326,27 @@ func postgresValueJSON(v any) ([]byte, error) {
 			return []byte("null"), nil
 		}
 		return jsQuote(nil, x.s), nil
+	case *store.Time:
+		if instant, ok := x.Instant(); ok {
+			return jsQuote(nil, dumpTime(instant)), nil
+		}
+		return x.MarshalJSON()
 	case interface{ MarshalJSON() ([]byte, error) }:
 		return x.MarshalJSON()
 	}
 	return []byte("null"), nil
+}
+
+// dumpTime writes a PostgreSQL time as Date.toISOString does, with the
+// microseconds after the milliseconds when it has any, so a restore
+// brings the time back whole.
+func dumpTime(t time.Time) string {
+	iso := store.ISOTime(t)
+	micro := t.Nanosecond() / 1000 % 1000
+	if micro == 0 {
+		return iso
+	}
+	return fmt.Sprintf("%s%03dZ", strings.TrimSuffix(iso, "Z"), micro)
 }
 
 // jsQuote appends s as JSON.stringify writes a string: only the quote,
