@@ -75,3 +75,21 @@ func TestPolicyMembersOfTheWrongType(t *testing.T) {
 		}
 	})
 }
+
+// A change that names no column answers the policy as it is, where it
+// answered null (BUGS DG2).
+func TestUpdateWithoutColumnsAnswersThePolicy(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		created := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/bd/policies", Body: replay.Text(`{"name":"Kept"}`)})
+		if created.Status != 201 {
+			t.Fatalf("create: %d %s", created.Status, created.Body)
+		}
+		for _, body := range []string{`{}`, `{"unknown":1}`, `[{"name":"In a list"}]`} {
+			got := w.Do(replay.Request{Role: "admin", Method: "PATCH", Path: "/api/dataguard/policies/1", Body: replay.Text(body)})
+			if got.Status != 200 || replay.Normalize(got.Body) != replay.Normalize(created.Body) {
+				t.Errorf("PATCH %s: %d %s, want the policy %s", body, got.Status, got.Body, created.Body)
+			}
+		}
+	})
+}

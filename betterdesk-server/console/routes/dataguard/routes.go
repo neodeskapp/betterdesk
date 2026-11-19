@@ -177,7 +177,7 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 // update answers PATCH policies/{id}: every member of the body that names
 // a column is written: a name that is text, the other texts text (scope
 // also null), enabled a flag and rules a list. A body that names none
-// answers null.
+// answers the policy as it is.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	id := number(r, "id")
 	exists, err := policyExists(r.Context(), h.db, id)

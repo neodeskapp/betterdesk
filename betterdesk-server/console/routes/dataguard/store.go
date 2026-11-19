@@ -283,11 +283,11 @@ type change struct {
 }
 
 // updatePolicy sets the given columns and the time of the change, and
-// returns the row as it is afterwards. Without changes it does nothing
-// and returns nil, as it does for a policy that is gone.
+// returns the row as it is afterwards. Without changes it returns the row
+// as it is.
 func updatePolicy(ctx context.Context, db *store.DB, id jsbind.Value, changes []change) (*row, error) {
 	if len(changes) == 0 {
-		return nil, nil
+		return policyByID(ctx, db, id)
 	}
 	doing := "update policy " + id.ToString()
 	sets := make([]string, 0, len(changes)+1)

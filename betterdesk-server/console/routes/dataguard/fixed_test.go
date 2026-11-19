@@ -138,3 +138,22 @@ var _ = policyFixes.Add("DG1", map[string]replay.Fix{
 	`admin PATCH /api/dataguard/policies/2 {"enabled":"false"}`:                                  {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
 	`admin PATCH /api/dataguard/policies/2 {"description":{},"scope":["x","y"]}`:                 {Status: 400, Answer: `{"error":"Invalid description"}`, After: nodePolicy},
 })
+
+// DG2: a change that names no column answers the policy as it is.
+var _ = policyFixes.Add("DG2", map[string]replay.Fix{
+	"admin PATCH /api/dataguard/policies/2 {}": {Dialect: "sqlite", Status: 200,
+		Answer: `{"id":2,"name":"By admin at /api/bd","description":"","policy_type":"","action":"log","scope":"","enabled":1,"rules":[],"created_at":"2001-02-03 04:05:06","updated_at":"2001-02-03 04:05:07"}`},
+	`admin PATCH /api/bd/policies/2 {"unknown":true}`: {Dialect: "sqlite", Status: 200,
+		Answer: `{"id":2,"name":"By admin at /api/bd","description":"","policy_type":"","action":"log","scope":"","enabled":1,"rules":[],"created_at":"2001-02-03 04:05:06","updated_at":"2001-02-03 04:05:07"}`},
+	`admin PATCH /api/bd/policies/2 [{"name":"In a list"}]`: {Dialect: "sqlite", Status: 200,
+		Answer: `{"id":2,"name":"Last","description":"x","policy_type":"usb","action":"log","scope":"y","enabled":1,"rules":[1],"created_at":"2001-02-03 04:05:06","updated_at":"<now, SQLite form>"}`},
+})
+
+var _ = policyFixes.Add("DG2", map[string]replay.Fix{
+	"admin PATCH /api/dataguard/policies/2 {}": {Dialect: "postgres", Status: 200,
+		Answer: `{"id":2,"name":"By admin at /api/bd","description":"","policy_type":"","action":"log","scope":"","enabled":true,"rules":[],"created_at":"2001-02-03T04:05:06.000Z","updated_at":"2001-02-03T04:05:07.000Z"}`},
+	`admin PATCH /api/bd/policies/2 {"unknown":true}`: {Dialect: "postgres", Status: 200,
+		Answer: `{"id":2,"name":"By admin at /api/bd","description":"","policy_type":"","action":"log","scope":"","enabled":true,"rules":[],"created_at":"2001-02-03T04:05:06.000Z","updated_at":"2001-02-03T04:05:07.000Z"}`},
+	`admin PATCH /api/bd/policies/2 [{"name":"In a list"}]`: {Dialect: "postgres", Status: 200,
+		Answer: `{"id":2,"name":"Last","description":"{}","policy_type":"usb","action":"log","scope":"{\"x\",\"y\"}","enabled":true,"rules":[1],"created_at":"2001-02-03T04:05:06.000Z","updated_at":"<now, ISO form>"}`},
+})
