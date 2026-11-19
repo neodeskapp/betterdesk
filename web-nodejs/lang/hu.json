@@ -2166,7 +2166,8 @@
     "signed_in_as": "{user} felhasználóként van bejelentkezve, {role} szerepkörrel.",
     "server_error_log": "Ha ez ismétlődik, egy rendszergazda a szervernaplóban megtalálja a részleteket.",
     "go_sign_in": "Ugrás a bejelentkezési oldalra",
-    "error_details": "Hiba részletei"
+    "error_details": "Hiba részletei",
+    "forbidden": "Ehhez az eszközhöz nincs hozzáférése."
   },
   "remote": {
     "title": "Távoli asztal",

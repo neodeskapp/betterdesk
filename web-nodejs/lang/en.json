@@ -2186,7 +2186,8 @@
         "signed_in_as": "You are signed in as {user} with the role {role}.",
         "server_error_log": "If it keeps happening, an administrator can find the details in the server log.",
         "go_sign_in": "Go to the sign-in page",
-        "error_details": "Error details"
+        "error_details": "Error details",
+        "forbidden": "You don't have access to this device."
     },
     "remote": {
         "title": "Remote Desktop",

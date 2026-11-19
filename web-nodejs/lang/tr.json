@@ -2166,7 +2166,8 @@
     "signed_in_as": "{user} olarak, {role} rolüyle oturum açtınız.",
     "server_error_log": "Bu tekrarlanırsa bir yönetici ayrıntıları sunucu günlüğünde bulabilir.",
     "go_sign_in": "Oturum açma sayfasına git",
-    "error_details": "Hata ayrıntıları"
+    "error_details": "Hata ayrıntıları",
+    "forbidden": "Bu cihaza erişiminiz yok."
   },
   "remote": {
     "title": "Uzak Masaüstü",

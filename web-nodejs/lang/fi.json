@@ -2166,7 +2166,8 @@
     "signed_in_as": "Olet kirjautunut käyttäjänä {user} roolilla {role}.",
     "server_error_log": "Jos tämä toistuu, järjestelmänvalvoja löytää tiedot palvelimen lokista.",
     "go_sign_in": "Siirry kirjautumissivulle",
-    "error_details": "Virheen tiedot"
+    "error_details": "Virheen tiedot",
+    "forbidden": "Sinulla ei ole pääsyä tähän laitteeseen."
   },
   "remote": {
     "title": "Etätyöpöytä",

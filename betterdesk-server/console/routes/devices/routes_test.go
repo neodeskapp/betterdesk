@@ -65,7 +65,7 @@ func TestEveryRouteChecksTheScope(t *testing.T) {
 	}
 	w, api := world(t, storetest.Migrated(t), routetest.Overrides{"operator": all}, nil)
 	operator := w.As("operator")
-	forbidden := `{"success":false,"error":"errors.forbidden"}`
+	forbidden := `{"success":false,"error":"You don't have access to this device."}`
 	for _, c := range []struct{ method, path, body string }{
 		{"GET", "/api/devices/C", ""},
 		{"GET", "/api/devices/C/groups", ""},

@@ -2,7 +2,9 @@ package folders_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -34,10 +36,14 @@ func newWorld(t *testing.T, db *store.DB) *routetest.World {
 		}
 		return routetest.Reply{Status: 404, Body: `{"error":"not found"}`}
 	}
-	return routetest.New(t, routetest.Options{DB: db, API: api, Config: func(cfg *config.Config) {
-		cfg.LangDir = filepath.Join("..", "..", "..", "..", "web-nodejs", "lang")
-	}})
+	return routetest.New(t, routetest.Options{DB: db, API: api, Config: realLanguages})
 }
+
+// langDir holds the console's language files.
+var langDir = filepath.Join("..", "..", "..", "..", "web-nodejs", "lang")
+
+// realLanguages gives the console its own language files.
+func realLanguages(cfg *config.Config) { cfg.LangDir = langDir }
 
 func want(t *testing.T, what string, got routetest.Answer, status int, body string) {
 	t.Helper()
@@ -71,7 +77,7 @@ const (
 	serverError = `{"success":false,"error":"Server error"}`
 	noFolder    = `{"success":false,"error":"Folder not found"}`
 	noDevice    = `{"success":false,"error":"Device not found"}`
-	forbidden   = `{"success":false,"error":"errors.forbidden"}`
+	forbidden   = `{"success":false,"error":"You don't have access to this device."}`
 	ok          = `{"success":true}`
 )
 
@@ -212,9 +218,7 @@ func TestTheDeviceScopeCheckComesFirst(t *testing.T) {
 		}
 		return routetest.Reply{Status: 404, Body: `{"error":"not found"}`}
 	}
-	w := routetest.New(t, routetest.Options{DB: db, API: api, Config: func(cfg *config.Config) {
-		cfg.LangDir = filepath.Join("..", "..", "..", "..", "web-nodejs", "lang")
-	}})
+	w := routetest.New(t, routetest.Options{DB: db, API: api, Config: realLanguages})
 	ctx := context.Background()
 	for _, q := range []string{
 		`INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-viewer', 'Viewer only', '', '', 'manual', '')`,
@@ -227,10 +231,51 @@ func TestTheDeviceScopeCheckComesFirst(t *testing.T) {
 	}
 	operator, admin := w.As("operator"), w.As("admin")
 	api.Calls()
-	want(t, "operator, deleted E", operator.Do("PATCH", "/api/devices/E/folder", `{"folderId":null}`), http.StatusForbidden, `{"success":false,"error":"errors.forbidden"}`)
+	want(t, "operator, deleted E", operator.Do("PATCH", "/api/devices/E/folder", `{"folderId":null}`), http.StatusForbidden, forbidden)
 	if calls := strings.Join(api.Calls(), ","); calls != "GET /api/peers/E,GET /api/peers?include_deleted=true" {
 		t.Errorf("operator, deleted E: calls %s", calls)
 	}
 	want(t, "admin, deleted E", admin.Do("PATCH", "/api/devices/E/folder", `{"folderId":null}`), http.StatusNotFound, `{"success":false,"error":"Device not found"}`)
 	want(t, "operator, A", operator.Do("PATCH", "/api/devices/A/folder", `{"folderId":null}`), http.StatusOK, `{"success":true}`)
+}
+
+// TestScopeRefusalInEveryLanguage: the refusal of a device outside the
+// account's scope is a sentence in the language of the request, in every
+// language the console has, never the name of a text.
+func TestScopeRefusalInEveryLanguage(t *testing.T) {
+	w := newWorld(t, storetest.Migrated(t))
+	admin, operator := w.As("admin"), w.As("operator")
+	want(t, "create", admin.Do("POST", "/api/folders", `{"name":"Lab","allowed_users":["e2e_viewer"]}`),
+		200, `{"success":true,"data":{"id":1,"name":"Lab","color":"#6366f1","icon":"folder","allowed_users":["e2e_viewer"],"allowed_groups":[]}}`)
+	want(t, "assign", admin.Do("POST", "/api/folders/1/devices", `{"deviceIds":["A"]}`), 200, `{"success":true,"data":{"count":1}}`)
+	files, err := os.ReadDir(langDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	english := ""
+	for _, f := range files {
+		code, isJSON := strings.CutSuffix(f.Name(), ".json")
+		if !isJSON {
+			continue
+		}
+		got := operator.Do("POST", "/api/folders/0/devices", `{"deviceIds":["A"]}`, "Accept-Language", code)
+		var answer struct {
+			Error string `json:"error"`
+		}
+		if err := json.Unmarshal([]byte(got.Body), &answer); err != nil || got.Status != http.StatusForbidden {
+			t.Fatalf("%s: %d %s", code, got.Status, got.Body)
+		}
+		switch {
+		case answer.Error == "" || answer.Error == "errors.forbidden":
+			t.Errorf("%s: the refusal is %q", code, answer.Error)
+		case code == "en":
+			english = answer.Error
+		}
+		if code != "en" && english != "" && answer.Error == english {
+			t.Errorf("%s: the refusal is the English text", code)
+		}
+	}
+	if english != "You don't have access to this device." {
+		t.Errorf("the English refusal is %q", english)
+	}
 }

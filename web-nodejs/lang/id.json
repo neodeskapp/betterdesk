@@ -2166,7 +2166,8 @@
     "signed_in_as": "Anda masuk sebagai {user} dengan peran {role}.",
     "server_error_log": "Jika terus terjadi, administrator dapat melihat detailnya di log server.",
     "go_sign_in": "Buka halaman masuk",
-    "error_details": "Detail kesalahan"
+    "error_details": "Detail kesalahan",
+    "forbidden": "Anda tidak punya akses ke perangkat ini."
   },
   "remote": {
     "title": "Desktop Jarak Jauh",

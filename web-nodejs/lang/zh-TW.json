@@ -2182,7 +2182,8 @@
     "signed_in_as": "您目前以 {user} 的身分登入，角色為 {role}。",
     "server_error_log": "如果持續發生，管理員可以在伺服器日誌中查看詳細資訊。",
     "go_sign_in": "前往登入頁面",
-    "error_details": "錯誤詳細資訊"
+    "error_details": "錯誤詳細資訊",
+    "forbidden": "您沒有存取此設備的權限。"
   },
   "remote": {
     "title": "遠程桌面",

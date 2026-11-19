@@ -2160,7 +2160,8 @@
     "signed_in_as": "U bent aangemeld als {user} met de rol {role}.",
     "server_error_log": "Blijft het gebeuren, dan vindt een beheerder de details in het serverlogboek.",
     "go_sign_in": "Naar de aanmeldpagina",
-    "error_details": "Foutdetails"
+    "error_details": "Foutdetails",
+    "forbidden": "U hebt geen toegang tot dit apparaat."
   },
   "remote": {
     "title": "Extern bureaublad",

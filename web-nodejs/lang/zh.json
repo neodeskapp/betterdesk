@@ -2160,7 +2160,8 @@
     "signed_in_as": "您当前以 {user} 的身份登录，角色为 {role}。",
     "server_error_log": "如果问题持续出现，管理员可以在服务器日志中查看详细信息。",
     "go_sign_in": "前往登录页面",
-    "error_details": "错误详情"
+    "error_details": "错误详情",
+    "forbidden": "您没有访问此设备的权限。"
   },
   "remote": {
     "title": "远程桌面",

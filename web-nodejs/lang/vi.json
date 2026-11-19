@@ -2166,7 +2166,8 @@
     "signed_in_as": "Bạn đang đăng nhập với tên {user}, vai trò {role}.",
     "server_error_log": "Nếu lỗi tiếp tục xảy ra, quản trị viên có thể xem chi tiết trong nhật ký máy chủ.",
     "go_sign_in": "Đến trang đăng nhập",
-    "error_details": "Chi tiết lỗi"
+    "error_details": "Chi tiết lỗi",
+    "forbidden": "Bạn không có quyền truy cập thiết bị này."
   },
   "remote": {
     "title": "Máy tính để bàn từ xa",

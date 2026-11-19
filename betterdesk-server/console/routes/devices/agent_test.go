@@ -177,7 +177,7 @@ func TestNodeAgentAnswers(t *testing.T) {
 			// handler (a body it cannot parse, one over the size limit);
 			// that answer is the console's own and is pinned elsewhere, so
 			// only its status counts here.
-			sameBody := normalize(got.Body) == normalize(step.Answer) || strings.Contains(step.Answer, `"oracle":"error handler"`)
+			sameBody := normalize(got.Body) == normalize(sinceFO1(step.Answer)) || strings.Contains(step.Answer, `"oracle":"error handler"`)
 			same := got.Status == step.Status && sameBody &&
 				strings.Join(calls, "\n") == strings.Join(step.Extra.Calls, "\n") &&
 				normalize(strings.Join(sent, "\n")) == normalize(strings.Join(step.Extra.Agent, "\n"))

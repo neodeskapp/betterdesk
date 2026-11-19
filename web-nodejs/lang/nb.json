@@ -2166,7 +2166,8 @@
     "signed_in_as": "Du er logget på som {user} med rollen {role}.",
     "server_error_log": "Hvis det fortsetter, finner en administrator detaljene i serverloggen.",
     "go_sign_in": "Gå til påloggingssiden",
-    "error_details": "Feildetaljer"
+    "error_details": "Feildetaljer",
+    "forbidden": "Du har ikke tilgang til denne enheten."
   },
   "remote": {
     "title": "Eksternt skrivebord",

@@ -2166,7 +2166,8 @@
     "signed_in_as": "Du er logget ind som {user} med rollen {role}.",
     "server_error_log": "Hvis det bliver ved, kan en administrator finde detaljerne i serverloggen.",
     "go_sign_in": "Gå til login-siden",
-    "error_details": "Fejldetaljer"
+    "error_details": "Fejldetaljer",
+    "forbidden": "Du har ikke adgang til denne enhed."
   },
   "remote": {
     "title": "Fjernskrivebord",

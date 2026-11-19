@@ -2182,7 +2182,8 @@
     "signed_in_as": "Vous êtes connecté en tant que {user} avec le rôle {role}.",
     "server_error_log": "Si cela se reproduit, un administrateur trouvera les détails dans le journal du serveur.",
     "go_sign_in": "Aller à la page de connexion",
-    "error_details": "Détails de l'erreur"
+    "error_details": "Détails de l'erreur",
+    "forbidden": "Vous n’avez pas accès à cet appareil."
   },
   "remote": {
     "title": "Tableau de bord",

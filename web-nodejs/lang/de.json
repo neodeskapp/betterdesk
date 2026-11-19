@@ -2160,7 +2160,8 @@
     "signed_in_as": "Sie sind als {user} mit der Rolle {role} angemeldet.",
     "server_error_log": "Wenn das wieder passiert, findet ein Administrator die Einzelheiten im Serverprotokoll.",
     "go_sign_in": "Zur Anmeldung",
-    "error_details": "Fehlerdetails"
+    "error_details": "Fehlerdetails",
+    "forbidden": "Sie haben keinen Zugriff auf dieses Gerät."
   },
   "remote": {
     "title": "Dashboard",

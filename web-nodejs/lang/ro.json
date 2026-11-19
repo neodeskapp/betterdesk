@@ -2166,7 +2166,8 @@
     "signed_in_as": "Sunteți conectat ca {user} cu rolul {role}.",
     "server_error_log": "Dacă se repetă, un administrator găsește detaliile în jurnalul serverului.",
     "go_sign_in": "Mergeți la pagina de conectare",
-    "error_details": "Detaliile erorii"
+    "error_details": "Detaliile erorii",
+    "forbidden": "Nu aveți acces la acest dispozitiv."
   },
   "remote": {
     "title": "Desktop la distanță",

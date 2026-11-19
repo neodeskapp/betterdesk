@@ -2160,7 +2160,8 @@
     "signed_in_as": "Você está conectado como {user} com a função {role}.",
     "server_error_log": "Se continuar acontecendo, um administrador encontra os detalhes no log do servidor.",
     "go_sign_in": "Ir para a página de entrada",
-    "error_details": "Detalhes do erro"
+    "error_details": "Detalhes do erro",
+    "forbidden": "Não tem acesso a este dispositivo."
   },
   "remote": {
     "title": "Ambiente de trabalho remoto",

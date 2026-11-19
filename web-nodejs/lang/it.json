@@ -2160,7 +2160,8 @@
     "signed_in_as": "Ha effettuato l'accesso come {user} con il ruolo {role}.",
     "server_error_log": "Se continua a succedere, un amministratore trova i dettagli nel log del server.",
     "go_sign_in": "Vai alla pagina di accesso",
-    "error_details": "Dettagli dell'errore"
+    "error_details": "Dettagli dell'errore",
+    "forbidden": "Non hai accesso a questo dispositivo."
   },
   "remote": {
     "title": "Desktop remoto",

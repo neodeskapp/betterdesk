@@ -245,7 +245,7 @@ func TestNodeAnswers(t *testing.T) {
 				answers[key] = fixedAnswer{Status: got.Status, Answer: normalize(got.Body), Calls: normalizeAll(calls)}
 				continue
 			}
-			same := got.Status == step.Status && (step.StatusOnly || normalize(got.Body) == normalize(step.Answer)) &&
+			same := got.Status == step.Status && (step.StatusOnly || normalize(got.Body) == normalize(sinceFO1(step.Answer))) &&
 				normalize(strings.Join(calls, "\n")) == normalize(strings.Join(step.Extra.Calls, "\n"))
 			if same {
 				continue
@@ -278,4 +278,11 @@ func nodeLanguages(cfg *config.Config) {
 	if _, err := os.Stat(filepath.Join(cfg.LangDir, "en.json")); err != nil {
 		cfg.LangDir = "/repo/web-nodejs/lang"
 	}
+}
+
+// sinceFO1 is an answer the Node console recorded as the console gives it
+// since the language files have errors.forbidden (BUGS FO1): the
+// sentence in place of the name of the text.
+func sinceFO1(answer string) string {
+	return strings.ReplaceAll(answer, `"error":"errors.forbidden"`, `"error":"You don't have access to this device."`)
 }

@@ -2178,7 +2178,8 @@
     "signed_in_as": "Jesteś zalogowany jako {user} z rolą {role}.",
     "server_error_log": "Jeśli to się powtarza, administrator znajdzie szczegóły w logu serwera.",
     "go_sign_in": "Przejdź do strony logowania",
-    "error_details": "Szczegóły błędu"
+    "error_details": "Szczegóły błędu",
+    "forbidden": "Nie masz dostępu do tego urządzenia."
   },
   "remote": {
     "title": "Pulpit Zdalny",
