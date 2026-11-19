@@ -3,9 +3,14 @@ package authn
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
+
+	"github.com/unitronix/betterdesk-server/auth"
 )
 
 // The bug fixes of BUGS.md that change what the recorded scenarios of
@@ -24,6 +29,7 @@ var scenarioFixes = []scenarioFix{
 	{"S3", stopAtSyncsFromTheSignalServer},
 	{"AN4", noPasswordFromTheNextLine},
 	{"AN7", noCodesInOtherLists},
+	{"AN8", strictSecrets},
 	{"AN6", logTheWrittenCredentialsPath},
 }
 
@@ -267,4 +273,75 @@ func syncsFromTheSignalServer(step *stepVector) bool {
 		}
 	}
 	return false
+}
+
+// strictSecrets: a stored two-factor secret is read as the API server
+// reads it and used as it decodes (AN8). Node read it leniently and
+// stretched a short one, so for such a secret Node's codes are not the
+// console's. A code is checked against the API server's code
+// (auth.ComputeTOTP) at the step's time, no secret that is not base32 is a
+// fault, and turning two-factor on with a wrong code leaves the account's
+// row as it was seeded.
+func strictSecrets(sc *scenarioVector) bool {
+	secrets := map[string]string{}
+	seeded := map[string]seedUser{}
+	for i, u := range sc.Seed.Users {
+		id := strconv.Itoa(i + 1)
+		seeded[id] = u
+		if u.TOTPSecret != nil {
+			secrets[id] = *u.TOTPSecret
+		}
+	}
+	changed := false
+	refused := map[string]bool{}
+	for i := range sc.Steps {
+		step := &sc.Steps[i]
+		if len(step.Args) == 0 {
+			continue
+		}
+		id := string(step.Args[0])
+		if step.Fn == "generateTotpSetup" {
+			delete(secrets, id)
+			continue
+		}
+		secret, ok := secrets[id]
+		if !ok || len(step.Args) < 2 || step.At.Abs == nil {
+			continue
+		}
+		var token string
+		if json.Unmarshal(step.Args[1], &token) != nil {
+			continue
+		}
+		code, err := auth.ComputeTOTP(secret, time.UnixMilli(*step.At.Abs))
+		right := err == nil && token == code
+		switch step.Fn {
+		case "verifyTotpCode":
+			if step.Thrown != nil || string(step.Result) == "true" {
+				result := json.RawMessage(strconv.FormatBool(right))
+				if step.Thrown != nil || string(result) != string(step.Result) {
+					step.Thrown, step.Result, changed = nil, result, true
+				}
+			}
+		case "verifyAndEnableTotp":
+			succeeded := strings.Contains(string(step.Result), `"success":true`)
+			if !right && (succeeded || step.Thrown != nil) {
+				step.Thrown, step.Result, changed = nil, json.RawMessage(`{"success":false,"error":"Invalid verification code"}`), true
+				refused[id] = refused[id] || succeeded
+			}
+		}
+	}
+	for _, row := range sc.Tables["users"] {
+		id := fmt.Sprint(row["id"])
+		if !refused[id] {
+			continue
+		}
+		u := seeded[id]
+		row["totp_enabled"] = u.TOTPEnabled
+		if u.TOTPRecoveryCodes == nil {
+			row["totp_recovery_codes"] = nil
+		} else {
+			row["totp_recovery_codes"] = *u.TOTPRecoveryCodes
+		}
+	}
+	return changed
 }

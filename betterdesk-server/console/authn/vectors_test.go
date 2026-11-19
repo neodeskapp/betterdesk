@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 )
 
@@ -180,46 +181,57 @@ func TestTOTPVectors(t *testing.T) {
 			len(vectors.Codes), len(vectors.Checks), len(vectors.URLs), len(vectors.Generated))
 	}
 
-	thrown, accepted := 0, 0
+	// AN8: the console reads a secret as the API server does and takes its
+	// bytes as they are. Where Node read a secret leniently, threw on one,
+	// or stretched a short one, the code is the API server's
+	// (auth.ComputeTOTP), and a secret the API server cannot read has none
+	// and no token passes for it.
+	reference := func(secret string, at time.Time) (string, bool) {
+		code, err := auth.ComputeTOTP(secret, at)
+		return code, err == nil
+	}
+	thrown, accepted, changed := 0, 0, 0
 	for i, v := range vectors.Codes {
-		got, err := totpCode(v.Secret, time.UnixMilli(v.At))
+		at := time.UnixMilli(v.At)
+		got, err := totpCode(v.Secret, at)
+		ref, readable := reference(v.Secret, at)
+		var node string
 		if v.Thrown != nil {
 			thrown++
-			if err == nil || err.Error() != *v.Thrown {
-				t.Errorf("code %d: secret %q: got %q, %v; Node throws %q", i, v.Secret, got, err, *v.Thrown)
-			}
-			continue
-		}
-		var want string
-		if err := json.Unmarshal(v.Result, &want); err != nil {
+		} else if err := json.Unmarshal(v.Result, &node); err != nil {
 			t.Fatal(err)
 		}
-		if err != nil || got != want {
-			t.Errorf("code %d: totpCode(%q, %d) = %q, %v; Node says %q", i, v.Secret, v.At, got, err, want)
+		if v.Thrown != nil || !readable || node != ref {
+			changed++
+		}
+		switch {
+		case readable && (err != nil || got != ref):
+			t.Errorf("code %d: totpCode(%q, %d) = %q, %v; want %q (Node: %q, %v)", i, v.Secret, v.At, got, err, ref, node, v.Thrown)
+		case !readable && err == nil:
+			t.Errorf("code %d: totpCode(%q, %d) = %q for a secret that is not base32", i, v.Secret, v.At, got)
 		}
 	}
-	if thrown == 0 {
-		t.Error("no vector with a secret Node refuses")
+	if thrown == 0 || changed == 0 || changed == len(vectors.Codes) {
+		t.Errorf("%d secrets Node refuses, %d of %d codes change with AN8; want some of each", thrown, changed, len(vectors.Codes))
 	}
 
+	changed = 0
 	for i, v := range vectors.Checks {
-		got, err := totpVerify(v.Token, v.Secret, time.UnixMilli(v.At))
-		if v.Thrown != nil {
-			if err == nil || err.Error() != *v.Thrown {
-				t.Errorf("check %d: secret %q: got %v, %v; Node throws %q", i, v.Secret, got, err, *v.Thrown)
-			}
-			continue
-		}
-		want := v.bool(t)
-		if want {
+		at := time.UnixMilli(v.At)
+		got, err := totpVerify(v.Token, v.Secret, at)
+		ref, readable := reference(v.Secret, at)
+		want := readable && v.Token == ref
+		if v.Thrown != nil || v.bool(t) != want {
+			changed++
+		} else if want {
 			accepted++
 		}
 		if err != nil || got != want {
-			t.Errorf("check %d: totpVerify(%q, %q, %d) = %v, %v; Node says %v", i, v.Token, v.Secret, v.At, got, err, want)
+			t.Errorf("check %d: totpVerify(%q, %q, %d) = %v, %v; want %v (Node: %s, %v)", i, v.Token, v.Secret, v.At, got, err, want, v.Result, v.Thrown)
 		}
 	}
-	if accepted < 100 {
-		t.Errorf("only %d checks Node accepts", accepted)
+	if accepted < 100 || changed == 0 {
+		t.Errorf("%d checks accepted as in Node, %d changed by AN8", accepted, changed)
 	}
 
 	for i, v := range vectors.URLs {

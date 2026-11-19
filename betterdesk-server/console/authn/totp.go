@@ -25,12 +25,11 @@ import (
 // of 30 seconds, and no tolerance. Only the code of the current step is
 // accepted; the code of the step before is refused.
 //
-// The secret is base32 text. It is read leniently: lower case counts as
-// upper case, reading stops at "=", and a character below "0" (a space, a
-// dash) counts as five zero bits. A secret of fewer than 10 bytes is
-// repeated to fill the 20 bytes of the key, so its codes are not the ones
-// other apps compute for the same short secret. Secrets made here have 20
-// bytes.
+// The secret is base32 text (RFC 4648) without padding, read as the API
+// server reads the same column: the letters A to Z and the digits 2 to 7.
+// Its bytes are the HMAC key as they are, whatever their number. A secret
+// with any other character has no codes: every code is wrong for it.
+// Secrets made here have 20 bytes.
 
 const (
 	totpIssuer     = "BetterDesk"
@@ -42,75 +41,15 @@ const (
 	recoveryCodeCount = 8
 )
 
-var errNotBase32 = errors.New("Invalid input - it is not base32 encoded string")
+var errNotBase32 = errors.New("the two-factor secret is not base32 text")
 
-// base32Table maps the characters "0" to DEL to their five bits. 0xff
-// stands for characters outside the alphabet; their eight bits are used
-// as they are.
-var base32Table = [80]byte{
-	0xff, 0xff, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-	0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
-	0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
-	0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
-	0x17, 0x18, 0x19, 0xff, 0xff, 0xff, 0xff, 0xff,
-	0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
-	0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
-	0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
-	0x17, 0x18, 0x19, 0xff, 0xff, 0xff, 0xff, 0xff,
-}
-
-// decodeSecret reads a stored secret. It fails only for a byte above DEL.
+// decodeSecret reads a stored secret.
 func decodeSecret(secret string) ([]byte, error) {
-	out := make([]byte, 0, len(secret)*5/8+1)
-	var shift uint
-	var char int
-	for i := 0; i < len(secret); i++ {
-		c := secret[i]
-		if c == '=' {
-			break
-		}
-		if c >= 0x80 {
-			return nil, errNotBase32
-		}
-		digit := 0
-		if c >= '0' {
-			digit = int(base32Table[c-'0'])
-		}
-		if shift <= 3 {
-			shift = (shift + 5) % 8
-			if shift == 0 {
-				char |= digit
-				out = append(out, byte(char))
-				char = 0
-			} else {
-				char |= 0xff & (digit << (8 - shift))
-			}
-		} else {
-			shift = (shift + 5) % 8
-			char |= 0xff & (digit >> shift)
-			out = append(out, byte(char))
-			char = 0xff & (digit << (8 - shift))
-		}
+	key, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(secret)
+	if err != nil {
+		return nil, errNotBase32
 	}
-	return out, nil
-}
-
-// totpKey is the HMAC key for a decoded secret: the secret itself, or a
-// short one repeated.
-func totpKey(secret []byte) []byte {
-	hexLength := 2 * len(secret)
-	if hexLength >= totpKeyLength {
-		return secret
-	}
-	key := make([]byte, 0, totpKeyLength)
-	for i := 0; i < totpKeyLength-hexLength && len(key) < totpKeyLength; i++ {
-		key = append(key, secret...)
-	}
-	if len(key) > totpKeyLength {
-		key = key[:totpKeyLength]
-	}
-	return key
+	return key, nil
 }
 
 // totpCode computes the code of secret for the step that contains at.
@@ -122,7 +61,7 @@ func totpCode(secret string, at time.Time) (string, error) {
 	counter := math.Max(0, math.Floor(float64(at.UnixMilli())/30/1000))
 	var message [8]byte
 	binary.BigEndian.PutUint64(message[:], uint64(counter))
-	mac := hmac.New(sha1.New, totpKey(decoded))
+	mac := hmac.New(sha1.New, decoded)
 	mac.Write(message[:])
 	digest := mac.Sum(nil)
 	offset := digest[len(digest)-1] & 0x0f
@@ -131,9 +70,13 @@ func totpCode(secret string, at time.Time) (string, error) {
 }
 
 // totpVerify reports whether token is the code of the current step. The
-// token must be exactly the six digits: no spaces, no other digits.
+// token must be exactly the six digits: no spaces, no other digits. No
+// token is the code of a secret that is not base32.
 func totpVerify(token, secret string, at time.Time) (bool, error) {
 	code, err := totpCode(secret, at)
+	if errors.Is(err, errNotBase32) {
+		return false, nil
+	}
 	if err != nil {
 		return false, err
 	}
