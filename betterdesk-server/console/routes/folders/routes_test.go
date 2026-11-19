@@ -103,17 +103,15 @@ func TestFolderRoutes(t *testing.T) {
 		want(t, "name that is a list", admin.Do("POST", "/api/folders", `{"name":["x"]}`), 400, required)
 		want(t, "create", admin.Do("POST", "/api/folders", `{"name":"  Lab ","color":"#123","allowed_users":["e2e_viewer","ghost"," e2e_viewer"]}`),
 			200, `{"success":true,"data":{"id":1,"name":"Lab","color":"#123","icon":"folder","allowed_users":["e2e_viewer"],"allowed_groups":[]}}`)
-		want(t, "create with other types", admin.Do("POST", "/api/folders", `{"name":"Odd","color":5,"icon":""}`),
-			200, `{"success":true,"data":{"id":2,"name":"Odd","color":5,"icon":"folder","allowed_users":[],"allowed_groups":[]}}`)
+		want(t, "create with a color that is a number", admin.Do("POST", "/api/folders", `{"name":"Odd","color":5,"icon":""}`),
+			400, `{"success":false,"error":"Invalid folder color"}`)
+		want(t, "create with an empty icon", admin.Do("POST", "/api/folders", `{"name":"Odd","color":"#555","icon":""}`),
+			200, `{"success":true,"data":{"id":2,"name":"Odd","color":"#555","icon":"folder","allowed_users":[],"allowed_groups":[]}}`)
 		if got := rows(t, db, `SELECT guid FROM device_groups WHERE guid LIKE 'folder_%' ORDER BY guid`); got != "folder_1" {
 			t.Errorf("folder groups after creating: %q", got)
 		}
-		odd := "5.0"
-		if db.IsPostgres() {
-			odd = "5"
-		}
-		if got := rows(t, db, `SELECT color FROM folders WHERE id = 2`); got != odd {
-			t.Errorf("stored color of a number: %q", got)
+		if got := rows(t, db, `SELECT color FROM folders WHERE id = 2`); got != "#555" {
+			t.Errorf("stored color: %q", got)
 		}
 
 		// Devices into the folder only e2e_viewer may see
@@ -343,6 +341,30 @@ func TestFolderIDsAreWholeNumbers(t *testing.T) {
 		want(t, "move into folder 1.0", admin.Do("PATCH", "/api/devices/B/folder", `{"folderId":1.0}`), 200, ok)
 		if got := rows(t, db, `SELECT device_id FROM device_folder_assignments ORDER BY device_id`); got != "A,B" {
 			t.Errorf("assignments: %q", got)
+		}
+	})
+}
+
+// TestColorAndIconAreText: a folder color or icon that is no text is
+// refused when a folder is made or changed, so what is stored is what the
+// answer says on both databases.
+func TestColorAndIconAreText(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		admin := newWorld(t, db).As("admin")
+		color, icon := `{"success":false,"error":"Invalid folder color"}`, `{"success":false,"error":"Invalid folder icon"}`
+		for _, body := range []string{`{"name":"x","color":5}`, `{"name":"x","color":["#fff"]}`, `{"name":"x","color":true}`, `{"name":"x","color":{}}`} {
+			want(t, "create with "+body, admin.Do("POST", "/api/folders", body), 400, color)
+		}
+		for _, body := range []string{`{"name":"x","icon":5}`, `{"name":"x","icon":["box"]}`, `{"name":"x","color":"#fff","icon":false}`} {
+			want(t, "create with "+body, admin.Do("POST", "/api/folders", body), 400, icon)
+		}
+		want(t, "create", admin.Do("POST", "/api/folders", `{"name":"Lab","color":null,"icon":"box"}`),
+			200, `{"success":true,"data":{"id":1,"name":"Lab","color":"#6366f1","icon":"box","allowed_users":[],"allowed_groups":[]}}`)
+		want(t, "change the color to a number", admin.Do("PATCH", "/api/folders/1", `{"color":7}`), 400, color)
+		want(t, "change the icon to a list", admin.Do("PATCH", "/api/folders/1", `{"icon":["a"]}`), 400, icon)
+		want(t, "change", admin.Do("PATCH", "/api/folders/1", `{"color":"#123"}`), 200, ok)
+		if got := rows(t, db, `SELECT name || '|' || color || '|' || icon FROM folders`); got != "Lab|#123|box" {
+			t.Errorf("stored folder: %q", got)
 		}
 	})
 }

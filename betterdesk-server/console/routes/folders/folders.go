@@ -264,6 +264,20 @@ func (h *handlers) checkName(w http.ResponseWriter, r *http.Request, name middle
 	return trimmed, true
 }
 
+// checkLook checks the color and icon of a body: each may be missing,
+// null or text. It answers 400 for anything else and then reports false.
+func (h *handlers) checkLook(w http.ResponseWriter, r *http.Request, body middleware.JSONObject) bool {
+	for _, field := range []struct{ name, refusal string }{{"color", "Invalid folder color"}, {"icon", "Invalid folder icon"}} {
+		switch body.Get(field.name).Kind() {
+		case middleware.KindUndefined, middleware.KindNull, middleware.KindString:
+		default:
+			kit.Fail(w, r, http.StatusBadRequest, field.refusal)
+			return false
+		}
+	}
+	return true
+}
+
 // create answers POST /api/folders with {name, color?, icon?,
 // allowed_users?, allowed_groups?}.
 func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
@@ -280,6 +294,9 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	text, _ := name.Str()
+	if !h.checkLook(w, r, body) {
+		return
+	}
 	color, icon := jsbind.Of(body.Get("color")), jsbind.Of(body.Get("icon"))
 	id, err := h.groups.CreateFolder(ctx, jsbind.String(trimmed), color.Or(jsbind.String(defaultColor)), icon.Or(jsbind.String(defaultIcon)))
 	if err != nil {
@@ -337,6 +354,9 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		name, newName = jsbind.String(trimmed), trimmed
+	}
+	if !h.checkLook(w, r, body) {
+		return
 	}
 	if err := h.groups.UpdateFolder(ctx, id, name, jsbind.Of(body.Get("color")), jsbind.Of(body.Get("icon"))); err != nil {
 		h.serverError(w, r, "Update folder error:", err)

@@ -328,20 +328,6 @@
        },
        {
         "allowed_groups": [],
-        "allowed_users": [
-         "e2e_operator",
-         "e2e_viewer"
-        ],
-        "color": "5.0",
-        "created_at": "<volatile>",
-        "device_count": 0,
-        "icon": "folder",
-        "id": 12,
-        "name": "Odd",
-        "sort_order": 0
-       },
-       {
-        "allowed_groups": [],
         "allowed_users": [],
         "color": "#22c55e",
         "created_at": "<volatile>",
@@ -385,7 +371,7 @@
         "sort_order": 0
        }
       ],
-      "total": 8
+      "total": 7
      },
      "success": true
     }
@@ -442,7 +428,7 @@
         "created_at": "<volatile>",
         "device_count": 2,
         "icon": "box",
-        "id": 14,
+        "id": 13,
         "name": "Contract renamed",
         "sort_order": 0
        },
@@ -455,7 +441,7 @@
         "created_at": "<volatile>",
         "device_count": 0,
         "icon": "folder",
-        "id": 13,
+        "id": 12,
         "name": "Contract restricted",
         "sort_order": 0
        },
@@ -468,20 +454,6 @@
         "icon": "folder",
         "id": 4,
         "name": "Lab",
-        "sort_order": 0
-       },
-       {
-        "allowed_groups": [],
-        "allowed_users": [
-         "e2e_operator",
-         "e2e_viewer"
-        ],
-        "color": "5.0",
-        "created_at": "<volatile>",
-        "device_count": 0,
-        "icon": "folder",
-        "id": 16,
-        "name": "Odd",
         "sort_order": 0
        },
        {
@@ -524,12 +496,12 @@
         "created_at": "<volatile>",
         "device_count": 0,
         "icon": "folder",
-        "id": 15,
+        "id": 14,
         "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         "sort_order": 0
        }
       ],
-      "total": 8
+      "total": 7
      },
      "success": true
     }
@@ -583,7 +555,7 @@
         "created_at": "<volatile>",
         "device_count": 1,
         "icon": "folder",
-        "id": 17,
+        "id": 15,
         "name": "Contract restricted",
         "sort_order": 0
        },
@@ -689,7 +661,7 @@
         "created_at": "<volatile>",
         "device_count": 2,
         "icon": "box",
-        "id": 19,
+        "id": 17,
         "name": "Contract renamed",
         "sort_order": 0
        },
@@ -702,7 +674,7 @@
         "created_at": "<volatile>",
         "device_count": 0,
         "icon": "folder",
-        "id": 18,
+        "id": 16,
         "name": "Contract restricted",
         "sort_order": 0
        },
@@ -715,20 +687,6 @@
         "icon": "folder",
         "id": 4,
         "name": "Lab",
-        "sort_order": 0
-       },
-       {
-        "allowed_groups": [],
-        "allowed_users": [
-         "e2e_operator",
-         "e2e_viewer"
-        ],
-        "color": "5.0",
-        "created_at": "<volatile>",
-        "device_count": 0,
-        "icon": "folder",
-        "id": 21,
-        "name": "Odd",
         "sort_order": 0
        },
        {
@@ -771,12 +729,12 @@
         "created_at": "<volatile>",
         "device_count": 0,
         "icon": "folder",
-        "id": 20,
+        "id": 18,
         "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         "sort_order": 0
        }
       ],
-      "total": 8
+      "total": 7
      },
      "success": true
     }
@@ -833,7 +791,7 @@
         "created_at": "<volatile>",
         "device_count": 2,
         "icon": "box",
-        "id": 23,
+        "id": 20,
         "name": "Contract renamed",
         "sort_order": 0
        },
@@ -846,7 +804,7 @@
         "created_at": "<volatile>",
         "device_count": 0,
         "icon": "folder",
-        "id": 22,
+        "id": 19,
         "name": "Contract restricted",
         "sort_order": 0
        },
@@ -859,20 +817,6 @@
         "icon": "folder",
         "id": 4,
         "name": "Lab",
-        "sort_order": 0
-       },
-       {
-        "allowed_groups": [],
-        "allowed_users": [
-         "e2e_operator",
-         "e2e_viewer"
-        ],
-        "color": "5.0",
-        "created_at": "<volatile>",
-        "device_count": 0,
-        "icon": "folder",
-        "id": 25,
-        "name": "Odd",
         "sort_order": 0
        },
        {
@@ -915,12 +859,12 @@
         "created_at": "<volatile>",
         "device_count": 0,
         "icon": "folder",
-        "id": 24,
+        "id": 21,
         "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         "sort_order": 0
        }
       ],
-      "total": 8
+      "total": 7
      },
      "success": true
     }
