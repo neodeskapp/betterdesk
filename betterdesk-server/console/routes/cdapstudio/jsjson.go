@@ -88,8 +88,10 @@ func isArrayIndex(key string) bool {
 }
 
 // maxDepth is how deep arrays and objects may be nested in JSON that is
-// read. Deeper JSON counts as not JSON.
-const maxDepth = 10000
+// read. Deeper JSON counts as not JSON, so a flow nested deeper is
+// refused as "Invalid flow JSON". A flow of the editor is a few levels
+// deep.
+const maxDepth = 200
 
 var errJSON = errors.New("not JSON")
 

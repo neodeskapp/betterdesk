@@ -139,9 +139,24 @@ var (
 	placeholder = regexp.MustCompile(`\{(\w+)\}`)
 )
 
+// stepDifferences are the steps of testdata/flows.json a bug fix answers
+// differently on purpose, with what Go answers now. A step that saved a
+// flow in Node and is refused now leaves its name unsaved, so the steps
+// after it ask for a flow that does not exist.
+var stepDifferences = map[string]struct {
+	status int
+	text   string
+}{
+	// ST1: a flow nested deeper than 200 levels is not JSON
+	"flow text nested 1000 deep": {400, `{"success":false,"error":"Invalid flow JSON"}`},
+	"export nested 1000 deep":    {404, `{"success":false,"error":"Flow not found"}`},
+	"delete nested":              {404, `{"success":false,"error":"Flow not found"}`},
+}
+
 // TestNodeSteps replays the steps the Node console answered, in order, on
-// both databases. Ids and times differ from run to run: an id is compared
-// by the step that made it, a time by its form.
+// both databases, but for the steps in stepDifferences. Ids and times
+// differ from run to run: an id is compared by the step that made it, a
+// time by its form.
 func TestNodeSteps(t *testing.T) {
 	file, err := os.Open("testdata/flows.json")
 	if err != nil {
@@ -198,6 +213,15 @@ func TestNodeSteps(t *testing.T) {
 			if db.IsPostgres() && s.Method != "GET" {
 				// The database's clock orders the list
 				time.Sleep(2 * time.Millisecond)
+			}
+			if fixed, ok := stepDifferences[s.Name]; ok {
+				if got := mask(rec.Body.String(), mine); rec.Code != fixed.status || got != fixed.text {
+					t.Errorf("%s: %d %s, the fix answers %d %s", s.Name, rec.Code, got, fixed.status, fixed.text)
+				}
+				if s.Save != "" && rec.Code == http.StatusOK {
+					t.Errorf("%s: the fix saves the flow; the step belongs in the replay", s.Name)
+				}
+				continue
 			}
 			if s.Save != "" {
 				var answer struct {
@@ -474,4 +498,20 @@ func TestUpdateOfAnEmptyStoredFlow(t *testing.T) {
 			t.Errorf("flow_json = %q, %v", text, err)
 		}
 	})
+}
+
+// TestFlowNestedTooDeepIsRefused: a flow nested deeper than 200 levels is
+// refused as text and as a value, when it is made, changed and imported;
+// 200 levels are stored.
+func TestFlowNestedTooDeepIsRefused(t *testing.T) {
+	w := newWorld(t, storetest.Migrated(t))
+	deep := func(n int) string { return strings.Repeat("[", n) + strings.Repeat("]", n) }
+	refused := `{"success":false,"error":"Invalid flow JSON"}`
+	expect(t, "200 levels as text", w.do("alice", "POST", "/api/cdap-studio/flows", `{"name":"Deep","flow_json":"`+deep(200)+`"}`, ""), 200, `{"success":true,"id":"a0a1a2a3a4a50000"}`)
+	expect(t, "201 levels as text", w.do("alice", "POST", "/api/cdap-studio/flows", `{"name":"Deep","flow_json":"`+deep(201)+`"}`, ""), 400, refused)
+	expect(t, "201 levels as a value", w.do("alice", "POST", "/api/cdap-studio/flows", `{"name":"Deep","flow_json":`+deep(201)+`}`, ""), 400, refused)
+	expect(t, "an update to 201 levels", w.do("alice", "PUT", "/api/cdap-studio/flows/a0a1a2a3a4a50000", `{"flow_json":"`+deep(201)+`"}`, ""), 400, refused)
+	expect(t, "an import of 201 levels", w.do("alice", "POST", "/api/cdap-studio/flows/import", `{"name":"Deep","flow":`+deep(201)+`}`, ""), 400, refused)
+	objects := strings.Repeat(`{"a":`, 201) + "1" + strings.Repeat("}", 201)
+	expect(t, "201 levels of objects", w.do("alice", "POST", "/api/cdap-studio/flows", `{"name":"Deep","flow_json":`+objects+`}`, ""), 400, refused)
 }
