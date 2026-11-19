@@ -101,7 +101,8 @@ func validWallpaper(v any) bool {
 
 // save answers POST /api/desktop/layout with the body {widgets,
 // wallpaper}. Without widgets the layout is stored empty; without
-// wallpaper the stored one stays.
+// wallpaper the stored one stays, and a wallpaper of null or "" takes it
+// away.
 func (h *handlers) save(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
 	object, _ := body.(*goapi.Object)
@@ -126,8 +127,11 @@ func (h *handlers) save(w http.ResponseWriter, r *http.Request) {
 	user := strconv.FormatInt(kit.UserID(r), 10)
 	err := setSetting(r.Context(), h.store, layoutKey(user), payload)
 	if err == nil && object.Has("wallpaper") {
-		// null cannot be stored: the write fails and the file takes over
-		err = setSetting(r.Context(), h.store, wallpaperKey(user), wallpaper)
+		stored := wallpaper
+		if stored == nil {
+			stored = ""
+		}
+		err = setSetting(r.Context(), h.store, wallpaperKey(user), stored)
 	}
 	if err != nil {
 		h.log.Warn("DB layout save failed, using file fallback:", err)

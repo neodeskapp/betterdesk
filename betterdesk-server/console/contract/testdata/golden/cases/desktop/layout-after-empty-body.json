@@ -39,7 +39,7 @@
     "kind": "json",
     "json": {
      "data": {
-      "wallpaper": "solid:#1a2B3c",
+      "wallpaper": "",
       "widgets": []
      },
      "success": true

@@ -7,7 +7,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
 	"testing"
@@ -219,35 +218,6 @@ func TestSaveRefusesALayoutOverHalfAMegabyte(t *testing.T) {
 	}
 }
 
-var fallbackFile = regexp.MustCompile(`^\{"widgets":\[\{"id":"w","type":"clock","x":0,"y":0,"w":1,"h":1\}\],"wallpaper":"","updated_at":"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z"\}$`)
-
-// TestWallpaperNullGoesToTheFile: null cannot be stored in the settings
-// table, so the write fails and the layout is written to the fallback
-// file as well. The stored wallpaper stays as it was.
-func TestWallpaperNullGoesToTheFile(t *testing.T) {
-	eachDB(t, func(t *testing.T, w *routetest.World) {
-		admin := w.As("admin")
-		if got := admin.Do("POST", "/api/desktop/layout", `{"wallpaper":"solid:#abc"}`); got.Status != 200 {
-			t.Fatal(got.Body)
-		}
-		widgets := `[{"id":"w","type":"clock","x":0,"y":0,"w":1,"h":1}]`
-		if got := admin.Do("POST", "/api/desktop/layout", `{"widgets":`+widgets+`,"wallpaper":null}`); got.Status != 200 || got.Body != `{"success":true}` {
-			t.Fatalf("save: %d %s", got.Status, got.Body)
-		}
-		file := filepath.Join(w.DataDir, "desktop-layouts", "1.json")
-		raw, err := os.ReadFile(file)
-		if err != nil || !fallbackFile.Match(raw) {
-			t.Errorf("fallback file: %v %s", err, raw)
-		}
-		if info, err := os.Stat(file); err == nil && runtime.GOOS != "windows" && info.Mode().Perm() != 0o600 {
-			t.Errorf("fallback file mode %v", info.Mode().Perm())
-		}
-		if got := admin.Do("GET", "/api/desktop/layout", ""); got.Body != `{"success":true,"data":{"widgets":`+widgets+`,"wallpaper":"solid:#abc"}}` {
-			t.Errorf("load: %s", got.Body)
-		}
-	})
-}
-
 func TestTheFileStandsInForTheDatabase(t *testing.T) {
 	w := routetest.New(t, routetest.Options{})
 	admin := w.As("admin")
@@ -326,9 +296,13 @@ func TestWithoutTheSettingsTable(t *testing.T) {
 		Widgets   json.RawMessage `json:"widgets"`
 		Wallpaper string          `json:"wallpaper"`
 	}
-	raw, err := os.ReadFile(filepath.Join(w.DataDir, "desktop-layouts", "1.json"))
+	path := filepath.Join(w.DataDir, "desktop-layouts", "1.json")
+	raw, err := os.ReadFile(path)
 	if err != nil || json.Unmarshal(raw, &file) != nil || string(file.Widgets) != widgets || file.Wallpaper != "solid:#abc" {
 		t.Errorf("fallback file: %v %s", err, raw)
+	}
+	if info, err := os.Stat(path); err == nil && runtime.GOOS != "windows" && info.Mode().Perm() != 0o600 {
+		t.Errorf("fallback file mode %v", info.Mode().Perm())
 	}
 	if got := admin.Do("GET", "/api/desktop/layout", ""); got.Body != `{"success":true,"data":{"widgets":`+widgets+`,"wallpaper":"solid:#abc"}}` {
 		t.Errorf("load: %s", got.Body)
@@ -387,4 +361,28 @@ func TestWallpapers(t *testing.T) {
 	if got := list(); got.Status != 500 || got.Body != `{"success":false,"error":"Failed to list wallpapers"}` {
 		t.Errorf("a file in the folder's place: %d %s", got.Status, got.Body)
 	}
+}
+
+// TestWallpaperNullClearsIt: a wallpaper of null is stored as "", which
+// takes the wallpaper away, and the save reaches the database.
+func TestWallpaperNullClearsIt(t *testing.T) {
+	eachDB(t, func(t *testing.T, w *routetest.World) {
+		admin := w.As("admin")
+		if got := admin.Do("POST", "/api/desktop/layout", `{"wallpaper":"solid:#abc"}`); got.Status != 200 {
+			t.Fatal(got.Body)
+		}
+		widgets := `[{"id":"w","type":"clock","x":0,"y":0,"w":1,"h":1}]`
+		if got := admin.Do("POST", "/api/desktop/layout", `{"widgets":`+widgets+`,"wallpaper":null}`); got.Status != 200 || got.Body != `{"success":true}` {
+			t.Fatalf("save: %d %s", got.Status, got.Body)
+		}
+		if got := setting(t, w, "desktop_wallpaper_1"); got != "" {
+			t.Errorf("stored wallpaper: %q", got)
+		}
+		if _, err := os.Stat(filepath.Join(w.DataDir, "desktop-layouts", "1.json")); !os.IsNotExist(err) {
+			t.Errorf("a fallback file was written: %v", err)
+		}
+		if got := admin.Do("GET", "/api/desktop/layout", ""); got.Body != `{"success":true,"data":{"widgets":`+widgets+`,"wallpaper":""}}` {
+			t.Errorf("load: %s", got.Body)
+		}
+	})
 }
