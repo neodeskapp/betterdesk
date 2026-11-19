@@ -170,8 +170,61 @@ func TestConfirmWithoutARestartFunction(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if pending.Phase() != PhaseFailed || pending.Get("error") != "no_restart" {
+	// the go-config rollback has no API to call
+	if pending.Phase() != PhaseFailed || pending.Get("error") != "service_restart_failed_rollback_failed" {
 		t.Errorf("after the refused restart: phase %q, error %v", pending.Phase(), pending.Get("error"))
+	}
+}
+
+// TestConfirmRollsBackWhenTheRestartFails: a restart that fails with an
+// error undoes the changes as one that reports success false does, and the
+// transaction says whether everything came back; the answer is still the
+// restart's error (BUGS RC2).
+func TestConfirmRollsBackWhenTheRestartFails(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		rollbackErr error
+		want        string
+	}{
+		{"undone", nil, "service_restart_failed_rolled_back"},
+		{"not undone", errors.New("read-only"), "service_restart_failed_rollback_failed"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s := newService(t, Options{
+				RestartServer: func(context.Context) (serverinfo.RestartResult, error) {
+					return serverinfo.RestartResult{}, serverinfo.ErrNoRestart
+				},
+				Exit:  func() {},
+				After: func(time.Duration, func()) { t.Error("an exit was scheduled after a failed restart") },
+			})
+			var undone []string
+			s.SetRollback("advanced-file", func(_ context.Context, descriptor *goapi.Object) error {
+				id, _ := descriptor.Get("fileId").(string)
+				undone = append(undone, id)
+				return tc.rollbackErr
+			})
+			var public *Public
+			for _, id := range []string{"server-env", "console-env"} {
+				var err error
+				public, err = s.RegisterChange(1, Change{Key: id, Rollback: goapi.NewObject("type", "advanced-file", "fileId", id)})
+				if err != nil {
+					t.Fatal(err)
+				}
+			}
+			if _, err := s.Confirm(context.Background(), 1, public.ID()); !errors.Is(err, serverinfo.ErrNoRestart) {
+				t.Fatalf("confirm: %v, want no_restart", err)
+			}
+			if strings.Join(undone, ",") != "console-env,server-env" {
+				t.Errorf("undone: %v, want both changes, newest first", undone)
+			}
+			pending, err := s.GetPending(1)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if pending.Phase() != PhaseFailed || pending.Get("error") != tc.want {
+				t.Errorf("after the failed restart: phase %q, error %v; want failed, %s", pending.Phase(), pending.Get("error"), tc.want)
+			}
+		})
 	}
 }
 

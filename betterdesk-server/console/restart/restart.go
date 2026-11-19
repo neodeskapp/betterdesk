@@ -44,6 +44,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -474,8 +475,9 @@ func (s *Service) Cancel(ctx context.Context, userID int64, id string) (*Cancele
 //
 // Errors: "restart_transaction_not_found" (404),
 // "restart_transaction_not_pending" (409), and whatever RestartServer
-// returned as its error ("no_restart"); the transaction is then failed
-// with that text and nothing is undone.
+// returned as its error ("no_restart"). The changes are then undone as
+// for a reported failure, and the transaction is failed with the same
+// error texts.
 func (s *Service) Confirm(ctx context.Context, userID int64, id string) (*Public, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -496,6 +498,10 @@ func (s *Service) Confirm(ctx context.Context, userID int64, id string) (*Public
 	}
 
 	answer, err := s.restart(ctx, state)
+	var failed *failedRestart
+	if errors.As(err, &failed) {
+		return nil, failed.err
+	}
 	if err != nil {
 		message := err.Error()
 		if message == "" {
@@ -511,14 +517,27 @@ func (s *Service) Confirm(ctx context.Context, userID int64, id string) (*Public
 	return answer, nil
 }
 
+// failedRestart is the error of RestartServer after restart undid the
+// changes and stored the failed transaction.
+type failedRestart struct{ err error }
+
+func (f *failedRestart) Error() string { return f.err.Error() }
+
 // restart is the part of Confirm that may fail the transaction.
 func (s *Service) restart(ctx context.Context, state *goapi.Object) (*Public, error) {
-	if s.opts.RestartServer == nil {
-		return nil, serverinfo.ErrNoRestart
+	var result serverinfo.RestartResult
+	err := serverinfo.ErrNoRestart
+	if s.opts.RestartServer != nil {
+		result, err = s.opts.RestartServer(ctx)
 	}
-	result, err := s.opts.RestartServer(ctx)
 	if err != nil {
-		return nil, err
+		if undoErr := s.undo(ctx, state); undoErr != nil {
+			return nil, undoErr
+		}
+		if touchErr := s.touch(state); touchErr != nil {
+			return nil, touchErr
+		}
+		return nil, &failedRestart{err: err}
 	}
 	restart, err := goapi.FromGo(result)
 	if err != nil {
@@ -528,20 +547,8 @@ func (s *Service) restart(ctx context.Context, state *goapi.Object) (*Public, er
 
 	failed := restartFailed(result)
 	if failed {
-		changes, err := spread(orEmpty(state.Get("changes")), "(state.changes || [])")
-		if err != nil {
+		if err := s.undo(ctx, state); err != nil {
 			return nil, err
-		}
-		failures, err := s.rollbackAll(ctx, changes)
-		if err != nil {
-			return nil, err
-		}
-		state.Set("rollbackFailures", failures)
-		state.Set("phase", PhaseFailed)
-		if len(failures) > 0 {
-			state.Set("error", "service_restart_failed_rollback_failed")
-		} else {
-			state.Set("error", "service_restart_failed_rolled_back")
 		}
 	}
 	if err := s.touch(state); err != nil {
@@ -560,6 +567,27 @@ func (s *Service) restart(ctx context.Context, state *goapi.Object) (*Public, er
 	public.fields.Set("token", state.Get("token"))
 	public.fields.Set("restart", restart)
 	return public, nil
+}
+
+// undo puts back every change of a transaction whose restart failed and
+// marks it failed, with the error saying whether everything came back.
+func (s *Service) undo(ctx context.Context, state *goapi.Object) error {
+	changes, err := spread(orEmpty(state.Get("changes")), "(state.changes || [])")
+	if err != nil {
+		return err
+	}
+	failures, err := s.rollbackAll(ctx, changes)
+	if err != nil {
+		return err
+	}
+	state.Set("rollbackFailures", failures)
+	state.Set("phase", PhaseFailed)
+	if len(failures) > 0 {
+		state.Set("error", "service_restart_failed_rollback_failed")
+	} else {
+		state.Set("error", "service_restart_failed_rolled_back")
+	}
+	return nil
 }
 
 // restartFailed reports a restart whose reload of the units or whose

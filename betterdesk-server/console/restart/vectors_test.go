@@ -282,11 +282,24 @@ func TestNodeVectors(t *testing.T) {
 	file := loadVectors(t)
 	w := &oracleWorld{t: t, dir: filepath.Join(t.TempDir(), "data")}
 	steps, failures := 0, 0
+	fixed := map[string]int{}
 	for _, scenario := range file.Scenarios {
 		for i, step := range scenario.Steps {
 			steps++
 			w.script, w.calls, w.exit = step.Script, nil, false
 			out, err := w.run(step)
+
+			if bug, problems := w.fixedStep(step, out, err); bug != "" {
+				fixed[bug]++
+				if len(problems) > 0 {
+					failures++
+					if failures <= 15 {
+						t.Errorf("%s, step %d (%s): %s", scenario.Name, i, bug, strings.Join(problems, "; "))
+					}
+				}
+				w.resync(step)
+				continue
+			}
 
 			var problems []string
 			problem := func(what, got, want string) {
@@ -375,6 +388,9 @@ func TestNodeVectors(t *testing.T) {
 	}
 	if steps < 9000 {
 		t.Errorf("replayed %d steps, the vector file should hold more than 9000", steps)
+	}
+	if fixed["RC2"] < 40 {
+		t.Errorf("%d steps confirm a restart that fails with an error, the vector file has more (BUGS RC2)", fixed["RC2"])
 	}
 }
 
