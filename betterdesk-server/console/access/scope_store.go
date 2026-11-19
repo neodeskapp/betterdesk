@@ -317,22 +317,13 @@ func (s *Service) UserPeerGrants(ctx context.Context, userID int64) ([]string, e
 	return out, nil
 }
 
-// setUserPeerGrants replaces an account's direct grants. On PostgreSQL the
-// old grants go and the new ones come in one transaction. On SQLite the old
-// grants are deleted first, on their own, and stay deleted when storing the
-// new ones fails.
+// setUserPeerGrants replaces an account's direct grants: the old grants go
+// and the new ones come in one transaction, so a failed store keeps the
+// old ones.
 func (s *Service) setUserPeerGrants(ctx context.Context, userID int64, peerIDs []string) error {
-	const remove = `DELETE FROM user_peer_grants WHERE user_id = ?`
-	if !s.db.IsPostgres() {
-		if _, err := s.db.Exec(ctx, remove, userID); err != nil {
-			return fmt.Errorf("clear device grants of user %d: %w", userID, err)
-		}
-	}
 	err := s.db.InTx(ctx, func(tx *store.Tx) error {
-		if s.db.IsPostgres() {
-			if _, err := tx.Exec(ctx, remove, userID); err != nil {
-				return err
-			}
+		if _, err := tx.Exec(ctx, `DELETE FROM user_peer_grants WHERE user_id = ?`, userID); err != nil {
+			return err
 		}
 		for _, id := range peerIDs {
 			if _, err := tx.Exec(ctx, `INSERT INTO user_peer_grants (user_id, peer_id) VALUES (?, ?)`, userID, id); err != nil {

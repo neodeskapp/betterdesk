@@ -516,3 +516,34 @@ func TestPeerLookupFailuresAreLogged(t *testing.T) {
 		t.Errorf("without a lookup nothing is logged: %q", logged.String())
 	}
 }
+
+// PA11: replacing an account's grants is one transaction on both
+// databases, so a failed store keeps the old grants.
+func TestSetUserPeerGrantsKeepsTheOldGrantsWhenStoringFails(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		createSchema(t, db)
+		ctx := context.Background()
+		mustExec(t, db, `INSERT INTO users (id, username, password_hash, role) VALUES (1, 'u1', 'x', 'viewer')`)
+		s := New(db, &fakeRoles{}, Options{})
+		if _, err := s.SyncUserPeerGrants(ctx, 1, []any{"a", "b"}); err != nil {
+			t.Fatal(err)
+		}
+		// The database refuses the second id.
+		mustExec(t, db, db.Pick(
+			`CREATE TRIGGER no_long_ids BEFORE INSERT ON user_peer_grants WHEN NEW.peer_id = 'refused' BEGIN SELECT RAISE(ABORT, 'too long'); END`,
+			`CREATE OR REPLACE FUNCTION no_long_ids() RETURNS trigger AS $$ BEGIN IF NEW.peer_id = 'refused' THEN RAISE EXCEPTION 'too long'; END IF; RETURN NEW; END $$ LANGUAGE plpgsql`))
+		if db.IsPostgres() {
+			mustExec(t, db, `CREATE TRIGGER no_long_ids BEFORE INSERT ON user_peer_grants FOR EACH ROW EXECUTE FUNCTION no_long_ids()`)
+		}
+		if _, err := s.SyncUserPeerGrants(ctx, 1, []any{"c", "refused"}); err == nil {
+			t.Fatal("storing a refused id must fail")
+		}
+		got, err := s.UserPeerGrants(ctx, 1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Join(sortedStrings(got), ",") != "a,b" {
+			t.Errorf("grants after the failed store: %v, want the old a,b", got)
+		}
+	})
+}
