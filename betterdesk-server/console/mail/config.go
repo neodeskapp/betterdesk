@@ -167,6 +167,7 @@ func (s *Service) newTransporter(cfg *Config) *transporter {
 	t := &transporter{config: cfg, signature: cfg.signature()}
 	t.settings.Secure = cfg.get("secure").truthy()
 	t.settings.TLSVerify = s.tlsVerify(cfg)
+	t.settings.RequireTLS = s.opts.RequireTLS
 
 	// The port is read when the connection object is made, before
 	// anything else.

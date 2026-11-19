@@ -22,7 +22,7 @@ type SMTP struct {
 	// Wire holds what a connection needs besides the saved settings: the
 	// dialer, the resolver, the machine's host name, the root
 	// certificates and the timeouts. Its zero fields are nodemailer's
-	// defaults. The six settings fields in it are not read.
+	// defaults. The seven settings fields in it are not read.
 	Wire smtpwire.Options
 }
 
@@ -35,6 +35,7 @@ func (t *SMTP) options(settings Settings) smtpwire.Options {
 	opts.User = settings.User
 	opts.Pass = settings.Pass
 	opts.TLSVerify = settings.TLSVerify
+	opts.RequireTLS = settings.RequireTLS
 	return opts
 }
 

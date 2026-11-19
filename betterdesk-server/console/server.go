@@ -314,6 +314,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		Transport:    &mail.SMTP{},
 		Getenv:       getenv,
 		TLSVerify:    cfg.SMTPTLSVerify,
+		RequireTLS:   cfg.SMTPRequireTLS,
 		Host:         cfg.Host,
 		Port:         cfg.Port,
 		HTTPRedirect: cfg.HTTPRedirect,

@@ -41,6 +41,9 @@ type Settings struct {
 	// TLSVerify is options.tls.rejectUnauthorized: whether the server's
 	// certificate has to be valid.
 	TLSVerify bool
+	// RequireTLS is options.requireTLS for a connection with credentials:
+	// the login goes out only after TLS is on.
+	RequireTLS bool
 }
 
 // Outgoing is what the console passes to transporter.sendMail.
@@ -90,6 +93,10 @@ type Options struct {
 	// the configuration does not say. The console sets it from
 	// SMTP_TLS_VERIFY, which is on unless the variable is "false".
 	TLSVerify bool
+	// RequireTLS keeps a login off a connection without TLS, for every
+	// configuration. The console sets it from SMTP_REQUIRE_TLS, which is on
+	// unless the variable is "false".
+	RequireTLS bool
 	// Host is config.host: HOST, default "127.0.0.1".
 	Host string
 	// Port is config.port: the port the console listens on (PORT, default

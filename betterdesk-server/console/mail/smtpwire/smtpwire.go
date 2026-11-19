@@ -11,10 +11,11 @@
 // after the login and sends QUIT.
 //
 // Credentials and TLS: STARTTLS is used whenever the server offers it, and a
-// refused or failed upgrade ends the call. A server that does not offer
-// STARTTLS (or only answers HELO) gets the login in plain text. That is what
-// nodemailer does without its requireTLS option, which the console never
-// set.
+// refused or failed upgrade ends the call. With RequireTLS, a call with
+// credentials asks for STARTTLS also when the server does not offer it and
+// does not fall back to HELO, so the login never goes out in plain text
+// (nodemailer's requireTLS). Without RequireTLS, a server that does not offer
+// STARTTLS (or only answers HELO) gets the login in plain text.
 //
 // # Where it differs from nodemailer
 //
@@ -81,9 +82,9 @@ type Resolver interface {
 	LookupIPAddr(ctx context.Context, host string) ([]net.IPAddr, error)
 }
 
-// Options says where and how to connect. The first six fields are what the
-// console stores; the rest is injected and has nodemailer's defaults when
-// zero.
+// Options says where and how to connect. The first seven fields are the
+// console's mail settings (the six it stores and RequireTLS); the rest is
+// injected and has nodemailer's defaults when zero.
 type Options struct {
 	// Host is a name or an IP address. "" is "localhost".
 	Host string
@@ -101,6 +102,12 @@ type Options struct {
 	// TLSVerify checks the server's certificate chain and name
 	// (tls.rejectUnauthorized). Without it any certificate is accepted.
 	TLSVerify bool
+	// RequireTLS keeps the credentials off a connection without TLS: when
+	// they are used and the connection is not secure, STARTTLS is sent
+	// whether the server offers it or not, and a server that refuses EHLO
+	// ends the call instead of getting HELO (nodemailer's requireTLS).
+	// Without credentials it changes nothing.
+	RequireTLS bool
 
 	// Dial opens a TCP connection to "ip:port". Default: a net.Dialer.
 	Dial func(ctx context.Context, network, address string) (net.Conn, error)

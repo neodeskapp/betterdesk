@@ -528,28 +528,34 @@ func (c *client) onGreeting(reply string) {
 const (
 	ehloClosing  = "closing"  // 421: the session ends
 	ehloRefused  = "refused"  // not a 2xx reply: HELO is tried
-	ehloStartTLS = "starttls" // TLS is offered and not on yet: STARTTLS
+	ehloNoTLS    = "notls"    // not a 2xx reply where TLS is required: the session ends
+	ehloStartTLS = "starttls" // TLS is offered, or required, and not on yet: STARTTLS
 	ehloAccepted = "accepted" // the session is set up
 )
 
 // afterEhlo decides the step after an EHLO reply. TLS is started whenever
-// the server offers it on a connection that is not secure yet.
-func afterEhlo(reply string, secure bool) string {
+// the server offers it on a connection that is not secure yet, and also
+// without the offer when it is required.
+func afterEhlo(reply string, secure, requireTLS bool) string {
 	switch {
 	case strings.HasPrefix(reply, "421"):
 		return ehloClosing
+	case !strings.HasPrefix(reply, "2") && requireTLS && !secure:
+		return ehloNoTLS
 	case !strings.HasPrefix(reply, "2"):
 		return ehloRefused
-	case !secure && hasKeyword(reply, "STARTTLS"):
+	case !secure && (requireTLS || hasKeyword(reply, "STARTTLS")):
 		return ehloStartTLS
 	}
 	return ehloAccepted
 }
 
 func (c *client) onEHLO(reply string) {
-	switch afterEhlo(reply, c.secure) {
+	switch afterEhlo(reply, c.secure, c.opts.RequireTLS && c.useCreds) {
 	case ehloClosing:
 		c.onError(newError("Server terminates connection. response="+reply, "ECONNECTION", reply, "EHLO"))
+	case ehloNoTLS:
+		c.onError(newError("EHLO failed but HELO does not support required STARTTLS. response="+reply, "ECONNECTION", reply, "EHLO"))
 	case ehloRefused:
 		c.expect(c.onHELO)
 		c.sendCommand("HELO " + c.name)

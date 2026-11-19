@@ -45,6 +45,8 @@
 //	ALLOW_SELF_SIGNED_CERTS  false                 "true" turns the automatic HSTS off. It does not touch mail.
 //	SMTP_TLS_VERIFY          true                  "false" in any letter case: the mail server's certificate is not checked
 //	                                               when the saved SMTP settings have no tlsVerify of their own.
+//	SMTP_REQUIRE_TLS         true                  "false" in any letter case: the SMTP login may go out without TLS, for
+//	                                               a mail server on a trusted network that offers no STARTTLS.
 //	HTTP_REDIRECT_HTTPS      true                  "true" in any letter case: the link to the console in a mail
 //	                                               starts with https, else with http. Nothing is redirected by it.
 //	DEFAULT_LANGUAGE         en                    Language of a request that names none.

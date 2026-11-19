@@ -44,3 +44,17 @@ func TestMailSwitches(t *testing.T) {
 		}
 	}
 }
+
+// A login to the mail server needs TLS unless SMTP_REQUIRE_TLS is "false",
+// the switch for a mail server on a trusted network (BUGS EM10).
+func TestRequireTLSSwitch(t *testing.T) {
+	for value, want := range map[string]bool{"": true, "true": true, "false": false, "FALSE": false, "False": false, "0": true, "no": true, " false": true} {
+		cfg, err := load(env(map[string]string{"SMTP_REQUIRE_TLS": value}), machine("/srv/bin", "/srv/run"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if cfg.SMTPRequireTLS != want {
+			t.Errorf("SMTP_REQUIRE_TLS=%q: require %v, want %v", value, cfg.SMTPRequireTLS, want)
+		}
+	}
+}

@@ -153,7 +153,7 @@ func TestEhloVectors(t *testing.T) {
 	}
 	steps := map[string]int{}
 	for i, v := range vectors {
-		step := afterEhlo(v.Reply, v.Secure)
+		step := afterEhlo(v.Reply, v.Secure, false)
 		steps[step]++
 		want := ""
 		switch {
