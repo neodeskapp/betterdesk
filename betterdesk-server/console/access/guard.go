@@ -112,6 +112,8 @@ var RouteRules = []Rule{
 	{Prefix: "/api/settings/themes"},
 	{Prefix: "/api/settings/fonts"},
 	{Prefix: "/api/settings/restart-status"},
+	// The audit trail the Security audit page reads.
+	{Prefix: "/api/settings/audit", Section: "security-audit"},
 }
 
 const apiPrefix = "/api/"

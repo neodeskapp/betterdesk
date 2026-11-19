@@ -44,19 +44,25 @@
    "roles": [
     "viewer"
    ],
-   "status": 403,
+   "status": 200,
    "headers": {
-    "cache-control": "no-store",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "application/json; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
     "etag": "<present>",
     "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
      "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
+    "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -64,12 +70,986 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "data[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data[66].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    },
+    {
+     "path": "data[67].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    },
+    {
+     "path": "data[68].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    },
+    {
+     "path": "data[69].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    },
+    {
+     "path": "data[70].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    },
+    {
+     "path": "data[71].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    },
+    {
+     "path": "data[72].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    },
+    {
+     "path": "data[73].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    },
+    {
+     "path": "data[74].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    },
+    {
+     "path": "data[75].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    },
+    {
+     "path": "data[76].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    },
+    {
+     "path": "data[77].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    },
+    {
+     "path": "data[78].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    },
+    {
+     "path": "data[79].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    },
+    {
+     "path": "data[80].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    },
+    {
+     "path": "data[81].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    },
+    {
+     "path": "data[82].details",
+     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "code": "panel_access_denied",
-     "error": "Panel access denied: settings",
-     "success": false
+     "data": [
+      {
+       "action": "generic_agent_activated",
+       "created_at": "<volatile>",
+       "details": "Activated generic Support Agent contract-unknown-3",
+       "id": 140,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "generic_agent_activated",
+       "created_at": "<volatile>",
+       "details": "Activated generic Support Agent 123456",
+       "id": 139,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "generic_agent_activated",
+       "created_at": "<volatile>",
+       "details": "Activated generic Support Agent contract-unknown-2",
+       "id": 138,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "generic_agent_activated",
+       "created_at": "<volatile>",
+       "details": "Activated generic Support Agent contract-unknown-1",
+       "id": 137,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 136,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 135,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 134,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 133,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 132,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 131,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 130,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 129,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 128,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 127,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "generic_agent_activated",
+       "created_at": "<volatile>",
+       "details": "Activated generic Support Agent contract-unknown-3",
+       "id": 126,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 125,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 124,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 123,
+       "ip_address": "<client-ip>",
+       "user_id": 7,
+       "username": "e2e_server_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 122,
+       "ip_address": "<client-ip>",
+       "user_id": 7,
+       "username": "e2e_server_admin"
+      },
+      {
+       "action": "generic_agent_activated",
+       "created_at": "<volatile>",
+       "details": "Activated generic Support Agent contract-unknown-3",
+       "id": 121,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "generic_agent_activated",
+       "created_at": "<volatile>",
+       "details": "Activated generic Support Agent 123456",
+       "id": 120,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "generic_agent_activated",
+       "created_at": "<volatile>",
+       "details": "Activated generic Support Agent contract-unknown-2",
+       "id": 119,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "generic_agent_activated",
+       "created_at": "<volatile>",
+       "details": "Activated generic Support Agent contract-unknown-1",
+       "id": 118,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 117,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 116,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 115,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 114,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 113,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 112,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 111,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 110,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 109,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 108,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 107,
+       "ip_address": "<client-ip>",
+       "user_id": 9,
+       "username": "e2e_operator"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 106,
+       "ip_address": "<client-ip>",
+       "user_id": 9,
+       "username": "e2e_operator"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 105,
+       "ip_address": "<client-ip>",
+       "user_id": 10,
+       "username": "e2e_viewer"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 104,
+       "ip_address": "<client-ip>",
+       "user_id": 10,
+       "username": "e2e_viewer"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 103,
+       "ip_address": "<client-ip>",
+       "user_id": 11,
+       "username": "e2e_guest_issuer"
+      },
+      {
+       "action": "profile_updated",
+       "created_at": "<volatile>",
+       "details": "Updated operator profile",
+       "id": 102,
+       "ip_address": "<client-ip>",
+       "user_id": 11,
+       "username": "e2e_guest_issuer"
+      },
+      {
+       "action": "user_group_created",
+       "created_at": "<volatile>",
+       "details": "Created user group: contract policy group",
+       "id": 101,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "user_access_policy_updated",
+       "created_at": "<volatile>",
+       "details": "Updated access policy for user 3",
+       "id": 100,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "user_access_policy_updated",
+       "created_at": "<volatile>",
+       "details": "Updated access policy for user 3",
+       "id": 99,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "user_access_policy_updated",
+       "created_at": "<volatile>",
+       "details": "Updated access policy for user 3",
+       "id": 98,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "user_access_policy_updated",
+       "created_at": "<volatile>",
+       "details": "Updated access policy for user 3",
+       "id": 97,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "user_access_policy_updated",
+       "created_at": "<volatile>",
+       "details": "Updated access policy for user 3",
+       "id": 96,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "user_access_policy_updated",
+       "created_at": "<volatile>",
+       "details": "Updated access policy for user 3",
+       "id": 95,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "user_group_created",
+       "created_at": "<volatile>",
+       "details": "Created user group: contract policy group",
+       "id": 94,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "user_access_policy_updated",
+       "created_at": "<volatile>",
+       "details": "Updated access policy for user 3",
+       "id": 93,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "user_access_policy_updated",
+       "created_at": "<volatile>",
+       "details": "Updated access policy for user 3",
+       "id": 92,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "user_group_created",
+       "created_at": "<volatile>",
+       "details": "Created user group: contract policy group",
+       "id": 91,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "user_group_created",
+       "created_at": "<volatile>",
+       "details": "Created user group: contract policy group",
+       "id": 90,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "user_access_policy_updated",
+       "created_at": "<volatile>",
+       "details": "Updated access policy for user 3",
+       "id": 89,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "user_access_policy_updated",
+       "created_at": "<volatile>",
+       "details": "Updated access policy for user 3",
+       "id": 88,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "user_group_created",
+       "created_at": "<volatile>",
+       "details": "Created user group: contract policy group",
+       "id": 87,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "user_group_created",
+       "created_at": "<volatile>",
+       "details": "Created user group: contract policy group",
+       "id": 86,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "user_group_created",
+       "created_at": "<volatile>",
+       "details": "Created user group: contract policy group",
+       "id": 85,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "user_group_created",
+       "created_at": "<volatile>",
+       "details": "Created user group: contract policy group",
+       "id": 84,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "user_group_created",
+       "created_at": "<volatile>",
+       "details": "Created user group: contract policy group",
+       "id": 83,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "login",
+       "created_at": "<volatile>",
+       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "id": 82,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "login",
+       "created_at": "<volatile>",
+       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "id": 81,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "login",
+       "created_at": "<volatile>",
+       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "id": 80,
+       "ip_address": "<client-ip>",
+       "user_id": 7,
+       "username": "e2e_server_admin"
+      },
+      {
+       "action": "login",
+       "created_at": "<volatile>",
+       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "id": 79,
+       "ip_address": "<client-ip>",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      {
+       "action": "login",
+       "created_at": "<volatile>",
+       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "id": 78,
+       "ip_address": "<client-ip>",
+       "user_id": 9,
+       "username": "e2e_operator"
+      },
+      {
+       "action": "login",
+       "created_at": "<volatile>",
+       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "id": 77,
+       "ip_address": "<client-ip>",
+       "user_id": 10,
+       "username": "e2e_viewer"
+      },
+      {
+       "action": "login",
+       "created_at": "<volatile>",
+       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
+       "id": 76,
+       "ip_address": "<client-ip>",
+       "user_id": 11,
+       "username": "e2e_guest_issuer"
+      },
+      {
+       "action": "login_failed",
+       "created_at": "<volatile>",
+       "details": "Username: e***; ip=<client-ip>; ua=bd-contract/1",
+       "id": 75,
+       "ip_address": "<client-ip>",
+       "user_id": null,
+       "username": null
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 74,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 73,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 72,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 71,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 70,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 69,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 68,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 67,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 66,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 65,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 64,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 63,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 62,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 61,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 60,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 59,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_membership_updated",
+       "created_at": "<volatile>",
+       "details": "<volatile>",
+       "id": 58,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_saved",
+       "created_at": "<volatile>",
+       "details": "Device group Support team devices saved",
+       "id": 57,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_saved",
+       "created_at": "<volatile>",
+       "details": "Device group Critical servers saved",
+       "id": 56,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_group_saved",
+       "created_at": "<volatile>",
+       "details": "Device group All laptops saved",
+       "id": 55,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_tags_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100031 tags set to [office]",
+       "id": 54,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_tags_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100028 tags set to [laptop]",
+       "id": 53,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_tags_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100027 tags set to [legacy]",
+       "id": 52,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_tags_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100026 tags set to [lab, vm]",
+       "id": 51,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_tags_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100025 tags set to [lab, iot]",
+       "id": 50,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_tags_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100024 tags set to [lab, iot]",
+       "id": 49,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_tags_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100023 tags set to [mobile]",
+       "id": 48,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_tags_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100022 tags set to [mobile]",
+       "id": 47,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_tags_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100021 tags set to [kiosk]",
+       "id": 46,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_tags_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100020 tags set to [kiosk]",
+       "id": 45,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_tags_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100019 tags set to [laptop, sales]",
+       "id": 44,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_tags_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100018 tags set to [laptop, sales]",
+       "id": 43,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_tags_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100017 tags set to [laptop, sales]",
+       "id": 42,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      },
+      {
+       "action": "device_tags_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100016 tags set to [server, linux]",
+       "id": 41,
+       "ip_address": "127.0.0.1",
+       "user_id": 1,
+       "username": "admin"
+      }
+     ],
+     "success": true
     }
    }
   }

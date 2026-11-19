@@ -106,7 +106,7 @@ func TestGuards(t *testing.T) {
 		denied := s.As("viewer")
 		admin := s.As("admin")
 		sectionDenied := `{"success":false,"error":"Panel access denied: settings","code":"panel_access_denied"}`
-		for _, route := range append(serverConfig, "GET /api/settings/audit") {
+		for _, route := range serverConfig {
 			method, path, _ := strings.Cut(route, " ")
 			body := ""
 			if method != http.MethodGet {
@@ -124,6 +124,11 @@ func TestGuards(t *testing.T) {
 			if res := denied.Do(method, path, body); res.Status != http.StatusForbidden || res.Body != sectionDenied {
 				t.Errorf("%s without server.config: %d %s, want the panel guard's refusal", route, res.Status, res.Body)
 			}
+		}
+		// The audit trail belongs to the security audit section (PA3, F2).
+		if res := denied.Do("GET", "/api/settings/audit", ""); res.Status != http.StatusForbidden ||
+			res.Body != `{"success":false,"error":"Panel access denied: security-audit","code":"panel_access_denied"}` {
+			t.Errorf("audit without audit.view and server.config: %d %s", res.Status, res.Body)
 		}
 		allowed := s.As("global_admin")
 		if res := allowed.Do("GET", "/api/settings/audit", ""); res.Status != http.StatusForbidden ||

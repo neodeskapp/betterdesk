@@ -58,6 +58,9 @@ var ruleFixes = []ruleFix{
 	{bug: "PA3 (F1)", add: Rule{Prefix: "/api/settings/themes"}},
 	{bug: "PA3 (F1)", add: Rule{Prefix: "/api/settings/fonts"}},
 	{bug: "PA3 (F1)", add: Rule{Prefix: "/api/settings/restart-status"}},
+	// The audit trail asks audit.view, the security audit section's read
+	// permission.
+	{bug: "PA3 (F2)", add: Rule{Prefix: "/api/settings/audit", Section: "security-audit"}},
 }
 
 // sectionFix is a catalog section whose permissions differ from Node's.

@@ -40,7 +40,7 @@ var guardPaths = []struct {
 	{"/users/", "users"}, {"/users/42", "users"}, {"/api/users/42", "users"}, {"/api/users/42/avatar", "users"},
 	{"/strategies/new", "strategies"}, {"/strategiesx", ""},
 	{"/api/panel/access/users/1", "users"}, {"/api/panel/user-groups/abc/members", "users"},
-	{"/api/settings/server-info", ""}, {"/api/settings/audit", "settings"}, {"/api/reports/generate", "reports"},
+	{"/api/settings/server-info", ""}, {"/api/settings/audit", "security-audit"}, {"/api/reports/generate", "reports"},
 
 	// what every account reads below /api/settings has no section (F1)
 	{"/api/settings/info", ""}, {"/api/settings/appearance", ""}, {"/api/settings/branding", ""},

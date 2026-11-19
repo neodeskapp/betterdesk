@@ -152,3 +152,16 @@ func TestSettingsReadsAreForEveryAccount(t *testing.T) {
 		t.Errorf("branding with settings at none: %+v", got)
 	}
 }
+
+// PA3 (F2): the audit trail of the Security audit page asks audit.view,
+// the security audit section's read permission, not server.config.
+func TestSettingsAuditIsTheSecurityAuditsTrail(t *testing.T) {
+	// viewer, operator, guest_issuer, global_admin, server_admin
+	checkRouteCases(t, []routeCase{
+		{"GET", "/api/settings/audit", "audit.view", [5]string{"ok", "ok", "guard", "ok", "ok"}},
+	})
+	c := &Context{UserID: 1, HasUser: true, Role: "super_admin", Policy: policyWith("security-audit", LevelNone)}
+	if got := c.Guard("GET", "/api/settings/audit"); got.Verdict != VerdictDenied || got.Section != "security-audit" {
+		t.Errorf("audit with security-audit at none: %+v", got)
+	}
+}
