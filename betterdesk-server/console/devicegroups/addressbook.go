@@ -27,7 +27,8 @@ const MaxTagLength = 50
 
 // SanitizeTag cleans one tag: control characters go (tab, line feed and
 // carriage return count as white space instead), white space around it
-// goes, and what is left is cut to 50 characters.
+// goes, and what is left is cut to 50 characters, without white space the
+// cut leaves at its end.
 func SanitizeTag(value string) string {
 	value = strings.Map(func(r rune) rune {
 		if r <= 0x08 || r == 0x0b || r == 0x0c || r >= 0x0e && r <= 0x1f {
@@ -35,7 +36,7 @@ func SanitizeTag(value string) string {
 		}
 		return r
 	}, value)
-	return cut(jsTrim(value), MaxTagLength)
+	return jsTrim(cut(jsTrim(value), MaxTagLength))
 }
 
 // tagList collects tags without repeats, in the order they come.

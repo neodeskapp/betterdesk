@@ -188,8 +188,8 @@ type tagDeleted struct {
 
 // setTags answers PUT /api/devices/{id}/tags with {tags: [...]}: the
 // device's tags become the texts of the list, trimmed, without empty ones,
-// each cut to 50 UTF-16 units before a character that does not fit whole,
-// at most 20.
+// each cut to 50 UTF-16 units before a character that does not fit whole
+// and trimmed again, at most 20.
 func (h *handlers) setTags(w http.ResponseWriter, r *http.Request) {
 	list, isList := value(r, "tags").([]any)
 	if !isList {
@@ -199,7 +199,7 @@ func (h *handlers) setTags(w http.ResponseWriter, r *http.Request) {
 	cleaned := []string{}
 	for _, item := range list {
 		if s, ok := item.(string); ok && jsTrim(s) != "" {
-			cleaned = append(cleaned, cutWhole(jsTrim(s), 50))
+			cleaned = append(cleaned, jsTrim(cutWhole(jsTrim(s), 50)))
 		}
 	}
 	if len(cleaned) > 20 {

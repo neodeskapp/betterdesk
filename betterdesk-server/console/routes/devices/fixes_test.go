@@ -349,6 +349,21 @@ func TestSetTagsKeepsWholeCharacters(t *testing.T) {
 	}
 }
 
+// TestSetTagsTrimsAfterTheCut: a tag whose 50th character is white space
+// is stored without it (BUGS DGR6).
+func TestSetTagsTrimsAfterTheCut(t *testing.T) {
+	w, api := world(t, storetest.Migrated(t), nil, nil)
+	a49 := strings.Repeat("a", 49)
+	api.Calls()
+	got := w.As("admin").Do("PUT", "/api/devices/A/tags", `{"tags":["`+a49+` b","x"]}`)
+	if want := `{"success":true,"data":{"tags":["` + a49 + `","x"]}}`; got.Status != http.StatusOK || got.Body != want {
+		t.Errorf("a tag with a space as its 50th character: %d %s, want %s", got.Status, got.Body, want)
+	}
+	if calls := strings.Join(api.Calls(), "\n"); !strings.Contains(calls, `PUT /api/peers/A/tags {"tags":["`+a49+`","x"]}`) {
+		t.Errorf("the tags the server got: %s", calls)
+	}
+}
+
 // TestSaveGroupTakesTextOnly: a device group whose name, guid, note, team
 // id or tag filter is no text is refused with 400 before anything is
 // written, where it was saved with the value read as text (BUGS DGR5).

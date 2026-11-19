@@ -12,13 +12,13 @@ import (
 func units(s string) int { return len(utf16.Encode([]rune(s))) }
 
 // cleanTags fails unless tags are what NormalizeTags promises: no empty
-// tag, no repeat, no control character and at most 50 characters each. A
-// tag may end in white space: it is trimmed before it is cut (BUGS DGR6).
+// tag, no repeat, no control character, no white space around it and at
+// most 50 characters each.
 func cleanTags(t *testing.T, what string, tags []string) {
 	t.Helper()
 	seen := map[string]bool{}
 	for _, tag := range tags {
-		if tag == "" || seen[tag] || units(tag) > MaxTagLength || strings.IndexFunc(tag, removedControl) >= 0 {
+		if tag == "" || seen[tag] || units(tag) > MaxTagLength || strings.IndexFunc(tag, removedControl) >= 0 || jsTrim(tag) != tag {
 			t.Fatalf("%s: tag %q in %q", what, tag, tags)
 		}
 		seen[tag] = true

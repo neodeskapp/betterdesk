@@ -83,6 +83,26 @@ func TestGroupPayloadRefusesValuesThatAreNoText(t *testing.T) {
 	}
 }
 
+// TestSanitizeTagTrimsAfterTheCut: a long tag whose 50th character is
+// white space ends without it after the cut, where it kept the space
+// (BUGS DGR6, seed c1feb613a164759d of FuzzAddressBook).
+func TestSanitizeTagTrimsAfterTheCut(t *testing.T) {
+	a := strings.Repeat("a", 49)
+	for in, want := range map[string]string{
+		a + " b":         a,
+		" " + a + " bc ": a,
+		a[:48] + " \tx":  a[:48],
+		a + "b c":        a + "b",
+	} {
+		if got := SanitizeTag(in); got != want {
+			t.Errorf("SanitizeTag(%q) = %q, want %q", in, got, want)
+		}
+	}
+	if got := NormalizeTags([]any{a + " b", a}); len(got) != 1 || got[0] != a {
+		t.Errorf("NormalizeTags of two tags equal after the cut: %q", got)
+	}
+}
+
 // TestCutKeepsWholeCharacters: a tag, and the fields of a device group,
 // cut to a length in UTF-16 units stop before a character outside the
 // Basic Multilingual Plane that does not fit whole, where half of it was
