@@ -2,10 +2,14 @@ package backup
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/unitronix/betterdesk-server/console/branding"
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/store"
 )
 
 // The settings snapshot: the older backup format, one JSON file with the
@@ -15,7 +19,8 @@ import (
 // gzip.
 
 // CreateBackup builds the snapshot (createBackup). The first error of a
-// query ends it.
+// query ends it. The mail settings go in without their password (see
+// dropSMTPPassword).
 func (s *Service) CreateBackup(ctx context.Context) (*goapi.Object, error) {
 	timestamp := s.isoNow()
 	db := s.o.Store
@@ -23,6 +28,7 @@ func (s *Service) CreateBackup(ctx context.Context) (*goapi.Object, error) {
 	if err != nil {
 		return nil, err
 	}
+	dropSMTPPassword(settings)
 	var brand any = branding.NewObject()
 	if s.o.Branding != nil {
 		brand = s.o.Branding.GetBranding()
@@ -78,6 +84,77 @@ func (s *Service) CreateBackup(ctx context.Context) (*goapi.Object, error) {
 // SnapshotJSON is JSON.stringify(snapshot, null, 2).
 func SnapshotJSON(snapshot *goapi.Object) ([]byte, error) { return indentJSON(snapshot) }
 
+// smtpKey is the settings row of the mail settings (package mail): JSON
+// text of an object whose member "pass" is the SMTP password in clear.
+const smtpKey = "smtp_config"
+
+// dropSMTPPassword takes the member "pass" out of the mail settings of a
+// snapshot. A snapshot is a file people download and keep; the password
+// stays in the database, and a restore keeps it (keepSMTPPassword). A
+// value that is no JSON object stays as it is.
+func dropSMTPPassword(settings *goapi.Object) {
+	text, isText := settings.Get(smtpKey).(string)
+	if !isText {
+		return
+	}
+	config, ok := smtpObject(text)
+	if !ok || !config.Has("pass") {
+		return
+	}
+	without := branding.NewObject()
+	for _, k := range config.Keys() {
+		if k != "pass" {
+			value, _ := config.Get(k)
+			without.Set(k, value)
+		}
+	}
+	settings.Set(smtpKey, branding.Stringify(without))
+}
+
+// keepSMTPPassword gives mail settings from a snapshot that have no
+// password the password stored now, so restoring a snapshot does not
+// clear it. Settings that bring a password (a snapshot of an older
+// console) are restored as they are.
+func keepSMTPPassword(ctx context.Context, db *store.DB, value any) (any, error) {
+	text, isText := value.(string)
+	if !isText {
+		return value, nil
+	}
+	config, ok := smtpObject(text)
+	if !ok || config.Has("pass") {
+		return value, nil
+	}
+	var stored sql.NullString
+	err := db.QueryRow(ctx, `SELECT value FROM settings WHERE key = ?`, smtpKey).Scan(&stored)
+	if errors.Is(err, sql.ErrNoRows) || (err == nil && !stored.Valid) {
+		return value, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("load the stored mail settings: %w", err)
+	}
+	current, ok := smtpObject(stored.String)
+	if !ok {
+		return value, nil
+	}
+	pass, has := current.Get("pass")
+	if !has {
+		return value, nil
+	}
+	config.Set("pass", pass)
+	return branding.Stringify(config), nil
+}
+
+// smtpObject parses the text of the mail settings; ok is false for text
+// that is no JSON object.
+func smtpObject(text string) (*branding.Object, bool) {
+	parsed, err := branding.ParseJSON([]byte(text))
+	if err != nil {
+		return nil, false
+	}
+	o, ok := parsed.(*branding.Object)
+	return o, ok && o != nil
+}
+
 // ValidateBackup checks a parsed snapshot (validateBackup). The error is
 // the TypeError JavaScript threw for a version it could not turn into
 // text.
@@ -125,7 +202,8 @@ type SnapshotOptions struct {
 // runs on its own; a part that fails stops where it failed and leaves a
 // warning:
 //
-//   - settings: every key is written as it is in the snapshot;
+//   - settings: every key is written as it is in the snapshot, the mail
+//     settings with the stored password when they bring none;
 //   - branding: through the branding service, which cleans the values;
 //   - users (only when asked, and only a non-empty list): every account is
 //     replaced (restoreUsers);
@@ -142,6 +220,13 @@ func (s *Service) RestoreBackup(ctx context.Context, data any, o SnapshotOptions
 	if settings := prop(cons, "settings"); o.Settings && truthy(settings) {
 		err := func() error {
 			for _, e := range settingEntries(settings) {
+				if e.key == smtpKey {
+					kept, err := keepSMTPPassword(ctx, db, e.value)
+					if err != nil {
+						return err
+					}
+					e.value = kept
+				}
 				if err := setSetting(ctx, db, e.key, e.value); err != nil {
 					return err
 				}
