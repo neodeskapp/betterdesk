@@ -78,6 +78,7 @@ const (
 	noFolder    = `{"success":false,"error":"Folder not found"}`
 	noDevice    = `{"success":false,"error":"Device not found"}`
 	forbidden   = `{"success":false,"error":"You don't have access to this device."}`
+	invalidID   = `{"success":false,"error":"Invalid folder id"}`
 	ok          = `{"success":true}`
 )
 
@@ -146,11 +147,7 @@ func TestFolderRoutes(t *testing.T) {
 		// One device
 		want(t, "move an unknown device", admin.Do("PATCH", "/api/devices/Z/folder", `{"folderId":1}`), 404, noDevice)
 		want(t, "move what the operator may not see", operator.Do("PATCH", "/api/devices/A/folder", `{"folderId":null}`), 403, forbidden)
-		if db.IsPostgres() {
-			want(t, "move into a folder that is text", admin.Do("PATCH", "/api/devices/C/folder", `{"folderId":"abc"}`), 500, serverError)
-		} else {
-			want(t, "move into a folder that is text", admin.Do("PATCH", "/api/devices/C/folder", `{"folderId":"abc"}`), 404, noFolder)
-		}
+		want(t, "move into a folder that is text", admin.Do("PATCH", "/api/devices/C/folder", `{"folderId":"abc"}`), 400, invalidID)
 		want(t, "move into no folder", admin.Do("PATCH", "/api/devices/C/folder", `{"folderId":99}`), 404, noFolder)
 		want(t, "move", operator.Do("PATCH", "/api/devices/C/folder", `{"folderId":2}`), 200, ok)
 		want(t, "move out", admin.Do("PATCH", "/api/devices/A/folder", `{}`), 200, ok)
@@ -161,11 +158,7 @@ func TestFolderRoutes(t *testing.T) {
 
 		// Changing
 		want(t, "change an unknown folder", admin.Do("PATCH", "/api/folders/99", `{"name":"x"}`), 404, noFolder)
-		if db.IsPostgres() {
-			want(t, "change folder abc", admin.Do("PATCH", "/api/folders/abc", `{"name":"x"}`), 500, serverError)
-		} else {
-			want(t, "change folder abc", admin.Do("PATCH", "/api/folders/abc", `{"name":"x"}`), 404, noFolder)
-		}
+		want(t, "change folder abc", admin.Do("PATCH", "/api/folders/abc", `{"name":"x"}`), 400, invalidID)
 		want(t, "a null name", admin.Do("PATCH", "/api/folders/1", `{"name":null}`), 400, required)
 		want(t, "a blank name", admin.Do("PATCH", "/api/folders/1", `{"name":"  "}`), 400, required)
 		want(t, "change", admin.Do("PATCH", "/api/folders/1", `{"name":" Lab 2 ","icon":"box","allowed_users":[]}`), 200, ok)
@@ -323,6 +316,33 @@ func TestNameThatIsNoText(t *testing.T) {
 		}
 		if got := rows(t, db, `SELECT name FROM folders`); got != "Lab" {
 			t.Errorf("stored names: %q", got)
+		}
+	})
+}
+
+// TestFolderIDsAreWholeNumbers: a folder id in the address or the body
+// that is no whole number from 0 to 2147483647 is refused with 400 on
+// both databases, before any query; one in range that names no folder is
+// not found.
+func TestFolderIDsAreWholeNumbers(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		admin := newWorld(t, db).As("admin")
+		want(t, "create", admin.Do("POST", "/api/folders", `{"name":"Lab"}`),
+			200, `{"success":true,"data":{"id":1,"name":"Lab","color":"#6366f1","icon":"folder","allowed_users":[],"allowed_groups":[]}}`)
+		for _, id := range []string{"abc", "1.5", "-1", "1e3", "%201", "2147483648", "99999999999"} {
+			want(t, "change folder "+id, admin.Do("PATCH", "/api/folders/"+id, `{"name":"x"}`), 400, invalidID)
+			want(t, "delete folder "+id, admin.Do("DELETE", "/api/folders/"+id, ""), 400, invalidID)
+			want(t, "assign to folder "+id, admin.Do("POST", "/api/folders/"+id+"/devices", `{"deviceIds":["A"]}`), 400, invalidID)
+		}
+		for _, id := range []string{`"abc"`, `1.5`, `-1`, `"1.0"`, `" 1"`, `2147483648`, `true`, `[1]`, `{}`} {
+			want(t, "move into folder "+id, admin.Do("PATCH", "/api/devices/A/folder", `{"folderId":`+id+`}`), 400, invalidID)
+		}
+		want(t, "change folder 2147483647", admin.Do("PATCH", "/api/folders/2147483647", `{"name":"x"}`), 404, noFolder)
+		want(t, "move into folder 2147483647", admin.Do("PATCH", "/api/devices/A/folder", `{"folderId":2147483647}`), 404, noFolder)
+		want(t, "move into folder \"1\"", admin.Do("PATCH", "/api/devices/A/folder", `{"folderId":"1"}`), 200, ok)
+		want(t, "move into folder 1.0", admin.Do("PATCH", "/api/devices/B/folder", `{"folderId":1.0}`), 200, ok)
+		if got := rows(t, db, `SELECT device_id FROM device_folder_assignments ORDER BY device_id`); got != "A,B" {
+			t.Errorf("assignments: %q", got)
 		}
 	})
 }

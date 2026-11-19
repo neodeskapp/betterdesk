@@ -4,6 +4,7 @@ import (
 	"context"
 	"math"
 	"net/http"
+	"strconv"
 
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/devicegroups"
@@ -24,12 +25,53 @@ const (
 	maxName = 50
 )
 
-// folderID is parseInt(req.params.id, 10).
-func folderID(r *http.Request) jsbind.Value {
-	if n, ok := jsreq.ParseInt(r.PathValue("id"), 10); ok {
-		return jsbind.Number(n)
+// maxFolderID is the largest id the folders table's integer column holds.
+const maxFolderID = math.MaxInt32
+
+// invalidFolderID is the answer to a folder id that no folder can have.
+const invalidFolderID = "Invalid folder id"
+
+// folderIDOf reads a folder id written in digits: a whole number from 0
+// to maxFolderID. ok is false for any other text.
+func folderIDOf(text string) (id jsbind.Value, ok bool) {
+	if text == "" || len(text) > 10 {
+		return jsbind.Undefined, false
 	}
-	return jsbind.Number(math.NaN())
+	for i := 0; i < len(text); i++ {
+		if text[i] < '0' || text[i] > '9' {
+			return jsbind.Undefined, false
+		}
+	}
+	n, err := strconv.ParseInt(text, 10, 64)
+	if err != nil || n > maxFolderID {
+		return jsbind.Undefined, false
+	}
+	return jsbind.Number(float64(n)), true
+}
+
+// folderID reads the folder id of the address. It answers 400 for one
+// that is not written in digits or is beyond maxFolderID, and then
+// reports false.
+func folderID(w http.ResponseWriter, r *http.Request) (jsbind.Value, bool) {
+	id, ok := folderIDOf(r.PathValue("id"))
+	if !ok {
+		kit.Fail(w, r, http.StatusBadRequest, invalidFolderID)
+	}
+	return id, ok
+}
+
+// bodyFolderID reads a folder id of the body: a whole number from 0 to
+// maxFolderID, as a number or as text in digits. ok is false for
+// anything else.
+func bodyFolderID(v middleware.Value) (jsbind.Value, bool) {
+	if text, isText := v.Str(); isText {
+		return folderIDOf(text)
+	}
+	f, isNumber := v.Float()
+	if !isNumber || f != math.Trunc(f) || f < 0 || f > maxFolderID {
+		return jsbind.Undefined, false
+	}
+	return jsbind.Number(f), true
 }
 
 // groupGUID is `folder_${id}` for a folder id as JavaScript wrote it.
@@ -273,7 +315,10 @@ func orPlain(v any, fallback string) any {
 // update answers PATCH /api/folders/{id} with the fields to change.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	id := folderID(r)
+	id, ok := folderID(w, r)
+	if !ok {
+		return
+	}
 	body := kit.Body(r)
 	folder, err := h.groups.FolderByID(ctx, id)
 	if err != nil {
@@ -316,7 +361,10 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 // are in no folder any more and its device group goes too.
 func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	id := folderID(r)
+	id, ok := folderID(w, r)
+	if !ok {
+		return
+	}
 	folder, err := h.groups.FolderByID(ctx, id)
 	if err != nil {
 		h.serverError(w, r, "Delete folder error:", err)

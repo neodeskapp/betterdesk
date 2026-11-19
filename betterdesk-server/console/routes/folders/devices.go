@@ -34,7 +34,10 @@ type movedCount struct {
 // gave it as.
 func (h *handlers) assignDevices(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	id := folderID(r)
+	id, ok := folderID(w, r)
+	if !ok {
+		return
+	}
 	list, isList := kit.Body(r).Get("deviceIds").Array()
 	if !isList || len(list) == 0 {
 		fail(w, r, http.StatusBadRequest, "folders.no_devices_selected")
@@ -95,7 +98,8 @@ func (h *handlers) assignDevices(w http.ResponseWriter, r *http.Request) {
 
 // assignDevice answers PATCH /api/devices/{id}/folder with {folderId}: the
 // device goes into the folder, or out of its folder for null or no
-// folderId.
+// folderId. A folderId that is no whole number (as a number or in
+// digits) is refused with 400.
 func (h *handlers) assignDevice(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	deviceID := r.PathValue("id")
@@ -115,6 +119,12 @@ func (h *handlers) assignDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !folder.IsNull() && !folder.IsUndefined() {
+		id, ok := bodyFolderID(kit.Body(r).Get("folderId"))
+		if !ok {
+			kit.Fail(w, r, http.StatusBadRequest, invalidFolderID)
+			return
+		}
+		folder = id
 		row, err := h.groups.FolderByID(ctx, folder)
 		if err != nil {
 			h.serverError(w, r, "Assign device folder error:", err)
