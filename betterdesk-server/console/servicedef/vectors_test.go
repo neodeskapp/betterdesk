@@ -210,7 +210,7 @@ func TestFlowVectors(t *testing.T) {
 			},
 		})
 		result := s.Check(context.Background())
-		if !sameJSON(t, result, flow.Result) {
+		if !sameJSON(t, result, withUnitHint(flow.Result)) {
 			got, _ := json.Marshal(result)
 			t.Errorf("flow %d (windows %v): result\n got %s\nNode %s", i, flow.Windows, got, flow.Result)
 		}

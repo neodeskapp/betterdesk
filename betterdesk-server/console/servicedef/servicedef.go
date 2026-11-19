@@ -66,8 +66,8 @@ type Options struct {
 var ErrNoPrivilegedHelper = errors.New("Privileged update failed")
 
 // unitHint is what a refused read or write of the unit adds to its
-// message.
-const unitHint = "Run once as root: sudo node web-nodejs/scripts/linux-ensure-console-user.js"
+// message: the installer's update writes the unit as it should be.
+const unitHint = "Run once as root: sudo ./betterdesk.sh --update"
 
 // allowedUnits are the unit files the privileged helper may touch.
 var allowedUnits = map[string]bool{

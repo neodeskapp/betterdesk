@@ -747,7 +747,8 @@ func TestConnectionModeSplitDocker(t *testing.T) {
 	}
 }
 
-// A unit the console may not write gives the hint the Node console gave.
+// A unit the console may not write names the installer's update, which
+// writes it (BUGS NL4: the hint named a script of the Node console).
 func TestSetConnectionModePermissionDenied(t *testing.T) {
 	dir := t.TempDir()
 	unit := filepath.Join(dir, "unit")
@@ -761,7 +762,7 @@ func TestSetConnectionModePermissionDenied(t *testing.T) {
 		s := New(Options{SystemdUnit: unit, DockerEnvFile: filepath.Join(dir, "none"), FS: fsys, Getenv: envMap(nil)})
 		_, err := s.SetConnectionMode(context.Background(), ConnectionInput{Mode: "relay_only"})
 		want := "Cannot write systemd connection settings (permission denied on " + unit + "). " +
-			"Run once as root: sudo node /opt/BetterDeskConsole/scripts/linux-ensure-console-user.js " +
+			"Run once as root: sudo ./betterdesk.sh --update " +
 			"then retry \u2014 or set ALLOW_SHARED_NAT_INITIATOR via a systemd drop-in."
 		if err == nil || err.Error() != want || !errors.Is(err, fs.ErrPermission) {
 			t.Errorf("%s: error %v", name, err)

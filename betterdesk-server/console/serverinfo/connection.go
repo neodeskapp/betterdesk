@@ -709,7 +709,7 @@ func (s *Service) systemdWriteError(err error) error {
 	return &FileError{
 		Code: "EACCES",
 		msg: "Cannot write systemd connection settings (permission denied on " + s.opts.SystemdUnit + "). " +
-			"Run once as root: sudo node /opt/BetterDeskConsole/scripts/linux-ensure-console-user.js " +
+			"Run once as root: sudo ./betterdesk.sh --update " +
 			"then retry \u2014 or set ALLOW_SHARED_NAT_INITIATOR via a systemd drop-in.",
 		err: err,
 	}
