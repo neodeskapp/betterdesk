@@ -217,7 +217,7 @@
        {
         "key": "server-attestation",
         "read": "server.attestation",
-        "write": "branding.edit"
+        "write": "server.attestation"
        }
       ],
       "pages": [
@@ -282,7 +282,7 @@
         "section": "toolkit"
        },
        {
-        "prefix": "/attestation",
+        "prefix": "/server-attestation",
         "section": "server-attestation"
        },
        {
@@ -1064,7 +1064,7 @@
        {
         "key": "server-attestation",
         "read": "server.attestation",
-        "write": "branding.edit"
+        "write": "server.attestation"
        }
       ],
       "pages": [
@@ -1129,7 +1129,7 @@
         "section": "toolkit"
        },
        {
-        "prefix": "/attestation",
+        "prefix": "/server-attestation",
         "section": "server-attestation"
        },
        {
@@ -2000,7 +2000,7 @@
        {
         "key": "server-attestation",
         "read": "server.attestation",
-        "write": "branding.edit"
+        "write": "server.attestation"
        }
       ],
       "pages": [
@@ -2065,7 +2065,7 @@
         "section": "toolkit"
        },
        {
-        "prefix": "/attestation",
+        "prefix": "/server-attestation",
         "section": "server-attestation"
        },
        {
@@ -2155,7 +2155,7 @@
        "resource-control": "none",
        "scaling": "none",
        "security-audit": "read",
-       "server-attestation": "write",
+       "server-attestation": "none",
        "server-management": "none",
        "settings": "none",
        "strategies": "write",
@@ -3037,7 +3037,7 @@
        {
         "key": "server-attestation",
         "read": "server.attestation",
-        "write": "branding.edit"
+        "write": "server.attestation"
        }
       ],
       "pages": [
@@ -3102,7 +3102,7 @@
         "section": "toolkit"
        },
        {
-        "prefix": "/attestation",
+        "prefix": "/server-attestation",
         "section": "server-attestation"
        },
        {

@@ -105,23 +105,23 @@
     "kind": "json",
     "json": {
      "config": {
-      "badgeTitle": "Measured capacity",
+      "badgeTitle": "Saved by the role",
       "tierLabels": {
-       "bronze": "Starter",
-       "iron": "",
-       "obsidian": "Top",
+       "bronze": "",
+       "iron": "Eisen",
+       "obsidian": "",
        "platinum": "",
        "titanium": ""
       }
      },
      "presentation": {
-      "badgeTitle": "Measured capacity",
+      "badgeTitle": "Saved by the role",
       "brand": "BetterDesk",
       "tierLabel": null,
       "tierLabels": {
-       "bronze": "Starter",
-       "iron": "Iron",
-       "obsidian": "Top",
+       "bronze": "Bronze",
+       "iron": "Eisen",
+       "obsidian": "Obsidian",
        "platinum": "Platinum",
        "titanium": "Titanium"
       }

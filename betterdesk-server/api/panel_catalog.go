@@ -72,7 +72,7 @@ var panelSectionCatalog = []panelSection{
 	{Key: "permissions", Label: "Permissions", Group: "system", ReadPermission: auth.PermServerConfig, WritePermission: auth.PermServerConfig},
 	{Key: "server-management", Label: "Server management", Group: "system", ReadPermission: auth.PermServerConfig, WritePermission: auth.PermServerConfig},
 	{Key: "settings", Label: "Settings", Group: "system", ReadPermission: auth.PermServerConfig, WritePermission: auth.PermServerConfig},
-	{Key: "server-attestation", Label: "Server attestation", Group: "system", ReadPermission: auth.PermServerAttestation, WritePermission: auth.PermBrandingEdit},
+	{Key: "server-attestation", Label: "Server attestation", Group: "system", ReadPermission: auth.PermServerAttestation, WritePermission: auth.PermServerAttestation},
 }
 
 // panelSectionGroups mirrors the group list the console renders.

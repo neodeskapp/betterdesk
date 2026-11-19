@@ -248,7 +248,7 @@
        {
         "key": "server-attestation",
         "read": "server.attestation",
-        "write": "branding.edit"
+        "write": "server.attestation"
        }
       ],
       "pages": [
@@ -313,7 +313,7 @@
         "section": "toolkit"
        },
        {
-        "prefix": "/attestation",
+        "prefix": "/server-attestation",
         "section": "server-attestation"
        },
        {
@@ -1095,7 +1095,7 @@
        {
         "key": "server-attestation",
         "read": "server.attestation",
-        "write": "branding.edit"
+        "write": "server.attestation"
        }
       ],
       "pages": [
@@ -1160,7 +1160,7 @@
         "section": "toolkit"
        },
        {
-        "prefix": "/attestation",
+        "prefix": "/server-attestation",
         "section": "server-attestation"
        },
        {

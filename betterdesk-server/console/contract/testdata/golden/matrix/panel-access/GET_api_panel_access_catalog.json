@@ -426,7 +426,7 @@
         "key": "server-attestation",
         "label": "Server attestation",
         "readPermission": "server.attestation",
-        "writePermission": "branding.edit"
+        "writePermission": "server.attestation"
        }
       ]
      },

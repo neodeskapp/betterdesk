@@ -124,7 +124,7 @@ var Catalog = []Section{
 	{"permissions", "Permissions", "system", "server.config", "server.config"},
 	{"server-management", "Server management", "system", "server.config", "server.config"},
 	{"settings", "Settings", "system", "server.config", "server.config"},
-	{"server-attestation", "Server attestation", "system", "server.attestation", "branding.edit"},
+	{"server-attestation", "Server attestation", "system", "server.attestation", "server.attestation"},
 }
 
 // SectionGroups lists the catalog's groups in display order.

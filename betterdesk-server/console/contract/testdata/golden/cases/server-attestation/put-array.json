@@ -46,8 +46,7 @@
   },
   {
    "roles": [
-    "viewer",
-    "server_admin"
+    "viewer"
    ],
    "status": 403,
    "headers": {
@@ -77,6 +76,7 @@
   },
   {
    "roles": [
+    "server_admin",
     "admin"
    ],
    "status": 400,

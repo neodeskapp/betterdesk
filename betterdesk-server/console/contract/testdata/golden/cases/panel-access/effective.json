@@ -1038,8 +1038,8 @@
         "source": "role"
        },
        "server-attestation": {
-        "access": "write",
-        "role_ceiling": "write",
+        "access": "none",
+        "role_ceiling": "none",
         "source": "role"
        },
        "server-management": {
@@ -1299,8 +1299,8 @@
         "source": "role"
        },
        "server-attestation": {
-        "access": "read",
-        "role_ceiling": "read",
+        "access": "write",
+        "role_ceiling": "write",
         "source": "role"
        },
        "server-management": {

@@ -46,7 +46,7 @@ var RouteRules = []Rule{
 	{Prefix: "/reports", Section: "reports"},
 	{Prefix: "/agents", Section: "agents"},
 	{Prefix: "/toolkit", Section: "toolkit"},
-	{Prefix: "/attestation", Section: "server-attestation"},
+	{Prefix: "/server-attestation", Section: "server-attestation"},
 	{Prefix: "/dataguard", Section: "dataguard"},
 	{Prefix: "/security-audit", Section: "security-audit"},
 	{Prefix: "/permissions", Section: "permissions"},

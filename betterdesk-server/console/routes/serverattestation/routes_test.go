@@ -39,6 +39,7 @@ func keys(t *testing.T, body string) []string {
 func TestGuards(t *testing.T) {
 	w := routetest.New(t, routetest.Options{})
 	out := w.SignedOut()
+	sectionDenied := `{"success":false,"error":"Panel access denied: server-attestation","code":"panel_access_denied"}`
 	for _, path := range []string{"/api/server-attestation/status", "/api/server-attestation/result", "/api/server-attestation/badge-config"} {
 		if got := out.Do(http.MethodGet, path, ""); got.Status != http.StatusUnauthorized {
 			t.Errorf("signed out GET %s = %d %s", path, got.Status, got.Body)
@@ -49,10 +50,11 @@ func TestGuards(t *testing.T) {
 		if got := w.As("server_admin").Do(http.MethodGet, path, ""); got.Status != http.StatusOK {
 			t.Errorf("server_admin GET %s = %d %s", path, got.Status, got.Body)
 		}
-		// global_admin reaches write in the section through branding.edit,
-		// but the role decides first and lacks server.attestation
+		// The section asks server.attestation for reading and writing
+		// (PA5, F9): global_admin, who has branding.edit only, is refused
+		// by the panel access guard
 		if got := w.As("global_admin").Do(http.MethodGet, path, ""); got.Status != http.StatusForbidden ||
-			got.Body != `{"success":false,"error":"Permission denied: server.attestation"}` {
+			got.Body != sectionDenied {
 			t.Errorf("global_admin GET %s = %d %s", path, got.Status, got.Body)
 		}
 	}
@@ -61,7 +63,7 @@ func TestGuards(t *testing.T) {
 		{http.MethodPut, "/api/server-attestation/badge-config", `{"badgeTitle":"x"}`},
 	} {
 		if got := w.As("global_admin").Do(c.method, c.path, c.body); got.Status != http.StatusForbidden ||
-			got.Body != `{"success":false,"error":"Permission denied: server.attestation"}` {
+			got.Body != sectionDenied {
 			t.Errorf("global_admin %s %s = %d %s", c.method, c.path, got.Status, got.Body)
 		}
 	}
@@ -69,11 +71,12 @@ func TestGuards(t *testing.T) {
 		if got := out.Do(http.MethodPost, path, "{}"); got.Status != http.StatusUnauthorized {
 			t.Errorf("signed out POST %s = %d", path, got.Status)
 		}
-		// server_admin may look but not change: the section's write
-		// permission is branding.edit
-		if got := w.As("server_admin").Do(http.MethodPost, path, "{}"); got.Status != http.StatusForbidden {
-			t.Errorf("server_admin POST %s = %d %s", path, got.Status, got.Body)
-		}
+	}
+	// server_admin, who has server.attestation, may change it now that the
+	// section's write permission is server.attestation (PA5, F9)
+	if got := w.As("server_admin").Do(http.MethodPost, "/api/server-attestation/abort", "{}"); got.Status != http.StatusOK ||
+		got.Body != `{"success":true,"aborted":false}` {
+		t.Errorf("server_admin POST abort = %d %s", got.Status, got.Body)
 	}
 	if got := w.As("operator").Do(http.MethodPut, "/api/server-attestation/badge-config", `{"badgeTitle":"x"}`); got.Status != http.StatusForbidden {
 		t.Errorf("operator PUT = %d", got.Status)

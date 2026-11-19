@@ -192,6 +192,25 @@ func TestReportsAskAuditView(t *testing.T) {
 	}
 }
 
+// PA5 (F9): /attestation is the device identity page of the four admin
+// roles, /server-attestation the server attestation page; every server
+// attestation route asks server.attestation, so server_admin runs the
+// benchmark and global_admin, who has branding.edit only, passes none.
+func TestServerAttestationAsksItsPermission(t *testing.T) {
+	if rule, ok := FindRule("/attestation"); ok {
+		t.Errorf("/attestation has the rule %+v", rule)
+	}
+	if rule, ok := FindRule("/server-attestation"); !ok || rule.Section != "server-attestation" {
+		t.Errorf("/server-attestation: %+v %v", rule, ok)
+	}
+	// viewer, operator, guest_issuer, global_admin, server_admin
+	checkRouteCases(t, []routeCase{
+		{"GET", "/api/server-attestation/status", "server.attestation", [5]string{"guard", "guard", "guard", "guard", "ok"}},
+		{"POST", "/api/server-attestation/run", "server.attestation", [5]string{"guard", "guard", "guard", "guard", "ok"}},
+		{"PUT", "/api/server-attestation/badge-config", "server.attestation", [5]string{"guard", "guard", "guard", "guard", "ok"}},
+	})
+}
+
 // PA3 (F3): a person's own profile, the profile pictures and the person's
 // own effective policy need a session only; another account's picture
 // stays in the users section.

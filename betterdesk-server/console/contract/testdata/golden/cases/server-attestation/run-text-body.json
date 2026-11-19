@@ -12,7 +12,8 @@
  "answers": [
   {
    "roles": [
-    "viewer"
+    "viewer",
+    "global_admin"
    ],
    "status": 403,
    "headers": {
@@ -42,7 +43,6 @@
   },
   {
    "roles": [
-    "global_admin",
     "admin"
    ],
    "status": 415,

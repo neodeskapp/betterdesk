@@ -17,7 +17,7 @@ var guardPaths = []struct {
 	{"/automation", "automation"}, {"/network", "network"}, {"/registrations", "registrations"}, {"/cdap", "cdap"},
 	{"/fleet", "fleet"}, {"/chat", "chat"}, {"/scaling", "scaling"}, {"/cross-platform", "cross-platform"},
 	{"/reports", "reports"}, {"/agents", "agents"}, {"/toolkit", "toolkit"}, {"/keys", ""},
-	{"/tokens", ""}, {"/policies", ""}, {"/attestation", "server-attestation"},
+	{"/tokens", ""}, {"/policies", ""}, {"/attestation", ""},
 	{"/dataguard", "dataguard"}, {"/security-audit", "security-audit"}, {"/permissions", "permissions"},
 	{"/languages", "languages"}, {"/resource-control", "resource-control"}, {"/server-management", "server-management"},
 	{"/client-branding", ""}, {"/cdap-studio", "cdap"}, {"/users", "users"}, {"/api/users", "users"},
@@ -85,7 +85,7 @@ var guardPaths = []struct {
 	{"/api/console/bootstrap", ""}, {"/api/inventory", ""}, {"/api/keys", ""}, {"/api/tenants", ""},
 
 	// pages without a rule
-	{"/login", ""}, {"/logout", ""}, {"/pairing", ""}, {"/server-attestation", ""}, {"/generator", ""}, {"/portal", ""},
+	{"/login", ""}, {"/logout", ""}, {"/pairing", ""}, {"/server-attestation", "server-attestation"}, {"/generator", ""}, {"/portal", ""},
 }
 
 func TestFindRule(t *testing.T) {

@@ -72,6 +72,9 @@ var ruleFixes = []ruleFix{
 	{bug: "PA3 (F4)", add: Rule{Prefix: "/api/network/resolve", Section: "toolkit"}},
 	// The reports page was listed twice.
 	{bug: "PA3 (F6), RP1", remove: Rule{Prefix: "/reports", Section: "reports"}},
+	// /attestation is the device identity page; the server attestation
+	// page had no rule.
+	{bug: "PA5 (F9)", remove: Rule{Prefix: "/attestation", Section: "server-attestation"}, add: Rule{Prefix: "/server-attestation", Section: "server-attestation"}},
 }
 
 // sectionFix is a catalog section whose permissions differ from Node's.
@@ -94,6 +97,8 @@ var sectionFixes = []sectionFix{
 	{bug: "PA3 (F7)", key: "toolkit", read: "device.connect", write: "device.connect"},
 	// Every reports route asks audit.view, also the writes.
 	{bug: "PA3 (F6), RP1", key: "reports", read: "audit.view", write: "audit.view"},
+	// All server attestation routes ask server.attestation.
+	{bug: "PA5 (F9)", key: "server-attestation", read: "server.attestation", write: "server.attestation"},
 }
 
 // nodeTables returns the guard's rules and the catalog's sections as the
