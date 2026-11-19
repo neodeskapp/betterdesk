@@ -107,7 +107,8 @@ func bodyValue(body middleware.JSONObject, name string) value {
 // body is req.body. Each member has to have its type, and the first one
 // that has not is answered with 400 {"error":"..."}: "SMTP host is
 // required" for a host that is missing, blank or another empty value,
-// else "Invalid <member>". What is stored:
+// else "Invalid <member>"; then a save without a sender is answered "SMTP
+// sender is required". What is stored:
 //
 //	host         text, without the white space around it
 //	port         a whole number from 1 to 65535, or text of its digits,
@@ -116,7 +117,7 @@ func bodyValue(body middleware.JSONObject, name string) value {
 //	user         text; "" when missing or null
 //	pass         text; when missing, null, "" or "********", the
 //	             password stored so far, else ""
-//	from         text; "betterdesk@localhost" when missing, null or ""
+//	from         text that is not blank
 //	alert_email  plain addresses separated by commas (PlainAddressList),
 //	             without the white space around them; "" when missing or
 //	             null
@@ -187,6 +188,9 @@ func nextConfig(body middleware.JSONObject, existing value) (config value, refus
 	if tlsVerify.kind != kindUndefined && tlsVerify.kind != kindBool {
 		return undefined, "Invalid tlsVerify"
 	}
+	if jsbind.Trim(texts["from"]) == "" {
+		return undefined, "SMTP sender is required"
+	}
 	// The password stays what it was unless the request brings a new one:
 	// the settings page sends the mask back, or nothing.
 	pass := stringValue(texts["pass"])
@@ -196,17 +200,13 @@ func nextConfig(body middleware.JSONObject, existing value) (config value, refus
 			pass = kept
 		}
 	}
-	from := texts["from"]
-	if from == "" {
-		from = defaultFrom
-	}
 	config = objectValue(
 		"host", stringValue(jsbind.Trim(host.str)),
 		"port", numberValue(port),
 		"secure", boolValue(secure.flag),
 		"user", stringValue(texts["user"]),
 		"pass", pass,
-		"from", stringValue(from),
+		"from", stringValue(texts["from"]),
 		"alert_email", stringValue(alertEmail),
 	)
 	if tlsVerify.kind == kindBool {

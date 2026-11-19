@@ -125,12 +125,12 @@ func TestPutKeepsTheStoredPasswordForTheMask(t *testing.T) {
 		// No password at all keeps it too; a new one replaces it; the mask
 		// with nothing stored is no password.
 		for _, step := range []struct{ body, want string }{
-			{`{"host":"h"}`, `"pass":"existing-secret"`},
-			{`{"host":"h","pass":""}`, `"pass":"existing-secret"`},
-			{`{"host":"h","pass":null}`, `"pass":"existing-secret"`},
-			{`{"host":"h","pass":"new-secret"}`, `"pass":"new-secret"`},
-			{`{"host":"h","pass":"********"}`, `"pass":"new-secret"`},
-			{`{"host":"h","pass":" ********"}`, `"pass":" ********"`},
+			{`{"host":"h","from":"f@example.com"}`, `"pass":"existing-secret"`},
+			{`{"host":"h","from":"f@example.com","pass":""}`, `"pass":"existing-secret"`},
+			{`{"host":"h","from":"f@example.com","pass":null}`, `"pass":"existing-secret"`},
+			{`{"host":"h","from":"f@example.com","pass":"new-secret"}`, `"pass":"new-secret"`},
+			{`{"host":"h","from":"f@example.com","pass":"********"}`, `"pass":"new-secret"`},
+			{`{"host":"h","from":"f@example.com","pass":" ********"}`, `"pass":" ********"`},
 		} {
 			if answer := s.PutSMTPSettings(ctx, bodyOf(step.body)); answer.Status != 200 {
 				t.Fatalf("%s: %d", step.body, answer.Status)
@@ -142,7 +142,7 @@ func TestPutKeepsTheStoredPasswordForTheMask(t *testing.T) {
 		if _, err := db.Exec(ctx, "DELETE FROM settings WHERE key = ?", settingKey); err != nil {
 			t.Fatal(err)
 		}
-		s.PutSMTPSettings(ctx, bodyOf(`{"host":"h","pass":"********"}`))
+		s.PutSMTPSettings(ctx, bodyOf(`{"host":"h","from":"f@example.com","pass":"********"}`))
 		if got := stored(t, db); !strings.Contains(got, `"pass":""`) {
 			t.Fatalf("mask without a stored password: %s", got)
 		}
@@ -622,7 +622,7 @@ func TestASettingThatIsNoTextIsNoConfiguration(t *testing.T) {
 		t.Fatalf("a configuration from a blob: %s", cfg.signature())
 	}
 	// A save over it does not take a password from it
-	if answer := s.PutSMTPSettings(ctx, bodyOf(`{"host":"h","pass":"********"}`)); answer.Status != 200 {
+	if answer := s.PutSMTPSettings(ctx, bodyOf(`{"host":"h","from":"f@example.com","pass":"********"}`)); answer.Status != 200 {
 		t.Fatalf("%d", answer.Status)
 	}
 	if got := stored(t, db); !strings.Contains(got, `"pass":""`) {

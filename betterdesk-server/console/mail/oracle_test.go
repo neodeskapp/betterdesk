@@ -378,6 +378,10 @@ func refusedForCause(request, message string) bool {
 	case "Invalid alert_email":
 		emails, isText := text("alert_email")
 		return !missing("alert_email") && (!isText || !PlainAddressList(jsbind.Trim(emails)))
+	case "SMTP sender is required":
+		// BUGS EM9
+		from, isText := text("from")
+		return missing("from") || isText && jsbind.Trim(from) == ""
 	}
 	return false
 }
@@ -829,11 +833,16 @@ func (r *replay) run(i int, step oracleStep) {
 		answer := r.service.PutSMTPSettings(ctx, body)
 		if refused := marshal(t, answer.Body); answer.Status == 400 && (step.Status != 400 || step.Body != refused) {
 			// BUGS EM5: a member of the wrong type is refused, where Node
-			// stored it or failed on it
-			r.counts["EM5: a save with a member of the wrong type"]++
+			// stored it or failed on it, and EM9: so is a save without a
+			// sender
 			var reason errorBody
 			if err := json.Unmarshal([]byte(refused), &reason); err != nil || step.Request == nil || !refusedForCause(*step.Request, reason.Error) {
 				t.Fatalf("step %d put %s: refused with %s", i, show(step.Request), refused)
+			}
+			if reason.Error == "SMTP sender is required" {
+				r.counts["EM9: a save without a sender"]++
+			} else {
+				r.counts["EM5: a save with a member of the wrong type"]++
 			}
 			after, hasRow, err := getSetting(ctx, r.db, settingKey)
 			if err != nil || hasRow != hadRow || after != before || answer.Audit != nil || answer.LogError != "" || len(r.log.lines) != 0 {
@@ -1015,7 +1024,7 @@ func TestNodeRecording(t *testing.T) {
 			"recipients that are no text", "EM1: a stored tlsVerify that is no flag", "EM3: an alert value with markup is escaped",
 			"EM7: a help request mail with its blank lines", "EM4: a stored configuration that is invalid",
 			"EM5: a save with a member of the wrong type", "EM5: a read after a refused save",
-			"EM8: no address without a public URL", "EM8: a help request mail without a link"} {
+			"EM8: no address without a public URL", "EM8: a help request mail without a link", "EM9: a save without a sender"} {
 			if r.counts[name] == 0 {
 				t.Errorf("the recording has no %q", name)
 			}

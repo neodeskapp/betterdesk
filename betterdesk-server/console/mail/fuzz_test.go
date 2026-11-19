@@ -145,7 +145,7 @@ func FuzzSettingsBody(f *testing.F) {
 		}
 		config, refused := nextConfig(body, existing)
 		if refused != "" {
-			if refused != "SMTP host is required" && !strings.HasPrefix(refused, "Invalid ") {
+			if refused != "SMTP host is required" && refused != "SMTP sender is required" && !strings.HasPrefix(refused, "Invalid ") {
 				t.Fatalf("%s: refused with %q", raw, refused)
 			}
 			return
