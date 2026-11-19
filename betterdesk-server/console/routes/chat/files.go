@@ -147,27 +147,7 @@ func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusNotFound, "File not found")
 		return
 	}
-	if h.inHiddenFolder() {
-		h.serverError(w, r, errors.New("Not Found"), http.StatusNotFound)
-		return
-	}
 	h.files.ServeName(w, r, name, nil)
-}
-
-// inHiddenFolder reports whether a part of the folder's path starts with
-// a dot. No file was ever sent from such a folder: the old console's file
-// sender treated every part of the absolute path like a hidden file.
-func (h *handlers) inHiddenFolder() bool {
-	abs, err := filepath.Abs(h.dir)
-	if err != nil {
-		abs = h.dir
-	}
-	for _, part := range strings.Split(filepath.ToSlash(abs), "/") {
-		if len(part) > 1 && part[0] == '.' {
-			return true
-		}
-	}
-	return false
 }
 
 // attachment sets the header that makes a browser save the file under

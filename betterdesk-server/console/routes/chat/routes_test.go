@@ -503,15 +503,16 @@ func TestDownloadNeedsTheWholeID(t *testing.T) {
 	}
 }
 
-// The old console's file sender refused every file below a folder whose
-// name starts with a dot, so an install in such a place never sent a file.
+// A console installed below a folder whose name starts with a dot sends
+// its chat files: only the name below the chat folder is looked at.
 func TestDownloadFromAHiddenFolder(t *testing.T) {
 	w := newWorldIn(t, filepath.Join(t.TempDir(), ".console", "data", "chat-files"))
-	w.put(firstID+".txt", "secret")
-	expect(t, "download", w.get("viewer", "GET", "/api/chat/files/"+firstID), 404, failed)
-	expect(t, "an unknown id", w.get("viewer", "GET", "/api/chat/files/"+secondID), 404, `{"success":false,"error":"File not found"}`)
+	w.put(secondID+".txt", "secret")
+	expect(t, "download", w.get("viewer", "GET", "/api/chat/files/"+secondID), 200, "secret")
+	expect(t, "an unknown id", w.get("viewer", "GET", "/api/chat/files/ffffffffffffffffffffffffffffffff"), 404, `{"success":false,"error":"File not found"}`)
 	expect(t, "upload", w.upload("viewer", part{"file", "a.txt", []byte("x")}), 200,
 		`{"success":true,"file_id":"`+firstID+`","filename":"`+firstID+`.txt","size":1,"url":"/api/chat/files/`+firstID+`"}`)
+	expect(t, "download of the upload", w.get("viewer", "GET", "/api/chat/files/"+firstID), 200, "x")
 }
 
 func TestSearch(t *testing.T) {
