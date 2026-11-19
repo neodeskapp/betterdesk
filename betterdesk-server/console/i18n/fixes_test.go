@@ -1,6 +1,7 @@
 package i18n
 
 import (
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -33,6 +34,11 @@ var vectorFixes = []vectorFix{
 
 	// A value that is no language gives way to the next source.
 	{"L4", "pick.json", pickWith(pickRules{loadedOnly: true, textOnly: true, skipUnknown: true})},
+
+	// A file that holds null is not loaded.
+	{"L5", "edge.json", nullFileNotInSnapshot},
+	{"L5", "defaults.json", nullFileNotInDefaultSnapshots},
+	{"L5", "routes-edge.json", nullFileNoLanguage},
 }
 
 // fixedVectors reads a file of vectors with every fix applied.
@@ -134,6 +140,48 @@ func inheritedNamesNotValidated(t testing.TB, file any) int {
 		if str(c, "method") == "GET" && isValidate && nodeInheritedNames[code] &&
 			answerJSON(c, 200, `{"success":true,"data":`+notFoundReport+`}`) {
 			n++
+		}
+	}
+	return n
+}
+
+// --- L5 ---
+
+// edgeNullLanguage is the language whose file in testdata/lang-edge holds
+// null.
+const edgeNullLanguage = "fr"
+
+func nullFileNotInSnapshot(t testing.TB, file any) int {
+	if entry, ok := at(file, "snapshot", edgeNullLanguage).(*Object); ok && setIf(entry, "has", false) {
+		return 1
+	}
+	return 0
+}
+
+func nullFileNotInDefaultSnapshots(t testing.TB, file any) int {
+	n := 0
+	for _, def := range file.(*Object).Keys() {
+		n += nullFileNotInSnapshot(t, at(file, def))
+	}
+	return n
+}
+
+func nullFileNoLanguage(t testing.TB, file any) int {
+	n := 0
+	for _, c := range list(file, "vectors") {
+		if slices.Contains(strs(c, "removeFiles"), edgeNullLanguage+".json") {
+			continue
+		}
+		switch method, path := str(c, "method"), str(c, "path"); {
+		case method == "GET" && path == "/api/i18n/translations/"+edgeNullLanguage:
+			if answerJSON(c, 404, `{"success":false,"error":"Language not found"}`) {
+				n++
+			}
+		case method == "POST" && path == "/api/i18n/set/"+edgeNullLanguage:
+			changed := answerJSON(c, 400, `{"success":false,"error":"Language not supported"}`)
+			if setAll(c, "setCookie", []any{}, "persisted", []any{}, "sessionPreferred", nil) || changed {
+				n++
+			}
 		}
 	}
 	return n

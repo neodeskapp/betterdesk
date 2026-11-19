@@ -75,7 +75,8 @@ func TestStringsBodyAndCaching(t *testing.T) {
 
 func TestStringsUnknownCodes(t *testing.T) {
 	_, srv := stringsServer(t)
-	for _, code := range []string{"xx", "EN", "e", "abcd", "zh-tw", "zh-TWxyz", "constructor", "__proto__", "..%2Fconfig", "pl", "fr%00", "deu", "de.json"} {
+	// fr.json holds null, so fr is no language either
+	for _, code := range []string{"xx", "EN", "e", "abcd", "zh-tw", "zh-TWxyz", "constructor", "__proto__", "..%2Fconfig", "pl", "fr", "fr%00", "deu", "de.json"} {
 		got := do(t, srv.URL, "GET", "/api/console/strings/"+code, nil, nil, 0)
 		if got.status != 404 || got.body != `{"success":false,"error":"Language not found"}` {
 			t.Errorf("%s: %d %s", code, got.status, short(got.body))
@@ -83,12 +84,6 @@ func TestStringsUnknownCodes(t *testing.T) {
 		if got.header.Get("Cache-Control") != "" || got.header.Get("Vary") != "" {
 			t.Errorf("%s: the 404 carries the caching headers of the strings", code)
 		}
-	}
-	// A file that holds null counts as a language and gets the default texts.
-	got := do(t, srv.URL, "GET", "/api/console/strings/fr", nil, nil, 0)
-	en := do(t, srv.URL, "GET", "/api/console/strings/en", nil, nil, 0)
-	if got.status != 200 || got.body != en.body {
-		t.Errorf("fr: %d, body equals the English one: %v", got.status, got.body == en.body)
 	}
 	if got := do(t, srv.URL, "GET", "/api/console/strings/zh-TW", nil, nil, 0); got.status != 200 {
 		t.Errorf("zh-TW: %d", got.status)

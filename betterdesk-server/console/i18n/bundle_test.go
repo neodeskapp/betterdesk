@@ -1,12 +1,15 @@
 package i18n
 
 import (
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"slices"
 	"strings"
 	"testing"
+	"time"
 )
 
 func listJSON(t *testing.T, b *Bundle) string {
@@ -249,8 +252,8 @@ func TestLoadSkipsWhatIsNotInTheTable(t *testing.T) {
 	if b.Has("dir") {
 		t.Error("dir.json (a folder) is loaded")
 	}
-	if !b.Has("fr") || b.Meta("fr") != nil || b.Translations("fr") != nil {
-		t.Error("a file that holds null counts as a language but has no entry and no texts")
+	if b.Has("fr") || b.Meta("fr") != nil || b.Translations("fr") != nil {
+		t.Error("a file that holds null is loaded")
 	}
 	if b.Has("constructor") || b.Has("__proto__") || b.Has("") || b.Has("En") {
 		t.Error("Has for inherited names, empty and wrong case")
@@ -258,6 +261,39 @@ func TestLoadSkipsWhatIsNotInTheTable(t *testing.T) {
 	for _, line := range l.take() {
 		if strings.Contains(line, "xx") {
 			t.Errorf("log line about a file outside the table: %q", line)
+		}
+	}
+}
+
+// A language file that holds null is logged and not loaded: the language
+// cannot be chosen and has no strings, as it was already not listed
+// (BUGS.md L5).
+func TestLoadSkipsFileThatHoldsNull(t *testing.T) {
+	dir := copyDir(t, "testdata/lang-upload")
+	if err := os.WriteFile(filepath.Join(dir, "fr.json"), []byte("null"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	h, _, l := handlersFor(t, dir, time.Now())
+	if lines := l.take(); !slices.Contains(lines, "Failed to load language fr Cannot read properties of null (reading '_meta')") {
+		t.Errorf("log lines %q", lines)
+	}
+	if h.Bundle.Has("fr") || h.Bundle.Meta("fr") != nil || h.Bundle.Translations("fr") != nil {
+		t.Error("fr is loaded")
+	}
+	srv := httptest.NewServer(routes(h))
+	defer srv.Close()
+	for _, c := range []struct {
+		method, path string
+		status       int
+		body         string
+	}{
+		{"POST", "/api/i18n/set/fr", 400, `{"success":false,"error":"Language not supported"}`},
+		{"GET", "/api/i18n/translations/fr", 404, `{"success":false,"error":"Language not found"}`},
+		{"GET", "/api/console/strings/fr", 404, `{"success":false,"error":"Language not found"}`},
+	} {
+		got := do(t, srv.URL, c.method, c.path, nil, nil, 0)
+		if got.status != c.status || got.body != c.body || got.header.Get("Set-Cookie") != "" {
+			t.Errorf("%s %s: %d %s, cookie %q; want %d %s", c.method, c.path, got.status, short(got.body), got.header.Get("Set-Cookie"), c.status, c.body)
 		}
 	}
 }

@@ -176,13 +176,11 @@ func (b *Bundle) loadLocked(root langRoot, code string) bool {
 		b.logf("Failed to load language %s %s", logValue(code), err)
 		return false
 	}
-	b.translations[code] = data
 	if data == nil {
-		// The texts are stored before the metadata is read, so a file
-		// that holds null counts as a language without being listed.
 		b.logf("Failed to load language %s %s", logValue(code), "Cannot read properties of null (reading '_meta')")
 		return false
 	}
+	b.translations[code] = data
 
 	fileMeta := property(data, "_meta")
 	if !truthy(fileMeta) {
