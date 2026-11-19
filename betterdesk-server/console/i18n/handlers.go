@@ -41,8 +41,7 @@ type Handlers struct {
 	Bundle *Bundle
 
 	// Production is the console's production mode (NODE_ENV is
-	// "production"). When set, an upload the form parser refuses answers
-	// "Internal Server Error" instead of the parser's message.
+	// "production"). The routes answer the same in both modes.
 	Production bool
 
 	// SecureCookie adds Secure to the language cookie that Set sends.
@@ -190,14 +189,11 @@ func (h *Handlers) Validate(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) Upload(w http.ResponseWriter, r *http.Request) {
 	form := readUpload(r)
 	if form.failure != "" {
-		// What the form parser refuses went to the console's error
-		// handler, which hides the message in production.
-		h.logf("Server error: %s", form.failure)
-		message := form.failure
-		if h.Production {
-			message = "Internal Server Error"
+		status := http.StatusBadRequest
+		if form.tooLarge {
+			status = http.StatusRequestEntityTooLarge
 		}
-		fail(w, r, http.StatusInternalServerError, message)
+		fail(w, r, status, form.failure)
 		return
 	}
 	if !form.hasFile {

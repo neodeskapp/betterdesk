@@ -148,7 +148,7 @@ func FuzzUploadLanguage(f *testing.F) {
 			t.Fatalf("the answer is not JSON: %q", w.Body.String())
 		}
 		switch w.Code {
-		case 400, 500:
+		case 400, 413, 500:
 			if at(answer, "success") != false || str(answer, "error") == "" {
 				t.Fatalf("%d with %s", w.Code, w.Body.String())
 			}

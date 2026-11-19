@@ -300,26 +300,49 @@ func TestUploadWithoutABody(t *testing.T) {
 	if got := send(""); got != `400 {"success":false,"error":"No file uploaded"}` {
 		t.Errorf("no length: %s", got)
 	}
-	if got := send("Content-Length: 0\r\n"); got != `500 {"success":false,"error":"Unexpected end of form"}` {
+	if got := send("Content-Length: 0\r\n"); got != `400 {"success":false,"error":"Unexpected end of form"}` {
 		t.Errorf("length 0: %s", got)
 	}
 }
 
-func TestUploadHidesParserMessagesInProduction(t *testing.T) {
-	h, _, l := handlersFor(t, copyDir(t, "testdata/lang-upload"), time.Now())
-	body := "--B\r\nContent-Disposition: form-data; name=\"other\"; filename=\"de.json\"\r\nContent-Type: application/json\r\n\r\n{}\r\n--B--\r\n"
-	for production, want := range map[bool]string{false: "Unexpected file field", true: "Internal Server Error"} {
+// What the form parser refuses is the uploader's mistake: 413 for a file
+// or field over its limit, 400 for the rest, with the parser's message
+// also in production and nothing in the server log (BUGS.md L8).
+func TestUploadFormRefusalsAre4xx(t *testing.T) {
+	part := func(header, content string) string { return "--B\r\n" + header + "\r\n\r\n" + content + "\r\n" }
+	file := func(field, name, kind, content string) string {
+		return part("Content-Disposition: form-data; name=\""+field+"\"; filename=\""+name+"\"\r\nContent-Type: "+kind, content)
+	}
+	cases := []struct {
+		name, contentType, body string
+		status                  int
+		message                 string
+	}{
+		{"file over the limit", "multipart/form-data; boundary=B", file("file", "de.json", "application/json", strings.Repeat(" ", 1<<20+1)) + "--B--\r\n", 413, "File too large"},
+		{"field over the limit", "multipart/form-data; boundary=B", part(`Content-Disposition: form-data; name="note"`, strings.Repeat("x", 1<<20+1)) + "--B--\r\n", 413, "Field value too long"},
+		{"file in another field", "multipart/form-data; boundary=B", file("other", "de.json", "application/json", "{}") + "--B--\r\n", 400, "Unexpected file field"},
+		{"file that is not JSON", "multipart/form-data; boundary=B", file("file", "de.json", "text/plain", "{}") + "--B--\r\n", 400, "Only JSON files allowed"},
+		{"truncated form", "multipart/form-data; boundary=B", file("file", "de.json", "application/json", "{}"), 400, "Unexpected end of form"},
+		{"broken part header", "multipart/form-data; boundary=B", part("Content-Disposition form-data", "{}") + "--B--\r\n", 400, "Malformed part header"},
+		{"part without a name", "multipart/form-data; boundary=B", part("Content-Disposition: form-data", "x") + "--B--\r\n", 400, "Field name missing"},
+		{"no boundary", "multipart/form-data", "x", 400, "Multipart: Boundary not found"},
+		{"other multipart type", "multipart/mixed; boundary=B", "x", 400, "Unsupported content type: multipart/mixed; boundary=B"},
+	}
+	for _, production := range []bool{false, true} {
+		h, _, l := handlersFor(t, copyDir(t, "testdata/lang-upload"), time.Now())
 		h.Production = production
 		l.take()
-		r := httptest.NewRequest("POST", "/api/i18n/upload", strings.NewReader(body))
-		r.Header.Set("Content-Type", "multipart/form-data; boundary=B")
-		r.Header.Set("Content-Length", numberString(float64(len(body))))
-		w := httptest.NewRecorder()
-		h.Upload(w, r)
-		if w.Code != 500 || w.Body.String() != `{"success":false,"error":"`+want+`"}` {
-			t.Errorf("production %v: %d %s", production, w.Code, w.Body.String())
+		for _, c := range cases {
+			r := httptest.NewRequest("POST", "/api/i18n/upload", strings.NewReader(c.body))
+			r.Header.Set("Content-Type", c.contentType)
+			r.Header.Set("Content-Length", numberString(float64(len(c.body))))
+			w := httptest.NewRecorder()
+			h.Upload(w, r)
+			if want := `{"success":false,"error":"` + c.message + `"}`; w.Code != c.status || w.Body.String() != want {
+				t.Errorf("production %v, %s: %d %s; want %d %s", production, c.name, w.Code, w.Body.String(), c.status, want)
+			}
 		}
-		if lines := l.take(); len(lines) != 1 || lines[0] != "Server error: Unexpected file field" {
+		if lines := l.take(); len(lines) != 0 {
 			t.Errorf("production %v: log lines %q", production, lines)
 		}
 	}

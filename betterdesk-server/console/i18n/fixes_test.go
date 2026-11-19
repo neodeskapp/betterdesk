@@ -47,6 +47,10 @@ var vectorFixes = []vectorFix{
 		// a string Save refused with 500
 		"upper case name", "name with percent escapes", "name with nul", "meta code with traversal", "meta code dotdot",
 		"meta code with slash", "meta code proto", "meta code astral", "code base64", "production: bad code format")},
+
+	// What the form parser refuses is 413 or 400 with its message, also
+	// in production.
+	{"L8", "upload.json", parserRefusalsAre4xx},
 }
 
 // fixedVectors reads a file of vectors with every fix applied.
@@ -218,6 +222,42 @@ func uploadsRefused(status int, message string, names ...string) func(t testing.
 		}
 		return n
 	}
+}
+
+// parserMessages are the refusals of the form parser, with the status
+// they get now.
+var parserMessages = map[string]int{
+	"File too large": 413, "Field value too long": 413,
+	"Unexpected file field": 400, "Only JSON files allowed": 400, "Field name missing": 400,
+	"Malformed part header": 400, "Unexpected end of form": 400, "Malformed content type": 400,
+	"Multipart: Boundary not found": 400,
+}
+
+func parserRefusalsAre4xx(t testing.TB, file any) int {
+	// In production Node hid the parser's message
+	hidden := map[string]string{"production: wrong field": "Unexpected file field", "production: too large": "File too large"}
+	n := 0
+	for _, c := range list(file) {
+		if num(c, "status") != 500 {
+			continue
+		}
+		answer, err := parseJSON(str(c, "body"))
+		if err != nil {
+			t.Fatalf("%s: %v", str(c, "name"), err)
+		}
+		message := str(answer, "error")
+		if m, ok := hidden[str(c, "name")]; ok {
+			message = m
+		}
+		status, ok := parserMessages[message]
+		if strings.HasPrefix(message, "Unsupported content type: ") {
+			status, ok = 400, true
+		}
+		if ok && setAll(c, "status", float64(status), "body", `{"success":false,"error":"`+message+`"}`) {
+			n++
+		}
+	}
+	return n
 }
 
 // --- the request language (L1, L2, L4) ---

@@ -35,9 +35,11 @@ type upload struct {
 	// code is the form's "code" value as the route sees it: undefined,
 	// a string, a list or an object.
 	code any
-	// failure is the message of the error that stopped the parser. The
-	// console's error handler answers it with status 500.
-	failure string
+	// failure is the message of the error that stopped the parser, which
+	// the route answers with status 400, or 413 when tooLarge is set: a
+	// part was over its size limit.
+	failure  string
+	tooLarge bool
 }
 
 var (
@@ -118,7 +120,7 @@ func readUpload(r *http.Request) upload {
 	// The rest of the body is read and dropped, so the client can
 	// finish sending before it gets the answer.
 	_, _ = io.Copy(io.Discard, r.Body)
-	out := upload{failure: p.failure, code: undefined}
+	out := upload{failure: p.failure, tooLarge: p.tooLarge, code: undefined}
 	if p.failure == "" {
 		out.hasFile, out.originalName, out.data = p.stored, p.storedName, p.storedData
 		out.code = p.body.value("code")
@@ -142,6 +144,7 @@ type formParser struct {
 
 	complete bool
 	failure  string
+	tooLarge bool
 
 	// after a boundary: 1 expects - or CR, 2 expects the second -, 3
 	// expects LF
@@ -173,6 +176,13 @@ type formParser struct {
 func (p *formParser) fail(message string) {
 	if p.failure == "" {
 		p.failure = message
+	}
+}
+
+// failTooLarge is fail for a part over its size limit.
+func (p *formParser) failTooLarge(message string) {
+	if p.failure == "" {
+		p.failure, p.tooLarge = message, true
 	}
 }
 
@@ -315,7 +325,7 @@ func (p *formParser) content(data []byte) {
 		if p.fileSize == uploadFileLimit {
 			p.skipPart = true
 			if p.fileAccepted {
-				p.fail("File too large")
+				p.failTooLarge("File too large")
 			}
 		}
 	case p.inField:
@@ -352,7 +362,7 @@ func (p *formParser) boundary() {
 		case !p.fieldNamed:
 			p.fail("Field name missing")
 		case p.fieldTruncated:
-			p.fail("Field value too long")
+			p.failTooLarge("Field value too long")
 		case isCodeField(p.fieldName):
 			var value any = ""
 			if size > 0 {
