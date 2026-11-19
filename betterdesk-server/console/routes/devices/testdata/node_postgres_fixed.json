@@ -21,6 +21,286 @@
    ]
   }
  },
+ "148 PUT /api/devices/A1001/groups {\"groupGuids\":[\"g-ops\"]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[\"g-ops\"]}}",
+   "calls": [
+    "GET /api/peers/A1001",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/A1001/device-group {\"guid\":\"g-ops\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "149 PUT /api/devices/A1001/groups {\"groupGuids\":[\"g-open\"]} as operator": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[\"g-open\"]}}",
+   "calls": [
+    "GET /api/peers/A1001",
+    "GET /api/peers/A1001",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/A1001/device-group {\"guid\":\"g-open\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\"]}"
+   ]
+  }
+ },
+ "150 PUT /api/devices/A1001/groups {\"groupGuids\":[\"g-viewer\"]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[\"g-viewer\"]}}",
+   "calls": [
+    "GET /api/peers/A1001",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/A1001/device-group {\"guid\":\"g-viewer\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "151 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "152 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "153 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "154 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "155 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "156 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "157 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "158 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "159 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "160 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "161 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "162 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "163 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "164 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "165 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "166 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "167 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "168 PUT /api/devices/B1002/groups {\"groupGuids\":[]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/B1002",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/B1002/device-group {\"guid\":\"\",\"groups\":[\"g-default\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "169 members after the panel writes": {
+  "bug": "UM33",
+  "answer": {
+   "rows": "[{\"guid\":\"g-viewer\",\"peer_id\":\"A1001\"},{\"guid\":\"g-viewer\",\"peer_id\":\"C1003\"},{\"guid\":\"g-viewer\",\"peer_id\":\"E1005\"}]"
+  }
+ },
  "18 GET /api/devices?sortOrder[]=asc as admin": {
   "bug": "DE4",
   "answer": {
@@ -61,10 +341,10 @@
   }
  },
  "215 GET /api/device-groups as admin": {
-  "bug": "DGR5",
+  "bug": "DGR5, UM33",
   "answer": {
    "status": 200,
-   "answer": "{\"success\":true,\"data\":{\"groups\":[{\"id\":14,\"guid\":\"<guid>\",\"name\":\"By operator\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[\"e2e_operator\"],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":1,\"guid\":\"g-default\",\"name\":\"Default\",\"note\":\"Default device group\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":12,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":9,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":10,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":11,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":7,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":8,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":4,\"guid\":\"g-lab\",\"name\":\"Lab tag\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"lab-3\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":2,\"guid\":\"g-open\",\"name\":\"Open group\",\"note\":\"kept\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]},{\"id\":5,\"guid\":\"g-ops\",\"name\":\"Ops\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]},{\"id\":13,\"guid\":\"<guid>\",\"name\":\"T\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"kiosk\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":3,\"guid\":\"g-viewer\",\"name\":\"Viewer only\",\"note\":\"n\",\"team_id\":\"team-1\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":2,\"allowed_users\":[\"e2e_viewer\"],\"allowed_groups\":[],\"allowed_user_groups\":[]}],\"total\":13}}",
+   "answer": "{\"success\":true,\"data\":{\"groups\":[{\"id\":14,\"guid\":\"<guid>\",\"name\":\"By operator\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[\"e2e_operator\"],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":1,\"guid\":\"g-default\",\"name\":\"Default\",\"note\":\"Default device group\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":12,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":9,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":10,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":11,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":7,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":8,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":4,\"guid\":\"g-lab\",\"name\":\"Lab tag\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"lab-3\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":2,\"guid\":\"g-open\",\"name\":\"Open group\",\"note\":\"kept\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]},{\"id\":5,\"guid\":\"g-ops\",\"name\":\"Ops\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]},{\"id\":13,\"guid\":\"<guid>\",\"name\":\"T\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"kiosk\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":3,\"guid\":\"g-viewer\",\"name\":\"Viewer only\",\"note\":\"n\",\"team_id\":\"team-1\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":3,\"allowed_users\":[\"e2e_viewer\"],\"allowed_groups\":[],\"allowed_user_groups\":[]}],\"total\":13}}",
    "calls": [
     "GET /api/peers",
     "GET /api/remote-targets?org_id=&include_disabled=false"
@@ -72,10 +352,10 @@
   }
  },
  "220 GET /api/devices/A1001/groups as admin": {
-  "bug": "DGR5",
+  "bug": "DGR5, UM33",
   "answer": {
    "status": 200,
-   "answer": "{\"success\":true,\"data\":{\"groups\":[{\"id\":14,\"guid\":\"<guid>\",\"name\":\"By operator\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[\"e2e_operator\"],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":1,\"guid\":\"g-default\",\"name\":\"Default\",\"note\":\"Default device group\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":12,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":10,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":11,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":7,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":8,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":9,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":2,\"guid\":\"g-open\",\"name\":\"Open group\",\"note\":\"kept\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]},{\"id\":5,\"guid\":\"g-ops\",\"name\":\"Ops\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]},{\"id\":13,\"guid\":\"<guid>\",\"name\":\"T\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"kiosk\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":3,\"guid\":\"g-viewer\",\"name\":\"Viewer only\",\"note\":\"n\",\"team_id\":\"team-1\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":2,\"allowed_users\":[\"e2e_viewer\"],\"allowed_groups\":[],\"allowed_user_groups\":[]}],\"memberships\":[{\"id\":2,\"guid\":\"g-open\",\"name\":\"Open group\",\"note\":\"kept\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]},{\"id\":5,\"guid\":\"g-ops\",\"name\":\"Ops\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]}]}}",
+   "answer": "{\"success\":true,\"data\":{\"groups\":[{\"id\":14,\"guid\":\"<guid>\",\"name\":\"By operator\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[\"e2e_operator\"],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":1,\"guid\":\"g-default\",\"name\":\"Default\",\"note\":\"Default device group\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":12,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":10,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":11,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":7,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":8,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":9,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":2,\"guid\":\"g-open\",\"name\":\"Open group\",\"note\":\"kept\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]},{\"id\":5,\"guid\":\"g-ops\",\"name\":\"Ops\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]},{\"id\":13,\"guid\":\"<guid>\",\"name\":\"T\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"kiosk\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":3,\"guid\":\"g-viewer\",\"name\":\"Viewer only\",\"note\":\"n\",\"team_id\":\"team-1\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":3,\"allowed_users\":[\"e2e_viewer\"],\"allowed_groups\":[],\"allowed_user_groups\":[]}],\"memberships\":[{\"id\":3,\"guid\":\"g-viewer\",\"name\":\"Viewer only\",\"note\":\"n\",\"team_id\":\"team-1\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":3,\"allowed_users\":[\"e2e_viewer\"],\"allowed_groups\":[],\"allowed_user_groups\":[]}]}}",
    "calls": [
     "GET /api/peers/A1001",
     "GET /api/peers",
@@ -84,10 +364,20 @@
   }
  },
  "221 GET /api/devices/A1001/groups as operator": {
-  "bug": "DGR5",
+  "bug": "DGR5, UM33",
+  "answer": {
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "calls": [
+    "GET /api/peers/A1001"
+   ]
+  }
+ },
+ "222 GET /api/devices/A1001/groups as viewer": {
+  "bug": "UM33",
   "answer": {
    "status": 200,
-   "answer": "{\"success\":true,\"data\":{\"groups\":[{\"id\":14,\"guid\":\"<guid>\",\"name\":\"By operator\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[\"e2e_operator\"],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":1,\"guid\":\"g-default\",\"name\":\"Default\",\"note\":\"Default device group\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":12,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":10,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":11,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":7,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":8,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":9,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":2,\"guid\":\"g-open\",\"name\":\"Open group\",\"note\":\"kept\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]},{\"id\":5,\"guid\":\"g-ops\",\"name\":\"Ops\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]},{\"id\":13,\"guid\":\"<guid>\",\"name\":\"T\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"kiosk\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]}],\"memberships\":[{\"id\":2,\"guid\":\"g-open\",\"name\":\"Open group\",\"note\":\"kept\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]},{\"id\":5,\"guid\":\"g-ops\",\"name\":\"Ops\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]}]}}",
+   "answer": "{\"success\":true,\"data\":{\"groups\":[{\"id\":1,\"guid\":\"g-default\",\"name\":\"Default\",\"note\":\"Default device group\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":12,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":10,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":11,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":7,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":8,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":9,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":13,\"guid\":\"<guid>\",\"name\":\"T\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"kiosk\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":3,\"guid\":\"g-viewer\",\"name\":\"Viewer only\",\"note\":\"n\",\"team_id\":\"team-1\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":3,\"allowed_users\":[\"e2e_viewer\"],\"allowed_groups\":[],\"allowed_user_groups\":[]}],\"memberships\":[{\"id\":3,\"guid\":\"g-viewer\",\"name\":\"Viewer only\",\"note\":\"n\",\"team_id\":\"team-1\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":3,\"allowed_users\":[\"e2e_viewer\"],\"allowed_groups\":[],\"allowed_user_groups\":[]}]}}",
    "calls": [
     "GET /api/peers/A1001",
     "GET /api/peers/A1001",
@@ -97,10 +387,10 @@
   }
  },
  "223 GET /api/devices/C1003/groups as admin": {
-  "bug": "DGR5",
+  "bug": "DGR5, UM33",
   "answer": {
    "status": 200,
-   "answer": "{\"success\":true,\"data\":{\"groups\":[{\"id\":14,\"guid\":\"<guid>\",\"name\":\"By operator\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[\"e2e_operator\"],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":1,\"guid\":\"g-default\",\"name\":\"Default\",\"note\":\"Default device group\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":12,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":10,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":11,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":7,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":8,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":9,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":2,\"guid\":\"g-open\",\"name\":\"Open group\",\"note\":\"kept\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]},{\"id\":5,\"guid\":\"g-ops\",\"name\":\"Ops\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]},{\"id\":13,\"guid\":\"<guid>\",\"name\":\"T\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"kiosk\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":3,\"guid\":\"g-viewer\",\"name\":\"Viewer only\",\"note\":\"n\",\"team_id\":\"team-1\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":2,\"allowed_users\":[\"e2e_viewer\"],\"allowed_groups\":[],\"allowed_user_groups\":[]}],\"memberships\":[{\"id\":3,\"guid\":\"g-viewer\",\"name\":\"Viewer only\",\"note\":\"n\",\"team_id\":\"team-1\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":2,\"allowed_users\":[\"e2e_viewer\"],\"allowed_groups\":[],\"allowed_user_groups\":[]}]}}",
+   "answer": "{\"success\":true,\"data\":{\"groups\":[{\"id\":14,\"guid\":\"<guid>\",\"name\":\"By operator\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[\"e2e_operator\"],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":1,\"guid\":\"g-default\",\"name\":\"Default\",\"note\":\"Default device group\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":12,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":10,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":11,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":7,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":8,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":9,\"guid\":\"<guid>\",\"name\":\"Fallback group\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":2,\"guid\":\"g-open\",\"name\":\"Open group\",\"note\":\"kept\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]},{\"id\":5,\"guid\":\"g-ops\",\"name\":\"Ops\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":0,\"allowed_users\":[],\"allowed_groups\":[\"ug-ops\"],\"allowed_user_groups\":[{\"guid\":\"ug-ops\",\"name\":\"Operators\"}]},{\"id\":13,\"guid\":\"<guid>\",\"name\":\"T\",\"note\":\"\",\"team_id\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"kiosk\",\"created_at\":\"<now, ISO form>\",\"member_count\":1,\"allowed_users\":[],\"allowed_groups\":[],\"allowed_user_groups\":[]},{\"id\":3,\"guid\":\"g-viewer\",\"name\":\"Viewer only\",\"note\":\"n\",\"team_id\":\"team-1\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":3,\"allowed_users\":[\"e2e_viewer\"],\"allowed_groups\":[],\"allowed_user_groups\":[]}],\"memberships\":[{\"id\":3,\"guid\":\"g-viewer\",\"name\":\"Viewer only\",\"note\":\"n\",\"team_id\":\"team-1\",\"source_type\":\"manual\",\"tag_filter\":\"\",\"created_at\":\"<now, ISO form>\",\"member_count\":3,\"allowed_users\":[\"e2e_viewer\"],\"allowed_groups\":[],\"allowed_user_groups\":[]}]}}",
    "calls": [
     "GET /api/peers/C1003",
     "GET /api/peers",
@@ -115,11 +405,64 @@
    "answer": "{\"success\":false,\"error\":\"Invalid group identifier\"}"
   }
  },
+ "230 PUT /api/devices/A1001/groups {\"groupGuids\":[\"g-ops\",\"g-ops\",\"no-such\",\"g-lab\"]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[\"g-ops\"]}}",
+   "calls": [
+    "GET /api/peers/A1001",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/A1001/device-group {\"guid\":\"g-ops\",\"groups\":[\"<guid>\",\"g-default\",\"<guid>\",\"<guid>\",\"<guid>\",\"<guid>\",\"<guid>\",\"<guid>\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
+ "231 PUT /api/devices/A1001/groups {\"groupGuids\":[null,5]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[]}}",
+   "calls": [
+    "GET /api/peers/A1001",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/A1001/device-group {\"guid\":\"\",\"groups\":[\"<guid>\",\"g-default\",\"<guid>\",\"<guid>\",\"<guid>\",\"<guid>\",\"<guid>\",\"<guid>\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
+  }
+ },
  "232 PUT /api/devices/A1001/groups {} as admin": {
   "bug": "DE6",
   "answer": {
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid group identifier\"}"
+  }
+ },
+ "233 PUT /api/devices/A1001/groups {\"groupGuids\":[\"g-ops\",\"g-viewer\"]} as operator": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[\"g-ops\"]}}",
+   "calls": [
+    "GET /api/peers/A1001",
+    "GET /api/peers/A1001",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/A1001/device-group {\"guid\":\"g-ops\",\"groups\":[\"<guid>\",\"g-default\",\"<guid>\",\"<guid>\",\"<guid>\",\"<guid>\",\"<guid>\",\"<guid>\",\"g-open\",\"g-ops\"]}"
+   ]
+  }
+ },
+ "236 PUT /api/devices/A1001/groups {\"groupGuids\":[\"g-open\"]} as admin": {
+  "bug": "UM33",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"groupGuids\":[\"g-open\"]}}",
+   "calls": [
+    "GET /api/peers/A1001",
+    "GET /api/peers",
+    "GET /api/remote-targets?org_id=&include_disabled=false",
+    "PUT /api/panel/devices/A1001/device-group {\"guid\":\"g-open\",\"groups\":[\"<guid>\",\"g-default\",\"<guid>\",\"<guid>\",\"<guid>\",\"<guid>\",\"<guid>\",\"<guid>\",\"g-open\",\"g-ops\",\"g-viewer\"]}"
+   ]
   }
  },
  "237 GET /api/devices/A1001/groups as admin": {
@@ -256,9 +599,9 @@
   }
  },
  "459 audit": {
-  "bug": "DE5, DE6, DGR2, DGR5",
+  "bug": "DE5, DE6, DGR2, DGR5, UM33",
   "answer": {
-   "rows": "[{\"user_id\":1,\"action\":\"device_banned\",\"details\":\"Device B1002 banned: stolen\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tag_renamed\",\"details\":\"Tag \\\"5\\\" renamed to \\\"6\\\" on 0 device(s), 0 group(s)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tag_renamed\",\"details\":\"Tag \\\"nobody-has\\\" renamed to \\\"y\\\" on 0 device(s), 0 group(s)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tag_renamed\",\"details\":\"Tag \\\"LAB\\\" renamed to \\\"lab-2\\\" on 2 device(s), 1 group(s)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_tag_renamed\",\"details\":\"Tag \\\"lab-2\\\" renamed to \\\"lab\\\" on 0 device(s), 1 group(s)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tag_renamed\",\"details\":\"Tag \\\"lab\\\" renamed to \\\"lab-3\\\" on 1 device(s), 1 group(s)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tag_deleted\",\"details\":\"Tag \\\"42\\\" removed from 0 device(s) (0 dynamic group(s) reference it)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tag_deleted\",\"details\":\"Tag \\\"Office\\\" removed from 1 device(s) (0 dynamic group(s) reference it)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tag_deleted\",\"details\":\"Tag \\\"fan\\\" removed from 0 device(s) (0 dynamic group(s) reference it)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_tag_deleted\",\"details\":\"Tag \\\"kiosk\\\" removed from 0 device(s) (0 dynamic group(s) reference it)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tags_updated\",\"details\":\"Device A1001 tags set to [a, b, cccccccccccccccccccccccccccccccccccccccccccccccccc, d😀d😀d😀d😀d😀d😀d😀d😀d😀d😀d😀d😀d😀d😀d😀d😀d]\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tags_updated\",\"details\":\"Device A1001 tags set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tags_updated\",\"details\":\"Device A1001 tags set to [k0, k2, k4, k6, k8, k10, k12, k14, k16, k18, k20, k22, k24]\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device A1001 groups set to [g-ops]\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_group_membership_updated\",\"details\":\"Device A1001 groups set to [g-open]\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device A1001 groups set to [g-viewer]\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_deleted\",\"details\":\"Device group Ops deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_deleted\",\"details\":\"Device group Ops deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_deleted\",\"details\":\"Device group Ops deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_group_deleted\",\"details\":\"Device group Ops deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Go group saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group undefined saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group undefined saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group 5 saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group undefined saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_group_saved\",\"details\":\"Device group By operator via Go saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Open via Go saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Fallback group saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Fallback group saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Fallback group saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Fallback group saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Fallback group saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Fallback group saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group T saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Open group 2 saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Open group 3 saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Open group saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_group_saved\",\"details\":\"Device group By operator saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_deleted\",\"details\":\"Device group Lab tag deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device A1001 groups set to [g-ops]\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device A1001 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_group_membership_updated\",\"details\":\"Device A1001 groups set to [g-ops]\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device A1001 groups set to [g-open]\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_updated\",\"details\":\"Device A1001 updated\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_updated\",\"details\":\"Device A1001 updated\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_updated\",\"details\":\"Device A1001 updated\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_updated\",\"details\":\"Device A1001 updated\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_updated\",\"details\":\"Device A1001 updated\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device.rename\",\"details\":\"Device A1001 renamed to \\\"New name xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\\"\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device.rename\",\"details\":\"Device A1001 renamed to \\\"a,b\\\"\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device.rename\",\"details\":\"Device C1003 renamed to \\\"x\\\"\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_revoked\",\"details\":\"Device A1001 revoked (blocklist + disconnect) + cascade\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_deleted\",\"details\":\"Device A1001 deleted permanently\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_deleted\",\"details\":\"Device A1001 deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_deleted\",\"details\":\"Device D1004 deleted permanently\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_deleted\",\"details\":\"Device A1001 deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_restored\",\"details\":\"Device A1001 restored\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_restored\",\"details\":\"Device D1004 restored\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_restored\",\"details\":\"Device A1001 restored\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_restored\",\"details\":\"Device A1001 restored\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"devices_bulk_deleted\",\"details\":\"1 devices deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"devices_bulk_deleted\",\"details\":\"0 devices deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_banned\",\"details\":\"Device A1001 banned: Lost xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_banned\",\"details\":\"Device A1001 banned\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_banned\",\"details\":\"Device A1001 banned\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_banned\",\"details\":\"Device A1001 banned: 5\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_unbanned\",\"details\":\"Device A1001 unbanned\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_id_changed\",\"details\":\"Device ID changed from A1001 to NEW-ID_1\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_id_changed\",\"details\":\"Device ID changed from A1001 to rt_target1\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_connection_mode\",\"details\":\"Device A1001 connection mode normal -> incoming-only; reason: Support xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx; revision: 3; command: cmd-1\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_connection_mode\",\"details\":\"Device A1001 connection mode  -> normal; reason: x; revision: ; command: \",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_connection_mode\",\"details\":\"Device A1001 connection mode normal -> normal; reason: x; revision: 3; command: cmd-1\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_created\",\"details\":\"Created strategy: New rule rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_created\",\"details\":\"Created strategy: Off rule\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_created\",\"details\":\"Created strategy: RustDesk keys\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_updated\",\"details\":\"Updated strategy: Rule one\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_updated\",\"details\":\"Updated strategy: Rule one\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_updated\",\"details\":\"Updated strategy: Rule one\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_updated\",\"details\":\"Updated strategy: Rule one!\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_updated\",\"details\":\"Updated strategy: Rule one!\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_assigned\",\"details\":\"Assigned strategy: Alpha rule\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_deleted\",\"details\":\"Deleted strategy: Alpha rule\",\"ip_address\":\"127.0.0.1\"}]"
+   "rows": "[{\"user_id\":1,\"action\":\"device_banned\",\"details\":\"Device B1002 banned: stolen\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tag_renamed\",\"details\":\"Tag \\\"5\\\" renamed to \\\"6\\\" on 0 device(s), 0 group(s)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tag_renamed\",\"details\":\"Tag \\\"nobody-has\\\" renamed to \\\"y\\\" on 0 device(s), 0 group(s)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tag_renamed\",\"details\":\"Tag \\\"LAB\\\" renamed to \\\"lab-2\\\" on 2 device(s), 1 group(s)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_tag_renamed\",\"details\":\"Tag \\\"lab-2\\\" renamed to \\\"lab\\\" on 0 device(s), 1 group(s)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tag_renamed\",\"details\":\"Tag \\\"lab\\\" renamed to \\\"lab-3\\\" on 1 device(s), 1 group(s)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tag_deleted\",\"details\":\"Tag \\\"42\\\" removed from 0 device(s) (0 dynamic group(s) reference it)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tag_deleted\",\"details\":\"Tag \\\"Office\\\" removed from 1 device(s) (0 dynamic group(s) reference it)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tag_deleted\",\"details\":\"Tag \\\"fan\\\" removed from 0 device(s) (0 dynamic group(s) reference it)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_tag_deleted\",\"details\":\"Tag \\\"kiosk\\\" removed from 0 device(s) (0 dynamic group(s) reference it)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tags_updated\",\"details\":\"Device A1001 tags set to [a, b, cccccccccccccccccccccccccccccccccccccccccccccccccc, d😀d😀d😀d😀d😀d😀d😀d😀d😀d😀d😀d😀d😀d😀d😀d😀d]\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tags_updated\",\"details\":\"Device A1001 tags set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_tags_updated\",\"details\":\"Device A1001 tags set to [k0, k2, k4, k6, k8, k10, k12, k14, k16, k18, k20, k22, k24]\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device A1001 groups set to [g-ops]\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_group_membership_updated\",\"details\":\"Device A1001 groups set to [g-open]\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device A1001 groups set to [g-viewer]\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device B1002 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_deleted\",\"details\":\"Device group Ops deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_deleted\",\"details\":\"Device group Ops deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_deleted\",\"details\":\"Device group Ops deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_group_deleted\",\"details\":\"Device group Ops deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Go group saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group undefined saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group undefined saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group 5 saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group undefined saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_group_saved\",\"details\":\"Device group By operator via Go saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Open via Go saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Fallback group saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Fallback group saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Fallback group saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Fallback group saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Fallback group saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Fallback group saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group T saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Open group 2 saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Open group 3 saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_saved\",\"details\":\"Device group Open group saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_group_saved\",\"details\":\"Device group By operator saved\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_deleted\",\"details\":\"Device group Lab tag deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device A1001 groups set to [g-ops]\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device A1001 groups set to []\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_group_membership_updated\",\"details\":\"Device A1001 groups set to [g-ops]\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_group_membership_updated\",\"details\":\"Device A1001 groups set to [g-open]\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_updated\",\"details\":\"Device A1001 updated\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_updated\",\"details\":\"Device A1001 updated\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_updated\",\"details\":\"Device A1001 updated\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_updated\",\"details\":\"Device A1001 updated\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_updated\",\"details\":\"Device A1001 updated\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device.rename\",\"details\":\"Device A1001 renamed to \\\"New name xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\\"\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device.rename\",\"details\":\"Device A1001 renamed to \\\"a,b\\\"\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device.rename\",\"details\":\"Device C1003 renamed to \\\"x\\\"\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_revoked\",\"details\":\"Device A1001 revoked (blocklist + disconnect) + cascade\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_deleted\",\"details\":\"Device A1001 deleted permanently\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_deleted\",\"details\":\"Device A1001 deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_deleted\",\"details\":\"Device D1004 deleted permanently\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_deleted\",\"details\":\"Device A1001 deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_restored\",\"details\":\"Device A1001 restored\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_restored\",\"details\":\"Device D1004 restored\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_restored\",\"details\":\"Device A1001 restored\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_restored\",\"details\":\"Device A1001 restored\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"devices_bulk_deleted\",\"details\":\"1 devices deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"devices_bulk_deleted\",\"details\":\"0 devices deleted\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_banned\",\"details\":\"Device A1001 banned: Lost xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_banned\",\"details\":\"Device A1001 banned\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_banned\",\"details\":\"Device A1001 banned\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_banned\",\"details\":\"Device A1001 banned: 5\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_unbanned\",\"details\":\"Device A1001 unbanned\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_id_changed\",\"details\":\"Device ID changed from A1001 to NEW-ID_1\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_id_changed\",\"details\":\"Device ID changed from A1001 to rt_target1\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_connection_mode\",\"details\":\"Device A1001 connection mode normal -> incoming-only; reason: Support xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx; revision: 3; command: cmd-1\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"device_connection_mode\",\"details\":\"Device A1001 connection mode  -> normal; reason: x; revision: ; command: \",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"device_connection_mode\",\"details\":\"Device A1001 connection mode normal -> normal; reason: x; revision: 3; command: cmd-1\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_created\",\"details\":\"Created strategy: New rule rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_created\",\"details\":\"Created strategy: Off rule\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_created\",\"details\":\"Created strategy: RustDesk keys\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_updated\",\"details\":\"Updated strategy: Rule one\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_updated\",\"details\":\"Updated strategy: Rule one\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_updated\",\"details\":\"Updated strategy: Rule one\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_updated\",\"details\":\"Updated strategy: Rule one!\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_updated\",\"details\":\"Updated strategy: Rule one!\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_assigned\",\"details\":\"Assigned strategy: Alpha rule\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"strategy_deleted\",\"details\":\"Deleted strategy: Alpha rule\",\"ip_address\":\"127.0.0.1\"}]"
   }
  },
  "9 GET /api/devices?search[]=x as admin": {

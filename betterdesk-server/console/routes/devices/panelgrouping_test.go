@@ -123,14 +123,7 @@ func TestPanelTrustActsAsTheOperator(t *testing.T) {
 			t.Fatal(err)
 		}
 		operator.Do("PUT", "/api/devices/A/groups", `{"groupGuids":["g-one"]}`)
-		expect(t, a, "members as a viewer in the table",
-			"GET /api/panel/device-groups/g-default/peers as e2e_operator/viewer",
-			"GET /api/panel/device-groups/g-one/peers as e2e_operator/viewer",
-			"GET /api/panel/device-groups/g%3Atwo/peers as e2e_operator/viewer",
-			"PUT /api/panel/device-groups/g-default/peers as e2e_operator/viewer",
-			"PUT /api/panel/device-groups/g-one/peers as e2e_operator/viewer",
-			"PUT /api/panel/device-groups/g%3Atwo/peers as e2e_operator/viewer",
-		)
+		expect(t, a, "members as a viewer in the table", "PUT /api/panel/devices/A/device-group as e2e_operator/viewer")
 
 		// A role the API server does not know: no role, 401
 		if _, err := w.DB.Exec(ctx, `UPDATE users SET role = 'made_up' WHERE username = 'e2e_operator'`); err != nil {

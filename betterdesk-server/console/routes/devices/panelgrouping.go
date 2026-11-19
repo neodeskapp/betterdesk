@@ -89,53 +89,21 @@ func (h *handlers) deleteGroupFromGo(r *http.Request, guid string) (bool, error)
 	return false, fromGo(result, "Could not delete the device group")
 }
 
-// groupPeersFromGo is getGroupPeersFromGo: the ids of the group's members,
-// ok false when the API server gave no list.
-func (h *handlers) groupPeersFromGo(r *http.Request, guid string) (peers []any, ok bool) {
-	result := h.api.GetPanelDeviceGroupPeers(r.Context(), guid, h.panelCall(r)...)
-	if !goapi.Truthy(result.Get("success")) || !goapi.Truthy(result.Get("data")) {
-		return nil, false
+// membershipToGo writes the device's manual groups through the API server
+// in one call: the device goes into the selected group and out of the
+// other manual groups the account may see, in one transaction, and its
+// other groups stay. saved is false when the console's own writer takes
+// over (the API server cannot take the call); a refusal changes nothing.
+func (h *handlers) membershipToGo(r *http.Request, id string, manual, selected []string) (saved bool, err error) {
+	chosen := ""
+	if len(selected) == 1 {
+		chosen = selected[0]
 	}
-	peers, ok = dig(result.Get("data"), "peers").([]any)
-	return peers, ok
-}
-
-// setGroupPeersInGo is setGroupPeersInGo: saved is false when the console's
-// own writer takes over, also after an answer of success without data.
-func (h *handlers) setGroupPeersInGo(r *http.Request, guid string, peers []any) (saved bool, err error) {
-	result := h.api.SetPanelDeviceGroupPeers(r.Context(), guid, peers, h.panelCall(r)...)
+	result := h.api.SetPanelDeviceGroup(r.Context(), id, chosen, manual, h.panelCall(r)...)
 	if goapi.Truthy(result.Get("success")) {
-		return goapi.Truthy(result.Get("data")), nil
+		return true, nil
 	}
 	return false, fromGo(result, "Could not save group members")
-}
-
-// membershipToGo writes the device's manual groups through the API
-// server: it reads the members of every manual group, puts the device into
-// the selected one and takes it out of the others, then writes each
-// group's members back. saved is false when the console's own writer
-// takes over: a group's members could not be read, or a write went
-// nowhere, which can leave the groups written before it changed.
-func (h *handlers) membershipToGo(r *http.Request, id string, manual, selected []string) (saved bool, err error) {
-	type update struct {
-		guid  string
-		peers []any
-	}
-	updates := make([]update, 0, len(manual))
-	for _, guid := range manual {
-		peers, ok := h.groupPeersFromGo(r, guid)
-		if !ok {
-			return false, nil
-		}
-		in := len(selected) == 1 && selected[0] == guid
-		updates = append(updates, update{guid: guid, peers: withPeer(peers, id, in)})
-	}
-	for _, u := range updates {
-		if saved, err := h.setGroupPeersInGo(r, u.guid, u.peers); err != nil || !saved {
-			return false, err
-		}
-	}
-	return true, nil
 }
 
 // panelCall is panelConfig: the options of a call into the panel grouping
@@ -218,29 +186,4 @@ func savedName(saved any) (string, error) {
 		return text(o.Get("name"))
 	}
 	return "undefined", nil
-}
-
-// withPeer is the member list of a group after the change: peers as a
-// set, with id added or taken out. Equal texts, numbers and booleans count
-// once; lists and objects are never equal to anything.
-func withPeer(peers []any, id string, in bool) []any {
-	out := make([]any, 0, len(peers)+1)
-	seen := map[any]bool{}
-	for _, p := range peers {
-		switch p.(type) {
-		case string, float64, bool, nil:
-			if seen[p] {
-				continue
-			}
-			seen[p] = true
-		}
-		if !in && p == id {
-			continue
-		}
-		out = append(out, p)
-	}
-	if in && !seen[id] {
-		out = append(out, id)
-	}
-	return out
 }

@@ -75,6 +75,54 @@ func (pg *PostgresDB) SetDeviceGroupPeers(groupGUID string, peerIDs []string) er
 	return tx.Commit(ctx)
 }
 
+// SetDeviceManualGroup makes the device a member of the chosen group and of
+// none of groupGUIDs, in one transaction (see PanelGroupStore).
+func (pg *PostgresDB) SetDeviceManualGroup(peerID string, groupGUIDs []string, chosen string) error {
+	peerID, chosen = strings.TrimSpace(peerID), strings.TrimSpace(chosen)
+	if peerID == "" {
+		return errors.New("db: SetDeviceManualGroup: no device id")
+	}
+	ctx, cancel := pg.withTimeout()
+	defer cancel()
+	tx, err := pg.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	groupID := func(guid string) (id int64, found bool, err error) {
+		err = tx.QueryRow(ctx, `SELECT id FROM device_groups WHERE guid = $1`, guid).Scan(&id)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, false, nil
+		}
+		return id, err == nil, err
+	}
+	for _, guid := range dedupeStrings(append(groupGUIDs[:len(groupGUIDs):len(groupGUIDs)], chosen)) {
+		id, found, err := groupID(guid)
+		if err != nil {
+			return err
+		}
+		if !found {
+			continue
+		}
+		if _, err := tx.Exec(ctx, `DELETE FROM device_group_members WHERE device_group_id = $1 AND peer_id = $2`, id, peerID); err != nil {
+			return err
+		}
+	}
+	if chosen != "" {
+		id, found, err := groupID(chosen)
+		if err != nil {
+			return err
+		}
+		if !found {
+			return ErrDeviceGroupNotFound
+		}
+		if _, err := tx.Exec(ctx, `INSERT INTO device_group_members (device_group_id, peer_id) VALUES ($1, $2)`, id, peerID); err != nil {
+			return err
+		}
+	}
+	return tx.Commit(ctx)
+}
+
 // GetDeviceGroupACL reads the usernames and user-group GUIDs allowed to see
 // the group's devices.
 func (pg *PostgresDB) GetDeviceGroupACL(groupGUID string) (*DeviceGroupACL, error) {

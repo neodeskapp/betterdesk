@@ -442,6 +442,79 @@ func TestSaveGroupRefusesLongAccessLists(t *testing.T) {
 	}
 }
 
+// TestMembershipIsOneWrite: the device's manual groups go to the API
+// server in one call, which names the chosen group and the manual groups
+// the account may see; the server writes them in one transaction. A
+// refusal is answered with its status and changes nothing, also not
+// through the console's own writer; an API server that does not have the
+// call (404) leaves the write to the console's own writer (BUGS UM33).
+func TestMembershipIsOneWrite(t *testing.T) {
+	db := storetest.Migrated(t)
+	w, api := world(t, db, nil, nil)
+	ctx := context.Background()
+	for _, q := range []string{
+		`DELETE FROM device_groups WHERE guid <> 'g-viewer'`,
+		`INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-a', 'A', '', '', 'manual', '')`,
+		`INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-b', 'B', '', '', 'manual', '')`,
+		`INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-tag', 'Tag', '', '', 'tag', 'lab')`,
+		`INSERT INTO device_group_members (device_group_id, peer_id) SELECT id, 'A' FROM device_groups WHERE guid = 'g-a'`,
+	} {
+		if _, err := db.Exec(ctx, q); err != nil {
+			t.Fatalf("%s: %v", q, err)
+		}
+	}
+	memberOf := func() string {
+		return rows(t, db, `SELECT g.guid FROM device_group_members m JOIN device_groups g ON g.id = m.device_group_id WHERE m.peer_id = 'A' ORDER BY g.guid`)
+	}
+	panelCalls := func() []string {
+		var out []string
+		for _, call := range api.Calls() {
+			if strings.Contains(call, "/api/panel/") {
+				out = append(out, call)
+			}
+		}
+		return out
+	}
+	const write = "PUT /api/panel/devices/A/device-group"
+	operator, admin := w.As("operator"), w.As("admin")
+
+	api.Calls()
+	api.On(write, 200, `{"device_id":"A","guid":"g-b"}`)
+	if got := operator.Do("PUT", "/api/devices/A/groups", `{"groupGuids":["g-b"]}`); got.Status != http.StatusOK {
+		t.Fatalf("move into g-b: %d %s", got.Status, got.Body)
+	}
+	if got, want := panelCalls(), []string{write + ` {"guid":"g-b","groups":["g-a","g-b"]}`}; strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Errorf("calls of the operator, who may not see g-viewer: %q, want %q", got, want)
+	}
+	admin.Do("PUT", "/api/devices/A/groups", `{"groupGuids":[]}`)
+	if got, want := panelCalls(), []string{write + ` {"guid":"","groups":["g-a","g-b","g-viewer"]}`}; strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Errorf("calls of admin: %q, want %q", got, want)
+	}
+	if got := memberOf(); got != `[{"guid":"g-a"}]` {
+		t.Errorf("the console's own rows after writes the server took: %s", got)
+	}
+
+	api.On(write, 400, `{"error":"invalid JSON"}`)
+	got := admin.Do("PUT", "/api/devices/A/groups", `{"groupGuids":["g-b"]}`)
+	if got.Status != http.StatusBadRequest || got.Body != `{"success":false,"error":"Request failed with status code 400"}` {
+		t.Errorf("a refused write: %d %s", got.Status, got.Body)
+	}
+	if calls := panelCalls(); len(calls) != 1 {
+		t.Errorf("a refused write made the calls %q", calls)
+	}
+	if got := memberOf(); got != `[{"guid":"g-a"}]` {
+		t.Errorf("rows after a refused write: %s", got)
+	}
+
+	api.On(write, 404, `{"error":"not found"}`)
+	if got := admin.Do("PUT", "/api/devices/A/groups", `{"groupGuids":["g-b"]}`); got.Status != http.StatusOK {
+		t.Errorf("a write the API server does not have: %d %s", got.Status, got.Body)
+	}
+	if got := memberOf(); got != `[{"guid":"g-b"}]` {
+		t.Errorf("rows after the console's own writer: %s", got)
+	}
+}
+
 // TestListIgnoresQueryLists: search and sortOrder given as a list or an
 // object are ignored like the other parameters, and the list answers
 // (BUGS DE4).

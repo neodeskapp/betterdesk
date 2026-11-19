@@ -79,20 +79,52 @@ var fixedSteps = []fixedStep{
 	// after it get other ids, and the lists leave it out.
 	{"node", `210 POST /api/device-groups {"name":["a","b"],"note":5,"team_id":null,"allowed_users":"e2e_viewer, e2e_operator ,x","allowed_groups":[{"guid":"ug-ops"},"ug-ops","missing"]} as admin`, "DGR5"},
 	{"node", `214 POST /api/device-groups {"name":"By operator","allowed_users":["e2e_operator"]} as operator`, "DGR5"},
-	{"node", "215 GET /api/device-groups as admin", "DGR5"},
-	{"node", "220 GET /api/devices/A1001/groups as admin", "DGR5"},
-	{"node", "221 GET /api/devices/A1001/groups as operator", "DGR5"},
-	{"node", "223 GET /api/devices/C1003/groups as admin", "DGR5"},
+	{"node", "215 GET /api/device-groups as admin", "DGR5, UM33"},
+	{"node", "220 GET /api/devices/A1001/groups as admin", "DGR5, UM33"},
+	{"node", "221 GET /api/devices/A1001/groups as operator", "DGR5, UM33"},
+	{"node", "223 GET /api/devices/C1003/groups as admin", "DGR5, UM33"},
 	{"node", "237 GET /api/devices/A1001/groups as admin", "DGR5"},
 	{"node", "356 GET /api/devices/C1003/groups as viewer", "DGR5"},
-	// The audit log after the steps of DE5, DE6, DGR2 and DGR5
-	{"node", "459 audit", "DE5, DE6, DGR2, DGR5"},
+	// The audit log after the steps of DE5, DE6, DGR2, DGR5 and UM33
+	{"node", "459 audit", "DE5, DE6, DGR2, DGR5, UM33"},
 	// The scope check does not take bulk-delete for a device id: no lookup
 	// of a device of that name, and the made-up server's bulk-delete device
 	// outside the operator's scope no longer refuses the bulk delete before
 	// its permission check does.
 	{"node", `384 POST /api/devices/bulk-delete {"ids":["A1001"]} as operator`, "UM35"},
 	{"node", `385 POST /api/devices/bulk-delete {"ids":["C1003"]} as operator`, "UM35"},
+	// The device's manual groups go to the API server in one call, which
+	// the made-up server of the recording does not have (404): the
+	// console's own writer takes each write, where Node read and wrote
+	// every group through the server and answered its refusals. The rows
+	// and lists after them follow (steps 215 to 223 and 459 above).
+	{"node", `148 PUT /api/devices/A1001/groups {"groupGuids":["g-ops"]} as admin`, "UM33"},
+	{"node", `149 PUT /api/devices/A1001/groups {"groupGuids":["g-open"]} as operator`, "UM33"},
+	{"node", `150 PUT /api/devices/A1001/groups {"groupGuids":["g-viewer"]} as admin`, "UM33"},
+	{"node", `151 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `152 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `153 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `154 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `155 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `156 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `157 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `158 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `159 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `160 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `161 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `162 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `163 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `164 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `165 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `166 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `167 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `168 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", "169 members after the panel writes", "UM33"},
+	{"node", "222 GET /api/devices/A1001/groups as viewer", "UM33"},
+	{"node", `230 PUT /api/devices/A1001/groups {"groupGuids":["g-ops","g-ops","no-such","g-lab"]} as admin`, "UM33"},
+	{"node", `231 PUT /api/devices/A1001/groups {"groupGuids":[null,5]} as admin`, "UM33"},
+	{"node", `233 PUT /api/devices/A1001/groups {"groupGuids":["g-ops","g-viewer"]} as operator`, "UM33"},
+	{"node", `236 PUT /api/devices/A1001/groups {"groupGuids":["g-open"]} as admin`, "UM33"},
 }
 
 // fixedStep is a step of a recording that the fix of a bug changed. The

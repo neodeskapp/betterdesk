@@ -130,6 +130,23 @@ func (c *Client) SetPanelDeviceFolder(ctx context.Context, deviceID string, fold
 	return c.wrapped(ctx, f4, http.MethodPut, "/panel/devices/"+seg(safe)+"/folder", append([]CallOption{body}, opts...)...)
 }
 
+// SetPanelDeviceGroup calls PUT /api/panel/devices/{id}/device-group with
+// {guid, groups}: the device becomes a member of the manual group guid
+// ("" for none) and leaves the other groups of groups, in one transaction.
+// W or F4, as SetPanelDeviceFolder for the id.
+func (c *Client) SetPanelDeviceGroup(ctx context.Context, deviceID, guid string, groups []string, opts ...CallOption) *Object {
+	safe, e := safeID(deviceID, "device id")
+	if e != nil {
+		return fail(f4, e)
+	}
+	list := make([]any, len(groups))
+	for i, g := range groups {
+		list[i] = g
+	}
+	body := Body(NewObject("guid", guid, "groups", list))
+	return c.wrapped(ctx, f4, http.MethodPut, "/panel/devices/"+seg(safe)+"/device-group", append([]CallOption{body}, opts...)...)
+}
+
 // ListPanelUserGrants calls GET /api/panel/users/{id}/grants: the devices
 // granted to the account directly, the id as in UpdatePanelFolder. W or
 // F1.

@@ -14,6 +14,8 @@ package db
 // already used the shorter name with a different return type — the two
 // interfaces coexist on purpose while the RustDesk sync path is unchanged.
 
+import "errors"
+
 // Folder is a panel folder chip (the device list's left rail).
 type Folder struct {
 	ID        int64  `json:"id"`
@@ -38,6 +40,13 @@ type PanelGroupStore interface {
 	// Membership: peer IDs in a device group.
 	ListDeviceGroupPeerIDs(groupGUID string) ([]string, error)
 	SetDeviceGroupPeers(groupGUID string, peerIDs []string) error
+	// SetDeviceManualGroup makes the device a member of the group chosen
+	// and of none of the groups of groupGUIDs, in one transaction; chosen
+	// "" takes it out of all of them. The other members, and the device's
+	// other groups, stay. A guid of groupGUIDs that names no group is
+	// skipped; a chosen one that names none fails with
+	// ErrDeviceGroupNotFound and changes nothing.
+	SetDeviceManualGroup(peerID string, groupGUIDs []string, chosen string) error
 
 	// ACL: usernames and user-group GUIDs allowed to see the group's devices.
 	GetDeviceGroupACL(groupGUID string) (*DeviceGroupACL, error)
@@ -55,6 +64,9 @@ type PanelGroupStore interface {
 	ListPanelUserPeerGrants(userID int64) ([]string, error)
 	SetUserPeerGrants(userID int64, peerIDs []string) error
 }
+
+// ErrDeviceGroupNotFound is a write to a device group that does not exist.
+var ErrDeviceGroupNotFound = errors.New("device group not found")
 
 // Compile-time checks: both engines must satisfy the store.
 var (

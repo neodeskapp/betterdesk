@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"strings"
 )
 
@@ -75,6 +76,54 @@ func (s *SQLiteDB) SetDeviceGroupPeers(groupGUID string, peerIDs []string) error
 		seen[peerID] = true
 		if _, err := tx.Exec(
 			`INSERT INTO device_group_members (device_group_id, peer_id) VALUES (?, ?)`, id, peerID); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+// SetDeviceManualGroup makes the device a member of the chosen group and of
+// none of groupGUIDs, in one transaction (see PanelGroupStore).
+func (s *SQLiteDB) SetDeviceManualGroup(peerID string, groupGUIDs []string, chosen string) error {
+	peerID, chosen = strings.TrimSpace(peerID), strings.TrimSpace(chosen)
+	if peerID == "" {
+		return errors.New("db: SetDeviceManualGroup: no device id")
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	groupID := func(guid string) (id int64, found bool, err error) {
+		err = tx.QueryRow(`SELECT id FROM device_groups WHERE guid = ?`, guid).Scan(&id)
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, false, nil
+		}
+		return id, err == nil, err
+	}
+	for _, guid := range dedupeStrings(append(groupGUIDs[:len(groupGUIDs):len(groupGUIDs)], chosen)) {
+		id, found, err := groupID(guid)
+		if err != nil {
+			return err
+		}
+		if !found {
+			continue
+		}
+		if _, err := tx.Exec(`DELETE FROM device_group_members WHERE device_group_id = ? AND peer_id = ?`, id, peerID); err != nil {
+			return err
+		}
+	}
+	if chosen != "" {
+		id, found, err := groupID(chosen)
+		if err != nil {
+			return err
+		}
+		if !found {
+			return ErrDeviceGroupNotFound
+		}
+		if _, err := tx.Exec(`INSERT INTO device_group_members (device_group_id, peer_id) VALUES (?, ?)`, id, peerID); err != nil {
 			return err
 		}
 	}

@@ -23,11 +23,13 @@ package api
 //	PUT    /api/panel/folders/{id}                     update a folder
 //	DELETE /api/panel/folders/{id}                     delete a folder
 //	PUT    /api/panel/devices/{id}/folder              assign / clear a folder
+//	PUT    /api/panel/devices/{id}/device-group        set the manual group
 //	GET    /api/panel/users/{id}/grants                direct device grants
 //	PUT    /api/panel/users/{id}/grants                replace direct grants
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -315,6 +317,42 @@ func (s *Server) handlePanelDeviceGroupPeersPut(w http.ResponseWriter, r *http.R
 	writeJSON(w, http.StatusOK, map[string]any{"guid": guid, "peers": peers, "total": len(peers)})
 }
 
+// handlePanelDeviceManualGroup sets a device's manual group with
+// {guid, groups}: the device becomes a member of the group guid ("" for
+// none) and leaves the other groups of groups, the manual groups the
+// caller decides about, in one transaction. Its other groups stay. A guid
+// that names no group is 404 and changes nothing.
+func (s *Server) handlePanelDeviceManualGroup(w http.ResponseWriter, r *http.Request) {
+	store, ok := s.requirePanelGroupStore(w)
+	if !ok {
+		return
+	}
+	peerID := strings.TrimSpace(r.PathValue("id"))
+	if peerID == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "device id is required"})
+		return
+	}
+	var body struct {
+		GUID   string   `json:"guid"`
+		Groups []string `json:"groups"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+		return
+	}
+	guid := strings.TrimSpace(body.GUID)
+	err := store.SetDeviceManualGroup(peerID, body.Groups, guid)
+	if errors.Is(err, db.ErrDeviceGroupNotFound) {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "group not found"})
+		return
+	}
+	if err != nil {
+		writeInternalError(w, err, "SetDeviceManualGroup")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"device_id": peerID, "guid": guid})
+}
+
 func (s *Server) handlePanelDeviceGroupACLGet(w http.ResponseWriter, r *http.Request) {
 	store, ok := s.requirePanelGroupStore(w)
 	if !ok {
@@ -575,6 +613,8 @@ func (s *Server) registerPanelGroupRoutes(mux *http.ServeMux) {
 		s.requirePermission(auth.PermDeviceEdit, s.handlePanelFoldersDelete))
 	mux.HandleFunc("PUT /api/panel/devices/{id}/folder",
 		s.requirePermission(auth.PermDeviceEdit, s.handlePanelDeviceFolder))
+	mux.HandleFunc("PUT /api/panel/devices/{id}/device-group",
+		s.requirePermission(auth.PermDeviceEdit, s.handlePanelDeviceManualGroup))
 
 	mux.HandleFunc("GET /api/panel/users/{id}/grants",
 		s.requirePermission(auth.PermUserView, s.handlePanelUserGrantsGet))

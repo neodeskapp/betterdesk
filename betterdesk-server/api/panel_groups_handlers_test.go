@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -363,5 +364,64 @@ func TestPanelGroupSaveAnswersTheStoredAccessList(t *testing.T) {
 	}
 	if got := fmt.Sprint(body["allowed_users"], body["allowed_groups"]); got != "[] []" {
 		t.Errorf("answered access list after an update with an unknown name: %s", got)
+	}
+}
+
+// TestPanelDeviceManualGroup: one call sets a device's manual group: the
+// device goes into the chosen group and out of the other groups named, in
+// one transaction; a chosen group that does not exist is refused with 404
+// and changes nothing (BUGS UM33).
+func TestPanelDeviceManualGroup(t *testing.T) {
+	srv, base := panelGroupTestServer(t, 19932)
+	store := srv.db.(db.PanelGroupStore)
+	var guids []string
+	for _, name := range []string{"A", "B"} {
+		resp, body := doPanelJSON(t, http.MethodPost, base+"/api/panel/device-groups", map[string]any{"name": name})
+		guid, _ := body["guid"].(string)
+		if resp.StatusCode != http.StatusCreated || guid == "" {
+			t.Fatalf("create %s: %d %v", name, resp.StatusCode, body)
+		}
+		guids = append(guids, guid)
+	}
+	a, b := guids[0], guids[1]
+	if err := store.SetDeviceGroupPeers(a, []string{"PEER1", "PEER2"}); err != nil {
+		t.Fatal(err)
+	}
+	members := func() string {
+		t.Helper()
+		var out []string
+		for _, guid := range guids {
+			peers, err := store.ListDeviceGroupPeerIDs(guid)
+			if err != nil {
+				t.Fatal(err)
+			}
+			out = append(out, strings.Join(peers, ","))
+		}
+		return strings.Join(out, " | ")
+	}
+	url := base + "/api/panel/devices/PEER1/device-group"
+
+	resp, body := doPanelJSON(t, http.MethodPut, url, map[string]any{"guid": b, "groups": []string{a, b}})
+	if resp.StatusCode != http.StatusOK || body["device_id"] != "PEER1" || body["guid"] != b {
+		t.Fatalf("move into B: %d %v", resp.StatusCode, body)
+	}
+	if got := members(); got != "PEER2 | PEER1" {
+		t.Errorf("members after moving PEER1 into B: %q", got)
+	}
+	resp, body = doPanelJSON(t, http.MethodPut, url, map[string]any{"guid": "no-such-group", "groups": []string{a, b}})
+	if resp.StatusCode != http.StatusNotFound || body["error"] != "group not found" {
+		t.Errorf("a chosen group that does not exist: %d %v", resp.StatusCode, body)
+	}
+	if got := members(); got != "PEER2 | PEER1" {
+		t.Errorf("members after a refused write: %q", got)
+	}
+	if resp, body = doPanelJSON(t, http.MethodPut, url, "not an object"); resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("a body that is no object: %d %v", resp.StatusCode, body)
+	}
+	if resp, body = doPanelJSON(t, http.MethodPut, url, map[string]any{"guid": "", "groups": []string{a, b}}); resp.StatusCode != http.StatusOK {
+		t.Fatalf("take PEER1 out: %d %v", resp.StatusCode, body)
+	}
+	if got := members(); got != "PEER2 | " {
+		t.Errorf("members after taking PEER1 out: %q", got)
 	}
 }

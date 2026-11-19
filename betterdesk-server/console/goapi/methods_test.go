@@ -474,3 +474,35 @@ func TestSyncOnlineStatusMakesNoCall(t *testing.T) {
 		t.Errorf("made requests: %q", api.requests)
 	}
 }
+
+// TestSetPanelDeviceGroup checks the call that sets a device's manual
+// group in one write (BUGS UM33), which the Node client did not have: its
+// request and body, the answer of a success and of a refusal (F4), and an
+// id the path cannot carry, which makes no call.
+func TestSetPanelDeviceGroup(t *testing.T) {
+	ctx := context.Background()
+	for _, c := range []struct {
+		id, guid string
+		groups   []string
+		answer   func(http.ResponseWriter, *http.Request)
+		request  string
+		body     string
+		want     string
+	}{
+		{"P1", "g-1", []string{"g-1", "g:2"}, answerJSON(200, `{"device_id":"P1","guid":"g-1"}`),
+			"PUT /api/panel/devices/P1/device-group", `{"guid":"g-1","groups":["g-1","g:2"]}`, `{"success":true,"data":{"device_id":"P1","guid":"g-1"}}`},
+		{"P 2", "", nil, answerJSON(200, `{}`), "", "", `{"success":false,"error":"Invalid device id"}`},
+		{"P1", "", []string{}, answerJSON(400, `{"error":"invalid JSON"}`),
+			"PUT /api/panel/devices/P1/device-group", `{"guid":"","groups":[]}`, `{"success":false,"error":"Request failed with status code 400","status":400}`},
+		{"P1", "g-1", nil, noAnswer, "PUT /api/panel/devices/P1/device-group", `{"guid":"g-1","groups":[]}`, `{"success":false,"error":"socket hang up"}`},
+	} {
+		api := &fakeAPI{answer: c.answer}
+		got := toJSON(t, New(api).SetPanelDeviceGroup(ctx, c.id, c.guid, c.groups))
+		if got != c.want {
+			t.Errorf("SetPanelDeviceGroup(%q, %q, %q) = %s, want %s", c.id, c.guid, c.groups, got, c.want)
+		}
+		if want := strings.Fields(c.request); strings.Join(api.requests, " ") != strings.Join(want, " ") || len(api.bodies) > 0 && api.bodies[0] != c.body {
+			t.Errorf("SetPanelDeviceGroup(%q, %q, %q) sent %q %q, want %q %s", c.id, c.guid, c.groups, api.requests, api.bodies, c.request, c.body)
+		}
+	}
+}
