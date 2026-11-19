@@ -13,8 +13,6 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
-	"golang.org/x/text/collate"
-	"golang.org/x/text/language"
 )
 
 // The build queue (services/clientTemplateWorker.js). A bundle's
@@ -655,35 +653,11 @@ func (s *Service) hostPlatformKey() string {
 	return platform + "/" + arch + "/portable"
 }
 
-// createdText is String(row.created_at || ”): the stored text on SQLite,
-// and on PostgreSQL the Date's toString in the console's time zone, which
-// is what the old sort compared.
-func (s *Service) createdText(b *Build) string {
-	text := b.CreatedAt.String()
-	if !s.opts.DB.IsPostgres() {
-		return text
-	}
-	t, ok := b.CreatedAt.Instant()
-	if !ok {
-		return ""
-	}
-	t = t.Local()
-	_, offset := t.Zone()
-	sign := "+"
-	if offset < 0 {
-		sign, offset = "-", -offset
-	}
-	return t.Format("Mon Jan 02 2006 15:04:05") + fmt.Sprintf(" GMT%s%02d%02d (%s)", sign, offset/3600, offset%3600/60, zoneLongName(t))
-}
-
-// zoneLongName is the zone's name as JavaScript prints it in a date; the
-// abbreviation where no long name is known.
-func zoneLongName(t time.Time) string {
-	name, _ := t.Zone()
-	if name == "UTC" {
-		return "Coordinated Universal Time"
-	}
-	return name
+// createdAt is the time a build was queued; the zero time for a row
+// without one, which then goes first.
+func createdAt(b *Build) time.Time {
+	t, _ := b.CreatedAt.Instant()
+	return t
 }
 
 func (s *Service) claimNextBuild(ctx context.Context) (*claim, error) {
@@ -699,7 +673,6 @@ func (s *Service) claimNextBuild(ctx context.Context) (*claim, error) {
 		return nil, err
 	}
 	host := s.hostPlatformKey()
-	col := collate.New(language.English)
 	sort.SliceStable(candidates, func(i, j int) bool {
 		a, b := candidates[i], candidates[j]
 		ah, bh := 1, 1
@@ -712,7 +685,7 @@ func (s *Service) claimNextBuild(ctx context.Context) (*claim, error) {
 		if ah != bh {
 			return ah < bh
 		}
-		return col.CompareString(s.createdText(a), s.createdText(b)) < 0
+		return createdAt(a).Before(createdAt(b))
 	})
 	for _, row := range candidates {
 		bundle, err := s.findBundleForHash(ctx, row.BrandingHash)

@@ -670,6 +670,35 @@ func TestTwoWorkersClaimARowOnce(t *testing.T) {
 	})
 }
 
+// TestQueuedBuildsInTimeOrder takes the oldest queued build first by its
+// time, also where the name of its weekday sorts after the newer one's
+// (BUGS GN6: on PostgreSQL a Friday build went before an older Monday
+// build).
+func TestQueuedBuildsInTimeOrder(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		s := New(Options{DB: db, ServerInfo: fakeServerInfo{}, DataDir: t.TempDir(), Env: func() []string { return nil }, GOOS: "linux", GOARCH: "amd64"})
+		readyModule(t, s)
+		bundle := newBundle(t, s, goapi.NewObject("server_host", "h.example"), "")
+		must(t, s.EnqueueBuildsForHash(ctx, bundle.BrandingHash, false, nil, false))
+		for key, b := range buildsByKey(t, s, bundle.BrandingHash) {
+			if key != "windows/x64/portable" && key != "windows/arm64/portable" {
+				must(t, s.UpsertBuild(ctx, BuildUpdate{BrandingHash: b.BrandingHash, Platform: b.Platform, Arch: b.Arch, Format: b.Format, Status: "ready", ArtifactSize: int64(1)}))
+			}
+		}
+		for arch, created := range map[string]string{"arm64": "2026-11-09 08:00:00", "x64": "2026-11-13 08:00:00"} {
+			if _, err := db.Exec(ctx, "UPDATE agent_bundle_builds SET created_at = ? WHERE platform = 'windows' AND arch = ?", created, arch); err != nil {
+				t.Fatal(err)
+			}
+		}
+		next, err := s.claimNextBuild(ctx)
+		must(t, err)
+		if next == nil || next.build.Key() != "windows/arm64/portable" {
+			t.Fatalf("first build: %+v, want the Monday one (windows/arm64)", next)
+		}
+	})
+}
+
 // TestEnqueueKeepsFinishedBuilds leaves ready and building rows alone
 // unless the queue is forced.
 func TestEnqueueKeepsFinishedBuilds(t *testing.T) {
