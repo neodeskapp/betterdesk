@@ -52,6 +52,15 @@ type handlers struct {
 
 	mu    sync.Mutex
 	cache *cached
+	// running holds the collections in progress by their number of days
+	running map[int]*run
+}
+
+// run is a collection in progress. done closes when entry or err is set.
+type run struct {
+	done  chan struct{}
+	entry *cached
+	err   error
 }
 
 // cached is the last collection: for how many days, when it was started,
@@ -122,23 +131,43 @@ func daysOf(v any) int {
 }
 
 // collected returns the kept collection when it is for the same number of
-// days and no older than five minutes, and collects anew otherwise. Two
-// requests that both find nothing kept both collect.
+// days and no older than five minutes, and collects anew otherwise. A
+// request that comes while a collection for the same number of days runs
+// waits for that one, and gets its result or its failure. A collection
+// goes on when the request that started it ends.
 func (h *handlers) collected(ctx context.Context, days int) (*cached, error) {
 	at := h.now().UnixMilli()
 	h.mu.Lock()
-	kept := h.cache
-	h.mu.Unlock()
-	if kept != nil && kept.days == days && at-kept.at <= cacheFor.Milliseconds() {
+	if kept := h.cache; kept != nil && kept.days == days && at-kept.at <= cacheFor.Milliseconds() {
+		h.mu.Unlock()
 		return kept, nil
 	}
-	data, err := collect(ctx, h.api, days, at)
-	if err != nil {
-		return nil, err
+	current, joined := h.running[days]
+	if !joined {
+		current = &run{done: make(chan struct{})}
+		if h.running == nil {
+			h.running = map[int]*run{}
+		}
+		h.running[days] = current
 	}
-	fresh := &cached{days: days, at: at, data: data}
-	h.mu.Lock()
-	h.cache = fresh
 	h.mu.Unlock()
-	return fresh, nil
+
+	if !joined {
+		data, err := collect(context.WithoutCancel(ctx), h.api, days, at)
+		h.mu.Lock()
+		delete(h.running, days)
+		if err == nil {
+			current.entry = &cached{days: days, at: at, data: data}
+			h.cache = current.entry
+		}
+		current.err = err
+		h.mu.Unlock()
+		close(current.done)
+	}
+	select {
+	case <-current.done:
+		return current.entry, current.err
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
 }

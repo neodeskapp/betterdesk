@@ -254,3 +254,102 @@ func TestDaysOf(t *testing.T) {
 		}
 	}
 }
+
+// blockingSource is an API client whose device list waits until it is
+// released, and that counts how often the list was asked for.
+type blockingSource struct {
+	entered chan struct{}
+	release chan struct{}
+
+	mu    sync.Mutex
+	peers int
+}
+
+func (b *blockingSource) GetAllPeers(context.Context, bool) []*goapi.Object {
+	b.mu.Lock()
+	b.peers++
+	b.mu.Unlock()
+	b.entered <- struct{}{}
+	<-b.release
+	return []*goapi.Object{goapi.NewObject("id", "a")}
+}
+
+// GetPeerConnectionSessions answers one session, and fails as the API
+// client does once the context has ended.
+func (b *blockingSource) GetPeerConnectionSessions(ctx context.Context, _ string, _ any) *goapi.Object {
+	if ctx.Err() != nil {
+		return goapi.NewObject("success", false, "error", ctx.Err().Error())
+	}
+	session := goapi.NewObject("id", float64(1), "started_at", time.Now().UTC().Format(time.RFC3339))
+	return goapi.NewObject("success", true, "data", goapi.NewObject("sessions", []any{session}))
+}
+
+func (b *blockingSource) ListHelpRequests(context.Context, any) *goapi.Object {
+	return goapi.NewObject("success", true, "data", []any{})
+}
+
+// TestRequestsDuringACollectionShareIt sends a second request while the
+// first one's collection waits for the device list: it waits for that
+// collection instead of starting its own, and both get its result.
+func TestRequestsDuringACollectionShareIt(t *testing.T) {
+	src := &blockingSource{entered: make(chan struct{}, 2), release: make(chan struct{})}
+	h := &handlers{api: src, now: time.Now}
+	type outcome struct {
+		entry *cached
+		err   error
+	}
+	results := make(chan outcome, 2)
+	ask := func() {
+		entry, err := h.collected(context.Background(), 14)
+		results <- outcome{entry, err}
+	}
+	go ask()
+	<-src.entered
+	go ask()
+	select {
+	case <-src.entered:
+		t.Error("the second request started a collection of its own")
+	case <-time.After(500 * time.Millisecond):
+	}
+	close(src.release)
+	first, second := <-results, <-results
+	if first.err != nil || second.err != nil || first.entry == nil || first.entry != second.entry {
+		t.Errorf("the two requests got %+v and %+v", first, second)
+	}
+	if src.peers != 1 {
+		t.Errorf("the device list was asked for %d times", src.peers)
+	}
+	// A request after the collection ended reads what was kept
+	if entry, err := h.collected(context.Background(), 14); err != nil || entry != first.entry {
+		t.Errorf("a later request got %+v, %v", entry, err)
+	}
+}
+
+// TestACollectionOutlivesTheRequestThatStartedIt: the request that
+// started a collection goes away, the collection goes on, and a request
+// that waited for it gets its result.
+func TestACollectionOutlivesTheRequestThatStartedIt(t *testing.T) {
+	src := &blockingSource{entered: make(chan struct{}, 2), release: make(chan struct{})}
+	h := &handlers{api: src, now: time.Now}
+	ctx, cancel := context.WithCancel(context.Background())
+	waited := make(chan error, 1)
+	go func() {
+		_, err := h.collected(ctx, 14)
+		waited <- err
+	}()
+	<-src.entered
+	second := make(chan *cached, 1)
+	go func() {
+		entry, _ := h.collected(context.Background(), 14)
+		second <- entry
+	}()
+	time.Sleep(200 * time.Millisecond)
+	cancel()
+	close(src.release)
+	if err := <-waited; err != nil && err != context.Canceled {
+		t.Errorf("the first request ended with %v", err)
+	}
+	if entry := <-second; entry == nil || len(entry.data.Sessions) != 1 {
+		t.Errorf("the request that waited got %+v", entry)
+	}
+}
