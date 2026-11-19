@@ -62,6 +62,14 @@ var fixedSteps = []fixedStep{
 	// and their text, where Node answered 500.
 	{"node", `436 POST /api/panel/strategies/s-two/assign {"peers":{"length":2}} as admin`, "DE7"},
 	{"node", `438 POST /api/panel/strategies/s-two/assign {"peers":[""]} as admin`, "DE7"},
+	// An agent that answers with the error agent_offline or agent_timeout
+	// gets 502 with that text: no snapshot, no queued collection, no 503
+	// or 504.
+	{"node_agent", `17 GET /api/devices/A1001/services as admin agent {"ok":false,"error":"agent_timeout"}`, "WS8"},
+	{"node_agent", `18 GET /api/devices/A1001/services as admin agent {"ok":false,"error":"agent_offline"}`, "WS8"},
+	{"node_agent", `19 GET /api/devices/A1001/processes as admin agent {"ok":false,"error":"agent_offline"}`, "WS8"},
+	{"node_agent", `20 GET /api/devices/A1001/clipboard as admin agent {"ok":false,"error":"agent_offline"}`, "WS8"},
+	{"node_agent", `55 GET /api/devices/A1001/services as admin agent {"ok":false,"error":"agent_offline"}`, "WS8"},
 	// The audit log after the steps of DE5 and DE6
 	{"node", "459 audit", "DE5, DE6"},
 }

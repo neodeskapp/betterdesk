@@ -22,7 +22,8 @@ import (
 // that is not connected gets the snapshot the server keeps, when there is
 // one for the request, else a collection queued for when it comes back,
 // else 503 agent_offline. An agent that does not answer in time is 504
-// agent_timeout, one that answers with an error 502 and its error.
+// agent_timeout, one that answers with an error 502 and its error, also
+// when the agent's error reads agent_offline or agent_timeout.
 
 // commandFor is the collection the server queues for a request while the
 // agent is offline.
@@ -78,7 +79,8 @@ func (h *handlers) agentRequest(w http.ResponseWriter, r *http.Request, typ stri
 	if msg == "" {
 		msg = "agent_error"
 	}
-	if msg == bdrelay.ErrAgentOffline.Message {
+	offline := errors.Is(err, bdrelay.ErrAgentOffline)
+	if offline {
 		if name, ok := snapshotFor[typ]; ok {
 			telemetry := h.api.GetPeerTelemetry(ctx, id)
 			if snapshot, _ := goapi.Dig(telemetry, "data", "snapshots", name).(*goapi.Object); snapshot != nil && goapi.Truthy(snapshot.Get("data")) {
@@ -105,10 +107,10 @@ func (h *handlers) agentRequest(w http.ResponseWriter, r *http.Request, typ stri
 		}
 	}
 	status := http.StatusBadGateway
-	switch msg {
-	case bdrelay.ErrAgentOffline.Message:
+	switch {
+	case offline:
 		status = http.StatusServiceUnavailable
-	case bdrelay.ErrAgentTimeout.Message:
+	case errors.Is(err, bdrelay.ErrAgentTimeout):
 		status = http.StatusGatewayTimeout
 	}
 	answer(w, r, status, failure{Error: msg})

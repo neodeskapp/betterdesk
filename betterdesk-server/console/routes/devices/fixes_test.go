@@ -2,15 +2,20 @@ package devices_test
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/console/bdrelay/fakeagent"
 	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/unitronix/betterdesk-server/console/ws/wstest"
 )
 
 // The bugs of BUGS.md that the device routes fixed, each with the
@@ -338,4 +343,55 @@ func TestStrategyWriteAnswersPermissions(t *testing.T) {
 			t.Errorf("update: %d %s", got.Status, got.Body)
 		}
 	})
+}
+
+// TestAgentErrorsAreTheAgents: an agent that answers a request with the
+// error agent_offline or agent_timeout gets 502 with its text, like any
+// other error of an agent, and the server's snapshot is not asked for;
+// the snapshot, the queued collection, 503 and 504 are for an agent that
+// is not connected or does not answer in time (BUGS WS8; the replay
+// covers those).
+func TestAgentErrorsAreTheAgents(t *testing.T) {
+	db := storetest.Migrated(t)
+	t.Cleanup(wstest.Goroutines(t))
+	api := routetest.NewAPI()
+	api.Fallback = func(c routetest.Call) routetest.Reply {
+		switch {
+		case c.Method == "GET" && c.Target == "/api/peers/A1001":
+			return routetest.Reply{Status: 200, Body: `{"id":"A1001","hostname":"a"}`}
+		case c.Method == "GET" && strings.HasPrefix(c.Target, "/api/peers/A1001/telemetry"):
+			return routetest.Reply{Status: 200, Body: `{"snapshots":{"services":{"data":[{"name":"cached"}],"collected_at":"2020-01-01T00:00:00Z"}}}`}
+		case c.Method != "GET":
+			return routetest.Reply{Status: 200, Body: `{"status":"queued"}`}
+		}
+		return routetest.Reply{Status: 404, Body: `{"error":"not found"}`}
+	}
+	w := routetest.New(t, routetest.Options{DB: db, API: api, Env: raisedLimits, Config: nodeLanguages})
+	ctx := context.Background()
+	if _, err := db.Exec(ctx, `CREATE TABLE IF NOT EXISTS device_tokens (token_hash TEXT, peer_id TEXT, status TEXT,
+		max_uses INTEGER, use_count INTEGER, expires_at TEXT)`); err != nil {
+		t.Fatal(err)
+	}
+	sum := sha256.Sum256([]byte(agentToken))
+	if _, err := db.Exec(ctx, `INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked)
+		VALUES (?, ?, 1, 'A1001', '', '2999-01-01 00:00:00', ?)`, agentToken, hex.EncodeToString(sum[:]), false); err != nil {
+		t.Fatal(err)
+	}
+	agent, err := fakeagent.Connect(w.Addr(), "A1001", agentToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer agent.Close()
+	admin := w.As("admin")
+	for _, reason := range []string{"agent_offline", "agent_timeout"} {
+		agent.Answer(func(fakeagent.Request) any { return fakeagent.JSON(`{"ok":false,"error":"` + reason + `"}`) })
+		api.Calls()
+		got := admin.Do("GET", "/api/devices/A1001/services", "")
+		if want := `{"success":false,"error":"` + reason + `"}`; got.Status != http.StatusBadGateway || got.Body != want {
+			t.Errorf("an agent that answers %s: %d %s, want 502 %s", reason, got.Status, got.Body, want)
+		}
+		if calls := api.Calls(); len(calls) != 1 {
+			t.Errorf("an agent that answers %s: calls %q, want only the device lookup", reason, calls)
+		}
+	}
 }

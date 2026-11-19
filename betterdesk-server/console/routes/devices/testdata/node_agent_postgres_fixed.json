@@ -1,0 +1,67 @@
+{
+ "17 GET /api/devices/A1001/services as admin agent {\"ok\":false,\"error\":\"agent_timeout\"}": {
+  "bug": "WS8",
+  "answer": {
+   "status": 502,
+   "answer": "{\"success\":false,\"error\":\"agent_timeout\"}",
+   "calls": [
+    "GET /api/peers/A1001"
+   ],
+   "agent": [
+    "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+   ]
+  }
+ },
+ "18 GET /api/devices/A1001/services as admin agent {\"ok\":false,\"error\":\"agent_offline\"}": {
+  "bug": "WS8",
+  "answer": {
+   "status": 502,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "calls": [
+    "GET /api/peers/A1001"
+   ],
+   "agent": [
+    "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+   ]
+  }
+ },
+ "19 GET /api/devices/A1001/processes as admin agent {\"ok\":false,\"error\":\"agent_offline\"}": {
+  "bug": "WS8",
+  "answer": {
+   "status": 502,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "calls": [
+    "GET /api/peers/A1001"
+   ],
+   "agent": [
+    "{\"protocol_version\":1,\"type\":\"processes.list\",\"request_id\":\"<id>\",\"payload\":null}"
+   ]
+  }
+ },
+ "20 GET /api/devices/A1001/clipboard as admin agent {\"ok\":false,\"error\":\"agent_offline\"}": {
+  "bug": "WS8",
+  "answer": {
+   "status": 502,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "calls": [
+    "GET /api/peers/A1001"
+   ],
+   "agent": [
+    "{\"protocol_version\":1,\"type\":\"clipboard.get\",\"request_id\":\"<id>\",\"payload\":null}"
+   ]
+  }
+ },
+ "55 GET /api/devices/A1001/services as admin agent {\"ok\":false,\"error\":\"agent_offline\"}": {
+  "bug": "WS8",
+  "answer": {
+   "status": 502,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "calls": [
+    "GET /api/peers/A1001"
+   ],
+   "agent": [
+    "{\"protocol_version\":1,\"type\":\"services.list\",\"request_id\":\"<id>\",\"payload\":null}"
+   ]
+  }
+ }
+}
