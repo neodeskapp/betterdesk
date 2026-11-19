@@ -35,9 +35,10 @@ type TerminalOptions struct {
 	// address.
 	ClientIP func(r *http.Request) string
 	// SessionCheck is how often an open terminal looks whether its session
-	// still exists; when it has ended (signed out, ended elsewhere, past
-	// its limits) the socket is closed and the shells end. Default 10
-	// seconds.
+	// still exists and its role still has server.config; when the session
+	// has ended (signed out, ended elsewhere, past its limits) or the
+	// permission is gone, the socket is closed and the shells end. Default
+	// 10 seconds.
 	SessionCheck time.Duration
 	// KillWait is how long a shell has to end after it was asked to (a
 	// hang-up for a terminal, a termination for pipes) before it and its
@@ -140,8 +141,8 @@ func (s *Service) Register(reg *ws.Registry) {
 // the Origin ("403 Forbidden"), a session with a user ("401
 // Unauthorized"), the permission server.config of the session's role with
 // the role overrides ("403 Forbidden", also when the lookup fails), then
-// the handshake. The session is looked at again every SessionCheck while
-// the socket is open.
+// the handshake. The session and the permission are looked at again every
+// SessionCheck while the socket is open.
 func (s *Service) serveTerminal(u *ws.Upgrade) {
 	if !u.CheckOrigin("server-management-terminal") {
 		return
@@ -231,8 +232,10 @@ func (t *terminal) run(u *ws.Upgrade, role, username string) {
 	logging.Logf("console", "[srv-term] session %s closed", t.id)
 }
 
-// watchSession closes the socket when its session has ended or belongs to
-// another user, and returns when the socket has ended.
+// watchSession closes the socket when its session has ended, belongs to
+// another user, or its role no longer has server.config with the role
+// overrides (a failed lookup counts as no, as at the upgrade), and
+// returns when the socket has ended.
 func (t *terminal) watchSession(u *ws.Upgrade) {
 	tick := time.NewTicker(t.s.opts.Terminal.SessionCheck)
 	defer tick.Stop()
@@ -241,20 +244,29 @@ func (t *terminal) watchSession(u *ws.Upgrade) {
 		case <-t.conn.Context().Done():
 			return
 		case <-tick.C:
-			ctx, cancel := context.WithTimeout(t.conn.Context(), 5*time.Second)
-			check := *u
-			check.R = u.R.WithContext(ctx)
-			sess := check.Session()
-			cancel()
-			if t.conn.Context().Err() != nil {
-				return
-			}
-			if !sess.SignedIn() || sess.UserID() != t.userID {
-				t.conn.Close(1008, "Session ended")
+			if !t.stillAllowed(u) {
+				if t.conn.Context().Err() == nil {
+					t.conn.Close(1008, "Session ended")
+				}
 				return
 			}
 		}
 	}
+}
+
+// stillAllowed reads the socket's session again and looks up the
+// permission of its role.
+func (t *terminal) stillAllowed(u *ws.Upgrade) bool {
+	ctx, cancel := context.WithTimeout(t.conn.Context(), 5*time.Second)
+	defer cancel()
+	check := *u
+	check.R = u.R.WithContext(ctx)
+	sess := check.Session()
+	if !sess.SignedIn() || sess.UserID() != t.userID {
+		return false
+	}
+	allowed, err := check.RoleHasPermission(sess.Role(), terminalPermission)
+	return err == nil && allowed
 }
 
 func (t *terminal) audit(action, details string) {

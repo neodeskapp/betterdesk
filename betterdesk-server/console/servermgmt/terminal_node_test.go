@@ -104,6 +104,10 @@ func newOracleWorld(t *testing.T, noPty bool) *oracleWorld {
 		Now: func() time.Time { return time.UnixMilli(1700000000000) },
 		Terminal: TerminalOptions{
 			NoPty: noPty,
+			// the old terminal looked at the session and the permission
+			// once; the checks of an open terminal (terminal_test.go) would
+			// add lookups to a long conversation
+			SessionCheck: time.Hour,
 			Audit: func(_ context.Context, userID int64, action, details, ip string) {
 				w.mu.Lock()
 				w.audits = append(w.audits, []any{float64(userID), action, details, ip})
@@ -194,6 +198,9 @@ func pipeRunes(s string) string {
 //     it ignores SIGTERM), and so is the first shell of a second init.
 //   - A shell that switched to another account has no supplementary groups
 //     (node-pty kept root's group 0 in the shell).
+//   - An open terminal looks up server.config again with its session
+//     (SM15); the replay checks only once an hour, so the lookups stay the
+//     upgrade's.
 func TestNodeTerminalPipe(t *testing.T) { replayTerminal(t, "pipe") }
 
 func TestNodeTerminalPty(t *testing.T) {

@@ -70,6 +70,16 @@ type termWorld struct {
 	mu      sync.Mutex
 	audits  []string
 	lookups []string
+	// revoked takes server.config from admin, as a role override does;
+	// lookupFails makes every lookup fail
+	revoked, lookupFails bool
+}
+
+// setPermission changes the permission table while sockets are open.
+func (w *termWorld) setPermission(revoked, lookupFails bool) {
+	w.mu.Lock()
+	w.revoked, w.lookupFails = revoked, lookupFails
+	w.mu.Unlock()
 }
 
 func newTermWorld(t *testing.T, noPty bool, mutate func(*Options)) *termWorld {
@@ -82,12 +92,12 @@ func newTermWorld(t *testing.T, noPty bool, mutate func(*Options)) *termWorld {
 		},
 		Permission: func(_ context.Context, role, permission string) (bool, error) {
 			w.mu.Lock()
+			defer w.mu.Unlock()
 			w.lookups = append(w.lookups, role+" "+permission)
-			w.mu.Unlock()
-			if role == "throws" {
+			if role == "throws" || w.lookupFails {
 				return false, errors.New("lookup failed")
 			}
-			return role == "admin" && permission == "server.config", nil
+			return role == "admin" && permission == "server.config" && !w.revoked, nil
 		},
 	})
 	home := t.TempDir()
@@ -272,7 +282,9 @@ func TestTerminalUpgradeChecks(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			defer wstest.Goroutines(t)()
-			w := newTermWorld(t, true, nil)
+			// no session check while the socket is open: the lookups are
+			// the upgrade's only
+			w := newTermWorld(t, true, func(o *Options) { o.Terminal.SessionCheck = time.Hour })
 			w.session.mu.Lock()
 			w.session.signedIn, w.session.role = tc.signedIn, tc.role
 			w.session.mu.Unlock()
@@ -346,10 +358,11 @@ func TestTerminalNeedsInitFirst(t *testing.T) {
 }
 
 // A shell ends with its socket: the close message, the client going away
-// without a close frame, and the end of the session all end every shell
-// the socket started, the first of a second init too.
+// without a close frame, the end of the session, and the role losing
+// server.config (or the lookup failing) all end every shell the socket
+// started, the first of a second init too.
 func TestTerminalShellsEndWithTheSocket(t *testing.T) {
-	for _, how := range []string{"close message", "connection dropped", "session ended", "session of another user", "console stops"} {
+	for _, how := range []string{"close message", "connection dropped", "session ended", "session of another user", "permission taken", "permission lookup fails", "console stops"} {
 		t.Run(how, func(t *testing.T) {
 			defer wstest.Goroutines(t)()
 			w := newTermWorld(t, true, nil)
@@ -372,13 +385,17 @@ func TestTerminalShellsEndWithTheSocket(t *testing.T) {
 				w.session.set(false, 7) // the same user, signed out
 			case "session of another user":
 				w.session.set(true, 8)
+			case "permission taken":
+				w.setPermission(true, false)
+			case "permission lookup fails":
+				w.setPermission(false, true)
 			case "console stops":
 				w.reg.Close()
 			}
 			if !gone(first, 3*time.Second) || !gone(second, 3*time.Second) {
 				t.Errorf("shells still run after %s", how)
 			}
-			if how == "session ended" || how == "session of another user" {
+			if how == "session ended" || how == "session of another user" || strings.HasPrefix(how, "permission") {
 				c.Wait(3*time.Second, func(_ []wstest.Frame, closed bool) bool { return closed })
 				if closed, code, reason := c.Closed(); !closed || code != 1008 || reason != "Session ended" {
 					t.Errorf("closed %v %d %q", closed, code, reason)
