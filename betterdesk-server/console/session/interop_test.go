@@ -869,15 +869,23 @@ func TestInteropExpiryDecidedByOneSide(t *testing.T) {
 					b.wantUser(true, decider, other)
 					age(t, db, sid, tc.column, tc.by)
 
-					// The store ends it on the way in: the request goes on
-					// signed out and nothing clears the cookie
+					// The store ends it on the way in. Node goes on signed
+					// out and nothing clears the cookie; Go answers the
+					// request as an ended session, clears the cookie and
+					// empties the row (BUGS.md S7)
 					probe := b.copy()
 					r := probe.do(decider, "GET", "/api/t/whoami", nil)
-					if r.status != http.StatusOK || r.json(t)["userId"] != nil || strings.Contains(strings.Join(r.setCookies, "\n"), "bd.sid=") {
+					cleared := strings.Contains(strings.Join(r.setCookies, "\n"), "bd.sid=;")
+					if decider == g.server {
+						code := map[string]string{"idle": "session_idle", "max_age": "session_expired"}[tc.reason]
+						if r.status != http.StatusUnauthorized || !strings.Contains(string(r.body), `"code":"`+code+`"`) || !cleared {
+							t.Fatalf("%s: %d %s, Set-Cookie %q", decider.name, r.status, r.body, r.setCookies)
+						}
+					} else if r.status != http.StatusOK || r.json(t)["userId"] != nil || strings.Contains(strings.Join(r.setCookies, "\n"), "bd.sid=") {
 						t.Fatalf("%s: %d %s, Set-Cookie %q", decider.name, r.status, r.body, r.setCookies)
 					}
 					ended := readRow(t, db, sid)
-					if ended.active || str(ended.reason) != tc.reason || ended.ended == nil || ended.json == "{}" {
+					if ended.active || str(ended.reason) != tc.reason || ended.ended == nil || (ended.json == "{}") != (decider == g.server) {
 						t.Fatalf("row after %s decided: %+v", decider.name, ended)
 					}
 					b.wantUser(false, other, decider)
