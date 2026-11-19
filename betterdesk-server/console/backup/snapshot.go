@@ -447,11 +447,7 @@ func (s *Service) restoreGroups(ctx context.Context, cons any) error {
 			if enabled == branding.Undefined {
 				enabled = float64(1)
 			}
-			permissions := prop(r, "permissions")
-			if _, isText := permissions.(string); !isText {
-				permissions = branding.Stringify(orValue(permissions, branding.NewObject()))
-			}
-			_ = createStrategy(ctx, db, guid, prop(r, "name"), prop(r, "user_group_guid"), prop(r, "device_group_guid"), enabled, permissions)
+			_ = createStrategy(ctx, db, guid, prop(r, "name"), prop(r, "user_group_guid"), prop(r, "device_group_guid"), enabled, prop(r, "permissions"))
 		}
 	}
 	return nil

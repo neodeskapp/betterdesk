@@ -102,6 +102,26 @@ func TestSnapshotMatchesNode(t *testing.T) {
 	}
 }
 
+// snapshotRestoreDifferences are the tables Go restores otherwise than
+// Node on purpose, by dialect, case and table, with the rows Go writes
+// (times masked).
+var snapshotRestoreDifferences = map[string]string{
+	// BK11: a rule's permissions are stored as JSON text once, not as the
+	// JSON text of their JSON text
+	"sqlite/odd values/strategies": strings.Join([]string{
+		`1|'g-1'|'rule'|''|''|1|'{"view":true}'|'<time>'|'<time>'`,
+		`2|'s1'|'a'|''|''|0|'{"x":1}'|'<time>'|'<time>'`,
+		`3|'s2'|'b'|''|''|1|'{"y":true}'|'<time>'|'<time>'`,
+		`4|'s3'|'c'|''|''|1|'{}'|'<time>'|'<time>'`,
+	}, "\n"),
+	"postgres/odd values/strategies": strings.Join([]string{
+		`(1,g-1,rule,"","",t,"{""view"":true}","<time>","<time>")`,
+		`(2,s1,a,"","",f,"{""x"":1}","<time>","<time>")`,
+		`(3,s2,b,"","",t,"{""y"":true}","<time>","<time>")`,
+		`(4,s3,c,"","",f,{},"<time>","<time>")`,
+	}, "\n"),
+}
+
 func TestSnapshotRestoreMatchesNode(t *testing.T) {
 	needNode(t)
 	for _, dialect := range []string{"sqlite", "postgres"} {
@@ -167,6 +187,12 @@ func TestSnapshotRestoreMatchesNode(t *testing.T) {
 					}
 					want, have := tablesOf(t, nodeDst, tables), tablesOf(t, goDst, tables)
 					for _, table := range tables {
+						if fixed, ok := snapshotRestoreDifferences[dialect+"/"+c.name+"/"+table]; ok {
+							if have[table] != fixed {
+								t.Errorf("table %s:\n go:   %s\n want: %s (Node: %s)", table, have[table], fixed, want[table])
+							}
+							continue
+						}
 						if want[table] != have[table] {
 							t.Errorf("table %s:\n go:   %s\n node: %s", table, have[table], want[table])
 						}

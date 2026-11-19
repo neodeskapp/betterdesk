@@ -275,8 +275,9 @@ func createDeviceGroup(ctx context.Context, db *store.DB, guid, name, note any) 
 }
 
 // createStrategy is createStrategy(data) of the adapters: SQLite stores
-// enabled as 1 or 0 by its truth, PostgreSQL binds it as it is; the
-// permissions are JSON.stringify(permissions || {}).
+// enabled as 1 or 0 by its truth, PostgreSQL binds it as it is. The
+// permissions are stored as JSON text once: text that is not empty is
+// that text already, anything else is JSON.stringify(permissions || {}).
 func createStrategy(ctx context.Context, db *store.DB, guid, name, userGroupGUID, deviceGroupGUID, enabled, permissions any) error {
 	var stored any = true
 	if enabled != branding.Undefined {
@@ -288,8 +289,11 @@ func createStrategy(ctx context.Context, db *store.DB, guid, name, userGroupGUID
 			stored = float64(0)
 		}
 	}
-	args, err := bindArgs(db, 6, []any{guid, name, orValue(userGroupGUID, ""), orValue(deviceGroupGUID, ""),
-		stored, branding.Stringify(orValue(permissions, branding.NewObject()))})
+	text, isText := permissions.(string)
+	if !isText || text == "" {
+		text = branding.Stringify(orValue(permissions, branding.NewObject()))
+	}
+	args, err := bindArgs(db, 6, []any{guid, name, orValue(userGroupGUID, ""), orValue(deviceGroupGUID, ""), stored, text})
 	if err != nil {
 		return err
 	}

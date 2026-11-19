@@ -98,6 +98,38 @@ func TestSnapshotRestoresAddressBooks(t *testing.T) {
 	})
 }
 
+// BK11: a restored rule's permissions are stored as JSON text once, so
+// they read back as the object they were, whether the snapshot holds
+// them as an object or as text.
+func TestSnapshotRestoresRulePermissions(t *testing.T) {
+	dialects(t, func(t *testing.T, dialect string) {
+		ctx := context.Background()
+		in := newInstall(t, dialect)
+		s := in.snapshotService(t)
+		snapshot := parsedJSON(t, `{"_format":"betterdesk-backup","_version":1,"console":{"strategies":[`+
+			`{"guid":"s1","name":"text","permissions":"{\"x\":1}"},`+
+			`{"guid":"s2","name":"object","permissions":{"y":true,"z":[1]}},`+
+			`{"guid":"s3","name":"empty text","permissions":""},`+
+			`{"guid":"s4","name":"none"}]}}`)
+		if res := s.RestoreBackup(ctx, snapshot, SnapshotOptions{Groups: true}); len(res.Warnings) != 0 {
+			t.Fatalf("restore: %+v", res)
+		}
+		rules, err := allStrategies(ctx, in.db)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := map[string]string{}
+		for _, r := range rules {
+			got[r.Str("guid")] = branding.Stringify(r.Get("permissions"))
+		}
+		for guid, want := range map[string]string{"s1": `{"x":1}`, "s2": `{"y":true,"z":[1]}`, "s3": `{}`, "s4": `{}`} {
+			if got[guid] != want {
+				t.Errorf("%s: permissions %s, want %s", guid, got[guid], want)
+			}
+		}
+	})
+}
+
 // EM2: the snapshot is a file people keep; the SMTP password stays in the
 // database. A snapshot without one keeps the stored password; one that
 // brings a password (made by an older console) restores it.
