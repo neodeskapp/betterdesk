@@ -125,39 +125,3 @@ func add(a float64, b any) (any, error) {
 	}
 	return jsbind.NumberString(a) + s, nil
 }
-
-// replaceFirst is s.replace(pattern, replacement) for a text pattern: the
-// first match is replaced, and the replacement's $$, $&, $` and $' stand
-// for a dollar sign, the match, the text before it and the text after it.
-func replaceFirst(s, pattern, replacement string) string {
-	i := strings.Index(s, pattern)
-	if i < 0 {
-		return s
-	}
-	before, after := s[:i], s[i+len(pattern):]
-	var b strings.Builder
-	b.WriteString(before)
-	for j := 0; j < len(replacement); j++ {
-		c := replacement[j]
-		if c != '$' || j+1 >= len(replacement) {
-			b.WriteByte(c)
-			continue
-		}
-		switch replacement[j+1] {
-		case '$':
-			b.WriteByte('$')
-		case '&':
-			b.WriteString(pattern)
-		case '`':
-			b.WriteString(before)
-		case '\'':
-			b.WriteString(after)
-		default:
-			b.WriteByte(c)
-			continue
-		}
-		j++
-	}
-	b.WriteString(after)
-	return b.String()
-}

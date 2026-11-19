@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"io"
 	"math"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -146,10 +147,8 @@ func (h *handlers) one(w http.ResponseWriter, r *http.Request) {
 
 // approve answers PUT /api/registrations/{id}/approve with the body
 // {folder_id, group_guids, display_name, tags}. The pending registration
-// becomes approved with the server configuration its device polls for:
-// the console's address with the host the approver used, the signal
-// server on port 21116 of that host, the server's key and a new access
-// token. Then the device goes into the folder and the device groups, and
+// becomes approved with the server configuration its device polls for
+// (serverConfig). Then the device goes into the folder and the device groups, and
 // gets the display name and the tags when the API server knows it. A
 // display name or tags that are truthy but no text answer 400 before
 // anything is stored, so an approval always has its event and its audit
@@ -229,9 +228,9 @@ func nullable(row *goapi.Object) any {
 	return row
 }
 
-// serverConfig is buildServerConfig with 0.0.0.0 replaced by the host of
-// the request: the part of the Host header before its first colon, else
-// the request's host name, else localhost.
+// serverConfig is the configuration an approved device polls for: the
+// console's address and the signal server's (approvalAddresses), the
+// server's key and a new access token.
 func (h *handlers) serverConfig(r *http.Request) (registrations.ServerConfig, error) {
 	protocol := "http"
 	port := 0
@@ -241,47 +240,52 @@ func (h *handlers) serverConfig(r *http.Request) (registrations.ServerConfig, er
 		}
 		port = h.d.Config.Port
 	}
-	var key string
+	var key, publicID string
 	if h.d.ServerInfo != nil {
 		key = string(h.d.ServerInfo.ResolvePublicKey(r.Context()))
+		publicID = h.d.ServerInfo.GetPublicEndpointSettings().PublicServerID
 	}
 	token := make([]byte, 32)
 	if _, err := io.ReadFull(h.random, token); err != nil {
 		return registrations.ServerConfig{}, err
 	}
-	host := h.actualHost(r)
+	consoleURL, serverAddress := approvalAddresses(protocol, port, r.Host, publicID)
 	return registrations.ServerConfig{
-		ConsoleURL:    replaceFirst(protocol+"://0.0.0.0:"+strconv.Itoa(port), "0.0.0.0", host),
-		ServerAddress: replaceFirst("0.0.0.0:21116", "0.0.0.0", host),
+		ConsoleURL:    consoleURL,
+		ServerAddress: serverAddress,
 		ServerKey:     key,
 		AccessToken:   hex.EncodeToString(token),
 	}, nil
 }
 
-// actualHost is req.headers.host?.split(':')[0] || req.hostname ||
-// 'localhost'. An IPv6 address in the Host header gives "[" (BUGS RG5).
-func (h *handlers) actualHost(r *http.Request) string {
-	if first, _, _ := strings.Cut(r.Host, ":"); first != "" {
-		return first
-	}
-	host := r.Host
-	if h.d.Config != nil {
-		host = h.d.Config.TrustProxy.Host(r)
+// approvalAddresses are the console's address and the signal server's an
+// approved device is given. The host is the public ID server setting's
+// when there is one, else the one of the Host header the approver's
+// request had, else localhost; an IPv6 address keeps its brackets. The
+// console's address has the console's port; the signal server's has the
+// setting's port, else 21116.
+func approvalAddresses(protocol string, port int, requestHost, publicID string) (consoleURL, serverAddress string) {
+	host, signalPort := splitHost(publicID)
+	if host == "" {
+		host, _ = splitHost(requestHost)
+		signalPort = ""
 	}
 	if host == "" {
-		return "localhost"
+		host = "localhost"
 	}
-	offset := 0
-	if host[0] == '[' {
-		offset = strings.IndexByte(host, ']') + 1
+	if signalPort == "" {
+		signalPort = "21116"
 	}
-	if i := strings.IndexByte(host[offset:], ':'); i >= 0 {
-		host = host[:offset+i]
+	return protocol + "://" + net.JoinHostPort(host, strconv.Itoa(port)), net.JoinHostPort(host, signalPort)
+}
+
+// splitHost takes "host:port", "[v6]:port", "[v6]" or "host" apart.
+func splitHost(s string) (host, port string) {
+	s = jsbind.Trim(s)
+	if h, p, err := net.SplitHostPort(s); err == nil {
+		return h, p
 	}
-	if host == "" {
-		return "localhost"
-	}
-	return host
+	return strings.TrimSuffix(strings.TrimPrefix(s, "["), "]"), ""
 }
 
 // assignFolder puts the device into the folder parseInt(folderID, 10)
