@@ -89,3 +89,34 @@ func TestHardDeleteClearsDeviceRows(t *testing.T) {
 		}
 	})
 }
+
+// TestSysinfoNullColumnsAnswerTheFallback: a system information row whose
+// list and object columns are NULL answers [] and {} for them, where the
+// web app reads lists and objects; stored values are parsed as before
+// (BUGS D19).
+func TestSysinfoNullColumnsAnswerTheFallback(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w, _ := world(t, db, nil, nil)
+		ctx := context.Background()
+		for _, q := range []string{
+			`INSERT INTO peer_sysinfo (peer_id, hostname, displays, encoding, features, platform_additions) VALUES ('A', 'h', NULL, NULL, NULL, NULL)`,
+			`INSERT INTO peer_sysinfo (peer_id, hostname, displays, encoding, features, platform_additions) VALUES ('C', 'h', '[{"name":"x"}]', '["h264"]', '{"a":1}', '{"b":2}')`,
+		} {
+			if _, err := db.Exec(ctx, q); err != nil {
+				t.Fatalf("%s: %v", q, err)
+			}
+		}
+		admin := w.As("admin")
+		for id, wants := range map[string][]string{
+			"A": {`"displays":[]`, `"encoding":[]`, `"features":{}`, `"platform_additions":{}`},
+			"C": {`"displays":[{"name":"x"}]`, `"encoding":["h264"]`, `"features":{"a":1}`, `"platform_additions":{"b":2}`},
+		} {
+			got := admin.Do("GET", "/api/devices/"+id, "")
+			for _, want := range wants {
+				if got.Status != http.StatusOK || !strings.Contains(got.Body, want) {
+					t.Errorf("device %s: %d %s, want %s", id, got.Status, got.Body, want)
+				}
+			}
+		}
+	})
+}

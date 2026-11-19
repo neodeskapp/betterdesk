@@ -73,9 +73,9 @@ func jsNumber(s string) any {
 }
 
 // safeJSONParse is the adapter's safeJsonParse(value, fallback): the
-// parsed JSON of text, the fallback where JSON.parse throws, and null for
-// NULL (JSON.parse(null) is null). On PostgreSQL a value the driver
-// parsed already (an object or a list) is taken as it is.
+// parsed JSON of text, and the fallback for NULL and where JSON.parse
+// throws. On PostgreSQL a value the driver parsed already (an object or a
+// list) is taken as it is.
 func safeJSONParse(db *store.DB, v any, fallback any) any {
 	if db.IsPostgres() {
 		switch v.(type) {
@@ -85,7 +85,7 @@ func safeJSONParse(db *store.DB, v any, fallback any) any {
 	}
 	switch t := v.(type) {
 	case nil:
-		return nil
+		return fallback
 	case string:
 		parsed, err := goapi.Parse([]byte(t))
 		if err != nil {
