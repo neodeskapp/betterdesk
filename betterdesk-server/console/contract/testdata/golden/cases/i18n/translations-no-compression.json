@@ -2626,6 +2626,7 @@
        "download_failed": "Download fehlgeschlagen",
        "error": "Fehler",
        "error_details": "Fehlerdetails",
+       "forbidden": "Sie haben keinen Zugriff auf dieses Gerät.",
        "forbidden_message": "Ihre Rolle umfasst diese Seite nicht. Wenn Sie sie für Ihre Arbeit brauchen, bitten Sie einen Administrator, Ihrer Rolle den Zugriff zu geben.",
        "forbidden_title": "Sie haben keinen Zugriff auf diese Seite",
        "go_home": "Zur Übersicht",
