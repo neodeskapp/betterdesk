@@ -316,6 +316,7 @@ func TestSignInFlow(t *testing.T) {
 	if err := json.Unmarshal(raw, &want); err != nil {
 		t.Fatalf("read the recording: %v", err)
 	}
+	fixFlow(t, want)
 	if len(want) != len(f.steps) {
 		t.Fatalf("the recording has %d steps, the flow %d", len(want), len(f.steps))
 	}

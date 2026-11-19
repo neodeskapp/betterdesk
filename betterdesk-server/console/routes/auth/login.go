@@ -216,6 +216,14 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 	}
 	client := "; ip=" + meta.IP + "; ua=" + cutUTF16(meta.UserAgent, 160)
 
+	// Accounts for the desktop client only: the password was right, so the
+	// attempt counts as a success, but the console is not theirs.
+	if outcome.Failure == authn.FailureProOnly {
+		h.recordAttempt(r, username, true)
+		kit.Fail(w, r, http.StatusForbidden, kit.T(r, "auth.pro_only_account", nil))
+		return
+	}
+
 	if outcome.IsFailure() || outcome.User == nil {
 		h.recordAttempt(r, username, false)
 		details := "Username: " + jsString(username) + client
@@ -236,13 +244,6 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 
 	h.recordAttempt(r, username, true)
 	user := outcome.User
-
-	// Accounts for the desktop client only. The check in front of this one
-	// already refuses them, with the answer for a wrong password.
-	if user.Role.Valid && user.Role.String == "pro" {
-		kit.Fail(w, r, http.StatusForbidden, kit.T(r, "auth.pro_only_account", nil))
-		return
-	}
 
 	if user.TOTPRequired {
 		// The pending account goes into a new session: a session id that

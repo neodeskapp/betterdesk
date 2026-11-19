@@ -13,7 +13,7 @@
    "roles": [
     "pro"
    ],
-   "status": 401,
+   "status": 403,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -36,7 +36,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Invalid username or password.",
+     "error": "This account is for RustDesk desktop client only. Please use the RustDesk app to log in.",
      "success": false
     }
    }

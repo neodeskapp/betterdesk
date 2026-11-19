@@ -484,16 +484,6 @@ func TestKeptDefects(t *testing.T) {
 		}
 	})
 
-	t.Run("S11: a pro account gets the plain refusal", func(t *testing.T) {
-		db := storetest.Migrated(t)
-		s, _, _ := testService(t, db, nil)
-		addUser(t, s, "client", "pw", "pro", "local")
-		outcome, err := s.Authenticate(context.Background(), "client", "pw")
-		if err != nil || outcome.User != nil || outcome.IsFailure() {
-			t.Errorf("sign-in of a pro account: %+v, %v; want the same answer as for a wrong password", outcome, err)
-		}
-	})
-
 	t.Run("S12: recovery codes are stored as they are, and the Go server's are not understood", func(t *testing.T) {
 		db := storetest.Migrated(t)
 		ctx := context.Background()

@@ -201,7 +201,6 @@ func TestSingleSignOn(t *testing.T) {
 func TestSingleSignOnRolesAndWaysBack(t *testing.T) {
 	w := newWorld(t, nil, setup{})
 	stored := w.addUser(user{name: "known", role: "global_admin", language: "fr"})
-	pro := w.addUser(user{name: "desk", role: "pro"})
 
 	// Without a role from the provider the stored one counts, and a new
 	// account is a viewer
@@ -224,21 +223,13 @@ func TestSingleSignOnRolesAndWaysBack(t *testing.T) {
 	if role := w.text(`SELECT role FROM users WHERE username = 'fresh'`); role != "viewer" {
 		t.Errorf("role of the new account: %q", role)
 	}
-	// An account for the desktop client is signed in here all the same
-	w.provider(`"token":"t3","username":"desk"`)
-	c := w.agent()
-	res := singleSignOn(t, c, "/devices")
-	if res.header.Get("Location") != "/devices" || !strings.Contains(w.stored(c), fmt.Sprintf(`"userId":%d,`, pro)) {
-		t.Errorf("sign-on of a pro account: %q %s", res.header.Get("Location"), w.stored(c))
-	}
-
 	// The way back is checked when the sign-on starts and again when it ends
 	calls := w.api.seen("GET /api/auth/oidc/authorize")
 	var asked []string
 	for _, call := range calls {
 		asked = append(asked, call.Query)
 	}
-	equal(t, "ways back the signal server was given", asked, []string{"return_url=%2F", "return_url=%2F", "return_url=%2Fdevices"})
+	equal(t, "ways back the signal server was given", asked, []string{"return_url=%2F", "return_url=%2F"})
 	w.api.json("POST /api/auth/oidc/exchange", 200, `{"token":"t4","username":"known","return_url":"https://evil.example/"}`)
 	if res := w.agent().get("/api/auth/oidc/session?code=x"); res.status != http.StatusFound || res.header.Get("Location") != "/" {
 		t.Errorf("an unsafe way back from the signal server: %d %q", res.status, res.header.Get("Location"))

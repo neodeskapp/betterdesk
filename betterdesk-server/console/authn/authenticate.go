@@ -21,6 +21,10 @@ const (
 // local account.
 const FailureUsernameCollision = "username_collision"
 
+// FailureProOnly is the failure code of a sign-in with the right password
+// for an account of the role "pro".
+const FailureProOnly = "pro_only"
+
 // rolePro marks accounts for the RustDesk desktop client only. They cannot
 // sign in to the console.
 const rolePro = "pro"
@@ -80,7 +84,7 @@ type Outcome struct {
 	// User is the account that signed in, nil when sign-in was refused.
 	User *User
 	// Failure is the code of a refusal that has its own answer:
-	// FailureUsernameCollision. Empty otherwise.
+	// FailureUsernameCollision or FailureProOnly. Empty otherwise.
 	Failure string
 }
 
@@ -316,11 +320,12 @@ func authSuccessFromUser(user *Account, accept *goAccept) *User {
 }
 
 // finish turns accepted credentials into the outcome and notes the
-// sign-in on the row unless the second factor is still due.
+// sign-in on the row unless the second factor is still due. A pro account
+// is the failure FailureProOnly.
 func (s *Service) finish(ctx context.Context, user *Account, accept *goAccept) (Outcome, error) {
 	result := authSuccessFromUser(user, accept)
 	if result == nil {
-		return Outcome{}, nil
+		return Outcome{Failure: FailureProOnly}, nil
 	}
 	if !result.TOTPRequired {
 		if err := touchLastLogin(ctx, s.db, user.ID.V); err != nil {
@@ -348,7 +353,8 @@ func (s *Service) finish(ctx context.Context, user *Account, accept *goAccept) (
 //     Settings.AutoCreate is set and the signal server accepts the
 //     credentials: then a local row is made.
 //
-// An account with the role "pro" is refused. The outcome's user has
+// An account with the role "pro" is refused: with FailureProOnly when its
+// credentials were accepted, plainly otherwise. The outcome's user has
 // TOTPRequired set when the second factor is due; only otherwise is the
 // sign-in noted on the row (last_login).
 //

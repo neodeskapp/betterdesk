@@ -175,9 +175,10 @@ func (h *handlers) oidcCallback(w http.ResponseWriter, r *http.Request) {
 // oidcSession answers GET /api/auth/oidc/session?code=<code>, the last hop
 // of a single sign-on. The code is good once and for a minute; the signal
 // server exchanges it for the user it signed in. That user gets a local
-// account if it has none, and a console session.
+// account if it has none, and a console session. A pro account gets 403
+// with the text of the password sign-in and no session.
 //
-// No second factor is asked for here, and a pro account is not refused.
+// No second factor is asked for here.
 func (h *handlers) oidcSession(w http.ResponseWriter, r *http.Request) {
 	code, _ := queryText(r, "code")
 	if code == "" {
@@ -221,6 +222,12 @@ func (h *handlers) oidcSession(w http.ResponseWriter, r *http.Request) {
 		sessionRole.String = exchangeText(data.Get("role"))
 	case user.Role.String != "":
 		sessionRole.String = user.Role.String
+	}
+	// Accounts for the desktop client only get no console session, as at
+	// the password sign-in
+	if sessionRole.String == "pro" {
+		kit.Fail(w, r, http.StatusForbidden, kit.T(r, "auth.pro_only_account", nil))
+		return
 	}
 	who := newAccount(user.ID, user.Username, sessionRole, user.PreferredLanguage)
 	meta := h.sessions.ClientMeta(r, "")

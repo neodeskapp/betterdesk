@@ -55,7 +55,6 @@ func TestLoginRefusesWhatIsNoCredentials(t *testing.T) {
 func TestLoginWithWrongCredentials(t *testing.T) {
 	eachWorld(t, setup{}, func(t *testing.T, w *world) {
 		alice := w.addUser(user{name: "alice"})
-		w.addUser(user{name: "pia", role: "pro"})
 		w.addUser(user{name: "sso", provider: "oidc"})
 		a := w.agent()
 
@@ -65,20 +64,17 @@ func TestLoginWithWrongCredentials(t *testing.T) {
 			t.Errorf("a refused sign-in set cookies: %v", res.cookies())
 		}
 		want(t, "unknown user", a.post("/api/auth/login", login("nobody", password)), http.StatusUnauthorized, invalidCredentials)
-		// An account for the desktop client gets the answer of a wrong password
-		want(t, "pro account", a.post("/api/auth/login", login("pia", password)), http.StatusUnauthorized, invalidCredentials)
 		want(t, "single sign-on account", a.post("/api/auth/login", login("sso", password)), http.StatusUnauthorized, invalidCredentials)
 		want(t, "blank username", a.post("/api/auth/login", login("  ", password)), http.StatusUnauthorized, invalidCredentials)
 
 		equal(t, "audit", w.audit(), []string{
 			"login_failed|Username: a***; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
 			"login_failed|Username: n***; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
-			"login_failed|Username: p***; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
 			"login_failed|Username: s***; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
 			"login_failed|Username: *** ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
 		})
 		equal(t, "attempts", w.attempts(), []string{
-			"alice|127.0.0.1|0", "nobody|127.0.0.1|0", "pia|127.0.0.1|0", "sso|127.0.0.1|0", "  |127.0.0.1|0",
+			"alice|127.0.0.1|0", "nobody|127.0.0.1|0", "sso|127.0.0.1|0", "  |127.0.0.1|0",
 		})
 		if at := w.text(`SELECT CAST(last_login AS TEXT) FROM users WHERE id = ?`, alice); at != "" {
 			t.Errorf("a refused sign-in noted a sign-in on the account: %q", at)

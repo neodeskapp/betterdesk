@@ -843,6 +843,10 @@ func (r *scenarioRun) call(step *stepVector) (any, error) {
 		switch {
 		case err != nil:
 			return nil, err
+		case outcome.Failure == FailureProOnly:
+			// Node's authenticate returned null for a pro account; the
+			// route tells it apart now (BUGS.md S11)
+			return nil, nil
 		case outcome.IsFailure():
 			return map[string]any{"__authFailure": outcome.Failure}, nil
 		case outcome.User == nil:
