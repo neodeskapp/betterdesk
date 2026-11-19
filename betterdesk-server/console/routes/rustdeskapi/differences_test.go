@@ -62,7 +62,9 @@ var fixedSteps = []fixedStep{
 	{"node", "469 POST /api/login", "RD7"},
 	{"node", "the tokens", "RD7"},
 	{"node", "the tokens after sign-out", "RD7"},
-	{"node", "the audit entries", "RD7"},
+	// The audit entry of a sign-in from a banned device names the account
+	// in full: only a failed sign-in's "Username: " entry is shortened.
+	{"node", "the audit entries", "RD7, AL1"},
 	// The accessible route gives the short form in any letter case.
 	{"node", "609 GET /API/Device-Group/Accessible", "RD11"},
 }
