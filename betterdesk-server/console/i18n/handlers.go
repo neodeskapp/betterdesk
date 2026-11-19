@@ -248,6 +248,7 @@ func (h *Handlers) Upload(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusInternalServerError, result.Error)
 		return
 	}
+	h.forgetStrings(name)
 	if h.Audit != nil {
 		if err := h.Audit(r, "language_uploaded", "Language "+name+" uploaded"); err != nil {
 			crash(err.Error())
@@ -268,6 +269,7 @@ func (h *Handlers) Delete(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, result.Error)
 		return
 	}
+	h.forgetStrings(code)
 	if h.Audit != nil {
 		if err := h.Audit(r, "language_deleted", "Language "+code+" deleted"); err != nil {
 			h.logf("Delete language error: %v", err)
@@ -285,12 +287,24 @@ var stringsCode = regexp.MustCompile(`^[a-z]{2,3}(-[A-Za-z]{2,4})?$`)
 var wordGzip = regexp.MustCompile(`\bgzip\b`)
 
 // stringsEntry is one language's merged texts as sent to the web app. It
-// is made on first use and kept until the process ends, also when the
-// language file changes.
+// is made on first use and kept until an upload or a delete changes the
+// language, or the default language that fills it.
 type stringsEntry struct {
 	body     []byte
 	revision string
 	gzip     []byte
+}
+
+// forgetStrings drops the strings a change of code makes stale: code's
+// own, or every language's when code is the default language.
+func (h *Handlers) forgetStrings(code string) {
+	h.stringsMu.Lock()
+	defer h.stringsMu.Unlock()
+	if code == h.Bundle.DefaultLang {
+		clear(h.cache)
+		return
+	}
+	delete(h.cache, code)
 }
 
 func (h *Handlers) stringsFor(code string) *stringsEntry {

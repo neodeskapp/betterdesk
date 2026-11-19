@@ -177,36 +177,48 @@ func TestStringsCompression(t *testing.T) {
 	}
 }
 
-// The strings are made once per language and process. A change of the
-// file does not reach the endpoint before a restart.
-func TestStringsStayAsFirstServed(t *testing.T) {
-	h, srv := stringsServer(t)
-	first := do(t, srv.URL, "GET", "/api/console/strings/de", nil, nil, 0)
-	texts, _ := parseJSON(`{"common":{"cancel":"Neu"}}`)
-	if r := h.Bundle.Save("de", texts); !r.Success {
-		t.Fatal(r)
+// After an upload the strings endpoint sends the new texts under a new
+// revision, also for the languages the uploaded default language fills;
+// a language nothing changed keeps its strings, and a deleted one is gone
+// (BUGS.md L6).
+func TestStringsAfterUploadHaveTheNewRevision(t *testing.T) {
+	h, _, _ := handlersFor(t, copyDir(t, "testdata/lang-upload"), time.Now())
+	srv := httptest.NewServer(routes(h))
+	defer srv.Close()
+	get := func(code string) answer { return do(t, srv.URL, "GET", "/api/console/strings/"+code, nil, nil, 0) }
+	upload := func(name, content string) {
+		t.Helper()
+		form := "--B\r\nContent-Disposition: form-data; name=\"file\"; filename=\"" + name + "\"\r\nContent-Type: application/json\r\n\r\n" + content + "\r\n--B--\r\n"
+		res := do(t, srv.URL, "POST", "/api/i18n/upload", map[string]string{"Content-Type": "multipart/form-data; boundary=B"}, strings.NewReader(form), int64(len(form)))
+		if res.status != 200 {
+			t.Fatalf("upload %s: %d %s", name, res.status, res.body)
+		}
 	}
-	if got := h.Bundle.Translate("de", "common.cancel", nil); got != "Neu" {
-		t.Fatalf("the bundle did not reload: %v", got)
+
+	de, pl := get("de"), get("pl")
+	revision := h.StringsRevision("de")
+	upload("de.json", `{"a":"Neu"}`)
+	again := get("de")
+	if !strings.Contains(again.body, `"a":"Neu"`) || again.header.Get("ETag") == de.header.Get("ETag") {
+		t.Errorf("de after the upload: %s, ETag %s", short(again.body), again.header.Get("ETag"))
 	}
-	again := do(t, srv.URL, "GET", "/api/console/strings/de", nil, nil, 0)
-	if again.body != first.body || again.header.Get("ETag") != first.header.Get("ETag") {
-		t.Error("the strings changed after a save; Node kept the first version until restart")
+	if h.StringsRevision("de") == revision || h.StringsURL("de") != "/api/console/strings/de?v="+h.StringsRevision("de") {
+		t.Errorf("the revision stayed %s after the upload", revision)
 	}
-	// A language first asked for after the change gets the new texts.
-	if r := h.Bundle.Save("nl", texts); !r.Success {
-		t.Fatal(r)
+	if got := get("pl"); got.body != pl.body || got.header.Get("ETag") != pl.header.Get("ETag") {
+		t.Error("pl changed although nothing it takes changed")
 	}
-	nl := do(t, srv.URL, "GET", "/api/console/strings/nl", nil, nil, 0)
-	if !strings.Contains(nl.body, `"cancel":"Neu"`) {
-		t.Errorf("nl: %s", short(nl.body))
+
+	upload("en.json", `{"a":"A","b":{"c":"C2"}}`)
+	if got := get("pl"); !strings.Contains(got.body, `"c":"C2"`) || got.header.Get("ETag") == pl.header.Get("ETag") {
+		t.Errorf("pl after an upload of the default language: %s", short(got.body))
 	}
-	// A deleted language is gone at once.
-	if r := h.Bundle.Delete("de"); !r.Success {
-		t.Fatal(r)
+
+	if res := do(t, srv.URL, "DELETE", "/api/i18n/de", nil, nil, 0); res.status != 200 {
+		t.Fatalf("delete: %d %s", res.status, res.body)
 	}
-	if got := do(t, srv.URL, "GET", "/api/console/strings/de", nil, nil, 0); got.status != 404 {
-		t.Errorf("after delete: %d", got.status)
+	if got := get("de"); got.status != 404 {
+		t.Errorf("de after the delete: %d", got.status)
 	}
 }
 
