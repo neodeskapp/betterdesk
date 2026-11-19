@@ -93,3 +93,16 @@ func TestUpdateWithoutColumnsAnswersThePolicy(t *testing.T) {
 		}
 	})
 }
+
+// The statistics of no event are zeros on both databases, where SQLite
+// answered null for the four sums (BUGS DG4).
+func TestStatsWithoutEventsAreZero(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		for _, path := range []string{"/api/dataguard/stats", "/api/bd/stats"} {
+			if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != 200 || got.Body != `{"total":0,"blocked":0,"logged":0,"usb_events":0,"file_events":0}` {
+				t.Errorf("%s: %d %s", path, got.Status, got.Body)
+			}
+		}
+	})
+}

@@ -29,6 +29,13 @@ func TestNodeAnswers(t *testing.T) {
 		guarded := 0
 		defer policyFixes.Unused(t, db)
 		w.Run(replay.Load(t, db, "node"), policyFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
+			// SQLite summed no event to null; the counts are 0 (BUGS DG4)
+			if strings.HasSuffix(step.Path, "/stats") && strings.Contains(step.Answer, ":null") && got.Status == 200 {
+				if want := strings.ReplaceAll(step.Answer, ":null", ":0"); got.Body != want {
+					t.Errorf("%s: %s, want %s", step.Name, got.Body, want)
+				}
+				return true
+			}
 			if strings.HasPrefix(step.Path, "/api/dataguard") && got.Status == 403 && strings.Contains(got.Body, `"code":"panel_access_denied"`) {
 				switch step.Role {
 				case "global_admin", "operator", "viewer", "guest_issuer":

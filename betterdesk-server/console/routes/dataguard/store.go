@@ -372,8 +372,7 @@ func listEvents(ctx context.Context, db *store.DB, f eventFilter) ([]row, error)
 	return rows, nil
 }
 
-// eventStats is the number of events, all and by action and source. On
-// SQLite the four partial counts are null while there is no event.
+// eventStats is the number of events, all and by action and source.
 type eventStats struct {
 	Total      jsbind.Cell `json:"total"`
 	Blocked    jsbind.Cell `json:"blocked"`
@@ -387,10 +386,10 @@ func countEvents(ctx context.Context, db *store.DB) (eventStats, error) {
 	err := db.QueryRow(ctx, db.Pick(`
 		SELECT
 			COUNT(*) AS total,
-			SUM(CASE WHEN action = 'block' THEN 1 ELSE 0 END) AS blocked,
-			SUM(CASE WHEN action = 'log' THEN 1 ELSE 0 END) AS logged,
-			SUM(CASE WHEN event_source = 'usb' THEN 1 ELSE 0 END) AS usb_events,
-			SUM(CASE WHEN event_source = 'file' THEN 1 ELSE 0 END) AS file_events
+			COALESCE(SUM(CASE WHEN action = 'block' THEN 1 ELSE 0 END), 0) AS blocked,
+			COALESCE(SUM(CASE WHEN action = 'log' THEN 1 ELSE 0 END), 0) AS logged,
+			COALESCE(SUM(CASE WHEN event_source = 'usb' THEN 1 ELSE 0 END), 0) AS usb_events,
+			COALESCE(SUM(CASE WHEN event_source = 'file' THEN 1 ELSE 0 END), 0) AS file_events
 		FROM dlp_events`, `
 		SELECT
 			COUNT(*)::INTEGER AS total,
