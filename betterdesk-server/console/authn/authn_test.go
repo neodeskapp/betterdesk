@@ -480,17 +480,6 @@ func TestKeptDefects(t *testing.T) {
 			t.Errorf("the stored text itself: %v, %v; codes are compared as plain text", ok, err)
 		}
 	})
-
-	t.Run("a new secret has 140 random bits", func(t *testing.T) {
-		s := pureService()
-		s.rand = bytes.NewReader(bytes.Repeat([]byte{0xff}, 20))
-		high, _ := s.generateSecret()
-		s.rand = bytes.NewReader(bytes.Repeat([]byte{0x7f}, 20))
-		low, _ := s.generateSecret()
-		if high != low {
-			t.Errorf("the top bit of the random bytes counts: %s and %s", high, low)
-		}
-	})
 }
 
 func TestHousekeepingLogsAFailure(t *testing.T) {

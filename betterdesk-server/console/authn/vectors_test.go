@@ -3,6 +3,7 @@ package authn
 import (
 	"bytes"
 	"context"
+	"encoding/base32"
 	"encoding/hex"
 	"encoding/json"
 	"os"
@@ -199,17 +200,37 @@ func TestTOTPVectors(t *testing.T) {
 		}
 	}
 
+	// AN1: Node cleared the top bit of every random byte; the console keeps
+	// it. Where a byte had it set, Node's secret is the one of the cleared
+	// bytes and the console's the one of the bytes as they are.
+	encode := base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString
+	newSecrets := 0
 	for i, v := range vectors.Generated {
 		random, err := hex.DecodeString(v.Random)
 		if err != nil {
 			t.Fatal(err)
 		}
+		cleared := bytes.Clone(random)
+		for j := range cleared {
+			cleared[j] &= 0x7f
+		}
+		if encode(cleared) != v.Secret {
+			t.Errorf("secret %d: Node's %q is not the one of the bytes %s with their top bit cleared", i, v.Secret, v.Random)
+		}
+		want := v.Secret
+		if !bytes.Equal(cleared, random) {
+			want = encode(random)
+			newSecrets++
+		}
 		s := pureService()
 		s.rand = bytes.NewReader(random)
 		got, err := s.generateSecret()
-		if err != nil || got != v.Secret {
-			t.Errorf("secret %d: from %s: %q, %v; Node says %q", i, v.Random, got, err, v.Secret)
+		if err != nil || got != want {
+			t.Errorf("secret %d: from %s: %q, %v; want %q (Node says %q)", i, v.Random, got, err, want, v.Secret)
 		}
+	}
+	if newSecrets == 0 {
+		t.Errorf("none of %d generated secrets changes with AN1", len(vectors.Generated))
 	}
 }
 

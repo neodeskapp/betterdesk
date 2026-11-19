@@ -179,16 +179,12 @@ func otpauthURL(account, secret, issuer string) string {
 		"?secret=" + formEncode(secret) + "&issuer=" + formEncode(issuer) + "&digits=6&period=30"
 }
 
-// generateSecret makes a secret of 20 bytes as 32 base32 characters. The
-// top bit of every byte is cleared, so a secret has 140 random bits
-// (BUGS.md AN1).
+// generateSecret makes a secret of 20 random bytes, 160 bits, as 32
+// base32 characters.
 func (s *Service) generateSecret() (string, error) {
 	raw := make([]byte, totpKeyLength)
 	if _, err := io.ReadFull(s.rand, raw); err != nil {
 		return "", fmt.Errorf("two-factor secret: %w", err)
-	}
-	for i := range raw {
-		raw[i] &= 0x7f
 	}
 	return base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(raw), nil
 }

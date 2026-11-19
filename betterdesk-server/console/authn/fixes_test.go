@@ -2,6 +2,7 @@ package authn
 
 import (
 	"encoding/json"
+	"io"
 	"strings"
 )
 
@@ -28,6 +29,18 @@ func fixScenario(sc *scenarioVector, changed map[string]int) {
 			changed[fix.bug]++
 		}
 	}
+}
+
+// topBitCleared reads bytes with their top bit cleared, as Node turned the
+// random bytes of a two-factor secret into text first (AN1).
+type topBitCleared struct{ r io.Reader }
+
+func (c topBitCleared) Read(p []byte) (int, error) {
+	n, err := c.r.Read(p)
+	for i := range p[:n] {
+		p[i] &= 0x7f
+	}
+	return n, err
 }
 
 // stopAtSyncsFromTheSignalServer: when the signal server asks for a second

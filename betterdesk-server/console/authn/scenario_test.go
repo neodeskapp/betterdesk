@@ -702,6 +702,13 @@ func (r *scenarioRun) runStep(index int, step *stepVector) {
 	}
 	r.stub.load(step.Go)
 	r.svc.rand = &mulberry{a: step.Seed}
+	if step.Fn == "generateTotpSetup" {
+		// AN1: Node's secret was the one of the random bytes with their top
+		// bit cleared. Fed those bytes the console makes Node's secret, so
+		// the steps after the set-up compare with Node's; TestTOTPVectors
+		// holds the difference itself.
+		r.svc.rand = topBitCleared{r.svc.rand}
+	}
 	r.sleeps, r.hooks = nil, step.OnSleep
 	asked := r.now
 
