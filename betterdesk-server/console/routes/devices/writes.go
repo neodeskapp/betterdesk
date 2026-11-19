@@ -1,11 +1,13 @@
 package devices
 
 import (
+	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
@@ -76,7 +78,8 @@ func changesOf(result *goapi.Object) any {
 
 // remove answers DELETE /api/devices/{id}?revoke=&cascade=&hard=: a soft
 // delete; revoke also blocks the device and drops its connections,
-// cascade deletes the devices linked to it, hard deletes it for good
+// cascade deletes the devices linked to it (refused with 403 when the
+// account may not see one of them), hard deletes it for good
 // (also one that is soft-deleted already) and clears what the console
 // keeps of it.
 func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
@@ -100,6 +103,17 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 			h.serverError(w, r, "Delete device error:", err)
 		}
 		return
+	}
+	if opts.Cascade {
+		ok, err := h.linkedInScope(r, id)
+		if err != nil {
+			h.serverError(w, r, "Delete device error:", err)
+			return
+		}
+		if !ok {
+			fail(w, r, http.StatusForbidden, "errors.forbidden")
+			return
+		}
 	}
 	result := h.backend.DeleteDevice(ctx, id, opts)
 	if !result.Bool("success") {
@@ -130,6 +144,29 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 	// The server names the devices it deleted with this one
 	cascaded := or(dig(result.Get("data"), "cascaded"), []any{})
 	answer(w, r, http.StatusOK, deleted{Success: true, Revoked: opts.Revoke, Hard: opts.Hard, Cascaded: cascaded})
+}
+
+// linkedInScope reports whether the account may see every device linked
+// to the device id, which a delete with cascade deletes with it. The roles
+// that see every device pass without a lookup; a list of linked devices
+// that cannot be read is an error.
+func (h *handlers) linkedInScope(r *http.Request, id string) (bool, error) {
+	if user := kit.User(r); user == nil || access.IsAdminRole(user.Role) {
+		return true, nil
+	}
+	result := h.api.GetLinkedPeers(r.Context(), id)
+	linked, isList := dig(result.Get("data"), "linked").([]any)
+	if !result.Bool("success") || !isList {
+		return false, fmt.Errorf("read the devices linked to %s: %v", id, result.Get("error"))
+	}
+	ids := make([]string, len(linked))
+	for i, item := range linked {
+		device, _ := item.(*goapi.Object)
+		if ids[i] = idText(device); ids[i] == "" {
+			return false, fmt.Errorf("a device linked to %s has no id", id)
+		}
+	}
+	return h.allInScope(r, ids)
 }
 
 type deleted struct {

@@ -177,6 +177,63 @@ func TestDeleteNamesCascadedDevices(t *testing.T) {
 	}
 }
 
+// TestCascadeChecksTheLinkedDevices: a delete with cascade, which the
+// server carries out on the devices linked to the named one, is refused
+// with 403 when one of them is outside the account's scope, before
+// anything is deleted; with every linked device in scope it goes through.
+// A delete without cascade and the roles that see every device do not
+// look the linked devices up (BUGS DE11).
+func TestCascadeChecksTheLinkedDevices(t *testing.T) {
+	w, api := world(t, storetest.Migrated(t), routetest.Overrides{"operator": {"device.delete": true}}, nil)
+	operator, admin := w.As("operator"), w.As("admin")
+	forbidden := `{"success":false,"error":"You don't have access to this device."}`
+	deletes := func(calls []string) []string {
+		var out []string
+		for _, call := range calls {
+			if !strings.HasPrefix(call, "GET ") {
+				out = append(out, call)
+			}
+		}
+		return out
+	}
+	api.On("GET /api/peers/A/linked", 200, `{"peer_id":"A","linked":[{"id":"A2"},{"id":"C"}],"total":2}`)
+	for _, path := range []string{"/api/devices/A?cascade=true", "/api/devices/A?cascade=true&hard=true", "/api/devices/A?revoke=true&cascade=true"} {
+		api.Calls()
+		if got := operator.Do("DELETE", path, ""); got.Status != http.StatusForbidden || got.Body != forbidden {
+			t.Errorf("%s with C linked, as operator: %d %s, want 403 %s", path, got.Status, got.Body, forbidden)
+		}
+		if calls := deletes(api.Calls()); len(calls) > 0 {
+			t.Errorf("%s with C linked, as operator, reached the server: %q", path, calls)
+		}
+	}
+	api.On("GET /api/peers/A/linked", 500, `{"error":"database is locked"}`)
+	api.Calls()
+	if got := operator.Do("DELETE", "/api/devices/A?cascade=true", ""); got.Status != http.StatusInternalServerError {
+		t.Errorf("a cascade whose linked devices cannot be read, as operator: %d %s, want 500", got.Status, got.Body)
+	}
+	if calls := deletes(api.Calls()); len(calls) > 0 {
+		t.Errorf("a cascade whose linked devices cannot be read reached the server: %q", calls)
+	}
+
+	api.On("GET /api/peers/A/linked", 200, `{"peer_id":"A","linked":[{"id":"A2"}],"total":1}`)
+	if got := operator.Do("DELETE", "/api/devices/A?cascade=true", ""); got.Status != http.StatusOK {
+		t.Errorf("a cascade with every linked device in scope, as operator: %d %s", got.Status, got.Body)
+	}
+	api.On("GET /api/peers/A/linked", 200, `{"peer_id":"A","linked":[{"id":"C"}],"total":1}`)
+	api.Calls()
+	if got := operator.Do("DELETE", "/api/devices/A", ""); got.Status != http.StatusOK {
+		t.Errorf("a delete without cascade, as operator: %d %s", got.Status, got.Body)
+	}
+	if got := admin.Do("DELETE", "/api/devices/A?cascade=true", ""); got.Status != http.StatusOK {
+		t.Errorf("a cascade with C linked, as admin: %d %s", got.Status, got.Body)
+	}
+	for _, call := range api.Calls() {
+		if strings.HasSuffix(call, "/linked") {
+			t.Errorf("a delete without cascade or by admin looked the linked devices up: %s", call)
+		}
+	}
+}
+
 // TestListIgnoresQueryLists: search and sortOrder given as a list or an
 // object are ignored like the other parameters, and the list answers
 // (BUGS DE4).
