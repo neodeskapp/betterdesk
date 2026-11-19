@@ -2,7 +2,6 @@ package users
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"regexp"
@@ -42,8 +41,8 @@ func canAssignRole(caller, target string) bool {
 // mayChange reports whether the caller may change, reset or delete an
 // account: its own, or one whose role the caller could give. global_admin
 // also looks after guest_issuer accounts, a role nobody is given here.
-func mayChange(r *http.Request, userID float64, target *account) bool {
-	if isSessionAccount(r, userID) {
+func mayChange(r *http.Request, target *account) bool {
+	if isSessionAccount(r, target.ID.V) {
 		return true
 	}
 	caller, role := callerRole(r), target.role()
@@ -58,19 +57,12 @@ func callerRole(r *http.Request) string {
 	return ""
 }
 
-// isSessionAccount is userId === req.session.userId. The session keeps
-// the id as a number, and as text where the users table has 64-bit ids;
-// text never equals the number of the path.
-func isSessionAccount(r *http.Request, id float64) bool {
-	var raw json.RawMessage
-	if !kit.Session(r).Get("userId", &raw) {
-		return false
-	}
-	var n float64
-	if json.Unmarshal(raw, &n) != nil {
-		return false
-	}
-	return n == id
+// isSessionAccount reports whether the account with the id is the
+// caller's own. The session keeps the id as a number, and as text where
+// the users table has 64-bit ids; both count as the number.
+func isSessionAccount(r *http.Request, id int64) bool {
+	own := kit.UserID(r)
+	return own != 0 && own == id
 }
 
 // errRoleAboveOwn is the reply to a role the caller may not give.
@@ -422,7 +414,7 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	if user == nil {
 		return nil, sayKey(r, http.StatusNotFound, "users.not_found")
 	}
-	if !mayChange(r, userID, user) {
+	if !mayChange(r, user) {
 		return nil, errRoleAboveOwn
 	}
 	provider, err := providerOf(user)
@@ -438,7 +430,7 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 			return nil, err
 		}
 	}
-	if isSessionAccount(r, userID) && role.Truthy() && access.IsSuperAdminRole(callerRole(r)) && !(role.IsString() && access.IsSuperAdminRole(role.Str())) {
+	if isSessionAccount(r, user.ID.V) && role.Truthy() && access.IsSuperAdminRole(callerRole(r)) && !(role.IsString() && access.IsSuperAdminRole(role.Str())) {
 		return nil, sayKey(r, http.StatusBadRequest, "users.cannot_demote_self")
 	}
 	id := user.ID.V
@@ -587,11 +579,11 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 		failKey(w, r, http.StatusNotFound, "users.not_found")
 		return
 	}
-	if isSessionAccount(r, userID) {
+	if isSessionAccount(r, user.ID.V) {
 		failKey(w, r, http.StatusBadRequest, "users.cannot_delete_self")
 		return
 	}
-	if !mayChange(r, userID, user) {
+	if !mayChange(r, user) {
 		sent(w, r, errRoleAboveOwn)
 		return
 	}
@@ -641,7 +633,7 @@ func (h *handlers) resetPassword(w http.ResponseWriter, r *http.Request) {
 		failKey(w, r, http.StatusNotFound, "users.not_found")
 		return
 	}
-	if !mayChange(r, userID, user) {
+	if !mayChange(r, user) {
 		sent(w, r, errRoleAboveOwn)
 		return
 	}

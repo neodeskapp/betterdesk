@@ -10,6 +10,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
@@ -266,6 +267,31 @@ func TestUsernameMustBeText(t *testing.T) {
 			!strings.Contains(got.Body, `"folder_ids":[1]`) {
 			t.Errorf("abc lost its folder: %s", got.Body)
 		}
+	})
+}
+
+// The sign-in keeps the account id as text where the users table has
+// 64-bit ids. The caller's own account is still its own: it cannot be
+// deleted or demoted through these routes, and global_admin may still
+// change it (BUGS US3).
+func TestSessionAccountWithTextID(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		w := world(t, storetest.Prepare(t, db, storetest.GoServerFirst), routetest.Options{})
+		w.Server.Router().Get("/__users/text-id", func(rw http.ResponseWriter, r *http.Request) {
+			kit.Session(r).Set("userId", strconv.FormatInt(kit.UserID(r), 10))
+			kit.OK(rw, r, nil)
+		})
+		admin, global := w.As("admin"), w.As("global_admin")
+		for _, a := range []*routetest.Agent{admin, global} {
+			expect(t, "text id", a.Do("GET", "/__users/text-id", ""), 200, "")
+		}
+		expect(t, "delete", admin.Do("DELETE", "/api/users/1", ""), 400, `{"success":false,"error":"You cannot delete your own account"}`)
+		expect(t, "demote", admin.Do("PATCH", "/api/users/1", `{"role":"viewer"}`), 400, `{"success":false,"error":"You cannot demote yourself"}`)
+		var role string
+		if err := db.QueryRow(context.Background(), `SELECT role FROM users WHERE id = 1`).Scan(&role); err != nil || role != "admin" {
+			t.Errorf("the admin account: role %q, %v", role, err)
+		}
+		expect(t, "own email", global.Do("PATCH", "/api/users/4", `{"email":"me@example.invalid"}`), 200, "")
 	})
 }
 

@@ -79,6 +79,16 @@ var fixes = map[string]fix{
 		n.deleteAccount(16)
 		n.audit("user_deleted", "Deleted user: target_glob")
 	}},
+
+	// A session whose id is text: Node let the admin delete its own
+	// account. On PostgreSQL the audit entry then failed its foreign key.
+	"472 text id DELETE /api/users/1": {bug: "US3", status: http.StatusBadRequest,
+		answer: is(`{"success":false,"error":"You cannot delete your own account"}`), node: func(n *nodeWrites) {
+			n.deleteAccount(1)
+			if !n.p.db.IsPostgres() {
+				n.audit("user_deleted", "Deleted user: e2e_admin")
+			}
+		}},
 }
 
 // nodeWrites writes what the request of a step wrote in Node.
