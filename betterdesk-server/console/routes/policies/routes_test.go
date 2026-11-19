@@ -2,6 +2,7 @@ package policies_test
 
 import (
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -19,17 +20,31 @@ func register(d *kit.Deps) {
 
 // fixes are the vectors of vectors.json whose answer a bug fix of
 // BUGS.md changed on purpose (proxytest.Replay).
-var fixes = append(proxytest.Fixes("FL4",
-	// An id with two dots in it is refused by the route's own check, before
-	// any call.
-	422, 423, 466, 467, 510, 511, 554, 555, 598, 599, 642, 643, 688, 689, 690, 691,
-	774, 775, 818, 819,
+var fixes = slices.Concat(proxytest.Fixes("FL4",
+	// A device id with two dots in it is refused with 400 before any call.
+	818, 819,
 ), proxytest.Fixes("FL1",
 	// A limit or an offset that is no single text is refused with 400
 	// before any call.
 	891, 892, 893, 894, 895, 896, 897, 898, 984, 1011, 1090, 1126, 1261, 1296, 1361,
 	1385, 1390,
-)...)
+), proxytest.Fixes("FL3",
+	// An organization or device id that cannot go into a path, one with two
+	// dots in it as well (FL4), is refused with 400 and the check's text.
+	422, 423, 432, 433, 436, 437, 438, 439, 440, 441, 442, 443, 444, 445, 456,
+	457, 458, 459, 460, 461, 466, 467, 476, 477, 480, 481, 482, 483, 484, 485,
+	486, 487, 488, 489, 500, 501, 502, 503, 504, 505, 510, 511, 520, 521, 524,
+	525, 526, 527, 528, 529, 530, 531, 532, 533, 544, 545, 546, 547, 548, 549,
+	554, 555, 564, 565, 568, 569, 570, 571, 572, 573, 574, 575, 576, 577, 588,
+	589, 590, 591, 592, 593, 598, 599, 608, 609, 612, 613, 614, 615, 616, 617,
+	618, 619, 620, 621, 632, 633, 634, 635, 636, 637, 642, 643, 652, 653, 656,
+	657, 658, 659, 660, 661, 662, 663, 664, 665, 676, 677, 678, 679, 680, 681,
+	688, 689, 690, 691, 708, 709, 710, 711, 716, 717, 718, 719, 720, 721, 722,
+	723, 724, 725, 726, 727, 728, 729, 730, 731, 732, 733, 734, 735, 756, 757,
+	758, 759, 760, 761, 762, 763, 764, 765, 766, 767, 774, 775, 784, 785, 788,
+	789, 790, 791, 792, 793, 794, 795, 796, 797, 808, 809, 810, 811, 812, 813,
+	860,
+))
 
 // TestVectors replays what routes/policies.routes.js of the Node console
 // answered and asked the API server (testdata/nodeoracle/run.js).
@@ -107,6 +122,37 @@ func TestAttestationPagingThatIsNoText(t *testing.T) {
 		rec, calls := w.Do(proxytest.Request{Path: "/api/panel/attestation?" + query, Session: adminSession()}, records)
 		if rec.Code != 200 || len(calls) != 1 || calls[0].URL != sent {
 			t.Errorf("?%s: %d %s after %+v, want a call to %s", query, rec.Code, rec.Body, calls, sent)
+		}
+	}
+}
+
+// TestBadIDsAre400: an organization or device id that cannot go into a
+// path is refused with 400 and the check's text before any call, as the
+// fleet and resource control routes refuse it (BUGS.md FL3).
+func TestBadIDsAre400(t *testing.T) {
+	w := proxytest.NewWorld(t, register)
+	policy := &proxytest.Answer{Status: 200, Type: "application/json", Body: `{"ok":true}`}
+	body := `{"mode":"attended"}`
+	for _, c := range []struct {
+		method, path, want string
+	}{
+		{"GET", "/api/panel/policies/bad%20id", "Invalid orgId"},
+		{"GET", "/api/panel/policies/a..b", "Invalid orgId"},
+		{"GET", "/api/panel/policies/bad%20id/audit", "Invalid orgId"},
+		{"GET", "/api/panel/policies/bad%20id/effective/900100001", "Invalid orgId"},
+		{"GET", "/api/panel/policies/org-1/effective/bad%20id", "Invalid deviceId"},
+		{"GET", "/api/panel/policies/bad%20id/effective/bad%20id", "Invalid deviceId"},
+		{"PUT", "/api/panel/policies/bad%20id/connection", "Invalid orgId"},
+		{"PUT", "/api/panel/policies/%2E%2E/security", "Invalid orgId"},
+		{"GET", "/api/bd/api/panel/policies/bad%20id", "Invalid orgId"},
+	} {
+		req := proxytest.Request{Method: c.method, Path: c.path, Session: adminSession()}
+		if c.method == "PUT" {
+			req.Type, req.Body = "application/json", &body
+		}
+		rec, calls := w.Do(req, policy)
+		if rec.Code != 400 || rec.Body.String() != `{"error":"`+c.want+`"}` || len(calls) != 0 {
+			t.Errorf("%s %s: %d %s after %d calls, want 400 %s", c.method, c.path, rec.Code, rec.Body, len(calls), c.want)
 		}
 	}
 }

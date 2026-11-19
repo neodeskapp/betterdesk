@@ -13,12 +13,10 @@ import (
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/goapipath"
 	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/webui"
 )
 
 type handlers struct {
 	api *goapi.Client
-	web *webui.Host
 	log *kit.Logger
 }
 
@@ -30,7 +28,7 @@ var categories = []string{"connection", "features", "security", "network", "upda
 // roles; the write routes ask for nothing else, so someone without a
 // session gets their answer there.
 func Register(d *kit.Deps) {
-	h := &handlers{api: d.GoAPI, web: d.WebUI, log: d.Log.Child("Policies")}
+	h := &handlers{api: d.GoAPI, log: d.Log.Child("Policies")}
 	r := d.Router
 
 	r.Get("/api/panel/policies/{orgId}", h.read(""), d.RequireAuth, d.RequireAdmin)
@@ -64,7 +62,7 @@ func (h *handlers) read(suffix string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		path, err := policyPath(r, suffix)
 		if err != nil {
-			h.web.ServerError(w, r, err, 0)
+			refuse(w, r, err)
 			return
 		}
 		h.proxy(w, r, http.MethodGet, path)
@@ -77,7 +75,7 @@ func (h *handlers) write(suffix string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		path, err := policyPath(r, suffix)
 		if err != nil {
-			h.web.ServerError(w, r, err, 0)
+			refuse(w, r, err)
 			return
 		}
 		h.proxy(w, r, http.MethodPut, path, goapipath.Body(goapipath.RequestBody(r)))
@@ -90,19 +88,24 @@ func (h *handlers) write(suffix string) http.HandlerFunc {
 func (h *handlers) effective(w http.ResponseWriter, r *http.Request) {
 	device, err := goapipath.AssertSafeAPIID(r.PathValue("deviceId"), "deviceId")
 	if err != nil {
-		h.web.ServerError(w, r, err, 0)
+		refuse(w, r, err)
 		return
 	}
 	path, err := policyPath(r, "")
 	if err != nil {
-		h.web.ServerError(w, r, err, 0)
+		refuse(w, r, err)
 		return
 	}
 	h.proxy(w, r, http.MethodGet, path+"/effective/"+goapi.EncodeURIComponent(device))
 }
 
-// proxy calls the API server and answers with its status and body. A
-// refused id never gets here: the routes answer that as a server error.
+// refuse answers an id that cannot go into a path with 400 and the
+// check's text ("Invalid orgId", "Invalid deviceId").
+func refuse(w http.ResponseWriter, r *http.Request, err error) {
+	kit.JSON(w, r, http.StatusBadRequest, goapipath.ErrorBody{Error: err.Error()})
+}
+
+// proxy calls the API server and answers with its status and body.
 //
 //	no answer                                500 {"error":"Go server unreachable"}
 //	404 for a GET whose path ends in /policy 200 {}, so the page shows its defaults
