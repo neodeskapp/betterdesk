@@ -76,20 +76,34 @@ type writtenAnswer struct {
 
 // writeFile answers PUT /api/settings/advanced/files/{id} with {content}.
 // A file the server or the console reads at its start goes into the
-// caller's restart transaction, with its backup as the way back.
+// caller's restart transaction, with its backup as the way back; the
+// file is written only once the transaction takes the change, so while
+// another operator's change waits the answer is 409 and nothing is
+// written.
 func (g *general) writeFile(w http.ResponseWriter, r *http.Request) {
-	written, err := g.files.WriteFile(r.PathValue("id"), jsreq.Prop(jsreq.Body(r), "content"))
+	id := r.PathValue("id")
+	content := jsreq.Prop(jsreq.Body(r), "content")
+	var written *advancedconfig.Written
 	var pending *restart.Public
-	if err == nil && written.RequiresRestart != "none" {
-		var backup any
-		if written.BackupPath != nil {
-			backup = *written.BackupPath
-		}
-		pending, err = g.d.Restart.RegisterChange(kit.UserID(r), restart.Change{
-			Key:      "advanced:" + written.ID,
-			Label:    "Advanced configuration: " + written.ID,
-			Rollback: goapi.NewObject("type", "advanced-file", "fileId", written.ID, "backupPath", backup, "created", written.Created),
+	var err error
+	if needs, known := g.files.RequiresRestart(id); known && needs != "none" {
+		pending, err = g.d.Restart.RegisterChangeAfter(kit.UserID(r), "advanced:"+id, func() (restart.Change, error) {
+			var writeErr error
+			if written, writeErr = g.files.WriteFile(id, content); writeErr != nil {
+				return restart.Change{}, writeErr
+			}
+			var backup any
+			if written.BackupPath != nil {
+				backup = *written.BackupPath
+			}
+			return restart.Change{
+				Key:      "advanced:" + written.ID,
+				Label:    "Advanced configuration: " + written.ID,
+				Rollback: goapi.NewObject("type", "advanced-file", "fileId", written.ID, "backupPath", backup, "created", written.Created),
+			}, nil
 		})
+	} else {
+		written, err = g.files.WriteFile(id, content)
 	}
 	if err == nil {
 		details := "Saved advanced config: " + written.Path
@@ -100,8 +114,11 @@ func (g *general) writeFile(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		if !refuseFile(w, r, err) {
-			g.log.Error("Write advanced config file error:", err)
-			kit.Fail(w, r, http.StatusInternalServerError, messageOr(err, kit.T(r, "errors.server_error", nil)))
+			status := statusOf(err)
+			if status == http.StatusInternalServerError {
+				g.log.Error("Write advanced config file error:", err)
+			}
+			kit.Fail(w, r, status, messageOr(err, kit.T(r, "errors.server_error", nil)))
 		}
 		return
 	}

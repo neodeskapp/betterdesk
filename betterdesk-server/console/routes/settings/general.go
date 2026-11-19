@@ -53,11 +53,10 @@ func newGeneral(d *kit.Deps, log *kit.Logger) *general {
 }
 
 // rollbackFile undoes a saved configuration file for the restart
-// transaction. The descriptor's "created" is not passed on, as the old
-// console did not pass it: a file that the save created cannot be undone
-// (BUGS SE1).
+// transaction: a file the save created is removed, one that was there gets
+// its backup back.
 func (g *general) rollbackFile(_ context.Context, descriptor *goapi.Object) error {
-	return g.files.RestoreBackup(descriptor.Get("fileId"), descriptor.Get("backupPath"), false)
+	return g.files.RestoreBackup(descriptor.Get("fileId"), descriptor.Get("backupPath"), descriptor.Get("created") == true)
 }
 
 // answer is {success, data} with data always present, also as null.

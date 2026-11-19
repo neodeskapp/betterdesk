@@ -361,6 +361,16 @@ func (s *Service) RegisterChange(userID int64, change Change) (*Public, error) {
 	if change.Rollback == nil {
 		return nil, &Error{Message: "restart_change_not_reversible"}
 	}
+	return s.RegisterChangeAfter(userID, change.Key, func() (Change, error) { return change, nil })
+}
+
+// RegisterChangeAfter is RegisterChange for a setting that is written
+// first: it checks everything RegisterChange refuses for a change with
+// key, and only then runs write, which saves the setting and returns the
+// change (its Key is taken as key). All of it is one step, so a refused
+// change writes nothing and no other change comes between. An error of
+// write is returned as it is, and nothing is registered.
+func (s *Service) RegisterChangeAfter(userID int64, key string, write func() (Change, error)) (*Public, error) {
 	id, signedIn := operator(userID)
 	if !signedIn {
 		return nil, &Error{Message: "restart_auth_required"}
@@ -399,28 +409,35 @@ func (s *Service) RegisterChange(userID int64, change Change) (*Public, error) {
 		}
 		return nil, typeError("state.changes.find is not a function")
 	}
-	label := change.Label
-	if label == "" {
-		label = change.Key
-	}
 	var existing *goapi.Object
-	found := false
 	for _, item := range changes {
 		if item == nil {
 			return nil, typeError("Cannot read properties of null (reading 'key')")
 		}
-		if entry, isObject := item.(*goapi.Object); isObject && isText(entry.Get("key"), change.Key) {
-			existing, found = entry, true
+		if entry, isObject := item.(*goapi.Object); isObject && isText(entry.Get("key"), key) {
+			existing = entry
 			break
 		}
 	}
-	switch {
-	case found:
-		existing.Set("label", label)
-	case len(changes) >= MaxChanges:
+	if existing == nil && len(changes) >= MaxChanges {
 		return nil, &Error{Message: "restart_too_many_changes"}
-	default:
-		state.Set("changes", append(changes, goapi.NewObject("key", change.Key, "label", label, "rollback", change.Rollback)))
+	}
+
+	change, err := write()
+	if err != nil {
+		return nil, err
+	}
+	if change.Rollback == nil {
+		return nil, &Error{Message: "restart_change_not_reversible"}
+	}
+	label := change.Label
+	if label == "" {
+		label = key
+	}
+	if existing != nil {
+		existing.Set("label", label)
+	} else {
+		state.Set("changes", append(changes, goapi.NewObject("key", key, "label", label, "rollback", change.Rollback)))
 	}
 	if err := s.touch(state); err != nil {
 		return nil, err

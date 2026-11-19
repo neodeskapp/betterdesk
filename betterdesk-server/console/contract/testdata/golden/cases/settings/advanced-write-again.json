@@ -38,10 +38,6 @@
    },
    "volatile": [
     {
-     "path": "data.backupPath",
-     "format": "/aaa/aaaa/.aaaaaaa_aaaaaa.aaa.9999-99-99A99-99-99-999A"
-    },
-    {
      "path": "data.mtime",
      "format": "9999-99-99A99:99:99.999A"
     },
@@ -66,8 +62,8 @@
     "kind": "json",
     "json": {
      "data": {
-      "backupPath": "<volatile>",
-      "created": false,
+      "backupPath": null,
+      "created": true,
       "id": "console-session-secret",
       "mtime": "<volatile>",
       "path": "/app/data/.session_secret",

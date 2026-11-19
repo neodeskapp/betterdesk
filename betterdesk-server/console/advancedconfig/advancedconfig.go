@@ -178,6 +178,14 @@ func exists(p string) bool {
 
 // lookup finds the catalog entry of an id that is allowed on this
 // platform: getDefinition and isPlatformAllowed.
+// RequiresRestart names what has to restart before a change of the file
+// with id takes effect ("console", "goserver", "systemd" or "none"). ok
+// is false for an id the editor does not offer here.
+func (s *Service) RequiresRestart(id string) (string, bool) {
+	def, ok := s.lookup(id)
+	return def.requiresRestart, ok
+}
+
 func (s *Service) lookup(id any) (definition, bool) {
 	text, ok := id.(string)
 	if !ok || text == "" {

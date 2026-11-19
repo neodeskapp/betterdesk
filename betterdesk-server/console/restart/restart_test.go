@@ -176,6 +176,41 @@ func TestConfirmWithoutARestartFunction(t *testing.T) {
 	}
 }
 
+// TestRegisterChangeAfterWritesNothingWhenRefused: a change that the
+// transaction refuses never runs its write, a write that fails registers
+// nothing, and a write that works is registered under the key (BUGS SE2,
+// CM5).
+func TestRegisterChangeAfterWritesNothingWhenRefused(t *testing.T) {
+	s := newService(t, Options{})
+	mustRegister(t, s, 1, "first")
+	wrote := 0
+	write := func(err error) func() (Change, error) {
+		return func() (Change, error) {
+			wrote++
+			return Change{Key: "ignored", Label: "File", Rollback: goConfig("file", "N")}, err
+		}
+	}
+	_, err := s.RegisterChangeAfter(2, "file", write(nil))
+	var refused *Error
+	if !errors.As(err, &refused) || refused.StatusCode() != http.StatusConflict || refused.Message != "restart_transaction_owned" || wrote != 0 {
+		t.Errorf("another operator: %v, wrote %d times", err, wrote)
+	}
+	if _, err := s.RegisterChangeAfter(0, "file", write(nil)); err == nil || err.Error() != "restart_auth_required" || wrote != 0 {
+		t.Errorf("nobody signed in: %v, wrote %d times", err, wrote)
+	}
+	failed := errors.New("disk full")
+	if _, err := s.RegisterChangeAfter(1, "file", write(failed)); !errors.Is(err, failed) || wrote != 1 {
+		t.Errorf("a failed write: %v, wrote %d times", err, wrote)
+	}
+	public, err := s.RegisterChangeAfter(1, "file", write(nil))
+	if err != nil || wrote != 2 {
+		t.Fatalf("a write that works: %v, wrote %d times", err, wrote)
+	}
+	if text, _ := json.Marshal(public.Get("changes")); string(text) != `[{"key":"first","label":"FIRST"},{"key":"file","label":"File"}]` {
+		t.Errorf("changes %s", text)
+	}
+}
+
 // TestRegisterChangeWaitsForARunningRestart: while a transaction is
 // restarting under this process's boot id, a new change is refused for
 // every operator and the transaction stays, so its page can follow it.

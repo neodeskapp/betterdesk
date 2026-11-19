@@ -3,6 +3,7 @@ package settings_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -184,8 +185,8 @@ func TestRestartStatus(t *testing.T) {
 }
 
 // The file editor's chain through the restart transaction, as the
-// contract cases run it: a new file cannot be undone (the rollback gets
-// no backup), a file that was there can.
+// contract cases run it: a cancel removes a file the save created (BUGS
+// SE1) and puts the backup of a file that was there back.
 func TestAdvancedFileChain(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		s := newSite(t, db, nil, nil)
@@ -218,29 +219,33 @@ func TestAdvancedFileChain(t *testing.T) {
 		}
 
 		// Another operator may not change the file into this transaction:
-		// the file is saved and the answer is 500
+		// the answer is 409 and the file stays as it is (BUGS SE2)
 		res = s.As("super_admin").Do("PUT", "/api/settings/advanced/files/console-session-secret", `{"content":"other\n"}`)
-		if res.Status != http.StatusInternalServerError || res.Body != `{"success":false,"error":"restart_transaction_owned"}` {
+		if res.Status != http.StatusConflict || res.Body != `{"success":false,"error":"restart_transaction_owned"}` {
 			t.Errorf("other operator: %d %s", res.Status, res.Body)
 		}
-		if content, _ := os.ReadFile(secret); string(content) != "other\n" {
+		if content, _ := os.ReadFile(secret); string(content) != "first\n" {
 			t.Errorf("content after the other operator: %q", content)
+		}
+		if entries, _ := os.ReadDir(s.DataDir); strings.Contains(fmt.Sprint(entries), ".session_secret.bak.") {
+			t.Errorf("the refused write left a backup: %v", entries)
 		}
 
 		res = admin.Do("POST", "/api/settings/restart/cancel", `{"id":"`+tx+`"}`)
-		if res.Status != http.StatusInternalServerError ||
-			res.Body != `{"success":false,"error":"restart_rollback_failed","details":[{"key":"advanced:console-session-secret","error":"invalid_backup"}]}` {
+		if res.Status != http.StatusOK || res.Body != `{"success":true,"data":{"canceled":true,"id":"`+tx+`"}}` {
 			t.Errorf("cancel of a new file: %d %s", res.Status, res.Body)
 		}
-		res = admin.Do("GET", "/api/settings/restart/pending", "")
-		if !strings.Contains(res.Body, `"phase":"failed"`) || res.Header.Get("Cache-Control") != "no-store" {
-			t.Errorf("pending after the failed cancel: %q %s", res.Header.Get("Cache-Control"), res.Body)
+		if _, err := os.Stat(secret); !os.IsNotExist(err) {
+			t.Errorf("the file the save created is still there after the cancel: %v", err)
 		}
-		res = admin.Do("POST", "/api/settings/restart/complete", `{"id":"`+tx+`"}`)
-		if res.Body != `{"success":true,"data":{"completed":true,"id":"`+tx+`"}}` {
-			t.Errorf("complete: %s", res.Body)
+		res = admin.Do("GET", "/api/settings/restart/pending", "")
+		if res.Body != `{"success":true,"data":null}` || res.Header.Get("Cache-Control") != "no-store" {
+			t.Errorf("pending after the cancel: %q %s", res.Header.Get("Cache-Control"), res.Body)
 		}
 
+		if err := os.WriteFile(secret, []byte("other\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
 		res = admin.Do("PUT", "/api/settings/advanced/files/console-session-secret", `{"content":"second\n"}`)
 		got = decode(t, res.Body)
 		backup, _ := got["data"].(map[string]any)["backupPath"].(string)

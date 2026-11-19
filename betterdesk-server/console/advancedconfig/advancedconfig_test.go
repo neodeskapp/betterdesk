@@ -160,8 +160,8 @@ func TestWriteKeepsTheModeOfAFileAndCreatesNewOnesPrivate(t *testing.T) {
 	}
 }
 
-// A file the write created is removed by a restore with created; the
-// settings routes never pass created (the old console did not).
+// A file the write created is removed by a restore with created, which
+// the settings routes pass for a file their save created.
 func TestRestoreCreated(t *testing.T) {
 	s, root := testService(t, nil)
 	if _, err := s.WriteFile("go-blocklist", "x"); err != nil {
