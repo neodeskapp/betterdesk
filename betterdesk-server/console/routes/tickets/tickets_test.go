@@ -480,6 +480,25 @@ func TestTicketMembersOfTheWrongType(t *testing.T) {
 	})
 }
 
+// A change checks status and priority whenever the body has them: an
+// empty text, null, 0 or false is refused, so every ticket keeps a status
+// the statistics count (BUGS TK3).
+func TestUpdateChecksStatusWhenPresent(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		g := newGroup(t, db)
+		g.want(g.do("admin", "POST", "/api/tickets", `{"title":"Counted"}`), 201, "")
+		for _, value := range []string{`""`, `null`, `0`, `false`} {
+			g.want(g.do("admin", "PATCH", "/api/tickets/1", `{"status":`+value+`}`), 400, `{"error":"Invalid status. Valid: open, in_progress, resolved, closed"}`)
+			g.want(g.do("admin", "PATCH", "/api/tickets/1", `{"priority":`+value+`}`), 400, `{"error":"Invalid priority. Valid: low, medium, high, critical"}`)
+		}
+		g.want(g.do("admin", "GET", "/api/tickets/stats", ""), 200, `{"total":1,"open":1,"in_progress":0,"resolved":0,"closed":0}`)
+		var priority string
+		if err := db.QueryRow(context.Background(), "SELECT priority FROM tickets WHERE id = 1").Scan(&priority); err != nil || priority != "medium" {
+			t.Errorf("priority after the refused changes: %q, %v", priority, err)
+		}
+	})
+}
+
 // unread is a request body that counts what is read of it.
 type unread struct {
 	left int64

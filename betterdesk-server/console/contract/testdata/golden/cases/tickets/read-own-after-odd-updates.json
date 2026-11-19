@@ -156,10 +156,10 @@
      "description": "now with text",
      "device_id": null,
      "id": 15,
-     "priority": null,
+     "priority": "low",
      "resolved_at": "<volatile>",
      "sla_due_at": "2031-05-06T07:08:09.000Z",
-     "status": "",
+     "status": "closed",
      "title": "Role ticket, renamed",
      "updated_at": "<volatile>"
     }
@@ -245,10 +245,10 @@
      "description": "now with text",
      "device_id": null,
      "id": 17,
-     "priority": null,
+     "priority": "low",
      "resolved_at": "<volatile>",
      "sla_due_at": "2031-05-06T07:08:09.000Z",
-     "status": "",
+     "status": "closed",
      "title": "Role ticket, renamed",
      "updated_at": "<volatile>"
     }
@@ -334,10 +334,10 @@
      "description": "now with text",
      "device_id": null,
      "id": 20,
-     "priority": null,
+     "priority": "low",
      "resolved_at": "<volatile>",
      "sla_due_at": "2031-05-06T07:08:09.000Z",
-     "status": "",
+     "status": "closed",
      "title": "Role ticket, renamed",
      "updated_at": "<volatile>"
     }
@@ -431,10 +431,10 @@
      "description": "now with text",
      "device_id": null,
      "id": 22,
-     "priority": null,
+     "priority": "low",
      "resolved_at": "<volatile>",
      "sla_due_at": "2031-05-06T07:08:09.000Z",
-     "status": "",
+     "status": "closed",
      "title": "Role ticket, renamed",
      "updated_at": "<volatile>"
     }

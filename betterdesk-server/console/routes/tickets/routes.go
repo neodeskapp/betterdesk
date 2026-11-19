@@ -330,9 +330,8 @@ func (h *handlers) get(w http.ResponseWriter, r *http.Request) {
 // names one of title, description, status, priority, category,
 // assigned_to, sla_due_at and device_id is written, each checked: the
 // title is text that is not empty, description and assigned_to are text
-// or null, category is one of the known ones, and so are status and
-// priority when they are not empty; device_id is a device id, empty or
-// null, and sla_due_at a time or null.
+// or null, status, priority and category are each one of the known ones,
+// device_id is a device id, empty or null, and sla_due_at a time or null.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	t, err := ticketByID(r.Context(), h.db, ticketID(r, "id"))
 	if err != nil {
@@ -345,11 +344,11 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	}
 	body := kit.Body(r)
 	status, priority, deviceID := jsbind.Of(body.Get("status")), jsbind.Of(body.Get("priority")), jsbind.Of(body.Get("device_id"))
-	if status.Truthy() && !oneOf(status, validStatuses) {
+	if body.Has("status") && !oneOf(status, validStatuses) {
 		fail(w, r, http.StatusBadRequest, "Invalid status. Valid: "+strings.Join(validStatuses, ", "))
 		return
 	}
-	if priority.Truthy() && !oneOf(priority, validPriorities) {
+	if body.Has("priority") && !oneOf(priority, validPriorities) {
 		fail(w, r, http.StatusBadRequest, "Invalid priority. Valid: "+strings.Join(validPriorities, ", "))
 		return
 	}

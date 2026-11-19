@@ -219,3 +219,19 @@ var _ = ticketFixes.Add("TK1", map[string]replay.Fix{
 	`admin PATCH /api/tickets/2 {"sla_due_at":5}`:                 {Status: 400, Answer: invalidDue, After: set("sla_due_at", "5.0", failed)},
 	`admin PATCH /api/tickets/2 {"sla_due_at":""}`:                {Status: 400, Answer: invalidDue, After: set("sla_due_at", "", failed)},
 })
+
+var (
+	invalidStatus   = `{"error":"Invalid status. Valid: open, in_progress, resolved, closed"}`
+	invalidPriority = `{"error":"Invalid priority. Valid: low, medium, high, critical"}`
+)
+
+// TK3: a change checks status and priority whenever they are there.
+var _ = ticketFixes.Add("TK3", map[string]replay.Fix{
+	`admin PATCH /api/tickets/2 {"status":""}`:     {Status: 400, Answer: invalidStatus, After: set("status", "", "")},
+	`admin PATCH /api/tickets/2 {"status":0}`:      {Status: 400, Answer: invalidStatus, After: set("status", "0.0", "0")},
+	`admin PATCH /api/tickets/2 {"status":null}`:   {Status: 400, Answer: invalidStatus, After: set("status", nil, nil)},
+	`admin PATCH /api/tickets/2 {"status":false}`:  {Status: 400, Answer: invalidStatus, After: set("status", failed, "false")},
+	`admin PATCH /api/tickets/2 {"priority":null}`: {Status: 400, Answer: invalidPriority, After: set("priority", nil, nil)},
+	`admin PATCH /api/tickets/2 {"priority":""}`:   {Status: 400, Answer: invalidPriority, After: set("priority", "", "")},
+	`admin PATCH /api/tickets/2 {"priority":0}`:    {Status: 400, Answer: invalidPriority, After: set("priority", "0.0", "0")},
+})
