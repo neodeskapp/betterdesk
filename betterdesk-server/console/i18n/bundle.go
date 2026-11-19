@@ -99,6 +99,10 @@ type Bundle struct {
 	// Logf writes the load messages. log.Printf when nil.
 	Logf func(format string, args ...any)
 
+	// write writes a saved language's data to its new file; f.Write when
+	// nil. Tests make it fail.
+	write func(f *os.File, data []byte) error
+
 	mu           sync.RWMutex
 	translations map[string]any
 	available    map[string]*Object
@@ -595,9 +599,9 @@ type Result struct {
 //
 // The code must pass ValidCode and the file must lie in Dir after symbolic
 // links are resolved. The file is written as JSON with two spaces of
-// indentation, in UTF-8, without a trailing newline, in place: the
-// existing file is truncated and rewritten, not replaced by a rename. A
-// code outside the table of known languages is written but not loaded.
+// indentation, in UTF-8, without a trailing newline, into a new file that
+// replaces the old one only once it is complete. A code outside the table
+// of known languages is written but not loaded.
 func (b *Bundle) Save(code string, texts any) Result {
 	if !ValidCode(code) {
 		return Result{Error: "Invalid language code format"}

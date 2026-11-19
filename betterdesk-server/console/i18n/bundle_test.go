@@ -1,6 +1,7 @@
 package i18n
 
 import (
+	"errors"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -386,6 +387,57 @@ func TestSaveWritesIndentedJSONAndReloads(t *testing.T) {
 	}
 	if lines := l.take(); !reflect.DeepEqual(lines, []string{"i18n: Skipping unsupported language code xx"}) {
 		t.Errorf("log lines %q", lines)
+	}
+}
+
+// A save that fails while it writes leaves the old file whole and the
+// language as it was, with no file of the attempt left behind. A save
+// that succeeds keeps the old file's permissions (BUGS.md L17).
+func TestSaveKeepsTheOldFileWhenTheWriteFails(t *testing.T) {
+	dir := copyDir(t, "testdata/lang-upload")
+	file := filepath.Join(dir, "de.json")
+	if err := os.Chmod(file, 0o640); err != nil {
+		t.Fatal(err)
+	}
+	b, _ := loaded(t, dir, "en")
+	before, err := os.ReadFile(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	names := fileNames(t, dir)
+	texts, _ := parseJSON(`{"a":"neu","b":{"c":"neu"}}`)
+
+	b.write = func(f *os.File, data []byte) error {
+		if _, err := f.Write(data[:3]); err != nil {
+			return err
+		}
+		return errors.New("no space left on device")
+	}
+	if r := b.Save("de", texts); r.Success || r.Error != "no space left on device" {
+		t.Errorf("Save while the disk is full = %+v", r)
+	}
+	if after, _ := os.ReadFile(file); string(after) != string(before) {
+		t.Errorf("the file after a failed save: %q", after)
+	}
+	if got := fileNames(t, dir); !reflect.DeepEqual(got, names) {
+		t.Errorf("files after a failed save: %v, before %v", got, names)
+	}
+	if got := b.T("de", "a", nil); got != "A-de" {
+		t.Errorf("the language after a failed save: a = %q", got)
+	}
+
+	b.write = nil
+	if r := b.Save("de", texts); !r.Success {
+		t.Fatalf("Save = %+v", r)
+	}
+	if after, _ := os.ReadFile(file); string(after) != stringify(texts, "  ") {
+		t.Errorf("the saved file: %q", after)
+	}
+	if got := fileNames(t, dir); !reflect.DeepEqual(got, names) {
+		t.Errorf("files after a save: %v, before %v", got, names)
+	}
+	if info, err := os.Stat(file); runtime.GOOS != "windows" && (err != nil || info.Mode().Perm() != 0o640) {
+		t.Errorf("the saved file's mode: %v, %v", info.Mode(), err)
 	}
 }
 

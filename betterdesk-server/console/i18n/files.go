@@ -47,11 +47,47 @@ func (b *Bundle) readDir() ([]fs.DirEntry, error) {
 	return os.ReadDir(b.Dir)
 }
 
+// writeFile replaces the file at path with data. It writes a new file in
+// the same folder and renames it over the old one, so a write that fails
+// leaves the old file as it was. The new file gets the old one's
+// permissions, or 0644.
 func (b *Bundle) writeFile(path string, data []byte) error {
 	if b.FS != nil {
 		return &fs.PathError{Op: "open", Path: path, Err: syscall.EROFS}
 	}
-	return os.WriteFile(path, data, 0o666)
+	mode := fs.FileMode(0o644)
+	if info, err := os.Stat(path); err == nil {
+		mode = info.Mode().Perm()
+	}
+	f, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+".*.tmp")
+	if err != nil {
+		return err
+	}
+	err = b.writeData(f, data)
+	if err == nil {
+		err = f.Chmod(mode)
+	}
+	if err == nil {
+		err = f.Sync()
+	}
+	if closeErr := f.Close(); err == nil {
+		err = closeErr
+	}
+	if err == nil {
+		err = os.Rename(f.Name(), path)
+	}
+	if err != nil {
+		_ = os.Remove(f.Name())
+	}
+	return err
+}
+
+func (b *Bundle) writeData(f *os.File, data []byte) error {
+	if b.write != nil {
+		return b.write(f, data)
+	}
+	_, err := f.Write(data)
+	return err
 }
 
 // remove deletes a language file and refuses a directory, as unlink does.
