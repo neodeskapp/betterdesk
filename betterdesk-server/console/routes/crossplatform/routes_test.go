@@ -71,6 +71,9 @@ var changedByFixes = map[string]struct {
 	// API server then answers a bare list, which Node never read
 	"distribution, a bare list": {200, `{"total":20,"platforms":{"windows":2,"ubuntu 22.04":1,"linux":1,"macos":3,"android":1,"ios":4,"chromeos":1,"other":3,"freebsd 14":1,"debian 12":2,"äöü éire":1},"archs":{"unknown":14,"x86_64":2,"arm64":2,"amd64":1,"αρμ":1},"versions":{"2":2,"9":1,"10":1,"1.4.2":4,"1.4.1":1,"1.3.9":1,"unknown":5,"1.5":1,"true":1,"1,2":1,"[object Object]":1,"Ünïcode":1}}`},
 	"protocols, a bare list":    {200, `{"totalOnline":3,"codecs":{"vp9":1,"h264":2},"features":{"file_transfer":2,"clipboard":1}}`},
+	// TH5: a name every JavaScript object has counts from 1
+	"distribution, names every object has": {200, `{"total":30,"platforms":{"constructor":2,"tostring":2,"valueof":2,"hasownproperty":2,"isprototypeof":2,"propertyisenumerable":2,"tolocalestring":2,"__proto__":2,"__definegetter__":2,"__definesetter__":2,"__lookupgetter__":2,"__lookupsetter__":2,"length":2,"prototype":2,"name":2},"archs":{"constructor":2,"tostring":2,"valueof":2,"hasownproperty":2,"isprototypeof":2,"propertyisenumerable":2,"tolocalestring":2,"__proto__":2,"__definegetter__":2,"__definesetter__":2,"__lookupgetter__":2,"__lookupsetter__":2,"length":2,"prototype":2,"name":2},"versions":{"constructor":2,"toString":2,"valueOf":2,"hasOwnProperty":2,"isPrototypeOf":2,"propertyIsEnumerable":2,"toLocaleString":2,"__proto__":2,"__defineGetter__":2,"__defineSetter__":2,"__lookupGetter__":2,"__lookupSetter__":2,"length":2,"prototype":2,"name":2}}`},
+	"protocols, names every object has":    {200, `{"totalOnline":30,"codecs":{"constructor":2,"toString":2,"valueOf":2,"hasOwnProperty":2,"isPrototypeOf":2,"propertyIsEnumerable":2,"toLocaleString":2,"__proto__":2,"__defineGetter__":2,"__defineSetter__":2,"__lookupGetter__":2,"__lookupSetter__":2,"length":2,"prototype":2,"name":2},"features":{"constructor":3,"toString":3,"valueOf":3,"hasOwnProperty":3,"isPrototypeOf":3,"propertyIsEnumerable":3,"toLocaleString":3,"__proto__":3,"__defineGetter__":3,"__defineSetter__":3,"__lookupGetter__":3,"__lookupSetter__":3,"length":3,"prototype":3,"name":3}}`},
 }
 
 // TestRoutesMatchNode replays the answers of the API server the Node
@@ -214,6 +217,24 @@ func TestCountsCoverMoreThan500Devices(t *testing.T) {
 	for path, want := range map[string]string{
 		"/api/panel/cross-platform/distribution": `{"total":501,"platforms":{"linux":501},"archs":{"unknown":501},"versions":{"1.4":501}}`,
 		"/api/panel/cross-platform/protocols":    `{"totalOnline":501,"codecs":{"vp9":501},"features":{}}`,
+	} {
+		if got := admin.Do("GET", path, ""); got.Status != 200 || got.Body != want {
+			t.Errorf("%s: %d %s, want %s", path, got.Status, got.Body, want)
+		}
+	}
+}
+
+// TestTallyCountsEveryName: the names of the members every JavaScript
+// object has count like any other name, "__proto__" included.
+func TestTallyCountsEveryName(t *testing.T) {
+	api := routetest.NewAPI()
+	api.On("GET /api/peers", 200, `[`+
+		`{"platform":"constructor","arch":"constructor","version":"toString","live_online":true,"supported_codecs":["valueOf","__proto__"],"supported_features":"hasOwnProperty"},`+
+		`{"platform":"constructor","arch":"constructor","version":"__proto__","live_online":true,"supported_codecs":["valueOf"]}]`)
+	admin := routetest.New(t, routetest.Options{API: api}).As("admin")
+	for path, want := range map[string]string{
+		"/api/panel/cross-platform/distribution": `{"total":2,"platforms":{"constructor":2},"archs":{"constructor":2},"versions":{"toString":1,"__proto__":1}}`,
+		"/api/panel/cross-platform/protocols":    `{"totalOnline":2,"codecs":{"valueOf":2,"__proto__":1},"features":{"hasOwnProperty":1}}`,
 	} {
 		if got := admin.Do("GET", path, ""); got.Status != 200 || got.Body != want {
 			t.Errorf("%s: %d %s, want %s", path, got.Status, got.Body, want)
