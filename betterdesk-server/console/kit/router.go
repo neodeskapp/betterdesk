@@ -91,6 +91,10 @@ func (rt *Router) Mount(prefix string) *Router {
 	return &Router{table: rt.table, prefix: rt.prefix + prefix}
 }
 
+// Prefix is the mount the router adds its routes below, "" for the table
+// itself.
+func (rt *Router) Prefix() string { return rt.prefix }
+
 // Handle adds a route. The middleware runs in the order given, before h.
 // method is "" for every method.
 func (rt *Router) Handle(method, pattern string, h http.Handler, mw ...Middleware) {

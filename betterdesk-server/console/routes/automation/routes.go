@@ -6,7 +6,7 @@
 //     settings. All of them need the permission server.config, and all of
 //     them step aside at /api/bd for the routes of other groups there.
 //   - The routes of the device agent, behind the device token guard
-//     (device.go): it fetches its pending commands (GET commands, reached
+//     (device.go): it fetches its pending commands (GET commands, registered
 //     at /api/bd only, because at /api/automation the people's list of
 //     commands answers first) and reports a command's result (POST
 //     commands/{id}/result, at both mounts).
@@ -66,7 +66,11 @@ func Register(d *kit.Deps) {
 	r.Get("/commands", h.commands, notOnDeviceMount, d.RequireAuth, canConfigure)
 	r.Get("/commands/{id}", h.command, id, notOnDeviceMount, d.RequireAuth, canConfigure)
 
-	r.Get("/commands", h.pendingCommands, d.RequireDeviceToken)
+	// At /api/automation the people's list of the same path answers every
+	// request first, so the device route is registered at /api/bd only
+	if r.Prefix() == devicemount.DeviceMount {
+		r.Get("/commands", h.pendingCommands, d.RequireDeviceToken)
+	}
 	r.Post("/commands/{id}/result", h.commandResult, id, d.RequireDeviceToken)
 
 	r.Get("/smtp", h.smtp, notOnDeviceMount, d.RequireAuth, canConfigure)

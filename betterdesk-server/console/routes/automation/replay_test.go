@@ -133,12 +133,13 @@ func answersTheRow(t *testing.T, w *replay.World, step replay.Step, got replay.A
 	}
 }
 
-// The console has the group's fifteen routes at /api/automation and at
-// /api/bd, in this order and in the order of the old file: the thirteen
-// panel routes, with the two device routes after GET commands/{id}. At
-// /api/bd the panel routes step aside, and nothing else of this console
-// answers their addresses there. The device routes ask for a device token,
-// a session does not stand for one.
+// The console has the group's routes at /api/automation and at /api/bd,
+// in this order and in the order of the old file: the thirteen panel
+// routes, with the device routes after GET commands/{id}: both at /api/bd,
+// the result route alone at /api/automation (BUGS I5). At /api/bd the
+// panel routes step aside, and nothing else of this console answers their
+// addresses there. The device routes ask for a device token, a session
+// does not stand for one.
 func TestTheRoutesAtBothMounts(t *testing.T) {
 	w := replay.NewWorld(t, storetest.Migrated(t), nil)
 	var registered []string
@@ -157,9 +158,15 @@ func TestTheRoutesAtBothMounts(t *testing.T) {
 			"GET %s/rules", "POST %s/rules", "GET %s/rules/{id}", "PATCH %s/rules/{id}", "DELETE %s/rules/{id}",
 			"GET %s/alerts", "POST %s/alerts/{id}/ack",
 			"POST %s/commands", "GET %s/commands", "GET %s/commands/{id}",
-			"GET %s/commands", "POST %s/commands/{id}/result",
+			"GET %s/commands (device)", "POST %s/commands/{id}/result",
 			"GET %s/smtp", "PUT %s/smtp", "POST %s/smtp/test",
 		} {
+			if strings.HasSuffix(route, " (device)") {
+				if mount != "/api/bd" {
+					continue
+				}
+				route = strings.TrimSuffix(route, " (device)")
+			}
 			want = append(want, strings.Replace(route, "%s", mount, 1))
 		}
 	}
