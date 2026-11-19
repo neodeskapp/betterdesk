@@ -29,7 +29,6 @@ package alerts
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math"
 	"sync"
@@ -151,30 +150,17 @@ func (e *Engine) Wait() { e.background.Wait() }
 
 // ---- conditions ----
 
-// The errors JavaScript threw for an operator that is no operator but
-// the name of something every object has.
-var (
-	errNotAnObject    = errors.New("Cannot convert undefined or null to object")
-	errNotAFunction   = errors.New("fn is not a function")
-	errToLocaleString = errors.New("Object.prototype.toLocaleString called on null or undefined")
-)
-
 // EvalCondition reports whether value and threshold, both as numbers
 // (Number(...)), stand in the relation op names: gt, gte, lt, lte, eq
 // (===) or neq (!==). A value that is no number is NaN, for which only
 // neq holds.
 //
-// An op the engine does not know is false. The exceptions are the names
-// every JavaScript object carries, which the Node console looked up as if
-// they were operators: "constructor" and "toString" hold for every value,
-// "isPrototypeOf" for none, and the rest fail with the TypeError returned
-// here, which ends the evaluation that met the rule. The error is also
-// the TypeError for a value or threshold JavaScript cannot make a number
-// of.
+// Any other op is false, also the names every JavaScript object carries
+// ("constructor", "toString", ...), which the Node console looked up as
+// if they were operators. The error is the TypeError for a value or
+// threshold JavaScript cannot make a number of.
 func EvalCondition(value jsbind.Value, op string, threshold jsbind.Value) (bool, error) {
 	var compare func(a, b float64) bool
-	var result bool
-	var fails error
 	switch op {
 	case "gt":
 		compare = func(a, b float64) bool { return a > b }
@@ -188,21 +174,9 @@ func EvalCondition(value jsbind.Value, op string, threshold jsbind.Value) (bool,
 		compare = func(a, b float64) bool { return a == b }
 	case "neq":
 		compare = func(a, b float64) bool { return a != b }
-	case "constructor", "toString":
-		result = true
-	case "isPrototypeOf":
-		result = false
-	case "__defineGetter__", "__defineSetter__", "hasOwnProperty", "__lookupGetter__", "__lookupSetter__",
-		"propertyIsEnumerable", "valueOf":
-		fails = errNotAnObject
-	case "__proto__":
-		fails = errNotAFunction
-	case "toLocaleString":
-		fails = errToLocaleString
 	default:
 		return false, nil
 	}
-	// The two numbers are made before the operator runs
 	a, err := jsNumber(value)
 	if err != nil {
 		return false, err
@@ -211,13 +185,7 @@ func EvalCondition(value jsbind.Value, op string, threshold jsbind.Value) (bool,
 	if err != nil {
 		return false, err
 	}
-	if fails != nil {
-		return false, fails
-	}
-	if compare != nil {
-		return compare(a, b), nil
-	}
-	return result, nil
+	return compare(a, b), nil
 }
 
 // ---- evaluation ----

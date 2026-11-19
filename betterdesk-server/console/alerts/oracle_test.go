@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -171,10 +172,18 @@ func TestEvalConditionAsNode(t *testing.T) {
 	if len(vectors) < 60000 {
 		t.Fatalf("%d vectors", len(vectors))
 	}
-	held, failed := 0, 0
+	held, failed, members := 0, 0, 0
 	for _, v := range vectors {
 		got, err := EvalCondition(bindValue(t, v.V), v.Op, bindValue(t, v.T))
 		switch {
+		case slices.Contains(objectMembers, v.Op):
+			// BUGS AE2: a name every object has is no operator; Node held,
+			// refused or threw for it
+			members++
+			if got || err != nil {
+				t.Errorf("evalCondition(%s, %q, %s) = %v %v, want false", v.V, v.Op, v.T, got, err)
+			}
+			continue
 		case v.Throws != nil:
 			failed++
 			if err == nil || err.Error() != *v.Throws {
@@ -187,8 +196,8 @@ func TestEvalConditionAsNode(t *testing.T) {
 			held++
 		}
 	}
-	if held < 5000 || failed < 5000 {
-		t.Fatalf("%d conditions held, %d failed: the recording is one-sided", held, failed)
+	if held < 5000 || failed < 1000 || members < 1000 {
+		t.Fatalf("%d conditions held, %d failed, %d named an object's member: the recording is one-sided", held, failed, members)
 	}
 }
 
@@ -484,6 +493,23 @@ func TestEngineAsNodeWithoutDatabase(t *testing.T) {
 			}
 			continue
 		}
+		if memberRules := memberOperatorRules(c.Rules); len(memberRules) > 0 {
+			// BUGS AE2: a rule whose operator is a name every object has
+			// holds for nothing and fails nothing, so the rules after it
+			// are checked too. Node held such a rule, or threw and stopped.
+			counts["AE2: a rule with an object's member as its operator"]++
+			if err != nil && strings.Contains(err.Error(), "undefined or null") {
+				t.Fatalf("case %d %s: %v", i, describe(), err)
+			}
+			for _, created := range mem.created {
+				for _, id := range memberRules {
+					if strings.HasPrefix(created, `{"rule_id":`+id+`,`) {
+						t.Fatalf("case %d %s: rule %s raised %s", i, describe(), id, created)
+					}
+				}
+			}
+			continue
+		}
 		if (err == nil) != (c.Throws == nil) || (err != nil && err.Error() != *c.Throws) {
 			t.Fatalf("case %d %s: error %v, Node threw %s", i, describe(), err, show(c.Throws))
 		}
@@ -543,7 +569,7 @@ func TestEngineAsNodeWithoutDatabase(t *testing.T) {
 			t.Fatalf("case %d %s: logs %q\nNode: %q", i, describe(), logs.lines, c.Logs)
 		}
 	}
-	for _, name := range []string{"rules", "telemetry", "sweep", "odd ids", "thrown", "alerts", "mails"} {
+	for _, name := range []string{"rules", "telemetry", "sweep", "odd ids", "thrown", "alerts", "mails", "AE2: a rule with an object's member as its operator"} {
 		if counts[name] == 0 {
 			t.Errorf("the recording has no %q", name)
 		}
@@ -734,10 +760,29 @@ func TestEngineAsNodeOnRows(t *testing.T) {
 				}{c.Fn, c.Device, c.Type, c.Metric, c.Rules, c.History, c.Telemetry})
 				return string(in)
 			}
+			rows := cellRows(t, db, "SELECT rule_id, device_id, severity, message, acknowledged, acknowledged_by FROM alert_history WHERE message <> 'seeded' ORDER BY id", 6, nil)
+			var cols []map[string]string
+			for _, rule := range c.Rules {
+				cols = append(cols, map[string]string{"id": strconv.Itoa(rule.ID), "condition_op": rule.Cols["condition_op"]})
+			}
+			if memberRules := memberOperatorRules(cols); len(memberRules) > 0 {
+				// BUGS AE2, as in TestEngineAsNodeWithoutDatabase
+				counts["AE2: a rule with an object's member as its operator"]++
+				if err != nil && strings.Contains(err.Error(), "undefined or null") {
+					t.Fatalf("case %d %s: %v", i, describe(), err)
+				}
+				for _, row := range rows {
+					for _, id := range memberRules {
+						if strings.HasPrefix(row, "["+id+",") {
+							t.Fatalf("case %d %s: rule %s raised %s", i, describe(), id, row)
+						}
+					}
+				}
+				continue
+			}
 			if (err == nil) != (c.Throws == nil) || (err != nil && err.Error() != *c.Throws) {
 				t.Fatalf("case %d %s: error %v, Node threw %s", i, describe(), err, show(c.Throws))
 			}
-			rows := cellRows(t, db, "SELECT rule_id, device_id, severity, message, acknowledged, acknowledged_by FROM alert_history WHERE message <> 'seeded' ORDER BY id", 6, nil)
 			if !sameStrings(rows, c.Rows) {
 				t.Fatalf("case %d %s: alerts %q\nNode: %q\nlogs %q\nNode's %q", i, describe(), rows, c.Rows, logs.lines, c.Logs)
 			}
