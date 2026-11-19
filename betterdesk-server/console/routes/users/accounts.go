@@ -386,9 +386,10 @@ func (h *handlers) clientError(w http.ResponseWriter, r *http.Request, err error
 // "strategyGuid"}. Checks and writes go in this order, and what was
 // written before a refusal stays: the id, the account, whether the caller
 // may change it (mayChange), the password and role of a directory or
-// single sign-on account, the new username, the
-// caller's own demotion, the role, the password, the user groups, the
-// device scope, the email. The answer is the account as the list has it.
+// single sign-on account, the new username, the caller's own demotion,
+// the role (the last administrator keeps one), the password, the user
+// groups, the device scope, the email. The answer is the account as the
+// list has it.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	userID, ok := pathID(r)
 	if !ok {
@@ -447,6 +448,15 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 		}
 		if !canAssignRole(callerRole(r), role.Str()) {
 			return nil, errRoleAboveOwn
+		}
+		if access.IsSuperAdminRole(user.role()) && !access.IsSuperAdminRole(role.Str()) {
+			admins, err := countAdmins(ctx, h.d.Store)
+			if err != nil {
+				return nil, err
+			}
+			if admins <= 1 {
+				return nil, sayKey(r, http.StatusBadRequest, "users.last_admin")
+			}
 		}
 		if err := updateRole(ctx, h.d.Store, id, role.Str()); err != nil {
 			return nil, err

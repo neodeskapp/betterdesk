@@ -174,7 +174,18 @@ func TestLastAdministrator(t *testing.T) {
 		}
 	}
 	expect(t, "one of two", admin.Do("DELETE", "/api/users/9", ""), 200, `{"success":true}`)
-	expect(t, "the last", admin.Do("DELETE", "/api/users/2", ""), 400, `{"success":false,"error":"Cannot delete the last administrator"}`)
+	const last = `{"success":false,"error":"Cannot delete the last administrator"}`
+	expect(t, "the last", admin.Do("DELETE", "/api/users/2", ""), 400, last)
+
+	// Nor can the last one lose the role (BUGS US2); admin and super_admin
+	// are both administrators
+	expect(t, "the last demoted", admin.Do("PATCH", "/api/users/2", `{"role":"operator"}`), 400, last)
+	var role string
+	if err := w.DB.QueryRow(ctx, `SELECT role FROM users WHERE id = 2`).Scan(&role); err != nil || role != "super_admin" {
+		t.Errorf("the last administrator's role: %q, %v", role, err)
+	}
+	expect(t, "the last as admin", admin.Do("PATCH", "/api/users/2", `{"role":"admin"}`), 200, "")
+	expect(t, "the last back", admin.Do("PATCH", "/api/users/2", `{"role":"super_admin"}`), 200, "")
 }
 
 // global_admin may give operator, viewer and pro, so it may change only
