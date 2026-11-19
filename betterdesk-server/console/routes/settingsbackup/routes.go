@@ -13,6 +13,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/backup"
 	"github.com/unitronix/betterdesk-server/console/branding"
+	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
@@ -58,8 +59,10 @@ func Register(d *kit.Deps) {
 		DBPath:     cfg.DBPath,
 		// the folder of the chat routes (chat.FilesDir)
 		ChatFilesDir: filepath.Join(cfg.ConsoleDir, "data", "chat-files"),
-		AppVersion:   cfg.Version,
-		Limits:       archiveLimits(cfg.Getenv, d.Log.Child("SETTINGS").Warn),
+		// the folder of the ticket routes (tickets.uploadsDir)
+		AttachmentsDir: attachmentsDir(cfg),
+		AppVersion:     cfg.Version,
+		Limits:         archiveLimits(cfg.Getenv, d.Log.Child("SETTINGS").Warn),
 	})
 	scheduled := scheduledbackup.New(scheduledbackup.Options{
 		Store:   d.Store,
@@ -68,6 +71,16 @@ func Register(d *kit.Deps) {
 		AppDir:  cfg.ConsoleDir,
 	})
 	register(d, backups, scheduled)
+}
+
+// attachmentsDir is the folder of the ticket attachments, as the ticket
+// routes pick it: data/attachments in CONSOLE_DIR, in DATA_DIR when there
+// is no CONSOLE_DIR.
+func attachmentsDir(cfg *config.Config) string {
+	if cfg.ConsoleDir != "" {
+		return filepath.Join(cfg.ConsoleDir, "data", "attachments")
+	}
+	return filepath.Join(cfg.DataDir, "attachments")
 }
 
 // archiveLimits are the limits of an uploaded archive, read once at the

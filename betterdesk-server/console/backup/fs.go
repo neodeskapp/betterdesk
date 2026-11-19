@@ -12,9 +12,9 @@ import (
 )
 
 // uploadNameAllowed checks a name below a folder of an archive
-// (console/uploads/, console/chat-files/) before it is written into dir:
-// not absolute, no "." part, and the path must
-// stay in dir after the links that exist on the way are followed (safepath
+// (console/uploads/, console/chat-files/, console/attachments/) before it
+// is written into dir: not absolute, no "." part, and the path must stay
+// in dir after the links that exist on the way are followed (safepath
 // also refuses a NUL). The old console only refused names with "..".
 func uploadNameAllowed(dir, rel string) bool {
 	if strings.HasPrefix(rel, "/") || filepath.IsAbs(rel) {

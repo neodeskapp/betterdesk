@@ -353,16 +353,17 @@ func (f fakeGoServer) GetHealth(context.Context) *goapi.Object { return f.data.O
 
 func (in *install) service(t *testing.T, appVersion string) *Service {
 	return New(Options{
-		Store:        in.db,
-		GoAPI:        loadFakeGoServer(t),
-		DataDir:      in.dataDir,
-		EnvPath:      in.envFile,
-		KeysPath:     in.keysPath,
-		PubKeyPath:   filepath.Join(in.keysPath, "id_ed25519.pub"),
-		APIKeyPath:   filepath.Join(in.keysPath, ".api_key"),
-		DBPath:       filepath.Join(in.keysPath, "db_v2.sqlite3"),
-		AppVersion:   appVersion,
-		ChatFilesDir: filepath.Join(in.consoleDir, "data", "chat-files"),
+		Store:          in.db,
+		GoAPI:          loadFakeGoServer(t),
+		DataDir:        in.dataDir,
+		EnvPath:        in.envFile,
+		KeysPath:       in.keysPath,
+		PubKeyPath:     filepath.Join(in.keysPath, "id_ed25519.pub"),
+		APIKeyPath:     filepath.Join(in.keysPath, ".api_key"),
+		DBPath:         filepath.Join(in.keysPath, "db_v2.sqlite3"),
+		AppVersion:     appVersion,
+		ChatFilesDir:   filepath.Join(in.consoleDir, "data", "chat-files"),
+		AttachmentsDir: filepath.Join(in.consoleDir, "data", "attachments"),
 	})
 }
 
@@ -513,6 +514,8 @@ func tarEntries(t *testing.T, archive []byte) []tarEntry {
 var readmeLinesNodeLacks = []string{
 	// CH2: the chat files
 	"     console/chat-files/*    -> <consoleDir>/data/chat-files/",
+	// TK10: the ticket attachments
+	"     console/attachments/*   -> <consoleDir>/data/attachments/",
 }
 
 func compareArchives(t *testing.T, goArchive, nodeArchive []byte) {

@@ -76,6 +76,9 @@ type Options struct {
 	// ChatFilesDir is the folder of the chat files
 	// (CONSOLE_DIR/data/chat-files) with their links in .links/.
 	ChatFilesDir string
+	// AttachmentsDir is the folder of the ticket attachments
+	// (CONSOLE_DIR/data/attachments).
+	AttachmentsDir string
 	// AppVersion is the product version the archive names.
 	AppVersion string
 	// Now is the clock; nil is time.Now.
@@ -102,20 +105,21 @@ func New(o Options) *Service {
 
 // paths are the files a full backup holds, resolveBackupPaths.
 type paths struct {
-	env, sessionSecret, uploadsDir, chatFilesDir, consoleDB, goPrivKey, goPubKey, goAPIKey, goDB, meshAgentCert string
+	env, sessionSecret, uploadsDir, chatFilesDir, attachmentsDir, consoleDB, goPrivKey, goPubKey, goAPIKey, goDB, meshAgentCert string
 }
 
 func (s *Service) paths() paths {
 	p := paths{
-		env:           s.o.EnvPath,
-		sessionSecret: filepath.Join(s.o.DataDir, ".session_secret"),
-		uploadsDir:    filepath.Join(s.o.DataDir, "uploads"),
-		chatFilesDir:  s.o.ChatFilesDir,
-		goPrivKey:     filepath.Join(s.o.KeysPath, "id_ed25519"),
-		goPubKey:      s.o.PubKeyPath,
-		goAPIKey:      s.o.APIKeyPath,
-		goDB:          s.o.DBPath,
-		meshAgentCert: filepath.Join(s.o.KeysPath, "mesh_agent_server.pem"),
+		env:            s.o.EnvPath,
+		sessionSecret:  filepath.Join(s.o.DataDir, ".session_secret"),
+		uploadsDir:     filepath.Join(s.o.DataDir, "uploads"),
+		chatFilesDir:   s.o.ChatFilesDir,
+		attachmentsDir: s.o.AttachmentsDir,
+		goPrivKey:      filepath.Join(s.o.KeysPath, "id_ed25519"),
+		goPubKey:       s.o.PubKeyPath,
+		goAPIKey:       s.o.APIKeyPath,
+		goDB:           s.o.DBPath,
+		meshAgentCert:  filepath.Join(s.o.KeysPath, "mesh_agent_server.pem"),
 	}
 	if !s.o.Store.IsPostgres() {
 		p.consoleDB = s.o.DBPath
@@ -273,6 +277,7 @@ type Manifest struct {
 //	console/auth.db                  the SQLite file (DB_PATH), on SQLite only
 //	console/uploads/...              every file below DATA_DIR/uploads
 //	console/chat-files/...           the chat files and their .links
+//	console/attachments/...          the ticket attachments
 //	goserver/id_ed25519(.pub)        the server's key pair
 //	goserver/.api_key                the API key
 //	goserver/db_v2.sqlite3           DB_PATH again, as the server's database
@@ -281,7 +286,7 @@ type Manifest struct {
 //
 // A part whose file is missing or unreadable is left out; the dump is
 // left out when it fails. Files are mode 0600 in the archive, uploads,
-// chat files and the rest 0644.
+// chat files, attachments and the rest 0644.
 func (s *Service) CreateFullBackup(ctx context.Context) ([]byte, string, error) {
 	timestamp := s.isoNow()
 	p := s.paths()
@@ -339,6 +344,7 @@ func (s *Service) CreateFullBackup(ctx context.Context) ([]byte, string, error) 
 	addFile("console/auth.db", p.consoleDB)
 	addFolder(uploadsPrefix, p.uploadsDir)
 	addFolder(chatFilesPrefix, p.chatFilesDir)
+	addFolder(attachmentsPrefix, p.attachmentsDir)
 	addFile("goserver/id_ed25519", p.goPrivKey)
 	addFile("goserver/id_ed25519.pub", p.goPubKey)
 	addFile("goserver/.api_key", p.goAPIKey)
@@ -429,6 +435,7 @@ func recoveryReadme(m Manifest) string {
 		"     console/auth.db         -> <dataDir>/auth.db   (SQLite backend only)",
 		"     console/uploads/*       -> <dataDir>/uploads/",
 		"     console/chat-files/*    -> <consoleDir>/data/chat-files/",
+		"     console/attachments/*   -> <consoleDir>/data/attachments/",
 		"     goserver/id_ed25519     -> <keysPath>/id_ed25519",
 		"     goserver/id_ed25519.pub -> <keysPath>/id_ed25519.pub",
 		"     goserver/.api_key       -> <keysPath>/.api_key",
@@ -519,7 +526,8 @@ func (e *ErrInvalidArchive) Error() string {
 //
 //  1. the logical dump, table by table (ImportAllTables); the branding
 //     cache is loaded again when branding_config came back; the chat
-//     files go with the dump, when it is chosen,
+//     files and the ticket attachments go with the dump, when it is
+//     chosen,
 //  2. the uploads, below DATA_DIR/uploads,
 //  3. the secrets, each to its own path,
 //  4. the .env,
@@ -548,6 +556,7 @@ func (s *Service) RestoreFullBackup(ctx context.Context, buf []byte, o RestoreOp
 	}
 	if o.Database {
 		s.restoreFolderPart(files, &res, chatFilesPrefix, p.chatFilesDir, "chat files", "Chat files")
+		s.restoreFolderPart(files, &res, attachmentsPrefix, p.attachmentsDir, "attachments", "Attachments")
 	}
 
 	if o.Uploads {
@@ -639,8 +648,9 @@ func (s *Service) importDump(ctx context.Context, raw []byte, res *RestoreResult
 
 // The folders of an archive.
 const (
-	uploadsPrefix   = "console/uploads/"
-	chatFilesPrefix = "console/chat-files/"
+	uploadsPrefix     = "console/uploads/"
+	chatFilesPrefix   = "console/chat-files/"
+	attachmentsPrefix = "console/attachments/"
 )
 
 // restoreFolderPart restores the files below prefix into dir as a part of

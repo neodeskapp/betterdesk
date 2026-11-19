@@ -418,6 +418,44 @@ func TestFullBackupCarriesTheChatFiles(t *testing.T) {
 	}
 }
 
+// TK10: the ticket attachments go into the full backup and come back
+// with the console data.
+func TestFullBackupCarriesTheAttachments(t *testing.T) {
+	ctx := context.Background()
+	src := newInstall(t, "sqlite")
+	attachments := map[string]string{"1731230000000-a1b2c3d4.pdf": "an attachment", "1731230000001-e5f6a7b8.png": "a picture"}
+	writeFiles(t, filepath.Join(src.consoleDir, "data", "attachments"), attachments)
+	archive, _, err := src.service(t, "x").CreateFullBackup(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	files, err := ExtractTarGz(archive, Limits{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, content := range attachments {
+		if data, ok := files.Get("console/attachments/" + name); !ok || string(data) != content {
+			t.Errorf("%s in the archive: %q %v", name, data, ok)
+		}
+	}
+
+	dst := newInstall(t, "sqlite")
+	res, err := dst.service(t, "x").RestoreFullBackup(ctx, archive, RestoreOptions{Database: true})
+	if err != nil || len(res.Warnings) != 0 || !slices.Contains(res.Restored, "attachments (2 files)") {
+		t.Fatalf("restore: %+v %v", res, err)
+	}
+	if got := filesBelow(t, filepath.Join(dst.consoleDir, "data", "attachments")); !maps.Equal(got, attachments) {
+		t.Errorf("attachments after the restore: %q", got)
+	}
+	other := newInstall(t, "sqlite")
+	if _, err := other.service(t, "x").RestoreFullBackup(ctx, archive, RestoreOptions{Uploads: true}); err != nil {
+		t.Fatal(err)
+	}
+	if got := filesBelow(t, filepath.Join(other.consoleDir, "data", "attachments")); len(got) != 0 {
+		t.Errorf("attachments restored without the console data: %q", got)
+	}
+}
+
 func parsedJSON(t *testing.T, text string) any {
 	t.Helper()
 	v, err := branding.ParseJSON([]byte(text))
