@@ -2506,6 +2506,11 @@ merge_console_env() {
             printf 'DB_URL=%s\n' "$RUSTDESK_PATH/db_v2.sqlite3" >> "$env_file"
         fi
     fi
+    # The server makes the first admin before the console starts, and the
+    # console keeps an admin it did not make: both take the same password
+    if [ "$fresh_install" = "true" ] && ! grep -q '^INIT_ADMIN_PASS=' "$env_file"; then
+        printf 'INIT_ADMIN_PASS=%s\n' "$admin_password" >> "$env_file"
+    fi
 
     if ! BETTERDESK_ENV_FILE='' "$bin" upgrade-env --from "$env_file" --write --supervisor systemd >/dev/null; then
         print_error "betterdesk-server upgrade-env could not finish .env"

@@ -162,10 +162,35 @@ test_kill_stale_processes() (
     rm -rf "$TEST_DIR"
 )
 
+# A fresh .env gives the server the admin password the console shows
+# (INIT_ADMIN_PASS): the server makes the first admin before the console
+# starts, and the console keeps an admin it did not make.
+test_fresh_env_admin_password() (
+    load
+    cat > "$RUSTDESK_PATH/betterdesk-server" <<'FAKE'
+#!/bin/bash
+# Stands in for the binary: upgrade-env --from FILE (the commands it has)
+if [ "$1 $2" = "env merge" ]; then
+    printf 'DEFAULT_ADMIN_PASSWORD=%s\nDB_TYPE=sqlite\n' "$BD_SUBST_DEFAULT_ADMIN_PASSWORD" > "$4"
+    echo '{"success":true,"mode":"fresh","added":[]}'
+fi
+exit 0
+FAKE
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    ADMIN_PASSWORD='Fresh-Admin-Pass-1'
+    USE_POSTGRESQL=false
+    merge_console_env true >/dev/null
+    grep -qx 'INIT_ADMIN_PASS=Fresh-Admin-Pass-1' "$CONSOLE_PATH/.env" \
+        || fail "a fresh .env has no INIT_ADMIN_PASS of the admin password: $(grep -c INIT_ADMIN_PASS "$CONSOLE_PATH/.env") lines"
+    grep -qx "DB_URL=$RUSTDESK_PATH/db_v2.sqlite3" "$CONSOLE_PATH/.env" || fail "DB_URL of a fresh SQLite install"
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
 test_write_server_unit
 test_node_era_detection
 test_kill_stale_processes
+test_fresh_env_admin_password
 echo "Go installer unit checks passed"
