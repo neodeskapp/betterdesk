@@ -32,6 +32,14 @@ var fixedSteps = []fixedStep{
 	// The version of the system information hbok1 uploaded, not the
 	// empty text.
 	{"node", "396 POST /api/sysinfo_ver", "RD1"},
+	// The switch of a strategy is read from {"enabled": <boolean>}; any
+	// other body is refused before the strategy is looked up, so it stays
+	// switched on.
+	{"node", "666 PUT /api/strategies/s-fixed-1/status", "RD2"},
+	{"node", "667 PUT /api/strategies/nope/status", "RD2"},
+	{"node_sqlite", "668 GET /api/strategies", "RD2"},
+	{"flow", "admin-strategy-status", "RD2"},
+	{"flow", "admin-strategy-status-unknown", "RD2"},
 }
 
 // fixedStep is a step of the recordings of both databases ("node",

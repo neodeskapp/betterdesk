@@ -9,5 +9,27 @@
    "status": 200
   },
   "bug": "RD1"
+ },
+ "666 PUT /api/strategies/s-fixed-1/status": {
+  "answer": {
+   "answer": "{\"error\":\"enabled must be true or false\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 400
+  },
+  "bug": "RD2"
+ },
+ "667 PUT /api/strategies/nope/status": {
+  "answer": {
+   "answer": "{\"error\":\"enabled must be true or false\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 400
+  },
+  "bug": "RD2"
  }
 }

@@ -266,9 +266,9 @@ func (h *handlers) assignStrategy(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, statusAnswer{Status: "ok"})
 }
 
-// strategyStatus answers PUT /api/strategies/:guid/status. The body is
-// meant to be the JSON true or false, which the body parser refuses; so
-// enabled is always false (BUGS RD2).
+// strategyStatus answers PUT /api/strategies/:guid/status with the body
+// {"enabled": true} or {"enabled": false}. A body without a boolean
+// enabled is refused before the strategy is looked up.
 func (h *handlers) strategyStatus(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	guid := pathGUID(r)
@@ -276,7 +276,12 @@ func (h *handlers) strategyStatus(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "Strategy guid is required")
 		return
 	}
-	row, err := h.store.updateStrategy(ctx, guid, strategyData{enabled: jsbind.Bool(false)}, true)
+	enabled, ok := kit.Body(r).Get("enabled").Bool()
+	if !ok {
+		fail(w, r, http.StatusBadRequest, "enabled must be true or false")
+		return
+	}
+	row, err := h.store.updateStrategy(ctx, guid, strategyData{enabled: jsbind.Bool(enabled)}, true)
 	if err == nil && row == nil {
 		err = fmt.Errorf("strategy not found")
 	}

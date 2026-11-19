@@ -9,5 +9,38 @@
    "status": 200
   },
   "bug": "RD1"
+ },
+ "666 PUT /api/strategies/s-fixed-1/status": {
+  "answer": {
+   "answer": "{\"error\":\"enabled must be true or false\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 400
+  },
+  "bug": "RD2"
+ },
+ "667 PUT /api/strategies/nope/status": {
+  "answer": {
+   "answer": "{\"error\":\"enabled must be true or false\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 400
+  },
+  "bug": "RD2"
+ },
+ "668 GET /api/strategies": {
+  "answer": {
+   "answer": "{\"data\":[{\"guid\":\"s-fixed-1\",\"name\":\"Alpha\",\"user_group_guid\":\"ug-fixed\",\"device_group_guid\":\"\",\"enabled\":true,\"permissions\":{\"b\":1,\"a\":2}},{\"guid\":\"s-fixed-2\",\"name\":\"Beta 3\",\"user_group_guid\":\"\",\"device_group_guid\":\"\",\"enabled\":true,\"permissions\":{}},{\"guid\":\"<uuid>\",\"name\":\"New\",\"user_group_guid\":\"\",\"device_group_guid\":\"\",\"enabled\":false,\"permissions\":[1]},{\"guid\":\"<uuid>\",\"name\":\"New 2\",\"user_group_guid\":\"\",\"device_group_guid\":\"\",\"enabled\":true,\"permissions\":{}},{\"guid\":\"<uuid>\",\"name\":\"New 3\",\"user_group_guid\":\"\",\"device_group_guid\":\"\",\"enabled\":true,\"permissions\":{}}],\"total\":5}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RD2"
  }
 }
