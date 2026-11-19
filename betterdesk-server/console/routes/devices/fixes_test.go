@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
@@ -211,4 +212,38 @@ func TestChangeIDTakesTextOnly(t *testing.T) {
 	if got := admin.Do("POST", "/api/devices/A/change-id", `{"newId":"NEWID1"}`); got.Status != http.StatusOK {
 		t.Errorf("a new id as text: %d %s", got.Status, got.Body)
 	}
+}
+
+// TestSetGroupsNeedsAList: groupGuids that is missing or no list is
+// refused and leaves the device in its group; an empty list still takes
+// it out of every manual group (BUGS DE6).
+func TestSetGroupsNeedsAList(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w, api := world(t, db, nil, func(cfg *config.Config) { cfg.PanelGroupingNode = true })
+		admin := w.As("admin")
+		ctx := context.Background()
+		member := func() int {
+			var n int
+			if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM device_group_members WHERE peer_id = 'C'`).Scan(&n); err != nil {
+				t.Fatal(err)
+			}
+			return n
+		}
+		refused := admin.Do("PUT", "/api/devices/C/groups", `{"groupGuids":["not a guid!"]}`)
+		if refused.Status != http.StatusBadRequest {
+			t.Fatalf("an invalid guid: %d %s", refused.Status, refused.Body)
+		}
+		for _, body := range []string{`{}`, `{"groupGuids":null}`, `{"groupGuids":"g-viewer"}`, `{"groupGuids":{"0":"g-viewer"}}`, `{"groupGuids":5}`} {
+			api.Calls()
+			if got := admin.Do("PUT", "/api/devices/C/groups", body); got.Status != refused.Status || got.Body != refused.Body {
+				t.Errorf("%s: %d %s, want %d %s", body, got.Status, got.Body, refused.Status, refused.Body)
+			}
+			if n := member(); n != 1 {
+				t.Fatalf("%s took C out of its group", body)
+			}
+		}
+		if got := admin.Do("PUT", "/api/devices/C/groups", `{"groupGuids":[]}`); got.Status != http.StatusOK || member() != 0 {
+			t.Errorf("an empty list: %d %s, %d memberships left", got.Status, got.Body, member())
+		}
+	})
 }

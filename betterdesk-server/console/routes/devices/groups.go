@@ -311,21 +311,26 @@ type membershipList struct {
 
 // setMemberships answers PUT /api/devices/{id}/groups with {groupGuids}:
 // the device becomes a member of the one manual group of the list the
-// account may see and leaves the other manual groups it may see. A device
-// is in at most one manual group; tag groups are not touched.
+// account may see and leaves the other manual groups it may see; an empty
+// list takes it out of all of them. groupGuids that is missing or no list
+// is refused like an invalid guid. A device is in at most one manual
+// group; tag groups are not touched.
 func (h *handlers) setMemberships(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("id")
+	list, isList := value(r, "groupGuids").([]any)
+	if !isList {
+		fail(w, r, http.StatusBadRequest, "devices.group_invalid")
+		return
+	}
 	var guids []string
-	if list, ok := value(r, "groupGuids").([]any); ok {
-		for _, item := range list {
-			s, err := text(item)
-			if err != nil {
-				h.serverError(w, r, "Update device memberships error:", err)
-				return
-			}
-			guids = append(guids, s)
+	for _, item := range list {
+		s, err := text(item)
+		if err != nil {
+			h.serverError(w, r, "Update device memberships error:", err)
+			return
 		}
+		guids = append(guids, s)
 	}
 	invalid := len(guids) > 100
 	for _, guid := range guids {

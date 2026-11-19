@@ -54,7 +54,12 @@ var fixedSteps = []fixedStep{
 	{"node", `296 POST /api/devices/A1001/change-id {"newId":{"length":8}} as admin`, "DE5"},
 	{"node", `297 POST /api/devices/A1001/change-id {"newId":{"length":"7"}} as admin`, "DE5"},
 	{"node", `300 POST /api/devices/A1001/change-id {"newId":{"a":1}} as admin`, "DE5"},
-	{"node", "459 audit", "DE5"},
+	// groupGuids that is no list is refused and changes nothing; the audit
+	// log has no entry of it.
+	{"node", `226 PUT /api/devices/A1001/groups {"groupGuids":"g-open"} as admin`, "DE6"},
+	{"node", "232 PUT /api/devices/A1001/groups {} as admin", "DE6"},
+	// The audit log after the steps of DE5 and DE6
+	{"node", "459 audit", "DE5, DE6"},
 }
 
 // fixedStep is a step of a recording that the fix of a bug changed. The
