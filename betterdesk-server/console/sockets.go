@@ -31,8 +31,9 @@ func registerSockets(d *kit.Deps) {
 	d.RemoteRelay.Register(d.Sockets) // services/remoteRelay.js: /ws/remote-agent/<id>, /ws/remote-viewer/<id>
 	// services/cdapTerminalProxy.js, services/cdapMediaProxy.js: /api/cdap/devices/<id>/terminal, desktop, video, files, audio
 	cdapproxy.New(cdapproxy.Options{API: d.GoAPI.Handler(), Devices: d.Backend, CanAccess: d.DeviceGroups.UserCanAccessDevice}).Register(d.Sockets)
-	d.ServerMgmt.Register(d.Sockets)                                             // services/serverTerminalProxy.js: /ws/server-management/terminal
-	meshproxy.New(meshproxy.Options{API: d.GoAPI.Handler()}).Register(d.Sockets) // services/meshAshxProxy.js: /agent.ashx, /meshrelay.ashx, /control.ashx
+	d.ServerMgmt.Register(d.Sockets) // services/serverTerminalProxy.js: /ws/server-management/terminal
+	// services/meshAshxProxy.js: /agent.ashx, /meshrelay.ashx, /control.ashx
+	meshproxy.New(meshproxy.Options{API: d.GoAPI.ForwardHandler(), ClientIP: d.Config.TrustProxy.ClientIP}).Register(d.Sockets)
 	// services/remoteTargetGateway.js: /ws/remote-target/<id>, on the API
 	// server's tunnel in this process
 	remotetarget.New(remotetarget.Options{

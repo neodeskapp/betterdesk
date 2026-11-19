@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -126,6 +127,22 @@ func (c *Client) Handler() http.Handler {
 		r = r.WithContext(api.WithIdentity(r.Context(), c.identity))
 		r.Host = c.host
 		r.RemoteAddr = c.remoteAddr
+		c.handler.ServeHTTP(w, r)
+	})
+}
+
+// ForwardHandler is Handler for requests the console passes on for a
+// client: a request that names its caller ("host:port" in RemoteAddr)
+// keeps that address, so the API server's limits and blocklist count the
+// client (DECISIONS A60, the MeshCentral sockets). Any other request gets
+// the client's caller address, as with Handler.
+func (c *Client) ForwardHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r = r.WithContext(api.WithIdentity(r.Context(), c.identity))
+		r.Host = c.host
+		if _, _, err := net.SplitHostPort(r.RemoteAddr); err != nil {
+			r.RemoteAddr = c.remoteAddr
+		}
 		c.handler.ServeHTTP(w, r)
 	})
 }

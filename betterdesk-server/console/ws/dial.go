@@ -47,6 +47,9 @@ type DialOptions struct {
 	// MaxPayload is the largest message the socket takes; 0 is
 	// DefaultMaxPayload.
 	MaxPayload int64
+	// RemoteAddr is the caller address ("host:port") h sees in
+	// r.RemoteAddr. Empty leaves the in-memory connection's, "pipe".
+	RemoteAddr string
 }
 
 // ErrNoSubprotocol is a handshake answer that names no subprotocol
@@ -59,6 +62,13 @@ var ErrNoSubprotocol = errors.New("ws: server sent no subprotocol")
 // would on its listener. An answer other than 101 is an error. ctx ends
 // the dial; the open socket ends with Close and Wait.
 func DialHandler(ctx context.Context, h http.Handler, target string, opts DialOptions) (*Upstream, error) {
+	if addr := opts.RemoteAddr; addr != "" {
+		inner := h
+		h = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			r.RemoteAddr = addr
+			inner.ServeHTTP(w, r)
+		})
+	}
 	client, server := net.Pipe()
 	l := &pipeListener{conn: server, closed: make(chan struct{})}
 	srv := &http.Server{Handler: h, ErrorLog: log.New(io.Discard, "", 0)}

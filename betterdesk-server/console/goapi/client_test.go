@@ -596,3 +596,31 @@ func TestHandlerForUpgradesCarriesIdentityHostAndAddress(t *testing.T) {
 		t.Error("the caller's request was changed")
 	}
 }
+
+// ForwardHandler keeps a caller address the request brings and gives a
+// request without one the client's, as Handler does.
+func TestForwardHandlerKeepsTheCallersAddress(t *testing.T) {
+	var got *http.Request
+	var id api.Identity
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r
+		id, _ = api.IdentityFromContext(r.Context())
+	})
+	h := New(inner, WithHost("10.1.2.3:21121")).ForwardHandler()
+	for remote, want := range map[string]string{
+		"203.0.113.5:0":   "203.0.113.5:0",
+		"[2001:db8::5]:0": "[2001:db8::5]:0",
+		"pipe":            "127.0.0.1:0",
+		"":                "127.0.0.1:0",
+	} {
+		req := httptest.NewRequest("GET", "/agent.ashx?id=1", nil)
+		req.RemoteAddr = remote
+		h.ServeHTTP(httptest.NewRecorder(), req)
+		if got.RemoteAddr != want || got.Host != "10.1.2.3:21121" || got.URL.RequestURI() != "/agent.ashx?id=1" {
+			t.Errorf("RemoteAddr %q: the handler saw RemoteAddr %q, Host %q, %s", remote, got.RemoteAddr, got.Host, got.URL)
+		}
+		if id.Username != BridgeUsername || id.Role != BridgeRole {
+			t.Errorf("RemoteAddr %q: identity = %+v", remote, id)
+		}
+	}
+}

@@ -9,6 +9,7 @@ package meshproxy
 
 import (
 	"context"
+	"net"
 	"net/http"
 
 	"github.com/unitronix/betterdesk-server/console/ws"
@@ -20,19 +21,23 @@ var Paths = []string{"/agent.ashx", "/meshrelay.ashx", "/control.ashx"}
 
 // Options configure the proxy.
 type Options struct {
-	// API is the API server's handler for sockets
-	// (goapi.Client.Handler).
+	// API is the API server's handler for sockets that keeps the caller
+	// address a socket brings (goapi.Client.ForwardHandler).
 	API http.Handler
+	// ClientIP is the client's address under TRUST_PROXY
+	// (httpx.TrustProxy.ClientIP). nil takes the connection's address.
+	ClientIP func(r *http.Request) string
 }
 
 // Proxy passes the MeshCentral sockets on to the API server.
 type Proxy struct {
-	api http.Handler
+	api      http.Handler
+	clientIP func(r *http.Request) string
 }
 
 // New returns the proxy.
 func New(opts Options) *Proxy {
-	return &Proxy{api: opts.API}
+	return &Proxy{api: opts.API, clientIP: opts.ClientIP}
 }
 
 // Register adds the three sockets.
@@ -44,9 +49,10 @@ func (p *Proxy) Register(reg *ws.Registry) {
 
 // serve runs the checks, each a bare status line: a foreign origin 403,
 // and for /control.ashx no signed-in session 401. Then the handshake, and
-// the socket is passed on with the address it came from in
-// X-Forwarded-For. Messages that arrive before the gateway has answered
-// are dropped. The browser's subprotocols are not passed on.
+// the socket is passed on with the client's address as its caller and in
+// X-Forwarded-For, so the gateway's limit and blocklist per address count
+// clients (DECISIONS A60). Messages that arrive before the gateway has
+// answered are dropped. The browser's subprotocols are not passed on.
 func (p *Proxy) serve(u *ws.Upgrade) {
 	if !u.CheckOrigin("mesh-" + u.Path) {
 		return
@@ -64,11 +70,16 @@ func (p *Proxy) serve(u *ws.Upgrade) {
 	if q := u.Query(); q != "" {
 		target += "?" + q
 	}
+	client := u.SocketAddr()
+	if p.clientIP != nil {
+		client = p.clientIP(u.R)
+	}
 	header := http.Header{}
-	header.Set("X-Forwarded-For", u.SocketAddr())
+	header.Set("X-Forwarded-For", client)
+	dial := ws.DialOptions{Header: header, RemoteAddr: net.JoinHostPort(client, "0")}
 	ws.Pass(conn, ws.PassOptions{
 		Dial: func(ctx context.Context) (*ws.Upstream, error) {
-			return ws.DialHandler(ctx, p.api, target, ws.DialOptions{Header: header})
+			return ws.DialHandler(ctx, p.api, target, dial)
 		},
 		OnFail: func(err error) {
 			logging.Logf("console", "WARN: [mesh proxy] %s %v", u.Path, err)
