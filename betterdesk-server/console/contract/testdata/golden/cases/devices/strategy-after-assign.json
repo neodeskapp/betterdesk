@@ -93,7 +93,104 @@
   },
   {
    "roles": [
-    "operator",
+    "operator"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.strategy.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.strategy.group_guids[*]",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.strategy.groups[*]",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.strategy.guid",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.strategy.peers[*]",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "data.strategy.updated_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data.strategy.users[*]",
+     "pattern": "^[9aA+/_=-]{36}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "strategy": {
+       "created_at": "<volatile>",
+       "device_group_count": 0,
+       "device_group_guid": "",
+       "enabled": true,
+       "group_guids": [],
+       "groups": [],
+       "guid": "<volatile>",
+       "name": "Contract rule renamed",
+       "peer_count": 0,
+       "peer_ids": [],
+       "peers": [],
+       "permission_keys": [
+        "enable-file-transfer",
+        "disable-clipboard",
+        "enable-clipboard",
+        "enable-audio",
+        "enable-tunnel",
+        "enable-camera",
+        "enable-remote-restart",
+        "enable-block-input"
+       ],
+       "permissions": {
+        "enable-clipboard": "Y"
+       },
+       "updated_at": "<volatile>",
+       "user_count": 0,
+       "user_group_guid": "",
+       "user_names": [],
+       "users": []
+      }
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
     "global_admin",
     "super_admin",
     "admin"

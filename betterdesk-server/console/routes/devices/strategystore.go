@@ -145,12 +145,10 @@ func isUUID(s string) bool {
 	return length(s) == 36 && strings.Count(s, "-") == 4
 }
 
-// resolvePeerAssignmentKey returns the guid a device's assignments are
-// stored under, the device found among the server's by id, guid or uuid.
-// With write, a device without a guid gets its uuid in lower case when
-// that looks like one, else a random one, and keeps it; without, its key
-// is "".
-func resolvePeerAssignmentKey(ctx context.Context, db *store.DB, key string, write bool) (string, error) {
+// peerIDOfReference returns the id of the device among the server's with
+// the id, guid or uuid key, and refuses an empty key or one that names no
+// device.
+func peerIDOfReference(ctx context.Context, db *store.DB, key string) (string, error) {
 	if key == "" {
 		return "", refusal("empty peer reference")
 	}
@@ -159,6 +157,16 @@ func resolvePeerAssignmentKey(ctx context.Context, db *store.DB, key string, wri
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", refusal("peer not found")
 	}
+	return id, err
+}
+
+// resolvePeerAssignmentKey returns the guid a device's assignments are
+// stored under, the device found among the server's by id, guid or uuid.
+// With write, a device without a guid gets its uuid in lower case when
+// that looks like one, else a random one, and keeps it; without, its key
+// is "".
+func resolvePeerAssignmentKey(ctx context.Context, db *store.DB, key string, write bool) (string, error) {
+	id, err := peerIDOfReference(ctx, db, key)
 	if err != nil {
 		return "", err
 	}

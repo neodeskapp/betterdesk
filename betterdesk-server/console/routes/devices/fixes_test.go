@@ -326,6 +326,84 @@ func TestAssignChecksEveryReferenceFirst(t *testing.T) {
 	})
 }
 
+// TestAssignChecksTheDeviceScope: an account with a limited device scope
+// gives a rule to, or takes it from, only the devices and device groups it
+// may see. A device or a device group outside its scope, named by id,
+// guid or name, is refused with 403 on assign and unassign, and nothing is
+// written, here or on the server. The roles that see every device are not
+// checked (BUGS UM30).
+func TestAssignChecksTheDeviceScope(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w, api := world(t, db, nil, nil)
+		ctx := context.Background()
+		for _, q := range []string{
+			`CREATE TABLE IF NOT EXISTS peers (id TEXT PRIMARY KEY, uuid TEXT DEFAULT '', guid TEXT DEFAULT '')`,
+			`INSERT INTO peers (id, uuid, guid) VALUES ('A', '', ''), ('C', '', 'guid-c')`,
+			`INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-open', 'Open', '', '', 'manual', '')`,
+		} {
+			if _, err := db.Exec(ctx, q); err != nil {
+				t.Fatalf("%s: %v", q, err)
+			}
+		}
+		written := func() string {
+			var n int
+			if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM strategy_assignments`).Scan(&n); err != nil {
+				t.Fatal(err)
+			}
+			var guid string
+			if err := db.QueryRow(ctx, `SELECT COALESCE(guid, '') FROM peers WHERE id = 'A'`).Scan(&guid); err != nil {
+				t.Fatal(err)
+			}
+			return fmt.Sprintf("%d assignments, guid of A %q", n, guid)
+		}
+		admin, operator := w.As("admin"), w.As("operator")
+		created := admin.Do("POST", "/api/panel/strategies", `{"name":"Night"}`)
+		m := strategyGUIDField.FindStringSubmatch(created.Body)
+		if m == nil {
+			t.Fatalf("create: %d %s", created.Status, created.Body)
+		}
+		assign := "/api/panel/strategies/" + m[1] + "/assign"
+		const nothing = `0 assignments, guid of A ""`
+		forbidden := `{"success":false,"error":"You don't have access to this device."}`
+		for _, body := range []string{
+			`{"peers":["C"]}`,
+			`{"peers":["guid-c"]}`,
+			`{"peers":["A","C"]}`,
+			`{"groups":["g-viewer"]}`,
+			`{"groups":["Viewer only"]}`,
+			`{"peers":["A"],"users":["e2e_operator"],"groups":["g-open","g-viewer"]}`,
+		} {
+			for _, path := range []string{assign, "/api/panel/strategies/unassign"} {
+				api.Calls()
+				if got := operator.Do("POST", path, body); got.Status != http.StatusForbidden || got.Body != forbidden {
+					t.Errorf("%s %s as operator: %d %s, want 403 %s", path, body, got.Status, got.Body, forbidden)
+				}
+				if got := written(); got != nothing {
+					t.Fatalf("%s %s as operator wrote: %s", path, body, got)
+				}
+				for _, call := range api.Calls() {
+					if !strings.HasPrefix(call, "GET ") {
+						t.Errorf("%s %s as operator reached the server: %s", path, body, call)
+					}
+				}
+			}
+		}
+		// A reference that names nothing is still the 400 it was
+		if got := operator.Do("POST", assign, `{"peers":["C","nope"]}`); got.Status != http.StatusBadRequest {
+			t.Errorf("an unknown device as operator: %d %s, want 400", got.Status, got.Body)
+		}
+		if got := operator.Do("POST", assign, `{"peers":["A"],"groups":["g-open"]}`); got.Status != http.StatusOK {
+			t.Errorf("a device and a group in the operator's scope: %d %s", got.Status, got.Body)
+		}
+		if got := admin.Do("POST", assign, `{"peers":["C"],"groups":["g-viewer"]}`); got.Status != http.StatusOK {
+			t.Errorf("a device and a group outside the operator's scope as admin: %d %s", got.Status, got.Body)
+		}
+		if got := operator.Do("POST", "/api/panel/strategies/unassign", `{"peers":["A"]}`); got.Status != http.StatusOK {
+			t.Errorf("unassign of a device in the operator's scope: %d %s", got.Status, got.Body)
+		}
+	})
+}
+
 // TestStrategyWriteAnswersPermissions: creating and changing a rule
 // answers the stored permissions, also on PostgreSQL where the signal
 // server created the table with a TEXT column for them (BUGS DE8).

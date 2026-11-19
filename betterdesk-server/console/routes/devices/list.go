@@ -107,6 +107,34 @@ func (h *handlers) inScope(w http.ResponseWriter, r *http.Request, device *goapi
 	return ok, nil
 }
 
+// allInScope reports whether the account may see every device of ids.
+// Each is looked up with the deleted ones; a device the device layer does
+// not know is checked by its id alone. The roles that see every device
+// pass without a lookup.
+func (h *handlers) allInScope(r *http.Request, ids []string) (bool, error) {
+	ctx := r.Context()
+	user := kit.User(r)
+	if len(ids) == 0 || user == nil || access.IsAdminRole(user.Role) {
+		return true, nil
+	}
+	devices := make([]*goapi.Object, len(ids))
+	for i, id := range ids {
+		if devices[i] = h.backend.GetDeviceByID(ctx, id, true); devices[i] == nil {
+			devices[i] = goapi.NewObject("id", id)
+		}
+	}
+	scope, err := h.groups.DeviceScopeForUser(ctx, user, devices)
+	if err != nil {
+		return false, err
+	}
+	for _, id := range ids {
+		if !scope.Has(id) {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
 // found looks the device of the path up and answers 404 or 403 when it
 // is none or one the account may not see. ok is false when it answered;
 // what names the route in the log of a failure.

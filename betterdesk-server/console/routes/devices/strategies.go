@@ -9,7 +9,10 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/unitronix/betterdesk-server/console/access"
+	"github.com/unitronix/betterdesk-server/console/devicegroups"
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
@@ -347,15 +350,73 @@ type resolved struct {
 	peers, users, groups []string
 }
 
+// errOutOfScope is an assignment that names a device or a device group
+// the account may not see. It is answered with 403.
+var errOutOfScope = errors.New("the assignment names a device or a device group outside the account's scope")
+
 // resolveAssignKeys turns the references of an assignment body into the
-// keys the assignments are stored under. Every reference is checked
+// keys the assignments are stored under. Every reference is checked, and
+// then the account's scope over the devices and device groups named,
 // before the first device or account gets a guid; the first bad one is
 // the refusal.
-func resolveAssignKeys(ctx context.Context, db *store.DB, t targets) (resolved, error) {
-	if _, err := resolveRefs(ctx, db, t, false); err != nil {
+func (h *handlers) resolveAssignKeys(r *http.Request, t targets) (resolved, error) {
+	ctx := r.Context()
+	if _, err := resolveRefs(ctx, h.d.Store, t, false); err != nil {
 		return resolved{}, err
 	}
-	return resolveRefs(ctx, db, t, true)
+	if err := h.assignmentInScope(r, t); err != nil {
+		return resolved{}, err
+	}
+	return resolveRefs(ctx, h.d.Store, t, true)
+}
+
+// assignmentInScope returns errOutOfScope when an assignment, whose
+// references were checked, names a device the account may not see (its
+// device scope) or a device group that is closed to it (the group's
+// access list). The roles that see every device pass. The accounts of an
+// assignment are not checked.
+func (h *handlers) assignmentInScope(r *http.Request, t targets) error {
+	ctx := r.Context()
+	user := kit.User(r)
+	if user == nil || access.IsAdminRole(user.Role) {
+		return nil
+	}
+	peers, _ := refs(t.peers)
+	ids := make([]string, 0, len(peers))
+	for _, item := range peers {
+		key, _ := item.(string)
+		id, err := peerIDOfReference(ctx, h.d.Store, jsTrim(key))
+		if err != nil {
+			return err
+		}
+		ids = append(ids, id)
+	}
+	if ok, err := h.allInScope(r, ids); err != nil || !ok {
+		if err == nil {
+			err = errOutOfScope
+		}
+		return err
+	}
+	groups, _ := refs(t.groups)
+	if len(groups) == 0 {
+		return nil
+	}
+	accessUser := h.groups.UserAccessContext(ctx, user)
+	for _, item := range groups {
+		key, _ := item.(string)
+		guid, err := resolveDeviceGroupAssignmentKey(ctx, h.d.Store, jsTrim(key), false)
+		if err != nil {
+			return err
+		}
+		group, err := h.groups.DeviceGroupByGUID(ctx, guid)
+		if err != nil {
+			return err
+		}
+		if group == nil || !access.GroupAllowedForUser(devicegroups.ScopeGroup(group), accessUser) {
+			return errOutOfScope
+		}
+	}
+	return nil
 }
 
 // resolveRefs resolves the references of the three lists in order. With
@@ -428,7 +489,7 @@ func (h *handlers) assignStrategy(w http.ResponseWriter, r *http.Request) {
 		answer(w, r, http.StatusBadRequest, failure{Error: "At least one target is required"})
 		return
 	}
-	keys, err := resolveAssignKeys(ctx, h.d.Store, t)
+	keys, err := h.resolveAssignKeys(r, t)
 	if err == nil {
 		err = assign(ctx, h.d.Store, guid, keys)
 	}
@@ -455,9 +516,14 @@ type summaryAnswer struct {
 	Summary *goapi.Object `json:"summary"`
 }
 
-// assignFailure answers a failed assignment or removal: 400 with the
-// text of a refusal, 500 for anything else.
+// assignFailure answers a failed assignment or removal: 403 for a device
+// or device group outside the account's scope, 400 with the text of a
+// refusal, 500 for anything else.
 func (h *handlers) assignFailure(w http.ResponseWriter, r *http.Request, what string, err error) {
+	if errors.Is(err, errOutOfScope) {
+		fail(w, r, http.StatusForbidden, "errors.forbidden")
+		return
+	}
 	h.log.Error(what, err)
 	var refused refusal
 	if errors.As(err, &refused) {
@@ -476,7 +542,7 @@ func (h *handlers) unassignStrategy(w http.ResponseWriter, r *http.Request) {
 		answer(w, r, http.StatusBadRequest, failure{Error: "At least one target is required"})
 		return
 	}
-	keys, err := resolveAssignKeys(ctx, h.d.Store, t)
+	keys, err := h.resolveAssignKeys(r, t)
 	if err == nil {
 		err = assign(ctx, h.d.Store, "", keys)
 	}
