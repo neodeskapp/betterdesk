@@ -68,7 +68,7 @@ func TestNodeTextVectors(t *testing.T) {
 	}
 
 	counts := map[string]int{}
-	failures := 0
+	failures, changed := 0, 0
 	lines := bufio.NewScanner(zr)
 	lines.Buffer(make([]byte, 1<<20), 1<<26)
 	for n := 1; lines.Scan(); n++ {
@@ -83,6 +83,21 @@ func TestNodeTextVectors(t *testing.T) {
 		}
 		random.buf.Reset()
 		random.buf.Write(drawn)
+		if v.Route == "password" && strings.HasPrefix(v.Body, "[") && v.Status == 200 {
+			// SC9: a body that is an array names no length, so the password
+			// has the default 16 characters, drawn from bytes Node never drew
+			random.buf.Reset()
+			random.buf.Write(bytes.Repeat([]byte{1, 2, 3, 4}, 64))
+			status, body := post(v.Route, v.Body)
+			var got struct {
+				Data struct{ Length int } `json:"data"`
+			}
+			if err := json.Unmarshal([]byte(body), &got); status != 200 || err != nil || got.Data.Length != 16 {
+				t.Errorf("vector %d: password %s: %d %s, want 16 characters", n, clip(v.Body), status, clip(body))
+			}
+			changed++
+			continue
+		}
 		status, body := post(v.Route, v.Body)
 		if status != v.Status || body != v.Answer {
 			failures++
@@ -105,7 +120,7 @@ func TestNodeTextVectors(t *testing.T) {
 			t.Errorf("%d vectors for %s, want at least %d: is the recorded file complete?", counts[route], route, least)
 		}
 	}
-	t.Logf("replayed %v", counts)
+	t.Logf("replayed %v; %d passwords of an array body have the default length (SC9)", counts, changed)
 }
 
 func clip(s string) string {

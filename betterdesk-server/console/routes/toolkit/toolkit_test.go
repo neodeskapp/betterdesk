@@ -83,6 +83,25 @@ func TestWakeOnLANNeedsThePermissionToConnect(t *testing.T) {
 	}
 }
 
+// A body that is a JSON array names no length: the password gets the
+// default 16 characters, not the array's length (BUGS.md SC9).
+func TestPasswordOfAnArrayBodyHasTheDefaultLength(t *testing.T) {
+	s := newSite(t, Options{Network: unreachable(t)})
+	admin := s.signIn("admin")
+	for body, want := range map[string]int{`[1,2,3,4,5,6,7,8,9]`: 16, `[]`: 16, `[1,2]`: 16, `{"length":9}`: 9} {
+		status, answer := s.post(admin, "/api/toolkit/password", body)
+		var got struct {
+			Data struct {
+				Password string `json:"password"`
+				Length   int    `json:"length"`
+			} `json:"data"`
+		}
+		if err := json.Unmarshal([]byte(answer), &got); status != 200 || err != nil || got.Data.Length != want || len(got.Data.Password) != want {
+			t.Errorf("%s: %d %s, want a password of %d", body, status, answer, want)
+		}
+	}
+}
+
 func TestTextTools(t *testing.T) {
 	s := newSite(t, Options{Network: unreachable(t), Now: func() time.Time { return oracleNow }, Random: bytes.NewReader(bytes.Repeat([]byte{255, 0, 61, 62, 200}, 100))})
 	admin := s.signIn("admin")

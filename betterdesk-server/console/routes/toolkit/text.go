@@ -16,7 +16,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/middleware"
 )
 
 // maxText is the longest text a text tool takes, in UTF-16 units.
@@ -81,10 +80,6 @@ type passwordData struct {
 func (h *handlers) password(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	length := int(body.IntBetween("length", 16, 4, 128))
-	if items, isArray := middleware.BodyValue(r).Array(); isArray {
-		// A body that is an array has a length of its own
-		length = min(max(len(items), 4), 128)
-	}
 	charset := ""
 	if body.Flag("uppercase", true) {
 		charset += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
