@@ -265,6 +265,45 @@ func TestRestore(t *testing.T) {
 	})
 }
 
+// BK13: when only the audit entry after a restore fails, the restore is
+// done: the answer is its result, not a server error. A download still
+// needs its audit entry, since the archive holds the server's secrets.
+func TestRestoreAnswersWhenTheAuditFails(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db, nil)
+		admin := w.As("admin")
+		ctx := context.Background()
+		archive := []byte(admin.Do("GET", "/api/settings/backup", "").Body)
+		if _, err := db.Exec(ctx, `INSERT INTO folders (name) VALUES ('after the backup')`); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := db.Exec(ctx, `ALTER TABLE audit_log RENAME TO audit_log_away`); err != nil {
+			t.Fatal(err)
+		}
+		post := func(name string, content []byte) routetest.Answer {
+			body, ct := multipartBody(t, "backup", name, content, nil)
+			return admin.Do("POST", "/api/settings/restore", body, "Content-Type", ct)
+		}
+		res := post("b.tar.gz", archive)
+		if res.Status != 200 || !strings.HasPrefix(res.Body, `{"success":true,"data":{"type":"full","restored":["database (`) {
+			t.Errorf("full restore: %d %s", res.Status, res.Body)
+		}
+		var folders int
+		if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM folders WHERE name = 'after the backup'`).Scan(&folders); err != nil || folders != 0 {
+			t.Errorf("the restore did not run: %d %v", folders, err)
+		}
+		res = post("b.json", []byte(`{"_format":"betterdesk-backup","_version":1,"_created":"2026-11-10T08:00:00.000Z","console":{"folders":[{"name":"from the snapshot"}]}}`))
+		if res.Status != 200 || res.Body != `{"success":true,"data":{"type":"config","restored":["folders","groups"],"skipped":["settings","branding","users","addressBooks"],"warnings":[],"backupDate":"2026-11-10T08:00:00.000Z"}}` {
+			t.Errorf("snapshot restore: %d %s", res.Status, res.Body)
+		}
+		for _, q := range []string{"", "?format=json"} {
+			if res := admin.Do("GET", "/api/settings/backup"+q, ""); res.Status != 500 {
+				t.Errorf("download%s without an audit entry: %d %s", q, res.Status, shown(res))
+			}
+		}
+	})
+}
+
 // TestRestoreArchiveLimits: an uploaded archive with more entries than
 // BACKUP_MAX_ENTRIES, one that unpacks past BACKUP_MAX_DECOMPRESSED_BYTES
 // and one with an entry past its end are refused with 400 and the

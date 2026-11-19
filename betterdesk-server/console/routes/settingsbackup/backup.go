@@ -114,12 +114,7 @@ func (h *handlers) restore(w http.ResponseWriter, r *http.Request) {
 			kit.Fail(w, r, http.StatusBadRequest, errText(err))
 			return
 		}
-		details := "Full restore | Restored: " + strings.Join(result.Restored, ", ") + " | Skipped: " + strings.Join(result.Skipped, ", ")
-		if err := h.d.LogAction(r, "backup_restored", details); err != nil {
-			h.log.Error("Restore error:", err)
-			h.serverError(w, r)
-			return
-		}
+		h.audit(r, "Full restore | Restored: "+strings.Join(result.Restored, ", ")+" | Skipped: "+strings.Join(result.Skipped, ", "))
 		data := branding.NewObject()
 		data.Set("type", "full")
 		data.Set("restored", strings2any(result.Restored))
@@ -153,12 +148,7 @@ func (h *handlers) restore(w http.ResponseWriter, r *http.Request) {
 		Groups:       notFalse("restoreGroups"),
 		AddressBooks: notFalse("restoreAddressBooks"),
 	})
-	details := "Config restore | Restored: " + strings.Join(result.Restored, ", ") + " | Skipped: " + strings.Join(result.Skipped, ", ")
-	if err := h.d.LogAction(r, "backup_restored", details); err != nil {
-		h.log.Error("Restore error:", err)
-		h.serverError(w, r)
-		return
-	}
+	h.audit(r, "Config restore | Restored: "+strings.Join(result.Restored, ", ")+" | Skipped: "+strings.Join(result.Skipped, ", "))
 	data := branding.NewObject()
 	data.Set("type", "config")
 	data.Set("restored", strings2any(result.Restored))
@@ -167,6 +157,15 @@ func (h *handlers) restore(w http.ResponseWriter, r *http.Request) {
 	data.Set("backupDate", member(parsed, "_created"))
 	data.Set("backupVersion", member(parsed, "_console_version"))
 	writeData(w, r, branding.Stringify(data))
+}
+
+// audit writes the audit entry of a restore. The restore is done when it
+// runs, so a failed entry is logged and the answer is still the result.
+// A download is different: it is refused without its entry.
+func (h *handlers) audit(r *http.Request, details string) {
+	if err := h.d.LogAction(r, "backup_restored", details); err != nil {
+		h.log.Error("Restore audit error:", err)
+	}
 }
 
 // member is v[key], undefined when v has no such key.
