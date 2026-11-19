@@ -53,6 +53,10 @@ var fixes = slices.Concat(proxytest.Fixes("FL4",
 	// The attestation limit goes on held to 1 to 200, the offset held to 0 to
 	// 2^53-1, both as plain digits.
 	879, 899, 900, 901, 902, 904, 905, 906,
+), proxytest.Fixes("FL9",
+	// The policy writes check the session first: signed out is 401 with
+	// session_required, a pro account is refused as on the other routes.
+	16, 17, 24, 25, 32, 33, 40, 41, 48, 49, 56, 57, 64, 65, 72, 73, 80, 81, 88, 89,
 ))
 
 // TestVectors replays what routes/policies.routes.js of the Node console
@@ -207,6 +211,31 @@ func TestAttestationPagingIsClamped(t *testing.T) {
 		rec, calls := w.Do(proxytest.Request{Path: "/api/panel/attestation?" + query, Session: adminSession()}, records)
 		if rec.Code != 200 || len(calls) != 1 || calls[0].URL != "/api/attestation?"+sent {
 			t.Errorf("?%s: %d after %+v, want a call with %s", query, rec.Code, calls, sent)
+		}
+	}
+}
+
+// TestPolicyWritesNeedASession: the five policy writes check the session
+// first, as the group's other routes do: signed out is 401 with the code
+// the web app looks for, a pro account is refused as everywhere else in
+// the console (BUGS.md FL9).
+func TestPolicyWritesNeedASession(t *testing.T) {
+	w := proxytest.NewWorld(t, register)
+	ok := &proxytest.Answer{Status: 200, Type: "application/json", Body: `{"ok":true}`}
+	body := `{"mode":"attended"}`
+	pro := &proxytest.Account{UserID: 8}
+	pro.User.Username, pro.User.Role = "e2e_pro", "pro"
+	for _, category := range []string{"connection", "features", "security", "network", "update"} {
+		for _, prefix := range []string{"", "/api/bd"} {
+			path := prefix + "/api/panel/policies/org-1/" + category
+			rec, calls := w.Do(proxytest.Request{Method: "PUT", Path: path, Type: "application/json", Body: &body}, ok)
+			if rec.Code != 401 || rec.Body.String() != `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}` || len(calls) != 0 {
+				t.Errorf("PUT %s signed out: %d %s after %d calls", path, rec.Code, rec.Body, len(calls))
+			}
+			rec, calls = w.Do(proxytest.Request{Method: "PUT", Path: path, Type: "application/json", Body: &body, Session: pro}, ok)
+			if rec.Code != 403 || rec.Body.String() != `{"success":false,"error":"Pro accounts can only access the RustDesk desktop client API"}` || len(calls) != 0 {
+				t.Errorf("PUT %s as pro: %d %s after %d calls", path, rec.Code, rec.Body, len(calls))
+			}
 		}
 	}
 }

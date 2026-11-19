@@ -35,7 +35,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Unauthorized",
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
      "success": false
     }
    }
