@@ -30,7 +30,7 @@ map's `delete`, `notifyTarget`, `getOnlineDeviceIds`, `isDeviceOnline`, the
 heartbeat's list of pending sessions, `requestFromDevice` and its result).
 After each step it records what every socket got (the answer's head, text
 and binary messages, the close frame, the end of the connection) and what
-the call returned. `../node_relay.json` holds 14 scenarios with 220 steps.
+the call returned. `../node_relay.json` holds 15 scenarios with 230 steps.
 `TestNodeScenarios` plays them on the Go service with the same clock and
 random source (a `throwNow` step makes the Go clock panic once); every
 socket must see the same, in order, and every call must return the same
@@ -39,8 +39,10 @@ JSON.
 The recording is of upstream 3.5.264 (GHSA-98mc-f6p7-gj85): a relay token
 of another length closes with 4403 "Invalid token" (scenario `relay token
 lengths`), and a throw in the relay handler closes that socket with 1011
-"Internal error" (`relay handler throws`). The other twelve scenarios are
-the same as in the recording of the tree before the move.
+"Internal error" (`relay handler throws`). The scenario `relay frames
+around the length marks` relays messages of 125, 126, 127, 65535 and 65536
+bytes, the lengths where the frame header changes. The other twelve
+scenarios are the same as in the recording of the tree before the move.
 
 This folder is a test fixture from the time both servers existed. The service
 is gone from `web-nodejs` since it moved, so the script runs on the spec

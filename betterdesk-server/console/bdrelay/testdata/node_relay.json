@@ -3363,6 +3363,145 @@
      ]
     }
    ]
+  },
+  {
+   "name": "relay frames around the length marks",
+   "clock": 1700000601000,
+   "steps": [
+    {
+     "step": {
+      "call": "create",
+      "args": [
+       "dev2",
+       "dev1"
+      ],
+      "as": "s1"
+     },
+     "result": {
+      "sessionId": "56cbb3ba-6e1e-4aa7-be14-c0483f950b6e",
+      "initiatorToken": "fb9ccd7df95ad9c33fb6724dd58f23a212f3664642383d29600d592078af0824",
+      "targetToken": "bcfa76856510e937589d90ef37b00e8d72744e4c4c7b994e29c64ec454d0549a"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "init",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "init",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "tgt",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.targetToken}&role=target"
+     },
+     "events": [
+      {
+       "socket": "tgt",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "tgt",
+       "text": "{\"type\":\"paired\",\"session\":\"56cbb3ba-6e1e-4aa7-be14-c0483f950b6e\"}"
+      },
+      {
+       "socket": "init",
+       "text": "{\"type\":\"paired\",\"session\":\"56cbb3ba-6e1e-4aa7-be14-c0483f950b6e\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "init",
+      "repeat": 125
+     },
+     "events": [
+      {
+       "socket": "tgt",
+       "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "init",
+      "repeat": 126
+     },
+     "events": [
+      {
+       "socket": "tgt",
+       "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "init",
+      "repeat": 127
+     },
+     "events": [
+      {
+       "socket": "tgt",
+       "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "tgt",
+      "repeat": 127,
+      "opcode": 2
+     },
+     "events": [
+      {
+       "socket": "init",
+       "binary": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eA=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "init",
+      "repeat": 65535
+     },
+     "events": [
+      {
+       "socket": "tgt",
+       "text": "\u0001RUN:65535:x\u0001"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "init",
+      "repeat": 65536
+     },
+     "events": [
+      {
+       "socket": "tgt",
+       "text": "\u0001RUN:65536:x\u0001"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "init",
+      "text": "after the long ones"
+     },
+     "events": [
+      {
+       "socket": "tgt",
+       "text": "after the long ones"
+      }
+     ]
+    }
+   ]
   }
  ]
 }

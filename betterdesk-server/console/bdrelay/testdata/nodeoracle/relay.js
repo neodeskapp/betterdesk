@@ -133,7 +133,7 @@ function openSocket(name, port, target, headers) {
             let len = s.buf[1] & 0x7f;
             let off = 2;
             if (len === 126) { if (s.buf.length < 4) return; len = s.buf.readUInt16BE(2); off = 4; }
-            if (len === 127) { if (s.buf.length < 10) return; len = Number(s.buf.readBigUInt64BE(2)); off = 10; }
+            else if (len === 127) { if (s.buf.length < 10) return; len = Number(s.buf.readBigUInt64BE(2)); off = 10; }
             if (s.buf.length < off + len) return;
             const payload = s.buf.subarray(off, off + len);
             s.buf = s.buf.subarray(off + len);
@@ -499,6 +499,20 @@ scenario('relay handler throws', [
     { open: 'b', path: relay('s1', 'initiator') },
     { open: 'c', path: relay('s1', 'target') },
     { send: 'b', text: 'still relayed' },
+]);
+// Messages whose length sits at the marks of the frame header (125, 126
+// and 127 bytes; 65535 and 65536) reach the other side whole.
+scenario('relay frames around the length marks', [
+    { call: 'create', args: ['dev2', 'dev1'], as: 's1' },
+    { open: 'init', path: relay('s1', 'initiator') },
+    { open: 'tgt', path: relay('s1', 'target') },
+    { send: 'init', repeat: 125 },
+    { send: 'init', repeat: 126 },
+    { send: 'init', repeat: 127 },
+    { send: 'tgt', repeat: 127, opcode: 2 },
+    { send: 'init', repeat: 65535 },
+    { send: 'init', repeat: 65536 },
+    { send: 'init', text: 'after the long ones' },
 ]);
 
 (async () => {
