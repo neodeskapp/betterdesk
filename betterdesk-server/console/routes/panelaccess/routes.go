@@ -7,6 +7,8 @@ package panelaccess
 import (
 	"math"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/kit"
@@ -72,25 +74,25 @@ func (h *handlers) effective(w http.ResponseWriter, r *http.Request) {
 	kit.OK(w, r, policy)
 }
 
-// userID is Number.parseInt(id, 10) of the id in the path. ok is false
-// for text that starts with no number and for a number no id can be.
+// userID reads the account id of the path: digits only, and at most the
+// largest id the account columns hold on every database. ok is false for
+// anything else ("3x", "3.9", " 3", "+3"), which names no account.
 func userID(r *http.Request) (id int64, ok bool) {
-	n, isNumber := jsreq.ParseInt(r.PathValue("id"), 10)
-	if !isNumber || math.Abs(n) >= 1<<63 {
+	raw := r.PathValue("id")
+	if raw == "" || strings.TrimLeft(raw, "0123456789") != "" {
 		return 0, false
 	}
-	return int64(n), true
+	id, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil || id > math.MaxInt32 {
+		return 0, false
+	}
+	return id, true
 }
 
 // findUser loads the account of the id in the path, and answers 404 when
-// there is none. An id that is no number finds no account on SQLite; on
-// PostgreSQL the query fails on it, which is a 500.
+// there is none or the id is no account id.
 func (h *handlers) findUser(w http.ResponseWriter, r *http.Request) (*access.PolicyUser, bool) {
 	id, ok := userID(r)
-	if !ok && h.d.Store.IsPostgres() {
-		kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
-		return nil, false
-	}
 	var user *access.PolicyUser
 	if ok {
 		var err error

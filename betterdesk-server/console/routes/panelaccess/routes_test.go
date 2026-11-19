@@ -163,17 +163,21 @@ func TestUserPolicy(t *testing.T) {
 	})
 }
 
-func TestUserIDIsReadLikeANumberAtTheStart(t *testing.T) {
+// PA13, TH9, TH10: the account id of the path is written in digits and
+// is a number an account id can be; anything else finds no account, on
+// both databases, before any query.
+func TestUserIDMustBeDigits(t *testing.T) {
 	eachDB(t, func(t *testing.T, w *routetest.World) {
 		admin := w.As("admin")
-		for _, id := range []string{"6", "6x", "%206", "6.9", "%2B6", "0006"} {
+		for _, id := range []string{"6", "0006"} {
 			got := admin.Do("GET", "/api/panel/access/users/"+id, "")
 			if a := decode(t, got); got.Status != 200 || string(a.Data.UserID) != "6" || a.Data.Effective.SubjectID != "6" {
 				t.Errorf("user %q: %d %s", id, got.Status, got.Body)
 			}
 		}
 		notFound := `{"success":false,"error":"User not found"}`
-		for _, id := range []string{"999", "-6", "0", "0x6"} {
+		for _, id := range []string{"999", "-6", "0", "0x6", "6x", "%206", "6.9", "%2B6", "abc", "x6",
+			"99999999999999999999999", "-99999999999999999999999", "3000000000"} {
 			if got := admin.Do("GET", "/api/panel/access/users/"+id, ""); got.Status != 404 || got.Body != notFound {
 				t.Errorf("user %q: %d %s", id, got.Status, got.Body)
 			}
@@ -184,19 +188,9 @@ func TestUserIDIsReadLikeANumberAtTheStart(t *testing.T) {
 		if got := admin.Do("GET", "/api/panel/access/users/999", "", "Accept-Language", "de"); got.Status != 404 || got.Body != `{"success":false,"error":"Benutzer nicht gefunden"}` {
 			t.Errorf("in German: %d %s", got.Status, got.Body)
 		}
-		// Text that is no number, and a number no id can be: SQLite finds
-		// no such account, PostgreSQL fails on the value
-		status, body := 404, notFound
-		if w.DB.IsPostgres() {
-			status, body = 500, `{"success":false,"error":"Server error"}`
-		}
-		for _, id := range []string{"abc", "x6", "99999999999999999999999", "-99999999999999999999999", "3000000000"} {
-			if got := admin.Do("GET", "/api/panel/access/users/"+id, ""); got.Status != status || got.Body != body {
-				t.Errorf("user %q: %d %s, want %d %s", id, got.Status, got.Body, status, body)
-			}
-			if got := admin.Do("PUT", "/api/panel/access/users/"+id, policy); got.Status != status || got.Body != body {
-				t.Errorf("save user %q: %d %s, want %d %s", id, got.Status, got.Body, status, body)
-			}
+		var stored int
+		if err := w.DB.QueryRow(context.Background(), "SELECT COUNT(*) FROM panel_access_policies WHERE subject_id = ?", "6").Scan(&stored); err != nil || stored != 0 {
+			t.Errorf("rows stored for account 6 by saves that named another id: %d %v", stored, err)
 		}
 		if rows := w.AuditRows(); len(rows) != 0 {
 			t.Errorf("audit log after saves that found no account: %q", rows)

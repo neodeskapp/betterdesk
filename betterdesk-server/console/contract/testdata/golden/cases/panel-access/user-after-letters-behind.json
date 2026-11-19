@@ -397,9 +397,9 @@
          "source": "role"
         },
         "dashboard": {
-         "access": "read",
+         "access": "none",
          "role_ceiling": "read",
-         "source": "role"
+         "source": "user"
         },
         "dataguard": {
          "access": "none",
@@ -407,7 +407,7 @@
          "source": "role"
         },
         "devices": {
-         "access": "read",
+         "access": "none",
          "role_ceiling": "read",
          "source": "user"
         },
@@ -459,12 +459,12 @@
         "registrations": {
          "access": "none",
          "role_ceiling": "none",
-         "source": "role"
+         "source": "user"
         },
         "remote": {
-         "access": "read",
+         "access": "none",
          "role_ceiling": "read",
-         "source": "role"
+         "source": "user"
         },
         "reports": {
          "access": "write",
@@ -533,8 +533,8 @@
       "features": [],
       "sections": [
        {
-        "access_level": "read",
-        "resource_key": "devices"
+        "access_level": "none",
+        "resource_key": "group:core"
        }
       ],
       "user_id": 3
