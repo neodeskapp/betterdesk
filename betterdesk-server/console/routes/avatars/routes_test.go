@@ -332,20 +332,18 @@ func TestListOfPictures(t *testing.T) {
 	})
 }
 
-// A failing database is a 500 with a fixed word, for both routes. On
-// PostgreSQL an id beyond the integer range is such a failure, on SQLite
-// it finds nothing.
+// A failing database is a 500 with a fixed word, for both routes. An id
+// beyond the integer range of the column is no failure: no user has it,
+// on either database.
 func TestDatabaseFailures(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := newWorld(t, db, nil)
 		w.signIn(w.user("bob"))
-		rec := w.send(w.cookie, http.MethodGet, "/api/users/9999999999/avatar", nil)
-		wantStatus, wantBody, wantCache := 404, `{"success":false,"error":"not_found"}`, "private, no-cache"
-		if db.IsPostgres() {
-			wantStatus, wantBody, wantCache = 500, `{"success":false,"error":"server_error"}`, ""
-		}
-		if rec.Code != wantStatus || rec.Body.String() != wantBody || rec.Header().Get("Cache-Control") != wantCache {
-			t.Fatalf("an id beyond integer: %d %s, Cache-Control %q", rec.Code, rec.Body.String(), rec.Header().Get("Cache-Control"))
+		for _, id := range []string{"2147483648", "9999999999"} {
+			rec := w.send(w.cookie, http.MethodGet, "/api/users/"+id+"/avatar", nil)
+			if rec.Code != 404 || rec.Body.String() != `{"success":false,"error":"not_found"}` || rec.Header().Get("Cache-Control") != "private, no-cache" {
+				t.Fatalf("the id %s, beyond integer: %d %s, Cache-Control %q", id, rec.Code, rec.Body.String(), rec.Header().Get("Cache-Control"))
+			}
 		}
 		if _, err := db.Exec(context.Background(), `ALTER TABLE user_avatars RENAME TO user_avatars_gone`); err != nil {
 			t.Fatal(err)
@@ -355,6 +353,22 @@ func TestDatabaseFailures(t *testing.T) {
 			if rec.Code != 500 || rec.Body.String() != `{"success":false,"error":"server_error"}` {
 				t.Errorf("%s without the table: %d %s", target, rec.Code, rec.Body.String())
 			}
+		}
+	})
+}
+
+// The largest id the column holds still reaches the database.
+func TestPictureOfTheLargestID(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db, nil)
+		w.signIn(w.user("bob"))
+		if _, err := db.Exec(context.Background(), `INSERT INTO users (id, username, password_hash, role) VALUES (2147483647, 'last', 'x', 'viewer')`); err != nil {
+			t.Fatal(err)
+		}
+		w.picture(2147483647, "image/gif", []byte("GIF89a"), "1f19970f056cd116", "profile", "")
+		rec := w.send(w.cookie, http.MethodGet, "/api/users/2147483647/avatar", nil)
+		if rec.Code != 200 || rec.Body.String() != "GIF89a" {
+			t.Fatalf("the picture of id 2147483647: %d %q", rec.Code, rec.Body.String())
 		}
 	})
 }

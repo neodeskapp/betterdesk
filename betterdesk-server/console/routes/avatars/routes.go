@@ -7,6 +7,7 @@
 package avatars
 
 import (
+	"math"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -60,11 +61,16 @@ func (h *handlers) picture(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusNotFound, "not_found")
 		return
 	}
-	row, err := h.avatars.GetAvatar(r.Context(), id)
-	if err != nil {
-		h.log.Error("read error:", err)
-		kit.Fail(w, r, http.StatusInternalServerError, "server_error")
-		return
+	// An id the users table's integer column cannot hold belongs to no
+	// user; PostgreSQL would refuse it as a query argument
+	var row *avatarsvc.Avatar
+	if id <= math.MaxInt32 {
+		var err error
+		if row, err = h.avatars.GetAvatar(r.Context(), id); err != nil {
+			h.log.Error("read error:", err)
+			kit.Fail(w, r, http.StatusInternalServerError, "server_error")
+			return
+		}
 	}
 	header := w.Header()
 	// A row without bytes is served as it is: an empty picture
