@@ -567,6 +567,37 @@ func TestAFailedUploadLeavesNoFile(t *testing.T) {
 	})
 }
 
+// An upload's type is text: other values are refused, and a text that is
+// no media type is stored as application/octet-stream. A row that holds
+// such a type from before is sent as application/octet-stream (BUGS TK8).
+func TestDownloadWithAnOddStoredType(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		g := newGroup(t, db)
+		g.want(g.do("admin", "POST", "/api/tickets", `{"title":"files"}`), 201, "")
+		for _, mimetype := range []string{`5`, `true`, `["text/plain"]`, `{}`} {
+			g.want(g.do("admin", "POST", "/api/tickets/1/attachments", `{"filename":"a.txt","data":"aGk=","mimetype":`+mimetype+`}`), 400, `{"error":"Invalid mimetype"}`)
+		}
+		for i, mimetype := range []string{`"text/html\r\nX: 1"`, `"tëxt/plain"`, `" "`, `"plain"`, `"text/plain; charset=utf-8"`} {
+			g.want(g.do("admin", "POST", "/api/tickets/1/attachments", `{"filename":"a.txt","data":"aGk=","mimetype":`+mimetype+`}`), 201, "")
+			want := "application/octet-stream"
+			if i == 4 {
+				want = "text/plain; charset=utf-8"
+			}
+			var stored string
+			if err := db.QueryRow(context.Background(), "SELECT mimetype FROM ticket_attachments WHERE id = ?", i+1).Scan(&stored); err != nil || stored != want {
+				t.Errorf("type stored for %s: %q, %v; want %q", mimetype, stored, err, want)
+			}
+		}
+		if _, err := db.Exec(context.Background(), "UPDATE ticket_attachments SET mimetype = ? WHERE id = 1", "text/html\r\nX: 1"); err != nil {
+			t.Fatal(err)
+		}
+		rec := g.do("admin", "GET", "/api/tickets/attachments/1", "")
+		if rec.Code != 200 || rec.Body.String() != "hi" || rec.Header().Get("Content-Type") != "application/octet-stream" || rec.Header().Get("Content-Disposition") != `attachment; filename="a.txt"` {
+			t.Errorf("download of a row with a type no header can carry: %d %q %v", rec.Code, rec.Body.String(), rec.Header())
+		}
+	})
+}
+
 // unread is a request body that counts what is read of it.
 type unread struct {
 	left int64

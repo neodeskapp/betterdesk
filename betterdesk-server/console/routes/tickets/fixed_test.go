@@ -269,3 +269,100 @@ var _ = ticketFixes.Add("TK7", map[string]replay.Fix{
 	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":"YQ=YQ"}`:    {Status: 400, Answer: dataRefused, After: resendFile("data.bin", 'a')},
 	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":"éééé"}`:     {Status: 400, Answer: dataRefused, After: emptyFile("data.bin")},
 })
+
+// mimeUpload is the recorded upload of mime.bin whose file names its type.
+func mimeUpload(data, mimetype string) string {
+	return `admin POST /api/tickets/5/attachments {"filename":"mime.bin","data":"` + data + `","mimetype":` + mimetype + `}`
+}
+
+// storedType writes the type Node stored for the attachment its answer
+// names, on each database; failed means Node stored nothing there.
+func storedType(sqlite, postgres any) func(t *testing.T, w *replay.World, step replay.Step) {
+	return func(t *testing.T, w *replay.World, step replay.Step) {
+		t.Helper()
+		value := sqlite
+		if w.DB.IsPostgres() {
+			value = postgres
+		}
+		if value == failed || step.Status != 201 {
+			return
+		}
+		var answer struct {
+			Attachment struct {
+				ID int64 `json:"id"`
+			} `json:"attachment"`
+		}
+		if err := json.Unmarshal([]byte(step.Answer), &answer); err != nil {
+			t.Fatal(err)
+		}
+		w.Exec("UPDATE ticket_attachments SET mimetype = ? WHERE id = ?", []any{value, answer.Attachment.ID})
+	}
+}
+
+// both runs one stand-in after the other.
+func both(first, second func(t *testing.T, w *replay.World, step replay.Step)) func(t *testing.T, w *replay.World, step replay.Step) {
+	return func(t *testing.T, w *replay.World, step replay.Step) {
+		t.Helper()
+		first(t, w, step)
+		second(t, w, step)
+	}
+}
+
+// nodeUpload uploads the recorded file without its type when Node stored
+// one there, and then writes the type Node stored.
+func nodeUpload(data string, sqlite, postgres any) func(t *testing.T, w *replay.World, step replay.Step) {
+	body := `{"filename":"mime.bin","data":"` + data + `"}`
+	pick := func(value any) string {
+		if value == failed {
+			return ""
+		}
+		return body
+	}
+	return both(replay.ResendBy(pick(sqlite), pick(postgres)), storedType(sqlite, postgres))
+}
+
+var (
+	invalidType = `{"error":"Invalid mimetype"}`
+	longType    = strings.Repeat("x", 300)
+	octet       = map[string]string{"Content-Type": "application/octet-stream", "Content-Disposition": `attachment; filename="mime.bin"`}
+)
+
+// TK8: an upload's type is text, stored only when it is a media type, and
+// a download sends a stored type that is none as application/octet-stream.
+var _ = ticketFixes.Add("TK8", map[string]replay.Fix{
+	mimeUpload("bWltZSAw", `0`):               {Status: 400, Answer: invalidType, After: nodeUpload("bWltZSAw", "application/octet-stream", "application/octet-stream")},
+	mimeUpload("bWltZSA1", `5`):               {Status: 400, Answer: invalidType, After: nodeUpload("bWltZSA1", "5.0", "5")},
+	mimeUpload("bWltZSB0cnVl", `true`):        {Status: 400, Answer: invalidType, After: nodeUpload("bWltZSB0cnVl", failed, "true")},
+	mimeUpload("bWltZSBbIngveSJd", `["x/y"]`): {Status: 400, Answer: invalidType, After: nodeUpload("bWltZSBbIngveSJd", "x/y", `{"x/y"}`)},
+	mimeUpload("bWltZSB7fQ==", `{}`):          {Status: 400, Answer: invalidType, After: nodeUpload("bWltZSB7fQ==", failed, "{}")},
+	mimeUpload("bWltZSAidGV4dC9odG1sXHJcblgtSW5qZWN0ZWQ6IDEi", `"text/html\r\nX-Injected: 1"`):     {Status: 201, Answer: `{"success":true,"attachment":{"id":18,"filename":"mime.bin","size_bytes":33}}`, Dialect: "sqlite", After: storedType("text/html\r\nX-Injected: 1", nil)},
+	mimeUpload("bWltZSAidMOreHQvcGxhaW4i", `"tëxt/plain"`):                                         {Status: 201, Answer: `{"success":true,"attachment":{"id":19,"filename":"mime.bin","size_bytes":18}}`, Dialect: "sqlite", After: storedType("tëxt/plain", nil)},
+	mimeUpload("bWltZSAiz4AveCI=", `"π/x"`):                                                        {Status: 201, Answer: `{"success":true,"attachment":{"id":20,"filename":"mime.bin","size_bytes":11}}`, Dialect: "sqlite", After: storedType("π/x", nil)},
+	mimeUpload("bWltZSAiICI=", `" "`):                                                              {Status: 201, Answer: `{"success":true,"attachment":{"id":22,"filename":"mime.bin","size_bytes":8}}`, Dialect: "sqlite", After: storedType(" ", nil)},
+	mimeUpload(base64.StdEncoding.EncodeToString([]byte(`mime "`+longType+`"`)), `"`+longType+`"`): {Status: 201, Answer: `{"success":true,"attachment":{"id":23,"filename":"mime.bin","size_bytes":307}}`, Dialect: "sqlite", After: storedType(longType, nil)},
+
+	"admin GET /api/tickets/attachments/15 ": {Status: 200, Answer: "mime 5", Headers: octet, Dialect: "sqlite"},
+	"admin GET /api/tickets/attachments/18 ": {Status: 200, Answer: `mime "text/html\r\nX-Injected: 1"`, Headers: octet, Dialect: "sqlite"},
+	"admin GET /api/tickets/attachments/19 ": {Status: 200, Answer: `mime "tëxt/plain"`, Headers: octet, Dialect: "sqlite"},
+	"admin GET /api/tickets/attachments/20 ": {Status: 200, Answer: `mime "π/x"`, Headers: octet, Dialect: "sqlite"},
+	"admin GET /api/tickets/attachments/22 ": {Status: 200, Answer: `mime " "`, Headers: octet, Dialect: "sqlite"},
+	"admin GET /api/tickets/attachments/23 ": {Status: 200, Answer: `mime "` + longType + `"`, Headers: octet, Dialect: "sqlite"},
+})
+
+var _ = ticketFixes.Add("TK8", map[string]replay.Fix{
+	mimeUpload("bWltZSAidGV4dC9odG1sXHJcblgtSW5qZWN0ZWQ6IDEi", `"text/html\r\nX-Injected: 1"`):     {Status: 201, Answer: `{"success":true,"attachment":{"id":20,"filename":"mime.bin","size_bytes":33}}`, Dialect: "postgres", After: storedType(nil, "text/html\r\nX-Injected: 1")},
+	mimeUpload("bWltZSAidMOreHQvcGxhaW4i", `"tëxt/plain"`):                                         {Status: 201, Answer: `{"success":true,"attachment":{"id":21,"filename":"mime.bin","size_bytes":18}}`, Dialect: "postgres", After: storedType(nil, "tëxt/plain")},
+	mimeUpload("bWltZSAiz4AveCI=", `"π/x"`):                                                        {Status: 201, Answer: `{"success":true,"attachment":{"id":22,"filename":"mime.bin","size_bytes":11}}`, Dialect: "postgres", After: storedType(nil, "π/x")},
+	mimeUpload("bWltZSAiICI=", `" "`):                                                              {Status: 201, Answer: `{"success":true,"attachment":{"id":24,"filename":"mime.bin","size_bytes":8}}`, Dialect: "postgres", After: storedType(nil, " ")},
+	mimeUpload(base64.StdEncoding.EncodeToString([]byte(`mime "`+longType+`"`)), `"`+longType+`"`): {Status: 201, Answer: `{"success":true,"attachment":{"id":25,"filename":"mime.bin","size_bytes":307}}`, Dialect: "postgres", After: storedType(nil, longType)},
+
+	"admin GET /api/tickets/attachments/15 ": {Status: 200, Answer: "mime 5", Headers: octet, Dialect: "postgres"},
+	"admin GET /api/tickets/attachments/17 ": {Status: 200, Answer: "mime true", Headers: octet, Dialect: "postgres"},
+	"admin GET /api/tickets/attachments/18 ": {Status: 200, Answer: `mime ["x/y"]`, Headers: octet, Dialect: "postgres"},
+	"admin GET /api/tickets/attachments/19 ": {Status: 200, Answer: "mime {}", Headers: octet, Dialect: "postgres"},
+	"admin GET /api/tickets/attachments/20 ": {Status: 200, Answer: `mime "text/html\r\nX-Injected: 1"`, Headers: octet, Dialect: "postgres"},
+	"admin GET /api/tickets/attachments/21 ": {Status: 200, Answer: `mime "tëxt/plain"`, Headers: octet, Dialect: "postgres"},
+	"admin GET /api/tickets/attachments/22 ": {Status: 200, Answer: `mime "π/x"`, Headers: octet, Dialect: "postgres"},
+	"admin GET /api/tickets/attachments/24 ": {Status: 200, Answer: `mime " "`, Headers: octet, Dialect: "postgres"},
+	"admin GET /api/tickets/attachments/25 ": {Status: 200, Answer: `mime "` + longType + `"`, Headers: octet, Dialect: "postgres"},
+})

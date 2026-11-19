@@ -124,6 +124,11 @@ func (h *handlers) attach(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "Filename and data (base64) are required")
 		return
 	}
+	mimetype := jsbind.Of(body.Get("mimetype"))
+	if !mimetype.IsString() && !mimetype.IsNull() && !mimetype.IsUndefined() {
+		fail(w, r, http.StatusBadRequest, "Invalid mimetype")
+		return
+	}
 	if len(file) > maxAttachmentSize {
 		fail(w, r, http.StatusRequestEntityTooLarge, "Attachment too large. Max 25 MB")
 		return
@@ -144,8 +149,11 @@ func (h *handlers) attach(w http.ResponseWriter, r *http.Request) {
 	}
 	var id jsbind.Cell
 	if err == nil {
-		mimetype := jsbind.Of(body.Get("mimetype")).Or(jsbind.String("application/octet-stream"))
-		id, err = addAttachment(r.Context(), h.db, t.id(), name, mimetype, len(file), storagePath, kit.User(r).Username)
+		stored := "application/octet-stream"
+		if mediaType(mimetype.Str()) {
+			stored = mimetype.Str()
+		}
+		id, err = addAttachment(r.Context(), h.db, t.id(), name, jsbind.String(stored), len(file), storagePath, kit.User(r).Username)
 		if err != nil {
 			// A file without a row is reached by nothing
 			_ = os.Remove(storagePath)
@@ -195,16 +203,17 @@ func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusNotFound, "Attachment file missing")
 		return
 	}
-	// The two headers are set one after the other; a stored type that no
-	// header can carry fails after the first is in place.
+	// A stored type that is no media type, which rows from before the
+	// check can hold, goes out as a plain download
 	disposition, okName := headerValue(`attachment; filename="` + a.Filename + `"`)
-	contentType, okType := headerValue(a.Mimetype.String)
-	if okName {
-		w.Header().Set("Content-Disposition", disposition)
-	}
-	if !okName || !okType || !a.Mimetype.Valid {
-		h.serverError(w, r, "Attachment download error", errors.New("invalid characters in a header of the stored attachment"))
+	if !okName {
+		h.serverError(w, r, "Attachment download error", errors.New("invalid characters in the name of the stored attachment"))
 		return
+	}
+	w.Header().Set("Content-Disposition", disposition)
+	contentType := "application/octet-stream"
+	if a.Mimetype.Valid && mediaType(a.Mimetype.String) {
+		contentType = a.Mimetype.String
 	}
 	w.Header()["Content-Type"] = []string{contentType}
 
@@ -229,6 +238,16 @@ func hasDotPart(path string) bool {
 		}
 	}
 	return false
+}
+
+// mediaType reports whether text is a media type a header can carry:
+// type/subtype with parameters, in ASCII, without control characters.
+func mediaType(text string) bool {
+	if _, ok := headerValue(text); !ok {
+		return false
+	}
+	name, _, err := mime.ParseMediaType(text)
+	return err == nil && strings.Count(name, "/") == 1
 }
 
 // headerValue returns text as the bytes of a header value: one byte per
