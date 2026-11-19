@@ -238,43 +238,90 @@ func isJSLineEnd(r rune) bool {
 	return r == '\n' || r == '\r' || r == 0x2028 || r == 0x2029
 }
 
+// systemdAssignments splits the value of an Environment= line into its
+// assignments as systemd does: separated by spaces or tabs, each one
+// optionally in double or single quotes, which may hold spaces; a quote
+// that is not closed runs to the end of the line. It returns each
+// assignment without its quotes, and as it was written.
+func systemdAssignments(value string) (assignments, written []string) {
+	i := 0
+	for i < len(value) {
+		if value[i] == ' ' || value[i] == '\t' {
+			i++
+			continue
+		}
+		start := i
+		if q := value[i]; q == '"' || q == '\'' {
+			end := strings.IndexByte(value[i+1:], q)
+			if end < 0 {
+				return append(assignments, value[i+1:]), append(written, value[i:])
+			}
+			i += end + 2
+			assignments, written = append(assignments, value[start+1:i-1]), append(written, value[start:i])
+			continue
+		}
+		for i < len(value) && value[i] != ' ' && value[i] != '\t' {
+			i++
+		}
+		assignments, written = append(assignments, value[start:i]), append(written, value[start:i])
+	}
+	return assignments, written
+}
+
 // ParseSystemdEnvironment reads the managed variables out of the text of a
-// systemd unit: its "Environment=KEY=value" lines, with or without quotes
-// around KEY=value. A line must start with "Environment=" at its first
-// character.
+// systemd unit: each assignment of its "Environment=" lines, indented or
+// not (systemdAssignments).
 func ParseSystemdEnvironment(content string) map[string]string {
 	env := map[string]string{}
 	const prefix = "Environment="
 	for _, line := range strings.FieldsFunc(content, isJSLineEnd) {
-		if !strings.HasPrefix(line, prefix) || len(line) == len(prefix) {
+		trimmed := jsTrim(line)
+		if !strings.HasPrefix(trimmed, prefix) {
 			continue
 		}
-		pair := stripQuotes(jsTrim(line[len(prefix):]))
-		eq := strings.IndexByte(pair, '=')
-		if eq <= 0 {
-			continue
-		}
-		if key := jsTrim(pair[:eq]); isManagedKey(key) {
-			env[key] = jsTrim(pair[eq+1:])
+		assignments, _ := systemdAssignments(trimmed[len(prefix):])
+		for _, pair := range assignments {
+			eq := strings.IndexByte(pair, '=')
+			if eq <= 0 {
+				continue
+			}
+			if key := jsTrim(pair[:eq]); isManagedKey(key) {
+				env[key] = jsTrim(pair[eq+1:])
+			}
 		}
 	}
 	return env
 }
 
 // PatchSystemdEnvironment returns the text of a systemd unit with the
-// managed variables set to vars. Every "Environment=" line of a managed
-// variable is removed. The new lines go into the [Service] section, before
-// its ExecStart line or else at the end of its first block of lines; a
-// unit without that section gets them at the end.
+// managed variables set to vars. Every assignment of a managed variable is
+// taken out of its "Environment=" line, which goes when nothing else is
+// left on it. The new lines go into the [Service] section, before its
+// ExecStart line or else at the end of its first block of lines; a unit
+// without that section gets them at the end.
 func PatchSystemdEnvironment(content string, vars EnvVars) string {
 	var out []string
 	for _, line := range strings.Split(content, "\n") {
 		trimmed := jsTrim(line)
 		if strings.HasPrefix(trimmed, "Environment=") {
-			pair := stripQuotes(jsTrim(trimmed[len("Environment="):]))
-			key, _, _ := strings.Cut(pair, "=")
-			if isManagedKey(key) {
+			assignments, written := systemdAssignments(trimmed[len("Environment="):])
+			var kept []string
+			for i, pair := range assignments {
+				if key, _, _ := strings.Cut(pair, "="); !isManagedKey(key) {
+					kept = append(kept, written[i])
+				}
+			}
+			switch {
+			case len(kept) == len(assignments):
+			case len(kept) == 0:
 				continue
+			default:
+				indent := line[:len(line)-len(strings.TrimLeft(line, " \t"))]
+				end := ""
+				if strings.HasSuffix(line, "\r") {
+					end = "\r"
+				}
+				line = indent + "Environment=" + strings.Join(kept, " ") + end
 			}
 		}
 		out = append(out, line)

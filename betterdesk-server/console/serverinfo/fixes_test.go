@@ -251,3 +251,44 @@ func savedDespiteEnvFile(t testing.TB, raw map[string]any, nodeEnv map[string]st
 	}
 	return nil, &saved, saved, env
 }
+
+// holdsSeveralAssignments reports whether a unit has an Environment= line
+// that SI9 reads otherwise than Node: an indented one, which Node's reader
+// skipped, or one whose value has a space, a tab or a quote that does not
+// just wrap the whole value, which Node took as one assignment. Such
+// units may differ from Node's answers;
+// TestSystemdEnvironmentSeveralAssignmentsOnALine checks what Go does.
+func holdsSeveralAssignments(unit string) bool {
+	for _, line := range strings.FieldsFunc(unit, isJSLineEnd) {
+		trimmed := jsTrim(line)
+		if !strings.HasPrefix(trimmed, "Environment=") {
+			continue
+		}
+		if !strings.HasPrefix(line, "Environment=") {
+			return true
+		}
+		value := jsTrim(trimmed[len("Environment="):])
+		if strings.ContainsAny(value, " \t") {
+			return true
+		}
+		inner := value
+		if len(value) >= 2 && (value[0] == '"' || value[0] == '\'') && value[len(value)-1] == value[0] {
+			inner = value[1 : len(value)-1]
+		}
+		if strings.ContainsAny(inner, `"'`) {
+			return true
+		}
+	}
+	return false
+}
+
+// unitCases lets the recorded cases whose units hold such a line differ
+// from Node's answers (SI9); every other case must match them.
+func unitCases(m *mismatches, units ...string) *mismatches {
+	for _, unit := range units {
+		if holdsSeveralAssignments(unit) {
+			return &mismatches{t: dropped{m.t}}
+		}
+	}
+	return m
+}

@@ -155,7 +155,9 @@ func TestSystemdEnvironmentAgainstNode(t *testing.T) {
 	atLeast(t, "patch_systemd", len(v.PatchSystemd), 1400)
 	m := &mismatches{t: t}
 	found := 0
+	all := m
 	for _, c := range v.ParseSystemd {
+		m := unitCases(all, c.Text)
 		got := ParseSystemdEnvironment(c.Text)
 		found += len(got)
 		if !reflect.DeepEqual(got, c.Out) {
@@ -167,6 +169,7 @@ func TestSystemdEnvironmentAgainstNode(t *testing.T) {
 	}
 	changed := 0
 	for _, c := range v.PatchSystemd {
+		m := unitCases(all, c.Text)
 		got := PatchSystemdEnvironment(c.Text, c.Vars.vars())
 		if got != c.Out {
 			m.errorf("PatchSystemdEnvironment(%q, %v) =\n%q\nNode answers\n%q", c.Text, c.Vars, got, c.Out)
@@ -393,8 +396,10 @@ func TestConnectionServiceAgainstNode(t *testing.T) {
 	ctx := context.Background()
 	m := &mismatches{t: t}
 	sources, setKinds, restartKinds := map[string]int{}, map[string]int{}, map[string]int{}
+	all := m
 	for i, c := range v.Service {
 		label := "case " + strconv.Itoa(i)
+		m := unitCases(all, c.State.Unit.Text, c.State.DropIn.Text)
 
 		st := stageConnection(t, root, c.State)
 		if got := st.service.IsDockerSplitDeployment(); got != c.SplitDeployment {
@@ -614,6 +619,38 @@ WantedBy=multi-user.target
 `
 	if got := PatchSystemdEnvironment(sampleSystemd, relayOnlyVars()); got != want {
 		t.Errorf("patched unit\n%s\nwant\n%s", got, want)
+	}
+}
+
+// TestSystemdEnvironmentSeveralAssignmentsOnALine reads and writes each
+// assignment of an Environment= line, quoted or not, also on an indented
+// line (BUGS SI9: a line was one variable, so a second assignment became
+// part of the first one's value, and a save removed the line with the
+// variables on it that the console does not manage).
+func TestSystemdEnvironmentSeveralAssignmentsOnALine(t *testing.T) {
+	unit := "[Service]\n" +
+		"Environment=\"P2P_FIRST=N\" \"ALWAYS_USE_RELAY=Y\"\n" +
+		"  Environment=SAME_NAT_RELAY=N LOG_LEVEL=debug\n" +
+		"Environment='OPERATOR_ONLY_OUTBOUND=Y' \"TITLE=a b\"\n" +
+		"Environment=P2P_FALLBACK_MS=500\n" +
+		"ExecStart=/opt/betterdesk/betterdesk-server\n"
+	want := map[string]string{"P2P_FIRST": "N", "ALWAYS_USE_RELAY": "Y", "SAME_NAT_RELAY": "N", "OPERATOR_ONLY_OUTBOUND": "Y", "P2P_FALLBACK_MS": "500"}
+	if got := ParseSystemdEnvironment(unit); !reflect.DeepEqual(got, want) {
+		t.Errorf("parsed %q, want %q", got, want)
+	}
+	patched := "[Service]\n" +
+		"  Environment=LOG_LEVEL=debug\n" +
+		"Environment=\"TITLE=a b\"\n" +
+		"Environment=P2P_FIRST=N\n" +
+		"Environment=ALWAYS_USE_RELAY=Y\n" +
+		"Environment=P2P_FALLBACK_MS=3000\n" +
+		"Environment=SAME_NAT_RELAY=N\n" +
+		"Environment=ALLOW_SHARED_NAT_INITIATOR=N\n" +
+		"Environment=LOGGED_IN_ONLY_INITIATOR=Y\n" +
+		"Environment=OPERATOR_ONLY_OUTBOUND=Y\n" +
+		"ExecStart=/opt/betterdesk/betterdesk-server\n"
+	if got := PatchSystemdEnvironment(unit, relayOnlyVars()); got != patched {
+		t.Errorf("patched unit\n%s\nwant\n%s", got, patched)
 	}
 }
 
