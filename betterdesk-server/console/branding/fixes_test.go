@@ -50,6 +50,27 @@ func fixedPure(name string, a []any, got string) string {
 	return ""
 }
 
+var reAppliedUpload = regexp.MustCompile(`^\{"success":true,"url":"(/uploads/(bg-<HEX>[^"]*))","applied":true,`)
+
+// fixedUploadAnswer is the answer and the audit entries Node recorded for
+// a step of the uploads, with the fixes applied, and the bug that changed
+// them. BR10: a background whose target is named like something every
+// object has ("constructor") is not applied.
+func fixedUploadAnswer(entry any) (body, audit any, bug string) {
+	body, audit = property(entry, "body"), property(entry, "audit")
+	fields, _ := property(property(entry, "step"), "fields").(*Object)
+	target, isText := "", false
+	if fields != nil {
+		target, isText = property(fields, "target").(string)
+	}
+	m := reAppliedUpload.FindStringSubmatch(toString(or(body, "")))
+	if _, own := backgroundTargets[trim(target)]; !isText || m == nil || own {
+		return body, audit, ""
+	}
+	return `{"success":true,"url":"` + m[1] + `","applied":false,"data":null}`,
+		[]any{[]any{"branding_bg_upload", "Uploaded background: " + m[2]}}, "BR10"
+}
+
 // noFontFolder is the answer of Node for a font name without an ASCII
 // letter or digit, where the console finds no installed font (BR2).
 const noFontFolder = "throws Error: Invalid font family name"

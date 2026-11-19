@@ -201,18 +201,12 @@ var backgroundTargets = map[string]string{
 // ApplyBackground stores an uploaded picture as the background named by
 // target (bgImageUrl, loginBgImageUrl, agentBgImageUrl or
 // rdclientBgImageUrl) and switches that background to "image". For any
-// other target it does nothing and answers applied false. With applied
-// true, branding is the saved settings.
-//
-// A target that is the name of something every JavaScript object has
-// ("constructor", "toString" ...) counts as known (BUGS BR10): nothing
-// about the background is stored, and applied is true.
+// other target, also one named like something every JavaScript object has
+// ("constructor", "toString" ...), it does nothing and answers applied
+// false. With applied true, branding is the saved settings.
 func (s *Service) ApplyBackground(ctx context.Context, target, url string) (branding *Object, applied bool, err error) {
 	typeKey, known := backgroundTargets[target]
 	if !known {
-		typeKey, known = objectPrototype[target]
-	}
-	if target == "" || !known {
 		return nil, false, nil
 	}
 	if err := s.SaveBranding(ctx, object(target, url, typeKey, "image")); err != nil {

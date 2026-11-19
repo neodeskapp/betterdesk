@@ -240,12 +240,16 @@ func TestUploadBackground(t *testing.T) {
 				t.Errorf("target %q: audit %s", target, got)
 			}
 		}
-		// a name every object has counts as a target and stores nothing
-		// about the picture (BUGS BR10)
-		res = upload(t, admin, "/api/settings/branding/upload-background",
-			part{field: "target", content: []byte("constructor")}, part{field: "background", name: "w.png", contentType: "image/png", content: pngBytes})
-		if answer := decode(t, res.Body); answer["applied"] != true || answer["data"].(map[string]any)["bgImageUrl"] != "" {
-			t.Errorf("constructor: %s", res.Body)
+		// a name every object has is no target either (BUGS BR10)
+		for _, target := range []string{"constructor", "__proto__", "toString", "hasOwnProperty"} {
+			res = upload(t, admin, "/api/settings/branding/upload-background",
+				part{field: "target", content: []byte(target)}, part{field: "background", name: "w.png", contentType: "image/png", content: pngBytes})
+			if answer := decode(t, res.Body); res.Status != http.StatusOK || answer["applied"] != false || answer["data"] != nil {
+				t.Errorf("target %s: %d %s", target, res.Status, res.Body)
+			}
+			if got := lastAudit(t, w); !strings.HasPrefix(got, "branding_bg_upload|Uploaded background: bg-") {
+				t.Errorf("target %s: audit %s", target, got)
+			}
 		}
 		if res := upload(t, admin, "/api/settings/branding/upload-background", part{field: "background", name: "big.jpg", contentType: "image/jpeg", content: bytes.Repeat([]byte("a"), branding.BackgroundMaxBytes+1)}); res.Body != `{"success":false,"error":"File too large (max 8 MB)"}` {
 			t.Errorf("too large: %d %s", res.Status, res.Body)
@@ -369,10 +373,13 @@ func TestUploadsLikeNode(t *testing.T) {
 			}
 		}
 		last := ""
-		renames := 0
+		renames, inheritedTargets := 0, 0
 		defer func() {
 			if renames < 10 {
 				t.Errorf("%d uploads stored under another name than Node's, the recording has more (BUGS I9)", renames)
+			}
+			if inheritedTargets < 3 {
+				t.Errorf("%d background uploads name a target every object has, the recording has more (BUGS BR10)", inheritedTargets)
 			}
 		}()
 		for i, entry := range steps {
@@ -465,19 +472,19 @@ func TestUploadsLikeNode(t *testing.T) {
 			if want, ok := branding.Field(entry, "status").(float64); ok && int(want) != status {
 				t.Errorf("%s: status %d, want %d (%s)", what, status, int(want), clipText(body))
 			}
-			if want, ok := branding.Field(entry, "body").(string); ok {
-				if got := maskUploadNames(reRevisionField.ReplaceAllLiteralString(body, `"revision":"<REV>"`)); got != want {
-					t.Errorf("%s: body\n got  %s\n want %s", what, clipText(got), clipText(want))
+			wantBody, wantAudit, fixed := fixedUploadAnswer(entry)
+			if fixed {
+				inheritedTargets++
+			}
+			if wantBody != "" {
+				if got := maskUploadNames(reRevisionField.ReplaceAllLiteralString(body, `"revision":"<REV>"`)); got != wantBody {
+					t.Errorf("%s: body\n got  %s\n want %s", what, clipText(got), clipText(wantBody))
 				}
 			}
 			var audit []string
 			for _, row := range w.AuditRows()[auditBefore:] {
 				parts := strings.SplitN(row, "|", 3)
 				audit = append(audit, branding.Stringify([]any{parts[0], maskUploadNames(strings.NewReplacer(renamed...).Replace(parts[1]))}))
-			}
-			var wantAudit []string
-			for _, a := range lines2(branding.Field(entry, "audit")) {
-				wantAudit = append(wantAudit, a)
 			}
 			if strings.Join(audit, ",") != strings.Join(wantAudit, ",") {
 				t.Errorf("%s: audit %v, want %v", what, audit, wantAudit)
@@ -518,6 +525,28 @@ var (
 	reStoredURL     = regexp.MustCompile(`"url":"/uploads/((?:logo|bg)-[0-9a-f]{16})([^"]*)"`)
 	reRecordedURL   = regexp.MustCompile(`"url":"/uploads/(?:logo|bg)-<HEX>([^"]*)"`)
 )
+
+var reRecordedApplied = regexp.MustCompile(`^\{"success":true,"url":"(/uploads/(bg-<HEX>[^"]*))","applied":true,`)
+
+// ownTargets are the settings a background upload may name as its target.
+var ownTargets = map[string]bool{"bgImageUrl": true, "loginBgImageUrl": true, "agentBgImageUrl": true, "rdclientBgImageUrl": true}
+
+// fixedUploadAnswer is the answer and the audit entries Node recorded for
+// an upload step, as JSON texts, with the fixes of BUGS.md applied.
+// fixed says that a fix changed them: BR10, a background whose target is
+// named like something every object has ("constructor") is not applied.
+func fixedUploadAnswer(entry any) (body string, audit []string, fixed bool) {
+	body, _ = branding.Field(entry, "body").(string)
+	audit = lines2(branding.Field(entry, "audit"))
+	step := branding.Field(entry, "step")
+	target, isText := branding.Field(branding.Field(step, "fields"), "target").(string)
+	m := reRecordedApplied.FindStringSubmatch(body)
+	if !isText || m == nil || ownTargets[branding.Trim(target)] {
+		return body, audit, false
+	}
+	return `{"success":true,"url":"` + m[1] + `","applied":false,"data":null}`,
+		[]string{branding.Stringify([]any{"branding_bg_upload", "Uploaded background: " + m[2]})}, true
+}
 
 // uploadExtensions are the extensions a logo or background gets by its
 // content type (BUGS I9).

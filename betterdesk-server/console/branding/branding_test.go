@@ -1278,15 +1278,11 @@ func TestApplyBackground(t *testing.T) {
 				t.Errorf("ApplyBackground(%s): %v, %v, %s=%q %s=%q", target, applied, err, target, branding.Text(target), typeKey, branding.Text(typeKey))
 			}
 		}
-		for _, target := range []string{"", "logoUrl", "bgType", "BGIMAGEURL", " bgImageUrl"} {
+		// also a name every JavaScript object has is no target (BUGS BR10)
+		for _, target := range []string{"", "logoUrl", "bgType", "BGIMAGEURL", " bgImageUrl", "constructor", "__proto__", "toString", "hasOwnProperty"} {
 			if branding, applied, err := s.ApplyBackground(ctx, target, "/uploads/bg-2.png"); applied || err != nil || branding != nil {
 				t.Errorf("ApplyBackground(%q) = %v, %v", target, applied, err)
 			}
-		}
-		// a name every JavaScript object has counts as a target, and stores nothing of the picture
-		branding, applied, err := s.ApplyBackground(ctx, "constructor", "/uploads/bg-3.png")
-		if err != nil || !applied || strings.Contains(Stringify(branding), "bg-3.png") {
-			t.Errorf("ApplyBackground(constructor): %v, %v", applied, err)
 		}
 	})
 }

@@ -551,12 +551,16 @@ func (r *filesReplay) uploadSteps() {
 		if recorded, ok := property(entry, "status").(float64); ok && int(recorded) != status {
 			t.Errorf("%s: status %d, want %d (body %s)", what, status, int(recorded), clip(body))
 		}
-		if recorded, ok := property(entry, "body").(string); ok {
+		wantBody, wantAudit, fixed := fixedUploadAnswer(entry)
+		if fixed != "" {
+			r.fixed[fixed]++
+		}
+		if recorded, ok := wantBody.(string); ok {
 			if got := maskNames(maskRevision(body)); got != recorded {
 				t.Errorf("%s: body\n got  %s\n want %s", what, clip(got), clip(recorded))
 			}
 		}
-		if got, want := maskNames(Stringify(or(audit, []any{}))), Stringify(or(property(entry, "audit"), []any{})); got != want {
+		if got, want := maskNames(Stringify(or(audit, []any{}))), Stringify(or(wantAudit, []any{})); got != want {
 			t.Errorf("%s: audit entries\n got  %s\n want %s", what, got, want)
 		}
 		if got, want := Stringify(tree(t, r.uploadsDir())), Stringify(property(entry, "uploads")); got != want {
@@ -674,6 +678,9 @@ func TestOracleFiles(t *testing.T) {
 		r.uploadSteps()
 		if r.renamed < 10 {
 			t.Errorf("%d uploads stored under another name than Node's, the recording has more (BUGS I9)", r.renamed)
+		}
+		if r.fixed["BR10"] < 3 {
+			t.Errorf("%d background uploads name a target every object has, the recording has more (BUGS BR10)", r.fixed["BR10"])
 		}
 	})
 	t.Run("themes", func(t *testing.T) { r.t = t; r.themes() })
