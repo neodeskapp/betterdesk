@@ -223,9 +223,7 @@
     "kind": "json",
     "json": {
      "data": {
-      "allowed_groups": [
-       "g"
-      ],
+      "allowed_groups": [],
       "allowed_users": [],
       "created": true,
       "guid": "<volatile>",

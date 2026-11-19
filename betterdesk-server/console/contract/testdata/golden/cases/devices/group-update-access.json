@@ -125,8 +125,8 @@
      "data": {
       "allowed_groups": [],
       "allowed_users": [
-       "e2e_viewer",
-       "e2e_operator"
+       "e2e_operator",
+       "e2e_viewer"
       ],
       "created": false,
       "guid": "<volatile>",

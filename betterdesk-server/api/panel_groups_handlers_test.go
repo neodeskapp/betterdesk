@@ -333,3 +333,35 @@ func TestPanelGroupUpdateKeepsNoteAndTeam(t *testing.T) {
 		t.Errorf("after an update with an empty note and another team: %q", got)
 	}
 }
+
+// TestPanelGroupSaveAnswersTheStoredAccessList: the answer of a save lists
+// the accounts and user groups the access list stored, not the request's:
+// names of no account and guids of no user group are left out, in the
+// stored order (BUGS UM32).
+func TestPanelGroupSaveAnswersTheStoredAccessList(t *testing.T) {
+	srv, base := panelGroupTestServer(t, 19931)
+	group := &db.UserGroup{Name: "Ops"}
+	if err := srv.db.CreateUserGroup(group); err != nil {
+		t.Fatal(err)
+	}
+	resp, body := doPanelJSON(t, http.MethodPost, base+"/api/panel/device-groups", map[string]any{
+		"name":           "Support",
+		"allowed_users":  []string{"nobody-has-this-name", "operator-grp", " operator-grp "},
+		"allowed_groups": []string{"no-such-user-group", group.GUID},
+	})
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("create: %d %v", resp.StatusCode, body)
+	}
+	if got := fmt.Sprint(body["allowed_users"], body["allowed_groups"]); got != fmt.Sprint([]any{"operator-grp"}, []any{group.GUID}) {
+		t.Errorf("answered access list: %s", got)
+	}
+	resp, body = doPanelJSON(t, http.MethodPost, base+"/api/panel/device-groups", map[string]any{
+		"guid": body["guid"], "name": "Support", "allowed_users": []string{"nobody-has-this-name"},
+	})
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("update: %d %v", resp.StatusCode, body)
+	}
+	if got := fmt.Sprint(body["allowed_users"], body["allowed_groups"]); got != "[] []" {
+		t.Errorf("answered access list after an update with an unknown name: %s", got)
+	}
+}

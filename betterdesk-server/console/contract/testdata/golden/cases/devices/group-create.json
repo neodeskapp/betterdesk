@@ -130,12 +130,9 @@
     "kind": "json",
     "json": {
      "data": {
-      "allowed_groups": [
-       "contract-no-such-user-group"
-      ],
+      "allowed_groups": [],
       "allowed_users": [
-       "e2e_operator",
-       "nobody-has-this-name"
+       "e2e_operator"
       ],
       "created": true,
       "guid": "<volatile>",

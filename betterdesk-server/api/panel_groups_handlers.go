@@ -218,6 +218,17 @@ func (s *Server) handlePanelDeviceGroupsSave(w http.ResponseWriter, r *http.Requ
 		writeInternalError(w, err, "SetDeviceGroupACL")
 		return
 	}
+	// The answer lists what the ACL stored: only existing accounts and
+	// user groups
+	stored, err := store.GetDeviceGroupACL(body.GUID)
+	if err != nil {
+		writeInternalError(w, err, "GetDeviceGroupACL")
+		return
+	}
+	allowedUsers, allowedGroups := []string{}, []string{}
+	if stored != nil {
+		allowedUsers, allowedGroups = stored.AllowedUsers, stored.AllowedUserGroups
+	}
 
 	status := http.StatusOK
 	if created {
@@ -228,8 +239,8 @@ func (s *Server) handlePanelDeviceGroupsSave(w http.ResponseWriter, r *http.Requ
 		"name":           body.Name,
 		"source_type":    sourceType,
 		"tag_filter":     tagFilter,
-		"allowed_users":  dedupe(users),
-		"allowed_groups": dedupe(groups),
+		"allowed_users":  allowedUsers,
+		"allowed_groups": allowedGroups,
 		"created":        created,
 	})
 }
@@ -533,20 +544,6 @@ func parsePanelID(w http.ResponseWriter, raw string) (int64, bool) {
 		return 0, false
 	}
 	return id, true
-}
-
-func dedupe(values []string) []string {
-	seen := make(map[string]bool, len(values))
-	out := make([]string, 0, len(values))
-	for _, raw := range values {
-		value := strings.TrimSpace(raw)
-		if value == "" || seen[value] {
-			continue
-		}
-		seen[value] = true
-		out = append(out, value)
-	}
-	return out
 }
 
 // registerPanelGroupRoutes mounts the grouping endpoints. Writes need
