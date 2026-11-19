@@ -1,7 +1,9 @@
 package generator
 
 import (
+	"math"
 	"net/http"
+	"strconv"
 	"strings"
 	"unicode/utf16"
 
@@ -83,16 +85,34 @@ func (h *handlers) generateConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 // relayEndpoint is serverinfo.RelayEndpoint for request values of any JSON
-// type: an address that is not text has none, and a port that is truthy is
-// taken as String() makes it, even when that is "" (String([])).
+// type: an address that is not text has none, and the port is taken only
+// when it is a whole number from 1 to 65535, as a number or as its
+// digits; else the server's relay port is.
 func (h *handlers) relayEndpoint(host, port any) string {
 	address, _ := host.(string)
-	defaultPort := h.serverInfo.DefaultRelayPort
-	if gen.Truthy(port) {
-		text := jsString(port)
-		defaultPort = func() string { return text }
+	return serverinfo.RelayEndpoint(address, requestRelayPort(port), h.serverInfo.DefaultRelayPort)
+}
+
+// requestRelayPort is the port a request names, without leading zeros,
+// or "" when it names none.
+func requestRelayPort(port any) string {
+	var n float64
+	switch p := port.(type) {
+	case float64:
+		n = p
+	case string:
+		if p == "" || len(p) > 5 || strings.Trim(p, "0123456789") != "" {
+			return ""
+		}
+		v, _ := strconv.Atoi(p)
+		n = float64(v)
+	default:
+		return ""
 	}
-	return serverinfo.RelayEndpoint(address, "", defaultPort)
+	if n < 1 || n > 65535 || n != math.Trunc(n) {
+		return ""
+	}
+	return strconv.Itoa(int(n))
 }
 
 // contentDisposition is the Content-Disposition of a download under name

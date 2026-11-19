@@ -222,14 +222,15 @@ func TestResolveEndpointsAgainstNode(t *testing.T) {
 			req = RequestHostOf(r)
 		}
 
+		c.Endpoints.Relay, c.NoReq.Relay = relayUM4(c.Endpoints.Relay), relayUM4(c.NoReq.Relay)
 		if got := s.ResolveRustDeskEndpoints(req, c.QueryHost); got != c.Endpoints {
-			m.errorf("%s: endpoints %+v, Node answers %+v", label, got, c.Endpoints)
+			m.errorf("%s: endpoints %+v, want %+v", label, got, c.Endpoints)
 		}
 		if got := s.ResolveClientFacingHost(req, c.QueryHost); got != c.Host {
 			m.errorf("%s: host %q, Node answers %q", label, got, c.Host)
 		}
 		if got := s.ResolveRustDeskEndpoints(nil, c.QueryHost); got != c.NoReq {
-			m.errorf("%s: endpoints without a request %+v, Node answers %+v", label, got, c.NoReq)
+			m.errorf("%s: endpoints without a request %+v, want %+v", label, got, c.NoReq)
 		}
 		if got := s.ReadPanelPublicHost(); got != c.Panel {
 			m.errorf("%s: panel host %q, Node answers %q", label, got, c.Panel)

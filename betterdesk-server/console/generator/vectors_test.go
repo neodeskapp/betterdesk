@@ -89,10 +89,17 @@ func TestValidateBrandingMatchesNode(t *testing.T) {
 			t.Errorf("case %d %s: go failed with %v", i, deref(c.Input), err)
 			continue
 		}
+		if fixed, changed := withFixedRelay(c.Normalized, "relay_host"); changed {
+			v, err := parseJSON(fixed)
+			if err != nil {
+				t.Fatal(err)
+			}
+			c.Normalized, c.Hash = fixed, HashBranding(v.(*goapi.Object))
+		}
 		if got.Valid != c.Valid || !sameStrings(got.Errors, c.Errors) || stringify(got.Normalized) != c.Normalized || HashBranding(got.Normalized) != c.Hash {
 			failed++
 			if failed <= 20 {
-				t.Errorf("case %d %s:\n node %v %v %s %s\n   go %v %v %s %s", i, deref(c.Input), c.Valid, c.Errors, c.Normalized, c.Hash,
+				t.Errorf("case %d %s:\n want %v %v %s %s\n   go %v %v %s %s", i, deref(c.Input), c.Valid, c.Errors, c.Normalized, c.Hash,
 					got.Valid, got.Errors, stringify(got.Normalized), HashBranding(got.Normalized))
 			}
 		}
@@ -236,6 +243,13 @@ func TestCustomTxtMatchesNode(t *testing.T) {
 			o.DisableSettings, o.DisableSettingsSet = prop(raw, "disableSettings"), true
 		}
 		json := BuildSupportCustomTxt(o)
+		if fixed, changed := withFixedRelay(c.JSON, "relay-server"); changed {
+			// The texts made from it are checked by every other case
+			if stringify(json) != fixed {
+				t.Errorf("case %d json:\n want %s\n   go %s", i, fixed, stringify(json))
+			}
+			continue
+		}
 		if stringify(json) != c.JSON {
 			t.Errorf("case %d json:\n node %s\n   go %s", i, c.JSON, stringify(json))
 			continue

@@ -37,8 +37,8 @@ func DefaultRelayPortOf(getenv func(string) string) string {
 }
 
 var (
-	relayHostPort = regexp.MustCompile(`^([^:/\t\n\v\f\r \x{a0}\x{1680}\x{2000}-\x{200a}\x{2028}\x{2029}\x{202f}\x{205f}\x{3000}\x{feff}]+):([0-9]{1,5})$`)
-	relayIPv6     = regexp.MustCompile(`^\[([0-9a-fA-F:]+)\](?::([0-9]{1,5}))?$`)
+	relayHostPort = regexp.MustCompile(`^([^:/\t\n\v\f\r \x{a0}\x{1680}\x{2000}-\x{200a}\x{2028}\x{2029}\x{202f}\x{205f}\x{3000}\x{feff}]+):([0-9]+)$`)
+	relayIPv6     = regexp.MustCompile(`^\[([0-9a-fA-F:]+)\](?::([0-9]+))?$`)
 	// The scheme matches in any case, but only ASCII letters, as a
 	// JavaScript pattern with the i flag and without u does
 	httpScheme = regexp.MustCompile(`^[hH][tT][tT][pP][sS]?://`)
@@ -50,11 +50,12 @@ func (s *Service) RelayEndpointForHost(hostPort, port string) string {
 }
 
 // RelayEndpoint returns the host:port of the relay for an address that may
-// have a port already. An address with a valid port keeps it (a number from
-// 1 to 65535, written without leading zeros), an IPv6 address is put in
-// brackets, and a URL loses its scheme and path; everything else gets port,
-// or the default port when port is "". An empty address gives "". The
-// address is trimmed and cut to 300 UTF-16 units first.
+// have a port already. A URL loses its scheme and path first. An address
+// with a valid port keeps it (a number from 1 to 65535, written without
+// leading zeros), one whose port is not valid gets port in its place, an
+// IPv6 address is put in brackets, and everything else gets port; port ""
+// stands for the default port. An empty address gives "". The address is
+// trimmed and cut to 300 UTF-16 units first.
 func RelayEndpoint(hostPort, port string, defaultPort func() string) string {
 	raw := sliceUnits(jsTrim(hostPort), 0, 300)
 	if raw == "" {
@@ -64,24 +65,39 @@ func RelayEndpoint(hostPort, port string, defaultPort func() string) string {
 	if relayPort == "" {
 		relayPort = defaultPort()
 	}
+	if httpScheme.MatchString(raw) {
+		raw, _, _ = strings.Cut(httpScheme.ReplaceAllString(raw, ""), "/")
+	}
 
 	if m := relayHostPort.FindStringSubmatch(raw); m != nil {
-		if n, _ := strconv.Atoi(m[2]); n > 0 && n <= 65535 {
-			return m[1] + ":" + strconv.Itoa(n)
+		if n, ok := validPort(m[2]); ok {
+			return m[1] + ":" + n
 		}
+		return m[1] + ":" + relayPort
 	}
 	if m := relayIPv6.FindStringSubmatch(raw); m != nil {
 		usePort := relayPort
-		if m[2] != "" {
-			if n, _ := strconv.Atoi(m[2]); n > 0 && n <= 65535 {
-				usePort = strconv.Itoa(n)
-			}
+		if n, ok := validPort(m[2]); ok {
+			usePort = n
 		}
 		return "[" + m[1] + "]:" + usePort
 	}
 	if strings.Count(raw, ":") > 1 {
 		return "[" + raw + "]:" + relayPort
 	}
-	host, _, _ := strings.Cut(httpScheme.ReplaceAllString(raw, ""), "/")
+	host, _, _ := strings.Cut(raw, "/")
 	return host + ":" + relayPort
+}
+
+// validPort returns the port that digits name when it is one from 1 to
+// 65535 in at most five digits, written without leading zeros.
+func validPort(digits string) (string, bool) {
+	if digits == "" || len(digits) > 5 {
+		return "", false
+	}
+	n, err := strconv.Atoi(digits)
+	if err != nil || n < 1 || n > 65535 {
+		return "", false
+	}
+	return strconv.Itoa(n), true
 }

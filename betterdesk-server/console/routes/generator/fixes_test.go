@@ -29,4 +29,22 @@ var fixes = map[string]fix{
 	// starts from the default profile, which asks for the server's host.
 	"148 PUT /api/generator/bundles/nullbr00001": {bug: "GN3", status: 400,
 		answer: `{"success":false,"error":"Validation failed","errors":["server_host_required"],"details":["server_host_required"]}`},
+	// The relay of the rustdesk.toml: a port that is not valid gives way
+	// to the relay port, a URL's host and port are read after its scheme,
+	// and a relayPort that is no port from 1 to 65535 is the server's.
+	"113 POST /api/generator/generate-config": tomlWithRelay("r:21117"),
+	"114 POST /api/generator/generate-config": tomlWithRelay("r:7"),
+	"120 POST /api/generator/generate-config": tomlWithRelay("R.example:8443"),
+	"128 POST /api/generator/generate-config": tomlWithRelay("r:21117"),
+	"129 POST /api/generator/generate-config": tomlWithRelay("r:21117"),
+	"130 POST /api/generator/generate-config": tomlWithRelay("r:21117"),
+	"131 POST /api/generator/generate-config": tomlWithRelay("r:21117"),
+	"133 POST /api/generator/generate-config": tomlWithRelay("r:21117"),
+}
+
+// tomlWithRelay is the old toml generator's answer for the host h with
+// the relay given (UM4).
+func tomlWithRelay(relay string) fix {
+	return fix{bug: "UM4", status: 200, answer: `{"success":true,"data":{"config":"rendezvous_server = h:21116\nrelay_server = ` + relay +
+		`\nkey = AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwM=","fileName":"rustdesk.toml"}}`}
 }

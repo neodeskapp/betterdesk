@@ -185,8 +185,8 @@ func TestRelayEndpointForHostAgainstNode(t *testing.T) {
 		s := New(Options{Getenv: func(key string) string { return env[key] }})
 		port := relayPortArg(t, c.Port)
 		got := s.RelayEndpointForHost(c.In, port)
-		if got != c.Out {
-			m.errorf("case %d: RelayEndpointForHost(%q, %q) with %v = %q, Node answers %q", i, c.In, port, env, got, c.Out)
+		if want := relayUM4(c.Out); got != want {
+			m.errorf("case %d: RelayEndpointForHost(%q, %q) with %v = %q, want %q (Node answers %q)", i, c.In, port, env, got, want, c.Out)
 		}
 		switch {
 		case c.Out == "":
@@ -202,6 +202,30 @@ func TestRelayEndpointForHostAgainstNode(t *testing.T) {
 	for _, kind := range []string{"empty", "bracketed", "default port", "second setting"} {
 		if !kinds[kind] {
 			t.Errorf("no vector gives a relay of the kind %q", kind)
+		}
+	}
+}
+
+// TestRelayEndpointURLsAndBadPorts reads a URL's host and port after its
+// scheme and path are cut, and puts the relay port in place of a port
+// that is not valid (BUGS UM4: a URL with a port was taken for an IPv6
+// address, and a bad port was kept with a second one after it).
+func TestRelayEndpointURLsAndBadPorts(t *testing.T) {
+	for _, c := range []struct{ in, port, want string }{
+		{"https://desk.example.com:8443/x", "", "desk.example.com:8443"},
+		{"HTTP://r.example/p/q", "", "r.example:21117"},
+		{"https://r.example:0/", "", "r.example:21117"},
+		{"https://[fe80::1]:6/x", "", "[fe80::1]:6"},
+		{"http://::1", "", "[::1]:21117"},
+		{"r:0", "", "r:21117"},
+		{"r:65536", "7", "r:7"},
+		{"r:123456", "", "r:21117"},
+		{"r:007", "", "r:7"},
+		{"[fe80::1]:123456", "", "[fe80::1]:21117"},
+		{"r.example", "", "r.example:21117"},
+	} {
+		if got := RelayEndpoint(c.in, c.port, func() string { return "21117" }); got != c.want {
+			t.Errorf("RelayEndpoint(%q, %q) = %q, want %q", c.in, c.port, got, c.want)
 		}
 	}
 }
@@ -234,18 +258,23 @@ func TestConfigPayloadAgainstNode(t *testing.T) {
 		s := New(opts)
 
 		got := s.BuildRustDeskConfigPayload(c.Arg.Endpoints, c.Opts.options())
-		if got != c.Payload {
-			m.errorf("case %d: payload %+v, Node built %+v (config %+v, arg %+v)", i, got, c.Payload, c.Cfg, c.Arg.Endpoints)
+		want, wantCLI, wantURI := c.Payload, c.CLI, c.URI
+		if want.Relay = relayUM4(c.Payload.Relay); want.Relay != c.Payload.Relay {
+			// The texts carry the payload, encoded as in every other case
+			wantCLI, wantURI = EncodeRustDeskCliConfigString(want), EncodeRustDeskConfigURI(want)
+		}
+		if got != want {
+			m.errorf("case %d: payload %+v, want %+v (Node built %+v, config %+v, arg %+v)", i, got, want, c.Payload, c.Cfg, c.Arg.Endpoints)
 			continue
 		}
 		if got.Key != "" {
 			withKey++
 		}
-		if cli := EncodeRustDeskCliConfigString(got); cli != c.CLI {
-			m.errorf("case %d: config string\n%s\nNode wrote\n%s", i, cli, c.CLI)
+		if cli := EncodeRustDeskCliConfigString(got); cli != wantCLI {
+			m.errorf("case %d: config string\n%s\nwant\n%s", i, cli, wantCLI)
 		}
-		if uri := EncodeRustDeskConfigURI(got); uri != c.URI {
-			m.errorf("case %d: config link\n%s\nNode wrote\n%s", i, uri, c.URI)
+		if uri := EncodeRustDeskConfigURI(got); uri != wantURI {
+			m.errorf("case %d: config link\n%s\nwant\n%s", i, uri, wantURI)
 		}
 	}
 	if withKey < 1000 {

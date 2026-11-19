@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -100,4 +101,23 @@ func underscoreKey(key string) string {
 		}
 	}
 	return string(out)
+}
+
+// relayFixes are the relays of the recorded vectors that the relay rule
+// gives otherwise (UM4): Node took a URL with a port for a bare IPv6
+// address and put it in brackets with the relay port after it.
+var relayFixes = map[string]string{
+	"[https://Desk.Example.com:8443/path]:21117": "Desk.Example.com:8443",
+	"[http://[::1]:80]:21117":                    "[::1]:80",
+}
+
+// withFixedRelay is a recorded JSON text with the relay under key as the
+// fixed rule gives it, and whether that changed it.
+func withFixedRelay(text, key string) (string, bool) {
+	for node, fixed := range relayFixes {
+		if old := `"` + key + `":"` + node + `"`; strings.Contains(text, old) {
+			return strings.Replace(text, old, `"`+key+`":"`+fixed+`"`, 1), true
+		}
+	}
+	return text, false
 }
