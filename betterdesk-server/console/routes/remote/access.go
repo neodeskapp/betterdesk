@@ -95,11 +95,7 @@ func (h *handlers) requireRemoteAccess(next http.Handler) http.Handler {
 			}
 			if grant != nil {
 				g.guest, g.guestToken = grant, grant.Token
-				allowed, err := guestaccess.PeerAllowed(grant.Data, deviceID)
-				if err != nil {
-					h.log.Warn("Guest grant validate failed:", err.Error())
-				}
-				if allowed {
+				if guestaccess.PeerAllowed(grant.Data, deviceID) {
 					guests.SetCookie(w, guestToken, goapi.Dig(grant.Data, "expires_at"))
 					next.ServeHTTP(w, r)
 					return

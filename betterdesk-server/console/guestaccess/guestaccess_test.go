@@ -44,20 +44,21 @@ func TestPeerAllowedChecksTheList(t *testing.T) {
 		{`{"peer_ids":[],"allowed_peer_ids":["A"]}`, "A", false},
 		{`{"peer_ids":null,"allowed_peer_ids":["A"]}`, "A", true},
 		{`{"peer_ids":"","allowed_peer_ids":["A"]}`, "A", true},
-		{`{"peer_ids":"xAy"}`, "A", true},
-		{`{"peer_ids":"xy"}`, "A", false},
 		{`{"peer_ids":[["A"],1,null]}`, "A", false},
 		{`"text"`, "A", false},
+		// A list of devices that is no list reaches no device (BUGS.md GA2)
+		{`{"peer_ids":"xAy"}`, "A", false},
+		{`{"peer_ids":"A"}`, "A", false},
+		{`{"peer_ids":"xy"}`, "A", false},
+		{`{"peer_ids":"xAy","allowed_peer_ids":["A"]}`, "A", false},
+		{`{"peer_ids":5}`, "A", false},
+		{`{"peer_ids":{"0":"A"}}`, "A", false},
+		{`{"peer_ids":true}`, "A", false},
+		{`{"allowed_peer_ids":"A"}`, "A", false},
 	}
 	for _, c := range cases {
-		got, err := PeerAllowed(parse(t, c.grant), c.peer)
-		if err != nil || got != c.want {
-			t.Errorf("PeerAllowed(%s, %q) = %v, %v; want %v", c.grant, c.peer, got, err, c.want)
-		}
-	}
-	for _, grant := range []string{`{"peer_ids":5}`, `{"peer_ids":{"0":"A"}}`, `{"peer_ids":true}`} {
-		if _, err := PeerAllowed(parse(t, grant), "A"); !errors.Is(err, ErrBadGrant) {
-			t.Errorf("PeerAllowed(%s): %v, want ErrBadGrant", grant, err)
+		if got := PeerAllowed(parse(t, c.grant), c.peer); got != c.want {
+			t.Errorf("PeerAllowed(%s, %q) = %v; want %v", c.grant, c.peer, got, c.want)
 		}
 	}
 }

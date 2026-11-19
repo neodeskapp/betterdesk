@@ -292,13 +292,7 @@ func (h *handlers) desktop(w http.ResponseWriter, r *http.Request) {
 			kit.JSON(w, r, http.StatusBadRequest, badGuestToken)
 			return
 		}
-		allowed := false
-		if grant != nil {
-			if allowed, err = guestaccess.PeerAllowed(grant.Data, peerID); err != nil {
-				panic(http.ErrAbortHandler)
-			}
-		}
-		if !allowed {
+		if grant == nil || !guestaccess.PeerAllowed(grant.Data, peerID) {
 			kit.JSON(w, r, http.StatusForbidden, failure{Error: "Invalid or expired guest link"})
 			return
 		}

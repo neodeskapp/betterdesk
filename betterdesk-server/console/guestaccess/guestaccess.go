@@ -208,37 +208,29 @@ func (s *Service) AttachGrant(ctx context.Context, r *http.Request, peerID strin
 	return &Grant{Token: token, Data: data}, nil
 }
 
-// ErrBadGrant is the failure of a link whose list of devices is neither a
-// list nor a text. The API server sends a list; the old console stopped
-// at anything else, and a route closes the connection without an answer.
-var ErrBadGrant = errors.New("ids.includes is not a function")
-
 // PeerAllowed reports whether a link reaches the device: its "peer_ids",
-// else its "allowed_peer_ids", hold peerID (peerAllowedByGrant). grant is
-// the API server's answer (Grant.Data). The error is ErrBadGrant.
-func PeerAllowed(grant any, peerID string) (bool, error) {
+// else its "allowed_peer_ids", is a list that holds peerID
+// (peerAllowedByGrant). grant is the API server's answer (Grant.Data). A
+// list of devices that is no list, also a text, reaches no device; the
+// API server always sends a list.
+func PeerAllowed(grant any, peerID string) bool {
 	if !goapi.Truthy(grant) || peerID == "" {
-		return false, nil
+		return false
 	}
 	ids := goapi.Dig(grant, "peer_ids")
 	if !goapi.Truthy(ids) {
 		ids = goapi.Dig(grant, "allowed_peer_ids")
 	}
-	if !goapi.Truthy(ids) {
-		return false, nil
+	list, ok := ids.([]any)
+	if !ok {
+		return false
 	}
-	switch list := ids.(type) {
-	case []any:
-		for _, id := range list {
-			if text, isText := id.(string); isText && text == peerID {
-				return true, nil
-			}
+	for _, id := range list {
+		if text, isText := id.(string); isText && text == peerID {
+			return true
 		}
-		return false, nil
-	case string:
-		return strings.Contains(list, peerID), nil
 	}
-	return false, ErrBadGrant
+	return false
 }
 
 // OnRevoke adds a function that is called when a link is taken back, with

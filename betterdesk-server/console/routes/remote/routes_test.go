@@ -511,10 +511,13 @@ func appVersionOf(t *testing.T, vectors []vector) string {
 // route of routes/bd-api.routes.js answered (testdata/nodeoracle/run.js):
 // status, Content-Type, Cache-Control, Location, the cookies, the rate
 // limit and the body, and what they asked the API server, the device
-// table and the remote relay, on SQLite and PostgreSQL.
+// table and the remote relay, on SQLite and PostgreSQL. A vector whose
+// answer a bug fix changed on purpose is held to another vector's answer
+// (answeredAs).
 func TestNodeVectors(t *testing.T) {
 	vectors := loadVectors(t)
 	version := appVersionOf(t, vectors)
+	twins := answeredAs(t, vectors)
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := newWorld(t, db, version, false)
 		on := newWorld(t, storetest.Migrated(t), version, true)
@@ -533,7 +536,11 @@ func TestNodeVectors(t *testing.T) {
 				target = on
 			}
 			rec := target.do(v)
-			if problems := compare(target, v, rec); len(problems) > 0 {
+			expected := v
+			if j, ok := twins[i]; ok {
+				expected = &vectors[j]
+			}
+			if problems := compare(target, expected, rec); len(problems) > 0 {
 				failures++
 				if failures <= 25 {
 					t.Errorf("vector %d: %s %s:\n  %s", i, v.Request.Method, v.Request.Path, strings.Join(problems, "\n  "))

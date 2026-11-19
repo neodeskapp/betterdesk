@@ -321,12 +321,35 @@ func TestTokensWithoutATextAreRefused(t *testing.T) {
 	cookie := map[string]string{"Cookie": `bd.guest=j:{"toString":1}`}
 	refused("a cookie without a text", proxytest.Request{Path: "/api/guest/access-links/peers", Headers: cookie}, badGuest)
 	refused("a cookie without a text on the desktop route", proxytest.Request{Method: "POST", Path: "/api/guest/mesh/devices/dev-1/desktop", Headers: cookie, Type: "application/json", Body: &body}, badGuest)
-	// A link whose list of devices is neither a list nor a text
-	for _, bad := range []string{`{"valid":true,"peer_ids":5}`, `{"valid":true,"peer_ids":{"0":"dev-1"}}`, `{"valid":true,"allowed_peer_ids":true}`} {
+}
+
+// TestALinkReachesTheDevicesOfItsListOnly: a link whose list of devices
+// is no list reaches no device, also where a text holds the device's id
+// (BUGS.md GA2); the old console stopped at a list that was neither a
+// list nor a text.
+func TestALinkReachesTheDevicesOfItsListOnly(t *testing.T) {
+	w := newWorld(t)
+	body := "{}"
+	for _, grant := range []string{
+		`{"valid":true,"peer_ids":"xx dev-1 yy"}`,
+		`{"valid":true,"peer_ids":"dev-1"}`,
+		`{"valid":true,"peer_ids":5}`,
+		`{"valid":true,"peer_ids":{"0":"dev-1"}}`,
+		`{"valid":true,"allowed_peer_ids":true}`,
+	} {
 		req := proxytest.Request{Method: "POST", Path: "/api/guest/mesh/devices/dev-1/desktop?guest=tok", Type: "application/json", Body: &body}
-		if closed, rec := aborted(t, w, req, &proxytest.Answer{Status: 200, Type: "application/json", Body: bad}); !closed {
-			t.Errorf("a link with %s was answered with %d %s", bad, rec.Code, rec.Body)
+		closed, rec := aborted(t, w, req, &proxytest.Answer{Status: 200, Type: "application/json", Body: grant})
+		if closed || rec.Code != 403 || rec.Body.String() != `{"error":"Invalid or expired guest link"}` {
+			t.Errorf("a link %s: closed %v", grant, closed)
+			if !closed {
+				t.Errorf("answered %d %s", rec.Code, rec.Body)
+			}
 		}
+	}
+	rec, _ := w.Do(proxytest.Request{Method: "POST", Path: "/api/guest/mesh/devices/dev-1/desktop?guest=tok", Type: "application/json", Body: &body},
+		&proxytest.Answer{Status: 200, Type: "application/json", Body: `{"valid":true,"peer_ids":["dev-1"]}`})
+	if rec.Code != 200 {
+		t.Errorf("a link with the device in its list: %d %s", rec.Code, rec.Body)
 	}
 }
 
