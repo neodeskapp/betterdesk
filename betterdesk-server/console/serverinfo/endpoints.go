@@ -207,22 +207,28 @@ func NormalizeSettings(in PublicEndpointsInput) (PublicEndpoints, error) {
 		return PublicEndpoints{}, err
 	}
 	if out.PublicAPIURL, err = normalizeAPIURL(in.PublicAPIURL); err != nil {
-		return PublicEndpoints{}, err
+		return PublicEndpoints{}, apiURLError{err}
 	}
 	return out, nil
 }
 
+// apiURLError is an error of the API address field.
+type apiURLError struct{ error }
+
+func (e apiURLError) Unwrap() error { return e.error }
+
 // ValidateSettings is NormalizeSettings with the errors a route answers
-// with: ErrInvalidPublicHost for a bad host and for any value with a line
-// break or NUL character in it, ErrInvalidPublicAPIURL for a bad API
-// address.
+// with: ErrInvalidPublicAPIURL for anything wrong with the API address,
+// a line break or NUL character included, and ErrInvalidPublicHost for
+// anything wrong with the ID server or the relay.
 func ValidateSettings(in PublicEndpointsInput) (PublicEndpoints, error) {
 	out, err := NormalizeSettings(in)
+	var apiErr apiURLError
 	switch {
+	case errors.As(err, &apiErr):
+		return PublicEndpoints{}, ErrInvalidPublicAPIURL
 	case errors.Is(err, ErrInvalidHost), errors.Is(err, ErrInvalidEnvValue):
 		return PublicEndpoints{}, ErrInvalidPublicHost
-	case errors.Is(err, ErrInvalidAPIURL):
-		return PublicEndpoints{}, ErrInvalidPublicAPIURL
 	}
 	return out, err
 }

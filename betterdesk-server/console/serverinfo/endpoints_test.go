@@ -94,7 +94,7 @@ func TestNormalizeSettingsAgainstNode(t *testing.T) {
 		got, err := NormalizeSettings(in)
 		check("NormalizeSettings", c.Raw, got, err, c.Normalize.Out, c.Normalize.Err)
 		got, err = ValidateSettings(in)
-		check("ValidateSettings", c.Raw, got, err, c.Validate.Out, c.Validate.Err)
+		check("ValidateSettings", c.Raw, got, err, c.Validate.Out, validateErrorSI7(c.Raw, c.Validate.Err))
 	}
 	for _, text := range []string{"invalid_host", "invalid_api_url", "invalid_env_value", "invalid_public_host", "invalid_public_api_url"} {
 		if errorsSeen[text] < 20 {
@@ -128,11 +128,16 @@ func TestValidateSettingsErrors(t *testing.T) {
 	if !errors.Is(err, ErrInvalidPublicHost) {
 		t.Errorf("line break in the host: %v", err)
 	}
-	// A line break in the API address is reported as a bad host: the Node
-	// console did the same.
-	_, err = ValidateSettings(PublicEndpointsInput{PublicAPIURL: "https://api.example.com\nOTHER=1"})
-	if !errors.Is(err, ErrInvalidPublicHost) {
-		t.Errorf("line break in the API address: %v", err)
+	// A line break or NUL in the API address is a bad API address, not a
+	// bad host (BUGS SI7)
+	for _, api := range []string{"https://api.example.com\nOTHER=1", "https://api.\rexample.com", "https://api.example.com/\x00"} {
+		_, err = ValidateSettings(PublicEndpointsInput{PublicServerID: "remote.example.com", PublicAPIURL: api})
+		if !errors.Is(err, ErrInvalidPublicAPIURL) {
+			t.Errorf("line break in the API address %q: %v", api, err)
+		}
+		if _, err = NormalizeSettings(PublicEndpointsInput{PublicAPIURL: api}); !errors.Is(err, ErrInvalidEnvValue) || err.Error() != "invalid_env_value" {
+			t.Errorf("normalized %q: %v", api, err)
+		}
 	}
 	got, err := ValidateSettings(PublicEndpointsInput{
 		PublicServerID: "remote.example.com", PublicRelayServer: "relay.example.com", PublicAPIURL: "https://api.example.com/",
@@ -206,7 +211,7 @@ func TestWritePublicEndpointsAgainstNode(t *testing.T) {
 		switch {
 		case c.Err != nil:
 			refused++
-			want := strings.ReplaceAll(*c.Err, "{ROOT}", st.root)
+			want := strings.ReplaceAll(*validateErrorSI7(c.Raw, c.Err), "{ROOT}", st.root)
 			if err == nil || err.Error() != want {
 				m.errorf("%s: error %v, Node throws %q", label, err, want)
 			}

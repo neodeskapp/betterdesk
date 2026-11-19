@@ -192,3 +192,20 @@ type dropped struct{ testing.TB }
 func (dropped) Helper()               {}
 func (dropped) Errorf(string, ...any) {}
 func (dropped) Fatalf(string, ...any) {}
+
+// validateErrorSI7 is the error ValidateSettings gives where Node's error
+// for the raw settings was nodeErr (SI7). Node answered a line break or
+// NUL in the API address with invalid_public_host; where the ID server
+// and the relay are fine, that error came from the API address, which Go
+// answers with invalid_public_api_url.
+func validateErrorSI7(raw map[string]any, nodeErr *string) *string {
+	if nodeErr == nil || *nodeErr != ErrInvalidPublicHost.Error() {
+		return nodeErr
+	}
+	in := endpointsInput(raw)
+	if _, err := NormalizeSettings(PublicEndpointsInput{PublicServerID: in.PublicServerID, PublicRelayServer: in.PublicRelayServer}); err != nil {
+		return nodeErr
+	}
+	apiErr := ErrInvalidPublicAPIURL.Error()
+	return &apiErr
+}
