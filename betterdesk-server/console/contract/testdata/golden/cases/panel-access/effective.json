@@ -194,8 +194,8 @@
         "source": "role"
        },
        "cross-platform": {
-        "access": "none",
-        "role_ceiling": "none",
+        "access": "write",
+        "role_ceiling": "write",
         "source": "role"
        },
        "dashboard": {
@@ -249,8 +249,8 @@
         "source": "role"
        },
        "organizations": {
-        "access": "read",
-        "role_ceiling": "read",
+        "access": "write",
+        "role_ceiling": "write",
         "source": "role"
        },
        "permissions": {
@@ -455,8 +455,8 @@
         "source": "role"
        },
        "cross-platform": {
-        "access": "none",
-        "role_ceiling": "none",
+        "access": "write",
+        "role_ceiling": "write",
         "source": "role"
        },
        "dashboard": {
@@ -716,8 +716,8 @@
         "source": "role"
        },
        "cross-platform": {
-        "access": "write",
-        "role_ceiling": "write",
+        "access": "read",
+        "role_ceiling": "read",
         "source": "role"
        },
        "dashboard": {

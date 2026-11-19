@@ -237,7 +237,7 @@
         "key": "organizations",
         "label": "Organizations",
         "readPermission": "user.view",
-        "writePermission": "org.edit"
+        "writePermission": "org.manage_devices"
        },
        {
         "group": "administration",
@@ -369,8 +369,8 @@
         "group": "commercialization",
         "key": "cross-platform",
         "label": "Cross-platform",
-        "readPermission": "server.config",
-        "writePermission": "server.config"
+        "readPermission": "device.view",
+        "writePermission": "device.edit"
        },
        {
         "group": "security",

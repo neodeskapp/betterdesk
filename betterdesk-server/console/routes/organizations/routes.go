@@ -5,8 +5,9 @@
 // console links to an organization.
 //
 // Most routes pass the request on to the API server and answer with what
-// it said. Reading needs a session only (BUGS G16); writing needs the
-// permission the route names.
+// it said. Reading needs user.view, which the roles of the pages that read
+// organizations have (DECISIONS A39); the devices with a stored password
+// need org.manage_devices, and writing the permission the route names.
 package organizations
 
 import (
@@ -33,9 +34,9 @@ func Register(d *kit.Deps) {
 	can := d.RequirePermission
 
 	// Organizations
-	r.Get("/api/panel/org", h.pass("GET", fixed("/org"), false), auth)
+	r.Get("/api/panel/org", h.pass("GET", fixed("/org"), false), auth, can("user.view"))
 	r.Post("/api/panel/org", h.create, auth, can("org.create"))
-	r.Get("/api/panel/org/{id}", h.pass("GET", orgPath(""), false), auth)
+	r.Get("/api/panel/org/{id}", h.pass("GET", orgPath(""), false), auth, can("user.view"))
 	r.Put("/api/panel/org/{id}", h.pass("PUT", orgPath(""), true), auth, can("org.edit"))
 	r.Delete("/api/panel/org/{id}", h.remove, auth, can("org.delete"))
 
@@ -56,23 +57,23 @@ func Register(d *kit.Deps) {
 
 	// Devices
 	r.Post("/api/panel/org/{id}/devices", h.pass("POST", orgPath("/devices"), true), auth, can("org.manage_devices"))
-	r.Get("/api/panel/org/{id}/devices", h.pass("GET", orgPath("/devices"), false), auth)
+	r.Get("/api/panel/org/{id}/devices", h.pass("GET", orgPath("/devices"), false), auth, can("user.view"))
 	r.Delete("/api/panel/org/{id}/devices/{did}", h.pass("DELETE", orgItemPath("/devices/", "did", "deviceId"), false), auth, can("org.manage_devices"))
 
 	// Settings
-	r.Get("/api/panel/org/{id}/settings", h.pass("GET", orgPath("/settings"), false), auth)
+	r.Get("/api/panel/org/{id}/settings", h.pass("GET", orgPath("/settings"), false), auth, can("user.view"))
 	r.Put("/api/panel/org/{id}/settings", h.pass("PUT", orgPath("/settings"), true), auth, can("org.edit"))
 
 	// The shared address book
-	r.Get("/api/panel/org/{id}/address-book", h.pass("GET", orgPath("/address-book"), false), auth)
+	r.Get("/api/panel/org/{id}/address-book", h.pass("GET", orgPath("/address-book"), false), auth, can("user.view"))
 	r.Put("/api/panel/org/{id}/address-book", h.pass("PUT", orgPath("/address-book"), true), auth, can("org.edit"))
 
 	// The peer credential vault
-	r.Get("/api/panel/org/{id}/peer-credentials", h.pass("GET", orgPath("/peer-credentials"), false), auth)
+	r.Get("/api/panel/org/{id}/peer-credentials", h.pass("GET", orgPath("/peer-credentials"), false), auth, can("org.manage_devices"))
 	r.Put("/api/panel/org/{id}/peer-credentials/{peerId}", h.pass("PUT", credentialPath, true), auth, can("org.edit"))
 	r.Delete("/api/panel/org/{id}/peer-credentials/{peerId}", h.pass("DELETE", credentialPath, false), auth, can("org.edit"))
 
-	r.Get("/api/panel/org/{id}/device-groups", h.deviceGroups, auth)
+	r.Get("/api/panel/org/{id}/device-groups", h.deviceGroups, auth, can("user.view"))
 }
 
 // unreachable is the answer's error when the API server gave no body.

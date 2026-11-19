@@ -63,7 +63,7 @@ var RouteRules = []Rule{
 	{Prefix: "/api/guest", Section: "guests"},
 	{Prefix: "/api/folders", Section: "folders"},
 	{Prefix: "/organizations", Section: "organizations"},
-	{Prefix: "/api/organizations", Section: "organizations"},
+	{Prefix: "/api/panel/org", Section: "organizations"},
 	{Prefix: "/devices", Section: "devices"},
 	{Prefix: "/api/devices", Section: "devices"},
 	{Prefix: "/api/device-groups", Section: "devices"},
@@ -80,12 +80,12 @@ var RouteRules = []Rule{
 	{Prefix: "/api/reports", Section: "reports"},
 	{Prefix: "/api/activity", Section: "activity"},
 	{Prefix: "/api/files", Section: "files"},
-	{Prefix: "/api/scaling", Section: "scaling"},
-	{Prefix: "/api/cross-platform", Section: "cross-platform"},
+	{Prefix: "/api/panel/scaling", Section: "scaling"},
+	{Prefix: "/api/panel/cross-platform", Section: "cross-platform"},
 	{Prefix: "/api/toolkit", Section: "toolkit"},
 	{Prefix: "/api/security-audit", Section: "security-audit"},
-	{Prefix: "/api/languages", Section: "languages"},
-	{Prefix: "/api/resource-control", Section: "resource-control"},
+	{Prefix: "/api/panel/languages", Section: "languages"},
+	{Prefix: "/api/panel/resource-control", Section: "resource-control"},
 	{Prefix: "/api/server-management", Section: "server-management"},
 	{Prefix: "/api/server-attestation", Section: "server-attestation"},
 	{Prefix: "/api/registrations", Section: "registrations"},
@@ -99,6 +99,13 @@ var RouteRules = []Rule{
 	// people beside the device routes.
 	{Prefix: "/api/bd/transfer", Section: "files"},
 	{Prefix: "/api/bd/transfers", Section: "files"},
+	{Prefix: "/api/panel/fleet", Section: "fleet"},
+	{Prefix: "/api/chat", Section: "chat"},
+	// The fleet, scaling and resource control groups answer at
+	// /api/bd + their path too.
+	{Prefix: "/api/bd/api/panel/fleet", Section: "fleet"},
+	{Prefix: "/api/bd/api/panel/scaling", Section: "scaling"},
+	{Prefix: "/api/bd/api/panel/resource-control", Section: "resource-control"},
 }
 
 const apiPrefix = "/api/"

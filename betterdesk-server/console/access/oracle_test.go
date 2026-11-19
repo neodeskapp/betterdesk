@@ -334,6 +334,7 @@ func TestOracleRequestHasPermission(t *testing.T) {
 		Bits string `json:"bits"`
 	}
 	loadVectors(t, "request_has_permission", &v)
+	withNodeTables(t)
 	i := 0
 	for _, role := range v.Roles {
 		for _, section := range v.Sections {
@@ -438,6 +439,7 @@ func TestOracleNormalize(t *testing.T) {
 		Catalog json.RawMessage `json:"catalog"`
 	}
 	loadVectors(t, "normalize", &v)
+	withNodeTables(t)
 
 	for _, c := range v.Levels {
 		if got := NormalizeLevel(c.Input); got != c.Level {
@@ -661,6 +663,7 @@ func TestOraclePolicyMerge(t *testing.T) {
 		} `json:"edges"`
 	}
 	loadVectors(t, "policy_merge", &v)
+	withNodeTables(t)
 	if len(v.Cases) < 600 {
 		t.Fatalf("only %d cases", len(v.Cases))
 	}
@@ -749,6 +752,7 @@ func TestOracleRequireGuards(t *testing.T) {
 		Results  []int         `json:"results"`
 	}
 	loadVectors(t, "require_guards", &v)
+	withNodeTables(t)
 	i := 0
 	for _, guard := range v.Guards {
 		arg := ""
@@ -878,6 +882,7 @@ func TestOracleBootstrap(t *testing.T) {
 		UIPermissions []string `json:"uiPermissions"`
 	}
 	loadVectors(t, "bootstrap", &v)
+	withNodeTables(t)
 	if !reflect.DeepEqual(v.UIPermissions, UIPermissions) {
 		t.Fatalf("UIPermissions differ from Node's UI_PERMISSIONS:\n got  %v\n want %v", UIPermissions, v.UIPermissions)
 	}

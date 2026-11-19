@@ -27,6 +27,20 @@ var ruleFixes = []ruleFix{
 	// too.
 	{bug: "FT8", add: Rule{Prefix: "/api/bd/transfer", Section: "files"}},
 	{bug: "FT8", add: Rule{Prefix: "/api/bd/transfers", Section: "files"}},
+
+	// The API rules of these sections named prefixes no route has.
+	{bug: "PA4, G16", remove: Rule{Prefix: "/api/organizations", Section: "organizations"}, add: Rule{Prefix: "/api/panel/org", Section: "organizations"}},
+	{bug: "PA4", remove: Rule{Prefix: "/api/scaling", Section: "scaling"}, add: Rule{Prefix: "/api/panel/scaling", Section: "scaling"}},
+	{bug: "PA4", remove: Rule{Prefix: "/api/cross-platform", Section: "cross-platform"}, add: Rule{Prefix: "/api/panel/cross-platform", Section: "cross-platform"}},
+	{bug: "PA4", remove: Rule{Prefix: "/api/languages", Section: "languages"}, add: Rule{Prefix: "/api/panel/languages", Section: "languages"}},
+	{bug: "PA4", remove: Rule{Prefix: "/api/resource-control", Section: "resource-control"}, add: Rule{Prefix: "/api/panel/resource-control", Section: "resource-control"}},
+	// fleet and chat had no API rule.
+	{bug: "PA4", add: Rule{Prefix: "/api/panel/fleet", Section: "fleet"}},
+	{bug: "PA4", add: Rule{Prefix: "/api/chat", Section: "chat"}},
+	// The second address of the fleet, scaling and resource control routes.
+	{bug: "PA4, I3", add: Rule{Prefix: "/api/bd/api/panel/fleet", Section: "fleet"}},
+	{bug: "PA4, I3", add: Rule{Prefix: "/api/bd/api/panel/scaling", Section: "scaling"}},
+	{bug: "PA4, I3", add: Rule{Prefix: "/api/bd/api/panel/resource-control", Section: "resource-control"}},
 }
 
 // sectionFix is a catalog section whose permissions differ from Node's.
@@ -36,7 +50,13 @@ type sectionFix struct {
 	read, write Permission
 }
 
-var sectionFixes = []sectionFix{}
+var sectionFixes = []sectionFix{
+	// Organizations are read with user.view, their devices are assigned
+	// with org.manage_devices (DECISIONS A39).
+	{bug: "PA4, G16", key: "organizations", read: "user.view", write: "org.manage_devices"},
+	// The cross-platform routes and menu entry ask device.view.
+	{bug: "PA4", key: "cross-platform", read: "device.view", write: "device.edit"},
+}
 
 // nodeTables returns the guard's rules and the catalog's sections as the
 // Node console had them.

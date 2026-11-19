@@ -113,7 +113,7 @@
        {
         "key": "organizations",
         "read": "user.view",
-        "write": "org.edit"
+        "write": "org.manage_devices"
        },
        {
         "key": "folders",
@@ -207,8 +207,8 @@
        },
        {
         "key": "cross-platform",
-        "read": "server.config",
-        "write": "server.config"
+        "read": "device.view",
+        "write": "device.edit"
        },
        {
         "key": "security-audit",
@@ -408,7 +408,7 @@
        "cdap": "none",
        "chat": "none",
        "commercialization": "none",
-       "cross-platform": "none",
+       "cross-platform": "read",
        "dashboard": "read",
        "dataguard": "none",
        "devices": "read",
@@ -678,6 +678,16 @@
          "keywords": "hardware software",
          "page": "inventory",
          "text": "Inventory"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/cross-platform",
+         "keywords": "cross-platform matrix features os",
+         "page": "cross-platform",
+         "text": "Platform support"
         }
        ],
        "text": "Devices"
@@ -856,7 +866,7 @@
        {
         "key": "organizations",
         "read": "user.view",
-        "write": "org.edit"
+        "write": "org.manage_devices"
        },
        {
         "key": "folders",
@@ -950,8 +960,8 @@
        },
        {
         "key": "cross-platform",
-        "read": "server.config",
-        "write": "server.config"
+        "read": "device.view",
+        "write": "device.edit"
        },
        {
         "key": "security-audit",
@@ -1151,7 +1161,7 @@
        "cdap": "read",
        "chat": "write",
        "commercialization": "none",
-       "cross-platform": "none",
+       "cross-platform": "read",
        "dashboard": "read",
        "dataguard": "none",
        "devices": "read",
@@ -1427,6 +1437,16 @@
          "countId": null,
          "external": false,
          "group": "",
+         "href": "/cross-platform",
+         "keywords": "cross-platform matrix features os",
+         "page": "cross-platform",
+         "text": "Platform support"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
          "href": "/cdap",
          "keywords": "cdap iot scada sensors gateway",
          "page": "cdap",
@@ -1660,7 +1680,7 @@
        {
         "key": "organizations",
         "read": "user.view",
-        "write": "org.edit"
+        "write": "org.manage_devices"
        },
        {
         "key": "folders",
@@ -1754,8 +1774,8 @@
        },
        {
         "key": "cross-platform",
-        "read": "server.config",
-        "write": "server.config"
+        "read": "device.view",
+        "write": "device.edit"
        },
        {
         "key": "security-audit",
@@ -1955,7 +1975,7 @@
        "cdap": "write",
        "chat": "write",
        "commercialization": "read",
-       "cross-platform": "none",
+       "cross-platform": "write",
        "dashboard": "read",
        "dataguard": "none",
        "devices": "write",
@@ -1966,7 +1986,7 @@
        "help-requests": "write",
        "languages": "none",
        "network": "none",
-       "organizations": "read",
+       "organizations": "write",
        "permissions": "none",
        "registrations": "none",
        "remote": "write",
@@ -2245,6 +2265,16 @@
          "keywords": "fleet bulk tasks workflows compliance",
          "page": "fleet",
          "text": "Fleet tasks"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/cross-platform",
+         "keywords": "cross-platform matrix features os",
+         "page": "cross-platform",
+         "text": "Platform support"
         },
         {
          "core": false,
@@ -2560,7 +2590,7 @@
        {
         "key": "organizations",
         "read": "user.view",
-        "write": "org.edit"
+        "write": "org.manage_devices"
        },
        {
         "key": "folders",
@@ -2654,8 +2684,8 @@
        },
        {
         "key": "cross-platform",
-        "read": "server.config",
-        "write": "server.config"
+        "read": "device.view",
+        "write": "device.edit"
        },
        {
         "key": "security-audit",

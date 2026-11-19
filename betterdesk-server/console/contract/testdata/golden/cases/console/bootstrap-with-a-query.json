@@ -113,7 +113,7 @@
        {
         "key": "organizations",
         "read": "user.view",
-        "write": "org.edit"
+        "write": "org.manage_devices"
        },
        {
         "key": "folders",
@@ -207,8 +207,8 @@
        },
        {
         "key": "cross-platform",
-        "read": "server.config",
-        "write": "server.config"
+        "read": "device.view",
+        "write": "device.edit"
        },
        {
         "key": "security-audit",
@@ -408,7 +408,7 @@
        "cdap": "read",
        "chat": "write",
        "commercialization": "none",
-       "cross-platform": "none",
+       "cross-platform": "read",
        "dashboard": "read",
        "dataguard": "none",
        "devices": "read",
@@ -684,6 +684,16 @@
          "countId": null,
          "external": false,
          "group": "",
+         "href": "/cross-platform",
+         "keywords": "cross-platform matrix features os",
+         "page": "cross-platform",
+         "text": "Platform support"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "",
          "href": "/cdap",
          "keywords": "cdap iot scada sensors gateway",
          "page": "cdap",
@@ -917,7 +927,7 @@
        {
         "key": "organizations",
         "read": "user.view",
-        "write": "org.edit"
+        "write": "org.manage_devices"
        },
        {
         "key": "folders",
@@ -1011,8 +1021,8 @@
        },
        {
         "key": "cross-platform",
-        "read": "server.config",
-        "write": "server.config"
+        "read": "device.view",
+        "write": "device.edit"
        },
        {
         "key": "security-audit",

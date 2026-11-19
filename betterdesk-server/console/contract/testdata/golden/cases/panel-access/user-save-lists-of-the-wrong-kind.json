@@ -158,8 +158,8 @@
          "source": "role"
         },
         "cross-platform": {
-         "access": "none",
-         "role_ceiling": "none",
+         "access": "read",
+         "role_ceiling": "read",
          "source": "role"
         },
         "dashboard": {

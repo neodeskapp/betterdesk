@@ -129,6 +129,7 @@ func seedScenario(t *testing.T, db *store.DB, scenario storeScenario) {
 }
 
 func TestOracleStore(t *testing.T) {
+	withNodeTables(t)
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		scenario := loadScenario(t, db)
 		seedScenario(t, db, scenario)

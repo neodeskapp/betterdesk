@@ -168,6 +168,7 @@ func TestBootstrapUnderAPolicyAsNodeAnswered(t *testing.T) {
 				if part.name == "nav" && !texts {
 					part.want, part.got = withoutTexts(part.want), withoutTexts(part.got)
 				}
+				part.want, part.got = withoutFixed(part.name, part.want), withoutFixed(part.name, part.got)
 				if !sameJSON(part.want, part.got) {
 					t.Errorf("%s of %s differs\n  node: %s\n    go: %s", part.name, role, part.want, part.got)
 				}
@@ -364,6 +365,76 @@ func TestSupportersAndBootScript(t *testing.T) {
 }
 
 // withoutTexts is a navigation without its translated texts.
+// fixedSections are the panel sections whose catalog entry, rules or
+// levels the panel access fixes changed against what Node answered, with
+// the bugs; fixedPages are the navigation pages those fixes show or hide.
+// The comparison leaves them out on both sides.
+var (
+	fixedSections = map[string]string{"organizations": "PA4, G16", "cross-platform": "PA4"}
+	fixedPages    = map[string]string{"cross-platform": "PA4"}
+)
+
+// withoutFixed drops the fixed sections from the bootstrap's access (their
+// catalog entries, levels and page rules) and the fixed pages from its
+// navigation, with the navigation sections left empty by that.
+func withoutFixed(part string, raw json.RawMessage) json.RawMessage {
+	switch part {
+	case "access":
+		var access map[string]any
+		if json.Unmarshal(raw, &access) != nil || access == nil {
+			return raw
+		}
+		keep := func(list any, key string) []any {
+			out := []any{}
+			items, _ := list.([]any)
+			for _, item := range items {
+				if m, ok := item.(map[string]any); ok {
+					if name, _ := m[key].(string); fixedSections[name] != "" {
+						continue
+					}
+				}
+				out = append(out, item)
+			}
+			return out
+		}
+		access["catalog"] = keep(access["catalog"], "key")
+		access["pages"] = keep(access["pages"], "section")
+		if sections, ok := access["sections"].(map[string]any); ok {
+			for key := range fixedSections {
+				delete(sections, key)
+			}
+		}
+		out, _ := json.Marshal(access)
+		return out
+	case "nav":
+		var sections []map[string]any
+		if json.Unmarshal(raw, &sections) != nil {
+			return raw
+		}
+		out := []map[string]any{}
+		for _, s := range sections {
+			pages, _ := s["pages"].([]any)
+			kept := []any{}
+			for _, p := range pages {
+				if page, ok := p.(map[string]any); ok {
+					if name, _ := page["page"].(string); fixedPages[name] != "" {
+						continue
+					}
+				}
+				kept = append(kept, p)
+			}
+			if len(kept) == 0 && len(pages) > 0 {
+				continue
+			}
+			s["pages"] = kept
+			out = append(out, s)
+		}
+		body, _ := json.Marshal(out)
+		return body
+	}
+	return raw
+}
+
 func withoutTexts(nav json.RawMessage) json.RawMessage {
 	var sections []map[string]any
 	if json.Unmarshal(nav, &sections) != nil {

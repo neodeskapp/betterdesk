@@ -371,13 +371,12 @@ func TestLanguagesOverview(t *testing.T) {
 		if res := w.agent().get(path); res.status != 401 || res.body != signedOut {
 			t.Errorf("%s signed out: %d %s", path, res.status, res.body)
 		}
-		for _, role := range []string{"viewer", "operator", "global_admin", "guest_issuer"} {
-			if res := w.agent().signIn(role).get(path); res.status != 403 || res.body != `{"success":false,"error":"Permission denied: server.config"}` {
+		// The languages section of the panel access guard refuses the roles
+		// without server.config, pro included, before the route (BUGS PA4).
+		for _, role := range []string{"viewer", "operator", "global_admin", "guest_issuer", "pro"} {
+			if res := w.agent().signIn(role).get(path); res.status != 403 || res.body != `{"success":false,"error":"Panel access denied: languages","code":"panel_access_denied"}` {
 				t.Errorf("%s as %s: %d %s", path, role, res.status, res.body)
 			}
-		}
-		if res := w.agent().signIn("pro").get(path); res.status != 403 || !strings.Contains(res.body, "Pro accounts") {
-			t.Errorf("%s as pro: %d %s", path, res.status, res.body)
 		}
 	}
 	for _, role := range []string{"admin", "super_admin", "server_admin"} {

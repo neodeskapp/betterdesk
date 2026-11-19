@@ -35,12 +35,12 @@ func exec(t *testing.T, db *store.DB, query string, args ...any) {
 func TestPassingOn(t *testing.T) {
 	api := routetest.NewAPI()
 	w := routetest.New(t, routetest.Options{API: api})
-	admin, viewer := w.As("admin"), w.As("viewer")
+	admin, reader := w.As("admin"), w.As("operator")
 
 	api.On("GET /api/org", 200, `{"organizations":[{"id":"o1","name":"One"}]}`)
-	want(t, "list", viewer.Do("GET", "/api/panel/org", ""), 200, `{"organizations":[{"id":"o1","name":"One"}]}`)
+	want(t, "list", reader.Do("GET", "/api/panel/org", ""), 200, `{"organizations":[{"id":"o1","name":"One"}]}`)
 	api.On("GET /api/org/o1/settings", 200, `{"timezone":"UTC"}`)
-	want(t, "settings, as a viewer", viewer.Do("GET", "/api/panel/org/o1/settings", ""), 200, `{"timezone":"UTC"}`)
+	want(t, "settings, as an operator", reader.Do("GET", "/api/panel/org/o1/settings", ""), 200, `{"timezone":"UTC"}`)
 	calls(t, "reads", api, "GET /api/org", "GET /api/org/o1/settings")
 
 	// A write goes on with the body; the API server's refusal comes back
@@ -53,7 +53,7 @@ func TestPassingOn(t *testing.T) {
 	api.Calls()
 
 	// Ids are checked before anything is sent
-	want(t, "an odd org id", viewer.Do("GET", "/api/panel/org/bad$id/devices", ""), 400, `{"error":"Invalid orgId"}`)
+	want(t, "an odd org id", reader.Do("GET", "/api/panel/org/bad$id/devices", ""), 400, `{"error":"Invalid orgId"}`)
 	want(t, "an odd user id", admin.Do("PUT", "/api/panel/org/o1/users/a%20b", `{}`), 400, `{"error":"Invalid userId"}`)
 	want(t, "an odd device id", admin.Do("DELETE", "/api/panel/org/o1/devices/x$", ""), 400, `{"error":"Invalid deviceId"}`)
 	calls(t, "refused ids", api)
@@ -70,14 +70,14 @@ func TestPassingOn(t *testing.T) {
 	// A failure of the API server goes back as it came; an id with a
 	// slash in it is refused
 	api.On("GET /api/org/org-42", 502, `{"error":"Upstream failure"}`)
-	want(t, "detail", viewer.Do("GET", "/api/panel/org/org-42", ""), 502, `{"error":"Upstream failure"}`)
+	want(t, "detail", reader.Do("GET", "/api/panel/org/org-42", ""), 502, `{"error":"Upstream failure"}`)
 	calls(t, "detail", api, "GET /api/org/org-42")
-	want(t, "a slash in the id", viewer.Do("GET", "/api/panel/org/foo%2Fbar", ""), 400, `{"error":"Invalid orgId"}`)
+	want(t, "a slash in the id", reader.Do("GET", "/api/panel/org/foo%2Fbar", ""), 400, `{"error":"Invalid orgId"}`)
 	calls(t, "a slash in the id", api)
 
 	// Permissions
-	if got := viewer.Do("PUT", "/api/panel/org/o1/settings", `{}`); got.Status != 403 || !strings.Contains(got.Body, "org.edit") {
-		t.Errorf("a viewer writes settings: %d %s", got.Status, got.Body)
+	if got := reader.Do("PUT", "/api/panel/org/o1/settings", `{}`); got.Status != 403 || !strings.Contains(got.Body, "org.edit") {
+		t.Errorf("an operator writes settings: %d %s", got.Status, got.Body)
 	}
 	want(t, "an operator creates", w.As("operator").Do("POST", "/api/panel/org", `{"name":"Ops","slug":"ops"}`), 403, `{"success":false,"error":"Permission denied: org.create"}`)
 	if got := w.SignedOut().Do("GET", "/api/panel/org", ""); got.Status != 401 {
@@ -164,17 +164,17 @@ func TestLinkedGroups(t *testing.T) {
 		exec(t, db, `INSERT INTO user_groups (guid, name, note, team_id) VALUES ('u1', 'Team', NULL, 'o1'), ('u2', 'Else', 'x', 'o3')`)
 		exec(t, db, `INSERT INTO user_group_members (user_group_id, user_id) SELECT id, 1 FROM user_groups WHERE guid = 'u1'`)
 
-		got := w.As("viewer").Do("GET", "/api/panel/org/%20o1%20/device-groups", "")
+		got := w.As("operator").Do("GET", "/api/panel/org/%20o1%20/device-groups", "")
 		body := regexp.MustCompile(`"created_at":"[^"]+"`).ReplaceAllString(got.Body, `"created_at":"T"`)
 		body = regexp.MustCompile(`"id":\d+`).ReplaceAllString(body, `"id":0`)
 		want(t, "linked groups", routetest.Answer{Status: got.Status, Body: body}, 200, `{"org_id":"o1","device_groups":[`+
 			`{"id":0,"guid":"g-tag","name":"Lab","note":"n","team_id":" o1 ","source_type":"tag","tag_filter":"LAB","created_at":"T","member_count":1,"allowed_users":[],"allowed_groups":[],"allowed_user_groups":[]},`+
 			`{"id":0,"guid":"g-manual","name":"Manual","note":null,"team_id":"o1","source_type":"manual","tag_filter":"","created_at":"T","member_count":1,"allowed_users":[],"allowed_groups":[],"allowed_user_groups":[]}],`+
 			`"user_groups":[{"guid":"u1","name":"Team","note":"","member_count":1}]}`)
-		want(t, "an odd org id", w.As("viewer").Do("GET", "/api/panel/org/o$/device-groups", ""), 400, `{"error":"Invalid orgId"}`)
+		want(t, "an odd org id", w.As("operator").Do("GET", "/api/panel/org/o$/device-groups", ""), 400, `{"error":"Invalid orgId"}`)
 
-		exec(t, db, `DROP TABLE user_group_members`)
-		want(t, "a table that fails", w.As("viewer").Do("GET", "/api/panel/org/o1/device-groups", ""), 500, `{"error":"Failed to load organization groups"}`)
+		exec(t, db, `DROP TABLE device_group_members`)
+		want(t, "a table that fails", w.As("operator").Do("GET", "/api/panel/org/o1/device-groups", ""), 500, `{"error":"Failed to load organization groups"}`)
 	})
 }
 
@@ -236,4 +236,30 @@ func TestDeleteKeepsTheDeviceGroupWithoutItsTeam(t *testing.T) {
 		want(t, "groups of the deleted organization", admin.Do("GET", "/api/panel/org/org-1/device-groups", ""), 200,
 			`{"org_id":"org-1","device_groups":[],"user_groups":[]}`)
 	})
+}
+
+// G16 (DECISIONS A39): reading organizations needs user.view, so viewer and
+// guest_issuer get 403 (the organizations section of the panel access guard
+// refuses them first); the devices with a stored password need
+// org.manage_devices, which server_admin lacks. Nothing reaches the API
+// server for a refused read.
+func TestReadingNeedsUserView(t *testing.T) {
+	api := routetest.NewAPI()
+	api.On("GET /api/org", 200, `{"organizations":[]}`)
+	api.On("GET /api/org/o1/peer-credentials", 200, `{"credentials":[]}`)
+	w := routetest.New(t, routetest.Options{API: api})
+	refused := `{"success":false,"error":"Panel access denied: organizations","code":"panel_access_denied"}`
+	for _, role := range []string{"viewer", "guest_issuer"} {
+		for _, path := range []string{"/api/panel/org", "/api/panel/org/o1", "/api/panel/org/o1/devices", "/api/panel/org/o1/settings",
+			"/api/panel/org/o1/address-book", "/api/panel/org/o1/device-groups"} {
+			want(t, role+" reads "+path, w.As(role).Do("GET", path, ""), 403, refused)
+		}
+		want(t, role+" reads the stored passwords", w.As(role).Do("GET", "/api/panel/org/o1/peer-credentials", ""), 403, refused)
+	}
+	want(t, "server_admin reads the stored passwords", w.As("server_admin").Do("GET", "/api/panel/org/o1/peer-credentials", ""), 403,
+		`{"success":false,"error":"Permission denied: org.manage_devices"}`)
+	calls(t, "refused reads", api)
+	want(t, "server_admin lists", w.As("server_admin").Do("GET", "/api/panel/org", ""), 200, `{"organizations":[]}`)
+	want(t, "an operator reads the stored passwords", w.As("operator").Do("GET", "/api/panel/org/o1/peer-credentials", ""), 200, `{"credentials":[]}`)
+	calls(t, "allowed reads", api, "GET /api/org", "GET /api/org/o1/peer-credentials")
 }
