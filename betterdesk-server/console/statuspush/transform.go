@@ -110,8 +110,11 @@ func transform(event any, now func() time.Time) (output, bool) {
 		msg.Set("timestamp", timestamp())
 		return output{panel: true, message: msg}, true
 	case "help_request":
+		// The data's fields stay at the top, where the web app reads them,
+		// but a type in them does not change the message's.
 		msg := goapi.NewObject("type", "help_request")
 		spread(msg, payload)
+		msg.Set("type", "help_request")
 		msg.Set("timestamp", timestamp())
 		return output{panel: true, message: msg}, true
 	case "peer_online", "peer_offline", "peer_status_changed", "peer_registered":

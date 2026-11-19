@@ -194,3 +194,23 @@ func TestStatusEventsFollowTheDeviceScope(t *testing.T) {
 		check()
 	})
 }
+
+// TestHelpRequestDataCannotChangeTheType: the data of a help request is
+// spread into the message, but a type in it does not change the message's
+// type, and the event's timestamp stays the message's.
+func TestHelpRequestDataCannotChangeTheType(t *testing.T) {
+	now := func() time.Time { return time.UnixMilli(7) }
+	for frame, want := range map[string]string{
+		`{"type":"help_request","timestamp":"t","data":{"device_id":"dev1","type":"device_status","status":"online"}}`: `{"type":"help_request","device_id":"dev1","status":"online","timestamp":"t"}`,
+		`{"type":"help_request","timestamp":"t","data":{"type":"x","timestamp":"y"}}`:                                  `{"type":"help_request","timestamp":"t"}`,
+		`{"type":"help_request","data":{"id":"1","message":"help"}}`:                                                   `{"type":"help_request","id":"1","message":"help","timestamp":7}`,
+	} {
+		out, ok := transform(parse(t, frame), now)
+		if !ok || !out.panel {
+			t.Fatalf("%s: not a panel message", frame)
+		}
+		if got, _ := stringify(out.message); got != want {
+			t.Errorf("%s\n got %s\nwant %s", frame, got, want)
+		}
+	}
+}

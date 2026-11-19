@@ -68,20 +68,48 @@ func oraclePermission(_ context.Context, role, permission string) (bool, error) 
 	return false, nil
 }
 
+// helpRequestTypeFix is what WS11 changes in a recorded help request whose
+// data has a type: Node's message with the type set back to
+// help_request. ok is false for every other event.
+func helpRequestTypeFix(t *testing.T, frame *goapi.Object, panel []string) ([]string, bool) {
+	t.Helper()
+	data, _ := frame.Get("data").(*goapi.Object)
+	if frame.Get("type") != "help_request" || data == nil || !data.Has("type") {
+		return panel, false
+	}
+	out := make([]string, len(panel))
+	for i, text := range panel {
+		msg := parse(t, text)
+		msg.Set("type", "help_request")
+		var err error
+		if out[i], err = stringify(msg); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return out, true
+}
+
 // TestNodeEvents replays every event frame of the recording: the message
 // each kind of socket got from Node, byte for byte, and the device id
-// changes carried into the database.
+// changes carried into the database. A help request whose data has a type
+// keeps the type help_request since WS11 (helpRequestTypeFix).
 func TestNodeEvents(t *testing.T) {
 	rec := load(t)
 	now := func() time.Time { return time.UnixMilli(rec.Now) }
 	if len(rec.Events) < 1000 {
 		t.Fatalf("only %d events recorded", len(rec.Events))
 	}
-	failed := 0
+	failed, fixed := 0, 0
 	for i, e := range rec.Events {
 		frame, err := goapi.Parse([]byte(e.Frame))
 		if err != nil {
 			t.Fatalf("event %d: %v", i, err)
+		}
+		if o, ok := frame.(*goapi.Object); ok && o != nil {
+			var changed bool
+			if e.Panel, changed = helpRequestTypeFix(t, o, e.Panel); changed {
+				fixed++
+			}
 		}
 		var status, panel []string
 		var cascades [][2]string
@@ -109,6 +137,9 @@ func TestNodeEvents(t *testing.T) {
 	}
 	if failed > 0 {
 		t.Errorf("%d of %d events differ", failed, len(rec.Events))
+	}
+	if fixed == 0 {
+		t.Error("no recorded help request has a type in its data: the WS11 fix changes nothing here")
 	}
 }
 
