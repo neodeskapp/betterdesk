@@ -630,6 +630,46 @@ func TestArtifactPathSafe(t *testing.T) {
 	}
 }
 
+// TestTwoWorkersClaimARowOnce lets only one of two workers on one
+// database take a queued build that both read as queued; the other gets
+// the next one (BUGS GN5: both took it and built it).
+func TestTwoWorkersClaimARowOnce(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		dataDir := t.TempDir()
+		a := New(Options{DB: db, ServerInfo: fakeServerInfo{}, DataDir: dataDir, Env: func() []string { return nil }})
+		b := New(Options{DB: db, ServerInfo: fakeServerInfo{}, DataDir: dataDir, Env: func() []string { return nil }})
+		readyModule(t, a)
+		bundle := newBundle(t, a, goapi.NewObject("server_host", "h.example"), "")
+		must(t, a.EnqueueBuildsForHash(ctx, bundle.BrandingHash, false, nil, false))
+		seenByA, err := a.listPendingBuilds(ctx, 50)
+		must(t, err)
+		seenByB, err := b.listPendingBuilds(ctx, 50)
+		must(t, err)
+		if len(seenByA) < 2 || seenByA[0].Key() != seenByB[0].Key() {
+			t.Fatalf("pending builds: %d", len(seenByA))
+		}
+		took, err := b.claimBuild(ctx, seenByB[0])
+		must(t, err)
+		if !took {
+			t.Fatal("the first worker did not take the build")
+		}
+		took, err = a.claimBuild(ctx, seenByA[0])
+		must(t, err)
+		if took {
+			t.Fatal("the second worker took the build the first one builds")
+		}
+		if row := buildsByKey(t, a, bundle.BrandingHash)[seenByA[0].Key()]; row.Status != "building" {
+			t.Fatalf("claimed row: %s", mustRaw(t, row))
+		}
+		next, err := a.claimNextBuild(ctx)
+		must(t, err)
+		if next == nil || next.build.Key() == seenByA[0].Key() {
+			t.Fatalf("the second worker's next build: %+v", next)
+		}
+	})
+}
+
 // TestEnqueueKeepsFinishedBuilds leaves ready and building rows alone
 // unless the queue is forced.
 func TestEnqueueKeepsFinishedBuilds(t *testing.T) {

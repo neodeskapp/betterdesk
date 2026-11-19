@@ -36,8 +36,8 @@ type handlers struct {
 	log        *kit.Logger
 }
 
-// Register adds the group's routes in the order of the Node file, and,
-// when no Node console runs behind this one, the build worker.
+// Register adds the group's routes in the order of the Node file, and
+// the build worker unless AGENT_BUILD_WORKER turns it off.
 func Register(d *kit.Deps) {
 	h := &handlers{
 		gen:        d.Generator,
@@ -86,7 +86,7 @@ func Register(d *kit.Deps) {
 	r.Get("/api/generator/config", h.legacyConfig, d.RequireAuth)
 	r.Post("/api/generator/generate-config", h.generateConfig, d.RequireAuth)
 
-	if d.Config.NodeUpstream == nil && d.Config.AgentBuildWorker {
+	if d.Config.AgentBuildWorker {
 		d.Jobs.Add("client build worker", h.runWorker)
 	}
 }
@@ -94,11 +94,6 @@ func Register(d *kit.Deps) {
 // runWorker is the start-up hook of the old console: the build worker,
 // and in embedded mode a sync of the client source that queues new
 // generations when the commit changed.
-//
-// It runs only when no Node console runs behind this one. That console
-// starts its own worker on the same queue table and artifact folder, and
-// a worker claims a queued build with a read followed by a write, which
-// two workers can both win.
 func (h *handlers) runWorker(ctx context.Context) {
 	if h.gen.Embedded() {
 		go func() {

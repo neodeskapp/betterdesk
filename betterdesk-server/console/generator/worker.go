@@ -27,10 +27,9 @@ import (
 // new generation becomes the one a bundle hands out only when all its
 // targets are ready.
 //
-// Claiming a row is a read of the queued rows followed by a write of
-// "building": not atomic. Two workers on one database could build the
-// same row. The console therefore runs this worker only when no Node
-// console runs behind it (see Run).
+// A worker claims a queued row with one update that succeeds only while
+// the row is still queued (claimBuild), so two workers on one database
+// never build the same row.
 
 type workerState struct {
 	mu           sync.Mutex
@@ -730,13 +729,39 @@ func (s *Service) claimNextBuild(ctx context.Context) (*claim, error) {
 			}
 			continue
 		}
-		if err := s.UpsertBuild(ctx, BuildUpdate{BrandingHash: row.BrandingHash, Platform: row.Platform, Arch: row.Arch, Format: row.Format,
-			Status: "building", ArtifactPath: row.ArtifactPath, ArtifactSize: sizeArg(row), ArtifactSHA256: row.ArtifactSHA256}); err != nil {
+		took, err := s.claimBuild(ctx, row)
+		if err != nil {
 			return nil, err
 		}
-		return &claim{build: row, bundle: bundle}, nil
+		if took {
+			return &claim{build: row, bundle: bundle}, nil
+		}
 	}
 	return nil, nil
+}
+
+// claimBuild marks a queued build as building, in one statement that
+// changes the row only while it still has the status it was read with.
+// Of two workers on one database that both read it as queued, only one
+// takes it; it reports whether this one did.
+func (s *Service) claimBuild(ctx context.Context, row *Build) (bool, error) {
+	now := "datetime('now')"
+	if s.opts.DB.IsPostgres() {
+		now = "NOW()"
+	}
+	res, err := s.opts.DB.Exec(ctx, `UPDATE agent_bundle_builds
+		SET status = 'building', error_message = '', progress_percent = 0, progress_phase = '',
+			started_at = `+now+`, updated_at = `+now+`
+		WHERE branding_hash = ? AND platform = ? AND arch = ? AND format = ? AND status = ?`,
+		row.BrandingHash, row.Platform, row.Arch, row.Format, row.Status)
+	if err != nil {
+		return false, fmt.Errorf("claim agent bundle build %s: %w", row.Key(), err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("claim agent bundle build %s: %w", row.Key(), err)
+	}
+	return n == 1, nil
 }
 
 // parseRowBranding is the bundle's profile as the worker read it: {} for
