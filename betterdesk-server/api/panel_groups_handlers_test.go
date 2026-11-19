@@ -73,11 +73,11 @@ func TestPanelGroupLifecycle(t *testing.T) {
 
 	// Create a group with an ACL.
 	resp, body := doPanelJSON(t, http.MethodPost, base+"/api/panel/device-groups", map[string]any{
-		"name":             "Support team",
-		"note":             "created by test",
-		"source_type":      "manual",
-		"allowed_users":    []string{"operator-grp"},
-		"allowed_groups":   []string{},
+		"name":           "Support team",
+		"note":           "created by test",
+		"source_type":    "manual",
+		"allowed_users":  []string{"operator-grp"},
+		"allowed_groups": []string{},
 	})
 	if resp.StatusCode != http.StatusCreated {
 		t.Fatalf("create status %d, want 201 (%v)", resp.StatusCode, body)
@@ -297,5 +297,39 @@ func TestPanelGroupRoutesRequirePermission(t *testing.T) {
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusForbidden {
 		t.Fatalf("status %d, want 403 without device.edit", resp.StatusCode)
+	}
+}
+
+// TestPanelGroupUpdateKeepsNoteAndTeam: an update whose body leaves out
+// the note and the team id keeps the stored ones, as the console's own
+// writer did; one that names them writes them (BUGS UM31).
+func TestPanelGroupUpdateKeepsNoteAndTeam(t *testing.T) {
+	srv, base := panelGroupTestServer(t, 19930)
+	resp, body := doPanelJSON(t, http.MethodPost, base+"/api/panel/device-groups", map[string]any{
+		"name": "Support", "note": "A note", "team_id": "team-1",
+	})
+	guid, _ := body["guid"].(string)
+	if resp.StatusCode != http.StatusCreated || guid == "" {
+		t.Fatalf("create: %d %v", resp.StatusCode, body)
+	}
+	stored := func() string {
+		t.Helper()
+		g, err := srv.db.GetDeviceGroup(guid)
+		if err != nil || g == nil {
+			t.Fatalf("GetDeviceGroup: %v %v", g, err)
+		}
+		return g.Name + "|" + g.Note + "|" + g.TeamID
+	}
+	if resp, body = doPanelJSON(t, http.MethodPost, base+"/api/panel/device-groups", map[string]any{"guid": guid, "name": "Support 2"}); resp.StatusCode != http.StatusOK {
+		t.Fatalf("update: %d %v", resp.StatusCode, body)
+	}
+	if got := stored(); got != "Support 2|A note|team-1" {
+		t.Errorf("after an update without note and team id: %q", got)
+	}
+	if resp, body = doPanelJSON(t, http.MethodPost, base+"/api/panel/device-groups", map[string]any{"guid": guid, "name": "Support 3", "note": "", "team_id": "team-2"}); resp.StatusCode != http.StatusOK {
+		t.Fatalf("update: %d %v", resp.StatusCode, body)
+	}
+	if got := stored(); got != "Support 3||team-2" {
+		t.Errorf("after an update with an empty note and another team: %q", got)
 	}
 }

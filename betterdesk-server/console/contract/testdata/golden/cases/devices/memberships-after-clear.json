@@ -529,10 +529,10 @@
         "id": 0,
         "member_count": 1,
         "name": "Contract group renamed",
-        "note": "",
+        "note": "A note",
         "source_type": "manual",
         "tag_filter": "",
-        "team_id": ""
+        "team_id": "contract-team"
        },
        {
         "allowed_groups": [],
@@ -646,10 +646,10 @@
         "id": 0,
         "member_count": 1,
         "name": "Contract group renamed",
-        "note": "",
+        "note": "A note",
         "source_type": "manual",
         "tag_filter": "",
-        "team_id": ""
+        "team_id": "contract-team"
        }
       ]
      },
@@ -752,10 +752,10 @@
         "id": 0,
         "member_count": 1,
         "name": "Contract group renamed",
-        "note": "",
+        "note": "A note",
         "source_type": "manual",
         "tag_filter": "",
-        "team_id": ""
+        "team_id": "contract-team"
        },
        {
         "allowed_groups": [],
@@ -885,10 +885,10 @@
         "id": 0,
         "member_count": 1,
         "name": "Contract group renamed",
-        "note": "",
+        "note": "A note",
         "source_type": "manual",
         "tag_filter": "",
-        "team_id": ""
+        "team_id": "contract-team"
        }
       ]
      },

@@ -60,15 +60,15 @@ func (s *Server) requirePanelGroupStore(w http.ResponseWriter) (db.PanelGroupSto
 
 // panelGroupView is the JSON shape the console renders.
 type panelGroupView struct {
-	GUID           string   `json:"guid"`
-	Name           string   `json:"name"`
-	Note           string   `json:"note"`
-	TeamID         string   `json:"team_id"`
-	SourceType     string   `json:"source_type"`
-	TagFilter      string   `json:"tag_filter"`
-	MemberCount    int      `json:"member_count"`
-	AllowedUsers   []string `json:"allowed_users"`
-	AllowedGroups  []string `json:"allowed_groups"`
+	GUID          string   `json:"guid"`
+	Name          string   `json:"name"`
+	Note          string   `json:"note"`
+	TeamID        string   `json:"team_id"`
+	SourceType    string   `json:"source_type"`
+	TagFilter     string   `json:"tag_filter"`
+	MemberCount   int      `json:"member_count"`
+	AllowedUsers  []string `json:"allowed_users"`
+	AllowedGroups []string `json:"allowed_groups"`
 }
 
 func (s *Server) handlePanelDeviceGroupsList(w http.ResponseWriter, r *http.Request) {
@@ -105,11 +105,13 @@ func (s *Server) handlePanelDeviceGroupsList(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusOK, map[string]any{"groups": out, "total": len(out)})
 }
 
+// panelGroupBody is a submitted group. Note and TeamID are nil when the
+// body leaves them out: an update then keeps the stored ones.
 type panelGroupBody struct {
 	GUID          string   `json:"guid"`
 	Name          string   `json:"name"`
-	Note          string   `json:"note"`
-	TeamID        string   `json:"team_id"`
+	Note          *string  `json:"note"`
+	TeamID        *string  `json:"team_id"`
 	SourceType    string   `json:"source_type"`
 	TagFilter     string   `json:"tag_filter"`
 	AllowedUsers  []string `json:"allowed_users"`
@@ -147,8 +149,13 @@ func (s *Server) handlePanelDeviceGroupsSave(w http.ResponseWriter, r *http.Requ
 	if sourceType == "tag" {
 		tagFilter = truncStr(strings.TrimSpace(body.TagFilter), 50)
 	}
-	note := truncStr(body.Note, 512)
-	teamID := truncStr(strings.TrimSpace(body.TeamID), 64)
+	var note, teamID string
+	if body.Note != nil {
+		note = truncStr(*body.Note, 512)
+	}
+	if body.TeamID != nil {
+		teamID = truncStr(strings.TrimSpace(*body.TeamID), 64)
+	}
 
 	var created bool
 	if body.GUID == "" {
@@ -174,6 +181,12 @@ func (s *Server) handlePanelDeviceGroupsSave(w http.ResponseWriter, r *http.Requ
 		if existing == nil {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "group not found"})
 			return
+		}
+		if body.Note == nil {
+			note = existing.Note
+		}
+		if body.TeamID == nil {
+			teamID = existing.TeamID
 		}
 		update := &db.DeviceGroup{
 			GUID:       body.GUID,
@@ -211,13 +224,13 @@ func (s *Server) handlePanelDeviceGroupsSave(w http.ResponseWriter, r *http.Requ
 		status = http.StatusCreated
 	}
 	writeJSON(w, status, map[string]any{
-		"guid":          body.GUID,
-		"name":          body.Name,
-		"source_type":   sourceType,
-		"tag_filter":    tagFilter,
-		"allowed_users": dedupe(users),
+		"guid":           body.GUID,
+		"name":           body.Name,
+		"source_type":    sourceType,
+		"tag_filter":     tagFilter,
+		"allowed_users":  dedupe(users),
 		"allowed_groups": dedupe(groups),
-		"created":       created,
+		"created":        created,
 	})
 }
 
