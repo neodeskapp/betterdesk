@@ -8,11 +8,16 @@
 package tenants
 
 import (
+	"errors"
 	"math"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/jackc/pgx/v5/pgconn"
+	"modernc.org/sqlite"
+	sqlite3 "modernc.org/sqlite/lib"
 
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
@@ -157,10 +162,7 @@ func slugOf(name string) string {
 // {name, slug?, contact_name?, contact_email?, max_devices?, notes?}: a
 // name that is text, the other texts text or null (null and empty take the
 // default) and max_devices a whole number from 0. A slug that is taken is
-// 409 on SQLite; on
-// PostgreSQL it is the 500 of every other failure, because the route
-// looked for "UNIQUE" in the error's text and PostgreSQL words it
-// differently.
+// 409.
 func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	name, isText := body.String("name")
@@ -183,7 +185,7 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		h.log.Error("POST / error:", err)
-		if strings.Contains(jsbind.Message(err), "UNIQUE") {
+		if isUniqueViolation(err) {
 			fail(w, r, http.StatusConflict, "Tenant slug already exists")
 			return
 		}
@@ -242,6 +244,22 @@ func flag(v jsbind.Value) (on, ok bool) {
 	return false, false
 }
 
+// isUniqueViolation reports whether err is a unique constraint the write
+// broke: SQLite's codes for a unique or primary key constraint, or
+// PostgreSQL's 23505.
+func isUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == "23505"
+	}
+	var sqliteErr *sqlite.Error
+	if errors.As(err, &sqliteErr) {
+		code := sqliteErr.Code()
+		return code == sqlite3.SQLITE_CONSTRAINT_UNIQUE || code == sqlite3.SQLITE_CONSTRAINT_PRIMARYKEY
+	}
+	return false
+}
+
 // update answers PATCH /api/tenants/{id}: every member of the body that
 // names a column is written, each checked: a name that is text with
 // something in it, the other texts text (also null, but for the slug),
@@ -269,6 +287,10 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	var updated *tenant
 	if err == nil {
 		updated, err = updateTenant(r.Context(), h.db, id, h.changes(r))
+	}
+	if isUniqueViolation(err) {
+		fail(w, r, http.StatusConflict, "Tenant slug already exists")
+		return
 	}
 	if err != nil {
 		h.log.Error("PATCH /:id error:", err)

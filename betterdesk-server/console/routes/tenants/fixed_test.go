@@ -611,3 +611,18 @@ func nodeRemoved(t *testing.T, w *replay.World, step replay.Step) {
 		w.Exec("DELETE FROM tenant_users WHERE tenant_id = ? AND user_id = ?", []any{tenant, id})
 	}
 }
+
+const slugTaken = `{"error":"Tenant slug already exists"}`
+
+// TN2: a taken slug is 409 on both databases, in a create and a change.
+var _ = tenantFixes.Add("TN2", map[string]replay.Fix{
+	`admin PATCH /api/tenants/2 {"slug":"acme-corp"}`: {Status: 409, Answer: slugTaken},
+	`admin PATCH /api/tenants/2 {"slug":"UNIQUE"}`:    {Status: 409, Answer: slugTaken},
+})
+
+var _ = tenantFixes.Add("TN2", map[string]replay.Fix{
+	`admin POST /api/tenants {"name":"acme corp"}`:              {Dialect: "postgres", Status: 409, Answer: slugTaken},
+	`admin POST /api/tenants {"name":"ACME--CORP!!"}`:           {Dialect: "postgres", Status: 409, Answer: slugTaken},
+	`admin POST /api/tenants {"name":"???"}`:                    {Dialect: "postgres", Status: 409, Answer: slugTaken},
+	`admin POST /api/tenants {"name":"Tenant 26","slug":"1.5"}`: {Dialect: "postgres", Status: 409, Answer: slugTaken},
+})

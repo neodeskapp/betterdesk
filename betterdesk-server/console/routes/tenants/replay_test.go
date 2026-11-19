@@ -145,3 +145,29 @@ func TestTenantIDsThatAreNoWholeNumber(t *testing.T) {
 		}
 	})
 }
+
+// A slug that is taken is 409 on both databases, in a create and in a
+// change, decided by the error's code and not its text (BUGS TN2).
+func TestTakenSlugIs409(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		post := func(body string) replay.Answer {
+			return w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tenants", Body: replay.Text(body)})
+		}
+		taken := `{"error":"Tenant slug already exists"}`
+		for _, body := range []string{`{"name":"Acme"}`, `{"name":"Other","slug":"UNIQUE"}`} {
+			if got := post(body); got.Status != 201 {
+				t.Fatalf("create %s: %d %s", body, got.Status, got.Body)
+			}
+		}
+		if got := post(`{"name":"ACME!"}`); got.Status != 409 || got.Body != taken {
+			t.Errorf("a taken slug: %d %s", got.Status, got.Body)
+		}
+		if got := w.Do(replay.Request{Role: "admin", Method: "PATCH", Path: "/api/tenants/2", Body: replay.Text(`{"slug":"acme"}`)}); got.Status != 409 || got.Body != taken {
+			t.Errorf("a change to a taken slug: %d %s", got.Status, got.Body)
+		}
+		if got := post(`{"name":"Third","notes":"UNIQUE"}`); got.Status != 201 {
+			t.Errorf("a text that says UNIQUE: %d %s", got.Status, got.Body)
+		}
+	})
+}
