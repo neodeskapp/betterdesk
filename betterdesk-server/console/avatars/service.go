@@ -169,7 +169,7 @@ func (s *Service) SyncOIDCPicture(ctx context.Context, userID int64, exchange Cl
 	result := failed(err)
 	where := "inline picture"
 	if !hasPrefixFold(picture, "data:") {
-		where = sliceUnits(picture, 200)
+		where = addressForLog(picture)
 	}
 	s.log.Warn(fmt.Sprintf("OIDC picture for user %d not stored (%s): %s; %s", userID, result.Code, err.Error(), where))
 	return result

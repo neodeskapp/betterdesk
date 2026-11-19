@@ -369,15 +369,27 @@ func TestFailedWritesKeepThePicture(t *testing.T) {
 	})
 }
 
-// The warning about an address names at most its first 200 characters.
-func TestWarningCutsTheAddress(t *testing.T) {
+// The warning about an address names its scheme, host and path, at most
+// 200 characters of them, and never its query, fragment or credentials:
+// identity providers put signed tokens there.
+func TestWarningShowsNoQueryOrCredentials(t *testing.T) {
 	db := storetest.Migrated(t)
-	svc, log := newTestService(t, db, FetchOptions{})
-	address := "ftp://example.com/" + strings.Repeat("a", 400)
-	svc.SyncOIDCPicture(context.Background(), addUser(t, db, "alice"), claims{"picture": address})
-	lines := log.take()
-	if len(lines) != 1 || !strings.HasSuffix(lines[0], "; "+address[:200]) {
-		t.Fatalf("warnings: %q", lines)
+	svc, log := newTestService(t, db, FetchOptions{Transport: &scriptedTransport{t: t}})
+	user := addUser(t, db, "alice")
+	long := "https://idp.example/" + strings.Repeat("a", 400)
+	for _, c := range []struct{ address, want string }{
+		{"https://idp.example/pictures/alice.png?token=signed-secret#part-secret", "https://idp.example/pictures/alice.png"},
+		{"https://user:pass-secret@idp.example:8443/a.png?sig=secret", "https://idp.example:8443/a.png"},
+		{`HTTPS:\\user:pass-secret@IDP.example\a.png?sig=secret`, "https://idp.example/a.png"},
+		{"ftp://user:pass-secret@example.com/a.png?token=secret", "ftp://example.com/a.png"},
+		{"not a picture?token=secret", "not a picture"},
+		{long + "?token=secret", long[:200]},
+	} {
+		svc.SyncOIDCPicture(context.Background(), user, claims{"picture": c.address})
+		lines := log.take()
+		if len(lines) != 1 || !strings.HasSuffix(lines[0], "; "+c.want) || strings.Contains(lines[0], "secret") {
+			t.Errorf("%s: warnings %q, want one that ends with %q", c.address, lines, c.want)
+		}
 	}
 }
 

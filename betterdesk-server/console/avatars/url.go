@@ -86,6 +86,28 @@ func checkURL(text string) (target, error) {
 	return t.target, nil
 }
 
+// addressForLog is what a log line may show of a picture address: its
+// scheme, host and path, cut to 200 characters. The query, the fragment
+// and credentials are left out, because identity providers put signed
+// tokens there. An http or https address is read as checkURL reads it;
+// other text loses what follows the first "?" or "#" and what comes
+// before an "@" after "://".
+func addressForLog(address string) string {
+	if t, ok := parseTarget(address); ok && (t.scheme == "http" || t.scheme == "https") {
+		return sliceUnits(t.scheme+"://"+t.url().Host+t.path, 200)
+	}
+	if i := strings.IndexAny(address, "?#"); i >= 0 {
+		address = address[:i]
+	}
+	if scheme, rest, ok := strings.Cut(address, "://"); ok {
+		authority, _, _ := strings.Cut(rest, "/")
+		if i := strings.LastIndexByte(authority, '@'); i >= 0 {
+			address = scheme + "://" + rest[i+1:]
+		}
+	}
+	return sliceUnits(address, 200)
+}
+
 type parsedTarget struct {
 	target
 	credentials bool
