@@ -25,7 +25,8 @@ func TestBundleOnFSReadsAsOnDisk(t *testing.T) {
 	}
 	onDisk, diskLogs := loaded(t, dir, "en")
 	fsLogs := &logs{}
-	inFS := New(dir, "en")
+	// Dir only names the folder in messages; nothing is read from it
+	inFS := New(filepath.Join(t.TempDir(), "named"), "en")
 	inFS.FS = os.DirFS(dir)
 	inFS.Logf = fsLogs.logf
 	inFS.Load()
@@ -82,10 +83,10 @@ func TestBundleOnFSReadsAsOnDisk(t *testing.T) {
 		t.Fatal(err)
 	}
 	texts := stringify(inFS.Merged("de"), "")
-	if r := inFS.Save("de", NewObject()); r.Success || r.Error != "EROFS: read-only file system, open '"+file+"'" {
+	if r := inFS.Save("de", NewObject()); r.Success || r.Error != "EROFS: read-only file system, open '"+filepath.Join(inFS.Dir, "de.json")+"'" {
 		t.Errorf("Save in FS: %+v", r)
 	}
-	if r := inFS.Delete("de"); r.Success || r.Error != "EROFS: read-only file system, unlink '"+file+"'" {
+	if r := inFS.Delete("de"); r.Success || r.Error != "EROFS: read-only file system, unlink '"+filepath.Join(inFS.Dir, "de.json")+"'" {
 		t.Errorf("Delete in FS: %+v", r)
 	}
 	if after, _ := os.ReadFile(file); string(after) != string(before) {

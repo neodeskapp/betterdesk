@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"errors"
+	"io/fs"
 	"maps"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +11,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"testing/fstest"
 	"time"
 )
 
@@ -110,6 +113,40 @@ func TestStaticFoldersFromTheTree(t *testing.T) {
 	for _, target := range []string{"/favicon.svg", "/protos/message.proto"} {
 		if rec := serve(bare, httptest.NewRequest("GET", target, nil)); rec.Code != http.StatusTeapot {
 			t.Errorf("%s without the tree: %d", target, rec.Code)
+		}
+	}
+}
+
+// The tree answers only for names below its root that are clean paths in
+// it; anything else is a file that is not there.
+func TestStaticTreeNames(t *testing.T) {
+	root := staticRoot("public")
+	tree := staticTree{root: root, dir: "public", fsys: fstest.MapFS{
+		"public/a/b.txt": {Data: []byte("b")},
+		"secret.txt":     {Data: []byte("s")},
+	}}
+	sep := string(filepath.Separator)
+	if info, err := tree.Stat(root + sep + "a" + sep + "b.txt"); err != nil || info.Size() != 1 {
+		t.Fatalf("a file of the tree: %v", err)
+	}
+	if info, err := tree.Stat(root); err != nil || !info.IsDir() {
+		t.Errorf("the root: %v", err)
+	}
+	for _, name := range []string{
+		root + sep + "a" + sep + sep + "b.txt",
+		root + sep + "a" + sep + "." + sep + "b.txt",
+		root + sep + ".." + sep + "secret.txt",
+		root + "x" + sep + "a" + sep + "b.txt",
+		filepath.Dir(root) + sep + "secret.txt",
+	} {
+		if _, err := tree.Stat(name); !errors.Is(err, fs.ErrNotExist) {
+			t.Errorf("Stat(%q) = %v, want a file that is not there", name, err)
+		}
+		if f, err := tree.Open(name); !errors.Is(err, fs.ErrNotExist) {
+			if f != nil {
+				_ = f.Close()
+			}
+			t.Errorf("Open(%q) = %v, want a file that is not there", name, err)
 		}
 	}
 }
