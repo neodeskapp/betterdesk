@@ -52,7 +52,7 @@ func (h *handlers) users(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	kit.JSON(w, r, http.StatusOK, listAnswer{Data: []rustdeskUser{{
-		Name: user.Username, Status: 1, IsAdmin: user.role() == "admin", GroupName: "Default",
+		Name: user.Username, Status: 1, IsAdmin: adminRoles[user.role()], GroupName: "Default",
 	}}, Total: 1})
 }
 

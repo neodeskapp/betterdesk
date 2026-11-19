@@ -813,3 +813,52 @@ func TestSignInStoresTextClientIDsOnly(t *testing.T) {
 		}
 	})
 }
+
+// is_admin is one rule in every answer about an account: the four admin
+// roles are admins at sign-in, in GET /api/currentUser and in GET
+// /api/users alike.
+func TestIsAdminIsOneRule(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db, nil)
+		hash, err := w.Server.Deps().Authn.HashPassword(context.Background(), "Rd-Test-1!x")
+		if err != nil {
+			t.Fatal(err)
+		}
+		for id, admin := range map[int]bool{1: true, 2: true, 3: true, 4: true, 5: false, 6: false} {
+			w.Exec("UPDATE users SET password_hash = ? WHERE id = ?", []any{hash, id})
+			var name string
+			if err := db.QueryRow(context.Background(), "SELECT username FROM users WHERE id = ?", id).Scan(&name); err != nil {
+				t.Fatal(err)
+			}
+			signIn := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"username":"` + name + `","password":"Rd-Test-1!x","id":"c-` + name + `"}`)})
+			var answer struct {
+				Token string `json:"access_token"`
+				User  struct {
+					IsAdmin bool `json:"is_admin"`
+				} `json:"user"`
+			}
+			if err := json.Unmarshal([]byte(signIn.Body), &answer); err != nil || answer.Token == "" {
+				t.Fatalf("sign in as %s: %d %s", name, signIn.Status, signIn.Body)
+			}
+			var current struct {
+				IsAdmin bool `json:"is_admin"`
+			}
+			got := w.Do(replay.Request{Path: "/api/currentUser", Headers: bearer(answer.Token)})
+			if err := json.Unmarshal([]byte(got.Body), &current); err != nil {
+				t.Fatalf("currentUser of %s: %d %s", name, got.Status, got.Body)
+			}
+			var users struct {
+				Data []struct {
+					IsAdmin bool `json:"is_admin"`
+				} `json:"data"`
+			}
+			got = w.Do(replay.Request{Path: "/api/users", Headers: bearer(answer.Token)})
+			if err := json.Unmarshal([]byte(got.Body), &users); err != nil || len(users.Data) != 1 {
+				t.Fatalf("users of %s: %d %s", name, got.Status, got.Body)
+			}
+			if answer.User.IsAdmin != admin || current.IsAdmin != admin || users.Data[0].IsAdmin != admin {
+				t.Errorf("%s: is_admin %t at sign-in, %t in currentUser, %t in users; want %t", name, answer.User.IsAdmin, current.IsAdmin, users.Data[0].IsAdmin, admin)
+			}
+		}
+	})
+}

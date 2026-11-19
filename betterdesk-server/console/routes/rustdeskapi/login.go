@@ -347,8 +347,8 @@ type currentUserAnswer struct {
 	IsAdmin bool   `json:"is_admin"`
 }
 
-// currentUser answers /api/currentUser for every method. is_admin is the
-// role admin only.
+// currentUser answers /api/currentUser for every method. is_admin is one
+// of the four admin roles, as at sign-in.
 func (h *handlers) currentUser(w http.ResponseWriter, r *http.Request) {
 	token := bearerToken(r)
 	if token == "" {
@@ -366,7 +366,7 @@ func (h *handlers) currentUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	kit.JSON(w, r, http.StatusOK, currentUserAnswer{
-		Name: user.Username, Status: 1, IsAdmin: user.Role.Valid && user.Role.String == "admin",
+		Name: user.Username, Status: 1, IsAdmin: adminRoles[user.Role.String],
 	})
 }
 

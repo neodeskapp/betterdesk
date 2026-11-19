@@ -21,7 +21,7 @@ const (
 )
 
 // adminRoles are the roles ADMIN_ROLES of the client API lets write groups
-// and strategies, and that it reports as is_admin at sign-in.
+// and strategies, and that it reports as is_admin.
 var adminRoles = map[string]bool{"admin": true, "super_admin": true, "server_admin": true, "global_admin": true}
 
 type errorBody struct {
