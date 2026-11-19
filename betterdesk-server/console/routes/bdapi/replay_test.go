@@ -307,6 +307,22 @@ var fixes = []fix{
 	{bug: "BD7", dialect: "sqlite", steps: []string{"128 odd values after"}, edits: []string{
 		`{"id":"DEV3","uuid":"",`, `{"id":"DEV3","uuid":"uuid-3",`,
 	}},
+	// An approval whose request carried a key admits only that key: the
+	// device that sent none is refused and never registered
+	{bug: "BD8", steps: []string{"49 approved, no key sent POST /api/bd/register"}, status: http.StatusForbidden,
+		answer: `{"error":"enrollment_proof_required","message":"Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession"}`},
+	{bug: "BD8", dialect: "sqlite", steps: []string{"73 new devices after"}, edits: []string{
+		`,{"id":"APPROVED2","uuid":"","pk":null,"info":"{\"hostname\":\"\",\"os\":\"\",\"version\":\"\",\"ip\":\"127.0.0.1\"}","ip":"127.0.0.1","status_online":1,"is_deleted":0}`, ``,
+	}},
+	{bug: "BD8", dialect: "postgres", steps: []string{"73 new devices after"}, edits: []string{
+		`,{"id":"APPROVED2","uuid":"","pk":null,"info":{"ip":"127.0.0.1","os":"","version":"","hostname":""},"ip":"127.0.0.1","status_online":true,"is_deleted":false}`, ``,
+	}},
+	{bug: "BD8", dialect: "sqlite", steps: []string{"132 GET /api/bd/operator/devices", "135 token with spaces GET /api/bd/operator/devices"}, edits: []string{
+		`,{"id":"APPROVED2","hostname":"","platform":"","online":true,"last_online":"2026-11-18 17:40:53"}`, ``,
+	}},
+	{bug: "BD8", dialect: "postgres", steps: []string{"132 GET /api/bd/operator/devices", "135 token with spaces GET /api/bd/operator/devices"}, edits: []string{
+		`,{"id":"APPROVED2","hostname":"","platform":"","online":true,"last_online":"2026-11-18T17:41:22.789Z"}`, ``,
+	}},
 }
 
 // fixedSteps returns the steps as the Go console answers them since the

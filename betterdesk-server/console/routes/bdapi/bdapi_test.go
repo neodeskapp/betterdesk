@@ -301,3 +301,44 @@ func TestRegistrationWithoutUUIDKeepsTheStoredOne(t *testing.T) {
 		}
 	})
 }
+
+// An approval whose request carried a key admits the first registration
+// only with that key; a device registered before is not asked again
+// (BUGS BD8).
+func TestApprovalWithAKeyNeedsThatKey(t *testing.T) {
+	reviewed, _, _ := ed25519.GenerateKey(nil)
+	reviewedText := base64.StdEncoding.EncodeToString(reviewed)
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		ctx := context.Background()
+		for _, id := range []string{"APPKEY1", "APPKEY2"} {
+			if _, err := w.DB.Exec(ctx, "INSERT INTO pending_registrations (device_id, public_key, status) VALUES (?, ?, 'approved')", id, reviewedText); err != nil {
+				t.Fatal(err)
+			}
+		}
+		register := func(id, body string) string {
+			got := w.SignedOut().Do("POST", "/api/bd/register", body, "X-Device-Id", id)
+			if got.Status == 200 {
+				return "200"
+			}
+			return fmt.Sprint(got.Status, " ", got.Body)
+		}
+		refused := `403 {"error":"enrollment_proof_required","message":"Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession"}`
+		if got := register("APPKEY1", `{"uuid":"u-1"}`); got != refused {
+			t.Errorf("without the reviewed key: %s", got)
+		}
+		if got := register("APPKEY1", `{"uuid":"u-1","public_key":"`+reviewedText+`"}`); got != "200" {
+			t.Errorf("with the reviewed key: %s", got)
+		}
+		// Once the device is registered, it registers again as it did
+		if got := register("APPKEY1", `{"uuid":"u-1"}`); got != "200" {
+			t.Errorf("a registered device without its key: %s", got)
+		}
+		if _, err := w.DB.Exec(ctx, "INSERT INTO peer (id, uuid, info) VALUES ('APPKEY2', 'u-2', '{}')"); err != nil {
+			t.Fatal(err)
+		}
+		if got := register("APPKEY2", `{"uuid":"u-2"}`); got != "200" {
+			t.Errorf("a device registered before the approval: %s", got)
+		}
+	})
+}

@@ -14,7 +14,7 @@ import (
 //
 //  1. the operator approved a LAN registration request of the id
 //     (pending_registrations, status approved) and, when that request
-//     carried a key, the registration brings the same key or none;
+//     carried a key, the registration brings the same key;
 //  2. an enrollment token of an agent template (POST /api/bd/enroll), which
 //     admits one device: the first one that redeems it;
 //  3. an Ed25519 proof of possession of the key it registers (proof.go).
@@ -171,14 +171,15 @@ func (h *handlers) registerPolicy(r *http.Request, id string, uuid, publicKey an
 }
 
 // admitted is resolveAdmissionGrant: an approval of the operator for the
-// id, or an enrollment token in the body that is, or now becomes, bound
-// to the id. A failed lookup of the approval counts as none.
+// id, with the key the approver reviewed when the request carried one,
+// or an enrollment token in the body that is, or now becomes, bound to
+// the id. A failed lookup of the approval counts as none.
 func (h *handlers) admitted(r *http.Request, id string, publicKey any) (bool, error) {
 	ctx := r.Context()
 	if reg, err := h.regs.ByDeviceID(ctx, id); err == nil && reg != nil && reg.Get("status") == "approved" {
 		reviewed, hasReviewed := canonicalKey(orValue(reg.Get("public_key"), ""))
 		incoming, hasIncoming := canonicalKey(orValue(publicKey, ""))
-		if !hasReviewed || !hasIncoming || reviewed == incoming {
+		if !hasReviewed || hasIncoming && reviewed == incoming {
 			return true, nil
 		}
 	}
