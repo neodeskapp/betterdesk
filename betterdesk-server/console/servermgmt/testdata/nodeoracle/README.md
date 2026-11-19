@@ -33,8 +33,10 @@ system.
 `node`; the Go terminal tests that replay it run only as root where that
 account exists. Where the Go terminal differs on purpose, the test says so
 next to the comparison: a shell asked to stop is gone afterwards (pipe mode
-in Node left an interactive bash running), and a shell that switched
-accounts has no supplementary groups (node-pty kept root's group 0).
+in Node left an interactive bash running), a shell that switched accounts
+has no supplementary groups (node-pty kept root's group 0), and pipe output
+is decoded across reads (SM10). The other replays list their intended
+differences the same way (`fileChanges`, `crlfServices`).
 
 These scripts are fixtures from the time both servers existed. The services
 are gone from `web-nodejs` since they moved, so the scripts run only on a

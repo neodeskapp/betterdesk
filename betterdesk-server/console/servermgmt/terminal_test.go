@@ -532,6 +532,29 @@ func TestTerminalSize(t *testing.T) {
 	}
 }
 
+// Output is decoded across reads in both modes: a character whose bytes
+// come in two reads arrives whole.
+func TestTerminalSplitCharacter(t *testing.T) {
+	for _, noPty := range []bool{true, false} {
+		if !noPty && !ptyWorks() {
+			continue
+		}
+		w := newTermWorld(t, noPty, nil)
+		c, _ := w.dial(nil)
+		send(t, c, map[string]any{"type": "init"})
+		waitReady(t, c, 1)
+		// the prompt goes to standard error, a pipe of its own, which may
+		// come in between
+		send(t, c, map[string]any{"type": "input", "data": "exec 2>/dev/null\nprintf 'A\\303'; sleep 0.3; printf '\\251Z\\n'\n"})
+		if !c.Wait(5*time.Second, func([]wstest.Frame, bool) bool { return strings.Contains(outputOf(c), "AéZ") }) || strings.ContainsRune(outputOf(c), '�') {
+			t.Errorf("pipe %v: %q", noPty, outputOf(c))
+		}
+		c.Close(1000)
+		w.srv.Close()
+		w.reg.Close()
+	}
+}
+
 // A shell that ends by itself sends end with its code and closes the
 // socket; one killed by a signal names it (pipes).
 func TestTerminalShellExit(t *testing.T) {

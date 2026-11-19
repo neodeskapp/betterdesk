@@ -27,9 +27,6 @@ type shellProc struct {
 	outputs []*os.File
 	// resizeTo sets the terminal's size; nil for pipes
 	resizeTo func(cols, rows int)
-	// stream decodes the output across reads (a terminal); pipes decode
-	// each read on its own, as the old console did
-	stream bool
 
 	mu      sync.Mutex
 	queue   []string
@@ -45,7 +42,7 @@ type shellProc struct {
 
 func newShellProc(kind string, cmd *exec.Cmd, input io.WriteCloser, outputs []*os.File) *shellProc {
 	return &shellProc{
-		kind: kind, cmd: cmd, input: input, outputs: outputs, stream: kind == "pty",
+		kind: kind, cmd: cmd, input: input, outputs: outputs,
 		wake: make(chan struct{}, 1), exited: make(chan struct{}), ended: make(chan struct{}),
 	}
 }
@@ -101,23 +98,18 @@ func (p *shellProc) start(out func(string), exit func(code, signal any)) {
 	}()
 }
 
-// read hands the output of one source to out until it ends.
+// read hands the output of one source to out until it ends, decoded
+// across reads: a character split between two reads goes out whole.
 func (p *shellProc) read(f *os.File, out func(string)) {
 	buf := make([]byte, 64*1024)
 	var carry []byte
 	for {
 		n, err := f.Read(buf)
 		if n > 0 {
-			chunk := buf[:n]
-			if p.stream {
-				chunk = append(carry, chunk...)
-				var text string
-				text, carry = decodeStream(chunk)
-				if text != "" {
-					out(text)
-				}
-			} else {
-				out(decodeUTF8(chunk))
+			var text string
+			text, carry = decodeStream(append(carry, buf[:n]...))
+			if text != "" {
+				out(text)
 			}
 		}
 		if err != nil {

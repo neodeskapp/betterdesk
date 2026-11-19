@@ -201,6 +201,9 @@ func pipeRunes(s string) string {
 //   - An open terminal looks up server.config again with its session
 //     (SM15); the replay checks only once an hour, so the lookups stay the
 //     upgrade's.
+//   - Pipe output is decoded across reads as a pseudo-terminal's is
+//     (SM10): the character split between two reads arrives whole, where
+//     the old pipe mode sent two U+FFFD.
 func TestNodeTerminalPipe(t *testing.T) { replayTerminal(t, "pipe") }
 
 func TestNodeTerminalPty(t *testing.T) {
@@ -304,6 +307,9 @@ func replayTerminal(t *testing.T, mode string) {
 				}
 				output = pidMarker.ReplaceAllString(output, "__PID${1}__<pid>")
 				want := step.Output
+				if mode == "pipe" && conv.Name == "split character" {
+					want = strings.ReplaceAll(want, "��", "é")
+				}
 				if mode == "pty" {
 					want = rootGroup.ReplaceAllString(want, "|$1|")
 					// Two resizes in a row are one redraw or two, as the
