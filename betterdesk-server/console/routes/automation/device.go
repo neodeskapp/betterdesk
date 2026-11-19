@@ -44,7 +44,12 @@ func (h *handlers) commandResult(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "Status must be completed, failed, or running")
 		return
 	}
-	command, err := commandByID(r.Context(), h.db, number(r, "id"))
+	id, ok := idOf(r)
+	if !ok {
+		fail(w, r, http.StatusNotFound, "Command not found")
+		return
+	}
+	command, err := commandByID(r.Context(), h.db, id)
 	if err != nil {
 		h.serverError(w, r, "Command result error", err)
 		return
@@ -62,7 +67,7 @@ func (h *handlers) commandResult(w http.ResponseWriter, r *http.Request) {
 		}
 		result = jsbind.String(text)
 	}
-	id := command.number("id")
+	id = command.number("id")
 	if err := updateRemoteCommand(r.Context(), h.db, id, status.Str(), result); err != nil {
 		h.serverError(w, r, "Command result error", err)
 		return

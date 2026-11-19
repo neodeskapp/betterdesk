@@ -22,6 +22,7 @@ package automation
 import (
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
@@ -112,10 +113,18 @@ func writtenInDigits(next http.Handler) http.Handler {
 	})
 }
 
-// number is +req.params[name] for a parameter made of digits. More digits
-// than a JavaScript number holds give the nearest number it does hold.
-func number(r *http.Request, name string) jsbind.Value {
-	return jsbind.Number(jsbind.ParseNumber(r.PathValue(name)))
+// maxID is the largest id an id column holds: SERIAL on PostgreSQL.
+const maxID = 2147483647
+
+// idOf reads the id of the address, which writtenInDigits let through as
+// digits. ok is false for an id beyond maxID, which names nothing on
+// either database.
+func idOf(r *http.Request) (id jsbind.Value, ok bool) {
+	n, err := strconv.Atoi("0" + strings.TrimLeft(r.PathValue("id"), "0"))
+	if err != nil || n > maxID {
+		return jsbind.Undefined, false
+	}
+	return jsbind.Number(float64(n)), true
 }
 
 // oneOf is list.includes(v): v is a text and one of the list.
@@ -208,7 +217,12 @@ func (h *handlers) createRule(w http.ResponseWriter, r *http.Request) {
 
 // rule answers GET rules/{id}.
 func (h *handlers) rule(w http.ResponseWriter, r *http.Request) {
-	rule, err := ruleByID(r.Context(), h.db, number(r, "id"))
+	id, ok := idOf(r)
+	if !ok {
+		fail(w, r, http.StatusNotFound, "Rule not found")
+		return
+	}
+	rule, err := ruleByID(r.Context(), h.db, id)
 	if err != nil {
 		h.serverError(w, r, "Rule get error", err)
 		return
@@ -227,7 +241,12 @@ func (h *handlers) rule(w http.ResponseWriter, r *http.Request) {
 // their type, and condition_value is not null. enabled is read as on a
 // new rule: off for false, 0, "0" and "false".
 func (h *handlers) updateRule(w http.ResponseWriter, r *http.Request) {
-	rule, err := ruleByID(r.Context(), h.db, number(r, "id"))
+	id, ok := idOf(r)
+	if !ok {
+		fail(w, r, http.StatusNotFound, "Rule not found")
+		return
+	}
+	rule, err := ruleByID(r.Context(), h.db, id)
 	if err != nil {
 		h.serverError(w, r, "Rule update error", err)
 		return
@@ -296,7 +315,12 @@ func (h *handlers) updateRule(w http.ResponseWriter, r *http.Request) {
 
 // deleteRule answers DELETE rules/{id}. The alerts of the rule go with it.
 func (h *handlers) deleteRule(w http.ResponseWriter, r *http.Request) {
-	rule, err := ruleByID(r.Context(), h.db, number(r, "id"))
+	id, ok := idOf(r)
+	if !ok {
+		fail(w, r, http.StatusNotFound, "Rule not found")
+		return
+	}
+	rule, err := ruleByID(r.Context(), h.db, id)
 	if err == nil && rule != nil {
 		err = deleteRule(r.Context(), h.db, rule.number("id"))
 	}

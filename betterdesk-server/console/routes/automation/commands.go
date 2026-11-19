@@ -91,7 +91,12 @@ func (h *handlers) commands(w http.ResponseWriter, r *http.Request) {
 
 // command answers GET commands/{id}: the command with its result.
 func (h *handlers) command(w http.ResponseWriter, r *http.Request) {
-	command, err := commandByID(r.Context(), h.db, number(r, "id"))
+	id, ok := idOf(r)
+	if !ok {
+		fail(w, r, http.StatusNotFound, "Command not found")
+		return
+	}
+	command, err := commandByID(r.Context(), h.db, id)
 	if err != nil {
 		h.serverError(w, r, "Command get error", err)
 		return

@@ -50,7 +50,12 @@ func (h *handlers) alerts(w http.ResponseWriter, r *http.Request) {
 // keeps its first acknowledgement, and one that does not exist is 404.
 func (h *handlers) acknowledge(w http.ResponseWriter, r *http.Request) {
 	username := kit.User(r).Username
-	found, err := acknowledgeAlert(r.Context(), h.db, number(r, "id"), username)
+	id, ok := idOf(r)
+	if !ok {
+		fail(w, r, http.StatusNotFound, "Alert not found")
+		return
+	}
+	found, err := acknowledgeAlert(r.Context(), h.db, id, username)
 	if err != nil {
 		h.serverError(w, r, "Ack error", err)
 		return

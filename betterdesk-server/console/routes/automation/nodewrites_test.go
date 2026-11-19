@@ -146,6 +146,9 @@ func nodeRuleUpdate(t *testing.T, w *replay.World, step replay.Step) {
 // acknowledgement.
 func nodeAck(t *testing.T, w *replay.World, step replay.Step) {
 	t.Helper()
+	if step.Status != http.StatusOK {
+		return
+	}
 	parts := strings.Split(step.Path, "/")
 	nodeExec(t, w, "UPDATE alert_history SET acknowledged = "+w.DB.Pick("1", "TRUE")+", acknowledged_by = ?, acknowledged_at = "+store.NowSQL(w.DB.Dialect())+" WHERE id = ?",
 		jsbind.String(replay.Users[step.Role].Username), jsbind.Number(jsbind.ParseNumber(parts[len(parts)-2])))
@@ -181,4 +184,24 @@ func nodeCommand(t *testing.T, w *replay.World, step replay.Step) {
 	if step.Status == http.StatusCreated {
 		nodeAudit(t, w, step, "remote_command_sent", commandType.Str()+" to "+device.ToString())
 	}
+}
+
+// nodeRuleDelete is what DELETE rules/{id} wrote for a rule Node found:
+// the rule is gone, with the audit log entry of its id and name.
+func nodeRuleDelete(t *testing.T, w *replay.World, step replay.Step) {
+	t.Helper()
+	if step.Status != http.StatusOK {
+		return
+	}
+	id := jsbind.Number(jsbind.ParseNumber(step.Path[strings.LastIndexByte(step.Path, '/')+1:]))
+	args, err := jsbind.Args(w.DB.Dialect(), 1, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var name string
+	if err := w.DB.QueryRow(context.Background(), "SELECT name FROM alert_rules WHERE id = ?", args...).Scan(&name); err != nil {
+		t.Fatalf("%s: %v", step.Name, err)
+	}
+	nodeExec(t, w, "DELETE FROM alert_rules WHERE id = ?", id)
+	nodeAudit(t, w, step, "alert_rule_deleted", "Rule #"+id.ToString()+": "+name)
 }
