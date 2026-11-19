@@ -409,7 +409,8 @@ func (h *handlers) createBundle(w http.ResponseWriter, r *http.Request) {
 
 // updateBundle answers PUT /api/generator/bundles/{bundleId}: a new name,
 // profile or slug. A changed profile gets a new hash and its builds are
-// queued; the answer does not wait for that.
+// queued before the answer; when they cannot be, the change stays saved
+// and the answer is the queue's error, as for a new bundle.
 func (h *handlers) updateBundle(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("bundleId")
@@ -503,6 +504,8 @@ func (h *handlers) updateBundle(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := h.gen.EnqueueBuildsForHash(ctx, hash, false, platforms, true); err != nil {
 			h.log.Error("[generator] enqueue builds failed:", err.Error())
+			h.sendBuildError(w, r, err, http.StatusServiceUnavailable)
+			return
 		}
 	}
 	ok(w, r, goapi.NewObject("bundle", serializeBundle(updated)))

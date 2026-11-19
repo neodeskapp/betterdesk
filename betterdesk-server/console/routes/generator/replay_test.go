@@ -355,3 +355,29 @@ func TestUpdateBundleWithNullProfile(t *testing.T) {
 		}
 	})
 }
+
+// TestUpdateAnswersAQueueFailure answers a changed profile whose builds
+// cannot be queued with the queue's error, as a new bundle is answered;
+// the change itself is saved (BUGS GN4: the answer said success).
+func TestUpdateAnswersAQueueFailure(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		var dataDir string
+		w := replay.NewWorld(t, db, func(cfg *config.Config) { dataDir = cfg.DataDir })
+		ready(t, w, dataDir)
+		created := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/generator/bundles",
+			Body: replay.Text(`{"name":"Acme","slug":"acme","branding":{"server_host":"h.example"}}`)})
+		slug, id := bundleSlug(t, created)
+		if slug != "acme" {
+			t.Fatalf("create: %d %s", created.Status, created.Body)
+		}
+		w.Exec("DROP TABLE agent_bundle_builds", nil)
+		got := w.Do(replay.Request{Role: "admin", Method: "PUT", Path: "/api/generator/bundles/" + id,
+			Body: replay.Text(`{"name":"Acme two","branding":{"server_host":"other.example"}}`)})
+		if got.Status != http.StatusServiceUnavailable || !strings.HasPrefix(got.Body, `{"success":false,"error":`) {
+			t.Errorf("queue failed: %d %s", got.Status, got.Body)
+		}
+		if rows := w.Rows("SELECT name FROM agent_bundles WHERE slug = 'acme'", nil); rows != `[{"name":"Acme two"}]` {
+			t.Errorf("change not saved: %s", rows)
+		}
+	})
+}
