@@ -74,7 +74,7 @@
     "kind": "json",
     "json": {
      "data": {
-      "backend": {},
+      "backend": "betterdesk",
       "devices": {
        "banned": 2,
        "offline": 16,

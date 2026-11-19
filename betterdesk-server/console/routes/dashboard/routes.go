@@ -67,13 +67,13 @@ func serverError(w http.ResponseWriter, r *http.Request) {
 type statsData struct {
 	Devices any           `json:"devices"`
 	Hbbs    *goapi.Object `json:"hbbs"`
-	// Backend is always an empty object (BUGS SI11).
-	Backend   struct{} `json:"backend"`
-	PublicKey bool     `json:"publicKey"`
+	// Backend names the server the console works with: always betterdesk.
+	Backend   string `json:"backend"`
+	PublicKey bool   `json:"publicKey"`
 }
 
-// stats answers GET /api/stats: the device counts, the server's health
-// and whether the server has a public key.
+// stats answers GET /api/stats: the device counts, the server's health,
+// the name of the backend and whether the server has a public key.
 func (h *handlers) stats(w http.ResponseWriter, r *http.Request) {
 	devices, err := h.backend.GetStats(r.Context())
 	if err != nil {
@@ -83,7 +83,7 @@ func (h *handlers) stats(w http.ResponseWriter, r *http.Request) {
 	}
 	health := h.backend.GetHealth(r.Context())
 	key := h.info.ResolvePublicKey(r.Context())
-	kit.OK(w, r, statsData{Devices: devices, Hbbs: health, PublicKey: key != ""})
+	kit.OK(w, r, statsData{Devices: devices, Hbbs: health, Backend: "betterdesk", PublicKey: key != ""})
 }
 
 type clientConfigData struct {

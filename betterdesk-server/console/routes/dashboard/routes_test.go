@@ -54,6 +54,9 @@ func TestEveryRouteNeedsASession(t *testing.T) {
 	}
 }
 
+// TestStats answers the device counts, the server's health, the name of
+// the backend and whether there is a public key (BUGS SI11: the backend
+// was always an empty object).
 func TestStats(t *testing.T) {
 	w := newWorld(t, nil, map[string]string{"id_ed25519.pub": validKey})
 	w.api.set("/api/health", health)
@@ -61,7 +64,7 @@ func TestStats(t *testing.T) {
 	want(t, "stats", w.get("viewer", "/api/stats"), 200,
 		`{"success":true,"data":{"devices":{"total":30,"online":14,"offline":16,"banned":2,"withNotes":0},`+
 			`"hbbs":{"status":"running","version":"3.5.224","uptime":"1h2m3s","peers_online":14,"backend":"betterdesk"},`+
-			`"backend":{},"publicKey":true}}`)
+			`"backend":"betterdesk","publicKey":true}}`)
 
 	// No key in the file and none from the server: publicKey is false.
 	// A server that does not answer its health check is "unreachable".
@@ -71,7 +74,7 @@ func TestStats(t *testing.T) {
 	want(t, "no key, no health", w.get("viewer", "/api/stats"), 200,
 		`{"success":true,"data":{"devices":{"total":3,"online":"1","offline":2,"banned":0,"withNotes":2},`+
 			`"hbbs":{"status":"unreachable","backend":"betterdesk","error":"Request failed with status code 503"},`+
-			`"backend":{},"publicKey":false}}`)
+			`"backend":"betterdesk","publicKey":false}}`)
 }
 
 func TestStatsFromTheConsoleTablesWhenTheServerGivesNone(t *testing.T) {
