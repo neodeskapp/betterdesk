@@ -3,6 +3,7 @@ package registration
 import (
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/devicegroups"
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -34,42 +35,65 @@ func (h *handlers) enrollmentHistory(w http.ResponseWriter, r *http.Request) {
 // body {display_name, sync_mode, tags, folder_id, group_guids}: the API
 // server approves, and when it says it did, the device goes into the
 // folder and the device groups and the approval is audited. The answer is
-// the API client's.
+// the API client's. A sync_mode that is no text, and group_guids that are
+// no list of text, answer 400 before the API server is asked.
 func (h *handlers) enrollmentApprove(w http.ResponseWriter, r *http.Request) {
 	deviceID := r.PathValue("id")
 	body := jsreq.Body(r)
 	field := func(name string) any { return jsreq.Prop(body, name) }
 	syncMode, groupGUIDs := field("sync_mode"), field("group_guids")
+	mode, guids, problem := approvalFields(syncMode, groupGUIDs)
+	if problem != "" {
+		failure(w, r, http.StatusBadRequest, problem)
+		return
+	}
 	result := h.d.GoAPI.ApproveEnrollment(r.Context(), deviceID, field("display_name"), syncMode, field("tags"))
 	if result.Bool("success") {
 		h.assignFolder(r, deviceID, field("folder_id"), "Assign device to folder error:")
 		if err := h.applyGroups(r, deviceID, groupGUIDs); err != nil {
 			h.log.Error("Assign device groups on enrollment approve:", err)
 		}
-		if details, err := enrollmentApprovalDetails(deviceID, syncMode, groupGUIDs); err == nil {
-			h.audit(r, "enrollment_approved", details)
-		}
+		h.audit(r, "enrollment_approved", enrollmentApprovalDetails(deviceID, mode, guids))
 	}
 	kit.JSON(w, r, http.StatusOK, result)
 }
 
-// enrollmentApprovalDetails is the audit text of an enrollment approval:
-// the mode and the device groups as the body named them. It fails where
-// JavaScript could not make text of them, and the entry is not written.
-func enrollmentApprovalDetails(deviceID string, syncMode, groupGUIDs any) (string, error) {
-	mode, err := text(orValue(syncMode, "standard"))
-	if err != nil {
-		return "", err
-	}
-	note := ""
-	if list, ok := groupGUIDs.([]any); ok && len(list) > 0 {
-		joined, err := join(list, ", ")
-		if err != nil {
-			return "", err
+// approvalFields reads the mode ("standard" when none is given) and the
+// device groups of an enrollment approval; problem is the error to
+// answer when either is of a type the web app never sends.
+func approvalFields(syncMode, groupGUIDs any) (mode string, guids []string, problem string) {
+	mode = "standard"
+	if goapi.Truthy(syncMode) {
+		s, ok := syncMode.(string)
+		if !ok {
+			return "", nil, "Invalid sync_mode"
 		}
-		note = ", groups: [" + joined + "]"
+		mode = s
 	}
-	return "Approved enrollment for device " + deviceID + " (mode: " + mode + note + ")", nil
+	if goapi.Truthy(groupGUIDs) {
+		list, ok := groupGUIDs.([]any)
+		if !ok {
+			return "", nil, "Invalid group_guids"
+		}
+		for _, item := range list {
+			s, ok := item.(string)
+			if !ok {
+				return "", nil, "Invalid group_guids"
+			}
+			guids = append(guids, s)
+		}
+	}
+	return mode, guids, ""
+}
+
+// enrollmentApprovalDetails is the audit text of an enrollment approval:
+// the mode and the device groups as the body named them.
+func enrollmentApprovalDetails(deviceID, mode string, guids []string) string {
+	note := ""
+	if len(guids) > 0 {
+		note = ", groups: [" + strings.Join(guids, ", ") + "]"
+	}
+	return "Approved enrollment for device " + deviceID + " (mode: " + mode + note + ")"
 }
 
 // enrollmentReject answers POST /api/enrollment/reject/{id} with the body

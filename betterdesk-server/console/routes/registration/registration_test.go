@@ -533,3 +533,35 @@ func TestApprovalChecksTheBodyFirst(t *testing.T) {
 		}
 	})
 }
+
+// An enrollment approval whose sync_mode is no text, or whose group_guids
+// are no list of text, is refused before the API server is asked, so an
+// approval that happens is always audited (BUGS RG13).
+func TestEnrollmentApprovalChecksTheBodyFirst(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		api := routetest.NewAPI().On("POST /api/enrollment/approve/DEV1", http.StatusOK, `{"success":true,"device_id":"DEV1"}`)
+		w := routetest.New(t, routetest.Options{DB: db, API: api})
+		for body, want := range map[string]string{
+			`{"sync_mode":{"toString":1}}`:       `400 {"success":false,"error":"Invalid sync_mode"}`,
+			`{"sync_mode":5}`:                    `400 {"success":false,"error":"Invalid sync_mode"}`,
+			`{"group_guids":[{"toString":"x"}]}`: `400 {"success":false,"error":"Invalid group_guids"}`,
+			`{"group_guids":["dg-a",null]}`:      `400 {"success":false,"error":"Invalid group_guids"}`,
+			`{"group_guids":"dg-a"}`:             `400 {"success":false,"error":"Invalid group_guids"}`,
+		} {
+			got := w.As("admin").Do(http.MethodPost, "/api/enrollment/approve/DEV1", body)
+			if have := strconv.Itoa(got.Status) + " " + got.Body; have != want {
+				t.Errorf("%s: %s, want %s", body, have, want)
+			}
+		}
+		if calls := api.Calls(); len(calls) != 0 {
+			t.Errorf("API calls %q", calls)
+		}
+		if rows := w.AuditRows(); len(rows) != 0 {
+			t.Errorf("audit %q", rows)
+		}
+		got := w.As("admin").Do(http.MethodPost, "/api/enrollment/approve/DEV1", `{"sync_mode":"turbo","group_guids":[]}`)
+		if rows := w.AuditRows(); got.Status != http.StatusOK || len(rows) != 1 || !strings.Contains(rows[0], "(mode: turbo)") {
+			t.Errorf("a good body: %d %s, audit %q", got.Status, got.Body, rows)
+		}
+	})
+}
