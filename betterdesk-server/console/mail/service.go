@@ -96,10 +96,6 @@ type Options struct {
 	// configuration. The console sets it from SMTP_REQUIRE_TLS, which is on
 	// unless the variable is "false".
 	RequireTLS bool
-	// Host and HTTPRedirect are not read: the address in mails comes from
-	// PanelHost, ServesHTTPS and the ports.
-	Host         string
-	HTTPRedirect bool
 	// Port is the port the console serves plain HTTP on.
 	Port int
 	// PanelHost reads PANEL_PUBLIC_HOST, the host people reach the console

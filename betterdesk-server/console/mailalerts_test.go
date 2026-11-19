@@ -3,11 +3,15 @@ package console
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
 	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path/filepath"
 	"slices"
 	"testing"
 	"time"
@@ -58,10 +62,29 @@ func TestAlertSweepRunsOnlyWithoutNode(t *testing.T) {
 	}
 }
 
+// writeCertificate writes a certificate and its key as PEM files and
+// returns their paths.
+func writeCertificate(t *testing.T, cert tls.Certificate) (certPath, keyPath string) {
+	t.Helper()
+	dir := t.TempDir()
+	key, err := x509.MarshalPKCS8PrivateKey(cert.PrivateKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	certPath, keyPath = filepath.Join(dir, "panel.crt"), filepath.Join(dir, "panel.key")
+	for path, block := range map[string]*pem.Block{certPath: {Type: "CERTIFICATE", Bytes: cert.Certificate[0]}, keyPath: {Type: "PRIVATE KEY", Bytes: key}} {
+		if err := os.WriteFile(path, pem.EncodeToMemory(block), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return certPath, keyPath
+}
+
 // TestMailSettingsReachTheService pins what the server hands the mail
 // service from the configuration: whether the mail server's certificate
 // is checked when the saved settings do not say, and how the console's
-// address in a mail is built.
+// address in a mail is built: the panel's public host, with https only
+// when the console serves HTTPS with a certificate (BUGS EM8).
 func TestMailSettingsReachTheService(t *testing.T) {
 	// A mail server with implicit TLS and a certificate no one trusts. It
 	// greets with 421, so a client that gets through the handshake fails
@@ -91,14 +114,21 @@ func TestMailSettingsReachTheService(t *testing.T) {
 		}
 	}()
 	_, port, _ := net.SplitHostPort(listener.Addr().String())
+	certPath, keyPath := writeCertificate(t, certificate)
 
 	for _, tt := range []struct {
-		verify, redirect bool
-		wantError        string
-		wantURL          string
+		verify     bool
+		panelHost  string
+		https      bool
+		certFile   string
+		wantError  string
+		wantURL    string
+		explaining string
 	}{
-		{true, true, "self-signed certificate", "https://127.0.0.1:5000"},
-		{false, false, "Invalid greeting. response=421 busy: 421 busy", "http://127.0.0.1:5000"},
+		{true, "panel.example.com", true, certPath, "self-signed certificate", "https://panel.example.com:5443", "HTTPS with a certificate"},
+		{false, "panel.example.com", true, filepath.Join(t.TempDir(), "missing.crt"), "Invalid greeting. response=421 busy: 421 busy", "http://panel.example.com:5000", "HTTPS mode without a certificate"},
+		{false, "panel.example.com", false, "", "Invalid greeting. response=421 busy: 421 busy", "http://panel.example.com:5000", "plain HTTP"},
+		{false, "", true, certPath, "Invalid greeting. response=421 busy: 421 busy", "", "no public host"},
 	} {
 		db := storetest.Migrated(t)
 		stored := `{"host":"127.0.0.1","port":` + port + `,"secure":true}`
@@ -106,12 +136,16 @@ func TestMailSettingsReachTheService(t *testing.T) {
 			t.Fatal(err)
 		}
 		cfg := &config.Config{
-			Host: "0.0.0.0", Port: 5000, DataDir: t.TempDir(), UploadsDir: t.TempDir(),
+			Host: "0.0.0.0", Port: 5000, HTTPSPort: 5443, HTTPS: tt.https, CertFile: tt.certFile, KeyFile: keyPath,
+			DataDir: t.TempDir(), UploadsDir: t.TempDir(),
 			LangDir: "static/files/lang", WebUIDir: t.TempDir(), DefaultLanguage: "en", LogLevel: "silent",
-			SMTPTLSVerify: tt.verify, HTTPRedirect: tt.redirect,
+			SMTPTLSVerify: tt.verify, HTTPRedirect: true,
 			Getenv: func(key string) string {
-				if key == "SESSION_SECRET" {
+				switch key {
+				case "SESSION_SECRET":
 					return testSecret
+				case "PANEL_PUBLIC_HOST":
+					return tt.panelHost
 				}
 				return ""
 			},
@@ -131,7 +165,7 @@ func TestMailSettingsReachTheService(t *testing.T) {
 			t.Errorf("SMTP_TLS_VERIFY %v: the test answered %v, %q (%v), want the failure %q", tt.verify, result.Success, got, err, tt.wantError)
 		}
 		if got := s.Deps().Mail.GetPanelBaseURL(); got != tt.wantURL {
-			t.Errorf("HTTP_REDIRECT_HTTPS %v: the console's address in mails is %q, want %q", tt.redirect, got, tt.wantURL)
+			t.Errorf("%s: the console's address in mails is %q, want %q", tt.explaining, got, tt.wantURL)
 		}
 		s.Stop()
 	}

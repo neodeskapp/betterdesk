@@ -266,14 +266,12 @@ func (r *replay) setState(step oracleStep) {
 	r.transport = &fakeTransport{}
 	r.log = &logLines{}
 	r.service = New(Options{
-		DB:           r.db,
-		Transport:    r.transport,
-		Getenv:       func(name string) string { return r.env[name] },
-		TLSVerify:    step.Cfg.SMTPTLSVerify,
-		Host:         step.Cfg.Host,
-		Port:         step.Cfg.Port,
-		HTTPRedirect: step.Cfg.HTTPRedirect,
-		Logger:       r.log,
+		DB:        r.db,
+		Transport: r.transport,
+		Getenv:    func(name string) string { return r.env[name] },
+		TLSVerify: step.Cfg.SMTPTLSVerify,
+		Port:      step.Cfg.Port,
+		Logger:    r.log,
 	})
 }
 

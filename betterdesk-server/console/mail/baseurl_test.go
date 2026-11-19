@@ -36,7 +36,7 @@ func TestTheHelpLinkUsesThePublicAddress(t *testing.T) {
 	} {
 		env := c.env
 		s := New(Options{
-			Getenv: func(name string) string { return env[name] }, Host: "0.0.0.0", Port: 5000, HTTPSPort: 5443, HTTPRedirect: true,
+			Getenv: func(name string) string { return env[name] }, Port: 5000, HTTPSPort: 5443,
 			PanelHost: func() string { return c.panelHost }, ServesHTTPS: func() bool { return c.https },
 		})
 		if got := s.GetPanelBaseURL(); got != c.want {
@@ -54,7 +54,7 @@ func TestTheHelpLinkUsesThePublicAddress(t *testing.T) {
 	// Without an address the help request mail has no link
 	db := storetest.Migrated(t)
 	storeConfig(t, db, fullConfig)
-	s, transport, _ := newTestService(db, nil, Options{Host: "0.0.0.0", Port: 5000, HTTPRedirect: true})
+	s, transport, _ := newTestService(db, nil, Options{Port: 5000})
 	if ok, err := s.SendHelpRequestEmail(context.Background(), HelpRequestEmail{To: []string{"a@example.org"}, HelpRequest: HelpRequest{Hostname: jsbind.String("PC-01"), Message: jsbind.String("Need help")}}); !ok || err != nil {
 		t.Fatal(ok, err)
 	}

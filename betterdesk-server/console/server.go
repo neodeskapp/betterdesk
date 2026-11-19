@@ -310,15 +310,16 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	s.deps.DeviceGroups = devicegroups.New(devicegroups.Options{DB: opts.Store, Access: s.deps.Access})
 	s.deps.Backend = goapi.NewBackend(api, devicegroups.DeviceStore{Groups: s.deps.DeviceGroups})
 	s.deps.Mail = mail.New(mail.Options{
-		DB:           opts.Store,
-		Transport:    &mail.SMTP{},
-		Getenv:       getenv,
-		TLSVerify:    cfg.SMTPTLSVerify,
-		RequireTLS:   cfg.SMTPRequireTLS,
-		Host:         cfg.Host,
-		Port:         cfg.Port,
-		HTTPRedirect: cfg.HTTPRedirect,
-		Logger:       s.deps.Log.Child("Email"),
+		DB:          opts.Store,
+		Transport:   &mail.SMTP{},
+		Getenv:      getenv,
+		TLSVerify:   cfg.SMTPTLSVerify,
+		RequireTLS:  cfg.SMTPRequireTLS,
+		Port:        cfg.Port,
+		HTTPSPort:   cfg.HTTPSPort,
+		PanelHost:   s.deps.ServerInfo.ReadPanelPublicHostValue,
+		ServesHTTPS: func() bool { return s.net.cert != nil },
+		Logger:      s.deps.Log.Child("Email"),
 	})
 	// Alert mails and evaluations beside a request end with the console:
 	// the job below cancels them and waits for them when the jobs stop.
