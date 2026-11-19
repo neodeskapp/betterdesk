@@ -43,10 +43,10 @@ func copyFile(src, dst string) error {
 	return os.Chmod(dst, info.Mode().Perm())
 }
 
-// copyTree is fs.cp(src, dst, {recursive: true}): folders are made and
-// get the source's mode, files keep their mode, and a symbolic link is
-// made again pointing at its target, a relative target made absolute
-// against the source folder. Times are not kept.
+// copyTree is fs.cp(src, dst, {recursive: true, verbatimSymlinks: true}):
+// folders are made and get the source's mode, files keep their mode, and
+// a symbolic link is made again with its target as written, so a
+// relative link points inside the copy. Times are not kept.
 func copyTree(src, dst string) error {
 	info, err := os.Lstat(src)
 	if err != nil {
@@ -57,9 +57,6 @@ func copyTree(src, dst string) error {
 		target, err := os.Readlink(src)
 		if err != nil {
 			return err
-		}
-		if !filepath.IsAbs(target) {
-			target = filepath.Join(filepath.Dir(src), target)
 		}
 		_ = os.Remove(dst)
 		return os.Symlink(target, dst)
