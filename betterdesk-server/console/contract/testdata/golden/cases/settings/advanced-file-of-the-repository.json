@@ -10,10 +10,9 @@
    "roles": [
     "admin"
    ],
-   "status": 200,
+   "status": 404,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
-    "content-encoding": "gzip",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "application/json; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
@@ -28,7 +27,6 @@
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
      "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
-    "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -37,31 +35,15 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    {
-     "path": "data.content",
-     "format": "; AaaaaaAaaa — Aaaaaaaaaaa Aaaaaaaaaaaaa\r\n; Aaaaaaa aaaa Aa aaaaaa aaa Aaaa.aa aaaaaaa aa a aaaaaa aaaaaaaaa\r\n\r\n[aaaaaaaaaaa]\r\naaaaaaaa=aaaa\r\naaaaaaa=/aaa/aaa/aaaaaaaaaa/aaaaaaaaaaa.aaa\r\naaaaaaa_aaaaaaaa=99AA\r\naaaaaaa_aaaaaaa=9\r\naaaaaaaa=aaaa\r\naaaaaaa=/aaa/aaa/aaaaaaaaaaa.aaa\r\naaaa=aaaa\r\n\r\n[aaaa_aaaa_aaaaaa]\r\naaaa=/aaa/aaa/aaaaaaaaaa.aaaa\r\naaaaa=9999\r\n\r\n[aaaaaaaaaaaa:aaaaaaaaaa]\r\naaaaaaaaaa.aaaaaaaaaaaa_aaaaaaa = aaaaaaaaaa.aaaaaaaaaaaa:aaaa_aaaa_aaaaaaaaaaaa\r\n\r\n[aaaaaaaaaaaaa]\r\naaaaaaaaa=aaaa:///aaa/aaa/aaaaaaaaaa.aaaa\r\n\r\n; ---- AaaaaaAaaa Aaaa.aa Aaaaaaa ----\r\n; Aaaaa aaaaaa Aa aa aaaaaaaa aaaaaa aaaaa aaaa aaa aaaaaaaaaa (aaaaa #999).\r\n; Aaaaa aaaaaaaaaaa aaa aaa aaaaaaaaaaaa aaaaaaa aaaaaaaa.\r\n; Aaa aaaaaaa (9999). Aaa AaaaAaaa aaaaaa AAA aa aaaaaa aa aaa Aa aaaaaa (99999),\r\n; aa aaa aaaaaaa'a aaa aaaaaa AAA aaaaaaaa aa aaaaaaaa (AAA_AAAAAAA=aaaaa).\r\n[aaaaaaa:aaaaaaaaaa-aaaaaaa]\r\naaaaaaa=aaaa /aaa/aaaaaa.aa\r\naaaaaaaaa=/aaa\r\naaaa=aaaaaaaaaa\r\naaaaaaaaa=aaaa\r\naaaaaaaaaaa=aaaa\r\naaaaaaaaaaaa=9\r\naaaaaaaaa=99\r\naaaaaaaaaaaa=99\r\n; Aaa aa Aaaaaa aaaaaa/aaaaaa aa aaaaaa aaaaaa aa `aaaaaa aaaa`\r\naaaaaa_aaaaaaa=/aaa/aaaaaa\r\naaaaaa_aaaaaaa_aaaaaaaa=9\r\naaaaaa_aaaaaaa=/aaa/aaaaaa\r\naaaaaa_aaaaaaa_aaaaaaaa=9\r\n; Aaaaaaa aaaaaa aaa aaaaa aaaaa aaaa; aaa Aa aaaaaa aaaa aaa aaaaaa AAA.\r\naaaaaaaaaaa=AAA_AAAAAAA=\"aaaaa\",AAAA=\"9.9.9.9\",AAAAAAA_AAAAA_AAAAAAAA=\"%(AAA_AAAAAAA_AAAAA_AAAAAAAA)a\",AAAAAAA_AAAAA_AAAAAAAA=\"%(AAA_AAAAAAA_AAAAA_AAAAAAAA)a\",AAAAAA_AAAA_AA_AAAA=\"%(AAA_AAAAAA_AAAA_AA_AAAA)a\"\r\naaaaaaaa=999\r\n\r\n; ---- AaaaaaAaaa Aa Aaaaaa ----\r\n; Aaaaaa (99999 AAA/AAA), Aaaaa (99999), AAA (99999), AAA (99999), AA (99999/99999)\r\n; Aaa AAAA AAA aaa AaaaAaaa aaaaaa AAA aaa aaaaaaaaaaaa aaaa aaa Aa aaaaaa (99999).\r\n; AA_AAA aaa aaa aa aaa aa aaaaaaaaaa.aa: AAAaaa aaaa aa aaaaaaaa:// AAA\r\n[aaaaaaa:aaaaaaaaaa-aaaaaa]\r\naaaaaaa=/aaa/aaaaaa/aaaa-aaaaa-aaaa-aa.aa /aaa/aaaaa/aaa/aaaaaaaaaa-aaaaaa -aaaa aaa -aaa-aaaa 99999 -aaa-aaaa /aaa/aaaaaaaa/aa_aa99999\r\naaaaaaaaa=/aaa/aaaaaaaa\r\naaaa=aaaaaaaaaa\r\naaaaaaaaa=aaaa\r\naaaaaaaaaaa=aaaa\r\naaaaaaaaaaaa=9\r\naaaaaaaaa=9\r\naaaaaaaaaaaa=99\r\n; Aaa aa Aaaaaa aaaaaa/aaaaaa aa aaaaaa aaaaaa aa `aaaaaa aaaa`\r\naaaaaa_aaaaaaa=/aaa/aaaaaa\r\naaaaaa_aaaaaaa_aaaaaaaa=9\r\naaaaaa_aaaaaaa=/aaa/aaaaaa\r\naaaaaa_aaaaaaa_aaaaaaaa=9\r\naaaaaaaaaaa=AAAAAA_AAAA=\"99999\",AAAAAA_AAAA_AAAAA_AAA_AA=\"%(AAA_AAAAAA_AAAA_AAAAA_AAA_AA)a\",AAAAAAAAA_AAAA=\"%(AAA_AAAAAAAAA_AAAA)a\",AA_AAA=\"%(AAA_AA_AAA)a\",AAAA_AA_AAAA=\"%(AAA_AAAA_AA_AAAA)a\",AAAAAA_AAAA_AA_AAAA=\"%(AAA_AAAAAA_AAAA_AA_AAAA)a\",AAAAA_AAAAAAA=\"%(AAA_AAAAA_AAAAAAA)a\",AAAAAAAAAA_AAAA=\"%(AAA_AAAAAAAAAA_AAAA)a\",AAAAAAAAAA_AAAA_AAA_AAAAAAAA=\"%(AAA_AAAAAAAAAA_AAAA_AAA_AAAAAAAA)a\",AAA_AAAAAAA=\"%(AAA_AAA_AAAAAAA)a\",AAAAAAA_AAA_AAAAA_AAAA_AA=\"%(AAA_AAAAAAA_AAA_AAAAA_AAAA_AA)a\",AAAAAAA_AAAAAAA_AAAAAA_AAAAA=\"%(AAA_AAAAAAA_AAAAAAA_AAAAAA_AAAAA)a\",AAAAAAA_AAAAA_AA_AAA=\"%(AAA_AAAAAAA_AAAAA_AA_AAA)a\",AAAA_AAAAA_AAAA=\"%(AAA_AAAA_AAAAA_AAAA)a\",AAAA_AAAAA_AAAA=\"%(AAA_AAAA_AAAAA_AAAA)a\"\r\naaaaaaaa=999\r\n"
-    },
-    {
-     "path": "data.mtime",
-     "format": "9999-99-99A99:99:99.999A"
-    },
-    {
-     "path": "data.size",
-     "integer": true
-    }
+    "data.content",
+    "data.mtime",
+    "data.size"
    ],
    "body": {
     "kind": "json",
     "json": {
-     "data": {
-      "content": "<volatile>",
-      "id": "docker-supervisord",
-      "mtime": "<volatile>",
-      "path": "/repo/docker/supervisord.conf",
-      "requiresRestart": "console",
-      "size": 0
-     },
-     "success": true
+     "error": "File does not exist",
+     "success": false
     }
    }
   }

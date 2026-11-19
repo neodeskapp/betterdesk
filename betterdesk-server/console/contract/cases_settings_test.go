@@ -322,7 +322,9 @@ func init() {
 		contract.Case{Name: "advanced-file-missing", Path: "/api/settings/advanced/files/console-env", Roles: admin},
 		contract.Case{
 			Name: "advanced-file-of-the-repository", Path: "/api/settings/advanced/files/docker-supervisord", Roles: admin,
-			// A file of the checkout: only its place and shape count
+			// A file the editor lists in the checkout that the one image of
+			// A32 removed: a listed file that is missing and cannot be made
+			// answers 404
 			Volatile: []string{"data.content", "data.size", "data.mtime"},
 		},
 		contract.Case{
