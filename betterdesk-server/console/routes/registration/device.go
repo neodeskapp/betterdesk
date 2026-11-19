@@ -2,6 +2,7 @@ package registration
 
 import (
 	"net/http"
+	"regexp"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
@@ -11,6 +12,10 @@ import (
 )
 
 // The two routes devices call without signing in.
+
+// deviceIDPattern is the form of a device id, as /api/bd/register checks
+// it.
+var deviceIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{3,64}$`)
 
 // clientIP is the address the group records: the client's address as
 // TRUST_PROXY gives it, so X-Forwarded-For and X-Real-IP count only from a
@@ -26,18 +31,20 @@ func clientIP(r *http.Request) string {
 // {device_id, hostname, platform, version, public_key, uuid}: a new
 // pending registration, or the device's registration as it is, so asking
 // again changes neither the key an approver reviews nor a rejection. No
-// credential is needed. The device id has to be text of at least three UTF-16 units before
-// it is trimmed (RG4); the other fields are cut to their length, and a
-// field that is truthy but no text is the 500 of a TypeError.
+// credential is needed. The device id, trimmed, has to be an id
+// /api/bd/register takes: 3 to 64 letters, digits, "_" and "-". The other
+// fields are cut to their length, and a field that is truthy but no text
+// is the 500 of a TypeError.
 func (h *handlers) registerRequest(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
 	field := func(name string) any { return jsreq.Prop(body, name) }
-	deviceID, ok := field("device_id").(string)
-	if !ok || deviceID == "" || length(deviceID) < 3 {
+	deviceID, _ := field("device_id").(string)
+	deviceID = jsbind.Trim(deviceID)
+	if !deviceIDPattern.MatchString(deviceID) {
 		failure(w, r, http.StatusBadRequest, "Invalid device_id")
 		return
 	}
-	req := registrations.Request{DeviceID: jsbind.Trim(deviceID), IPAddress: clientIP(r)}
+	req := registrations.Request{DeviceID: deviceID, IPAddress: clientIP(r)}
 	for _, f := range []struct {
 		name string
 		max  int

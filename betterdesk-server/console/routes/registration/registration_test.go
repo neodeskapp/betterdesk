@@ -202,8 +202,9 @@ func TestDeviceRoutesAtBothMounts(t *testing.T) {
 }
 
 // The checks of the request route, each on its own: the device id must
-// be text of at least three UTF-16 units before it is trimmed, a field
-// that is truthy but no text fails, the fields are cut to their length.
+// be text that is, once trimmed, 3 to 64 letters, digits, "_" and "-"
+// (BUGS RG4), a field that is truthy but no text fails, the fields are
+// cut to their length.
 func TestRegisterRequestChecks(t *testing.T) {
 	w := routetest.New(t, routetest.Options{})
 	device := w.SignedOut()
@@ -224,7 +225,12 @@ func TestRegisterRequestChecks(t *testing.T) {
 		{`{"device_id":""}`, `400 {"success":false,"error":"Invalid device_id"}`},
 		// Two UTF-16 units in six bytes
 		{`{"device_id":"日本"}`, `400 {"success":false,"error":"Invalid device_id"}`},
-		{`{"device_id":"   "}`, `200 {"success":true,"status":"pending","id":1}`},
+		{`{"device_id":"   "}`, `400 {"success":false,"error":"Invalid device_id"}`},
+		{`{"device_id":" ab "}`, `400 {"success":false,"error":"Invalid device_id"}`},
+		{`{"device_id":"` + strings.Repeat("a", 65) + `"}`, `400 {"success":false,"error":"Invalid device_id"}`},
+		{`{"device_id":"😀a"}`, `400 {"success":false,"error":"Invalid device_id"}`},
+		{`{"device_id":"dev.1"}`, `400 {"success":false,"error":"Invalid device_id"}`},
+		{`{"device_id":"` + strings.Repeat("a", 64) + `"}`, `200 {"success":true,"status":"pending","id":1}`},
 		{`{"device_id":"ab"}`, `400 {"success":false,"error":"Invalid device_id"}`},
 		{`{"device_id":"é"}`, `400 {"success":false,"error":"Invalid device_id"}`},
 		{`{"device_id":123}`, `400 {"success":false,"error":"Invalid device_id"}`},
@@ -241,15 +247,11 @@ func TestRegisterRequestChecks(t *testing.T) {
 			t.Errorf("%s: %s, want %s", c.body, have, c.want)
 		}
 	}
-	// Three units of an emoji and a letter pass; white space counts before the trim
-	if got := device.Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"😀a"}`); got.Status != http.StatusOK {
-		t.Errorf("an emoji and a letter: %d %s", got.Status, got.Body)
-	}
 	// A no-break space before, a byte order mark after: JavaScript white space
-	if got := device.Do(http.MethodPost, "/api/bd/register-request", `{"device_id":" `+string(rune(0xa0))+`ab`+string(rune(0xfeff))+` ","hostname":0,"platform":false,"version":null}`); got.Status != http.StatusOK {
+	if got := device.Do(http.MethodPost, "/api/bd/register-request", `{"device_id":" `+string(rune(0xa0))+`a_b-1`+string(rune(0xfeff))+` ","hostname":0,"platform":false,"version":null}`); got.Status != http.StatusOK {
 		t.Errorf("white space around: %d %s", got.Status, got.Body)
 	}
-	if r := row("ab"); r["hostname"] != "" || r["platform"] != "" || r["version"] != "" {
+	if r := row("a_b-1"); r["hostname"] != "" || r["platform"] != "" || r["version"] != "" {
 		t.Errorf("falsy fields: %v", r)
 	}
 	long := `{"device_id":"cut","hostname":"` + strings.Repeat("h", 300) + `","platform":"` + strings.Repeat("😀", 40) + `","version":"` + strings.Repeat("v", 40) + `","public_key":"` + strings.Repeat("k", 600) + `","uuid":"` + strings.Repeat("u", 70) + `"}`
