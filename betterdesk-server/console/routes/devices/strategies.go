@@ -206,8 +206,7 @@ func nameOf(row *goapi.Object) (string, error) {
 
 // updateStrategy answers PATCH /api/panel/strategies/{guid}: the body's
 // fields over the stored rule. A field the body leaves out keeps its
-// value, but a rule that is off is switched on unless the body says
-// enabled:false, because the stored 0 (SQLite) is not false (BUGS DE2).
+// value; the stored switch is read as a boolean first (1 or 0 on SQLite).
 func (h *handlers) updateStrategy(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	guid, ok := strategyGUID(w, r)
@@ -224,6 +223,8 @@ func (h *handlers) updateStrategy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	merged := existing.Clone()
+	stored := existing.Get("enabled")
+	merged.Set("enabled", stored == true || stored == float64(1))
 	body := plainBody(r)
 	for _, key := range body.Keys() {
 		merged.Set(key, body.Get(key))

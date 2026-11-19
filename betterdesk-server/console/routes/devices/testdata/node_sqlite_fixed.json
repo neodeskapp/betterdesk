@@ -14,5 +14,47 @@
     "GET /api/peers/A1001"
    ]
   }
+ },
+ "425 PATCH /api/panel/strategies/s-one {} as admin": {
+  "bug": "DE2",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"strategy\":{\"guid\":\"s-one\",\"name\":\"Rule one\",\"user_group_guid\":\"\",\"device_group_guid\":\"g-open\",\"enabled\":false,\"permissions\":{\"enable-audio\":\"Y\"},\"permission_keys\":[\"enable-file-transfer\",\"disable-clipboard\",\"enable-clipboard\",\"enable-audio\",\"enable-tunnel\",\"enable-camera\",\"enable-remote-restart\",\"enable-block-input\"],\"created_at\":\"<now, SQLite form>\",\"updated_at\":\"<now, SQLite form>\"}}}"
+  }
+ },
+ "428 PATCH /api/panel/strategies/s-one {\"permissions\":{\"enable-tunnel\":\"N\"}} as admin": {
+  "bug": "DE2",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"strategy\":{\"guid\":\"s-one\",\"name\":\"Rule one\",\"user_group_guid\":\"\",\"device_group_guid\":\"g-open\",\"enabled\":false,\"permissions\":{\"enable-tunnel\":\"N\"},\"permission_keys\":[\"enable-file-transfer\",\"disable-clipboard\",\"enable-clipboard\",\"enable-audio\",\"enable-tunnel\",\"enable-camera\",\"enable-remote-restart\",\"enable-block-input\"],\"created_at\":\"<now, SQLite form>\",\"updated_at\":\"<now, SQLite form>\"}}}"
+  }
+ },
+ "429 PATCH /api/panel/strategies/s-one {\"name\":\"Rule one!\",\"user_group_guid\":\"ug-ops\"} as admin": {
+  "bug": "DE2",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"strategy\":{\"guid\":\"s-one\",\"name\":\"Rule one!\",\"user_group_guid\":\"ug-ops\",\"device_group_guid\":\"g-open\",\"enabled\":false,\"permissions\":{\"enable-tunnel\":\"N\"},\"permission_keys\":[\"enable-file-transfer\",\"disable-clipboard\",\"enable-clipboard\",\"enable-audio\",\"enable-tunnel\",\"enable-camera\",\"enable-remote-restart\",\"enable-block-input\"],\"created_at\":\"<now, SQLite form>\",\"updated_at\":\"<now, SQLite form>\"}}}"
+  }
+ },
+ "430 PATCH /api/panel/strategies/s-one {\"permissions\":{\"enable-audio\":\"custom\",\"enable-camera\":true,\"other\":\"Y\"}} as admin": {
+  "bug": "DE2",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"strategy\":{\"guid\":\"s-one\",\"name\":\"Rule one!\",\"user_group_guid\":\"ug-ops\",\"device_group_guid\":\"g-open\",\"enabled\":false,\"permissions\":{\"enable-camera\":\"Y\"},\"permission_keys\":[\"enable-file-transfer\",\"disable-clipboard\",\"enable-clipboard\",\"enable-audio\",\"enable-tunnel\",\"enable-camera\",\"enable-remote-restart\",\"enable-block-input\"],\"created_at\":\"<now, SQLite form>\",\"updated_at\":\"<now, SQLite form>\"}}}"
+  }
+ },
+ "445 GET /api/panel/strategies/s-one as admin": {
+  "bug": "DE2",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"strategy\":{\"guid\":\"s-one\",\"name\":\"Rule one!\",\"user_group_guid\":\"ug-ops\",\"device_group_guid\":\"g-open\",\"enabled\":false,\"permissions\":{\"enable-camera\":\"Y\"},\"permission_keys\":[\"enable-file-transfer\",\"disable-clipboard\",\"enable-clipboard\",\"enable-audio\",\"enable-tunnel\",\"enable-camera\",\"enable-remote-restart\",\"enable-block-input\"],\"created_at\":\"<now, SQLite form>\",\"updated_at\":\"<now, SQLite form>\",\"peer_count\":0,\"user_count\":1,\"device_group_count\":0,\"peers\":[],\"users\":[\"guid-nobody\"],\"groups\":[],\"peer_ids\":[],\"user_names\":[],\"group_guids\":[]}}}"
+  }
+ },
+ "455 GET /api/panel/strategies as admin": {
+  "bug": "DE2",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"data\":{\"strategies\":[{\"guid\":\"<guid>\",\"name\":\"New rule rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr\",\"user_group_guid\":\"\",\"device_group_guid\":\"\",\"enabled\":true,\"permissions\":{\"enable-audio\":\"Y\"},\"permission_keys\":[\"enable-file-transfer\",\"disable-clipboard\",\"enable-clipboard\",\"enable-audio\",\"enable-tunnel\",\"enable-camera\",\"enable-remote-restart\",\"enable-block-input\"],\"created_at\":\"<now, SQLite form>\",\"updated_at\":\"<now, SQLite form>\"},{\"guid\":\"<guid>\",\"name\":\"Off rule\",\"user_group_guid\":\"\",\"device_group_guid\":\"\",\"enabled\":false,\"permissions\":{},\"permission_keys\":[\"enable-file-transfer\",\"disable-clipboard\",\"enable-clipboard\",\"enable-audio\",\"enable-tunnel\",\"enable-camera\",\"enable-remote-restart\",\"enable-block-input\"],\"created_at\":\"<now, SQLite form>\",\"updated_at\":\"<now, SQLite form>\"},{\"guid\":\"s-one\",\"name\":\"Rule one!\",\"user_group_guid\":\"ug-ops\",\"device_group_guid\":\"g-open\",\"enabled\":false,\"permissions\":{\"enable-camera\":\"Y\"},\"permission_keys\":[\"enable-file-transfer\",\"disable-clipboard\",\"enable-clipboard\",\"enable-audio\",\"enable-tunnel\",\"enable-camera\",\"enable-remote-restart\",\"enable-block-input\"],\"created_at\":\"<now, SQLite form>\",\"updated_at\":\"<now, SQLite form>\"},{\"guid\":\"<guid>\",\"name\":\"RustDesk keys\",\"user_group_guid\":\"\",\"device_group_guid\":\"\",\"enabled\":true,\"permissions\":{\"enable-tunnel\":\"Y\",\"enable-camera\":\"N\",\"enable-file-transfer\":\"N\",\"enable-audio\":\"N\"},\"permission_keys\":[\"enable-file-transfer\",\"disable-clipboard\",\"enable-clipboard\",\"enable-audio\",\"enable-tunnel\",\"enable-camera\",\"enable-remote-restart\",\"enable-block-input\"],\"created_at\":\"<now, SQLite form>\",\"updated_at\":\"<now, SQLite form>\"}],\"total\":4}}"
+  }
  }
 }

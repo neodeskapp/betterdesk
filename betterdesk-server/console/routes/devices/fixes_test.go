@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -116,6 +117,39 @@ func TestSysinfoNullColumnsAnswerTheFallback(t *testing.T) {
 				if got.Status != http.StatusOK || !strings.Contains(got.Body, want) {
 					t.Errorf("device %s: %d %s, want %s", id, got.Status, got.Body, want)
 				}
+			}
+		}
+	})
+}
+
+var strategyGUIDField = regexp.MustCompile(`"guid":"([^"]+)"`)
+
+// TestUpdateStrategyKeepsItsSwitch: a change to a rule that is switched
+// off leaves it off unless the body switches it on, on both databases
+// (BUGS DE2).
+func TestUpdateStrategyKeepsItsSwitch(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w, _ := world(t, db, nil, nil)
+		admin := w.As("admin")
+		created := admin.Do("POST", "/api/panel/strategies", `{"name":"Night","enabled":false}`)
+		m := strategyGUIDField.FindStringSubmatch(created.Body)
+		if created.Status != http.StatusOK || m == nil || !strings.Contains(created.Body, `"enabled":false`) {
+			t.Fatalf("create: %d %s", created.Status, created.Body)
+		}
+		path := "/api/panel/strategies/" + m[1]
+		for _, c := range []struct{ body, enabled string }{
+			{`{}`, `"enabled":false`},
+			{`{"name":"Late night"}`, `"enabled":false`},
+			{`{"enabled":true}`, `"enabled":true`},
+			{`{"name":"Night"}`, `"enabled":true`},
+			{`{"enabled":false}`, `"enabled":false`},
+		} {
+			got := admin.Do("PATCH", path, c.body)
+			if got.Status != http.StatusOK || !strings.Contains(got.Body, c.enabled) {
+				t.Errorf("PATCH %s: %d %s, want %s", c.body, got.Status, got.Body, c.enabled)
+			}
+			if got := admin.Do("GET", path, ""); !strings.Contains(got.Body, c.enabled) {
+				t.Errorf("GET after PATCH %s: %d %s, want %s", c.body, got.Status, got.Body, c.enabled)
 			}
 		}
 	})

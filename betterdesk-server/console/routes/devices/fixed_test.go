@@ -27,6 +27,14 @@ var fixedSteps = []fixedStep{
 	// allows, it is outside the operator's scope.
 	{"node", "264 cleared", "DE1"},
 	{"node", `403 PATCH /api/devices/A1001/folder {"folderId":999} as operator`, "DE1"},
+	// s-one is stored switched off (0 on SQLite); a change that leaves
+	// enabled out keeps it off, where Node switched it on.
+	{"node_sqlite", "425 PATCH /api/panel/strategies/s-one {} as admin", "DE2"},
+	{"node_sqlite", `428 PATCH /api/panel/strategies/s-one {"permissions":{"enable-tunnel":"N"}} as admin`, "DE2"},
+	{"node_sqlite", `429 PATCH /api/panel/strategies/s-one {"name":"Rule one!","user_group_guid":"ug-ops"} as admin`, "DE2"},
+	{"node_sqlite", `430 PATCH /api/panel/strategies/s-one {"permissions":{"enable-audio":"custom","enable-camera":true,"other":"Y"}} as admin`, "DE2"},
+	{"node_sqlite", "445 GET /api/panel/strategies/s-one as admin", "DE2"},
+	{"node_sqlite", "455 GET /api/panel/strategies as admin", "DE2"},
 }
 
 // fixedStep is a step of a recording that the fix of a bug changed. The
