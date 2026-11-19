@@ -371,3 +371,20 @@ func lookupEnrollmentToken(ctx context.Context, q store.Querier, tokenHash strin
 	}
 	return nil, fmt.Errorf("look up an enrollment token: %w", err)
 }
+
+// deviceKnown reports whether the signal server has a device row with this
+// id in peers, a soft-deleted one included. A database without the table
+// has no devices.
+func deviceKnown(ctx context.Context, q store.Querier, id string) (bool, error) {
+	var one int
+	err := store.SelectRow(ctx, q, `SELECT 1 FROM peers WHERE id = ?`, id).Scan(&one)
+	switch {
+	case err == nil:
+		return true, nil
+	case errors.Is(err, sql.ErrNoRows):
+		return false, nil
+	case strings.Contains(err.Error(), q.Pick("no such table", "does not exist")):
+		return false, nil
+	}
+	return false, fmt.Errorf("look up a device: %w", err)
+}

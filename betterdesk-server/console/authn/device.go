@@ -172,13 +172,26 @@ const minDeviceTokenLength = 8
 
 // VerifyEnrollmentToken reports whether token is an enrollment token the
 // device may use: known to the signal server, not revoked or expired, with
-// uses left, and bound to this device or to none.
+// uses left, and bound to this device. A token bound to no device passes
+// only for a device id the signal server has no device row for yet: an
+// enrolled device gets a token bound to it, so an unbound token is never
+// the credential of a device that exists.
 func (s *Service) VerifyEnrollmentToken(ctx context.Context, deviceID, token string) (bool, error) {
 	row, err := lookupEnrollmentToken(ctx, s.db, HashDeviceToken(token))
 	if err != nil {
 		return false, err
 	}
-	return s.enrollmentValid(row, deviceID), nil
+	if !s.enrollmentValid(row, deviceID) {
+		return false, nil
+	}
+	if row.peerID.String != "" {
+		return true, nil
+	}
+	known, err := deviceKnown(ctx, s.db, deviceID)
+	if err != nil {
+		return false, err
+	}
+	return !known, nil
 }
 
 func (s *Service) enrollmentValid(row *enrollmentToken, deviceID string) bool {
