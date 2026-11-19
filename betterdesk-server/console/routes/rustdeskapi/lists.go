@@ -42,7 +42,10 @@ type rustdeskUser struct {
 
 // users answers GET /api/users with a bearer token: the account itself.
 func (h *handlers) users(w http.ResponseWriter, r *http.Request) {
-	user := h.validate(r.Context(), bearerToken(r))
+	user, ok := h.validate(w, r, bearerToken(r))
+	if !ok {
+		return
+	}
 	if user == nil {
 		fail(w, r, http.StatusUnauthorized, msgInvalidToken)
 		return
@@ -558,7 +561,10 @@ func resolveRequestedFolderID(p filterParams, folders []*goapi.Object) (float64,
 
 // peers answers GET /api/peers with a bearer token.
 func (h *handlers) peers(w http.ResponseWriter, r *http.Request) {
-	user := h.validate(r.Context(), bearerToken(r))
+	user, ok := h.validate(w, r, bearerToken(r))
+	if !ok {
+		return
+	}
 	if user == nil {
 		fail(w, r, http.StatusUnauthorized, msgInvalidToken)
 		return

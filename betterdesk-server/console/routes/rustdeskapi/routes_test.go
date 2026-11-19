@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -861,4 +862,45 @@ func TestIsAdminIsOneRule(t *testing.T) {
 			}
 		}
 	})
+}
+
+// When the database fails under the token check or the device lookup, the
+// client gets 500 {"error":"Server error"} instead of a closed connection.
+func TestADatabaseFailureAnswers500(t *testing.T) {
+	db := storetest.Migrated(t)
+	w := world(t, db, nil)
+	server := httptest.NewServer(w.Server)
+	defer server.Close()
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct{ method, path, body string }{
+		{"GET", "/api/ab", ""},
+		{"GET", "/api/peers", ""},
+		{"GET", "/api/users", ""},
+		{"GET", "/api/audit", ""},
+		{"GET", "/api/audit/conn", ""},
+		{"GET", "/api/device-group", ""},
+		{"POST", "/api/heartbeat", `{"id":"900100001"}`},
+		{"POST", "/api/sysinfo", `{"id":"900100001"}`},
+	} {
+		req, err := http.NewRequest(c.method, server.URL+c.path, strings.NewReader(c.body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Header.Set("Authorization", "Bearer "+viewerToken)
+		if c.body != "" {
+			req.Header.Set("Content-Type", "application/json")
+		}
+		res, err := server.Client().Do(req)
+		if err != nil {
+			t.Errorf("%s %s: no answer: %v", c.method, c.path, err)
+			continue
+		}
+		body, _ := io.ReadAll(res.Body)
+		_ = res.Body.Close()
+		if res.StatusCode != http.StatusInternalServerError || string(body) != `{"error":"Server error"}` {
+			t.Errorf("%s %s: %d %s", c.method, c.path, res.StatusCode, body)
+		}
+	}
 }

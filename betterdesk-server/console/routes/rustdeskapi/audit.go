@@ -292,7 +292,11 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request, l auditList, key
 // (audit.view; the console's refusal otherwise).
 func (h *handlers) connections(w http.ResponseWriter, r *http.Request) {
 	if token := bearerToken(r); token != "" {
-		if h.validate(r.Context(), token) == nil {
+		user, ok := h.validate(w, r, token)
+		if !ok {
+			return
+		}
+		if user == nil {
 			fail(w, r, http.StatusUnauthorized, msgInvalidToken)
 			return
 		}
@@ -325,8 +329,14 @@ type auditSummary struct {
 // summary answers GET /api/audit: the newest 50 of each kind.
 func (h *handlers) summary(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	token := bearerToken(r)
-	if token == "" || h.validate(ctx, token) == nil {
+	var user *tokenUser
+	if token := bearerToken(r); token != "" {
+		var ok bool
+		if user, ok = h.validate(w, r, token); !ok {
+			return
+		}
+	}
+	if user == nil {
 		fail(w, r, http.StatusUnauthorized, msgAuthRequired)
 		return
 	}

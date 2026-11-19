@@ -33,10 +33,12 @@ func fail(w http.ResponseWriter, r *http.Request, status int, message string) {
 	kit.JSON(w, r, status, errorBody{Error: message})
 }
 
-// abort ends the request without an answer. Node lost the process where a
-// promise of an async handler failed outside its try; the Go console closes
-// the connection and keeps running (DECISIONS A19).
-func abort() { panic(http.ErrAbortHandler) }
+// serverFailure answers a request whose token check or device lookup
+// failed in the database: 500 {"error":"Server error"}.
+func (h *handlers) serverFailure(w http.ResponseWriter, r *http.Request, what string, err error) {
+	h.log.Error(what, err)
+	fail(w, r, http.StatusInternalServerError, msgServerError)
+}
 
 // bearerToken is extractBearerToken: the Authorization header as Node read
 // it (the first of several, its bytes as Latin-1) must start with "Bearer ";
@@ -70,18 +72,19 @@ func (u tokenUser) sessionUser() *session.User {
 
 func (u tokenUser) isPro() bool { return u.Role.Valid && u.Role.String == "pro" }
 
-// validate is authService.validateAccessToken. A failing lookup is the
-// rejected promise Node did not catch.
-func (h *handlers) validate(ctx context.Context, token string) *tokenUser {
-	user, err := h.d.Authn.ValidateAccessToken(ctx, token)
+// validate is authService.validateAccessToken: the account of a token, nil
+// for a token that is not valid. When the lookup fails the request is
+// answered with 500 and ok is false.
+func (h *handlers) validate(w http.ResponseWriter, r *http.Request, token string) (user *tokenUser, ok bool) {
+	found, err := h.d.Authn.ValidateAccessToken(r.Context(), token)
 	if err != nil {
-		h.log.Error("Access token lookup failed:", err)
-		abort()
+		h.serverFailure(w, r, "Access token lookup failed:", err)
+		return nil, false
 	}
-	if user == nil {
-		return nil
+	if found == nil {
+		return nil, true
 	}
-	return &tokenUser{user}
+	return &tokenUser{found}, true
 }
 
 type authUserKey struct{}
@@ -99,7 +102,10 @@ func (h *handlers) requireAuth(next http.Handler) http.Handler {
 		token := bearerToken(r)
 		var user *tokenUser
 		if token != "" {
-			user = h.validate(r.Context(), token)
+			var ok bool
+			if user, ok = h.validate(w, r, token); !ok {
+				return
+			}
 		}
 		if user == nil {
 			fail(w, r, http.StatusUnauthorized, msgAuthRequired)
@@ -135,17 +141,16 @@ func unlessBearer(next http.Handler) http.Handler {
 
 // tokenOrFail checks the token the way most handlers did themselves: no
 // token is 401 "Authorization required", one that is not valid 401
-// "Invalid or expired token".
+// "Invalid or expired token". It is nil when it answered the request.
 func (h *handlers) tokenOrFail(w http.ResponseWriter, r *http.Request) *tokenUser {
 	token := bearerToken(r)
 	if token == "" {
 		fail(w, r, http.StatusUnauthorized, msgAuthRequired)
 		return nil
 	}
-	user := h.validate(r.Context(), token)
-	if user == nil {
+	user, ok := h.validate(w, r, token)
+	if ok && user == nil {
 		fail(w, r, http.StatusUnauthorized, msgInvalidToken)
-		return nil
 	}
 	return user
 }

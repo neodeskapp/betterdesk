@@ -84,8 +84,8 @@ func (h *handlers) heartbeat(w http.ResponseWriter, r *http.Request) {
 	}
 	device, err := h.store.peerByID(ctx, id)
 	if err != nil {
-		h.log.Error("[API:HEARTBEAT] Device lookup failed:", err.Error())
-		abort()
+		h.serverFailure(w, r, "[API:HEARTBEAT] Device lookup failed:", err)
+		return
 	}
 	if device == nil {
 		modified(false)
@@ -226,8 +226,8 @@ func (h *handlers) sysinfo(w http.ResponseWriter, r *http.Request) {
 	}
 	device, err := h.store.peerByID(ctx, id)
 	if err != nil {
-		h.log.Error("[API:SYSINFO] Device lookup failed:", err.Error())
-		abort()
+		h.serverFailure(w, r, "[API:SYSINFO] Device lookup failed:", err)
+		return
 	}
 	if device == nil {
 		h.log.Info(fmt.Sprintf("[API:SYSINFO] Device not found: %s (must register first)", id))
