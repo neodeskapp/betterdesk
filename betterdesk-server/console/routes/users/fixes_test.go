@@ -30,6 +30,25 @@ type fix struct {
 	node func(n *nodeWrites)
 }
 
+// replaced is the recorded answer with one part of it replaced.
+func replaced(old, new string) func(string) string {
+	return func(node string) string {
+		if !strings.Contains(node, old) {
+			return "recorded answer without " + old
+		}
+		return strings.Replace(node, old, new, 1)
+	}
+}
+
+// guidList is "g<from>",...,"g<to>" as a JSON list writes it.
+func guidList(from, to int) string {
+	parts := make([]string, 0, to-from+1)
+	for i := from; i <= to; i++ {
+		parts = append(parts, `"g`+strconv.Itoa(i)+`"`)
+	}
+	return strings.Join(parts, ",")
+}
+
 // is answers the same text on every database.
 func is(answer string) func(string) string { return func(string) string { return answer } }
 
@@ -112,6 +131,13 @@ var fixes = map[string]fix{
 				n.audit("user_deleted", "Deleted user: e2e_admin")
 			}
 		}},
+
+	// The answer to a new account: Node listed the user group guids as
+	// they were sent, and no email for null.
+	"199 POST /api/users": {bug: "US7", answer: replaced(`"user_groups":["ug-alpha","ug-beta","missing"]`, `"user_groups":["ug-alpha","ug-beta"]`)},
+	"204 POST /api/users": {bug: "US7", answer: replaced(`"user_groups":["5"]`, `"user_groups":[]`)},
+	"209 POST /api/users": {bug: "US7", answer: replaced(`"user_groups":["g0",`+guidList(1, 99)+`]`, `"user_groups":[]`)},
+	"226 POST /api/users": {bug: "US7", answer: replaced(`"role":"viewer","user_groups"`, `"role":"viewer","email":"","user_groups"`)},
 
 	// Checks after writes: Node created the account, then refused its
 	// email or strategy. The strategy gave it its guid first.

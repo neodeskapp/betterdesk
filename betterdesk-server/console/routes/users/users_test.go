@@ -362,6 +362,33 @@ func TestRefusedChangesWriteNothing(t *testing.T) {
 	})
 }
 
+// The answer to a new account lists the user groups it became a member
+// of, not the guids as they were sent, and an email of null is "" (BUGS
+// US7).
+func TestCreateAnswersStoredGroups(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		w := world(t, storetest.Prepare(t, db, storetest.GoServerFirst), routetest.Options{})
+		ctx := context.Background()
+		queries := []string{
+			`INSERT INTO user_groups (guid, name) VALUES ('g-b', 'Beta')`,
+			`INSERT INTO user_groups (guid, name) VALUES ('g-a', 'Alpha')`,
+		}
+		if db.IsPostgres() {
+			queries = append(queries, `SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users))`)
+		}
+		for _, query := range queries {
+			if _, err := db.Exec(ctx, query); err != nil {
+				t.Fatal(err)
+			}
+		}
+		got := w.As("admin").Do("POST", "/api/users", `{"username":"grouped","password":"Strong-Pass-1!","groupGuids":["g-b"," g-a ","missing"],"email":null}`, "X-Forwarded-For", "10.6.0.1")
+		want := `"username":"grouped","role":"viewer","email":"","user_groups":["g-a","g-b"],"folder_ids":[],"peer_grants":[]}}`
+		if got.Status != http.StatusOK || !strings.HasSuffix(got.Body, want) {
+			t.Errorf("create: %d %s, want the answer to end with %s", got.Status, got.Body, want)
+		}
+	})
+}
+
 // String() of an object whose own toString member hides the method
 // throws: folder and device ids made of such values are a server error,
 // and nothing is written. An object as folderIds is no list and takes the

@@ -220,12 +220,13 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 // checks too: 3 to 64 letters, digits and the characters _ . @ -.
 var usernamePattern = regexp.MustCompile(`^[A-Za-z0-9_.@-]{3,64}$`)
 
-// createdAccount is the answer to a new account.
+// createdAccount is the answer to a new account, with the user groups it
+// became a member of.
 type createdAccount struct {
 	ID         store.Int64String `json:"id"`
 	Username   string            `json:"username"`
 	Role       string            `json:"role"`
-	Email      *string           `json:"email,omitempty"`
+	Email      string            `json:"email"`
 	UserGroups []string          `json:"user_groups"`
 	FolderIDs  []int64           `json:"folder_ids"`
 	PeerGrants []string          `json:"peer_grants"`
@@ -314,8 +315,7 @@ func (h *handlers) createAccount(r *http.Request) (*createdAccount, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Without an email the answer says ""; with null it says nothing
-	saved := new(string)
+	var saved *string
 	if !email.IsUndefined() {
 		if saved, err = normalizeEmail(email); err != nil {
 			return nil, err
@@ -344,7 +344,10 @@ func (h *handlers) createAccount(r *http.Request) (*createdAccount, error) {
 	if err := h.d.LogAction(r, "user_created", "Created user: "+name+" ("+assigned+")"); err != nil {
 		return nil, err
 	}
-	out := &createdAccount{ID: id, Username: name, Role: assigned, Email: saved, UserGroups: groups}
+	out := &createdAccount{ID: id, Username: name, Role: assigned, Email: textOf(saved)}
+	if out.UserGroups, err = h.groupGUIDsOfAccount(ctx, id.V); err != nil {
+		return nil, err
+	}
 	if out.FolderIDs, err = h.d.Access.UserFolderIDs(ctx, name); err != nil {
 		return nil, err
 	}
