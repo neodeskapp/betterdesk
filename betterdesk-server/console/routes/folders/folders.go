@@ -206,16 +206,12 @@ func decoded(v middleware.Value) any {
 }
 
 // checkName checks a submitted folder name. It returns the trimmed name,
-// or answers 400 for a name that is missing, blank or too long, and 500
-// for one that is no text, and then returns ok false.
-func (h *handlers) checkName(w http.ResponseWriter, r *http.Request, name middleware.Value, what string) (string, bool) {
+// or answers 400 for a name that is no text, blank or too long, and then
+// returns ok false.
+func (h *handlers) checkName(w http.ResponseWriter, r *http.Request, name middleware.Value) (string, bool) {
 	text, isText := name.Str()
-	if !isText {
-		h.serverError(w, r, what, errNoText)
-		return "", false
-	}
 	trimmed := jsbind.Trim(text)
-	if trimmed == "" {
+	if !isText || trimmed == "" {
 		fail(w, r, http.StatusBadRequest, "folders.name_required")
 		return "", false
 	}
@@ -225,13 +221,6 @@ func (h *handlers) checkName(w http.ResponseWriter, r *http.Request, name middle
 	}
 	return trimmed, true
 }
-
-// errNoText is the TypeError of name.trim() on a value that is no text.
-var errNoText = errorText("name.trim is not a function")
-
-type errorText string
-
-func (e errorText) Error() string { return string(e) }
 
 // create answers POST /api/folders with {name, color?, icon?,
 // allowed_users?, allowed_groups?}.
@@ -244,7 +233,7 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "folders.name_required")
 		return
 	}
-	trimmed, ok := h.checkName(w, r, name, "Create folder error:")
+	trimmed, ok := h.checkName(w, r, name)
 	if !ok {
 		return
 	}
@@ -298,7 +287,7 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	name := jsbind.Undefined
 	newName := folder.Get("name")
 	if given := body.Get("name"); given.Exists() {
-		trimmed, ok := h.checkName(w, r, given, "Update folder error:")
+		trimmed, ok := h.checkName(w, r, given)
 		if !ok {
 			return
 		}

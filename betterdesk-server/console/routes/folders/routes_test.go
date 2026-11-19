@@ -98,8 +98,8 @@ func TestFolderRoutes(t *testing.T) {
 		want(t, "no name", admin.Do("POST", "/api/folders", `{"color":"#fff"}`), 400, required)
 		want(t, "blank name", admin.Do("POST", "/api/folders", `{"name":" \t "}`), 400, required)
 		want(t, "long name", admin.Do("POST", "/api/folders", `{"name":" `+strings.Repeat("x", 50)+`"}`), 400, tooLong)
-		want(t, "name that is a number", admin.Do("POST", "/api/folders", `{"name":5}`), 500, serverError)
-		want(t, "name that is a list", admin.Do("POST", "/api/folders", `{"name":["x"]}`), 500, serverError)
+		want(t, "name that is a number", admin.Do("POST", "/api/folders", `{"name":5}`), 400, required)
+		want(t, "name that is a list", admin.Do("POST", "/api/folders", `{"name":["x"]}`), 400, required)
 		want(t, "create", admin.Do("POST", "/api/folders", `{"name":"  Lab ","color":"#123","allowed_users":["e2e_viewer","ghost"," e2e_viewer"]}`),
 			200, `{"success":true,"data":{"id":1,"name":"Lab","color":"#123","icon":"folder","allowed_users":["e2e_viewer"],"allowed_groups":[]}}`)
 		want(t, "create with other types", admin.Do("POST", "/api/folders", `{"name":"Odd","color":5,"icon":""}`),
@@ -166,7 +166,7 @@ func TestFolderRoutes(t *testing.T) {
 		} else {
 			want(t, "change folder abc", admin.Do("PATCH", "/api/folders/abc", `{"name":"x"}`), 404, noFolder)
 		}
-		want(t, "a null name", admin.Do("PATCH", "/api/folders/1", `{"name":null}`), 500, serverError)
+		want(t, "a null name", admin.Do("PATCH", "/api/folders/1", `{"name":null}`), 400, required)
 		want(t, "a blank name", admin.Do("PATCH", "/api/folders/1", `{"name":"  "}`), 400, required)
 		want(t, "change", admin.Do("PATCH", "/api/folders/1", `{"name":" Lab 2 ","icon":"box","allowed_users":[]}`), 200, ok)
 		want(t, "change the second", admin.Do("PATCH", "/api/folders/2", `{}`), 200, ok)
@@ -303,6 +303,26 @@ func TestAssignStoresTheDevicesID(t *testing.T) {
 		want(t, "assign a number", admin.Do("POST", "/api/folders/1/devices", `{"deviceIds":[900100021]}`), 200, `{"success":true,"data":{"count":1}}`)
 		if got := rows(t, db, `SELECT device_id FROM device_folder_assignments`); got != "900100021" {
 			t.Errorf("stored device ids: %q", got)
+		}
+	})
+}
+
+// TestNameThatIsNoText: a folder name of any JSON type but text is
+// refused like a missing one, when a folder is made and when it is
+// changed, and nothing is stored.
+func TestNameThatIsNoText(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		admin := newWorld(t, db).As("admin")
+		for _, name := range []string{`5`, `true`, `["x"]`, `{"a":"x"}`} {
+			want(t, "create with "+name, admin.Do("POST", "/api/folders", `{"name":`+name+`}`), 400, required)
+		}
+		want(t, "create", admin.Do("POST", "/api/folders", `{"name":"Lab"}`),
+			200, `{"success":true,"data":{"id":1,"name":"Lab","color":"#6366f1","icon":"folder","allowed_users":[],"allowed_groups":[]}}`)
+		for _, name := range []string{`null`, `5`, `false`, `[]`, `{}`} {
+			want(t, "change to "+name, admin.Do("PATCH", "/api/folders/1", `{"name":`+name+`}`), 400, required)
+		}
+		if got := rows(t, db, `SELECT name FROM folders`); got != "Lab" {
+			t.Errorf("stored names: %q", got)
 		}
 	})
 }
