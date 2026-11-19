@@ -193,12 +193,35 @@ func fixedRow(want storedRow, details *string) storedRow {
 	return want
 }
 
+// wholeUserPart is a URL the parser refuses as the console masks it: the
+// user part up to the last "@" before the path, where Node masked it to the
+// first (AL3).
+func wholeUserPart(out string) string {
+	const mark = "//***@"
+	i := strings.Index(out, mark)
+	if i < 0 {
+		return out
+	}
+	rest := out[i+len(mark):]
+	host := rest
+	if slash := strings.IndexByte(rest, '/'); slash >= 0 {
+		host = rest[:slash]
+	}
+	at := strings.LastIndexByte(host, '@')
+	if at < 0 {
+		return out
+	}
+	return out[:i+len(mark)] + rest[at+1:]
+}
+
 // nodeOrFixed is what the console answers for a vector: Node's answer as
 // the fixes change it.
 func nodeOrFixed(name string, v vector) string {
 	switch name {
 	case "RedactDetails":
 		return fixedDetails(v.In)
+	case "RedactURL":
+		return wholeUserPart(v.Out)
 	}
 	return v.Out
 }
@@ -217,6 +240,37 @@ func TestFixesChangeVectors(t *testing.T) {
 		}
 		if changed == 0 {
 			t.Errorf("%s changes no RedactDetails vector", name)
+		}
+	}
+	changed := 0
+	for _, v := range file.URL {
+		if wholeUserPart(v.Out) != v.Out {
+			changed++
+		}
+	}
+	if changed == 0 {
+		t.Error("AL3 changes no RedactURL vector")
+	}
+}
+
+// TestRedactURLPasswordWithAt: a URL the parser refuses loses its whole
+// user part up to the last "@" before the path, also a password with "@"
+// in it (BUGS.md AL3).
+func TestRedactURLPasswordWithAt(t *testing.T) {
+	for _, c := range []struct{ in, want string }{
+		{"http://user:p@ss@exa mple.com/", "http://***@exa mple.com/"},
+		{"http://u:a@b@c@h:65536/x", "http://***@h:65536/x"},
+		{"//u:p@@host/x@y", "//***@host/x@y"},
+		{"http://u:@@@exa mple.com", "http://***@exa mple.com"},
+		// An empty user part has nothing to mask
+		{"//@h", "//@h"},
+	} {
+		got := RedactURL(c.in)
+		if got != c.want {
+			t.Errorf("RedactURL(%q) = %q, want %q", c.in, got, c.want)
+		}
+		if strings.Contains(got, "ss@") || strings.Contains(got, "b@c") || strings.Contains(got, "@@") {
+			t.Errorf("RedactURL(%q) = %q keeps part of the password", c.in, got)
 		}
 	}
 }

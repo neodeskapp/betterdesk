@@ -152,7 +152,7 @@ func TestRedactURL(t *testing.T) {
 		// masked.
 		{"no scheme", "//user:pw@host/x", "//***@host/x"},
 		{"space in the host", "http://user:pw@exa mple.com/x", "http://***@exa mple.com/x"},
-		{"refused, password with @", "http://user:p@ss@exa mple.com/", "http://***@ss@exa mple.com/"},
+		{"refused, password with @", "http://user:p@ss@exa mple.com/", "http://***@exa mple.com/"},
 		{"refused, two user parts", "x //a@b //c@d", "x //***@b //c@d"},
 		{"port too large", "http://u:p@h:65536/", "http://***@h:65536/"},
 		{"no host after the user", "http://u:p@/x", "http://***@/x"},

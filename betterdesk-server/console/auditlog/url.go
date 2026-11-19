@@ -12,10 +12,9 @@ import (
 // characters a URL cannot carry percent-encoded. White space around it is
 // dropped; an empty value stays empty.
 //
-// A value the parser refuses comes back as it is, with the first
-// "//user:password@" in it written as "//***@". The user part ends at the
-// first "@" there, so a password with an "@" in it is cut short, not
-// removed.
+// A value the parser refuses comes back as it is, with everything from
+// the first "//" to the last "@" before the next slash written as
+// "//***@", so a password with an "@" in it is removed whole.
 //
 // One kind of host is not rewritten the way Node rewrites it: a host with
 // letters outside ASCII, or with an "xn--" label. Node converts the first
@@ -27,7 +26,7 @@ func RedactURL(raw string) string {
 	return out
 }
 
-var userinfoFallback = regexp.MustCompile(`//[^/@]+@`)
+var userinfoFallback = regexp.MustCompile(`//[^/]+@`)
 
 // redactURL also reports whether the host is one of the kind RedactURL does
 // not rewrite the way Node does.
