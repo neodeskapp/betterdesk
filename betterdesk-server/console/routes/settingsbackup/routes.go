@@ -56,7 +56,7 @@ func Register(d *kit.Deps) {
 		APIKeyPath: cfg.APIKeyPath,
 		DBPath:     cfg.DBPath,
 		AppVersion: cfg.Version,
-		Limits:     archiveLimits(cfg.Getenv),
+		Limits:     archiveLimits(cfg.Getenv, d.Log.Child("SETTINGS").Warn),
 	})
 	scheduled := scheduledbackup.New(scheduledbackup.Options{
 		Store:   d.Store,
@@ -68,16 +68,24 @@ func Register(d *kit.Deps) {
 }
 
 // archiveLimits are the limits of an uploaded archive, read once at the
-// start as the old console's module read them: Number() of
-// BACKUP_MAX_DECOMPRESSED_BYTES and BACKUP_MAX_ENTRIES, the default for
-// what is unset, 0 or no number.
-func archiveLimits(getenv func(string) string) backup.Limits {
+// start: BACKUP_MAX_DECOMPRESSED_BYTES and BACKUP_MAX_ENTRIES as whole
+// numbers of at least 1 (backup.EnvLimit), the default for what is unset.
+// A value that is no such number gets the default and a warning, so a
+// limit such as -1 does not refuse every restore.
+func archiveLimits(getenv func(string) string, warn func(args ...any)) backup.Limits {
 	if getenv == nil {
 		return backup.Limits{}
 	}
+	read := func(name string) float64 {
+		limit, ok := backup.EnvLimit(getenv(name))
+		if !ok {
+			warn(name + " is not a whole number of at least 1, the default limit holds")
+		}
+		return limit
+	}
 	return backup.Limits{
-		MaxBytes:   backup.EnvLimit(getenv("BACKUP_MAX_DECOMPRESSED_BYTES")),
-		MaxEntries: backup.EnvLimit(getenv("BACKUP_MAX_ENTRIES")),
+		MaxBytes:   read("BACKUP_MAX_DECOMPRESSED_BYTES"),
+		MaxEntries: read("BACKUP_MAX_ENTRIES"),
 	}
 }
 

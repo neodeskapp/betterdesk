@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -165,13 +166,32 @@ func TestExtractLimitsMatchNode(t *testing.T) {
 // TestEnvLimitsMatchNode: BACKUP_MAX_DECOMPRESSED_BYTES and
 // BACKUP_MAX_ENTRIES as Number() reads them, and what the limits they
 // give do to the same eight archives.
+//
+// The intended difference (BUGS.md UM42): where Node took a limit that is
+// no whole number from 1 to 2^53-1 (-1, 0.5, Infinity, 1e21), the default
+// holds and EnvLimit reports it. Such a case is compared with the Node
+// case whose limits are the ones in force now, when there is one.
 func TestEnvLimitsMatchNode(t *testing.T) {
 	var v archiveVectors
 	loadVectors(t, "archive.json.gz", &v)
 	if len(v.Env.Cases) < 400 || len(v.Env.Archives) != 8 {
 		t.Fatalf("%d env cases over %d archives", len(v.Env.Cases), len(v.Env.Archives))
 	}
-	failed := 0
+	type result = struct {
+		Files [][2]string `json:"files"`
+		Error *jsErr      `json:"error"`
+	}
+	usable := func(text string) bool {
+		n := jsbind.ParseNumber(text)
+		return n >= 1 && n <= 1<<53-1 && n == math.Trunc(n)
+	}
+	nodeResults := map[[2]string][]result{}
+	for _, c := range v.Env.Cases {
+		if usable(c.MaxBytes) && usable(c.MaxEntries) {
+			nodeResults[[2]string{c.MaxBytes, c.MaxEntries}] = c.Results
+		}
+	}
+	failed, changed, compared := 0, 0, 0
 	for i, c := range v.Env.Cases {
 		env := map[string]string{}
 		if c.Bytes != nil {
@@ -180,19 +200,43 @@ func TestEnvLimitsMatchNode(t *testing.T) {
 		if c.Entries != nil {
 			env["BACKUP_MAX_ENTRIES"] = *c.Entries
 		}
-		limits := Limits{MaxBytes: EnvLimit(env["BACKUP_MAX_DECOMPRESSED_BYTES"]), MaxEntries: EnvLimit(env["BACKUP_MAX_ENTRIES"])}
+		maxBytes, bytesOK := EnvLimit(env["BACKUP_MAX_DECOMPRESSED_BYTES"])
+		maxEntries, entriesOK := EnvLimit(env["BACKUP_MAX_ENTRIES"])
+		limits := Limits{MaxBytes: maxBytes, MaxEntries: maxEntries}
 		inForce := limits.orDefault()
-		if got := jsbind.NumberString(inForce.MaxBytes); got != c.MaxBytes {
-			t.Errorf("env %d %q: bytes limit %s, Node %s", i, env, got, c.MaxBytes)
+
+		wantBytes, wantEntries := c.MaxBytes, c.MaxEntries
+		if !usable(wantBytes) {
+			wantBytes, changed = jsbind.NumberString(DefaultMaxArchiveBytes), changed+1
+		}
+		if !usable(wantEntries) {
+			wantEntries, changed = jsbind.NumberString(DefaultMaxEntries), changed+1
+		}
+		if got := jsbind.NumberString(inForce.MaxBytes); got != wantBytes {
+			t.Errorf("env %d %q: bytes limit %s, want %s (Node %s)", i, env, got, wantBytes, c.MaxBytes)
 			failed++
 		}
-		if got := jsbind.NumberString(inForce.MaxEntries); got != c.MaxEntries {
-			t.Errorf("env %d %q: entries limit %s, Node %s", i, env, got, c.MaxEntries)
+		if got := jsbind.NumberString(inForce.MaxEntries); got != wantEntries {
+			t.Errorf("env %d %q: entries limit %s, want %s (Node %s)", i, env, got, wantEntries, c.MaxEntries)
 			failed++
 		}
-		for k, want := range c.Results {
+		// reported: a value that is set and is not the limit in force
+		if want := c.Bytes == nil || jsbind.Trim(*c.Bytes) == "" || usable(*c.Bytes); bytesOK != want {
+			t.Errorf("env %d %q: bytes reported %v", i, env, !bytesOK)
+			failed++
+		}
+		if want := c.Entries == nil || jsbind.Trim(*c.Entries) == "" || usable(*c.Entries); entriesOK != want {
+			t.Errorf("env %d %q: entries reported %v", i, env, !entriesOK)
+			failed++
+		}
+		want, found := nodeResults[[2]string{wantBytes, wantEntries}]
+		if !found {
+			continue
+		}
+		compared++
+		for k, w := range want {
 			files, err := ExtractTarGz(unb64(t, v.Env.Archives[k]), limits)
-			if diff := extractDiff(files, err, want.Files, want.Error); diff != "" {
+			if diff := extractDiff(files, err, w.Files, w.Error); diff != "" {
 				t.Errorf("env %d %q archive %d: %s", i, env, k, diff)
 				failed++
 			}
@@ -200,6 +244,9 @@ func TestEnvLimitsMatchNode(t *testing.T) {
 		if failed > 10 {
 			t.FailNow()
 		}
+	}
+	if changed < 100 || compared < 300 {
+		t.Errorf("%d limits changed, %d cases compared", changed, compared)
 	}
 }
 

@@ -2,6 +2,7 @@ package backup
 
 import (
 	"bytes"
+	"math"
 	"strings"
 	"testing"
 )
@@ -71,43 +72,62 @@ func TestArchiveLimits(t *testing.T) {
 	}
 }
 
-// TestOddLimits: limits read from the environment are taken as they are.
-// A negative or infinite byte limit refuses every archive with zlib's
-// RangeError for the option; a fraction is compared as it is.
+// UM42: a limit from the environment is a whole number from 1 to 2^53-1.
+// Anything else gets the default and is reported, so -1 ("no limit"), a
+// fraction or Infinity no longer refuse every archive.
+func TestEnvLimitTakesWholeNumbers(t *testing.T) {
+	archive, err := CreateTarGz([]Entry{{Name: "a", Data: bytes.Repeat([]byte("x"), 10)}, {Name: "b", Data: []byte("y")}}, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		env   string
+		limit float64
+		ok    bool
+	}{
+		{"", 0, true}, {" \t", 0, true},
+		{"1", 1, true}, {" 2048 ", 2048, true}, {"0x800", 2048, true}, {"1e3", 1000, true}, {"9007199254740991", 9007199254740991, true},
+		{"0", 0, false}, {"-0", 0, false}, {"-1", 0, false}, {"0.5", 0, false}, {"2048.5", 0, false}, {"1.5", 0, false},
+		{"Infinity", 0, false}, {"-Infinity", 0, false}, {"1e16", 0, false}, {"1e21", 0, false}, {"9007199254740992", 0, false},
+		{"abc", 0, false}, {"2048abc", 0, false}, {"NaN", 0, false},
+	} {
+		if limit, ok := EnvLimit(c.env); limit != c.limit || ok != c.ok {
+			t.Errorf("%q: %v %v, want %v %v", c.env, limit, ok, c.limit, c.ok)
+		}
+	}
+	for _, env := range []string{"-1", "0.5", "Infinity", "1e16", "1e21", "2048.5"} {
+		limit, _ := EnvLimit(env)
+		if _, err := ExtractTarGz(archive, Limits{MaxBytes: limit, MaxEntries: limit}); err != nil {
+			t.Errorf("limits from %s: %v", env, err)
+		}
+	}
+	limit, _ := EnvLimit("0x800")
+	if _, err := ExtractTarGz(archive, Limits{MaxBytes: limit}); err == nil || err.Error() != "Cannot create a Buffer larger than 2048 bytes" {
+		t.Errorf("0x800: %v", err)
+	}
+}
+
+// Limits given as they are, as the old module took its options: a
+// negative or infinite byte limit refuses every archive with zlib's
+// RangeError for the option, a fraction is compared as it is.
 func TestOddLimits(t *testing.T) {
 	archive, err := CreateTarGz([]Entry{{Name: "a", Data: bytes.Repeat([]byte("x"), 10)}, {Name: "b", Data: []byte("y")}}, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, c := range []struct {
-		env, want string
+		limit float64
+		want  string
 	}{
-		{"-1", `The value of "options.maxOutputLength" is out of range. It must be >= 1 and <= 9007199254740991. Received -1`},
-		{"0.5", `The value of "options.maxOutputLength" is out of range. It must be >= 1 and <= 9007199254740991. Received 0.5`},
-		{"Infinity", `The value of "options.maxOutputLength" is out of range. It must be a finite number. Received Infinity`},
-		{"1e16", `The value of "options.maxOutputLength" is out of range. It must be >= 1 and <= 9007199254740991. Received 10_000_000_000_000_000`},
-		{"1e21", `The value of "options.maxOutputLength" is out of range. It must be >= 1 and <= 9007199254740991. Received 1e_+21`},
-		{"2048.5", `Cannot create a Buffer larger than 2048.5 bytes`},
-		{"0x800", `Cannot create a Buffer larger than 2048 bytes`},
+		{-1, `The value of "options.maxOutputLength" is out of range. It must be >= 1 and <= 9007199254740991. Received -1`},
+		{0.5, `The value of "options.maxOutputLength" is out of range. It must be >= 1 and <= 9007199254740991. Received 0.5`},
+		{math.Inf(1), `The value of "options.maxOutputLength" is out of range. It must be a finite number. Received Infinity`},
+		{1e16, `The value of "options.maxOutputLength" is out of range. It must be >= 1 and <= 9007199254740991. Received 10_000_000_000_000_000`},
+		{1e21, `The value of "options.maxOutputLength" is out of range. It must be >= 1 and <= 9007199254740991. Received 1e_+21`},
+		{2048.5, `Cannot create a Buffer larger than 2048.5 bytes`},
 	} {
-		if _, err := ExtractTarGz(archive, Limits{MaxBytes: EnvLimit(c.env)}); err == nil || err.Error() != c.want {
-			t.Errorf("BACKUP_MAX_DECOMPRESSED_BYTES=%s: %v", c.env, err)
-		}
-	}
-	for _, c := range []struct {
-		env, want string
-	}{
-		{"-1", "Backup archive has more than -1 entries"},
-		{"0.5", "Backup archive has more than 0.5 entries"},
-		{"1.5", ""},
-		{"-Infinity", "Backup archive has more than -Infinity entries"},
-		{"2", ""},
-		{"abc", ""},
-		{"", ""},
-	} {
-		_, err := ExtractTarGz(archive, Limits{MaxEntries: EnvLimit(c.env)})
-		if (c.want == "" && err != nil) || (c.want != "" && (err == nil || err.Error() != c.want)) {
-			t.Errorf("BACKUP_MAX_ENTRIES=%s: %v", c.env, err)
+		if _, err := ExtractTarGz(archive, Limits{MaxBytes: c.limit}); err == nil || err.Error() != c.want {
+			t.Errorf("byte limit %v: %v", c.limit, err)
 		}
 	}
 	if !strings.HasPrefix(numericSeparators("-4294967297"), "-4_294") {

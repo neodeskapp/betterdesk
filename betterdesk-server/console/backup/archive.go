@@ -208,10 +208,11 @@ const (
 	DefaultMaxEntries = 50000
 )
 
-// Limits cap what ExtractTarGz takes from an archive. A field is a number
-// as JavaScript's Number() read the setting (BACKUP_MAX_DECOMPRESSED_BYTES,
-// BACKUP_MAX_ENTRIES) and is taken as it is, fractions, negative and
-// infinite values included; 0 (or NaN) is the default.
+// Limits cap what ExtractTarGz takes from an archive. The console fills
+// them with EnvLimit from BACKUP_MAX_DECOMPRESSED_BYTES and
+// BACKUP_MAX_ENTRIES, so a field is a whole number from 1 to 2^53-1, or 0
+// (or NaN) for the default. Other values are taken as they are, fractions,
+// negative and infinite ones included.
 type Limits struct {
 	// MaxBytes caps the unpacked tar file (zlib's maxOutputLength). Below
 	// 1, above the largest Buffer (2^53-1) and infinite, every archive is
@@ -233,15 +234,25 @@ func (l Limits) orDefault() Limits {
 	return l
 }
 
-// EnvLimit is Number(value) of a limit's environment variable, with NaN
-// (text that is no number) as 0, the default: Node's
-// Number(process.env.X) || default.
-func EnvLimit(value string) float64 {
-	n := jsbind.ParseNumber(value)
-	if math.IsNaN(n) {
-		return 0
+// maxSafeInteger is 2^53-1, the largest limit EnvLimit takes.
+const maxSafeInteger = 1<<53 - 1
+
+// EnvLimit reads the environment variable of a limit
+// (BACKUP_MAX_DECOMPRESSED_BYTES, BACKUP_MAX_ENTRIES) as JavaScript's
+// Number() reads text, so " 2048 ", "1e3" and "0x800" are numbers. A whole
+// number from 1 to 2^53-1 is the limit. Unset or blank is 0, the default.
+// Anything else (text that is no number, 0, a negative number, a
+// fraction, Infinity, a number past 2^53-1) is 0 too, with ok false, so
+// the caller can say that the default holds instead.
+func EnvLimit(value string) (limit float64, ok bool) {
+	if jsbind.Trim(value) == "" {
+		return 0, true
 	}
-	return n
+	n := jsbind.ParseNumber(value)
+	if math.IsNaN(n) || n < 1 || n > maxSafeInteger || n != math.Trunc(n) {
+		return 0, false
+	}
+	return n, true
 }
 
 // ExtractTarGz unpacks an archive made by CreateTarGz, as the old console

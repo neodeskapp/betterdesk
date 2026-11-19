@@ -265,11 +265,13 @@ func TestRestore(t *testing.T) {
 	})
 }
 
-// TestRestoreArchiveLimits: an uploaded archive with more regular files
-// than BACKUP_MAX_ENTRIES, one that unpacks past
-// BACKUP_MAX_DECOMPRESSED_BYTES (or meets a byte limit zlib refuses) and
-// one with an entry past its end are refused with 400 and the reader's
-// message, as the old route answered them.
+// TestRestoreArchiveLimits: an uploaded archive with more entries than
+// BACKUP_MAX_ENTRIES, one that unpacks past BACKUP_MAX_DECOMPRESSED_BYTES
+// and one with an entry past its end are refused with 400 and the
+// reader's message, as the old route answered them. A limit that is no
+// whole number of at least 1 leaves the default in force (UM42): the old
+// route refused every archive for -1 and let a third file through for
+// 1.5.
 func TestRestoreArchiveLimits(t *testing.T) {
 	archive, err := backup.CreateTarGz([]backup.Entry{
 		{Name: "manifest.json", Data: []byte(`{"_format":"betterdesk-full-backup","_version":1}`)},
@@ -297,15 +299,20 @@ func TestRestoreArchiveLimits(t *testing.T) {
 		want string
 	}{
 		{map[string]string{"BACKUP_MAX_ENTRIES": "2"}, archive, `Backup archive has more than 2 entries"}`},
-		{map[string]string{"BACKUP_MAX_ENTRIES": " 1.5 "}, archive, `Backup archive has more than 1.5 entries"}`},
+		{map[string]string{"BACKUP_MAX_ENTRIES": " 1.5 "}, archive, ""},
 		{map[string]string{"BACKUP_MAX_DECOMPRESSED_BYTES": "0x800"}, archive, `Cannot create a Buffer larger than 2048 bytes"}`},
-		{map[string]string{"BACKUP_MAX_DECOMPRESSED_BYTES": "-1"}, archive,
-			`The value of \"options.maxOutputLength\" is out of range. It must be >= 1 and <= 9007199254740991. Received -1"}`},
+		{map[string]string{"BACKUP_MAX_DECOMPRESSED_BYTES": "-1"}, archive, ""},
 		{nil, cut.Bytes(), `Backup archive entry cut.bin extends past the end of the archive"}`},
 	} {
 		w := newWorld(t, nil, c.env)
 		body, ct := multipartBody(t, "backup", "b.tar.gz", c.body, nil)
 		res := w.As("admin").Do("POST", "/api/settings/restore", body, "Content-Type", ct)
+		if c.want == "" {
+			if res.Status != 200 || !strings.HasPrefix(res.Body, `{"success":true,"data":{"type":"full",`) {
+				t.Errorf("%v: %d %s", c.env, res.Status, res.Body)
+			}
+			continue
+		}
 		if res.Status != 400 || res.Body != prefix+c.want {
 			t.Errorf("%v: %d %s", c.env, res.Status, res.Body)
 		}
