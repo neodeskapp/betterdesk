@@ -483,15 +483,14 @@ var ErrRunning = errors.New("A scheduled backup is already running")
 // fails this check is removed), and its SHA-256 is written next to it as
 // "<hex>  <name>\n". Then the oldest archives beyond the retention count
 // go. The state records the outcome either way; an error is returned
-// after it is recorded.
-//
-// When the state cannot be read or noted at the start, the error is
-// returned and the service stays marked as running, as the old service
-// did (BUGS.md BK7).
+// after it is recorded. When the state cannot be read or noted at the
+// start, the error is returned and nothing is written. Either way the
+// service is free for the next run when this one returns.
 func (s *Service) CreateScheduledBackup(ctx context.Context) (*Result, error) {
 	if !s.running.CompareAndSwap(false, true) {
 		return nil, ErrRunning
 	}
+	defer s.running.Store(false)
 	startedAt := s.iso(s.o.Now())
 	stored, err := s.GetStatus(ctx)
 	if err != nil {
@@ -503,7 +502,6 @@ func (s *Service) CreateScheduledBackup(ctx context.Context) (*Result, error) {
 	if err := s.saveStatus(ctx, status); err != nil {
 		return nil, err
 	}
-	defer s.running.Store(false)
 
 	res, err := s.write(ctx, status)
 	if err != nil {

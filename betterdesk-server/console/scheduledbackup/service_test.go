@@ -17,6 +17,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/backup"
 	"github.com/unitronix/betterdesk-server/console/branding"
+	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
@@ -264,6 +265,31 @@ func TestOneRunAtATime(t *testing.T) {
 	if _, err := s.CreateScheduledBackup(ctx); err != nil {
 		t.Errorf("after the run: %v", err)
 	}
+}
+
+// BK7: a run whose state cannot be read or saved at the start frees the
+// service again, so the next run is not refused as already running.
+func TestRunFlagClearsWhenTheStateFails(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		clk := &clock{t: time.Date(2026, 11, 10, 10, 0, 0, 0, time.UTC)}
+		s := New(Options{Store: db, Backups: &fakeBackups{now: clk.now}, DataDir: t.TempDir(), AppDir: "/app/console", Now: clk.now, PID: 42})
+		if _, err := db.Exec(ctx, `ALTER TABLE settings RENAME TO settings_away`); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := s.CreateScheduledBackup(ctx); err == nil || errors.Is(err, ErrRunning) {
+			t.Fatalf("run without the settings table: %v", err)
+		}
+		if _, err := db.Exec(ctx, `ALTER TABLE settings_away RENAME TO settings`); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := s.CreateScheduledBackup(ctx); err != nil {
+			t.Errorf("the run after the failed one: %v", err)
+		}
+		if skip, _, err := s.RunIfDue(ctx); err != nil || skip == nil || skip.Reason != "disabled" {
+			t.Errorf("due check after the failed run: %+v %v", skip, err)
+		}
+	})
 }
 
 func TestRunIfDue(t *testing.T) {
