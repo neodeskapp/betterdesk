@@ -23,7 +23,7 @@ type detailsRules struct {
 
 var (
 	nodeDetails = detailsRules{}
-	nowDetails  = detailsRules{labelAtStart: true, nameEndsAtSemicolon: true}
+	nowDetails  = detailsRules{labelAtStart: true, nameEndsAtSemicolon: true, beforeLineBreaks: true}
 )
 
 // referenceDetails is RedactDetails written out by hand under the rules.
@@ -230,7 +230,7 @@ func nodeOrFixed(name string, v vector) string {
 func TestFixesChangeVectors(t *testing.T) {
 	file := loadRedactVectors(t)
 	for name, rules := range map[string]detailsRules{
-		"AL1": {labelAtStart: true}, "S19": {nameEndsAtSemicolon: true},
+		"AL1": {labelAtStart: true}, "S19": {nameEndsAtSemicolon: true}, "AL2": {beforeLineBreaks: true},
 	} {
 		changed := 0
 		for _, v := range file.Details {
@@ -305,6 +305,23 @@ func TestRedactDetailsKeepsAccountNamesOfUserManagement(t *testing.T) {
 	} {
 		if got := RedactDetails(in); got != in {
 			t.Errorf("RedactDetails(%q) = %q, want it as it is", in, got)
+		}
+	}
+}
+
+// TestRedactDetailsEndsASecretAtALineBreak: a secret's value ends at a line
+// break as well as at white space, so the next line stays, and a key at
+// the start of a line is masked too (BUGS.md AL2).
+func TestRedactDetailsEndsASecretAtALineBreak(t *testing.T) {
+	for in, want := range map[string]string{
+		"token=abc\r\nnext line":          `token=***\n\nnext line`,
+		"password: s3cret\nmore text":     `password: ***\nmore text`,
+		"lost my password:\nplease reset": `lost my password:\nplease reset`,
+		"token=x\ntoken=y":                `token=***\ntoken=***`,
+		"secret=x y":                      `secret=***\ny`,
+	} {
+		if got := RedactDetails(in); got != want {
+			t.Errorf("RedactDetails(%q) = %q, want %q", in, got, want)
 		}
 	}
 }

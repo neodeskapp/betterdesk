@@ -92,7 +92,7 @@ func TestRedactDetails(t *testing.T) {
 		{"key after a hyphen or a dot", "x-api-key: abc my.token=abc", "x-api-key: *** my.token=***"},
 		{"value ends at white space", "token=abc def", "token=*** def"},
 		{"line breaks", "a\r\nb\u2028c", `a\n\nb\nc`},
-		{"a line break ends no value", "token=abc\ntoken=def", `token=***`},
+		{"a line break ends a value", "token=abc\ntoken=def", `token=***\ntoken=***`},
 		{"no-break space is white space", "User:\u00a0bob\u00a0x", "User: b***b\u00a0x"},
 		{"U+0085 is not", "token=a\u0085b c", "token=*** c"},
 		{"only ASCII letters fold", "\u017fecret=x to\u212aen=y", "\u017fecret=x to\u212aen=y"},

@@ -16,9 +16,14 @@ import (
 // separators and U+FEFF. U+0085 is not part of it.
 const jsSpaceClass = `\t\n\v\f\r \x{a0}\x{1680}\x{2000}-\x{200a}\x{2028}\x{2029}\x{202f}\x{205f}\x{3000}\x{feff}`
 
+// lineSpaceClass is jsSpaceClass without the line breaks: LF, CR, U+2028
+// and U+2029.
+const lineSpaceClass = `\t\v\f \x{a0}\x{1680}\x{2000}-\x{200a}\x{202f}\x{205f}\x{3000}\x{feff}`
+
 const (
 	jsSpace    = `[` + jsSpaceClass + `]`
 	jsNonSpace = `[^` + jsSpaceClass + `]`
+	lineSpace  = `[` + lineSpaceClass + `]`
 )
 
 func isJSSpace(r rune) bool {
@@ -78,9 +83,10 @@ var (
 	// sign-in writes them. The name runs to the next white space or ";":
 	// "Username: alice; ip=..." holds the name "alice".
 	userLabel = regexp.MustCompile(`^(` + foldAll("Username", "User") + `):` + jsSpace + `*([^` + jsSpaceClass + `;]+)`)
-	// "token=abc", "password: abc".
+	// "token=abc", "password: abc", on one line: the value runs to the
+	// next white space, a line break included.
 	secretPair = regexp.MustCompile(`(\b(?:` + foldAll("password", "secret", "token", "api_key", "api-key", "key") + `)` +
-		jsSpace + `*[:=]` + jsSpace + `*)` + jsNonSpace + `+`)
+		lineSpace + `*[:=]` + lineSpace + `*)` + jsNonSpace + `+`)
 	sensitiveKey = regexp.MustCompile(foldAll("password", "secret", "token") + `|` + foldASCII("api") + `[_-]?` + foldASCII("key") +
 		`|^` + foldASCII("key") + `$`)
 )
@@ -134,24 +140,27 @@ func utf16Length(s string) int {
 }
 
 // RedactDetails prepares the free text of an audit entry for the details
-// column: line breaks are made harmless (SanitizeLogValue), the name after
-// "Username:" or "User:" at the start of the text is shortened
-// (RedactUsername), and the value after password, secret, token, api_key,
-// api-key or key with ":" or "=" becomes "***". An empty text stays empty.
+// column: the name after "Username:" or "User:" at the start of the text
+// is shortened (RedactUsername), the value after password, secret, token,
+// api_key, api-key or key with ":" or "=" on the same line becomes "***",
+// and then line breaks are made harmless (SanitizeLogValue). An empty text
+// stays empty.
 //
 // The name after a label ends before white space or ";", so
 // "Username: alice; ip=..." becomes "Username: a***e; ip=...". A name
 // elsewhere in the text stays: "Created user: frank" names the account an
-// administrator created.
+// administrator created. A secret's value ends at white space or a line
+// break, and a key at the start of a line counts as anywhere else.
 func RedactDetails(details string) string {
 	if details == "" {
 		return ""
 	}
-	text := SanitizeLogValue(details)
+	text := toUTF8(details)
 	text = replaceSubmatches(userLabel, text, func(groups []string) string {
 		return groups[1] + ": " + RedactUsername(groups[2])
 	})
-	return secretPair.ReplaceAllString(text, "${1}***")
+	text = secretPair.ReplaceAllString(text, "${1}***")
+	return lineBreaks.Replace(text)
 }
 
 // SensitiveDetailKey reports whether a field name looks like it holds a

@@ -277,7 +277,7 @@ func TestWrite(t *testing.T) {
 		if row.Action != "login_failed" {
 			t.Errorf("action is %q", row.Action)
 		}
-		if got := show(row.details(t)); got != `'Username: a***e; token=***'` {
+		if got := show(row.details(t)); got != `'Username: a***e; token=***\n\nnext'` {
 			t.Errorf("details is %s, want the redacted text", got)
 		}
 		if got := show(row.ip(t)); got != "'203.0.113.7'" {
