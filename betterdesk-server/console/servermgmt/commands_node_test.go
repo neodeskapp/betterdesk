@@ -156,12 +156,28 @@ func (f *fakeRun) run(ctx context.Context, name string, args ...string) ([]byte,
 	return []byte(f.stdout), []byte(f.stderr), f.code, f.err
 }
 
+// crlfServices is the list the Go console makes of the recording's
+// PowerShell output with CR LF line ends, as PowerShell writes them: every
+// allowed service in it (SM8). The old service matched only the last line,
+// which has no line end.
+var crlfServices = []any{
+	map[string]any{"name": "BetterDeskServer", "active": "active", "sub": "running", "description": "BetterDesk Server"},
+	map[string]any{"name": "BetterDeskConsole", "active": "inactive", "sub": "stopped", "description": "BetterDesk Console"},
+}
+
 // TestNodeServiceList replays the service lists the old service made of
 // systemctl's and PowerShell's output: the allow list, the parsing, a
-// command that failed.
+// command that failed. Where the Go console differs on purpose, the list
+// is changed here: a PowerShell list with CR LF line ends (crlfServices).
 func TestNodeServiceList(t *testing.T) {
 	rec := loadNodeCommands(t)
+	crlf := 0
 	for i, v := range rec.Services {
+		want := v.Services
+		if v.Platform == "win32" && v.Status == 0 && strings.Contains(v.Stdout, "\r\n") {
+			want = crlfServices
+			crlf++
+		}
 		f := &fakeRun{stdout: v.Stdout, code: v.Status}
 		s := New(Options{GOOS: goos(v.Platform), Run: f.run})
 		got := []any{}
@@ -173,16 +189,19 @@ func TestNodeServiceList(t *testing.T) {
 			o["active"], o["sub"], o["description"] = u.Active, u.Sub, u.Description
 			got = append(got, o)
 		}
-		if !reflect.DeepEqual(asJSON(t, got), v.Services) {
-			t.Errorf("list %d (%s %q):\n got %v\nwant %v", i, v.Platform, v.Stdout, asJSON(t, got), v.Services)
+		if !reflect.DeepEqual(asJSON(t, got), want) {
+			t.Errorf("list %d (%s %q):\n got %v\nwant %v", i, v.Platform, v.Stdout, asJSON(t, got), want)
 		}
-		var want []string
+		var wantCalls []string
 		for _, c := range v.Calls {
-			want = append(want, c.Cmd+" "+strings.Join(c.Args, " "))
+			wantCalls = append(wantCalls, c.Cmd+" "+strings.Join(c.Args, " "))
 		}
-		if !reflect.DeepEqual(f.calls, want) {
-			t.Errorf("list %d ran %q, want %q", i, f.calls, want)
+		if !reflect.DeepEqual(f.calls, wantCalls) {
+			t.Errorf("list %d ran %q, want %q", i, f.calls, wantCalls)
 		}
+	}
+	if crlf != 1 {
+		t.Errorf("%d lists with CR LF, the recording has one", crlf)
 	}
 }
 

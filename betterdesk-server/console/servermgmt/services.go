@@ -101,16 +101,16 @@ func parseSystemctl(raw string) []Unit {
 }
 
 // getServiceLine is one line of Get-Service as CSV: name, status, display
-// name. A line that ends in a carriage return does not match, as it did
-// not before.
+// name.
 var getServiceLine = regexp.MustCompile(`^"([^"]*)","([^"]*)","([^"]*)"$`)
 
-// parseGetService reads the CSV of Get-Service after its header line.
+// parseGetService reads the CSV of Get-Service after its header line. The
+// lines end in CR LF or LF.
 func parseGetService(raw string) []Unit {
 	var units []Unit
 	lines := strings.Split(raw, "\n")
 	for _, line := range lines[1:] {
-		m := getServiceLine.FindStringSubmatch(line)
+		m := getServiceLine.FindStringSubmatch(strings.TrimSuffix(line, "\r"))
 		if m == nil {
 			continue
 		}
