@@ -88,9 +88,9 @@ func TestWriteRefusesWhatIsNoRegularFile(t *testing.T) {
 
 // Delete and rename leave the folders the browser may change in place: a
 // root itself, or a folder that holds one, is refused, also as the new
-// name of a rename. A link is removed or moved itself, never what it
-// points to, and a link outside the folders that points into one is
-// refused.
+// name of a rename, a path through a link, and a root configured through
+// a link. A link is removed or moved itself, never what it points to, and
+// a link outside the folders that points into one is refused.
 func TestDeleteAndRenameKeepTheRoots(t *testing.T) {
 	base := t.TempDir()
 	server, console, data := filepath.Join(base, "server"), filepath.Join(base, "console"), filepath.Join(base, "server", "keep", "data")
@@ -109,10 +109,14 @@ func TestDeleteAndRenameKeepTheRoots(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(server, "sub", "b.txt"), []byte("bee"), 0o666); err != nil {
 		t.Fatal(err)
 	}
-	env := map[string]string{"BETTERDESK_PATH": server, "BETTERDESK_CONSOLE_PATH": console, "BETTERDESK_MUTABLE_ROOTS": data}
+	env := map[string]string{
+		"BETTERDESK_PATH": server, "BETTERDESK_CONSOLE_PATH": console, "BETTERDESK_MUTABLE_ROOTS": filepath.Join(base, "serverlink", "keep", "data"),
+	}
 	s := New(Options{GOOS: "linux", Getenv: func(k string) string { return env[k] }, WorkDir: console, beforeChange: onlyBelow(t, base)})
 
-	for _, p := range []string{server, server + "/", console, data, filepath.Join(server, "keep"), filepath.Join(server, "sub", "..")} {
+	for _, p := range []string{
+		server, server + "/", console, data, filepath.Join(server, "keep"), filepath.Join(server, "sub", ".."), filepath.Join(base, "serverlink", "keep"),
+	} {
 		if _, err := s.DeletePath(p); !errors.Is(err, ErrChangeRoot) {
 			t.Errorf("delete %s: %v, want %v", p, err, ErrChangeRoot)
 		}

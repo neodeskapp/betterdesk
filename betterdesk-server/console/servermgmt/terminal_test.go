@@ -94,8 +94,12 @@ func newTermWorld(t *testing.T, noPty bool, mutate func(*Options)) *termWorld {
 			w.mu.Lock()
 			defer w.mu.Unlock()
 			w.lookups = append(w.lookups, role+" "+permission)
-			if role == "throws" || w.lookupFails {
+			if role == "throws" {
 				return false, errors.New("lookup failed")
+			}
+			if w.lookupFails {
+				// a failed lookup counts as no, whatever else it says
+				return true, errors.New("lookup failed")
 			}
 			return role == "admin" && permission == "server.config" && !w.revoked, nil
 		},
