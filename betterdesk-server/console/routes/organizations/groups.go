@@ -1,6 +1,7 @@
 package organizations
 
 import (
+	"context"
 	"math"
 	"net/http"
 	"strconv"
@@ -42,6 +43,48 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	goapipath.WriteJSON(w, r, resp.Status, org)
+}
+
+// remove answers DELETE /api/panel/org/{id} with the API server's answer.
+// When the organization is gone, the device groups made with it stay with
+// their members, access lists and billing packages, and lose its team id
+// (DECISIONS A49). A group that cannot be changed is logged.
+func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
+	target, err := orgPath("")(r)
+	if err != nil {
+		invalid(w, r, err)
+		return
+	}
+	resp, err := h.api.Request(r.Context(), http.MethodDelete, target)
+	if err != nil {
+		status, data := goapipath.FailureOf(err, unreachable)
+		goapipath.WriteJSON(w, r, status, data)
+		return
+	}
+	if orgID, err := goapipath.AssertSafeAPIID(r.PathValue("id"), "orgId"); err == nil {
+		if err := h.leaveTeam(r.Context(), orgID); err != nil {
+			h.log.Warn("[org] clearing the team of the organization's device groups failed:", jsbind.Message(err))
+		}
+	}
+	goapipath.WriteJSON(w, r, resp.Status, resp.Data())
+}
+
+// leaveTeam clears the team id of the device groups of an organization.
+func (h *handlers) leaveTeam(ctx context.Context, orgID string) error {
+	all, err := h.groups.AllDeviceGroups(ctx)
+	if err != nil {
+		return err
+	}
+	for _, group := range all {
+		if teamOf(group) != orgID {
+			continue
+		}
+		guid := jsreq.String(devicegroups.Plain(group.Get("guid")))
+		if _, err := h.groups.UpdateDeviceGroup(ctx, guid, devicegroups.GroupData{TeamID: jsbind.String("")}); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // requestValue is a value of the API server's answer as a value to bind.

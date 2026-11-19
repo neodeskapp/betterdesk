@@ -37,7 +37,7 @@ func Register(d *kit.Deps) {
 	r.Post("/api/panel/org", h.create, auth, can("org.create"))
 	r.Get("/api/panel/org/{id}", h.pass("GET", orgPath(""), false), auth)
 	r.Put("/api/panel/org/{id}", h.pass("PUT", orgPath(""), true), auth, can("org.edit"))
-	r.Delete("/api/panel/org/{id}", h.pass("DELETE", orgPath(""), false), auth, can("org.delete"))
+	r.Delete("/api/panel/org/{id}", h.remove, auth, can("org.delete"))
 
 	// Users of an organization
 	r.Get("/api/panel/org/{id}/users", h.pass("GET", orgPath("/users"), false), auth, can("user.view"), can("org.manage_users"))

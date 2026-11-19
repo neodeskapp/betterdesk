@@ -190,3 +190,50 @@ func TestRosterNeedsUserView(t *testing.T) {
 	calls(t, "roster without user.view", api)
 	want(t, "roster as admin", w.As("admin").Do("GET", "/api/panel/org/org-1/users", ""), 200, `[]`)
 }
+
+// TestDeleteKeepsTheDeviceGroupWithoutItsTeam: deleting an organization
+// keeps the device group made with it, members included, and clears its
+// team id; a delete the API server refuses changes nothing.
+func TestDeleteKeepsTheDeviceGroupWithoutItsTeam(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		api := routetest.NewAPI()
+		w := routetest.New(t, routetest.Options{DB: db, API: api})
+		admin := w.As("admin")
+		exec(t, db, `DELETE FROM device_groups`)
+		api.On("POST /api/org", 201, `{"id":"org-1","name":"Acme"}`)
+		admin.Do("POST", "/api/panel/org", `{"name":"Acme"}`)
+		exec(t, db, `INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('other', 'Other', '', 'org-2', 'manual', '')`)
+		exec(t, db, `INSERT INTO device_group_members (device_group_id, peer_id) SELECT id, '900100001' FROM device_groups WHERE team_id = 'org-1'`)
+		groups := func() string {
+			res, err := db.Query(context.Background(), `SELECT g.name || '|' || g.team_id || '|' || COUNT(m.peer_id) FROM device_groups g
+				LEFT JOIN device_group_members m ON m.device_group_id = g.id GROUP BY g.id, g.name, g.team_id ORDER BY g.name`)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer res.Close()
+			var out []string
+			for res.Next() {
+				var row string
+				if err := res.Scan(&row); err != nil {
+					t.Fatal(err)
+				}
+				out = append(out, row)
+			}
+			return strings.Join(out, ",")
+		}
+
+		api.On("DELETE /api/org/org-1", 409, `{"error":"organization has devices"}`)
+		want(t, "a refused delete", admin.Do("DELETE", "/api/panel/org/org-1", ""), 409, `{"error":"organization has devices"}`)
+		if got := groups(); got != "Acme|org-1|1,Other|org-2|0" {
+			t.Errorf("groups after a refused delete: %s", got)
+		}
+		api.On("DELETE /api/org/org-1", 200, `{"success":true}`)
+		want(t, "delete", admin.Do("DELETE", "/api/panel/org/org-1", ""), 200, `{"success":true}`)
+		if got := groups(); got != "Acme||1,Other|org-2|0" {
+			t.Errorf("groups after the delete: %s", got)
+		}
+		api.On("GET /api/peers", 200, `[]`)
+		want(t, "groups of the deleted organization", admin.Do("GET", "/api/panel/org/org-1/device-groups", ""), 200,
+			`{"org_id":"org-1","device_groups":[],"user_groups":[]}`)
+	})
+}
