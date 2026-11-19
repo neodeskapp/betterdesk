@@ -58,7 +58,7 @@ func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		w.Vars["<UPLOADS>"] = uploads(w)
-		defer ticketFixes.Unused(t)
+		defer ticketFixes.Unused(t, db)
 		w.Run(replay.Load(t, db, "node"), ticketFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			switch {
 			case step.Files != nil:
@@ -124,7 +124,7 @@ func download(t *testing.T, step replay.Step, got replay.Answer) {
 func TestNodeDeviceAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
-		defer deviceFixes.Unused(t)
+		defer deviceFixes.Unused(t, db)
 		w.Run(replay.Load(t, db, "node_device"), deviceFixes.Check(w, nil))
 	})
 }

@@ -17,7 +17,12 @@ type Fix struct {
 	Bug    string
 	Status int
 	Answer string
-	After  func(t *testing.T, w *World, step Step)
+	// Headers are headers the answer must have, by name ("" for none).
+	Headers map[string]string
+	// Dialect limits the fix to one database ("sqlite", "postgres"),
+	// where the step is a different request on each.
+	Dialect string
+	After   func(t *testing.T, w *World, step Step)
 }
 
 // FixKey names a recorded request: role, method, path and body.
@@ -43,6 +48,9 @@ func (l *Fixes) Add(bug string, steps map[string]Fix) bool {
 		l.steps = map[string]Fix{}
 	}
 	for key, f := range steps {
+		if f.Dialect != "" {
+			key = f.Dialect + ": " + key
+		}
 		if _, twice := l.steps[key]; twice {
 			panic("two fixes for " + key)
 		}
@@ -62,11 +70,20 @@ func (l *Fixes) Check(w *World, next Check) Check {
 		key := FixKey(step)
 		f, listed := l.steps[key]
 		if !listed {
+			key = w.DB.Dialect().String() + ": " + key
+			f, listed = l.steps[key]
+		}
+		if !listed {
 			return next != nil && next(t, step, got)
 		}
 		l.used[key]++
 		if got.Status != f.Status || Normalize(got.Body) != Normalize(f.Answer) {
 			t.Errorf("%s (%s): %s\n   fix: %d %s\n    go: %d %s", step.Name, f.Bug, key, f.Status, f.Answer, got.Status, got.Body)
+		}
+		for name, value := range f.Headers {
+			if have := got.Header.Get(name); have != value {
+				t.Errorf("%s (%s): %s: header %s: fix %q, go %q", step.Name, f.Bug, key, name, value, have)
+			}
 		}
 		if f.After != nil {
 			f.After(t, w, step)
@@ -75,11 +92,14 @@ func (l *Fixes) Check(w *World, next Check) Check {
 	}
 }
 
-// Unused fails for the entries of the list that no step of the run named,
-// so the list holds only steps there are.
-func (l *Fixes) Unused(t *testing.T) {
+// Unused fails for the entries of the list that no step of the run on db
+// named, so the list holds only steps there are.
+func (l *Fixes) Unused(t *testing.T, db *store.DB) {
 	t.Helper()
 	for key, f := range l.steps {
+		if f.Dialect != "" && f.Dialect != db.Dialect().String() {
+			continue
+		}
 		if l.used[key] == 0 {
 			t.Errorf("the fix of %s names no step of the recording: %s", f.Bug, key)
 		}
