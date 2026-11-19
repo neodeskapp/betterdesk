@@ -31,12 +31,14 @@ import (
 //     that answer is compared.
 //   - A body that is no JSON was answered by the recording's stand-in for
 //     the rest of the console; there only the status is compared.
+//
+// The steps a bug fix changed are on the list deviceFixes.
 func TestNodeDeviceAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		engine := w.Server.Deps().Alerts
 		trimmed, elsewhere := 0, 0
-		w.Run(replay.Load(t, db, "node_device"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		w.Run(replay.Load(t, db, "node_device"), deviceFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			engine.Wait()
 			if headers, ok := withoutSpaceAround(step.Headers); ok {
 				trimmed++
@@ -55,7 +57,8 @@ func TestNodeDeviceAnswers(t *testing.T) {
 				return true
 			}
 			return false
-		})
+		}))
+		deviceFixes.Unused(t, db)
 		if trimmed != 6 || elsewhere != 1 {
 			t.Errorf("%d requests were sent again with a header trimmed and %d answers compared by status only, want 6 and 1", trimmed, elsewhere)
 		}
