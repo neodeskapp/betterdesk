@@ -154,3 +154,19 @@ func TestUpdateStrategyKeepsItsSwitch(t *testing.T) {
 		}
 	})
 }
+
+// TestDeleteNamesCascadedDevices: the answer of a delete with cascade
+// names the devices the server deleted with it (BUGS DE3).
+func TestDeleteNamesCascadedDevices(t *testing.T) {
+	w, api := world(t, storetest.Migrated(t), nil, nil)
+	admin := w.As("admin")
+	api.On("DELETE /api/peers/A?cascade=true", 200, `{"status":"deleted","id":"A","revoked":false,"cascaded":["X","Y"]}`)
+	if got := admin.Do("DELETE", "/api/devices/A?cascade=true", ""); got.Status != http.StatusOK || got.Body != `{"success":true,"revoked":false,"hard":false,"cascaded":["X","Y"]}` {
+		t.Errorf("delete with cascade: %d %s", got.Status, got.Body)
+	}
+	// The server leaves cascaded out when nothing was linked
+	api.On("DELETE /api/peers/A?cascade=true", 200, `{"status":"deleted","id":"A","revoked":false}`)
+	if got := admin.Do("DELETE", "/api/devices/A?cascade=true", ""); got.Status != http.StatusOK || got.Body != `{"success":true,"revoked":false,"hard":false,"cascaded":[]}` {
+		t.Errorf("delete with cascade and nothing linked: %d %s", got.Status, got.Body)
+	}
+}

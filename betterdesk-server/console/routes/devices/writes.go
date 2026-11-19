@@ -129,7 +129,8 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Delete device error:", err)
 		return
 	}
-	cascaded := or(result.Get("cascaded"), []any{})
+	// The server names the devices it deleted with this one
+	cascaded := or(dig(result.Get("data"), "cascaded"), []any{})
 	answer(w, r, http.StatusOK, deleted{Success: true, Revoked: opts.Revoke, Hard: opts.Hard, Cascaded: cascaded})
 }
 

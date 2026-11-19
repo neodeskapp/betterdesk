@@ -35,6 +35,10 @@ var fixedSteps = []fixedStep{
 	{"node_sqlite", `430 PATCH /api/panel/strategies/s-one {"permissions":{"enable-audio":"custom","enable-camera":true,"other":"Y"}} as admin`, "DE2"},
 	{"node_sqlite", "445 GET /api/panel/strategies/s-one as admin", "DE2"},
 	{"node_sqlite", "455 GET /api/panel/strategies as admin", "DE2"},
+	// The made-up server names X as deleted with A1001; the answer passes
+	// it on.
+	{"node", "258 DELETE /api/devices/A1001 {} as admin", "DE3"},
+	{"node", "263 DELETE /api/devices/A1001?revoke=TRUE&hard=1 {} as admin", "DE3"},
 }
 
 // fixedStep is a step of a recording that the fix of a bug changed. The

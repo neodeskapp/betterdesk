@@ -1,4 +1,26 @@
 {
+ "258 DELETE /api/devices/A1001 {} as admin": {
+  "bug": "DE3",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"revoked\":false,\"hard\":false,\"cascaded\":[\"X\"]}",
+   "calls": [
+    "GET /api/peers/A1001",
+    "DELETE /api/peers/A1001"
+   ]
+  }
+ },
+ "263 DELETE /api/devices/A1001?revoke=TRUE&hard=1 {} as admin": {
+  "bug": "DE3",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true,\"revoked\":false,\"hard\":false,\"cascaded\":[\"X\"]}",
+   "calls": [
+    "GET /api/peers/A1001",
+    "DELETE /api/peers/A1001"
+   ]
+  }
+ },
  "264 cleared": {
   "bug": "DE1",
   "answer": {
