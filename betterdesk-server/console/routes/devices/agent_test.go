@@ -54,12 +54,15 @@ const agentToken = "agent-token-A1001"
 // answers), the snapshot and the queued collection of an offline agent,
 // not found and out of scope, odd bodies and queries, the audit entries.
 // The Go routes must answer the same bytes, make the same calls to the API
-// server, send the agent the same requests and leave the same audit rows.
+// server, send the agent the same requests and leave the same audit rows,
+// except for the steps a bug fix changed (fixed_test.go): those must be
+// the Go console's answers in testdata/node_agent_<db>_fixed.json.
 func TestNodeAgentAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		// Checked after the console of the test has stopped
 		t.Cleanup(wstest.Goroutines(t))
-		raw, err := os.ReadFile(filepath.Join("testdata", "node_agent_"+db.Dialect().String()+".json"))
+		file := "node_agent_" + db.Dialect().String()
+		raw, err := os.ReadFile(filepath.Join("testdata", file+".json"))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -67,6 +70,13 @@ func TestNodeAgentAnswers(t *testing.T) {
 		if err := json.Unmarshal(wstest.Expand(raw), &rec); err != nil {
 			t.Fatal(err)
 		}
+		recordFixed, fixes := recordingFixed(), fixesOf(file)
+		var fixed map[string]fixedAnswer
+		if !recordFixed {
+			fixed = loadFixed(t, file)
+		}
+		answers := map[string]fixedAnswer{}
+		names := make([]string, len(rec.Steps))
 		api := &fakeAPI{table: rec.Table}
 		w := routetest.New(t, routetest.Options{DB: db, API: api, Env: raisedLimits, Config: nodeLanguages})
 		ctx := context.Background()
@@ -108,8 +118,20 @@ func TestNodeAgentAnswers(t *testing.T) {
 		browsers := map[string]*routetest.Agent{}
 		failed := 0
 		for i, step := range rec.Steps {
+			names[i] = step.Name
+			key := stepKey(i, step.Name)
+			_, isFixed := fixes[key]
+			if isFixed && !recordFixed {
+				f := fixed[key]
+				step.Status, step.Answer, step.Rows, step.Extra.Calls, step.Extra.Agent = f.Status, f.Answer, f.Rows, f.Calls, f.Agent
+			}
 			if step.SQL != "" {
-				if got := rows(t, db, step.SQL); normalize(got) != normalize(step.Rows) {
+				got := rows(t, db, step.SQL)
+				if isFixed && recordFixed {
+					answers[key] = fixedAnswer{Rows: normalize(got)}
+					continue
+				}
+				if normalize(got) != normalize(step.Rows) {
 					t.Errorf("step %d %s:\n node: %s\n   go: %s", i, step.Name, step.Rows, got)
 				}
 				continue
@@ -147,6 +169,10 @@ func TestNodeAgentAnswers(t *testing.T) {
 			for _, req := range agent.Take() {
 				sent = append(sent, strings.Replace(req.Raw, req.RequestID, "<id>", 1))
 			}
+			if isFixed && recordFixed {
+				answers[key] = fixedAnswer{Status: got.Status, Answer: normalize(got.Body), Calls: calls, Agent: normalizeAll(sent)}
+				continue
+			}
 			// The oracle's app ends with a stand-in for the console's error
 			// handler (a body it cannot parse, one over the size limit);
 			// that answer is the console's own and is pinned elsewhere, so
@@ -165,6 +191,10 @@ func TestNodeAgentAnswers(t *testing.T) {
 		}
 		if failed > 30 {
 			t.Errorf("%d more steps differ", failed-30)
+		}
+		checkListed(t, file, names)
+		if recordFixed {
+			writeFixed(t, file, answers)
 		}
 	})
 }

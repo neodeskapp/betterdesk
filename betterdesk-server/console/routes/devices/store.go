@@ -159,6 +159,26 @@ func latestAuditEntry(ctx context.Context, db *store.DB, action, prefix string) 
 	return &e, nil
 }
 
+// clearDeletedDevice removes what the console keeps of a device that was
+// deleted for good: its system information, its metrics, its folder, its
+// manual device groups and its row in the console's device table.
+func clearDeletedDevice(ctx context.Context, db *store.DB, id string) error {
+	return db.InTx(ctx, func(tx *store.Tx) error {
+		for _, query := range []string{
+			`DELETE FROM peer_sysinfo WHERE peer_id = ?`,
+			`DELETE FROM peer_metrics WHERE peer_id = ?`,
+			`DELETE FROM device_folder_assignments WHERE device_id = ?`,
+			`DELETE FROM device_group_members WHERE peer_id = ?`,
+			`DELETE FROM peer WHERE id = ?`,
+		} {
+			if _, err := tx.Exec(ctx, query, id); err != nil {
+				return fmt.Errorf("clear the rows of deleted device %s: %w", id, err)
+			}
+		}
+		return nil
+	})
+}
+
 // accountRole is the role of the users row named username, read the way
 // the API server's db.GetUser reads it for the panel trust bridge: found
 // is false when there is no such row, when its role is NULL, and when the

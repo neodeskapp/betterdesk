@@ -79,7 +79,8 @@ func changesOf(result *goapi.Object) any {
 // remove answers DELETE /api/devices/{id}?revoke=&cascade=&hard=: a soft
 // delete; revoke also blocks the device and drops its connections,
 // cascade deletes the devices linked to it, hard deletes it for good
-// (also one that is soft-deleted already).
+// (also one that is soft-deleted already) and clears what the console
+// keeps of it.
 func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("id")
@@ -107,10 +108,13 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 		answer(w, r, http.StatusInternalServerError, failure{Error: or(result.Get("error"), kit.T(r, "devices.delete_failed", nil))})
 		return
 	}
-	// The console's system information, metrics, folder and group rows of
-	// the device stay, and so does its row in peer after a hard delete: the
-	// old route's clean-up called a function its database layer did not
-	// have (BUGS DE1)
+	// A soft-deleted device can come back and keeps what the console holds
+	// of it; after a hard delete there is nothing to come back to
+	if opts.Hard {
+		if err := clearDeletedDevice(ctx, h.d.Store, id); err != nil {
+			h.log.Warn("Clean-up after a device delete failed:", err)
+		}
+	}
 	action, details := "device_deleted", "Device "+id+" deleted"
 	switch {
 	case opts.Revoke:

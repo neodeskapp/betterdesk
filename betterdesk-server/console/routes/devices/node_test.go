@@ -163,10 +163,12 @@ func rows(t *testing.T, db *store.DB, query string) string {
 // it, groups and members, tags, every write, odd values of every JSON
 // type, failures of the API server. The Go routes must answer the same,
 // byte for byte, make the same calls to the API server and leave the same
-// rows.
+// rows, except for the steps a bug fix changed (fixed_test.go): those
+// must be the Go console's answers in testdata/node_<db>_fixed.json.
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		raw, err := os.ReadFile(filepath.Join("testdata", "node_"+db.Dialect().String()+".json"))
+		file := "node_" + db.Dialect().String()
+		raw, err := os.ReadFile(filepath.Join("testdata", file+".json"))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -174,6 +176,13 @@ func TestNodeAnswers(t *testing.T) {
 		if err := json.Unmarshal(raw, &rec); err != nil {
 			t.Fatal(err)
 		}
+		recordFixed, fixes := recordingFixed(), fixesOf(file)
+		var fixed map[string]fixedAnswer
+		if !recordFixed {
+			fixed = loadFixed(t, file)
+		}
+		answers := map[string]fixedAnswer{}
+		names := make([]string, len(rec.Steps))
 		api := &fakeAPI{table: rec.Table}
 		w := routetest.New(t, routetest.Options{DB: db, API: api, Env: raisedLimits, Config: nodeLanguages})
 		ctx := context.Background()
@@ -192,6 +201,13 @@ func TestNodeAnswers(t *testing.T) {
 		agents := map[string]*routetest.Agent{}
 		failed := 0
 		for i, step := range rec.Steps {
+			names[i] = step.Name
+			key := stepKey(i, step.Name)
+			_, isFixed := fixes[key]
+			if isFixed && !recordFixed {
+				f := fixed[key]
+				step.Status, step.Answer, step.Rows, step.Extra.Calls, step.StatusOnly = f.Status, f.Answer, f.Rows, f.Calls, false
+			}
 			if step.SQL != "" && !strings.HasPrefix(step.SQL, "SELECT") {
 				if _, err := db.Exec(ctx, step.SQL); err != nil {
 					t.Fatalf("step %d %s: %v", i, step.Name, err)
@@ -199,7 +215,12 @@ func TestNodeAnswers(t *testing.T) {
 				continue
 			}
 			if step.SQL != "" {
-				if got := rows(t, db, step.SQL); normalize(got) != normalize(step.Rows) {
+				got := rows(t, db, step.SQL)
+				if isFixed && recordFixed {
+					answers[key] = fixedAnswer{Rows: normalize(got)}
+					continue
+				}
+				if normalize(got) != normalize(step.Rows) {
 					t.Errorf("step %d %s:\n node: %s\n   go: %s", i, step.Name, step.Rows, got)
 				}
 				continue
@@ -220,6 +241,10 @@ func TestNodeAnswers(t *testing.T) {
 			}
 			got := a.Do(step.Method, step.Path, body, "Accept", "application/json")
 			calls := api.taken()
+			if isFixed && recordFixed {
+				answers[key] = fixedAnswer{Status: got.Status, Answer: normalize(got.Body), Calls: normalizeAll(calls)}
+				continue
+			}
 			same := got.Status == step.Status && (step.StatusOnly || normalize(got.Body) == normalize(step.Answer)) &&
 				normalize(strings.Join(calls, "\n")) == normalize(strings.Join(step.Extra.Calls, "\n"))
 			if same {
@@ -232,6 +257,10 @@ func TestNodeAnswers(t *testing.T) {
 		}
 		if failed > 30 {
 			t.Errorf("%d more steps differ", failed-30)
+		}
+		checkListed(t, file, names)
+		if recordFixed {
+			writeFixed(t, file, answers)
 		}
 	})
 }

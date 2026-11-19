@@ -1,0 +1,18 @@
+{
+ "264 cleared": {
+  "bug": "DE1",
+  "answer": {
+   "rows": "[]"
+  }
+ },
+ "403 PATCH /api/devices/A1001/folder {\"folderId\":999} as operator": {
+  "bug": "DE1",
+  "answer": {
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "calls": [
+    "GET /api/peers/A1001"
+   ]
+  }
+ }
+}
