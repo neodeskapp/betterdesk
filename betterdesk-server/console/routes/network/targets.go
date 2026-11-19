@@ -9,6 +9,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/netmonitor"
+	"github.com/unitronix/betterdesk-server/console/store"
 )
 
 const (
@@ -346,12 +347,13 @@ type statsAnswer struct {
 	Up      int `json:"up"`
 	Down    int `json:"down"`
 	Unknown int `json:"unknown"`
-	// AvgLatency is always null: the old route averaged a member the
-	// targets do not have (BUGS.md NM3).
-	AvgLatency *float64 `json:"avg_latency"`
+	// AvgLatency is the mean of the last round trip of the targets that
+	// have one, null when none has.
+	AvgLatency *netmonitor.Number `json:"avg_latency"`
 }
 
-// stats answers GET /stats: how many targets are up, down and unknown.
+// stats answers GET /stats: how many targets are up, down and unknown, and
+// their mean round trip.
 func (h *handlers) stats(w http.ResponseWriter, r *http.Request) {
 	targets, err := netmonitor.ListTargets(r.Context(), h.db, netmonitor.TargetFilter{})
 	if err != nil {
@@ -359,6 +361,8 @@ func (h *handlers) stats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	answer := statsAnswer{Total: len(targets)}
+	var sum float64
+	var timed int
 	for i := range targets {
 		switch targets[i].LastStatus.String {
 		case "up":
@@ -366,7 +370,26 @@ func (h *handlers) stats(w http.ResponseWriter, r *http.Request) {
 		case "down":
 			answer.Down++
 		}
+		if rtt, ok := asSent(targets[i].LastRTT); ok {
+			sum += rtt
+			timed++
+		}
 	}
 	answer.Unknown = answer.Total - answer.Up - answer.Down
+	if timed > 0 {
+		mean := netmonitor.Number(sum / float64(timed))
+		answer.AvgLatency = &mean
+	}
 	kit.JSON(w, r, http.StatusOK, answer)
+}
+
+// asSent is a stored round trip as the answers write it: a PostgreSQL real
+// in its short form (12.3, not 12.300000190734863).
+func asSent(rtt store.Float) (float64, bool) {
+	text, err := rtt.MarshalJSON()
+	if err != nil || string(text) == "null" {
+		return 0, false
+	}
+	f, err := strconv.ParseFloat(string(text), 64)
+	return f, err == nil
 }

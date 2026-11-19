@@ -161,3 +161,40 @@ func TestUpdateWithNothingAnswersTheTarget(t *testing.T) {
 		}
 	})
 }
+
+// The stats average the last round trip of the targets that have one
+// (BUGS.md NM3).
+func TestStatsAverageTheLastRoundTrip(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db, names{})
+		stats := func() string {
+			t.Helper()
+			rec := w.do("vera", "GET", "/api/network/stats", nil, "")
+			if rec.Code != 200 {
+				t.Fatalf("stats: %d %s", rec.Code, rec.Body.String())
+			}
+			return rec.Body.String()
+		}
+		if got := stats(); got != `{"total":0,"up":0,"down":0,"unknown":0,"avg_latency":null}` {
+			t.Errorf("no targets: %s", got)
+		}
+		ctx := context.Background()
+		for _, row := range []struct {
+			status any
+			rtt    any
+		}{{"up", 10}, {"up", 20.5}, {"down", nil}, {nil, nil}} {
+			if _, err := db.Exec(ctx, "INSERT INTO network_targets (name, host, check_type, last_status, last_rtt_ms) VALUES ('t', 'h', 'ping', ?, ?)", row.status, row.rtt); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if got := stats(); got != `{"total":4,"up":2,"down":1,"unknown":1,"avg_latency":15.25}` {
+			t.Errorf("two round trips: %s", got)
+		}
+		if _, err := db.Exec(ctx, "UPDATE network_targets SET last_rtt_ms = NULL"); err != nil {
+			t.Fatal(err)
+		}
+		if got := stats(); got != `{"total":4,"up":2,"down":1,"unknown":1,"avg_latency":null}` {
+			t.Errorf("no round trip: %s", got)
+		}
+	})
+}
