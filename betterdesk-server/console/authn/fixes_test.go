@@ -23,6 +23,7 @@ type scenarioFix struct {
 var scenarioFixes = []scenarioFix{
 	{"S3", stopAtSyncsFromTheSignalServer},
 	{"AN4", noPasswordFromTheNextLine},
+	{"AN7", noCodesInOtherLists},
 	{"AN6", logTheWrittenCredentialsPath},
 }
 
@@ -171,6 +172,50 @@ func noPasswordFromTheNextLine(sc *scenarioVector) bool {
 				}
 			}
 			changed = true
+		}
+	}
+	return changed
+}
+
+// textList reports whether stored is a JSON list of texts.
+func textList(stored string) bool {
+	var entries []any
+	if json.Unmarshal([]byte(stored), &entries) != nil || entries == nil {
+		return false
+	}
+	for _, entry := range entries {
+		if _, ok := entry.(string); !ok {
+			return false
+		}
+	}
+	return true
+}
+
+// noCodesInOtherLists: a stored recovery list that is JSON but not a list
+// of texts holds no codes (AN7). Node threw on it, or took a code that
+// came before the first entry that is not text; the console answers no
+// code, and the list stays as it is.
+func noCodesInOtherLists(sc *scenarioVector) bool {
+	if !strings.HasPrefix(sc.Name, "recovery/") || len(sc.Seed.Users) == 0 || sc.Seed.Users[0].TOTPRecoveryCodes == nil {
+		return false
+	}
+	stored := *sc.Seed.Users[0].TOTPRecoveryCodes
+	if !json.Valid([]byte(stored)) || textList(stored) {
+		return false
+	}
+	changed := false
+	for i := range sc.Steps {
+		step := &sc.Steps[i]
+		if step.Fn != "verifyRecoveryCode" || len(step.Args) == 0 || string(step.Args[0]) != "1" {
+			continue
+		}
+		if step.Thrown != nil || string(step.Result) != "false" {
+			step.Thrown, step.Result, changed = nil, json.RawMessage("false"), true
+		}
+	}
+	for _, row := range sc.Tables["users"] {
+		if row["username"] == sc.Seed.Users[0].Username && row["totp_recovery_codes"] != stored {
+			row["totp_recovery_codes"], changed = stored, true
 		}
 	}
 	return changed

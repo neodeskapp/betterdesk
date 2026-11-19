@@ -295,25 +295,25 @@ func (s *Service) VerifyRecoveryCode(ctx context.Context, userID int64, code str
 // takeRecoveryCode looks for code in the stored JSON list of codes. When
 // it is there, matched is true and left is the list without it.
 //
-// Stored text that is not JSON matches nothing. JSON that is not a list,
-// and an entry that is not text and comes before a match, are errors: the
-// list is damaged.
+// Stored text that is not a JSON list of texts holds no codes: text that
+// is not JSON, JSON that is not a list, and a list with an entry that is
+// not text (null included) match nothing.
 func takeRecoveryCode(stored, code string) (left string, matched bool, err error) {
-	var parsed any
-	if err := json.Unmarshal([]byte(stored), &parsed); err != nil {
+	var entries []any
+	if err := json.Unmarshal([]byte(stored), &entries); err != nil || entries == nil {
 		return "", false, nil
 	}
-	list, ok := parsed.([]any)
-	if !ok {
-		return "", false, errors.New("the stored recovery codes are not a list")
+	list := make([]string, len(entries))
+	for i, entry := range entries {
+		text, isText := entry.(string)
+		if !isText {
+			return "", false, nil
+		}
+		list[i] = text
 	}
 	upper := cases.Upper(language.Und)
 	wanted := upper.String(jsTrim(toWellFormed(code)))
-	for i, entry := range list {
-		text, isText := entry.(string)
-		if !isText {
-			return "", false, errors.New("a stored recovery code is not text")
-		}
+	for i, text := range list {
 		if upper.String(text) == wanted {
 			left, err := withoutElement(stored, i)
 			return left, err == nil, err
