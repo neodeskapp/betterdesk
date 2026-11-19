@@ -60,7 +60,7 @@ func (c *counter) Read(p []byte) (int, error) {
 // uploaded template archive, bundles created, changed, rebuilt, revoked
 // and deleted, the download portal with a ready build, previews, the old
 // toml generator. Every answer must match byte for byte; downloads also
-// in their headers.
+// in their headers. A step of fixes must give the fix's answer instead.
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		raw, err := os.ReadFile(filepath.Join("testdata", "node_"+db.Dialect().String()+".json"))
@@ -148,11 +148,14 @@ func TestNodeAnswers(t *testing.T) {
 				}
 				continue
 			}
-			want, have := scrub(step.Answer), scrub(got.Body)
-			if got.Status != step.Status || want != have {
+			status, want, have := step.Status, scrub(step.Answer), scrub(got.Body)
+			if f, fixed := fixes[step.Name]; fixed {
+				status, want = f.status, f.answer
+			}
+			if got.Status != status || want != have {
 				failed++
 				if failed <= 25 {
-					t.Errorf("step %d %q as %q\n node %d %s\n   go %d %s", i, step.Name, step.Role, step.Status, want, got.Status, have)
+					t.Errorf("step %d %q as %q\n want %d %s\n   go %d %s", i, step.Name, step.Role, status, want, got.Status, have)
 				}
 				continue
 			}
@@ -326,3 +329,4 @@ func TestChangedBundleWithoutSlugGetsOne(t *testing.T) {
 		}
 	})
 }
+

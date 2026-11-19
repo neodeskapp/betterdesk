@@ -70,6 +70,12 @@ func TestValidateBrandingMatchesNode(t *testing.T) {
 			idna++
 			continue
 		}
+		if key, fixed := colourListVectors[i]; fixed {
+			if !checkColourListVector(t, i, key, input) {
+				failed++
+			}
+			continue
+		}
 		got, err := ValidateBranding(input, nil)
 		switch {
 		case c.Threw != "":

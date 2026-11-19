@@ -112,8 +112,7 @@ type Validation struct {
 // order the checks ran; Normalized holds defaults in place of the wrong
 // values (agentBundleService.validateBranding).
 //
-// The error is the TypeError the old service threw: for a null profile,
-// and for a colour given as a list.
+// The error is the TypeError the old service threw for a null profile.
 func ValidateBranding(input any, relayPort func() string) (Validation, error) {
 	if input == nil {
 		return Validation{}, typeError("Cannot read properties of null (reading 'app_name')")
@@ -170,20 +169,13 @@ func ValidateBranding(input any, relayPort func() string) (Validation, error) {
 		out.Set("logo_data_url", "")
 	}
 
-	// The colour is tested as String(value), so a list holding one valid
-	// colour passes the test; lower-casing it then throws a TypeError.
-	var thrown error
+	// A colour is text: a list, also one that holds a valid colour, is an
+	// invalid colour like any other value.
 	checkColor := func(key string, value any, fallback, errKey string) {
-		if !hexColor.MatchString(jsString(value)) {
-			errs = append(errs, errKey)
-			value = fallback
-		}
 		color, isText := value.(string)
-		if !isText {
-			if thrown == nil {
-				thrown = typeError("out." + key + ".toLowerCase is not a function")
-			}
-			return
+		if !isText || !hexColor.MatchString(color) {
+			errs = append(errs, errKey)
+			color = fallback
 		}
 		out.Set(key, strings.ToLower(color))
 	}
@@ -259,9 +251,6 @@ func ValidateBranding(input any, relayPort func() string) (Validation, error) {
 		))
 	} else {
 		out.Set("server", goapi.NewObject("address", "", "api_url", "", "public_key", ""))
-	}
-	if thrown != nil {
-		return Validation{}, thrown
 	}
 	if errs == nil {
 		errs = []string{}
