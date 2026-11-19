@@ -16,11 +16,11 @@ var guardPaths = []struct {
 	{"/", "dashboard"}, {"/inventory", "devices"}, {"/tickets", "tickets"}, {"/help-requests", "help-requests"},
 	{"/automation", "automation"}, {"/network", "network"}, {"/registrations", "registrations"}, {"/cdap", "cdap"},
 	{"/fleet", "fleet"}, {"/chat", "chat"}, {"/scaling", "scaling"}, {"/cross-platform", "cross-platform"},
-	{"/reports", "reports"}, {"/agents", "agents"}, {"/toolkit", "toolkit"}, {"/keys", "settings"},
-	{"/tokens", "settings"}, {"/policies", "settings"}, {"/attestation", "server-attestation"},
+	{"/reports", "reports"}, {"/agents", "agents"}, {"/toolkit", "toolkit"}, {"/keys", ""},
+	{"/tokens", ""}, {"/policies", ""}, {"/attestation", "server-attestation"},
 	{"/dataguard", "dataguard"}, {"/security-audit", "security-audit"}, {"/permissions", "permissions"},
 	{"/languages", "languages"}, {"/resource-control", "resource-control"}, {"/server-management", "server-management"},
-	{"/client-branding", "settings"}, {"/cdap-studio", "cdap"}, {"/users", "users"}, {"/api/users", "users"},
+	{"/client-branding", ""}, {"/cdap-studio", "cdap"}, {"/users", "users"}, {"/api/users", "users"},
 	{"/api/panel/user-groups", "users"}, {"/api/panel/access", "users"}, {"/api/guest", "guests"},
 	{"/api/folders", "folders"}, {"/organizations", "organizations"}, {"/api/panel/org", "organizations"},
 	{"/devices", "devices"}, {"/api/devices", "devices"}, {"/api/device-groups", "devices"}, {"/api/tags", "devices"},
@@ -33,14 +33,20 @@ var guardPaths = []struct {
 	{"/api/panel/resource-control", "resource-control"}, {"/api/server-management", "server-management"},
 	{"/api/panel/fleet", "fleet"}, {"/api/chat", "chat"},
 	{"/api/server-attestation", "server-attestation"}, {"/api/registrations", "registrations"},
-	{"/api/settings", "settings"}, {"/settings", "settings"}, {"/api/panel/billing", "commercialization"},
+	{"/api/settings", "settings"}, {"/settings", ""}, {"/api/panel/billing", "commercialization"},
 	{"/commercialization", "commercialization"}, {"/activity", "activity"},
 
 	// below a prefix, and with a trailing slash
 	{"/users/", "users"}, {"/users/42", "users"}, {"/api/users/42", "users"}, {"/api/users/42/avatar", "users"},
 	{"/strategies/new", "strategies"}, {"/strategiesx", ""},
 	{"/api/panel/access/users/1", "users"}, {"/api/panel/user-groups/abc/members", "users"},
-	{"/api/settings/server-info", "settings"}, {"/api/settings/audit", "settings"}, {"/api/reports/generate", "reports"},
+	{"/api/settings/server-info", ""}, {"/api/settings/audit", "settings"}, {"/api/reports/generate", "reports"},
+
+	// what every account reads below /api/settings has no section (F1)
+	{"/api/settings/info", ""}, {"/api/settings/appearance", ""}, {"/api/settings/branding", ""},
+	{"/api/settings/branding/profiles/1/apply", ""}, {"/api/settings/themes", ""}, {"/api/settings/themes/x/apply", ""},
+	{"/api/settings/fonts/local", ""}, {"/api/settings/restart-status", ""}, {"/api/settings/brandingx", "settings"},
+	{"/api/settings/ldap", "settings"}, {"/api/settings/backup/stats", "settings"}, {"/api/settings/infos", "settings"},
 	{"/api/devices/ABC/rename", "devices"}, {"/api/guest/links", "guests"}, {"/devices//x", "devices"},
 	{"/api/remote/viewer/abc", "remote"}, {"/remote/login", "remote"}, {"/remote/abc", "remote"},
 	{"/cdap/devices/1", "cdap"}, {"/server-management/", "server-management"},
@@ -90,7 +96,7 @@ func TestFindRule(t *testing.T) {
 		}
 	}
 	// Jest: panelAccessGuard.test.js, "maps page and API paths to the same section".
-	for path, section := range map[string]string{"/users": "users", "/api/users/42": "users", "/api/settings/server-info": "settings"} {
+	for path, section := range map[string]string{"/users": "users", "/api/users/42": "users", "/api/settings/ldap": "settings"} {
 		if rule, ok := FindRule(path); !ok || rule.Section != section {
 			t.Errorf("FindRule(%q) = %+v", path, rule)
 		}
@@ -134,8 +140,8 @@ func TestFindRuleLongestMatch(t *testing.T) {
 
 func TestPageRules(t *testing.T) {
 	pages := PageRules()
-	if len(pages) != 37 {
-		t.Fatalf("%d page rules, want 37", len(pages))
+	if len(pages) != 32 {
+		t.Fatalf("%d page rules, want 32", len(pages))
 	}
 	if pages[0] != (Rule{Path: "/", Section: "dashboard"}) {
 		t.Errorf("first page rule is %+v", pages[0])

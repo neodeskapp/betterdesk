@@ -4,7 +4,9 @@ import "strings"
 
 // Rule maps a console path to a panel section. A rule with Path matches
 // that path only; a rule with Prefix matches the prefix itself and
-// everything below it.
+// everything below it. A rule without a section exempts its paths from
+// the rule of a shorter prefix: when it is the longest match, the path
+// has no section.
 type Rule struct {
 	Path    string `json:"path,omitempty"`
 	Prefix  string `json:"prefix,omitempty"`
@@ -44,9 +46,6 @@ var RouteRules = []Rule{
 	{Prefix: "/reports", Section: "reports"},
 	{Prefix: "/agents", Section: "agents"},
 	{Prefix: "/toolkit", Section: "toolkit"},
-	{Prefix: "/keys", Section: "settings"},
-	{Prefix: "/tokens", Section: "settings"},
-	{Prefix: "/policies", Section: "settings"},
 	{Prefix: "/attestation", Section: "server-attestation"},
 	{Prefix: "/dataguard", Section: "dataguard"},
 	{Prefix: "/security-audit", Section: "security-audit"},
@@ -54,7 +53,6 @@ var RouteRules = []Rule{
 	{Prefix: "/languages", Section: "languages"},
 	{Prefix: "/resource-control", Section: "resource-control"},
 	{Prefix: "/server-management", Section: "server-management"},
-	{Prefix: "/client-branding", Section: "settings"},
 	{Prefix: "/cdap-studio", Section: "cdap"},
 	{Prefix: "/users", Section: "users"},
 	{Prefix: "/api/users", Section: "users"},
@@ -90,7 +88,6 @@ var RouteRules = []Rule{
 	{Prefix: "/api/server-attestation", Section: "server-attestation"},
 	{Prefix: "/api/registrations", Section: "registrations"},
 	{Prefix: "/api/settings", Section: "settings"},
-	{Prefix: "/settings", Section: "settings"},
 	{Prefix: "/api/panel/billing", Section: "commercialization"},
 	{Prefix: "/commercialization", Section: "commercialization"},
 	{Prefix: "/reports", Section: "reports"},
@@ -106,6 +103,15 @@ var RouteRules = []Rule{
 	{Prefix: "/api/bd/api/panel/fleet", Section: "fleet"},
 	{Prefix: "/api/bd/api/panel/scaling", Section: "scaling"},
 	{Prefix: "/api/bd/api/panel/resource-control", Section: "resource-control"},
+	// What the shell and the Settings page read for every account; the
+	// branding writes ask branding.edit themselves.
+	{Prefix: "/api/settings/info"},
+	{Prefix: "/api/settings/server-info"},
+	{Prefix: "/api/settings/appearance"},
+	{Prefix: "/api/settings/branding"},
+	{Prefix: "/api/settings/themes"},
+	{Prefix: "/api/settings/fonts"},
+	{Prefix: "/api/settings/restart-status"},
 }
 
 const apiPrefix = "/api/"
@@ -116,7 +122,7 @@ const apiPrefix = "/api/"
 func PageRules() []Rule {
 	out := make([]Rule, 0, len(RouteRules))
 	for _, rule := range RouteRules {
-		if !strings.HasPrefix(rule.pattern(), apiPrefix) {
+		if !strings.HasPrefix(rule.pattern(), apiPrefix) && rule.Section != "" {
 			out = append(out, rule)
 		}
 	}
@@ -140,6 +146,9 @@ func findRuleIn(rules []Rule, path string) (Rule, bool) {
 		if !found || len(rule.pattern()) > len(best.pattern()) {
 			best, found = rule, true
 		}
+	}
+	if best.Section == "" {
+		return Rule{}, false
 	}
 	return best, found
 }

@@ -37,9 +37,9 @@ var writes = []struct{ method, path, body string }{
 	{"POST", "/api/settings/fonts/upload", ""},
 }
 
-// Every write needs a session and branding.edit. The settings section's
-// panel guard keeps viewer out first; server_admin passes it and is
-// refused by the permission.
+// Every write needs a session and branding.edit. The branding routes have
+// no panel section (PA3, F1): viewer and server_admin are refused by the
+// permission.
 func TestWritesNeedBrandingEdit(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := world(t, db)
@@ -48,7 +48,7 @@ func TestWritesNeedBrandingEdit(t *testing.T) {
 			if res := out.Do(c.method, c.path, c.body); res.Status != http.StatusUnauthorized || res.Body != `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}` {
 				t.Errorf("%s %s signed out: %d %s", c.method, c.path, res.Status, res.Body)
 			}
-			if res := viewer.Do(c.method, c.path, c.body); res.Status != http.StatusForbidden || !strings.Contains(res.Body, "panel_access_denied") {
+			if res := viewer.Do(c.method, c.path, c.body); res.Status != http.StatusForbidden || res.Body != `{"success":false,"error":"Permission denied: branding.edit"}` {
 				t.Errorf("%s %s as viewer: %d %s", c.method, c.path, res.Status, res.Body)
 			}
 			if res := server.Do(c.method, c.path, c.body); res.Status != http.StatusForbidden || res.Body != `{"success":false,"error":"Permission denied: branding.edit"}` {

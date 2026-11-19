@@ -162,8 +162,9 @@ func TestPageAllowed(t *testing.T) {
 	}
 	for page, want := range map[string]bool{
 		"dashboard": true, "devices": true,
-		"users":            false, // its section is at none
-		"settings:general": false, "settings:backup": false, "keys": false, "tokens": false, "policies": false, "client-branding": false,
+		"users": false, // its section is at none
+		// no section since F1: their routes and menu rules decide
+		"settings:general": true, "settings:backup": true, "keys": true, "tokens": true, "policies": true, "client-branding": true,
 		"registrations":              false,
 		"activate-agent":             false, // its address is the dashboard's, its section is registrations
 		"pairing":                    true,  // no rule for its address

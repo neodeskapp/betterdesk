@@ -106,7 +106,7 @@ func TestGuards(t *testing.T) {
 		denied := s.As("viewer")
 		admin := s.As("admin")
 		sectionDenied := `{"success":false,"error":"Panel access denied: settings","code":"panel_access_denied"}`
-		for _, route := range append(serverConfig, "GET /api/settings/audit", "GET /api/settings/info", "GET /api/settings/server-info") {
+		for _, route := range append(serverConfig, "GET /api/settings/audit") {
 			method, path, _ := strings.Cut(route, " ")
 			body := ""
 			if method != http.MethodGet {
@@ -130,7 +130,11 @@ func TestGuards(t *testing.T) {
 			res.Body != `{"success":false,"error":"Permission denied: audit.view"}` {
 			t.Errorf("audit without audit.view: %d %s", res.Status, res.Body)
 		}
+		// What every account reads has no panel section (PA3, F1).
 		for _, path := range []string{"/api/settings/info", "/api/settings/server-info"} {
+			if res := denied.Do("GET", path, ""); res.Status != http.StatusOK {
+				t.Errorf("%s as viewer: %d %s", path, res.Status, res.Body)
+			}
 			if res := allowed.Do("GET", path, ""); res.Status != http.StatusOK {
 				t.Errorf("%s with a session: %d %s", path, res.Status, res.Body)
 			}
@@ -350,8 +354,9 @@ func TestInfoAndServerInfo(t *testing.T) {
 		if _, err := db.Exec(context.Background(), `INSERT INTO peer (id, is_deleted, status_online, is_banned) VALUES ('a', `+db.Pick("0, 1, 0", "FALSE, TRUE, FALSE")+`), ('b', `+db.Pick("0, 0, 1", "FALSE, FALSE, TRUE")+`), ('c', `+db.Pick("1, 1, 1", "TRUE, TRUE, TRUE")+`)`); err != nil {
 			t.Fatal(err)
 		}
+		// Every account reads it (PA3, F1).
 		res := s.As("viewer").Do("GET", "/api/settings/info", "")
-		if res.Status != http.StatusForbidden {
+		if res.Status != http.StatusOK {
 			t.Errorf("viewer: %d %s", res.Status, res.Body)
 		}
 		res = s.As("admin").Do("GET", "/api/settings/info", "")

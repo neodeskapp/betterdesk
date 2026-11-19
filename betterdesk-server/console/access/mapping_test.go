@@ -117,3 +117,38 @@ func TestOrganizationsNeedUserView(t *testing.T) {
 		{"POST", "/api/chat/upload", "chat.access", [5]string{"ok", "ok", "guard", "ok", "guard"}},
 	})
 }
+
+// PA3 (F1): the Settings page, its branding and the server facts the shell
+// reads are for every account; the branding writes ask branding.edit,
+// which global_admin has; the rest of /api/settings stays server.config.
+func TestSettingsReadsAreForEveryAccount(t *testing.T) {
+	// viewer, operator, guest_issuer, global_admin, server_admin
+	checkRouteCases(t, []routeCase{
+		{"GET", "/api/settings/info", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/settings/server-info", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/settings/branding", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/settings/appearance", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/settings/themes", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/settings/fonts/local", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/settings/restart-status", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"POST", "/api/settings/branding", "branding.edit", [5]string{"route", "route", "route", "ok", "route"}},
+		{"POST", "/api/settings/themes/dark/apply", "branding.edit", [5]string{"route", "route", "route", "ok", "route"}},
+		{"DELETE", "/api/settings/fonts/Inter", "branding.edit", [5]string{"route", "route", "route", "ok", "route"}},
+		{"GET", "/api/settings/ldap", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
+		{"PUT", "/api/settings/ldap", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
+	})
+	for _, page := range []string{"/settings", "/keys", "/tokens", "/policies", "/client-branding"} {
+		if rule, ok := FindRule(page); ok {
+			t.Errorf("page %s has the rule %+v; its routes decide", page, rule)
+		}
+	}
+	// A row that closes settings still closes the server settings, and
+	// leaves what every account reads alone.
+	c := &Context{UserID: 1, HasUser: true, Role: "super_admin", Policy: policyWith("settings", LevelNone)}
+	if got := c.Guard("GET", "/api/settings/ldap"); got.Verdict != VerdictDenied {
+		t.Errorf("ldap with settings at none: %+v", got)
+	}
+	if got := c.Guard("GET", "/api/settings/branding"); got.Verdict != VerdictNoRule {
+		t.Errorf("branding with settings at none: %+v", got)
+	}
+}

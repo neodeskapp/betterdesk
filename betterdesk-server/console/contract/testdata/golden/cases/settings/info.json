@@ -52,48 +52,7 @@
     "guest_issuer",
     "viewer",
     "operator",
-    "global_admin"
-   ],
-   "status": 403,
-   "headers": {
-    "cache-control": "no-store",
-    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "application/json; charset=utf-8",
-    "cross-origin-resource-policy": "same-origin",
-    "etag": "<present>",
-    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": [
-     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
-    ],
-    "x-content-type-options": "nosniff",
-    "x-dns-prefetch-control": "off",
-    "x-download-options": "noopen",
-    "x-frame-options": "DENY",
-    "x-permitted-cross-domain-policies": "none",
-    "x-xss-protection": "0"
-   },
-   "volatile": [
-    "data.app.nodeVersion",
-    "data.goServer.uptime",
-    "data.server.memoryUsage",
-    "data.server.uptime"
-   ],
-   "body": {
-    "kind": "json",
-    "json": {
-     "code": "panel_access_denied",
-     "error": "Panel access denied: settings",
-     "success": false
-    }
-   }
-  },
-  {
-   "roles": [
-    "server_admin",
-    "super_admin",
-    "admin"
+    "super_admin"
    ],
    "status": 200,
    "headers": {
@@ -186,6 +145,118 @@
        "banned": 2,
        "offline": 16,
        "online": 14,
+       "total": 30
+      }
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin",
+    "server_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    "data.app.nodeVersion",
+    "data.goServer.uptime",
+    {
+     "path": "data.server.memoryUsage",
+     "integer": true
+    },
+    {
+     "path": "data.server.uptime",
+     "integer": true
+    },
+    {
+     "path": "data.stats.offline",
+     "integer": true
+    },
+    {
+     "path": "data.stats.online",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "app": {
+       "env": "production",
+       "name": "BetterDesk Console",
+       "nodeVersion": "<volatile>",
+       "version": "3.5.264"
+      },
+      "backend": "betterdesk",
+      "goServer": {
+       "backend": "betterdesk",
+       "billing_pending_relays": 0,
+       "clock_synced": true,
+       "connection": {
+        "allow_shared_nat_initiator": false,
+        "always_use_relay": false,
+        "logged_in_only_initiator": false,
+        "operator_only_outbound": false,
+        "p2p_fallback_ms": 2000,
+        "p2p_first": true,
+        "relay_servers": "",
+        "same_nat_relay": true
+       },
+       "peers_critical": 0,
+       "peers_degraded": 0,
+       "peers_in_memory": 14,
+       "peers_online": 14,
+       "peers_tcp": 0,
+       "peers_total": 30,
+       "peers_udp": 14,
+       "peers_ws": 0,
+       "relay_active_sessions": 0,
+       "status": "running",
+       "tls": false,
+       "uptime": "<volatile>",
+       "version": "3.5.264"
+      },
+      "paths": {
+       "apiKey": "/opt/rustdesk/.api_key",
+       "database": "/opt/rustdesk/db_v2.sqlite3",
+       "publicKey": "/opt/rustdesk/id_ed25519.pub"
+      },
+      "server": {
+       "arch": "x64",
+       "hostname": "<hostname>",
+       "memoryUsage": 0,
+       "platform": "linux",
+       "uptime": 0
+      },
+      "stats": {
+       "banned": 2,
+       "offline": 0,
+       "online": 0,
        "total": 30
       }
      },

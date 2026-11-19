@@ -41,6 +41,23 @@ var ruleFixes = []ruleFix{
 	{bug: "PA4, I3", add: Rule{Prefix: "/api/bd/api/panel/fleet", Section: "fleet"}},
 	{bug: "PA4, I3", add: Rule{Prefix: "/api/bd/api/panel/scaling", Section: "scaling"}},
 	{bug: "PA4, I3", add: Rule{Prefix: "/api/bd/api/panel/resource-control", Section: "resource-control"}},
+
+	// The Settings page is for every account, Client setup for every role;
+	// Tokens, Policies and Client branding ask other permissions than
+	// server.config.
+	{bug: "PA3 (F1)", remove: Rule{Prefix: "/keys", Section: "settings"}},
+	{bug: "PA3 (F1)", remove: Rule{Prefix: "/tokens", Section: "settings"}},
+	{bug: "PA3 (F1)", remove: Rule{Prefix: "/policies", Section: "settings"}},
+	{bug: "PA3 (F1)", remove: Rule{Prefix: "/client-branding", Section: "settings"}},
+	{bug: "PA3 (F1)", remove: Rule{Prefix: "/settings", Section: "settings"}},
+	// What the shell and the Settings page read for every account.
+	{bug: "PA3 (F1)", add: Rule{Prefix: "/api/settings/info"}},
+	{bug: "PA3 (F1)", add: Rule{Prefix: "/api/settings/server-info"}},
+	{bug: "PA3 (F1)", add: Rule{Prefix: "/api/settings/appearance"}},
+	{bug: "PA3 (F1)", add: Rule{Prefix: "/api/settings/branding"}},
+	{bug: "PA3 (F1)", add: Rule{Prefix: "/api/settings/themes"}},
+	{bug: "PA3 (F1)", add: Rule{Prefix: "/api/settings/fonts"}},
+	{bug: "PA3 (F1)", add: Rule{Prefix: "/api/settings/restart-status"}},
 }
 
 // sectionFix is a catalog section whose permissions differ from Node's.

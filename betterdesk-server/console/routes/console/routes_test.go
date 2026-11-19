@@ -367,11 +367,16 @@ func TestSupportersAndBootScript(t *testing.T) {
 // withoutTexts is a navigation without its translated texts.
 // fixedSections are the panel sections whose catalog entry, rules or
 // levels the panel access fixes changed against what Node answered, with
-// the bugs; fixedPages are the navigation pages those fixes show or hide.
-// The comparison leaves them out on both sides.
+// the bugs; fixedRules are page rules the fixes removed, and fixedPages
+// the navigation pages those fixes show or hide. The comparison leaves
+// them out on both sides.
 var (
 	fixedSections = map[string]string{"organizations": "PA4, G16", "cross-platform": "PA4"}
-	fixedPages    = map[string]string{"cross-platform": "PA4"}
+	fixedRules    = map[string]string{"/settings": "PA3 (F1)", "/keys": "PA3 (F1)", "/tokens": "PA3 (F1)", "/policies": "PA3 (F1)", "/client-branding": "PA3 (F1)"}
+	fixedPages    = map[string]string{
+		"cross-platform": "PA4", "settings:general": "PA3 (F1)", "settings:branding": "PA3 (F1)", "settings:auth": "PA3 (F1)",
+		"keys": "PA3 (F1)", "tokens": "PA3 (F1)", "policies": "PA3 (F1)", "client-branding": "PA3 (F1)",
+	}
 )
 
 // withoutFixed drops the fixed sections from the bootstrap's access (their
@@ -390,6 +395,9 @@ func withoutFixed(part string, raw json.RawMessage) json.RawMessage {
 			for _, item := range items {
 				if m, ok := item.(map[string]any); ok {
 					if name, _ := m[key].(string); fixedSections[name] != "" {
+						continue
+					}
+					if prefix, _ := m["prefix"].(string); fixedRules[prefix] != "" {
 						continue
 					}
 				}

@@ -308,18 +308,6 @@
         "section": "toolkit"
        },
        {
-        "prefix": "/keys",
-        "section": "settings"
-       },
-       {
-        "prefix": "/tokens",
-        "section": "settings"
-       },
-       {
-        "prefix": "/policies",
-        "section": "settings"
-       },
-       {
         "prefix": "/attestation",
         "section": "server-attestation"
        },
@@ -348,10 +336,6 @@
         "section": "server-management"
        },
        {
-        "prefix": "/client-branding",
-        "section": "settings"
-       },
-       {
         "prefix": "/cdap-studio",
         "section": "cdap"
        },
@@ -378,10 +362,6 @@
        {
         "prefix": "/remote",
         "section": "remote"
-       },
-       {
-        "prefix": "/settings",
-        "section": "settings"
        },
        {
         "prefix": "/commercialization",
@@ -770,6 +750,53 @@
         }
        ],
        "text": "Activity"
+      },
+      {
+       "icon": "settings",
+       "id": "settings",
+       "pages": [
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "Console",
+         "href": "/settings",
+         "keywords": "settings relay address public endpoints connection strategy meshcentral",
+         "page": "settings:general",
+         "text": "General"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "Console",
+         "href": "/settings?tab=branding",
+         "keywords": "branding theme colours colors logo dark mode",
+         "page": "settings:branding",
+         "text": "Appearance"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "Console",
+         "href": "/settings?tab=auth",
+         "keywords": "authentication 2fa two-factor totp password ldap sso oidc",
+         "page": "settings:auth",
+         "text": "Sign-in"
+        },
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "Clients and enrollment",
+         "href": "/keys",
+         "keywords": "keys public key qr client setup rustdesk config",
+         "page": "keys",
+         "text": "Client setup"
+        }
+       ],
+       "text": "Settings"
       }
      ],
      "palettes": {
@@ -1122,18 +1149,6 @@
         "section": "toolkit"
        },
        {
-        "prefix": "/keys",
-        "section": "settings"
-       },
-       {
-        "prefix": "/tokens",
-        "section": "settings"
-       },
-       {
-        "prefix": "/policies",
-        "section": "settings"
-       },
-       {
         "prefix": "/attestation",
         "section": "server-attestation"
        },
@@ -1162,10 +1177,6 @@
         "section": "server-management"
        },
        {
-        "prefix": "/client-branding",
-        "section": "settings"
-       },
-       {
         "prefix": "/cdap-studio",
         "section": "cdap"
        },
@@ -1192,10 +1203,6 @@
        {
         "prefix": "/remote",
         "section": "remote"
-       },
-       {
-        "prefix": "/settings",
-        "section": "settings"
        },
        {
         "prefix": "/commercialization",
