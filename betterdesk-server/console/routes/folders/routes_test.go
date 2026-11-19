@@ -40,7 +40,7 @@ func newWorld(t *testing.T, db *store.DB) *routetest.World {
 }
 
 // langDir holds the console's language files.
-var langDir = filepath.Join("..", "..", "..", "..", "web-nodejs", "lang")
+var langDir = filepath.Join("..", "..", "static", "files", "lang")
 
 // realLanguages gives the console its own language files.
 func realLanguages(cfg *config.Config) { cfg.LangDir = langDir }

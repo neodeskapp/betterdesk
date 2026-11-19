@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"io/fs"
 	"math"
 	"net"
 	"net/url"
@@ -13,6 +14,8 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/unitronix/betterdesk-server/console/static"
+	"github.com/unitronix/betterdesk-server/internal/productversion"
 )
 
 // Config is the console's configuration.
@@ -50,40 +53,59 @@ type Config struct {
 	// DOCKER is "true". It moves the default folders.
 	Docker bool
 
-	// ConsoleDir is the folder of the old console's files (lang, public,
-	// protos, wallpapers): CONSOLE_DIR, else the first usual place that
-	// has lang/en.json.
+	// ConsoleDir is the folder that holds the console's state: its .env
+	// and data/ (CONSOLE_DIR, else the first usual place that has a .env
+	// or the language files of a Node console install, else the first
+	// usual place).
 	ConsoleDir string
 	// DataDir is where the console keeps what it writes: the session
-	// secret, uploads (DATA_DIR).
+	// secret, uploads, installed fonts (DATA_DIR).
 	DataDir string
-	// LangDir holds the <code>.json language files (CONSOLE_LANG_DIR).
+	// Version is the product version the console reports: the one built
+	// into the binary.
+	Version string
+
+	// StaticDir is a folder on disk with the console's own files in the
+	// shape of console/static/files (CONSOLE_STATIC_DIR), read in place of
+	// the files in the binary, for development.
+	StaticDir string
+	// Static is the console's own files in the binary (package static).
+	// The folders and files below that are empty are read from it. With
+	// CONSOLE_STATIC_DIR they name its folders and Static is nil.
+	Static fs.FS
+	// LangDir holds the <code>.json language files on disk
+	// (CONSOLE_LANG_DIR, else lang in StaticDir). Empty: lang in Static.
 	LangDir string
+	// PublicDir and ProtosDir are served as files at the root and at
+	// /protos: public and protos in StaticDir, or empty for Static's.
+	PublicDir string
+	ProtosDir string
+	// The branding's built-in files: the theme presets (themes), the
+	// palettes (config/theme-palettes.json), the default favicon
+	// (public/favicon.svg) and the supporters list
+	// (config/supporters.json), in StaticDir or, when empty, in Static.
+	ThemesDir      string
+	PalettesFile   string
+	FaviconFile    string
+	SupportersFile string
+
 	// WebUIDir is a build of the web app on disk (WEB_UI_DIR), for
 	// development. Empty means the build in the binary.
 	WebUIDir string
-	// PublicDir, ProtosDir, WallpapersDir and UploadsDir are the folders
-	// the console serves as files.
-	PublicDir     string
-	ProtosDir     string
+	// WallpapersDir and UploadsDir are folders on disk the console serves
+	// as files: wallpapers in ConsoleDir and uploads in DataDir.
 	WallpapersDir string
 	UploadsDir    string
 	// TransfersDir is where the files of file transfers are written:
 	// data/transfers in ConsoleDir, whatever DATA_DIR says.
 	TransfersDir string
-	// The branding's files, in ConsoleDir whatever DATA_DIR says: the
+	// The branding's state, in ConsoleDir whatever DATA_DIR says: the
 	// installed fonts (public/fonts), the optional font list
-	// (data/google-fonts-cache.json), uploaded fonts before they are
-	// installed (data/tmp), the built-in themes (themes), the built-in
-	// palettes (config/theme-palettes.json), the default favicon
-	// (public/favicon.svg) and the supporters list (config/supporters.json).
-	FontsDir       string
-	FontCacheFile  string
-	TempDir        string
-	ThemesDir      string
-	PalettesFile   string
-	FaviconFile    string
-	SupportersFile string
+	// (data/google-fonts-cache.json) and uploaded fonts before they are
+	// installed (data/tmp).
+	FontsDir      string
+	FontCacheFile string
+	TempDir       string
 
 	// HTTPS is the console's HTTPS mode (HTTPS_ENABLED): it picks the
 	// names of the session and CSRF cookies, marks them Secure and
@@ -211,31 +233,21 @@ type Config struct {
 
 // probe is how Load looks at the machine. Tests replace it.
 type probe struct {
-	exists func(path string) bool
-	// exeDir is the folder of the server's binary, cwd the working
-	// directory; "" when unknown.
-	exeDir, cwd string
-	windows     bool
+	exists  func(path string) bool
+	windows bool
 	// isSet reports whether a variable is set, also to the empty text.
 	// nil counts a variable as set when getenv gives more than "".
 	isSet func(name string) bool
 }
 
 func systemProbe() probe {
-	p := probe{
+	return probe{
 		exists: func(path string) bool {
 			_, err := os.Stat(path)
 			return err == nil
 		},
 		windows: runtime.GOOS == "windows",
 	}
-	if exe, err := os.Executable(); err == nil {
-		p.exeDir = filepath.Dir(exe)
-	}
-	if cwd, err := os.Getwd(); err == nil {
-		p.cwd = cwd
-	}
-	return p
 }
 
 // Load reads the configuration through getenv. A variable set to the
@@ -300,20 +312,32 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 			cfg.DataDir = "/app/data"
 		}
 	}
-	cfg.LangDir = orDefault(getenv("CONSOLE_LANG_DIR"), filepath.Join(cfg.ConsoleDir, "lang"))
+	cfg.Version = productversion.Product()
+
+	if cfg.StaticDir = getenv("CONSOLE_STATIC_DIR"); cfg.StaticDir != "" {
+		cfg.LangDir = filepath.Join(cfg.StaticDir, "lang")
+		cfg.PublicDir = filepath.Join(cfg.StaticDir, "public")
+		cfg.ProtosDir = filepath.Join(cfg.StaticDir, "protos")
+		cfg.ThemesDir = filepath.Join(cfg.StaticDir, "themes")
+		cfg.PalettesFile = filepath.Join(cfg.StaticDir, "config", "theme-palettes.json")
+		cfg.FaviconFile = filepath.Join(cfg.StaticDir, "public", "favicon.svg")
+		cfg.SupportersFile = filepath.Join(cfg.StaticDir, "config", "supporters.json")
+	} else {
+		tree, err := static.Files()
+		if err != nil {
+			return nil, fmt.Errorf("the console's files in the binary: %w", err)
+		}
+		cfg.Static = tree
+	}
+	cfg.LangDir = orDefault(getenv("CONSOLE_LANG_DIR"), cfg.LangDir)
+
 	cfg.WebUIDir = getenv("WEB_UI_DIR")
-	cfg.PublicDir = filepath.Join(cfg.ConsoleDir, "public")
-	cfg.ProtosDir = filepath.Join(cfg.ConsoleDir, "protos")
 	cfg.WallpapersDir = filepath.Join(cfg.ConsoleDir, "wallpapers")
 	cfg.UploadsDir = filepath.Join(cfg.DataDir, "uploads")
 	cfg.TransfersDir = filepath.Join(cfg.ConsoleDir, "data", "transfers")
 	cfg.FontsDir = filepath.Join(cfg.ConsoleDir, "public", "fonts")
 	cfg.FontCacheFile = filepath.Join(cfg.ConsoleDir, "data", "google-fonts-cache.json")
 	cfg.TempDir = filepath.Join(cfg.ConsoleDir, "data", "tmp")
-	cfg.ThemesDir = filepath.Join(cfg.ConsoleDir, "themes")
-	cfg.PalettesFile = filepath.Join(cfg.ConsoleDir, "config", "theme-palettes.json")
-	cfg.FaviconFile = filepath.Join(cfg.ConsoleDir, "public", "favicon.svg")
-	cfg.SupportersFile = filepath.Join(cfg.ConsoleDir, "config", "supporters.json")
 
 	cfg.HTTPS = isTrue(getenv("HTTPS_ENABLED"))
 	cfg.HTTPSExact = getenv("HTTPS_ENABLED") == "true"
@@ -425,9 +449,9 @@ func nullish(getenv func(string) string, p probe, name, fallback string) string 
 // case, nothing else.
 func isTrue(value string) bool { return strings.ToLower(value) == "true" }
 
-// consoleDir finds the folder of the old console's files: CONSOLE_DIR,
-// else the first usual place that has lang/en.json, else the first usual
-// place.
+// consoleDir finds the folder that holds the console's state:
+// CONSOLE_DIR, else the first usual place that has a .env or, where a
+// Node console was installed, lang/en.json, else the first usual place.
 func consoleDir(getenv func(string) string, p probe, docker bool) string {
 	if dir := getenv("CONSOLE_DIR"); dir != "" {
 		return dir
@@ -436,18 +460,13 @@ func consoleDir(getenv func(string) string, p probe, docker bool) string {
 	if docker {
 		places = append(places, "/app")
 	}
-	for _, base := range []string{p.exeDir, p.cwd} {
-		if base != "" {
-			places = append(places, filepath.Join(base, "..", "web-nodejs"))
-		}
-	}
 	if p.windows {
 		places = append(places, `C:\BetterDeskConsole`)
 	} else {
 		places = append(places, "/opt/BetterDeskConsole", "/opt/betterdesk", "/var/lib/betterdesk")
 	}
 	for _, place := range places {
-		if p.exists(filepath.Join(place, "lang", "en.json")) {
+		if p.exists(filepath.Join(place, ".env")) || p.exists(filepath.Join(place, "lang", "en.json")) {
 			return place
 		}
 	}

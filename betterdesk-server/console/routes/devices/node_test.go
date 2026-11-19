@@ -271,13 +271,9 @@ var raisedLimits = map[string]string{
 	"RATE_LIMIT_MAX": "1000000", "PANEL_READ_RATE_LIMIT_MAX": "1000000", "WIDGET_RATE_LIMIT_MAX": "1000000",
 }
 
-// nodeLanguages gives the console the language files of the source tree
-// (or of /repo, for a copy of the server without the tree around it).
+// nodeLanguages gives the console the language files of the source tree.
 func nodeLanguages(cfg *config.Config) {
-	cfg.LangDir = filepath.Join("..", "..", "..", "..", "web-nodejs", "lang")
-	if _, err := os.Stat(filepath.Join(cfg.LangDir, "en.json")); err != nil {
-		cfg.LangDir = "/repo/web-nodejs/lang"
-	}
+	cfg.LangDir = filepath.Join("..", "..", "static", "files", "lang")
 }
 
 // sinceFO1 is an answer the Node console recorded as the console gives it

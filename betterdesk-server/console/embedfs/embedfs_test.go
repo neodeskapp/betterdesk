@@ -370,6 +370,83 @@ func TestCopyRefuses(t *testing.T) {
 	}
 }
 
+func TestStampRecordsTheTimesInPlace(t *testing.T) {
+	source := map[string]time.Time{
+		"lang/en.json":           time.Date(2025, 11, 10, 1, 59, 3, 123456700, time.UTC),
+		"public/img/a.png":       time.Date(2024, 1, 2, 3, 4, 5, 6000, time.UTC),
+		"public/fonts/.gitkeep":  time.Date(2023, 6, 7, 8, 9, 10, 0, time.UTC),
+		"_x/b.txt":               time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
+		"config/theme.json":      time.Date(2021, 5, 6, 7, 8, 9, 999000000, time.UTC),
+		"themes/sub/insolve.txt": time.Date(2020, 2, 3, 4, 5, 6, 0, time.UTC),
+	}
+	dir := makeTree(t, source)
+	writeFile(t, filepath.Join(dir, Placeholder), "")
+	writeFile(t, filepath.Join(dir, StampFile), `{"stale.txt":1}`)
+
+	files, size, err := Stamp(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var wantSize int64
+	for name := range source {
+		wantSize += int64(len("content of " + name))
+	}
+	if files != len(source) || size != wantSize {
+		t.Errorf("stamped %d files of %d bytes, want %d of %d", files, size, len(source), wantSize)
+	}
+	raw, err := os.ReadFile(filepath.Join(dir, StampFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stamp map[string]int64
+	if err := json.Unmarshal(raw, &stamp); err != nil {
+		t.Fatal(err)
+	}
+	if len(stamp) != len(source) {
+		t.Errorf("stamp names %d files: %v", len(stamp), stamp)
+	}
+	f, err := New(os.DirFS(filepath.Dir(dir)), filepath.Base(dir), fallback)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, at := range source {
+		if stamp[name] != at.UnixNano() {
+			t.Errorf("stamp of %s: %d, want %d", name, stamp[name], at.UnixNano())
+		}
+		info, err := f.Stat(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !info.ModTime().Equal(at) {
+			t.Errorf("%s: %v, want %v", name, info.ModTime(), at)
+		}
+	}
+	// The files stay where they are: nothing is copied or removed
+	for name := range source {
+		if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash(name))); err != nil {
+			t.Error(err)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(dir, Placeholder)); err != nil {
+		t.Error(err)
+	}
+
+	if _, _, err := Stamp(filepath.Join(dir, "lang", "en.json")); err == nil || !strings.Contains(err.Error(), "is not a folder") {
+		t.Errorf("a file was stamped as a folder: %v", err)
+	}
+	if _, _, err := Stamp(filepath.Join(dir, "missing")); err == nil {
+		t.Error("a missing folder was stamped")
+	}
+	if runtime.GOOS != "windows" {
+		if err := os.Symlink(filepath.Join(dir, "lang", "en.json"), filepath.Join(dir, "lang", "link.json")); err != nil {
+			t.Fatal(err)
+		}
+		if _, _, err := Stamp(dir); err == nil {
+			t.Error("a symbolic link was stamped")
+		}
+	}
+}
+
 func writeFile(t *testing.T, name, content string) {
 	t.Helper()
 	if err := os.WriteFile(name, []byte(content), 0o644); err != nil {

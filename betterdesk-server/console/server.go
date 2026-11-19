@@ -24,6 +24,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -191,6 +192,13 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	}
 
 	bundle := i18n.New(cfg.LangDir, cfg.DefaultLanguage)
+	if cfg.LangDir == "" && cfg.Static != nil {
+		// The language files in the binary, read only
+		if bundle.FS, err = fs.Sub(cfg.Static, "lang"); err != nil {
+			return nil, fmt.Errorf("the language files in the binary: %w", err)
+		}
+		bundle.Dir = filepath.Join("(built in)", "lang")
+	}
 	bundle.Logf = func(format string, args ...any) { logging.Logf("console", format, args...) }
 	bundle.Load()
 	languages := &i18n.Handlers{
@@ -253,7 +261,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	s.deps.Branding, err = branding.New(branding.Options{
 		DB: opts.Store, UploadsDir: cfg.UploadsDir, FontsDir: cfg.FontsDir, FontCacheFile: cfg.FontCacheFile,
 		TempDir: cfg.TempDir, ThemesDir: cfg.ThemesDir, PalettesFile: cfg.PalettesFile, FaviconFile: cfg.FaviconFile,
-		SupportersFile: cfg.SupportersFile,
+		SupportersFile: cfg.SupportersFile, Files: cfg.Static,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("branding: %w", err)
@@ -397,7 +405,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	s.jobs.Add("online status sync", sweeps.RunStatusSync)
 	if cfg.NodeUpstream == nil {
 		lan := discovery.FromEnv(getenv, discovery.Settings{PubKeyPath: cfg.PubKeyPath, Port: float64(cfg.Port), APIPort: float64(cfg.APIPort), HTTPS: cfg.HTTPS,
-			Version: serverinfo.ReadProductVersion(serverinfo.OSFS{}, filepath.Join(cfg.ConsoleDir, ".."), cfg.ConsoleDir, serverinfo.DefaultVersionFallback)})
+			Version: cfg.Version})
 		s.jobs.Add("LAN discovery", discovery.NewLAN(lan).Run)
 		// The old console announced itself over mDNS only where someone had
 		// installed bonjour-service by hand; no installer or image did. So

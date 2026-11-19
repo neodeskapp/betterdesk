@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -19,12 +17,8 @@ import (
 
 func loginPageWorld(t *testing.T, db *store.DB) *routetest.World {
 	t.Helper()
-	consoleDir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(consoleDir, "VERSION"), []byte("1.2.3"), 0o644); err != nil {
-		t.Fatal(err)
-	}
 	return routetest.New(t, routetest.Options{DB: db, Config: func(cfg *config.Config) {
-		cfg.ConsoleDir = filepath.Join(consoleDir, "web-nodejs")
+		cfg.Version = "1.2.3"
 	}})
 }
 

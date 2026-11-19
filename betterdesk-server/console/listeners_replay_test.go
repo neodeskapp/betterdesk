@@ -268,7 +268,7 @@ func newGoStack(t *testing.T, db *store.DB, scenario oracleScenario, certs *test
 		cfg.Host = host
 	}
 	cfg.DataDir, cfg.UploadsDir = data, filepath.Join(data, "uploads")
-	cfg.LangDir = filepath.Join("..", "..", "web-nodejs", "lang")
+	cfg.LangDir = filepath.Join("static", "files", "lang")
 	cfg.WebUIDir = filepath.Join(data, "no-build")
 	cfg.NodeEnv, cfg.Production = "production", true
 	g := &goStack{api: newEchoAPI(t), reg: newFakeRegistration(t), ports: map[string]string{}}

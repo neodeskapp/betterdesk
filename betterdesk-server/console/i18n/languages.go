@@ -4,7 +4,6 @@ import (
 	"errors"
 	"math"
 	"net/http"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -66,8 +65,8 @@ func newFlatKeys() *flatKeys { return &flatKeys{values: map[string]string{}} }
 
 // readJSONFile reads and parses a file without dropping a byte order mark,
 // so a file with one does not parse. message is the error in Node's words.
-func readJSONFile(path string) (data any, message string, ok bool) {
-	raw, err := os.ReadFile(path)
+func (b *Bundle) readJSONFile(path string) (data any, message string, ok bool) {
+	raw, err := b.readFile(path)
 	if err != nil {
 		return nil, nodeFSMessage(err, "read", path), false
 	}
@@ -90,10 +89,10 @@ func (h *Handlers) loadReferences() (*references, error) {
 	refs := &references{byCode: map[string]*flatKeys{}, has: map[string]bool{}}
 	for _, code := range []string{"en", "pl"} {
 		path := filepath.Join(h.Bundle.Dir, code+".json")
-		if _, err := os.Stat(path); err != nil {
+		if err := h.Bundle.stat(path); err != nil {
 			continue
 		}
-		data, message, ok := readJSONFile(path)
+		data, message, ok := h.Bundle.readJSONFile(path)
 		if !ok {
 			return nil, errors.New(message)
 		}
@@ -112,8 +111,8 @@ func (h *Handlers) loadReferences() (*references, error) {
 	return refs, nil
 }
 
-func jsonNames(dir string) ([]string, error) {
-	items, err := os.ReadDir(dir)
+func (b *Bundle) jsonNames() ([]string, error) {
+	items, err := b.readDir()
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +159,7 @@ func (h *Handlers) panelLanguages() ([]any, int, error) {
 	if len(refs.keys) == 0 {
 		return languages, 0, nil
 	}
-	names, err := jsonNames(h.Bundle.Dir)
+	names, err := h.Bundle.jsonNames()
 	if err != nil {
 		return nil, 0, err
 	}
@@ -168,7 +167,7 @@ func (h *Handlers) panelLanguages() ([]any, int, error) {
 	for _, file := range names {
 		code := strings.Replace(decodeUTF8([]byte(file)), ".json", "", 1)
 		reference := code == "en" || code == "pl"
-		data, message, ok := readJSONFile(filepath.Join(h.Bundle.Dir, file))
+		data, message, ok := h.Bundle.readJSONFile(filepath.Join(h.Bundle.Dir, file))
 		if !ok {
 			languages = append(languages, obj(
 				"code", code, "name", code, "native", code, "flag", "", "rtl", false, "needs_review", true,
@@ -261,14 +260,14 @@ func (h *Handlers) panelMissing(code string) (*Object, int) {
 		return nil, http.StatusInternalServerError
 	}
 	path := filepath.Join(h.Bundle.Dir, letters.String()+".json")
-	if _, err := os.Stat(path); err != nil {
+	if err := h.Bundle.stat(path); err != nil {
 		return nil, http.StatusNotFound
 	}
 	refs, err := h.loadReferences()
 	if err != nil {
 		return nil, http.StatusInternalServerError
 	}
-	data, _, ok := readJSONFile(path)
+	data, _, ok := h.Bundle.readJSONFile(path)
 	if !ok {
 		return nil, http.StatusInternalServerError
 	}

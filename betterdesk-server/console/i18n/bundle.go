@@ -100,6 +100,10 @@ var inheritedNames = map[string]bool{
 type Bundle struct {
 	// Dir is the folder with the <code>.json files.
 	Dir string
+	// FS holds the <code>.json files at its top in place of Dir, which then
+	// only names the folder in messages. Its files are read only: saving
+	// or deleting a language fails as on a read-only file system.
+	FS fs.FS
 	// DefaultLang is the language whose texts fill what another lacks.
 	DefaultLang string
 	// Logf writes the load messages. log.Printf when nil.
@@ -141,7 +145,7 @@ func logValue(s string) string {
 func (b *Bundle) Load() {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	if _, err := os.Stat(b.Dir); err != nil {
+	if !b.dirExists() {
 		b.logf("Language directory not found %s", logValue(b.Dir))
 	} else {
 		root := b.root()
@@ -169,10 +173,10 @@ func (b *Bundle) loadLocked(root langRoot, code string) bool {
 		b.logf("Failed to load language %s %s", logValue(code), err)
 		return false
 	}
-	if _, err := os.Stat(path); err != nil {
+	if err := b.stat(path); err != nil {
 		return false
 	}
-	raw, err := os.ReadFile(path)
+	raw, err := b.readFile(path)
 	if err != nil {
 		b.logf("Failed to load language %s %s", logValue(code), nodeFSMessage(err, "read", path))
 		return false
@@ -632,7 +636,7 @@ func (b *Bundle) Save(code string, texts any) Result {
 	if err != nil {
 		return Result{Error: err.Error()}
 	}
-	if err := os.WriteFile(path, []byte(stringify(texts, "  ")), 0o666); err != nil {
+	if err := b.writeFile(path, []byte(stringify(texts, "  "))); err != nil {
 		return Result{Error: nodeFSMessage(err, "open", path)}
 	}
 	b.loadLocked(root, code)
@@ -654,8 +658,8 @@ func (b *Bundle) Delete(code string) Result {
 	if err != nil {
 		return Result{Error: err.Error()}
 	}
-	if _, err := os.Stat(path); err == nil {
-		if err := removeFile(path); err != nil {
+	if err := b.stat(path); err == nil {
+		if err := b.remove(path); err != nil {
 			return Result{Error: nodeFSMessage(err, "unlink", path)}
 		}
 	}
@@ -672,19 +676,18 @@ func (b *Bundle) Delete(code string) Result {
 	return Result{Success: true}
 }
 
-// removeFile deletes a file and refuses a directory, as unlink does.
-func removeFile(path string) error {
-	if info, err := os.Lstat(path); err == nil && info.IsDir() {
-		return &fs.PathError{Op: "unlink", Path: path, Err: syscall.EISDIR}
-	}
-	return os.Remove(path)
+// langRoot is the language folder as an absolute path, and with its
+// symbolic links resolved for comparing. In FS it is Dir as written, and
+// it has no links.
+type langRoot struct {
+	abs, real string
+	inFS      bool
 }
 
-// langRoot is the language folder as an absolute path, and with its
-// symbolic links resolved for comparing.
-type langRoot struct{ abs, real string }
-
 func (b *Bundle) root() langRoot {
+	if b.FS != nil {
+		return langRoot{abs: b.Dir, inFS: true}
+	}
 	abs, err := filepath.Abs(b.Dir)
 	if err != nil {
 		abs = b.Dir
@@ -700,6 +703,9 @@ func (r langRoot) file(code string) (string, error) {
 		return "", errors.New("Invalid path segment")
 	}
 	target := filepath.Join(r.abs, name)
+	if r.inFS {
+		return target, nil
+	}
 	rel, err := filepath.Rel(r.real, comparablePath(target))
 	if err != nil || (rel != "." && (strings.HasPrefix(rel, "..") || filepath.IsAbs(rel))) {
 		return "", errors.New("Path outside allowed directory")

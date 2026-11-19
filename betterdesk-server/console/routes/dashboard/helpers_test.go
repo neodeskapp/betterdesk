@@ -36,7 +36,7 @@ var roleIDs = map[string]int64{
 
 // languages loads the console's language files once for all tests.
 var languages = sync.OnceValue(func() *i18n.Bundle {
-	bundle := i18n.New(filepath.Join("..", "..", "..", "..", "web-nodejs", "lang"), "en")
+	bundle := i18n.New(filepath.Join("..", "..", "static", "files", "lang"), "en")
 	bundle.Logf = func(string, ...any) {}
 	bundle.Load()
 	return bundle

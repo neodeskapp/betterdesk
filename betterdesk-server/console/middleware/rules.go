@@ -1,7 +1,10 @@
 package middleware
 
 import (
+	"io"
+	"io/fs"
 	"net/http"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -84,8 +87,10 @@ func MarkAPICompression(exempt func(*http.Request) bool) func(http.Handler) http
 
 // StaticFoldersOptions name the folders the console serves as files.
 type StaticFoldersOptions struct {
-	// PublicDir is served at the root: favicon.svg, fonts/, img/.
+	// PublicDir is served at the root: favicon.svg, img/.
 	PublicDir string
+	// FontsDir is served at /fonts: the installed fonts.
+	FontsDir string
 	// ProtosDir is served at /protos.
 	ProtosDir string
 	// UploadsDir is served at /uploads: DATA_DIR/uploads, where uploaded
@@ -93,6 +98,10 @@ type StaticFoldersOptions struct {
 	UploadsDir string
 	// WallpapersDir is served at /wallpapers. It may not exist.
 	WallpapersDir string
+	// Static is the tree of the console's own files (package static):
+	// its public and protos folders are served where PublicDir or
+	// ProtosDir is empty.
+	Static fs.FS
 	// Production is NODE_ENV=production. It gives the files a max-age of 7
 	// days (30 for uploads and wallpapers) in place of 0.
 	Production bool
@@ -104,9 +113,9 @@ type StaticFoldersOptions struct {
 }
 
 // StaticFolders serves the console's own files: the public folder at the
-// root, then /protos, /uploads and /wallpapers. A request that names no
-// file goes on to next; a folder without a trailing slash is redirected
-// to the address with one.
+// root, then /fonts, /protos, /uploads and /wallpapers. A request that
+// names no file goes on to next; a folder without a trailing slash is
+// redirected to the address with one.
 //
 // Cache-Control is only set when it is missing. Behind SecurityHeaders it
 // never is, so the files answer no-store, or one hour under /img/ and
@@ -120,26 +129,92 @@ func StaticFolders(opts StaticFoldersOptions) func(http.Handler) http.Handler {
 	if opts.OnError != nil {
 		onError = opts.OnError
 	}
-	mounts := []struct {
+	type mount struct {
 		mount, dir string
+		static     string
 		options    httpx.StaticOptions
-	}{
-		{"", opts.PublicDir, httpx.StaticOptions{MaxAge: week}},
-		{"/protos", opts.ProtosDir, httpx.StaticOptions{MaxAge: week}},
-		{"/uploads", opts.UploadsDir, httpx.StaticOptions{MaxAge: month}},
-		{"/wallpapers", opts.WallpapersDir, httpx.StaticOptions{MaxAge: month, Immutable: true}},
+	}
+	mounts := []mount{
+		{"", opts.PublicDir, "public", httpx.StaticOptions{MaxAge: week}},
+		{"/fonts", opts.FontsDir, "", httpx.StaticOptions{MaxAge: week}},
+		{"/protos", opts.ProtosDir, "protos", httpx.StaticOptions{MaxAge: week}},
+		{"/uploads", opts.UploadsDir, "", httpx.StaticOptions{MaxAge: month}},
+		{"/wallpapers", opts.WallpapersDir, "", httpx.StaticOptions{MaxAge: month, Immutable: true}},
 	}
 	return func(next http.Handler) http.Handler {
 		handler := next
 		for i := len(mounts) - 1; i >= 0; i-- {
 			m := mounts[i]
-			if m.dir == "" {
-				continue
-			}
 			m.options.OnError = onError
 			m.options.FS = opts.FS
-			handler = httpx.NewStatic(filepath.Clean(m.dir), m.options).Middleware(m.mount)(handler)
+			root := filepath.Clean(m.dir)
+			switch {
+			case m.dir != "":
+			case m.static != "" && opts.Static != nil:
+				root = staticRoot(m.static)
+				m.options.FS = staticTree{root: root, fsys: opts.Static, dir: m.static}
+			default:
+				continue
+			}
+			handler = httpx.NewStatic(root, m.options).Middleware(m.mount)(handler)
 		}
 		return handler
 	}
+}
+
+// staticRoot is the name a folder of the console's tree goes by in a
+// file server: the server makes file names of it as of a folder on disk,
+// and staticTree turns them back.
+func staticRoot(dir string) string {
+	root, err := filepath.Abs(filepath.FromSlash("/betterdesk-static/" + dir))
+	if err != nil {
+		return filepath.FromSlash("/betterdesk-static/" + dir)
+	}
+	return root
+}
+
+// staticTree is the folder dir of the console's tree as the file server
+// reaches it: by the names it makes of root.
+type staticTree struct {
+	root string
+	fsys fs.FS
+	dir  string
+}
+
+// name is the slash-separated name in fsys of a file name made of root.
+func (t staticTree) name(op, file string) (string, error) {
+	rel := "."
+	if file != t.root {
+		rest, ok := strings.CutPrefix(file, t.root+string(filepath.Separator))
+		if !ok || !fs.ValidPath(filepath.ToSlash(rest)) {
+			return "", &fs.PathError{Op: op, Path: file, Err: fs.ErrNotExist}
+		}
+		rel = filepath.ToSlash(rest)
+	}
+	return path.Join(t.dir, rel), nil
+}
+
+func (t staticTree) Stat(file string) (fs.FileInfo, error) {
+	name, err := t.name("stat", file)
+	if err != nil {
+		return nil, err
+	}
+	return fs.Stat(t.fsys, name)
+}
+
+func (t staticTree) Open(file string) (io.ReadSeekCloser, error) {
+	name, err := t.name("open", file)
+	if err != nil {
+		return nil, err
+	}
+	f, err := t.fsys.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	seekable, ok := f.(io.ReadSeekCloser)
+	if !ok {
+		_ = f.Close()
+		return nil, &fs.PathError{Op: "open", Path: file, Err: fs.ErrInvalid}
+	}
+	return seekable, nil
 }

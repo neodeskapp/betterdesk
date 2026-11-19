@@ -9,7 +9,6 @@ package settingsbackup
 
 import (
 	"net/http"
-	"path/filepath"
 
 	"github.com/unitronix/betterdesk-server/console/backup"
 	"github.com/unitronix/betterdesk-server/console/branding"
@@ -17,7 +16,6 @@ import (
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/scheduledbackup"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
 )
 
 // maxUpload is the largest backup a restore takes, 200 MB.
@@ -57,7 +55,7 @@ func Register(d *kit.Deps) {
 		PubKeyPath: cfg.PubKeyPath,
 		APIKeyPath: cfg.APIKeyPath,
 		DBPath:     cfg.DBPath,
-		AppVersion: serverinfo.ReadProductVersion(serverinfo.OSFS{}, filepath.Join(cfg.ConsoleDir, ".."), cfg.ConsoleDir, serverinfo.DefaultVersionFallback),
+		AppVersion: cfg.Version,
 		Limits:     archiveLimits(cfg.Getenv),
 	})
 	scheduled := scheduledbackup.New(scheduledbackup.Options{

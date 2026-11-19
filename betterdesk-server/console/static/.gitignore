@@ -1,0 +1,2 @@
+# Written by cmd/embed-webui before go build: the times of the files
+/files/.embedfs-times.json

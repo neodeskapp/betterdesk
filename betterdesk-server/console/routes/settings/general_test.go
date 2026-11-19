@@ -41,6 +41,7 @@ func newSite(t *testing.T, db *store.DB, overrides routetest.Overrides, env map[
 	}
 	opts := routetest.Options{DB: db, API: s.API, Env: env, Config: func(cfg *config.Config) {
 		cfg.ConsoleDir = s.Console
+		cfg.Version = "4.5.6"
 		cfg.KeysPath = s.Keys
 		cfg.EnvPath = filepath.Join(s.Console, ".env")
 		cfg.ComposePath = filepath.Join(root, "no-compose", "docker-compose.yml")
@@ -146,7 +147,7 @@ func TestRestartStatus(t *testing.T) {
 	res := s.SignedOut().Do("GET", "/api/settings/restart-status", "")
 	got := decode(t, res.Body)
 	data := got["data"].(map[string]any)
-	if data["status"] != "ok" || !strings.HasPrefix(data["cacheVersion"].(string), "0.0.0.") || data["uptime"] != float64(0) {
+	if data["status"] != "ok" || !strings.HasPrefix(data["cacheVersion"].(string), "4.5.6.") || data["uptime"] != float64(0) {
 		t.Errorf("liveness: %s", res.Body)
 	}
 	for _, query := range []string{"?job=a&token=b", "?job=a&job=b&token=t", "?job[x]=1&token=t"} {
@@ -360,7 +361,7 @@ func TestInfoAndServerInfo(t *testing.T) {
 			t.Errorf("keys %s", keys)
 		}
 		app := data["app"].(map[string]any)
-		if app["name"] != "BetterDesk Console" || app["nodeVersion"] != runtime.Version() || app["env"] != "production" || app["version"] != "0.0.0" {
+		if app["name"] != "BetterDesk Console" || app["nodeVersion"] != runtime.Version() || app["env"] != "production" || app["version"] != "4.5.6" {
 			t.Errorf("app %v", app)
 		}
 		server := data["server"].(map[string]any)

@@ -49,13 +49,9 @@ func smallLangDir(t *testing.T) string {
 
 func worldWithLanguages(t *testing.T, db *store.DB, nodeBehind bool, langDir string) *routetest.World {
 	t.Helper()
-	consoleDir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(consoleDir, "VERSION"), []byte("9.8.7\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
 	w := routetest.New(t, routetest.Options{DB: db, Config: func(cfg *config.Config) {
 		cfg.LangDir = langDir
-		cfg.ConsoleDir = filepath.Join(consoleDir, "web-nodejs")
+		cfg.Version = "9.8.7"
 		cfg.PalettesFile = filepath.Join(fixtures, "config", "theme-palettes.json")
 		cfg.SupportersFile = filepath.Join(fixtures, "config", "supporters.json")
 		cfg.FaviconFile = filepath.Join(fixtures, "public", "favicon.svg")
@@ -83,25 +79,15 @@ func worldWithLanguages(t *testing.T, db *store.DB, nodeBehind bool, langDir str
 	return w
 }
 
-// sourceLangDir is web-nodejs/lang of the source tree, "" when the tree
-// around the server is not there.
+// sourceLangDir is the console's language files in the source tree, ""
+// when they are not there.
 func sourceLangDir(t *testing.T) string {
 	t.Helper()
-	dir, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
+	dir := filepath.Join("..", "..", "static", "files", "lang")
+	if _, err := os.Stat(filepath.Join(dir, "en.json")); err != nil {
+		return ""
 	}
-	for {
-		candidate := filepath.Join(dir, "web-nodejs", "lang")
-		if _, err := os.Stat(filepath.Join(candidate, "en.json")); err == nil {
-			return candidate
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return ""
-		}
-		dir = parent
-	}
+	return dir
 }
 
 func decode(t *testing.T, body string) map[string]any {

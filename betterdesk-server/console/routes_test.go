@@ -31,7 +31,7 @@ func copyLang(t *testing.T, codes ...string) string {
 	t.Helper()
 	dir := t.TempDir()
 	for _, code := range codes {
-		raw, err := os.ReadFile(filepath.Join("..", "..", "web-nodejs", "lang", code+".json"))
+		raw, err := os.ReadFile(filepath.Join("static", "files", "lang", code+".json"))
 		if err != nil {
 			t.Fatal(err)
 		}

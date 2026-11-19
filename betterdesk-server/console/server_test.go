@@ -365,7 +365,7 @@ func TestStartAndStopLeaveNothingRunning(t *testing.T) {
 
 	cfg := &config.Config{
 		Host: "127.0.0.1", NodeUpstream: upstream, DataDir: t.TempDir(), UploadsDir: t.TempDir(),
-		LangDir: "../../web-nodejs/lang", WebUIDir: t.TempDir(), DefaultLanguage: "en",
+		LangDir: "static/files/lang", WebUIDir: t.TempDir(), DefaultLanguage: "en",
 		Getenv: func(key string) string {
 			if key == "SESSION_SECRET" {
 				return testSecret
@@ -430,7 +430,7 @@ func TestStopWaitsForPictureSyncs(t *testing.T) {
 	db := storetest.Migrated(t)
 	cfg := &config.Config{
 		Host: "127.0.0.1", DataDir: t.TempDir(), UploadsDir: t.TempDir(),
-		LangDir: "../../web-nodejs/lang", WebUIDir: t.TempDir(), DefaultLanguage: "en",
+		LangDir: "static/files/lang", WebUIDir: t.TempDir(), DefaultLanguage: "en",
 		Getenv: func(key string) string {
 			if key == "SESSION_SECRET" {
 				return testSecret

@@ -136,30 +136,11 @@ type world struct {
 // The token rows, the same as in testdata/nodeoracle/run.js.
 var tokenRows = [][2]string{{"tok-device-a", "dev-a"}, {"tok-device-b", "dev-b"}, {"tok-numeric", "123456"}, {"tok-unbound", ""}, {"tok-seeded", "900100001"}}
 
-// nodeLangDir is the old console's language folder, which the oracle
-// read as well.
+// nodeLangDir is the console's language folder, which the oracle read as
+// well (then in web-nodejs/lang).
 func nodeLangDir(t *testing.T) string {
 	t.Helper()
-	dir, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	for {
-		candidate := filepath.Join(dir, "web-nodejs", "lang")
-		if _, err := os.Stat(filepath.Join(candidate, "en.json")); err == nil {
-			return candidate
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			// A copy of the server folder (tools/mutate.sh) reads the
-			// worktree's files in the dev image
-			if _, err := os.Stat("/repo/web-nodejs/lang/en.json"); err == nil {
-				return "/repo/web-nodejs/lang"
-			}
-			t.Skip("no web-nodejs/lang to read the languages from")
-		}
-		dir = parent
-	}
+	return filepath.Join("..", "..", "static", "files", "lang")
 }
 
 func newWorld(t *testing.T, db *store.DB, appVersion string, mockOn bool) *world {

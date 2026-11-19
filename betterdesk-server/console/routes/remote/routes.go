@@ -17,7 +17,6 @@ package remote
 import (
 	"context"
 	_ "embed"
-	"path/filepath"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/branding"
@@ -117,8 +116,7 @@ func defaultSources(d *kit.Deps) sources {
 		src.relay = d.RemoteRelay
 	}
 	if d.Config != nil {
-		dir := d.Config.ConsoleDir
-		src.appVersion = serverinfo.ReadProductVersion(serverinfo.OSFS{}, filepath.Join(dir, ".."), dir, serverinfo.DefaultVersionFallback)
+		src.appVersion = d.Config.Version
 		if d.Config.Getenv != nil && jsbind.Trim(d.Config.Getenv("BD_DEV_MOCK_REMOTE")) == "1" {
 			src.mock = newMockScript(time.Now())
 		}

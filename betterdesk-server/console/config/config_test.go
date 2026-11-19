@@ -2,28 +2,42 @@ package config
 
 import (
 	"encoding/json"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/unitronix/betterdesk-server/internal/productversion"
 )
 
 func env(values map[string]string) func(string) string {
 	return func(key string) string { return values[key] }
 }
 
+// folders are the folders and files of a configuration by field name.
+func folders(cfg *Config) map[string]string {
+	return map[string]string{
+		"ConsoleDir": cfg.ConsoleDir, "DataDir": cfg.DataDir, "WebUIDir": cfg.WebUIDir, "WallpapersDir": cfg.WallpapersDir,
+		"UploadsDir": cfg.UploadsDir, "TransfersDir": cfg.TransfersDir, "FontsDir": cfg.FontsDir,
+		"FontCacheFile": cfg.FontCacheFile, "TempDir": cfg.TempDir, "StaticDir": cfg.StaticDir, "LangDir": cfg.LangDir,
+		"PublicDir": cfg.PublicDir, "ProtosDir": cfg.ProtosDir, "ThemesDir": cfg.ThemesDir, "PalettesFile": cfg.PalettesFile,
+		"FaviconFile": cfg.FaviconFile, "SupportersFile": cfg.SupportersFile,
+	}
+}
+
 // machine is a probe with the given files and folders.
-func machine(exeDir, cwd string, files ...string) probe {
+func machine(files ...string) probe {
 	have := map[string]bool{}
 	for _, f := range files {
 		have[filepath.FromSlash(f)] = true
 	}
-	return probe{exists: func(p string) bool { return have[p] }, exeDir: exeDir, cwd: cwd}
+	return probe{exists: func(p string) bool { return have[p] }}
 }
 
 func TestLoadDefaults(t *testing.T) {
-	cfg, err := load(env(nil), machine("/srv/bin", "/srv/run"))
+	cfg, err := load(env(nil), machine())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,25 +50,38 @@ func TestLoadDefaults(t *testing.T) {
 	if cfg.DefaultLanguage != "en" || cfg.DeviceScopeDefault != "open" || cfg.LogLevel != "" || cfg.APIHost != "127.0.0.1:21114" {
 		t.Errorf("defaults = %+v", cfg)
 	}
-	console := filepath.Join("/srv/bin", "..", "web-nodejs")
+	console := "/opt/BetterDeskConsole"
 	want := map[string]string{
 		"ConsoleDir":    console,
 		"DataDir":       filepath.Join(console, "data"),
-		"LangDir":       filepath.Join(console, "lang"),
 		"WebUIDir":      "",
-		"PublicDir":     filepath.Join(console, "public"),
-		"ProtosDir":     filepath.Join(console, "protos"),
 		"WallpapersDir": filepath.Join(console, "wallpapers"),
 		"UploadsDir":    filepath.Join(console, "data", "uploads"),
+		"FontsDir":      filepath.Join(console, "public", "fonts"),
+		// The console's own files come from the binary
+		"StaticDir": "", "LangDir": "", "PublicDir": "", "ProtosDir": "",
+		"ThemesDir": "", "PalettesFile": "", "FaviconFile": "", "SupportersFile": "",
 	}
-	got := map[string]string{
-		"ConsoleDir": cfg.ConsoleDir, "DataDir": cfg.DataDir, "LangDir": cfg.LangDir, "WebUIDir": cfg.WebUIDir,
-		"PublicDir": cfg.PublicDir, "ProtosDir": cfg.ProtosDir, "WallpapersDir": cfg.WallpapersDir, "UploadsDir": cfg.UploadsDir,
-	}
+	got := folders(cfg)
 	for name, dir := range want {
 		if got[name] != dir {
 			t.Errorf("%s = %q, want %q", name, got[name], dir)
 		}
+	}
+	if cfg.Static == nil {
+		t.Fatal("no files in the binary")
+	}
+	for _, name := range []string{
+		"lang/en.json", "lang/pl.json", "lang/zh-TW.json", "public/favicon.svg", "public/img/betterdesk_icon.png",
+		"public/img/login-slides/free.jpg", "protos/rendezvous.proto", "protos/message.proto", "themes/default.json",
+		"config/theme-palettes.json", "config/supporters.json",
+	} {
+		if info, err := fs.Stat(cfg.Static, name); err != nil || info.Size() == 0 {
+			t.Errorf("%s in the binary: %v", name, err)
+		}
+	}
+	if cfg.Version == "" || cfg.Version != productversion.Product() {
+		t.Errorf("Version = %q, want the binary's %q", cfg.Version, productversion.Product())
 	}
 	if cfg.Getenv == nil {
 		t.Error("Getenv is not kept for the packages that read their own settings")
@@ -82,7 +109,7 @@ func TestPanelGroupingSettings(t *testing.T) {
 		{"nodes", "\n", false, false},
 		{"nod", "0", false, true},
 	} {
-		cfg, err := load(env(map[string]string{"BACKEND_PANEL_GROUPING": c.grouping, "PANEL_TRUST_SECRET": c.secret}), machine("/srv/bin", "/srv/run"))
+		cfg, err := load(env(map[string]string{"BACKEND_PANEL_GROUPING": c.grouping, "PANEL_TRUST_SECRET": c.secret}), machine())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -101,7 +128,7 @@ func TestLoadValues(t *testing.T) {
 		"DEFAULT_LANGUAGE": "de", "DEVICE_SCOPE_DEFAULT": "Restricted", "LOG_LEVEL": " Debug ",
 		"DATA_DIR": "/data", "CONSOLE_DIR": "/console", "CONSOLE_LANG_DIR": "/langs", "WEB_UI_DIR": "/ui",
 		"HBBS_API_URL": "http://127.0.0.1:21121/api",
-	}), machine("/srv/bin", "/srv/run"))
+	}), machine())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,28 +147,66 @@ func TestLoadValues(t *testing.T) {
 	if cfg.DefaultLanguage != "de" || cfg.DeviceScopeDefault != "restricted" || cfg.LogLevel != " Debug " || cfg.APIHost != "127.0.0.1:21121" {
 		t.Errorf("values = %+v", cfg)
 	}
-	if cfg.DataDir != "/data" || cfg.LangDir != "/langs" || cfg.WebUIDir != "/ui" ||
-		cfg.PublicDir != filepath.Join("/console", "public") || cfg.UploadsDir != filepath.Join("/data", "uploads") {
-		t.Errorf("folders = %+v", cfg)
+	want := map[string]string{
+		"ConsoleDir": "/console", "DataDir": "/data", "WebUIDir": "/ui", "UploadsDir": filepath.Join("/data", "uploads"),
+		"WallpapersDir": filepath.Join("/console", "wallpapers"),
+		// The transfers and the branding's files stay in the console's
+		// folder
+		"FontsDir":      filepath.Join("/console", "public", "fonts"),
+		"TransfersDir":  filepath.Join("/console", "data", "transfers"),
+		"FontCacheFile": filepath.Join("/console", "data", "google-fonts-cache.json"),
+		"TempDir":       filepath.Join("/console", "data", "tmp"),
+		// The language files come from CONSOLE_LANG_DIR, the other
+		// files of the console from the binary
+		"LangDir": "/langs", "StaticDir": "", "PublicDir": "", "ProtosDir": "",
+		"ThemesDir": "", "PalettesFile": "", "FaviconFile": "", "SupportersFile": "",
 	}
-	// The transfers folder stays with the console's files, not with DATA_DIR
-	if cfg.TransfersDir != filepath.Join("/console", "data", "transfers") {
-		t.Errorf("TransfersDir = %q", cfg.TransfersDir)
-	}
-	// So do the branding's files
-	branding := map[string][2]string{
-		"FontsDir":       {cfg.FontsDir, filepath.Join("/console", "public", "fonts")},
-		"FontCacheFile":  {cfg.FontCacheFile, filepath.Join("/console", "data", "google-fonts-cache.json")},
-		"TempDir":        {cfg.TempDir, filepath.Join("/console", "data", "tmp")},
-		"ThemesDir":      {cfg.ThemesDir, filepath.Join("/console", "themes")},
-		"PalettesFile":   {cfg.PalettesFile, filepath.Join("/console", "config", "theme-palettes.json")},
-		"FaviconFile":    {cfg.FaviconFile, filepath.Join("/console", "public", "favicon.svg")},
-		"SupportersFile": {cfg.SupportersFile, filepath.Join("/console", "config", "supporters.json")},
-	}
-	for name, pair := range branding {
-		if pair[0] != pair[1] {
-			t.Errorf("%s = %q, want %q", name, pair[0], pair[1])
+	got := folders(cfg)
+	for name, dir := range want {
+		if got[name] != dir {
+			t.Errorf("%s = %q, want %q", name, got[name], dir)
 		}
+	}
+	if cfg.Static == nil {
+		t.Error("no files in the binary")
+	}
+}
+
+// CONSOLE_STATIC_DIR reads every one of the console's own files from a
+// folder on disk; CONSOLE_LANG_DIR still wins for the language files.
+func TestStaticDir(t *testing.T) {
+	cfg, err := load(env(map[string]string{"CONSOLE_STATIC_DIR": "/src/static", "CONSOLE_DIR": "/console"}), machine())
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]string{
+		"StaticDir":      "/src/static",
+		"LangDir":        filepath.Join("/src/static", "lang"),
+		"PublicDir":      filepath.Join("/src/static", "public"),
+		"ProtosDir":      filepath.Join("/src/static", "protos"),
+		"ThemesDir":      filepath.Join("/src/static", "themes"),
+		"PalettesFile":   filepath.Join("/src/static", "config", "theme-palettes.json"),
+		"FaviconFile":    filepath.Join("/src/static", "public", "favicon.svg"),
+		"SupportersFile": filepath.Join("/src/static", "config", "supporters.json"),
+		// State stays where it was
+		"ConsoleDir": "/console", "DataDir": filepath.Join("/console", "data"),
+		"FontsDir": filepath.Join("/console", "public", "fonts"), "WallpapersDir": filepath.Join("/console", "wallpapers"),
+	}
+	got := folders(cfg)
+	for name, dir := range want {
+		if got[name] != dir {
+			t.Errorf("%s = %q, want %q", name, got[name], dir)
+		}
+	}
+	if cfg.Static != nil {
+		t.Error("the files in the binary are read beside CONSOLE_STATIC_DIR")
+	}
+	cfg, err = load(env(map[string]string{"CONSOLE_STATIC_DIR": "/src/static", "CONSOLE_LANG_DIR": "/langs"}), machine())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.LangDir != "/langs" || cfg.PublicDir != filepath.Join("/src/static", "public") {
+		t.Errorf("CONSOLE_LANG_DIR with CONSOLE_STATIC_DIR: LangDir %q, PublicDir %q", cfg.LangDir, cfg.PublicDir)
 	}
 }
 
@@ -150,7 +215,7 @@ func TestSwitchesReadAsTheOldConsoleDid(t *testing.T) {
 		"true": {true, true}, "True": {true, false}, "TRUE": {true, false},
 		"1": {false, false}, "yes": {false, false}, "": {false, false}, " true": {false, false},
 	} {
-		cfg, err := load(env(map[string]string{"HTTPS_ENABLED": value}), machine("", ""))
+		cfg, err := load(env(map[string]string{"HTTPS_ENABLED": value}), machine())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -159,7 +224,7 @@ func TestSwitchesReadAsTheOldConsoleDid(t *testing.T) {
 		}
 	}
 	for value, want := range map[string]bool{"production": true, "Production": false, "development": false, "": false} {
-		cfg, _ := load(env(map[string]string{"NODE_ENV": value}), machine("", ""))
+		cfg, _ := load(env(map[string]string{"NODE_ENV": value}), machine())
 		if cfg.Production != want {
 			t.Errorf("NODE_ENV=%q gives Production %v", value, cfg.Production)
 		}
@@ -167,49 +232,56 @@ func TestSwitchesReadAsTheOldConsoleDid(t *testing.T) {
 }
 
 func TestDockerRule(t *testing.T) {
-	byEnv, _ := load(env(map[string]string{"DOCKER": "true"}), machine("/usr/local/bin", "/opt/rustdesk"))
-	byFile, _ := load(env(nil), machine("/usr/local/bin", "/opt/rustdesk", "/.dockerenv"))
+	byEnv, _ := load(env(map[string]string{"DOCKER": "true"}), machine())
+	byFile, _ := load(env(nil), machine("/.dockerenv"))
 	for name, cfg := range map[string]*Config{"DOCKER=true": byEnv, "/.dockerenv": byFile} {
-		if !cfg.Docker || cfg.DataDir != "/app/data" || cfg.ConsoleDir != "/app" || cfg.LangDir != filepath.Join("/app", "lang") ||
+		if !cfg.Docker || cfg.DataDir != "/app/data" || cfg.ConsoleDir != "/app" || cfg.LangDir != "" || cfg.Static == nil ||
 			cfg.WebUIDir != "" {
 			t.Errorf("%s: %+v", name, cfg)
 		}
 	}
 	// DOCKER has to be "true" exactly, and DATA_DIR wins over the rule
-	other, _ := load(env(map[string]string{"DOCKER": "TRUE", "DATA_DIR": "/d"}), machine("/b", "/c"))
+	other, _ := load(env(map[string]string{"DOCKER": "TRUE", "DATA_DIR": "/d"}), machine())
 	if other.Docker || other.DataDir != "/d" {
 		t.Errorf("DOCKER=TRUE: %+v", other)
 	}
-	set, _ := load(env(map[string]string{"DOCKER": "true", "DATA_DIR": "/d"}), machine("/b", "/c"))
+	set, _ := load(env(map[string]string{"DOCKER": "true", "DATA_DIR": "/d"}), machine())
 	if set.DataDir != "/d" || set.UploadsDir != filepath.Join("/d", "uploads") {
 		t.Errorf("DATA_DIR in a container: %+v", set)
 	}
 }
 
+// The console's folder is the one that holds its state. An install of
+// the Node console is found by the language files it left there, a newer
+// one by its .env. A web-nodejs folder in a source tree is not looked for.
 func TestConsoleDirSearch(t *testing.T) {
-	beside := filepath.Join("/srv/bin", "..", "web-nodejs")
-	besideCwd := filepath.Join("/srv/run", "..", "web-nodejs")
 	cases := []struct {
-		name  string
-		env   map[string]string
-		files []string
-		want  string
+		name    string
+		env     map[string]string
+		files   []string
+		windows bool
+		want    string
 	}{
-		{"nothing found: next to the binary", nil, nil, beside},
-		{"next to the binary", nil, []string{beside + "/lang/en.json", "/opt/BetterDeskConsole/lang/en.json"}, beside},
-		{"next to the working directory", nil, []string{besideCwd + "/lang/en.json", "/opt/BetterDeskConsole/lang/en.json"}, besideCwd},
-		{"the folder the installer uses", nil, []string{"/opt/BetterDeskConsole/lang/en.json", "/opt/betterdesk/lang/en.json"}, "/opt/BetterDeskConsole"},
-		{"the older folder", nil, []string{"/opt/betterdesk/lang/en.json"}, "/opt/betterdesk"},
-		{"a container without /app/lang", map[string]string{"DOCKER": "true"}, []string{"/opt/betterdesk/lang/en.json"}, "/opt/betterdesk"},
-		{"a container", map[string]string{"DOCKER": "true"}, []string{"/app/lang/en.json", "/opt/betterdesk/lang/en.json"}, "/app"},
-		{"CONSOLE_DIR wins", map[string]string{"CONSOLE_DIR": "/x"}, []string{"/app/lang/en.json"}, "/x"},
+		{"nothing found: the folder the installer uses", nil, []string{"/srv/web-nodejs/lang/en.json", "/srv/web-nodejs/.env"}, false, "/opt/BetterDeskConsole"},
+		{"a Node install in the folder the installer uses", nil, []string{"/opt/BetterDeskConsole/lang/en.json", "/opt/betterdesk/lang/en.json"}, false, "/opt/BetterDeskConsole"},
+		{"a Node install in the older folder", nil, []string{"/opt/betterdesk/lang/en.json"}, false, "/opt/betterdesk"},
+		{"an install with only its .env", nil, []string{"/var/lib/betterdesk/.env"}, false, "/var/lib/betterdesk"},
+		{"the first folder with either", nil, []string{"/opt/betterdesk/lang/en.json", "/var/lib/betterdesk/.env"}, false, "/opt/betterdesk"},
+		{"neither in the folder the installer uses", nil, []string{"/opt/BetterDeskConsole/data/auth.db", "/opt/betterdesk/.env"}, false, "/opt/betterdesk"},
+		{"a container without either in /app", map[string]string{"DOCKER": "true"}, []string{"/opt/betterdesk/lang/en.json"}, false, "/opt/betterdesk"},
+		{"a container of the Node image", map[string]string{"DOCKER": "true"}, []string{"/app/lang/en.json", "/opt/betterdesk/lang/en.json"}, false, "/app"},
+		{"a container with nothing found", map[string]string{"DOCKER": "true"}, nil, false, "/app"},
+		{"CONSOLE_DIR wins", map[string]string{"CONSOLE_DIR": "/x"}, []string{"/app/lang/en.json", "/opt/BetterDeskConsole/.env"}, false, "/x"},
+		{"Windows", nil, nil, true, `C:\BetterDeskConsole`},
 	}
 	for _, c := range cases {
-		cfg, err := load(env(c.env), machine("/srv/bin", "/srv/run", c.files...))
+		p := machine(c.files...)
+		p.windows = c.windows
+		cfg, err := load(env(c.env), p)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if cfg.ConsoleDir != filepath.FromSlash(c.want) {
+		if cfg.ConsoleDir != c.want {
 			t.Errorf("%s: ConsoleDir = %q, want %q", c.name, cfg.ConsoleDir, c.want)
 		}
 	}
@@ -221,7 +293,7 @@ func TestConsoleDirSearch(t *testing.T) {
 func TestWebUIDirOnlyFromTheVariable(t *testing.T) {
 	inside := filepath.Join("/opt/BetterDeskConsole", "web-ui", "build")
 	beside := filepath.Join("/opt/BetterDeskConsole", "..", "web-ui", "build")
-	builds := machine("", "", inside+"/index.html", beside+"/index.html")
+	builds := machine(inside+"/index.html", beside+"/index.html")
 	cfg, _ := load(env(map[string]string{"CONSOLE_DIR": "/opt/BetterDeskConsole"}), builds)
 	if cfg.WebUIDir != "" {
 		t.Errorf("without WEB_UI_DIR: %q, want the build in the binary", cfg.WebUIDir)
@@ -248,7 +320,7 @@ func TestConsolePort(t *testing.T) {
 		{map[string]string{"PORT": "6000"}, 5000},
 		{map[string]string{"PORT": "6000", "CONSOLE_PORT": "0"}, 0},
 	} {
-		cfg, err := load(env(c.env), machine("", ""))
+		cfg, err := load(env(c.env), machine())
 		if err != nil {
 			t.Fatalf("%v: %v", c.env, err)
 		}
@@ -261,7 +333,7 @@ func TestConsolePort(t *testing.T) {
 		}
 	}
 	for _, bad := range []string{"-1", "65536", "5000x", "0x10", "5 000"} {
-		if _, err := load(env(map[string]string{"CONSOLE_PORT": bad}), machine("", "")); err == nil {
+		if _, err := load(env(map[string]string{"CONSOLE_PORT": bad}), machine()); err == nil {
 			t.Errorf("CONSOLE_PORT=%q was taken", bad)
 		}
 	}
@@ -274,7 +346,7 @@ func TestAPIHost(t *testing.T) {
 		{"", "https://api.example/api", "api.example"},
 		{"not a url", "", "127.0.0.1:21114"},
 	} {
-		cfg, _ := load(env(map[string]string{"BETTERDESK_API_URL": c.better, "HBBS_API_URL": c.hbbs}), machine("", ""))
+		cfg, _ := load(env(map[string]string{"BETTERDESK_API_URL": c.better, "HBBS_API_URL": c.hbbs}), machine())
 		if cfg.APIHost != c.want {
 			t.Errorf("BETTERDESK_API_URL=%q HBBS_API_URL=%q: APIHost = %q, want %q", c.better, c.hbbs, cfg.APIHost, c.want)
 		}
@@ -347,7 +419,7 @@ func TestSettingsAsTheOldConsoleReadThem(t *testing.T) {
 		if c.Docker {
 			files = append(files, "/.dockerenv")
 		}
-		cfg, err := load(env(c.Env), machine("/srv/bin", "/srv/run", files...))
+		cfg, err := load(env(c.Env), machine(files...))
 		if err != nil {
 			t.Errorf("%v: %v", c.Env, err)
 			continue
@@ -386,14 +458,14 @@ func TestKeysPathSearch(t *testing.T) {
 		on   probe
 		want string
 	}{
-		{"nothing found: the newer folder", nil, machine("", ""), "/opt/betterdesk"},
-		{"the newer folder has the key", nil, machine("", "", "/opt/betterdesk/id_ed25519", "/opt/rustdesk/id_ed25519"), "/opt/betterdesk"},
-		{"only the older folder has the key", nil, machine("", "", "/opt/rustdesk/id_ed25519"), "/opt/rustdesk"},
-		{"the public key alone does not count", nil, machine("", "", "/opt/rustdesk/id_ed25519.pub"), "/opt/betterdesk"},
-		{"a container", nil, machine("", "", "/.dockerenv", "/opt/betterdesk/id_ed25519"), "/opt/rustdesk"},
-		{"KEYS_PATH first", map[string]string{"KEYS_PATH": "/k", "RUSTDESK_DIR": "/d", "RUSTDESK_PATH": "/p"}, machine("", "", "/.dockerenv"), "/k"},
-		{"then RUSTDESK_DIR", map[string]string{"RUSTDESK_DIR": "/d", "RUSTDESK_PATH": "/p"}, machine("", ""), "/d"},
-		{"then RUSTDESK_PATH", map[string]string{"RUSTDESK_PATH": "/p"}, machine("", "", "/opt/rustdesk/id_ed25519"), "/p"},
+		{"nothing found: the newer folder", nil, machine(), "/opt/betterdesk"},
+		{"the newer folder has the key", nil, machine("/opt/betterdesk/id_ed25519", "/opt/rustdesk/id_ed25519"), "/opt/betterdesk"},
+		{"only the older folder has the key", nil, machine("/opt/rustdesk/id_ed25519"), "/opt/rustdesk"},
+		{"the public key alone does not count", nil, machine("/opt/rustdesk/id_ed25519.pub"), "/opt/betterdesk"},
+		{"a container", nil, machine("/.dockerenv", "/opt/betterdesk/id_ed25519"), "/opt/rustdesk"},
+		{"KEYS_PATH first", map[string]string{"KEYS_PATH": "/k", "RUSTDESK_DIR": "/d", "RUSTDESK_PATH": "/p"}, machine("/.dockerenv"), "/k"},
+		{"then RUSTDESK_DIR", map[string]string{"RUSTDESK_DIR": "/d", "RUSTDESK_PATH": "/p"}, machine(), "/d"},
+		{"then RUSTDESK_PATH", map[string]string{"RUSTDESK_PATH": "/p"}, machine("/opt/rustdesk/id_ed25519"), "/p"},
 		{"Windows, nothing found", nil, windows(), `C:\BetterDesk`},
 		{"Windows, the newer folder", nil, windows(`C:\BetterDesk\id_ed25519`, `C:\RustDesk\id_ed25519`), `C:\BetterDesk`},
 		{"Windows, the older folder", nil, windows(`C:\RustDesk\id_ed25519`), `C:\RustDesk`},
@@ -421,7 +493,7 @@ func TestKeysPathSearch(t *testing.T) {
 func TestKeyFilesHaveTheirOwnSettings(t *testing.T) {
 	cfg, err := load(env(map[string]string{
 		"KEYS_PATH": "/k", "DB_PATH": "/x/db.sqlite3", "PUB_KEY_PATH": "/y/key.pub", "API_KEY_PATH": "/z/api",
-	}), machine("", ""))
+	}), machine())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -431,7 +503,7 @@ func TestKeyFilesHaveTheirOwnSettings(t *testing.T) {
 }
 
 func TestEnvAndComposePaths(t *testing.T) {
-	cfg, err := load(env(map[string]string{"CONSOLE_DIR": "/opt/BetterDeskConsole"}), machine("", ""))
+	cfg, err := load(env(map[string]string{"CONSOLE_DIR": "/opt/BetterDeskConsole"}), machine())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -446,7 +518,7 @@ func TestEnvAndComposePaths(t *testing.T) {
 func TestSignalAndRelaySettings(t *testing.T) {
 	cfg, err := load(env(map[string]string{
 		"WS_HBBS_HOST": "signal.example", "WS_HBBS_PORT": "31116", "WS_HBBR_HOST": "relay.example", "WS_HBBR_PORT": "41117",
-	}), machine("", ""))
+	}), machine())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -456,7 +528,7 @@ func TestSignalAndRelaySettings(t *testing.T) {
 }
 
 func TestAPIAddressDefaults(t *testing.T) {
-	cfg, err := load(env(nil), machine("", ""))
+	cfg, err := load(env(nil), machine())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -503,7 +575,7 @@ func TestHostDefaultsToLoopback(t *testing.T) {
 		{"::", "::"},
 		{" 10.0.0.5 ", "10.0.0.5"},
 	} {
-		cfg, err := load(env(map[string]string{"HOST": c.host}), machine("/srv/bin", "/srv/run"))
+		cfg, err := load(env(map[string]string{"HOST": c.host}), machine())
 		if err != nil {
 			t.Fatal(err)
 		}

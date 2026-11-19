@@ -75,7 +75,7 @@ the scratch folder. It writes:
 | | `settings_from_env`, `env_vars_from_settings`, `settings_from_api` | the converters, with every kind of JSON value as input |
 | | `service` | `isDockerSplitDeployment`, `detectDeploymentSource`, `getConnectionMode`, `setConnectionMode` (as the JSON a route answers), a read after the write, and `restartServer`, per layout of files, environment, privileged helper and server answers; with the requests sent and the files afterwards |
 | | `shell` | the message of the error `child_process.execSync` throws for a few harmless commands |
-| `version` | `read` | `readProductVersion`, `readPackageJsonVersion` and `readEmbeddedServerVersion` on generated folders |
+| `version` | `read` | `readProductVersion`, `readPackageJsonVersion` and `readEmbeddedServerVersion` on generated folders. Nothing replays it any more: the console reports the version built into the binary, and the Go readers are gone |
 
 `idna.js` records `new URL('http://<name>/').hostname` for a label with one
 character outside ASCII: every such character up to U+1FFFF and every 257th

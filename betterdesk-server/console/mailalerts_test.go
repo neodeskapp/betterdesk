@@ -24,7 +24,7 @@ func TestAlertSweepRunsOnlyWithoutNode(t *testing.T) {
 		t.Helper()
 		cfg := &config.Config{
 			Host: "127.0.0.1", NodeUpstream: upstream, DataDir: t.TempDir(), UploadsDir: t.TempDir(),
-			LangDir: "../../web-nodejs/lang", WebUIDir: t.TempDir(), DefaultLanguage: "en",
+			LangDir: "static/files/lang", WebUIDir: t.TempDir(), DefaultLanguage: "en",
 			Getenv: func(key string) string {
 				if key == "SESSION_SECRET" {
 					return testSecret
@@ -107,7 +107,7 @@ func TestMailSettingsReachTheService(t *testing.T) {
 		}
 		cfg := &config.Config{
 			Host: "0.0.0.0", Port: 5000, DataDir: t.TempDir(), UploadsDir: t.TempDir(),
-			LangDir: "../../web-nodejs/lang", WebUIDir: t.TempDir(), DefaultLanguage: "en", LogLevel: "silent",
+			LangDir: "static/files/lang", WebUIDir: t.TempDir(), DefaultLanguage: "en", LogLevel: "silent",
 			SMTPTLSVerify: tt.verify, HTTPRedirect: tt.redirect,
 			Getenv: func(key string) string {
 				if key == "SESSION_SECRET" {

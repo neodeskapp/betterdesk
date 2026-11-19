@@ -33,7 +33,7 @@ func clockWorld(t *testing.T) (*world, string) {
 	envPath := filepath.Join(t.TempDir(), ".env")
 	cfg := &config.Config{
 		Host: "127.0.0.1", NodeEnv: "development", DataDir: data, UploadsDir: filepath.Join(data, "uploads"),
-		LangDir: filepath.Join("..", "..", "web-nodejs", "lang"), WebUIDir: filepath.Join(data, "no-build"),
+		LangDir: filepath.Join("static", "files", "lang"), WebUIDir: filepath.Join(data, "no-build"),
 		DefaultLanguage: "en", EnvPath: envPath,
 		Getenv: func(key string) string { return map[string]string{"SESSION_SECRET": testSecret}[key] },
 	}
@@ -128,7 +128,7 @@ func TestBillingClockChangeIsCanceledThroughTheRestartRoutes(t *testing.T) {
 func TestHelpRequestMailRunsOnlyWithoutNode(t *testing.T) {
 	build := func(upstream *url.URL) *Server {
 		cfg := &config.Config{
-			Host: "127.0.0.1", DataDir: t.TempDir(), UploadsDir: t.TempDir(), LangDir: filepath.Join("..", "..", "web-nodejs", "lang"),
+			Host: "127.0.0.1", DataDir: t.TempDir(), UploadsDir: t.TempDir(), LangDir: filepath.Join("static", "files", "lang"),
 			DefaultLanguage: "en", NodeUpstream: upstream, TrustProxy: httpx.TrustProxy{},
 			Getenv: func(key string) string { return map[string]string{"SESSION_SECRET": testSecret}[key] },
 		}

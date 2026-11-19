@@ -155,9 +155,9 @@ func NewWorldWithRoles(t *testing.T, db *store.DB, configure func(cfg *config.Co
 	return &World{T: t, DB: db, Server: s, Config: cfg, Vars: map[string]string{}, browsers: map[string]*browser{}}
 }
 
-// langDir finds the language files of the source tree from the test's
-// folder. A copy of the server without the tree around it gets an empty
-// folder: the console then has no texts but its keys.
+// langDir finds the console's language files from the test's folder. A
+// copy of the server without them gets an empty folder: the console then
+// has no texts but its keys.
 func langDir(t *testing.T) string {
 	t.Helper()
 	dir, err := os.Getwd()
@@ -165,7 +165,7 @@ func langDir(t *testing.T) string {
 		t.Fatal(err)
 	}
 	for {
-		candidate := filepath.Join(dir, "web-nodejs", "lang")
+		candidate := filepath.Join(dir, "console", "static", "files", "lang")
 		if _, err := os.Stat(filepath.Join(candidate, "en.json")); err == nil {
 			return candidate
 		}

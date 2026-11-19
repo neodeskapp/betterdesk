@@ -8,7 +8,9 @@
 // build copies a folder into the module first with Copy. Copy writes the
 // time of every file into StampFile in the copy. The folder in the module
 // holds Placeholder, a committed file that lets go:embed compile before
-// anything was copied in; without a copy the folder is empty.
+// anything was copied in; without a copy the folder is empty. A folder
+// that is committed inside the module is embedded where it is: Stamp
+// writes its StampFile, and without one its files have the fallback time.
 //
 // StampFile and Placeholder at the top of the folder are not part of what
 // an FS shows. Every other name is, also names that start with "." or "_":
@@ -281,14 +283,68 @@ func Copy(from, to string) (files int, size int64, err error) {
 	if err != nil {
 		return 0, 0, fmt.Errorf("copy %s to %s: %w", from, to, err)
 	}
-	raw, err := json.Marshal(stamp)
-	if err != nil {
-		return 0, 0, err
-	}
-	if err := os.WriteFile(filepath.Join(dst, StampFile), raw, 0o644); err != nil {
+	if err := writeStamp(dst, stamp); err != nil {
 		return 0, 0, fmt.Errorf("write the times of %s: %w", to, err)
 	}
 	return files, size, nil
+}
+
+// Stamp records the times of a folder that is embedded where it is,
+// without a copy: it writes StampFile into dir with the modification time
+// of every regular file below it. StampFile and Placeholder at the top
+// are left out. It answers the number of files and their bytes. A
+// symbolic link or another irregular file is an error.
+func Stamp(dir string) (files int, size int64, err error) {
+	root, err := filepath.Abs(dir)
+	if err != nil {
+		return 0, 0, err
+	}
+	if info, err := os.Stat(root); err != nil {
+		return 0, 0, err
+	} else if !info.IsDir() {
+		return 0, 0, fmt.Errorf("%s is not a folder", dir)
+	}
+	stamp := map[string]int64{}
+	err = filepath.WalkDir(root, func(name string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, err := filepath.Rel(root, name)
+		if err != nil {
+			return err
+		}
+		slash := filepath.ToSlash(rel)
+		switch {
+		case d.IsDir() || hidden(slash):
+			return nil
+		case !d.Type().IsRegular():
+			return fmt.Errorf("%s is not a regular file", name)
+		}
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		stamp[slash] = info.ModTime().UnixNano()
+		files++
+		size += info.Size()
+		return nil
+	})
+	if err != nil {
+		return 0, 0, fmt.Errorf("stamp %s: %w", dir, err)
+	}
+	if err := writeStamp(root, stamp); err != nil {
+		return 0, 0, fmt.Errorf("write the times of %s: %w", dir, err)
+	}
+	return files, size, nil
+}
+
+// writeStamp writes the times of a folder's files into its StampFile.
+func writeStamp(dir string, stamp map[string]int64) error {
+	raw, err := json.Marshal(stamp)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(dir, StampFile), raw, 0o644)
 }
 
 // emptyFolder empties a folder, or makes it, keeping Placeholder.

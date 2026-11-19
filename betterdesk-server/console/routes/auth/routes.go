@@ -39,7 +39,7 @@ func newHandlers(d *kit.Deps) *handlers {
 		sessions:    d.Sessions,
 		guestCookie: "bd.guest",
 		now:         time.Now,
-		appVersion:  productVersion(d),
+		appVersion:  d.Config.Version,
 	}
 	if d.Config.HTTPS {
 		h.guestCookie = "betterdesk.guest"

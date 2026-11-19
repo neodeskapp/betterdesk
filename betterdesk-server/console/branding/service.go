@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"io/fs"
 	"net"
 	"net/http"
 	"os"
@@ -43,8 +44,8 @@ type Options struct {
 	ThemesDir string
 	// PalettesFile is the JSON file with the built-in dark and light
 	// palettes. Node: <console>/config/theme-palettes.json. New fails
-	// when it cannot be read. Empty means no built-in palettes: both are
-	// empty objects.
+	// when it cannot be read. Empty, and without Files, means no built-in
+	// palettes: both are empty objects.
 	PalettesFile string
 	// FaviconFile is the default favicon. Node: <console>/public/favicon.svg.
 	// A built-in mark is used when it cannot be read.
@@ -52,6 +53,11 @@ type Options struct {
 	// SupportersFile is the list of supporters for the Help panel. Node:
 	// <console>/config/supporters.json.
 	SupportersFile string
+	// Files is the tree of the console's own files (package static). Each
+	// of the four built-in files above whose option is empty is read from
+	// it: themes, config/theme-palettes.json, public/favicon.svg and
+	// config/supporters.json.
+	Files fs.FS
 
 	// HTTP sends the requests of a font download to fonts.googleapis.com
 	// and fonts.gstatic.com. Nil means a direct connection without a
@@ -141,16 +147,16 @@ func New(opts Options) (*Service, error) {
 		}
 	}
 	var parsed any = NewObject()
-	if opts.PalettesFile != "" {
-		raw, err := os.ReadFile(opts.PalettesFile)
+	if opts.PalettesFile != "" || opts.Files != nil {
+		raw, where, err := readBuiltin(opts, opts.PalettesFile, builtinPalettes)
 		if err != nil {
 			return nil, fmt.Errorf("read the theme palettes: %w", err)
 		}
 		if parsed, err = parseJSON(decodeUTF8(raw)); err != nil {
-			return nil, fmt.Errorf("read the theme palettes %s: %w", opts.PalettesFile, err)
+			return nil, fmt.Errorf("read the theme palettes %s: %w", where, err)
 		}
 		if parsed == nil {
-			return nil, fmt.Errorf("read the theme palettes %s: the file holds null", opts.PalettesFile)
+			return nil, fmt.Errorf("read the theme palettes %s: the file holds null", where)
 		}
 	}
 	palettes := NewObject()
@@ -363,7 +369,7 @@ func (s *Service) GenerateFavicon() string {
 		}
 	}
 	s.faviconOnce.Do(func() {
-		raw, err := os.ReadFile(s.opts.FaviconFile)
+		raw, _, err := readBuiltin(s.opts, s.opts.FaviconFile, builtinFavicon)
 		if err != nil {
 			s.favicon = defaultFaviconFallback
 			return

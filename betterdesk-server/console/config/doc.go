@@ -14,12 +14,15 @@
 //	NODE_ENV                 development           "production" hides error detail and reads the web app's files once.
 //	DOCKER                   (off)                 "true", or a /.dockerenv file, means a container: default folders
 //	                                               are /app and /app/data.
-//	CONSOLE_DIR              (searched)            Folder of the old console's files (lang, public, protos, wallpapers).
-//	                                               Searched in this order for lang/en.json: /app in a container,
-//	                                               ../web-nodejs next to the server's binary, ../web-nodejs next to the
-//	                                               working directory, /opt/BetterDeskConsole, /opt/betterdesk,
-//	                                               /var/lib/betterdesk (C:\BetterDeskConsole on Windows).
-//	CONSOLE_LANG_DIR         CONSOLE_DIR/lang      Folder of the <code>.json language files.
+//	CONSOLE_DIR              (searched)            Folder that holds the console's state: its .env and data/. Searched
+//	                                               in this order for a .env, or the lang/en.json an install of the Node
+//	                                               console left: /app in a container, /opt/BetterDeskConsole,
+//	                                               /opt/betterdesk, /var/lib/betterdesk (C:\BetterDeskConsole on
+//	                                               Windows); the first of them when none has either.
+//	CONSOLE_STATIC_DIR       (the files in the     A folder on disk with the console's own files in the shape of
+//	                         binary)               console/static/files (lang, public, protos, themes, config), read
+//	                                               in place of the files in the binary, for development.
+//	CONSOLE_LANG_DIR         (lang of the above)   Folder of the <code>.json language files on disk.
 //	DATA_DIR                 /app/data in a        Where the console writes: .session_secret, uploads.
 //	                         container, else
 //	                         CONSOLE_DIR/data
@@ -103,16 +106,19 @@
 // DATA_DIR unless DATA_DIR is CONSOLE_DIR/data (the default outside a
 // container, and /app/data in the container images).
 //
-// The branding's files have fixed places in CONSOLE_DIR as well, whatever
-// DATA_DIR says (only its uploaded pictures go to DATA_DIR/uploads):
+// The branding keeps its state in these places:
 //
+//	DATA_DIR/uploads                           uploaded pictures, served as /uploads/
 //	CONSOLE_DIR/public/fonts                   installed fonts, served as /fonts/
 //	CONSOLE_DIR/data/google-fonts-cache.json   optional list of more font families for the search
 //	CONSOLE_DIR/data/tmp                       an uploaded font before it is installed
-//	CONSOLE_DIR/themes                         the built-in themes (*.json)
-//	CONSOLE_DIR/config/theme-palettes.json     the built-in palettes; the console does not start without it
-//	CONSOLE_DIR/public/favicon.svg             the default favicon
-//	CONSOLE_DIR/config/supporters.json         the supporters list of the Help panel
+//
+// The console's own files ship in the binary (package static), or come
+// from CONSOLE_STATIC_DIR: the language files, public/ (favicon.svg and
+// img/, served at the root), protos/ (served as /protos/), the built-in
+// themes, config/theme-palettes.json and config/supporters.json.
+// CONSOLE_DIR/wallpapers, served as /wallpapers/, holds no files that
+// ship; it stays on disk.
 //
 // Read by the packages that own them, through Config.Getenv:
 //

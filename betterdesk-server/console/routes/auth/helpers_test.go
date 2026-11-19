@@ -146,7 +146,7 @@ func newWorld(t *testing.T, db *store.DB, o setup) *world {
 		DataDir:         data,
 		KeysPath:        data,
 		UploadsDir:      filepath.Join(data, "uploads"),
-		LangDir:         filepath.Join("..", "..", "..", "..", "web-nodejs", "lang"),
+		LangDir:         filepath.Join("..", "..", "static", "files", "lang"),
 		WebUIDir:        webUI,
 		HTTPS:           o.https,
 		DefaultLanguage: "en",

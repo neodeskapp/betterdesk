@@ -23,7 +23,7 @@ func TestBrandingAtStart(t *testing.T) {
 		}
 		cfg := &config.Config{
 			Host: "127.0.0.1", DataDir: t.TempDir(), UploadsDir: t.TempDir(),
-			LangDir: "../../web-nodejs/lang", WebUIDir: t.TempDir(), DefaultLanguage: "en",
+			LangDir: "static/files/lang", WebUIDir: t.TempDir(), DefaultLanguage: "en",
 			PalettesFile: filepath.Join("branding", "testdata", "console", "config", "theme-palettes.json"),
 			Getenv: func(key string) string {
 				if key == "SESSION_SECRET" {

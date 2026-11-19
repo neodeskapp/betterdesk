@@ -20,7 +20,7 @@ func TestMailSwitches(t *testing.T) {
 		{" true", "true ", false, false},
 		{"on", "off", false, false},
 	} {
-		cfg, err := load(env(map[string]string{"SMTP_TLS_VERIFY": tt.verify, "HTTP_REDIRECT_HTTPS": tt.redirect}), machine("/srv/bin", "/srv/run"))
+		cfg, err := load(env(map[string]string{"SMTP_TLS_VERIFY": tt.verify, "HTTP_REDIRECT_HTTPS": tt.redirect}), machine())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -32,7 +32,7 @@ func TestMailSwitches(t *testing.T) {
 		}
 	}
 	// ALLOW_SELF_SIGNED_CERTS is about the console's own calls, not mail
-	cfg, err := load(env(map[string]string{"ALLOW_SELF_SIGNED_CERTS": "true"}), machine("/srv/bin", "/srv/run"))
+	cfg, err := load(env(map[string]string{"ALLOW_SELF_SIGNED_CERTS": "true"}), machine())
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -162,7 +162,7 @@ func newWorld(t *testing.T, o setup) *world {
 		Production:      o.production,
 		DataDir:         data,
 		UploadsDir:      filepath.Join(data, "uploads"),
-		LangDir:         filepath.Join("..", "..", "web-nodejs", "lang"),
+		LangDir:         filepath.Join("static", "files", "lang"),
 		WebUIDir:        filepath.Join(data, "no-build"),
 		PublicDir:       o.public,
 		HTTPS:           o.https,

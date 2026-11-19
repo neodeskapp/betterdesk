@@ -1,7 +1,5 @@
 package branding
 
-import "os"
-
 // supporterLinks are the project links the Help panel shows when
 // SupportersFile names no others.
 var supporterLinks = [][2]string{
@@ -33,9 +31,9 @@ func (s *Service) LoadSupporters() *Object {
 	}
 	var loaded *Object
 	err := try(func() {
-		raw, err := os.ReadFile(s.opts.SupportersFile)
+		raw, where, err := readBuiltin(s.opts, s.opts.SupportersFile, builtinSupporters)
 		if err != nil {
-			panic(fsError(err, "open", s.opts.SupportersFile))
+			panic(fsError(err, "open", where))
 		}
 		data, err := parseJSON(decodeUTF8(raw))
 		if err != nil {

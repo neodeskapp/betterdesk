@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strconv"
 	"time"
@@ -14,7 +13,6 @@ import (
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/restart"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
 )
 
 // general holds the routes of the settings area that are not about the
@@ -39,11 +37,11 @@ func newGeneral(d *kit.Deps, log *kit.Logger) *general {
 	getenv := func(string) string { return "" }
 	if d.Config != nil {
 		consoleDir, dataDir, keysPath = d.Config.ConsoleDir, d.Config.DataDir, d.Config.KeysPath
+		g.version = d.Config.Version
 		if d.Config.Getenv != nil {
 			getenv = d.Config.Getenv
 		}
 	}
-	g.version = serverinfo.ReadProductVersion(serverinfo.OSFS{}, filepath.Join(consoleDir, ".."), consoleDir, serverinfo.DefaultVersionFallback)
 	g.cacheVersion = g.version + "." + strconv.FormatInt(g.started.UnixMilli(), 10)
 	g.files = advancedconfig.New(advancedconfig.Options{
 		ConsoleDir: consoleDir, DataDir: dataDir, KeysPath: keysPath, Getenv: getenv,

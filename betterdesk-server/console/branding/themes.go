@@ -2,8 +2,6 @@ package branding
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -11,17 +9,17 @@ import (
 var reThemeID = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 // ListThemes lists the built-in theme presets: every *.json file of
-// ThemesDir that is a theme (type "betterdesk-theme" with a branding
+// ThemesDir, or of themes in Files, that is a theme (type "betterdesk-theme" with a branding
 // part), as {id, name, description, colors}. Files that cannot be read as
 // such are left out. The order is by file name.
 func (s *Service) ListThemes() ([]any, error) {
-	themes := []any{}
-	if !exists(s.opts.ThemesDir) {
+	themes, folder := []any{}, s.themeFolder()
+	if !folder.exists(folder.dir) {
 		return themes, nil
 	}
-	list, err := os.ReadDir(s.opts.ThemesDir)
+	list, err := folder.list()
 	if err != nil {
-		return nil, fsError(err, "scandir", s.opts.ThemesDir)
+		return nil, fsError(err, "scandir", folder.dir)
 	}
 	for _, entry := range list {
 		file := decodeUTF8([]byte(entry.Name()))
@@ -29,7 +27,7 @@ func (s *Service) ListThemes() ([]any, error) {
 			continue
 		}
 		_ = try(func() {
-			raw, err := os.ReadFile(filepath.Join(s.opts.ThemesDir, entry.Name()))
+			raw, err := folder.read(folder.join(entry.Name()))
 			if err != nil {
 				return
 			}
@@ -81,11 +79,12 @@ func (s *Service) ApplyTheme(ctx context.Context, id string) (result ThemeResult
 	if !reThemeID.MatchString(id) {
 		return ThemeInvalidID, nil
 	}
-	file := resolveChildPath(s.opts.ThemesDir, id+".json")
-	if !exists(file) {
+	folder := s.themeFolder()
+	file := folder.file(id + ".json")
+	if !folder.exists(file) {
 		return ThemeNotFound, nil
 	}
-	raw, err := os.ReadFile(file)
+	raw, err := folder.read(file)
 	if err != nil {
 		return ThemeInvalidFormat, fsError(err, "open", file)
 	}

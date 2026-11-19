@@ -23,12 +23,10 @@ import (
 	"crypto/rand"
 	"io"
 	"net/http"
-	"path/filepath"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/registrations"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
 )
 
 type handlers struct {
@@ -56,7 +54,7 @@ func Register(d *kit.Deps) {
 		log:     d.Log.Child("BD-API"),
 		now:     time.Now,
 		random:  rand.Reader,
-		version: productVersion(d),
+		version: d.Config.Version,
 	}
 	r := d.Early
 	operator := []kit.Middleware{h.requireDeviceAuth, requireOperatorRole}
@@ -86,14 +84,6 @@ func Register(d *kit.Deps) {
 	r.Post("/notifications/read-all", h.markAllRead, h.csrfProtection, d.RequireAuth)
 	r.Post("/operator/sessions", h.recordSession, operator...)
 	r.Get("/operator/sessions", h.sessionHistory, operator...)
-}
-
-// productVersion is the product's version as the old console read it at
-// start: the VERSION file above the console's folder, the one in it, its
-// package.json, else 0.0.0.
-func productVersion(d *kit.Deps) string {
-	dir := d.Config.ConsoleDir
-	return serverinfo.ReadProductVersion(serverinfo.OSFS{}, filepath.Join(dir, ".."), dir, serverinfo.DefaultVersionFallback)
 }
 
 // failure is the group's error answer: {"error":"..."}, without success.

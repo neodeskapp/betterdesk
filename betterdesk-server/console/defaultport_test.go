@@ -29,7 +29,7 @@ func TestATakenPortGivesWayOnlyWithoutConsolePort(t *testing.T) {
 		cfg := &config.Config{
 			Host: "127.0.0.1", Port: port, PortUnset: unset, NodeEnv: "development",
 			DataDir: data, UploadsDir: filepath.Join(data, "uploads"),
-			LangDir: filepath.Join("..", "..", "web-nodejs", "lang"), WebUIDir: filepath.Join(data, "no-build"),
+			LangDir: filepath.Join("static", "files", "lang"), WebUIDir: filepath.Join(data, "no-build"),
 			DefaultLanguage: "en", EnvPath: filepath.Join(data, ".env"),
 			Getenv: func(key string) string { return map[string]string{"SESSION_SECRET": testSecret}[key] },
 		}

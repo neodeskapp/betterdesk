@@ -4,7 +4,7 @@ import "testing"
 
 // The listener settings as config/config.js read them.
 func TestListenerSettings(t *testing.T) {
-	cfg, err := load(env(nil), machine("/srv/bin", "/srv/run"))
+	cfg, err := load(env(nil), machine())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -19,7 +19,7 @@ func TestListenerSettings(t *testing.T) {
 	cfg, err = load(env(map[string]string{
 		"HTTPS_PORT": "8443x", "HTTP_REDIRECT_HTTPS": "yes", "SSL_CERT_PATH": "/c.pem", "SSL_KEY_PATH": "/k.pem",
 		"SSL_CA_PATH": "/ca.pem", "API_HOST": "10.0.0.1", "RUSTDESK_API_PROXY": "FALSE", "RUSTDESK_API_TLS": "Off",
-	}), machine("/srv/bin", "/srv/run"))
+	}), machine())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +33,7 @@ func TestListenerSettings(t *testing.T) {
 		value string
 		want  bool
 	}{{"true", true}, {"TRUE", true}, {"false", false}, {"0", false}, {"1", false}, {" true", false}} {
-		cfg, _ := load(env(map[string]string{"HTTP_REDIRECT_HTTPS": c.value, "RUSTDESK_API_PROXY": c.value}), machine("/srv/bin", "/srv/run"))
+		cfg, _ := load(env(map[string]string{"HTTP_REDIRECT_HTTPS": c.value, "RUSTDESK_API_PROXY": c.value}), machine())
 		if cfg.HTTPRedirect != c.want || cfg.ClientAPIProxy != c.want {
 			t.Errorf("%q: redirect %v, proxy %v, want %v", c.value, cfg.HTTPRedirect, cfg.ClientAPIProxy, c.want)
 		}
@@ -45,7 +45,7 @@ func TestListenerSettings(t *testing.T) {
 // "||": empty is the default.
 func TestEmptyIsNotUnsetForTwoSwitches(t *testing.T) {
 	values := map[string]string{"API_ENABLED": "", "RUSTDESK_API_PROXY": "", "HTTP_REDIRECT_HTTPS": ""}
-	p := machine("/srv/bin", "/srv/run")
+	p := machine()
 	p.isSet = func(name string) bool { _, ok := values[name]; return ok }
 	cfg, err := load(env(values), p)
 	if err != nil {
@@ -55,7 +55,7 @@ func TestEmptyIsNotUnsetForTwoSwitches(t *testing.T) {
 		t.Errorf("set to empty: API enabled %v, proxy %v, redirect %v", cfg.APIEnabled, cfg.ClientAPIProxy, cfg.HTTPRedirect)
 	}
 	// Load without a presence test counts empty as unset
-	cfg, _ = load(env(values), machine("/srv/bin", "/srv/run"))
+	cfg, _ = load(env(values), machine())
 	if !cfg.APIEnabled || !cfg.ClientAPIProxy {
 		t.Errorf("without presence: API enabled %v, proxy %v", cfg.APIEnabled, cfg.ClientAPIProxy)
 	}

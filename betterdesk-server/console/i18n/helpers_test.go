@@ -17,7 +17,7 @@ var realLangDir = func() string {
 	if dir := os.Getenv("BD_LANG_DIR"); dir != "" {
 		return dir
 	}
-	return "../../../web-nodejs/lang"
+	return "../static/files/lang"
 }()
 
 // vectors reads a file of test vectors recorded from the Node console
