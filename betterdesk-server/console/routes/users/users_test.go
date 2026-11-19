@@ -416,6 +416,26 @@ func TestListWritesNothing(t *testing.T) {
 	})
 }
 
+// A deleted account leaves the list of who has a picture at once, not
+// when the list's 30 seconds run out (BUGS AV2).
+func TestDeletedUserLeavesTheAvatarList(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		w := world(t, storetest.Prepare(t, db, storetest.GoServerFirst), routetest.Options{})
+		picture := db.Pick(`X'89504E47'`, `decode('89504e47', 'hex')`)
+		if _, err := db.Exec(context.Background(), `INSERT INTO user_avatars (user_id, mime_type, data, version, source) VALUES (6, 'image/png', `+picture+`, 'v6', 'profile')`); err != nil {
+			t.Fatal(err)
+		}
+		admin := w.As("admin")
+		if got := admin.Do("GET", "/api/users/avatars", ""); got.Status != http.StatusOK || !strings.Contains(got.Body, `"v6"`) {
+			t.Fatalf("the list before: %d %s", got.Status, got.Body)
+		}
+		expect(t, "delete", admin.Do("DELETE", "/api/users/6", ""), 200, `{"success":true}`)
+		if got := admin.Do("GET", "/api/users/avatars", ""); got.Status != http.StatusOK || strings.Contains(got.Body, `"v6"`) {
+			t.Errorf("the list after the delete: %d %s", got.Status, got.Body)
+		}
+	})
+}
+
 // String() of an object whose own toString member hides the method
 // throws: folder and device ids made of such values are a server error,
 // and nothing is written. An object as folderIds is no list and takes the

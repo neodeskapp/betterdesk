@@ -643,6 +643,8 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Delete user error:", err)
 		return
 	}
+	// The list of who has a picture forgets the account now
+	h.d.Avatars.ResetCache()
 	if err := h.d.LogAction(r, "user_deleted", "Deleted user: "+user.username()); err != nil {
 		h.serverError(w, r, "Delete user error:", err)
 		return
