@@ -1,7 +1,10 @@
 package network
 
 import (
+	"math"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
@@ -11,7 +14,74 @@ import (
 const (
 	targetNotFound   = "Target not found"
 	invalidCheckType = "check_type must be one of: ping, tcp, http, https"
+	notSaved         = "The target could not be saved"
 )
+
+// The members of a target are checked before anything is stored, and a
+// refusal names the member (BUGS.md NM1).
+const (
+	nameNotText     = "name must be text"
+	hostNotText     = "host must be text"
+	urlNotText      = "url must be text"
+	portNotInRange  = "port must be a whole number from 1 to 65535"
+	timeoutNotRange = "timeout_ms must be a whole number from 1 to 2147483647"
+	intervalNoRange = "interval_ms must be a whole number from 1 to 2147483647"
+	enabledNotFlag  = "enabled must be true or false"
+	maxPort         = 65535
+	maxMs           = 1<<31 - 1
+)
+
+// wholeNumber reads a member that holds a whole number from 1 to max: a
+// number, or text of digits. 0 is a member that is not there, null, 0 or
+// empty text, which all stand for no value. ok is false for anything else.
+func wholeNumber(v middleware.Value, max float64) (n netmonitor.Number, ok bool) {
+	var f float64
+	switch v.Kind() {
+	case middleware.KindUndefined, middleware.KindNull:
+		return 0, true
+	case middleware.KindNumber:
+		f, _ = v.Float()
+	case middleware.KindString:
+		s, _ := v.Str()
+		if s == "" {
+			return 0, true
+		}
+		if strings.Trim(s, "0123456789") != "" {
+			return 0, false
+		}
+		f, _ = strconv.ParseFloat(s, 64)
+	default:
+		return 0, false
+	}
+	if f == 0 {
+		return 0, true
+	}
+	if f != math.Trunc(f) || f < 1 || f > max {
+		return 0, false
+	}
+	return netmonitor.Number(f), true
+}
+
+// flag reads enabled: true or false, or 1 or 0.
+func flag(v middleware.Value) (on, ok bool) {
+	if b, isBool := v.Bool(); isBool {
+		return b, true
+	}
+	if f, isNumber := v.Float(); isNumber && (f == 0 || f == 1) {
+		return f == 1, true
+	}
+	return false, false
+}
+
+// textOrNull is a member that must be text, or null where null may be
+// stored.
+func textOrNull(v middleware.Value) (netmonitor.Param, bool) {
+	if v.Kind() == middleware.KindNull {
+		return netmonitor.Null(), true
+	}
+	s, isString := v.Str()
+	return netmonitor.Text(s), isString
+}
 
 // validCheckType reports whether v is one of the four check types, as
 // text.
@@ -71,34 +141,150 @@ func (h *handlers) createTarget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := netmonitor.NewTarget{
-		Name:       param(name),
-		Host:       netmonitor.Text(""),
-		Port:       netmonitor.Null(),
-		URL:        netmonitor.Null(),
-		CheckType:  param(checkType),
-		TimeoutMs:  parseInt(body.Get("timeout_ms")).Or(netmonitor.DefaultTimeoutMs),
-		IntervalMs: parseInt(body.Get("interval_ms")).Or(netmonitor.DefaultPollIntervalMs),
-		Enabled:    true,
-	}
-	if host.Truthy() {
-		data.Host = param(host)
-	}
-	if port := parseInt(body.Get("port")); port.Truthy() {
-		data.Port = netmonitor.Num(port)
-	}
-	if url.Truthy() {
-		data.URL = param(url)
-	}
-	if enabled, isBool := body.Get("enabled").Bool(); isBool && !enabled {
-		data.Enabled = false
+	data, problem := newTarget(body)
+	if problem != "" {
+		fail(w, r, http.StatusBadRequest, problem)
+		return
 	}
 	target, err := netmonitor.CreateTarget(detached(r), h.db, data)
 	if err != nil {
-		fail(w, r, http.StatusBadRequest, netmonitor.DriverMessage(err))
+		h.logError("create a network target:", err)
+		fail(w, r, http.StatusBadRequest, notSaved)
 		return
 	}
 	kit.JSON(w, r, http.StatusCreated, target)
+}
+
+// newTarget reads the members of a create body that passed the checks for
+// the members it must have, and the first member it refuses.
+func newTarget(body middleware.JSONObject) (netmonitor.NewTarget, string) {
+	kind, _ := body.Get("check_type").Str()
+	data := netmonitor.NewTarget{
+		Host:      netmonitor.Text(""),
+		Port:      netmonitor.Null(),
+		URL:       netmonitor.Null(),
+		CheckType: netmonitor.Text(kind),
+		Enabled:   true,
+	}
+	name, isString := body.Get("name").Str()
+	if !isString {
+		return data, nameNotText
+	}
+	data.Name = netmonitor.Text(name)
+	if host := body.Get("host"); host.Truthy() {
+		text, isString := host.Str()
+		if !isString {
+			return data, hostNotText
+		}
+		data.Host = netmonitor.Text(text)
+	}
+	if url := body.Get("url"); url.Truthy() {
+		text, isString := url.Str()
+		if !isString {
+			return data, urlNotText
+		}
+		data.URL = netmonitor.Text(text)
+	}
+	port, ok := wholeNumber(body.Get("port"), maxPort)
+	if !ok {
+		return data, portNotInRange
+	}
+	if port != 0 {
+		data.Port = netmonitor.Num(port)
+	}
+	if data.TimeoutMs, ok = wholeNumber(body.Get("timeout_ms"), maxMs); !ok {
+		return data, timeoutNotRange
+	}
+	if data.IntervalMs, ok = wholeNumber(body.Get("interval_ms"), maxMs); !ok {
+		return data, intervalNoRange
+	}
+	if body.Has("enabled") {
+		if data.Enabled, ok = flag(body.Get("enabled")); !ok {
+			return data, enabledNotFlag
+		}
+	}
+	return data, ""
+}
+
+// targetChanges reads the members an update body names, and the first
+// member it refuses. Host and url may be null; port, timeout_ms and
+// interval_ms may be null or 0 for no value.
+func targetChanges(body middleware.JSONObject) (netmonitor.TargetChanges, string) {
+	var changes netmonitor.TargetChanges
+	if body.Has("check_type") {
+		v := body.Get("check_type")
+		if !validCheckType(v) {
+			return changes, invalidCheckType
+		}
+		kind, _ := v.Str()
+		p := netmonitor.Text(kind)
+		changes.CheckType = &p
+	}
+	if body.Has("name") {
+		name, isString := body.Get("name").Str()
+		if !isString {
+			return changes, nameNotText
+		}
+		p := netmonitor.Text(name)
+		changes.Name = &p
+	}
+	for _, m := range []struct {
+		key, problem string
+		into         **netmonitor.Param
+	}{{"host", hostNotText, &changes.Host}, {"url", urlNotText, &changes.URL}} {
+		if !body.Has(m.key) {
+			continue
+		}
+		p, ok := textOrNull(body.Get(m.key))
+		if !ok {
+			return changes, m.problem
+		}
+		*m.into = &p
+	}
+	if body.Has("port") {
+		port, ok := wholeNumber(body.Get("port"), maxPort)
+		if !ok {
+			return changes, portNotInRange
+		}
+		p := netmonitor.Null()
+		if port != 0 {
+			p = netmonitor.Num(port)
+		}
+		changes.Port = &p
+	}
+	for _, m := range []struct {
+		key, problem string
+		into         **netmonitor.Param
+	}{{"timeout_ms", timeoutNotRange, &changes.TimeoutMs}, {"interval_ms", intervalNoRange, &changes.IntervalMs}} {
+		if !body.Has(m.key) {
+			continue
+		}
+		v := body.Get(m.key)
+		n, ok := wholeNumber(v, maxMs)
+		if !ok {
+			return changes, m.problem
+		}
+		p := netmonitor.Num(n)
+		if v.Kind() == middleware.KindNull {
+			p = netmonitor.Null()
+		}
+		*m.into = &p
+	}
+	if body.Has("enabled") {
+		on, ok := flag(body.Get("enabled"))
+		if !ok {
+			return changes, enabledNotFlag
+		}
+		changes.Enabled = &on
+	}
+	return changes, ""
+}
+
+// logError writes a failure the client is not told the details of.
+func (h *handlers) logError(what string, err error) {
+	if h.log != nil {
+		h.log.Error(what, netmonitor.DriverMessage(err))
+	}
 }
 
 // getTarget answers GET /targets/{id}.
@@ -119,46 +305,15 @@ func (h *handlers) getTarget(w http.ResponseWriter, r *http.Request) {
 // body names. A body that names none answers 404, like an id no target
 // has (BUGS.md NM2).
 func (h *handlers) updateTarget(w http.ResponseWriter, r *http.Request) {
-	body := kit.Body(r)
-	if checkType := body.Get("check_type"); checkType.Truthy() && !validCheckType(checkType) {
-		fail(w, r, http.StatusBadRequest, invalidCheckType)
+	changes, problem := targetChanges(kit.Body(r))
+	if problem != "" {
+		fail(w, r, http.StatusBadRequest, problem)
 		return
 	}
-
-	var changes netmonitor.TargetChanges
-	given := func(key string) *netmonitor.Param {
-		if !body.Has(key) {
-			return nil
-		}
-		p := param(body.Get(key))
-		return &p
-	}
-	number := func(key string, orNull bool) *netmonitor.Param {
-		if !body.Has(key) {
-			return nil
-		}
-		n := parseInt(body.Get(key))
-		p := netmonitor.Num(n)
-		if orNull && !n.Truthy() {
-			p = netmonitor.Null()
-		}
-		return &p
-	}
-	changes.Name = given("name")
-	changes.Host = given("host")
-	changes.Port = number("port", true)
-	changes.URL = given("url")
-	changes.CheckType = given("check_type")
-	changes.TimeoutMs = number("timeout_ms", false)
-	changes.IntervalMs = number("interval_ms", false)
-	if body.Has("enabled") {
-		enabled := body.Get("enabled").Truthy()
-		changes.Enabled = &enabled
-	}
-
 	target, err := netmonitor.UpdateTarget(detached(r), h.db, pathID(r), changes)
 	if err != nil {
-		fail(w, r, http.StatusBadRequest, netmonitor.DriverMessage(err))
+		h.logError("update a network target:", err)
+		fail(w, r, http.StatusBadRequest, notSaved)
 		return
 	}
 	if target == nil {

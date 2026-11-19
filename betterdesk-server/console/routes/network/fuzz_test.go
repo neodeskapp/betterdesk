@@ -2,6 +2,7 @@ package network
 
 import (
 	"encoding/json"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -67,7 +68,12 @@ func FuzzBodyValues(f *testing.F) {
 			for _, key := range []string{"host", "port", "timeout"} {
 				v := body.Get(key)
 				_ = text(v)
-				_ = param(v)
+				// A target takes only a whole number in range
+				if n, ok := wholeNumber(v, maxPort); ok && n != 0 && (n < 1 || n > maxPort || float64(n) != math.Trunc(float64(n))) {
+					t.Fatalf("%s: member %s is taken as the port %s", raw, key, n)
+				} else if !ok && n != 0 {
+					t.Fatalf("%s: member %s is refused but read as %s", raw, key, n)
+				}
 				if n := parseInt(v); !n.IsNaN() && n.String() == "" {
 					t.Fatalf("%s: a number without text", raw)
 				}

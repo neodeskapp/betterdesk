@@ -67,31 +67,6 @@ func stringify(v middleware.Value) json.RawMessage {
 	return out
 }
 
-// param is the value as a statement parameter.
-func param(v middleware.Value) netmonitor.Param {
-	switch v.Kind() {
-	case middleware.KindBool:
-		b, _ := v.Bool()
-		return netmonitor.Bool(b)
-	case middleware.KindNumber:
-		f, _ := v.Float()
-		return netmonitor.Num(netmonitor.Number(f))
-	case middleware.KindString:
-		s, _ := v.Str()
-		return netmonitor.Text(s)
-	case middleware.KindArray:
-		items, _ := v.Array()
-		params := make([]netmonitor.Param, len(items))
-		for i, item := range items {
-			params[i] = param(item)
-		}
-		return netmonitor.List(params...)
-	case middleware.KindObject:
-		return netmonitor.Object(string(stringify(v)))
-	}
-	return netmonitor.Null()
-}
-
 // member is one key of an answer with its value.
 type member struct {
 	key   string

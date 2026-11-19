@@ -1,0 +1,138 @@
+package network
+
+import (
+	"context"
+	"encoding/json"
+	"testing"
+
+	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/unitronix/betterdesk-server/console/store/storetest"
+)
+
+// The members of a target are checked before anything is stored: text for
+// name, host and url, whole numbers in range for port and the times, a
+// flag for enabled. A refusal is 400 with the console's own words, the
+// same on both databases (BUGS.md NM1).
+func TestTargetValuesOfTheWrongType(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db, names{})
+		count := func() int {
+			var n int
+			if err := db.QueryRow(context.Background(), "SELECT COUNT(*) FROM network_targets").Scan(&n); err != nil {
+				t.Fatal(err)
+			}
+			return n
+		}
+		send := func(method, path, body string) (int, string) {
+			t.Helper()
+			rec := w.do("adm", method, path, &body, "")
+			return rec.Code, rec.Body.String()
+		}
+		const (
+			name     = `{"error":"name must be text"}`
+			host     = `{"error":"host must be text"}`
+			url      = `{"error":"url must be text"}`
+			port     = `{"error":"port must be a whole number from 1 to 65535"}`
+			timeout  = `{"error":"timeout_ms must be a whole number from 1 to 2147483647"}`
+			interval = `{"error":"interval_ms must be a whole number from 1 to 2147483647"}`
+			enabled  = `{"error":"enabled must be true or false"}`
+			kind     = `{"error":"check_type must be one of: ping, tcp, http, https"}`
+		)
+		for body, want := range map[string]string{
+			`{"name":42,"check_type":"ping","host":"10.1.2.3"}`:                                  name,
+			`{"name":{"a":1},"check_type":"ping","host":"10.1.2.3"}`:                             name,
+			`{"name":true,"check_type":"ping","host":"10.1.2.3"}`:                                name,
+			`{"name":["x"],"check_type":"ping","host":"10.1.2.3"}`:                               name,
+			`{"name":"x","check_type":"ping","host":["10.1.2.3"]}`:                               host,
+			`{"name":"x","check_type":"ping","host":7}`:                                          host,
+			`{"name":"x","check_type":"http","url":5}`:                                           url,
+			`{"name":"x","check_type":"http","url":["http://10.1.2.3/"]}`:                        url,
+			`{"name":"x","check_type":"tcp","host":"10.1.2.3","port":"1x"}`:                      port,
+			`{"name":"x","check_type":"tcp","host":"10.1.2.3","port":70000}`:                     port,
+			`{"name":"x","check_type":"tcp","host":"10.1.2.3","port":80.5}`:                      port,
+			`{"name":"x","check_type":"tcp","host":"10.1.2.3","port":-1}`:                        port,
+			`{"name":"x","check_type":"tcp","host":"10.1.2.3","port":true}`:                      port,
+			`{"name":"x","check_type":"tcp","host":"10.1.2.3","port":"5000/tcp"}`:                port,
+			`{"name":"x","check_type":"ping","host":"x","timeout_ms":"abc"}`:                     timeout,
+			`{"name":"x","check_type":"ping","host":"x","timeout_ms":-5}`:                        timeout,
+			`{"name":"x","check_type":"ping","host":"x","timeout_ms":2147483648}`:                timeout,
+			`{"name":"x","check_type":"ping","host":"x","timeout_ms":"1e23"}`:                    timeout,
+			`{"name":"x","check_type":"ping","host":"x","interval_ms":"1500.9"}`:                 interval,
+			`{"name":"x","check_type":"ping","host":"x","interval_ms":[1]}`:                      interval,
+			`{"name":"x","check_type":"ping","host":"x","enabled":"no"}`:                         enabled,
+			`{"name":"x","check_type":"ping","host":"x","enabled":{}}`:                           enabled,
+			`{"name":"x","check_type":"ping","host":"x","enabled":null}`:                         enabled,
+			`{"name":"x","check_type":"ping","host":"x","enabled":2}`:                            enabled,
+			`{"name":"x","check_type":"ping","host":"x","timeout_ms":"99999999999999999999999"}`: timeout,
+		} {
+			if status, answer := send("POST", "/api/network/targets", body); status != 400 || answer != want {
+				t.Errorf("create %s: %d %s, want 400 %s", body, status, answer, want)
+			}
+		}
+		if n := count(); n != 0 {
+			t.Fatalf("%d targets stored by refused requests", n)
+		}
+
+		// What the web app sends, and the forms of a number the old routes took
+		status, answer := send("POST", "/api/network/targets", `{"name":"Printer","host":"10.1.2.3","check_type":"tcp","port":"9100","interval_ms":30000,"timeout_ms":0,"enabled":0}`)
+		var created struct {
+			ID         int64    `json:"id"`
+			Port       *float64 `json:"port"`
+			TimeoutMs  float64  `json:"timeout_ms"`
+			IntervalMs float64  `json:"interval_ms"`
+			Enabled    json.RawMessage `json:"enabled"`
+		}
+		if err := json.Unmarshal([]byte(answer), &created); status != 201 || err != nil || created.Port == nil || *created.Port != 9100 || created.TimeoutMs != 5000 || created.IntervalMs != 30000 || !isFlag(created.Enabled, false) {
+			t.Fatalf("create: %d %s", status, answer)
+		}
+		target := "/api/network/targets/" + json.Number(jsonInt(created.ID)).String()
+		for body, want := range map[string]string{
+			`{"name":null}`:                            name,
+			`{"name":["a","b"]}`:                       name,
+			`{"name":5000000000}`:                      name,
+			`{"host":7.5}`:                             host,
+			`{"url":{}}`:                               url,
+			`{"port":5000000000}`:                      port,
+			`{"port":"none"}`:                          port,
+			`{"timeout_ms":"99999999999999999999999"}`: timeout,
+			`{"timeout_ms":"none"}`:                    timeout,
+			`{"interval_ms":-1}`:                       interval,
+			`{"enabled":{}}`:                           enabled,
+			`{"enabled":"yes"}`:                        enabled,
+			`{"check_type":""}`:                        kind,
+			`{"check_type":null}`:                      kind,
+			`{"name":"renamed","port":"5000000000"}`:   port,
+		} {
+			if status, answer := send("PATCH", target, body); status != 400 || answer != want {
+				t.Errorf("update %s: %d %s, want 400 %s", body, status, answer, want)
+			}
+		}
+		status, answer = send("PATCH", target, `{"name":"Printer 2","host":null,"port":null,"timeout_ms":2500,"interval_ms":0,"enabled":true}`)
+		var updated struct {
+			Name       string   `json:"name"`
+			Host       *string  `json:"host"`
+			Port       *float64 `json:"port"`
+			TimeoutMs  float64  `json:"timeout_ms"`
+			IntervalMs float64  `json:"interval_ms"`
+			Enabled    json.RawMessage `json:"enabled"`
+		}
+		if err := json.Unmarshal([]byte(answer), &updated); status != 200 || err != nil || updated.Name != "Printer 2" || updated.Host != nil || updated.Port != nil || updated.TimeoutMs != 2500 || updated.IntervalMs != 0 || !isFlag(updated.Enabled, true) {
+			t.Errorf("update: %d %s", status, answer)
+		}
+	})
+}
+
+// isFlag reports whether a flag of an answer is on, or off: 1 and 0 on
+// SQLite, true and false on PostgreSQL.
+func isFlag(raw json.RawMessage, on bool) bool {
+	if on {
+		return string(raw) == "1" || string(raw) == "true"
+	}
+	return string(raw) == "0" || string(raw) == "false"
+}
+
+// jsonInt writes a whole number as JSON.
+func jsonInt(n int64) string {
+	out, _ := json.Marshal(n)
+	return string(out)
+}

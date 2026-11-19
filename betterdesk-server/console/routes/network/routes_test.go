@@ -338,6 +338,92 @@ var stepDifferences = map[string]struct {
 	"resolve: 256": {500, `{"error":"Hostname 256 resolves to blocked address 0.0.1.0"}`},
 }
 
+// refusedTargets are the steps whose body the checks of a target refuse
+// (BUGS.md NM1), with the refusal. Where Node stored what such a body
+// held, its answer is the row; the replay stores that row as well, so the
+// steps after it see the targets Node had.
+var refusedTargets = map[string]string{
+	"create odd: enabled as text":                     enabledNotFlag,
+	"create odd: enabled null":                        enabledNotFlag,
+	"create odd: host as a list of one":               hostNotText,
+	"create odd: host as a list of two":               hostNotText,
+	"create odd: host as a number":                    hostNotText,
+	"create odd: host as an empty list":               hostNotText,
+	"create odd: host as an object":                   hostNotText,
+	"create odd: host true":                           hostNotText,
+	"create odd: name and host as objects":            nameNotText,
+	"create odd: name as 1e21":                        nameNotText,
+	"create odd: name as a fraction":                  nameNotText,
+	"create odd: name as a large number":              nameNotText,
+	"create odd: name as a list in a list":            nameNotText,
+	"create odd: name as a list of one":               nameNotText,
+	"create odd: name as a list of two":               nameNotText,
+	"create odd: name as a list with a number":        nameNotText,
+	"create odd: name as a list with an object":       nameNotText,
+	"create odd: name as a list with null":            nameNotText,
+	"create odd: name as a list with quotes":          nameNotText,
+	"create odd: name as a list with true":            nameNotText,
+	"create odd: name as a number":                    nameNotText,
+	"create odd: name as a small number":              nameNotText,
+	"create odd: name as an empty list":               nameNotText,
+	"create odd: name as an empty object":             nameNotText,
+	"create odd: name as an object":                   nameNotText,
+	"create odd: name as minus zero":                  nameNotText,
+	"create odd: name true":                           nameNotText,
+	"create odd: port 1e21":                           portNotInRange,
+	"create odd: port as a list":                      portNotInRange,
+	"create odd: port as an object":                   portNotInRange,
+	"create odd: port below zero":                     portNotInRange,
+	"create odd: port in hex":                         portNotInRange,
+	"create odd: port large":                          portNotInRange,
+	"create odd: port not a number":                   portNotInRange,
+	"create odd: port of many digits":                 portNotInRange,
+	"create odd: port true":                           portNotInRange,
+	"create odd: port with a fraction":                portNotInRange,
+	"create odd: port with letters":                   portNotInRange,
+	"create odd: port with spaces":                    portNotInRange,
+	"create odd: timeouts as text":                    timeoutNotRange,
+	"create odd: timeouts below zero":                 timeoutNotRange,
+	"create odd: timeouts large":                      timeoutNotRange,
+	"create odd: timeouts with fractions":             timeoutNotRange,
+	"create odd: url as a list":                       urlNotText,
+	"create odd: url as a number":                     urlNotText,
+	"create odd: url as an object":                    urlNotText,
+	"create odd: url true":                            urlNotText,
+	"prepare check: http with a timeout below zero":   timeoutNotRange,
+	"prepare check: no type":                          invalidCheckType,
+	"prepare check: tcp with a large port":            portNotInRange,
+	"prepare check: tcp with a timeout below zero":    timeoutNotRange,
+	"update: empty type":                              invalidCheckType,
+	"update: enabled as a list":                       enabledNotFlag,
+	"update: enabled as an object":                    enabledNotFlag,
+	"update: enabled as text":                         enabledNotFlag,
+	"update: enabled empty text":                      enabledNotFlag,
+	"update: enabled null":                            enabledNotFlag,
+	"update: host as a number":                        hostNotText,
+	"update: name as a list of one":                   nameNotText,
+	"update: name as a list of two":                   nameNotText,
+	"update: name as a number":                        nameNotText,
+	"update: name as an empty list":                   nameNotText,
+	"update: name as an object and host as an object": nameNotText,
+	"update: name as an object":                       nameNotText,
+	"update: name null":                               nameNotText,
+	"update: name true":                               nameNotText,
+	"update: port 1e21":                               portNotInRange,
+	"update: port as text":                            portNotInRange,
+	"update: port large":                              portNotInRange,
+	"update: port not a number":                       portNotInRange,
+	"update: port with a fraction":                    portNotInRange,
+	"update: timeouts below zero":                     timeoutNotRange,
+	"update: timeouts large":                          timeoutNotRange,
+	"update: timeouts not numbers":                    timeoutNotRange,
+	"update: timeouts true":                           timeoutNotRange,
+	"update: type false":                              invalidCheckType,
+	"update: type null":                               invalidCheckType,
+	"update: type zero":                               invalidCheckType,
+	"update: url as a number":                         urlNotText,
+}
+
 // TestNodeSteps replays the steps the Node console answered, in order, on
 // the database they were recorded on. Times differ from run to run and
 // are compared by their form; ids are the same, since both start from an
@@ -377,6 +463,28 @@ func TestNodeSteps(t *testing.T) {
 				as = *s.As
 			}
 			rec := w.do(as, s.Method, s.Path, s.Body, s.BodyType)
+			if problem, ok := refusedTargets[s.Name]; ok {
+				if want := `{"error":"` + problem + `"}`; rec.Code != http.StatusBadRequest || rec.Body.String() != want {
+					t.Errorf("%s: %d %s, want 400 %s", s.Name, rec.Code, rec.Body.String(), want)
+				}
+				if s.Status == http.StatusOK || s.Status == http.StatusCreated {
+					storeAsNode(t, db, s)
+				}
+				continue
+			}
+			if enabledByZero[s.Name] {
+				want := strings.NewReplacer(`"enabled":1`, `"enabled":0`, `"enabled":true`, `"enabled":false`).Replace(s.Text)
+				if rec.Code != http.StatusCreated || maskTimes(rec.Body.String()) != maskTimes(want) {
+					t.Errorf("%s: %d %s, want 201 %s", s.Name, rec.Code, rec.Body.String(), want)
+				}
+				storeAsNode(t, db, step{Name: s.Name, Method: "PATCH", Text: s.Text})
+				continue
+			}
+			if s.Status == http.StatusBadRequest && rec.Code == http.StatusBadRequest && rec.Body.String() == `{"error":"`+notSaved+`"}` && s.Method != "GET" {
+				// NM1: the database refused the write, and its message is
+				// not passed on
+				continue
+			}
 			if strings.HasPrefix(s.Type, "text/html") {
 				// Not a route of the group: the old console answered with
 				// its page for that
@@ -400,6 +508,57 @@ func TestNodeSteps(t *testing.T) {
 			}
 		}
 	})
+}
+
+// enabledByZero are the creates with "enabled": 0. Node disabled a target
+// only for false and enabled these; the checks of a target take 0 as
+// false, as Node's updates did (BUGS.md NM1). The replay then stores
+// Node's row, so the steps after it see the target Node had.
+var enabledByZero = map[string]bool{
+	"create with keys in another order": true,
+	"create odd: enabled zero":          true,
+}
+
+// storeAsNode stores the target row Node answered a create (POST) or an
+// update with, as Node stored it.
+func storeAsNode(t *testing.T, db *store.DB, s step) {
+	t.Helper()
+	decoder := json.NewDecoder(strings.NewReader(s.Text))
+	decoder.UseNumber()
+	var row map[string]any
+	if err := decoder.Decode(&row); err != nil {
+		t.Fatalf("%s: Node's answer %s: %v", s.Name, s.Text, err)
+	}
+	columns := []string{"name", "host", "port", "url", "check_type", "timeout_ms", "interval_ms", "enabled", "last_status", "last_check_at", "last_rtt_ms"}
+	if s.Method == "POST" {
+		columns = append([]string{"id"}, columns...)
+	}
+	values := make([]any, 0, len(columns)+1)
+	for _, column := range columns {
+		value := row[column]
+		if n, ok := value.(json.Number); ok {
+			if whole, err := n.Int64(); err == nil {
+				value = whole
+			} else {
+				value, _ = n.Float64()
+			}
+		}
+		values = append(values, value)
+	}
+	query := "INSERT INTO network_targets (" + strings.Join(columns, ", ") + ") VALUES (?" + strings.Repeat(", ?", len(columns)-1) + ")"
+	if s.Method != "POST" {
+		query = "UPDATE network_targets SET " + strings.Join(columns, " = ?, ") + " = ? WHERE id = ?"
+		values = append(values, row["id"].(json.Number).String())
+	}
+	ctx := context.Background()
+	if _, err := db.Exec(ctx, query, values...); err != nil {
+		t.Fatalf("%s: store Node's row: %v", s.Name, err)
+	}
+	if s.Method == "POST" && db.IsPostgres() {
+		if _, err := db.Exec(ctx, "SELECT setval(pg_get_serial_sequence('network_targets', 'id'), (SELECT MAX(id) FROM network_targets))"); err != nil {
+			t.Fatal(err)
+		}
+	}
 }
 
 func TestRoutesInTheOrderOfTheOldFile(t *testing.T) {

@@ -6,9 +6,8 @@
 // running a check or a tool needs device.connect; changing targets and
 // starting or stopping the monitor needs server.config.
 //
-// The routes pass on what the client sent without checking its type, and
-// answer with the database driver's message when the database refuses it,
-// as the old routes did (BUGS.md NM1).
+// The members of a target are checked before anything is stored; a
+// refusal is 400 with a message that names the member.
 package network
 
 import (
@@ -23,6 +22,7 @@ import (
 type handlers struct {
 	db      *store.DB
 	monitor *netmonitor.Monitor
+	log     *kit.Logger
 }
 
 // Register adds the group's routes below the mount (/api/network) and the
@@ -40,7 +40,7 @@ func Register(d *kit.Deps) {
 }
 
 func register(d *kit.Deps, monitor *netmonitor.Monitor) {
-	h := &handlers{db: d.Store, monitor: monitor}
+	h := &handlers{db: d.Store, monitor: monitor, log: d.Log}
 	if d.Jobs != nil {
 		d.Jobs.Add("network monitor", monitor.Run)
 	}
