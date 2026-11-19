@@ -90,8 +90,11 @@ func TestActivityWhichEntriesCount(t *testing.T) {
 		{"an empty events list is taken", `{"events":[],"entries":[{"action":"b"}]}`, 0},
 		{"events null: entries", `{"events":null,"entries":[{"action":"a"}]}`, 1},
 		{"events that is no list", `{"events":{"0":{"action":"a"}}}`, 0},
-		{"reading stops at null", `{"events":[{"action":"a"},null,{"action":"b"}]}`, 1},
-		{"a bare list is not read", `[{"action":"a"}]`, 0},
+		// a null entry is skipped and a bare list is read (BUGS SI12: reading
+		// stopped at the null, and a bare list gave no events)
+		{"a null entry is skipped", `{"events":[{"action":"a"},null,{"action":"b"}]}`, 2},
+		{"ten after a null", `{"events":[null,` + strings.Join(twelve, ",") + `]}`, 10},
+		{"a bare list is read", `[{"action":"a"},null,{"action":"b"}]`, 2},
 		{"text", `"events"`, 0},
 		{"nothing", `{}`, 0},
 	} {
@@ -103,7 +106,10 @@ func TestActivityWhichEntriesCount(t *testing.T) {
 		if c.events == 0 && body != noEvents {
 			t.Errorf("%s: %s", c.name, body)
 		}
-		if c.name == "reading stops at null" && body != `{"success":true,"events":[`+one+`]}` {
+		if c.name == "a null entry is skipped" && body != `{"success":true,"events":[`+one+`,`+strings.ReplaceAll(one, `"a"`, `"b"`)+`]}` {
+			t.Errorf("%s: %s", c.name, body)
+		}
+		if c.name == "ten after a null" && (!strings.Contains(body, `"a9"`) || strings.Contains(body, `"a10"`)) {
 			t.Errorf("%s: %s", c.name, body)
 		}
 	}

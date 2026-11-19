@@ -43,8 +43,9 @@ func or(values ...any) any {
 }
 
 // serverEvents turns the server's answer to the audit request into
-// events. The entries are the list under data.events, or data.entries
-// in the older form. Reading stops at an entry that is null.
+// events: the first ten entries that are not null of the list under
+// data.events, or data.entries in the older form, or of the answer's
+// data when that is a list itself.
 func serverEvents(audit *goapi.Object) []*goapi.Object {
 	events := []*goapi.Object{}
 	var picked any
@@ -52,17 +53,15 @@ func serverEvents(audit *goapi.Object) []*goapi.Object {
 	case *goapi.Object:
 		picked = or(data.Get("events"), data.Get("entries"))
 	case []any:
-		// A bare list is not read: the old console took the list's own
-		// "entries" method for the entries, which is no list
-		return events
+		picked = data
 	}
 	entries, _ := or(picked, audit.Get("events"), audit.Get("entries")).([]any)
-	if len(entries) > feedLength {
-		entries = entries[:feedLength]
-	}
 	for _, entry := range entries {
-		if entry == nil {
+		if len(events) == feedLength {
 			break
+		}
+		if entry == nil {
+			continue
 		}
 		details := goapi.Dig(entry, "details")
 		event := goapi.NewObject(
