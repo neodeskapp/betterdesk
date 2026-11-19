@@ -156,8 +156,8 @@ func SanitizeSVG(svg any) string {
 
 // SanitizeCSSColorValue cleans a colour or gradient that goes into the
 // generated stylesheet. Only letters, digits, white space and # % . , ( )
-// / - stay, "expression(" and "url(" are taken out once, and the result is
-// cut at 400 characters.
+// / - stay, "expression(" and "url(" are taken out until none is left (also
+// one wrapped around itself), and the result is cut at 400 characters.
 func SanitizeCSSColorValue(value any) (out string, err error) {
 	defer catch(&err)
 	return sanitizeCSSColorValue(value), nil
@@ -183,14 +183,14 @@ func sanitizeCSSColorValue(value any) string {
 		}
 		b.WriteRune(r)
 	}
-	v = reCSSExpression.ReplaceAllLiteralString(b.String(), "")
-	v = reCSSURL.ReplaceAllLiteralString(v, "")
+	v = stripUntilStable(b.String(), remover(reCSSExpression, ""), remover(reCSSURL, ""))
 	return substring(v, 400)
 }
 
 // SanitizeCustomCSS cleans the free CSS an administrator can add: no tags,
 // no @import, expression(), behavior or -moz-binding, no script or data
-// URLs, at most 20,000 characters.
+// URLs, at most 20,000 characters. The rules run until none finds
+// anything, so a word wrapped around itself is gone too.
 func SanitizeCustomCSS(value any) (out string, err error) {
 	defer catch(&err)
 	return sanitizeCustomCSS(value), nil
@@ -206,12 +206,12 @@ func sanitizeCustomCSS(value any) string {
 		scriptTag.strip,
 		styleTag.strip,
 		remover(reSVGOnAttr, " "),
+		remover(reCSSImport, ""),
+		remover(reCSSExpression, ""),
+		remover(reCSSBehavior, ""),
+		remover(reCSSMozBinding, ""),
+		remover(reCSSScriptURL, "none"),
 	)
-	css = reCSSImport.ReplaceAllLiteralString(css, "")
-	css = reCSSExpression.ReplaceAllLiteralString(css, "")
-	css = reCSSBehavior.ReplaceAllLiteralString(css, "")
-	css = reCSSMozBinding.ReplaceAllLiteralString(css, "")
-	css = reCSSScriptURL.ReplaceAllLiteralString(css, "none")
 	return substring(css, 20000)
 }
 

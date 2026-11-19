@@ -24,11 +24,74 @@ var (
 	reRecordedUpload = regexp.MustCompile(`"url":"/uploads/(?:logo|bg)-<HEX>([^"]*)"`)
 )
 
+// The rules of the CSS cleaners, in the order Node ran each of them once:
+// those of the custom CSS, and those of a colour or gradient.
+var (
+	customCSSWords = []*regexp.Regexp{reCSSImport, reCSSExpression, reCSSBehavior, reCSSMozBinding, reCSSScriptURL}
+	colorWords     = []*regexp.Regexp{reCSSExpression, reCSSURL}
+)
+
+// hasCSSWord reports text in which one of the rules finds something.
+func hasCSSWord(text string, rules []*regexp.Regexp) bool {
+	for _, re := range rules {
+		if re.MatchString(text) {
+			return true
+		}
+	}
+	return false
+}
+
+// nodeCustomCSS and nodeColor are the CSS cleaners as Node ran them: the
+// rules for words once each, after the tags.
+func nodeCustomCSS(text string) string {
+	css := stripUntilStable(text, remover(reCSSStyleTag, ""), remover(reCSSAnyTag, ""), scriptTag.strip, styleTag.strip, remover(reSVGOnAttr, " "))
+	for i, re := range customCSSWords {
+		with := ""
+		if i == len(customCSSWords)-1 {
+			with = "none"
+		}
+		css = re.ReplaceAllLiteralString(css, with)
+	}
+	return substring(css, 20000)
+}
+
+func nodeColor(text string) string {
+	var kept []rune
+	for _, r := range trim(text) {
+		if r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || strings.ContainsRune("#%.,()/-", r) || isJSSpace(r) {
+			kept = append(kept, r)
+		}
+	}
+	out := string(kept)
+	for _, re := range colorWords {
+		out = re.ReplaceAllLiteralString(out, "")
+	}
+	return substring(out, 400)
+}
+
+// wrappedCSSWord reports a text that a CSS cleaner now cleans otherwise
+// than Node did: one with a word wrapped around itself (BR7).
+func wrappedCSSWord(v any) bool {
+	text, ok := v.(string)
+	if !ok {
+		return false
+	}
+	return nodeCustomCSS(text) != sanitizeCustomCSS(text) || nodeColor(text) != sanitizeCSSColorValue(text)
+}
+
 // fixedPure checks a recorded call of TestOraclePure whose answer a fix
 // changes on purpose. It returns the bug id when Go answered as the fix
 // says, and "" for a call no fix changes or one Go answers otherwise
 // (which is then reported against Node's answer).
 func fixedPure(name string, a []any, got string) string {
+	// BR7: the CSS cleaners run until nothing is left to remove
+	rules := colorWords
+	if name == "sanitizeCustomCss" {
+		rules = customCSSWords
+	}
+	if anyValue(a, wrappedCSSWord) && !strings.HasPrefix(got, "throws ") && !hasCSSWord(got, rules) {
+		return "BR7"
+	}
 	// BR1: an address on this server with a control character is refused,
 	// so it reaches no answer
 	if anyValue(a, isControlAddress) {
@@ -151,6 +214,11 @@ func (f *storeFixes) before(step any) {
 		bug = "BR1"
 	case property(step, "op") == "profileApply" && f.profiles[id] != "":
 		bug = f.profiles[id]
+	// BR7: a word wrapped around itself in a colour or the custom CSS
+	case anyValue(step, wrappedCSSWord):
+		bug = "BR7"
+	case property(step, "op") == "profileApply" && anyValue(f.profileData(id), wrappedCSSWord):
+		bug = "BR7"
 	}
 	if bug != "" {
 		f.diverged = bug
@@ -230,7 +298,7 @@ func (f *storeFixes) recordedProfiles(recorded any) any {
 // that the state was Node's again soon after each.
 func (f *storeFixes) check() {
 	f.t.Helper()
-	for bug, atLeast := range map[string]int{"BR1": 5, "BR2": 1} {
+	for bug, atLeast := range map[string]int{"BR1": 5, "BR2": 1, "BR7": 1} {
 		if f.fixed[bug] < atLeast {
 			f.t.Errorf("%d steps of the scenario are changed by the fix of %s, the recording has more", f.fixed[bug], bug)
 		}
@@ -377,4 +445,34 @@ func TestBackgroundAddressWithALineBreakStaysInItsDeclaration(t *testing.T) {
 			t.Errorf("the stylesheet of a stored row:\n%s", css)
 		}
 	})
+}
+
+// TestCleanersRemoveWordsWrappedAroundThemselves: the CSS cleaners run
+// until nothing is left to remove, so a word wrapped around a copy of
+// itself does not come back when the inner copy goes (BUGS BR7).
+func TestCleanersRemoveWordsWrappedAroundThemselves(t *testing.T) {
+	for in, gone := range map[string]string{
+		"@im@import;port url(//evil.example/x.css);": "@import",
+		"a { width: expexpression(ression(1) }":      "expression(",
+		"a { bebehavior:havior: url(x.htc) }":        "behavior:",
+		"a { -moz--moz-binding:binding: url(x) }":    "-moz-binding:",
+		"a { background: <st<style>yle>red }":        "<style",
+	} {
+		out, err := SanitizeCustomCSS(in)
+		if err != nil || strings.Contains(strings.ToLower(out), gone) {
+			t.Errorf("SanitizeCustomCSS(%q) = %q, %v", in, out, err)
+		}
+	}
+	for in, gone := range map[string]string{
+		"expexpression(ression(1)":         "expression(",
+		"linear-gradient(ururl(l(x), red)": "url(",
+	} {
+		out, err := SanitizeCSSColorValue(in)
+		if err != nil || strings.Contains(out, gone) {
+			t.Errorf("SanitizeCSSColorValue(%q) = %q, %v", in, out, err)
+		}
+	}
+	if out, _ := SanitizeCustomCSS("a { background: url(/img/x.png) }"); out != "a { background: url(/img/x.png) }" {
+		t.Errorf("a plain picture address in custom CSS: %q", out)
+	}
 }
