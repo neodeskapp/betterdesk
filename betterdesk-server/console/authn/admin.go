@@ -42,11 +42,11 @@ var ErrNoBootstrapAdmin = errors.New("Docker bootstrap admin was not created by 
 
 // adminPasswordLine finds the first line "Admin Password: <value>" of a
 // credentials file. Lines end at LF, CR, U+2028 or U+2029. The white space
-// after the colon may run over line ends, so an empty line takes the next
-// line as its value.
+// after the colon stays on the line, so a line without a value gives no
+// password.
 var adminPasswordLine = regexp.MustCompile(
 	`(?:^|[\n\r\x{2028}\x{2029}])Admin Password:` +
-		`[\t\n\v\f\r \x{a0}\x{1680}\x{2000}-\x{200a}\x{2028}\x{2029}\x{202f}\x{205f}\x{3000}\x{feff}]*` +
+		`[\t\v\f \x{a0}\x{1680}\x{2000}-\x{200a}\x{202f}\x{205f}\x{3000}\x{feff}]*` +
 		`([^\n\r\x{2028}\x{2029}]+)`)
 
 // credentialDirs lists the folders to look for .admin_credentials in, in
