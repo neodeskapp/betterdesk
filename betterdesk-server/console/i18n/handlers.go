@@ -112,9 +112,8 @@ func fail(w http.ResponseWriter, r *http.Request, status int, message string) {
 }
 
 // Language picks the language of r and, when ?lang= names a language,
-// adds the cookie that remembers it to the answer. An error means the
-// request is to be answered with status 500 and, outside production, err's
-// text as the message; the returned language is then the default.
+// adds the cookie that remembers it to the answer. The error is always
+// nil: every request gets a language.
 func (h *Handlers) Language(w http.ResponseWriter, r *http.Request) (string, error) {
 	preferred := ""
 	if h.PreferredLanguage != nil {
@@ -124,7 +123,7 @@ func (h *Handlers) Language(w http.ResponseWriter, r *http.Request) (string, err
 	if sel.SetCookie != "" {
 		w.Header().Add("Set-Cookie", sel.SetCookie)
 	}
-	return sel.Lang, sel.Err
+	return sel.Lang, nil
 }
 
 // Languages answers GET /api/i18n/languages: the listed languages keyed by

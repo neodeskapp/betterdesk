@@ -13,11 +13,11 @@
    "roles": [
     "signed-out"
    ],
-   "status": 500,
+   "status": 200,
    "headers": {
-    "cache-control": "no-store",
-    "content-security-policy": "default-src 'self'; frame-src 'none'; worker-src 'self' blob:; connect-src 'self'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; script-src 'self' 'sha256-xTQM7V4ywctaWeIGqiJ1amibCKKSO4IoqejxLuLjYYc='; style-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
-    "content-type": "text/html; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
     "etag": "<present>",
     "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
@@ -30,12 +30,18 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "timestamp",
+     "format": "9999-99-99A99:99:99.999A"
+    }
+   ],
    "body": {
-    "kind": "bytes",
-    "type": "text/html",
-    "length": 3098,
-    "sha256": "31fa63e2b750ac15c04850c3c75d2bd01c1d48d4a3885195f4b503d8a70a1989",
-    "head": "<!doctype html>\n<html lang=\"en\" dir=\"ltr\" data-theme=\"light\" data-theme-mode=\"system\">\n\t<head><meta name=\"bd-error\" content=\"500\">\n\t\t<meta charset=\"utf-8\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\" />\n\t\t<meta name=\"robots\" content=\"noindex, nofollow\""
+    "kind": "json",
+    "json": {
+     "status": "ok",
+     "timestamp": "<volatile>"
+    }
    }
   }
  ]

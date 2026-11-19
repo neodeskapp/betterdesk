@@ -223,16 +223,15 @@ func TestLanguageSetsTheCookieForTheQuery(t *testing.T) {
 	cases := []struct {
 		query, pref, cookie, accept string
 		lang, setCookie             string
-		fails                       bool
 	}{
-		{"", "", "", "", "en", "", false},
-		{"lang=de", "pl", "betterdesk_lang=en", "pl", "de", "betterdesk_lang=de; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 12:00:00 GMT; SameSite=Lax", false},
-		{"lang=xx", "pl", "", "", "en", "", false},
-		{"", "pl", "betterdesk_lang=de", "de", "pl", "", false},
-		{"", "", "betterdesk_lang=de", "pl", "de", "", false},
-		{"", "", "", "pl;q=0.5, de;q=0.8", "de", "", false},
-		{"lang[]=de", "", "", "", "de", "betterdesk_lang=j%3A%5B%22de%22%5D; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 12:00:00 GMT; SameSite=Lax", false},
-		{"lang[toString]=de", "", "", "", "en", "", true},
+		{"", "", "", "", "en", ""},
+		{"lang=de", "pl", "betterdesk_lang=en", "pl", "de", "betterdesk_lang=de; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 12:00:00 GMT; SameSite=Lax"},
+		{"lang=xx", "pl", "", "", "en", ""},
+		{"", "pl", "betterdesk_lang=de", "de", "pl", ""},
+		{"", "", "betterdesk_lang=de", "pl", "de", ""},
+		{"", "", "", "pl;q=0.5, de;q=0.8", "de", ""},
+		{"lang[]=de", "", "", "", "en", ""},
+		{"lang[toString]=de", "", "", "", "en", ""},
 	}
 	for _, c := range cases {
 		r := &http.Request{URL: &url.URL{Path: "/", RawQuery: c.query}, Header: http.Header{}}
@@ -243,8 +242,8 @@ func TestLanguageSetsTheCookieForTheQuery(t *testing.T) {
 		}
 		w := httptest.NewRecorder()
 		lang, err := h.Language(w, r)
-		if lang != c.lang || (err != nil) != c.fails {
-			t.Errorf("%q: language %q, error %v; want %q, fails %v", c.query, lang, err, c.lang, c.fails)
+		if lang != c.lang || err != nil {
+			t.Errorf("%q: language %q, error %v; want %q", c.query, lang, err, c.lang)
 		}
 		if got := w.Header().Get("Set-Cookie"); got != c.setCookie {
 			t.Errorf("%q: Set-Cookie %q, want %q", c.query, got, c.setCookie)

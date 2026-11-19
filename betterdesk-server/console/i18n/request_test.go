@@ -45,7 +45,7 @@ func TestRequestLanguageLikeNode(t *testing.T) {
 	if len(cases) < 300 {
 		t.Fatalf("only %d vectors", len(cases))
 	}
-	cookies, throws := 0, 0
+	cookies := 0
 	for i, c := range cases {
 		b.DefaultLang = str(c, "def")
 		r := &http.Request{URL: &url.URL{Path: "/p", RawQuery: str(c, "query")}, Header: http.Header{}}
@@ -66,16 +66,7 @@ func TestRequestLanguageLikeNode(t *testing.T) {
 				"accept=" + short(str(c, "accept")), "default=" + str(c, "def")}, " "))
 		}
 		if str(c, "throws") != "" {
-			throws++
-			if sel.Err == nil {
-				t.Errorf("%s: no error, Node threw %q", where(), str(c, "throws"))
-			} else if sel.Err.Error() != str(c, "throws") {
-				t.Errorf("%s: error %q, Node threw %q", where(), sel.Err, str(c, "throws"))
-			}
-			continue
-		}
-		if sel.Err != nil {
-			t.Errorf("%s: error %v, Node picked %q", where(), sel.Err, str(c, "lang"))
+			t.Errorf("%s: the vector still fails with %q", where(), str(c, "throws"))
 			continue
 		}
 		if sel.Lang != str(c, "lang") {
@@ -90,8 +81,8 @@ func TestRequestLanguageLikeNode(t *testing.T) {
 			t.Errorf("%s: Set-Cookie %q, Node sent %q", where(), sel.SetCookie, wantCookie)
 		}
 	}
-	if cookies < 30 || throws < 1 {
-		t.Errorf("the vectors set %d cookies and throw %d times; too few to mean anything", cookies, throws)
+	if cookies < 30 {
+		t.Errorf("the vectors set %d cookies; too few to mean anything", cookies)
 	}
 }
 
@@ -105,8 +96,8 @@ func TestHasIgnoresInheritedNames(t *testing.T) {
 			t.Errorf("Has(%q) = true", name)
 		}
 		query := &http.Request{URL: &url.URL{Path: "/", RawQuery: "lang=" + name}, Header: http.Header{}}
-		if sel := b.RequestLanguage(query, "", now); sel.Lang != "en" || sel.SetCookie != "" || sel.Err != nil {
-			t.Errorf("?lang=%s: language %q, cookie %q, error %v; want en and no cookie", name, sel.Lang, sel.SetCookie, sel.Err)
+		if sel := b.RequestLanguage(query, "", now); sel.Lang != "en" || sel.SetCookie != "" {
+			t.Errorf("?lang=%s: language %q, cookie %q; want en and no cookie", name, sel.Lang, sel.SetCookie)
 		}
 		accept := &http.Request{URL: &url.URL{Path: "/"}, Header: http.Header{"Accept-Language": {name + ", de;q=0.5"}}}
 		if sel := b.RequestLanguage(accept, "", now); sel.Lang != "de" {
@@ -114,6 +105,47 @@ func TestHasIgnoresInheritedNames(t *testing.T) {
 		}
 		if got := stringify(b.Validate(name).Object(), ""); got != `{"valid":false,"error":"Language not found"}` {
 			t.Errorf("Validate(%q) = %s", name, got)
+		}
+	}
+}
+
+// A lang query value or a language cookie that is not a string counts as
+// not given: the next source decides, and no j: cookie is set (BUGS.md L2,
+// L3).
+func TestRequestLanguageIgnoresValuesThatAreNotText(t *testing.T) {
+	b, _ := loaded(t, copyDir(t, "testdata/lang-upload"), "en")
+	now := time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
+	cases := []struct{ query, cookie, accept, want string }{
+		{"lang[toString]=de", "", "", "en"},
+		{"lang[toString]=de", "betterdesk_lang=pl", "", "pl"},
+		{"lang[]=de", "", "", "en"},
+		{"lang[]=de", "betterdesk_lang=pl", "", "pl"},
+		{"lang[0]=de", "", "", "en"},
+		{"lang[0][0]=de", "", "", "en"},
+		{"lang[x]=de", "", "pl", "pl"},
+		{"lang=de&lang=pl", "", "", "en"},
+		{"", `betterdesk_lang=j:["de"]`, "", "en"},
+		{"", `betterdesk_lang=j:["de"]`, "pl", "pl"},
+		{"", `betterdesk_lang=j:{"toString":1}`, "pl", "pl"},
+		{"", "betterdesk_lang=j:5", "pl", "pl"},
+		{"", `betterdesk_lang=j:"de"`, "pl", "de"},
+		{"lang=de", "", "", "de"},
+	}
+	for _, c := range cases {
+		r := &http.Request{URL: &url.URL{Path: "/", RawQuery: c.query}, Header: http.Header{}}
+		if c.cookie != "" {
+			r.Header.Set("Cookie", c.cookie)
+		}
+		if c.accept != "" {
+			r.Header.Set("Accept-Language", c.accept)
+		}
+		sel := b.RequestLanguage(r, "", now)
+		wantCookie := ""
+		if c.query == "lang=de" {
+			wantCookie = LangCookie("de", false, now)
+		}
+		if sel.Lang != c.want || sel.SetCookie != wantCookie {
+			t.Errorf("query %q, cookie %q, Accept-Language %q: language %q, Set-Cookie %q; want %q, %q", c.query, c.cookie, c.accept, sel.Lang, sel.SetCookie, c.want, wantCookie)
 		}
 	}
 }
@@ -150,16 +182,9 @@ func TestPickLanguageOrder(t *testing.T) {
 		{"q that cannot be read", "", "", "", "de;q=abc", "de"},
 	}
 	for _, c := range cases {
-		got, err := PickLanguage(has, Text(c.query), c.preferred, Text(c.cookie), c.accept, "en")
-		if err != nil || got != c.want {
-			t.Errorf("%s: %q, %v; want %q", c.name, got, err, c.want)
+		if got := PickLanguage(has, c.query, c.preferred, c.cookie, c.accept, "en"); got != c.want {
+			t.Errorf("%s: %q, want %q", c.name, got, c.want)
 		}
-	}
-	if _, err := PickLanguage(has, Choice{Truthy: true, Throws: true}, "de", Choice{}, "", "en"); err != ErrNotText {
-		t.Errorf("a value that cannot be text: err %v", err)
-	}
-	if got, err := PickLanguage(has, Choice{}, "de", Choice{Truthy: true, Throws: true}, "", "en"); err != nil || got != "de" {
-		t.Errorf("a bad cookie does not matter when the preference is used: %q, %v", got, err)
 	}
 }
 

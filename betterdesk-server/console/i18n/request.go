@@ -16,86 +16,41 @@ const CookieName = "betterdesk_lang"
 // cookieMaxAge is one year in seconds.
 const cookieMaxAge = 365 * 24 * 60 * 60
 
-// Choice is a language value as Express hands it to a route: the lang
-// query parameter after the query parser, or the cookie after the cookie
-// parser. Both can be lists or objects (?lang[]=de, a cookie starting with
-// j:), and those follow JavaScript's rules for truth and text.
-type Choice struct {
-	// Truthy says whether the value counts as given. An empty string
-	// does not; a list or object always does.
-	Truthy bool
-	// Name is the value as text: what is looked up as a language.
-	Name string
-	// Cookie is the text Express stores when the value is written to a
-	// cookie: the string itself, or j: and JSON for a list or object.
-	Cookie string
-	// Throws is set for a value JavaScript cannot turn into text (an
-	// object with its own toString key). A request with such a value is
-	// answered with status 500.
-	Throws bool
-}
-
-// Text is the Choice for a plain string.
-func Text(s string) Choice {
-	return Choice{Truthy: s != "", Name: s, Cookie: s}
-}
-
-func choiceOf(v any) Choice {
-	if v == undefined {
-		return Choice{}
-	}
-	if s, ok := v.(string); ok {
-		return Text(s)
-	}
-	name, ok := jsString(v)
-	c := Choice{Truthy: truthy(v), Name: name, Throws: !ok}
-	if isObjectLike(v) {
-		c.Cookie = "j:" + stringify(v, "")
-	} else {
-		c.Cookie = name
-	}
-	return c
-}
-
-// ErrNotText is the failure for a language value that JavaScript cannot
-// turn into text. Its text is the TypeError's message, which the console's
-// error answer with status 500 carries outside production.
+// ErrNotText is the failure for a value that JavaScript cannot turn into
+// text. Its text is the TypeError's message.
 var ErrNotText = errors.New("Cannot convert object to primitive value")
 
 // PickLanguage returns the language of a request.
 //
-// The first given value of query, the signed-in user's preferred language,
-// cookie and the Accept-Language header is taken; when none is given the
-// default language. If the taken value is not a language (has says no),
-// the default language is used: a wrong ?lang= does not fall through to
-// the cookie.
+// query and cookie are the lang query parameter and the language cookie,
+// "" when they are not given. The first given value of query, the
+// signed-in user's preferred language, cookie and the Accept-Language
+// header is taken; when none is given the default language. If the taken
+// value is not a language (has says no), the default language is used: a
+// wrong ?lang= does not fall through to the cookie.
 //
 // Accept-Language is read loosely: entries sorted by q (missing q is 1,
 // an unreadable q compares equal to everything, as in JavaScript), and for
 // each entry first the full tag, case-sensitive ("zh-TW"), then the part
 // before the first dash ("zh").
-func PickLanguage(has func(string) bool, query Choice, preferred string, cookie Choice, acceptLanguage, defaultLang string) (string, error) {
-	var chosen Choice
+func PickLanguage(has func(string) bool, query, preferred, cookie, acceptLanguage, defaultLang string) string {
+	chosen := defaultLang
 	switch {
-	case query.Truthy:
+	case query != "":
 		chosen = query
 	case preferred != "":
-		chosen = Text(preferred)
-	case cookie.Truthy:
+		chosen = preferred
+	case cookie != "":
 		chosen = cookie
 	default:
-		chosen = Text(defaultLang)
 		if lang := acceptedLanguage(has, acceptLanguage); lang != "" {
-			chosen = Text(lang)
+			chosen = lang
 		}
 	}
-	if chosen.Throws {
-		return "", ErrNotText
+	if !has(chosen) {
+		return defaultLang
 	}
-	if !has(chosen.Name) {
-		return defaultLang, nil
-	}
-	return chosen.Name, nil
+	return chosen
 }
 
 // Selection is the language of a request and the cookie to set for it.
@@ -105,26 +60,18 @@ type Selection struct {
 	// SetCookie is the Set-Cookie header value to add, or empty. The
 	// cookie is set when ?lang= names a language.
 	SetCookie string
-	// Err is ErrNotText for a query or cookie value that cannot be
-	// text; the request is to be answered with status 500. Lang is then
-	// the default language.
-	Err error
 }
 
 // RequestLanguage picks the language for r. preferred is the signed-in
 // user's stored language, empty when there is none or nobody is signed in.
 // now is the time the cookie's expiry is counted from.
 func (b *Bundle) RequestLanguage(r *http.Request, preferred string, now time.Time) Selection {
-	query := QueryChoice(r.URL.RawQuery)
-	cookie := CookieChoice(strings.Join(r.Header.Values("Cookie"), "; "))
+	query := QueryLanguage(r.URL.RawQuery)
+	cookie := CookieLanguage(strings.Join(r.Header.Values("Cookie"), "; "))
 	accept := strings.Join(r.Header.Values("Accept-Language"), ", ")
-	lang, err := PickLanguage(b.Has, query, preferred, cookie, accept, b.DefaultLang)
-	if err != nil {
-		return Selection{Lang: b.DefaultLang, Err: err}
-	}
-	sel := Selection{Lang: lang}
-	if query.Truthy && b.Has(query.Name) {
-		sel.SetCookie = LangCookie(query.Cookie, false, now)
+	sel := Selection{Lang: PickLanguage(b.Has, query, preferred, cookie, accept, b.DefaultLang)}
+	if query != "" && b.Has(query) {
+		sel.SetCookie = LangCookie(query, false, now)
 	}
 	return sel
 }
@@ -222,22 +169,24 @@ func percentByte(s string, i int) (byte, bool) {
 
 // --- the cookie ---
 
-// CookieChoice reads the language cookie from a Cookie header the way
+// CookieLanguage reads the language cookie from a Cookie header the way
 // cookie-parser reads it: the first cookie of that name counts, quotes around
 // the value are dropped, percent escapes are decoded when they are valid,
 // and a value starting with j: is read as JSON when that gives a true
-// value.
-func CookieChoice(header string) Choice {
+// value. Only a string counts: for a cookie that is JSON of anything else
+// (j:["de"], j:5) it returns "", as for a cookie that is not there.
+func CookieLanguage(header string) string {
 	raw, ok := cookieValue(latin1(header), len(header), CookieName)
 	if !ok {
-		return Choice{}
+		return ""
 	}
 	if strings.HasPrefix(raw, "j:") {
 		if v, err := parseJSON(raw[2:]); err == nil && truthy(v) {
-			return choiceOf(v)
+			text, _ := v.(string)
+			return text
 		}
 	}
-	return Text(raw)
+	return raw
 }
 
 func cookieValue(str string, length int, name string) (string, bool) {
@@ -423,12 +372,14 @@ func parseFloat(s string) float64 {
 
 // --- the query parameter ---
 
-// QueryChoice reads the lang parameter from a raw query string the way
-// Express's query parser (qs) reads it: repeated and bracketed parameters
-// (lang=a&lang=b, lang[]=a, lang[0]=a, lang[x]=a) become lists and
-// objects.
-func QueryChoice(rawQuery string) Choice {
-	return choiceOf(qsParam(rawQuery, "lang"))
+// QueryLanguage reads the lang parameter from a raw query string the way
+// Express's query parser (qs) reads it. Repeated and bracketed parameters
+// (lang=a&lang=b, lang[]=a, lang[0]=a, lang[x]=a) make a list or an
+// object there; only a string counts, so for those it returns "", as for a
+// parameter that is not there.
+func QueryLanguage(rawQuery string) string {
+	text, _ := qsParam(rawQuery, "lang").(string)
+	return text
 }
 
 const (

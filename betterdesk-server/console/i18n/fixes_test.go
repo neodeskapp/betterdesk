@@ -27,6 +27,9 @@ var vectorFixes = []vectorFix{
 	{"L1", "routes-edge.json", inheritedNamesNotValidated},
 	{"L1", "routes-upload.json", inheritedNamesNotValidated},
 	{"L1", "pick.json", pickWith(pickRules{loadedOnly: true})},
+
+	// A query or cookie value that is not a string counts as not given.
+	{"L2", "pick.json", pickWith(pickRules{loadedOnly: true, textOnly: true})},
 }
 
 // fixedVectors reads a file of vectors with every fix applied.
@@ -140,6 +143,9 @@ func inheritedNamesNotValidated(t testing.TB, file any) int {
 type pickRules struct {
 	// loadedOnly: only a loaded language counts, no inherited name (L1).
 	loadedOnly bool
+	// textOnly: a query or cookie value counts only when it is a string
+	// (L2).
+	textOnly bool
 }
 
 // referencePick is the request language of one vector of pick.json,
@@ -154,7 +160,12 @@ func referencePick(b *Bundle, c any, rules pickRules, now time.Time) (lang, setC
 		}
 		return !rules.loadedOnly && nodeInheritedNames[name]
 	}
-	given := func(v any) bool { return v != undefined && truthy(v) }
+	given := func(v any) bool {
+		if _, isText := v.(string); rules.textOnly && !isText {
+			return false
+		}
+		return v != undefined && truthy(v)
+	}
 
 	query := qsParam(str(c, "query"), "lang")
 	var cookie any = undefined
@@ -174,27 +185,30 @@ func referencePick(b *Bundle, c any, rules pickRules, now time.Time) (lang, setC
 		accept = toBytes(header)
 	}
 
-	// query || preference || cookie || Accept-Language || default
-	var chosen any = str(c, "def")
-	switch {
-	case given(query):
-		chosen = query
-	case flag(c, "hasPref") && str(c, "pref") != "":
-		chosen = str(c, "pref")
-	case given(cookie):
-		chosen = cookie
-	default:
-		if picked := acceptedLanguage(has, accept); picked != "" {
-			chosen = picked
-		}
+	// query, preference, cookie, Accept-Language, default: Node takes the
+	// first given one and the default when that is no language
+	var sources []any
+	if given(query) {
+		sources = append(sources, query)
 	}
-	name, ok := jsString(chosen)
-	if !ok {
-		return "", "", ErrNotText.Error()
+	if flag(c, "hasPref") && str(c, "pref") != "" {
+		sources = append(sources, str(c, "pref"))
+	}
+	if given(cookie) {
+		sources = append(sources, cookie)
+	}
+	if picked := acceptedLanguage(has, accept); picked != "" {
+		sources = append(sources, picked)
 	}
 	lang = str(c, "def")
-	if has(name) {
-		lang = name
+	if len(sources) > 0 {
+		name, ok := jsString(sources[0])
+		if !ok {
+			return "", "", ErrNotText.Error()
+		}
+		if has(name) {
+			lang = name
+		}
 	}
 	if given(query) {
 		if name, _ := jsString(query); has(name) {
