@@ -124,16 +124,8 @@
       },
       {
        "created_at": "<volatile>",
-       "filename": "list.bin",
-       "id": 7,
-       "mimetype": "application/octet-stream",
-       "size_bytes": 5,
-       "uploaded_by": "e2e_operator"
-      },
-      {
-       "created_at": "<volatile>",
        "filename": "odd.bin",
-       "id": 8,
+       "id": 7,
        "mimetype": "application/octet-stream",
        "size_bytes": 3,
        "uploaded_by": "e2e_operator"
@@ -183,23 +175,15 @@
       {
        "created_at": "<volatile>",
        "filename": "role.bin",
-       "id": 10,
+       "id": 9,
        "mimetype": "application/octet-stream",
        "size_bytes": 4,
        "uploaded_by": "e2e_global_admin"
       },
       {
        "created_at": "<volatile>",
-       "filename": "list.bin",
-       "id": 11,
-       "mimetype": "application/octet-stream",
-       "size_bytes": 5,
-       "uploaded_by": "e2e_global_admin"
-      },
-      {
-       "created_at": "<volatile>",
        "filename": "odd.bin",
-       "id": 12,
+       "id": 10,
        "mimetype": "application/octet-stream",
        "size_bytes": 3,
        "uploaded_by": "e2e_global_admin"
@@ -249,23 +233,15 @@
       {
        "created_at": "<volatile>",
        "filename": "role.bin",
-       "id": 15,
+       "id": 13,
        "mimetype": "application/octet-stream",
        "size_bytes": 4,
        "uploaded_by": "e2e_super_admin"
       },
       {
        "created_at": "<volatile>",
-       "filename": "list.bin",
-       "id": 16,
-       "mimetype": "application/octet-stream",
-       "size_bytes": 5,
-       "uploaded_by": "e2e_super_admin"
-      },
-      {
-       "created_at": "<volatile>",
        "filename": "odd.bin",
-       "id": 17,
+       "id": 14,
        "mimetype": "application/octet-stream",
        "size_bytes": 3,
        "uploaded_by": "e2e_super_admin"
@@ -315,23 +291,15 @@
       {
        "created_at": "<volatile>",
        "filename": "role.bin",
-       "id": 19,
+       "id": 16,
        "mimetype": "application/octet-stream",
        "size_bytes": 4,
        "uploaded_by": "e2e_admin"
       },
       {
        "created_at": "<volatile>",
-       "filename": "list.bin",
-       "id": 20,
-       "mimetype": "application/octet-stream",
-       "size_bytes": 5,
-       "uploaded_by": "e2e_admin"
-      },
-      {
-       "created_at": "<volatile>",
        "filename": "odd.bin",
-       "id": 21,
+       "id": 17,
        "mimetype": "application/octet-stream",
        "size_bytes": 3,
        "uploaded_by": "e2e_admin"
@@ -339,7 +307,7 @@
       {
        "created_at": "<volatile>",
        "filename": "three.bin",
-       "id": 22,
+       "id": 18,
        "mimetype": "application/octet-stream",
        "size_bytes": 2359296,
        "uploaded_by": "e2e_admin"

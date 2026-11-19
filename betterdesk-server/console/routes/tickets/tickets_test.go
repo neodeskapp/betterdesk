@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -349,6 +350,38 @@ func TestFileBytes(t *testing.T) {
 	if got := safeName("a b/c\\d.txt\U0001F4CEü-_.Z9"); got != "a_b_c_d.txt___-_.Z9" {
 		t.Errorf("safeName = %q", got)
 	}
+}
+
+// The file data of an upload is base64 text. A list, an object that looks
+// like a list or a stored buffer, a number or a flag is refused before
+// anything is made of it: an object with a large length costs no memory
+// (BUGS TK6).
+func TestAttachmentDataMustBeText(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		g := newGroup(t, db)
+		g.want(g.do("admin", "POST", "/api/tickets", `{"title":"files"}`), 201, "")
+		refused := `{"error":"Filename and data (base64) are required"}`
+		for _, data := range []string{
+			`{"length":4000000}`, `{"length":1000000000}`, `[104,105]`, `{"type":"Buffer","data":[104,105]}`, `{"0":65,"length":1}`, `{}`, `5`, `true`,
+		} {
+			var before, after runtime.MemStats
+			runtime.GC()
+			runtime.ReadMemStats(&before)
+			g.want(g.do("admin", "POST", "/api/tickets/1/attachments", `{"filename":"x.bin","data":`+data+`}`), 400, refused)
+			runtime.ReadMemStats(&after)
+			if grown := after.TotalAlloc - before.TotalAlloc; grown > 64<<20 {
+				t.Errorf("data %s: the upload allocated %d MB", data, grown>>20)
+			}
+		}
+		if files, err := os.ReadDir(g.h.uploads); err != nil || len(files) != 0 {
+			t.Errorf("files stored: %d, %v", len(files), err)
+		}
+		var rows int
+		if err := db.QueryRow(context.Background(), "SELECT COUNT(*) FROM ticket_attachments").Scan(&rows); err != nil || rows != 0 {
+			t.Errorf("attachment rows: %d, %v", rows, err)
+		}
+		g.want(g.do("admin", "POST", "/api/tickets/1/attachments", `{"filename":"x.bin","data":"aGk="}`), 201, `{"success":true,"attachment":{"id":1,"filename":"x.bin","size_bytes":2}}`)
+	})
 }
 
 // unread is a request body that counts what is read of it.

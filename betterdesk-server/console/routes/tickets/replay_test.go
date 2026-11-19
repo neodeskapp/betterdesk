@@ -51,12 +51,19 @@ func storedFiles(t *testing.T, w *replay.World) []string {
 // front of the routes in the console. Where the guard refuses a write
 // that the route itself refused with "Permission denied", the guard's
 // answer is taken for it.
+//
+// The steps the bug fixes change are listed in ticketFixes (fixed_test.go)
+// with the Go console's answer.
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		w.Vars["<UPLOADS>"] = uploads(w)
+		used := map[string]int{}
+		defer ticketFixes.unused(t, used)
 		w.Run(replay.Load(t, db, "node"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			switch {
+			case ticketFixes.apply(t, w, step, got, used):
+				return true
 			case step.Files != nil:
 				if have := storedFiles(t, w); strings.Join(have, "\n") != strings.Join(step.Files, "\n") {
 					t.Errorf("files left in the attachment folder:\n   node: %q\n     go: %q", step.Files, have)

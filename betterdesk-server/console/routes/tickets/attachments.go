@@ -5,12 +5,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"math"
 	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"unicode/utf16"
 
@@ -46,65 +44,17 @@ func (h *handlers) removeFile(storagePath string) {
 	}
 }
 
-// errNoBuffer is the TypeError of Buffer.from for a value it cannot read.
-var errNoBuffer = errors.New("The first argument must be of type string or an instance of Buffer, ArrayBuffer, or Array or an Array-like Object.")
+// errDataNotText is the answer to file data that is no text: the file goes
+// in as base64 text, as the web app sends it.
+var errDataNotText = errors.New("the file data is no text")
 
-// errTooLarge stands for a list-like object whose length alone is over
-// the limit: its bytes are not made.
-var errTooLarge = errors.New("attachment too large")
-
-// fileBytes is Buffer.from(data, 'base64'): the bytes of the uploaded
-// file. A text is base64, read leniently; a list is its numbers as
-// bytes; so is an object that looks like a list ({"length":2,"0":65,
-// "1":66}) or like a stored buffer ({"type":"Buffer","data":[...]}).
-// Every other value is an error.
+// fileBytes is the bytes of the uploaded file: data is base64 text, read
+// leniently. Any other value is an error, before anything is made of it.
 func fileBytes(data jsbind.Value) ([]byte, error) {
-	switch {
-	case data.IsString():
-		return decodeBase64(data.Str()), nil
-	case data.IsArray():
-		return byteList(data.Items()), nil
-	case data.IsObject():
-		if valueOf := data.Member("valueOf"); valueOf.Truthy() {
-			return nil, errors.New("value.valueOf is not a function")
-		}
-		if length := data.Member("length"); !length.IsUndefined() {
-			if !length.IsNumber() {
-				return []byte{}, nil
-			}
-			n := length.ToNumber()
-			switch {
-			case n <= 0:
-				return []byte{}, nil
-			case n >= maxAttachmentSize+1:
-				return nil, errTooLarge
-			}
-			items := make([]jsbind.Value, int(n))
-			for i := range items {
-				items[i] = data.Member(strconv.Itoa(i))
-			}
-			return byteList(items), nil
-		}
-		if list := data.Member("data"); data.Member("type").Str() == "Buffer" && list.IsArray() {
-			return byteList(list.Items()), nil
-		}
+	if !data.IsString() {
+		return nil, errDataNotText
 	}
-	return nil, errNoBuffer
-}
-
-// byteList turns values into bytes the way a Uint8Array takes them: the
-// number of each value, cut to a whole number, modulo 256. What is no
-// number is 0.
-func byteList(items []jsbind.Value) []byte {
-	out := make([]byte, len(items))
-	for i, item := range items {
-		n := item.ToNumber()
-		if math.IsNaN(n) || math.IsInf(n, 0) {
-			continue
-		}
-		out[i] = byte(int64(math.Mod(math.Trunc(n), 256)))
-	}
-	return out
+	return decodeBase64(data.Str()), nil
 }
 
 // decodeBase64 reads base64 the way Buffer.from(text, 'base64') does. It
@@ -218,7 +168,11 @@ func (h *handlers) attach(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	file, err := fileBytes(data)
-	if errors.Is(err, errTooLarge) || len(file) > maxAttachmentSize {
+	if err != nil {
+		fail(w, r, http.StatusBadRequest, "Filename and data (base64) are required")
+		return
+	}
+	if len(file) > maxAttachmentSize {
 		fail(w, r, http.StatusRequestEntityTooLarge, "Attachment too large. Max 25 MB")
 		return
 	}
