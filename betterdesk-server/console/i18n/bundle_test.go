@@ -708,3 +708,20 @@ func TestTranslateReturnsTheKeyForValuesThatAreNotText(t *testing.T) {
 		}
 	}
 }
+
+// The web app builds the panel access section names from the catalog key
+// cdap; the typo access_section_cdep beside it is in no language file
+// (BUGS.md L15).
+func TestLanguageFilesHaveNoCdepKey(t *testing.T) {
+	dir := copyDir(t, realLangDir)
+	b, _ := loaded(t, dir, "en")
+	for _, name := range fileNames(t, dir) {
+		texts := b.Translations(strings.TrimSuffix(name, ".json"))
+		if lookup(texts, "users.access_section_cdep") != undefined {
+			t.Errorf("%s has users.access_section_cdep", name)
+		}
+		if text, _ := lookup(texts, "users.access_section_cdap").(string); text == "" {
+			t.Errorf("%s lacks users.access_section_cdap", name)
+		}
+	}
+}
