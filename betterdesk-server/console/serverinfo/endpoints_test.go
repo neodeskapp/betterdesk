@@ -374,3 +374,22 @@ func TestSavePublicEndpointsReplacesEnvironment(t *testing.T) {
 		t.Errorf("panel host %q: a save must leave it alone", got)
 	}
 }
+
+// TestNormalizeAPIURLRefusesLongAddress refuses a public API address over
+// 2,048 characters before it is parsed (BUGS SI10: the host name mapping
+// of a long address that is not ASCII took seconds of CPU).
+func TestNormalizeAPIURLRefusesLongAddress(t *testing.T) {
+	base := "https://api.example.com/"
+	fits := base + strings.Repeat("x", 2048-len(base))
+	if got, err := NormalizeSettings(PublicEndpointsInput{PublicAPIURL: fits}); err != nil || got.PublicAPIURL != fits {
+		t.Errorf("2,048 characters: %v", err)
+	}
+	for _, long := range []string{fits + "x", "https://" + strings.Repeat("中", 3000) + ".example"} {
+		if _, err := NormalizeSettings(PublicEndpointsInput{PublicAPIURL: long}); !errors.Is(err, ErrInvalidAPIURL) {
+			t.Errorf("%d characters: %v", len(long), err)
+		}
+		if _, err := ValidateSettings(PublicEndpointsInput{PublicAPIURL: long}); !errors.Is(err, ErrInvalidPublicAPIURL) {
+			t.Errorf("%d characters, validated: %v", len(long), err)
+		}
+	}
+}

@@ -160,6 +160,11 @@ func normalizeHostField(value any) (string, error) {
 	return normalized.Host, nil
 }
 
+// maxAPIURLLength is the longest public API address taken, in UTF-16
+// units. Longer ones are refused before they are parsed: the host name
+// mapping takes time with the square of a long host that is not ASCII.
+const maxAPIURLLength = 2048
+
 func normalizeAPIURL(value any) (string, error) {
 	raw := ""
 	if truthy(value) {
@@ -171,7 +176,7 @@ func normalizeAPIURL(value any) (string, error) {
 	if hasEnvInjection(raw) {
 		return "", ErrInvalidEnvValue
 	}
-	if !hasHTTPScheme(raw) {
+	if !hasHTTPScheme(raw) || utf16Len(raw) > maxAPIURLLength {
 		return "", ErrInvalidAPIURL
 	}
 	u, ok := parseJSURL(raw)
