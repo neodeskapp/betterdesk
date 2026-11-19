@@ -120,11 +120,24 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 		answer(w, r, http.StatusInternalServerError, failure{Error: or(result.Get("error"), kit.T(r, "devices.delete_failed", nil))})
 		return
 	}
+	// The server names the devices it deleted with this one
+	cascaded := or(dig(result.Get("data"), "cascaded"), []any{})
 	// A soft-deleted device can come back and keeps what the console holds
-	// of it; after a hard delete there is nothing to come back to
+	// of it; after a hard delete there is nothing to come back to, also for
+	// the devices deleted with it
 	if opts.Hard {
-		if err := clearDeletedDevice(ctx, h.d.Store, id); err != nil {
-			h.log.Warn("Clean-up after a device delete failed:", err)
+		gone := []string{id}
+		if list, ok := cascaded.([]any); ok {
+			for _, item := range list {
+				if s, isText := item.(string); isText && s != "" {
+					gone = append(gone, s)
+				}
+			}
+		}
+		for _, deviceID := range gone {
+			if err := clearDeletedDevice(ctx, h.d.Store, deviceID); err != nil {
+				h.log.Warn("Clean-up after a device delete failed:", err)
+			}
 		}
 	}
 	action, details := "device_deleted", "Device "+id+" deleted"
@@ -141,8 +154,6 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Delete device error:", err)
 		return
 	}
-	// The server names the devices it deleted with this one
-	cascaded := or(dig(result.Get("data"), "cascaded"), []any{})
 	answer(w, r, http.StatusOK, deleted{Success: true, Revoked: opts.Revoke, Hard: opts.Hard, Cascaded: cascaded})
 }
 

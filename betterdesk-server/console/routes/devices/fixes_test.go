@@ -97,6 +97,70 @@ func TestHardDeleteClearsDeviceRows(t *testing.T) {
 	})
 }
 
+// TestHardCascadeClearsTheLinkedDevicesRows: a hard delete with cascade
+// clears what the console keeps of every device the server names as
+// deleted with it, not only of the named one; a soft delete with cascade
+// keeps theirs (BUGS DE10).
+func TestHardCascadeClearsTheLinkedDevicesRows(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w, api := world(t, db, nil, nil)
+		ctx := context.Background()
+		folder, err := db.Insert(ctx, `INSERT INTO folders (name) VALUES ('Office')`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, id := range []string{"A", "A2", "A3"} {
+			for _, q := range []string{
+				`INSERT INTO peer_sysinfo (peer_id, hostname) VALUES (?, 'h')`,
+				`INSERT INTO peer_metrics (peer_id, cpu_usage) VALUES (?, 1)`,
+				`INSERT INTO peer (id) VALUES (?)`,
+				`INSERT INTO device_folder_assignments (device_id, folder_id) VALUES (?, ` + fmt.Sprint(folder) + `)`,
+				`INSERT INTO device_group_members (device_group_id, peer_id) SELECT id, ? FROM device_groups WHERE guid = 'g-viewer'`,
+			} {
+				if _, err := db.Exec(ctx, q, id); err != nil {
+					t.Fatalf("%s: %v", q, err)
+				}
+			}
+		}
+		rows := func(id string) string {
+			t.Helper()
+			var counts []string
+			for _, q := range []string{
+				`SELECT COUNT(*) FROM peer_sysinfo WHERE peer_id = ?`,
+				`SELECT COUNT(*) FROM peer_metrics WHERE peer_id = ?`,
+				`SELECT COUNT(*) FROM device_folder_assignments WHERE device_id = ?`,
+				`SELECT COUNT(*) FROM device_group_members WHERE peer_id = ?`,
+				`SELECT COUNT(*) FROM peer WHERE id = ?`,
+			} {
+				var n int
+				if err := db.QueryRow(ctx, q, id).Scan(&n); err != nil {
+					t.Fatalf("%s: %v", q, err)
+				}
+				counts = append(counts, fmt.Sprint(n))
+			}
+			return strings.Join(counts, " ")
+		}
+		const all, none = "1 1 1 1 1", "0 0 0 0 0"
+		admin := w.As("admin")
+		api.On("DELETE /api/peers/A?cascade=true", 200, `{"status":"deleted","id":"A","revoked":false,"cascaded":["A2"]}`)
+		if got := admin.Do("DELETE", "/api/devices/A?cascade=true", ""); got.Status != http.StatusOK {
+			t.Fatalf("soft delete with cascade: %d %s", got.Status, got.Body)
+		}
+		if got := rows("A2"); got != all {
+			t.Errorf("rows of A2 after a soft delete with cascade: %s, want %s", got, all)
+		}
+		api.On("DELETE /api/peers/A?cascade=true&hard=true", 200, `{"status":"deleted","id":"A","revoked":false,"cascaded":["A2"]}`)
+		if got := admin.Do("DELETE", "/api/devices/A?cascade=true&hard=true", ""); got.Status != http.StatusOK {
+			t.Fatalf("hard delete with cascade: %d %s", got.Status, got.Body)
+		}
+		for id, want := range map[string]string{"A": none, "A2": none, "A3": all} {
+			if got := rows(id); got != want {
+				t.Errorf("rows of %s after a hard delete of A with cascade: %s, want %s", id, got, want)
+			}
+		}
+	})
+}
+
 // TestSysinfoNullColumnsAnswerTheFallback: a system information row whose
 // list and object columns are NULL answers [] and {} for them, where the
 // web app reads lists and objects; stored values are parsed as before
