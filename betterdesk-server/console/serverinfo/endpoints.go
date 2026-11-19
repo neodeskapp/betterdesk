@@ -368,8 +368,9 @@ func (s *Service) SyncProcessEnv(p PublicEndpoints) {
 // WritePublicEndpointSettingsToEnv validates the settings and stores them:
 // first in the public endpoints file, then in the console's env file, then
 // over the environment values the service reads. It returns the settings
-// as stored. When the second file cannot be written the first one has
-// changed already.
+// as stored. The public endpoints file is where they last; the console's
+// env file only mirrors them, so a failure to write it (read-only in a
+// container) is logged and the save goes on.
 func (s *Service) WritePublicEndpointSettingsToEnv(in PublicEndpointsInput) (PublicEndpoints, error) {
 	normalized, err := ValidateSettings(in)
 	if err != nil {
@@ -387,7 +388,7 @@ func (s *Service) WritePublicEndpointSettingsToEnv(in PublicEndpointsInput) (Pub
 		return PublicEndpoints{}, err
 	}
 	if err := s.upsertKeysToFile(s.opts.EnvPath, values); err != nil {
-		return PublicEndpoints{}, err
+		s.log.Warn("Could not copy the public endpoints into "+s.opts.EnvPath+":", err.Error())
 	}
 	s.SyncProcessEnv(normalized)
 	return normalized, nil

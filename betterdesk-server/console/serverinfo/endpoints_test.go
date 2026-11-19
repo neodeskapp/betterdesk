@@ -208,6 +208,9 @@ func TestWritePublicEndpointsAgainstNode(t *testing.T) {
 		s := New(Options{DataDir: st.dataDir, EnvPath: st.envPath, Getenv: envMap(c.Env), Logger: &recordingLogger{}})
 
 		got, err := s.SavePublicEndpointSettings(endpointsInput(c.Raw))
+		if envMirrorFailed(c.Err, c.Durable, c.Legacy) {
+			c.Err, c.Out, c.Read, c.EnvAfter = savedDespiteEnvFile(t, c.Raw, c.EnvAfter, &c.After)
+		}
 		switch {
 		case c.Err != nil:
 			refused++
@@ -298,24 +301,33 @@ func TestSavePublicEndpointsRenameFails(t *testing.T) {
 	}
 }
 
-// When the console's env file cannot be written, the durable file has the
-// new values already and the environment values are not replaced: a
-// variable set in the environment keeps winning.
+// When the console's env file cannot be written (read-only in a
+// container), the save still succeeds: the durable file has the new
+// values, they replace the environment values, and the failure is logged
+// (BUGS SI8: the save answered 500 and the old values stayed in use).
 func TestSavePublicEndpointsSecondFileFails(t *testing.T) {
 	root := t.TempDir()
 	dataDir, envPath := filepath.Join(root, "data"), filepath.Join(root, ".env")
 	fsys := &failingFS{failWriteOf: filepath.Join(root, "..env.")}
-	s := New(Options{DataDir: dataDir, EnvPath: envPath, FS: fsys, Getenv: envMap(map[string]string{"PUBLIC_SERVER_ID": "from-compose.example"})})
-	_, err := s.SavePublicEndpointSettings(PublicEndpointsInput{PublicServerID: "new.example"})
-	if err == nil {
-		t.Fatal("no error")
+	log := &recordingLogger{}
+	s := New(Options{DataDir: dataDir, EnvPath: envPath, FS: fsys, Logger: log,
+		Getenv: envMap(map[string]string{"PUBLIC_SERVER_ID": "from-compose.example"})})
+	saved, err := s.SavePublicEndpointSettings(PublicEndpointsInput{PublicServerID: "new.example"})
+	if err != nil || saved.PublicServerID != "new.example" {
+		t.Fatalf("save: %+v, %v", saved, err)
 	}
 	got, readErr := os.ReadFile(filepath.Join(dataDir, DurableBasename))
 	if readErr != nil || !strings.Contains(string(got), "PUBLIC_SERVER_ID=new.example\n") {
 		t.Errorf("durable file %q, %v", got, readErr)
 	}
-	if got := s.ReadPublicEndpointEnv().PublicServerID; got != "from-compose.example" {
-		t.Errorf("reads %q: the environment value was replaced although the save failed", got)
+	if got := s.ReadPublicEndpointEnv().PublicServerID; got != "new.example" {
+		t.Errorf("reads %q: the environment value was not replaced", got)
+	}
+	if _, err := os.Stat(envPath); !os.IsNotExist(err) {
+		t.Errorf("the console's env file was written: %v", err)
+	}
+	if !strings.Contains(strings.Join(log.all(), "\n"), envPath) {
+		t.Errorf("the failure was not logged: %q", log.all())
 	}
 }
 

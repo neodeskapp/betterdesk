@@ -1,6 +1,7 @@
 package serverinfo
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"net/netip"
 	"regexp"
@@ -208,4 +209,45 @@ func validateErrorSI7(raw map[string]any, nodeErr *string) *string {
 	}
 	apiErr := ErrInvalidPublicAPIURL.Error()
 	return &apiErr
+}
+
+// envMirrorFailed reports a recorded save that Node refused only because
+// the console's env file is a folder and could not be written, while the
+// public endpoints file could (SI8).
+func envMirrorFailed(nodeErr *string, durable, legacy textOrDir) bool {
+	return nodeErr != nil && strings.HasPrefix(*nodeErr, "EISDIR") && legacy.Dir && !durable.Dir
+}
+
+// savedDespiteEnvFile is what such a save gives in Go (SI8): no error,
+// the settings stored, read back and in the environment as validated.
+// The env file stays as Node left it. The public endpoints file holds the
+// saved settings: Node's run, whose environment kept the old values, had
+// copied those into it when it read the settings back.
+func savedDespiteEnvFile(t testing.TB, raw map[string]any, nodeEnv map[string]string, after *snapshot) (*string, *PublicEndpoints, PublicEndpoints, map[string]string) {
+	t.Helper()
+	saved, err := ValidateSettings(endpointsInput(raw))
+	if err != nil {
+		t.Fatalf("a save Node failed only at the env file does not validate: %v", err)
+	}
+	values := map[string]string{EnvPublicServerID: saved.PublicServerID, EnvPublicRelayServer: saved.PublicRelayServer, EnvPublicAPIURL: saved.PublicAPIURL}
+	env := map[string]string{}
+	for k, v := range nodeEnv {
+		env[k] = v
+	}
+	for k, v := range values {
+		env[k] = v
+	}
+	if after.Durable != nil && after.Durable.Bytes != nil {
+		lines := strings.Split(string(decodeBase64(t, *after.Durable.Bytes)), "\n")
+		for i, line := range lines {
+			if key, _, found := strings.Cut(line, "="); found {
+				if v, managed := values[key]; managed {
+					lines[i] = key + "=" + v
+				}
+			}
+		}
+		text := base64.StdEncoding.EncodeToString([]byte(strings.Join(lines, "\n")))
+		after.Durable.Bytes = &text
+	}
+	return nil, &saved, saved, env
 }
