@@ -67,6 +67,11 @@ var fixedSteps = []fixedStep{
 	{"node", "the audit entries", "RD7, AL1"},
 	// The accessible route gives the short form in any letter case.
 	{"node", "609 GET /API/Device-Group/Accessible", "RD11"},
+	// A device group whose team id is a number is refused, where Node
+	// stored it as "7"; the changes after it keep the team id it had.
+	{"node", "618 POST /api/device-group", "DGR5"},
+	{"node", "619 POST /api/device-group", "DGR5"},
+	{"node", "620 POST /api/device-group", "DGR5"},
 }
 
 // fixedStep is a step of the recordings of both databases ("node",

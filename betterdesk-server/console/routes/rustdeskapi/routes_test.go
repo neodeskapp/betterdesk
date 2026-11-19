@@ -1032,3 +1032,35 @@ func TestDeviceGroupFormFollowsTheRoute(t *testing.T) {
 		}
 	})
 }
+
+// POST /api/device-group refuses a group whose name, guid, note, team id
+// or tag filter is no text with 400 before anything is written, where it
+// saved the value read as text; null and a missing member are no refusal
+// (BUGS DGR5).
+func TestDeviceGroupSaveTakesTextOnly(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db, nil)
+		tokenFor(w, db, 1, adminToken)
+		count := func() string { return w.Rows(`SELECT COUNT(*) AS n FROM device_groups`, nil) }
+		before := count()
+		for _, c := range []struct{ body, member string }{
+			{`{"name":["a","b"]}`, "name"},
+			{`{"name":{"a":1}}`, "name"},
+			{`{"name":"Lab","guid":1e21}`, "guid"},
+			{`{"name":"Lab","note":true}`, "note"},
+			{`{"name":"Lab","team_id":5}`, "team_id"},
+			{`{"name":"Lab","dynamic":true,"tag":["lab"]}`, "tag"},
+		} {
+			got := w.Do(replay.Request{Method: "POST", Path: "/api/device-group", Headers: bearer(adminToken), Body: replay.Text(c.body)})
+			if want := `{"error":"` + c.member + ` must be text"}`; got.Status != http.StatusBadRequest || got.Body != want {
+				t.Errorf("%s: %d %s, want 400 %s", c.body, got.Status, got.Body, want)
+			}
+			if got := count(); got != before {
+				t.Errorf("%s wrote a group: %s, before %s", c.body, got, before)
+			}
+		}
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/device-group", Headers: bearer(adminToken), Body: replay.Text(`{"name":"Lab","note":null,"team_id":null}`)}); got.Status != http.StatusOK {
+			t.Errorf("a group with null note and team id: %d %s", got.Status, got.Body)
+		}
+	})
+}

@@ -612,10 +612,15 @@ func bodyMap(r *http.Request) map[string]any {
 }
 
 // saveDeviceGroup answers POST /api/device-group: with a guid an update,
-// else a new group; the answer is the group's row.
+// else a new group; the answer is the group's row. A name, guid, note,
+// team id or tag filter that is no text is refused with 400.
 func (h *handlers) saveDeviceGroup(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	payload := devicegroups.NormalizeGroupPayload(bodyMap(r))
+	if payload.NotText != "" {
+		fail(w, r, http.StatusBadRequest, payload.NotText+" must be text")
+		return
+	}
 	if payload.Name == "" {
 		fail(w, r, http.StatusBadRequest, "Group name is required")
 		return
