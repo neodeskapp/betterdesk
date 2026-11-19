@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -15,6 +16,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/routes/pairing"
+	"github.com/unitronix/betterdesk-server/console/serverinfo"
 	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
@@ -73,6 +75,8 @@ type world struct {
 	router  *kit.Router
 	steps   http.Handler
 	cookies map[string]string
+	// env is the environment the console reads (PANEL_PUBLIC_HOST, ...)
+	env map[string]string
 }
 
 func newWorld(t *testing.T, db *store.DB) *world {
@@ -90,7 +94,7 @@ func newWorld(t *testing.T, db *store.DB) *world {
 	if err != nil {
 		t.Fatal(err)
 	}
-	w := &world{t: t, db: db, api: &fakeAPI{}, cookies: map[string]string{}}
+	w := &world{t: t, db: db, api: &fakeAPI{}, cookies: map[string]string{}, env: map[string]string{}}
 	d := &kit.Deps{
 		Router:   kit.NewRouter(),
 		Store:    db,
@@ -98,6 +102,12 @@ func newWorld(t *testing.T, db *store.DB) *world {
 		GoAPI:    goapi.New(w.api),
 		Audit:    auditlog.New(db),
 		Log:      kit.NewLogger("error", true),
+		ServerInfo: serverinfo.New(serverinfo.Options{
+			APIURL:  "http://127.0.0.1:21114/api",
+			DataDir: t.TempDir(),
+			EnvPath: filepath.Join(t.TempDir(), ".env"),
+			Getenv:  func(key string) string { return w.env[key] },
+		}),
 	}
 	pairing.Register(d)
 	w.router = d.Router

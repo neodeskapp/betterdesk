@@ -12,6 +12,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/serverinfo"
 )
 
 // codeID is the form of a code's id: 8 to 32 hex digits.
@@ -39,9 +40,12 @@ type hostAnswer struct {
 }
 
 // host answers GET /api/panel/pairing/host: the address to suggest in the
-// "Server address" field. It is always empty (BUGS SI1).
+// "Server address" field, the host clients are given for this request
+// (serverinfo ResolveClientFacingHost, as the dashboard's client
+// configuration finds it).
 func (h *handlers) host(w http.ResponseWriter, r *http.Request) {
-	kit.JSON(w, r, http.StatusOK, hostAnswer{Success: true, Host: ""})
+	host := h.d.ServerInfo.ResolveClientFacingHost(serverinfo.RequestHostOf(r), "")
+	kit.JSON(w, r, http.StatusOK, hostAnswer{Success: true, Host: host})
 }
 
 // refusal is the answer when the API server did not do what was asked.

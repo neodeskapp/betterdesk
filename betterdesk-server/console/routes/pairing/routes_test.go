@@ -71,9 +71,17 @@ func TestEveryRouteNeedsASessionAndThePermission(t *testing.T) {
 	want(t, "bad id as viewer", w.do("viewer", "DELETE", "/api/panel/pairing/codes/nope", ""), 403, denied)
 }
 
-func TestHostIsAlwaysEmpty(t *testing.T) {
+// The suggested address is the host clients are given: the public server
+// ID setting, else PANEL_PUBLIC_HOST, else the host of the API address,
+// as the spec tree's route answers it (upstream 3.5.264 resolves its
+// pairing page's host this way).
+func TestHostIsTheClientFacingHost(t *testing.T) {
 	w := newWorld(t, nil)
-	want(t, "host", w.do("admin", "GET", "/api/panel/pairing/host", ""), 200, `{"success":true,"host":""}`)
+	want(t, "configured API address", w.do("admin", "GET", "/api/panel/pairing/host", ""), 200, `{"success":true,"host":"127.0.0.1"}`)
+	w.env["PANEL_PUBLIC_HOST"] = "Desk.Example.org:5443"
+	want(t, "PANEL_PUBLIC_HOST", w.do("admin", "GET", "/api/panel/pairing/host", ""), 200, `{"success":true,"host":"Desk.Example.org"}`)
+	w.env["PUBLIC_SERVER_ID"] = "id.example.org"
+	want(t, "public server ID", w.do("admin", "GET", "/api/panel/pairing/host", ""), 200, `{"success":true,"host":"id.example.org"}`)
 	if calls := w.api.seen(); len(calls) != 0 {
 		t.Errorf("the host route called the API server: %v", calls)
 	}
