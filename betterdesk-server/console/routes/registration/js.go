@@ -2,6 +2,7 @@ package registration
 
 import (
 	"errors"
+	"math"
 	"strings"
 	"unicode/utf8"
 
@@ -102,26 +103,29 @@ func orValue(a, b any) any {
 	return b
 }
 
-// add is a + b for the number a and a value of the API server: a number
-// stays a number (null counts as 0, a flag as 0 or 1); text, a list and
-// an object make text. It fails where JavaScript throws.
-func add(a float64, b any) (any, error) {
-	switch t := b.(type) {
+// countOf is Number(v) || 0 for a count of the API server: a number as it
+// is, a flag as 0 or 1, text and a list as the number their text reads,
+// anything that is no number 0.
+func countOf(v any) float64 {
+	n := math.NaN()
+	switch t := v.(type) {
 	case nil:
-		return a, nil
+		n = 0
 	case bool:
-		if t {
-			return a + 1, nil
+		if n = 0; t {
+			n = 1
 		}
-		return a, nil
 	case float64:
-		return a + t, nil
+		n = t
 	case string:
-		return jsbind.NumberString(a) + t, nil
+		n = jsbind.ParseNumber(t)
+	case []any:
+		if s, err := text(t); err == nil {
+			n = jsbind.ParseNumber(s)
+		}
 	}
-	s, err := text(b)
-	if err != nil {
-		return nil, err
+	if math.IsNaN(n) {
+		return 0
 	}
-	return jsbind.NumberString(a) + s, nil
+	return n
 }

@@ -523,10 +523,11 @@
   "step": "443 count \"5\" GET /api/registrations/count",
   "bugs": [
    "RG2",
-   "RG4"
+   "RG4",
+   "RG7"
   ],
   "status": 200,
-  "answer": "{\"success\":true,\"count\":\"255\"}",
+  "answer": "{\"success\":true,\"count\":30}",
   "calls": [
    {
     "method": "GET",
@@ -571,10 +572,11 @@
   "step": "446 count [3] GET /api/registrations/count",
   "bugs": [
    "RG2",
-   "RG4"
+   "RG4",
+   "RG7"
   ],
   "status": 200,
-  "answer": "{\"success\":true,\"count\":\"253\"}",
+  "answer": "{\"success\":true,\"count\":28}",
   "calls": [
    {
     "method": "GET",
@@ -587,10 +589,11 @@
   "step": "447 count {} GET /api/registrations/count",
   "bugs": [
    "RG2",
-   "RG4"
+   "RG4",
+   "RG7"
   ],
   "status": 200,
-  "answer": "{\"success\":true,\"count\":\"25[object Object]\"}",
+  "answer": "{\"success\":true,\"count\":25}",
   "calls": [
    {
     "method": "GET",
@@ -635,10 +638,11 @@
   "step": "450 count \"x\" GET /api/registrations/count",
   "bugs": [
    "RG2",
-   "RG4"
+   "RG4",
+   "RG7"
   ],
   "status": 200,
-  "answer": "{\"success\":true,\"count\":\"25x\"}",
+  "answer": "{\"success\":true,\"count\":25}",
   "calls": [
    {
     "method": "GET",

@@ -71,19 +71,15 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 
 // count answers GET /api/registrations/count: the pending LAN
 // registrations plus the count the API server gives for its enrollment
-// queue, added as JavaScript adds (a count in text makes text, BUGS RG7).
-// A source that fails counts 0; a sum that throws answers 0.
+// queue, read as a number (Number(count) || 0). A source that fails
+// counts 0.
 func (h *handlers) count(w http.ResponseWriter, r *http.Request) {
 	lan, err := h.regs.PendingCount(r.Context())
 	if err != nil {
 		lan = 0
 	}
 	pending := h.d.GoAPI.GetEnrollmentPending(r.Context())
-	sum, err := add(lan, orValue(pending.Get("count"), float64(0)))
-	if err != nil {
-		sum = float64(0)
-	}
-	kit.JSON(w, r, http.StatusOK, goapi.NewObject("success", true, "count", sum))
+	kit.JSON(w, r, http.StatusOK, goapi.NewObject("success", true, "count", lan+countOf(pending.Get("count"))))
 }
 
 const (

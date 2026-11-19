@@ -22,7 +22,8 @@ import (
 
 // The intent of web-nodejs/tests/registration.routes.test.js: the pending
 // count adds the LAN registrations and the API server's enrollment count,
-// and a failing API server counts 0.
+// and a failing API server counts 0. The API server's count is read as a
+// number: text as the number it holds, anything else as 0 (BUGS RG7).
 func TestPendingCountAddsBothSources(t *testing.T) {
 	for _, c := range []struct {
 		name, pending, want string
@@ -31,6 +32,10 @@ func TestPendingCountAddsBothSources(t *testing.T) {
 		{"enrollments only", `{"devices":[{"device_id":"Client-A"}],"count":2}`, `{"success":true,"count":2}`, 0},
 		{"both", `{"devices":[],"count":1}`, `{"success":true,"count":4}`, 3},
 		{"API server fails", ``, `{"success":true,"count":5}`, 5},
+		{"count in text", `{"devices":[],"count":"5"}`, `{"success":true,"count":7}`, 2},
+		{"count an object", `{"devices":[],"count":{}}`, `{"success":true,"count":2}`, 2},
+		{"count a list of one", `{"devices":[],"count":[3]}`, `{"success":true,"count":5}`, 2},
+		{"count no number", `{"devices":[],"count":"x"}`, `{"success":true,"count":2}`, 2},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			api := routetest.NewAPI()
