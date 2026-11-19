@@ -43,7 +43,7 @@
     "kind": "json",
     "json": {
      "appName": "Contract Console",
-     "appVersion": "3.5.224",
+     "appVersion": "3.5.264",
      "attestation": null,
      "branding": {
       "footerText": "Contract footer",
@@ -317,7 +317,7 @@
     "kind": "json",
     "json": {
      "appName": "Contract Console",
-     "appVersion": "3.5.224",
+     "appVersion": "3.5.264",
      "attestation": null,
      "branding": {
       "footerText": "Contract footer",

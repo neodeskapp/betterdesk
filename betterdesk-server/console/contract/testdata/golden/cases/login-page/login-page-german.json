@@ -46,7 +46,7 @@
     "kind": "json",
     "json": {
      "appName": "BetterDesk",
-     "appVersion": "3.5.224",
+     "appVersion": "3.5.264",
      "attestation": null,
      "branding": {
       "footerText": "",
@@ -293,7 +293,7 @@
     "kind": "json",
     "json": {
      "appName": "BetterDesk",
-     "appVersion": "3.5.224",
+     "appVersion": "3.5.264",
      "attestation": null,
      "branding": {
       "footerText": "",

@@ -54,7 +54,6 @@
    "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
-    "content-encoding": "gzip",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "application/json; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
@@ -69,7 +68,6 @@
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
      "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
-    "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -81,46 +79,10 @@
     "kind": "json",
     "json": {
      "data": {
-      "coverage": "99.5",
+      "coverage": "100.0",
       "extra": [],
-      "missing": [
-       "users.access_policy_title",
-       "users.access_section_dashboard",
-       "users.access_section_devices",
-       "users.access_section_registrations",
-       "users.access_section_remote",
-       "users.access_section_users",
-       "users.access_section_organizations",
-       "users.access_section_folders",
-       "users.access_section_strategies",
-       "users.access_section_guests",
-       "users.access_section_tickets",
-       "users.access_section_help-requests",
-       "users.access_section_cdep",
-       "users.access_section_cdap",
-       "users.access_section_fleet",
-       "users.access_section_chat",
-       "users.access_section_activity",
-       "users.access_section_automation",
-       "users.access_section_files",
-       "users.access_section_network",
-       "users.access_section_dataguard",
-       "users.access_section_reports",
-       "users.access_section_commercialization",
-       "users.access_section_scaling",
-       "users.access_section_cross-platform",
-       "users.access_section_toolkit",
-       "users.access_section_security-audit",
-       "users.access_section_languages",
-       "users.access_section_resource-control",
-       "users.access_section_system",
-       "users.access_section_settings",
-       "users.access_section_server-attestation",
-       "users.access_section_agents",
-       "users.access_section_permissions",
-       "users.access_section_server-management"
-      ],
-      "valid": false
+      "missing": [],
+      "valid": true
      },
      "success": true
     }

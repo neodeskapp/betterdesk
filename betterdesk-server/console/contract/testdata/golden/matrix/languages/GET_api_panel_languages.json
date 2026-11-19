@@ -124,12 +124,12 @@
        "extra_keys": 0,
        "flag": "🇸🇦",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Arabic",
        "native": "العربية",
        "needs_review": true,
        "rtl": true,
-       "total_keys": 7449
+       "total_keys": 7521
       },
       {
        "code": "cs",
@@ -139,12 +139,12 @@
        "extra_keys": 0,
        "flag": "",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Czech",
        "native": "Čeština",
        "needs_review": false,
        "rtl": false,
-       "total_keys": 7444
+       "total_keys": 7516
       },
       {
        "code": "da",
@@ -154,12 +154,12 @@
        "extra_keys": 0,
        "flag": "🇩🇰",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Danish",
        "native": "Dansk",
        "needs_review": true,
        "rtl": false,
-       "total_keys": 7448
+       "total_keys": 7520
       },
       {
        "code": "de",
@@ -169,12 +169,12 @@
        "extra_keys": 0,
        "flag": "",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "German",
        "native": "Deutsch",
        "needs_review": false,
        "rtl": false,
-       "total_keys": 7444
+       "total_keys": 7516
       },
       {
        "code": "en",
@@ -189,7 +189,7 @@
        "native": "English",
        "needs_review": false,
        "rtl": false,
-       "total_keys": 7479
+       "total_keys": 7516
       },
       {
        "code": "es",
@@ -199,12 +199,12 @@
        "extra_keys": 0,
        "flag": "",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Spanish",
        "native": "Español",
        "needs_review": false,
        "rtl": false,
-       "total_keys": 7444
+       "total_keys": 7516
       },
       {
        "code": "fi",
@@ -214,12 +214,12 @@
        "extra_keys": 0,
        "flag": "🇫🇮",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Finnish",
        "native": "Suomi",
        "needs_review": true,
        "rtl": false,
-       "total_keys": 7448
+       "total_keys": 7520
       },
       {
        "code": "fr",
@@ -229,12 +229,12 @@
        "extra_keys": 0,
        "flag": "",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "French",
        "native": "Français",
        "needs_review": false,
        "rtl": false,
-       "total_keys": 7448
+       "total_keys": 7520
       },
       {
        "code": "hi",
@@ -244,12 +244,12 @@
        "extra_keys": 0,
        "flag": "🇮🇳",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Hindi",
        "native": "हिन्दी",
        "needs_review": true,
        "rtl": false,
-       "total_keys": 7448
+       "total_keys": 7520
       },
       {
        "code": "hu",
@@ -259,12 +259,12 @@
        "extra_keys": 0,
        "flag": "🇭🇺",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Hungarian",
        "native": "Magyar",
        "needs_review": true,
        "rtl": false,
-       "total_keys": 7448
+       "total_keys": 7520
       },
       {
        "code": "id",
@@ -274,12 +274,12 @@
        "extra_keys": 0,
        "flag": "🇮🇩",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Indonesian",
        "native": "Bahasa Indonesia",
        "needs_review": true,
        "rtl": false,
-       "total_keys": 7448
+       "total_keys": 7520
       },
       {
        "code": "it",
@@ -289,12 +289,12 @@
        "extra_keys": 0,
        "flag": "",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Italian",
        "native": "Italiano",
        "needs_review": false,
        "rtl": false,
-       "total_keys": 7444
+       "total_keys": 7516
       },
       {
        "code": "ja",
@@ -304,12 +304,12 @@
        "extra_keys": 0,
        "flag": "",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Japanese",
        "native": "日本語",
        "needs_review": false,
        "rtl": false,
-       "total_keys": 7444
+       "total_keys": 7516
       },
       {
        "code": "ko",
@@ -319,12 +319,12 @@
        "extra_keys": 0,
        "flag": "",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Korean",
        "native": "한국어",
        "needs_review": false,
        "rtl": false,
-       "total_keys": 7444
+       "total_keys": 7516
       },
       {
        "code": "nb",
@@ -334,12 +334,12 @@
        "extra_keys": 0,
        "flag": "🇳🇴",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Norwegian",
        "native": "Norsk",
        "needs_review": true,
        "rtl": false,
-       "total_keys": 7448
+       "total_keys": 7520
       },
       {
        "code": "nl",
@@ -349,12 +349,12 @@
        "extra_keys": 0,
        "flag": "",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Dutch",
        "native": "Nederlands",
        "needs_review": false,
        "rtl": false,
-       "total_keys": 7444
+       "total_keys": 7516
       },
       {
        "code": "pl",
@@ -369,7 +369,7 @@
        "native": "Polski",
        "needs_review": false,
        "rtl": false,
-       "total_keys": 7479
+       "total_keys": 7516
       },
       {
        "code": "pt",
@@ -379,12 +379,12 @@
        "extra_keys": 0,
        "flag": "",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Portuguese",
        "native": "Português",
        "needs_review": false,
        "rtl": false,
-       "total_keys": 7444
+       "total_keys": 7516
       },
       {
        "code": "ro",
@@ -394,12 +394,12 @@
        "extra_keys": 0,
        "flag": "🇷🇴",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Romanian",
        "native": "Română",
        "needs_review": true,
        "rtl": false,
-       "total_keys": 7448
+       "total_keys": 7520
       },
       {
        "code": "sv",
@@ -409,12 +409,12 @@
        "extra_keys": 0,
        "flag": "🇸🇪",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Swedish",
        "native": "Svenska",
        "needs_review": true,
        "rtl": false,
-       "total_keys": 7448
+       "total_keys": 7520
       },
       {
        "code": "th",
@@ -424,12 +424,12 @@
        "extra_keys": 0,
        "flag": "🇹🇭",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Thai",
        "native": "ไทย",
        "needs_review": true,
        "rtl": false,
-       "total_keys": 7448
+       "total_keys": 7520
       },
       {
        "code": "tr",
@@ -439,12 +439,12 @@
        "extra_keys": 0,
        "flag": "🇹🇷",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Turkish",
        "native": "Türkçe",
        "needs_review": true,
        "rtl": false,
-       "total_keys": 7448
+       "total_keys": 7520
       },
       {
        "code": "uk",
@@ -454,12 +454,12 @@
        "extra_keys": 0,
        "flag": "🇺🇦",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Ukrainian",
        "native": "Українська",
        "needs_review": true,
        "rtl": false,
-       "total_keys": 7448
+       "total_keys": 7520
       },
       {
        "code": "vi",
@@ -469,12 +469,12 @@
        "extra_keys": 0,
        "flag": "🇻🇳",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Vietnamese",
        "native": "Tiếng Việt",
        "needs_review": true,
        "rtl": false,
-       "total_keys": 7448
+       "total_keys": 7520
       },
       {
        "code": "zh-TW",
@@ -484,12 +484,12 @@
        "extra_keys": 0,
        "flag": "",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "Chinese (Traditional)",
        "native": "繁體中文",
        "needs_review": false,
        "rtl": false,
-       "total_keys": 7448
+       "total_keys": 7520
       },
       {
        "code": "zh",
@@ -499,15 +499,15 @@
        "extra_keys": 0,
        "flag": "",
        "is_reference": false,
-       "missing_keys": 35,
+       "missing_keys": 0,
        "name": "中文",
        "native": "中文",
        "needs_review": false,
        "rtl": false,
-       "total_keys": 7444
+       "total_keys": 7516
       }
      ],
-     "refKeyCount": 7479
+     "refKeyCount": 7516
     }
    }
   }

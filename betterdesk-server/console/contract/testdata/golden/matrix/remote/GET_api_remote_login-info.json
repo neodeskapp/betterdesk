@@ -44,7 +44,7 @@
     "kind": "json",
     "json": {
      "appName": "BetterDesk",
-     "appVersion": "3.5.224",
+     "appVersion": "3.5.264",
      "branding": {
       "logoIcon": "dns",
       "logoSvg": "",
@@ -318,7 +318,7 @@
     "kind": "json",
     "json": {
      "appName": "BetterDesk",
-     "appVersion": "3.5.224",
+     "appVersion": "3.5.264",
      "branding": {
       "logoIcon": "dns",
       "logoSvg": "",
@@ -561,7 +561,7 @@
     "kind": "json",
     "json": {
      "appName": "BetterDesk",
-     "appVersion": "3.5.224",
+     "appVersion": "3.5.264",
      "branding": {
       "logoIcon": "dns",
       "logoSvg": "",
