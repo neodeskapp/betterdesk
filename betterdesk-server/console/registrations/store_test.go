@@ -62,13 +62,14 @@ func TestCreateApproveRejectDelete(t *testing.T) {
 		if got := shape(mustJSON(t, row)); got != want {
 			t.Fatalf("created:\n got %s\nwant %s", got, want)
 		}
-		// Asking again while pending changes the fields, keeps the id
-		row, err = s.Create(ctx, Request{DeviceID: "dev-1", Hostname: "pc-2"})
+		// Asking again while pending changes nothing: the approver reviews
+		// the first request's key, uuid and fields (BUGS RG2)
+		row, err = s.Create(ctx, Request{DeviceID: "dev-1", Hostname: "pc-2", IPAddress: "10.0.0.9", PublicKey: "other", UUID: "u2"})
 		if err != nil {
 			t.Fatal(err)
 		}
-		if row.Get("id") != float64(1) || row.Get("hostname") != "pc-2" || row.Get("public_key") != "" {
-			t.Fatalf("asked again: %s", mustJSON(t, row))
+		if got := shape(mustJSON(t, row)); got != want {
+			t.Fatalf("asked again:\n got %s\nwant %s", got, want)
 		}
 		id := jsbind.Number(1)
 		approved, err := s.Approve(ctx, id, "", ServerConfig{ConsoleURL: "http://h:5000", ServerKey: "key"})
@@ -103,7 +104,7 @@ func TestCreateApproveRejectDelete(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if same.Get("hostname") != "pc-2" || same.Get("status") != "approved" {
+		if same.Get("hostname") != "pc" || same.Get("status") != "approved" {
 			t.Fatalf("approved device asked again: %s", mustJSON(t, same))
 		}
 
@@ -119,15 +120,16 @@ func TestCreateApproveRejectDelete(t *testing.T) {
 		if rejected.Get("status") != "rejected" || rejected.Get("rejected_reason") != "no" {
 			t.Fatalf("rejected: %s", mustJSON(t, rejected))
 		}
-		// A rejected device asking again is pending again, without the reason
-		reopened, err := s.Create(ctx, Request{DeviceID: "dev-2", Hostname: "again"})
+		// A rejected device asking again stays rejected with its reason
+		// until its request is deleted (BUGS RG2, DECISIONS A55)
+		still, err := s.Create(ctx, Request{DeviceID: "dev-2", Hostname: "again"})
 		if err != nil {
 			t.Fatal(err)
 		}
-		if reopened.Get("status") != "pending" || reopened.Get("rejected_reason") != "" || reopened.Get("id") != second.Get("id") {
-			t.Fatalf("reopened: %s", mustJSON(t, reopened))
+		if still.Get("status") != "rejected" || still.Get("rejected_reason") != "no" || still.Get("hostname") != "" || still.Get("id") != second.Get("id") {
+			t.Fatalf("asked again after the rejection: %s", mustJSON(t, still))
 		}
-		if n, err := s.PendingCount(ctx); err != nil || n != 1 {
+		if n, err := s.PendingCount(ctx); err != nil || n != 0 {
 			t.Fatalf("pending count %v %v", n, err)
 		}
 		gone, err := s.Delete(ctx, id2)
@@ -138,8 +140,16 @@ func TestCreateApproveRejectDelete(t *testing.T) {
 		if err != nil || gone {
 			t.Fatalf("delete again: %v %v", gone, err)
 		}
-		if n, err := s.PendingCount(ctx); err != nil || n != 0 {
-			t.Fatalf("pending count after delete %v %v", n, err)
+		// After the deletion the device asks anew
+		fresh, err := s.Create(ctx, Request{DeviceID: "dev-2", Hostname: "again"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if fresh.Get("status") != "pending" || fresh.Get("hostname") != "again" || fresh.Get("id") == second.Get("id") {
+			t.Fatalf("asked anew: %s", mustJSON(t, fresh))
+		}
+		if n, err := s.PendingCount(ctx); err != nil || n != 1 {
+			t.Fatalf("pending count after the new request %v %v", n, err)
 		}
 	})
 }

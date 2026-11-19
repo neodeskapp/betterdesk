@@ -206,37 +206,22 @@ func (s *Service) ByDeviceIDValue(ctx context.Context, deviceID jsbind.Value) (*
 }
 
 // Create is createPendingRegistration: a new pending row for a device
-// without one; for a device with a row that is approved, that row as it
-// is; for any other row, the row again pending with the request's fields
-// and without a rejection reason.
+// without one, else the device's row as it is. A request never changes a
+// row: the approver reviews the key, uuid and fields of the first
+// request, and a rejected device stays rejected until someone with
+// enrollment.manage deletes its row.
 func (s *Service) Create(ctx context.Context, req Request) (*goapi.Object, error) {
 	var row *goapi.Object
 	err := s.db.InTx(ctx, func(tx *store.Tx) error {
 		var id int64
-		var status sql.NullString
-		err := tx.QueryRow(ctx, "SELECT id, status FROM pending_registrations WHERE device_id = ?", req.DeviceID).Scan(&id, &status)
+		err := tx.QueryRow(ctx, "SELECT id FROM pending_registrations WHERE device_id = ?", req.DeviceID).Scan(&id)
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
 			return s.insert(ctx, tx, req, &row)
 		case err != nil:
 			return err
-		case status.Valid && status.String == "approved":
-			row, err = readRow(ctx, tx, "SELECT "+columns(tx)+" FROM pending_registrations WHERE id = ?", id)
-			return err
 		}
-		update := `UPDATE pending_registrations
-			SET hostname = ?, platform = ?, version = ?, ip_address = ?, public_key = ?, uuid = ?,
-				status = 'pending', rejected_reason = '', updated_at = ` + store.NowSQL(tx.Dialect()) + `
-			WHERE id = ?`
-		values := []any{req.Hostname, req.Platform, req.Version, req.IPAddress, req.PublicKey, req.UUID, id}
-		if tx.Dialect() == store.Postgres {
-			row, err = readRow(ctx, tx, update+" RETURNING "+postgresColumns, values...)
-			return err
-		}
-		if _, err := tx.Exec(ctx, update, values...); err != nil {
-			return err
-		}
-		row, err = readRow(ctx, tx, "SELECT "+sqliteColumns+" FROM pending_registrations WHERE id = ?", id)
+		row, err = readRow(ctx, tx, "SELECT "+columns(tx)+" FROM pending_registrations WHERE id = ?", id)
 		return err
 	})
 	if err != nil {

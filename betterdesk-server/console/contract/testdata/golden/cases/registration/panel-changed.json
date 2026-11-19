@@ -57,7 +57,7 @@
        "json": {
         "registration": {
          "device_id": "900100021",
-         "hostname": "contract-lan-kiosk-renamed",
+         "hostname": "contract-lan-kiosk",
          "id": 29,
          "platform": "Windows",
          "source": "lan",
@@ -95,7 +95,7 @@
        "json": {
         "registration": {
          "device_id": "900100021",
-         "hostname": "contract-lan-kiosk-renamed",
+         "hostname": "contract-lan-kiosk",
          "id": 39,
          "platform": "Windows",
          "source": "lan",
@@ -133,7 +133,7 @@
        "json": {
         "registration": {
          "device_id": "900100021",
-         "hostname": "contract-lan-kiosk-renamed",
+         "hostname": "contract-lan-kiosk",
          "id": 44,
          "platform": "Windows",
          "source": "lan",

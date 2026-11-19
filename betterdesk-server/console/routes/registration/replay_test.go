@@ -4,13 +4,17 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -206,64 +210,213 @@ func (p *replayer) run() {
 			t.Errorf(format, a...)
 		}
 	}
-	steps, errs := fixedSteps(p.db.Dialect().String(), p.rec.Steps)
+	dialect := p.db.Dialect().String()
+	steps, errs := fixedSteps(dialect, p.rec.Steps)
 	for _, err := range errs {
 		report("%v", err)
 	}
+	fixed := loadFixed(t, dialect)
+	rewrite := os.Getenv("REPLAY_FIX")
+	written := 0
 	for i, step := range steps {
-		switch {
-		case step.SQL != "":
-			if !strings.HasPrefix(step.SQL, "SELECT") {
-				if _, err := p.db.Exec(ctx, step.SQL, args(step.Params)...); err != nil {
-					t.Fatalf("step %d %s: %v", i, step.Name, err)
-				}
-				continue
+		if step.SQL != "" && !strings.HasPrefix(step.SQL, "SELECT") {
+			if _, err := p.db.Exec(ctx, step.SQL, args(step.Params)...); err != nil {
+				t.Fatalf("step %d %s: %v", i, step.Name, err)
 			}
-			if have := p.rows(step.SQL, step.Params); have != step.Rows {
-				report("step %d %q:\n   node: %s\n     go: %s", i, step.Name, step.Rows, have)
+			continue
+		}
+		want := outcomeOf(step)
+		entry, isFixed := fixed[step.Name]
+		if isFixed {
+			want = entry.outcome
+		}
+		have := p.play(step, want)
+		if isFixed && len(compare(step, outcomeOf(step), have)) == 0 {
+			if rewrite == "" {
+				report("step %d %q: listed in %s, but answered as Node answered", i, step.Name, fixedFile(dialect))
 			}
-		case step.Notifications:
-			p.setOverrides(step.API)
-			p.api.Calls()
-			client := goapi.New(p.api)
-			items := registrations.New(p.db, client).WithClock(time.Now, time.UTC).Notifications(ctx)
-			raw, err := httpx.Marshal(items)
-			if err != nil {
-				t.Fatal(err)
+			delete(fixed, step.Name)
+			written++
+			continue
+		}
+		diffs := compare(step, want, have)
+		if len(diffs) == 0 {
+			continue
+		}
+		if rewrite != "" {
+			bugs := entry.Bugs
+			if !slices.Contains(bugs, rewrite) {
+				bugs = append(bugs, rewrite)
 			}
-			want, have := normalize(step.Items), normalize(string(raw))
-			if want != have {
-				report("step %d %q:\n   node: %s\n     go: %s", i, step.Name, want, have)
-			}
-			if got := p.calls(); !sameCalls(got, step.Calls) {
-				report("step %d %q: API calls\n   node: %v\n     go: %v", i, step.Name, step.Calls, got)
-			}
-		default:
-			p.setOverrides(step.API)
-			p.api.Calls()
-			status, body := p.send(step)
-			wantStatus, wantAnswer := step.Status, step.Answer
-			if a, ok := wholeApp[step.Name]; ok {
-				wantStatus, wantAnswer = a.status, a.answer
-			}
-			if status != wantStatus || normalize(body) != normalize(wantAnswer) {
-				report("step %d %q:\n   node: %d %s\n     go: %d %s", i, step.Name, wantStatus, normalize(wantAnswer), status, normalize(body))
-			}
-			if got := p.calls(); !sameCalls(got, step.Calls) {
-				report("step %d %q: API calls\n   node: %v\n     go: %v", i, step.Name, step.Calls, got)
-			}
-			if got := p.events(len(step.Events)); !sameEvents(got, step.Events) {
-				report("step %d %q: panel events\n   node: %q\n     go: %q", i, step.Name, step.Events, got)
-			}
-			p.capture(step, body)
+			fixed[step.Name] = fixedStep{Bugs: bugs, outcome: have}
+			written++
+			continue
+		}
+		for _, d := range diffs {
+			report("step %d %q: %s", i, step.Name, d)
 		}
 	}
 	if extra := p.events(0); len(extra) > 0 {
 		report("panel events after the last step: %q", extra)
 	}
+	for _, name := range unknownSteps(fixed, steps) {
+		report("%s lists a step the recording does not have: %q", fixedFile(dialect), name)
+	}
+	if rewrite != "" {
+		saveFixed(t, dialect, fixed, steps)
+		t.Errorf("REPLAY_FIX=%s: %d steps written into %s; look at the diff, then run without REPLAY_FIX", rewrite, written, fixedFile(dialect))
+	}
 	if failed > 30 {
 		t.Errorf("%d more steps differ", failed-30)
 	}
+}
+
+// outcome is what a step gave: its status and answer, the rows a query
+// read, the notifications, the API server's calls and the panel events.
+type outcome struct {
+	Status int       `json:"status,omitempty"`
+	Answer string    `json:"answer,omitempty"`
+	Rows   string    `json:"rows,omitempty"`
+	Items  string    `json:"items,omitempty"`
+	Calls  []apiCall `json:"calls,omitempty"`
+	Events []string  `json:"events,omitempty"`
+}
+
+// outcomeOf is what Node gave for the step, the whole Node console's
+// answer where it differs from the recording's.
+func outcomeOf(step recordedStep) outcome {
+	o := outcome{Status: step.Status, Answer: step.Answer, Rows: step.Rows, Items: step.Items, Calls: step.Calls, Events: step.Events}
+	if a, ok := wholeApp[step.Name]; ok {
+		o.Status, o.Answer = a.status, a.answer
+	}
+	return o
+}
+
+// play runs a step and returns what the Go console gave. want is what the
+// step should give, for the number of panel events to wait for.
+func (p *replayer) play(step recordedStep, want outcome) outcome {
+	ctx := context.Background()
+	switch {
+	case step.SQL != "":
+		return outcome{Rows: p.rows(step.SQL, step.Params)}
+	case step.Notifications:
+		p.setOverrides(step.API)
+		p.api.Calls()
+		client := goapi.New(p.api)
+		items := registrations.New(p.db, client).WithClock(time.Now, time.UTC).Notifications(ctx)
+		raw, err := httpx.Marshal(items)
+		if err != nil {
+			p.t.Fatal(err)
+		}
+		return outcome{Items: string(raw), Calls: p.calls()}
+	}
+	p.setOverrides(step.API)
+	p.api.Calls()
+	status, body := p.send(step)
+	o := outcome{Status: status, Answer: body, Calls: p.calls(), Events: p.events(len(want.Events))}
+	p.capture(step, body)
+	return o
+}
+
+// compare lists how what the Go console gave differs from what the step
+// should give.
+func compare(step recordedStep, want, have outcome) []string {
+	var diffs []string
+	switch {
+	case step.SQL != "":
+		if have.Rows != want.Rows {
+			diffs = append(diffs, fmt.Sprintf("\n   node: %s\n     go: %s", want.Rows, have.Rows))
+		}
+		return diffs
+	case step.Notifications:
+		if normalize(want.Items) != normalize(have.Items) {
+			diffs = append(diffs, fmt.Sprintf("\n   node: %s\n     go: %s", normalize(want.Items), normalize(have.Items)))
+		}
+	default:
+		if have.Status != want.Status || normalize(have.Answer) != normalize(want.Answer) {
+			diffs = append(diffs, fmt.Sprintf("\n   node: %d %s\n     go: %d %s", want.Status, normalize(want.Answer), have.Status, normalize(have.Answer)))
+		}
+		if !sameEvents(have.Events, want.Events) {
+			diffs = append(diffs, fmt.Sprintf("panel events\n   node: %q\n     go: %q", want.Events, have.Events))
+		}
+	}
+	if !sameCalls(have.Calls, want.Calls) {
+		diffs = append(diffs, fmt.Sprintf("API calls\n   node: %v\n     go: %v", want.Calls, have.Calls))
+	}
+	return diffs
+}
+
+// fixedStep is a step of testdata/fixed_<database>.json: what the Go
+// console gives since the bug fixes it names, for a step whose answer or
+// rows a fix changed, also through what an earlier step stored. The file
+// is written by a run with REPLAY_FIX=<bug id> after a fix, from the
+// steps that differ, and read as the steps' answers by every other run.
+type fixedStep struct {
+	Bugs []string `json:"bugs"`
+	outcome
+}
+
+func fixedFile(dialect string) string {
+	return filepath.Join("testdata", "fixed_"+dialect+".json")
+}
+
+type fixedEntry struct {
+	Step string `json:"step"`
+	fixedStep
+}
+
+func loadFixed(t *testing.T, dialect string) map[string]fixedStep {
+	t.Helper()
+	out := map[string]fixedStep{}
+	raw, err := os.ReadFile(fixedFile(dialect))
+	if errors.Is(err, fs.ErrNotExist) {
+		return out
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	var list []fixedEntry
+	if err := json.Unmarshal(raw, &list); err != nil {
+		t.Fatalf("read %s: %v", fixedFile(dialect), err)
+	}
+	for _, e := range list {
+		out[e.Step] = e.fixedStep
+	}
+	return out
+}
+
+// saveFixed writes the fixed steps in the order of the recording.
+func saveFixed(t *testing.T, dialect string, fixed map[string]fixedStep, steps []recordedStep) {
+	t.Helper()
+	var list []fixedEntry
+	for _, step := range steps {
+		if f, ok := fixed[step.Name]; ok {
+			list = append(list, fixedEntry{step.Name, f})
+		}
+	}
+	raw, err := json.MarshalIndent(list, "", " ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(fixedFile(dialect), append(raw, '\n'), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// unknownSteps are the names of fixed steps the recording does not have.
+func unknownSteps(fixed map[string]fixedStep, steps []recordedStep) []string {
+	names := map[string]bool{}
+	for _, step := range steps {
+		names[step.Name] = true
+	}
+	var out []string
+	for name := range fixed {
+		if !names[name] {
+			out = append(out, name)
+		}
+	}
+	sort.Strings(out)
+	return out
 }
 
 // fix is how a bug fix changed recorded steps on purpose: the status a

@@ -480,3 +480,22 @@ func TestApprovalDeviceGroups(t *testing.T) {
 		}
 	})
 }
+
+// A reason that is not truthy is stored as no reason: null, a missing
+// one, false, 0 and a body that is a list. Each device asks once: a
+// rejected device stays rejected (BUGS RG2).
+func TestRejectWithoutAReason(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		for i, body := range []string{`{"reason":null}`, `{}`, `{"reason":false}`, `{"reason":0}`, `[]`} {
+			id := "nobody-" + strconv.Itoa(i)
+			if got := w.SignedOut().Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"`+id+`"}`); got.Status != http.StatusOK {
+				t.Fatalf("request %s: %d %s", id, got.Status, got.Body)
+			}
+			got := w.As("admin").Do(http.MethodPut, "/api/registrations/"+strconv.Itoa(i+1)+"/reject", body)
+			if got.Status != http.StatusOK || !strings.Contains(got.Body, `"status":"rejected","approved_by":null,"approved_at":null,"rejected_reason":""`) {
+				t.Errorf("%s: %d %s", body, got.Status, got.Body)
+			}
+		}
+	})
+}

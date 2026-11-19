@@ -36,7 +36,7 @@
         "registration": {
          "created_at": "<volatile>",
          "device_id": "900100021",
-         "hostname": "contract-lan-kiosk-renamed",
+         "hostname": "contract-lan-kiosk",
          "id": 4,
          "ip": "<client-ip>",
          "platform": "Windows",
@@ -75,7 +75,7 @@
         "registration": {
          "created_at": "<volatile>",
          "device_id": "900100021",
-         "hostname": "contract-lan-kiosk-renamed",
+         "hostname": "contract-lan-kiosk",
          "id": 9,
          "ip": "<client-ip>",
          "platform": "Windows",
@@ -114,7 +114,7 @@
         "registration": {
          "created_at": "<volatile>",
          "device_id": "900100021",
-         "hostname": "contract-lan-kiosk-renamed",
+         "hostname": "contract-lan-kiosk",
          "id": 14,
          "ip": "<client-ip>",
          "platform": "Windows",
@@ -153,7 +153,7 @@
         "registration": {
          "created_at": "<volatile>",
          "device_id": "900100021",
-         "hostname": "contract-lan-kiosk-renamed",
+         "hostname": "contract-lan-kiosk",
          "id": 19,
          "ip": "<client-ip>",
          "platform": "Windows",
@@ -192,7 +192,7 @@
         "registration": {
          "created_at": "<volatile>",
          "device_id": "900100021",
-         "hostname": "contract-lan-kiosk-renamed",
+         "hostname": "contract-lan-kiosk",
          "id": 24,
          "ip": "<client-ip>",
          "platform": "Windows",
@@ -231,7 +231,7 @@
         "registration": {
          "created_at": "<volatile>",
          "device_id": "900100021",
-         "hostname": "contract-lan-kiosk-renamed",
+         "hostname": "contract-lan-kiosk",
          "id": 29,
          "ip": "<client-ip>",
          "platform": "Windows",
@@ -270,7 +270,7 @@
         "registration": {
          "created_at": "<volatile>",
          "device_id": "900100021",
-         "hostname": "contract-lan-kiosk-renamed",
+         "hostname": "contract-lan-kiosk",
          "id": 34,
          "ip": "<client-ip>",
          "platform": "Windows",
@@ -309,7 +309,7 @@
         "registration": {
          "created_at": "<volatile>",
          "device_id": "900100021",
-         "hostname": "contract-lan-kiosk-renamed",
+         "hostname": "contract-lan-kiosk",
          "id": 39,
          "ip": "<client-ip>",
          "platform": "Windows",
@@ -348,7 +348,7 @@
         "registration": {
          "created_at": "<volatile>",
          "device_id": "900100021",
-         "hostname": "contract-lan-kiosk-renamed",
+         "hostname": "contract-lan-kiosk",
          "id": 44,
          "ip": "<client-ip>",
          "platform": "Windows",

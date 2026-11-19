@@ -212,7 +212,7 @@
     "kind": "json",
     "json": {
      "id": 30,
-     "status": "pending",
+     "status": "rejected",
      "success": true
     }
    }
@@ -278,7 +278,7 @@
     "kind": "json",
     "json": {
      "id": 40,
-     "status": "pending",
+     "status": "rejected",
      "success": true
     }
    }
@@ -311,7 +311,7 @@
     "kind": "json",
     "json": {
      "id": 45,
-     "status": "pending",
+     "status": "rejected",
      "success": true
     }
    }

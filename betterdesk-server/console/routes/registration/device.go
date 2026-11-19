@@ -24,9 +24,9 @@ func clientIP(r *http.Request) string {
 
 // registerRequest answers POST /register-request with the body
 // {device_id, hostname, platform, version, public_key, uuid}: a new
-// pending registration, the same one again with the new fields, or an
-// approved one as it is; no credential is needed for any of it (BUGS
-// RG2). The device id has to be text of at least three UTF-16 units before
+// pending registration, or the device's registration as it is, so asking
+// again changes neither the key an approver reviews nor a rejection. No
+// credential is needed. The device id has to be text of at least three UTF-16 units before
 // it is trimmed (RG4); the other fields are cut to their length, and a
 // field that is truthy but no text is the 500 of a TypeError.
 func (h *handlers) registerRequest(w http.ResponseWriter, r *http.Request) {
