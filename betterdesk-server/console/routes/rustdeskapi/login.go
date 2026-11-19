@@ -114,15 +114,9 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if brute.Blocked {
-		if err := h.audit(ctx, 0, "api_login_blocked", fmt.Sprintf("User: %s, IP: %s, Reason: %s", username, ip, brute.Reason), ip); err != nil {
+		if err := h.refuseBlocked(w, r, username, ip, brute); err != nil {
 			serverError(err)
-			return
 		}
-		answer := blockedAnswer{Error: brute.Reason}
-		if !brute.RetryUnknown {
-			answer.RetryAfter = &brute.RetryAfter
-		}
-		kit.JSON(w, r, http.StatusTooManyRequests, answer)
 		return
 	}
 
@@ -213,10 +207,28 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, tokenAnswer{Type: "access_token", AccessToken: token, User: buildUserPayload(user.Username, user.Role.String)})
 }
 
+// refuseBlocked answers a sign-in step the lockout refused: an audit
+// entry, then 429 with the seconds to wait. An error is the audit entry's,
+// and nothing is answered then.
+func (h *handlers) refuseBlocked(w http.ResponseWriter, r *http.Request, username, ip string, brute authn.BruteForce) error {
+	if err := h.audit(r.Context(), 0, "api_login_blocked", fmt.Sprintf("User: %s, IP: %s, Reason: %s", username, ip, brute.Reason), ip); err != nil {
+		return err
+	}
+	answer := blockedAnswer{Error: brute.Reason}
+	if !brute.RetryUnknown {
+		answer.RetryAfter = &brute.RetryAfter
+	}
+	kit.JSON(w, r, http.StatusTooManyRequests, answer)
+	return nil
+}
+
 // secondStep is handleTfaVerification: the code of the account's second
-// factor for a pending secret. A wrong code counts as a failed sign-in
-// and keeps the secret until it expires, so the client can ask for the
-// code again; the right code uses the secret up.
+// factor for a pending secret. The lockout of the account and of the
+// address is checked before the code, as in the password step, so the
+// wrong codes that locked the account also end the tries of a secret
+// handed out before. A wrong code counts as a failed sign-in and keeps
+// the secret until it expires, so the client can ask for the code again;
+// the right code uses the secret up.
 func (h *handlers) secondStep(w http.ResponseWriter, r *http.Request, ip string, body middleware.JSONObject) {
 	ctx := r.Context()
 	serverError := func(err error) {
@@ -227,6 +239,17 @@ func (h *handlers) secondStep(w http.ResponseWriter, r *http.Request, ip string,
 	pending, ok := h.tfa.get(secret, h.now())
 	if !ok {
 		fail(w, r, http.StatusUnauthorized, "TFA session expired or invalid")
+		return
+	}
+	lockout, err := h.d.Authn.CheckBruteForce(ctx, pending.username, ip)
+	if err != nil {
+		serverError(err)
+		return
+	}
+	if lockout.Blocked {
+		if err := h.refuseBlocked(w, r, pending.username, ip, lockout); err != nil {
+			serverError(err)
+		}
 		return
 	}
 	code, _ := or(member(body, "tfaCode"), member(body, "verificationCode")).(string)

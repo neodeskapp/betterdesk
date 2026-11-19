@@ -173,6 +173,100 @@ func TestSecondStepRefusesAWrongCode(t *testing.T) {
 	})
 }
 
+// The second step checks the lockout of the account and of the address
+// before the code, as the password step does (BUGS RD13): once the wrong
+// codes have locked the account, or the address has too many failed
+// sign-ins, the right code for a pending secret is refused with 429 too.
+func TestSecondStepChecksTheLockout(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		code := func(w *replay.World, secret, code string) replay.Answer {
+			return w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"tfaCode":"` + code + `","secret":"` + secret + `"}`)})
+		}
+		pending := func(w *replay.World) string {
+			first := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"username":"e2e_viewer","password":"Rd-Test-1!x","id":"c1","uuid":"u1"}`)})
+			m := secretField.FindStringSubmatch(first.Body)
+			if first.Status != http.StatusOK || m == nil {
+				t.Fatalf("password step: %d %s", first.Status, first.Body)
+			}
+			return m[1]
+		}
+		refused := func(got replay.Answer, reason string) bool {
+			var body struct {
+				Error      string `json:"error"`
+				RetryAfter *int64 `json:"retry_after"`
+			}
+			return got.Status == http.StatusTooManyRequests && json.Unmarshal([]byte(got.Body), &body) == nil &&
+				body.Error == reason && body.RetryAfter != nil && *body.RetryAfter > 0
+		}
+		tokens := func() int {
+			var n int
+			if err := db.QueryRow(ctx, "SELECT COUNT(*) FROM access_tokens WHERE user_id = 6 AND client_id = 'c1'").Scan(&n); err != nil {
+				t.Fatal(err)
+			}
+			return n
+		}
+
+		w := world(t, db, nil)
+		setTOTP(t, w, db)
+
+		t.Run("account", func(t *testing.T) {
+			secret := pending(w)
+			for i := 1; i <= 10; i++ {
+				if got := code(w, secret, wrongCode(t, totpSecret)); got.Status != http.StatusUnauthorized || got.Body != `{"error":"Invalid verification code"}` {
+					t.Fatalf("wrong code %d: %d %s", i, got.Status, got.Body)
+				}
+			}
+			if got := code(w, secret, wrongCode(t, totpSecret)); !refused(got, "Account temporarily locked due to too many failed attempts") {
+				t.Errorf("a wrong code on a locked account: %d %s", got.Status, got.Body)
+			}
+			if got := code(w, secret, currentCode(t, totpSecret)); !refused(got, "Account temporarily locked due to too many failed attempts") {
+				t.Errorf("the right code on a locked account: %d %s", got.Status, got.Body)
+			}
+			if n := tokens(); n != 0 {
+				t.Errorf("%d tokens issued to a locked account", n)
+			}
+			var action, details string
+			if err := db.QueryRow(ctx, "SELECT action, details FROM audit_log ORDER BY id DESC LIMIT 1").Scan(&action, &details); err != nil ||
+				action != "api_login_blocked" || !strings.HasSuffix(details, ", Reason: Account temporarily locked due to too many failed attempts") {
+				t.Errorf("audit entry of a blocked second step: %q %q, %v", action, details, err)
+			}
+		})
+
+		t.Run("address", func(t *testing.T) {
+			if _, err := db.Exec(ctx, "DELETE FROM login_attempts"); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := db.Exec(ctx, "DELETE FROM account_lockouts"); err != nil {
+				t.Fatal(err)
+			}
+			secret := pending(w)
+			if got := code(w, secret, wrongCode(t, totpSecret)); got.Status != http.StatusUnauthorized {
+				t.Fatalf("wrong code: %d %s", got.Status, got.Body)
+			}
+			var ip string
+			if err := db.QueryRow(ctx, "SELECT ip_address FROM login_attempts ORDER BY id DESC LIMIT 1").Scan(&ip); err != nil || ip == "" {
+				t.Fatalf("the address of the failed attempt: %q, %v", ip, err)
+			}
+			failed := any(0)
+			if db.IsPostgres() {
+				failed = false
+			}
+			for i := 0; i < 30; i++ {
+				if _, err := db.Exec(ctx, "INSERT INTO login_attempts (username, ip_address, success) VALUES (?, ?, ?)", "someone-else", ip, failed); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if got := code(w, secret, currentCode(t, totpSecret)); !refused(got, "Too many failed attempts from this IP address") {
+				t.Errorf("the right code from a blocked address: %d %s", got.Status, got.Body)
+			}
+			if n := tokens(); n != 0 {
+				t.Errorf("%d tokens issued from a blocked address", n)
+			}
+		})
+	})
+}
+
 // totpSecret is the second factor setTOTP gives the viewer.
 const totpSecret = "JBSWY3DPEHPK3PXP"
 
