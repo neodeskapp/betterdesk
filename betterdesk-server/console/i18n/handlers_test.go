@@ -364,6 +364,59 @@ func decodeAll(m map[string]string) map[string]string {
 	return out
 }
 
+// filePart is a form part with a JSON file in the field "file".
+func filePart(name, content string) string {
+	return "Content-Disposition: form-data; name=\"file\"; filename=\"" + name + "\"\r\nContent-Type: application/json\r\n\r\n" + content
+}
+
+// codePart is a form part with the text field "code".
+func codePart(code string) string {
+	return "Content-Disposition: form-data; name=\"code\"\r\n\r\n" + code
+}
+
+// postForm sends parts (header lines, an empty line, the content) as a
+// multipart form to POST /api/i18n/upload.
+func postForm(t testing.TB, h *Handlers, parts ...string) answer {
+	t.Helper()
+	var form strings.Builder
+	for _, p := range parts {
+		form.WriteString("--B\r\n" + p + "\r\n")
+	}
+	form.WriteString("--B--\r\n")
+	srv := httptest.NewServer(routes(h))
+	defer srv.Close()
+	body := form.String()
+	return do(t, srv.URL, "POST", "/api/i18n/upload", map[string]string{"Content-Type": "multipart/form-data; boundary=B"}, strings.NewReader(body), int64(len(body)))
+}
+
+// An upload whose code is not one of the languages the console loads is
+// refused before anything is written (BUGS.md L7).
+func TestUploadRefusesCodeOutsideTheLanguageTable(t *testing.T) {
+	for _, parts := range [][]string{
+		{filePart("xx.json", `{"a":1}`)},
+		{filePart("en-US.json", `{"a":1}`)},
+		{filePart("abcde.json", `{"a":1}`)},
+		{filePart("EN.json", `{"a":1}`)},
+		{filePart("fr.json", `{"_meta":{"code":"en-GB"},"a":1}`)},
+		{codePart("xx"), filePart("foo.json", `{"a":1}`)},
+	} {
+		dir := copyDir(t, "testdata/lang-upload")
+		h, rec, _ := handlersFor(t, dir, time.Now())
+		before := fileNames(t, dir)
+		got := postForm(t, h, parts...)
+		if got.status != 400 || got.body != `{"success":false,"error":"Invalid language code"}` {
+			t.Errorf("%q: %d %s", parts, got.status, got.body)
+		}
+		if after := fileNames(t, dir); !reflect.DeepEqual(after, before) || len(rec.audit) != 0 {
+			t.Errorf("%q: files %v (before %v), audit %v", parts, after, before, rec.audit)
+		}
+	}
+	h, _, _ := handlersFor(t, copyDir(t, "testdata/lang-upload"), time.Now())
+	if got := postForm(t, h, filePart("fr.json", `{"a":1}`)); got.status != 200 || !h.Bundle.Has("fr") {
+		t.Errorf("a code of the table: %d %s", got.status, got.body)
+	}
+}
+
 // The translations page's routes against Node, on the odd fixture files
 // and with files added and removed.
 func TestPanelRoutesLikeNode(t *testing.T) {

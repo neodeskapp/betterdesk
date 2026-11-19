@@ -39,6 +39,14 @@ var vectorFixes = []vectorFix{
 	{"L5", "edge.json", nullFileNotInSnapshot},
 	{"L5", "defaults.json", nullFileNotInDefaultSnapshots},
 	{"L5", "routes-edge.json", nullFileNoLanguage},
+
+	// An upload of a code outside the language table is refused.
+	{"L7", "upload.json", uploadsRefused(400, "Invalid language code",
+		// written but never loaded
+		"new code not in the table", "five letter name", "region code name", "json in the middle",
+		// a string Save refused with 500
+		"upper case name", "name with percent escapes", "name with nul", "meta code with traversal", "meta code dotdot",
+		"meta code with slash", "meta code proto", "meta code astral", "code base64", "production: bad code format")},
 }
 
 // fixedVectors reads a file of vectors with every fix applied.
@@ -185,6 +193,31 @@ func nullFileNoLanguage(t testing.TB, file any) int {
 		}
 	}
 	return n
+}
+
+// --- uploads ---
+
+// uploadsRefused rewrites the named vectors of upload.json into a refusal
+// that writes nothing.
+func uploadsRefused(status int, message string, names ...string) func(t testing.TB, file any) int {
+	return func(t testing.TB, file any) int {
+		n := 0
+		for _, c := range list(file) {
+			if !slices.Contains(names, str(c, "name")) {
+				continue
+			}
+			if setAll(c, "status", float64(status), "body", `{"success":false,"error":"`+message+`"}`,
+				"changed", NewObject(), "audit", []any{}) {
+				n++
+			} else {
+				t.Errorf("%s: the vector is already refused that way", str(c, "name"))
+			}
+		}
+		if n != len(names) {
+			t.Errorf("%d of the %d named vectors found", n, len(names))
+		}
+		return n
+	}
 }
 
 // --- the request language (L1, L2, L4) ---

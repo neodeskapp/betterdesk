@@ -184,8 +184,9 @@ func (h *Handlers) Validate(w http.ResponseWriter, r *http.Request) {
 // Upload answers POST /api/i18n/upload: a multipart form with one JSON
 // file in the field "file". The language code comes from the file's
 // _meta.code, else the form's "code" field, else the file name without
-// ".json". The file is kept in memory, at most 1 MiB; nothing is written
-// to a temporary folder.
+// ".json", and must be one of the languages the console loads. The file
+// is kept in memory, at most 1 MiB; nothing is written to a temporary
+// folder.
 func (h *Handlers) Upload(w http.ResponseWriter, r *http.Request) {
 	form := readUpload(r)
 	if form.failure != "" {
@@ -242,6 +243,11 @@ func (h *Handlers) Upload(w http.ResponseWriter, r *http.Request) {
 	result := Result{Error: "Invalid language code format"}
 	name, isString := code.(string)
 	if isString {
+		// Only a language of the table is ever loaded
+		if _, known := knownLanguageFor(name); !known {
+			fail(w, r, http.StatusBadRequest, "Invalid language code")
+			return
+		}
 		result = h.Bundle.Save(name, translations)
 	}
 	if !result.Success {
