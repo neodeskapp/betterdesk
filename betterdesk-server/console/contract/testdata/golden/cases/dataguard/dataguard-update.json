@@ -5,7 +5,7 @@
   "path": "/api/dataguard/policies/{policy_dataguard}",
   "body": {
    "action": "log",
-   "description": null,
+   "description": "",
    "enabled": false,
    "name": "Watch USB sticks",
    "rules": []
@@ -120,7 +120,7 @@
     "json": {
      "action": "log",
      "created_at": "<volatile>",
-     "description": null,
+     "description": "",
      "enabled": 0,
      "id": 1,
      "name": "Watch USB sticks",
@@ -171,9 +171,9 @@
     "json": {
      "action": "log",
      "created_at": "<volatile>",
-     "description": null,
+     "description": "",
      "enabled": 0,
-     "id": 7,
+     "id": 5,
      "name": "Watch USB sticks",
      "policy_type": "usb",
      "rules": [],
@@ -222,9 +222,9 @@
     "json": {
      "action": "log",
      "created_at": "<volatile>",
-     "description": null,
+     "description": "",
      "enabled": 0,
-     "id": 13,
+     "id": 9,
      "name": "Watch USB sticks",
      "policy_type": "usb",
      "rules": [],

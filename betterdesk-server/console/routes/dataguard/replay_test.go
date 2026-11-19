@@ -21,12 +21,14 @@ import (
 // front of the routes in the console and lets only roles with
 // server.config into /api/dataguard. Where the guard refuses a role that
 // the routes alone let read, the guard's answer is taken; /api/bd has no
-// guard, so there every answer is compared.
+// guard, so there every answer is compared. The steps the bug fixes
+// change are listed in policyFixes (fixed_test.go).
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		guarded := 0
-		w.Run(replay.Load(t, db, "node"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		defer policyFixes.Unused(t, db)
+		w.Run(replay.Load(t, db, "node"), policyFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			if strings.HasPrefix(step.Path, "/api/dataguard") && got.Status == 403 && strings.Contains(got.Body, `"code":"panel_access_denied"`) {
 				switch step.Role {
 				case "global_admin", "operator", "viewer", "guest_issuer":
@@ -35,7 +37,7 @@ func TestNodeAnswers(t *testing.T) {
 				}
 			}
 			return false
-		})
+		}))
 		if guarded == 0 || guarded > 40 {
 			t.Errorf("%d answers were the panel access guard's", guarded)
 		}
@@ -125,7 +127,8 @@ func TestNodeDeviceAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		guarded, spelled := 0, 0
-		w.Run(replay.Load(t, db, "node_device"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		defer deviceFixes.Unused(t, db)
+		w.Run(replay.Load(t, db, "node_device"), deviceFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			if step.Role == "operator" && strings.HasPrefix(step.Path, "/api/dataguard/") && got.Status == 403 &&
 				got.Body == `{"success":false,"error":"Panel access denied: dataguard","code":"panel_access_denied"}` {
 				guarded++
@@ -139,7 +142,7 @@ func TestNodeDeviceAnswers(t *testing.T) {
 				return true
 			}
 			return false
-		})
+		}))
 		if guarded != 1 || spelled != 1 {
 			t.Errorf("%d answers were the panel access guard's and %d the inventory route's, want 1 and 1", guarded, spelled)
 		}

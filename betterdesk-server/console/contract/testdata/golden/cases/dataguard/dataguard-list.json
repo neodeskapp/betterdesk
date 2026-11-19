@@ -147,33 +147,6 @@
       "rules": [],
       "scope": "",
       "updated_at": "<volatile>"
-     },
-     {
-      "action": "log",
-      "created_at": "<volatile>",
-      "description": "5.0",
-      "enabled": 0,
-      "id": 3,
-      "name": "Types",
-      "policy_type": "",
-      "rules": [
-       1,
-       "text",
-       null,
-       true,
-       [
-        2,
-        []
-       ],
-       {
-        "10": "x",
-        "2": "y",
-        "a": {},
-        "b": 1
-       }
-      ],
-      "scope": "1.5",
-      "updated_at": "<volatile>"
      }
     ]
    }
@@ -224,7 +197,7 @@
       "created_at": "<volatile>",
       "description": "No mass storage",
       "enabled": 1,
-      "id": 7,
+      "id": 5,
       "name": "Block USB sticks",
       "policy_type": "usb",
       "rules": [
@@ -242,38 +215,11 @@
       "created_at": "<volatile>",
       "description": "",
       "enabled": 1,
-      "id": 8,
+      "id": 6,
       "name": "Defaults",
       "policy_type": "",
       "rules": [],
       "scope": "",
-      "updated_at": "<volatile>"
-     },
-     {
-      "action": "log",
-      "created_at": "<volatile>",
-      "description": "5.0",
-      "enabled": 0,
-      "id": 9,
-      "name": "Types",
-      "policy_type": "",
-      "rules": [
-       1,
-       "text",
-       null,
-       true,
-       [
-        2,
-        []
-       ],
-       {
-        "10": "x",
-        "2": "y",
-        "a": {},
-        "b": 1
-       }
-      ],
-      "scope": "1.5",
       "updated_at": "<volatile>"
      }
     ]
@@ -325,7 +271,7 @@
       "created_at": "<volatile>",
       "description": "No mass storage",
       "enabled": 1,
-      "id": 13,
+      "id": 9,
       "name": "Block USB sticks",
       "policy_type": "usb",
       "rules": [
@@ -343,38 +289,11 @@
       "created_at": "<volatile>",
       "description": "",
       "enabled": 1,
-      "id": 14,
+      "id": 10,
       "name": "Defaults",
       "policy_type": "",
       "rules": [],
       "scope": "",
-      "updated_at": "<volatile>"
-     },
-     {
-      "action": "log",
-      "created_at": "<volatile>",
-      "description": "5.0",
-      "enabled": 0,
-      "id": 15,
-      "name": "Types",
-      "policy_type": "",
-      "rules": [
-       1,
-       "text",
-       null,
-       true,
-       [
-        2,
-        []
-       ],
-       {
-        "10": "x",
-        "2": "y",
-        "a": {},
-        "b": 1
-       }
-      ],
-      "scope": "1.5",
       "updated_at": "<volatile>"
      }
     ]

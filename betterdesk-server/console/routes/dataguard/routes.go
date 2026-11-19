@@ -96,12 +96,44 @@ func (h *handlers) enabledFlag(on bool) jsbind.Value {
 	return jsbind.Number(0)
 }
 
+// flag reads enabled from a body: true or false, also written 1 or 0. A
+// text has quotes in its JSON, so "true" as text is no flag.
+func flag(v jsbind.Value) (on, ok bool) {
+	switch v.JSON() {
+	case "true", "1":
+		return true, true
+	case "false", "0":
+		return false, true
+	}
+	return false, false
+}
+
+// checkMembers answers 400 for the first member of the body that is not
+// what a policy takes: texts, which may also be null where nullable says
+// so, and enabled as a flag.
+func checkMembers(w http.ResponseWriter, r *http.Request, texts []string, nullable map[string]bool) bool {
+	body := kit.Body(r)
+	for _, member := range texts {
+		v := jsbind.Of(body.Get(member))
+		if v.IsUndefined() || v.IsString() || (v.IsNull() && nullable[member]) {
+			continue
+		}
+		fail(w, r, http.StatusBadRequest, "Invalid "+member)
+		return false
+	}
+	if enabled := jsbind.Of(body.Get("enabled")); !enabled.IsUndefined() {
+		if _, ok := flag(enabled); !ok {
+			fail(w, r, http.StatusBadRequest, "Invalid enabled")
+			return false
+		}
+	}
+	return true
+}
+
 // create answers POST policies with the body
-// {name, description?, policy_type?, action?, scope?, enabled?, rules?}.
-// The name has to be a text and the rules a list; nothing else is
-// checked. Without enabled a policy is on. With it, SQLite stores the
-// truth of the value and PostgreSQL the value itself, which has to be
-// something it reads as a boolean.
+// {name, description?, policy_type?, action?, scope?, enabled?, rules?}:
+// a name that is text, the other texts text or null (null takes the
+// default), enabled a flag (without it a policy is on) and rules a list.
 func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	name, isText := body.String("name")
@@ -115,13 +147,15 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "rules must be an array")
 		return
 	}
-	enabled := jsbind.Of(body.Get("enabled"))
-	switch {
-	case enabled.IsUndefined():
-		enabled = h.enabledFlag(true)
-	case !h.db.IsPostgres():
-		enabled = h.enabledFlag(enabled.Truthy())
+	texts := []string{"description", "policy_type", "action", "scope"}
+	if !checkMembers(w, r, texts, map[string]bool{"description": true, "policy_type": true, "action": true, "scope": true}) {
+		return
 	}
+	on := true
+	if enabled := jsbind.Of(body.Get("enabled")); !enabled.IsUndefined() {
+		on, _ = flag(enabled)
+	}
+	enabled := h.enabledFlag(on)
 	empty := jsbind.String("")
 	policy, err := createPolicy(r.Context(), h.db, newPolicy{
 		Name:        jsbind.String(name),
@@ -141,8 +175,9 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 }
 
 // update answers PATCH policies/{id}: every member of the body that names
-// a column is written, null included. A body that names none answers
-// null.
+// a column is written: a name that is text, the other texts text (scope
+// also null), enabled a flag and rules a list. A body that names none
+// answers null.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	id := number(r, "id")
 	exists, err := policyExists(r.Context(), h.db, id)
@@ -161,14 +196,26 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "rules must be an array")
 		return
 	}
+	if name, isText := body.String("name"); body.Has("name") && (!isText || jsbind.Trim(name) == "") {
+		fail(w, r, http.StatusBadRequest, "Policy name is required")
+		return
+	}
+	if !checkMembers(w, r, []string{"description", "policy_type", "action", "scope"}, map[string]bool{"scope": true}) {
+		return
+	}
 	var changes []change
 	for _, column := range []string{"name", "description", "policy_type", "action", "scope"} {
 		if body.Has(column) {
-			changes = append(changes, change{column, jsbind.Of(body.Get(column))})
+			value := jsbind.Of(body.Get(column))
+			if column == "name" {
+				value = jsbind.String(jsbind.Trim(value.Str()))
+			}
+			changes = append(changes, change{column, value})
 		}
 	}
 	if body.Has("enabled") {
-		changes = append(changes, change{"enabled", h.enabledFlag(body.Truthy("enabled"))})
+		on, _ := flag(jsbind.Of(body.Get("enabled")))
+		changes = append(changes, change{"enabled", h.enabledFlag(on)})
 	}
 	if !rules.IsUndefined() {
 		changes = append(changes, change{"rules", rulesText(rules)})

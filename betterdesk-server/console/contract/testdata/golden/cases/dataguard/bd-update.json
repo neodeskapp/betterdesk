@@ -5,7 +5,7 @@
   "path": "/api/bd/policies/{policy_bd}",
   "body": {
    "action": "log",
-   "description": null,
+   "description": "",
    "enabled": false,
    "name": "Watch USB sticks",
    "rules": []
@@ -123,9 +123,9 @@
     "json": {
      "action": "log",
      "created_at": "<volatile>",
-     "description": null,
+     "description": "",
      "enabled": 0,
-     "id": 4,
+     "id": 3,
      "name": "Watch USB sticks",
      "policy_type": "usb",
      "rules": [],
@@ -174,9 +174,9 @@
     "json": {
      "action": "log",
      "created_at": "<volatile>",
-     "description": null,
+     "description": "",
      "enabled": 0,
-     "id": 10,
+     "id": 7,
      "name": "Watch USB sticks",
      "policy_type": "usb",
      "rules": [],
@@ -225,9 +225,9 @@
     "json": {
      "action": "log",
      "created_at": "<volatile>",
-     "description": null,
+     "description": "",
      "enabled": 0,
-     "id": 16,
+     "id": 11,
      "name": "Watch USB sticks",
      "policy_type": "usb",
      "rules": [],

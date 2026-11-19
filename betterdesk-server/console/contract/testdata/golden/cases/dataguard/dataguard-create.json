@@ -187,7 +187,7 @@
      "created_at": "<volatile>",
      "description": "No mass storage",
      "enabled": 1,
-     "id": 7,
+     "id": 5,
      "name": "Block USB sticks",
      "policy_type": "usb",
      "rules": [
@@ -244,7 +244,7 @@
      "created_at": "<volatile>",
      "description": "No mass storage",
      "enabled": 1,
-     "id": 13,
+     "id": 9,
      "name": "Block USB sticks",
      "policy_type": "usb",
      "rules": [

@@ -78,111 +78,11 @@
   },
   {
    "roles": [
-    "server_admin"
-   ],
-   "status": 200,
-   "headers": {
-    "cache-control": "no-cache, no-store, must-revalidate",
-    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "application/json; charset=utf-8",
-    "cross-origin-resource-policy": "same-origin",
-    "etag": "<present>",
-    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "ratelimit-limit": "1000000",
-    "ratelimit-policy": "1000000;w=60",
-    "ratelimit-remaining": "<n>",
-    "ratelimit-reset": "<n>",
-    "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
-    "x-content-type-options": "nosniff",
-    "x-dns-prefetch-control": "off",
-    "x-download-options": "noopen",
-    "x-frame-options": "DENY",
-    "x-permitted-cross-domain-policies": "none",
-    "x-xss-protection": "0"
-   },
-   "volatile": [
-    {
-     "path": "created_at",
-     "format": "9999-99-99 99:99:99"
-    },
-    {
-     "path": "updated_at",
-     "format": "9999-99-99 99:99:99"
-    }
-   ],
-   "body": {
-    "kind": "json",
-    "json": {
-     "action": "log",
-     "created_at": "<volatile>",
-     "description": null,
-     "enabled": 1,
-     "id": 1,
-     "name": "Watch USB sticks",
-     "policy_type": "usb",
-     "rules": [],
-     "scope": "all",
-     "updated_at": "<volatile>"
-    }
-   }
-  },
-  {
-   "roles": [
-    "super_admin"
-   ],
-   "status": 200,
-   "headers": {
-    "cache-control": "no-cache, no-store, must-revalidate",
-    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "application/json; charset=utf-8",
-    "cross-origin-resource-policy": "same-origin",
-    "etag": "<present>",
-    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "ratelimit-limit": "1000000",
-    "ratelimit-policy": "1000000;w=60",
-    "ratelimit-remaining": "<n>",
-    "ratelimit-reset": "<n>",
-    "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
-    "x-content-type-options": "nosniff",
-    "x-dns-prefetch-control": "off",
-    "x-download-options": "noopen",
-    "x-frame-options": "DENY",
-    "x-permitted-cross-domain-policies": "none",
-    "x-xss-protection": "0"
-   },
-   "volatile": [
-    {
-     "path": "created_at",
-     "format": "9999-99-99 99:99:99"
-    },
-    {
-     "path": "updated_at",
-     "format": "9999-99-99 99:99:99"
-    }
-   ],
-   "body": {
-    "kind": "json",
-    "json": {
-     "action": "log",
-     "created_at": "<volatile>",
-     "description": null,
-     "enabled": 1,
-     "id": 7,
-     "name": "Watch USB sticks",
-     "policy_type": "usb",
-     "rules": [],
-     "scope": "all",
-     "updated_at": "<volatile>"
-    }
-   }
-  },
-  {
-   "roles": [
+    "server_admin",
+    "super_admin",
     "admin"
    ],
-   "status": 200,
+   "status": 400,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -203,29 +103,10 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    {
-     "path": "created_at",
-     "format": "9999-99-99 99:99:99"
-    },
-    {
-     "path": "updated_at",
-     "format": "9999-99-99 99:99:99"
-    }
-   ],
    "body": {
     "kind": "json",
     "json": {
-     "action": "log",
-     "created_at": "<volatile>",
-     "description": null,
-     "enabled": 1,
-     "id": 13,
-     "name": "Watch USB sticks",
-     "policy_type": "usb",
-     "rules": [],
-     "scope": "all",
-     "updated_at": "<volatile>"
+     "error": "Invalid enabled"
     }
    }
   }

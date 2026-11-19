@@ -73,7 +73,7 @@ func init() {
 
 			contract.Case{
 				Name: at("update"), Method: "PATCH", Path: mount.path + "/policies/{" + policy + "}",
-				Body: map[string]any{"name": "Watch USB sticks", "description": nil, "action": "log", "enabled": false, "rules": []any{}},
+				Body: map[string]any{"name": "Watch USB sticks", "description": "", "action": "log", "enabled": false, "rules": []any{}},
 			},
 			contract.Case{Name: at("update-enabled-by-truth"), Method: "PATCH", Path: mount.path + "/policies/{" + policy + "}", Body: map[string]any{"enabled": "no"}},
 			contract.Case{Name: at("update-nothing"), Method: "PATCH", Path: mount.path + "/policies/{" + policy + "}", Body: map[string]any{"unknown": 1}},
