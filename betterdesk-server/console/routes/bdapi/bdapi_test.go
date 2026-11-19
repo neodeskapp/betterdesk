@@ -342,3 +342,24 @@ func TestApprovalWithAKeyNeedsThatKey(t *testing.T) {
 		}
 	})
 }
+
+// The identity check compares uuids as the rename guard does: without
+// dashes and letter case, so a device whose uuid is written otherwise is
+// the same device (BUGS BD10).
+func TestUUIDInOtherLetterCaseIsTheSame(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		if _, err := w.DB.Exec(context.Background(), "INSERT INTO peer (id, uuid, info) VALUES ('CASEDEV1', 'ab12-cd34', '{}')"); err != nil {
+			t.Fatal(err)
+		}
+		for body, want := range map[string]int{
+			`{"uuid":"AB12CD34"}`:    200,
+			`{"uuid":"ab-12-CD-34"}`: 200,
+			`{"uuid":"ab12-cd35"}`:   409,
+		} {
+			if got := w.SignedOut().Do("POST", "/api/bd/register", body, "X-Device-Id", "CASEDEV1"); got.Status != want {
+				t.Errorf("%s: %d %s, want %d", body, got.Status, got.Body, want)
+			}
+		}
+	})
+}

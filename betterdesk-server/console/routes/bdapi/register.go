@@ -142,7 +142,13 @@ func (h *handlers) registerPolicy(r *http.Request, id string, uuid, publicKey an
 			return nil, err
 		}
 		incoming = trim(incoming)
-		uuidChanged := storedUUID != "" && incoming != "" && incoming != storedUUID
+		// Compared as the rename guard compares them: without dashes and
+		// letter case
+		sameUUID, err := uuidsEqual(incoming, storedUUID)
+		if err != nil {
+			return nil, err
+		}
+		uuidChanged := storedUUID != "" && incoming != "" && !sameUUID
 		if keyChanged || uuidChanged {
 			if !hasStored {
 				return &refusal{status: http.StatusConflict, Error: "identity_change_not_allowed",
