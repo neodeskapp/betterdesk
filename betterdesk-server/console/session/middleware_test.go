@@ -1006,37 +1006,15 @@ func TestIPChangeIsAuditedOncePerAddress(t *testing.T) {
 	})
 }
 
-func TestBrokenStoredSession(t *testing.T) {
-	cases := []string{`not json`, `[]`, `"text"`, `5`, `null`, `{"userId":7}`, `{"cookie":null}`, `{"cookie":5}`, `{"cookie":"x"}`, `{"cookie":{}} trailing`, `{"cookie":{"expires":}}`}
-	storetest.Each(t, func(t *testing.T, db *store.DB) {
-		f := newFixture(t, db)
-		now := f.clock.Now().UnixMilli()
-		for i, text := range cases {
-			sid := fmt.Sprintf("broken-%d", i)
-			f.mustSet(sid, record{json: text, expiresAt: now + 60_000, createdAt: now, lastActivityAt: now})
-			called := false
-			rec := f.serve(get("/", f.cookieFor(sid)), func(http.ResponseWriter, *http.Request) { called = true })
-			if called || rec.Code != http.StatusInternalServerError {
-				t.Errorf("%s: handler ran %v, status %d; want the error answer", text, called, rec.Code)
-			}
-		}
-		if len(f.errs) != len(cases) {
-			t.Fatalf("OnError was called %d times, want %d", len(f.errs), len(cases))
-		}
-		// An array as the cookie object is read as a cookie without attributes
-		f.mustSet("array", record{json: `{"cookie":[],"k":1}`, expiresAt: now + 60_000, createdAt: now, lastActivityAt: now})
-		if rec := f.serve(get("/", f.cookieFor("array")), nil); rec.Code != http.StatusNoContent {
-			t.Fatalf("status %d for a cookie array", rec.Code)
-		}
-	})
-}
-
+// A session cookie whose row cannot be read for a failure of the database
+// gets the error answer, and without an OnError of its own a plain 500.
 func TestDefaultErrorAnswer(t *testing.T) {
 	db := storetest.SQLite(t)
 	f := newFixture(t, db, func(o *Options) { o.OnError = nil })
 	now := f.clock.Now().UnixMilli()
-	f.mustSet("broken", record{json: `{}`, expiresAt: now + 60_000, createdAt: now, lastActivityAt: now})
-	if rec := f.serve(get("/", f.cookieFor("broken")), nil); rec.Code != http.StatusInternalServerError {
+	f.mustSet("row", record{json: `{"cookie":{}}`, expiresAt: now + 60_000, createdAt: now, lastActivityAt: now})
+	f.exec(`DROP TABLE panel_sessions`)
+	if rec := f.serve(get("/", f.cookieFor("row")), nil); rec.Code != http.StatusInternalServerError {
 		t.Fatalf("status %d", rec.Code)
 	}
 }

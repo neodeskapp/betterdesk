@@ -154,6 +154,9 @@ const (
 	ReasonMaxAge    = "max_age"
 	ReasonRevoked   = "revoked"
 	ReasonDestroyed = "destroyed"
+	// ReasonUnreadable ends a row whose stored session is not one the
+	// console can read.
+	ReasonUnreadable = "unreadable"
 )
 
 // cleanIP trims an address, removes the ::ffff: prefix of an IPv4 address

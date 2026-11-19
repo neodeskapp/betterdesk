@@ -3,7 +3,6 @@ package session
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -168,7 +167,13 @@ func (m *Manager) load(r *http.Request) (s *Session, expired string, err error) 
 		return s, "", nil
 	}
 	if err := s.restore(text); err != nil {
-		return nil, "", fmt.Errorf("stored session: %w", err)
+		// A stored session that cannot be read is no session: its row
+		// ends, and the request goes on with a new one
+		if err := m.table.end(r.Context(), id, ReasonUnreadable); err != nil {
+			return nil, "", err
+		}
+		empty, err := m.newSession(r)
+		return empty, "", err
 	}
 	s.id, s.originalID = id, id
 	if ended == "" {

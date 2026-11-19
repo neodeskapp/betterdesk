@@ -47,3 +47,43 @@ func TestIdleRowAnswersSessionIdle(t *testing.T) {
 		}
 	})
 }
+
+// TestUnreadableStoredSessionIsNoSession: a stored session the console
+// cannot read (not JSON, no cookie object) is no session: the request goes
+// on without one and the row ends, instead of an error on every request of
+// that browser (BUGS.md S21).
+func TestUnreadableStoredSessionIsNoSession(t *testing.T) {
+	cases := []string{`not json`, `[]`, `"text"`, `5`, `null`, `{"userId":7}`, `{"cookie":null}`, `{"cookie":5}`, `{"cookie":"x"}`, `{"cookie":{}} trailing`, `{"cookie":{"expires":}}`}
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		f := newFixture(t, db)
+		now := f.clock.Now().UnixMilli()
+		for i, text := range cases {
+			sid := "broken-" + string(rune('a'+i))
+			f.mustSet(sid, record{json: text, expiresAt: now + 60_000, createdAt: now, lastActivityAt: now})
+			var userID int64 = -1
+			rec := f.serve(get("/", f.cookieFor(sid)), func(w http.ResponseWriter, r *http.Request) {
+				userID = From(r).UserID()
+				w.WriteHeader(http.StatusNoContent)
+			})
+			if rec.Code != http.StatusNoContent || userID != 0 {
+				t.Errorf("%s: status %d, user %d; want the handler without a session", text, rec.Code, userID)
+			}
+			if row := f.row(sid); row.active || row.reason.String != ReasonUnreadable {
+				t.Errorf("%s: row %+v; want it ended as unreadable", text, row)
+			}
+			// The browser's next request finds the row ended and goes on
+			if rec := f.serve(get("/", f.cookieFor(sid)), nil); rec.Code != http.StatusNoContent {
+				t.Errorf("%s: the next request: %d", text, rec.Code)
+			}
+		}
+		if len(f.errs) != 0 {
+			t.Errorf("OnError was called: %v", f.errs)
+		}
+		// An array as the cookie object is read as a cookie without
+		// attributes: that session goes on
+		f.mustSet("array", record{json: `{"cookie":[],"k":1}`, expiresAt: now + 60_000, createdAt: now, lastActivityAt: now})
+		if rec := f.serve(get("/", f.cookieFor("array")), nil); rec.Code != http.StatusNoContent || !f.row("array").active {
+			t.Errorf("status %d for a cookie array, row %+v", rec.Code, f.row("array"))
+		}
+	})
+}
