@@ -777,7 +777,7 @@ func sortObjectKeys(entries []folderAssignment) {
 
 // ---- System information and metrics ----
 
-// sysinfoUpdatedAt is getPeerSysinfo(id).updated_at as new Date() read it;
+// sysinfoUpdatedAt is getPeerSysinfo(id).updated_at as an instant (parseDate);
 // found is false when the device has no row, ok is false for a time that
 // does not read (NaN).
 func (s *clientStore) sysinfoUpdatedAt(ctx context.Context, id string) (at time.Time, found, ok bool, err error) {
@@ -816,10 +816,10 @@ var (
 	dateTimeJS = regexp.MustCompile(`^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3})\d*)?)?(Z|[+-]\d{2}:\d{2})?$`)
 )
 
-// parseDate is new Date(text) for the forms the column holds: a date alone
-// is UTC midnight, a date and time with Z or an offset is that instant,
-// one without is local time (so "2026-11-10 01:02:03" from datetime('now'),
-// which is UTC, is read as the process's local time).
+// parseDate reads the forms the column holds as new Date(text) does, but
+// for a time without a zone: a date alone is UTC midnight, a date and
+// time with Z or an offset is that instant, and one without is UTC, the
+// zone datetime('now') writes in, whatever zone the console runs in.
 func parseDate(text string) (time.Time, bool) {
 	if m := dateOnly.FindStringSubmatch(text); m != nil {
 		t, err := time.Parse("2006-01-02", text)
@@ -837,11 +837,8 @@ func parseDate(text string) (time.Time, bool) {
 	if m[7] != "" {
 		ms = num((m[7] + "00")[:3])
 	}
-	loc := time.Local
-	switch zone := m[8]; {
-	case zone == "Z":
-		loc = time.UTC
-	case zone != "":
+	loc := time.UTC
+	if zone := m[8]; zone != "" && zone != "Z" {
 		sign := 1
 		if zone[0] == '-' {
 			sign = -1

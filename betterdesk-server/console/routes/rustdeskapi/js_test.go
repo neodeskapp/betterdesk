@@ -3,6 +3,7 @@ package rustdeskapi
 import (
 	"encoding/hex"
 	"math"
+	"strings"
 	"testing"
 	"time"
 
@@ -109,16 +110,19 @@ func TestParseCPU(t *testing.T) {
 	}
 }
 
-func TestParseDateLikeNewDate(t *testing.T) {
-	local := time.Date(2026, 11, 10, 20, 13, 11, 0, time.Local)
+// A time the SQLite column holds without a zone is UTC, as datetime('now')
+// writes it, whatever zone the console runs in (BUGS RD9): the result is
+// in UTC, not in the process's local zone.
+func TestParseDate(t *testing.T) {
+	utc := time.Date(2026, 11, 10, 20, 13, 11, 0, time.UTC)
 	for _, c := range []struct {
 		in   string
 		want time.Time
 		ok   bool
 	}{
-		{"2026-11-10 20:13:11", local, true},
-		{"2026-11-10T20:13:11", local, true},
-		{"2026-11-10T20:13:11Z", time.Date(2026, 11, 10, 20, 13, 11, 0, time.UTC), true},
+		{"2026-11-10 20:13:11", utc, true},
+		{"2026-11-10T20:13:11", utc, true},
+		{"2026-11-10T20:13:11Z", utc, true},
 		{"2026-11-10T20:13:11.5+01:00", time.Date(2026, 11, 10, 19, 13, 11, 500e6, time.UTC), true},
 		{"2026-11-10", time.Date(2026, 11, 10, 0, 0, 0, 0, time.UTC), true},
 		{"garbage", time.Time{}, false},
@@ -127,6 +131,9 @@ func TestParseDateLikeNewDate(t *testing.T) {
 		got, ok := parseDate(c.in)
 		if ok != c.ok || ok && !got.Equal(c.want) {
 			t.Errorf("parseDate(%q) = %v, %t; want %v, %t", c.in, got, ok, c.want, c.ok)
+		}
+		if ok && !strings.ContainsAny(c.in[10:], "Z+") && got.Location() != time.UTC {
+			t.Errorf("parseDate(%q) is in %v, not in UTC", c.in, got.Location())
 		}
 	}
 }
