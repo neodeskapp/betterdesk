@@ -55,16 +55,10 @@ var githubHosts = map[string]string{
 }
 
 // ResolveAllowedGithubHost returns the host when a redirect may go there,
-// and "" otherwise. The host is looked up in lower case. Like the plain
-// object the old console looked it up in, the table also "has" the names
-// constructor and __proto__ (BUGS AG1); such a host is kept as it is.
+// and "" otherwise. The host is looked up in lower case.
 func ResolveAllowedGithubHost(host string) string {
-	lower := strings.ToLower(host)
-	if allowed, ok := githubHosts[lower]; ok {
+	if allowed, ok := githubHosts[strings.ToLower(host)]; ok {
 		return allowed
-	}
-	if lower == "constructor" || lower == "__proto__" {
-		return host
 	}
 	return ""
 }

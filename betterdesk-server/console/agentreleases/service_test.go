@@ -33,9 +33,11 @@ func TestResolveAllowedGithubHost(t *testing.T) {
 		"127.0.0.1":                            "",
 		"":                                     "",
 		"api.github.com.evil.example":          "",
-		// what every JavaScript object has (BUGS AG1)
-		"constructor": "constructor",
-		"__proto__":   "__proto__",
+		// what every JavaScript object has, which a lookup in a plain
+		// object let through (BUGS AG1)
+		"constructor": "",
+		"__proto__":   "",
+		"Constructor": "",
 		"toString":    "",
 	} {
 		if got := ResolveAllowedGithubHost(host); got != want {
@@ -359,6 +361,7 @@ func TestRequestsToGitHub(t *testing.T) {
 		{"no list", reply(http.StatusOK, []byte(`{"message":"x"}`)), nil, "releases.find is not a function"},
 		{"null", reply(http.StatusOK, []byte(`null`)), nil, "Cannot read properties of null (reading 'find')"},
 		{"redirect elsewhere", reply(http.StatusMovedPermanently, nil, "Location", "https://evil.example/x"), nil, "generic_agent_release_redirect_host_invalid"},
+		{"redirect to constructor", reply(http.StatusFound, nil, "Location", "https://constructor/x"), nil, "generic_agent_release_redirect_host_invalid"},
 		{"redirect to http", reply(http.StatusTemporaryRedirect, nil, "Location", "http://github.com/x"), nil, `Protocol "http:" not supported. Expected "https:"`},
 		{"redirect loop", reply(http.StatusFound, nil, "Location", list), nil, "generic_agent_release_redirect_limit"},
 		{"303 is no redirect", reply(http.StatusSeeOther, nil, "Location", "https://github.com/x"), nil, "generic_agent_release_list_failed:303"},
