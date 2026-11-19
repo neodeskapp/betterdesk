@@ -279,3 +279,30 @@ func TestScopeRefusalInEveryLanguage(t *testing.T) {
 		t.Errorf("the English refusal is %q", english)
 	}
 }
+
+// TestAssignStoresTheDevicesID: a device id the body gives as a number is
+// stored as the device's id, so the device is in the folder, on SQLite
+// too, where the number was stored as 900100021.0.
+func TestAssignStoresTheDevicesID(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		api := routetest.NewAPI()
+		api.Fallback = func(c routetest.Call) routetest.Reply {
+			switch {
+			case c.Target == "/api/peers":
+				return routetest.Reply{Status: 200, Body: `{"peers":[{"id":"900100021","hostname":"n"}]}`}
+			case c.Target == "/api/peers/900100021":
+				return routetest.Reply{Status: 200, Body: `{"id":"900100021","hostname":"n"}`}
+			case strings.HasPrefix(c.Target, "/api/remote-targets"):
+				return routetest.Reply{Status: 200, Body: `{"targets":[]}`}
+			}
+			return routetest.Reply{Status: 404, Body: `{"error":"not found"}`}
+		}
+		admin := routetest.New(t, routetest.Options{DB: db, API: api, Config: realLanguages}).As("admin")
+		want(t, "create", admin.Do("POST", "/api/folders", `{"name":"Lab"}`),
+			200, `{"success":true,"data":{"id":1,"name":"Lab","color":"#6366f1","icon":"folder","allowed_users":[],"allowed_groups":[]}}`)
+		want(t, "assign a number", admin.Do("POST", "/api/folders/1/devices", `{"deviceIds":[900100021]}`), 200, `{"success":true,"data":{"count":1}}`)
+		if got := rows(t, db, `SELECT device_id FROM device_folder_assignments`); got != "900100021" {
+			t.Errorf("stored device ids: %q", got)
+		}
+	})
+}

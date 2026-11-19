@@ -29,7 +29,9 @@ type movedCount struct {
 
 // assignDevices answers POST /api/folders/{id}/devices with {deviceIds}:
 // the devices go into the folder, or out of their folder for the id 0.
-// Every device has to exist and be one the account may see.
+// Every device has to exist and be one the account may see. The id of the
+// device that was found is stored, as text, whatever JSON type the body
+// gave it as.
 func (h *handlers) assignDevices(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := folderID(r)
@@ -53,13 +55,13 @@ func (h *handlers) assignDevices(w http.ResponseWriter, r *http.Request) {
 	ids := make([]jsbind.Value, len(list))
 	devices := make([]*goapi.Object, 0, len(list))
 	for i, item := range list {
-		ids[i] = jsbind.Of(item)
-		text := ids[i].ToString()
+		text := jsbind.Of(item).ToString()
 		device := h.backend.GetDeviceByID(ctx, text, false)
 		if device == nil {
 			answer(w, r, http.StatusNotFound, notFoundDevice{Error: kit.T(r, "devices.not_found", nil), ID: text})
 			return
 		}
+		ids[i] = jsbind.String(jsreq.String(plainOf(device.Get("id"))))
 		devices = append(devices, device)
 	}
 	scope, err := h.groups.DeviceScopeForUser(ctx, kit.User(r), devices)
