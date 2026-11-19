@@ -619,6 +619,10 @@ var fixes = []fix{
 	// X-Forwarded-For of 10.0.0.2 buys no budget of its own
 	{bug: "WS3", scenario: "per-address limit", step: 11, events: `[{"socket":"other","head":` + head101 + `},
 		{"socket":"other","close":4429,"reason":"Too many connections"},{"socket":"other","end":true}]`},
+	// The socket closed with 1009 is counted down once: after it, one more
+	// socket fits, not two
+	{bug: "WS4", scenario: "an error counts down twice", step: 12, events: `[{"socket":"x2","head":` + head101 + `},
+		{"socket":"x2","close":4429,"reason":"Too many connections"},{"socket":"x2","end":true}]`},
 }
 
 // fixFor is the fix of a step, ok false for a step no fix changed.

@@ -57,15 +57,12 @@ func (s *Service) serveRelay(u *ws.Upgrade) {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if ws.ProtocolError(err) {
-		// "error" and then "close": counted down twice, and the other
-		// side hears of the error first.
-		s.perIP.Done(j.ip)
-		s.stopIdleLocked(j.sess)
-		s.teardownLocked(j.id, 1011, "WebSocket error")
-	}
 	s.perIP.Done(j.ip)
 	s.stopIdleLocked(j.sess)
+	if ws.ProtocolError(err) {
+		// The other side hears of the error
+		s.teardownLocked(j.id, 1011, "WebSocket error")
+	}
 	s.teardownLocked(j.id, 1000, "Peer disconnected")
 }
 

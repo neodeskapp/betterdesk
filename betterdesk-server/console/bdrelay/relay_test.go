@@ -359,3 +359,97 @@ func FuzzSignalMessage(f *testing.F) {
 		}
 	})
 }
+
+// waitCount waits until the address 127.0.0.1 has want sockets counted,
+// and checks that the count stays there for a while.
+func waitCount(t *testing.T, svc *Service, want int) {
+	t.Helper()
+	deadline := time.Now().Add(3 * time.Second)
+	for svc.perIP.Count("127.0.0.1") != want {
+		if time.Now().After(deadline) {
+			t.Fatalf("127.0.0.1 has %d sockets counted, want %d", svc.perIP.Count("127.0.0.1"), want)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	time.Sleep(200 * time.Millisecond)
+	if got := svc.perIP.Count("127.0.0.1"); got != want {
+		t.Fatalf("127.0.0.1 has %d sockets counted, want %d", got, want)
+	}
+}
+
+// TestAnErrorCountsDownOnce: a socket that ends with a protocol error (a
+// message over the limit) is counted down once for its address, like any
+// other end, on the signal socket and on both sides of a relay, so the
+// address cannot hold more than MaxRelayPerIP sockets afterwards.
+func TestAnErrorCountsDownOnce(t *testing.T) {
+	t.Cleanup(wstest.Goroutines(t))
+	t.Run("signal", func(t *testing.T) {
+		svc, addr := newRelay(t)
+		var open []*wstest.Client
+		for i := range MaxRelayPerIP {
+			c, ok, code := openSignal(t, addr, fmt.Sprintf("dev%d", i), nil)
+			if !ok {
+				t.Fatalf("socket %d closed with %d", i, code)
+			}
+			open = append(open, c)
+		}
+		if err := open[0].Text(strings.Repeat("x", SignalMaxPayload+1)); err != nil {
+			t.Fatal(err)
+		}
+		if !open[0].Wait(3*time.Second, func(_ []wstest.Frame, closed bool) bool { return closed }) {
+			t.Fatal("the message over the limit did not close the socket")
+		}
+		waitCount(t, svc, MaxRelayPerIP-1)
+		again, ok, code := openSignal(t, addr, "dev20", nil)
+		if !ok {
+			t.Errorf("the socket after the error closed with %d", code)
+		}
+		over, ok, code := openSignal(t, addr, "dev21", nil)
+		if ok || code != 4429 {
+			t.Errorf("an eleventh socket: welcomed %v, closed with %d", ok, code)
+		}
+		for _, c := range append(open, again, over) {
+			c.Drop()
+		}
+	})
+	t.Run("relay", func(t *testing.T) {
+		svc, addr := newRelay(t)
+		// Two signal sockets of the same address stay open throughout
+		var open []*wstest.Client
+		for i := range 2 {
+			c, ok, code := openSignal(t, addr, fmt.Sprintf("dev%d", i), nil)
+			if !ok {
+				t.Fatalf("signal socket %d closed with %d", i, code)
+			}
+			open = append(open, c)
+		}
+		id, initiatorToken, targetToken := svc.CreateRelaySession("dev2", "dev1")
+		join := func(role, token string) *wstest.Client {
+			q := url.Values{"session": {id}, "token": {token}, "role": {role}}
+			c, _, err := wstest.Dial(addr, "/ws/bd-relay?"+q.Encode(), nil)
+			if err != nil || c == nil {
+				t.Fatalf("dial: %v", err)
+			}
+			return c
+		}
+		initiator := join("initiator", initiatorToken)
+		target := join("target", targetToken)
+		if !target.Wait(3*time.Second, func(f []wstest.Frame, closed bool) bool { return closed || len(f) > 0 }) {
+			t.Fatal("the target was not paired")
+		}
+		waitCount(t, svc, 4)
+		if err := initiator.Binary(make([]byte, MaxFrameBytes+1)); err != nil {
+			t.Fatal(err)
+		}
+		if !target.Wait(5*time.Second, func(_ []wstest.Frame, closed bool) bool { return closed }) {
+			t.Fatal("the other side stayed open")
+		}
+		if _, code, reason := target.Closed(); code != 1011 || reason != "WebSocket error" {
+			t.Errorf("the other side closed with %d %q, want 1011 WebSocket error", code, reason)
+		}
+		waitCount(t, svc, 2)
+		for _, c := range append(open, initiator, target) {
+			c.Drop()
+		}
+	})
+}

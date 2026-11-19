@@ -112,13 +112,9 @@ func (s *Service) serveSignal(u *ws.Upgrade) {
 	conn.KeepAlive(s.opts.PingInterval)
 	conn.SendText(`{"type":"welcome","device_id":` + quote(deviceID) + `}`)
 
-	err = <-ended
+	<-ended
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if ws.ProtocolError(err) {
-		// "error" and then "close": the address is counted down twice.
-		s.perIP.Done(ip)
-	}
 	s.perIP.Done(ip)
 	if current, ok := s.online.get(deviceID); ok && current == conn {
 		s.online.delete(deviceID)
