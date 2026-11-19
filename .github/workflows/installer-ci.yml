@@ -9,6 +9,8 @@ on:
       - 'betterdesk.ps1'
       - 'betterdesk-docker.sh'
       - 'scripts/test-go-installer.sh'
+      - 'scripts/check-go-toolchain-pins.sh'
+      - 'betterdesk-server/go.mod'
       - 'scripts/test-postgresql-hba.sh'
       - 'scripts/test-docker-hardening.sh'
       - 'scripts/installer-protocol-check.js'
@@ -28,6 +30,8 @@ on:
       - 'betterdesk.ps1'
       - 'betterdesk-docker.sh'
       - 'scripts/test-go-installer.sh'
+      - 'scripts/check-go-toolchain-pins.sh'
+      - 'betterdesk-server/go.mod'
       - 'scripts/test-postgresql-hba.sh'
       - 'scripts/test-docker-hardening.sh'
       - 'scripts/installer-protocol-check.js'
@@ -72,6 +76,7 @@ jobs:
             betterdesk-docker.sh \
             scripts/test-native-installer.sh \
             scripts/test-go-installer.sh \
+            scripts/check-go-toolchain-pins.sh \
             scripts/test-postgresql-hba.sh \
             scripts/test-docker-hardening.sh)
       - name: Run ShellCheck
@@ -82,10 +87,13 @@ jobs:
             betterdesk-docker.sh \
             scripts/test-native-installer.sh \
             scripts/test-go-installer.sh \
+            scripts/check-go-toolchain-pins.sh \
             scripts/test-postgresql-hba.sh \
             scripts/test-docker-hardening.sh
       - name: Test the upgrade to the server with its web console
         run: bash scripts/test-go-installer.sh
+      - name: Check the Go pins of the installers against go.mod
+        run: bash scripts/check-go-toolchain-pins.sh
       - name: Test native installer watchdog and clone recovery
         run: bash scripts/test-native-installer.sh
       - name: Test PostgreSQL pg_hba.conf setup
