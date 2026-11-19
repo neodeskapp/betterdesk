@@ -43,7 +43,8 @@ const (
 	CleanupInterval = 30 * time.Second
 	// RequestTimeout is how long RequestFromDevice waits by default.
 	RequestTimeout = 15 * time.Second
-	// PingInterval is how often a signal socket is pinged.
+	// PingInterval is how often a signal socket is pinged; one that left
+	// two pings in a row unanswered is dropped (ws.Conn.Heartbeat).
 	PingInterval = 30 * time.Second
 )
 

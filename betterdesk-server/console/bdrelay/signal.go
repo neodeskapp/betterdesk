@@ -104,7 +104,7 @@ func (s *Service) serveSignal(u *ws.Upgrade) {
 	s.online.set(deviceID, conn)
 	s.mu.Unlock()
 	attached.Store(true)
-	conn.KeepAlive(s.opts.PingInterval)
+	conn.Heartbeat(s.opts.PingInterval)
 	conn.SendText(`{"type":"welcome","device_id":` + quote(deviceID) + `}`)
 
 	<-ended

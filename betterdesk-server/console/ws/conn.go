@@ -221,18 +221,39 @@ func (c *Conn) Discard() error {
 
 // KeepAlive sends a ping every interval until the socket ends. A missing
 // answer is not acted on.
-func (c *Conn) KeepAlive(interval time.Duration) {
+func (c *Conn) KeepAlive(interval time.Duration) { c.ping(interval, false) }
+
+// Heartbeat sends a ping every interval until the socket ends, like
+// KeepAlive, and drops the connection when two pings in a row got no
+// answer within an interval each: a peer that is gone ends after two to
+// three intervals, not when TCP gives up. The socket must be read
+// meanwhile, since the answers arrive through Read.
+func (c *Conn) Heartbeat(interval time.Duration) { c.ping(interval, true) }
+
+func (c *Conn) ping(interval time.Duration, drop bool) {
 	c.wg.Add(1)
 	go func() {
 		defer c.wg.Done()
 		t := time.NewTicker(interval)
 		defer t.Stop()
+		missed := 0
 		for {
 			select {
 			case <-t.C:
 				ctx, cancel := context.WithTimeout(c.ctx, interval)
-				_ = c.ws.Ping(ctx)
+				err := c.ws.Ping(ctx)
 				cancel()
+				switch {
+				case err == nil:
+					missed = 0
+				case c.ctx.Err() != nil:
+					return
+				default:
+					if missed++; drop && missed >= 2 {
+						c.CloseNow()
+						return
+					}
+				}
 			case <-c.ctx.Done():
 				return
 			}

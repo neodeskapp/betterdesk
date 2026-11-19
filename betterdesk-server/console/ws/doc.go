@@ -59,7 +59,8 @@
 // Read applies the socket's size limit (100 MiB unless the service set
 // one) and closes with 1009 when a message is over it, and with 1007 for
 // text that is not UTF-8. KeepAlive pings at an interval and, like the old
-// services, never acts on a missing answer. Every goroutine of a socket
+// services, never acts on a missing answer; Heartbeat drops a peer that
+// left two pings in a row unanswered. Every goroutine of a socket
 // ends when the socket ends or Registry.Close is called; a handler calls
 // Conn.Wait before it returns.
 package ws

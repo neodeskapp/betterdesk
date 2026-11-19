@@ -1,9 +1,12 @@
 package bdrelay
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -622,4 +625,54 @@ func TestRequestOfAClosedSocketSettlesAtOnce(t *testing.T) {
 	}
 	first.Drop()
 	second.Close(1000)
+}
+
+// TestAgentThatStopsAnsweringIsDropped: an agent whose connection died
+// without a close answers no ping; after two unanswered pings its signal
+// socket is dropped, the device is no longer online and its request is
+// answered as offline.
+func TestAgentThatStopsAnsweringIsDropped(t *testing.T) {
+	t.Cleanup(wstest.Goroutines(t))
+	svc := New(Options{VerifyDevice: oracleVerify, PingInterval: 50 * time.Millisecond})
+	reg := ws.New(ws.Options{})
+	svc.Register(reg)
+	srv := httptest.NewServer(reg)
+	t.Cleanup(func() {
+		srv.Close()
+		reg.Close()
+	})
+	conn, err := net.Dial("tcp", strings.TrimPrefix(srv.URL, "http://"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	_, _ = io.WriteString(conn, "GET /ws/bd-signal?device_id=dev1&token=tok-dev1-good HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\n"+
+		"Connection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n")
+	if head, err := bufio.NewReader(conn).ReadString('\n'); err != nil || !strings.HasPrefix(head, "HTTP/1.1 101") {
+		t.Fatalf("%q %v", head, err)
+	}
+	deadline := time.Now().Add(2 * time.Second)
+	for online, _ := svc.IsDeviceOnline("dev1"); !online; online, _ = svc.IsDeviceOnline("dev1") {
+		if time.Now().After(deadline) {
+			t.Fatal("the agent never came online")
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	done := make(chan error, 1)
+	go func() {
+		_, err := svc.RequestFromDevice(context.Background(), "dev1", "x", goapi.NewObject(), 30*time.Second)
+		done <- err
+	}()
+	select {
+	case err := <-done:
+		if !errors.Is(err, ErrAgentOffline) {
+			t.Errorf("request: %v, want agent_offline", err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("the request still waits: the agent was not dropped")
+	}
+	if online, _ := svc.IsDeviceOnline("dev1"); online {
+		t.Error("the agent is still online")
+	}
+	waitCount(t, svc, 0)
 }

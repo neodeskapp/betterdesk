@@ -1,8 +1,11 @@
 package statuspush
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
+	"io"
+	"net"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -458,4 +461,25 @@ func FuzzTransform(f *testing.F) {
 			}
 		}
 	})
+}
+
+// TestBrowserThatStopsAnsweringIsDropped: a socket whose pings went
+// unanswered twice in a row is dropped and gets no more messages.
+func TestBrowserThatStopsAnsweringIsDropped(t *testing.T) {
+	check := wstest.Goroutines(t)
+	svc, reg, srv := newServer(t, Options{PingInterval: 50 * time.Millisecond})
+	conn, err := net.Dial("tcp", strings.TrimPrefix(srv.URL, "http://"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	_, _ = io.WriteString(conn, handshake("/ws/device-status", `{"userId":1,"user":{"role":"admin"}}`, ""))
+	if head, err := bufio.NewReader(conn).ReadString('\n'); err != nil || !strings.HasPrefix(head, "HTTP/1.1 101") {
+		t.Fatalf("%q %v", head, err)
+	}
+	waitClients(t, svc, 1, 0)
+	waitClients(t, svc, 0, 0)
+	srv.Close()
+	reg.Close()
+	check()
 }

@@ -425,3 +425,84 @@ func TestClientIPIgnoresForwardedWithoutTrustProxy(t *testing.T) {
 		reg.Close()
 	}
 }
+
+// TestHeartbeatDropsAPeerThatDoesNotAnswer: Heartbeat pings every interval
+// and drops the connection when two pings in a row got no answer, so a
+// peer that is gone ends after two to three intervals. A peer that
+// answers stays, and KeepAlive alone drops nobody.
+func TestHeartbeatDropsAPeerThatDoesNotAnswer(t *testing.T) {
+	check := wstest.Goroutines(t)
+	const interval = 50 * time.Millisecond
+	type end struct {
+		name  string
+		after time.Duration
+	}
+	ended := make(chan end, 4)
+	reg := ws.New(ws.Options{})
+	reg.Handle("/ws/{name}", func(u *ws.Upgrade) {
+		conn, ok := u.Accept(ws.AcceptOptions{})
+		if !ok {
+			return
+		}
+		defer conn.Wait()
+		if strings.HasPrefix(u.Param("name"), "heartbeat") {
+			conn.Heartbeat(interval)
+		} else {
+			conn.KeepAlive(interval)
+		}
+		start := time.Now()
+		_ = conn.Discard()
+		ended <- end{u.Param("name"), time.Since(start)}
+	})
+	srv := httptest.NewServer(reg)
+	addr := strings.TrimPrefix(srv.URL, "http://")
+	// silent opens a socket and never reads from it again, so no ping is
+	// answered.
+	silent := func(name string) net.Conn {
+		conn, err := net.Dial("tcp", addr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, _ = io.WriteString(conn, "GET /ws/"+name+" HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"+
+			"Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n")
+		head, err := bufio.NewReader(conn).ReadString('\n')
+		if err != nil || !strings.HasPrefix(head, "HTTP/1.1 101") {
+			t.Fatalf("%s: %q %v", name, head, err)
+		}
+		return conn
+	}
+	gone := silent("heartbeat-silent")
+	defer gone.Close()
+	quiet := silent("keepalive-silent")
+	defer quiet.Close()
+	answering, _, err := wstest.Dial(addr, "/ws/heartbeat-answering", nil)
+	if err != nil || answering == nil {
+		t.Fatalf("dial: %v", err)
+	}
+	select {
+	case e := <-ended:
+		if e.name != "heartbeat-silent" {
+			t.Fatalf("%s ended first", e.name)
+		}
+		if e.after < 2*interval {
+			t.Errorf("dropped after %v, before two pings went unanswered", e.after)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("the peer that does not answer was not dropped")
+	}
+	time.Sleep(10 * interval)
+	select {
+	case e := <-ended:
+		t.Errorf("%s ended after %v", e.name, e.after)
+	default:
+	}
+	if answering.Pings() < 3 {
+		t.Errorf("the answering peer got %d pings", answering.Pings())
+	}
+	answering.Close(1000)
+	gone.Close()
+	quiet.Close()
+	srv.Close()
+	reg.Close()
+	check()
+}

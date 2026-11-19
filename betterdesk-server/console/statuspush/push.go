@@ -23,7 +23,8 @@ import (
 	"github.com/unitronix/betterdesk-server/logging"
 )
 
-// PingInterval is how often an open socket is pinged.
+// PingInterval is how often an open socket is pinged; one that left two
+// pings in a row unanswered is dropped (ws.Conn.Heartbeat).
 const PingInterval = 30 * time.Second
 
 // scopeTimeout bounds the device scope checks of one message.
@@ -137,7 +138,7 @@ func (s *Service) serve(u *ws.Upgrade, label string, clients map[*ws.Conn]*sessi
 		delete(clients, conn)
 		s.mu.Unlock()
 	}()
-	conn.KeepAlive(s.opts.PingInterval)
+	conn.Heartbeat(s.opts.PingInterval)
 	_ = conn.Discard()
 }
 
