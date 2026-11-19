@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/authn"
@@ -38,13 +39,17 @@ func withDevices(t *testing.T) func(d *kit.Deps) {
 
 // deviceFixes are the vectors of device_vectors.json whose answer a bug
 // fix of BUGS.md changed on purpose (proxytest.Replay).
-var deviceFixes = proxytest.Fixes("DV1",
+var deviceFixes = slices.Concat(proxytest.Fixes("DV1",
 	// The policy is the token's device's: a request that names its own
 	// device in the body gets that policy whatever the query or
 	// X-Device-Id names, at both mounts.
 	14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
 	41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,
-)
+), proxytest.Fixes("DV4",
+	// Only text names a device: a number or a list is refused as another
+	// device, where Node compared the text String() made of it.
+	92, 93, 114, 115,
+))
 
 // TestDeviceVectors replays what the device routes of the Node file
 // answered and asked the API server, with the device token checks in front

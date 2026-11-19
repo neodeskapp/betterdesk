@@ -6,6 +6,7 @@ import (
 	"encoding/base32"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -290,6 +291,23 @@ func parseJSONValue(t *testing.T, raw json.RawMessage) (value any, present bool)
 	return v, true
 }
 
+// refusedMatches are the match vectors that Node let through and a bug fix
+// of BUGS.md refuses as another device, with the bug: only text names a
+// device, where Node compared the text String() made of a number, true or
+// false, or a list (DV4).
+var refusedMatches = map[int]string{
+	30: "DV4", 32: "DV4", 60: "DV4", 62: "DV4",
+	78: "DV4", 79: "DV4", 80: "DV4", 81: "DV4", 82: "DV4", 83: "DV4",
+	96: "DV4", 97: "DV4", 98: "DV4", 99: "DV4", 100: "DV4", 101: "DV4",
+	156: "DV4", 157: "DV4", 158: "DV4", 159: "DV4", 160: "DV4", 161: "DV4",
+	186: "DV4", 197: "DV4", 212: "DV4", 218: "DV4", 221: "DV4", 233: "DV4",
+	236: "DV4", 240: "DV4", 241: "DV4", 246: "DV4", 247: "DV4", 259: "DV4",
+	263: "DV4", 264: "DV4", 277: "DV4", 284: "DV4", 297: "DV4", 318: "DV4",
+	320: "DV4", 344: "DV4", 346: "DV4", 365: "DV4", 367: "DV4", 376: "DV4",
+	387: "DV4", 390: "DV4", 397: "DV4", 430: "DV4", 433: "DV4", 435: "DV4",
+	448: "DV4", 452: "DV4", 454: "DV4", 475: "DV4",
+}
+
 func TestTokenVectors(t *testing.T) {
 	var vectors struct {
 		Hashes []struct {
@@ -361,6 +379,13 @@ func TestTokenVectors(t *testing.T) {
 			header = ClaimFromText(*v.Header, true)
 		}
 		err := RequireTokenDeviceMatch(v.DeviceID, ClaimFromJSON(body, hasBody), ClaimFromJSON(query, hasQuery), header)
+		if bug, fixed := refusedMatches[i]; fixed {
+			if !v.Answer.Next || !errors.Is(err, ErrDeviceMismatch) {
+				t.Errorf("match %d (%s): device %q body %s query %s header %v: got %v, Node passes %v; want the mismatch where Node let it pass",
+					i, bug, v.DeviceID, v.Body, v.Query, v.Header, err, v.Answer.Next)
+			}
+			continue
+		}
 		if v.Answer.Next {
 			if err != nil {
 				t.Errorf("match %d: device %q body %s query %s header %v: refused, Node lets it pass", i, v.DeviceID, v.Body, v.Query, v.Header)

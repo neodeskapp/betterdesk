@@ -3,11 +3,9 @@ package authn
 import (
 	"context"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
@@ -86,11 +84,14 @@ func (s *Service) RequireDeviceToken(ctx context.Context, authorization string) 
 type DeviceClaim struct {
 	// Present is false when the request has no such value.
 	Present bool
-	// Truthy says whether JavaScript takes the value for true: not "", 0,
-	// false or null.
+	// Truthy says whether the value names a device at all: false for the
+	// empty text and for null, which give way to the next place.
 	Truthy bool
-	// Text is the value as text.
+	// Text is the value when it is text.
 	Text string
+	// NoText marks a value that is no text: a number, true or false, a
+	// list or an object. It names no device a token can be bound to.
+	NoText bool
 }
 
 // ClaimFromText is the claim of a query parameter or a header: present is
@@ -99,41 +100,27 @@ func ClaimFromText(value string, present bool) DeviceClaim {
 	return DeviceClaim{Present: present, Truthy: present && value != "", Text: value}
 }
 
+// ClaimWithoutText is the claim of a value that is no text, such as a
+// query parameter given as a list (device_id[]=a) or an object.
+func ClaimWithoutText() DeviceClaim {
+	return DeviceClaim{Present: true, Truthy: true, NoText: true}
+}
+
 // ClaimFromJSON is the claim of a body field, parsed with goapi.Parse:
-// present is whether the body has the field.
+// present is whether the body has the field. A string is text; null
+// names no device, like the empty text; any other value is a claim
+// without text.
 func ClaimFromJSON(value any, present bool) DeviceClaim {
+	switch v := value.(type) {
+	case nil:
+		return DeviceClaim{Present: present}
+	case string:
+		return ClaimFromText(v, present)
+	}
 	if !present {
 		return DeviceClaim{}
 	}
-	return DeviceClaim{Present: true, Truthy: goapi.Truthy(value), Text: jsonText(value)}
-}
-
-// jsonText is String(value) for a parsed JSON value.
-func jsonText(value any) string {
-	switch v := value.(type) {
-	case nil:
-		return "null"
-	case string:
-		return v
-	case bool:
-		return strconv.FormatBool(v)
-	case float64:
-		quoted, _ := store.JSONParsed{}.MarshalJSON()
-		var number store.JSONParsed
-		if err := number.Scan(strconv.FormatFloat(v, 'g', -1, 64)); err == nil {
-			quoted, _ = number.MarshalJSON()
-		}
-		return string(quoted)
-	case []any:
-		parts := make([]string, len(v))
-		for i, element := range v {
-			if element != nil {
-				parts[i] = jsonText(element)
-			}
-		}
-		return strings.Join(parts, ",")
-	}
-	return "[object Object]"
+	return ClaimWithoutText()
 }
 
 // ErrDeviceMismatch is the refusal of a request that names another device
@@ -142,9 +129,10 @@ var ErrDeviceMismatch = &DeviceAuthError{Status: 403, Text: "Device ID mismatch"
 
 // RequireTokenDeviceMatch checks the device a request names against the
 // device its token is bound to. The claims are looked at in order (body,
-// query, header) and the first that is true counts; when none is, the last
-// one counts if the request has it. A request that names no device passes.
-// It returns ErrDeviceMismatch otherwise.
+// query, header) and the first that names a device counts; when none
+// does, the last one counts if the request has it. A request that names no
+// device passes. It returns ErrDeviceMismatch for a claim of another
+// device and for a claim that is no text.
 func RequireTokenDeviceMatch(deviceID string, claims ...DeviceClaim) error {
 	if len(claims) == 0 {
 		return nil
@@ -156,7 +144,7 @@ func RequireTokenDeviceMatch(deviceID string, claims ...DeviceClaim) error {
 			break
 		}
 	}
-	if claimed.Present && claimed.Text != deviceID {
+	if claimed.Present && (claimed.NoText || claimed.Text != deviceID) {
 		return ErrDeviceMismatch
 	}
 	return nil

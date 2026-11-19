@@ -3,7 +3,6 @@ package kit
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -64,22 +63,18 @@ func (d *Deps) RequireDeviceToken(next http.Handler) http.Handler {
 
 // RequireTokenDeviceMatch refuses a request that names another device than
 // the one its token is bound to. It goes behind RequireDeviceToken. The
-// device a request names is the first of these that is not empty for
-// JavaScript (not "", 0, false or null): the body's device_id, the
-// query's device_id, the header X-Device-Id; when none is, the header
-// counts if the request has it. Values that are no text are compared as
-// String() made them: 123 as "123", ["a"] as "a". A value String() cannot
-// make text of (an object with a member toString) names no device. A
+// device a request names is the first of these that names one: the body's
+// device_id, the query's device_id, the header X-Device-Id; the empty text
+// and null name none. When none does, the header counts if the request has
+// it. Only text names a device: a number, true or false, a list or an
+// object in the body, and a list or an object in the query
+// (device_id[]=a, device_id[x]=a), is refused like another device. A
 // request that names no device passes.
 //
-//	another device, or a value without text   403 {"error":"Device ID mismatch"}
+//	another device, or a value that is no text   403 {"error":"Device ID mismatch"}
 func (d *Deps) RequireTokenDeviceMatch(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		claims, err := deviceClaims(r)
-		if err == nil {
-			err = matchDevice(Device(r), claims)
-		}
-		if err != nil {
+		if err := matchDevice(Device(r), deviceClaims(r)); err != nil {
 			refused := authn.ErrDeviceMismatch
 			httpx.WriteJSON(w, r, refused.Status, deviceRefusal{Error: refused.Text})
 			return
@@ -106,24 +101,14 @@ func matchDevice(device *authn.DeviceAuth, claims []authn.DeviceClaim) error {
 
 // deviceClaims reads the three places where a request names its device,
 // in the order of the check: the body's device_id, the query's device_id
-// (req.query as Express parsed it, so a list or an object when the
-// address has device_id[]= or device_id[x]=), and X-Device-Id, whose
-// repeats are joined with ", " as Node joined them. It fails where
-// String() threw on the claim that counts.
-func deviceClaims(r *http.Request) ([]authn.DeviceClaim, error) {
-	body, bodyErr := bodyClaim(Body(r).Get("device_id"))
-	query, queryErr := queryClaim(goapipath.Query(r, "device_id"))
-	header := authn.ClaimFromText(DeviceIDHeader(r))
-
-	// String() runs on the first claim that is true; a list or an object
-	// always is.
-	switch {
-	case body.Truthy && bodyErr != nil:
-		return nil, bodyErr
-	case !body.Truthy && query.Truthy && queryErr != nil:
-		return nil, queryErr
+// (a list or an object when the address has device_id[]= or
+// device_id[x]=), and X-Device-Id, whose repeats are joined with ", ".
+func deviceClaims(r *http.Request) []authn.DeviceClaim {
+	return []authn.DeviceClaim{
+		bodyClaim(Body(r).Get("device_id")),
+		queryClaim(goapipath.Query(r, "device_id")),
+		authn.ClaimFromText(DeviceIDHeader(r)),
 	}
-	return []authn.DeviceClaim{body, query, header}, nil
 }
 
 // DeviceIDHeader is req.headers['x-device-id']: the text of the header
@@ -141,47 +126,27 @@ func DeviceIDHeader(r *http.Request) (value string, ok bool) {
 	return strings.Join(texts, ", "), true
 }
 
-// bodyClaim is the claim of the body's device_id. err is set when String()
-// cannot make text of the value.
-func bodyClaim(v middleware.Value) (authn.DeviceClaim, error) {
+// bodyClaim is the claim of the body's device_id.
+func bodyClaim(v middleware.Value) authn.DeviceClaim {
 	if !v.Exists() {
-		return authn.DeviceClaim{}, nil
+		return authn.DeviceClaim{}
 	}
 	parsed, err := goapi.Parse(v.Raw())
 	if err != nil {
-		return authn.DeviceClaim{}, fmt.Errorf("read the device_id of the body: %w", err)
+		return authn.ClaimWithoutText()
 	}
-	claim := authn.ClaimFromJSON(parsed, true)
-	if withoutText(parsed) {
-		return claim, goapipath.ErrNotPrimitive
-	}
-	return claim, nil
+	return authn.ClaimFromJSON(parsed, true)
 }
 
-// withoutText reports whether String() throws on a parsed JSON value: on
-// an object with its own member toString, which JSON can only make a value
-// that cannot be called, and on a list that holds such an object at any
-// depth, since a list joins the texts of its elements.
-func withoutText(value any) bool {
-	switch v := value.(type) {
-	case *goapi.Object:
-		return v.Has("toString")
-	case []any:
-		for _, element := range v {
-			if withoutText(element) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// queryClaim is the claim of the query's device_id. err is set when
-// String() cannot make text of the value.
-func queryClaim(v goapipath.QueryValue) (authn.DeviceClaim, error) {
+// queryClaim is the claim of the query's device_id: its text when the
+// query gives it once as text, a claim without text for a list or an
+// object.
+func queryClaim(v goapipath.QueryValue) authn.DeviceClaim {
 	if !v.Exists() {
-		return authn.DeviceClaim{}, nil
+		return authn.DeviceClaim{}
 	}
-	text, err := v.Text()
-	return authn.DeviceClaim{Present: true, Truthy: v.Truthy(), Text: text}, err
+	if text, ok := v.OneText(); ok {
+		return authn.ClaimFromText(text, true)
+	}
+	return authn.ClaimWithoutText()
 }

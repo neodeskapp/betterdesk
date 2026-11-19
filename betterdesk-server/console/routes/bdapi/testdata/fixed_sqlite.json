@@ -40,6 +40,22 @@
   "rows": "[{\"id\":\"NEWID1\",\"uuid\":\"UUID-N\",\"pk\":null,\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0},{\"id\":\"NEWID2\",\"uuid\":\"uuid-n2\",\"pk\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\",\"info\":\"{\\\"hostname\\\":\\\"\\\",\\\"os\\\":\\\"\\\",\\\"version\\\":\\\"\\\",\\\"ip\\\":\\\"127.0.0.1\\\"}\",\"ip\":\"127.0.0.1\",\"status_online\":1,\"is_deleted\":0}]"
  },
  {
+  "step": "77 claim in a list POST /api/bd/heartbeat",
+  "bugs": [
+   "DV4"
+  ],
+  "status": 403,
+  "answer": "{\"error\":\"Device ID mismatch\"}"
+ },
+ {
+  "step": "110 id in a list POST /api/bd/help-request",
+  "bugs": [
+   "DV4"
+  ],
+  "status": 403,
+  "answer": "{\"error\":\"Device ID mismatch\"}"
+ },
+ {
   "step": "114 POST /api/bd/chat/send",
   "bugs": [
    "BD2"

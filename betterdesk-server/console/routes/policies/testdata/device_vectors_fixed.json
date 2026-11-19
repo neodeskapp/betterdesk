@@ -414,5 +414,41 @@
     "body": ""
    }
   ]
+ },
+ {
+  "vector": 92,
+  "bug": "DV4",
+  "request": "POST /api/bd/attestation",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Device ID mismatch\"}",
+  "calls": []
+ },
+ {
+  "vector": 93,
+  "bug": "DV4",
+  "request": "POST /api/bd/attestation",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Device ID mismatch\"}",
+  "calls": []
+ },
+ {
+  "vector": 114,
+  "bug": "DV4",
+  "request": "POST /api/bd/api/bd/attestation",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Device ID mismatch\"}",
+  "calls": []
+ },
+ {
+  "vector": 115,
+  "bug": "DV4",
+  "request": "POST /api/bd/api/bd/attestation",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Device ID mismatch\"}",
+  "calls": []
  }
 ]

@@ -1,8 +1,44 @@
 [
  {
+  "vector": 13,
+  "bug": "DV4",
+  "request": "POST /api/bd/fleet/task-result",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Device ID mismatch\"}",
+  "calls": []
+ },
+ {
+  "vector": 14,
+  "bug": "DV4",
+  "request": "POST /api/bd/fleet/task-result",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Device ID mismatch\"}",
+  "calls": []
+ },
+ {
   "vector": 15,
   "bug": "DV3",
   "request": "POST /api/bd/fleet/task-result",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Device ID mismatch\"}",
+  "calls": []
+ },
+ {
+  "vector": 35,
+  "bug": "DV4",
+  "request": "POST /api/bd/fleet/software",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Device ID mismatch\"}",
+  "calls": []
+ },
+ {
+  "vector": 36,
+  "bug": "DV4",
+  "request": "POST /api/bd/fleet/software",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
@@ -18,9 +54,45 @@
   "calls": []
  },
  {
+  "vector": 57,
+  "bug": "DV4",
+  "request": "POST /api/bd/api/bd/fleet/task-result",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Device ID mismatch\"}",
+  "calls": []
+ },
+ {
+  "vector": 58,
+  "bug": "DV4",
+  "request": "POST /api/bd/api/bd/fleet/task-result",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Device ID mismatch\"}",
+  "calls": []
+ },
+ {
   "vector": 59,
   "bug": "DV3",
   "request": "POST /api/bd/api/bd/fleet/task-result",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Device ID mismatch\"}",
+  "calls": []
+ },
+ {
+  "vector": 79,
+  "bug": "DV4",
+  "request": "POST /api/bd/api/bd/fleet/software",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Device ID mismatch\"}",
+  "calls": []
+ },
+ {
+  "vector": 80,
+  "bug": "DV4",
+  "request": "POST /api/bd/api/bd/fleet/software",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",

@@ -503,3 +503,44 @@ func TestContextEndsAHighCostCompare(t *testing.T) {
 		t.Errorf("compare with cost 30: %v, %v after %v", ok, err, time.Since(start))
 	}
 }
+
+// TestAClaimThatIsNoTextIsRefused: only text names a device. A body value
+// that is a number, true or false, a list or an object is refused like
+// another device, also when String() of it is the token's device; null
+// and the empty text name none and give way (BUGS.md DV4).
+func TestAClaimThatIsNoTextIsRefused(t *testing.T) {
+	none := DeviceClaim{}
+	for _, c := range []struct {
+		device string
+		value  any
+	}{
+		{"device-a", []any{"device-a"}},
+		{"device-a", []any{[]any{"device-a"}}},
+		{"device-a", goapi.NewObject("toString", "device-a")},
+		{"123", float64(123)},
+		{"true", true},
+		{"device-a", float64(0)},
+		{"device-a", false},
+		{"device-a", []any{}},
+	} {
+		if err := RequireTokenDeviceMatch(c.device, ClaimFromJSON(c.value, true), none, none); !errors.Is(err, ErrDeviceMismatch) {
+			t.Errorf("%s: %#v in the body: %v, want the mismatch", c.device, c.value, err)
+		}
+		if err := RequireTokenDeviceMatch(c.device, none, ClaimFromJSON(c.value, true), ClaimFromText(c.device, true)); !errors.Is(err, ErrDeviceMismatch) {
+			t.Errorf("%s: %#v in the query: %v, want the mismatch", c.device, c.value, err)
+		}
+	}
+	for _, empty := range []any{nil, ""} {
+		if err := RequireTokenDeviceMatch("device-a", ClaimFromJSON(empty, true), ClaimFromText("device-a", true), none); err != nil {
+			t.Errorf("%#v in the body before the right device: %v", empty, err)
+		}
+	}
+	for _, device := range []string{"device-a", ""} {
+		if err := RequireTokenDeviceMatch(device, ClaimWithoutText(), none, none); !errors.Is(err, ErrDeviceMismatch) {
+			t.Errorf("a claim without text for the device %q: %v", device, err)
+		}
+	}
+	if err := RequireTokenDeviceMatch("device-a", ClaimFromJSON("device-a", true), ClaimWithoutText(), none); err != nil {
+		t.Errorf("a claim without text behind the right device: %v", err)
+	}
+}

@@ -520,6 +520,11 @@ func TestNodeVectors(t *testing.T) {
 			expected := v
 			if j, ok := twins[i]; ok {
 				expected = &vectors[j]
+				// The relay numbers the tokens it issues: count those Node
+				// had it issue for this vector, so later tokens keep theirs.
+				target.mu.Lock()
+				target.issued += issues(v) - issues(expected)
+				target.mu.Unlock()
 			}
 			if problems := compare(target, expected, rec); len(problems) > 0 {
 				failures++

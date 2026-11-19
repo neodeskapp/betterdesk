@@ -41,7 +41,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "device_id mismatch"
+     "error": "Device ID mismatch"
     }
    }
   }

@@ -179,8 +179,9 @@
 //   - d.RequireTokenDeviceMatch is requireTokenDeviceMatch, behind it. A
 //     request may name the device it speaks for in the body's device_id,
 //     the query's device_id or the header X-Device-Id; the first that is
-//     not empty for JavaScript counts, compared as String() made it. Another
-//     device than the token's is 403 {"error":"Device ID mismatch"}.
+//     not the empty text or null counts. Another device than the token's,
+//     or a value that is no text (a number, a list, an object), is 403
+//     {"error":"Device ID mismatch"}.
 //
 // Neither looks at the session. They go where Node had them in the list:
 //

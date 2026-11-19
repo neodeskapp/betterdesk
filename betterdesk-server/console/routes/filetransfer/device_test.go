@@ -70,6 +70,12 @@ var (
 	createdID   = regexp.MustCompile(`^\{"id":"([0-9a-f]{32})"`)
 )
 
+// refusedVectors are the vectors of device_vectors.json that a bug fix of
+// BUGS.md changed into the device guard's refusal, 403 {"error":"Device
+// ID mismatch"}, with the bug: only text names a device, where Node
+// compared the text String() made of a number or a list.
+var refusedVectors = map[int]string{47: "DV4", 48: "DV4"}
+
 // TestDeviceVectors replays what the Node console answered on the device
 // routes, POST /file-transfer and GET /file-transfer/{id} at /api/bd and
 // /api/files, with the routes for people of the same file on the same
@@ -78,7 +84,8 @@ var (
 // the console downloads, another device writing into it and cancelling it
 // (BUGS FT2), and a transfer someone starts that the device answers. The
 // whole console runs on SQLite and on PostgreSQL; the Node run had no
-// CSRF gate, and the replay sends the CSRF token on every write.
+// CSRF gate, and the replay sends the CSRF token on every write. The
+// vectors in refusedVectors are compared with the refusal.
 func TestDeviceVectors(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("testdata", "device_vectors.json"))
 	if err != nil {
@@ -114,6 +121,13 @@ func TestDeviceVectors(t *testing.T) {
 			// The recording made its transfers milliseconds apart, so no
 			// two of this run may share one either.
 			time.Sleep(2 * time.Millisecond)
+			if bug, ok := refusedVectors[i]; ok {
+				if got.Status != 403 || got.Body != `{"error":"Device ID mismatch"}` {
+					failures++
+					t.Errorf("vector %d (%s): %d %s, want the refusal of another device", i, bug, got.Status, got.Body)
+				}
+				continue
+			}
 
 			// A new transfer: remember which id of this run stands for it
 			for _, pattern := range []*regexp.Regexp{announcedID, createdID} {

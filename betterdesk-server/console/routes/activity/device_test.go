@@ -16,6 +16,15 @@ var refusedSteps = map[string]string{
 	"46 POST /api/bd/activity":                           "DV3",
 	"47 POST /api/bd/activity":                           "DV3",
 	"54 POST /api/bd/activity?device_id%5BtoString%5D=x": "DV3",
+	// Only text names a device: a number, true or false, a list in the body
+	// or in the query is refused, where Node compared the text String()
+	// made of it.
+	"35 POST /api/bd/activity":                          "DV4",
+	"36 POST /api/bd/activity":                          "DV4",
+	"40 POST /api/bd/activity":                          "DV4",
+	"41 POST /api/bd/activity":                          "DV4",
+	"48 POST /api/bd/activity":                          "DV4",
+	"53 POST /api/bd/activity?device_id%5B%5D=device-a": "DV4",
 }
 
 // TestNodeDeviceAnswers replays what the Node console's device route
