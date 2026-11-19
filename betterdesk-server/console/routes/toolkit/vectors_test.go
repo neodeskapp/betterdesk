@@ -154,11 +154,13 @@ func TestNodeSSLVectors(t *testing.T) {
 					},
 					Now: func() time.Time { return time.UnixMilli(v.Now) },
 				})
-				status, body := s.post(s.signIn("admin"), "/api/toolkit/ssl", `{"host":"0.0.0.0","port":8443}`)
+				// Node asked about 0.0.0.0, which the guard refuses since BUGS.md
+				// SC3. The certificates name 10.1.2.3 as well, so the answers stay
+				status, body := s.post(s.signIn("admin"), "/api/toolkit/ssl", `{"host":"10.1.2.3","port":8443}`)
 				if status != v.Status || body != v.Answer {
 					t.Errorf("\n got  %d %s\n node %d %s", status, body, v.Status, v.Answer)
 				}
-				if asked != "0.0.0.0:8443" {
+				if asked != "10.1.2.3:8443" {
 					t.Errorf("the handshake went to %q", asked)
 				}
 			})

@@ -313,6 +313,46 @@ func TestChecksRefuseEverySpellingOfLoopback(t *testing.T) {
 	}
 }
 
+// 0.0.0.0 and :: reach the server itself, so the checks refuse them like
+// loopback (BUGS.md SC3).
+func TestChecksRefuseThisNetwork(t *testing.T) {
+	resolver := &tableResolver{names: map[string][]string{"zero.test": {"0.0.0.0"}}, errors: map[string]string{}}
+	nothing := dialerFunc(func(_ context.Context, _, address string) (net.Conn, error) {
+		t.Errorf("a connection to %s", address)
+		return nil, errors.New("no connection in this test")
+	})
+	no := false
+	m := New(Options{Resolver: resolver, Dialer: nothing, Windows: &no, Ping: func(_ context.Context, _ string, args ...string) ([]byte, int, error) {
+		t.Errorf("ping %q", args)
+		return nil, 1, nil
+	}})
+	ctx := context.Background()
+	for _, host := range []string{"0.0.0.0", "0.1.2.3", "::"} {
+		want := "Blocked IP address: " + host
+		if res := m.CheckTCPPort(ctx, host, 5000, 1000); errText(res) != want {
+			t.Errorf("tcp %s: %s", host, errText(res))
+		}
+		if res := m.PingHost(ctx, host, 1000); errText(res) != want {
+			t.Errorf("ping %s: %s", host, errText(res))
+		}
+		if _, err := m.ResolveHost(ctx, host); err == nil || err.Error() != want {
+			t.Errorf("resolve %s: %v", host, err)
+		}
+	}
+	if res := m.CheckTCPPort(ctx, "zero.test", 5000, 1000); errText(res) != "Hostname zero.test resolves to blocked address 0.0.0.0" {
+		t.Errorf("tcp zero.test: %s", errText(res))
+	}
+	for url, want := range map[string]string{
+		"http://0.0.0.0:5000/health": "Blocked IP address: 0.0.0.0",
+		"http://[::]:5000/health":    "Blocked IP address: ::",
+		"https://zero.test/":         "Hostname zero.test resolves to blocked address 0.0.0.0",
+	} {
+		if res := m.CheckHTTP(ctx, url, 1000); errText(res) != want {
+			t.Errorf("http %s: %s, want %q", url, errText(res), want)
+		}
+	}
+}
+
 // errText is the error of a result, or what it is when there is none.
 func errText(res Result) string {
 	if res.Error == nil {

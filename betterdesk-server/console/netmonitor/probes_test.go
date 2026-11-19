@@ -72,6 +72,33 @@ type probeRecord struct {
 	PingArgs []string `json:"ping_args"`
 }
 
+// The servers of the oracle script listened on 0.0.0.0, which the guard
+// refuses since BUGS.md SC3. The replay moves them to standIn, a private
+// address the guard lets through, and the dialers of the tests connect
+// that address to the local servers. Only the local address Node names in
+// an error ("Local (0.0.0.0:0)") stays.
+const standIn = "10.9.9.9"
+
+var thisNetwork = regexp.MustCompile(`(^|[^0-9.])0\.0\.0\.0([^0-9.]|$)`)
+
+// moveToStandIn replaces 0.0.0.0 in a text of the vectors by standIn.
+func moveToStandIn(text string) string {
+	for range 2 {
+		// Twice, because two addresses in a row share the character between them
+		text = thisNetwork.ReplaceAllString(text, "${1}"+standIn+"${2}")
+	}
+	return strings.ReplaceAll(text, "Local ("+standIn+":0)", "Local (0.0.0.0:0)")
+}
+
+// local is where a dialer of the tests connects for address: the stand-in
+// is the local servers.
+func local(address string) string {
+	if host, port, err := net.SplitHostPort(address); err == nil && host == standIn {
+		return net.JoinHostPort("127.0.0.1", port)
+	}
+	return address
+}
+
 func loadProbeVectors(t *testing.T) *probeVectors {
 	t.Helper()
 	raw, err := os.ReadFile("testdata/probes.json")
@@ -79,7 +106,7 @@ func loadProbeVectors(t *testing.T) *probeVectors {
 		t.Fatal(err)
 	}
 	var v probeVectors
-	if err := json.Unmarshal(raw, &v); err != nil {
+	if err := json.Unmarshal([]byte(moveToStandIn(string(raw))), &v); err != nil {
 		t.Fatal(err)
 	}
 	return &v
@@ -91,9 +118,9 @@ type seenRequest struct {
 	headers           http.Header
 }
 
-// world is what the checks of a test can reach: servers on 0.0.0.0 like
-// those of the oracle script, a table of names, and a ping command that
-// prints what the script's did.
+// world is what the checks of a test can reach: the servers of the oracle
+// script at standIn, a table of names, and a ping command that prints what
+// the script's did.
 type world struct {
 	t        *testing.T
 	v        *probeVectors
@@ -202,7 +229,7 @@ func newWorld(t *testing.T) *world {
 	v := loadProbeVectors(t)
 	w := &world{t: t, v: v, ports: map[string]int{}, resolver: newTableResolver(t, v.DNS), roots: x509.NewCertPool()}
 	listen := func(name string) net.Listener {
-		l, err := net.Listen("tcp4", "0.0.0.0:0")
+		l, err := net.Listen("tcp4", "127.0.0.1:0")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -262,7 +289,7 @@ func (w *world) DialContext(ctx context.Context, network, address string) (net.C
 		return nil, &net.OpError{Op: "dial", Net: network, Err: os.NewSyscallError("connect", inject)}
 	}
 	var d net.Dialer
-	return d.DialContext(ctx, network, address)
+	return d.DialContext(ctx, network, local(address))
 }
 
 // ping implements PingRunner with the table of the oracle script.
@@ -415,6 +442,10 @@ var probeDifferences = map[string]string{
 	// Go's TLS server answers a request without TLS with status 400,
 	// Node's closes the connection. The check itself does the same.
 	"http to a TLS server": `{"success":false,"rtt_ms":"number","status_code":400,"error":null}`,
+	// SC3: :: and 0.0.0.0/8 reach the server itself, and the guard refuses
+	// them. Node looked :: up as a name (NM5), and 256 is 0.0.1.0.
+	"http v6 any address": `{"success":false,"rtt_ms":null,"status_code":null,"error":"Blocked IP address: ::"}`,
+	"resolve 256":         "thrown: Hostname 256 resolves to blocked address 0.0.1.0",
 	// Go's server refuses a request line with a "%" that starts no escape
 	// before the handler sees it; Node's server passes it on. The check
 	// sends the same line to both.
@@ -885,14 +916,14 @@ func (d *refusing) DialContext(ctx context.Context, network, address string) (ne
 		return nil, &net.OpError{Op: "dial", Net: network, Err: os.NewSyscallError("connect", syscall.ECONNREFUSED)}
 	}
 	var dialer net.Dialer
-	return dialer.DialContext(ctx, network, address)
+	return dialer.DialContext(ctx, network, local(address))
 }
 
 // An HTTP check of a name with several addresses tries them one after
 // the other and takes the first that answers.
 func TestHTTPCheckTriesEveryAddress(t *testing.T) {
 	w := newWorld(t)
-	w.resolver.names["two.test"] = []string{"192.0.2.50", "0.0.0.0"}
+	w.resolver.names["two.test"] = []string{"192.0.2.50", standIn}
 	dialer := &refusing{ip: "192.0.2.50"}
 	transport := newTransport(&connector{dialer: dialer, resolver: w.resolver, now: time.Now})
 	t.Cleanup(transport.CloseIdleConnections)
@@ -902,7 +933,7 @@ func TestHTTPCheckTriesEveryAddress(t *testing.T) {
 	if got := w.resultJSON(res); got != `{"success":true,"rtt_ms":"number","status_code":200,"error":null}` {
 		t.Errorf("result %s", got)
 	}
-	want := w.fill("[192.0.2.50:{http} 0.0.0.0:{http}]")
+	want := w.fill("[192.0.2.50:{http} " + standIn + ":{http}]")
 	if got := fmt.Sprint(dialer.dialed); got != want {
 		t.Errorf("tried %s, want %s", got, want)
 	}
@@ -927,7 +958,7 @@ func TestAddressesTakeTurnsByFamily(t *testing.T) {
 // status from 200 on can be a success.
 func TestHTTPCheckStatusBelow200(t *testing.T) {
 	w := newWorld(t)
-	l, err := net.Listen("tcp4", "0.0.0.0:0")
+	l, err := net.Listen("tcp4", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -944,7 +975,7 @@ func TestHTTPCheckStatusBelow200(t *testing.T) {
 			_ = conn.Close()
 		}
 	}()
-	res := w.prober(false).checkHTTP(context.Background(), "http://0.0.0.0:"+strconv.Itoa(l.Addr().(*net.TCPAddr).Port)+"/", 5000)
+	res := w.prober(false).checkHTTP(context.Background(), "http://"+standIn+":"+strconv.Itoa(l.Addr().(*net.TCPAddr).Port)+"/", 5000)
 	if res.Success || res.StatusCode == nil || *res.StatusCode != 101 {
 		t.Errorf("result %s", w.resultJSON(res))
 	}
@@ -956,7 +987,7 @@ func TestHTTPCheckTimesOut(t *testing.T) {
 	p := w.prober(false)
 	done := make(chan Result, 1)
 	start := time.Now()
-	go func() { done <- p.checkHTTP(context.Background(), w.fill("http://0.0.0.0:{silent}/"), 150) }()
+	go func() { done <- p.checkHTTP(context.Background(), w.fill("http://"+standIn+":{silent}/"), 150) }()
 	select {
 	case res := <-done:
 		if got := w.resultJSON(res); got != `{"success":false,"rtt_ms":null,"status_code":null,"error":"Timeout"}` {

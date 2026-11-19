@@ -213,6 +213,22 @@ type step struct {
 	Text     string  `json:"text"`
 }
 
+// The oracle script pointed the checks at 0.0.0.0, which the guard refuses
+// since BUGS.md SC3. The replay moves those steps to standIn, a private
+// address the guard lets through, where nothing listens either.
+const standIn = "10.9.9.9"
+
+var thisNetwork = regexp.MustCompile(`(^|[^0-9.])0\.0\.0\.0([^0-9.]|$)`)
+
+// moveToStandIn replaces 0.0.0.0 in a line of the steps by standIn.
+func moveToStandIn(line string) string {
+	for range 2 {
+		// Twice, because two addresses in a row share the character between them
+		line = thisNetwork.ReplaceAllString(line, "${1}"+standIn+"${2}")
+	}
+	return line
+}
+
 func readSteps(t *testing.T, file string) (names, []step) {
 	t.Helper()
 	f, err := os.Open(file)
@@ -225,7 +241,7 @@ func readSteps(t *testing.T, file string) (names, []step) {
 	lines.Buffer(make([]byte, 1<<20), 1<<26)
 	for lines.Scan() {
 		var s step
-		if err := json.Unmarshal(lines.Bytes(), &s); err != nil {
+		if err := json.Unmarshal([]byte(moveToStandIn(lines.Text())), &s); err != nil {
 			t.Fatal(err)
 		}
 		steps = append(steps, s)
@@ -312,6 +328,16 @@ func TestOrderSameNames(t *testing.T) {
 	}
 }
 
+// stepDifferences are the steps the Go routes answer otherwise than the
+// Node console on purpose, with the row of BUGS.md that says why.
+var stepDifferences = map[string]struct {
+	status int
+	text   string
+}{
+	// SC3: 0.0.1.0 is in 0.0.0.0/8, which the guard refuses
+	"resolve: 256": {500, `{"error":"Hostname 256 resolves to blocked address 0.0.1.0"}`},
+}
+
 // TestNodeSteps replays the steps the Node console answered, in order, on
 // the database they were recorded on. Times differ from run to run and
 // are compared by their form; ids are the same, since both start from an
@@ -342,6 +368,9 @@ func TestNodeSteps(t *testing.T) {
 					t.Fatal(err)
 				}
 				continue
+			}
+			if d, ok := stepDifferences[s.Name]; ok {
+				s.Status, s.Text = d.status, d.text
 			}
 			as := ""
 			if s.As != nil {

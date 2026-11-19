@@ -18,9 +18,10 @@ import (
 // Options say how strict a check is.
 type Options struct {
 	// AllowPrivate lets the private ranges through (10.0.0.0/8,
-	// 172.16.0.0/12, 192.168.0.0/16, 100.64.0.0/10, 198.18.0.0/15,
-	// 0.0.0.0/8 and the unique local IPv6 addresses), for the network
-	// tools of an administrator. Loopback and link-local stay blocked.
+	// 172.16.0.0/12, 192.168.0.0/16, 100.64.0.0/10, 198.18.0.0/15 and the
+	// unique local IPv6 addresses), for the network tools of an
+	// administrator. Loopback, link-local, 0.0.0.0/8 and :: stay blocked:
+	// a connection to 0.0.0.0 or :: reaches the machine itself.
 	AllowPrivate bool
 }
 
@@ -52,13 +53,14 @@ var blockedHostnames = map[string]bool{
 // tools of an administrator.
 var (
 	alwaysBlocked = []netip.Prefix{
+		netip.MustParsePrefix("0.0.0.0/8"),
 		netip.MustParsePrefix("127.0.0.0/8"),
 		netip.MustParsePrefix("169.254.0.0/16"),
+		netip.MustParsePrefix("::/128"),
 		netip.MustParsePrefix("::1/128"),
 		netip.MustParsePrefix("fe80::/10"),
 	}
 	privateRanges = []netip.Prefix{
-		netip.MustParsePrefix("0.0.0.0/8"),
 		netip.MustParsePrefix("10.0.0.0/8"),
 		netip.MustParsePrefix("172.16.0.0/12"),
 		netip.MustParsePrefix("192.168.0.0/16"),
@@ -75,10 +77,10 @@ var (
 // (::127.0.0.1), counts as that IPv4 address. A zone does not matter.
 // Text that is no address is blocked.
 //
-//	127.0.0.0/8, 169.254.0.0/16, ::1, fe80::/10        always
-//	0.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12,
-//	192.168.0.0/16, 100.64.0.0/10, 198.18.0.0/15,
-//	fc00::/7                                           unless AllowPrivate
+//	0.0.0.0/8, 127.0.0.0/8, 169.254.0.0/16,
+//	::, ::1, fe80::/10                                 always
+//	10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16,
+//	100.64.0.0/10, 198.18.0.0/15, fc00::/7          unless AllowPrivate
 func IsBlockedIP(ip string, opts Options) bool {
 	addr, err := netip.ParseAddr(ip)
 	if err != nil {

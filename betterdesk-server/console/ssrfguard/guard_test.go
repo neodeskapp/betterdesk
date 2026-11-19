@@ -267,11 +267,38 @@ func TestOtherSpellingsOfLoopbackAreBlocked(t *testing.T) {
 	}
 }
 
-// The gap of the Node guard that is still kept: 0.0.0.0 passes in the mode
-// for administrators.
-func TestKnownGapsAreKept(t *testing.T) {
-	if IsBlockedIP("0.0.0.0", Options{AllowPrivate: true}) {
-		t.Error("0.0.0.0 is blocked with AllowPrivate: the Node guard lets it through")
+// A connection to 0.0.0.0 or :: reaches the machine itself, so "this
+// network" and the unspecified IPv6 address are refused in both modes
+// (BUGS.md SC3).
+func TestAllowPrivateStillBlocksThisNetwork(t *testing.T) {
+	ctx := context.Background()
+	private := Options{AllowPrivate: true}
+	for _, ip := range []string{"0.0.0.0", "0.1.2.3", "0.255.255.255", "::", "0:0:0:0:0:0:0:0", "::ffff:0.0.0.0", "::ffff:0:0", "::0.0.0.2"} {
+		if !IsBlockedIP(ip, private) || !IsBlockedIP(ip, Options{}) {
+			t.Errorf("%s is let through", ip)
+		}
+	}
+	if IsBlockedIP("1.0.0.0", private) || IsBlockedIP("10.0.0.0", private) {
+		t.Error("an address next to 0.0.0.0/8 is blocked")
+	}
+	if _, err := SafeHostname("0.0.0.0", private); message(err) != "Blocked IP address: 0.0.0.0" {
+		t.Errorf("0.0.0.0: %v", err)
+	}
+	if _, err := noLookup(t).SafeResolvedHost(ctx, "[::]", private); message(err) != "Blocked IP address: ::" {
+		t.Errorf("[::]: %v", err)
+	}
+	if _, err := fixed("10.0.0.5", "0.0.0.0").SafeResolvedHost(ctx, "zero.example", private); message(err) != "Hostname zero.example resolves to blocked address 0.0.0.0" {
+		t.Errorf("a name of 0.0.0.0: %v", err)
+	}
+	for url, want := range map[string]string{
+		"http://0.0.0.0:5000/":   "Blocked IP address: 0.0.0.0",
+		"http://0/":              "Blocked IP address: 0.0.0.0",
+		"https://[::]:8443/":     "Blocked IP address: ::",
+		"http://0x0.0x1.0.0/abc": "Blocked IP address: 0.1.0.0",
+	} {
+		if _, err := noLookup(t).SafeMonitoringURL(ctx, url); message(err) != want {
+			t.Errorf("%s: %v, want %q", url, err, want)
+		}
 	}
 }
 

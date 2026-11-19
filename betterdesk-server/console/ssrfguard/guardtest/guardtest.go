@@ -23,8 +23,8 @@ func prefixes(texts ...string) []netip.Prefix {
 }
 
 var (
-	always  = prefixes("127.0.0.0/8", "169.254.0.0/16", "::1/128", "fe80::/10")
-	private = prefixes("0.0.0.0/8", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/10", "198.18.0.0/15", "fc00::/7")
+	always  = prefixes("0.0.0.0/8", "127.0.0.0/8", "169.254.0.0/16", "::/128", "::1/128", "fe80::/10")
+	private = prefixes("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/10", "198.18.0.0/15", "fc00::/7")
 )
 
 // address reads ip as the guard must see it: without a zone, and an IPv4
@@ -134,8 +134,13 @@ func Change(ip string, allowPrivate bool) string {
 		// Node refused any text that starts with fc or fd
 		return "SC6"
 	}
-	if _, ok := address(ip); !ok {
+	addr, ok := address(ip)
+	if !ok {
 		return "SC5"
+	}
+	// 0.0.0.0/8 passed Node in the mode for administrators, :: in both
+	if addr.Is6() && addr.IsUnspecified() || addr.Is4() && addr.As4()[0] == 0 && allowPrivate {
+		return "SC3"
 	}
 	return "SC1"
 }
