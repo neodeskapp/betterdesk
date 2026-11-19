@@ -2,6 +2,9 @@ package reports_test
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"testing"
 	"time"
@@ -62,12 +65,50 @@ func checkAnswer(t *testing.T, step replay.Step, got replay.Answer) bool {
 	return true
 }
 
+// reportFixes are the steps of testdata/node_*.json that the bug fixes
+// change.
+var reportFixes replay.Fixes
+
+// RP1: saving and deleting ask for a session before the role, so someone
+// who is not signed in gets 401 where Node answered 403 "Admin access
+// required". The recording sends 15 saves and 50 deletes without a
+// session, the same on both databases; signedOutWrites lists them.
+var _ = reportFixes.Add("RP1", signedOutWrites())
+
+// signedOutWrites are the fixes of the steps of the recording that save or
+// delete a report without a session.
+func signedOutWrites() map[string]replay.Fix {
+	raw, err := os.ReadFile(filepath.Join("testdata", "node_sqlite.json"))
+	if err != nil {
+		panic(err)
+	}
+	var rec replay.Recording
+	if err := json.Unmarshal(raw, &rec); err != nil {
+		panic(err)
+	}
+	steps := map[string]replay.Fix{}
+	for _, step := range rec.Steps {
+		write := step.Method == "POST" && step.Path == "/api/reports/save" || step.Method == "DELETE"
+		if step.Role == "" && write {
+			if step.Status != 403 || step.Answer != `{"error":"Admin access required"}` {
+				panic("RP1: Node answered " + step.Name + " signed out with " + step.Answer)
+			}
+			steps[replay.FixKey(step)] = replay.Fix{Status: 401, Answer: `{"error":"Authentication required"}`}
+		}
+	}
+	if len(steps) != 65 {
+		panic(fmt.Sprintf("RP1: %d saves and deletes without a session, want 65", len(steps)))
+	}
+	return steps
+}
+
 // TestNodeAnswers replays what the Node console's report routes answered
 // with its real engine and database adapter, on SQLite and on PostgreSQL
 // (testdata/node_sqlite.json, testdata/node_postgres.json): every route
 // for the accounts the route decides for, every report and its CSV, saved
 // reports of every kind, ids in many spellings. The Go console has to
-// answer the same behind its whole pipeline, byte for byte.
+// answer the same behind its whole pipeline, byte for byte, but for the
+// steps the bug fixes change (reportFixes).
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
@@ -75,6 +116,7 @@ func TestNodeAnswers(t *testing.T) {
 		if len(rec.Steps) < 780 {
 			t.Fatalf("the recording has %d steps", len(rec.Steps))
 		}
-		w.Run(rec, checkAnswer)
+		defer reportFixes.Unused(t, db)
+		w.Run(rec, reportFixes.Check(w, checkAnswer))
 	})
 }

@@ -1,10 +1,10 @@
 // Package reports holds the report routes under /api/reports: the report
 // types, reports made on demand as JSON or CSV, and saved reports.
 //
-// Reading and generating needs a session and audit.view. Saving and
-// deleting check the role alone: super_admin, admin and global_admin may,
-// everyone else gets 403, also someone who is not signed in (BUGS.md
-// RP1). GET /api/reports/trends is another group's, registered in front.
+// Every route needs a session and audit.view. Saving and deleting then
+// check the role: super_admin, admin and global_admin may, everyone else
+// gets 403. GET /api/reports/trends is another group's, registered in
+// front.
 package reports
 
 import (
@@ -43,8 +43,8 @@ func Register(d *kit.Deps) {
 	r.Post("/generate/csv", h.generateCSV, requireSession)
 	r.Get("/saved", h.listSaved, requireSession)
 	r.Get("/saved/{id}", h.getSaved, requireSession)
-	r.Post("/save", h.save, requireAdmin)
-	r.Delete("/saved/{id}", h.deleteSaved, requireAdmin)
+	r.Post("/save", h.save, requireSession, requireAdmin)
+	r.Delete("/saved/{id}", h.deleteSaved, requireSession, requireAdmin)
 }
 
 // failure is the group's error answer: {"error":"..."}.
@@ -83,8 +83,8 @@ func requireSession(next http.Handler) http.Handler {
 }
 
 // requireAdmin lets super_admin, admin and global_admin through by the
-// role in the session alone. Everyone else gets 403 {"error":"Admin
-// access required"}, also someone who is not signed in.
+// role in the session. Everyone else gets 403 {"error":"Admin access
+// required"}.
 func requireAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		role := ""

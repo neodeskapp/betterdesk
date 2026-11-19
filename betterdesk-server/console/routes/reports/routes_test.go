@@ -68,19 +68,29 @@ func TestReadsNeedAuditView(t *testing.T) {
 	}
 }
 
-// TestSaveAndDeleteCheckTheRoleOnly: saving and deleting look at the role
-// in the session and nothing else, so someone who is not signed in gets
-// 403 "Admin access required", not 401 (BUGS.md RP1).
-func TestSaveAndDeleteCheckTheRoleOnly(t *testing.T) {
-	w := routetest.New(t, routetest.Options{})
+// TestSaveAndDeleteAskTheReadsChecksFirst: saving and deleting ask for a
+// session and audit.view as the reads do, and then for the role (BUGS.md
+// RP1). Someone who is not signed in gets 401, and a global admin whose
+// role lost audit.view saves nothing, also at an address in other letters.
+func TestSaveAndDeleteAskTheReadsChecksFirst(t *testing.T) {
+	w := routetest.New(t, routetest.Options{Roles: replay.RoleOverrides{"global_admin": {"audit.view": false}}})
 	signedOut := w.SignedOut()
+	global := w.As("global_admin")
 	for _, r := range []struct{ method, path, body string }{
 		{"POST", "/api/reports/save", `{"type":"devices"}`},
+		{"POST", "/API/Reports/Save", `{"type":"devices"}`},
 		{"DELETE", "/api/reports/saved/1", ""},
+		{"DELETE", "/Api/Reports/Saved/1", ""},
 	} {
-		if got := signedOut.Do(r.method, r.path, r.body); got.Status != 403 || got.Body != `{"error":"Admin access required"}` {
+		if got := signedOut.Do(r.method, r.path, r.body); got.Status != 401 || got.Body != `{"error":"Authentication required"}` {
 			t.Errorf("%s %s signed out: %d %s", r.method, r.path, got.Status, got.Body)
 		}
+		if got := global.Do(r.method, r.path, r.body); got.Status != 403 {
+			t.Errorf("%s %s as a global admin without audit.view: %d %s", r.method, r.path, got.Status, got.Body)
+		}
+	}
+	if rows := savedCount(t, w); rows != 0 {
+		t.Fatalf("%d reports saved by the refused requests", rows)
 	}
 	admin := w.As("super_admin")
 	got := admin.Do("POST", "/api/reports/save", `{"type":"tickets","title":"Mine"}`)
@@ -188,6 +198,16 @@ func TestDatabaseFailures(t *testing.T) {
 func jsonNumber(n int) string {
 	out, _ := json.Marshal(n)
 	return string(out)
+}
+
+// savedCount is the number of saved reports.
+func savedCount(t *testing.T, w *routetest.World) int {
+	t.Helper()
+	var n int
+	if err := w.DB.QueryRow(context.Background(), "SELECT COUNT(*) FROM saved_reports").Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	return n
 }
 
 // TestTheExportIsNamedAfterTheDay: the file name of a CSV export holds
