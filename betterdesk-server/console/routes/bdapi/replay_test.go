@@ -207,6 +207,9 @@ func (p *replayer) run() {
 		report("%v", err)
 	}
 	for i, step := range steps {
+		if step.Name == firstSessionHistory {
+			p.sameSecond()
+		}
 		if step.SQL != "" {
 			if have := p.rows(step.SQL, step.Params); normalize(have) != normalize(step.Rows) {
 				report("step %d %q:\n   node: %s\n     go: %s", i, step.Name, step.Rows, have)
@@ -420,6 +423,28 @@ func (f fix) apply(step *recordedStep) bool {
 		step.Answer, changed = f.answer, true
 	}
 	return changed
+}
+
+// firstSessionHistory is the first step that reads the operator sessions
+// the replay recorded.
+const firstSessionHistory = "159 GET /api/bd/operator/sessions"
+
+// sameSecond gives the connection rows the replay wrote the times they
+// had in the recordings: one second, on PostgreSQL in the order they were
+// written. The history orders sessions and counts their length by the
+// second, so rows that a slow run spreads over two seconds would change
+// both.
+func (p *replayer) sameSecond() {
+	query := `UPDATE audit_connections SET created_at = (SELECT MIN(created_at) FROM audit_connections WHERE created_at > '2020-01-01')
+		WHERE created_at > '2020-01-01'`
+	if p.db.IsPostgres() {
+		query = `UPDATE audit_connections
+			SET created_at = date_trunc('second', (SELECT MIN(created_at) FROM audit_connections WHERE created_at > '2020-01-01')) + id * interval '1 millisecond'
+			WHERE created_at > '2020-01-01'`
+	}
+	if _, err := p.db.Exec(context.Background(), query); err != nil {
+		p.t.Fatalf("connection times: %v", err)
+	}
 }
 
 // calls are the API server's calls of the step, without the role
