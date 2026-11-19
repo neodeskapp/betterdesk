@@ -7,9 +7,7 @@ package servermanagement
 
 import (
 	"net/http"
-	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/servermgmt"
 )
@@ -39,16 +37,10 @@ func Register(d *kit.Deps) {
 	r.Post("/api/server-management/services/{name}/{action}", h.control, auth...)
 }
 
-// audit writes an audit entry as the old route did: the session's user,
-// the address from X-Forwarded-For as the client sent it (its first
-// entry), else the client's address. A failure does not fail the request.
+// audit writes an audit entry: the session's user and the client's
+// address under TRUST_PROXY. A failure does not fail the request.
 func (h *handlers) audit(r *http.Request, action, details string) {
-	ip := kit.ClientIP(r)
-	if forwarded := strings.Join(r.Header.Values("X-Forwarded-For"), ", "); forwarded != "" {
-		first, _, _ := strings.Cut(forwarded, ",")
-		ip = jsbind.Trim(first)
-	}
-	_ = h.d.Audit.Write(r.Context(), kit.UserID(r), action, details, ip)
+	_ = h.d.Audit.Write(r.Context(), kit.UserID(r), action, details, kit.ClientIP(r))
 }
 
 // fail answers 400 {"success":false,"error":message}, or with fallback

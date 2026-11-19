@@ -30,6 +30,10 @@ type TerminalOptions struct {
 	// Audit writes an audit log entry (db.logAction) for the opening and
 	// the closing of a terminal. Nil writes none.
 	Audit func(ctx context.Context, userID int64, action, details, ip string)
+	// ClientIP is the client's address the audit entries name, under
+	// TRUST_PROXY (httpx.TrustProxy.ClientIP). Nil takes the connection's
+	// address.
+	ClientIP func(r *http.Request) string
 	// SessionCheck is how often an open terminal looks whether its session
 	// still exists; when it has ended (signed out, ended elsewhere, past
 	// its limits) the socket is closed and the shells end. Default 10
@@ -158,7 +162,10 @@ func (s *Service) serveTerminal(u *ws.Upgrade) {
 		u.Refuse(http.StatusForbidden)
 		return
 	}
-	ip := forwardedAddr(u)
+	ip := u.SocketAddr()
+	if clientIP := s.opts.Terminal.ClientIP; clientIP != nil {
+		ip = clientIP(u.R)
+	}
 	conn, ok := u.Accept(ws.AcceptOptions{})
 	if !ok {
 		return
@@ -166,18 +173,6 @@ func (s *Service) serveTerminal(u *ws.Upgrade) {
 	defer conn.Wait()
 	t := &terminal{s: s, conn: conn, userID: sess.UserID(), ip: ip}
 	t.run(u, role, username)
-}
-
-// forwardedAddr is the address the terminal's audit entries name: the
-// first entry of X-Forwarded-For as the client sent it, else the
-// connection's address.
-func forwardedAddr(u *ws.Upgrade) string {
-	value := strings.Join(u.R.Header.Values("X-Forwarded-For"), ", ")
-	if value == "" {
-		value = u.SocketAddr()
-	}
-	first, _, _ := strings.Cut(value, ",")
-	return jsbind.Trim(first)
 }
 
 // terminal is one open terminal socket and the shells started on it.

@@ -205,7 +205,9 @@ func TestRoutesNeedServerConfig(t *testing.T) {
 }
 
 // A file round trip as admin: every change is in the audit log with the
-// user, the details and the first X-Forwarded-For entry as sent.
+// user, the details and the client's address as TRUST_PROXY gives it:
+// with no proxy trusted, the connection's address, whatever
+// X-Forwarded-For says.
 func TestFileRoutes(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		s := newSite(t, db)
@@ -238,10 +240,10 @@ func TestFileRoutes(t *testing.T) {
 			t.Errorf("delete %v", got)
 		}
 		want := [][4]string{
-			{"1", "server_file_mkdir", "path=" + base + "/d", "198.51.100.9"},
-			{"1", "server_file_write", "path=" + base + "/d/a.txt bytes=6", "198.51.100.9"},
-			{"1", "server_file_rename", "from=" + base + "/d/a.txt to=" + base + "/b.txt", "198.51.100.9"},
-			{"1", "server_file_delete", "path=" + base + "/d", "198.51.100.9"},
+			{"1", "server_file_mkdir", "path=" + base + "/d", "203.0.113.7"},
+			{"1", "server_file_write", "path=" + base + "/d/a.txt bytes=6", "203.0.113.7"},
+			{"1", "server_file_rename", "from=" + base + "/d/a.txt to=" + base + "/b.txt", "203.0.113.7"},
+			{"1", "server_file_delete", "path=" + base + "/d", "203.0.113.7"},
 		}
 		if got := audits(t, db); !reflect.DeepEqual(got, want) {
 			t.Errorf("audits\n got %v\nwant %v", got, want)

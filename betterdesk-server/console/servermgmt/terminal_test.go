@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/ws"
 	"github.com/unitronix/betterdesk-server/console/ws/wstest"
@@ -287,11 +288,10 @@ func TestTerminalUpgradeChecks(t *testing.T) {
 			if got := strings.Join(w.lookups, ","); got != tc.lookups {
 				t.Errorf("lookups %q, want %q", got, tc.lookups)
 			}
+			// without a ClientIP the address is the connection's, whatever
+			// X-Forwarded-For says
 			audits := w.auditsSoFar()
 			ip := "127.0.0.1"
-			if tc.header.Get("X-Forwarded-For") != "" {
-				ip = "198.51.100.9"
-			}
 			if tc.want == 101 && (len(audits) != 2 || audits[0] != "7 server_terminal_open "+ip || audits[1] != "7 server_terminal_close "+ip) {
 				t.Errorf("audits %v", audits)
 			}
@@ -299,6 +299,28 @@ func TestTerminalUpgradeChecks(t *testing.T) {
 				t.Errorf("audits of a refused socket: %v", audits)
 			}
 		})
+	}
+}
+
+// The audit entries name the client's address as ClientIP gives it, the
+// console's TRUST_PROXY rule: behind a trusted proxy on loopback the last
+// address the proxies did not add, not the first X-Forwarded-For entry the
+// client wrote.
+func TestTerminalAuditAddress(t *testing.T) {
+	trust, err := httpx.ParseTrustProxy("loopback")
+	if err != nil {
+		t.Fatal(err)
+	}
+	w := newTermWorld(t, true, func(o *Options) { o.Terminal.ClientIP = trust.ClientIP })
+	c, res := w.dial(http.Header{"X-Forwarded-For": {" 198.51.100.9 , 10.0.0.1"}})
+	if res.StatusCode != 101 {
+		t.Fatalf("status %d", res.StatusCode)
+	}
+	c.Close(1000)
+	w.srv.Close()
+	w.reg.Close()
+	if audits := w.auditsSoFar(); len(audits) != 2 || audits[0] != "7 server_terminal_open 10.0.0.1" || audits[1] != "7 server_terminal_close 10.0.0.1" {
+		t.Errorf("audits %v", audits)
 	}
 }
 

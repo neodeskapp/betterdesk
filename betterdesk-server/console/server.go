@@ -396,11 +396,14 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		RestartSelf: func() bool {
 			return s.deps.Restart.ExitLater(2*time.Second, "[SERVER-MGMT] Restarting after a restart of the server from server management...")
 		},
-		Terminal: servermgmt.TerminalOptions{Audit: func(ctx context.Context, userID int64, action, details, ip string) {
-			if err := audit.Write(ctx, userID, action, details, ip); err != nil {
-				logging.Logf("console", "WARN: [srv-term] audit log failed: %v", err)
-			}
-		}},
+		Terminal: servermgmt.TerminalOptions{
+			Audit: func(ctx context.Context, userID int64, action, details, ip string) {
+				if err := audit.Write(ctx, userID, action, details, ip); err != nil {
+					logging.Logf("console", "WARN: [srv-term] audit log failed: %v", err)
+				}
+			},
+			ClientIP: cfg.TrustProxy.ClientIP,
+		},
 	})
 	// The rest of the old console's start sequence: the hourly clean-up,
 	// the stale device sweep, and, unless a Node console behind this one
