@@ -572,3 +572,30 @@ func TestEnrollmentApprovalChecksTheBodyFirst(t *testing.T) {
 		}
 	})
 }
+
+// An id that no row can have (no number, below 1, above the largest
+// integer of the column) is not found, on both databases, before any
+// query; an id with digits first still finds its row (BUGS RG8).
+func TestRegistrationIDs(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		if got := w.SignedOut().Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"id-dev"}`); got.Status != http.StatusOK {
+			t.Fatalf("request: %d %s", got.Status, got.Body)
+		}
+		admin := w.As("admin")
+		notFound := `404 {"success":false,"error":"Registration not found"}`
+		for _, id := range []string{"abc", "99999999999", "2147483648", "0", "-1", "%20"} {
+			for _, c := range []struct{ method, suffix string }{
+				{http.MethodGet, ""}, {http.MethodPut, "/approve"}, {http.MethodPut, "/reject"}, {http.MethodDelete, ""},
+			} {
+				got := admin.Do(c.method, "/api/registrations/"+id+c.suffix, `{}`)
+				if have := strconv.Itoa(got.Status) + " " + got.Body; have != notFound {
+					t.Errorf("%s %s%s: %s", c.method, id, c.suffix, have)
+				}
+			}
+		}
+		if got := admin.Do(http.MethodGet, "/api/registrations/1abc", ""); got.Status != http.StatusOK || !strings.Contains(got.Body, `"device_id":"id-dev"`) {
+			t.Errorf("1abc: %d %s", got.Status, got.Body)
+		}
+	})
+}

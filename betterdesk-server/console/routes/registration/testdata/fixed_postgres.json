@@ -471,6 +471,30 @@
   "answer": "{\"success\":true,\"data\":[{\"id\":12,\"device_id\":\"NEW3\",\"hostname\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀�\",\"platform\":\"éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\",\"uuid\":\"x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x\",\"status\":\"pending\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-02-01T00:12:00.000Z\",\"updated_at\":\"2001-02-01T00:12:00.000Z\"}],\"total\":1}"
  },
  {
+  "step": "429 GET /api/registrations/abc",
+  "bugs": [
+   "RG8"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"Registration not found\"}"
+ },
+ {
+  "step": "433 GET /api/registrations/99999999999",
+  "bugs": [
+   "RG8"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"Registration not found\"}"
+ },
+ {
+  "step": "437 GET /api/registrations/9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999",
+  "bugs": [
+   "RG8"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"Registration not found\"}"
+ },
+ {
   "step": "439 GET /api/registrations/6",
   "bugs": [
    "RG2"
@@ -737,6 +761,14 @@
   ],
   "status": 400,
   "answer": "{\"success\":false,\"error\":\"Cannot approve: status is rejected\"}"
+ },
+ {
+  "step": "493 not a number PUT /api/registrations/abc/approve",
+  "bugs": [
+   "RG8"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"Registration not found\"}"
  },
  {
   "step": "494 POST /api/bd/register-request",
@@ -1282,6 +1314,14 @@
    "RG2"
   ],
   "rows": "[{\"user_id\":\"6\",\"action\":\"help_request_accepted\",\"details\":\"Help request 21 accepted\",\"ip_address\":\"10.9.9.9\"},{\"user_id\":\"6\",\"action\":\"help_request_accepted\",\"details\":\"Help request 22 accepted\",\"ip_address\":\"10.9.9.9\"},{\"user_id\":null,\"action\":\"help_request_resolved\",\"details\":\"Help request 23 resolved\",\"ip_address\":\"10.9.9.9\"},{\"user_id\":\"5\",\"action\":\"help_request_accepted\",\"details\":\"Help request 24 accepted by the night shift\",\"ip_address\":\"10.9.9.9\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device DEV1 (pc-1)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"4\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device DEV2 (Laptop 100%_off)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device DEV5 (École-PC)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR0 (approve-0)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR1 (approve-1)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR2 (approve-2)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR3 (approve-3)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR4 (approve-4)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR5 (approve-5)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR6 (approve-6)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR7 (approve-7)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR10 (approve-10)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_rejected\",\"details\":\"Rejected registration for device REJ1 (): rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr�\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"2\",\"action\":\"registration_rejected\",\"details\":\"Rejected registration for device REJ2 (): \",\"ip_address\":\"127.0.0.1\"}]"
+ },
+ {
+  "step": "556 DELETE /api/bd/api/registrations/x",
+  "bugs": [
+   "RG8"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"Registration not found\"}"
  },
  {
   "step": "558 registrations",

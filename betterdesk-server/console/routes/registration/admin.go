@@ -31,14 +31,15 @@ func failure(w http.ResponseWriter, r *http.Request, status int, message any) {
 	kit.JSON(w, r, status, goapi.NewObject("success", false, "error", message))
 }
 
-// registrationID is parseInt(req.params.id, 10): NaN for an id without
-// leading digits.
-func registrationID(r *http.Request) jsbind.Value {
+// registrationID is parseInt(req.params.id, 10). ok is false when that is
+// no id a row can have: no number, below 1, or above the largest integer
+// the column holds. Such an id finds no registration on either database.
+func registrationID(r *http.Request) (id jsbind.Value, ok bool) {
 	n, ok := jsreq.ParseInt(r.PathValue("id"), 10)
-	if !ok {
-		return jsbind.Number(math.NaN())
+	if !ok || n < 1 || n > math.MaxInt32 {
+		return jsbind.Value{}, false
 	}
-	return jsbind.Number(n)
+	return jsbind.Number(n), true
 }
 
 // audit writes an entry as these routes did: the account of the session
@@ -129,7 +130,12 @@ func boolSetting(v jsbind.Value, fallback bool) bool {
 
 // one answers GET /api/registrations/{id}.
 func (h *handlers) one(w http.ResponseWriter, r *http.Request) {
-	reg, err := h.regs.ByID(r.Context(), registrationID(r))
+	id, ok := registrationID(r)
+	if !ok {
+		failure(w, r, http.StatusNotFound, "Registration not found")
+		return
+	}
+	reg, err := h.regs.ByID(r.Context(), id)
 	if err != nil {
 		h.serverError(w, r, "Get registration error:", err)
 		return
@@ -151,7 +157,11 @@ func (h *handlers) one(w http.ResponseWriter, r *http.Request) {
 // entry.
 func (h *handlers) approve(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	id := registrationID(r)
+	id, ok := registrationID(r)
+	if !ok {
+		failure(w, r, http.StatusNotFound, "Registration not found")
+		return
+	}
 	reg, err := h.regs.ByID(ctx, id)
 	if err != nil {
 		h.serverError(w, r, "Approve registration error:", err)
@@ -324,13 +334,17 @@ func (h *handlers) applyPeerFields(r *http.Request, deviceID, displayName, tags 
 // is the 500 of a TypeError, before the registration is looked up.
 func (h *handlers) reject(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	id := registrationID(r)
 	reason, err := textOr(jsreq.Prop(jsreq.Body(r), "reason"), "")
 	if err != nil {
 		h.serverError(w, r, "Reject registration error:", err)
 		return
 	}
 	reason = cut(reason, 500)
+	id, ok := registrationID(r)
+	if !ok {
+		failure(w, r, http.StatusNotFound, "Registration not found")
+		return
+	}
 	reg, err := h.regs.ByID(ctx, id)
 	if err != nil {
 		h.serverError(w, r, "Reject registration error:", err)
@@ -356,7 +370,11 @@ func (h *handlers) reject(w http.ResponseWriter, r *http.Request) {
 // remove answers DELETE /api/registrations/{id}.
 func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	id := registrationID(r)
+	id, ok := registrationID(r)
+	if !ok {
+		failure(w, r, http.StatusNotFound, "Registration not found")
+		return
+	}
 	reg, err := h.regs.ByID(ctx, id)
 	if err != nil {
 		h.serverError(w, r, "Delete registration error:", err)
