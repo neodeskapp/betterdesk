@@ -6,6 +6,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
@@ -18,10 +19,11 @@ import (
 // record of the operator's remote sessions.
 
 // operatorLogin answers POST /api/bd/operator/login {username, password,
-// device_id}. The route tested the brute force check's answer, an object,
-// for its truth, so every request with a name and a password is refused
-// as blocked and no token is ever issued (BUGS S4). What the route did
-// after that check never runs.
+// device_id}: an access token bound to the device id, for the desktop
+// client in operator mode. Only an account with the role admin or
+// operator and without a second factor gets one: the desktop client has
+// no step that asks for the second factor (DECISIONS A37). The sign-in
+// lockout counts here as at every sign-in.
 func (h *handlers) operatorLogin(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
 	username, okName := jsreq.Prop(body, "username").(string)
@@ -30,11 +32,78 @@ func (h *handlers) operatorLogin(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "Username and password are required")
 		return
 	}
-	if _, err := h.d.Authn.CheckBruteForce(r.Context(), username, clientIP(r)); err != nil {
+	ctx := r.Context()
+	ip := clientIP(r)
+	brute, err := h.d.Authn.CheckBruteForce(ctx, username, ip)
+	if err != nil {
 		h.serverError(w, r, "Operator login error:", err, "Authentication failed")
 		return
 	}
-	fail(w, r, http.StatusTooManyRequests, "Too many failed attempts. Try again later.")
+	if brute.Blocked {
+		fail(w, r, http.StatusTooManyRequests, "Too many failed attempts. Try again later.")
+		return
+	}
+	outcome, err := h.d.Authn.Authenticate(ctx, username, password)
+	if err != nil {
+		h.serverError(w, r, "Operator login error:", err, "Authentication failed")
+		return
+	}
+	refuse := func(status int, answer any) {
+		if err := h.d.Authn.RecordAttempt(ctx, username, ip, false); err != nil {
+			h.log.Warn("Operator login attempt not recorded:", err.Error())
+		}
+		kit.JSON(w, r, status, answer)
+	}
+	user := outcome.User
+	switch {
+	case outcome.Failure == authn.FailureUsernameCollision:
+		refuse(http.StatusConflict, goapi.NewObject(
+			"error", "Username collision: a local account with this name already exists", "code", "username_collision"))
+		return
+	case user == nil:
+		refuse(http.StatusUnauthorized, failure{Error: "Invalid credentials"})
+		return
+	case !user.Role.Valid || user.Role.String != "admin" && user.Role.String != "operator":
+		refuse(http.StatusForbidden, failure{Error: "Insufficient permissions. Admin or operator role required."})
+		return
+	}
+	if err := h.d.Authn.RecordAttempt(ctx, username, ip, true); err != nil {
+		h.log.Warn("Operator login attempt not recorded:", err.Error())
+	}
+	if user.TOTPRequired {
+		kit.JSON(w, r, http.StatusForbidden, goapi.NewObject(
+			"error", "Two-factor authentication is required for this account", "code", "totp_required"))
+		return
+	}
+	device, err := textOr(jsreq.Prop(body, "device_id"), "")
+	if err != nil {
+		h.serverError(w, r, "Operator login error:", err, "Authentication failed")
+		return
+	}
+	userID := user.ID.V
+	token, err := h.d.Authn.GenerateAccessToken(ctx, userID, cut(device, 32), "", ip)
+	if err == nil {
+		err = h.d.Authn.TouchLastLogin(ctx, userID)
+	}
+	if err == nil {
+		named := device
+		if named == "" {
+			named = "unknown"
+		}
+		err = h.d.Audit.Write(ctx, userID, "operator_login", "Operator login from desktop client ("+named+")", ip)
+	}
+	if err != nil {
+		h.serverError(w, r, "Operator login error:", err, "Authentication failed")
+		return
+	}
+	name := user.Username
+	if name == "" {
+		name = username
+	}
+	kit.JSON(w, r, http.StatusOK, goapi.NewObject(
+		"access_token", token,
+		"user", goapi.NewObject("name", name, "role", user.Role.String),
+	))
 }
 
 type operatorDevice struct {

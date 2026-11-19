@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -441,6 +442,66 @@ func TestRenameGuardOnBothDatabases(t *testing.T) {
 			if have != c.want {
 				t.Errorf("%s: %s, want %s", c.name, have, c.want)
 			}
+		}
+	})
+}
+
+// The operator sign-in of the desktop client issues a token bound to the
+// device to an admin or operator without a second factor; a wrong
+// password, another role and an account with a second factor get none,
+// and the lockout counts (BUGS S4, DECISIONS A37).
+func TestOperatorLogin(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"RATE_LIMIT_MAX": "1000"}})
+		ctx := context.Background()
+		hash, err := w.Server.Deps().Authn.HashPassword(ctx, "op-secret-1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := w.DB.Exec(ctx, "UPDATE users SET password_hash = ?", hash); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := w.DB.Exec(ctx, "UPDATE users SET totp_enabled = "+db.Pick("1", "TRUE")+", totp_secret = 'JBSWY3DPEHPK3PXP' WHERE username = 'e2e_admin'"); err != nil {
+			t.Fatal(err)
+		}
+		login := func(username, password string) (int, string) {
+			got := w.SignedOut().Do("POST", "/api/bd/operator/login", `{"username":"`+username+`","password":"`+password+`","device_id":"OPDESK1"}`)
+			return got.Status, got.Body
+		}
+		status, body := login("e2e_operator", "op-secret-1")
+		var answer struct {
+			Token string `json:"access_token"`
+			User  struct{ Name, Role string }
+		}
+		if err := json.Unmarshal([]byte(body), &answer); status != 200 || err != nil || len(answer.Token) != 64 || answer.User.Name != "e2e_operator" || answer.User.Role != "operator" {
+			t.Fatalf("operator: %d %s", status, body)
+		}
+		// The token is bound to the device and opens the operator routes
+		var client string
+		if err := w.DB.QueryRow(ctx, "SELECT client_id FROM access_tokens WHERE user_id = 5").Scan(&client); err != nil || client != "OPDESK1" {
+			t.Errorf("token bound to %q (%v)", client, err)
+		}
+		if got := w.SignedOut().Do("GET", "/api/bd/operator/sessions", "", "Authorization", "Bearer "+answer.Token); got.Status != 200 {
+			t.Errorf("operator route with the token: %d %s", got.Status, got.Body)
+		}
+		for _, c := range []struct{ user, password, want string }{
+			{"e2e_admin", "op-secret-1", `403 {"error":"Two-factor authentication is required for this account","code":"totp_required"}`},
+			{"e2e_viewer", "op-secret-1", `403 {"error":"Insufficient permissions. Admin or operator role required."}`},
+			{"e2e_operator", "wrong", `401 {"error":"Invalid credentials"}`},
+		} {
+			if status, body := login(c.user, c.password); fmt.Sprint(status, " ", body) != c.want {
+				t.Errorf("%s: %d %s, want %s", c.user, status, body, c.want)
+			}
+		}
+		if rows := w.AuditRows(); len(rows) != 1 || !strings.HasPrefix(rows[0], "operator_login|Operator login from desktop client (OPDESK1)|") {
+			t.Errorf("audit %q", rows)
+		}
+		// Failed attempts lock the account
+		for i := 0; i < 10; i++ {
+			login("e2e_operator", "wrong")
+		}
+		if status, body := login("e2e_operator", "op-secret-1"); status != 429 || body != `{"error":"Too many failed attempts. Try again later."}` {
+			t.Errorf("locked: %d %s", status, body)
 		}
 	})
 }

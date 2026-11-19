@@ -70,6 +70,26 @@
   ]
  },
  {
+  "step": "131 POST /api/bd/operator/login",
+  "bugs": [
+   "S4"
+  ],
+  "status": 401,
+  "answer": "{\"error\":\"Invalid credentials\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/auth/sso/status",
+    "body": ""
+   },
+   {
+    "method": "POST",
+    "url": "/api/auth/login",
+    "body": "{\"username\":\"e2e_operator\",\"password\":\"wrong\"}"
+   }
+  ]
+ },
+ {
   "step": "132 GET /api/bd/operator/devices",
   "bugs": [
    "BD10"
