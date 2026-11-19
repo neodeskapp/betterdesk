@@ -31,8 +31,8 @@ type Records interface {
 // Network is every way the group reaches out. Tests replace the parts
 // they need; a nil part is the real one.
 type Network struct {
-	// Lookup resolves a host name to its addresses, for the guard and for
-	// the broadcast of wake-on-LAN. Default: ssrfguard.SystemLookup.
+	// Lookup resolves a host name to its addresses, for the guard.
+	// Default: ssrfguard.SystemLookup.
 	Lookup ssrfguard.LookupFunc
 	// Dial opens the TCP connection of a certificate check. Default: a
 	// net.Dialer.

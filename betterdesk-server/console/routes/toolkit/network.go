@@ -24,7 +24,8 @@ type wolData struct {
 // wol answers POST /api/toolkit/wol with the body {"mac":"aa:bb:cc:dd:ee:ff",
 // "broadcast":"192.168.1.255"}: it sends the wake-on-LAN packet for the
 // address to UDP port 9 of the broadcast address, 255.255.255.255 when
-// none is given. The broadcast address is not checked by the guard.
+// none is given. The broadcast address must be an IPv4 address the guard
+// for the network tools lets through: not loopback, link-local or 0.0.0.0.
 func (h *handlers) wol(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	mac, ok := bodyText(body, "mac")
@@ -53,6 +54,14 @@ func (h *handlers) wol(w http.ResponseWriter, r *http.Request) {
 	if given, ok := bodyText(body, "broadcast"); ok && given != "" {
 		broadcast = given
 	}
+	if !ssrfguard.IsIPv4(broadcast) {
+		kit.Fail(w, r, http.StatusBadRequest, "Invalid broadcast address")
+		return
+	}
+	if _, err := ssrfguard.SafeHostname(broadcast, ssrfguard.Options{AllowPrivate: true}); err != nil {
+		kit.Fail(w, r, http.StatusBadRequest, refusalText(err, "Invalid broadcast address"))
+		return
+	}
 	if err := h.sendMagic(r.Context(), packet, broadcast); err != nil {
 		kit.JSON(w, r, http.StatusOK, failed{Error: err.Error()})
 		return
@@ -66,35 +75,11 @@ func (h *handlers) wol(w http.ResponseWriter, r *http.Request) {
 
 const wolPort = 9
 
-// sendMagic sends the packet to port 9 of a broadcast address, which may
-// be a name. The messages of a failure are Node's:
-//
-//	an IPv6 address                 send EINVAL <address>:9
-//	the name does not resolve       getaddrinfo ENOTFOUND <name>
-//	the packet cannot be sent       send <errno> <address>:9
+// sendMagic sends the packet to port 9 of an IPv4 broadcast address. A
+// failure has Node's message: send <errno> <address>:9.
 func (h *handlers) sendMagic(ctx context.Context, packet []byte, broadcast string) error {
-	target := broadcast
-	switch ssrfguard.IsIP(broadcast) {
-	case 6:
-		return &connectError{"send EINVAL " + broadcast + ":" + strconv.Itoa(wolPort)}
-	case 0:
-		found, err := h.net.Lookup(ctx, broadcast)
-		if err != nil {
-			return err
-		}
-		target = ""
-		for _, address := range found {
-			if ssrfguard.IsIPv4(address) {
-				target = address
-				break
-			}
-		}
-		if target == "" {
-			return &ssrfguard.LookupError{Code: "ENOTFOUND", Host: broadcast}
-		}
-	}
-	if err := h.net.SendUDP(ctx, packet, &net.UDPAddr{IP: net.ParseIP(target), Port: wolPort}); err != nil {
-		return &connectError{"send " + errnoName(err) + " " + target + ":" + strconv.Itoa(wolPort)}
+	if err := h.net.SendUDP(ctx, packet, &net.UDPAddr{IP: net.ParseIP(broadcast), Port: wolPort}); err != nil {
+		return &connectError{"send " + errnoName(err) + " " + broadcast + ":" + strconv.Itoa(wolPort)}
 	}
 	return nil
 }

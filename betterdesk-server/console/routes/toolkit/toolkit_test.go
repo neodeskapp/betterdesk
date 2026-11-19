@@ -392,6 +392,20 @@ func TestSSLConnectionFailures(t *testing.T) {
 	check("the server says nothing", `{"host":"one.test"}`, "Connection timed out")
 }
 
+// The broadcast address of a magic packet goes through the guard for the
+// network tools: loopback, link-local and 0.0.0.0 are refused before a
+// packet leaves (BUGS.md SC8).
+func TestWakeOnLANRefusesLoopback(t *testing.T) {
+	s := newSite(t, Options{Network: unreachable(t)})
+	admin := s.signIn("admin")
+	for _, broadcast := range []string{"127.0.0.1", "127.255.255.255", "169.254.255.255", "0.0.0.0"} {
+		status, answer := s.post(admin, "/api/toolkit/wol", `{"mac":"aabbccddee0f","broadcast":"`+broadcast+`"}`)
+		if want := `{"success":false,"error":"Blocked IP address: ` + broadcast + `"}`; status != 400 || answer != want {
+			t.Errorf("%s: %d %s, want 400 %s", broadcast, status, answer, want)
+		}
+	}
+}
+
 func TestWakeOnLAN(t *testing.T) {
 	type sent struct {
 		packet []byte
@@ -400,7 +414,7 @@ func TestWakeOnLAN(t *testing.T) {
 	var packets []sent
 	var sendErr error
 	s := newSite(t, Options{Network: Network{
-		Lookup: resolving(map[string][]string{"office.test": {"2001:db8::1", "192.168.7.255"}, "v6only.test": {"2001:db8::1"}}),
+		Lookup: resolving(nil),
 		SendUDP: func(_ context.Context, packet []byte, to *net.UDPAddr) error {
 			packets = append(packets, sent{append([]byte(nil), packet...), to.String()})
 			return sendErr
@@ -419,13 +433,14 @@ func TestWakeOnLAN(t *testing.T) {
 		{`{"mac":"AA-BB-CC-DD-EE-0F","broadcast":"192.168.1.255"}`, 200, `{"success":true,"data":{"mac":"AA:BB:CC:DD:EE:0F","broadcast":"192.168.1.255"}}`, "192.168.1.255:9"},
 		{`{"mac":"aabbccddee0f","broadcast":""}`, 200, `{"success":true,"data":{"mac":"AA:BB:CC:DD:EE:0F","broadcast":"255.255.255.255"}}`, "255.255.255.255:9"},
 		{`{"mac":"aabbccddee0f","broadcast":7}`, 200, `{"success":true,"data":{"mac":"AA:BB:CC:DD:EE:0F","broadcast":"255.255.255.255"}}`, "255.255.255.255:9"},
-		// A name is resolved, and its first IPv4 address gets the packet
-		{`{"mac":"aabbccddee0f","broadcast":"office.test"}`, 200, `{"success":true,"data":{"mac":"AA:BB:CC:DD:EE:0F","broadcast":"office.test"}}`, "192.168.7.255:9"},
-		// Loopback is not refused here: the guard is not asked
-		{`{"mac":"aabbccddee0f","broadcast":"127.0.0.1"}`, 200, `{"success":true,"data":{"mac":"AA:BB:CC:DD:EE:0F","broadcast":"127.0.0.1"}}`, "127.0.0.1:9"},
-		{`{"mac":"aabbccddee0f","broadcast":"::1"}`, 200, `{"success":false,"error":"send EINVAL ::1:9"}`, ""},
-		{`{"mac":"aabbccddee0f","broadcast":"v6only.test"}`, 200, `{"success":false,"error":"getaddrinfo ENOTFOUND v6only.test"}`, ""},
-		{`{"mac":"aabbccddee0f","broadcast":"gone.test"}`, 200, `{"success":false,"error":"getaddrinfo ENOTFOUND gone.test"}`, ""},
+		// A broadcast address is an IPv4 address the guard lets through: no
+		// name, no IPv6 address, no loopback (SC8)
+		{`{"mac":"aabbccddee0f","broadcast":"office.test"}`, 400, `{"success":false,"error":"Invalid broadcast address"}`, ""},
+		{`{"mac":"aabbccddee0f","broadcast":"127.0.0.1"}`, 400, `{"success":false,"error":"Blocked IP address: 127.0.0.1"}`, ""},
+		{`{"mac":"aabbccddee0f","broadcast":"::1"}`, 400, `{"success":false,"error":"Invalid broadcast address"}`, ""},
+		{`{"mac":"aabbccddee0f","broadcast":"ff02::1"}`, 400, `{"success":false,"error":"Invalid broadcast address"}`, ""},
+		{`{"mac":"aabbccddee0f","broadcast":"127.1"}`, 400, `{"success":false,"error":"Invalid broadcast address"}`, ""},
+		{`{"mac":"aabbccddee0f","broadcast":"10.255.255.255"}`, 200, `{"success":true,"data":{"mac":"AA:BB:CC:DD:EE:0F","broadcast":"10.255.255.255"}}`, "10.255.255.255:9"},
 		{`{}`, 400, `{"success":false,"error":"MAC address is required"}`, ""},
 		{`{"mac":""}`, 400, `{"success":false,"error":"MAC address is required"}`, ""},
 		{`{"mac":112233445566}`, 400, `{"success":false,"error":"MAC address is required"}`, ""},
