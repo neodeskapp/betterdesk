@@ -10,9 +10,14 @@ import (
 // close frame.
 const CloseNoStatus = 1005
 
-// passQueue is how many messages of the socket may wait for the upstream;
-// a socket that sends more is not read until there is room.
-const passQueue = 1024
+// passQueue and passQueueBytes bound the messages of the socket that wait
+// for the upstream: at most 1,024 messages and 16 MiB (the remote target
+// gateway's largest message), one message of any size when nothing else
+// waits. A socket that sends more is not read until there is room.
+const (
+	passQueue      = 1024
+	passQueueBytes = 16 << 20
+)
 
 // PassOptions say how Pass carries messages between an accepted socket
 // and the upstream socket it opens, the way the old console's proxies to
@@ -88,8 +93,10 @@ type passing struct {
 	cond *sync.Cond
 	// up is set once the upstream is open
 	up *Upstream
-	// queue holds the socket's messages for the upstream
+	// queue holds the socket's messages for the upstream, queued their
+	// bytes
 	queue      []passMessage
+	queued     int
 	upGone     bool
 	socketGone bool
 }
@@ -100,17 +107,37 @@ type passing struct {
 func (p *passing) push(m passMessage) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	for len(p.queue) >= passQueue && !p.upGone && !p.socketGone {
+	for len(p.queue) > 0 && (len(p.queue) >= passQueue || p.queued+len(m.data) > passQueueBytes) && !p.upGone && !p.socketGone {
 		p.cond.Wait()
 	}
 	switch {
 	case p.upGone:
 	case p.up != nil:
 		p.queue = append(p.queue, m)
+		p.queued += len(m.data)
 		p.cond.Broadcast()
 	case p.opts.Queue:
 		p.queue = append(p.queue, m)
+		p.queued += len(m.data)
 	}
+}
+
+// next takes the first message that waits for the upstream, waiting for
+// one; ok is false when the upstream has ended.
+func (p *passing) next() (m passMessage, ok bool) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	for len(p.queue) == 0 && !p.upGone {
+		p.cond.Wait()
+	}
+	if p.upGone {
+		return passMessage{}, false
+	}
+	m = p.queue[0]
+	p.queue = p.queue[1:]
+	p.queued -= len(m.data)
+	p.cond.Broadcast()
+	return m, true
 }
 
 // connect dials the upstream, then sends the queue to it and its messages
@@ -163,25 +190,17 @@ func (p *passing) connect(ctx context.Context) {
 // gone marks the upstream as ended and drops what waits for it.
 func (p *passing) gone() {
 	p.upGone = true
-	p.queue = nil
+	p.queue, p.queued = nil, 0
 	p.cond.Broadcast()
 }
 
 // write sends the queued messages to the upstream in order.
 func (p *passing) write(up *Upstream) {
 	for {
-		p.mu.Lock()
-		for len(p.queue) == 0 && !p.upGone {
-			p.cond.Wait()
-		}
-		if p.upGone {
-			p.mu.Unlock()
+		m, ok := p.next()
+		if !ok {
 			return
 		}
-		m := p.queue[0]
-		p.queue = p.queue[1:]
-		p.cond.Broadcast()
-		p.mu.Unlock()
 		if err := up.Send(m.binary, m.data); err != nil {
 			return
 		}
