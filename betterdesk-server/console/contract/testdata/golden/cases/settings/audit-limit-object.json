@@ -74,74 +74,6 @@
     {
      "path": "data[*].created_at",
      "format": "9999-99-99 99:99:99"
-    },
-    {
-     "path": "data[66].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
-    },
-    {
-     "path": "data[67].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
-    },
-    {
-     "path": "data[68].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
-    },
-    {
-     "path": "data[69].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
-    },
-    {
-     "path": "data[70].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
-    },
-    {
-     "path": "data[71].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
-    },
-    {
-     "path": "data[72].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
-    },
-    {
-     "path": "data[73].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
-    },
-    {
-     "path": "data[74].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
-    },
-    {
-     "path": "data[75].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
-    },
-    {
-     "path": "data[76].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
-    },
-    {
-     "path": "data[77].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
-    },
-    {
-     "path": "data[78].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
-    },
-    {
-     "path": "data[79].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
-    },
-    {
-     "path": "data[80].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
-    },
-    {
-     "path": "data[81].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
-    },
-    {
-     "path": "data[82].details",
-     "pattern": "^[9aA+/_=-]{6} [9aA+/_=-]{9} [9aA+/_=-]{6} [9aA+/_=-]{3} [9aA+/_=-]{2} \\[[9aA+/_=-]{36}\\]$"
     }
    ],
    "body": {
@@ -149,904 +81,904 @@
     "json": {
      "data": [
       {
-       "action": "generic_agent_activated",
+       "action": "server_file_delete",
        "created_at": "<volatile>",
-       "details": "Activated generic Support Agent contract-unknown-3",
-       "id": 140,
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 867,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
       },
       {
-       "action": "generic_agent_activated",
+       "action": "server_file_delete",
        "created_at": "<volatile>",
-       "details": "Activated generic Support Agent 123456",
-       "id": 139,
+       "details": "path=/opt/rustdesk/sm-contract/sub",
+       "id": 866,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
       },
       {
-       "action": "generic_agent_activated",
+       "action": "server_file_delete",
        "created_at": "<volatile>",
-       "details": "Activated generic Support Agent contract-unknown-2",
-       "id": 138,
+       "details": "path=/opt/rustdesk/sm-contract/sub/moved.txt",
+       "id": 865,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
       },
       {
-       "action": "generic_agent_activated",
+       "action": "server_file_rename",
        "created_at": "<volatile>",
-       "details": "Activated generic Support Agent contract-unknown-1",
-       "id": 137,
+       "details": "from=/opt/rustdesk/sm-contract/note.txt to=/opt/rustdesk/sm-contract/sub/moved.txt",
+       "id": 864,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
       },
       {
-       "action": "profile_updated",
+       "action": "server_file_write",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 136,
+       "details": "path=/opt/rustdesk/sm-contract/empty.txt bytes=0",
+       "id": 863,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
       },
       {
-       "action": "profile_updated",
+       "action": "server_file_write",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 135,
+       "details": "path=/opt/rustdesk/sm-contract/bin.dat bytes=3",
+       "id": 862,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
       },
       {
-       "action": "profile_updated",
+       "action": "server_file_write",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 134,
+       "details": "path=/opt/rustdesk/sm-contract/sub/grüße ñ.txt bytes=18",
+       "id": 861,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
       },
       {
-       "action": "profile_updated",
+       "action": "server_file_write",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 133,
+       "details": "path=/opt/rustdesk/sm-contract/note.txt bytes=12",
+       "id": 860,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
       },
       {
-       "action": "profile_updated",
+       "action": "server_file_mkdir",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 132,
+       "details": "path=/opt/rustdesk/sm-contract/sub2",
+       "id": 859,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
       },
       {
-       "action": "profile_updated",
+       "action": "server_file_mkdir",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 131,
+       "details": "path=/opt/rustdesk/sm-contract/sub",
+       "id": 858,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
       },
       {
-       "action": "profile_updated",
+       "action": "server_file_mkdir",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 130,
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 857,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
       },
       {
-       "action": "profile_updated",
+       "action": "server_file_delete",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 129,
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 856,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
       },
       {
-       "action": "profile_updated",
+       "action": "server_file_delete",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 128,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 127,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "generic_agent_activated",
-       "created_at": "<volatile>",
-       "details": "Activated generic Support Agent contract-unknown-3",
-       "id": 126,
+       "details": "path=/opt/rustdesk/sm-contract/sub",
+       "id": 855,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
       },
       {
-       "action": "profile_updated",
+       "action": "server_file_delete",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 125,
+       "details": "path=/opt/rustdesk/sm-contract/sub/moved.txt",
+       "id": 854,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
       },
       {
-       "action": "profile_updated",
+       "action": "server_file_rename",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 124,
+       "details": "from=/opt/rustdesk/sm-contract/note.txt to=/opt/rustdesk/sm-contract/sub/moved.txt",
+       "id": 853,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
       },
       {
-       "action": "profile_updated",
+       "action": "server_file_write",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 123,
+       "details": "path=/opt/rustdesk/sm-contract/note.txt bytes=12",
+       "id": 852,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "server_file_mkdir",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract/sub",
+       "id": 851,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "server_file_mkdir",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 850,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_file_delete",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 849,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_file_delete",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract/sub",
+       "id": 848,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
       },
       {
-       "action": "profile_updated",
+       "action": "server_file_delete",
        "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 122,
+       "details": "path=/opt/rustdesk/sm-contract/sub/moved.txt",
+       "id": 847,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
       },
       {
-       "action": "generic_agent_activated",
+       "action": "server_file_rename",
        "created_at": "<volatile>",
-       "details": "Activated generic Support Agent contract-unknown-3",
-       "id": 121,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
-      },
-      {
-       "action": "generic_agent_activated",
-       "created_at": "<volatile>",
-       "details": "Activated generic Support Agent 123456",
-       "id": 120,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
-      },
-      {
-       "action": "generic_agent_activated",
-       "created_at": "<volatile>",
-       "details": "Activated generic Support Agent contract-unknown-2",
-       "id": 119,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
-      },
-      {
-       "action": "generic_agent_activated",
-       "created_at": "<volatile>",
-       "details": "Activated generic Support Agent contract-unknown-1",
-       "id": 118,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 117,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 116,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 115,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 114,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 113,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 112,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 111,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 110,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 109,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 108,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 107,
-       "ip_address": "<client-ip>",
-       "user_id": 9,
-       "username": "e2e_operator"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 106,
-       "ip_address": "<client-ip>",
-       "user_id": 9,
-       "username": "e2e_operator"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 105,
-       "ip_address": "<client-ip>",
-       "user_id": 10,
-       "username": "e2e_viewer"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 104,
-       "ip_address": "<client-ip>",
-       "user_id": 10,
-       "username": "e2e_viewer"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 103,
-       "ip_address": "<client-ip>",
-       "user_id": 11,
-       "username": "e2e_guest_issuer"
-      },
-      {
-       "action": "profile_updated",
-       "created_at": "<volatile>",
-       "details": "Updated operator profile",
-       "id": 102,
-       "ip_address": "<client-ip>",
-       "user_id": 11,
-       "username": "e2e_guest_issuer"
-      },
-      {
-       "action": "user_group_created",
-       "created_at": "<volatile>",
-       "details": "Created user group: contract policy group",
-       "id": 101,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "user_access_policy_updated",
-       "created_at": "<volatile>",
-       "details": "Updated access policy for user 3",
-       "id": 100,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "user_access_policy_updated",
-       "created_at": "<volatile>",
-       "details": "Updated access policy for user 3",
-       "id": 99,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "user_access_policy_updated",
-       "created_at": "<volatile>",
-       "details": "Updated access policy for user 3",
-       "id": 98,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "user_access_policy_updated",
-       "created_at": "<volatile>",
-       "details": "Updated access policy for user 3",
-       "id": 97,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "user_access_policy_updated",
-       "created_at": "<volatile>",
-       "details": "Updated access policy for user 3",
-       "id": 96,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "user_access_policy_updated",
-       "created_at": "<volatile>",
-       "details": "Updated access policy for user 3",
-       "id": 95,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "user_group_created",
-       "created_at": "<volatile>",
-       "details": "Created user group: contract policy group",
-       "id": 94,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "user_access_policy_updated",
-       "created_at": "<volatile>",
-       "details": "Updated access policy for user 3",
-       "id": 93,
-       "ip_address": "<client-ip>",
-       "user_id": 6,
-       "username": "e2e_super_admin"
-      },
-      {
-       "action": "user_access_policy_updated",
-       "created_at": "<volatile>",
-       "details": "Updated access policy for user 3",
-       "id": 92,
-       "ip_address": "<client-ip>",
-       "user_id": 6,
-       "username": "e2e_super_admin"
-      },
-      {
-       "action": "user_group_created",
-       "created_at": "<volatile>",
-       "details": "Created user group: contract policy group",
-       "id": 91,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "user_group_created",
-       "created_at": "<volatile>",
-       "details": "Created user group: contract policy group",
-       "id": 90,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "user_access_policy_updated",
-       "created_at": "<volatile>",
-       "details": "Updated access policy for user 3",
-       "id": 89,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
-      },
-      {
-       "action": "user_access_policy_updated",
-       "created_at": "<volatile>",
-       "details": "Updated access policy for user 3",
-       "id": 88,
-       "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
-      },
-      {
-       "action": "user_group_created",
-       "created_at": "<volatile>",
-       "details": "Created user group: contract policy group",
-       "id": 87,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "user_group_created",
-       "created_at": "<volatile>",
-       "details": "Created user group: contract policy group",
-       "id": 86,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "user_group_created",
-       "created_at": "<volatile>",
-       "details": "Created user group: contract policy group",
-       "id": 85,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "user_group_created",
-       "created_at": "<volatile>",
-       "details": "Created user group: contract policy group",
-       "id": 84,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "user_group_created",
-       "created_at": "<volatile>",
-       "details": "Created user group: contract policy group",
-       "id": 83,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "login",
-       "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
-       "id": 82,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "login",
-       "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
-       "id": 81,
-       "ip_address": "<client-ip>",
-       "user_id": 6,
-       "username": "e2e_super_admin"
-      },
-      {
-       "action": "login",
-       "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
-       "id": 80,
+       "details": "from=/opt/rustdesk/sm-contract/note.txt to=/opt/rustdesk/sm-contract/sub/moved.txt",
+       "id": 846,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
       },
       {
-       "action": "login",
+       "action": "server_file_write",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
-       "id": 79,
+       "details": "path=/opt/rustdesk/sm-contract/empty.txt bytes=0",
+       "id": 845,
        "ip_address": "<client-ip>",
-       "user_id": 8,
-       "username": "e2e_global_admin"
+       "user_id": 7,
+       "username": "e2e_server_admin"
       },
       {
-       "action": "login",
+       "action": "server_file_write",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
-       "id": 78,
+       "details": "path=/opt/rustdesk/sm-contract/bin.dat bytes=3",
+       "id": 844,
        "ip_address": "<client-ip>",
-       "user_id": 9,
-       "username": "e2e_operator"
+       "user_id": 7,
+       "username": "e2e_server_admin"
       },
       {
-       "action": "login",
+       "action": "server_file_write",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
-       "id": 77,
+       "details": "path=/opt/rustdesk/sm-contract/sub/grüße ñ.txt bytes=18",
+       "id": 843,
        "ip_address": "<client-ip>",
-       "user_id": 10,
-       "username": "e2e_viewer"
+       "user_id": 7,
+       "username": "e2e_server_admin"
       },
       {
-       "action": "login",
+       "action": "server_file_write",
        "created_at": "<volatile>",
-       "details": "User logged in; ip=<client-ip>; ua=bd-contract/1; fingerprint=none",
-       "id": 76,
+       "details": "path=/opt/rustdesk/sm-contract/note.txt bytes=12",
+       "id": 842,
        "ip_address": "<client-ip>",
-       "user_id": 11,
-       "username": "e2e_guest_issuer"
+       "user_id": 7,
+       "username": "e2e_server_admin"
       },
       {
-       "action": "login_failed",
+       "action": "server_file_mkdir",
        "created_at": "<volatile>",
-       "details": "Username: e***; ip=<client-ip>; ua=bd-contract/1",
-       "id": 75,
+       "details": "path=/opt/rustdesk/sm-contract/sub2",
+       "id": 841,
+       "ip_address": "<client-ip>",
+       "user_id": 7,
+       "username": "e2e_server_admin"
+      },
+      {
+       "action": "server_file_mkdir",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract/sub",
+       "id": 840,
+       "ip_address": "<client-ip>",
+       "user_id": 7,
+       "username": "e2e_server_admin"
+      },
+      {
+       "action": "server_file_mkdir",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 839,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_file_delete",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 838,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_file_mkdir",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 837,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_file_delete",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 836,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_file_mkdir",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 835,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_file_delete",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 834,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_file_mkdir",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 833,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_file_delete",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 832,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_file_mkdir",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 831,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_file_delete",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 830,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_file_mkdir",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 829,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_file_delete",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 828,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_file_mkdir",
+       "created_at": "<volatile>",
+       "details": "path=/opt/rustdesk/sm-contract",
+       "id": 827,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 826,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 825,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 824,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 823,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 822,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 821,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 820,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 819,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 818,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 817,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 816,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 815,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 814,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 813,
+       "ip_address": "<client-ip>",
+       "user_id": 7,
+       "username": "e2e_server_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 812,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 811,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 810,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 809,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 808,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 807,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 806,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 805,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 804,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 803,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 802,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 801,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "server_attestation_badge_updated",
+       "created_at": "<volatile>",
+       "details": "Updated Server Attestation badge labels",
+       "id": 800,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "api_login_banned_device",
+       "created_at": "<volatile>",
+       "details": "Device: 900100028, User: r***y",
+       "id": 799,
        "ip_address": "<client-ip>",
        "user_id": null,
        "username": null
       },
       {
-       "action": "device_group_membership_updated",
+       "action": "api_login_banned_device",
        "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 74,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "Device: 900100028, User: r***y",
+       "id": 798,
+       "ip_address": "<client-ip>",
+       "user_id": null,
+       "username": null
       },
       {
-       "action": "device_group_membership_updated",
+       "action": "api_login_failed",
        "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 73,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "User: r***y",
+       "id": 797,
+       "ip_address": "<client-ip>",
+       "user_id": null,
+       "username": null
       },
       {
-       "action": "device_group_membership_updated",
+       "action": "api_login_failed",
        "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 72,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "User: r***y",
+       "id": 796,
+       "ip_address": "<client-ip>",
+       "user_id": null,
+       "username": null
       },
       {
-       "action": "device_group_membership_updated",
+       "action": "api_login_failed",
        "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 71,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "User: r***y",
+       "id": 795,
+       "ip_address": "<client-ip>",
+       "user_id": null,
+       "username": null
       },
       {
-       "action": "device_group_membership_updated",
+       "action": "api_login_banned_device",
        "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 70,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "Device: 900100029, User: r***y",
+       "id": 794,
+       "ip_address": "<client-ip>",
+       "user_id": null,
+       "username": null
       },
       {
-       "action": "device_group_membership_updated",
+       "action": "api_login_banned_device",
        "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 69,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "Device: 900100028, User: r***y",
+       "id": 793,
+       "ip_address": "<client-ip>",
+       "user_id": null,
+       "username": null
       },
       {
-       "action": "device_group_membership_updated",
+       "action": "help_request_resolved",
        "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 68,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "Help request 2 resolved",
+       "id": 792,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
       },
       {
-       "action": "device_group_membership_updated",
+       "action": "help_request_accepted",
        "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 67,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "Help request 2 accepted",
+       "id": 791,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
       },
       {
-       "action": "device_group_membership_updated",
+       "action": "enrollment_rejection_cleared",
        "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 66,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "Cleared enrollment rejection for device contract-enroll-y (unbanned)",
+       "id": 790,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
       },
       {
-       "action": "device_group_membership_updated",
+       "action": "enrollment_rejected",
        "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 65,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "Rejected enrollment for device contract-enroll-y (banned)",
+       "id": 789,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
       },
       {
-       "action": "device_group_membership_updated",
+       "action": "enrollment_rejection_cleared",
        "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 64,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "Cleared enrollment rejection for device contract-enroll-x",
+       "id": 788,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
       },
       {
-       "action": "device_group_membership_updated",
+       "action": "enrollment_rejected",
        "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 63,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "Rejected enrollment for device contract-enroll-x",
+       "id": 787,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
       },
       {
-       "action": "device_group_membership_updated",
+       "action": "registration_rejected",
        "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 62,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "Rejected registration for device contract-reject (contract-reject-box): Not one of ours",
+       "id": 786,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
       },
       {
-       "action": "device_group_membership_updated",
+       "action": "folder_deleted",
        "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 61,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "Deleted folder: Contract registration folder",
+       "id": 785,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
       },
       {
-       "action": "device_group_membership_updated",
+       "action": "device_group_deleted",
        "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 60,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
-      },
-      {
-       "action": "device_group_membership_updated",
-       "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 59,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
-      },
-      {
-       "action": "device_group_membership_updated",
-       "created_at": "<volatile>",
-       "details": "<volatile>",
-       "id": 58,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
-      },
-      {
-       "action": "device_group_saved",
-       "created_at": "<volatile>",
-       "details": "Device group Support team devices saved",
-       "id": 57,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
-      },
-      {
-       "action": "device_group_saved",
-       "created_at": "<volatile>",
-       "details": "Device group Critical servers saved",
-       "id": 56,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
-      },
-      {
-       "action": "device_group_saved",
-       "created_at": "<volatile>",
-       "details": "Device group All laptops saved",
-       "id": 55,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
-      },
-      {
-       "action": "device_tags_updated",
-       "created_at": "<volatile>",
-       "details": "Device 900100031 tags set to [office]",
-       "id": 54,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
-      },
-      {
-       "action": "device_tags_updated",
-       "created_at": "<volatile>",
-       "details": "Device 900100028 tags set to [laptop]",
-       "id": 53,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
-      },
-      {
-       "action": "device_tags_updated",
-       "created_at": "<volatile>",
-       "details": "Device 900100027 tags set to [legacy]",
-       "id": 52,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
-      },
-      {
-       "action": "device_tags_updated",
-       "created_at": "<volatile>",
-       "details": "Device 900100026 tags set to [lab, vm]",
-       "id": 51,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
-      },
-      {
-       "action": "device_tags_updated",
-       "created_at": "<volatile>",
-       "details": "Device 900100025 tags set to [lab, iot]",
-       "id": 50,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
-      },
-      {
-       "action": "device_tags_updated",
-       "created_at": "<volatile>",
-       "details": "Device 900100024 tags set to [lab, iot]",
-       "id": 49,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
-      },
-      {
-       "action": "device_tags_updated",
-       "created_at": "<volatile>",
-       "details": "Device 900100023 tags set to [mobile]",
-       "id": 48,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
-      },
-      {
-       "action": "device_tags_updated",
-       "created_at": "<volatile>",
-       "details": "Device 900100022 tags set to [mobile]",
-       "id": 47,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "Device group Contract registration group deleted",
+       "id": 784,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
       },
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
        "details": "Device 900100021 tags set to [kiosk]",
-       "id": 46,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "id": 783,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "device_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100021 updated",
+       "id": 782,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "registration_approved",
+       "created_at": "<volatile>",
+       "details": "Approved registration for device 900100021 (contract-lan-kiosk)",
+       "id": 781,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "device_group_saved",
+       "created_at": "<volatile>",
+       "details": "Device group Contract registration group saved",
+       "id": 780,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "folder_created",
+       "created_at": "<volatile>",
+       "details": "Created folder: Contract registration folder",
+       "id": 779,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "help_request_resolved",
+       "created_at": "<volatile>",
+       "details": "Help request 2 resolved",
+       "id": 778,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "help_request_accepted",
+       "created_at": "<volatile>",
+       "details": "Help request 2 accepted",
+       "id": 777,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "enrollment_rejection_cleared",
+       "created_at": "<volatile>",
+       "details": "Cleared enrollment rejection for device contract-enroll-y (unbanned)",
+       "id": 776,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "enrollment_rejected",
+       "created_at": "<volatile>",
+       "details": "Rejected enrollment for device contract-enroll-y (banned)",
+       "id": 775,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "enrollment_rejection_cleared",
+       "created_at": "<volatile>",
+       "details": "Cleared enrollment rejection for device contract-enroll-x",
+       "id": 774,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "enrollment_rejected",
+       "created_at": "<volatile>",
+       "details": "Rejected enrollment for device contract-enroll-x",
+       "id": 773,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "registration_rejected",
+       "created_at": "<volatile>",
+       "details": "Rejected registration for device contract-reject (contract-reject-box): Not one of ours",
+       "id": 772,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "folder_deleted",
+       "created_at": "<volatile>",
+       "details": "Deleted folder: Contract registration folder",
+       "id": 771,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "device_group_deleted",
+       "created_at": "<volatile>",
+       "details": "Device group Contract registration group deleted",
+       "id": 770,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
       },
       {
        "action": "device_tags_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100020 tags set to [kiosk]",
-       "id": 45,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "Device 900100021 tags set to [kiosk]",
+       "id": 769,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
       },
       {
-       "action": "device_tags_updated",
+       "action": "device_updated",
        "created_at": "<volatile>",
-       "details": "Device 900100019 tags set to [laptop, sales]",
-       "id": 44,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
-      },
-      {
-       "action": "device_tags_updated",
-       "created_at": "<volatile>",
-       "details": "Device 900100018 tags set to [laptop, sales]",
-       "id": 43,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
-      },
-      {
-       "action": "device_tags_updated",
-       "created_at": "<volatile>",
-       "details": "Device 900100017 tags set to [laptop, sales]",
-       "id": 42,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
-      },
-      {
-       "action": "device_tags_updated",
-       "created_at": "<volatile>",
-       "details": "Device 900100016 tags set to [server, linux]",
-       "id": 41,
-       "ip_address": "127.0.0.1",
-       "user_id": 1,
-       "username": "admin"
+       "details": "Device 900100021 updated",
+       "id": 768,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
       }
      ],
      "success": true
