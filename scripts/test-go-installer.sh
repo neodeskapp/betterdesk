@@ -260,6 +260,18 @@ FAKE
     rm -rf "$TEST_DIR"
 )
 
+# The server folder holds the database and the keys: the service's group
+# may write it, nobody else may list or read it (upstream audit C3).
+test_server_folder_mode() (
+    load
+    SERVICE_USER=$(id -un)
+    printf 'x' > "$RUSTDESK_PATH/db_v2.sqlite3"
+    set_server_folder_permissions
+    mode=$(stat -c %a "$RUSTDESK_PATH")
+    [ "$mode" = 2770 ] || fail "the server folder has mode $mode, want 2770"
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
@@ -270,4 +282,5 @@ test_fresh_env_admin_password
 test_update_channel_in_env
 test_update_channel_before_server_update
 test_update_channel_kept_without_one
+test_server_folder_mode
 echo "Go installer unit checks passed"

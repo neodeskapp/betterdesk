@@ -3848,13 +3848,13 @@ own_by_service_user() {
 }
 
 # The server folder belongs to root with the service's group, which may
-# write it (2775): the server makes its database, keys and the binary's
-# .prev there. Its files belong to the service account, except the copies
+# write it, and nobody else may list or read it (2770): the server makes
+# its database, keys and the binary's .prev there. Its files belong to the service account, except the copies
 # kept for a rollback, the admin credentials and a source checkout.
 set_server_folder_permissions() {
     mkdir -p "$RUSTDESK_PATH/ssl"
     chown root:"$SERVICE_USER" "$RUSTDESK_PATH" 2>/dev/null || true
-    chmod 2775 "$RUSTDESK_PATH" 2>/dev/null || true
+    chmod 2770 "$RUSTDESK_PATH" 2>/dev/null || true
     local -a entries
     mapfile -t entries < <(find "$RUSTDESK_PATH" -mindepth 1 -maxdepth 1 ! -name '.admin_credentials' \
         ! -name '*.pre-go' ! -name 'source')
