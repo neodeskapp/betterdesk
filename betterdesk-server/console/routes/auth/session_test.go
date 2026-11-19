@@ -12,10 +12,9 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/auth"
 )
 
-// The clearing cookies of a sign-out through the API: the first one names
-// a cookie called "undefined", as it always has.
+// The clearing cookies of a sign-out: the session cookie under both names
+// it can have, and no other cookie (BUGS.md S1).
 var clearedAfterSignOut = []string{
-	"undefined=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
 	"betterdesk.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
 	"bd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
 }
@@ -147,7 +146,7 @@ func TestLogoutForm(t *testing.T) {
 		if res.status != http.StatusFound || res.header.Get("Location") != "/login" || res.body != `<p>Found. Redirecting to /login</p>` {
 			t.Errorf("sign-out form: %d %q %s", res.status, res.header.Get("Location"), res.body)
 		}
-		equal(t, "cookies", cookiesBut(res), clearedAfterSignOut[1:])
+		equal(t, "cookies", cookiesBut(res), clearedAfterSignOut)
 		if row := w.rows(`SELECT session_json, end_reason FROM panel_sessions WHERE sid = ?`, sid); len(row) != 1 || row[0] != "{}|logout" {
 			t.Errorf("the session row after sign-out: %v", row)
 		}

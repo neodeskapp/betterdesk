@@ -301,11 +301,10 @@ func TestDestroyAndClearCookies(t *testing.T) {
 				t.Error("a destroyed session still has its user")
 			}
 			s.Set("late", 1)
-			s.ClearCookiesAfterSignOut(w)
+			s.ClearCookies(w)
 			w.WriteHeader(http.StatusOK)
 		})
 		want := []string{
-			"undefined=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
 			"betterdesk.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
 			"bd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
 		}

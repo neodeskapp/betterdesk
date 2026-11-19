@@ -17,7 +17,7 @@ import (
 // not, and makes the browser forget the session cookie.
 func (h *handlers) logout(w http.ResponseWriter, r *http.Request) {
 	h.signOut(r)
-	kit.Session(r).ClearCookiesAfterSignOut(w)
+	kit.Session(r).ClearCookies(w)
 	kit.OK(w, r, nil)
 }
 

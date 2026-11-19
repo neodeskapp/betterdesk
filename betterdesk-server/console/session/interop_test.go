@@ -258,7 +258,7 @@ func startGo(t *testing.T, db *store.DB, s setup) *goServer {
 		sess := session.From(r)
 		sess.End(session.ReasonLogout)
 		_ = sess.Destroy()
-		sess.ClearCookiesAfterSignOut(w)
+		sess.ClearCookies(w)
 		httpx.WriteJSON(w, r, http.StatusOK, map[string]any{"success": true})
 	})
 	open.HandleFunc("GET /t/logout", func(w http.ResponseWriter, r *http.Request) {
@@ -973,10 +973,13 @@ func TestInteropSignOut(t *testing.T) {
 					body = map[string]any{}
 				}
 				r := b.do(outOn, method, path, body)
-				// Without the token cookie a GET also sets, which is random
+				// Without the token cookie a GET also sets, which is random,
+				// and without the clearing header for a cookie called
+				// "undefined" that Node sent and the Go console does not
+				// (BUGS.md S1)
 				var cleared []string
 				for _, line := range r.setCookies {
-					if !strings.HasPrefix(line, "__csrf") {
+					if !strings.HasPrefix(line, "__csrf") && !(outOn == node && strings.HasPrefix(line, "undefined=")) {
 						cleared = append(cleared, line)
 					}
 				}

@@ -20,6 +20,7 @@ type flowFix struct {
 
 var flowFixes = []flowFix{
 	{"S11", proAccountGets403},
+	{"S1", signOutClearsOnlySessionCookies},
 }
 
 // fixFlow applies every fix to the recorded steps.
@@ -76,4 +77,25 @@ func proAccountGets403(t *testing.T, steps []flowStep) bool {
 		}
 		return kept
 	}) && changed
+}
+
+// signOutClearsOnlySessionCookies: a sign-out through the API clears the
+// session cookie under its two names and no cookie called "undefined".
+func signOutClearsOnlySessionCookies(t *testing.T, steps []flowStep) bool {
+	changed := false
+	for i := range steps {
+		cookies := steps[i].Answer.Headers["set-cookie"]
+		var kept []string
+		for _, c := range cookies {
+			if strings.HasPrefix(c, "undefined=") {
+				changed = true
+				continue
+			}
+			kept = append(kept, c)
+		}
+		if len(kept) != len(cookies) {
+			steps[i].Answer.Headers["set-cookie"] = kept
+		}
+	}
+	return changed
 }

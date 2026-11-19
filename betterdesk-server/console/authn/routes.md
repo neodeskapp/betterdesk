@@ -84,8 +84,8 @@ attestation.
 ### `POST /api/auth/logout`, `POST /logout`, `GET /logout`
 
 No service call: audit `logout`, `sess.End(session.ReasonLogout)`,
-`sess.Destroy()`, `sess.ClearCookiesAfterSignOut(w)` for the API and
-`sess.ClearCookies(w)` and a redirect to `/login` for `POST /logout`.
+`sess.Destroy()`, `sess.ClearCookies(w)`, and for `POST /logout` a
+redirect to `/login`.
 `GET /logout` signs nobody out: 405 with the console's error page for a
 signed-in session, a redirect to `/login` otherwise.
 

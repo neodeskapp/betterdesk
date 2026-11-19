@@ -332,18 +332,10 @@ func (s *Session) End(reason string) {
 }
 
 // ClearCookies makes the browser forget the session cookie under both
-// names it can have, the way GET /logout answers.
+// names it can have, as a sign-out answers.
 func (s *Session) ClearCookies(w http.ResponseWriter) {
 	clearCookie(w, cookieNameHTTPS)
 	clearCookie(w, cookieNameHTTP)
-}
-
-// ClearCookiesAfterSignOut is what POST /api/auth/logout answers with: a
-// clearing header for a cookie called "undefined", then the two of
-// ClearCookies.
-func (s *Session) ClearCookiesAfterSignOut(w http.ResponseWriter) {
-	clearCookie(w, "undefined")
-	s.ClearCookies(w)
 }
 
 // record is the session as the table stores it.
