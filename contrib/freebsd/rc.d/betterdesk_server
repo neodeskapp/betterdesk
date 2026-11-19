@@ -14,6 +14,8 @@
 #   betterdesk_server_api_port="21114"
 #   betterdesk_server_flags=""                 # extra CLI flags (e.g. -db ...)
 #   betterdesk_server_user="root"
+#   betterdesk_server_env="CONSOLE_PORT=0"      # the console in the binary stays off: the
+#                                              # Node console (betterdesk_console) serves 5000
 #
 # Example community rc.d unit for FreeBSD (Tier 3). See contrib/freebsd/README.md.
 # Refs: https://github.com/UNITRONIX/BetterDesk/issues/310
@@ -34,6 +36,7 @@ load_rc_config $name
 : ${betterdesk_server_relay:="127.0.0.1"}
 : ${betterdesk_server_flags:=""}
 : ${betterdesk_server_user:="root"}
+: ${betterdesk_server_env:="CONSOLE_PORT=0"}
 
 pidfile="/var/run/${name}.pid"
 procname="${betterdesk_server_bin}"

@@ -26,7 +26,7 @@ func TestLoadDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.Port != 0 || cfg.Host != "127.0.0.1" || cfg.NodeUpstream != nil || cfg.TrustProxy.Enabled() || cfg.DebugRouting {
+	if cfg.Port != 5000 || cfg.Host != "127.0.0.1" || cfg.NodeUpstream != nil || cfg.TrustProxy.Enabled() || cfg.DebugRouting {
 		t.Errorf("defaults = %+v", cfg)
 	}
 	if cfg.NodeEnv != "development" || cfg.Production || cfg.Docker || cfg.HTTPS || cfg.HTTPSExact || cfg.AllowSelfSignedCerts {
@@ -40,7 +40,7 @@ func TestLoadDefaults(t *testing.T) {
 		"ConsoleDir":    console,
 		"DataDir":       filepath.Join(console, "data"),
 		"LangDir":       filepath.Join(console, "lang"),
-		"WebUIDir":      filepath.Join(console, "..", "web-ui", "build"),
+		"WebUIDir":      "",
 		"PublicDir":     filepath.Join(console, "public"),
 		"ProtosDir":     filepath.Join(console, "protos"),
 		"WallpapersDir": filepath.Join(console, "wallpapers"),
@@ -94,7 +94,7 @@ func TestPanelGroupingSettings(t *testing.T) {
 
 func TestLoadValues(t *testing.T) {
 	cfg, err := load(env(map[string]string{
-		"HOST": "127.0.0.1", "CONSOLE_PORT": "5000", "TRUST_PROXY": "loopback",
+		"HOST": "127.0.0.1", "CONSOLE_PORT": "5100", "TRUST_PROXY": "loopback",
 		"CONSOLE_NODE_UPSTREAM": "http://127.0.0.1:5001",
 		"NODE_ENV":              "production", "HTTPS_ENABLED": "TRUE", "HSTS_ENABLED": "On", "ALLOW_SELF_SIGNED_CERTS": "True",
 		"DEFAULT_LANGUAGE": "de", "DEVICE_SCOPE_DEFAULT": "Restricted", "LOG_LEVEL": " Debug ",
@@ -104,7 +104,7 @@ func TestLoadValues(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.Addr() != "127.0.0.1:5000" {
+	if cfg.Addr() != "127.0.0.1:5100" {
 		t.Errorf("Addr = %q", cfg.Addr())
 	}
 	if cfg.NodeUpstream == nil || cfg.NodeUpstream.Host != "127.0.0.1:5001" {
@@ -170,7 +170,7 @@ func TestDockerRule(t *testing.T) {
 	byFile, _ := load(env(nil), machine("/usr/local/bin", "/opt/rustdesk", "/.dockerenv"))
 	for name, cfg := range map[string]*Config{"DOCKER=true": byEnv, "/.dockerenv": byFile} {
 		if !cfg.Docker || cfg.DataDir != "/app/data" || cfg.ConsoleDir != "/app" || cfg.LangDir != filepath.Join("/app", "lang") ||
-			cfg.WebUIDir != filepath.Join("/app", "..", "web-ui", "build") {
+			cfg.WebUIDir != "" {
 			t.Errorf("%s: %+v", name, cfg)
 		}
 	}
@@ -214,21 +214,51 @@ func TestConsoleDirSearch(t *testing.T) {
 	}
 }
 
-func TestWebUIDirSearch(t *testing.T) {
+// The build on disk is only the one WEB_UI_DIR names: the builds the old
+// console's folder has beside or inside it are not looked for, so an
+// upgraded install serves the build in the binary.
+func TestWebUIDirOnlyFromTheVariable(t *testing.T) {
 	inside := filepath.Join("/opt/BetterDeskConsole", "web-ui", "build")
 	beside := filepath.Join("/opt/BetterDeskConsole", "..", "web-ui", "build")
-	only := func(files ...string) *Config {
-		cfg, _ := load(env(map[string]string{"CONSOLE_DIR": "/opt/BetterDeskConsole"}), machine("", "", files...))
-		return cfg
+	builds := machine("", "", inside+"/index.html", beside+"/index.html")
+	cfg, _ := load(env(map[string]string{"CONSOLE_DIR": "/opt/BetterDeskConsole"}), builds)
+	if cfg.WebUIDir != "" {
+		t.Errorf("without WEB_UI_DIR: %q, want the build in the binary", cfg.WebUIDir)
 	}
-	if got := only().WebUIDir; got != beside {
-		t.Errorf("no build anywhere: %q, want %q", got, beside)
+	cfg, _ = load(env(map[string]string{"CONSOLE_DIR": "/opt/BetterDeskConsole", "WEB_UI_DIR": inside}), builds)
+	if cfg.WebUIDir != inside {
+		t.Errorf("WEB_UI_DIR=%s: %q", inside, cfg.WebUIDir)
 	}
-	if got := only(inside + "/index.html").WebUIDir; got != inside {
-		t.Errorf("a build inside the console folder: %q, want %q", got, inside)
+}
+
+// CONSOLE_PORT, else 5000; 0 turns the console off (DECISIONS A27). PORT
+// is the old console's and the signal server's, never the console's.
+func TestConsolePort(t *testing.T) {
+	for _, c := range []struct {
+		env  map[string]string
+		want int
+	}{
+		{nil, 5000},
+		{map[string]string{"CONSOLE_PORT": ""}, 5000},
+		{map[string]string{"CONSOLE_PORT": "  "}, 5000},
+		{map[string]string{"CONSOLE_PORT": "0"}, 0},
+		{map[string]string{"CONSOLE_PORT": " 5001 "}, 5001},
+		{map[string]string{"CONSOLE_PORT": "65535"}, 65535},
+		{map[string]string{"PORT": "6000"}, 5000},
+		{map[string]string{"PORT": "6000", "CONSOLE_PORT": "0"}, 0},
+	} {
+		cfg, err := load(env(c.env), machine("", ""))
+		if err != nil {
+			t.Fatalf("%v: %v", c.env, err)
+		}
+		if cfg.Port != c.want {
+			t.Errorf("%v: port %d, want %d", c.env, cfg.Port, c.want)
+		}
 	}
-	if got := only(inside+"/index.html", beside+"/index.html").WebUIDir; got != beside {
-		t.Errorf("builds in both places: %q, want %q", got, beside)
+	for _, bad := range []string{"-1", "65536", "5000x", "0x10", "5 000"} {
+		if _, err := load(env(map[string]string{"CONSOLE_PORT": bad}), machine("", "")); err == nil {
+			t.Errorf("CONSOLE_PORT=%q was taken", bad)
+		}
 	}
 }
 

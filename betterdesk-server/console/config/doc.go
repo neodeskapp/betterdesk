@@ -4,7 +4,7 @@
 // # Settings
 //
 //	Variable                 Default               Meaning
-//	CONSOLE_PORT             (off)                 Port the Go console listens on. Unset or 0: the Go console does not start.
+//	CONSOLE_PORT             5000                  Port the Go console listens on. 0: the Go console does not start.
 //	HOST                     127.0.0.1             Address the console listens on.
 //	CONSOLE_NODE_UPSTREAM    (none)                http(s) address of the Node console while routes move. With it, Go
 //	                                               answers only the routes it has and forwards everything else.
@@ -23,8 +23,9 @@
 //	DATA_DIR                 /app/data in a        Where the console writes: .session_secret, uploads.
 //	                         container, else
 //	                         CONSOLE_DIR/data
-//	WEB_UI_DIR               web-ui/build beside   Build of the web app. Without it: CONSOLE_DIR/../web-ui/build, or
-//	                         CONSOLE_DIR           CONSOLE_DIR/web-ui/build when only that one has an index.html.
+//	WEB_UI_DIR               (the build in the     A build of the web app on disk, for development. Without it the
+//	                         binary)               console serves the build in the binary (cmd/embed-webui); a binary
+//	                                               built without that step has no web app.
 //	HTTPS_ENABLED            false                 "true" in any letter case: cookies are called betterdesk.sid and __csrf
 //	                                               and are Secure, the security headers are those of HTTPS. With a
 //	                                               certificate the console listens with TLS on HTTPS_PORT; without one

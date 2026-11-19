@@ -16,12 +16,12 @@ import (
 	"github.com/unitronix/betterdesk-server/events"
 )
 
-// startConsole starts the web console on its own port when CONSOLE_PORT is
-// set. The console works on the server's database: PostgreSQL through the
-// server's pool, SQLite through its own connections to the same file. The
-// returned function stops the console and everything it started. requestRestart
-// ends the process to be started again; the console calls it only under
-// a supervisor.
+// startConsole starts the web console on its own port: CONSOLE_PORT, else
+// 5000, and not at all with CONSOLE_PORT=0. The console works on the
+// server's database: PostgreSQL through the server's pool, SQLite through
+// its own connections to the same file. The returned function stops the
+// console and everything it started. requestRestart ends the process to
+// be started again; the console calls it only under a supervisor.
 func startConsole(ctx context.Context, cfg *config.Config, database db.Database, apiSrv *api.Server, bus *events.Bus, requestRestart func()) (func(), error) {
 	ccfg, err := consoleconfig.LoadEnv()
 	if err != nil {

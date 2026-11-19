@@ -142,7 +142,11 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	}
 
 	audit := auditlog.New(opts.Store)
+	if cfg.WebUIDir == "" && !webui.HasEmbeddedBuild() {
+		logging.Logf("console", "WARN: this binary was built without the web app (go run ./cmd/embed-webui before go build) and WEB_UI_DIR is not set: the console answers no pages")
+	}
 	host := webui.New(webui.Options{
+		Embedded:   cfg.WebUIDir == "",
 		Dir:        cfg.WebUIDir,
 		HTTPS:      cfg.HTTPS,
 		Production: cfg.Production,

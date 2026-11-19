@@ -249,6 +249,9 @@ ExecStart=/opt/betterdesk/betterdesk-server \
 Restart=always
 RestartSec=5
 LimitNOFILE=65535
+# The console in the binary is on by default on port 5000; it stays off
+# where the Node console (or nothing) serves the panel
+Environment=CONSOLE_PORT=0
 
 # Security hardening
 ProtectSystem=strict

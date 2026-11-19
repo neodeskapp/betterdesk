@@ -1,0 +1,6 @@
+# The web app's build, copied in by cmd/embed-webui so the binary embeds
+# it (DECISIONS A25). Only the placeholder that lets go:embed compile
+# without a build is committed.
+!/dist/
+/dist/*
+!/dist/.gitkeep

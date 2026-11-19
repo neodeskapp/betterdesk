@@ -102,11 +102,16 @@ jobs:
         with:
           go-version-file: ${{ env.SERVER_DIR }}/go.mod
           cache-dependency-path: ${{ env.SERVER_DIR }}/go.sum
-      # The web app goes where the binary embeds it from (DECISIONS A25).
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: web-ui-build
-          path: ${{ env.SERVER_DIR }}/console/webui/dist
+          path: ${{ runner.temp }}/web-ui-build
+      # The web app goes where the binary embeds it from (DECISIONS A25),
+      # with the time of every file. The step runs for the build machine,
+      # before GOOS and GOARCH are set.
+      - name: Embed the web app
+        working-directory: ${{ env.SERVER_DIR }}
+        run: go run ./cmd/embed-webui -from "${RUNNER_TEMP}/web-ui-build"
       - name: Build
         working-directory: ${{ env.SERVER_DIR }}
         env:

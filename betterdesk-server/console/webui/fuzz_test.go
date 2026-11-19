@@ -45,7 +45,7 @@ func FuzzHandlePath(f *testing.F) {
 	var hosts []*Host
 	for _, base := range []string{"", "/app2"} {
 		for _, production := range []bool{true, false} {
-			hosts = append(hosts, newHost(Options{Dir: dir, Base: &base, Production: production, Session: sessionFromHeader}, watched))
+			hosts = append(hosts, newHost(Options{Dir: dir, Base: &base, Production: production, Session: sessionFromHeader}, dir, watched))
 		}
 	}
 	watched.take()

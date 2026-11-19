@@ -534,7 +534,7 @@ func TestBuildIsReadAgainWhenItChanges(t *testing.T) {
 
 	// Same content written again with the same time: nothing is read
 	watched := &watchedFiles{}
-	quiet := newHost(Options{Dir: dir, Session: sessionFromHeader}, watched)
+	quiet := newHost(Options{Dir: dir, Session: sessionFromHeader}, dir, watched)
 	watched.take()
 	serve(quiet, "GET", "/extra", admin)
 	looked := 0

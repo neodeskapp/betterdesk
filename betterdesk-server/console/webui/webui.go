@@ -32,10 +32,12 @@
 // it must not sit behind something that cleans or redirects paths, such as
 // http.ServeMux with a "/" pattern.
 //
-// Options.Dir is the build directory. The caller decides it: WEB_UI_DIR
-// when set, else web-ui/build next to the directory the old console was
-// installed in, which is /web-ui/build in the Docker image and
-// <install directory>/web-ui/build on a native install.
+// The build is the one in the binary (Options.Embedded), which
+// cmd/embed-webui copies in before go build, or a build directory on disk
+// (Options.Dir, from WEB_UI_DIR, for development). Both answer the same
+// for the same build: every embedded file keeps the modification time it
+// had on disk, and with it its Last-Modified and ETag. A binary built
+// without the step has no build in it.
 package webui
 
 import (
@@ -53,7 +55,10 @@ const oldBase = "/app"
 
 // Options configure a Host.
 type Options struct {
-	// Dir is the build directory (see the package comment).
+	// Embedded serves the build in the binary; Dir is then not read.
+	Embedded bool
+	// Dir is a build directory on disk. Empty (and Embedded false) means no
+	// build.
 	Dir string
 	// Base is the URL prefix the app is served under: "" for the root, or a
 	// path such as "/console". nil means the base the build was made for,
@@ -89,22 +94,28 @@ type Host struct {
 	page *page
 }
 
-// New makes a Host for the build in opts.Dir. A missing build is not an
-// error: the Host then answers no pages and no files, and with
-// Options.Production off it starts to as soon as a build appears.
+// New makes a Host for the build in the binary or in opts.Dir. A missing
+// build is not an error: the Host then answers no pages and no files, and
+// for a directory with Options.Production off it starts to as soon as a
+// build appears there.
 func New(opts Options) *Host {
-	if opts.Dir == "" {
-		// No directory is no build, not the directory the server runs in
-		return newHost(opts, noFiles{})
+	if opts.Embedded {
+		build, err := embedded()
+		return newEmbedded(opts, build, err)
 	}
-	return newHost(opts, osFiles{})
-}
-
-func newHost(opts Options, files fileSystem) *Host {
 	dir := opts.Dir
 	if abs, err := filepath.Abs(dir); err == nil {
 		dir = abs
 	}
+	if opts.Dir == "" {
+		// No directory is no build, not the directory the server runs in
+		return newHost(opts, dir, noFiles{})
+	}
+	return newHost(opts, dir, osFiles{})
+}
+
+// newHost makes a Host whose files have names below dir.
+func newHost(opts Options, dir string, files fileSystem) *Host {
 	h := &Host{
 		dir:        filepath.Clean(dir),
 		https:      opts.HTTPS,

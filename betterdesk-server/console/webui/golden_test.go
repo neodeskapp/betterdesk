@@ -107,99 +107,108 @@ func TestAnswersMatchNode(t *testing.T) {
 		{name: "nobuild", options: Options{Production: true}, nobuild: true, atLeast: 700},
 	}
 	for _, config := range configs {
-		t.Run(config.name, func(t *testing.T) {
-			golden := loadGolden(t, config.name)
-			if len(golden.Cases) < config.atLeast {
-				t.Fatalf("only %d recorded cases", len(golden.Cases))
+		for _, inBinary := range []bool{false, true} {
+			name := config.name
+			if inBinary {
+				name += "/embedded"
 			}
-			dir := filepath.Join(t.TempDir(), "missing")
-			index := ""
-			if !config.nobuild {
-				dir = copySite(t, config.base)
-				index = readSite(t, dir, "index.html")
-			}
-			options := config.options
-			options.Dir = dir
-			options.Session = sessionFromHeader
-			h := New(options)
-			if h.Base() != config.base {
-				t.Fatalf("base %q, want %q", h.Base(), config.base)
-			}
-			if golden.Policy != nil && h.page.csp != *golden.Policy {
-				t.Fatalf("policy\n got %s\nwant %s", h.page.csp, *golden.Policy)
-			}
-
-			differences := 0
-			for _, c := range golden.Cases {
-				rec := httptest.NewRecorder()
-				replay(h, rec, rawRequest(c.Method, c.Target, c.Headers))
-				res := rec.Result()
-				var problems []string
-
-				if res.StatusCode != c.Status {
-					problems = append(problems, "status "+strconv.Itoa(res.StatusCode)+", Node "+strconv.Itoa(c.Status))
+			t.Run(name, func(t *testing.T) {
+				golden := loadGolden(t, config.name)
+				if len(golden.Cases) < config.atLeast {
+					t.Fatalf("only %d recorded cases", len(golden.Cases))
 				}
-				got := map[string]string{}
-				for name, values := range res.Header {
-					got[strings.ToLower(name)] = strings.Join(values, ", ")
+				dir := filepath.Join(t.TempDir(), "missing")
+				index := ""
+				if !config.nobuild {
+					dir = copySite(t, config.base)
+					index = readSite(t, dir, "index.html")
 				}
-				names := map[string]bool{}
-				for name := range got {
-					names[name] = true
+				options := config.options
+				options.Dir = dir
+				options.Session = sessionFromHeader
+				h, named := New(options), dir
+				if inBinary {
+					h, named = embeddedHost(t, options, config.nobuild), embeddedDir
 				}
-				for name := range c.Answer {
-					names[name] = true
+				if h.Base() != config.base {
+					t.Fatalf("base %q, want %q", h.Base(), config.base)
 				}
-				sorted := make([]string, 0, len(names))
-				for name := range names {
-					sorted = append(sorted, name)
-				}
-				sort.Strings(sorted)
-				for _, name := range sorted {
-					if c.NamesDir && (name == "content-length" || name == "etag") {
-						continue
-					}
-					want, wanted := c.Answer[name]
-					if want == "{POLICY}" {
-						want = *golden.Policy
-					}
-					have, has := got[name]
-					if has != wanted || have != want {
-						problems = append(problems, name+": "+strconv.Quote(have)+", Node "+strconv.Quote(want))
-					}
+				if golden.Policy != nil && h.page.csp != *golden.Policy {
+					t.Fatalf("policy\n got %s\nwant %s", h.page.csp, *golden.Policy)
 				}
 
-				want := ""
-				switch {
-				case c.Page != nil:
-					at := strings.Index(index, "<head>") + len("<head>")
-					want = index[:at] + strings.ReplaceAll(*c.Page, "{DIR}", dir) + index[at:]
-				case c.Body != nil:
-					want = strings.ReplaceAll(*c.Body, "{DIR}", dir)
-				case c.BodyBase64 != nil:
-					raw, err := base64.StdEncoding.DecodeString(*c.BodyBase64)
-					if err != nil {
-						t.Fatal(err)
-					}
-					want = string(raw)
-				}
-				if body := rec.Body.String(); body != want {
-					problems = append(problems, "body "+strconv.Quote(clip(body))+", Node "+strconv.Quote(clip(want)))
-				}
+				differences := 0
+				for _, c := range golden.Cases {
+					rec := httptest.NewRecorder()
+					replay(h, rec, rawRequest(c.Method, c.Target, c.Headers))
+					res := rec.Result()
+					var problems []string
 
-				if len(problems) > 0 {
-					differences++
-					if differences <= 12 {
-						t.Errorf("%s %q %v\n    %s", c.Method, c.Target, c.Headers, strings.Join(problems, "\n    "))
-					} else if differences <= 150 {
-						t.Errorf("%s %q %v: %s", c.Method, c.Target, c.Headers, clip(problems[0]))
+					if res.StatusCode != c.Status {
+						problems = append(problems, "status "+strconv.Itoa(res.StatusCode)+", Node "+strconv.Itoa(c.Status))
+					}
+					got := map[string]string{}
+					for name, values := range res.Header {
+						got[strings.ToLower(name)] = strings.Join(values, ", ")
+					}
+					names := map[string]bool{}
+					for name := range got {
+						names[name] = true
+					}
+					for name := range c.Answer {
+						names[name] = true
+					}
+					sorted := make([]string, 0, len(names))
+					for name := range names {
+						sorted = append(sorted, name)
+					}
+					sort.Strings(sorted)
+					for _, name := range sorted {
+						if c.NamesDir && (name == "content-length" || name == "etag") {
+							continue
+						}
+						want, wanted := c.Answer[name]
+						if want == "{POLICY}" {
+							want = *golden.Policy
+						}
+						have, has := got[name]
+						if has != wanted || have != want {
+							problems = append(problems, name+": "+strconv.Quote(have)+", Node "+strconv.Quote(want))
+						}
+					}
+
+					want := ""
+					switch {
+					case c.Page != nil:
+						at := strings.Index(index, "<head>") + len("<head>")
+						want = index[:at] + strings.ReplaceAll(*c.Page, "{DIR}", named) + index[at:]
+					case c.Body != nil:
+						want = strings.ReplaceAll(*c.Body, "{DIR}", named)
+					case c.BodyBase64 != nil:
+						raw, err := base64.StdEncoding.DecodeString(*c.BodyBase64)
+						if err != nil {
+							t.Fatal(err)
+						}
+						want = string(raw)
+					}
+					if body := rec.Body.String(); body != want {
+						problems = append(problems, "body "+strconv.Quote(clip(body))+", Node "+strconv.Quote(clip(want)))
+					}
+
+					if len(problems) > 0 {
+						differences++
+						if differences <= 12 {
+							t.Errorf("%s %q %v\n    %s", c.Method, c.Target, c.Headers, strings.Join(problems, "\n    "))
+						} else if differences <= 150 {
+							t.Errorf("%s %q %v: %s", c.Method, c.Target, c.Headers, clip(problems[0]))
+						}
 					}
 				}
-			}
-			if differences > 0 {
-				t.Errorf("%d of %d answers differ from Node", differences, len(golden.Cases))
-			}
-		})
+				if differences > 0 {
+					t.Errorf("%d of %d answers differ from Node", differences, len(golden.Cases))
+				}
+			})
+		}
 	}
 }
 

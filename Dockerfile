@@ -16,6 +16,18 @@
 #   21119 - WebSocket Relay
 #   5000  - Web Console (Node.js admin panel)
 
+# ============= Web UI build (the Svelte console) =============
+FROM node:22.23.2-alpine3.24 AS web-ui-builder
+
+WORKDIR /web-ui
+
+# npm 10 (bundled with Node 22) fails to resolve this dependency tree (web-ui-ci.yml)
+COPY web-ui/package.json web-ui/package-lock.json ./
+RUN npx -y npm@11.6.2 ci --no-audit --no-fund
+
+COPY web-ui/ .
+RUN npm run build
+
 # ============= Stage 1: Build Go server =============
 FROM golang:1.26.11-alpine AS go-builder
 ARG TARGETARCH
@@ -28,6 +40,10 @@ COPY betterdesk-server/go.mod betterdesk-server/go.sum ./
 RUN go mod download
 
 COPY betterdesk-server/ .
+
+# The binary carries the web app (DECISIONS A25), as the release binaries do
+COPY --from=web-ui-builder /web-ui/build /web-ui-build
+RUN go run ./cmd/embed-webui -from /web-ui-build
 
 ARG BETTERDESK_PRODUCT_VERSION=dev
 
@@ -50,18 +66,6 @@ RUN apk add --no-cache python3 make g++ || { sleep 2 && apk add --no-cache pytho
 
 COPY web-nodejs/package.json web-nodejs/package-lock.json* ./
 RUN npm ci --omit=dev
-
-# ============= Web UI build (the Svelte console) =============
-FROM node:22.23.2-alpine3.24 AS web-ui-builder
-
-WORKDIR /web-ui
-
-# npm 10 (bundled with Node 22) fails to resolve this dependency tree (web-ui-ci.yml)
-COPY web-ui/package.json web-ui/package-lock.json ./
-RUN npx -y npm@11.6.2 ci --no-audit --no-fund
-
-COPY web-ui/ .
-RUN npm run build
 
 # ============= Stage 3: Production runtime =============
 # Note: supervisord requires root to manage child processes with user= directive.
@@ -139,6 +143,9 @@ RUN chmod +x /ensure-app-user.sh /entrypoint.sh /docker/bootstrap-admin-credenti
 # Environment variables (defaults)
 ENV NODE_ENV=production
 ENV PORT=5000
+# The Node console serves port 5000 in this image; the Go server's own
+# console stays off (it is on by default, DECISIONS A27)
+ENV CONSOLE_PORT=0
 ENV SIGNAL_PORT=21116
 ENV SIGNAL_RATE_LIMIT_PER_IP=20
 ENV HOST=0.0.0.0

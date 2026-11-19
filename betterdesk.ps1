@@ -2133,6 +2133,16 @@ function Patch-ServiceDefinitions {
                     $changed = $true
                 }
             }
+            if ($svc -eq $script:SERVER_SERVICE) {
+                # The Node console serves port 5000; the server's own console,
+                # on by default, stays off
+                $serverEnv = @(@(& $nssmExe get $svc AppEnvironmentExtra 2>$null) | Where-Object { $_ })
+                if (-not ($serverEnv | Where-Object { $_ -like 'CONSOLE_PORT=*' })) {
+                    & $nssmExe set $svc AppEnvironmentExtra ($serverEnv + 'CONSOLE_PORT=0') | Out-Null
+                    Print-Info "Patched $svc AppEnvironmentExtra (CONSOLE_PORT=0: the Node console serves the panel)"
+                    $changed = $true
+                }
+            }
         } catch { }
     }
     if ($changed) {
@@ -2360,6 +2370,9 @@ function Setup-Services {
     # queued for operator approval. Existing installs are left untouched.
     if ($script:FRESH_INSTALL) { $serverEnvExtra += "ENROLLMENT_MODE=managed" }
     $serverEnvExtra += "MESH_ENABLED=Y"
+    # The Node console serves port 5000; the server's own console, on by
+    # default, stays off
+    $serverEnvExtra += "CONSOLE_PORT=0"
     & $nssm set $script:SERVER_SERVICE AppEnvironmentExtra $serverEnvExtra
     
     # Privilege separation: drop the Go server to its low-privilege virtual account.
@@ -2541,6 +2554,9 @@ function Setup-ScheduledTasks {
     foreach ($billingLine in (Get-GoBillingEnvLauncherLines -EnvFilePath $billingEnvFile)) {
         $launcherLines += $billingLine
     }
+    # The Node console serves port 5000; the server's own console, on by
+    # default, stays off
+    $launcherLines += "set `"CONSOLE_PORT=0`""
     $launcherLines += "`"$serverExe`" $serverArgs"
     Set-Content -Path $serverLauncher -Value $launcherLines -Encoding ASCII
     & icacls $serverLauncher /inheritance:r /grant:r "*S-1-5-32-544:F" "*S-1-5-18:F" 2>$null | Out-Null
@@ -3195,6 +3211,8 @@ function Setup-ServicesMinimal {
     if ($script:USE_POSTGRESQL -and $script:POSTGRESQL_URI) {
         $envExtra += "`nDB_URL=$($script:POSTGRESQL_URI)"
     }
+    # Server only: the console in the binary is on by default and stays off
+    $envExtra += "`nCONSOLE_PORT=0"
     nssm set $svcName AppEnvironmentExtra $envExtra
     
     # Privilege separation: drop the Go server to its low-privilege virtual account.

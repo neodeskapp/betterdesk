@@ -17,8 +17,8 @@ import (
 
 // Config is the console's configuration.
 type Config struct {
-	// Host and Port are where the console listens (HOST, CONSOLE_PORT).
-	// Port 0 means the Go console is off.
+	// Host and Port are where the console listens (HOST, CONSOLE_PORT;
+	// 5000 when CONSOLE_PORT is unset). Port 0 means the Go console is off.
 	Host string
 	Port int
 
@@ -55,7 +55,8 @@ type Config struct {
 	DataDir string
 	// LangDir holds the <code>.json language files (CONSOLE_LANG_DIR).
 	LangDir string
-	// WebUIDir is the build of the web app (WEB_UI_DIR).
+	// WebUIDir is a build of the web app on disk (WEB_UI_DIR), for
+	// development. Empty means the build in the binary.
 	WebUIDir string
 	// PublicDir, ProtosDir, WallpapersDir and UploadsDir are the folders
 	// the console serves as files.
@@ -257,6 +258,7 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 		cfg.Host = "127.0.0.1"
 	}
 
+	cfg.Port = defaultConsolePort
 	if raw := strings.TrimSpace(getenv("CONSOLE_PORT")); raw != "" {
 		port, err := strconv.Atoi(raw)
 		if err != nil || port < 0 || port > 65535 {
@@ -294,7 +296,7 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 		}
 	}
 	cfg.LangDir = orDefault(getenv("CONSOLE_LANG_DIR"), filepath.Join(cfg.ConsoleDir, "lang"))
-	cfg.WebUIDir = webUIDir(getenv, p, cfg.ConsoleDir)
+	cfg.WebUIDir = getenv("WEB_UI_DIR")
 	cfg.PublicDir = filepath.Join(cfg.ConsoleDir, "public")
 	cfg.ProtosDir = filepath.Join(cfg.ConsoleDir, "protos")
 	cfg.WallpapersDir = filepath.Join(cfg.ConsoleDir, "wallpapers")
@@ -447,22 +449,6 @@ func consoleDir(getenv func(string) string, p probe, docker bool) string {
 	return places[0]
 }
 
-// webUIDir finds the build of the web app: WEB_UI_DIR, else web-ui/build
-// next to the old console's folder (the Docker image and a source tree),
-// else inside it (where the installer builds it), whichever has an
-// index.html.
-func webUIDir(getenv func(string) string, p probe, consoleDir string) string {
-	if dir := getenv("WEB_UI_DIR"); dir != "" {
-		return dir
-	}
-	beside := filepath.Join(consoleDir, "..", "web-ui", "build")
-	inside := filepath.Join(consoleDir, "web-ui", "build")
-	if !p.exists(filepath.Join(beside, "index.html")) && p.exists(filepath.Join(inside, "index.html")) {
-		return inside
-	}
-	return beside
-}
-
 // apiHost is the host and port of the API address the old console was
 // configured with: BETTERDESK_API_URL, else HBBS_API_URL, else
 // 127.0.0.1:21114, as that address writes them.
@@ -477,6 +463,10 @@ func apiHost(getenv func(string) string) string {
 	}
 	return u.Host
 }
+
+// defaultConsolePort is the console's port when CONSOLE_PORT is unset
+// (DECISIONS A27): the port the old console had.
+const defaultConsolePort = 5000
 
 // The API address and port of an install that sets neither.
 const (

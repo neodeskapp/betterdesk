@@ -1218,7 +1218,9 @@ _safe_cp_tls_file() {
     return 0
 }
 
-# Ensure Go signal/relay/API ports are not overridden by shared .env (#219).
+# Ensure Go signal/relay/API ports are not overridden by shared .env (#219),
+# and that the Go server keeps its own console off: it is on by default on
+# port 5000, which the Node console (betterdesk-console.service) serves.
 ensure_go_server_signal_ports() {
     local go_svc_file="/etc/systemd/system/betterdesk-server.service"
     local changed=0
@@ -1226,6 +1228,10 @@ ensure_go_server_signal_ports() {
 
     [ -f "$go_svc_file" ] || return 1
 
+    if ! grep -q '^Environment=CONSOLE_PORT=' "$go_svc_file" 2>/dev/null; then
+        _upsert_systemd_env "$go_svc_file" CONSOLE_PORT 0
+        changed=1
+    fi
     if ! grep -q '^Environment=SIGNAL_PORT=21116' "$go_svc_file" 2>/dev/null; then
         _upsert_systemd_env "$go_svc_file" SIGNAL_PORT 21116
         changed=1
@@ -4833,6 +4839,9 @@ Environment=MESH_ENABLED=Y
 Environment=SIGNAL_PORT=21116
 Environment=RELAY_PORT=21117
 Environment=GO_API_PORT=${GO_API_PORT:-21114}
+# The Node console (betterdesk-console.service) serves port 5000; the
+# server's own console, on by default, stays off
+Environment=CONSOLE_PORT=0
 Environment=DB_URL=$db_url_env
 $CONNECTION_MODE_ENV_BLOCK
 ExecStart=$SERVER_BINARY_INSTALL_PATH -mode all -relay-servers $server_ip -key-file $RUSTDESK_PATH/id_ed25519 -api-port $API_PORT -signal-rate-limit-per-ip $signal_rate_limit $tls_arg
@@ -5260,6 +5269,8 @@ Restart=always
 RestartSec=5
 $GO_ENV
 Environment=MESH_ENABLED=Y
+# Server only: the console in the binary is on by default and stays off
+Environment=CONSOLE_PORT=0
 $CONNECTION_MODE_ENV_BLOCK
 
 # Hardening
