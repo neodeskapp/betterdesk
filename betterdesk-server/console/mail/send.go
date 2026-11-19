@@ -438,15 +438,16 @@ func helpRequestMail(help HelpRequest, folderName jsbind.Value, baseURL string) 
 	}
 	subject += "Help request — " + hostname
 
-	// Empty lines are dropped, also the ones meant as spacing
-	lines := []string{"A new help request was submitted.", "Device: " + hostname}
+	// Blank lines set the parts apart; the device id and the folder have a
+	// line only when they are set
+	lines := []string{"A new help request was submitted.", "", "Device: " + hostname}
 	if hasDevice {
 		lines = append(lines, "Device ID: "+deviceID)
 	}
 	if hasFolder {
 		lines = append(lines, "Folder: "+folder)
 	}
-	lines = append(lines, "Message: "+message, "Open in panel: "+link)
+	lines = append(lines, "", "Message: "+message, "", "Open in panel: "+link)
 	text = strings.Join(lines, "\n")
 
 	deviceRow, folderRow := "", ""

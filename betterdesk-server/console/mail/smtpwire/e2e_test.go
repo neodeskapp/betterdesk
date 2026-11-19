@@ -213,6 +213,14 @@ func replayEndToEnd(t *testing.T, sess *e2eSession, panelBaseURL string, roots *
 			recordedData, _ = base64.StdEncoding.DecodeString(*event.B64)
 		}
 	}
+	if sess.Call.Fn == "sendHelpRequestEmail" && recordedData != nil {
+		// BUGS EM7: the text of a help request mail has the blank lines
+		// Node dropped, after the first line and before the message and
+		// the link
+		for _, part := range []string{"Device: ", "Message: ", "Open in panel: "} {
+			recordedData = bytes.Replace(recordedData, []byte("\r\n"+part), []byte("\r\n\r\n"+part), 1)
+		}
+	}
 	transport := &mail.SMTP{Wire: smtpwire.Options{
 		RootCAs:           roots,
 		Hostname:          func() (string, error) { return sess.Hostname, nil },

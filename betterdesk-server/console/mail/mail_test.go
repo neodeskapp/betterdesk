@@ -363,10 +363,18 @@ func TestHelpRequestNotification(t *testing.T) {
 			t.Fatal(ok, err)
 		}
 		m := transport.sends[0].mail
-		wantText := "A new help request was submitted.\nDevice: PC-01\nDevice ID: dev-1\nFolder: Support\nMessage: Need help\nOpen in panel: https://panel.example.org/help-requests"
+		// Blank lines set the parts apart (BUGS EM7)
+		wantText := "A new help request was submitted.\n\nDevice: PC-01\nDevice ID: dev-1\nFolder: Support\n\nMessage: Need help\n\nOpen in panel: https://panel.example.org/help-requests"
 		if m.Subject != "[Support] Help request — PC-01" || !sameStrings(m.To, []string{"alice@example.com"}) || m.ToList || *m.Text != wantText ||
 			m.From != "from@example.com" || !strings.Contains(*m.HTML, `<a href="https://panel.example.org/help-requests">`) {
 			t.Fatalf("mail %s", describe(m))
+		}
+		// Without a device id and a folder only their lines go
+		if ok, err := s.SendHelpRequestEmail(ctx, HelpRequestEmail{To: []string{"alice@example.com"}, HelpRequest: HelpRequest{Hostname: jsbind.String("PC-02")}}); !ok || err != nil {
+			t.Fatal(ok, err)
+		}
+		if got, want := *transport.sends[1].mail.Text, "A new help request was submitted.\n\nDevice: PC-02\n\nMessage: \n\nOpen in panel: https://panel.example.org/help-requests"; got != want {
+			t.Fatalf("text %q, want %q", got, want)
 		}
 		for range 2 {
 			if err := s.LogEmailNotificationSent(ctx, "help_request", "42", "alice@example.com"); err != nil {

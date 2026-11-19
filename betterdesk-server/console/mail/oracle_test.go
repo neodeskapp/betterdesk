@@ -673,15 +673,19 @@ func (r *replay) run(i int, step oracleStep) {
 		r.checkSend(i, step, got, err)
 	case "help":
 		to, list := toOf(t, step.To)
-		got, err := r.service.SendHelpRequestEmail(ctx, HelpRequestEmail{
-			To: to, ToList: list,
-			HelpRequest: HelpRequest{
-				Hostname: bindValue(t, step.Help["hostname"]),
-				DeviceID: bindValue(t, step.Help["device_id"]),
-				Message:  bindValue(t, step.Help["message"]),
-			},
-			FolderName: bindValue(t, step.Folder),
-		})
+		help := HelpRequest{
+			Hostname: bindValue(t, step.Help["hostname"]),
+			DeviceID: bindValue(t, step.Help["device_id"]),
+			Message:  bindValue(t, step.Help["message"]),
+		}
+		if len(step.Sent) > 0 {
+			if text, _ := optional(step.Sent[0].Text); text != nil {
+				r.counts["EM7: a help request mail with its blank lines"]++
+				step.Sent = append(step.Sent[:0:0], step.Sent...)
+				step.Sent[0].Text = marshal(t, spacedHelpText(t, help, *text))
+			}
+		}
+		got, err := r.service.SendHelpRequestEmail(ctx, HelpRequestEmail{To: to, ToList: list, HelpRequest: help, FolderName: bindValue(t, step.Folder)})
 		r.checkSend(i, step, got, err)
 	case "baseurl":
 		if got := r.service.GetPanelBaseURL(); got != step.URL {
@@ -782,6 +786,25 @@ func escapedAlertCells(alert Alert, html string) string {
 	return html
 }
 
+// spacedHelpText is the text of a help request mail Node sent, with the
+// blank lines Node dropped (BUGS EM7): after the first line, and before
+// the message and the link.
+func spacedHelpText(t *testing.T, help HelpRequest, text string) string {
+	t.Helper()
+	message := ""
+	if help.Message.Truthy() {
+		message, _ = fromBind(help.Message).toString()
+	}
+	const first = "A new help request was submitted.\n"
+	link := strings.LastIndex(text, "\nOpen in panel: ")
+	head, tail := text[:link], text[link:]
+	body, ok := strings.CutSuffix(head, "\nMessage: "+message)
+	if !ok || !strings.HasPrefix(body, first) {
+		t.Fatalf("help request text %q", text)
+	}
+	return first + "\n" + body[len(first):] + "\n\nMessage: " + message + "\n" + tail
+}
+
 func orUndefined(text string) string {
 	if text == "" {
 		return "undefined"
@@ -834,7 +857,8 @@ func TestNodeRecording(t *testing.T) {
 		// Every kind of step and every special case has to have been met
 		for _, name := range []string{"state", "env", "reset", "load", "get", "test", "send", "alert", "help", "baseurl", "put", "has", "logsent", "logcount",
 			"nodemailer fails before it connects", "credentials that are no text", "a sender that is no text", "a sender that is no text, sent as text",
-			"recipients that are no text", "EM1: a stored tlsVerify that is no flag", "EM3: an alert value with markup is escaped"} {
+			"recipients that are no text", "EM1: a stored tlsVerify that is no flag", "EM3: an alert value with markup is escaped",
+			"EM7: a help request mail with its blank lines"} {
 			if r.counts[name] == 0 {
 				t.Errorf("the recording has no %q", name)
 			}
