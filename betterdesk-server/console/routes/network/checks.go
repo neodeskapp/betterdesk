@@ -175,12 +175,14 @@ func (h *handlers) startMonitor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.monitor.Start(interval)
+	h.saveMonitor(detached(r))
 	kit.JSON(w, r, http.StatusOK, started{Status: "started", IntervalMs: h.monitor.PollInterval()})
 }
 
 // stopMonitor answers POST /monitor/stop.
 func (h *handlers) stopMonitor(w http.ResponseWriter, r *http.Request) {
 	h.monitor.Stop()
+	h.saveMonitor(detached(r))
 	kit.JSON(w, r, http.StatusOK, stopped{Status: "stopped"})
 }
 

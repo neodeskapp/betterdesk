@@ -27,7 +27,8 @@ type handlers struct {
 
 // Register adds the group's routes below the mount (/api/network) and the
 // monitor's polling loop as a background job. The loop does nothing until
-// somebody starts the monitor through POST /monitor/start.
+// somebody starts the monitor through POST /monitor/start, or until the
+// console starts again after it ran.
 func Register(d *kit.Deps) {
 	opts := netmonitor.Options{
 		Store:                d.Store,
@@ -43,6 +44,7 @@ func register(d *kit.Deps, monitor *netmonitor.Monitor) {
 	h := &handlers{db: d.Store, monitor: monitor, log: d.Log}
 	if d.Jobs != nil {
 		d.Jobs.Add("network monitor", monitor.Run)
+		h.resumeMonitor()
 	}
 	view := d.RequirePermission("device.view")
 	connect := d.RequirePermission("device.connect")
