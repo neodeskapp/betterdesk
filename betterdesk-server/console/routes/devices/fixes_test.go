@@ -170,3 +170,20 @@ func TestDeleteNamesCascadedDevices(t *testing.T) {
 		t.Errorf("delete with cascade and nothing linked: %d %s", got.Status, got.Body)
 	}
 }
+
+// TestListIgnoresQueryLists: search and sortOrder given as a list or an
+// object are ignored like the other parameters, and the list answers
+// (BUGS DE4).
+func TestListIgnoresQueryLists(t *testing.T) {
+	w, _ := world(t, storetest.Migrated(t), nil, nil)
+	admin := w.As("admin")
+	want := admin.Do("GET", "/api/devices", "")
+	if want.Status != http.StatusOK || !strings.Contains(want.Body, `"id":"A"`) {
+		t.Fatalf("the list: %d %s", want.Status, want.Body)
+	}
+	for _, query := range []string{"search[]=x", "search[a]=1", "search[]=a&search[]=b", "sortOrder[]=asc", "sortOrder[x]=1", "search[]=x&sortOrder[]=asc"} {
+		if got := admin.Do("GET", "/api/devices?"+query, ""); got.Status != http.StatusOK || got.Body != want.Body {
+			t.Errorf("?%s: %d %s, want the list without it", query, got.Status, got.Body)
+		}
+	}
+}

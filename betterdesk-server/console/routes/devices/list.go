@@ -1,7 +1,6 @@
 package devices
 
 import (
-	"errors"
 	"math"
 	"net/http"
 	"time"
@@ -19,45 +18,24 @@ var sortFields = map[string]bool{
 	"os": true, "version": true, "username": true, "note": true,
 }
 
-// errNoLowerCase is the TypeError of req.query.sortOrder?.toLowerCase()
-// when the query gives a list or an object.
-var errNoLowerCase = errors.New("req.query.sortOrder?.toLowerCase is not a function")
-
-// errNoSearchText is the TypeError of filters.search.toLowerCase() when
-// the query gives a list or an object.
-var errNoSearchText = errors.New("filters.search.toLowerCase is not a function")
-
 // list answers GET /api/devices: the devices of the server and the remote
 // targets, with their folder and their device groups, those the account
 // may see, filtered and ordered as the query says (search, status,
-// hasNotes, includeDeleted, sortBy, sortOrder; no pages).
+// hasNotes, includeDeleted, sortBy, sortOrder; no pages). A parameter the
+// query gives as a list or an object is ignored.
 func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	filters := goapi.DeviceFilters{SortBy: "last_online", SortOrder: "desc"}
 	if s, ok := jsreq.Query(r, "sortBy").(string); ok && sortFields[s] {
 		filters.SortBy = s
 	}
-	switch order := jsreq.Query(r, "sortOrder").(type) {
-	case nil:
-	case string:
+	if order, ok := jsreq.Query(r, "sortOrder").(string); ok {
 		if lower := jsbind.ToLower(order); lower == "asc" || lower == "desc" {
 			filters.SortOrder = lower
 		}
-	default:
-		h.serverError(w, r, "Get devices error:", errNoLowerCase)
-		return
 	}
 	filters.IncludeDeleted = jsreq.Query(r, "includeDeleted") == "true"
-	if search := jsreq.Query(r, "search"); goapi.Truthy(search) {
-		s, ok := search.(string)
-		if !ok {
-			// The devices were fetched before the filter failed on the list
-			h.backend.GetAllDevices(ctx, goapi.DeviceFilters{IncludeDeleted: filters.IncludeDeleted})
-			h.serverError(w, r, "Get devices error:", errNoSearchText)
-			return
-		}
-		filters.Search = s
-	}
+	filters.Search, _ = jsreq.Query(r, "search").(string)
 	filters.Status, _ = jsreq.Query(r, "status").(string)
 	filters.HasNotes = jsreq.Query(r, "hasNotes") == "true"
 

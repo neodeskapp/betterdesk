@@ -39,6 +39,12 @@ var fixedSteps = []fixedStep{
 	// it on.
 	{"node", "258 DELETE /api/devices/A1001 {} as admin", "DE3"},
 	{"node", "263 DELETE /api/devices/A1001?revoke=TRUE&hard=1 {} as admin", "DE3"},
+	// search and sortOrder given as a list or an object are ignored: the
+	// whole list in the default order, where Node answered 500.
+	{"node", "9 GET /api/devices?search[]=x as admin", "DE4"},
+	{"node", "10 GET /api/devices?search[a]=1 as admin", "DE4"},
+	{"node", "18 GET /api/devices?sortOrder[]=asc as admin", "DE4"},
+	{"node", "19 GET /api/devices?sortOrder[x]=1 as admin", "DE4"},
 }
 
 // fixedStep is a step of a recording that the fix of a bug changed. The
