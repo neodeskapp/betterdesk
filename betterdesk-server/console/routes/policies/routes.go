@@ -8,7 +8,6 @@ package policies
 import (
 	"math"
 	"net/http"
-	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/goapipath"
@@ -57,7 +56,8 @@ func policyPath(r *http.Request, suffix string) (string, error) {
 }
 
 // read answers GET /api/panel/policies/{orgId} (suffix "") and
-// /api/panel/policies/{orgId}/audit.
+// /api/panel/policies/{orgId}/audit. The first is 200 {} when the API
+// server has no policy routes.
 func (h *handlers) read(suffix string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		path, err := policyPath(r, suffix)
@@ -65,7 +65,7 @@ func (h *handlers) read(suffix string) http.HandlerFunc {
 			refuse(w, r, err)
 			return
 		}
-		h.proxy(w, r, http.MethodGet, path)
+		h.proxy(w, r, http.MethodGet, path, suffix == "")
 	}
 }
 
@@ -78,7 +78,7 @@ func (h *handlers) write(suffix string) http.HandlerFunc {
 			refuse(w, r, err)
 			return
 		}
-		h.proxy(w, r, http.MethodPut, path, goapipath.Body(goapipath.RequestBody(r)))
+		h.proxy(w, r, http.MethodPut, path, false, goapipath.Body(goapipath.RequestBody(r)))
 	}
 }
 
@@ -96,7 +96,7 @@ func (h *handlers) effective(w http.ResponseWriter, r *http.Request) {
 		refuse(w, r, err)
 		return
 	}
-	h.proxy(w, r, http.MethodGet, path+"/effective/"+goapi.EncodeURIComponent(device))
+	h.proxy(w, r, http.MethodGet, path+"/effective/"+goapi.EncodeURIComponent(device), false)
 }
 
 // refuse answers an id that cannot go into a path with 400 and the
@@ -106,20 +106,21 @@ func refuse(w http.ResponseWriter, r *http.Request, err error) {
 }
 
 // proxy calls the API server and answers with its status and body.
+// defaults marks the call for an organization's own policies.
 //
-//	no answer                                500 {"error":"Go server unreachable"}
-//	404 for a GET whose path ends in /policy 200 {}, so the page shows its defaults
-//	                                         with an API server that has no policies
-//	any other failure                        its status and body; {"error":"Go server unreachable"}
-//	                                         for a body that is empty, false, 0 or null
-func (h *handlers) proxy(w http.ResponseWriter, r *http.Request, method, path string, opts ...goapi.CallOption) {
+//	no answer                              500 {"error":"Go server unreachable"}
+//	404 for the organization's policies    200 {}, so the page shows its defaults
+//	(defaults)                             with an API server that has no policies
+//	any other failure                      its status and body; {"error":"Go server unreachable"}
+//	                                       for a body that is empty, false, 0 or null
+func (h *handlers) proxy(w http.ResponseWriter, r *http.Request, method, path string, defaults bool, opts ...goapi.CallOption) {
 	resp, err := h.api.Request(r.Context(), method, path, opts...)
 	if err == nil {
 		goapipath.WriteJSON(w, r, resp.Status, resp.Data())
 		return
 	}
 	status, data := goapipath.FailureOf(err, "Go server unreachable")
-	if status == http.StatusNotFound && method == http.MethodGet && strings.HasSuffix(path, "/policy") {
+	if status == http.StatusNotFound && defaults {
 		h.log.Warn("The API server answered 404 for " + path + ": answering empty defaults. Its build has no policy routes.")
 		kit.JSON(w, r, http.StatusOK, struct{}{})
 		return

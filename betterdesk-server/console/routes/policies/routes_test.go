@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -44,6 +45,10 @@ var fixes = slices.Concat(proxytest.Fixes("FL4",
 	758, 759, 760, 761, 762, 763, 764, 765, 766, 767, 774, 775, 784, 785, 788,
 	789, 790, 791, 792, 793, 794, 795, 796, 797, 808, 809, 810, 811, 812, 813,
 	860,
+), proxytest.Fixes("FL5",
+	// Only the organization's own policies are 200 {} when the API server
+	// answers 404; the effective policy of a device named policy is not.
+	743,
 ))
 
 // TestVectors replays what routes/policies.routes.js of the Node console
@@ -153,6 +158,28 @@ func TestBadIDsAre400(t *testing.T) {
 		rec, calls := w.Do(req, policy)
 		if rec.Code != 400 || rec.Body.String() != `{"error":"`+c.want+`"}` || len(calls) != 0 {
 			t.Errorf("%s %s: %d %s after %d calls, want 400 %s", c.method, c.path, rec.Code, rec.Body, len(calls), c.want)
+		}
+	}
+}
+
+// TestEffectivePolicyOfADeviceNamedPolicy: only the organization's own
+// policies answer 200 {} when the API server has no policy routes; the
+// effective policy of a device named "policy" gets the API server's 404
+// like any other device (BUGS.md FL5).
+func TestEffectivePolicyOfADeviceNamedPolicy(t *testing.T) {
+	w := proxytest.NewWorld(t, register)
+	missing := &proxytest.Answer{Status: 404, Type: "application/json", Body: `{"error":"not found"}`}
+	for path, want := range map[string]string{
+		"/api/panel/policies/org-1/effective/policy":  `404 {"error":"not found"}`,
+		"/api/panel/policies/org-1/effective/dev-1":   `404 {"error":"not found"}`,
+		"/api/panel/policies/policy/effective/policy": `404 {"error":"not found"}`,
+		"/api/panel/policies/org-1/audit":             `404 {"error":"not found"}`,
+		"/api/panel/policies/org-1":                   `200 {}`,
+		"/api/panel/policies/policy":                  `200 {}`,
+	} {
+		rec, calls := w.Do(proxytest.Request{Path: path, Session: adminSession()}, missing)
+		if got := strconv.Itoa(rec.Code) + " " + rec.Body.String(); got != want || len(calls) != 1 {
+			t.Errorf("GET %s: %s after %d calls, want %s", path, got, len(calls), want)
 		}
 	}
 }

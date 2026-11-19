@@ -1332,6 +1332,22 @@
   "calls": []
  },
  {
+  "vector": 743,
+  "bug": "FL5",
+  "request": "GET /api/panel/policies/org-1/effective/policy",
+  "status": 404,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/org/org-1/policy/effective/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
   "vector": 756,
   "bug": "FL3",
   "request": "GET /api/panel/policies/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/effective/900100001",
