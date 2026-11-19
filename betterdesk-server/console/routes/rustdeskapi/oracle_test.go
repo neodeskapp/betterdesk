@@ -93,7 +93,9 @@ func maskSecrets(body string) string {
 // books a client reads back after storing one, tags, heartbeats, system
 // information, audit uploads and lists, sign-ins and sign-outs, each with
 // the rows it leaves. Status, Content-Type, body (byte for byte) and the
-// writes to the API server must be Node's.
+// writes to the API server must be Node's, except for the steps a bug fix
+// changed (differences_test.go): those must be the Go console's answers in
+// testdata/node_<db>_fixed.json.
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, func(cfg *config.Config) { cfg.APIEnabled = true })
@@ -101,8 +103,45 @@ func TestNodeAnswers(t *testing.T) {
 		d := w.Server.Deps()
 		d.GoAPI = goapi.New(stub)
 		d.Backend = goapi.NewBackend(d.GoAPI, devicegroups.DeviceStore{Groups: d.DeviceGroups})
+		rec, file := replay.Load(t, db, "node"), "node_"+db.Dialect().String()
+		recording := recordingFixed()
+		fixes, fixed, queries := fixesOf(file), map[string]fixedEntry{}, map[string]replay.Step{}
+		if !recording {
+			fixed = loadFixed(t, file)
+		}
+		names := make([]string, len(rec.Steps))
+		for i := range rec.Steps {
+			step := &rec.Steps[i]
+			names[i] = step.Name
+			if _, ok := fixes[step.Name]; !ok {
+				continue
+			}
+			switch {
+			case recording && step.SQL != "":
+				// The check below runs the query and keeps its rows
+				queries[step.Name] = *step
+				step.SQL = ""
+			case !recording:
+				var answer replay.Step
+				if err := json.Unmarshal(fixed[step.Name].Answer, &answer); err != nil {
+					t.Fatalf("the fixed answer of %s: %v", step.Name, err)
+				}
+				step.Status, step.Answer, step.Rows, step.Extra = answer.Status, answer.Answer, answer.Rows, answer.Extra
+			}
+		}
+		checkListed(t, file, names)
+		answers := map[string]any{}
 		failed := 0
-		w.Run(replay.Load(t, db, "node"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		w.Run(rec, func(t *testing.T, step replay.Step, got replay.Answer) bool {
+			if _, ok := fixes[step.Name]; ok && recording {
+				if query, ok := queries[step.Name]; ok {
+					answers[step.Name] = map[string]any{"rows": w.Rows(query.SQL, query.Params)}
+					return true
+				}
+				answers[step.Name] = map[string]any{"status": got.Status, "answer": maskSecrets(got.Body),
+					"extra": map[string]any{"type": got.Header.Get("Content-Type"), "calls": stub.take()}}
+				return true
+			}
 			var extra struct {
 				Type  string    `json:"type"`
 				Calls []apiCall `json:"calls"`
@@ -147,5 +186,8 @@ func TestNodeAnswers(t *testing.T) {
 			}
 			return true
 		})
+		if recording {
+			writeFixed(t, file, answers)
+		}
 	})
 }

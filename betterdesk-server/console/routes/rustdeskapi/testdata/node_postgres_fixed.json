@@ -1,0 +1,13 @@
+{
+ "396 POST /api/sysinfo_ver": {
+  "answer": {
+   "answer": "2a502fd6ff03fbf0",
+   "extra": {
+    "calls": [],
+    "type": "text/plain; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RD1"
+ }
+}

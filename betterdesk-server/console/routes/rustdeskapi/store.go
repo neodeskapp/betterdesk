@@ -797,6 +797,20 @@ func (s *clientStore) sysinfoUpdatedAt(ctx context.Context, id string) (at time.
 	return at, true, ok, nil
 }
 
+// sysinfoRaw is the stored system information of a device as one JSON
+// text (raw_json); found is false when the device has none.
+func (s *clientStore) sysinfoRaw(ctx context.Context, id string) (raw string, found bool, err error) {
+	var text sql.NullString
+	err = store.SelectRow(ctx, s.db, `SELECT raw_json FROM peer_sysinfo WHERE peer_id = ?`, id).Scan(&text)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", false, nil
+	}
+	if err != nil {
+		return "", false, fmt.Errorf("load the system information of %q: %w", id, err)
+	}
+	return text.String, text.Valid, nil
+}
+
 var (
 	dateOnly   = regexp.MustCompile(`^(\d{4})-(\d{2})-(\d{2})$`)
 	dateTimeJS = regexp.MustCompile(`^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3})\d*)?)?(Z|[+-]\d{2}:\d{2})?$`)

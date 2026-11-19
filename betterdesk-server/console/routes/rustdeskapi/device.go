@@ -1,6 +1,9 @@
 package rustdeskapi
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math"
 	"net/http"
@@ -311,15 +314,33 @@ func (h *handlers) sysinfo(w http.ResponseWriter, r *http.Request) {
 	plainText(w, r, "SYSINFO_UPDATED")
 }
 
-// sysinfoVersion answers POST /api/sysinfo_ver with the empty text, which
-// makes the client upload its system information again. The hash it was
-// meant to answer is built from a field the stored row is never read with
-// (BUGS RD1), so the answer is always empty.
+// sysinfoVersion answers POST /api/sysinfo_ver with the version of the
+// system information stored for the device the body names: the first 16
+// hex digits of the SHA-256 of the stored JSON, written with its keys in
+// order so both databases give the same version. A client that kept the
+// same version may skip its upload. The empty text, for no device or
+// nothing stored, makes the client upload.
 func (h *handlers) sysinfoVersion(w http.ResponseWriter, r *http.Request) {
 	if id := clientDeviceID(kit.Body(r)); id != "" && isValidDeviceID(id) {
-		if _, _, _, err := h.store.sysinfoUpdatedAt(r.Context(), id); err != nil {
+		raw, found, err := h.store.sysinfoRaw(r.Context(), id)
+		if err != nil {
 			h.log.Warn("[API:SYSINFO_VER] Error:", err.Error())
+		} else if canonical, ok := sortedJSON(raw); found && ok {
+			sum := sha256.Sum256(canonical)
+			plainText(w, r, hex.EncodeToString(sum[:])[:16])
+			return
 		}
 	}
 	plainText(w, r, "")
+}
+
+// sortedJSON writes a JSON text again with the keys of its objects in
+// order; ok is false for a text that is not JSON.
+func sortedJSON(text string) ([]byte, bool) {
+	var v any
+	if err := json.Unmarshal([]byte(text), &v); err != nil {
+		return nil, false
+	}
+	out, err := json.Marshal(v)
+	return out, err == nil
 }

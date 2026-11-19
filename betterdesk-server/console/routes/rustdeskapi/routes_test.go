@@ -524,6 +524,60 @@ func TestTheSystemInformationLimits(t *testing.T) {
 	})
 }
 
+// The version of the stored system information is the first 16 hex
+// digits of the SHA-256 of the stored JSON: the same until the device
+// uploads other information, and the empty text for a device without
+// any, so the client uploads.
+func TestSysinfoVersionIsTheStoredHash(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db, nil)
+		w.Exec("INSERT INTO peer (id) VALUES ('900300003')", nil)
+		version := func(body string) string {
+			got := w.Do(replay.Request{Method: "POST", Path: "/api/sysinfo_ver", Body: replay.Text(body)})
+			if got.Status != http.StatusOK || !strings.HasPrefix(got.Header.Get("Content-Type"), "text/plain") {
+				t.Fatalf("sysinfo_ver %s: %d %s %s", body, got.Status, got.Header.Get("Content-Type"), got.Body)
+			}
+			return got.Body
+		}
+		upload := func(hostname string) {
+			if got := w.Do(replay.Request{Method: "POST", Path: "/api/sysinfo", Body: replay.Text(`{"id":"900300003","hostname":"` + hostname + `","os":"Linux"}`)}); got.Body != "SYSINFO_UPDATED" {
+				t.Fatalf("sysinfo: %d %s", got.Status, got.Body)
+			}
+		}
+		if got := version(`{"id":"900300003"}`); got != "" {
+			t.Errorf("without stored information: %q", got)
+		}
+		upload("first")
+		first := version(`{"id":"900300003"}`)
+		if !regexp.MustCompile(`^[0-9a-f]{16}$`).MatchString(first) || version(`{"uuid":"900300003"}`) != first {
+			t.Errorf("the version of stored information: %q", first)
+		}
+		// The stored JSON with its keys in order, so both databases give
+		// the same version (PostgreSQL keeps jsonb in an order of its own)
+		var raw string
+		if err := db.QueryRow(context.Background(), "SELECT CAST(raw_json AS TEXT) FROM peer_sysinfo WHERE peer_id = '900300003'").Scan(&raw); err != nil {
+			t.Fatal(err)
+		}
+		var parsed any
+		if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
+			t.Fatal(err)
+		}
+		sorted, _ := json.Marshal(parsed)
+		if sum := sha256.Sum256(sorted); first != string(hexOf(sum[:]))[:16] || first != "4379a2be5012a53b" {
+			t.Errorf("version %q of %s", first, raw)
+		}
+		upload("second")
+		if second := version(`{"id":"900300003"}`); second == first || len(second) != 16 {
+			t.Errorf("the version after other information: %q, before %q", second, first)
+		}
+		for _, body := range []string{`{}`, `{"id":"900300099"}`, `{"id":"bad id"}`} {
+			if got := version(body); got != "" {
+				t.Errorf("%s: %q", body, got)
+			}
+		}
+	})
+}
+
 // The device list has at most 200 devices a page, and a device in folder
 // 0 is listed with its device group (0 is no folder).
 func TestThePeerList(t *testing.T) {

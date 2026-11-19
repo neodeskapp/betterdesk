@@ -29,6 +29,9 @@ var fixedSteps = []fixedStep{
 	{"flow", "tfa-secret-used", "S5"},
 	{"flow", "wrong-password-10", "S5"},
 	{"flow", "audit-entries", "S5"},
+	// The version of the system information hbok1 uploaded, not the
+	// empty text.
+	{"node", "396 POST /api/sysinfo_ver", "RD1"},
 }
 
 // fixedStep is a step of the recordings of both databases ("node",

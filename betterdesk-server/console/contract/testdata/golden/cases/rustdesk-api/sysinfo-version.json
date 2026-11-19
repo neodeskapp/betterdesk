@@ -34,7 +34,11 @@
     "x-xss-protection": "0"
    },
    "body": {
-    "kind": "empty"
+    "kind": "bytes",
+    "type": "text/plain",
+    "length": 16,
+    "sha256": "89d0e3013746a564de23d16e1967d4074c3369fd2e989cf3c3af425b77037483",
+    "head": "6b2b2f4ac150c588"
    }
   },
   {
@@ -64,7 +68,11 @@
     "x-xss-protection": "0"
    },
    "body": {
-    "kind": "empty"
+    "kind": "bytes",
+    "type": "text/plain",
+    "length": 16,
+    "sha256": "89d0e3013746a564de23d16e1967d4074c3369fd2e989cf3c3af425b77037483",
+    "head": "6b2b2f4ac150c588"
    }
   }
  ]
