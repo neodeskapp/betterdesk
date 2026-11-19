@@ -1,5 +1,517 @@
 [
  {
+  "vector": 5,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 6,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 7,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 13,
+  "bug": "FL7",
+  "request": "GET /api/bd/api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 14,
+  "bug": "FL7",
+  "request": "GET /api/bd/api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 15,
+  "bug": "FL7",
+  "request": "GET /api/bd/api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 160,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 161,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 162,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 163,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 164,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 165,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 166,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 167,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 168,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 169,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 170,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 502,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Failed to reach Go server\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 171,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 172,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 502,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Failed to reach Go server\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 173,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 502,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Failed to reach Go server\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 174,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 502,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Failed to reach Go server\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 175,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 502,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Failed to reach Go server\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 176,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 502,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Failed to reach Go server\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 177,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 502,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Failed to reach Go server\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 178,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 502,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Failed to reach Go server\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 179,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 502,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Failed to reach Go server\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 180,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 502,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Failed to reach Go server\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 181,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 502,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Failed to reach Go server\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 182,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 502,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Failed to reach Go server\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 183,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 502,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Failed to reach Go server\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 184,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 502,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Failed to reach Go server\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 185,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 502,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Failed to reach Go server\"}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
   "vector": 421,
   "bug": "FL4",
   "request": "GET /api/panel/resource-control/policies/a..b",
@@ -52,5 +564,629 @@
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Invalid deviceId\"}",
   "calls": []
+ },
+ {
+  "vector": 559,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"id\":\"900100001\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"status\":\"online\",\"device_type\":\"desktop\",\"tags\":\"a,b\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 560,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"id\":\"900100001\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"status\":\"online\",\"device_type\":\"desktop\",\"tags\":\"a,b\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 561,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"id\":\"900100001\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"status\":\"online\",\"device_type\":\"desktop\",\"tags\":\"a,b\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 562,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"id\":\"900100001\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"status\":\"online\",\"device_type\":\"desktop\",\"tags\":\"a,b\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 563,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 564,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"id\":\"900100001\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"status\":\"online\",\"device_type\":\"desktop\",\"tags\":\"a,b\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 565,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 566,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 567,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 568,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 569,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 570,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 571,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 572,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 573,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 574,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 575,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 576,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"hostname\":\"\",\"platform\":\"\",\"status\":\"offline\",\"device_type\":\"\",\"tags\":\"\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 577,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"id\":null,\"hostname\":\"\",\"platform\":\"\",\"status\":\"offline\",\"device_type\":\"\",\"tags\":\"\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 578,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"id\":0,\"hostname\":\"\",\"platform\":\"\",\"status\":\"offline\",\"device_type\":\"\",\"tags\":[]}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 579,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"id\":17,\"hostname\":17,\"platform\":{\"os\":\"x\"},\"status\":\"offline\",\"device_type\":true,\"tags\":[\"a\",\"b\"]}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 580,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"hostname\":\"\",\"platform\":\"\",\"status\":\"online\",\"device_type\":\"\",\"tags\":\"\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 581,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"hostname\":\"\",\"platform\":\"\",\"status\":\"degraded\",\"device_type\":\"\",\"tags\":\"\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 582,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 583,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 584,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"hostname\":\"\",\"platform\":\"\",\"status\":\"offline\",\"device_type\":\"\",\"tags\":\"\"},{\"hostname\":\"\",\"platform\":\"\",\"status\":\"offline\",\"device_type\":\"\",\"tags\":\"\"},{\"hostname\":\"\",\"platform\":\"\",\"status\":\"offline\",\"device_type\":\"\",\"tags\":\"\"},{\"hostname\":\"\",\"platform\":\"\",\"status\":\"offline\",\"device_type\":\"\",\"tags\":\"\"},{\"id\":\"x\",\"hostname\":\"\",\"platform\":\"\",\"status\":\"offline\",\"device_type\":\"\",\"tags\":\"\"}],\"total\":5}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 585,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"id\":0,\"hostname\":\"\",\"platform\":\"\",\"status\":\"offline\",\"device_type\":\"\",\"tags\":{\"__proto__\":1}}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 586,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"id\":\"late\",\"hostname\":\"h\",\"platform\":\"p\",\"status\":\"s\",\"device_type\":\"d\",\"tags\":\"t\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 587,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"id\":\"<b>&é\",\"hostname\":\"\",\"platform\":\"\",\"status\":\"offline\",\"device_type\":\"\",\"tags\":\"\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 588,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"id\":\"900100001\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"status\":\"online\",\"device_type\":\"desktop\",\"tags\":\"a,b\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 589,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"id\":\"900100001\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"status\":\"online\",\"device_type\":\"desktop\",\"tags\":\"a,b\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 590,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"id\":\"900100001\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"status\":\"online\",\"device_type\":\"desktop\",\"tags\":\"a,b\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 591,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"hostname\":\"\",\"platform\":\"\",\"status\":\"online\",\"device_type\":\"\",\"tags\":\"\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 592,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"hostname\":\"\",\"platform\":\"\",\"status\":\"up\",\"device_type\":\"\",\"tags\":\"\"},{\"hostname\":\"\",\"platform\":\"\",\"status\":\"down\",\"device_type\":\"\",\"tags\":\"\"},{\"hostname\":\"\",\"platform\":\"\",\"status\":\"offline\",\"device_type\":\"\",\"tags\":\"\"}],\"total\":3}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 593,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"id\":\"a\u2028b\",\"hostname\":\"x\u2029\",\"platform\":\"\",\"status\":\"offline\",\"device_type\":\"\",\"tags\":\"\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 594,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 595,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 596,
+  "bug": "FL7",
+  "request": "GET /api/panel/resource-control/devices?limit=5&x=1",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[{\"id\":\"900100001\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"status\":\"online\",\"device_type\":\"desktop\",\"tags\":\"a,b\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 598,
+  "bug": "FL7",
+  "request": "GET /API/Panel/Resource-Control/Devices/",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"devices\":[],\"total\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
  }
 ]

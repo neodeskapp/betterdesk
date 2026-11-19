@@ -24,9 +24,6 @@ var kinds = []string{"usb", "optical", "monitors", "disks", "quotas"}
 const (
 	orgPolicyPath = "/org/default/resource-policy"
 	unreachable   = "Failed to reach Go server"
-	// deviceListLimit is how many devices the device list asks the API
-	// server for.
-	deviceListLimit = 200
 )
 
 // Register adds the group's routes.
@@ -114,16 +111,19 @@ type deviceList struct {
 	Total   int             `json:"total"`
 }
 
-// devices answers GET /api/panel/resource-control/devices: the first 200
-// devices of the API server with the fields the page shows. When the call
-// fails, or the list holds something that is no device, the answer is the
-// empty list.
+// devices answers GET /api/panel/resource-control/devices: every device
+// of the API server with the fields the page shows, and their number as
+// total. A list that holds something that is no device is the empty list;
+// a failed call is 502 {"error":"Failed to reach Go server"}.
 func (h *handlers) devices(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.api.Get(r.Context(), "/peers")
+	if err != nil {
+		kit.JSON(w, r, http.StatusBadGateway, goapipath.ErrorBody{Error: unreachable})
+		return
+	}
 	list := deviceList{Devices: []*goapi.Object{}}
-	if resp, err := h.api.Get(r.Context(), "/peers", goapi.Query("limit", deviceListLimit)); err == nil {
-		if devices, ok := devicesOf(resp.Data()); ok {
-			list.Devices = devices
-		}
+	if devices, ok := devicesOf(resp.Data()); ok {
+		list.Devices = devices
 	}
 	list.Total = len(list.Devices)
 	goapipath.WriteJSON(w, r, http.StatusOK, list)
