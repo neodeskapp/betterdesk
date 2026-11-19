@@ -36,9 +36,17 @@ func withDevices(t *testing.T) func(d *kit.Deps) {
 	}
 }
 
+// deviceFixes are the vectors of device_vectors.json whose answer a bug
+// fix of BUGS.md changed on purpose (proxytest.Replay).
+var deviceFixes = proxytest.Fixes("DV3",
+	// A device_id that cannot be text names no device: the guard refuses
+	// it as another device, at both mounts.
+	15, 37, 59, 81,
+)
+
 // TestDeviceVectors replays what the device routes of the Node file
 // answered and asked the API server, with the device token checks in front
 // (testdata/nodeoracle/device.js).
 func TestDeviceVectors(t *testing.T) {
-	proxytest.Replay(t, filepath.Join("testdata", "device_vectors.json"), withDevices(t))
+	proxytest.Replay(t, filepath.Join("testdata", "device_vectors.json"), withDevices(t), deviceFixes...)
 }

@@ -1,0 +1,418 @@
+[
+ {
+  "vector": 14,
+  "bug": "DV1",
+  "request": "GET /api/bd/device-policy?device_id=device-b",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 15,
+  "bug": "DV1",
+  "request": "GET /api/bd/device-policy",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 16,
+  "bug": "DV1",
+  "request": "GET /api/bd/device-policy?device_id=device-c",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 17,
+  "bug": "DV1",
+  "request": "GET /api/bd/device-policy?device_id=bad%20id",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 18,
+  "bug": "DV1",
+  "request": "GET /api/bd/device-policy?device_id=a%3Ab%40c",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 19,
+  "bug": "DV1",
+  "request": "GET /api/bd/device-policy?device_id=%2E%2E",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 20,
+  "bug": "DV1",
+  "request": "GET /api/bd/device-policy?device_id[]=device-c",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 21,
+  "bug": "DV1",
+  "request": "GET /api/bd/device-policy?device_id[]=a&device_id[]=b",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 22,
+  "bug": "DV1",
+  "request": "GET /api/bd/device-policy?device_id[x]=device-c",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 23,
+  "bug": "DV1",
+  "request": "GET /api/bd/device-policy?device_id[toString]=x",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 24,
+  "bug": "DV1",
+  "request": "GET /api/bd/device-policy?device_id=ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 25,
+  "bug": "DV1",
+  "request": "GET /api/bd/device-policy",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 26,
+  "bug": "DV1",
+  "request": "GET /api/bd/device-policy",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 41,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/device-policy?device_id=device-b",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 42,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/device-policy",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 43,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/device-policy?device_id=device-c",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 44,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/device-policy?device_id=bad%20id",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 45,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/device-policy?device_id=a%3Ab%40c",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 46,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/device-policy?device_id=%2E%2E",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 47,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/device-policy?device_id[]=device-c",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 48,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/device-policy?device_id[]=a&device_id[]=b",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 49,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/device-policy?device_id[x]=device-c",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 50,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/device-policy?device_id[toString]=x",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 51,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/device-policy?device_id=ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 52,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/device-policy",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 53,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/device-policy",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"device_id\":\"x\",\"rules\":{\"b\":1,\"a\":[1]}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/device-a/policy",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ }
+]

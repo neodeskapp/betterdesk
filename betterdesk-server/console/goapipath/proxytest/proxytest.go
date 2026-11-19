@@ -8,6 +8,7 @@
 package proxytest
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -16,6 +17,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -246,53 +248,226 @@ func (w *World) Do(req Request, api *Answer) (*httptest.ResponseRecorder, []Call
 	return rec, append([]Call(nil), w.calls...)
 }
 
+// Fix names a vector whose answer a bug fix of BUGS.md changed on
+// purpose: its index in the vector file and the bug.
+type Fix struct {
+	Vector int
+	Bug    string
+}
+
+// Fixes names the vectors, by their index, that the fix of one bug
+// changed.
+func Fixes(bug string, vectors ...int) []Fix {
+	out := make([]Fix, len(vectors))
+	for i, v := range vectors {
+		out[i] = Fix{Vector: v, Bug: bug}
+	}
+	return out
+}
+
+// fixedVector is the console's answer to a fixed vector, as the file next
+// to the recording holds it. Request repeats the vector's method and path,
+// so the file cannot drift from the recording.
+type fixedVector struct {
+	Vector      int     `json:"vector"`
+	Bug         string  `json:"bug"`
+	Request     string  `json:"request"`
+	Status      int     `json:"status"`
+	Type        string  `json:"type"`
+	Body        string  `json:"body"`
+	Base64      *string `json:"base64,omitempty"`
+	Disposition string  `json:"disposition,omitempty"`
+	Calls       []Call  `json:"calls"`
+}
+
+// fixedFile is the file of the fixed vectors of a recording:
+// vectors.json has vectors_fixed.json.
+func fixedFile(file string) string {
+	return strings.TrimSuffix(file, ".json") + "_fixed.json"
+}
+
+func requestText(r Request) string {
+	method := r.Method
+	if method == "" {
+		method = http.MethodGet
+	}
+	return method + " " + r.Path
+}
+
 // Replay sends every vector of the file to the routes register adds and
 // compares status, Content-Type, Content-Disposition and body with what
 // the Node console answered, and the calls to the API server with the
 // calls it made.
-func Replay(t *testing.T, file string, register func(d *kit.Deps)) {
+//
+// The vectors that fixes name are compared with the console's answer in
+// the file next to the recording (vectors_fixed.json for vectors.json)
+// instead. PROXYTEST_RECORD_FIXED=1 writes that file from the console's
+// answers to them, and fails for a listed vector that still answers as
+// Node did. Look at the file's diff before a commit: only what the fixes
+// change may differ from Node's answer.
+func Replay(t *testing.T, file string, register func(d *kit.Deps), fixes ...Fix) {
 	t.Helper()
 	vectors := Load(t, file)
+	recording := os.Getenv("PROXYTEST_RECORD_FIXED") == "1"
+	fixed := loadFixed(t, file, vectors, fixes, recording)
+	var written []fixedVector
 	w := NewWorld(t, register)
 	failures := 0
 	for i, v := range vectors {
 		rec, calls := w.Do(v.Request, v.API)
-		var problems []string
-		if rec.Code != v.Status {
-			problems = append(problems, "status "+strconv.Itoa(rec.Code)+", want "+strconv.Itoa(v.Status))
-		}
-		if got := rec.Header().Get("Content-Type"); got != v.Type {
-			problems = append(problems, "Content-Type "+strconv.Quote(got)+", want "+strconv.Quote(v.Type))
-		}
-		if got := rec.Header().Get("Content-Disposition"); got != v.Disposition {
-			problems = append(problems, "Content-Disposition "+strconv.Quote(got)+", want "+strconv.Quote(v.Disposition))
-		}
-		if v.Base64 != nil {
-			if got := base64.StdEncoding.EncodeToString(rec.Body.Bytes()); got != *v.Base64 {
-				problems = append(problems, "body (base64) "+got+", want "+*v.Base64)
-			}
-		} else if got := rec.Body.String(); got != v.Body {
-			problems = append(problems, "body "+strconv.Quote(got)+", want "+strconv.Quote(v.Body))
-		}
-		if len(calls) != len(v.Calls) {
-			problems = append(problems, "API calls "+describe(calls)+", want "+describe(v.Calls))
-		} else {
-			for n := range calls {
-				if calls[n] != v.Calls[n] {
-					problems = append(problems, "API call "+describe(calls[n:n+1])+", want "+describe(v.Calls[n:n+1]))
+		got := answerOf(rec, calls, v.Base64 != nil)
+		want := fixedVector{Status: v.Status, Type: v.Type, Body: v.Body, Base64: v.Base64, Disposition: v.Disposition, Calls: v.Calls}
+		if entry, ok := fixed[i]; ok {
+			if recording {
+				if len(compare(got, want)) == 0 {
+					t.Errorf("vector %d: %s is listed for %s but answers as Node did", i, entry.Request, entry.Bug)
 				}
+				got.Vector, got.Bug, got.Request = i, entry.Bug, entry.Request
+				written = append(written, got)
+				continue
 			}
+			want = entry
 		}
-		if len(problems) > 0 {
+		if problems := compare(got, want); len(problems) > 0 {
 			failures++
 			if failures <= 25 {
-				t.Errorf("vector %d: %s %s (API answers %s):\n  %s", i, v.Request.Method, v.Request.Path, describeAnswer(v.API), strings.Join(problems, "\n  "))
+				t.Errorf("vector %d: %s (API answers %s):\n  %s", i, requestText(v.Request), describeAnswer(v.API), strings.Join(problems, "\n  "))
 			}
 		}
 	}
 	if failures > 25 {
 		t.Errorf("%d of %d vectors differ; the first 25 are shown", failures, len(vectors))
 	}
+	if recording {
+		writeFixed(t, file, written)
+	}
+}
+
+// answerOf is what the console answered, in the form of a fixed vector.
+func answerOf(rec *httptest.ResponseRecorder, calls []Call, binary bool) fixedVector {
+	got := fixedVector{
+		Status:      rec.Code,
+		Type:        rec.Header().Get("Content-Type"),
+		Disposition: rec.Header().Get("Content-Disposition"),
+		Calls:       calls,
+	}
+	if binary {
+		encoded := base64.StdEncoding.EncodeToString(rec.Body.Bytes())
+		got.Base64 = &encoded
+	} else {
+		got.Body = rec.Body.String()
+	}
+	if got.Calls == nil {
+		got.Calls = []Call{}
+	}
+	return got
+}
+
+// compare lists how an answer differs from the one it should be.
+func compare(got, want fixedVector) []string {
+	var problems []string
+	if got.Status != want.Status {
+		problems = append(problems, "status "+strconv.Itoa(got.Status)+", want "+strconv.Itoa(want.Status))
+	}
+	if got.Type != want.Type {
+		problems = append(problems, "Content-Type "+strconv.Quote(got.Type)+", want "+strconv.Quote(want.Type))
+	}
+	if got.Disposition != want.Disposition {
+		problems = append(problems, "Content-Disposition "+strconv.Quote(got.Disposition)+", want "+strconv.Quote(want.Disposition))
+	}
+	switch {
+	case want.Base64 != nil:
+		if got.Base64 == nil || *got.Base64 != *want.Base64 {
+			problems = append(problems, "body (base64) differs, want "+*want.Base64)
+		}
+	case got.Body != want.Body:
+		problems = append(problems, "body "+strconv.Quote(got.Body)+", want "+strconv.Quote(want.Body))
+	}
+	if len(got.Calls) != len(want.Calls) {
+		return append(problems, "API calls "+describe(got.Calls)+", want "+describe(want.Calls))
+	}
+	for n := range got.Calls {
+		if got.Calls[n] != want.Calls[n] {
+			problems = append(problems, "API call "+describe(got.Calls[n:n+1])+", want "+describe(want.Calls[n:n+1]))
+		}
+	}
+	return problems
+}
+
+// loadFixed checks the list of fixes against the recording and, unless the
+// file is being written, reads the answers of the fixed vectors. It stops
+// the test when the list and the file name other vectors or bugs.
+func loadFixed(t *testing.T, file string, vectors []Vector, fixes []Fix, recording bool) map[int]fixedVector {
+	t.Helper()
+	listed := map[int]fixedVector{}
+	for _, f := range fixes {
+		if f.Vector < 0 || f.Vector >= len(vectors) {
+			t.Fatalf("the fixed vector %d (%s) is not in %s", f.Vector, f.Bug, file)
+		}
+		if _, twice := listed[f.Vector]; twice {
+			t.Fatalf("the vector %d is listed twice", f.Vector)
+		}
+		listed[f.Vector] = fixedVector{Vector: f.Vector, Bug: f.Bug, Request: requestText(vectors[f.Vector].Request)}
+	}
+	if recording {
+		return listed
+	}
+	data, err := os.ReadFile(fixedFile(file))
+	if os.IsNotExist(err) && len(fixes) == 0 {
+		return listed
+	}
+	if err != nil {
+		t.Fatalf("read the fixed vectors: %v", err)
+	}
+	var entries []fixedVector
+	if err := json.Unmarshal(data, &entries); err != nil {
+		t.Fatalf("parse %s: %v", fixedFile(file), err)
+	}
+	answers := map[int]fixedVector{}
+	var problems []string
+	for _, entry := range entries {
+		want, ok := listed[entry.Vector]
+		switch {
+		case !ok:
+			problems = append(problems, "vector "+strconv.Itoa(entry.Vector)+" is in "+fixedFile(file)+" but not in the list of fixes")
+		case entry.Bug != want.Bug || entry.Request != want.Request:
+			problems = append(problems, "vector "+strconv.Itoa(entry.Vector)+" is "+want.Request+" of "+want.Bug+", the file has "+entry.Request+" of "+entry.Bug)
+		}
+		answers[entry.Vector] = entry
+	}
+	for vector, want := range listed {
+		if _, ok := answers[vector]; !ok {
+			problems = append(problems, "vector "+strconv.Itoa(vector)+" ("+want.Bug+") has no answer in "+fixedFile(file))
+		}
+	}
+	if len(problems) > 0 {
+		sort.Strings(problems)
+		t.Fatalf("%s", strings.Join(problems, "\n"))
+	}
+	return answers
+}
+
+// writeFixed writes the answers to the fixed vectors, or removes the file
+// when there are none.
+func writeFixed(t *testing.T, file string, entries []fixedVector) {
+	t.Helper()
+	if len(entries) == 0 {
+		if err := os.Remove(fixedFile(file)); err != nil && !os.IsNotExist(err) {
+			t.Fatal(err)
+		}
+		return
+	}
+	var out bytes.Buffer
+	enc := json.NewEncoder(&out)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", " ")
+	if err := enc.Encode(entries); err != nil {
+		t.Fatalf("encode the fixed vectors: %v", err)
+	}
+	if err := os.WriteFile(fixedFile(file), out.Bytes(), 0o644); err != nil {
+		t.Fatalf("write the fixed vectors: %v", err)
+	}
+	t.Logf("wrote %d fixed vectors to %s", len(entries), fixedFile(file))
 }
 
 func describe(calls []Call) string {

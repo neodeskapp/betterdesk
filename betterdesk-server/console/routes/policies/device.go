@@ -8,33 +8,16 @@ import (
 	"github.com/unitronix/betterdesk-server/console/kit"
 )
 
-// devicePolicy answers GET /api/bd/device-policy: the policy of a device
-// as the API server has it. The device is the query's device_id, else the
-// header X-Device-Id, else the token's device. The match guard in front
-// looks at the body first, so a request that names its own device in the
-// body may name any other one in the query or the header (BUGS DV1).
+// devicePolicy answers GET /api/bd/device-policy: the policy of the
+// token's device as the API server has it. A device the request names
+// besides the token (the body's or the query's device_id, X-Device-Id)
+// only has to be that device, which the match guard in front checks.
 //
-//	the device_id has no text, or is no id   400 {"error":"..."}
 //	no answer from the API server            500 {"error":"Policy fetch failed"}
 //	any other failure                        its status and body
 func (h *handlers) devicePolicy(w http.ResponseWriter, r *http.Request) {
-	raw := kit.Device(r).DeviceID
-	if query := goapipath.Query(r, "device_id"); query.Truthy() {
-		text, err := query.Text()
-		if err != nil {
-			kit.JSON(w, r, http.StatusBadRequest, goapipath.ErrorBody{Error: err.Error()})
-			return
-		}
-		raw = text
-	} else if header, _ := kit.DeviceIDHeader(r); header != "" {
-		raw = header
-	}
-	id, err := goapipath.AssertSafeAPIID(raw, "device_id")
-	if err != nil {
-		kit.JSON(w, r, http.StatusBadRequest, goapipath.ErrorBody{Error: err.Error()})
-		return
-	}
-	resp, err := h.api.Get(r.Context(), "/peers/"+goapi.EncodeURIComponent(id)+"/policy")
+	path := "/peers/" + goapi.EncodeURIComponent(kit.Device(r).DeviceID) + "/policy"
+	resp, err := h.api.Get(r.Context(), path)
 	if err != nil {
 		status, data := goapipath.FailureOf(err, "Policy fetch failed")
 		goapipath.WriteJSON(w, r, status, data)

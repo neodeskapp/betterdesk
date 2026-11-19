@@ -52,33 +52,13 @@ type noPolicy struct {
 }
 
 // resourcePolicy answers GET /api/bd/resource-policy: what the API server
-// says a device may use. The device is the header X-Device-Id, else the
-// query's device_id, else the token's device. The match guard in front
-// looks at the query before the header, so a request that names its own
-// device in the query may name any other one in the header (BUGS DV1).
-//
-//	the device is no id                       400 {"error":"Invalid deviceId"}
-//	the device_id has no text, or the call    200 {"policy":null}
-//	fails in any way
+// says the token's device may use. A device the request names besides the
+// token (the body's or the query's device_id, X-Device-Id) only has to be
+// that device, which the match guard in front checks. When the call fails
+// in any way the answer is 200 {"policy":null}.
 func (h *handlers) resourcePolicy(w http.ResponseWriter, r *http.Request) {
-	raw := kit.Device(r).DeviceID
-	if header, _ := kit.DeviceIDHeader(r); header != "" {
-		raw = header
-	} else if query := goapipath.Query(r, "device_id"); query.Truthy() {
-		text, err := query.Text()
-		if err != nil {
-			// The TypeError of String() is no "Invalid ..." refusal
-			kit.JSON(w, r, http.StatusOK, noPolicy{})
-			return
-		}
-		raw = text
-	}
-	id, err := goapipath.AssertSafeAPIID(raw, "deviceId")
-	if err != nil {
-		kit.JSON(w, r, http.StatusBadRequest, goapipath.ErrorBody{Error: err.Error()})
-		return
-	}
-	resp, err := h.api.Get(r.Context(), "/devices/"+goapi.EncodeURIComponent(id)+"/resources")
+	path := "/devices/" + goapi.EncodeURIComponent(kit.Device(r).DeviceID) + "/resources"
+	resp, err := h.api.Get(r.Context(), path)
 	if err != nil {
 		kit.JSON(w, r, http.StatusOK, noPolicy{})
 		return

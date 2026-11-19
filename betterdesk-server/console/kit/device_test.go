@@ -136,6 +136,52 @@ func touchedTokens(t *testing.T, db *store.DB) []int64 {
 	return ids
 }
 
+// refusedSteps are the steps of the recordings that a bug fix of BUGS.md
+// changed on purpose into the refusal of another device, 403 {"error":
+// "Device ID mismatch"}, with the bug. The names are the same in both
+// recordings.
+var refusedSteps = map[string]string{
+	// A device_id that String() cannot make text of names no device: a
+	// refusal, where Node's guard threw and answered 500.
+	"match body object with toString, header none":                                                        "DV3",
+	"match body object with toString, header same":                                                        "DV3",
+	"match body object with toString, header other":                                                       "DV3",
+	"match body object with toString, header empty":                                                       "DV3",
+	"match body list with toString, header none":                                                          "DV3",
+	"match body list with toString, header same":                                                          "DV3",
+	"match body list with toString, header other":                                                         "DV3",
+	"match body list with toString, header empty":                                                         "DV3",
+	"match body list in list with toString, header none":                                                  "DV3",
+	"match body list in list with toString, header same":                                                  "DV3",
+	"match body list in list with toString, header other":                                                 "DV3",
+	"match body list in list with toString, header empty":                                                 "DV3",
+	"match query object with toString, header none":                                                       "DV3",
+	"match query object with toString, header same":                                                       "DV3",
+	"match query object with toString, header other":                                                      "DV3",
+	"match query object with toString, header empty":                                                      "DV3",
+	"match query object with toString, header twice":                                                      "DV3",
+	"match query list with toString, header none":                                                         "DV3",
+	"match query list with toString, header same":                                                         "DV3",
+	"match query list with toString, header other":                                                        "DV3",
+	"match query list with toString, header empty":                                                        "DV3",
+	"match query list with toString, header twice":                                                        "DV3",
+	"mix 16: longest-device, body object with toString, query twice, header latin1":                       "DV3",
+	"mix 21: longest-device, body list with toString, query same, header twice":                           "DV3",
+	"mix 44: numeric-device, body none, query list with toString, header same":                            "DV3",
+	"mix 46: longest-device, body key missing, query object with toString, header other":                  "DV3",
+	"mix 51: other-device, body list in list with toString, query query zeros, header empty":              "DV3",
+	"mix 60: other-device, body list in list with toString, query escaped name, header same":              "DV3",
+	"mix 63: other-device, body list in list with toString, query object, header twice, one empty":        "DV3",
+	"mix 68: other-device, body list in list with toString, query escaped value, header twice, one empty": "DV3",
+	"mix 72: other-device, body object with toString, query object with toString, header other":           "DV3",
+	"mix 102: other-device, body list in list with toString, query object, header none":                   "DV3",
+	"mix 111: numeric-device, body object with toString, query none, header same":                         "DV3",
+	"mix 136: numeric-device, body list with toString, query plus, header header zeros":                   "DV3",
+	"mix 137: other-device, body list in list with toString, query plus, header same":                     "DV3",
+	"mix 150: numeric-device, body object with toString, query plus, header twice":                        "DV3",
+	"mix 158: numeric-device, body object with toString, query name only, header latin1":                  "DV3",
+}
+
 // TestDeviceGuardsAnswerAsNode replays what requireDeviceToken and
 // requireTokenDeviceMatch of the Node console answered to the same bytes
 // on the same token rows (testdata/nodeoracle/devicetoken.js): status,
@@ -169,6 +215,7 @@ func TestDeviceGuardsAnswerAsNode(t *testing.T) {
 		}
 		h := deviceWorld(t, db)
 		requests, refused, thrown := 0, 0, 0
+		fixed := map[string]bool{}
 		for _, step := range rec.Steps {
 			if step.SQL != "" {
 				if _, err := db.Exec(ctx, step.SQL, statementArgs(step.Params)...); err != nil {
@@ -185,13 +232,21 @@ func TestDeviceGuardsAnswerAsNode(t *testing.T) {
 			h.ServeHTTP(rec, readRaw(t, step.Raw))
 			requests++
 			switch {
-			case rec.Code == 500:
+			case step.Status == 500:
 				thrown++
-			case rec.Code >= 400:
+			case step.Status >= 400:
 				refused++
 			}
-			if rec.Code != step.Status || rec.Body.String() != step.Answer {
-				t.Errorf("%s:\n got %d %s\nNode %d %s", step.Name, rec.Code, rec.Body.String(), step.Status, step.Answer)
+			status, answer, by := step.Status, step.Answer, "Node"
+			if bug, ok := refusedSteps[step.Name]; ok {
+				if status == 403 && answer == mismatch {
+					t.Errorf("%s is listed for %s, but Node refused it as another device too", step.Name, bug)
+				}
+				fixed[step.Name] = true
+				status, answer, by = 403, mismatch, bug
+			}
+			if rec.Code != status || rec.Body.String() != answer {
+				t.Errorf("%s:\n got %d %s\n%4s %d %s", step.Name, rec.Code, rec.Body.String(), by, status, answer)
 				continue
 			}
 			if step.Touched != nil {
@@ -200,8 +255,13 @@ func TestDeviceGuardsAnswerAsNode(t *testing.T) {
 				}
 			}
 		}
+		for name := range refusedSteps {
+			if !fixed[name] {
+				t.Errorf("the listed step %q is not in the recording", name)
+			}
+		}
 		if requests < 500 || refused < 300 || thrown < 20 {
-			t.Errorf("%d requests, %d refused, %d server errors: the recording is thin", requests, refused, thrown)
+			t.Errorf("%d requests, Node refused %d and threw at %d: the recording is thin", requests, refused, thrown)
 		}
 	})
 }
@@ -264,7 +324,6 @@ const (
 	unbound        = `{"error":"Invalid or unbound access token"}`
 	lookupFailed   = `{"error":"Invalid or expired access token"}`
 	mismatch       = `{"error":"Device ID mismatch"}`
-	serverError    = `{"success":false,"error":"Internal Server Error"}`
 	futureExpiry   = "2999-01-01 00:00:00"
 	pastExpiry     = "2001-01-01 00:00:00"
 	tokenA         = "token-of-device-a"
@@ -313,10 +372,10 @@ func TestDeviceGuardsAnswer(t *testing.T) {
 			{name: "a number in the body", path: "/api/probe/match", method: "POST", body: `{"device_id":7}`, headers: []string{"Authorization", bearerA}, status: 403, answer: mismatch},
 			{name: "the token check comes first", path: "/api/probe/match", method: "POST", body: `{"device_id":"device-b"}`, status: 401, answer: noBearer},
 
-			{name: "body without text", path: "/api/probe/match", method: "POST", body: `{"device_id":{"toString":1}}`, headers: []string{"Authorization", bearerA}, status: 500, answer: serverError},
-			{name: "body list without text", path: "/api/probe/match", method: "POST", body: `{"device_id":[[{"toString":1}]]}`, headers: []string{"Authorization", bearerA}, status: 500, answer: serverError},
+			{name: "body without text", path: "/api/probe/match", method: "POST", body: `{"device_id":{"toString":1}}`, headers: []string{"Authorization", bearerA}, status: 403, answer: mismatch},
+			{name: "body list without text", path: "/api/probe/match", method: "POST", body: `{"device_id":[[{"toString":1}]]}`, headers: []string{"Authorization", bearerA}, status: 403, answer: mismatch},
 			{name: "body object with valueOf has text", path: "/api/probe/match", method: "POST", body: `{"device_id":{"valueOf":1}}`, headers: []string{"Authorization", bearerA}, status: 403, answer: mismatch},
-			{name: "query without text", path: "/api/probe/match?device_id[toString]=x", headers: []string{"Authorization", bearerA}, status: 500, answer: serverError},
+			{name: "query without text", path: "/api/probe/match?device_id[toString]=x", headers: []string{"Authorization", bearerA}, status: 403, answer: mismatch},
 			{name: "query without text behind a body", path: "/api/probe/match?device_id[toString]=x", method: "POST", body: `{"device_id":"device-a"}`, headers: []string{"Authorization", bearerA}, status: 200, answer: answerA},
 			{name: "body without text behind nothing", path: "/api/probe/match?device_id=device-a", method: "POST", body: `{"other":{"toString":1}}`, headers: []string{"Authorization", bearerA}, status: 200, answer: answerA},
 
@@ -386,15 +445,23 @@ func TestDeviceIsNilWithoutTheGuard(t *testing.T) {
 	}
 }
 
-func TestDeviceGuardServerErrorWithoutTheWebApp(t *testing.T) {
+// TestAClaimWithoutTextIsAMismatch: a device_id that String() cannot make
+// text of names no device the token could be bound to. The guard refuses
+// it as another device, also without the web app behind it (BUGS.md DV3).
+func TestAClaimWithoutTextIsAMismatch(t *testing.T) {
 	d := &Deps{}
-	r := httptest.NewRequest("POST", "/api/bd/x", strings.NewReader(`{"device_id":{"toString":1}}`))
-	r.Header.Set("Content-Type", "application/json")
-	reached := false
-	h := middleware.Bodies(middleware.BodyOptions{})(d.RequireTokenDeviceMatch(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { reached = true })))
-	rec := httptest.NewRecorder()
-	h.ServeHTTP(rec, r)
-	if reached || rec.Code != 500 || rec.Body.String() != serverError {
-		t.Errorf("got %d %s, reached %v", rec.Code, rec.Body.String(), reached)
+	for _, c := range []deviceCase{
+		{method: "POST", path: "/api/bd/x", body: `{"device_id":{"toString":1}}`},
+		{method: "POST", path: "/api/bd/x", body: `{"device_id":[{"toString":"device-a"}]}`},
+		{path: "/api/bd/x?device_id[toString]=x"},
+		{path: "/api/bd/x?device_id[][toString]=x"},
+	} {
+		reached := false
+		h := middleware.Bodies(middleware.BodyOptions{})(d.RequireTokenDeviceMatch(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { reached = true })))
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, c.request())
+		if reached || rec.Code != 403 || rec.Body.String() != mismatch {
+			t.Errorf("%s %s: got %d %s, reached %v", c.path, c.body, rec.Code, rec.Body.String(), reached)
+		}
 	}
 }

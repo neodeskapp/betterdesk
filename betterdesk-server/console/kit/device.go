@@ -68,20 +68,18 @@ func (d *Deps) RequireDeviceToken(next http.Handler) http.Handler {
 // JavaScript (not "", 0, false or null): the body's device_id, the
 // query's device_id, the header X-Device-Id; when none is, the header
 // counts if the request has it. Values that are no text are compared as
-// String() made them: 123 as "123", ["a"] as "a". A request that names no
-// device passes.
+// String() made them: 123 as "123", ["a"] as "a". A value String() cannot
+// make text of (an object with a member toString) names no device. A
+// request that names no device passes.
 //
-//	another device                          403 {"error":"Device ID mismatch"}
-//	a value String() cannot make text of    the console's server error answer
-//	(an object with a member toString)
+//	another device, or a value without text   403 {"error":"Device ID mismatch"}
 func (d *Deps) RequireTokenDeviceMatch(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		claims, err := deviceClaims(r)
-		if err != nil {
-			d.serverError(w, r, err)
-			return
+		if err == nil {
+			err = matchDevice(Device(r), claims)
 		}
-		if err := matchDevice(Device(r), claims); err != nil {
+		if err != nil {
 			refused := authn.ErrDeviceMismatch
 			httpx.WriteJSON(w, r, refused.Status, deviceRefusal{Error: refused.Text})
 			return
@@ -186,14 +184,4 @@ func queryClaim(v goapipath.QueryValue) (authn.DeviceClaim, error) {
 	}
 	text, err := v.Text()
 	return authn.DeviceClaim{Present: true, Truthy: v.Truthy(), Text: text}, err
-}
-
-// serverError answers what the console's error handler answered for an
-// error a middleware threw.
-func (d *Deps) serverError(w http.ResponseWriter, r *http.Request, err error) {
-	if d.WebUI != nil {
-		d.WebUI.ServerError(w, r, err, http.StatusInternalServerError)
-		return
-	}
-	httpx.WriteJSON(w, r, http.StatusInternalServerError, failure{Error: "Internal Server Error"})
 }

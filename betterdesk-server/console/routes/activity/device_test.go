@@ -8,6 +8,16 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
+// refusedSteps are the steps of the device recordings that a bug fix of
+// BUGS.md changed into the device guard's refusal, 403 {"error":"Device
+// ID mismatch"}, with the bug. The names are the same in both recordings.
+var refusedSteps = map[string]string{
+	// A device_id that cannot be text names no device.
+	"46 POST /api/bd/activity":                           "DV3",
+	"47 POST /api/bd/activity":                           "DV3",
+	"54 POST /api/bd/activity?device_id%5BtoString%5D=x": "DV3",
+}
+
 // TestNodeDeviceAnswers replays what the Node console's device route
 // answered with its real database adapter, device guards and alert rules
 // engine, on SQLite and on PostgreSQL (testdata/node_device_sqlite.json,
@@ -21,14 +31,23 @@ import (
 // The alert rules are evaluated in the background, as in the old
 // console; each step waits for them before the next one reads the alerts.
 // A body that is no JSON was answered by the recording's stand-in for the
-// rest of the console; there only the status is compared.
+// rest of the console; there only the status is compared. The steps in
+// refusedSteps are compared with the refusal.
 func TestNodeDeviceAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		engine := w.Server.Deps().Alerts
 		elsewhere := 0
+		refused := map[string]bool{}
 		w.Run(replay.Load(t, db, "node_device"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			engine.Wait()
+			if bug, ok := refusedSteps[step.Name]; ok {
+				refused[step.Name] = true
+				if got.Status != 403 || got.Body != `{"error":"Device ID mismatch"}` {
+					t.Errorf("%s (%s): %d %s, want the refusal of another device", step.Name, bug, got.Status, got.Body)
+				}
+				return true
+			}
 			if step.Answer == `{"success":false,"error":"Internal Server Error"}` && step.Status == 400 {
 				elsewhere++
 				if got.Status != step.Status {
@@ -40,6 +59,11 @@ func TestNodeDeviceAnswers(t *testing.T) {
 		})
 		if elsewhere != 1 {
 			t.Errorf("%d answers were compared by status only, want the 1 of the body that is no JSON", elsewhere)
+		}
+		for name := range refusedSteps {
+			if !refused[name] {
+				t.Errorf("the listed step %q is not in the recording", name)
+			}
 		}
 	})
 }

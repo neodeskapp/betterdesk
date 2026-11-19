@@ -1,0 +1,354 @@
+[
+ {
+  "vector": 11,
+  "bug": "DV1",
+  "request": "GET /api/bd/resource-policy?device_id=device-a",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 12,
+  "bug": "DV1",
+  "request": "GET /api/bd/resource-policy?device_id=device-a",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 14,
+  "bug": "DV1",
+  "request": "GET /api/bd/resource-policy?device_id=device-a",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 15,
+  "bug": "DV1",
+  "request": "GET /api/bd/resource-policy?device_id=device-a",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 16,
+  "bug": "DV1",
+  "request": "GET /api/bd/resource-policy?device_id=device-c",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 17,
+  "bug": "DV1",
+  "request": "GET /api/bd/resource-policy?device_id[]=device-c",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 18,
+  "bug": "DV1",
+  "request": "GET /api/bd/resource-policy?device_id[]=a&device_id[]=b",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 19,
+  "bug": "DV1",
+  "request": "GET /api/bd/resource-policy?device_id[x]=device-c",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 20,
+  "bug": "DV1",
+  "request": "GET /api/bd/resource-policy?device_id[toString]=x",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 21,
+  "bug": "DV1",
+  "request": "GET /api/bd/resource-policy?device_id=%2E%2E",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 22,
+  "bug": "DV1",
+  "request": "GET /api/bd/resource-policy?device_id=ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 34,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/resource-policy?device_id=device-a",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 35,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/resource-policy?device_id=device-a",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 37,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/resource-policy?device_id=device-a",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 38,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/resource-policy?device_id=device-a",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 39,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/resource-policy?device_id=device-c",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 40,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/resource-policy?device_id[]=device-c",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 41,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/resource-policy?device_id[]=a&device_id[]=b",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 42,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/resource-policy?device_id[x]=device-c",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 43,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/resource-policy?device_id[toString]=x",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 44,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/resource-policy?device_id=%2E%2E",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 45,
+  "bug": "DV1",
+  "request": "GET /api/bd/api/bd/resource-policy?device_id=ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/devices/device-a/resources",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ }
+]
