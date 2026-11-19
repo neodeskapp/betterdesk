@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+	"time"
 )
 
 // TestCopyTreeKeepsRelativeLinks copies a symbolic link with its target
@@ -35,5 +36,35 @@ func TestCopyTreeKeepsRelativeLinks(t *testing.T) {
 	}
 	if data, err := os.ReadFile(filepath.Join(dst, "lib", "libx.so")); err != nil || string(data) != "lib" {
 		t.Errorf("the copied link reads %q, %v", data, err)
+	}
+}
+
+// TestBuildSettingsThatAreNoNumber reads a build setting that is text
+// but no number as its default, as an empty one (BUGS GN8: the timeout
+// fired at once and the disk space check was off).
+func TestBuildSettingsThatAreNoNumber(t *testing.T) {
+	for raw, want := range map[string]time.Duration{
+		"":        time.Hour,
+		"abc":     time.Hour,
+		"NaN":     time.Hour,
+		"10":      time.Minute,
+		" 120000": 2 * time.Minute,
+		"90000ms": 90 * time.Second,
+	} {
+		if got := buildTimeoutOf(raw); got != want {
+			t.Errorf("BETTERDESK_CLIENT_BUILD_TIMEOUT_MS=%q: %v, want %v", raw, got, want)
+		}
+	}
+	for raw, want := range map[string]int64{
+		"":       3072,
+		"abc":    3072,
+		"-":      3072,
+		"100":    512,
+		"4096":   4096,
+		"2048MB": 2048,
+	} {
+		if got := minFreeMB(raw); got != want {
+			t.Errorf("BETTERDESK_CLIENT_BUILD_MIN_FREE_MB=%q: %d, want %d", raw, got, want)
+		}
 	}
 }

@@ -640,17 +640,18 @@ func (s *Service) AcceptBuilderTerms() (*goapi.Object, error) {
 	return s.writeBuilderState(goapi.NewObject("termsAccepted", true, "error", nil))
 }
 
-// buildTimeout is BETTERDESK_CLIENT_BUILD_TIMEOUT_MS, at least a minute,
-// default an hour. Text that is no number made the old timer fire at
-// once.
+// buildTimeout is BETTERDESK_CLIENT_BUILD_TIMEOUT_MS (buildTimeoutOf).
 func (s *Service) buildTimeout() time.Duration {
-	raw := s.getenv("BETTERDESK_CLIENT_BUILD_TIMEOUT_MS")
-	if raw == "" {
-		raw = "3600000"
-	}
+	return buildTimeoutOf(s.getenv("BETTERDESK_CLIENT_BUILD_TIMEOUT_MS"))
+}
+
+// buildTimeoutOf is the time an embedded build may take, from the
+// setting's text: at least a minute, and an hour when the setting is
+// empty or no number.
+func buildTimeoutOf(raw string) time.Duration {
 	ms, ok := jsParseInt(raw)
 	if !ok {
-		return time.Millisecond
+		return time.Hour
 	}
 	if ms < 60000 {
 		ms = 60000

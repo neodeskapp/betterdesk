@@ -188,13 +188,9 @@ func (b *localBuilder) main(ctx context.Context, requestPath, sourceDir, outputD
 	return nil
 }
 
-// ensureBuildCapacity needs BETTERDESK_CLIENT_BUILD_MIN_FREE_MB (default
-// 3072, at least 512) free below the output folder.
+// ensureBuildCapacity needs BETTERDESK_CLIENT_BUILD_MIN_FREE_MB
+// (minFreeMB) free below the output folder.
 func (b *localBuilder) ensureBuildCapacity(ctx context.Context, outputDir string) error {
-	raw := b.get("BETTERDESK_CLIENT_BUILD_MIN_FREE_MB")
-	if raw == "" {
-		raw = "3072"
-	}
 	free, err := freeBytes(outputDir)
 	if err != nil {
 		if !b.windows {
@@ -205,17 +201,22 @@ func (b *localBuilder) ensureBuildCapacity(ctx context.Context, outputDir string
 			return err
 		}
 	}
-	n, ok := jsParseInt(raw)
-	if !ok {
-		// Math.max(512, NaN) is NaN, and nothing is below NaN
-		return nil
-	}
-	minimum := max(512, n)
+	minimum := minFreeMB(b.get("BETTERDESK_CLIENT_BUILD_MIN_FREE_MB"))
 	freeMB := free / (1024 * 1024)
 	if freeMB < minimum {
 		return codeError("local_builder_disk_space_insufficient:" + jsString(float64(freeMB)) + "MB<" + jsString(float64(minimum)) + "MB")
 	}
 	return nil
+}
+
+// minFreeMB is the space in MB a build needs, from the setting's text:
+// at least 512, and 3072 when the setting is empty or no number.
+func minFreeMB(raw string) int64 {
+	n, ok := jsParseInt(raw)
+	if !ok {
+		return 3072
+	}
+	return max(512, n)
 }
 
 // loadVisualStudioEnvironment would take the Visual Studio environment
