@@ -86,43 +86,110 @@ func TestListRefusedByRoleOverride(t *testing.T) {
 	}
 }
 
-// A password set here is the one sign-in takes, and a role change, a new
-// password and a deleted account leave the account's session alone
-// (BUGS S9).
-func TestPasswordsAndSessions(t *testing.T) {
+// TestRoleChangeEndsTheAccountsSessions: a password set here is the one
+// sign-in takes, and a new role, a new password, a new name and a deleted
+// account end every session of the account and revoke its access tokens.
+// A caller who resets their own password keeps the session that did it
+// (BUGS.md S9, UM24).
+func TestRoleChangeEndsTheAccountsSessions(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
-		w := world(t, storetest.Prepare(t, db, storetest.GoServerFirst), routetest.Options{})
+		// Two sessions per account, so the own reset has another one to end,
+		// and sign-ins enough for all of the test
+		w := world(t, storetest.Prepare(t, db, storetest.GoServerFirst), routetest.Options{Env: map[string]string{"SESSION_MAX_PER_USER": "2", "LOGIN_RATE_LIMIT_MAX": "1000"}})
+		ctx := context.Background()
 		if db.IsPostgres() {
 			// The test accounts came with their ids; new ones follow them
-			if _, err := db.Exec(context.Background(), `SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users))`); err != nil {
+			if _, err := db.Exec(ctx, `SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users))`); err != nil {
 				t.Fatal(err)
 			}
 		}
 		admin := w.As("admin")
 		id := createdID(t, admin.Do("POST", "/api/users", `{"username":"carol","password":"First-Pass-1!","role":"operator"}`, "X-Forwarded-For", "10.1.0.1"))
+		carolID, _ := strconv.ParseInt(id, 10, 64)
+		authn := w.Server.Deps().Authn
 
-		login := func(password string) (routetest.Answer, *routetest.Agent) {
+		signIn := func(name, password string) *routetest.Agent {
+			t.Helper()
 			browser := w.SignedOut()
-			return browser.Do("POST", "/api/auth/login", `{"username":"carol","password":"`+password+`"}`), browser
+			if got := browser.Do("POST", "/api/auth/login", `{"username":"`+name+`","password":"`+password+`"}`); got.Status != http.StatusOK {
+				t.Fatalf("sign in as %s: %d %s", name, got.Status, got.Body)
+			}
+			return browser
 		}
-		if got, _ := login("First-Pass-1!"); got.Status != http.StatusOK {
-			t.Fatalf("sign in with the first password: %d %s", got.Status, got.Body)
+		token := func() string {
+			t.Helper()
+			issued, err := authn.IssueAccessToken(ctx, carolID, "client-1", "uuid-1", "10.1.0.9")
+			if err != nil {
+				t.Fatal(err)
+			}
+			return issued
 		}
-		expect(t, "change", admin.Do("PATCH", "/api/users/"+id, `{"password":"Second-Pass-2!","role":"viewer"}`), 200, "")
-		if got, _ := login("First-Pass-1!"); got.Status == http.StatusOK {
+		ended := func(what string, browser *routetest.Agent, issued string) {
+			t.Helper()
+			if got := browser.Do("GET", "/api/auth/verify", ""); got.Status != http.StatusUnauthorized {
+				t.Errorf("%s: the session goes on: %d %s", what, got.Status, got.Body)
+			}
+			if user, err := authn.ValidateAccessToken(ctx, issued); err != nil || user != nil {
+				t.Errorf("%s: the access token still works: %v, %v", what, user, err)
+			}
+		}
+
+		// The same role again changes nothing
+		carol, issued := signIn("carol", "First-Pass-1!"), token()
+		expect(t, "same role", admin.Do("PATCH", "/api/users/"+id, `{"role":"operator"}`), 200, "")
+		if got := carol.Do("GET", "/api/auth/verify", ""); got.Status != http.StatusOK {
+			t.Errorf("the same role ended the session: %d %s", got.Status, got.Body)
+		}
+		expect(t, "role", admin.Do("PATCH", "/api/users/"+id, `{"role":"viewer"}`), 200, "")
+		ended("new role", carol, issued)
+
+		carol, issued = signIn("carol", "First-Pass-1!"), token()
+		expect(t, "password", admin.Do("PATCH", "/api/users/"+id, `{"password":"Second-Pass-2!"}`), 200, "")
+		ended("new password", carol, issued)
+		if got := w.SignedOut().Do("POST", "/api/auth/login", `{"username":"carol","password":"First-Pass-1!"}`); got.Status == http.StatusOK {
 			t.Errorf("the first password still signs in")
 		}
-		got, carol := login("Second-Pass-2!")
-		if got.Status != http.StatusOK {
-			t.Fatalf("sign in with the second password: %d %s", got.Status, got.Body)
-		}
+
+		carol, issued = signIn("carol", "Second-Pass-2!"), token()
 		expect(t, "reset", admin.Do("POST", "/api/users/"+id+"/reset-password", `{"newPassword":"Third-Pass-3!"}`, "X-Forwarded-For", "10.1.0.2"), 200, "")
-		if got := carol.Do("GET", "/api/auth/verify", ""); got.Status != http.StatusOK || !strings.Contains(got.Body, `"role":"viewer"`) {
-			t.Errorf("the session after the reset: %d %s", got.Status, got.Body)
-		}
+		ended("reset password", carol, issued)
+
+		carol, issued = signIn("carol", "Third-Pass-3!"), token()
+		expect(t, "rename", admin.Do("PATCH", "/api/users/"+id, `{"username":"caroline"}`), 200, "")
+		ended("new name", carol, issued)
+
+		carol, issued = signIn("caroline", "Third-Pass-3!"), token()
 		expect(t, "delete", admin.Do("DELETE", "/api/users/"+id, ""), 200, `{"success":true}`)
-		if got := carol.Do("GET", "/api/auth/verify", ""); got.Status != http.StatusOK {
-			t.Errorf("the session of the deleted account ended: %d %s", got.Status, got.Body)
+		ended("deleted account", carol, issued)
+
+		var reasons []string
+		rows, err := db.Query(ctx, `SELECT DISTINCT end_reason FROM panel_sessions WHERE user_id = ?`, carolID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for rows.Next() {
+			var reason *string
+			if err := rows.Scan(&reason); err != nil {
+				t.Fatal(err)
+			}
+			if reason != nil {
+				reasons = append(reasons, *reason)
+			}
+		}
+		_ = rows.Close()
+		if strings.Join(reasons, ",") != "revoked" {
+			t.Errorf("end reasons of the account's sessions: %v, want revoked", reasons)
+		}
+
+		// A reset of one's own password keeps the session that made it and
+		// ends the others
+		other := w.As("admin")
+		expect(t, "own reset", admin.Do("POST", "/api/users/1/reset-password", `{"newPassword":"Fourth-Pass-4!"}`, "X-Forwarded-For", "10.1.0.3"), 200, "")
+		if got := admin.Do("GET", "/api/auth/verify", ""); got.Status != http.StatusOK {
+			t.Errorf("the own reset ended its own session: %d %s", got.Status, got.Body)
+		}
+		if got := other.Do("GET", "/api/auth/verify", ""); got.Status != http.StatusUnauthorized {
+			t.Errorf("the own reset left another session of the account: %d %s", got.Status, got.Body)
 		}
 	})
 }

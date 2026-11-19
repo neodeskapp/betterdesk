@@ -272,6 +272,11 @@ func (p *replayer) run() {
 		if fixed && f.node != nil {
 			f.node(&nodeWrites{p: p, step: step})
 		}
+		// The step ended these roles' sessions, which Node's kept: the
+		// steps after it sign in again
+		for _, role := range f.endsSessionsOf {
+			delete(p.agents, role)
+		}
 		p.capture(step, got.Body)
 	}
 	if failed > 40 {

@@ -30,6 +30,9 @@ type fix struct {
 	// not, after the step, so the steps after it start from the rows the
 	// recording's did. nil writes nothing.
 	node func(n *nodeWrites)
+	// endsSessionsOf are the roles whose sessions the step ends in the Go
+	// console and not in Node.
+	endsSessionsOf []string
 }
 
 // replaced is the recorded answer with one part of it replaced.
@@ -103,6 +106,15 @@ var fixes = map[string]fix{
 		}
 	}},
 	"196 POST /api/users": {bug: "US6", status: http.StatusBadRequest, answer: is(invalidUsername)},
+
+	// A role change and a deleted account end every session of the
+	// account, which Node's went on with: the test accounts that are
+	// changed sign in again
+	"346 PATCH /api/users/2":         {bug: "S9", endsSessionsOf: []string{"super_admin"}},
+	"348 PATCH /api/users/1":         {bug: "S9", endsSessionsOf: []string{"admin"}},
+	"349 PATCH /api/users/4":         {bug: "S9", endsSessionsOf: []string{"global_admin"}},
+	"473 text id PATCH /api/users/2": {bug: "S9", endsSessionsOf: []string{"super_admin"}},
+	"474 DELETE /api/users/2":        {bug: "S9", endsSessionsOf: []string{"super_admin"}},
 
 	// global_admin changes and deletes accounts above its own role. Once
 	// Node made target_super a viewer, global_admin may change it.

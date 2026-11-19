@@ -326,6 +326,24 @@ func (t *table) end(ctx context.Context, sid, reason string) error {
 	return nil
 }
 
+// endAccount ends the active rows of an account but keep with the reason
+// "revoked" and empties their stored sessions.
+func (t *table) endAccount(ctx context.Context, userID int64, keep string) (int, error) {
+	result, err := t.db.Exec(ctx,
+		`UPDATE panel_sessions
+		 SET is_active = `+t.sqlFalse()+`, ended_at = ?, end_reason = ?, session_json = '{}', updated_at = `+t.sqlNow()+`
+		 WHERE user_id = ? AND is_active = `+t.sqlTrue()+` AND sid <> ?`,
+		t.nowMs(), ReasonRevoked, userID, keep)
+	if err != nil {
+		return 0, fmt.Errorf("end the sessions of account %d: %w", userID, err)
+	}
+	ended, err := result.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("end the sessions of account %d: %w", userID, err)
+	}
+	return int(ended), nil
+}
+
 // replacedSession is a session a newer sign-in ended.
 type replacedSession struct {
 	sid       string

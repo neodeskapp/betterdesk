@@ -384,6 +384,15 @@ func (m *Manager) List(ctx context.Context, userID int64, current string) ([]Inf
 	return list, nil
 }
 
+// EndAccount ends every active session of an account with the reason
+// "revoked" and empties it, but the session with the id keep ("" keeps
+// none). A change to who an account is or what it may do calls it, so no
+// session goes on with what the account was at sign-in. It returns how
+// many sessions it ended.
+func (m *Manager) EndAccount(ctx context.Context, userID int64, keep string) (int, error) {
+	return m.table.endAccount(ctx, userID, keep)
+}
+
 // Cleanup ends the sessions that are past a limit and deletes old rows
 // that never belonged to an account.
 func (m *Manager) Cleanup(ctx context.Context) error {

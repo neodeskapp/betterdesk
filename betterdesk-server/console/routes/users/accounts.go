@@ -517,6 +517,13 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 			return nil, err
 		}
 	}
+	// A new name or role ends every session of the account; a new password
+	// keeps the session of a caller who changed their own
+	if newRole := role.Truthy() && role.Str() != user.role(); renaming || newRole || password.Truthy() {
+		if err := h.endSessions(r, id, !renaming && !newRole); err != nil {
+			return nil, err
+		}
+	}
 	if err := h.d.LogAction(r, "user_updated", "Updated user: "+user.username()); err != nil {
 		return nil, err
 	}
@@ -568,8 +575,7 @@ func (h *handlers) checkRename(r *http.Request, user *account, next string, exte
 
 // rename gives the account the new username checkRename passed, with
 // what is keyed by the name, and notes it in the audit log. Afterwards
-// the account goes by the new name for the rest of the request. Its
-// sessions and access tokens go on.
+// the account goes by the new name for the rest of the request.
 func (h *handlers) rename(r *http.Request, user *account, next string) error {
 	outcome, err := renameAccount(r.Context(), h.d.Store, user.ID.V, next)
 	switch {
@@ -639,6 +645,10 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Delete user error:", err)
 		return
 	}
+	if err := h.endSessions(r, user.ID.V, false); err != nil {
+		h.serverError(w, r, "Delete user error:", err)
+		return
+	}
 	if err := deleteAccount(ctx, h.d.Store, user.ID.V); err != nil {
 		h.serverError(w, r, "Delete user error:", err)
 		return
@@ -656,7 +666,8 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 
 // resetPassword answers POST /api/users/{id}/reset-password with the body
 // {"newPassword"}, for an account the caller may change (mayChange). The
-// account's sessions go on.
+// account's sessions end and its access tokens are revoked, but the
+// caller keeps the session of a reset of their own password.
 func (h *handlers) resetPassword(w http.ResponseWriter, r *http.Request) {
 	userID, ok := pathID(r)
 	if !ok {
@@ -696,6 +707,9 @@ func (h *handlers) resetPassword(w http.ResponseWriter, r *http.Request) {
 		err = updatePasswordHash(ctx, h.d.Store, user.ID.V, hash)
 	}
 	if err == nil {
+		err = h.endSessions(r, user.ID.V, true)
+	}
+	if err == nil {
 		err = h.d.LogAction(r, "password_reset", "Reset password for user: "+user.username())
 	}
 	if err != nil {
@@ -707,3 +721,18 @@ func (h *handlers) resetPassword(w http.ResponseWriter, r *http.Request) {
 
 // accountIDText is an account's id as the API server's paths have it.
 func accountIDText(id store.Int64String) string { return strconv.FormatInt(id.V, 10) }
+
+// endSessions ends the account's sessions and revokes its access tokens
+// after a change to who it is or what it may do, so nothing goes on with
+// what the account was at sign-in. keepOwn keeps the caller's session when
+// the account is the caller's own.
+func (h *handlers) endSessions(r *http.Request, id int64, keepOwn bool) error {
+	keep := ""
+	if keepOwn && isSessionAccount(r, id) {
+		keep = kit.Session(r).ID()
+	}
+	if _, err := h.d.Sessions.EndAccount(r.Context(), id, keep); err != nil {
+		return err
+	}
+	return h.d.Authn.RevokeClientTokens(r.Context(), id, "", "")
+}

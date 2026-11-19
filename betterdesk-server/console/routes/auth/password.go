@@ -40,7 +40,8 @@ func strictEqual(a, b middleware.Value) bool {
 
 // changePassword answers POST /api/auth/password with the body
 // {currentPassword, newPassword, confirmPassword}: the signed-in account
-// changes its own password. No session ends by it.
+// changes its own password. Its other sessions end and its access tokens
+// are revoked; the session that changed it goes on.
 func (h *handlers) changePassword(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	current, next := body.Get("currentPassword"), body.Get("newPassword")
@@ -60,6 +61,9 @@ func (h *handlers) changePassword(w http.ResponseWriter, r *http.Request) {
 		refuse(w, r, refusal)
 		return
 	case err == nil:
+		err = h.endOtherSessions(r)
+	}
+	if err == nil {
 		err = h.audit(r, kit.UserID(r), "password_changed", "Password changed")
 	}
 	if err != nil {
@@ -99,4 +103,14 @@ func (h *handlers) replacePassword(r *http.Request, current, next middleware.Val
 		return authn.ErrWrongPassword
 	}
 	return errNotText
+}
+
+// endOtherSessions ends the signed-in account's sessions but the one of
+// the request, and revokes the account's access tokens.
+func (h *handlers) endOtherSessions(r *http.Request) error {
+	userID := kit.UserID(r)
+	if _, err := h.sessions.EndAccount(r.Context(), userID, kit.Session(r).ID()); err != nil {
+		return err
+	}
+	return h.authn.RevokeClientTokens(r.Context(), userID, "", "")
 }
