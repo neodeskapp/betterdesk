@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
@@ -218,7 +219,7 @@ func (s *Service) syncLocalUserFromGo(ctx context.Context, local *Account, accep
 	if err := syncUserFromGo(ctx, s.db, local.ID.V, change); err != nil {
 		return nil, err
 	}
-	s.log.Info(fmt.Sprintf("[AUTH] Synced '%s' from Go (provider=%s, role=%s)", local.Username, provider, roleText(role, local)))
+	s.log.Info(fmt.Sprintf("[AUTH] Synced '%s' from Go (provider=%s, role=%s)", logName(local.Username), provider, roleText(role, local)))
 
 	updated := *local
 	if change.role != nil {
@@ -378,15 +379,15 @@ func (s *Service) Authenticate(ctx context.Context, username, password string) (
 
 	switch normalizeAuthProvider(user.AuthProvider.String) {
 	case providerOIDC:
-		s.log.Info(fmt.Sprintf("[AUTH] Login failed: '%s' is an SSO account (password login not allowed)", username))
+		s.log.Info(fmt.Sprintf("[AUTH] Login failed: '%s' is an SSO account (password login not allowed)", logName(username)))
 		return Outcome{}, nil
 	case providerLDAP:
 		accept := s.tryGoServerAuth(ctx, username, password)
 		if accept == nil {
-			s.log.Info(fmt.Sprintf("[AUTH] Login failed: LDAP credentials rejected for '%s'", username))
+			s.log.Info(fmt.Sprintf("[AUTH] Login failed: LDAP credentials rejected for '%s'", logName(username)))
 			return Outcome{}, nil
 		}
-		s.log.Info(fmt.Sprintf("[AUTH] Go server accepted LDAP login for '%s' — syncing local account", username))
+		s.log.Info(fmt.Sprintf("[AUTH] Go server accepted LDAP login for '%s' — syncing local account", logName(username)))
 		user, err = s.syncLocalUserFromGo(ctx, user, accept, "")
 		if err != nil {
 			return Outcome{}, err
@@ -406,7 +407,7 @@ func (s *Service) authenticateLocal(ctx context.Context, user *Account, username
 		hashType = "bcrypt"
 	}
 	s.log.Info(fmt.Sprintf("[AUTH] Verifying password for '%s' (hash type: %s, length: %d)",
-		username, hashType, utf16Len(user.PasswordHash.String)))
+		logName(username), hashType, utf16Len(user.PasswordHash.String)))
 
 	if !user.PasswordHash.Valid {
 		return Outcome{}, errNoHash
@@ -424,28 +425,28 @@ func (s *Service) authenticateLocal(ctx context.Context, user *Account, username
 			// sign-on account by a sign-in.
 			if isExternalAuthProvider(accept.provider) {
 				s.log.Info(fmt.Sprintf("[AUTH] Login blocked: username collision for local '%s' (Go provider=%s)",
-					username, normalizeAuthProvider(accept.provider)))
+					logName(username), normalizeAuthProvider(accept.provider)))
 				return Outcome{Failure: FailureUsernameCollision}, nil
 			}
-			s.log.Info(fmt.Sprintf("[AUTH] Go server accepted password for local '%s' — syncing hash", username))
+			s.log.Info(fmt.Sprintf("[AUTH] Go server accepted password for local '%s' — syncing hash", logName(username)))
 			user, err = s.syncLocalUserFromGo(ctx, user, accept, password)
 			if err != nil {
 				return Outcome{}, err
 			}
 		case sso.ldap && s.goAPI.TryLDAPVerifyOnGo(ctx, username, password):
-			s.log.Info(fmt.Sprintf("[AUTH] Login blocked: username collision for local '%s' (LDAP credentials valid)", username))
+			s.log.Info(fmt.Sprintf("[AUTH] Login blocked: username collision for local '%s' (LDAP credentials valid)", logName(username)))
 			return Outcome{Failure: FailureUsernameCollision}, nil
 		default:
-			s.log.Info(fmt.Sprintf("[AUTH] Login failed: password mismatch for '%s' (hash type: %s)", username, hashType))
+			s.log.Info(fmt.Sprintf("[AUTH] Login failed: password mismatch for '%s' (hash type: %s)", logName(username), hashType))
 			return Outcome{}, nil
 		}
 	} else {
-		s.log.Info(fmt.Sprintf("[AUTH] Login successful for '%s'", username))
+		s.log.Info(fmt.Sprintf("[AUTH] Login successful for '%s'", logName(username)))
 		if check.NeedsMigration {
 			if err := s.migrateHash(ctx, user, password); err != nil {
 				s.log.Warn("[AUTH] Failed to migrate password hash for user id", user.ID.V, ":", err.Error())
 			} else {
-				s.log.Info("[AUTH] Migrated password hash from PBKDF2 to bcrypt for user: " + username)
+				s.log.Info("[AUTH] Migrated password hash from PBKDF2 to bcrypt for user: " + logName(username))
 			}
 		}
 	}
@@ -480,7 +481,7 @@ func (s *Service) authenticateUnknown(ctx context.Context, username, password st
 			case sso.ldap:
 				reason = "LDAP enabled on Go server"
 			}
-			s.log.Info(fmt.Sprintf("[AUTH] Go server accepted credentials for '%s' — provisioning local user (%s)", username, reason))
+			s.log.Info(fmt.Sprintf("[AUTH] Go server accepted credentials for '%s' — provisioning local user (%s)", logName(username), reason))
 			created, err := s.provisionLocalUserFromGo(ctx, username, password, accept, sso)
 			if err != nil {
 				return Outcome{}, err
@@ -490,6 +491,11 @@ func (s *Service) authenticateUnknown(ctx context.Context, username, password st
 			}
 		}
 	}
-	s.log.Info(fmt.Sprintf("[AUTH] Login failed: user '%s' not found in database", username))
+	s.log.Info(fmt.Sprintf("[AUTH] Login failed: user '%s' not found in database", logName(username)))
 	return Outcome{}, nil
 }
+
+// logName is a user name as the sign-in log lines print it: shortened to
+// its first and last character, so the log does not hold the account
+// names people sign in with.
+func logName(username string) string { return auditlog.RedactUsername(username) }

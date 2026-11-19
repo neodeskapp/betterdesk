@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/unitronix/betterdesk-server/console/auditlog"
 )
 
 // The bug fixes of BUGS.md that change what the recorded scenarios of
@@ -30,6 +31,7 @@ var scenarioFixes = []scenarioFix{
 	{"AN4", noPasswordFromTheNextLine},
 	{"AN7", noCodesInOtherLists},
 	{"AN8", strictSecrets},
+	{"AL4", maskNamesInSignInLogs},
 	{"AN6", logTheWrittenCredentialsPath},
 }
 
@@ -56,6 +58,35 @@ func rewriteLogs(sc *scenarioVector, edit func(level, text string) string) bool 
 		}
 	}
 	return changed
+}
+
+// signInLogName finds the user name in a log line of the sign-in.
+var signInLogName = []*regexp.Regexp{
+	regexp.MustCompile(`^(\[AUTH\] Synced ')(.*)(' from Go \(provider=.*)$`),
+	regexp.MustCompile(`^(\[AUTH\] Login failed: ')(.*)(' is an SSO account \(password login not allowed\))$`),
+	regexp.MustCompile(`^(\[AUTH\] Login failed: LDAP credentials rejected for ')(.*)(')$`),
+	regexp.MustCompile(`^(\[AUTH\] Go server accepted LDAP login for ')(.*)(' — syncing local account)$`),
+	regexp.MustCompile(`^(\[AUTH\] Verifying password for ')(.*)(' \(hash type: .*)$`),
+	regexp.MustCompile(`^(\[AUTH\] Login blocked: username collision for local ')(.*)(' \(.*)$`),
+	regexp.MustCompile(`^(\[AUTH\] Go server accepted password for local ')(.*)(' — syncing hash)$`),
+	regexp.MustCompile(`^(\[AUTH\] Login failed: password mismatch for ')(.*)(' \(hash type: .*)$`),
+	regexp.MustCompile(`^(\[AUTH\] Login successful for ')(.*)(')$`),
+	regexp.MustCompile(`^(\[AUTH\] Migrated password hash from PBKDF2 to bcrypt for user: )(.*)()$`),
+	regexp.MustCompile(`^(\[AUTH\] Go server accepted credentials for ')(.*)(' — provisioning local user \(.*)$`),
+	regexp.MustCompile(`^(\[AUTH\] Login failed: user ')(.*)(' not found in database)$`),
+}
+
+// maskNamesInSignInLogs: the sign-in's log lines shorten the user name
+// where they are built (AL4). Node printed it as it was.
+func maskNamesInSignInLogs(sc *scenarioVector) bool {
+	return rewriteLogs(sc, func(_, text string) string {
+		for _, re := range signInLogName {
+			if m := re.FindStringSubmatch(text); m != nil {
+				return m[1] + auditlog.RedactUsername(m[2]) + m[3]
+			}
+		}
+		return text
+	})
 }
 
 // logTheWrittenCredentialsPath: the line about a made-up password names
