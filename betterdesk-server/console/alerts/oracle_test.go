@@ -534,6 +534,9 @@ func TestEngineAsNodeWithoutDatabase(t *testing.T) {
 			}
 			c.Created = created
 		}
+		goChecked, nodeChecked := slices.Contains(mem.filters, memoryRules), slices.Contains(c.Filters, memoryRules)
+		nodeReads, goReads := memoryReads(t, c.Telemetry)
+		memoryDiffers := c.Fn == "telemetry" && (goChecked != nodeChecked || goReads != nodeReads)
 		badLimit, badCooldown := oddRules(t, c.Rules)
 		touched := slices.ContainsFunc(c.RecentCalls, func(call [3]string) bool { return badLimit[call[0]] || badCooldown[call[0]] })
 		if touched && c.Throws == nil && c.Create != "throws" && c.Mail != "throws" {
@@ -543,7 +546,23 @@ func TestEngineAsNodeWithoutDatabase(t *testing.T) {
 			if problem := expectAE3(t, c, mem.recent, badLimit, badCooldown); problem != "" {
 				t.Fatalf("case %d %s: %s", i, describe(), problem)
 			}
-		} else if touched || c.Throws != nil && len(badLimit) > 0 {
+		}
+		if memoryDiffers {
+			// BUGS AE5: the Go console reads memory at 0 bytes used and
+			// checks it, and does not check it for a total of 0 or below.
+			// Memory comes last, so what came before it is the same; an
+			// error may come from a value only the Go console read.
+			counts["AE5: memory checked by one side only"]++
+			problem := ""
+			if !touched || c.Throws == nil && c.Create != "throws" && c.Mail != "throws" {
+				problem = sameBeforeMemory(mem, c, goChecked, nodeChecked)
+			}
+			if problem != "" || err != nil && !(goReads && !nodeReads) && (c.Throws == nil || err.Error() != *c.Throws) {
+				t.Fatalf("case %d %s: %s %v", i, describe(), problem, err)
+			}
+			continue
+		}
+		if !(touched && c.Throws == nil && c.Create != "throws" && c.Mail != "throws") && (touched || c.Throws != nil && len(badLimit) > 0) {
 			// The same where Node threw or a failure ended its loop over
 			// the rules early: the Go console raises nothing for the first
 			// kind of rule and takes 300 seconds for the second, so it
@@ -629,7 +648,7 @@ func TestEngineAsNodeWithoutDatabase(t *testing.T) {
 		}
 	}
 	for _, name := range []string{"rules", "telemetry", "sweep", "odd ids", "thrown", "alerts", "mails", "AE2: a rule with an object's member as its operator", "AE1: a device never online in the sweep",
-		"AE3: a rule whose limit or cooldown Node read as it was", "AE3: the same where Node threw"} {
+		"AE3: a rule whose limit or cooldown Node read as it was", "AE3: the same where Node threw", "AE5: memory checked by one side only"} {
 		if counts[name] == 0 {
 			t.Errorf("the recording has no %q", name)
 		}
@@ -854,6 +873,19 @@ func TestEngineAsNodeOnRows(t *testing.T) {
 				c.Logs = withoutDevices(c.Logs, never, func(line [2]string) string { return line[1] })
 				c.Triggered = c.Triggered[:len(c.Rows)]
 			}
+			if nodeChecks, goChecks := memoryChecks(t, c.Telemetry); c.Fn == "telemetry" && nodeChecks != goChecks {
+				// BUGS AE5, as in TestEngineAsNodeWithoutDatabase: memory
+				// comes last, so the alerts before it are the same
+				counts["AE5: memory checked by one side only"]++
+				short, long := c.Rows, rows
+				if nodeChecks {
+					short, long = rows, c.Rows
+				}
+				if !isPrefix(short, long) || err != nil && (c.Throws == nil || err.Error() != *c.Throws) {
+					t.Fatalf("case %d %s: alerts %q, Node: %q, %v", i, describe(), rows, c.Rows, err)
+				}
+				continue
+			}
 			var fields []map[string]string
 			for _, rule := range c.Rules {
 				fields = append(fields, map[string]string{"id": strconv.Itoa(rule.ID), "condition_value": rule.Cols["condition_value"], "cooldown_secs": rule.Cols["cooldown_secs"]})
@@ -932,7 +964,7 @@ func TestEngineAsNodeOnRows(t *testing.T) {
 			}
 		}
 		for _, name := range []string{"rules", "telemetry", "sweep", "alerts", "mails", "held back by the cooldown", "AE1: a device never online in the sweep",
-			"AE3: a rule whose limit or cooldown Node read as it was"} {
+			"AE3: a rule whose limit or cooldown Node read as it was", "AE5: memory checked by one side only"} {
 			if counts[name] == 0 {
 				t.Errorf("the recording has no %q", name)
 			}

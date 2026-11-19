@@ -354,20 +354,23 @@ type Telemetry struct {
 // EvaluateTelemetry checks a telemetry report: the CPU load against the
 // cpu_usage rules when the report has one, and used memory in percent,
 // rounded to a whole number, against the memory_usage rules when the
-// report has both memory values. The error is as for EvaluateRules.
+// report has both memory values (neither missing, null nor the empty
+// text, 0 used counts) and the total is above 0. The error is as for
+// EvaluateRules.
 func (e *Engine) EvaluateTelemetry(ctx context.Context, deviceID jsbind.Value, telemetry Telemetry) error {
 	if cpu := telemetry.CPUUsagePercent; !cpu.IsUndefined() && !cpu.IsNull() {
 		if err := e.EvaluateRules(ctx, deviceID, "cpu_usage", cpu, EvalOptions{}); err != nil {
 			return err
 		}
 	}
-	if telemetry.MemoryUsedBytes.Truthy() && telemetry.MemoryTotalBytes.Truthy() {
+	set := func(v jsbind.Value) bool { return !v.IsUndefined() && !v.IsNull() && !(v.IsString() && v.Str() == "") }
+	if set(telemetry.MemoryUsedBytes) && set(telemetry.MemoryTotalBytes) {
 		used, err := jsNumber(telemetry.MemoryUsedBytes)
 		if err != nil {
 			return err
 		}
 		total, err := jsNumber(telemetry.MemoryTotalBytes)
-		if err != nil {
+		if err != nil || !(total > 0) {
 			return err
 		}
 		ratio := used / total * 100
