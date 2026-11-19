@@ -812,6 +812,10 @@ func TestSignInStoresTextClientIDsOnly(t *testing.T) {
 		if err := db.QueryRow(ctx, "SELECT COUNT(*) FROM access_tokens WHERE user_id = 6 AND client_uuid = 'uu-1' AND NOT revoked").Scan(&kept); err != nil || kept != 1 {
 			t.Errorf("tokens of uu-1 left after sign-ins with UUIDs that are no text: %d, %v", kept, err)
 		}
+		// The five sign-ins whose UUID is no text keep each other's tokens
+		if err := db.QueryRow(ctx, "SELECT COUNT(*) FROM access_tokens WHERE user_id = 6 AND client_uuid = '' AND NOT revoked").Scan(&kept); err != nil || kept != 5 {
+			t.Errorf("tokens without a UUID left: %d, %v", kept, err)
+		}
 	})
 }
 
