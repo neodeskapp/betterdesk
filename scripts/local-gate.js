@@ -744,7 +744,7 @@ async function runInstallerChecks(report, tools) {
     for (const [id, script, label] of [
         ['installer-go-upgrade', 'scripts/test-go-installer.sh', 'Test the upgrade to the server with its web console'],
         ['installer-go-toolchain', 'scripts/check-go-toolchain-pins.sh', 'Check the Go pins of the installers against go.mod'],
-        ['installer-docker-update', 'scripts/test-docker-installer.sh', 'Test the Docker manager update'],
+        ['installer-docker-update', 'scripts/test-docker-installer.sh', 'Test the Docker manager update and backup'],
         ['installer-native-recovery', 'scripts/test-native-installer.sh', 'Test native installer recovery'],
         ['installer-postgres-hba', 'scripts/test-postgresql-hba.sh', 'Test PostgreSQL HBA setup'],
     ]) {

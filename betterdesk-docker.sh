@@ -2048,12 +2048,27 @@ do_backup_silent() {
     
     print_step "Creating backup: $backup_name"
     
-    # Backup data directory
+    # The data folder with its dotfiles (.api_key, .admin_credentials)
     if [ -d "$DATA_DIR" ]; then
-        cp -r "$DATA_DIR"/* "$backup_path/" 2>/dev/null || true
-        print_info "  - Dane ($DATA_DIR)"
+        cp -a "$DATA_DIR/." "$backup_path/" 2>/dev/null || true
+        print_info "  - Data ($DATA_DIR)"
     fi
-    
+
+    # The web console's data volume (/app/data), from the container that
+    # mounts it; docker cp also reads a stopped container
+    local container
+    for container in "$AIO_CONTAINER" "$CONSOLE_CONTAINER"; do
+        if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx "$container"; then
+            mkdir -p "$backup_path/console-data"
+            if docker cp "$container:/app/data/." "$backup_path/console-data/" >/dev/null 2>&1; then
+                print_info "  - Web console data (/app/data of $container)"
+            else
+                print_warning "  Could not copy /app/data of $container"
+            fi
+            break
+        fi
+    done
+
     # Backup compose file
     if [ -f "$COMPOSE_FILE" ]; then
         cp "$COMPOSE_FILE" "$backup_path/"

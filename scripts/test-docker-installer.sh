@@ -113,5 +113,39 @@ test_failed_build_restores_sources() (
     rm -rf "$TEST_DIR"
 )
 
+# UP13: the backup holds the data folder with its dotfiles (.api_key,
+# .admin_credentials) and the web console's data volume (/app/data).
+test_backup_keeps_dotfiles_and_console_data() (
+    load
+    printf 'key\n' > "$DATA_DIR/.api_key"
+    printf 'credentials\n' > "$DATA_DIR/.admin_credentials"
+    printf 'db\n' > "$DATA_DIR/db_v2.sqlite3"
+    printf 'old compose\n' > "$COMPOSE_FILE"
+    docker() {
+        case "$1" in
+            ps) printf '%s\n' betterdesk ;;
+            cp)
+                [ "$2" = "betterdesk:/app/data/." ] || return 1
+                mkdir -p "$3"
+                printf 'auth\n' > "$3/auth.db"
+                ;;
+            *) return 1 ;;
+        esac
+    }
+    ( do_backup_silent ) >/dev/null 2>&1
+    local archive root
+    archive=$(find "$BACKUP_DIR" -maxdepth 1 -name '*.tar.gz' | head -n 1)
+    [ -n "$archive" ] || fail "no backup archive"
+    mkdir -p "$TEST_DIR/unpacked"
+    tar -xzf "$archive" -C "$TEST_DIR/unpacked"
+    root=$(find "$TEST_DIR/unpacked" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+    [ -f "$root/db_v2.sqlite3" ] || fail "the database is not in the backup"
+    [ -f "$root/.api_key" ] || fail ".api_key is not in the backup"
+    [ -f "$root/.admin_credentials" ] || fail ".admin_credentials is not in the backup"
+    [ -f "$root/console-data/auth.db" ] || fail "the web console's data volume is not in the backup"
+    rm -rf "$TEST_DIR"
+)
+
 test_failed_build_restores_sources
+test_backup_keeps_dotfiles_and_console_data
 echo "Docker installer checks passed"

@@ -98,7 +98,7 @@ jobs:
         run: bash scripts/test-go-installer.sh
       - name: Check the Go pins of the installers against go.mod
         run: bash scripts/check-go-toolchain-pins.sh
-      - name: Test the Docker manager's update
+      - name: Test the Docker manager's update and backup
         run: bash scripts/test-docker-installer.sh
       - name: Test native installer watchdog and clone recovery
         run: bash scripts/test-native-installer.sh
