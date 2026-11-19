@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -31,11 +32,13 @@ func (g *general) getConnectionMode(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusInternalServerError, messageOr(err, kit.T(r, "errors.server_error", nil)))
 		return
 	}
+	// the running settings are on /api/health/detail; /api/health
+	// answers status and version only
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
 	var runtime any
-	if health, err := g.d.GoAPI.Get(r.Context(), "/health", goapi.Timeout(5*time.Second)); err == nil {
-		if connection := goapi.Dig(health.Data(), "connection"); goapi.Truthy(connection) {
-			runtime = connection
-		}
+	if connection := g.d.GoAPI.GetHealth(ctx).Get("connection"); goapi.Truthy(connection) {
+		runtime = connection
 	}
 	kit.OK(w, r, connectionData{ConnectionSettings: saved, Deployment: g.d.ServerInfo.DetectDeploymentSource(), Runtime: runtime})
 }

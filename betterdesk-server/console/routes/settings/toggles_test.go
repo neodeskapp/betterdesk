@@ -386,14 +386,21 @@ func TestClientSessions(t *testing.T) {
 func TestConnectionModeAndPublicEndpoints(t *testing.T) {
 	s := newSite(t, nil, nil, nil)
 	admin := s.As("admin")
-	s.API.On("GET /api/health", http.StatusOK, `{"status":"ok","connection":{"p2p_first":false}}`)
+	// the running settings come from /api/health/detail, since /api/health
+	// answers status and version only (BUGS UM1)
+	s.API.On("GET /api/health", http.StatusOK, `{"status":"ok","version":"1"}`)
+	s.API.On("GET /api/health/detail", http.StatusOK, `{"status":"ok","connection":{"p2p_first":false}}`)
 	res := admin.Do("GET", "/api/settings/connection-mode", "")
 	if res.Body != `{"success":true,"data":{"mode":"p2p_first","p2p_fallback_ms":2000,"same_nat_relay":true,"allow_shared_nat_initiator":false,"logged_in_only_initiator":false,"operator_only_outbound":false,"source":"defaults","writable":false,"deployment":"defaults","runtime":{"p2p_first":false}}}` {
 		t.Errorf("get: %s", res.Body)
 	}
-	s.API.On("GET /api/health", http.StatusOK, `{"status":"ok","connection":""}`)
+	s.API.On("GET /api/health/detail", http.StatusOK, `{"status":"ok","connection":""}`)
 	if res := admin.Do("GET", "/api/settings/connection-mode", ""); !strings.HasSuffix(res.Body, `"runtime":null}}`) {
 		t.Errorf("get without runtime: %s", res.Body)
+	}
+	s.API.On("GET /api/health/detail", http.StatusInternalServerError, `{"error":"x"}`)
+	if res := admin.Do("GET", "/api/settings/connection-mode", ""); !strings.HasSuffix(res.Body, `"runtime":null}}`) {
+		t.Errorf("get without the detail: %s", res.Body)
 	}
 	before := len(s.AuditRows())
 	res = admin.Do("PUT", "/api/settings/connection-mode", `{"mode":"relay_only"}`)
