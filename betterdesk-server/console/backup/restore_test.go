@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/avatars"
 	"github.com/unitronix/betterdesk-server/console/branding"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
@@ -454,6 +455,93 @@ func TestFullBackupCarriesTheAttachments(t *testing.T) {
 	if got := filesBelow(t, filepath.Join(other.consoleDir, "data", "attachments")); len(got) != 0 {
 		t.Errorf("attachments restored without the console data: %q", got)
 	}
+}
+
+// AV2: a restore that replaced the accounts or their pictures drops the
+// list of who has a picture, so the list shows the restored accounts at
+// once and not up to 30 seconds later.
+func TestRestoreDropsTheListOfPictures(t *testing.T) {
+	dialects(t, func(t *testing.T, dialect string) {
+		ctx := context.Background()
+		listed := func(av *avatars.Service) string {
+			entries, err := av.ListDirectory(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var names []string
+			for _, e := range entries {
+				names = append(names, e.Username)
+			}
+			return strings.Join(names, ",")
+		}
+		withAvatars := func(in *install) (*Service, *avatars.Service) {
+			av := avatars.New(avatars.Options{DB: in.db})
+			s := in.snapshotService(t)
+			s.o.Avatars = av
+			return s, av
+		}
+
+		// a full backup of an install where nobody has a picture
+		empty := newInstall(t, dialect)
+		mustExec(t, empty.db, `INSERT INTO users (id, username, password_hash, role) VALUES (50, 'seed_admin', 'h', 'admin')`)
+		archive, _, err := empty.service(t, "x").CreateFullBackup(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		in := newInstall(t, dialect)
+		in.seed(t)
+		s, av := withAvatars(in)
+		if got := listed(av); got != "seed_admin" {
+			t.Fatalf("pictures before the restore: %q", got)
+		}
+		if res, err := s.RestoreFullBackup(ctx, archive, RestoreOptions{Database: true}); err != nil || len(res.Warnings) != 0 {
+			t.Fatalf("full restore: %+v %v", res, err)
+		}
+		if got := listed(av); got != "" {
+			t.Errorf("pictures after the full restore: %q", got)
+		}
+
+		// a dump with one of the two tables only
+		for _, c := range []struct{ tables, unwanted string }{
+			{`{"user_avatars":[]}`, "seed_admin"},
+			{`{"users":[{"id":50,"username":"renamed","password_hash":"h","role":"admin"}]}`, "seed_admin"},
+		} {
+			dump, err := CreateTarGz([]Entry{
+				{Name: "manifest.json", Data: []byte(`{"_format":"betterdesk-full-backup","_version":1}`)},
+				{Name: "console/data.json", Data: []byte(`{"tables":` + c.tables + `}`)},
+			}, 1)
+			if err != nil {
+				t.Fatal(err)
+			}
+			in := newInstall(t, dialect)
+			in.seed(t)
+			s, av := withAvatars(in)
+			if got := listed(av); got != "seed_admin" {
+				t.Fatalf("pictures before the restore: %q", got)
+			}
+			if res, err := s.RestoreFullBackup(ctx, dump, RestoreOptions{Database: true}); err != nil || len(res.Warnings) != 0 {
+				t.Fatalf("restore of %s: %+v %v", c.tables, res, err)
+			}
+			if got := listed(av); got == c.unwanted {
+				t.Errorf("pictures after the restore of %s: %q", c.tables, got)
+			}
+		}
+
+		// a snapshot that replaces the accounts
+		in = newInstall(t, dialect)
+		in.seed(t)
+		s, av = withAvatars(in)
+		if got := listed(av); got != "seed_admin" {
+			t.Fatalf("pictures before the snapshot: %q", got)
+		}
+		snapshot := parsedJSON(t, `{"_format":"betterdesk-backup","_version":1,"console":{"users":[{"id":60,"username":"restored","password_hash":"h","role":"admin"}]}}`)
+		if res := s.RestoreBackup(ctx, snapshot, SnapshotOptions{Users: true}); !slices.Contains(res.Restored, "users") {
+			t.Fatalf("snapshot restore: %+v", res)
+		}
+		if got := listed(av); got != "" {
+			t.Errorf("pictures after the snapshot: %q", got)
+		}
+	})
 }
 
 func parsedJSON(t *testing.T, text string) any {

@@ -46,11 +46,16 @@ func Register(d *kit.Deps) {
 	if d.GoAPI != nil {
 		api = d.GoAPI
 	}
+	var pictures backup.Avatars
+	if d.Avatars != nil {
+		pictures = d.Avatars
+	}
 	backups := backup.New(backup.Options{
 		Store:      d.Store,
 		Branding:   b,
 		Groups:     groups,
 		GoAPI:      api,
+		Avatars:    pictures,
 		DataDir:    cfg.DataDir,
 		EnvPath:    cfg.EnvPath,
 		KeysPath:   cfg.KeysPath,

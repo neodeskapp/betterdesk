@@ -206,7 +206,8 @@ type SnapshotOptions struct {
 //     settings with the stored password when they bring none;
 //   - branding: through the branding service, which cleans the values;
 //   - users (only when asked, and only a non-empty list): every account is
-//     replaced (restoreUsers);
+//     replaced (restoreUsers), and the list of who has a picture is
+//     dropped;
 //   - folders: those whose name is not taken yet are added;
 //   - groups: user groups, device groups and rules whose guid is not taken
 //     yet are added, failures of single ones are ignored;
@@ -257,6 +258,7 @@ func (s *Service) RestoreBackup(ctx context.Context, data any, o SnapshotOptions
 			res.Warnings = append(res.Warnings, "Users restore failed: "+driverMessage(err))
 		} else {
 			res.Restored = append(res.Restored, "users")
+			s.forgetPictures()
 		}
 	} else {
 		res.Skipped = append(res.Skipped, "users")

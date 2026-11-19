@@ -34,6 +34,13 @@ type Branding interface {
 	LoadBranding(ctx context.Context) *branding.Object
 }
 
+// Avatars is the part of the avatar service a restore needs: it keeps a
+// list of who has a picture, which a restore of the accounts or their
+// pictures makes stale.
+type Avatars interface {
+	ResetCache()
+}
+
 // Groups lists folders and groups as the console's device group service
 // does.
 type Groups interface {
@@ -57,6 +64,7 @@ type Options struct {
 	Branding Branding
 	Groups   Groups
 	GoAPI    GoServer
+	Avatars  Avatars
 
 	// DataDir is DATA_DIR: .session_secret and uploads/ are below it.
 	DataDir string
@@ -525,8 +533,9 @@ func (e *ErrInvalidArchive) Error() string {
 // a part that fails leaves a warning and the next one still runs:
 //
 //  1. the logical dump, table by table (ImportAllTables); the branding
-//     cache is loaded again when branding_config came back; the chat
-//     files and the ticket attachments go with the dump, when it is
+//     cache is loaded again when branding_config came back, the list of
+//     who has a picture is dropped when users or user_avatars did; the
+//     chat files and the ticket attachments go with the dump, when it is
 //     chosen,
 //  2. the uploads, below DATA_DIR/uploads,
 //  3. the secrets, each to its own path,
@@ -641,6 +650,9 @@ func (s *Service) importDump(ctx context.Context, raw []byte, res *RestoreResult
 	if s.o.Branding != nil && slices.Contains(r.Restored, "branding_config") {
 		s.o.Branding.LoadBranding(ctx)
 	}
+	if slices.Contains(r.Restored, "users") || slices.Contains(r.Restored, "user_avatars") {
+		s.forgetPictures()
+	}
 	res.Restored = append(res.Restored, fmt.Sprintf("database (%d tables)", len(r.Restored)))
 	res.Warnings = append(res.Warnings, r.Warnings...)
 	return nil
@@ -652,6 +664,14 @@ const (
 	chatFilesPrefix   = "console/chat-files/"
 	attachmentsPrefix = "console/attachments/"
 )
+
+// forgetPictures drops the avatar service's list of who has a picture
+// after a restore replaced the accounts or their pictures.
+func (s *Service) forgetPictures() {
+	if s.o.Avatars != nil {
+		s.o.Avatars.ResetCache()
+	}
+}
 
 // restoreFolderPart restores the files below prefix into dir as a part of
 // the console data: "<label> (N files)" when it wrote any, a warning
