@@ -206,10 +206,9 @@ func isJSSpace(r rune) bool {
 	return r >= 0x2000 && r <= 0x200a
 }
 
-// cut returns the first n UTF-16 code units of s, as JavaScript's
-// slice(0, n) does. A character outside the Basic Multilingual Plane that
-// the cut falls into leaves its first half, which becomes U+FFFD in JSON
-// and in the database.
+// cut returns s cut to at most n UTF-16 code units, the length JavaScript
+// counts. It stops before a character outside the Basic Multilingual
+// Plane that does not fit whole, so no half of one is left.
 func cut(s string, n int) string {
 	units := 0
 	for i, r := range s {
@@ -218,9 +217,6 @@ func cut(s string, n int) string {
 			size = 2
 		}
 		if units+size > n {
-			if units < n {
-				return s[:i] + "�"
-			}
 			return s[:i]
 		}
 		units += size

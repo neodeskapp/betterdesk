@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -32,10 +33,21 @@ func loadVectors(t *testing.T, name string, into any) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := json.NewDecoder(zr).Decode(into); err != nil {
+	raw, err := io.ReadAll(zr)
+	if err != nil {
+		t.Fatalf("read %s: %v", name, err)
+	}
+	if err := json.Unmarshal(rawHalfCharacter.ReplaceAll(raw, []byte("$1")), into); err != nil {
 		t.Fatalf("read %s: %v", name, err)
 	}
 }
+
+// rawHalfCharacter is a half character (halfCharacter) in the JSON of a
+// vector file. The vectors hold one only in Node's answers, where a cut to
+// a length fell inside a character outside the Basic Multilingual Plane;
+// the fix of BUGS DGR2 cuts before such a character, so the answers are
+// read without the half.
+var rawHalfCharacter = regexp.MustCompile(`([^\x5c])\x5cud[89ab][0-9a-f]{2}`)
 
 // parsed reads recorded JSON the way the device layer hands values on:
 // objects as *goapi.Object.
@@ -459,8 +471,9 @@ func TestOperatorLookupsFailAsTheyAlwaysDid(t *testing.T) {
 
 // halfCharacter matches half of a character outside the Basic
 // Multilingual Plane as JSON.stringify writes it. Node leaves one where a
-// tag is cut to 50 characters in the middle of such a character; a Go
-// string cannot hold one and has U+FFFD in its place.
-var halfCharacter = regexp.MustCompile(`\x5cud[89a-f][0-9a-f]{2}`)
+// tag is cut to 50 characters in the middle of such a character; the fix
+// of BUGS DGR2 cuts before the character, so Node's answers are compared
+// without the half.
+var halfCharacter = regexp.MustCompile(`\x5cud[89ab][0-9a-f]{2}`)
 
-func nodeText(s string) string { return halfCharacter.ReplaceAllString(s, "\ufffd") }
+func nodeText(s string) string { return halfCharacter.ReplaceAllString(s, "") }

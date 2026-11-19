@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -70,8 +71,11 @@ var fixedSteps = []fixedStep{
 	{"node_agent", `19 GET /api/devices/A1001/processes as admin agent {"ok":false,"error":"agent_offline"}`, "WS8"},
 	{"node_agent", `20 GET /api/devices/A1001/clipboard as admin agent {"ok":false,"error":"agent_offline"}`, "WS8"},
 	{"node_agent", `55 GET /api/devices/A1001/services as admin agent {"ok":false,"error":"agent_offline"}`, "WS8"},
-	// The audit log after the steps of DE5 and DE6
-	{"node", "459 audit", "DE5, DE6"},
+	// The tag cut to 50 characters stops before the emoji that does not fit
+	// whole, where Node kept half of it.
+	{"node", `135 PUT /api/devices/A1001/tags {"tags":[" a ","",5,null,"b","  ","` + strings.Repeat("c", 60) + `","` + strings.Repeat("d😀", 30) + `"]} as admin`, "DGR2"},
+	// The audit log after the steps of DE5, DE6 and DGR2
+	{"node", "459 audit", "DE5, DE6, DGR2"},
 	// The scope check does not take bulk-delete for a device id: no lookup
 	// of a device of that name, and the made-up server's bulk-delete device
 	// outside the operator's scope no longer refuses the bulk delete before

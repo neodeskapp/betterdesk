@@ -116,13 +116,7 @@ func (a *fakeAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // randomGUID is a guid the database or the console made up during a run.
 var randomGUID = regexp.MustCompile(`[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}`)
 
-// loneSurrogate is half of a character outside the Basic Multilingual
-// Plane, which JSON.stringify writes as an escape and a Go string cannot
-// hold: the Go routes write U+FFFD in its place (BUGS DGR2).
-var loneSurrogate = regexp.MustCompile(`\\ud[89ab][0-9a-f]{2}`)
-
 func normalize(s string) string {
-	s = loneSurrogate.ReplaceAllString(s, "�")
 	return randomGUID.ReplaceAllString(replay.Normalize(s), "<guid>")
 }
 

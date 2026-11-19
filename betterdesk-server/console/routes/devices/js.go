@@ -115,6 +115,23 @@ func slice(s string, n int) string {
 	return s
 }
 
+// cutWhole is slice that stops before a character outside the Basic
+// Multilingual Plane that does not fit whole, so no half of one is left.
+func cutWhole(s string, n int) string {
+	units := 0
+	for i, r := range s {
+		size := 1
+		if r > 0xffff {
+			size = 2
+		}
+		if units+size > n {
+			return s[:i]
+		}
+		units += size
+	}
+	return s
+}
+
 // length is s.length in UTF-16 code units.
 func length(s string) int { return jsreq.Length(s) }
 

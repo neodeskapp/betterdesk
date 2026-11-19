@@ -333,6 +333,22 @@ func TestBulkDeleteIsNoDeviceID(t *testing.T) {
 	}
 }
 
+// TestSetTagsKeepsWholeCharacters: a tag cut to 50 UTF-16 units stops
+// before a character outside the Basic Multilingual Plane that does not
+// fit whole, so the server stores no half of it (BUGS DGR2).
+func TestSetTagsKeepsWholeCharacters(t *testing.T) {
+	w, api := world(t, storetest.Migrated(t), nil, nil)
+	a49 := strings.Repeat("a", 49)
+	api.Calls()
+	got := w.As("admin").Do("PUT", "/api/devices/A/tags", `{"tags":["`+a49+`😀","b😀"]}`)
+	if want := `{"success":true,"data":{"tags":["` + a49 + `","b😀"]}}`; got.Status != http.StatusOK || got.Body != want {
+		t.Errorf("tags cut in an emoji: %d %s, want %s", got.Status, got.Body, want)
+	}
+	if calls := strings.Join(api.Calls(), "\n"); !strings.Contains(calls, `PUT /api/peers/A/tags {"tags":["`+a49+`","b😀"]}`) {
+		t.Errorf("the tags the server got: %s", calls)
+	}
+}
+
 // TestListIgnoresQueryLists: search and sortOrder given as a list or an
 // object are ignored like the other parameters, and the list answers
 // (BUGS DE4).
