@@ -68,9 +68,12 @@ var changedByFixes = map[string]struct {
 	text   string
 }{
 	// TH4, G4: the device list is asked for without a page size, and the
-	// API server then answers a bare list, which Node never read
-	"distribution, a bare list": {200, `{"total":20,"platforms":{"windows":2,"ubuntu 22.04":1,"linux":1,"macos":3,"android":1,"ios":4,"chromeos":1,"other":3,"freebsd 14":1,"debian 12":2,"äöü éire":1},"archs":{"unknown":14,"x86_64":2,"arm64":2,"amd64":1,"αρμ":1},"versions":{"2":2,"9":1,"10":1,"1.4.2":4,"1.4.1":1,"1.3.9":1,"unknown":5,"1.5":1,"true":1,"1,2":1,"[object Object]":1,"Ünïcode":1}}`},
+	// API server then answers a bare list, which Node never read; TH6:
+	// "Kiosk display" is no iOS device
+	"distribution, a bare list": {200, `{"total":20,"platforms":{"windows":2,"ubuntu 22.04":1,"linux":1,"macos":3,"android":1,"ios":3,"chromeos":1,"other":3,"freebsd 14":1,"kiosk display":1,"debian 12":2,"äöü éire":1},"archs":{"unknown":14,"x86_64":2,"arm64":2,"amd64":1,"αρμ":1},"versions":{"2":2,"9":1,"10":1,"1.4.2":4,"1.4.1":1,"1.3.9":1,"unknown":5,"1.5":1,"true":1,"1,2":1,"[object Object]":1,"Ünïcode":1}}`},
 	"protocols, a bare list":    {200, `{"totalOnline":3,"codecs":{"vp9":1,"h264":2},"features":{"file_transfer":2,"clipboard":1}}`},
+	// TH6: a platform belongs to a family by the start of its name
+	"distribution, a mixed fleet": {200, `{"total":20,"platforms":{"windows":2,"ubuntu 22.04":1,"linux":1,"macos":3,"android":1,"ios":3,"chromeos":1,"other":3,"freebsd 14":1,"kiosk display":1,"debian 12":2,"äöü éire":1},"archs":{"unknown":14,"x86_64":2,"arm64":2,"amd64":1,"αρμ":1},"versions":{"2":2,"9":1,"10":1,"1.4.2":4,"1.4.1":1,"1.3.9":1,"unknown":5,"1.5":1,"true":1,"1,2":1,"[object Object]":1,"Ünïcode":1}}`},
 	// TH5: a name every JavaScript object has counts from 1
 	"distribution, names every object has": {200, `{"total":30,"platforms":{"constructor":2,"tostring":2,"valueof":2,"hasownproperty":2,"isprototypeof":2,"propertyisenumerable":2,"tolocalestring":2,"__proto__":2,"__definegetter__":2,"__definesetter__":2,"__lookupgetter__":2,"__lookupsetter__":2,"length":2,"prototype":2,"name":2},"archs":{"constructor":2,"tostring":2,"valueof":2,"hasownproperty":2,"isprototypeof":2,"propertyisenumerable":2,"tolocalestring":2,"__proto__":2,"__definegetter__":2,"__definesetter__":2,"__lookupgetter__":2,"__lookupsetter__":2,"length":2,"prototype":2,"name":2},"versions":{"constructor":2,"toString":2,"valueOf":2,"hasOwnProperty":2,"isPrototypeOf":2,"propertyIsEnumerable":2,"toLocaleString":2,"__proto__":2,"__defineGetter__":2,"__defineSetter__":2,"__lookupGetter__":2,"__lookupSetter__":2,"length":2,"prototype":2,"name":2}}`},
 	"protocols, names every object has":    {200, `{"totalOnline":30,"codecs":{"constructor":2,"toString":2,"valueOf":2,"hasOwnProperty":2,"isPrototypeOf":2,"propertyIsEnumerable":2,"toLocaleString":2,"__proto__":2,"__defineGetter__":2,"__defineSetter__":2,"__lookupGetter__":2,"__lookupSetter__":2,"length":2,"prototype":2,"name":2},"features":{"constructor":3,"toString":3,"valueOf":3,"hasOwnProperty":3,"isPrototypeOf":3,"propertyIsEnumerable":3,"toLocaleString":3,"__proto__":3,"__defineGetter__":3,"__defineSetter__":3,"__lookupGetter__":3,"__lookupSetter__":3,"length":3,"prototype":3,"name":3}}`},
@@ -239,5 +242,21 @@ func TestTallyCountsEveryName(t *testing.T) {
 		if got := admin.Do("GET", path, ""); got.Status != 200 || got.Body != want {
 			t.Errorf("%s: %d %s, want %s", path, got.Status, got.Body, want)
 		}
+	}
+}
+
+// TestPlatformFamilyByTheStartOfTheName: a family is named by the start
+// of the platform name, not by a part of a word inside it.
+func TestPlatformFamilyByTheStartOfTheName(t *testing.T) {
+	var devices []string
+	for _, platform := range []string{"Kiosk display", "Windows 11", "Lumac 2", "Linux Mint", "iPadOS 17", "Darwin 23", "ChromeOS", "Android 14", "Raspios", "iPhone 15"} {
+		devices = append(devices, `{"platform":"`+platform+`"}`)
+	}
+	api := routetest.NewAPI()
+	api.On("GET /api/peers", 200, "["+strings.Join(devices, ",")+"]")
+	admin := routetest.New(t, routetest.Options{API: api}).As("admin")
+	want := `{"total":10,"platforms":{"kiosk display":1,"windows":1,"lumac 2":1,"linux":1,"ios":2,"macos":1,"chromeos":1,"android":1,"raspios":1},"archs":{"unknown":10},"versions":{"unknown":10}}`
+	if got := admin.Do("GET", "/api/panel/cross-platform/distribution", ""); got.Status != 200 || got.Body != want {
+		t.Errorf("%d %s, want %s", got.Status, got.Body, want)
 	}
 }

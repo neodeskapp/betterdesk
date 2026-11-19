@@ -196,22 +196,29 @@ func lowerText(v any, fallback string) (string, bool) {
 }
 
 // platformKey sorts a platform name in lower case into the families the
-// page shows. A name of no family stays as it is; no name at all is
-// "other".
+// page shows, by the start of the name ("windows 11 pro", "ipados 17").
+// A name of no family stays as it is; no name at all is "other".
 func platformKey(platform string) string {
-	has := func(part string) bool { return strings.Contains(platform, part) }
+	starts := func(prefixes ...string) bool {
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(platform, prefix) {
+				return true
+			}
+		}
+		return false
+	}
 	switch {
-	case has("windows"):
+	case starts("windows"):
 		return "windows"
-	case has("linux"):
+	case starts("linux"):
 		return "linux"
-	case has("mac"), has("darwin"):
+	case starts("mac", "darwin"):
 		return "macos"
-	case has("android"):
+	case starts("android"):
 		return "android"
-	case has("ios"), has("iphone"), has("ipad"):
+	case starts("ios", "iphone", "ipad"):
 		return "ios"
-	case has("chrome"):
+	case starts("chrome"):
 		return "chromeos"
 	case platform != "unknown":
 		return platform
