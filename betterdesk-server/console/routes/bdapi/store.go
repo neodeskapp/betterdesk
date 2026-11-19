@@ -128,11 +128,13 @@ func updateOnlineStatus(ctx context.Context, db *store.DB, id jsbind.Value) erro
 	return err
 }
 
-// tableExists reports whether the database has the table, for the SQLite
-// adapter's checks of sqlite_master.
+// tableExists reports whether the database has the table: in
+// sqlite_master, or in the current schema of PostgreSQL.
 func tableExists(ctx context.Context, db *store.DB, name string) (bool, error) {
 	var found string
-	err := db.QueryRow(ctx, "SELECT name FROM sqlite_master WHERE type='table' AND name=?", name).Scan(&found)
+	err := db.QueryRow(ctx, db.Pick(
+		"SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+		"SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = ?"), name).Scan(&found)
 	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil
 	}
@@ -155,24 +157,19 @@ type renameCheck struct {
 	redirectID string
 }
 
+// checkRename runs the same rules on both databases: the newest entry of
+// the signal server's id_change_history for the old id names the new one,
+// whose row in peers (not soft deleted), else in peer (not deleted), the
+// device must match.
 func checkRename(ctx context.Context, db *store.DB, oldID string, uuid, pk any, ip string) (renameCheck, error) {
-	if db.IsPostgres() {
-		// The PostgreSQL adapter's guard called a query helper that does
-		// not exist; the ReferenceError made it answer "go on" for every
-		// id (BUGS BD5)
-		return renameCheck{}, nil
-	}
-	return checkRenameSQLite(ctx, db, oldID, uuid, pk, ip)
-}
-
-func checkRenameSQLite(ctx context.Context, db *store.DB, oldID string, uuid, pk any, ip string) (renameCheck, error) {
-	if isCurrentIDSQLite(ctx, db, oldID) {
+	if isCurrentID(ctx, db, oldID) {
 		return renameCheck{}, nil
 	}
 	newID := ""
 	if ok, err := tableExists(ctx, db, "id_change_history"); err == nil && ok {
 		var v sql.NullString
-		if err := db.QueryRow(ctx, "SELECT new_id FROM id_change_history WHERE old_id = ? ORDER BY rowid DESC LIMIT 1", oldID).Scan(&v); err == nil {
+		newest := db.Pick("ORDER BY rowid DESC", "ORDER BY id DESC")
+		if err := db.QueryRow(ctx, "SELECT new_id FROM id_change_history WHERE old_id = ? "+newest+" LIMIT 1", oldID).Scan(&v); err == nil {
 			newID = v.String
 		}
 	}
@@ -184,14 +181,14 @@ func checkRenameSQLite(ctx context.Context, db *store.DB, oldID string, uuid, pk
 		next = readSuccessor(ctx, db, "SELECT pk, uuid, ip FROM peers WHERE id = ? AND NOT soft_deleted", newID)
 	}
 	if next == nil {
-		next = readSuccessor(ctx, db, "SELECT pk, uuid, ip FROM peer WHERE id = ? AND is_deleted = 0", newID)
+		next = readSuccessor(ctx, db, "SELECT pk, uuid, ip FROM peer WHERE id = ? AND "+db.Pick("is_deleted = 0", "NOT is_deleted"), newID)
 	}
 	return decideRename(next, newID, uuid, pk, ip)
 }
 
-// isCurrentIDSQLite reports whether a device has the id now: in the
-// signal server's table when there is one, else in the console's.
-func isCurrentIDSQLite(ctx context.Context, db *store.DB, id string) bool {
+// isCurrentID reports whether a device has the id now: in the signal
+// server's table when there is one, else in the console's.
+func isCurrentID(ctx context.Context, db *store.DB, id string) bool {
 	if ok, err := tableExists(ctx, db, "peers"); err == nil && ok {
 		return rowExists(ctx, db, "SELECT 1 FROM peers WHERE id = ? LIMIT 1", id) == nil
 	}

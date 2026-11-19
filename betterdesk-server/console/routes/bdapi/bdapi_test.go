@@ -363,3 +363,53 @@ func TestUUIDInOtherLetterCaseIsTheSame(t *testing.T) {
 		}
 	})
 }
+
+// The rename guard runs on both databases: an id the signal server
+// renamed is refused with the new id, unless the device proves to be the
+// renamed one by its key or its uuid, then it registers under the new id
+// (BUGS BD5, D3).
+func TestRenameGuardOnBothDatabases(t *testing.T) {
+	key, _, _ := ed25519.GenerateKey(nil)
+	keyText := base64.StdEncoding.EncodeToString(key)
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		ctx := context.Background()
+		for _, stmt := range []string{
+			db.Pick("CREATE TABLE IF NOT EXISTS id_change_history (id INTEGER PRIMARY KEY AUTOINCREMENT, old_id TEXT NOT NULL, new_id TEXT NOT NULL)",
+				"CREATE TABLE IF NOT EXISTS id_change_history (id SERIAL PRIMARY KEY, old_id TEXT NOT NULL, new_id TEXT NOT NULL)"),
+			"INSERT INTO id_change_history (old_id, new_id) VALUES ('OLDREN1', 'GONEREN1')",
+			"INSERT INTO id_change_history (old_id, new_id) VALUES ('OLDREN1', 'NEWREN1')",
+			"INSERT INTO id_change_history (old_id, new_id) VALUES ('OLDREN2', 'NEWREN2')",
+			"INSERT INTO peer (id, uuid, ip, info) VALUES ('NEWREN2', '', '127.0.0.1:5123', '{}')",
+		} {
+			if _, err := w.DB.Exec(ctx, stmt); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if _, err := w.DB.Exec(ctx, "INSERT INTO peer (id, uuid, pk, info) VALUES ('NEWREN1', 'uuid-r', ?, '{}')", keyText); err != nil {
+			t.Fatal(err)
+		}
+		renamed := `409 {"error":"Device ID has been changed","new_id":"NEWREN1","message":"This device ID was renamed to NEWREN1. Please update your configuration."}`
+		for _, c := range []struct{ name, body, want string }{
+			{"another uuid", `{"uuid":"uuid-x"}`, renamed},
+			{"another key", `{"public_key":"other"}`, renamed},
+			{"the uuid", `{"uuid":"UUID-R"}`, "200 NEWREN1"},
+			{"the key", `{"public_key":"` + keyText + `"}`, "200 NEWREN1"},
+			// Neither key nor uuid: the address of the connection
+			{"OLDREN2 the address", `{}`, "200 NEWREN2"},
+		} {
+			id, newID := "OLDREN1", "NEWREN1"
+			if strings.HasPrefix(c.name, "OLDREN2") {
+				id, newID = "OLDREN2", "NEWREN2"
+			}
+			got := w.SignedOut().Do("POST", "/api/bd/register", c.body, "X-Device-Id", id)
+			have := fmt.Sprint(got.Status, " ", got.Body)
+			if got.Status == 200 && strings.Contains(got.Body, `"device_id":"`+newID+`"`) {
+				have = "200 " + newID
+			}
+			if have != c.want {
+				t.Errorf("%s: %s, want %s", c.name, have, c.want)
+			}
+		}
+	})
+}

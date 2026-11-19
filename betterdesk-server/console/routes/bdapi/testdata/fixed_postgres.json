@@ -1,0 +1,91 @@
+[
+ {
+  "step": "39 renamed, other uuid POST /api/bd/register",
+  "bugs": [
+   "BD5"
+  ],
+  "status": 409,
+  "header": {
+   "ratelimit-limit": "1000000"
+  },
+  "answer": "{\"error\":\"Device ID has been changed\",\"new_id\":\"NEWID1\",\"message\":\"This device ID was renamed to NEWID1. Please update your configuration.\"}"
+ },
+ {
+  "step": "40 renamed, same uuid in capitals POST /api/bd/register",
+  "bugs": [
+   "BD5"
+  ],
+  "status": 200,
+  "header": {
+   "ratelimit-limit": "1000000"
+  },
+  "answer": "{\"success\":true,\"device_id\":\"NEWID1\",\"server_time\":1795052315400,\"heartbeat_interval\":15}"
+ },
+ {
+  "step": "41 renamed, same address POST /api/bd/register",
+  "bugs": [
+   "BD5"
+  ],
+  "status": 200,
+  "header": {
+   "ratelimit-limit": "1000000"
+  },
+  "answer": "{\"success\":true,\"device_id\":\"NEWID1\",\"server_time\":1795052315515,\"heartbeat_interval\":15}"
+ },
+ {
+  "step": "42 renamed, other address POST /api/bd/register",
+  "bugs": [
+   "BD5"
+  ],
+  "status": 200,
+  "header": {
+   "ratelimit-limit": "1000000"
+  },
+  "answer": "{\"success\":true,\"device_id\":\"NEWID1\",\"server_time\":1795052315575,\"heartbeat_interval\":15}"
+ },
+ {
+  "step": "43 renamed, same key POST /api/bd/register",
+  "bugs": [
+   "BD5"
+  ],
+  "status": 200,
+  "header": {
+   "ratelimit-limit": "1000000"
+  },
+  "answer": "{\"success\":true,\"device_id\":\"NEWID2\",\"server_time\":1795052315610,\"heartbeat_interval\":15}"
+ },
+ {
+  "step": "44 renamed, other key POST /api/bd/register",
+  "bugs": [
+   "BD5"
+  ],
+  "status": 409,
+  "header": {
+   "ratelimit-limit": "1000000"
+  },
+  "answer": "{\"error\":\"Device ID has been changed\",\"new_id\":\"NEWID2\",\"message\":\"This device ID was renamed to NEWID2. Please update your configuration.\"}"
+ },
+ {
+  "step": "46 renamed devices after",
+  "bugs": [
+   "BD5"
+  ],
+  "rows": "[{\"id\":\"NEWID1\",\"uuid\":\"UUID-N\",\"pk\":null,\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false},{\"id\":\"NEWID2\",\"uuid\":\"uuid-n2\",\"pk\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\",\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false}]"
+ },
+ {
+  "step": "132 GET /api/bd/operator/devices",
+  "bugs": [
+   "BD5"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"devices\":[{\"id\":\"900100001\",\"hostname\":5,\"platform\":[\"w\"],\"online\":false,\"last_online\":\"\"},{\"id\":\"APPROVED1\",\"hostname\":\"ap\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:35.649Z\"},{\"id\":\"BANNED1\",\"hostname\":\"\",\"platform\":\"\",\"online\":false,\"last_online\":\"\"},{\"id\":\"DEV1\",\"hostname\":\"Front desk\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:36.350Z\"},{\"id\":\"DEV2\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:37.871Z\"},{\"id\":\"DEV3\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:37.909Z\"},{\"id\":\"KEYDEV\",\"hostname\":\"Keyed\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:35.329Z\"},{\"id\":\"NEWID1\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:35.572Z\"},{\"id\":\"NEWID2\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:35.589Z\"},{\"id\":\"PROOF1\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:35.981Z\"},{\"id\":\"PROOF10\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:36.257Z\"},{\"id\":\"PROOF2\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:36.018Z\"},{\"id\":\"PROOF3\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:36.120Z\"},{\"id\":\"PROOF5\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:36.158Z\"},{\"id\":\"PROOF8\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:36.201Z\"},{\"id\":\"TOKDEV1\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:35.764Z\"},{\"id\":\"TOKDEV3\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:35.825Z\"},{\"id\":\"TOKDEV4\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:35.909Z\"}]}"
+ },
+ {
+  "step": "135 token with spaces GET /api/bd/operator/devices",
+  "bugs": [
+   "BD5"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"devices\":[{\"id\":\"900100001\",\"hostname\":5,\"platform\":[\"w\"],\"online\":false,\"last_online\":\"\"},{\"id\":\"APPROVED1\",\"hostname\":\"ap\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:35.649Z\"},{\"id\":\"BANNED1\",\"hostname\":\"\",\"platform\":\"\",\"online\":false,\"last_online\":\"\"},{\"id\":\"DEV1\",\"hostname\":\"Front desk\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:36.350Z\"},{\"id\":\"DEV2\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:37.871Z\"},{\"id\":\"DEV3\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:37.909Z\"},{\"id\":\"KEYDEV\",\"hostname\":\"Keyed\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:35.329Z\"},{\"id\":\"NEWID1\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:35.572Z\"},{\"id\":\"NEWID2\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:35.589Z\"},{\"id\":\"PROOF1\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:35.981Z\"},{\"id\":\"PROOF10\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:36.257Z\"},{\"id\":\"PROOF2\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:36.018Z\"},{\"id\":\"PROOF3\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:36.120Z\"},{\"id\":\"PROOF5\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:36.158Z\"},{\"id\":\"PROOF8\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:36.201Z\"},{\"id\":\"TOKDEV1\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:35.764Z\"},{\"id\":\"TOKDEV3\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:35.825Z\"},{\"id\":\"TOKDEV4\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19T01:38:35.909Z\"}]}"
+ }
+]
