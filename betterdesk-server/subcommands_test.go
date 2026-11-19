@@ -33,3 +33,28 @@ func TestRunSubcommand(t *testing.T) {
 		}
 	}
 }
+
+// The commands of package cli are reached by their names, with the
+// streams they are given.
+func TestCLICommandsAreWired(t *testing.T) {
+	for _, c := range []struct {
+		name  string
+		args  []string
+		code  int
+		usage string
+	}{
+		{"env", nil, 2, "usage: betterdesk-server env merge"},
+		{"env", []string{"split"}, 2, "usage: betterdesk-server env merge"},
+		{"env", []string{"merge"}, 2, "Usage: betterdesk-server env merge"},
+		{"upgrade-env", nil, 2, "Usage: betterdesk-server upgrade-env"},
+		{"reset-password", []string{"a", "b"}, 1, "Usage: betterdesk-server reset-password"},
+		{"check", []string{"--bogus"}, 1, "FAIL Unknown option: --bogus"},
+		{"config", []string{"bogus"}, 2, "Usage:\n  betterdesk-server config check"},
+	} {
+		var out, errOut strings.Builder
+		code := subcommands[c.name].run(c.args, strings.NewReader(""), &out, &errOut)
+		if code != c.code || !strings.Contains(out.String()+errOut.String(), c.usage) {
+			t.Errorf("%s %v: %d %q %q", c.name, c.args, code, out.String(), errOut.String())
+		}
+	}
+}

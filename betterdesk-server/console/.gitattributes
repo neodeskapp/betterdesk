@@ -2,3 +2,5 @@
 **/testdata/** -text
 # Text the console embeds and parses line by line
 **/*.txt -text
+# The env file template is embedded and written out byte for byte
+managedconfig/env.example -text

@@ -96,9 +96,11 @@ func sliceUnits(s string, from, to int) string {
 	return b.String()
 }
 
-// decodeUTF8 turns the bytes of a file into text the way Node does for
+// DecodeUTF8 turns the bytes of a file into text the way Node does for
 // fs.readFileSync(path, 'utf8'): each broken sequence becomes one U+FFFD,
 // and a byte order mark stays in the text.
+func DecodeUTF8(b []byte) string { return decodeUTF8(b) }
+
 func decodeUTF8(b []byte) string {
 	if utf8.Valid(b) {
 		return string(b)

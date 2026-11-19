@@ -191,4 +191,7 @@ func TestAllowlistMatchesTheTemplate(t *testing.T) {
 	if len(keys) < 50 {
 		t.Errorf("only %d keys", len(keys))
 	}
+	if Template() != string(data) {
+		t.Error("the embedded template differs from web-nodejs/.env.example; run go generate")
+	}
 }

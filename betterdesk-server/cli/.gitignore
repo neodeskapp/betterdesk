@@ -1,0 +1,3 @@
+# Test fixtures: certificates and keys made for the protocol check tests
+# only (the root .gitignore leaves out *.pem everywhere)
+!testdata/**

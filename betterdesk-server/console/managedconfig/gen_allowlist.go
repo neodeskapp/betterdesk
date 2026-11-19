@@ -1,7 +1,9 @@
 //go:build ignore
 
 // gen_allowlist writes allowlist.go from the template web-nodejs/.env.example:
-// every key on a line "KEY=" or "# KEY=", as the old console read it.
+// every key on a line "KEY=" or "# KEY=", as the old console read it. It
+// also copies the template to env.example, which the binary embeds
+// (Template).
 //
 //	cd betterdesk-server/console/managedconfig && go generate
 package main
@@ -45,6 +47,9 @@ func main() {
 		log.Fatal(err)
 	}
 	if err := os.WriteFile("allowlist.go", src, 0o644); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.WriteFile("env.example", template, 0o644); err != nil {
 		log.Fatal(err)
 	}
 }

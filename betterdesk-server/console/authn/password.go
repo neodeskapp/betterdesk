@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"errors"
+	"io"
 	"strings"
 )
 
@@ -84,6 +85,17 @@ func pbkdf2Equal(password string, salt []byte, iterations int, expected []byte) 
 // first 72 bytes of a password.
 func (s *Service) HashPassword(ctx context.Context, password string) (string, error) {
 	return bcryptHash(ctx, s.rand, toWellFormed(password), s.bcryptCost)
+}
+
+// NewPasswordHash is HashPassword without a Service, with the salt from
+// random: for the reset-password command, which opens no console.
+func NewPasswordHash(ctx context.Context, random io.Reader, password string) (string, error) {
+	return bcryptHash(ctx, random, toWellFormed(password), saltRounds)
+}
+
+// CheckPassword is VerifyPassword without a Service.
+func CheckPassword(ctx context.Context, password, hash string) (bool, error) {
+	return (&Service{}).VerifyPassword(ctx, password, hash)
 }
 
 // PasswordCheck is the outcome of checking a password against a stored

@@ -1,0 +1,2 @@
+# Test fixtures stay byte for byte (fuzz corpus, certificates)
+testdata/** -text

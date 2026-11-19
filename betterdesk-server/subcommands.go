@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/unitronix/betterdesk-server/cli"
 	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/updater"
 )
@@ -32,6 +33,45 @@ var subcommands = map[string]subcommand{
 		usage: "rollback                                 put the binary before the last update back",
 		run:   runRollback,
 	},
+	"upgrade-env": {
+		usage: "upgrade-env --from FILE [--write]        turn the old console's env file into the server's",
+		run:   withEnv(cli.UpgradeEnv),
+	},
+	"env": {
+		usage: envMergeUsage,
+		run:   runEnv,
+	},
+	"reset-password": {
+		usage: "reset-password [USER]                    set a password; the new one is read from standard input",
+		run:   withEnv(cli.ResetPassword),
+	},
+	"config": {
+		usage: "config check | config set KEY=VALUE...   check what the panel can do, or set allowlisted settings",
+		run:   withEnv(cli.Config),
+	},
+	"check": {
+		usage: "check [--api URL] [--panel URL] [--port HOST:PORT] [--insecure]   check an install's addresses and ports",
+		run:   withEnv(cli.Check),
+	},
+}
+
+// withEnv runs a command of package cli with the process's environment
+// and the given streams.
+func withEnv(run func(args []string, env cli.Env) int) func([]string, io.Reader, io.Writer, io.Writer) int {
+	return func(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
+		env := cli.OS()
+		env.Stdin, env.Stdout, env.Stderr = stdin, stdout, stderr
+		return run(args, env)
+	}
+}
+
+// runEnv is "env merge"; "env" names a group of commands.
+func runEnv(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
+	if len(args) == 0 || args[0] != "merge" {
+		fmt.Fprintln(stderr, "betterdesk-server: usage: betterdesk-server "+envMergeUsage)
+		return 2
+	}
+	return withEnv(cli.EnvMerge)(args[1:], stdin, stdout, stderr)
 }
 
 // runSubcommand runs the command args[0] names. handled is false when
@@ -93,3 +133,5 @@ func runRollback(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	}
 	return updater.CLI{Service: svc, In: stdin, Out: stdout}.Rollback(args)
 }
+
+const envMergeUsage = "env merge --target FILE [--fresh] [--subst-file JSON] [--subst-env]   write the env file from the template"
