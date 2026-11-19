@@ -49,6 +49,10 @@ var fixes = slices.Concat(proxytest.Fixes("FL4",
 	// Only the organization's own policies are 200 {} when the API server
 	// answers 404; the effective policy of a device named policy is not.
 	743,
+), proxytest.Fixes("FL8",
+	// The attestation limit goes on held to 1 to 200, the offset held to 0 to
+	// 2^53-1, both as plain digits.
+	879, 899, 900, 901, 902, 904, 905, 906,
 ))
 
 // TestVectors replays what routes/policies.routes.js of the Node console
@@ -180,6 +184,29 @@ func TestEffectivePolicyOfADeviceNamedPolicy(t *testing.T) {
 		rec, calls := w.Do(proxytest.Request{Path: path, Session: adminSession()}, missing)
 		if got := strconv.Itoa(rec.Code) + " " + rec.Body.String(); got != want || len(calls) != 1 {
 			t.Errorf("GET %s: %s after %d calls, want %s", path, got, len(calls), want)
+		}
+	}
+}
+
+// TestAttestationPagingIsClamped: limit goes on as a whole number from 1
+// to 200 and offset as one from 0, both written as plain digits (BUGS.md
+// FL8).
+func TestAttestationPagingIsClamped(t *testing.T) {
+	w := proxytest.NewWorld(t, register)
+	records := &proxytest.Answer{Status: 200, Type: "application/json", Body: `{"records":[],"total":0}`}
+	for query, sent := range map[string]string{
+		"limit=-5":                           "limit=1&offset=0",
+		"limit=-0":                           "limit=50&offset=0",
+		"limit=500&offset=20":                "limit=200&offset=20",
+		"limit=7.9&offset=3.5":               "limit=7&offset=3",
+		"offset=-3":                          "limit=50&offset=0",
+		"offset=1234567890123456789012345":   "limit=50&offset=9007199254740991",
+		"limit=1e3&offset=99999999999999999": "limit=1&offset=9007199254740991",
+		"offset=9007199254740990":            "limit=50&offset=9007199254740990",
+	} {
+		rec, calls := w.Do(proxytest.Request{Path: "/api/panel/attestation?" + query, Session: adminSession()}, records)
+		if rec.Code != 200 || len(calls) != 1 || calls[0].URL != "/api/attestation?"+sent {
+			t.Errorf("?%s: %d after %+v, want a call with %s", query, rec.Code, calls, sent)
 		}
 	}
 }

@@ -1663,6 +1663,22 @@
   "calls": []
  },
  {
+  "vector": 879,
+  "bug": "FL8",
+  "request": "GET /api/panel/attestation?limit=-5&offset=-7",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"records\":[{\"device_id\":\"d1\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/attestation?limit=1&offset=0",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
   "vector": 891,
   "bug": "FL1",
   "request": "GET /api/panel/attestation?limit=10&limit=20",
@@ -1733,6 +1749,118 @@
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Invalid offset\"}",
   "calls": []
+ },
+ {
+  "vector": 899,
+  "bug": "FL8",
+  "request": "GET /api/panel/attestation?offset=99999999999999999999",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"records\":[{\"device_id\":\"d1\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/attestation?limit=50&offset=9007199254740991",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 900,
+  "bug": "FL8",
+  "request": "GET /api/panel/attestation?offset=999999999999999999999",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"records\":[{\"device_id\":\"d1\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/attestation?limit=50&offset=9007199254740991",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 901,
+  "bug": "FL8",
+  "request": "GET /api/panel/attestation?offset=99999999999999999999999",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"records\":[{\"device_id\":\"d1\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/attestation?limit=50&offset=9007199254740991",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 902,
+  "bug": "FL8",
+  "request": "GET /api/panel/attestation?offset=9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"records\":[{\"device_id\":\"d1\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/attestation?limit=50&offset=9007199254740991",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 904,
+  "bug": "FL8",
+  "request": "GET /api/panel/attestation?offset=-9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"records\":[{\"device_id\":\"d1\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/attestation?limit=50&offset=0",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 905,
+  "bug": "FL8",
+  "request": "GET /api/panel/attestation?offset=9007199254740993",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"records\":[{\"device_id\":\"d1\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/attestation?limit=50&offset=9007199254740991",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "vector": 906,
+  "bug": "FL8",
+  "request": "GET /api/panel/attestation?offset=0xffffffffffffffffffffffffffffff",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"records\":[{\"device_id\":\"d1\"}],\"total\":1}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/attestation?limit=50&offset=9007199254740991",
+    "type": "application/json",
+    "body": ""
+   }
+  ]
  },
  {
   "vector": 984,

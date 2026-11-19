@@ -131,6 +131,8 @@ func (h *handlers) proxy(w http.ResponseWriter, r *http.Request, method, path st
 const (
 	defaultLimit = 50
 	maxLimit     = 200
+	// maxOffset is the largest whole number a JSON number holds exactly.
+	maxOffset = 1<<53 - 1
 )
 
 type noRecords struct {
@@ -139,23 +141,26 @@ type noRecords struct {
 }
 
 // attestations answers GET /api/panel/attestation?limit=&offset=: the
-// attestation records. limit is 50 when the query gives none or 0 and at
-// most 200; offset is 0 when it gives none. Each is read from one text: a
-// list or an object (limit[]=1, limit[toString]=1) is answered with 400
-// "Invalid limit" or "Invalid offset" before any call. An API server
-// without attestation answers 404, which is the empty list here.
+// attestation records. limit is the whole number the query starts with,
+// 50 when it gives none or 0, and held to 1 to 200; offset is 0 when it
+// gives none and held to 0 to 2^53-1. Both go on as plain digits. Each is
+// read from one text: a list or an object (limit[]=1, limit[toString]=1)
+// is answered with 400 "Invalid limit" or "Invalid offset" before any
+// call. An API server without attestation answers 404, which is the empty
+// list here.
 func (h *handlers) attestations(w http.ResponseWriter, r *http.Request) {
 	limit, ok := queryInt(r, "limit", defaultLimit)
 	if !ok {
 		kit.JSON(w, r, http.StatusBadRequest, goapipath.ErrorBody{Error: "Invalid limit"})
 		return
 	}
-	limit = math.Min(limit, maxLimit)
+	limit = math.Max(1, math.Min(limit, maxLimit))
 	offset, ok := queryInt(r, "offset", 0)
 	if !ok {
 		kit.JSON(w, r, http.StatusBadRequest, goapipath.ErrorBody{Error: "Invalid offset"})
 		return
 	}
+	offset = math.Max(0, math.Min(offset, maxOffset))
 	path := "/attestation?limit=" + goapipath.NumberText(limit) + "&offset=" + goapipath.NumberText(offset)
 	resp, err := h.api.Get(r.Context(), path)
 	if err == nil {
