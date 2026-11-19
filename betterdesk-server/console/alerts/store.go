@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"math"
-	"strconv"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -20,9 +18,9 @@ import (
 //     a number, or text when the text is no number ("abc", "0x10");
 //     cooldown_secs is a whole number, a fraction or text. The text
 //     columns are text or NULL.
-//   - On PostgreSQL every column has its type. condition_value is a
-//     four-byte real and reads as the shortest number that names it (0.1,
-//     not 0.10000000149011612), and it can be NaN or an infinity.
+//   - On PostgreSQL every column has its type. condition_value is double
+//     precision (store.Migrate widens the four-byte real of the Node
+//     console), and it can be NaN or an infinity.
 type Rule struct {
 	ID             jsbind.Value
 	Name           jsbind.Value
@@ -94,30 +92,12 @@ func GetAlertRules(ctx context.Context, q store.Querier, filter RuleFilter) ([]R
 			CooldownSecs:   cells[8].Value(),
 			NotifyEmails:   cells[9].Value(),
 		}
-		if q.Dialect() == store.Postgres && rule.ConditionValue.IsNumber() {
-			rule.ConditionValue = jsbind.Number(shortReal(rule.ConditionValue.ToNumber()))
-		}
 		rules = append(rules, rule)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("read the alert rules: %w", err)
 	}
 	return rules, nil
-}
-
-// shortReal is a PostgreSQL real as JavaScript read it. The server prints
-// a four-byte number with the fewest digits that name it, and the driver
-// parsed that text: 0.1 came out as 0.1, where widening the four bytes
-// gives 0.10000000149011612.
-func shortReal(f float64) float64 {
-	if math.IsNaN(f) || math.IsInf(f, 0) {
-		return f
-	}
-	short, err := strconv.ParseFloat(strconv.FormatFloat(f, 'g', -1, 32), 64)
-	if err != nil {
-		return f
-	}
-	return short
 }
 
 // GetRecentAlert reports whether the rule raised an alert for the device

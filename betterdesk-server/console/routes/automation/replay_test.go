@@ -44,12 +44,20 @@ import (
 // new rule or command is answered with the stored row, where Node
 // answered with the values of the request (BUGS AU3). There the id must
 // be Node's and the answer what a read of the row gives.
+//
+// On PostgreSQL the replay keeps the limits of the rules in four bytes,
+// as Node's column did (nodeLimitColumn); the console's column has eight
+// (BUGS AE4).
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := newWorld(t, db)
 		guarded, elsewhere, slashes, undecoded, created := 0, 0, 0, 0, 0
 		defer panelFixes.Unused(t, db)
-		w.Run(replay.Load(t, db, "node"), panelFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		rec := replay.Load(t, db, "node")
+		if db.IsPostgres() {
+			rec.Seed = append(rec.Seed, nodeLimitColumn...)
+		}
+		w.Run(rec, panelFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			switch {
 			case !db.IsPostgres() && step.Method == "POST" && step.Status == 201 && got.Status == 201:
 				created++

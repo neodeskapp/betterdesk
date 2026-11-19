@@ -24,8 +24,9 @@ import (
 //
 // On SQLite a column goes out with whatever it holds: a column declared
 // INTEGER or REAL can hold fractions and text. On PostgreSQL a time is an
-// ISO text with milliseconds, a flag true or false, and condition_value,
-// a real of four bytes, the short form of that number.
+// ISO text with milliseconds, a flag true or false, and condition_value
+// the number its column holds: eight bytes since store.Migrate widened
+// the Node console's four-byte real (BUGS AE4).
 type record struct {
 	columns []string
 	values  []any // each a json.Marshaler and an sql.Scanner

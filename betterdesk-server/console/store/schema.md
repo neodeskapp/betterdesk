@@ -23,10 +23,13 @@ look in JSON as it did from Node.
   definition Node used.
 - It runs the data fixes that came with those columns: token hashes, bundle
   slugs, bundle product types, and the two default groups.
-- It only adds. No column or table is dropped, renamed or changed in type, and
-  no table is rebuilt. The one statement that changes an existing column is
-  `agent_bundles.product_type` on PostgreSQL (`SET NOT NULL`, `SET DEFAULT`),
-  see below.
+- It only adds, with two exceptions on PostgreSQL. No column or table is
+  dropped or renamed, and no table is rebuilt. `agent_bundles.product_type`
+  gets `SET NOT NULL` and `SET DEFAULT`, see below, and
+  `alert_rules.condition_value` is widened from Node's four-byte `real` to
+  `double precision` (BUGS AE4), the one change of a column's type: a fresh
+  database has the wider type from its file, an older one gets it from the
+  step `widen alert_rules.condition_value`.
 - A table that exists is left as it is, also when the signal server created it
   first with other column types. `Shape` tells which variant is there.
 - Every step checks what is there before it changes anything, so a second run
@@ -237,6 +240,7 @@ concerns 2.x files only.
 | `agent_bundles.product_type` | Adds `agent_bundles.product_type TEXT NOT NULL DEFAULT 'betterdesk-support'`; sets every value that is not `betterdesk-support` to it | column: missing. SQLite: the `UPDATE` runs at every start. PostgreSQL: the `UPDATE` runs only when the column was already there; then also `SET NOT NULL` when the column is nullable and `SET DEFAULT 'betterdesk-support'` when its default is another. Tolerated | after `agent_bundles.slug` | after `agent_bundles.slug` | 1051-1079, 4667-4701 |
 | `seed user_groups` | Inserts the group `Default` (note `Default user group`, random guid) | the table has no row | after the device_groups columns | after user_peer_grants | 720-726, 4942-4946 |
 | `seed device_groups` | Inserts the group `Default` (note `Default device group`, random guid) | the table has no row | after `seed user_groups` | after `seed user_groups` | 727-733, 4947-4951 |
+| `widen alert_rules.condition_value` | Changes the column to `double precision`, then sets every limit to the shortest number that names its four bytes, the value Node and the Go console read (0.1, where the cast alone gives 0.10000000149011612); NaN and the infinities stay. Logs `Migration: widened alert_rules.condition_value to double precision`. Not in Node (BUGS AE4); a Node console started on the wider column reads the same limits | the column is `real` | no step | last step | |
 
 The slug rules are those of `web-nodejs/services/agentBundleService.js`
 (`slugifyName`, `allocateUniqueSlug`); `SlugifyBundleName` and

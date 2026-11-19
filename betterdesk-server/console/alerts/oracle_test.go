@@ -729,9 +729,10 @@ func mustExec(t testing.TB, db *store.DB, query string, values ...jsbind.Value) 
 }
 
 // cellRows reads rows as JSON lists, the way JSON.stringify wrote the
-// rows the Node driver returned. real names the columns that are a
-// PostgreSQL real.
-func cellRows(t testing.TB, db *store.DB, query string, columns int, real map[int]bool) []string {
+// rows the Node driver returned. fourBytes names the columns to give as
+// the four-byte real Node's PostgreSQL column held (BUGS AE4): the
+// shortest number that names the value in four bytes.
+func cellRows(t testing.TB, db *store.DB, query string, columns int, fourBytes map[int]bool) []string {
 	t.Helper()
 	rows, err := db.Query(context.Background(), query)
 	if err != nil {
@@ -751,8 +752,9 @@ func cellRows(t testing.TB, db *store.DB, query string, columns int, real map[in
 		parts := make([]string, columns)
 		for i, cell := range cells {
 			v := cell.Value()
-			if real[i] && db.IsPostgres() && v.IsNumber() {
-				v = jsbind.Number(shortReal(v.ToNumber()))
+			if f := v.ToNumber(); fourBytes[i] && v.IsNumber() && !math.IsNaN(f) && !math.IsInf(f, 0) {
+				short, _ := strconv.ParseFloat(strconv.FormatFloat(f, 'g', -1, 32), 64)
+				v = jsbind.Number(short)
 			}
 			parts[i] = v.JSON()
 		}
@@ -801,8 +803,16 @@ func TestEngineAsNodeOnRows(t *testing.T) {
 				mustExec(t, db, "INSERT INTO alert_history (rule_id, device_id, severity, message, triggered_at) VALUES (?, ?, ?, ?, ?)",
 					jsbind.Number(float64(h.Rule)), bindValue(t, h.Device), jsbind.String("warning"), jsbind.String("seeded"), jsbind.String(text))
 			}
-			stored := cellRows(t, db, "SELECT id, "+strings.Join(ruleColumns, ", ")+" FROM alert_rules ORDER BY id", 11, map[int]bool{6: true})
-			if !sameStrings(stored, c.Stored) {
+			storedRules := "SELECT id, " + strings.Join(ruleColumns, ", ") + " FROM alert_rules ORDER BY id"
+			stored := cellRows(t, db, storedRules, 11, nil)
+			// BUGS AE4: on PostgreSQL Node's column held four bytes, the Go
+			// console's eight
+			nodeStored, widened := stored, false
+			if db.IsPostgres() {
+				nodeStored = cellRows(t, db, storedRules, 11, map[int]bool{6: true})
+				widened = !sameStrings(nodeStored, stored)
+			}
+			if !sameStrings(nodeStored, c.Stored) {
 				t.Fatalf("case %d: the database holds %q\nNode's: %q", i, stored, c.Stored)
 			}
 
@@ -845,6 +855,12 @@ func TestEngineAsNodeOnRows(t *testing.T) {
 				return string(in)
 			}
 			rows := cellRows(t, db, "SELECT rule_id, device_id, severity, message, acknowledged, acknowledged_by FROM alert_history WHERE message <> 'seeded' ORDER BY id", 6, nil)
+			if widened && (!sameStrings(rows, c.Rows) || (err == nil) != (c.Throws == nil)) {
+				// BUGS AE4: a limit Node's four bytes rounded compares, and
+				// reads in the alert's message, as it was given
+				counts["AE4: a limit PostgreSQL kept in four bytes"]++
+				continue
+			}
 			var cols []map[string]string
 			for _, rule := range c.Rules {
 				cols = append(cols, map[string]string{"id": strconv.Itoa(rule.ID), "condition_op": rule.Cols["condition_op"]})
@@ -973,6 +989,9 @@ func TestEngineAsNodeOnRows(t *testing.T) {
 			if counts[name] == 0 {
 				t.Errorf("the recording has no %q", name)
 			}
+		}
+		if db.IsPostgres() && counts["AE4: a limit PostgreSQL kept in four bytes"] == 0 {
+			t.Error("the PostgreSQL recording has no limit its four bytes rounded")
 		}
 		t.Logf("%d cases: %v", len(recording.Cases), counts)
 	})

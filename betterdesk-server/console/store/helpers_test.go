@@ -53,9 +53,18 @@ func readTestdata(t *testing.T, name string) string {
 }
 
 // queryStrings runs a query and returns each row as its values in text.
+//
+// A statement a connection prepared before Migrate widened a column (BUGS
+// AE4) fails once on that connection with SQLSTATE 0A000, after which pgx
+// prepares it again. The console migrates before its first query and
+// never meets this; tests that read a table before and after Migrate do,
+// and send the query a second time.
 func queryStrings(t *testing.T, db *store.DB, query string, args ...any) [][]string {
 	t.Helper()
 	rows, err := db.Query(testContext(t), query, args...)
+	if err != nil && strings.Contains(err.Error(), "(SQLSTATE 0A000)") {
+		rows, err = db.Query(testContext(t), query, args...)
+	}
 	if err != nil {
 		t.Fatalf("query %s: %v", firstWords(query), err)
 	}
@@ -166,6 +175,20 @@ func (c catalog) loose() catalog {
 			v = ""
 		case strings.HasPrefix(k, "column:"):
 			_, v, _ = strings.Cut(v, " ")
+		}
+		out[k] = v
+	}
+	return out
+}
+
+// wideConditionValue is the catalog of a database the Node console made,
+// as the Go console leaves it: on PostgreSQL alert_rules.condition_value is
+// double precision where Node made a four-byte real (BUGS AE4).
+func (c catalog) wideConditionValue() catalog {
+	out := catalog{}
+	for k, v := range c {
+		if k == "column:alert_rules.condition_value" {
+			v = strings.Replace(v, " type=real ", " type=double precision ", 1)
 		}
 		out[k] = v
 	}

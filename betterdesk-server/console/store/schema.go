@@ -10,7 +10,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 	"regexp"
+	"strconv"
 	"strings"
 	"unicode/utf16"
 
@@ -328,7 +330,69 @@ func postgresSteps() []step {
 	)...)
 	s = append(s, createTable("user_avatars"))
 	s = append(s, addColumns(lenient, "settings", "updated_at", "TIMESTAMPTZ DEFAULT NOW()")...)
+	s = append(s, widenConditionValue())
 	return s
+}
+
+// widenConditionValue makes alert_rules.condition_value double precision
+// where the Node console made it a four-byte real, which kept 16777217 as
+// 16777216 (BUGS AE4). Every stored limit keeps the value the console read:
+// the shortest number that names the four bytes, as PostgreSQL prints a
+// real (0.1), not the wider binary value the cast alone gives
+// (0.10000000149011612). An older version reads the wider column as it
+// read the real.
+func widenConditionValue() step {
+	return step{
+		name: "widen alert_rules.condition_value",
+		run: func(ctx context.Context, tx *Tx, _ *migration) error {
+			var dataType string
+			err := tx.QueryRow(ctx, `SELECT data_type FROM information_schema.columns
+				WHERE table_schema = current_schema() AND table_name = 'alert_rules' AND column_name = 'condition_value'`).Scan(&dataType)
+			if errors.Is(err, sql.ErrNoRows) || err == nil && dataType != "real" {
+				return nil
+			}
+			if err != nil {
+				return err
+			}
+			type limit struct {
+				id    int64
+				value float64
+			}
+			rows, err := tx.Query(ctx, `SELECT id, condition_value FROM alert_rules`)
+			if err != nil {
+				return err
+			}
+			var limits []limit
+			for rows.Next() {
+				var l limit
+				if err := rows.Scan(&l.id, &l.value); err != nil {
+					rows.Close()
+					return err
+				}
+				limits = append(limits, l)
+			}
+			if err := errors.Join(rows.Err(), rows.Close()); err != nil {
+				return err
+			}
+			if _, err := tx.Exec(ctx, `ALTER TABLE alert_rules ALTER COLUMN condition_value TYPE DOUBLE PRECISION`); err != nil {
+				return err
+			}
+			for _, l := range limits {
+				if math.IsNaN(l.value) || math.IsInf(l.value, 0) {
+					continue
+				}
+				short, err := strconv.ParseFloat(strconv.FormatFloat(l.value, 'g', -1, 32), 64)
+				if err != nil || short == l.value {
+					continue
+				}
+				if _, err := tx.Exec(ctx, `UPDATE alert_rules SET condition_value = ? WHERE id = ?`, short, l.id); err != nil {
+					return err
+				}
+			}
+			logging.Logf(logComponent, "Migration: widened alert_rules.condition_value to double precision")
+			return nil
+		},
+	}
 }
 
 // createTable runs the table's file: CREATE TABLE IF NOT EXISTS and the

@@ -1,6 +1,7 @@
 package store_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -13,7 +14,8 @@ const sessionTable = "panel_sessions"
 
 // A database the Go console sets up is the database the Node console set
 // up: same tables, columns, defaults, constraints and indexes, and on
-// SQLite the same stored statement text.
+// SQLite the same stored statement text. On PostgreSQL
+// alert_rules.condition_value is double precision (BUGS AE4).
 func TestMigrateFreshEqualsNodeDump(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		mustMigrate(t, db)
@@ -24,7 +26,7 @@ func TestMigrateFreshEqualsNodeDump(t *testing.T) {
 			node = storetest.Postgres(t)
 		}
 		storetest.NodeSchema(t, node)
-		want := readCatalog(t, node).without(sessionTable)
+		want := readCatalog(t, node).without(sessionTable).wideConditionValue()
 
 		if n := len(want.tables()); n != 55 {
 			t.Fatalf("the Node dump has %d tables besides %s, want 55", n, sessionTable)
@@ -42,7 +44,8 @@ func TestMigrateFreshEqualsNodeDump(t *testing.T) {
 
 // Migrate on a database the Node console created, with rows in every
 // table, changes neither the schema nor a single row, and reports nothing
-// done. Running it again changes nothing either.
+// done, but for widening alert_rules.condition_value on PostgreSQL (BUGS
+// AE4). Running it again changes nothing.
 func TestMigrateLeavesNodeDatabaseAlone(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		storetest.NodeSchema(t, db)
@@ -60,10 +63,18 @@ func TestMigrateLeavesNodeDatabaseAlone(t *testing.T) {
 		}
 
 		for run := 1; run <= 2; run++ {
-			if out := captureLog(t, func() { mustMigrate(t, db) }); out != "" {
+			out := captureLog(t, func() { mustMigrate(t, db) })
+			if run == 1 && db.IsPostgres() {
+				const widened = "[DB] Migration: widened alert_rules.condition_value to double precision\n"
+				if strings.Count(out, "\n") != 1 || !strings.HasSuffix(out, widened) {
+					t.Errorf("run 1: Migrate on a Node database logged %q, want only %q", out, widened)
+				}
+				out = ""
+			}
+			if out != "" {
 				t.Errorf("run %d: Migrate found something to do on a Node database:\n%s", run, out)
 			}
-			requireSameCatalog(t, "catalog of a Node database after Migrate", catalogBefore, readCatalog(t, db))
+			requireSameCatalog(t, "catalog of a Node database after Migrate", catalogBefore.wideConditionValue(), readCatalog(t, db))
 			requireSameSnapshot(t, "rows of a Node database after Migrate", rowsBefore, readSnapshot(t, db, tables))
 		}
 	})
