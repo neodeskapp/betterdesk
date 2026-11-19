@@ -428,3 +428,40 @@ func TestNegativeZeroIsWrittenAsZero(t *testing.T) {
 		t.Errorf("an answer holds %s", text)
 	}
 }
+
+// The id and the token of a transaction are compared as text of the same
+// bytes, neither of them empty (tokensEqual of upstream 3.5.264, audit P3):
+// a transaction file with an empty id and token answers nothing to a
+// caller who sends empty ones, and text of another length or another type
+// matches nothing.
+func TestPublicStatusComparesIDAndToken(t *testing.T) {
+	for _, c := range []struct {
+		expected any
+		actual   string
+		want     bool
+	}{
+		{"abc", "abc", true}, {"", "", false}, {"abc", "", false}, {"", "abc", false},
+		{"abc", "abd", false}, {"abc", "abcd", false}, {"é", "é", true}, {float64(1), "1", false}, {nil, "", false},
+	} {
+		if got := tokensEqual(c.expected, c.actual); got != c.want {
+			t.Errorf("tokensEqual(%#v, %q) = %v, want %v", c.expected, c.actual, got, c.want)
+		}
+	}
+
+	dir := filepath.Join(t.TempDir(), "data")
+	s := newService(t, Options{DataDir: dir, RestartServer: okRestart})
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	state := `{"id":"","token":"","userId":"1","phase":"pending","createdAt":"2026-11-10T08:00:00.000Z","updatedAt":"2026-11-10T08:00:00.000Z","changes":[]}`
+	if err := os.WriteFile(s.StatePath(), []byte(state), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	status, err := s.GetPublicStatus(context.Background(), "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if raw, _ := json.Marshal(status); string(raw) != `{"phase":"unknown","status":"unknown","ready":false}` {
+		t.Errorf("an empty id and token got %s", raw)
+	}
+}

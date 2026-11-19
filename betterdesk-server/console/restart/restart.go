@@ -591,7 +591,7 @@ func (s *Service) GetPublicStatus(ctx context.Context, id, token string) (*Publi
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	state := s.load()
-	if state == nil || !isText(state.Get("id"), id) || !isText(state.Get("token"), token) {
+	if state == nil || !tokensEqual(state.Get("id"), id) || !tokensEqual(state.Get("token"), token) {
 		return &Public{fields: goapi.NewObject("phase", "unknown", "status", "unknown", "ready", false)}, nil
 	}
 	if phaseOf(state) == PhaseRestarting && !isText(state.Get("bootId"), s.bootID) {

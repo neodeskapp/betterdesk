@@ -3,6 +3,7 @@ package restart
 import (
 	"bytes"
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -117,6 +118,17 @@ func phaseOf(state *goapi.Object) string {
 func isText(value any, text string) bool {
 	s, ok := value.(string)
 	return ok && s == text
+}
+
+// tokensEqual is the comparison of a transaction's id or token with what a
+// caller sent: both text, neither empty, the same bytes, compared in
+// constant time.
+func tokensEqual(expected any, actual string) bool {
+	s, ok := expected.(string)
+	if !ok || s == "" || actual == "" || len(s) != len(actual) {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(s), []byte(actual)) == 1
 }
 
 // orNull is value || null.
