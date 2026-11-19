@@ -310,14 +310,13 @@ func timestamp(s string) float64 {
 	return 0
 }
 
-// createdAt is String(entry.created_at) and toTimestamp of it: the text
-// SQLite keeps and what Date.parse reads from it, or for a PostgreSQL time
-// Date.prototype.toString and its instant to the second, which is all that
-// text holds.
+// createdAt is the time of a connection row as text (createdText) and in
+// milliseconds: what Date.parse reads from the text SQLite keeps, the
+// instant of a PostgreSQL time.
 func (h *handlers) createdAt(t store.Time) (string, float64) {
 	text := createdText(h.d.Store, t)
 	if instant, ok := t.Instant(); ok && h.d.Store.IsPostgres() {
-		return text, float64(instant.Truncate(time.Second).UnixMilli())
+		return text, float64(instant.UnixMilli())
 	}
 	return text, timestamp(text)
 }

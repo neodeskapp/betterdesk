@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -506,31 +505,15 @@ func auditConnections(ctx context.Context, db *store.DB, operator string, limit 
 	return out, rows.Err()
 }
 
-// createdText is String(entry.created_at): the text SQLite keeps, or a
-// PostgreSQL time as Date.prototype.toString writes it.
+// createdText is the time of a connection row as the session history
+// shows it: the text SQLite keeps, or a PostgreSQL time as ISO text with
+// milliseconds, each database's wire format.
 func createdText(db *store.DB, t store.Time) string {
 	if t.IsNull() {
 		return ""
 	}
 	if instant, ok := t.Instant(); ok && db.IsPostgres() {
-		return jsDateString(instant.In(time.Local))
+		return store.ISOTime(instant)
 	}
 	return t.String()
-}
-
-// jsDateString is Date.prototype.toString: "Tue Nov 10 2026 01:05:51
-// GMT+0100 (Central European Standard Time)". UTC has the name JavaScript
-// prints; other zones get their abbreviation.
-func jsDateString(t time.Time) string {
-	t = t.Truncate(time.Millisecond)
-	year := t.Year()
-	yearText := fmt.Sprintf("%04d", year)
-	if year < 0 {
-		yearText = fmt.Sprintf("-%06d", -year)
-	}
-	name, offset := t.Zone()
-	if offset == 0 && (name == "UTC" || name == "GMT" || name == "") {
-		name = "Coordinated Universal Time"
-	}
-	return t.Format("Mon Jan 02 ") + yearText + t.Format(" 15:04:05 GMT-0700") + " (" + name + ")"
 }

@@ -141,33 +141,53 @@
  {
   "step": "159 GET /api/bd/operator/sessions",
   "bugs": [
-   "BD12"
+   "BD12",
+   "BD13"
   ],
   "status": 200,
-  "answer": "{\"success\":true,\"sessions\":[{\"id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"device_id\":\"DEV1\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"operator\":\"e2e_operator\",\"started_at\":\"Thu Nov 19 2026 02:24:24 GMT+0000 (Coordinated Universal Time)\",\"ended_at\":\"\",\"duration_secs\":2,\"action\":\"session_start\"},{\"id\":\"s-9\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"e2e_operator\",\"started_at\":\"Thu Nov 19 2026 02:24:24 GMT+0000 (Coordinated Universal Time)\",\"ended_at\":\"Thu Nov 19 2026 02:24:24 GMT+0000 (Coordinated Universal Time)\",\"duration_secs\":0,\"action\":\"session_start\"}],\"count\":2}"
+  "answer": "{\"success\":true,\"sessions\":[{\"id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"device_id\":\"DEV1\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-19T02:29:35.010Z\",\"ended_at\":\"\",\"duration_secs\":1,\"action\":\"session_start\"},{\"id\":\"s-9\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-19T02:29:35.007Z\",\"ended_at\":\"2026-11-19T02:29:35.008Z\",\"duration_secs\":0,\"action\":\"session_end\"}],\"count\":2}"
+ },
+ {
+  "step": "160 GET /api/bd/operator/sessions?limit=1",
+  "bugs": [
+   "BD13"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"sessions\":[{\"id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"device_id\":\"DEV1\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-19T02:29:35.010Z\",\"ended_at\":\"\",\"duration_secs\":1,\"action\":\"session_start\"}],\"count\":1}"
+ },
+ {
+  "step": "161 GET /api/bd/operator/sessions?limit=0",
+  "bugs": [
+   "BD13"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"sessions\":[{\"id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"device_id\":\"DEV1\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-19T02:29:35.010Z\",\"ended_at\":\"\",\"duration_secs\":1,\"action\":\"session_start\"}],\"count\":1}"
  },
  {
   "step": "162 GET /api/bd/operator/sessions?limit=abc",
   "bugs": [
-   "BD12"
+   "BD12",
+   "BD13"
   ],
   "status": 200,
-  "answer": "{\"success\":true,\"sessions\":[{\"id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"device_id\":\"DEV1\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"operator\":\"e2e_operator\",\"started_at\":\"Thu Nov 19 2026 02:24:24 GMT+0000 (Coordinated Universal Time)\",\"ended_at\":\"\",\"duration_secs\":2,\"action\":\"session_start\"},{\"id\":\"s-9\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"e2e_operator\",\"started_at\":\"Thu Nov 19 2026 02:24:24 GMT+0000 (Coordinated Universal Time)\",\"ended_at\":\"Thu Nov 19 2026 02:24:24 GMT+0000 (Coordinated Universal Time)\",\"duration_secs\":0,\"action\":\"session_start\"}],\"count\":2}"
+  "answer": "{\"success\":true,\"sessions\":[{\"id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"device_id\":\"DEV1\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-19T02:29:35.010Z\",\"ended_at\":\"\",\"duration_secs\":1,\"action\":\"session_start\"},{\"id\":\"s-9\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-19T02:29:35.007Z\",\"ended_at\":\"2026-11-19T02:29:35.008Z\",\"duration_secs\":0,\"action\":\"session_end\"}],\"count\":2}"
  },
  {
   "step": "163 GET /api/bd/operator/sessions?limit=500",
   "bugs": [
-   "BD12"
+   "BD12",
+   "BD13"
   ],
   "status": 200,
-  "answer": "{\"success\":true,\"sessions\":[{\"id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"device_id\":\"DEV1\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"operator\":\"e2e_operator\",\"started_at\":\"Thu Nov 19 2026 02:24:24 GMT+0000 (Coordinated Universal Time)\",\"ended_at\":\"\",\"duration_secs\":2,\"action\":\"session_start\"},{\"id\":\"s-9\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"e2e_operator\",\"started_at\":\"Thu Nov 19 2026 02:24:24 GMT+0000 (Coordinated Universal Time)\",\"ended_at\":\"Thu Nov 19 2026 02:24:24 GMT+0000 (Coordinated Universal Time)\",\"duration_secs\":0,\"action\":\"session_start\"}],\"count\":2}"
+  "answer": "{\"success\":true,\"sessions\":[{\"id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"device_id\":\"DEV1\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-19T02:29:35.010Z\",\"ended_at\":\"\",\"duration_secs\":1,\"action\":\"session_start\"},{\"id\":\"s-9\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-19T02:29:35.007Z\",\"ended_at\":\"2026-11-19T02:29:35.008Z\",\"duration_secs\":0,\"action\":\"session_end\"}],\"count\":2}"
  },
  {
   "step": "164 GET /api/bd/operator/sessions?limit[]=2",
   "bugs": [
-   "BD12"
+   "BD12",
+   "BD13"
   ],
   "status": 200,
-  "answer": "{\"success\":true,\"sessions\":[{\"id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"device_id\":\"DEV1\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"operator\":\"e2e_operator\",\"started_at\":\"Thu Nov 19 2026 02:24:24 GMT+0000 (Coordinated Universal Time)\",\"ended_at\":\"\",\"duration_secs\":2,\"action\":\"session_start\"},{\"id\":\"s-9\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"e2e_operator\",\"started_at\":\"Thu Nov 19 2026 02:24:24 GMT+0000 (Coordinated Universal Time)\",\"ended_at\":\"Thu Nov 19 2026 02:24:24 GMT+0000 (Coordinated Universal Time)\",\"duration_secs\":0,\"action\":\"session_start\"}],\"count\":2}"
+  "answer": "{\"success\":true,\"sessions\":[{\"id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"device_id\":\"DEV1\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-19T02:29:35.010Z\",\"ended_at\":\"\",\"duration_secs\":1,\"action\":\"session_start\"},{\"id\":\"s-9\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-19T02:29:35.007Z\",\"ended_at\":\"2026-11-19T02:29:35.008Z\",\"duration_secs\":0,\"action\":\"session_end\"}],\"count\":2}"
  }
 ]

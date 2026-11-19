@@ -563,3 +563,25 @@ func TestSessionHistoryIsTheOperatorsOwn(t *testing.T) {
 		}
 	})
 }
+
+// The session history writes each database's time format: the text SQLite
+// keeps, ISO text with milliseconds on PostgreSQL, and the length comes
+// from the instants (BUGS BD13).
+func TestSessionHistoryTimes(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		sessionRows(t, db, [][4]string{
+			{"e2e_operator", "s-t", "session_start", "2026-11-18 10:00:00.250"},
+			{"e2e_operator", "s-t", "session_end", "2026-11-18 10:00:05.750"},
+		})
+		token := operatorToken(t, w, "tok-history-time-1")
+		got := w.SignedOut().Do("GET", "/api/bd/operator/sessions", "", "Authorization", "Bearer "+token)
+		want := `"started_at":"2026-11-18 10:00:00","ended_at":"2026-11-18 10:00:05","duration_secs":5,`
+		if db.IsPostgres() {
+			want = `"started_at":"2026-11-18T10:00:00.250Z","ended_at":"2026-11-18T10:00:05.750Z","duration_secs":6,`
+		}
+		if got.Status != 200 || !strings.Contains(got.Body, want) {
+			t.Errorf("%d %s, want %s", got.Status, got.Body, want)
+		}
+	})
+}
