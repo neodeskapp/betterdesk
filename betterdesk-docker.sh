@@ -1017,9 +1017,12 @@ build_images() {
     print_step "Building Docker images..."
     
     cd "$SCRIPT_DIR"
-    
-    $COMPOSE_CMD build --no-cache
-    
+
+    if ! $COMPOSE_CMD build --no-cache; then
+        print_error "The image did not build"
+        return 1
+    fi
+
     print_success "Images built"
 }
 
@@ -1345,9 +1348,70 @@ switch_update_channel() {
     press_enter
 }
 
+# The files an update from GitHub replaces. backup_update_sources copies
+# them (without node_modules) to .pre-update before the update; they stay
+# there until the new image is built, and restore_update_sources puts them
+# back when the build fails.
+UPDATE_SOURCE_ITEMS=(
+    betterdesk-server web-nodejs web-ui docker
+    Dockerfile Dockerfile.server
+    docker-compose.single.yml docker-compose.quick.single.yml docker-compose.quick.single.macvlan.yml
+    betterdesk-docker.sh betterdesk.sh betterdesk.ps1 VERSION
+)
+
+update_backup_dir() {
+    printf '%s\n' "$SCRIPT_DIR/.pre-update"
+}
+
+backup_update_sources() {
+    local dir item
+    dir=$(update_backup_dir)
+    rm -rf "$dir"
+    mkdir -p "$dir/files" || return 1
+    : > "$dir/absent"
+    for item in "${UPDATE_SOURCE_ITEMS[@]}"; do
+        if [ -e "$SCRIPT_DIR/$item" ]; then
+            tar -C "$SCRIPT_DIR" --exclude=node_modules -cf - "$item" | tar -C "$dir/files" -xf - || return 1
+        else
+            printf '%s\n' "$item" >> "$dir/absent"
+        fi
+    done
+    if [ -f "$COMPOSE_FILE" ]; then
+        cp -a "$COMPOSE_FILE" "$dir/compose-file" || return 1
+    fi
+}
+
+restore_update_sources() {
+    local dir item
+    dir=$(update_backup_dir)
+    [ -d "$dir/files" ] || return 1
+    for item in "${UPDATE_SOURCE_ITEMS[@]}"; do
+        if [ -d "$dir/files/$item" ]; then
+            mkdir -p "$SCRIPT_DIR/$item"
+            find "$SCRIPT_DIR/$item" -mindepth 1 -maxdepth 1 ! -name node_modules -exec rm -rf {} +
+            cp -a "$dir/files/$item/." "$SCRIPT_DIR/$item/"
+        elif [ -e "$dir/files/$item" ]; then
+            rm -rf "${SCRIPT_DIR:?}/$item"
+            cp -a "$dir/files/$item" "$SCRIPT_DIR/$item"
+        fi
+    done
+    while IFS= read -r item; do
+        [ -n "$item" ] && rm -rf "${SCRIPT_DIR:?}/$item"
+    done < "$dir/absent"
+    if [ -f "$dir/compose-file" ]; then
+        cp -a "$dir/compose-file" "$COMPOSE_FILE"
+    fi
+    rm -rf "$dir"
+}
+
+discard_update_sources() {
+    rm -rf "$(update_backup_dir)"
+}
+
 # Pull latest project files from GitHub before rebuilding Docker images.
 # This ensures the Dockerfiles, compose files, and source code (server and
-# web app) are up-to-date before docker compose build.
+# web app) are up-to-date before docker compose build. The files before
+# the update stay in .pre-update until the caller built the new image.
 update_docker_from_github() {
     local clone_dir="/tmp/betterdesk-docker-update-$$"
     rm -rf "$clone_dir"
@@ -1399,44 +1463,44 @@ update_docker_from_github() {
     print_step "Updating project files..."
     local files_updated=0
 
-    # Update Go server source
-    if [ -d "$SCRIPT_DIR/betterdesk-server" ]; then
-        rm -rf "$SCRIPT_DIR/betterdesk-server.pre-update" 2>/dev/null || true
-        mv "$SCRIPT_DIR/betterdesk-server" "$SCRIPT_DIR/betterdesk-server.pre-update" 2>/dev/null || true
+    # A copy of the files before the update, for a build that fails
+    if ! backup_update_sources; then
+        print_error "Could not keep a copy of the current files in $(update_backup_dir); nothing was changed"
+        discard_update_sources
+        rm -rf "$clone_dir"
+        return 1
     fi
-    # Copy *contents* into a guaranteed dir. Copying the directory itself would
-    # nest the new tree inside an existing betterdesk-server/ if the rename
-    # above failed (e.g. a locked file), leaving inconsistent source that breaks
-    # the Docker build with "undefined" Go errors (issue #158).
+
+    # Update Go server source: the new tree only, without files the release
+    # no longer has (a stale file breaks the Go build, issue #158)
+    rm -rf "$SCRIPT_DIR/betterdesk-server"
     mkdir -p "$SCRIPT_DIR/betterdesk-server"
     cp -rf "$clone_dir/betterdesk-server/." "$SCRIPT_DIR/betterdesk-server/"
     files_updated=$((files_updated + 1))
 
     # The console's language files, themes and images (web-nodejs) while the
-    # checkout has them; the image copies them in
+    # checkout has them; the image copies them in. data/ and node_modules/
+    # stay.
+    local pd
+    local preserve_dirs=("data" "node_modules")
     if [ -d "$SCRIPT_DIR/web-nodejs" ]; then
-        # Preserve data/ and node_modules/ if they exist locally
-        local preserve_dirs=("data" "node_modules")
         for pd in "${preserve_dirs[@]}"; do
             if [ -d "$SCRIPT_DIR/web-nodejs/$pd" ]; then
                 mv "$SCRIPT_DIR/web-nodejs/$pd" "/tmp/betterdesk-docker-preserve-$$-$pd" 2>/dev/null || true
             fi
         done
-        rm -rf "$SCRIPT_DIR/web-nodejs.pre-update" 2>/dev/null || true
-        mv "$SCRIPT_DIR/web-nodejs" "$SCRIPT_DIR/web-nodejs.pre-update" 2>/dev/null || true
+        rm -rf "$SCRIPT_DIR/web-nodejs"
     fi
     if [ -d "$clone_dir/web-nodejs" ]; then
         mkdir -p "$SCRIPT_DIR/web-nodejs"
         cp -rf "$clone_dir/web-nodejs/." "$SCRIPT_DIR/web-nodejs/"
     fi
-    # Restore preserved directories
     for pd in "${preserve_dirs[@]}"; do
         if [ -d "/tmp/betterdesk-docker-preserve-$$-$pd" ]; then
+            mkdir -p "$SCRIPT_DIR/web-nodejs"
             mv "/tmp/betterdesk-docker-preserve-$$-$pd" "$SCRIPT_DIR/web-nodejs/$pd" 2>/dev/null || true
         fi
     done
-    rm -rf "$SCRIPT_DIR/web-nodejs.pre-update" 2>/dev/null || true
-    rm -rf "$SCRIPT_DIR/betterdesk-server.pre-update" 2>/dev/null || true
     files_updated=$((files_updated + 1))
 
     # Update the new web console's source: the images build it (web-ui-builder
@@ -1507,10 +1571,15 @@ do_update() {
             print_info "Creating backup before update..."
             do_backup_silent
             preserve_compose_database_config
-            choose_docker_layout
             create_compose_file
+            # The running container stays until the new image is built
+            if ! build_images; then
+                print_error "The image did not build; the running container was left as it is"
+                press_enter
+                return
+            fi
+            choose_docker_layout
             stop_containers
-            build_images
             start_containers
             print_success "Local update completed!"
             press_enter
@@ -1529,12 +1598,21 @@ do_update() {
     fi
 
     preserve_compose_database_config
-    choose_docker_layout
     print_info "Regenerating docker-compose.yml with latest template..."
     create_compose_file
-    
+
+    # The running container and the files before the update stay until the
+    # new image is built (UP12)
+    if ! build_images; then
+        print_error "The new image did not build; the previous files are back and the running container was left as it is"
+        restore_update_sources || print_warning "Could not put the previous files back; they are in $(update_backup_dir)"
+        press_enter
+        return
+    fi
+    discard_update_sources
+
+    choose_docker_layout
     stop_containers
-    build_images
     start_containers
     
     print_success "Docker update completed!"
