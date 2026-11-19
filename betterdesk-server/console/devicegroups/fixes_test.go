@@ -1,6 +1,8 @@
 package devicegroups
 
 import (
+	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -24,6 +26,25 @@ func TestMergeLeavesBannedDevicesOut(t *testing.T) {
 	}
 	if got := MergeAddressBookData(data, MergeOptions{Devices: devices, KnownOnly: true}); got != `{"tags":["lab"],"peers":[{"id":"dev-1","tags":["lab"]}]}` {
 		t.Errorf("merge of the known peers: %s", got)
+	}
+}
+
+// TestRenameKeepsEveryTag: renaming a tag replaces it and keeps every
+// other tag of the device, also past the 20th; a tag that then repeats
+// goes as before (BUGS DGR4).
+func TestRenameKeepsEveryTag(t *testing.T) {
+	tags := make([]any, 25)
+	want := make([]string, 25)
+	for i := range tags {
+		tags[i] = "t" + strconv.Itoa(i)
+		want[i] = "t" + strconv.Itoa(i)
+	}
+	tags[22], want[22] = "old", "new"
+	if got, changed := RewriteTagsRename(tags, "old", "new"); !changed || !reflect.DeepEqual(got, want) {
+		t.Errorf("rename on a device with 25 tags: %q, %v", got, changed)
+	}
+	if got, changed := RewriteTagsRename(tags, "old", "t24"); !changed || len(got) != 24 || got[22] != "t24" {
+		t.Errorf("rename into a tag the device has: %q, %v", got, changed)
 	}
 }
 

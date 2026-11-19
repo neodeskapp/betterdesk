@@ -13,9 +13,6 @@ import (
 // Tags are free text on devices. Renaming or deleting a tag rewrites the
 // tags of the devices the caller may see, one device after the other.
 
-// MaxTagsPerDevice is the number of tags a rename leaves on a device.
-const MaxTagsPerDevice = 20
-
 // SanitizeTagName cleans a submitted tag name like SanitizeTag. A value
 // that is no text is "".
 func SanitizeTagName(value any) string {
@@ -100,9 +97,10 @@ func DeviceHasTag(device *goapi.Object, tag any) bool {
 }
 
 // RewriteTagsRename returns tags with every tag equal to from replaced by
-// to, without tags that then repeat (in any letter case), at most 20.
-// changed says whether a tag was replaced. With an empty from or to the
-// tags come back normalised and unchanged.
+// to, without tags that then repeat (in any letter case). A rename never
+// adds a tag, so every other tag of the device stays. changed says whether
+// a tag was replaced. With an empty from or to the tags come back
+// normalised and unchanged.
 func RewriteTagsRename(tags any, fromTag, toTag any) (next []string, changed bool) {
 	from, to := SanitizeTagName(fromTag), SanitizeTagName(toTag)
 	if from == "" || to == "" {
@@ -121,9 +119,6 @@ func RewriteTagsRename(tags any, fromTag, toTag any) (next []string, changed boo
 		}
 		seen[key] = true
 		next = append(next, value)
-		if len(next) >= MaxTagsPerDevice {
-			break
-		}
 	}
 	return next, changed
 }

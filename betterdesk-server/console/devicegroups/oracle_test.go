@@ -1,6 +1,7 @@
 package devicegroups
 
 import (
+	"bytes"
 	"compress/gzip"
 	"context"
 	"encoding/json"
@@ -10,6 +11,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/access"
@@ -40,6 +42,96 @@ func loadVectors(t *testing.T, name string, into any) {
 	if err := json.Unmarshal(rawHalfCharacter.ReplaceAll(raw, []byte("$1")), into); err != nil {
 		t.Fatalf("read %s: %v", name, err)
 	}
+}
+
+// renameKeepsMore reports whether a rename of the tags is one the fix of
+// BUGS DGR4 changes: Node kept at most 20 tags, the fix keeps every one.
+func renameKeepsMore(tags any) bool { return len(NormalizeTags(tags)) > 20 }
+
+// fixedVectors are the answers to the vectors a bug fix changes on purpose,
+// in testdata/<name>_fixed.json: per vector ("rename 12") the bug and the
+// Go answer, which the tests compare instead of Node's. A vector the fix
+// may change but does not keeps Node's answer and is not in the file.
+// With DEVICEGROUPS_RECORD_FIXED=1 the tests write the file from their
+// answers; look at its diff before a commit.
+type fixedVectors struct {
+	t      *testing.T
+	file   string
+	record bool
+	want   map[string]fixedVector
+	got    map[string]fixedVector
+}
+
+type fixedVector struct {
+	Bug    string          `json:"bug"`
+	Answer json.RawMessage `json:"answer"`
+}
+
+func loadFixedVectors(t *testing.T, name string) *fixedVectors {
+	t.Helper()
+	f := &fixedVectors{
+		t: t, file: filepath.Join("testdata", name+"_fixed.json"), record: os.Getenv("DEVICEGROUPS_RECORD_FIXED") == "1",
+		want: map[string]fixedVector{}, got: map[string]fixedVector{},
+	}
+	raw, err := os.ReadFile(f.file)
+	if err != nil && !os.IsNotExist(err) {
+		t.Fatal(err)
+	}
+	if err == nil {
+		if err := json.Unmarshal(raw, &f.want); err != nil {
+			t.Fatalf("%s: %v", f.file, err)
+		}
+	}
+	return f
+}
+
+// matches reports whether the answer to a vector the bug's fix may change
+// is Node's, or else the recorded one. Recording, it keeps an answer that
+// is not Node's and reports true.
+func (f *fixedVectors) matches(key, bug string, answer, node any) bool {
+	f.t.Helper()
+	nodeJSON, err := json.Marshal(node)
+	if err != nil {
+		f.t.Fatal(err)
+	}
+	if same(f.t, answer, nodeJSON) {
+		return true
+	}
+	encoded, err := json.Marshal(answer)
+	if err != nil {
+		f.t.Fatal(err)
+	}
+	f.got[key] = fixedVector{Bug: bug, Answer: encoded}
+	if f.record {
+		return true
+	}
+	want, ok := f.want[key]
+	return ok && want.Bug == bug && same(f.t, answer, want.Answer)
+}
+
+// finish fails for a recorded vector that no fix names, and writes the
+// file when recording.
+func (f *fixedVectors) finish() {
+	f.t.Helper()
+	if !f.record {
+		for key := range f.want {
+			if _, ok := f.got[key]; !ok {
+				f.t.Errorf("%s is in %s, but no fix changes it", key, f.file)
+			}
+		}
+		return
+	}
+	var out bytes.Buffer
+	enc := json.NewEncoder(&out)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", " ")
+	if err := enc.Encode(f.got); err != nil {
+		f.t.Fatal(err)
+	}
+	if err := os.WriteFile(f.file, out.Bytes(), 0o644); err != nil {
+		f.t.Fatal(err)
+	}
+	f.t.Logf("wrote %d fixed vectors to %s", len(f.got), f.file)
 }
 
 // rawHalfCharacter is a half character (halfCharacter) in the JSON of a
@@ -220,8 +312,18 @@ func TestOracleTags(t *testing.T) {
 			t.Errorf("DeviceHasTag(%s, %s) = %v, Node %v", rec.Device, rec.Tag, got, rec.Out)
 		}
 	}
-	for _, rec := range v.Rename {
+	fixes := loadFixedVectors(t, "tags")
+	defer fixes.finish()
+	for i, rec := range v.Rename {
 		tags, changed := RewriteTagsRename(parsed(t, rec.Tags), parsed(t, rec.From), parsed(t, rec.To))
+		if renameKeepsMore(parsed(t, rec.Tags)) {
+			out := map[string]any{"tags": tags, "changed": changed}
+			node := map[string]any{"tags": rec.Out.Tags, "changed": rec.Out.Changed}
+			if !fixes.matches("rename "+strconv.Itoa(i), "DGR4", out, node) {
+				t.Errorf("RewriteTagsRename(%s, %s, %s) = %q, %v; not the recorded answer of DGR4", rec.Tags, rec.From, rec.To, tags, changed)
+			}
+			continue
+		}
 		if !reflect.DeepEqual(tags, rec.Out.Tags) || changed != rec.Out.Changed {
 			t.Errorf("RewriteTagsRename(%s, %s, %s) = %q, %v; Node %q, %v", rec.Tags, rec.From, rec.To, tags, changed, rec.Out.Tags, rec.Out.Changed)
 		}
@@ -234,8 +336,10 @@ func TestOracleTags(t *testing.T) {
 	}
 	for i, run := range v.Runs {
 		var devices []*goapi.Object
+		fixed := false
 		for _, d := range list(t, run.Devices) {
 			devices = append(devices, d.(*goapi.Object))
+			fixed = fixed || run.Kind == "rename" && renameKeepsMore(d.(*goapi.Object).Get("tags"))
 		}
 		var groups []*access.DeviceGroup
 		for _, g := range run.Groups {
@@ -273,6 +377,31 @@ func TestOracleTags(t *testing.T) {
 				t.Fatal(err)
 			}
 			result = res
+		}
+		if fixed {
+			after := []any{}
+			for _, d := range devices {
+				after = append(after, d.Get("tags"))
+			}
+			filters := []string{}
+			for _, g := range groups {
+				filters = append(filters, g.TagFilter)
+			}
+			written := [][2]string{}
+			for _, u := range updates {
+				written = append(written, [2]string{u.guid, u.filter})
+			}
+			out := map[string]any{"result": result, "calls": calls, "updates": written, "devicesAfter": after, "filtersAfter": filters}
+			nodeWritten := [][2]string{}
+			for _, u := range run.Updates {
+				nodeWritten = append(nodeWritten, [2]string{u.GUID, u.Data.TagFilter})
+			}
+			node := map[string]any{"result": run.Result, "calls": run.Calls, "updates": nodeWritten, "devicesAfter": run.DevicesAfter, "filtersAfter": run.FiltersAfter}
+			if !fixes.matches("run "+strconv.Itoa(i), "DGR4", out, node) {
+				encoded, _ := json.Marshal(out)
+				t.Errorf("run %d (%s %s to %s): %s, not the recorded answer of DGR4", i, run.Kind, run.From, run.To, encoded)
+			}
+			continue
 		}
 		if !same(t, result, run.Result) {
 			encoded, _ := json.Marshal(result)
