@@ -68,6 +68,9 @@ type install struct {
 	dataDir  string
 	keysPath string
 	envFile  string
+	// consoleDir is CONSOLE_DIR, where the chat files and the ticket
+	// attachments are kept (below data/).
+	consoleDir string
 }
 
 func randomName(prefix string) string {
@@ -82,10 +85,11 @@ func newInstall(t *testing.T, dialect string) *install {
 	t.Helper()
 	root := t.TempDir()
 	in := &install{
-		dialect:  dialect,
-		dataDir:  filepath.Join(root, "data"),
-		keysPath: filepath.Join(root, "keys"),
-		envFile:  filepath.Join(root, "console.env"),
+		dialect:    dialect,
+		dataDir:    filepath.Join(root, "data"),
+		keysPath:   filepath.Join(root, "keys"),
+		envFile:    filepath.Join(root, "console.env"),
+		consoleDir: filepath.Join(root, "console"),
 	}
 	for _, dir := range []string{in.dataDir, in.keysPath} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -349,15 +353,16 @@ func (f fakeGoServer) GetHealth(context.Context) *goapi.Object { return f.data.O
 
 func (in *install) service(t *testing.T, appVersion string) *Service {
 	return New(Options{
-		Store:      in.db,
-		GoAPI:      loadFakeGoServer(t),
-		DataDir:    in.dataDir,
-		EnvPath:    in.envFile,
-		KeysPath:   in.keysPath,
-		PubKeyPath: filepath.Join(in.keysPath, "id_ed25519.pub"),
-		APIKeyPath: filepath.Join(in.keysPath, ".api_key"),
-		DBPath:     filepath.Join(in.keysPath, "db_v2.sqlite3"),
-		AppVersion: appVersion,
+		Store:        in.db,
+		GoAPI:        loadFakeGoServer(t),
+		DataDir:      in.dataDir,
+		EnvPath:      in.envFile,
+		KeysPath:     in.keysPath,
+		PubKeyPath:   filepath.Join(in.keysPath, "id_ed25519.pub"),
+		APIKeyPath:   filepath.Join(in.keysPath, ".api_key"),
+		DBPath:       filepath.Join(in.keysPath, "db_v2.sqlite3"),
+		AppVersion:   appVersion,
+		ChatFilesDir: filepath.Join(in.consoleDir, "data", "chat-files"),
 	})
 }
 
@@ -502,6 +507,14 @@ func tarEntries(t *testing.T, archive []byte) []tarEntry {
 	return out
 }
 
+// readmeLinesNodeLacks are the lines of README.txt that tell where the
+// parts go that Node never packed. An archive of Node's holds none of
+// these parts, so the entries stay the same when the seed has none.
+var readmeLinesNodeLacks = []string{
+	// CH2: the chat files
+	"     console/chat-files/*    -> <consoleDir>/data/chat-files/",
+}
+
 func compareArchives(t *testing.T, goArchive, nodeArchive []byte) {
 	t.Helper()
 	gos, nodes := tarEntries(t, goArchive), tarEntries(t, nodeArchive)
@@ -523,6 +536,11 @@ func compareArchives(t *testing.T, goArchive, nodeArchive []byte) {
 			// the time of the backup differs; everything else must not
 			gd = timeStamp.ReplaceAll(gd, []byte("<time>"))
 			nd = timeStamp.ReplaceAll(nd, []byte("<time>"))
+		}
+		if g.name == "README.txt" {
+			for _, line := range readmeLinesNodeLacks {
+				gd = bytes.Replace(gd, []byte(line+"\n"), nil, 1)
+			}
 		}
 		if !bytes.Equal(gd, nd) {
 			// An archive holds secrets: the failure names sizes and the

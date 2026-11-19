@@ -15,8 +15,9 @@
 //
 // A restore (RestoreFullBackup) unpacks and checks the whole archive
 // first and writes nothing when that fails. Then each part runs on its
-// own: the dump table by table (a table that fails keeps its rows), the
-// uploads, the secrets, the .env and the server's SQLite file. Parts
+// own: the dump table by table (a table that fails keeps its rows) with
+// the chat files, the uploads, the secrets, the .env and the server's
+// SQLite file. Parts
 // after a failed one still run; the result lists what was restored,
 // skipped and what failed.
 //

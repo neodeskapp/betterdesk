@@ -9,6 +9,7 @@ package settingsbackup
 
 import (
 	"net/http"
+	"path/filepath"
 
 	"github.com/unitronix/betterdesk-server/console/backup"
 	"github.com/unitronix/betterdesk-server/console/branding"
@@ -55,8 +56,10 @@ func Register(d *kit.Deps) {
 		PubKeyPath: cfg.PubKeyPath,
 		APIKeyPath: cfg.APIKeyPath,
 		DBPath:     cfg.DBPath,
-		AppVersion: cfg.Version,
-		Limits:     archiveLimits(cfg.Getenv, d.Log.Child("SETTINGS").Warn),
+		// the folder of the chat routes (chat.FilesDir)
+		ChatFilesDir: filepath.Join(cfg.ConsoleDir, "data", "chat-files"),
+		AppVersion:   cfg.Version,
+		Limits:       archiveLimits(cfg.Getenv, d.Log.Child("SETTINGS").Warn),
 	})
 	scheduled := scheduledbackup.New(scheduledbackup.Options{
 		Store:   d.Store,

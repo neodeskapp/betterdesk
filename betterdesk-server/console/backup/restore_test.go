@@ -5,8 +5,10 @@ import (
 	"compress/gzip"
 	"context"
 	"errors"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -334,6 +336,86 @@ func TestRestoreReloadsTheBranding(t *testing.T) {
 			t.Errorf("app name after the restore: %q", name)
 		}
 	})
+}
+
+// writeFiles writes files below dir: name to content.
+func writeFiles(t *testing.T, dir string, files map[string]string) {
+	t.Helper()
+	for name, content := range files {
+		path := filepath.Join(dir, filepath.FromSlash(name))
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+// filesBelow lists the files below dir with their content.
+func filesBelow(t *testing.T, dir string) map[string]string {
+	t.Helper()
+	out := map[string]string{}
+	_ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil || info.IsDir() {
+			return nil
+		}
+		data, _ := os.ReadFile(path)
+		rel, _ := filepath.Rel(dir, path)
+		out[filepath.ToSlash(rel)] = string(data)
+		return nil
+	})
+	return out
+}
+
+// CH2: the chat files, with the links that say who may download them, go
+// into the full backup and come back with the console data.
+func TestFullBackupCarriesTheChatFiles(t *testing.T) {
+	ctx := context.Background()
+	src := newInstall(t, "sqlite")
+	chat := map[string]string{
+		"0123456789abcdef0123456789abcdef.pdf":        "a chat file",
+		"fedcba9876543210fedcba9876543210":            "no extension",
+		".links/0123456789abcdef0123456789abcdef.pdf": `{"owner":50}` + "\n",
+	}
+	writeFiles(t, filepath.Join(src.consoleDir, "data", "chat-files"), chat)
+	archive, _, err := src.service(t, "x").CreateFullBackup(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var names []string
+	for _, e := range tarEntries(t, archive) {
+		if strings.HasPrefix(e.name, "console/chat-files/") {
+			names = append(names, e.name)
+		}
+	}
+	if strings.Join(names, ",") != "console/chat-files/.links/0123456789abcdef0123456789abcdef.pdf,console/chat-files/0123456789abcdef0123456789abcdef.pdf,console/chat-files/fedcba9876543210fedcba9876543210" {
+		t.Errorf("chat entries %q", names)
+	}
+
+	dst := newInstall(t, "sqlite")
+	writeFiles(t, filepath.Join(dst.consoleDir, "data", "chat-files"), map[string]string{"11111111111111111111111111111111.txt": "kept"})
+	res, err := dst.service(t, "x").RestoreFullBackup(ctx, archive, RestoreOptions{Database: true})
+	if err != nil || len(res.Warnings) != 0 || !slices.Contains(res.Restored, "chat files (3 files)") {
+		t.Fatalf("restore: %+v %v", res, err)
+	}
+	want := map[string]string{"11111111111111111111111111111111.txt": "kept"}
+	for name, content := range chat {
+		want[name] = content
+	}
+	if got := filesBelow(t, filepath.Join(dst.consoleDir, "data", "chat-files")); !maps.Equal(got, want) {
+		t.Errorf("chat files after the restore: %q", got)
+	}
+
+	// without the console data they stay where they are
+	other := newInstall(t, "sqlite")
+	res, err = other.service(t, "x").RestoreFullBackup(ctx, archive, RestoreOptions{Uploads: true})
+	if err != nil || slices.Contains(res.Restored, "chat files (3 files)") {
+		t.Fatalf("restore without the data: %+v %v", res, err)
+	}
+	if got := filesBelow(t, filepath.Join(other.consoleDir, "data", "chat-files")); len(got) != 0 {
+		t.Errorf("chat files restored without the console data: %q", got)
+	}
 }
 
 func parsedJSON(t *testing.T, text string) any {

@@ -73,6 +73,9 @@ type Options struct {
 	// a full backup copies twice, as the console's and as the server's
 	// database. Ignored on PostgreSQL for the console's copy.
 	DBPath string
+	// ChatFilesDir is the folder of the chat files
+	// (CONSOLE_DIR/data/chat-files) with their links in .links/.
+	ChatFilesDir string
 	// AppVersion is the product version the archive names.
 	AppVersion string
 	// Now is the clock; nil is time.Now.
@@ -99,7 +102,7 @@ func New(o Options) *Service {
 
 // paths are the files a full backup holds, resolveBackupPaths.
 type paths struct {
-	env, sessionSecret, uploadsDir, consoleDB, goPrivKey, goPubKey, goAPIKey, goDB, meshAgentCert string
+	env, sessionSecret, uploadsDir, chatFilesDir, consoleDB, goPrivKey, goPubKey, goAPIKey, goDB, meshAgentCert string
 }
 
 func (s *Service) paths() paths {
@@ -107,6 +110,7 @@ func (s *Service) paths() paths {
 		env:           s.o.EnvPath,
 		sessionSecret: filepath.Join(s.o.DataDir, ".session_secret"),
 		uploadsDir:    filepath.Join(s.o.DataDir, "uploads"),
+		chatFilesDir:  s.o.ChatFilesDir,
 		goPrivKey:     filepath.Join(s.o.KeysPath, "id_ed25519"),
 		goPubKey:      s.o.PubKeyPath,
 		goAPIKey:      s.o.APIKeyPath,
@@ -268,6 +272,7 @@ type Manifest struct {
 //	console/.session_secret          DATA_DIR/.session_secret
 //	console/auth.db                  the SQLite file (DB_PATH), on SQLite only
 //	console/uploads/...              every file below DATA_DIR/uploads
+//	console/chat-files/...           the chat files and their .links
 //	goserver/id_ed25519(.pub)        the server's key pair
 //	goserver/.api_key                the API key
 //	goserver/db_v2.sqlite3           DB_PATH again, as the server's database
@@ -275,8 +280,8 @@ type Manifest struct {
 //	README.txt                       how to restore by hand
 //
 // A part whose file is missing or unreadable is left out; the dump is
-// left out when it fails. Files are mode 0600 in the archive, uploads and
-// the rest 0644.
+// left out when it fails. Files are mode 0600 in the archive, uploads,
+// chat files and the rest 0644.
 func (s *Service) CreateFullBackup(ctx context.Context) ([]byte, string, error) {
 	timestamp := s.isoNow()
 	p := s.paths()
@@ -311,20 +316,29 @@ func (s *Service) CreateFullBackup(ctx context.Context) ([]byte, string, error) 
 		entries = append(entries, Entry{Name: name, Data: data, Mode: 0o600})
 		present = append(present, name)
 	}
-	addFile("console/.env", p.env)
-	addFile("console/.session_secret", p.sessionSecret)
-	addFile("console/auth.db", p.consoleDB)
-	if info, err := os.Stat(p.uploadsDir); err == nil && info.IsDir() {
-		_ = walkFiles(p.uploadsDir, "", func(rel, abs string) {
+	// addFolder adds the files below dir as prefix/<path below dir>.
+	addFolder := func(prefix, dir string) {
+		if dir == "" {
+			return
+		}
+		if info, err := os.Stat(dir); err != nil || !info.IsDir() {
+			return
+		}
+		_ = walkFiles(dir, "", func(rel, abs string) {
 			data, err := os.ReadFile(abs)
 			if err != nil {
 				return
 			}
-			name := "console/uploads/" + filepath.ToSlash(rel)
+			name := prefix + filepath.ToSlash(rel)
 			entries = append(entries, Entry{Name: name, Data: data, Mode: 0o644})
 			present = append(present, name)
 		})
 	}
+	addFile("console/.env", p.env)
+	addFile("console/.session_secret", p.sessionSecret)
+	addFile("console/auth.db", p.consoleDB)
+	addFolder(uploadsPrefix, p.uploadsDir)
+	addFolder(chatFilesPrefix, p.chatFilesDir)
 	addFile("goserver/id_ed25519", p.goPrivKey)
 	addFile("goserver/id_ed25519.pub", p.goPubKey)
 	addFile("goserver/.api_key", p.goAPIKey)
@@ -414,6 +428,7 @@ func recoveryReadme(m Manifest) string {
 		"     console/.session_secret -> <dataDir>/.session_secret",
 		"     console/auth.db         -> <dataDir>/auth.db   (SQLite backend only)",
 		"     console/uploads/*       -> <dataDir>/uploads/",
+		"     console/chat-files/*    -> <consoleDir>/data/chat-files/",
 		"     goserver/id_ed25519     -> <keysPath>/id_ed25519",
 		"     goserver/id_ed25519.pub -> <keysPath>/id_ed25519.pub",
 		"     goserver/.api_key       -> <keysPath>/.api_key",
@@ -503,7 +518,8 @@ func (e *ErrInvalidArchive) Error() string {
 // a part that fails leaves a warning and the next one still runs:
 //
 //  1. the logical dump, table by table (ImportAllTables); the branding
-//     cache is loaded again when branding_config came back,
+//     cache is loaded again when branding_config came back; the chat
+//     files go with the dump, when it is chosen,
 //  2. the uploads, below DATA_DIR/uploads,
 //  3. the secrets, each to its own path,
 //  4. the .env,
@@ -530,9 +546,12 @@ func (s *Service) RestoreFullBackup(ctx context.Context, buf []byte, o RestoreOp
 	} else {
 		res.Skipped = append(res.Skipped, "database")
 	}
+	if o.Database {
+		s.restoreFolderPart(files, &res, chatFilesPrefix, p.chatFilesDir, "chat files", "Chat files")
+	}
 
 	if o.Uploads {
-		count, err := s.restoreUploads(files, p.uploadsDir)
+		count, err := s.restoreFolder(files, uploadsPrefix, p.uploadsDir)
 		switch {
 		case err != nil:
 			res.Warnings = append(res.Warnings, "Uploads restore failed: "+err.Error())
@@ -618,14 +637,37 @@ func (s *Service) importDump(ctx context.Context, raw []byte, res *RestoreResult
 	return nil
 }
 
-// restoreUploads writes the archive's console/uploads/ files below dir.
-// An entry whose name is empty there, or holds "..", is skipped, as
-// before; so is one that safepath refuses (an absolute name, a "." part,
-// a link that leads out of the folder). A failed write ends the part.
-func (s *Service) restoreUploads(files *Files, dir string) (int, error) {
+// The folders of an archive.
+const (
+	uploadsPrefix   = "console/uploads/"
+	chatFilesPrefix = "console/chat-files/"
+)
+
+// restoreFolderPart restores the files below prefix into dir as a part of
+// the console data: "<label> (N files)" when it wrote any, a warning
+// "<Label> restore failed: ..." when a write failed, nothing when the
+// archive has none.
+func (s *Service) restoreFolderPart(files *Files, res *RestoreResult, prefix, dir, label, warning string) {
+	if dir == "" {
+		return
+	}
+	count, err := s.restoreFolder(files, prefix, dir)
+	switch {
+	case err != nil:
+		res.Warnings = append(res.Warnings, warning+" restore failed: "+err.Error())
+	case count > 0:
+		res.Restored = append(res.Restored, fmt.Sprintf("%s (%d files)", label, count))
+	}
+}
+
+// restoreFolder writes the archive's files below prefix into dir. An
+// entry whose name is empty there, or holds "..", is skipped, as before;
+// so is one that safepath refuses (an absolute name, a "." part, a link
+// that leads out of the folder). A failed write ends the part.
+func (s *Service) restoreFolder(files *Files, prefix, dir string) (int, error) {
 	count := 0
 	for _, name := range files.Names() {
-		rel, ok := strings.CutPrefix(name, "console/uploads/")
+		rel, ok := strings.CutPrefix(name, prefix)
 		if !ok || rel == "" || strings.Contains(rel, "..") {
 			continue
 		}
