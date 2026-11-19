@@ -31,7 +31,7 @@ type Options struct {
 	// <console>/data/uploads without DATA_DIR.
 	UploadsDir string
 	// FontsDir holds one folder per installed font, served as
-	// /fonts/<name>/. Node: <console>/public/fonts.
+	// /fonts/<name>/: DATA_DIR/fonts. Node: <console>/public/fonts.
 	FontsDir string
 	// FontCacheFile is an optional JSON list of further font families for
 	// the font search. Node: <console>/data/google-fonts-cache.json.

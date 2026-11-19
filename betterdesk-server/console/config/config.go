@@ -99,11 +99,14 @@ type Config struct {
 	// TransfersDir is where the files of file transfers are written:
 	// data/transfers in ConsoleDir, whatever DATA_DIR says.
 	TransfersDir string
-	// The branding's state, in ConsoleDir whatever DATA_DIR says: the
-	// installed fonts (public/fonts), the optional font list
+	// The branding's state: the installed fonts (fonts in DataDir), and in
+	// ConsoleDir whatever DATA_DIR says the optional font list
 	// (data/google-fonts-cache.json) and uploaded fonts before they are
-	// installed (data/tmp).
+	// installed (data/tmp). OldFontsDir is where the Node console
+	// installed fonts (public/fonts in ConsoleDir); the console copies it
+	// into FontsDir once.
 	FontsDir      string
+	OldFontsDir   string
 	FontCacheFile string
 	TempDir       string
 
@@ -335,7 +338,8 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 	cfg.WallpapersDir = filepath.Join(cfg.ConsoleDir, "wallpapers")
 	cfg.UploadsDir = filepath.Join(cfg.DataDir, "uploads")
 	cfg.TransfersDir = filepath.Join(cfg.ConsoleDir, "data", "transfers")
-	cfg.FontsDir = filepath.Join(cfg.ConsoleDir, "public", "fonts")
+	cfg.FontsDir = filepath.Join(cfg.DataDir, "fonts")
+	cfg.OldFontsDir = filepath.Join(cfg.ConsoleDir, "public", "fonts")
 	cfg.FontCacheFile = filepath.Join(cfg.ConsoleDir, "data", "google-fonts-cache.json")
 	cfg.TempDir = filepath.Join(cfg.ConsoleDir, "data", "tmp")
 

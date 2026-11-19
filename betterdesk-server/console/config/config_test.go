@@ -20,7 +20,7 @@ func env(values map[string]string) func(string) string {
 func folders(cfg *Config) map[string]string {
 	return map[string]string{
 		"ConsoleDir": cfg.ConsoleDir, "DataDir": cfg.DataDir, "WebUIDir": cfg.WebUIDir, "WallpapersDir": cfg.WallpapersDir,
-		"UploadsDir": cfg.UploadsDir, "TransfersDir": cfg.TransfersDir, "FontsDir": cfg.FontsDir,
+		"UploadsDir": cfg.UploadsDir, "TransfersDir": cfg.TransfersDir, "FontsDir": cfg.FontsDir, "OldFontsDir": cfg.OldFontsDir,
 		"FontCacheFile": cfg.FontCacheFile, "TempDir": cfg.TempDir, "StaticDir": cfg.StaticDir, "LangDir": cfg.LangDir,
 		"PublicDir": cfg.PublicDir, "ProtosDir": cfg.ProtosDir, "ThemesDir": cfg.ThemesDir, "PalettesFile": cfg.PalettesFile,
 		"FaviconFile": cfg.FaviconFile, "SupportersFile": cfg.SupportersFile,
@@ -57,7 +57,8 @@ func TestLoadDefaults(t *testing.T) {
 		"WebUIDir":      "",
 		"WallpapersDir": filepath.Join(console, "wallpapers"),
 		"UploadsDir":    filepath.Join(console, "data", "uploads"),
-		"FontsDir":      filepath.Join(console, "public", "fonts"),
+		"FontsDir":      filepath.Join(console, "data", "fonts"),
+		"OldFontsDir":   filepath.Join(console, "public", "fonts"),
 		// The console's own files come from the binary
 		"StaticDir": "", "LangDir": "", "PublicDir": "", "ProtosDir": "",
 		"ThemesDir": "", "PalettesFile": "", "FaviconFile": "", "SupportersFile": "",
@@ -150,9 +151,10 @@ func TestLoadValues(t *testing.T) {
 	want := map[string]string{
 		"ConsoleDir": "/console", "DataDir": "/data", "WebUIDir": "/ui", "UploadsDir": filepath.Join("/data", "uploads"),
 		"WallpapersDir": filepath.Join("/console", "wallpapers"),
-		// The transfers and the branding's files stay in the console's
-		// folder
-		"FontsDir":      filepath.Join("/console", "public", "fonts"),
+		// The installed fonts go with DATA_DIR; the transfers, the font
+		// list and uploaded fonts stay in the console's folder
+		"FontsDir":      filepath.Join("/data", "fonts"),
+		"OldFontsDir":   filepath.Join("/console", "public", "fonts"),
 		"TransfersDir":  filepath.Join("/console", "data", "transfers"),
 		"FontCacheFile": filepath.Join("/console", "data", "google-fonts-cache.json"),
 		"TempDir":       filepath.Join("/console", "data", "tmp"),
@@ -190,7 +192,7 @@ func TestStaticDir(t *testing.T) {
 		"SupportersFile": filepath.Join("/src/static", "config", "supporters.json"),
 		// State stays where it was
 		"ConsoleDir": "/console", "DataDir": filepath.Join("/console", "data"),
-		"FontsDir": filepath.Join("/console", "public", "fonts"), "WallpapersDir": filepath.Join("/console", "wallpapers"),
+		"FontsDir": filepath.Join("/console", "data", "fonts"), "WallpapersDir": filepath.Join("/console", "wallpapers"),
 	}
 	got := folders(cfg)
 	for name, dir := range want {
@@ -236,7 +238,7 @@ func TestDockerRule(t *testing.T) {
 	byFile, _ := load(env(nil), machine("/.dockerenv"))
 	for name, cfg := range map[string]*Config{"DOCKER=true": byEnv, "/.dockerenv": byFile} {
 		if !cfg.Docker || cfg.DataDir != "/app/data" || cfg.ConsoleDir != "/app" || cfg.LangDir != "" || cfg.Static == nil ||
-			cfg.WebUIDir != "" {
+			cfg.FontsDir != filepath.Join("/app/data", "fonts") || cfg.WebUIDir != "" {
 			t.Errorf("%s: %+v", name, cfg)
 		}
 	}

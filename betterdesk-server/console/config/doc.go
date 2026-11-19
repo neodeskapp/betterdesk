@@ -23,7 +23,7 @@
 //	                         binary)               console/static/files (lang, public, protos, themes, config), read
 //	                                               in place of the files in the binary, for development.
 //	CONSOLE_LANG_DIR         (lang of the above)   Folder of the <code>.json language files on disk.
-//	DATA_DIR                 /app/data in a        Where the console writes: .session_secret, uploads.
+//	DATA_DIR                 /app/data in a        Where the console writes: .session_secret, uploads, fonts.
 //	                         container, else
 //	                         CONSOLE_DIR/data
 //	WEB_UI_DIR               (the build in the     A build of the web app on disk, for development. Without it the
@@ -109,7 +109,9 @@
 // The branding keeps its state in these places:
 //
 //	DATA_DIR/uploads                           uploaded pictures, served as /uploads/
-//	CONSOLE_DIR/public/fonts                   installed fonts, served as /fonts/
+//	DATA_DIR/fonts                             installed fonts, served as /fonts/. At the first start without
+//	                                           it, the fonts of CONSOLE_DIR/public/fonts, where the Node console
+//	                                           installed them, are copied into it.
 //	CONSOLE_DIR/data/google-fonts-cache.json   optional list of more font families for the search
 //	CONSOLE_DIR/data/tmp                       an uploaded font before it is installed
 //

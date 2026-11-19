@@ -255,6 +255,11 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		Logger: s.deps.Log,
 	})
 	s.deps.Avatars = avatars.New(avatars.Options{DB: opts.Store, Logger: s.deps.Log.Child("Avatar")})
+	// The fonts an install of the Node console has go to the new folder
+	// once, before the branding lists them
+	if err := copyOldFonts(cfg.OldFontsDir, cfg.FontsDir); err != nil {
+		logging.Logf("console", "WARN: installed fonts: %v", err)
+	}
 	// The branding's cache is the one copy of the settings: every write
 	// goes through this service. Font downloads go through its outbound
 	// guard.
