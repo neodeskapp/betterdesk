@@ -599,3 +599,43 @@ func TestRegistrationIDs(t *testing.T) {
 		}
 	})
 }
+
+// An approval or rejection whose UPDATE changes no row, because another
+// approver changed the request after the route read it, is answered as
+// one of a request that is not pending, with the status the row has now,
+// on both databases. A trigger that skips the UPDATE stands in for the
+// other approver (BUGS RG9).
+func TestLostRaceIsRefused(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		if got := w.SignedOut().Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"race-dev"}`); got.Status != http.StatusOK {
+			t.Fatalf("request: %d %s", got.Status, got.Body)
+		}
+		ctx := context.Background()
+		statements := []string{"CREATE TRIGGER skip_update BEFORE UPDATE ON pending_registrations BEGIN SELECT RAISE(IGNORE); END"}
+		if db.IsPostgres() {
+			statements = []string{
+				"CREATE FUNCTION skip_update() RETURNS trigger AS $$ BEGIN RETURN NULL; END $$ LANGUAGE plpgsql",
+				"CREATE TRIGGER skip_update BEFORE UPDATE ON pending_registrations FOR EACH ROW EXECUTE FUNCTION skip_update()",
+			}
+		}
+		for _, stmt := range statements {
+			if _, err := db.Exec(ctx, stmt); err != nil {
+				t.Fatal(err)
+			}
+		}
+		admin := w.As("admin")
+		for path, want := range map[string]string{
+			"/api/registrations/1/approve": `400 {"success":false,"error":"Cannot approve: status is pending"}`,
+			"/api/registrations/1/reject":  `400 {"success":false,"error":"Cannot reject: status is pending"}`,
+		} {
+			got := admin.Do(http.MethodPut, path, `{}`)
+			if have := strconv.Itoa(got.Status) + " " + got.Body; have != want {
+				t.Errorf("%s: %s, want %s", path, have, want)
+			}
+		}
+		if rows := w.AuditRows(); len(rows) != 0 {
+			t.Errorf("audit %q", rows)
+		}
+	})
+}

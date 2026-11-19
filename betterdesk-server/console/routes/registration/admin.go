@@ -195,9 +195,13 @@ func (h *handlers) approve(w http.ResponseWriter, r *http.Request) {
 	if user := kit.User(r); user != nil && user.Username != "" {
 		approvedBy = user.Username
 	}
-	updated, err := h.regs.Approve(ctx, id, approvedBy, cfg)
+	updated, changed, err := h.regs.Approve(ctx, id, approvedBy, cfg)
 	if err != nil {
 		h.serverError(w, r, "Approve registration error:", err)
+		return
+	}
+	if !changed {
+		h.lostRace(w, r, updated, "Cannot approve: status is ")
 		return
 	}
 
@@ -358,13 +362,28 @@ func (h *handlers) reject(w http.ResponseWriter, r *http.Request) {
 		failure(w, r, http.StatusBadRequest, "Cannot reject: status is "+jsreq.String(status))
 		return
 	}
-	updated, err := h.regs.Reject(ctx, id, reason)
+	updated, changed, err := h.regs.Reject(ctx, id, reason)
 	if err != nil {
 		h.serverError(w, r, "Reject registration error:", err)
 		return
 	}
+	if !changed {
+		h.lostRace(w, r, updated, "Cannot reject: status is ")
+		return
+	}
 	h.audit(r, "registration_rejected", "Rejected registration for device "+jsreq.String(reg.Get("device_id"))+" ("+jsreq.String(reg.Get("hostname"))+"): "+reason)
 	kit.JSON(w, r, http.StatusOK, goapi.NewObject("success", true, "data", nullable(updated)))
+}
+
+// lostRace answers an approval or a rejection whose registration stopped
+// being pending after the route read it (another approver was first) as
+// one that was not pending: 400 with its status now, 404 when it is gone.
+func (h *handlers) lostRace(w http.ResponseWriter, r *http.Request, row *goapi.Object, message string) {
+	if row == nil {
+		failure(w, r, http.StatusNotFound, "Registration not found")
+		return
+	}
+	failure(w, r, http.StatusBadRequest, message+jsreq.String(row.Get("status")))
 }
 
 // remove answers DELETE /api/registrations/{id}.

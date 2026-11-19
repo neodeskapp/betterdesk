@@ -72,32 +72,33 @@ func TestCreateApproveRejectDelete(t *testing.T) {
 			t.Fatalf("asked again:\n got %s\nwant %s", got, want)
 		}
 		id := jsbind.Number(1)
-		approved, err := s.Approve(ctx, id, "", ServerConfig{ConsoleURL: "http://h:5000", ServerKey: "key"})
-		if err != nil {
-			t.Fatal(err)
+		approved, changed, err := s.Approve(ctx, id, "", ServerConfig{ConsoleURL: "http://h:5000", ServerKey: "key"})
+		if err != nil || !changed {
+			t.Fatal(changed, err)
 		}
 		if approved.Get("status") != "approved" || approved.Get("approved_by") != "admin" || approved.Get("access_token") != nil ||
 			approved.Get("server_address") != nil || approved.Get("console_url") != "http://h:5000" || approved.Get("server_key") != "key" {
 			t.Fatalf("approved: %s", mustJSON(t, approved))
 		}
-		// An approved row is not approved again; SQLite reads it back as it
-		// is, PostgreSQL's UPDATE ... RETURNING finds nothing
-		again, err := s.Approve(ctx, id, "x", ServerConfig{})
+		// An approved row is not approved or rejected again: both databases
+		// say nothing changed and give the row as it is (BUGS RG9)
+		again, changed, err := s.Approve(ctx, id, "x", ServerConfig{})
 		if err != nil {
 			t.Fatal(err)
 		}
-		if db.IsPostgres() != (again == nil) {
-			t.Fatalf("approving an approved row on %s: %s", db.Dialect(), mustJSON(t, again))
+		if changed || again == nil || again.Get("approved_by") != "admin" || again.Get("status") != "approved" {
+			t.Fatalf("approving an approved row on %s: %v %s", db.Dialect(), changed, mustJSON(t, again))
 		}
-		if again != nil && again.Get("approved_by") != "admin" {
-			t.Fatalf("approving again changed the row: %s", mustJSON(t, again))
-		}
-		rejectedApproved, err := s.Reject(ctx, id, "late")
+		rejectedApproved, changed, err := s.Reject(ctx, id, "late")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if db.IsPostgres() != (rejectedApproved == nil) || (rejectedApproved != nil && rejectedApproved.Get("status") != "approved") {
-			t.Fatalf("rejecting an approved row: %s", mustJSON(t, rejectedApproved))
+		if changed || rejectedApproved == nil || rejectedApproved.Get("status") != "approved" {
+			t.Fatalf("rejecting an approved row on %s: %v %s", db.Dialect(), changed, mustJSON(t, rejectedApproved))
+		}
+		missing, changed, err := s.Approve(ctx, jsbind.Number(999), "x", ServerConfig{})
+		if err != nil || changed || missing != nil {
+			t.Fatalf("approving a row that is not there: %v %v %v", missing, changed, err)
 		}
 		// An approved device asking again gets its row unchanged
 		same, err := s.Create(ctx, Request{DeviceID: "dev-1", Hostname: "intruder"})
@@ -113,9 +114,9 @@ func TestCreateApproveRejectDelete(t *testing.T) {
 			t.Fatal(err)
 		}
 		id2 := jsbind.Number(second.Get("id").(float64))
-		rejected, err := s.Reject(ctx, id2, "no")
-		if err != nil {
-			t.Fatal(err)
+		rejected, changed, err := s.Reject(ctx, id2, "no")
+		if err != nil || !changed {
+			t.Fatal(changed, err)
 		}
 		if rejected.Get("status") != "rejected" || rejected.Get("rejected_reason") != "no" {
 			t.Fatalf("rejected: %s", mustJSON(t, rejected))
@@ -218,7 +219,7 @@ func TestListFilters(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
-		if _, err := s.Reject(ctx, jsbind.Number(3), ""); err != nil {
+		if _, _, err := s.Reject(ctx, jsbind.Number(3), ""); err != nil {
 			t.Fatal(err)
 		}
 		// Distinct times, newest last created
@@ -292,7 +293,7 @@ func TestNotificationsFromBothSources(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
-		if _, err := s.Reject(ctx, jsbind.Number(3), ""); err != nil {
+		if _, _, err := s.Reject(ctx, jsbind.Number(3), ""); err != nil {
 			t.Fatal(err)
 		}
 		if _, err := db.Exec(ctx, db.Pick(

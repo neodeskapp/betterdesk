@@ -17,9 +17,6 @@ import (
 //
 //   - the search of List is LIKE on SQLite (letter case ignored for ASCII
 //     only) and ILIKE on PostgreSQL;
-//   - Approve and Reject return the row as it is after the change on
-//     SQLite, also when the row was no longer pending and nothing changed,
-//     and nil on PostgreSQL in that case (UPDATE ... RETURNING);
 //   - values are bound as each driver bound them (package jsbind): on
 //     SQLite a list is spread over the placeholders and an object fails, on
 //     PostgreSQL every value is sent as text, so an id the database cannot
@@ -257,9 +254,10 @@ func orNull(v string) any {
 
 // Approve is approvePendingRegistration: the pending row with the id
 // becomes approved by approvedBy ("admin" when empty) with the server
-// configuration. It returns the row; see the package notes for a row
-// that was not pending.
-func (s *Service) Approve(ctx context.Context, id jsbind.Value, approvedBy string, cfg ServerConfig) (*goapi.Object, error) {
+// configuration. It returns the row as it is now, and whether this call
+// approved it: a row that was no longer pending (another approver was
+// first) comes back unchanged, nil when it is gone.
+func (s *Service) Approve(ctx context.Context, id jsbind.Value, approvedBy string, cfg ServerConfig) (*goapi.Object, bool, error) {
 	if approvedBy == "" {
 		approvedBy = "admin"
 	}
@@ -269,50 +267,51 @@ func (s *Service) Approve(ctx context.Context, id jsbind.Value, approvedBy strin
 			access_token = ?, console_url = ?, server_address = ?, server_key = ?,
 			updated_at = ` + now + `
 		WHERE id = ? AND status = 'pending'`
-	row, err := s.change(ctx, update, id,
+	row, changed, err := s.change(ctx, update, id,
 		approvedBy, orNull(cfg.AccessToken), orNull(cfg.ConsoleURL), orNull(cfg.ServerAddress), orNull(cfg.ServerKey))
 	if err != nil {
-		return nil, fmt.Errorf("approve registration: %w", err)
+		return nil, false, fmt.Errorf("approve registration: %w", err)
 	}
-	return row, nil
+	return row, changed, nil
 }
 
 // Reject is rejectPendingRegistration: the pending row with the id becomes
-// rejected with the reason.
-func (s *Service) Reject(ctx context.Context, id jsbind.Value, reason string) (*goapi.Object, error) {
+// rejected with the reason. It returns what Approve returns.
+func (s *Service) Reject(ctx context.Context, id jsbind.Value, reason string) (*goapi.Object, bool, error) {
 	update := `UPDATE pending_registrations
 		SET status = 'rejected', rejected_reason = ?, updated_at = ` + store.NowSQL(s.db.Dialect()) + `
 		WHERE id = ? AND status = 'pending'`
-	row, err := s.change(ctx, update, id, reason)
+	row, changed, err := s.change(ctx, update, id, reason)
 	if err != nil {
-		return nil, fmt.Errorf("reject registration: %w", err)
+		return nil, false, fmt.Errorf("reject registration: %w", err)
 	}
-	return row, nil
+	return row, changed, nil
 }
 
-// change runs an UPDATE whose last placeholder is the id and returns the
-// row: through RETURNING on PostgreSQL, through a read afterwards on
-// SQLite.
-func (s *Service) change(ctx context.Context, update string, id jsbind.Value, values ...any) (*goapi.Object, error) {
+// change runs an UPDATE whose last placeholder is the id, and returns the
+// row after it and whether the UPDATE changed it, on both databases alike.
+func (s *Service) change(ctx context.Context, update string, id jsbind.Value, values ...any) (*goapi.Object, bool, error) {
 	bound, err := args(s.db, 1, id)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	values = append(values, bound...)
 	var row *goapi.Object
+	changed := false
 	err = s.db.InTx(ctx, func(tx *store.Tx) error {
-		var err error
-		if tx.Dialect() == store.Postgres {
-			row, err = readRow(ctx, tx, update+" RETURNING "+postgresColumns, values...)
+		res, err := tx.Exec(ctx, update, values...)
+		if err != nil {
 			return err
 		}
-		if _, err := tx.Exec(ctx, update, values...); err != nil {
+		n, err := res.RowsAffected()
+		if err != nil {
 			return err
 		}
-		row, err = readRow(ctx, tx, "SELECT "+sqliteColumns+" FROM pending_registrations WHERE id = ?", bound...)
+		changed = n > 0
+		row, err = readRow(ctx, tx, "SELECT "+columns(tx)+" FROM pending_registrations WHERE id = ?", bound...)
 		return err
 	})
-	return row, err
+	return row, changed, err
 }
 
 // Delete is deletePendingRegistration: it reports whether a row went.
