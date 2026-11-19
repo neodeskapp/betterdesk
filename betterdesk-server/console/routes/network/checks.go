@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/netmonitor"
 )
 
@@ -47,6 +48,19 @@ func (h *handlers) history(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, checks)
 }
 
+// toolTimeout is the timeout of a tool's body in milliseconds, the default
+// when it is no number or 0. ok is false for a number below 1, which the
+// tools refuse.
+func toolTimeout(body middleware.JSONObject) (timeout netmonitor.Number, ok bool) {
+	timeout = parseInt(body.Get("timeout"))
+	if timeout.Truthy() && timeout < 1 {
+		return 0, false
+	}
+	return timeout.Or(netmonitor.DefaultTimeoutMs), true
+}
+
+const timeoutBelowOne = "timeout must be at least 1"
+
 // ping answers POST /ping with the body {host, timeout}.
 func (h *handlers) ping(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
@@ -55,9 +69,14 @@ func (h *handlers) ping(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "host is required")
 		return
 	}
+	timeout, ok := toolTimeout(body)
+	if !ok {
+		fail(w, r, http.StatusBadRequest, timeoutBelowOne)
+		return
+	}
 	result := netmonitor.InvalidHost()
 	if name, isString := host.Str(); isString {
-		result = h.monitor.PingHost(detached(r), name, parseInt(body.Get("timeout")).Or(netmonitor.DefaultTimeoutMs))
+		result = h.monitor.PingHost(detached(r), name, timeout)
 	}
 	kit.JSON(w, r, http.StatusOK, object{{"host", stringify(host)}}.result(result))
 }
@@ -70,10 +89,15 @@ func (h *handlers) tcp(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "host and port are required")
 		return
 	}
+	timeout, ok := toolTimeout(body)
+	if !ok {
+		fail(w, r, http.StatusBadRequest, timeoutBelowOne)
+		return
+	}
 	port := parseInt(body.Get("port"))
 	result := netmonitor.InvalidHost()
 	if name, isString := host.Str(); isString {
-		result = h.monitor.CheckTCPPort(detached(r), name, port, parseInt(body.Get("timeout")).Or(netmonitor.DefaultTimeoutMs))
+		result = h.monitor.CheckTCPPort(detached(r), name, port, timeout)
 	}
 	kit.JSON(w, r, http.StatusOK, object{{"host", stringify(host)}, {"port", port}}.result(result))
 }
@@ -86,9 +110,14 @@ func (h *handlers) httpCheck(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "url is required")
 		return
 	}
+	timeout, ok := toolTimeout(body)
+	if !ok {
+		fail(w, r, http.StatusBadRequest, timeoutBelowOne)
+		return
+	}
 	result := netmonitor.URLRequired()
 	if rawURL, isString := target.Str(); isString {
-		result = h.monitor.CheckHTTP(detached(r), rawURL, parseInt(body.Get("timeout")).Or(netmonitor.DefaultTimeoutMs))
+		result = h.monitor.CheckHTTP(detached(r), rawURL, timeout)
 	}
 	kit.JSON(w, r, http.StatusOK, object{{"url", stringify(target)}}.result(result))
 }

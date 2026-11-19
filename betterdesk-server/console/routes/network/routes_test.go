@@ -336,6 +336,13 @@ var stepDifferences = map[string]struct {
 }{
 	// SC3: 0.0.1.0 is in 0.0.0.0/8, which the guard refuses
 	"resolve: 256": {500, `{"error":"Hostname 256 resolves to blocked address 0.0.1.0"}`},
+	// NM7: a timeout below 1 is refused before anything leaves the server
+	"ping: timeout below zero":               {400, `{"error":"timeout must be at least 1"}`},
+	"ping: timeout far below zero":           {400, `{"error":"timeout must be at least 1"}`},
+	"tcp: timeout below zero":                {400, `{"error":"timeout must be at least 1"}`},
+	"tcp: timeout below zero and a bad port": {400, `{"error":"timeout must be at least 1"}`},
+	"http: timeout below zero":               {400, `{"error":"timeout must be at least 1"}`},
+	"http: timeout checked after the url":    {400, `{"error":"timeout must be at least 1"}`},
 }
 
 // refusedTargets are the steps whose body the checks of a target refuse

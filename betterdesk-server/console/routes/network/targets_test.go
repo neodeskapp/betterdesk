@@ -237,3 +237,39 @@ func TestMonitorRefusesAnIntervalBelowASecond(t *testing.T) {
 		stop()
 	}
 }
+
+// The ping, TCP and HTTP tools refuse a timeout below 1 before anything
+// leaves the server (BUGS.md NM7). One that is no number or 0 still means
+// the default.
+func TestToolsRefuseATimeoutBelowOne(t *testing.T) {
+	w := newWorld(t, storetest.Migrated(t), names{})
+	const refused = `{"error":"timeout must be at least 1"}`
+	for _, c := range []struct{ path, body string }{
+		{"/api/network/ping", `{"host":"10.1.2.3","timeout":-1}`},
+		{"/api/network/ping", `{"host":"10.1.2.3","timeout":"-5000"}`},
+		{"/api/network/ping", `{"host":"10.1.2.3","timeout":-5000000000}`},
+		{"/api/network/tcp", `{"host":"10.1.2.3","port":80,"timeout":-1}`},
+		{"/api/network/tcp", `{"host":"10.1.2.3","port":80,"timeout":"-2000ms"}`},
+		{"/api/network/http", `{"url":"http://10.1.2.3/","timeout":-1}`},
+		{"/api/network/http", `{"url":"http://10.1.2.3/","timeout":-1e23}`},
+	} {
+		w.pinged = nil
+		rec := w.do("olga", "POST", c.path, &c.body, "")
+		if rec.Code != 400 || rec.Body.String() != refused {
+			t.Errorf("%s %s: %d %s, want 400 %s", c.path, c.body, rec.Code, rec.Body.String(), refused)
+		}
+		if len(w.pinged) != 0 {
+			t.Errorf("%s %s: ping ran with %q", c.path, c.body, w.pinged)
+		}
+	}
+	for _, c := range []struct{ path, body string }{
+		{"/api/network/ping", `{"host":"10.1.2.3","timeout":0}`},
+		{"/api/network/ping", `{"host":"10.1.2.3","timeout":"soon"}`},
+		{"/api/network/tcp", `{"host":"10.1.2.3","port":80,"timeout":1}`},
+		{"/api/network/http", `{"url":"http://10.1.2.3/","timeout":-0.5}`},
+	} {
+		if rec := w.do("olga", "POST", c.path, &c.body, ""); rec.Code != 200 {
+			t.Errorf("%s %s: %d %s, want the check", c.path, c.body, rec.Code, rec.Body.String())
+		}
+	}
+}
