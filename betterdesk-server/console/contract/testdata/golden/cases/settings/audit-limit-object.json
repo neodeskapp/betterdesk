@@ -695,7 +695,7 @@
       {
        "action": "api_login_banned_device",
        "created_at": "<volatile>",
-       "details": "Device: 900100028, User: r***y",
+       "details": "Device: 900100028, User: rd_contract_nobody",
        "id": 799,
        "ip_address": "<client-ip>",
        "user_id": null,
@@ -704,7 +704,7 @@
       {
        "action": "api_login_banned_device",
        "created_at": "<volatile>",
-       "details": "Device: 900100028, User: r***y",
+       "details": "Device: 900100028, User: rd_contract_nobody",
        "id": 798,
        "ip_address": "<client-ip>",
        "user_id": null,
@@ -740,7 +740,7 @@
       {
        "action": "api_login_banned_device",
        "created_at": "<volatile>",
-       "details": "Device: 900100029, User: r***y",
+       "details": "Device: 900100029, User: rd_contract_nobody",
        "id": 794,
        "ip_address": "<client-ip>",
        "user_id": null,
@@ -749,7 +749,7 @@
       {
        "action": "api_login_banned_device",
        "created_at": "<volatile>",
-       "details": "Device: 900100028, User: r***y",
+       "details": "Device: 900100028, User: rd_contract_nobody",
        "id": 793,
        "ip_address": "<client-ip>",
        "user_id": null,
