@@ -261,8 +261,8 @@ func (s *Service) DeletePath(p string) (*PathResult, error) {
 // entry is the path a delete or rename acts on: the last name of p as it
 // is, in its folder with the links resolved, which has to be one the
 // browser may change. So a link is acted on itself, and a link outside
-// the folders that points into one is refused. A folder of roots, or one
-// that holds one of them, is ErrChangeRoot.
+// the folders that points into one is refused. A root itself, or a folder
+// that holds one, is ErrChangeRoot.
 func (s *Service) entry(p string, roots []string) (string, error) {
 	abs := s.resolve(p)
 	if s.holdsRoot(abs, roots) {
@@ -279,12 +279,13 @@ func (s *Service) entry(p string, roots []string) (string, error) {
 	return target, nil
 }
 
-// holdsRoot reports whether path is one of roots or a folder they lie in,
-// with each root taken as written and with its links resolved.
+// holdsRoot reports whether path is one of roots (absolute, as WriteRoots
+// lists them) or a folder they lie in, with each root taken as written and
+// with its links resolved.
 func (s *Service) holdsRoot(path string, roots []string) bool {
 	for _, root := range roots {
-		forms := []string{s.resolve(root)}
-		if real, err := filepath.EvalSymlinks(forms[0]); err == nil {
+		forms := []string{root}
+		if real, err := filepath.EvalSymlinks(root); err == nil {
 			forms = append(forms, real)
 		}
 		for _, r := range forms {

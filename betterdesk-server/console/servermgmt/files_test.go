@@ -101,6 +101,7 @@ func TestDeleteAndRenameKeepTheRoots(t *testing.T) {
 	}
 	for name, target := range map[string]string{
 		filepath.Join(server, "link-in"): "sub", filepath.Join(server, "link-console"): console, filepath.Join(base, "serverlink"): "server",
+		filepath.Join(server, "sub", "up"): "..",
 	} {
 		if err := os.Symlink(target, name); err != nil {
 			t.Fatal(err)
@@ -116,6 +117,7 @@ func TestDeleteAndRenameKeepTheRoots(t *testing.T) {
 
 	for _, p := range []string{
 		server, server + "/", console, data, filepath.Join(server, "keep"), filepath.Join(server, "sub", ".."), filepath.Join(base, "serverlink", "keep"),
+		filepath.Join(server, "sub", "up", "keep"),
 	} {
 		if _, err := s.DeletePath(p); !errors.Is(err, ErrChangeRoot) {
 			t.Errorf("delete %s: %v, want %v", p, err, ErrChangeRoot)
