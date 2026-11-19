@@ -329,7 +329,9 @@ func contains(list []string, s string) bool {
 // send does one round trip and reads the body. undecoded says the body is
 // in a content encoding other than gzip and was left as it is.
 func (c *Client) send(req *http.Request) (res *http.Response, body []byte, undecoded bool, err error) {
-	trace := &httptrace.ClientTrace{GotConn: func(info httptrace.GotConnInfo) { c.noteLocalAddr(info.Conn.LocalAddr()) }}
+	trace := &httptrace.ClientTrace{GotConn: func(info httptrace.GotConnInfo) {
+		c.noteAddrs(info.Conn.LocalAddr(), info.Conn.RemoteAddr())
+	}}
 	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 	res, err = c.http.Do(req)
 	if err != nil {
@@ -366,21 +368,30 @@ func (c *Client) send(req *http.Request) (res *http.Response, body []byte, undec
 	return res, body, false, nil
 }
 
-// noteLocalAddr learns the address the console sees the suite at, from the
-// first connection.
-func (c *Client) noteLocalAddr(addr net.Addr) {
+// noteAddrs learns from the first connection the address the console sees
+// the suite at (local) and the console's own address (remote).
+func (c *Client) noteAddrs(local, remote net.Addr) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.normalizer != nil {
 		return
 	}
 	ip := ""
-	if tcp, ok := addr.(*net.TCPAddr); ok && !tcp.IP.IsLoopback() {
+	if tcp, ok := local.(*net.TCPAddr); ok && !tcp.IP.IsLoopback() {
 		ip = tcp.IP.String()
 	}
 	c.normalizer = NewNormalizer(c.base.Scheme+"://"+c.base.Host, ip)
 	c.normalizer.secrets = c.secrets
+	if tcp, ok := remote.(*net.TCPAddr); ok {
+		c.normalizer.withConsoleIP(tcp.IP.String())
+	}
 }
+
+// ConsoleHost is the variable {console_host} of every case: the host
+// name of the console under test (bdgo-c1), for a case that points the
+// console's network tools at the console itself. Answers write the
+// address it stands for as <console-ip>.
+const ConsoleHost = "console_host"
 
 func (c *Client) norm() *Normalizer {
 	c.mu.Lock()

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"mime"
+	"net"
 	"net/http"
 	"regexp"
 	"sort"
@@ -160,7 +161,26 @@ func headerRuleFor(name string) (headerRule, bool) {
 type Normalizer struct {
 	replacer *strings.Replacer
 	clientIP *regexp.Regexp
-	secrets  *secretSet
+	// consoleIP is the IP address the console's host name stands for, as
+	// the network tools report it when a case points them at the console.
+	consoleIP *regexp.Regexp
+	secrets   *secretSet
+}
+
+// addressPattern finds an IP address in text where it is not part of a
+// longer number.
+func addressPattern(ip string) *regexp.Regexp {
+	return regexp.MustCompile(`(^|[^0-9.])` + regexp.QuoteMeta(ip) + `($|[^0-9.]|\.[^0-9]|\.$)`)
+}
+
+// replaceAddress replaces every match of an address pattern by word.
+func replaceAddress(s string, pattern *regexp.Regexp, word string) string {
+	if pattern == nil || !pattern.MatchString(s) {
+		return s
+	}
+	// Twice, because two addresses in a row share the character between them.
+	s = pattern.ReplaceAllString(s, "${1}"+word+"${2}")
+	return pattern.ReplaceAllString(s, "${1}"+word+"${2}")
 }
 
 // NewNormalizer returns a Normalizer for a console at origin (scheme and
@@ -177,7 +197,16 @@ func NewNormalizer(origin, clientIP string) *Normalizer {
 	}
 	n.replacer = strings.NewReplacer(pairs...)
 	if clientIP != "" {
-		n.clientIP = regexp.MustCompile(`(^|[^0-9.])` + regexp.QuoteMeta(clientIP) + `($|[^0-9.]|\.[^0-9]|\.$)`)
+		n.clientIP = addressPattern(clientIP)
+	}
+	return n
+}
+
+// withConsoleIP makes the Normalizer write the console's own IP address
+// as <console-ip>. An empty or loopback address is left alone.
+func (n *Normalizer) withConsoleIP(ip string) *Normalizer {
+	if parsed := net.ParseIP(ip); parsed != nil && !parsed.IsLoopback() {
+		n.consoleIP = addressPattern(ip)
 	}
 	return n
 }
@@ -189,12 +218,8 @@ func (n *Normalizer) Text(s string) string {
 	}
 	s = n.secrets.mask(s)
 	s = n.replacer.Replace(s)
-	if n.clientIP != nil && n.clientIP.MatchString(s) {
-		// Twice, because two addresses in a row share the character between them.
-		s = n.clientIP.ReplaceAllString(s, "${1}<client-ip>${2}")
-		s = n.clientIP.ReplaceAllString(s, "${1}<client-ip>${2}")
-	}
-	return s
+	s = replaceAddress(s, n.clientIP, "<client-ip>")
+	return replaceAddress(s, n.consoleIP, "<console-ip>")
 }
 
 // maskJSON masks the known secrets in the texts and keys of a decoded JSON

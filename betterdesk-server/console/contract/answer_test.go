@@ -101,6 +101,26 @@ func TestNormalizeHeadersTakesOutTheInstance(t *testing.T) {
 	}
 }
 
+// The console's own address, which the network tools report when a case
+// points them at the console, is masked like the client's.
+func TestNormalizerConsoleIP(t *testing.T) {
+	n := NewNormalizer("http://bdgo-c1:5000", "172.18.0.5").withConsoleIP("172.18.0.9")
+	cases := map[string]string{
+		`{"host":"bdgo-c1","ip":"172.18.0.9"}`:   `{"host":"<hostname>","ip":"<console-ip>"}`,
+		"connect ECONNREFUSED 172.18.0.9:1":      "connect ECONNREFUSED <console-ip>:1",
+		"172.18.0.9 asked by 172.18.0.5":         "<console-ip> asked by <client-ip>",
+		"172.18.0.90 and 2172.18.0.9 stay as is": "172.18.0.90 and 2172.18.0.9 stay as is",
+	}
+	for in, want := range cases {
+		if got := n.Text(in); got != want {
+			t.Errorf("Text(%q) = %q, want %q", in, got, want)
+		}
+	}
+	if got := NewNormalizer("http://localhost:5000", "").withConsoleIP("127.0.0.1").Text("127.0.0.1:1"); got != "127.0.0.1:1" {
+		t.Errorf("a console on loopback: %q", got)
+	}
+}
+
 func TestNormalizerText(t *testing.T) {
 	n := NewNormalizer("http://bdgo-c1:5000", "172.18.0.5")
 	cases := map[string]string{

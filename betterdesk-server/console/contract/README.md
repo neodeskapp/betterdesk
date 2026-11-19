@@ -142,6 +142,10 @@ How a group runs:
   type, so a numeric ID is sent as a number. A variable nothing captured is
   `999999999`: a role that could not create the ticket asks for one that
   does not exist.
+- `{console_host}` is there in every turn: the host name of the console
+  under test (`bdgo-c1`). A case that points the console's network tools
+  at the console itself uses it; loopback and 0.0.0.0 are refused by the
+  console's guard.
 - Groups run in the order of their names and share nothing but the instance.
   Leave it as you found it: delete what a group creates. Rate limit counters
   cannot be undone. Creating users and resetting passwords share a limit of
@@ -421,9 +425,10 @@ An answer is:
   to make a diff readable. An event stream is not read.
 
 In headers and bodies the instance's own address becomes `<base>`
-(`http://bdgo-c1:5000`), `<host>` or `<hostname>`, and the address the
-requests come from becomes `<client-ip>`, so two instances give the same
-text. Length and hash of a text body are taken after that.
+(`http://bdgo-c1:5000`), `<host>` or `<hostname>`, the IP address the
+suite connects to becomes `<console-ip>`, and the address the requests
+come from becomes `<client-ip>`, so two instances give the same text.
+Length and hash of a text body are taken after that.
 
 ## Volatile values
 

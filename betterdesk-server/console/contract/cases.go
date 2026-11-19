@@ -721,6 +721,7 @@ func (s *Suite) runGroup(t *testing.T, group *CaseGroup) {
 	for _, role := range sortRoles(roleKeys(turns)) {
 		t.Run(string(role), func(t *testing.T) {
 			tn := newTurn(s.Client.secrets)
+			tn.vars[ConsoleHost] = s.Client.base.Hostname()
 			defer tn.closeSockets()
 			for i := range group.Cases {
 				c := &group.Cases[i]
