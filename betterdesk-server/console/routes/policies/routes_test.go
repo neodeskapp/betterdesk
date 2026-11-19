@@ -17,10 +17,19 @@ func register(d *kit.Deps) {
 	policies.Register(d.At("/api/bd"))
 }
 
+// fixes are the vectors of vectors.json whose answer a bug fix of
+// BUGS.md changed on purpose (proxytest.Replay).
+var fixes = proxytest.Fixes("FL4",
+	// An id with two dots in it is refused by the route's own check, before
+	// any call.
+	422, 423, 466, 467, 510, 511, 554, 555, 598, 599, 642, 643, 688, 689, 690, 691,
+	774, 775, 818, 819,
+)
+
 // TestVectors replays what routes/policies.routes.js of the Node console
 // answered and asked the API server (testdata/nodeoracle/run.js).
 func TestVectors(t *testing.T) {
-	proxytest.Replay(t, filepath.Join("testdata", "vectors.json"), register)
+	proxytest.Replay(t, filepath.Join("testdata", "vectors.json"), register, fixes...)
 }
 
 func TestRegisteredRoutes(t *testing.T) {

@@ -1,0 +1,182 @@
+[
+ {
+  "vector": 921,
+  "bug": "FL4",
+  "request": "GET /api/panel/fleet/resources/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 940,
+  "bug": "FL4",
+  "request": "POST /api/panel/fleet/resources/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 960,
+  "bug": "FL4",
+  "request": "PUT /api/panel/fleet/resources/a..b/res-1",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 961,
+  "bug": "FL4",
+  "request": "PUT /api/panel/fleet/resources/acme/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid resourceId\"}",
+  "calls": []
+ },
+ {
+  "vector": 998,
+  "bug": "FL4",
+  "request": "DELETE /api/panel/fleet/resources/a..b/res-1",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 999,
+  "bug": "FL4",
+  "request": "DELETE /api/panel/fleet/resources/acme/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid resourceId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1035,
+  "bug": "FL4",
+  "request": "GET /api/panel/fleet/tasks/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid taskId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1054,
+  "bug": "FL4",
+  "request": "PUT /api/panel/fleet/tasks/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid taskId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1073,
+  "bug": "FL4",
+  "request": "DELETE /api/panel/fleet/tasks/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid taskId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1092,
+  "bug": "FL4",
+  "request": "GET /api/panel/fleet/tasks/a..b/output",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid taskId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1111,
+  "bug": "FL4",
+  "request": "POST /api/panel/fleet/tasks/a..b/retry",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid taskId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1130,
+  "bug": "FL4",
+  "request": "GET /api/panel/fleet/workflows/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid workflowId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1149,
+  "bug": "FL4",
+  "request": "PUT /api/panel/fleet/workflows/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid workflowId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1168,
+  "bug": "FL4",
+  "request": "DELETE /api/panel/fleet/workflows/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid workflowId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1187,
+  "bug": "FL4",
+  "request": "POST /api/panel/fleet/workflows/a..b/execute",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid workflowId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1206,
+  "bug": "FL4",
+  "request": "GET /api/panel/fleet/workflows/a..b/history",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid workflowId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1225,
+  "bug": "FL4",
+  "request": "GET /api/panel/fleet/compliance/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1244,
+  "bug": "FL4",
+  "request": "POST /api/panel/fleet/compliance/a..b/scan",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1263,
+  "bug": "FL4",
+  "request": "POST /api/panel/fleet/compliance/a..b/remediate",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1344,
+  "bug": "FL4",
+  "request": "GET /api/panel/fleet/tasks?deviceId=a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ }
+]

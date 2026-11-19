@@ -6,9 +6,9 @@
 //
 // A value from a request goes into an API path only through
 // AssertSafeAPIID or SafeSegment (lib/goApiPath.js, lib/goApiProxy.js):
-// one path segment of letters, digits and . _ : @ % + -, never "." or
-// "..". The refusal is an error whose text starts with "Invalid ", which
-// IsInvalid reports and the routes answer with 400.
+// one path segment of letters, digits and . _ : @ % + -, never "." and
+// never with ".." in it. The refusal is an error whose text starts with
+// "Invalid ", which IsInvalid reports and the routes answer with 400.
 // AssertSafeGoAPIRelativePath is the check on a whole path that the
 // client in package goapi runs before every call.
 //

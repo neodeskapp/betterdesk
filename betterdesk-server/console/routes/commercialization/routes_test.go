@@ -43,11 +43,52 @@ func TestVectorsQuick(t *testing.T) {
 	})
 }
 
+// twoDots are the requests of the vectors whose answer a bug fix of
+// BUGS.md changed on purpose, with the parameter the route names: an id
+// with two dots in it is refused with 400 before any call (FL4), where
+// Node built the path and its API client refused it, which the route
+// answered as a call without an answer.
+var twoDots = map[string]string{
+	"GET /api/panel/billing/packages/a..b/preview": "packageId",
+	"PUT /api/panel/billing/packages/a..b":         "packageId",
+	"DELETE /api/panel/billing/packages/a..b":      "packageId",
+	"PUT /api/panel/billing/contracts/a..b":        "contractId",
+	"DELETE /api/panel/billing/contracts/a..b":     "contractId",
+	"POST /api/panel/billing/sessions/a..b/report": "sessionId",
+	"PUT /api/panel/billing/currencies/a..b":       "currencyCode",
+}
+
+// fixed changes the vectors of twoDots into the answer the console gives
+// now and reports whether v is one of them.
+func fixed(v *proxytest.Vector) bool {
+	label, ok := twoDots[v.Request.Method+" "+v.Request.Path]
+	if !ok || v.Status != 500 || v.Body != `{"error":"Go server unreachable"}` {
+		return false
+	}
+	v.Status, v.Type, v.Body, v.Calls = 400, "application/json; charset=utf-8", `{"error":"Invalid `+label+`"}`, nil
+	return true
+}
+
+func TestTwoDotsVectorsAreListed(t *testing.T) {
+	found := map[string]int{}
+	for _, v := range proxytest.Load(t, filepath.Join("testdata", "vectors.json")) {
+		if fixed(&v) {
+			found[v.Request.Method+" "+v.Request.Path]++
+		}
+	}
+	for request := range twoDots {
+		if found[request] != 1 {
+			t.Errorf("%s is in %d vectors, want 1", request, found[request])
+		}
+	}
+}
+
 func replay(t *testing.T, keep func(proxytest.Vector) bool) {
 	t.Helper()
 	var kept []proxytest.Vector
 	for _, v := range proxytest.Load(t, filepath.Join("testdata", "vectors.json")) {
 		if keep(v) {
+			fixed(&v)
 			kept = append(kept, v)
 		}
 	}

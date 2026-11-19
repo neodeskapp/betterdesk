@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -21,6 +22,12 @@ func loadVectors(t *testing.T, name string, into any) {
 		t.Fatalf("%s: %v", name, err)
 	}
 }
+
+// twoDotsRefused is how many vectors of paths.json a bug fix of BUGS.md
+// changed on purpose: an id or a segment with ".." anywhere in it, which
+// Node let through and its API client refused as a path afterwards, is
+// refused with "Invalid <label>" (FL4).
+const twoDotsRefused = 86
 
 func TestPathVectors(t *testing.T) {
 	var vectors []struct {
@@ -48,6 +55,13 @@ func TestPathVectors(t *testing.T) {
 		default:
 			t.Fatalf("unknown function %q", v.Fn)
 		}
+		if v.OK != nil && v.Fn != "path" && strings.Contains(strings.TrimFunc(v.Value, isJSSpace), "..") {
+			counts["two dots refused"]++
+			if err == nil || err.Error() != "Invalid "+v.Label {
+				t.Errorf("%s(%q, %q) = %q, %v; want Invalid %s (FL4), Node returns %q", v.Fn, v.Value, v.Label, got, err, v.Label, *v.OK)
+			}
+			continue
+		}
 		if v.OK != nil {
 			counts[v.Fn+" accepted"]++
 			if err != nil || got != *v.OK {
@@ -67,6 +81,9 @@ func TestPathVectors(t *testing.T) {
 		if counts[kind] < 20 {
 			t.Errorf("only %d vectors of the kind %q", counts[kind], kind)
 		}
+	}
+	if counts["two dots refused"] != twoDotsRefused {
+		t.Errorf("%d vectors with two dots in an id, want %d", counts["two dots refused"], twoDotsRefused)
 	}
 }
 

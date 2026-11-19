@@ -1,0 +1,56 @@
+[
+ {
+  "vector": 421,
+  "bug": "FL4",
+  "request": "GET /api/panel/resource-control/policies/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ },
+ {
+  "vector": 441,
+  "bug": "FL4",
+  "request": "POST /api/panel/resource-control/policies/a..b/usb",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ },
+ {
+  "vector": 461,
+  "bug": "FL4",
+  "request": "POST /api/panel/resource-control/policies/a..b/optical",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ },
+ {
+  "vector": 481,
+  "bug": "FL4",
+  "request": "POST /api/panel/resource-control/policies/a..b/monitors",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ },
+ {
+  "vector": 501,
+  "bug": "FL4",
+  "request": "POST /api/panel/resource-control/policies/a..b/disks",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ },
+ {
+  "vector": 521,
+  "bug": "FL4",
+  "request": "POST /api/panel/resource-control/policies/a..b/quotas",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ }
+]

@@ -1,0 +1,56 @@
+[
+ {
+  "vector": 60,
+  "bug": "FL4",
+  "request": "GET /json/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid a\"}",
+  "calls": []
+ },
+ {
+  "vector": 61,
+  "bug": "FL4",
+  "request": "DELETE /json/ok/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid b\"}",
+  "calls": []
+ },
+ {
+  "vector": 62,
+  "bug": "FL4",
+  "request": "GET /binary/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid a\"}",
+  "calls": []
+ },
+ {
+  "vector": 63,
+  "bug": "FL4",
+  "request": "GET /json/..a",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid a\"}",
+  "calls": []
+ },
+ {
+  "vector": 64,
+  "bug": "FL4",
+  "request": "DELETE /json/ok/..a",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid b\"}",
+  "calls": []
+ },
+ {
+  "vector": 65,
+  "bug": "FL4",
+  "request": "GET /binary/..a",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid a\"}",
+  "calls": []
+ }
+]

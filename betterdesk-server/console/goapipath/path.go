@@ -56,13 +56,14 @@ func AssertSafeGoAPIRelativePath(urlPath string) (string, error) {
 // path and returns it without the white space around it. value is the
 // text JavaScript makes of what the route read, String(value || ""): a
 // path parameter as it is, a query value through QueryValue.Text. It may
-// hold 1 to 256 letters, digits and . _ : @ % + - and must not be "." or
-// "..". Anything else is the error "Invalid <label>". The label names
+// hold 1 to 256 letters, digits and . _ : @ % + -, must not be "." and
+// must not hold ".." anywhere, which the path check of the API client
+// refuses. Anything else is the error "Invalid <label>". The label names
 // the parameter to the client ("orgId", "deviceId"); "id" is the usual
 // one for a route that names nothing.
 func AssertSafeAPIID(value, label string) (string, error) {
 	v := strings.TrimFunc(value, isJSSpace)
-	if v == "" || v == "." || v == ".." || len(v) > maxSegmentLength || strings.IndexFunc(v, unsafeIDRune) >= 0 {
+	if v == "" || v == "." || strings.Contains(v, "..") || len(v) > maxSegmentLength || strings.IndexFunc(v, unsafeIDRune) >= 0 {
 		return "", errors.New("Invalid " + label)
 	}
 	return v, nil

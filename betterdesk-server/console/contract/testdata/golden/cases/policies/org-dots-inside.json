@@ -113,7 +113,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Go server unreachable"
+     "error": "Internal Server Error",
+     "success": false
     }
    }
   }

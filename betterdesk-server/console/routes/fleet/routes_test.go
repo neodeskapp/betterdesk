@@ -17,10 +17,19 @@ func register(d *kit.Deps) {
 	fleet.Register(d.At("/api/bd"))
 }
 
+// fixes are the vectors of vectors.json whose answer a bug fix of
+// BUGS.md changed on purpose (proxytest.Replay).
+var fixes = proxytest.Fixes("FL4",
+	// An id with two dots in it is refused with 400 before any call, also
+	// the device filter of the task list.
+	921, 940, 960, 961, 998, 999, 1035, 1054, 1073, 1092, 1111, 1130, 1149, 1168,
+	1187, 1206, 1225, 1244, 1263, 1344,
+)
+
 // TestVectors replays what routes/fleet.routes.js of the Node console
 // answered and asked the API server (testdata/nodeoracle/run.js).
 func TestVectors(t *testing.T) {
-	proxytest.Replay(t, filepath.Join("testdata", "vectors.json"), register)
+	proxytest.Replay(t, filepath.Join("testdata", "vectors.json"), register, fixes...)
 }
 
 func TestRegisteredRoutes(t *testing.T) {

@@ -35,8 +35,15 @@ func register(d *kit.Deps) {
 	})
 }
 
+// proxyFixes are the vectors of proxy.json whose answer a bug fix of
+// BUGS.md changed on purpose (proxytest.Replay).
+var proxyFixes = proxytest.Fixes("FL4",
+	// An id with two dots in it is refused before a call is built.
+	60, 61, 62, 63, 64, 65,
+)
+
 func TestProxyVectors(t *testing.T) {
-	proxytest.Replay(t, filepath.Join("testdata", "proxy.json"), register)
+	proxytest.Replay(t, filepath.Join("testdata", "proxy.json"), register, proxyFixes...)
 }
 
 func TestPathOfStopsAtTheFirstRefusedParameter(t *testing.T) {

@@ -1,0 +1,182 @@
+[
+ {
+  "vector": 422,
+  "bug": "FL4",
+  "request": "GET /api/panel/policies/a..b",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 423,
+  "bug": "FL4",
+  "request": "GET /api/panel/policies/a..b",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 466,
+  "bug": "FL4",
+  "request": "PUT /api/panel/policies/a..b/connection",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 467,
+  "bug": "FL4",
+  "request": "PUT /api/panel/policies/a..b/connection",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 510,
+  "bug": "FL4",
+  "request": "PUT /api/panel/policies/a..b/features",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 511,
+  "bug": "FL4",
+  "request": "PUT /api/panel/policies/a..b/features",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 554,
+  "bug": "FL4",
+  "request": "PUT /api/panel/policies/a..b/security",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 555,
+  "bug": "FL4",
+  "request": "PUT /api/panel/policies/a..b/security",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 598,
+  "bug": "FL4",
+  "request": "PUT /api/panel/policies/a..b/network",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 599,
+  "bug": "FL4",
+  "request": "PUT /api/panel/policies/a..b/network",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 642,
+  "bug": "FL4",
+  "request": "PUT /api/panel/policies/a..b/update",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 643,
+  "bug": "FL4",
+  "request": "PUT /api/panel/policies/a..b/update",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 688,
+  "bug": "FL4",
+  "request": "GET /api/panel/policies/a..b/effective/900100001",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 689,
+  "bug": "FL4",
+  "request": "GET /api/panel/policies/a..b/effective/900100001",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 690,
+  "bug": "FL4",
+  "request": "GET /api/panel/policies/org-1/effective/a..b",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ },
+ {
+  "vector": 691,
+  "bug": "FL4",
+  "request": "GET /api/panel/policies/org-1/effective/a..b",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ },
+ {
+  "vector": 774,
+  "bug": "FL4",
+  "request": "GET /api/panel/policies/a..b/audit",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 775,
+  "bug": "FL4",
+  "request": "GET /api/panel/policies/a..b/audit",
+  "status": 500,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 818,
+  "bug": "FL4",
+  "request": "GET /api/panel/attestation/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ },
+ {
+  "vector": 819,
+  "bug": "FL4",
+  "request": "GET /api/panel/attestation/a..b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ }
+]
