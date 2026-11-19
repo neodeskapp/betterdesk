@@ -202,27 +202,76 @@ func TestSafeHTTPURLRefusals(t *testing.T) {
 	}
 }
 
-// The spellings the checks do not recognize. They are listed in BUGS.md;
-// this test keeps the port from closing them by accident, which would
-// make it answer differently from the Node console while both run.
-func TestKnownGapsAreKept(t *testing.T) {
+// An address is judged by what it is, not by how it is written: every
+// spelling of loopback and link-local is refused, also in the mode for
+// administrators, and every spelling of a private address without it
+// (BUGS.md SC1, SC2, SC5, SC6).
+func TestOtherSpellingsOfLoopbackAreBlocked(t *testing.T) {
 	ctx := context.Background()
-	for _, ip := range []string{"0:0:0:0:0:0:0:1", "::ffff:7f00:1", "::127.0.0.1", "febf::1", "0:0:0:0:0:ffff:127.0.0.1"} {
-		if IsBlockedIP(ip, Options{}) {
-			t.Errorf("%s is blocked: the Node guard lets it through", ip)
+	private := Options{AllowPrivate: true}
+	for _, ip := range []string{
+		"0:0:0:0:0:0:0:1", "::0001", "0::1", "::ffff:7f00:1", "::FFFF:7F00:1", "0:0:0:0:0:ffff:127.0.0.1", "::127.0.0.1", "::7f00:1",
+		"febf::1", "fe81::", "FE80:0:0:0:0:0:0:1", "fe80::1%eth0", "::ffff:a9fe:a9fe", "::ffff:169.254.169.254", "::169.254.0.1",
+	} {
+		if !IsBlockedIP(ip, Options{}) || !IsBlockedIP(ip, private) {
+			t.Errorf("%s is let through", ip)
 		}
 	}
+	for _, ip := range []string{"::ffff:a00:1", "::ffff:10.0.0.1", "::10.0.0.1", "::ffff:c0a8:101", "::ffff:ac10:1", "fd00::1", "fc00::"} {
+		if !IsBlockedIP(ip, Options{}) {
+			t.Errorf("%s is let through without AllowPrivate", ip)
+		}
+		if IsBlockedIP(ip, private) {
+			t.Errorf("%s is blocked with AllowPrivate", ip)
+		}
+	}
+	// fc00::/7 is a range, not two letters at the start of the text
+	for _, ip := range []string{"fc::1", "fd::", "fe::1", "00fc::1", "::ffff:808:808", "2001:db8::1", "64:ff9b::808:808"} {
+		if IsBlockedIP(ip, Options{}) {
+			t.Errorf("the public address %s is blocked", ip)
+		}
+	}
+	// Text that is no address is refused, the empty text as before
+	for _, ip := range []string{"", "not-an-address", "1.2.3", "127.0.0.1.", "[::1]", "::1%"} {
+		if !IsBlockedIP(ip, private) {
+			t.Errorf("%q, which is no address, is let through", ip)
+		}
+	}
+
+	if _, err := SafeHostname("0:0:0:0:0:0:0:1", private); message(err) != "Blocked IP address: 0:0:0:0:0:0:0:1" {
+		t.Errorf("long loopback: %v", err)
+	}
+	if _, err := SafeHostname("[::ffff:7f00:1]", Options{}); message(err) != "Blocked IP address: ::ffff:7f00:1" {
+		t.Errorf("mapped loopback in hex: %v", err)
+	}
+	// The URL parser writes a mapped address in hex; it is read all the same
+	for url, want := range map[string]string{
+		"http://[::ffff:127.0.0.1]/":       "Blocked IP address: ::ffff:7f00:1",
+		"http://[::ffff:169.254.169.254]/": "Blocked IP address: ::ffff:a9fe:a9fe",
+		"http://[::ffff:10.0.0.1]:8080/":   "Blocked IP address: ::ffff:a00:1",
+		"http://[0:0::1]/":                 "Blocked IP address: ::1",
+		"http://[febf::1]/":                "Blocked IP address: febf::1",
+	} {
+		if _, err := noLookup(t).SafeHTTPURL(ctx, url, Options{}); message(err) != want {
+			t.Errorf("%s: %v, want %q", url, err, want)
+		}
+	}
+	if parsed, err := noLookup(t).SafeHTTPURL(ctx, "http://[fc::1]/", Options{}); err != nil || parsed.Hostname != "[fc::1]" {
+		t.Errorf("public address fc::1 in a URL: %+v, %v", parsed, err)
+	}
+	if _, err := fixed("not-an-address").SafeResolvedHost(ctx, "odd.example", private); message(err) != "Hostname odd.example resolves to blocked address not-an-address" {
+		t.Errorf("a record that is no address: %v", err)
+	}
+	if _, err := fixed("93.184.216.34", "::ffff:7f00:1").SafeResolvedHost(ctx, "rebind.example", private); message(err) != "Hostname rebind.example resolves to blocked address ::ffff:7f00:1" {
+		t.Errorf("a record of mapped loopback in hex: %v", err)
+	}
+}
+
+// The gap of the Node guard that is still kept: 0.0.0.0 passes in the mode
+// for administrators.
+func TestKnownGapsAreKept(t *testing.T) {
 	if IsBlockedIP("0.0.0.0", Options{AllowPrivate: true}) {
 		t.Error("0.0.0.0 is blocked with AllowPrivate: the Node guard lets it through")
-	}
-	// The URL parser writes a mapped address in hex, which the address
-	// check does not read
-	parsed, err := noLookup(t).SafeHTTPURL(ctx, "http://[::ffff:127.0.0.1]/", Options{})
-	if err != nil || parsed.Hostname != "[::ffff:7f00:1]" {
-		t.Errorf("mapped loopback in a URL: %+v, %v", parsed, err)
-	}
-	if _, err := fixed("not-an-address").SafeResolvedHost(ctx, "odd.example", Options{}); err != nil {
-		t.Errorf("a record that is no address: %v", err)
 	}
 }
 

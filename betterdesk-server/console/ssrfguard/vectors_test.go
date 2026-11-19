@@ -6,10 +6,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"reflect"
 	"testing"
 	"unicode/utf8"
+
+	"github.com/unitronix/betterdesk-server/console/ssrfguard/guardtest"
 )
 
 // testdata/vectors.jsonl.gz was recorded by testdata/nodeoracle/gen.js
@@ -115,9 +118,36 @@ func refusal(err error) (string, string) {
 	return "<" + err.Error() + ">", ""
 }
 
+// refusal is the text of a refusal, or "<...>" for an error of another
+// kind, and "" for no error.
+func refusalText(err error) string {
+	if err == nil {
+		return ""
+	}
+	msg, code := refusal(err)
+	if code != "" && code != Code {
+		return "<code " + code + ">"
+	}
+	return msg
+}
+
+func nodeRefusal(v vector) string {
+	if v.Err == nil {
+		return ""
+	}
+	if v.Code != Code {
+		return "<code " + v.Code + ">"
+	}
+	return *v.Err
+}
+
+// TestNodeVectors replays what the Node guard answered. Where the port
+// answers otherwise on purpose, guardtest names the fixed row of BUGS.md,
+// and the counts of those rows are logged.
 func TestNodeVectors(t *testing.T) {
 	ctx := context.Background()
 	counts := map[string]int{}
+	changed := map[string]int{}
 	idna := 0
 	failures := 0
 	fail := func(format string, args ...any) {
@@ -126,29 +156,46 @@ func TestNodeVectors(t *testing.T) {
 			t.Errorf(format, args...)
 		}
 	}
+	// compare checks the outcome of a check here against Node's: the same
+	// refusal, or a difference a fixed row explains. It reports whether
+	// both passed, so the caller compares what they returned.
+	compare := func(i int, what string, v vector, err error) bool {
+		nodeErr, goErr := nodeRefusal(v), refusalText(err)
+		if nodeErr == goErr {
+			return nodeErr == ""
+		}
+		bug := guardtest.MessageChange(nodeErr, goErr, v.AllowPrivate)
+		if bug == "unexplained" {
+			fail("vector %d: %s, allowPrivate %v, scenario %s: %q here, Node %q", i, what, v.AllowPrivate, v.Scenario.Name, goErr, nodeErr)
+		}
+		changed[bug]++
+		return false
+	}
 	for i, v := range loadVectors(t) {
 		counts[v.Fn]++
 		opts := Options{AllowPrivate: v.AllowPrivate}
 		switch v.Fn {
 		case "isBlockedIp":
-			if got := IsBlockedIP(v.IP, opts); got != v.Blocked {
-				fail("vector %d: IsBlockedIP(%q, %+v) = %v, Node says %v", i, v.IP, opts, got, v.Blocked)
+			if node := guardtest.NodeBlocked(v.IP, v.AllowPrivate); node != v.Blocked {
+				t.Fatalf("vector %d: guardtest.NodeBlocked(%q, %v) = %v, Node said %v: the rule of the Node guard is written down wrong", i, v.IP, v.AllowPrivate, node, v.Blocked)
+			}
+			want := guardtest.Blocked(v.IP, v.AllowPrivate)
+			if got := IsBlockedIP(v.IP, opts); got != want {
+				fail("vector %d: IsBlockedIP(%q, %+v) = %v, want %v (Node says %v)", i, v.IP, opts, got, want, v.Blocked)
+			}
+			if bug := guardtest.Change(v.IP, v.AllowPrivate); bug != "" {
+				changed[bug]++
 			}
 
 		case "hostname":
 			got, err := SafeHostname(v.Host, opts)
-			if v.Err != nil {
-				if err == nil {
-					fail("vector %d: SafeHostname(%q, %+v) = %q, Node refuses: %s", i, v.Host, opts, got, *v.Err)
-				} else if msg, code := refusal(err); msg != *v.Err || code != v.Code {
-					fail("vector %d: SafeHostname(%q, %+v) refuses with %q (%s), Node with %q (%s)", i, v.Host, opts, msg, code, *v.Err, v.Code)
-				}
+			if !compare(i, fmt.Sprintf("SafeHostname(%q)", v.Host), v, err) {
 				continue
 			}
 			var want string
 			_ = json.Unmarshal(v.OK, &want)
-			if err != nil || got != want {
-				fail("vector %d: SafeHostname(%q, %+v) = %q, %v, Node says %q", i, v.Host, opts, got, err, want)
+			if got != want {
+				fail("vector %d: SafeHostname(%q, %+v) = %q, Node says %q", i, v.Host, opts, got, want)
 			}
 
 		case "resolved":
@@ -162,18 +209,13 @@ func TestNodeVectors(t *testing.T) {
 					t.Fatalf("vector %d: Node's lookup did not ask for all records in the resolver's order", i)
 				}
 			}
-			if v.Err != nil {
-				if err == nil {
-					fail("vector %d: SafeResolvedHost(%q, %+v, %s) = %q, Node refuses: %s", i, v.Host, opts, v.Scenario.Name, got, *v.Err)
-				} else if msg, code := refusal(err); msg != *v.Err || code != v.Code {
-					fail("vector %d: SafeResolvedHost(%q, %+v, %s) refuses with %q, Node with %q", i, v.Host, opts, v.Scenario.Name, msg, *v.Err)
-				}
+			if !compare(i, fmt.Sprintf("SafeResolvedHost(%q)", v.Host), v, err) {
 				continue
 			}
 			var want string
 			_ = json.Unmarshal(v.OK, &want)
-			if err != nil || got != want {
-				fail("vector %d: SafeResolvedHost(%q, %+v, %s) = %q, %v, Node says %q", i, v.Host, opts, v.Scenario.Name, got, err, want)
+			if got != want {
+				fail("vector %d: SafeResolvedHost(%q, %+v, %s) = %q, Node says %q", i, v.Host, opts, v.Scenario.Name, got, want)
 			}
 
 		case "parse":
@@ -231,18 +273,16 @@ func TestNodeVectors(t *testing.T) {
 			if !sameLookups(asked, v.Lookups) {
 				fail("vector %d: %s(%q) asked the resolver for %q, Node for %+v", i, v.Fn, v.URL, asked, v.Lookups)
 			}
-			if v.Err != nil {
-				if err == nil {
-					fail("vector %d: %s(%q, %+v, %s) = %+v, Node refuses: %s", i, v.Fn, v.URL, opts, v.Scenario.Name, got, *v.Err)
-				} else if msg, code := refusal(err); msg != *v.Err || code != v.Code {
-					fail("vector %d: %s(%q, %+v, %s) refuses with %q, Node with %q", i, v.Fn, v.URL, opts, v.Scenario.Name, msg, *v.Err)
-				}
+			if v.Fn == "monitoringUrl" {
+				v.AllowPrivate = true
+			}
+			if !compare(i, fmt.Sprintf("%s(%q)", v.Fn, v.URL), v, err) {
 				continue
 			}
 			var want vectorURL
 			_ = json.Unmarshal(v.OK, &want)
-			if err != nil || got.Href != want.Href || got.Hostname != want.Hostname {
-				fail("vector %d: %s(%q, %+v, %s) = %+v, %v, Node says %+v", i, v.Fn, v.URL, opts, v.Scenario.Name, got, err, want)
+			if got.Href != want.Href || got.Hostname != want.Hostname {
+				fail("vector %d: %s(%q, %+v, %s) = %+v, Node says %+v", i, v.Fn, v.URL, opts, v.Scenario.Name, got, want)
 			}
 
 		default:
@@ -257,7 +297,7 @@ func TestNodeVectors(t *testing.T) {
 			t.Errorf("%d vectors for %s, want at least %d: is the recorded file complete?", counts[fn], fn, least)
 		}
 	}
-	t.Logf("replayed %v; %d URLs have a host that needs IDNA and are refused here", counts, idna)
+	t.Logf("replayed %v; %d URLs have a host that needs IDNA and are refused here; answers that differ from Node's for a fixed row: %v", counts, idna, changed)
 }
 
 func errOr(err error) error {

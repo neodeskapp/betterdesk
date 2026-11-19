@@ -18,6 +18,8 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/unitronix/betterdesk-server/console/ssrfguard"
 )
 
 // DefaultTimeoutMs is how long a check waits when its target names no
@@ -130,7 +132,7 @@ func isValidHost(host string) bool {
 	if shellCharacters.MatchString(host) {
 		return false
 	}
-	return validHost.MatchString(host) || isIP(host)
+	return validHost.MatchString(host) || ssrfguard.IsIP(host) != 0
 }
 
 // utf16Length is the length of s as JavaScript counts it.
@@ -147,7 +149,7 @@ func utf16Length(s string) int {
 
 // prober runs the checks. It holds what they reach the outside with.
 type prober struct {
-	guard     Guard
+	guard     *ssrfguard.Guard
 	resolver  Resolver
 	dialer    Dialer
 	transport http.RoundTripper
@@ -183,7 +185,7 @@ func (p *prober) resolveHost(ctx context.Context, host string) (string, error) {
 	if !isValidHost(host) {
 		return "", errors.New(invalidHost)
 	}
-	clean, err := p.guard.SafeResolvedHost(ctx, host)
+	clean, err := p.guard.SafeResolvedHost(ctx, host, tools)
 	if err != nil {
 		return "", err
 	}
@@ -196,7 +198,7 @@ func (p *prober) pingHost(ctx context.Context, host string, timeoutMs Number) Re
 	if !isValidHost(host) {
 		return failed(invalidHost)
 	}
-	if _, err := p.guard.SafeResolvedHost(ctx, host); err != nil {
+	if _, err := p.guard.SafeResolvedHost(ctx, host, tools); err != nil {
 		return failed(err.Error())
 	}
 	var args []string
@@ -255,7 +257,7 @@ func (p *prober) checkTCPPort(ctx context.Context, host string, port, timeoutMs 
 	if !isValidHost(host) {
 		return failed(invalidHost)
 	}
-	if _, err := p.guard.SafeResolvedHost(ctx, host); err != nil {
+	if _, err := p.guard.SafeResolvedHost(ctx, host, tools); err != nil {
 		return failed(err.Error())
 	}
 	address, err := p.resolveHost(ctx, host)
@@ -373,6 +375,24 @@ func (p *prober) checkHTTP(ctx context.Context, rawURL string, timeoutMs Number)
 	}
 }
 
+// percentDecode turns every %XX into its byte and leaves a "%" that starts
+// no escape as it is.
+func percentDecode(s string) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	for i := 0; i < len(s); i++ {
+		if s[i] == '%' && i+2 < len(s) {
+			if n, err := strconv.ParseUint(s[i+1:i+3], 16, 8); err == nil {
+				b.WriteByte(byte(n))
+				i += 2
+				continue
+			}
+		}
+		b.WriteByte(s[i])
+	}
+	return b.String()
+}
+
 // idleTimer calls cancel when reset has not been called for the length of
 // timeout. A timeout of zero never fires.
 type idleTimer struct {
@@ -475,7 +495,7 @@ func (c *connector) dial(ctx context.Context, network, address string) (net.Conn
 	}
 	port, _ := strconv.Atoi(portText)
 	if strings.Contains(host, ":") {
-		return nil, &lookupError{code: "ENOTFOUND", host: "[" + host + "]"}
+		return nil, &ssrfguard.LookupError{Code: "ENOTFOUND", Host: "[" + host + "]"}
 	}
 	addresses, err := lookupAll(ctx, c.resolver, host)
 	if err != nil {
@@ -483,7 +503,7 @@ func (c *connector) dial(ctx context.Context, network, address string) (net.Conn
 	}
 	switch len(addresses) {
 	case 0:
-		return nil, &lookupError{code: "ENOTFOUND", host: host}
+		return nil, &ssrfguard.LookupError{Code: "ENOTFOUND", Host: host}
 	case 1:
 		conn, err := c.dialer.DialContext(ctx, network, net.JoinHostPort(addresses[0], portText))
 		if err != nil {

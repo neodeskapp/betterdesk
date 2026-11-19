@@ -10,6 +10,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/unitronix/betterdesk-server/console/ssrfguard"
 )
 
 // The checks report a failure with the text Node's error had, because that
@@ -98,7 +100,7 @@ func requestMessage(err error) string {
 		return ""
 	}
 	var (
-		lookup  *lookupError
+		lookup  *ssrfguard.LookupError
 		connect *connectError
 		cert    *certError
 	)
@@ -178,7 +180,7 @@ func altNamesMessage(cert *x509.Certificate, hostname string) string {
 		ips = append(ips, ip.String())
 	}
 	switch {
-	case isIP(hostname):
+	case ssrfguard.IsIP(hostname) != 0:
 		return prefix + "IP: " + hostname + " is not in the cert's list: " + strings.Join(ips, ", ")
 	case len(cert.DNSNames) > 0:
 		return prefix + "Host: " + hostname + ". is not in the cert's altnames: " + strings.Join(names, ", ")

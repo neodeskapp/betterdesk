@@ -1,17 +1,17 @@
 // Package ssrfguard decides whether the console may open a connection to
 // a host or fetch a URL that a signed-in person named: the checks of
-// lib/ssrfGuard.js, with the same answers and the same messages.
+// lib/ssrfGuard.js, with its messages.
 //
-// The guard looks at text. An address counts as blocked when its text
-// has one of the forms listed at IsBlockedIP; a name is resolved once and
-// every address it resolves to is checked the same way. Nothing here
-// opens a connection, and nothing ties a later connection to the
-// addresses that were checked: a caller that dials the returned name
+// An address is parsed and refused by its range (IsBlockedIP); a name is
+// resolved once and every address it resolves to is checked the same way.
+// Nothing here opens a connection, and nothing ties a later connection to
+// the addresses that were checked: a caller that dials the returned name
 // resolves it a second time.
 package ssrfguard
 
 import (
 	"context"
+	"net/netip"
 	"strings"
 )
 
@@ -48,83 +48,77 @@ var blockedHostnames = map[string]bool{
 	"metadata.goog":            true,
 }
 
+// The ranges the guard refuses. alwaysBlocked holds even for the network
+// tools of an administrator.
+var (
+	alwaysBlocked = []netip.Prefix{
+		netip.MustParsePrefix("127.0.0.0/8"),
+		netip.MustParsePrefix("169.254.0.0/16"),
+		netip.MustParsePrefix("::1/128"),
+		netip.MustParsePrefix("fe80::/10"),
+	}
+	privateRanges = []netip.Prefix{
+		netip.MustParsePrefix("0.0.0.0/8"),
+		netip.MustParsePrefix("10.0.0.0/8"),
+		netip.MustParsePrefix("172.16.0.0/12"),
+		netip.MustParsePrefix("192.168.0.0/16"),
+		netip.MustParsePrefix("100.64.0.0/10"),
+		netip.MustParsePrefix("198.18.0.0/15"),
+		netip.MustParsePrefix("fc00::/7"),
+	}
+)
+
 // IsBlockedIP reports whether an address, as text, must not be reached
-// (isBlockedIp). Text that is no address is blocked when it is empty and
-// let through otherwise.
+// (isBlockedIp). The address is parsed and its range decides, however it
+// is written: "0:0:0:0:0:0:0:1" is ::1, and an IPv4 address inside an
+// IPv6 one, mapped (::ffff:7f00:1, ::ffff:127.0.0.1) or compatible
+// (::127.0.0.1), counts as that IPv4 address. A zone does not matter.
+// Text that is no address is blocked.
 //
-// IPv4, written as four decimal numbers:
-//
-//	127.x.x.x, 169.254.x.x                              always
-//	0.x.x.x, 10.x.x.x, 172.16-31.x.x, 192.168.x.x,
-//	100.64-127.x.x, 198.18-19.x.x                       unless AllowPrivate
-//
-// IPv6, compared as lower-case text:
-//
-//	"::1", text that starts with "fe80:"                always
-//	text that starts with "fc" or "fd"                  unless AllowPrivate
-//	"::ffff:" followed by an IPv4 address               as that IPv4 address
-//
-// Other spellings of the same addresses are not recognized:
-// "0:0:0:0:0:0:0:1", "::ffff:7f00:1" and "::127.0.0.1" pass.
+//	127.0.0.0/8, 169.254.0.0/16, ::1, fe80::/10        always
+//	0.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12,
+//	192.168.0.0/16, 100.64.0.0/10, 198.18.0.0/15,
+//	fc00::/7                                           unless AllowPrivate
 func IsBlockedIP(ip string, opts Options) bool {
-	if ip == "" {
+	addr, err := netip.ParseAddr(ip)
+	if err != nil {
 		return true
 	}
-	if IsIPv4(ip) {
-		a, b := leadingOctets(ip)
-		if a == 127 {
+	addr = embeddedIPv4(addr.WithZone(""))
+	for _, r := range alwaysBlocked {
+		if r.Contains(addr) {
 			return true
 		}
-		if a == 169 && b == 254 {
-			return true
-		}
-		if opts.AllowPrivate {
-			return false
-		}
-		switch {
-		case a == 0 || a == 10 || a == 127:
-			return true
-		case a == 172 && b >= 16 && b <= 31:
-			return true
-		case a == 192 && b == 168:
-			return true
-		case a == 100 && b >= 64 && b <= 127:
-			return true
-		case a == 198 && (b == 18 || b == 19):
-			return true
-		}
+	}
+	if opts.AllowPrivate {
 		return false
 	}
-	if IsIPv6(ip) {
-		normalized := toLowerCase(ip)
-		if normalized == "::1" {
+	for _, r := range privateRanges {
+		if r.Contains(addr) {
 			return true
-		}
-		if strings.HasPrefix(normalized, "fe80:") {
-			return true
-		}
-		if !opts.AllowPrivate && (strings.HasPrefix(normalized, "fc") || strings.HasPrefix(normalized, "fd")) {
-			return true
-		}
-		if mapped, ok := strings.CutPrefix(normalized, "::ffff:"); ok && IsIPv4(mapped) {
-			return IsBlockedIP(mapped, opts)
 		}
 	}
 	return false
 }
 
-// leadingOctets reads the first two numbers of text that IsIPv4 accepted.
-func leadingOctets(ip string) (a, b int) {
-	parts := strings.SplitN(ip, ".", 3)
-	return decimal(parts[0]), decimal(parts[1])
-}
-
-func decimal(s string) int {
-	n := 0
-	for i := 0; i < len(s); i++ {
-		n = n*10 + int(s[i]-'0')
+// embeddedIPv4 is the IPv4 address an IPv6 address carries in its last 32
+// bits when the bits before them are those of a mapped address
+// (::ffff:0:0/96) or of a compatible one (::/96, without :: and ::1), and
+// the address itself otherwise.
+func embeddedIPv4(addr netip.Addr) netip.Addr {
+	if addr.Is4In6() {
+		return addr.Unmap()
 	}
-	return n
+	if !addr.Is6() || addr.IsUnspecified() || addr.IsLoopback() {
+		return addr
+	}
+	b := addr.As16()
+	for _, octet := range b[:12] {
+		if octet != 0 {
+			return addr
+		}
+	}
+	return netip.AddrFrom4([4]byte{b[12], b[13], b[14], b[15]})
 }
 
 // normalizeHostname trims a host name, lowers its letters and takes the

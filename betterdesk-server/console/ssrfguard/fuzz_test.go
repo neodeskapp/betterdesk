@@ -14,6 +14,8 @@ import (
 	"sync"
 	"testing"
 	"unicode/utf8"
+
+	"github.com/unitronix/betterdesk-server/console/ssrfguard/guardtest"
 )
 
 // nodeOracle is a running testdata/nodeoracle/server.js: the Node guard,
@@ -125,9 +127,9 @@ func plainlyDangerous(address string, opts Options) bool {
 // FuzzSSRFGuard feeds hosts, URLs and resolver answers to the checks.
 //
 // With Node at hand every input also goes to the Node guard, and the two
-// must agree: nothing Node refuses may pass here, and apart from hosts
-// that need the rules for international domain names (refused here) the
-// answers and messages are the same.
+// must agree: apart from hosts that need the rules for international
+// domain names (refused here) and the answers the fixed rows of BUGS.md
+// change (guardtest), the answers and messages are the same.
 //
 // Without Node the checks are held to the plain rule: no check passes a
 // host that is, or resolves to, an IPv4 address that is plainly dangerous.
@@ -186,6 +188,9 @@ func FuzzSSRFGuard(f *testing.F) {
 			}
 			if !blockedHere && plainlyDangerous(input, opts) {
 				t.Fatalf("IsBlockedIP(%q, %+v) lets a dangerous address through", input, opts)
+			}
+			if blockedHere != guardtest.Blocked(input, allowPrivate) {
+				t.Fatalf("IsBlockedIP(%q, %+v) = %v, the ranges say %v", input, opts, blockedHere, !blockedHere)
 			}
 		case 1:
 			q.Fn = "hostname"
@@ -246,18 +251,27 @@ func FuzzSSRFGuard(f *testing.F) {
 		if q.Fn == "isBlockedIp" {
 			nodePassed = string(answer.OK) == "false"
 		}
-		if passed && !nodePassed {
-			t.Fatalf("%s(%q, allowPrivate %v, records %q, error %q) passes here as %q, Node refuses: %s", q.Fn, input, allowPrivate, records, lookupErr, got, string(answer.OK)+deref(answer.Err))
-		}
 		if idna {
 			// Refused here whatever Node says
+			if passed && !nodePassed {
+				t.Fatalf("%s(%q, allowPrivate %v) passes here as %q, Node refuses: %s", q.Fn, input, allowPrivate, got, string(answer.OK)+deref(answer.Err))
+			}
 			return
-		}
-		if passed != nodePassed {
-			t.Fatalf("%s(%q, allowPrivate %v, records %q, error %q) is refused here (%s), Node passes it: %s", q.Fn, input, allowPrivate, records, lookupErr, got, answer.OK)
 		}
 		if strings.Join(asked, "\x00") != strings.Join(answer.Lookups, "\x00") {
 			t.Fatalf("%s(%q): the resolver was asked for %q here and for %q by Node", q.Fn, input, asked, answer.Lookups)
+		}
+		// An answer the fixed rows of BUGS.md change is not Node's, but the
+		// one guardtest gives
+		if q.Fn == "isBlockedIp" {
+			if guardtest.Change(input, allowPrivate) != "" {
+				return
+			}
+		} else if goErr := map[bool]string{false: got, true: ""}[passed]; passed != nodePassed || !passed && goErr != deref(answer.Err) {
+			if bug := guardtest.MessageChange(deref(answer.Err), goErr, allowPrivate); bug == "unexplained" {
+				t.Fatalf("%s(%q, allowPrivate %v, records %q, error %q)\n here %q\n node %s%s", q.Fn, input, allowPrivate, records, lookupErr, got, answer.OK, deref(answer.Err))
+			}
+			return
 		}
 		var want string
 		switch {
@@ -274,6 +288,29 @@ func FuzzSSRFGuard(f *testing.F) {
 		}
 		if got != want {
 			t.Fatalf("%s(%q, allowPrivate %v, records %q, error %q)\n here %q\n node %q", q.Fn, input, allowPrivate, records, lookupErr, got, want)
+		}
+	})
+}
+
+// The spellings of an IPv4 address the system resolver reads give an
+// address in the usual form, and the usual form gives itself.
+func FuzzLegacyIPv4(f *testing.F) {
+	for _, seed := range []string{"127.1", "2130706433", "0x7f.0.0.1", "0177.0.0.1", "1.2.3.4", "256", "0x", "08.1.1.1", "1.2.3.4.5", "4294967296", "", ".", "1..2"} {
+		f.Add(seed)
+	}
+	f.Fuzz(func(t *testing.T, host string) {
+		address, ok := legacyIPv4(host)
+		if !ok {
+			if IsIPv4(host) {
+				t.Fatalf("the address %q is not read", host)
+			}
+			return
+		}
+		if !IsIPv4(address) {
+			t.Fatalf("%q gives %q, which is no address", host, address)
+		}
+		if IsIPv4(host) && address != host {
+			t.Fatalf("the address %q gives %q", host, address)
 		}
 	})
 }

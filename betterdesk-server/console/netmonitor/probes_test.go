@@ -27,6 +27,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/ssrfguard"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
@@ -300,7 +301,7 @@ func (w *world) proberFor(allowSelfSigned bool, windows *bool) *prober {
 	transport := newTransport(&connector{dialer: w, resolver: w.resolver, roots: w.roots, allowSelfSigned: allowSelfSigned, now: time.Now})
 	w.t.Cleanup(transport.CloseIdleConnections)
 	return &prober{
-		guard:     ssrfGuard{resolver: w.resolver},
+		guard:     newGuard(w.resolver),
 		resolver:  w.resolver,
 		dialer:    w,
 		transport: transport,
@@ -385,12 +386,19 @@ func quote(s string) string {
 	return strings.TrimSpace(b.String())
 }
 
+// nobody is a resolver that knows no name.
+type nobody struct{}
+
+func (nobody) LookupIPAddr(_ context.Context, host string) ([]net.IPAddr, error) {
+	return nil, &net.DNSError{Err: "no such host", Name: host, IsNotFound: true}
+}
+
 // namesOnly leaves out what no resolver is asked for: addresses, and the
 // numbers the system reads as one.
 func namesOnly(lookups []string) []string {
 	names := []string{}
 	for _, host := range lookups {
-		if _, numeric := numericIPv4(host); !isIP(host) && !numeric && !strings.HasPrefix(host, "[") {
+		if _, err := ssrfguard.ResolverLookup(nobody{})(context.Background(), host); err != nil && ssrfguard.IsIP(host) == 0 && !strings.HasPrefix(host, "[") {
 			names = append(names, host)
 		}
 	}
@@ -718,7 +726,7 @@ func TestNodeCheckTarget(t *testing.T) {
 		no := false
 		p := w.prober(false)
 		m := New(Options{
-			Store: db, Guard: p.guard, Resolver: w.resolver, Dialer: w, Transport: p.transport, Ping: w.ping, Windows: &no,
+			Store: db, Resolver: w.resolver, Dialer: w, Transport: p.transport, Ping: w.ping, Windows: &no,
 			Log: logFunc(func(line string) { logged = append(logged, line) }),
 		})
 		if len(w.v.Checks) < 30 {

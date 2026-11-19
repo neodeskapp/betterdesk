@@ -6,6 +6,9 @@ import (
 	"net"
 	"strings"
 	"testing"
+
+	"github.com/unitronix/betterdesk-server/console/ssrfguard"
+	"github.com/unitronix/betterdesk-server/console/ssrfguard/guardtest"
 )
 
 // anywhere resolves every name to a public address.
@@ -26,11 +29,11 @@ func FuzzSafeMonitoringURL(f *testing.F) {
 	} {
 		f.Add(seed)
 	}
-	g := ssrfGuard{resolver: anywhere{}}
+	g := newGuard(anywhere{})
 	f.Fuzz(func(t *testing.T, raw string) {
 		parsed, err := g.SafeMonitoringURL(context.Background(), raw)
 		if err != nil {
-			if _, isRefusal := err.(*BlockedError); !isRefusal {
+			if _, isRefusal := err.(*ssrfguard.BlockedError); !isRefusal {
 				t.Fatalf("%q: error of type %T: %v", raw, err, err)
 			}
 			return
@@ -38,15 +41,15 @@ func FuzzSafeMonitoringURL(f *testing.F) {
 		if parsed.Protocol != "http:" && parsed.Protocol != "https:" {
 			t.Fatalf("%q: protocol %q passed", raw, parsed.Protocol)
 		}
-		host := normalizeHostname(parsed.Hostname)
+		host := strings.ToLower(strings.TrimSuffix(strings.TrimPrefix(parsed.Hostname, "["), "]"))
 		switch {
 		case host == "":
 			t.Fatalf("%q: an empty host passed", raw)
-		case blockedHostnames[host]:
+		case host == "localhost" || host == "localhost.localdomain" || host == "metadata.google.internal" || host == "metadata.goog":
 			t.Fatalf("%q: the blocked name %q passed", raw, host)
-		case isIP(host) && isBlockedIP(host, true):
+		case ssrfguard.IsIP(host) != 0 && guardtest.Blocked(host, true):
 			t.Fatalf("%q: the blocked address %q passed", raw, host)
-		case isIPv4(host) && (strings.HasPrefix(host, "127.") || strings.HasPrefix(host, "169.254.")):
+		case ssrfguard.IsIPv4(host) && (strings.HasPrefix(host, "127.") || strings.HasPrefix(host, "169.254.")):
 			t.Fatalf("%q: the loopback or link-local address %q passed", raw, host)
 		case !strings.HasPrefix(parsed.Pathname, "/"):
 			t.Fatalf("%q: path %q", raw, parsed.Pathname)
@@ -79,31 +82,8 @@ func FuzzValidHost(f *testing.F) {
 			}
 		}
 		// A zone is only there after an IPv6 address
-		if i := strings.IndexByte(host, '%'); i >= 0 && !isIPv6(host) {
+		if i := strings.IndexByte(host, '%'); i >= 0 && !ssrfguard.IsIPv6(host) {
 			t.Fatalf("%q is taken for a host", host)
-		}
-	})
-}
-
-// The spellings of an IPv4 address the system resolver reads give an
-// address in the usual form, and the usual form gives itself.
-func FuzzNumericIPv4(f *testing.F) {
-	for _, seed := range []string{"127.1", "2130706433", "0x7f.0.0.1", "0177.0.0.1", "1.2.3.4", "256", "0x", "08.1.1.1", "1.2.3.4.5", "4294967296", "", ".", "1..2"} {
-		f.Add(seed)
-	}
-	f.Fuzz(func(t *testing.T, host string) {
-		address, ok := numericIPv4(host)
-		if !ok {
-			if isIPv4(host) {
-				t.Fatalf("the address %q is not read", host)
-			}
-			return
-		}
-		if !isIPv4(address) {
-			t.Fatalf("%q gives %q, which is no address", host, address)
-		}
-		if isIPv4(host) && address != host {
-			t.Fatalf("the address %q gives %q", host, address)
 		}
 	})
 }

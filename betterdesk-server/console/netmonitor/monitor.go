@@ -4,10 +4,9 @@
 // target's check, and polls all enabled targets on a schedule once
 // somebody has started the monitor.
 //
-// Every check asks a Guard first, which refuses loopback, link-local and
-// cloud metadata addresses, so the tools cannot be pointed at the server
-// itself. The guard in this package does what lib/ssrfGuard.js did for
-// the network tools.
+// Every check asks console/ssrfguard first, which refuses loopback,
+// link-local and cloud metadata addresses, so the tools cannot be pointed
+// at the server itself.
 //
 // A failed check carries the message Node's error had (errors.go), since
 // those messages are stored and shown.
@@ -44,9 +43,6 @@ type Options struct {
 
 	// Resolver looks names up. Default: the system's resolver.
 	Resolver Resolver
-	// Guard is asked before every check. Default: the guard of this
-	// package on Resolver.
-	Guard Guard
 	// Dialer opens the connections of TCP and HTTP checks. Default: a
 	// net.Dialer.
 	Dialer Dialer
@@ -101,9 +97,6 @@ func New(opts Options) *Monitor {
 	if opts.Resolver == nil {
 		opts.Resolver = net.DefaultResolver
 	}
-	if opts.Guard == nil {
-		opts.Guard = ssrfGuard{resolver: opts.Resolver}
-	}
 	if opts.Now == nil {
 		opts.Now = time.Now
 	}
@@ -131,7 +124,7 @@ func New(opts Options) *Monitor {
 	return &Monitor{
 		db: opts.Store,
 		probe: prober{
-			guard:     opts.Guard,
+			guard:     newGuard(opts.Resolver),
 			resolver:  opts.Resolver,
 			dialer:    opts.Dialer,
 			transport: opts.Transport,

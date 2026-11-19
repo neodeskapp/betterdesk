@@ -25,18 +25,30 @@ func (e *LookupError) Error() string { return "getaddrinfo " + e.Code + " " + e.
 // and need no DNS, everything else is asked for its A and AAAA records.
 // Addresses come back as text without a zone.
 func SystemLookup(ctx context.Context, host string) ([]string, error) {
-	if address, ok := legacyIPv4(host); ok {
-		return []string{address}, nil
+	return ResolverLookup(net.DefaultResolver)(ctx, host)
+}
+
+// Resolver looks names up. *net.Resolver is one.
+type Resolver interface {
+	LookupIPAddr(ctx context.Context, host string) ([]net.IPAddr, error)
+}
+
+// ResolverLookup is SystemLookup with another resolver for the names.
+func ResolverLookup(resolver Resolver) LookupFunc {
+	return func(ctx context.Context, host string) ([]string, error) {
+		if address, ok := legacyIPv4(host); ok {
+			return []string{address}, nil
+		}
+		found, err := resolver.LookupIPAddr(ctx, host)
+		if err != nil {
+			return nil, lookupError(err, host)
+		}
+		out := make([]string, 0, len(found))
+		for _, address := range found {
+			out = append(out, address.IP.String())
+		}
+		return out, nil
 	}
-	found, err := net.DefaultResolver.LookupIPAddr(ctx, host)
-	if err != nil {
-		return nil, lookupError(err, host)
-	}
-	out := make([]string, 0, len(found))
-	for _, address := range found {
-		out = append(out, address.IP.String())
-	}
-	return out, nil
 }
 
 // lookupError names a resolver's failure the way getaddrinfo's were
