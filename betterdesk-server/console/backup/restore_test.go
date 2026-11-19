@@ -296,6 +296,55 @@ func TestRestoredFiles(t *testing.T) {
 	}
 }
 
+// BR14: a full restore that replaced branding_config reloads the
+// branding, so the pages show the restored look at once.
+func TestRestoreReloadsTheBranding(t *testing.T) {
+	dialects(t, func(t *testing.T, dialect string) {
+		ctx := context.Background()
+		withBranding := func(in *install) (*Service, *branding.Service) {
+			b, err := branding.New(branding.Options{DB: in.db})
+			if err != nil {
+				t.Fatal(err)
+			}
+			b.LoadBranding(ctx)
+			s := in.service(t, "x")
+			s.o.Branding = b
+			return s, b
+		}
+		src := newInstall(t, dialect)
+		srcService, srcBranding := withBranding(src)
+		if err := srcBranding.SaveBranding(ctx, parsedJSON(t, `{"appName":"From the backup"}`)); err != nil {
+			t.Fatal(err)
+		}
+		archive, _, err := srcService.CreateFullBackup(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		dst := newInstall(t, dialect)
+		dstService, dstBranding := withBranding(dst)
+		if name := dstBranding.GetBranding().Text("appName"); name == "From the backup" {
+			t.Fatalf("the branding is restored before the restore: %q", name)
+		}
+		res, err := dstService.RestoreFullBackup(ctx, archive, RestoreOptions{Database: true})
+		if err != nil || len(res.Warnings) != 0 {
+			t.Fatalf("restore: %+v %v", res, err)
+		}
+		if name := dstBranding.GetBranding().Text("appName"); name != "From the backup" {
+			t.Errorf("app name after the restore: %q", name)
+		}
+	})
+}
+
+func parsedJSON(t *testing.T, text string) any {
+	t.Helper()
+	v, err := branding.ParseJSON([]byte(text))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return v
+}
+
 func TestGunzipLimit(t *testing.T) {
 	archive, err := CreateTarGz([]Entry{{Name: "big", Data: bytes.Repeat([]byte("a"), 100000)}}, 1)
 	if err != nil {

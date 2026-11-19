@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -25,9 +26,12 @@ const (
 )
 
 // Branding is the part of the branding service a backup reads and writes.
+// LoadBranding fills its cache from the database again after a restore
+// replaced branding_config.
 type Branding interface {
 	GetBranding() *branding.Object
 	SaveBranding(ctx context.Context, updates any) error
+	LoadBranding(ctx context.Context) *branding.Object
 }
 
 // Groups lists folders and groups as the console's device group service
@@ -498,7 +502,8 @@ func (e *ErrInvalidArchive) Error() string {
 // changes nothing. Then, in this order and each part on its own, so that
 // a part that fails leaves a warning and the next one still runs:
 //
-//  1. the logical dump, table by table (ImportAllTables),
+//  1. the logical dump, table by table (ImportAllTables); the branding
+//     cache is loaded again when branding_config came back,
 //  2. the uploads, below DATA_DIR/uploads,
 //  3. the secrets, each to its own path,
 //  4. the .env,
@@ -604,6 +609,9 @@ func (s *Service) importDump(ctx context.Context, raw []byte, res *RestoreResult
 	r, err := ImportAllTables(ctx, s.o.Store, dump)
 	if err != nil {
 		return err
+	}
+	if s.o.Branding != nil && slices.Contains(r.Restored, "branding_config") {
+		s.o.Branding.LoadBranding(ctx)
 	}
 	res.Restored = append(res.Restored, fmt.Sprintf("database (%d tables)", len(r.Restored)))
 	res.Warnings = append(res.Warnings, r.Warnings...)
