@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -159,10 +160,61 @@ func TestPasswordLimitIsSharedWithTheSignInRoutes(t *testing.T) {
 // super_admin: both count.
 func TestLastAdministrator(t *testing.T) {
 	w := world(t, nil, routetest.Options{})
-	global := w.As("global_admin")
-	// admin (1) and super_admin (2) are the two administrators
-	expect(t, "one of two", global.Do("DELETE", "/api/users/2", ""), 200, `{"success":true}`)
-	expect(t, "the last", global.Do("DELETE", "/api/users/1", ""), 400, `{"success":false,"error":"Cannot delete the last administrator"}`)
+	admin := w.As("admin")
+	ctx := context.Background()
+	// The session keeps the role admin; the account's row no longer
+	// counts. other_admin (9) and super_admin (2) are the two
+	// administrators.
+	for _, query := range []string{
+		`UPDATE users SET role = 'operator' WHERE id = 1`,
+		`INSERT INTO users (id, username, password_hash, role) VALUES (9, 'other_admin', 'x', 'admin')`,
+	} {
+		if _, err := w.DB.Exec(ctx, query); err != nil {
+			t.Fatal(err)
+		}
+	}
+	expect(t, "one of two", admin.Do("DELETE", "/api/users/9", ""), 200, `{"success":true}`)
+	expect(t, "the last", admin.Do("DELETE", "/api/users/2", ""), 400, `{"success":false,"error":"Cannot delete the last administrator"}`)
+}
+
+// global_admin may give operator, viewer and pro, so it may change only
+// accounts with those roles, guest_issuer accounts and its own: an
+// account above it keeps its password, email, role and row (BUGS US1).
+func TestCannotChangeAnAccountAboveYourRole(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		w := world(t, storetest.Prepare(t, db, storetest.GoServerFirst), routetest.Options{})
+		ctx := context.Background()
+		global := w.As("global_admin")
+		const strong = `"Strong-Pass-1!"`
+		const above = `{"success":false,"error":"Cannot assign a role higher than your own"}`
+		// admin (1), super_admin (2), server_admin (3)
+		for i, id := range []string{"1", "2", "3"} {
+			ip := "10.3.0." + strconv.Itoa(i+1)
+			expect(t, "password of "+id, global.Do("PATCH", "/api/users/"+id, `{"password":`+strong+`}`), 403, above)
+			expect(t, "email of "+id, global.Do("PATCH", "/api/users/"+id, `{"email":"taken@example.invalid"}`), 403, above)
+			expect(t, "groups of "+id, global.Do("PATCH", "/api/users/"+id, `{"groupGuids":[]}`), 403, above)
+			expect(t, "role of "+id, global.Do("PATCH", "/api/users/"+id, `{"role":"viewer"}`), 403, above)
+			expect(t, "reset of "+id, global.Do("POST", "/api/users/"+id+"/reset-password", `{"newPassword":`+strong+`}`, "X-Forwarded-For", ip), 403, above)
+			expect(t, "delete of "+id, global.Do("DELETE", "/api/users/"+id, ""), 403, above)
+		}
+		for id, role := range map[int]string{1: "admin", 2: "super_admin", 3: "server_admin"} {
+			var stored string
+			if err := db.QueryRow(ctx, `SELECT role || ' ' || password_hash || ' ' || COALESCE(email, '') FROM users WHERE id = ?`, id).Scan(&stored); err != nil {
+				t.Fatalf("account %d: %v", id, err)
+			}
+			if want := role + " x "; stored != want {
+				t.Errorf("account %d is now %q, want %q", id, stored, want)
+			}
+		}
+
+		// What global_admin may still change
+		expect(t, "operator", global.Do("PATCH", "/api/users/5", `{"role":"viewer","password":`+strong+`}`), 200, "")
+		expect(t, "own account", global.Do("PATCH", "/api/users/4", `{"email":"me@example.invalid"}`), 200, "")
+		expect(t, "guest_issuer", global.Do("POST", "/api/users/7/reset-password", `{"newPassword":`+strong+`}`, "X-Forwarded-For", "10.3.0.9"), 200, `{"success":true}`)
+		expect(t, "pro", global.Do("DELETE", "/api/users/8", ""), 200, `{"success":true}`)
+		// And the super admin roles may change any account
+		expect(t, "admin by super_admin", w.As("super_admin").Do("PATCH", "/api/users/1", `{"role":"super_admin"}`), 200, "")
+	})
 }
 
 // String() of an object whose own toString member hides the method

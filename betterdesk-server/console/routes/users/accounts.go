@@ -39,6 +39,17 @@ func canAssignRole(caller, target string) bool {
 	return false
 }
 
+// mayChange reports whether the caller may change, reset or delete an
+// account: its own, or one whose role the caller could give. global_admin
+// also looks after guest_issuer accounts, a role nobody is given here.
+func mayChange(r *http.Request, userID float64, target *account) bool {
+	if isSessionAccount(r, userID) {
+		return true
+	}
+	caller, role := callerRole(r), target.role()
+	return canAssignRole(caller, role) || caller == "global_admin" && role == "guest_issuer"
+}
+
 // callerRole is req.session.user.role.
 func callerRole(r *http.Request) string {
 	if user := kit.User(r); user != nil {
@@ -382,8 +393,9 @@ func (h *handlers) clientError(w http.ResponseWriter, r *http.Request, err error
 // update answers PATCH /api/users/{id} with the body {"username", "role",
 // "password", "email", "groupGuids", "folderIds", "peerIds",
 // "strategyGuid"}. Checks and writes go in this order, and what was
-// written before a refusal stays: the id, the account, the password and
-// role of a directory or single sign-on account, the new username, the
+// written before a refusal stays: the id, the account, whether the caller
+// may change it (mayChange), the password and role of a directory or
+// single sign-on account, the new username, the
 // caller's own demotion, the role, the password, the user groups, the
 // device scope, the email. The answer is the account as the list has it.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
@@ -417,6 +429,9 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	}
 	if user == nil {
 		return nil, sayKey(r, http.StatusNotFound, "users.not_found")
+	}
+	if !mayChange(r, userID, user) {
+		return nil, errRoleAboveOwn
 	}
 	provider, err := providerOf(user)
 	if err != nil {
@@ -551,9 +566,10 @@ func providerOf(a *account) (string, error) {
 
 // ---- Deleting ----
 
-// remove answers DELETE /api/users/{id}. An account cannot delete itself,
-// and the last account with the role admin or super_admin cannot be
-// deleted. The account's panel access policy is emptied first.
+// remove answers DELETE /api/users/{id}. An account cannot delete itself
+// or an account it may not change (mayChange), and the last account with
+// the role admin or super_admin cannot be deleted. The account's panel
+// access policy is emptied first.
 func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 	userID, ok := pathID(r)
 	if !ok {
@@ -572,6 +588,10 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 	}
 	if isSessionAccount(r, userID) {
 		failKey(w, r, http.StatusBadRequest, "users.cannot_delete_self")
+		return
+	}
+	if !mayChange(r, userID, user) {
+		sent(w, r, errRoleAboveOwn)
 		return
 	}
 	admins, err := countAdmins(ctx, h.d.Store)
@@ -601,7 +621,8 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 // ---- Resetting a password ----
 
 // resetPassword answers POST /api/users/{id}/reset-password with the body
-// {"newPassword"}. The account's sessions go on.
+// {"newPassword"}, for an account the caller may change (mayChange). The
+// account's sessions go on.
 func (h *handlers) resetPassword(w http.ResponseWriter, r *http.Request) {
 	userID, ok := pathID(r)
 	if !ok {
@@ -617,6 +638,10 @@ func (h *handlers) resetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 	if user == nil {
 		failKey(w, r, http.StatusNotFound, "users.not_found")
+		return
+	}
+	if !mayChange(r, userID, user) {
+		sent(w, r, errRoleAboveOwn)
 		return
 	}
 	if !password.Truthy() {

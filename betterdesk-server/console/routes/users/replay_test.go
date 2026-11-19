@@ -81,7 +81,8 @@ var variants = []struct {
 // order of the checks, roles above the caller's own, the password limit,
 // values of every JSON type, the rows written, the audit entries and the
 // calls to the API server. The Go console must answer the same, byte for
-// byte after times and random guids, on a database of the same shape.
+// byte after times and random guids, on a database of the same shape,
+// except for the steps of fixes (fixes_test.go).
 func TestNodeAnswers(t *testing.T) {
 	for _, v := range variants {
 		t.Run(v.name, func(t *testing.T) {
@@ -242,16 +243,33 @@ func (p *replayer) run() {
 			continue
 		}
 		got := p.send(step)
-		want, have := normalize(step.Answer), normalize(got.Body)
-		if got.Status != step.Status || want != have {
+		status, answer, wantCalls := step.Status, step.Answer, nodeCalls(step.Extra.Calls)
+		f, fixed := fixes[step.Name]
+		if fixed {
+			if f.status != 0 {
+				status, wantCalls = f.status, nil
+			}
+			if f.answer != nil {
+				answer = f.answer(step.Answer)
+			}
+		}
+		want, have := normalize(answer), normalize(got.Body)
+		if got.Status != status || want != have {
 			body := ""
 			if step.Body != nil {
 				body = " " + *step.Body
 			}
-			report("step %d %q: %s %s%s as %q\n   node: %d %s\n     go: %d %s", i, step.Name, step.Method, step.Path, body, step.Role, step.Status, want, got.Status, have)
+			label := "node"
+			if fixed {
+				label = "fix " + f.bug
+			}
+			report("step %d %q: %s %s%s as %q\n   %s: %d %s\n     go: %d %s", i, step.Name, step.Method, step.Path, body, step.Role, label, status, want, got.Status, have)
 		}
-		if wantCalls, haveCalls := nodeCalls(step.Extra.Calls), p.api.Calls(); !sameCalls(wantCalls, haveCalls) {
+		if haveCalls := p.api.Calls(); !sameCalls(wantCalls, haveCalls) {
 			report("step %d %q: calls to the API server\n   node: %q\n     go: %q", i, step.Name, wantCalls, haveCalls)
+		}
+		if fixed && f.node != nil {
+			f.node(&nodeWrites{p: p, step: step})
 		}
 		p.capture(step, got.Body)
 	}
