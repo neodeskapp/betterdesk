@@ -226,9 +226,10 @@ func TestMergedKeepsUnsafeKeysOut(t *testing.T) {
 	if _, ok := merged.Get("prototype"); ok {
 		t.Error("the overlay's prototype key was merged")
 	}
-	// English has its own __proto__ key in the fixture; the German one must not replace it.
-	if got := stringify(at(merged, "__proto__"), ""); got != `{"polluted":"yes"}` {
-		t.Errorf("__proto__ after the merge = %s", got)
+	// English has its own __proto__ key in the fixture, which is dropped
+	// when the file is loaded.
+	if _, ok := merged.Get("__proto__"); ok {
+		t.Error("the __proto__ key is in the merged texts")
 	}
 	if got := stringify(at(merged, "common", "nested"), ""); got != `{"deep":{"leaf":"Leaf {0} {a.b} {[} {b} {}","extra":"E"}}` {
 		t.Errorf("nested merge = %s", got)
@@ -615,5 +616,70 @@ func TestLanguageFilesKeepTheirPromises(t *testing.T) {
 	}
 	if r := b.Validate("pl"); len(r.Missing)*10 > len(allKeys(b.Translations("en"), "")) {
 		t.Errorf("Polish lacks %d English keys, coverage %s", len(r.Missing), r.Coverage)
+	}
+}
+
+// unsafeKeyPath returns the first path to a key named __proto__,
+// prototype or constructor in v, or "".
+func unsafeKeyPath(v any, prefix string) string {
+	switch x := v.(type) {
+	case *Object:
+		for _, k := range x.Keys() {
+			if UnsafeKey(k) {
+				return prefix + k
+			}
+			inner, _ := x.Get(k)
+			if p := unsafeKeyPath(inner, prefix+k+"."); p != "" {
+				return p
+			}
+		}
+	case []any:
+		for i, inner := range x {
+			if p := unsafeKeyPath(inner, prefix+numberString(float64(i))+"."); p != "" {
+				return p
+			}
+		}
+	}
+	return ""
+}
+
+// The keys __proto__, prototype and constructor are dropped at every level
+// when a file is loaded and before one is saved, also where nothing
+// merges: in a subtree only the language has, in one that replaces a
+// string, in a list (BUGS.md L19).
+func TestTextsHaveNoUnsafeKeysAtAnyLevel(t *testing.T) {
+	dir := copyDir(t, "testdata/lang-upload")
+	unsafe := `{"__proto__":{"x":"1"},"a":{"constructor":{"y":"2"},"b":"B"},"b":{"c":{"prototype":"p","d":"D"}},` +
+		`"list":[{"prototype":"p","ok":"1"}],"new":{"__proto__":"z","k":{"constructor":"c"}}}`
+	if err := os.WriteFile(filepath.Join(dir, "de.json"), []byte(unsafe), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	h, _, _ := handlersFor(t, dir, time.Now())
+	b := h.Bundle
+	for what, v := range map[string]any{"texts": b.Translations("de"), "merged texts": b.Merged("de")} {
+		if p := unsafeKeyPath(v, ""); p != "" {
+			t.Errorf("the %s of de have %s", what, p)
+		}
+	}
+	if got := stringify(b.Translations("de"), ""); got != `{"a":{"b":"B"},"b":{"c":{"d":"D"}},"list":[{"ok":"1"}],"new":{"k":{}}}` {
+		t.Errorf("texts of de: %s", got)
+	}
+	srv := httptest.NewServer(routes(h))
+	defer srv.Close()
+	for _, path := range []string{"/api/console/strings/de", "/api/i18n/translations/de"} {
+		got := do(t, srv.URL, "GET", path, nil, nil, 0)
+		if got.status != 200 || strings.Contains(got.body, "__proto__") || strings.Contains(got.body, "constructor") || strings.Contains(got.body, "prototype") {
+			t.Errorf("%s: %d %s", path, got.status, short(got.body))
+		}
+	}
+
+	texts, _ := parseJSON(unsafe)
+	if r := b.Save("fr", texts); !r.Success {
+		t.Fatal(r)
+	}
+	raw, _ := os.ReadFile(filepath.Join(dir, "fr.json"))
+	saved, err := parseJSON(string(raw))
+	if err != nil || unsafeKeyPath(saved, "") != "" {
+		t.Errorf("the saved file: %s", raw)
 	}
 }

@@ -86,6 +86,29 @@ func UnsafeKey(key string) bool {
 	return key == "__proto__" || key == "prototype" || key == "constructor"
 }
 
+// withoutUnsafeKeys returns v without the keys UnsafeKey names, at every
+// level of its objects and lists.
+func withoutUnsafeKeys(v any) any {
+	switch x := v.(type) {
+	case *Object:
+		out := NewObject()
+		for _, k := range x.Keys() {
+			if !UnsafeKey(k) {
+				inner, _ := x.Get(k)
+				out.Set(k, withoutUnsafeKeys(inner))
+			}
+		}
+		return out
+	case []any:
+		out := make([]any, len(x))
+		for i, inner := range x {
+			out[i] = withoutUnsafeKeys(inner)
+		}
+		return out
+	}
+	return v
+}
+
 // Bundle is the set of loaded languages.
 type Bundle struct {
 	// Dir is the folder with the <code>.json files.
@@ -184,6 +207,7 @@ func (b *Bundle) loadLocked(root langRoot, code string) bool {
 		b.logf("Failed to load language %s %s", logValue(code), "Cannot read properties of null (reading '_meta')")
 		return false
 	}
+	data = withoutUnsafeKeys(data)
 	b.translations[code] = data
 
 	fileMeta := property(data, "_meta")
@@ -615,7 +639,7 @@ func (b *Bundle) Save(code string, texts any) Result {
 	if err != nil {
 		return Result{Error: err.Error()}
 	}
-	if err := b.writeFile(path, []byte(stringify(texts, "  "))); err != nil {
+	if err := b.writeFile(path, []byte(stringify(withoutUnsafeKeys(texts), "  "))); err != nil {
 		return Result{Error: nodeFSMessage(err, "open", path)}
 	}
 	b.loadLocked(root, code)

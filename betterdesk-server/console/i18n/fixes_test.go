@@ -1,6 +1,7 @@
 package i18n
 
 import (
+	"encoding/base64"
 	"net/http/httptest"
 	"net/url"
 	"os"
@@ -84,6 +85,13 @@ var vectorFixes = []vectorFix{
 	// Deleting a language that has no file and is not loaded is 404.
 	{"L18", "routes-edge.json", deleteWithoutFileNotFound},
 	{"L18", "routes-upload.json", deleteWithoutFileNotFound},
+
+	// The keys __proto__, prototype and constructor are dropped at every
+	// level when a file is loaded and before one is saved.
+	{"L19", "edge.json", unsafeKeysDroppedInSnapshot("en")},
+	{"L19", "defaults.json", unsafeKeysDroppedForEveryDefault},
+	{"L19", "routes-edge.json", unsafeKeysDroppedInRoutes},
+	{"L19", "upload.json", unsafeKeysDroppedInUploads},
 }
 
 // fixedVectors reads a file of vectors with every fix applied.
@@ -247,6 +255,181 @@ func deleteWithoutFileNotFound(t testing.TB, file any) int {
 		changed := answerJSON(c, 404, `{"success":false,"error":"Language not found"}`)
 		if setAll(c, "audit", []any{}, "removed", []any{}) || changed {
 			n++
+		}
+	}
+	return n
+}
+
+// --- L19 ---
+
+// dropUnsafe is v without the keys __proto__, prototype and constructor
+// at any level.
+func dropUnsafe(v any) any {
+	switch x := v.(type) {
+	case *Object:
+		out := NewObject()
+		for _, k := range x.Keys() {
+			if k != "__proto__" && k != "prototype" && k != "constructor" {
+				inner, _ := x.Get(k)
+				out.Set(k, dropUnsafe(inner))
+			}
+		}
+		return out
+	case []any:
+		out := make([]any, len(x))
+		for i, inner := range x {
+			out[i] = dropUnsafe(inner)
+		}
+		return out
+	}
+	return v
+}
+
+// dropUnsafeText is dropUnsafe on JSON text.
+func dropUnsafeText(t testing.TB, text string, indent string) string {
+	t.Helper()
+	return stringify(dropUnsafe(mustParse(t, text)), indent)
+}
+
+// unsafePath reports whether a dot path has a segment dropUnsafe drops.
+func unsafePath(path string) bool {
+	return slices.ContainsFunc(strings.Split(path, "."), UnsafeKey)
+}
+
+// dropUnsafeInDescribed rewrites a value the vector script described.
+func dropUnsafeInDescribed(t testing.TB, described any) bool {
+	if kind := str(described, "type"); kind != "object" && kind != "array" {
+		return false
+	}
+	return setIf(described, "value", dropUnsafeText(t, str(described, "value"), ""))
+}
+
+// dropUnsafeInReport rewrites a validation report (JSON text): the paths
+// with an unsafe segment leave its lists, and the coverage is counted
+// against the default language's keys without them.
+func dropUnsafeInReport(t testing.TB, report string, defaultTexts any) string {
+	r := mustParse(t, report).(*Object)
+	if _, listed := r.Get("missing"); !listed {
+		return report
+	}
+	for _, name := range []string{"missing", "extra"} {
+		var kept []any
+		for _, p := range list(r, name) {
+			if !unsafePath(p.(string)) {
+				kept = append(kept, p)
+			}
+		}
+		r.Set(name, append([]any{}, kept...))
+	}
+	missing := len(list(r, "missing"))
+	r.Set("valid", missing == 0)
+	if _, counted := r.Get("coverage"); counted {
+		total := float64(len(allKeys(dropUnsafe(defaultTexts), "")))
+		r.Set("coverage", toFixed1((total-float64(missing))/total*100))
+	}
+	return stringify(r, "")
+}
+
+// unsafeKeysDroppedInSnapshot rewrites a snapshot and its translate
+// vectors; def is the default language the vectors were made with.
+func unsafeKeysDroppedInSnapshot(def string) func(t testing.TB, file any) int {
+	return func(t testing.TB, file any) int {
+		n := 0
+		snapshot := at(file, "snapshot").(*Object)
+		var defaultTexts any
+		switch described := at(snapshot, def, "translations"); str(described, "type") {
+		case "object", "array":
+			defaultTexts = mustParse(t, str(described, "value"))
+		case "string":
+			defaultTexts = str(described, "value")
+		}
+		for _, code := range snapshot.Keys() {
+			entry := at(snapshot, code)
+			changed := dropUnsafeInDescribed(t, at(entry, "translations"))
+			if dropUnsafeInDescribed(t, at(entry, "merged")) {
+				changed = true
+			}
+			if setIf(entry, "validate", dropUnsafeInReport(t, str(entry, "validate"), defaultTexts)) {
+				changed = true
+			}
+			if changed {
+				n++
+			}
+		}
+		for _, c := range list(file, "translate") {
+			if dropUnsafeInDescribed(t, at(c, "result")) {
+				n++
+			}
+		}
+		return n
+	}
+}
+
+func unsafeKeysDroppedForEveryDefault(t testing.TB, file any) int {
+	n := 0
+	for _, def := range file.(*Object).Keys() {
+		n += unsafeKeysDroppedInSnapshot(def)(t, at(file, def))
+	}
+	return n
+}
+
+func unsafeKeysDroppedInRoutes(t testing.TB, file any) int {
+	n := 0
+	etags := map[string]string{}
+	for _, c := range list(file, "vectors") {
+		if str(c, "method") != "GET" || num(c, "status") != 200 {
+			continue
+		}
+		answer := mustParse(t, str(c, "body"))
+		data := at(answer, "data")
+		switch path := str(c, "path"); {
+		case strings.HasPrefix(path, "/api/i18n/translations/"):
+			answer.(*Object).Set("data", dropUnsafe(data))
+		case strings.HasPrefix(path, "/api/i18n/validate/"):
+			var defaultTexts any
+			if raw, err := os.ReadFile(filepath.Join("testdata", str(file, "label"), "en.json")); err == nil && !slices.Contains(strs(c, "removeFiles"), "en.json") {
+				defaultTexts = mustParse(t, string(raw))
+			}
+			answer.(*Object).Set("data", mustParse(t, dropUnsafeInReport(t, stringify(data, ""), defaultTexts)))
+		default:
+			continue
+		}
+		body := stringify(answer, "")
+		if setAll(c, "body", body, "etag", httpx.ETag([]byte(body))) {
+			n++
+			if len(strs(c, "removeFiles")) == 0 && len(list(c, "before")) == 0 {
+				etags[str(c, "path")] = str(c, "etag")
+			}
+		}
+	}
+	// A HEAD answer has the ETag of the GET answer's body
+	for _, c := range list(file, "vectors") {
+		if etag, ok := etags[str(c, "path")]; ok && str(c, "method") == "HEAD" && len(strs(c, "removeFiles")) == 0 && setIf(c, "etag", etag) {
+			n++
+		}
+	}
+	return n
+}
+
+func unsafeKeysDroppedInUploads(t testing.TB, file any) int {
+	n := 0
+	for _, c := range list(file) {
+		changed, ok := at(c, "changed").(*Object)
+		if !ok {
+			continue
+		}
+		for _, name := range changed.Keys() {
+			raw, err := base64.StdEncoding.DecodeString(str(changed, name))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !strings.HasSuffix(name, ".json") || !strings.HasPrefix(string(raw), "{") {
+				continue
+			}
+			text := dropUnsafeText(t, string(raw), "  ")
+			if setIf(changed, name, base64.StdEncoding.EncodeToString([]byte(text))) {
+				n++
+			}
 		}
 	}
 	return n
