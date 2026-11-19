@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/qr"
 )
@@ -38,7 +39,7 @@ func TestPasswordStepOfATwoFactorAccount(t *testing.T) {
 		// The session waits for the code and is not signed in
 		wantStored := regexp.MustCompile(`^\{"cookie":\{[^}]+\},` +
 			fmt.Sprintf(`"pendingTotpUserId":%d,"pendingTotpUser":\{"id":%d,"username":"alice","role":"operator","preferred_language":"pl","totpRequired":true,"goPartialToken":null\},`, alice, alice) +
-			`"pendingClientMeta":\{"ip":"127\.0\.0\.1","userAgent":"auth-test/1","clientFingerprint":"fp-of-the-password-step"\}\}$`)
+			`"pendingClientMeta":\{"ip":"127\.0\.0\.1","userAgent":"auth-test/1","clientFingerprint":"fp-of-the-password-step"\},"pendingTotpAt":\d{13}\}$`)
 		if stored := w.stored(a); !wantStored.MatchString(stored) {
 			t.Errorf("stored session:\n%s", stored)
 		}
@@ -150,7 +151,7 @@ func TestSecondFactorOfASessionAnOlderConsoleLeft(t *testing.T) {
 	w := newWorld(t, nil, setup{})
 	alice := w.addUser(user{name: "alice", totpEnabled: true, totpSecret: totpSecret, language: "de"})
 	a := w.agent("X-Client-Fingerprint", "fp-of-the-code-step")
-	a.setSession(fmt.Sprintf(`{"pendingTotpUserId":"%d","pendingTotpUser":{"id":"%d","username":"alice","role":null,"preferred_language":"de","totpRequired":true}}`, alice, alice))
+	a.setSession(fmt.Sprintf(`{"pendingTotpUserId":"%d","pendingTotpUser":{"id":"%d","username":"alice","role":null,"preferred_language":"de","totpRequired":true},%s}`, alice, alice, waitingSince(time.Now())))
 	res := a.post("/api/auth/totp/verify", fmt.Sprintf(`{"code":%q}`, currentCode(t, totpSecret)))
 	want(t, "code step", res, http.StatusOK, strings.Replace(signedInAlice, `"role":"operator"`, `"role":null`, 1))
 	stored := w.stored(a)
@@ -182,7 +183,7 @@ func TestSecondFactorOfASessionAnOlderConsoleLeft(t *testing.T) {
 func TestSecondFactorCheckedByTheSignalServer(t *testing.T) {
 	w := newWorld(t, nil, setup{})
 	alice := w.addUser(user{name: "alice", totpEnabled: true, totpSecret: totpSecret})
-	pending := fmt.Sprintf(`{"pendingTotpUserId":%d,"pendingTotpUser":{"id":%d,"username":"alice","role":"operator","preferred_language":null},"goPartialToken":"partial-1"}`, alice, alice)
+	pending := fmt.Sprintf(`{"pendingTotpUserId":%d,"pendingTotpUser":{"id":%d,"username":"alice","role":"operator","preferred_language":null},"goPartialToken":"partial-1",%s}`, alice, alice, waitingSince(time.Now()))
 
 	// The signal server accepts
 	w.api.json("POST /api/auth/login/2fa", 200, `{"token":"jwt"}`)
@@ -236,7 +237,7 @@ func TestSecondFactorUnavailableWhenTheAuditLogFails(t *testing.T) {
 	w := newWorld(t, nil, setup{})
 	alice := w.addUser(user{name: "alice", totpEnabled: true, totpSecret: totpSecret})
 	a := w.agent()
-	a.setSession(fmt.Sprintf(`{"pendingTotpUserId":%d,"pendingTotpUser":{"id":%d,"username":"alice"},"goPartialToken":"partial-1"}`, alice, alice))
+	a.setSession(fmt.Sprintf(`{"pendingTotpUserId":%d,"pendingTotpUser":{"id":%d,"username":"alice"},"goPartialToken":"partial-1",%s}`, alice, alice, waitingSince(time.Now())))
 	w.exec(`ALTER TABLE audit_log RENAME TO audit_log_away`)
 	res := a.post("/api/auth/totp/verify", `{"code":"654321"}`)
 	w.exec(`ALTER TABLE audit_log_away RENAME TO audit_log`)

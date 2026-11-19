@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/console/authn"
@@ -25,15 +26,21 @@ const (
 	pendingUserID = "pendingTotpUserId"
 	pendingUser   = "pendingTotpUser"
 	pendingMeta   = "pendingClientMeta"
+	// pendingSince is when the password step was passed, in milliseconds
+	// since 1970.
+	pendingSince = "pendingTotpAt"
 	// pendingFailures counts the wrong codes given since the password
 	// step.
 	pendingFailures = "pendingTotpFailures"
 	partialToken    = "goPartialToken"
 )
 
-// maxWrongCodes is how many wrong codes end the wait for the second
-// factor.
-const maxWrongCodes = 5
+// secondFactorWindow is how long the code may take after the password
+// step, and maxWrongCodes how many wrong codes end the wait.
+const (
+	secondFactorWindow = 5 * time.Minute
+	maxWrongCodes      = 5
+)
 
 // errNotText stands for the fault the old console ran into when a password
 // that is not text reached the hash compare.
@@ -264,6 +271,7 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		sess.Set(pendingUserID, user.ID)
 		sess.Set(pendingUser, user)
 		sess.Set(pendingMeta, meta)
+		sess.Set(pendingSince, h.now().UnixMilli())
 		kit.JSON(w, r, http.StatusOK, secondFactorDue{Success: true, TOTPRequired: true})
 		return
 	}
@@ -401,6 +409,11 @@ func (h *handlers) totpVerify(w http.ResponseWriter, r *http.Request) {
 	sess.Get(pendingUserID, &rawID)
 	sess.Get(pendingUser, &rawUser)
 	if !jsonTruthy(rawID) || !jsonTruthy(rawUser) {
+		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "auth.totp_session_expired", nil))
+		return
+	}
+	if !h.pendingInTime(sess) {
+		endPending(sess)
 		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "auth.totp_session_expired", nil))
 		return
 	}
@@ -580,6 +593,17 @@ func (h *handlers) finishSecondFactor(w http.ResponseWriter, r *http.Request, wh
 	kit.JSON(w, r, http.StatusOK, h.signedInAnswer(who, replaced, body))
 }
 
+// pendingInTime reports whether the password step of the waiting sign-in
+// was passed less than secondFactorWindow ago. A wait without that time
+// is over.
+func (h *handlers) pendingInTime(sess *session.Session) bool {
+	var since int64
+	if !sess.Get(pendingSince, &since) || since == 0 {
+		return false
+	}
+	return h.now().UnixMilli()-since <= secondFactorWindow.Milliseconds()
+}
+
 // countWrongCode notes a refused code of the waiting sign-in. The
 // maxWrongCodes-th ends the wait, so the next code needs the password
 // again.
@@ -595,7 +619,7 @@ func countWrongCode(sess *session.Session) {
 
 // endPending drops the waiting sign-in from the session.
 func endPending(sess *session.Session) {
-	for _, key := range []string{pendingUserID, pendingUser, pendingMeta, pendingFailures, partialToken} {
+	for _, key := range []string{pendingUserID, pendingUser, pendingMeta, pendingSince, pendingFailures, partialToken} {
 		sess.Delete(key)
 	}
 }
