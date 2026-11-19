@@ -541,21 +541,40 @@ func TestTerminalSpawnFailure(t *testing.T) {
 	w.reg.Close()
 }
 
-// The shell gets the console's environment with the account, the
-// terminal type and its size set; PWD only on a pseudo-terminal, as
-// node-pty set it.
+// The shell gets a fixed environment: PATH from the console's, the
+// account, the terminal type and its size; PWD only on a pseudo-terminal,
+// as node-pty set it. Nothing else of the console's environment (the
+// database address, keys) reaches it. On Windows the variables its shells
+// need come from the console's environment too, as the console spells
+// them.
 func TestShellEnv(t *testing.T) {
-	s := New(Options{GOOS: "linux", Getenv: func(k string) string { return map[string]string{"LANG": ""}[k] }, Terminal: TerminalOptions{
-		Environ: func() []string { return []string{"PATH=/bin", "HOME=/root", "SECRET=x", "TERM=vt100", "PWD=/repo"} },
+	getenv := func(k string) string { return map[string]string{"LANG": ""}[k] }
+	s := New(Options{GOOS: "linux", Getenv: getenv, Terminal: TerminalOptions{
+		Environ: func() []string {
+			return []string{"PATH=/bin", "HOME=/root", "SECRET=x", "DB_URL=postgres://bd:pw@db/bd", "TERM=vt100", "PWD=/repo"}
+		},
 	}})
 	a := Account{Username: "node", Home: "/home/node", Shell: "/bin/bash"}
 	pipe := strings.Join(s.shellEnv(a, 90, 30, false), " ")
-	if pipe != "PATH=/bin HOME=/home/node SECRET=x TERM=dumb PWD=/repo USER=node LOGNAME=node SHELL=/bin/bash LANG=en_US.UTF-8 COLUMNS=90 LINES=30" {
+	if pipe != "PATH=/bin HOME=/home/node USER=node LOGNAME=node SHELL=/bin/bash TERM=dumb LANG=en_US.UTF-8 COLUMNS=90 LINES=30" {
 		t.Errorf("pipe env %s", pipe)
 	}
 	pty := strings.Join(s.shellEnv(a, 90, 30, true), " ")
-	if !strings.Contains(pty, "TERM=xterm-256color") || !strings.Contains(pty, "PWD=/home/node") {
+	if pty != "PATH=/bin HOME=/home/node USER=node LOGNAME=node SHELL=/bin/bash TERM=xterm-256color LANG=en_US.UTF-8 COLUMNS=90 LINES=30 PWD=/home/node" {
 		t.Errorf("pty env %s", pty)
+	}
+
+	win := New(Options{GOOS: "windows", Getenv: getenv, Terminal: TerminalOptions{
+		Environ: func() []string {
+			return []string{`ComSpec=C:\Windows\system32\cmd.exe`, `Path=C:\Windows`, "SESSION_SECRET=y", `SystemRoot=C:\Windows`,
+				"PATHEXT=.COM;.EXE", `TEMP=C:\T`, `TMP=C:\T`, `USERPROFILE=C:\Users\svc`, `APPDATA=C:\Users\svc\AppData`}
+		},
+	}})
+	got := strings.Join(win.shellEnv(Account{Username: "svc", Home: `C:\Users\svc`, Shell: "cmd.exe"}, 80, 24, false), " ")
+	want := `Path=C:\Windows ComSpec=C:\Windows\system32\cmd.exe SystemRoot=C:\Windows PATHEXT=.COM;.EXE TEMP=C:\T TMP=C:\T USERPROFILE=C:\Users\svc ` +
+		`HOME=C:\Users\svc USER=svc LOGNAME=svc SHELL=cmd.exe TERM=dumb LANG=en_US.UTF-8 COLUMNS=80 LINES=24`
+	if got != want {
+		t.Errorf("windows env\n got %s\nwant %s", got, want)
 	}
 }
 

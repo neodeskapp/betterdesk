@@ -50,7 +50,8 @@ type TerminalOptions struct {
 	IsRoot func() bool
 	// Executable reports a regular file the console may execute.
 	Executable func(path string) bool
-	// Environ is the console's environment, which a shell inherits.
+	// Environ is the console's environment. A shell takes PATH from it, on
+	// Windows also the variables its shells need (see shellEnv).
 	Environ func() []string
 }
 

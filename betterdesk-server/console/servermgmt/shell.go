@@ -178,13 +178,37 @@ func (s *Service) PickTerminalUser() Account {
 	return current
 }
 
-// shellEnv is the environment of a shell: the console's own with the
-// account, the terminal type and size set (buildSpawnOptions). The shell
-// sees every variable the console has.
+// inheritedEnv are the variables a shell takes from the console's
+// environment, on Windows also those its shells need to start. Nothing
+// else of that environment reaches the shell: it holds the database
+// address and the keys.
+var (
+	inheritedEnv        = []string{"PATH"}
+	inheritedEnvWindows = []string{"PATH", "COMSPEC", "SystemRoot", "PATHEXT", "TEMP", "TMP", "USERPROFILE"}
+)
+
+// shellEnv is the environment of a shell: the inherited variables as the
+// console has them, then the account, the terminal type and size
+// (buildSpawnOptions).
 func (s *Service) shellEnv(a Account, cols, rows int, pty bool) []string {
 	term := "dumb"
 	if pty {
 		term = "xterm-256color"
+	}
+	keys := inheritedEnv
+	if s.windows() {
+		keys = inheritedEnvWindows
+	}
+	console := s.opts.Terminal.Environ()
+	var env []string
+	for _, key := range keys {
+		for _, entry := range console {
+			name, _, _ := strings.Cut(entry, "=")
+			if name == key || s.windows() && strings.EqualFold(name, key) {
+				env = append(env, entry)
+				break
+			}
+		}
 	}
 	set := [][2]string{
 		{"HOME", firstSet(a.Home, s.home())},
@@ -201,7 +225,6 @@ func (s *Service) shellEnv(a Account, cols, rows int, pty bool) []string {
 		// console's own
 		set = append(set, [2]string{"PWD", firstSet(a.Home, s.home())})
 	}
-	env := append([]string(nil), s.opts.Terminal.Environ()...)
 	for _, kv := range set {
 		env = setEnv(env, kv[0], kv[1], s.windows())
 	}
