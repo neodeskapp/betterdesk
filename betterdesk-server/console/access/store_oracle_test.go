@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -136,7 +138,13 @@ func TestOracleStore(t *testing.T) {
 		ctx := context.Background()
 		s := New(db, &fakeRoles{permissions: scenario.RolePermissions}, Options{DeviceScopeDefault: "open"})
 
-		errored := 0
+		// UM10, UM11: Go caps a stored "group:<key>" row at the highest
+		// ceiling among its sections and saves the rows of an account whose
+		// role it does not know (at none); Node capped at the group's first
+		// section and failed. Saves and stored rows are compared without the
+		// group rows, and the rows of the unknown role's account not at all.
+		errored, differ := 0, 0
+		unknownRole := map[string]bool{}
 		for i, step := range scenario.Steps {
 			s.ClearRoleCache()
 			s.InvalidateDeviceScopeDefault()
@@ -254,6 +262,27 @@ func TestOracleStore(t *testing.T) {
 				t.Fatalf("%s: unknown step", label)
 			}
 
+			id, _ := step.ID.(string)
+			if step.Op == "savePolicy" && step.Error && step.Status == nil && err == nil && step.Type == SubjectUser {
+				if user, _ := s.PolicyUserByID(ctx, mustAtoi(id)); user != nil && scenario.RolePermissions[user.Role] == nil && !IsSuperAdminRole(user.Role) {
+					unknownRole[id] = true
+					differ++
+					continue
+				}
+			}
+			if step.Op == "rawPolicies" && unknownRole[id] {
+				differ++
+				continue
+			}
+			if (step.Op == "savePolicy" || step.Op == "rawPolicies") && err == nil && !step.Error {
+				if got := jsJSON(t, result); got != string(step.Result) {
+					if g, w := withoutGroupRows(t, got), withoutGroupRows(t, string(step.Result)); g != w {
+						t.Fatalf("%s without the group rows\n got  %s\n want %s", label, g, w)
+					}
+					differ++
+					continue
+				}
+			}
 			if step.Error {
 				errored++
 				if err == nil {
@@ -285,5 +314,42 @@ func TestOracleStore(t *testing.T) {
 		if errored < 3 {
 			t.Fatalf("only %d failing steps ran", errored)
 		}
+		if differ == 0 || len(unknownRole) == 0 {
+			t.Errorf("%d steps compared without group rows, %d accounts with an unknown role", differ, len(unknownRole))
+		}
 	})
+}
+
+// withoutGroupRows drops the "group:<key>" rows from the sections of a
+// saved or stored policy in JSON.
+func withoutGroupRows(t *testing.T, raw string) string {
+	t.Helper()
+	var policy struct {
+		Sections []SectionRow `json:"sections"`
+		Features []FeatureRow `json:"features"`
+	}
+	if err := json.Unmarshal([]byte(raw), &policy); err != nil {
+		return raw
+	}
+	kept := []SectionRow{}
+	for _, row := range policy.Sections {
+		if !strings.HasPrefix(row.ResourceKey, groupKeyPrefix) {
+			kept = append(kept, row)
+		}
+	}
+	policy.Sections = kept
+	if policy.Features == nil {
+		policy.Features = []FeatureRow{}
+	}
+	return jsJSON(t, policy)
+}
+
+// mustAtoi reads an account id of the scenario, 0 for one that is no
+// number.
+func mustAtoi(s string) int64 {
+	n, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return n
 }

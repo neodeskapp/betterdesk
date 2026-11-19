@@ -3,6 +3,7 @@ package access
 import (
 	"context"
 	"errors"
+	"net/http"
 	"strconv"
 	"strings"
 )
@@ -56,7 +57,8 @@ var errGroupCeiling = errors.New("role ceiling of a user group: its members cann
 
 // subjectCeiling returns the ceiling a saved policy is capped at. An
 // account's is its role's (an id that names no account counts as a
-// viewer). A user group's always fails.
+// viewer); a role the server does not know reaches none anywhere. A user
+// group's always fails.
 func (s *Service) subjectCeiling(ctx context.Context, subjectType, subjectID string) (map[string]Level, error) {
 	if subjectType != SubjectUser {
 		return nil, errGroupCeiling
@@ -69,23 +71,30 @@ func (s *Service) subjectCeiling(ctx context.Context, subjectType, subjectID str
 	if user != nil {
 		role = user.Role
 	}
-	return s.roleCeiling(ctx, role)
+	ceiling, err := s.roleCeiling(ctx, role)
+	var unknown *RoleError
+	if errors.As(err, &unknown) && unknown.Status == http.StatusBadRequest {
+		return ceilingFor(PermissionSet{}), nil
+	}
+	return ceiling, err
 }
 
-// ceilingKey is the catalog section whose ceiling caps a stored row: the
-// row's own key, or for a "group:<key>" row the first section of that
-// catalog group ("" when there is none).
-func ceilingKey(resourceKey string) string {
+// rowCeiling is the ceiling a stored row is capped at: its section's, or
+// for a "group:<key>" row the highest among the sections of that catalog
+// group, so the row keeps what the role reaches in any of them. Resolving
+// the policy caps each section at its own ceiling again.
+func rowCeiling(ceiling map[string]Level, resourceKey string) Level {
 	group, isGroup := strings.CutPrefix(resourceKey, groupKeyPrefix)
 	if !isGroup {
-		return resourceKey
+		return ceiling[resourceKey]
 	}
+	highest := LevelNone
 	for _, entry := range Catalog {
-		if entry.Group == group {
-			return entry.Key
+		if entry.Group == group && rank(ceiling[entry.Key]) > rank(highest) {
+			highest = ceiling[entry.Key]
 		}
 	}
-	return ""
+	return highest
 }
 
 // clampToCeiling returns the lower of a level and a ceiling, both read with

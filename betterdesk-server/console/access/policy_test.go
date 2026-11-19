@@ -59,12 +59,11 @@ func TestRoleCeilingH7(t *testing.T) {
 	}
 }
 
-// A saved "group:<key>" row is capped at the ceiling of the first section of
-// that catalog group (BUGS UM10). dashboard comes first in core and has no
-// write permission, so core at write is stored as read for every role but
-// the super admins, and devices then resolves to read although the role
-// reaches write there.
-func TestSavedGroupRowTakesTheFirstSectionsCeiling(t *testing.T) {
+// UM10: a saved "group:<key>" row is capped at the highest ceiling among
+// the sections of that catalog group, not at its first section's:
+// dashboard comes first in core and has no write permission, languages
+// first in system. Resolving caps each section at its own ceiling.
+func TestSavedGroupRowTakesItsSectionsHighestCeiling(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		createSchema(t, db)
 		ctx := context.Background()
@@ -77,30 +76,74 @@ func TestSavedGroupRowTakesTheFirstSectionsCeiling(t *testing.T) {
 		write := func(key string) []any { return []any{map[string]any{"resource_key": key, "access_level": "write"}} }
 
 		saved, err := s.SavePolicy(ctx, "user", "1", write("group:core"), nil)
-		if err != nil || jsJSON(t, saved.Sections) != `[{"resource_key":"group:core","access_level":"read"}]` {
+		if err != nil || jsJSON(t, saved.Sections) != `[{"resource_key":"group:core","access_level":"write"}]` {
 			t.Fatalf("operator, core at write: %s, %v", jsJSON(t, saved.Sections), err)
 		}
 		policy, err := s.ResolveForUser(ctx, PolicyUser{ID: 1, Role: "operator"})
 		if err != nil {
 			t.Fatal(err)
 		}
-		if got, _ := policy.Sections.Get("devices"); got != (SectionAccess{LevelRead, SourceUser, LevelWrite}) {
+		if got, _ := policy.Sections.Get("devices"); got != (SectionAccess{LevelWrite, SourceUser, LevelWrite}) {
 			t.Errorf("operator devices: %+v", got)
 		}
+		if got, _ := policy.Sections.Get("dashboard"); got != (SectionAccess{LevelRead, SourceUser, LevelRead}) {
+			t.Errorf("operator dashboard: %+v", got)
+		}
 
-		// system starts with languages (server.config): a role that reaches
-		// server-attestation only gets none for the whole group.
+		// server-attestation is the one section of system the role reaches.
 		if saved, err = s.SavePolicy(ctx, "user", "2", write("group:system"), nil); err != nil ||
-			jsJSON(t, saved.Sections) != `[{"resource_key":"group:system","access_level":"none"}]` {
+			jsJSON(t, saved.Sections) != `[{"resource_key":"group:system","access_level":"write"}]` {
 			t.Fatalf("global_admin, system at write: %s, %v", jsJSON(t, saved.Sections), err)
 		}
 		if policy, err = s.ResolveForUser(ctx, PolicyUser{ID: 2, Role: "global_admin"}); err != nil {
 			t.Fatal(err)
 		}
-		if got, _ := policy.Sections.Get("server-attestation"); got != (SectionAccess{LevelNone, SourceUser, LevelWrite}) {
+		if got, _ := policy.Sections.Get("server-attestation"); got != (SectionAccess{LevelWrite, SourceUser, LevelWrite}) {
 			t.Errorf("global_admin server-attestation: %+v", got)
 		}
+		if got, _ := policy.Sections.Get("languages"); got != (SectionAccess{LevelNone, SourceUser, LevelNone}) {
+			t.Errorf("global_admin languages: %+v", got)
+		}
 	})
+}
+
+// UM11: an account whose role the server does not know can have its
+// policy saved: without section rows nothing is looked up (deleting an
+// account saves an empty policy), and its rows are capped at none.
+func TestSaveForAnAccountWithAnUnknownRole(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		createSchema(t, db)
+		ctx := context.Background()
+		mustExec(t, db, `INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)`, "old", "x", "made_up_role")
+		s := New(db, &fakeRoles{permissions: map[string][]string{}}, Options{})
+		if _, err := s.SavePolicy(ctx, "user", "1", nil, []any{map[string]any{"feature_key": "clipboard", "enabled": false}}); err != nil {
+			t.Fatalf("empty policy for an unknown role: %v", err)
+		}
+		saved, err := s.SavePolicy(ctx, "user", "1", []any{map[string]any{"resource_key": "devices", "access_level": "write"}}, nil)
+		if err != nil || jsJSON(t, saved.Sections) != `[{"resource_key":"devices","access_level":"none"}]` {
+			t.Errorf("rows for an unknown role: %s, %v", jsJSON(t, saved.Sections), err)
+		}
+		// A user group still cannot be saved (BUGS UM2).
+		if _, err := s.SavePolicy(ctx, "group", "g1", nil, nil); err == nil {
+			t.Error("a user group policy was saved")
+		}
+		// A policy without section rows looks up no ceiling, so a role
+		// lookup that fails stops only a save with rows.
+		failing := New(db, failingRoles{}, Options{})
+		if _, err := failing.SavePolicy(ctx, "user", "1", nil, nil); err != nil {
+			t.Errorf("empty policy while the role lookup fails: %v", err)
+		}
+		if _, err := failing.SavePolicy(ctx, "user", "1", []any{map[string]any{"resource_key": "devices", "access_level": "read"}}, nil); err == nil {
+			t.Error("rows saved while the role lookup fails")
+		}
+	})
+}
+
+// failingRoles is a role source whose every lookup fails.
+type failingRoles struct{}
+
+func (failingRoles) RolePermissions(context.Context, string) ([]string, error) {
+	return nil, errors.New("role lookup failed")
 }
 
 // Jest: panelAccessPolicyService.test.js, "applies user overrides over group
@@ -489,14 +532,14 @@ func TestPolicyStore(t *testing.T) {
 		if db.IsPostgres() != (err != nil) {
 			t.Errorf("save for an id that is no number: %v (an error only on PostgreSQL)", err)
 		}
-		// A role whose permissions cannot be looked up stores nothing.
-		if _, err := s.SavePolicy(ctx, "user", "3", viewerSave, []any{map[string]any{"feature_key": "audio", "enabled": true}}); err == nil || ErrorStatus(err) != 500 {
+		// A role the server does not know reaches none (UM11).
+		if _, err := s.SavePolicy(ctx, "user", "3", viewerSave, []any{map[string]any{"feature_key": "audio", "enabled": true}}); err != nil {
 			t.Errorf("save for an account with an unknown role: %v", err)
 		}
-		if rows, _ := s.PanelAccessPolicies(ctx, "user", "3"); len(rows) != 0 {
+		if rows, _ := s.PanelAccessPolicies(ctx, "user", "3"); jsJSON(t, rows) != `[{"resource_key":"devices","access_level":"none"}]` {
 			t.Errorf("rows stored for an account with an unknown role: %v", rows)
 		}
-		if rows, _ := s.ClientFeaturePolicies(ctx, "user", "3"); len(rows) != 0 {
+		if rows, _ := s.ClientFeaturePolicies(ctx, "user", "3"); len(rows) != 1 {
 			t.Errorf("features stored for an account with an unknown role: %v", rows)
 		}
 
