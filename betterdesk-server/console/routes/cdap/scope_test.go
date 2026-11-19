@@ -1,0 +1,123 @@
+package cdap_test
+
+import (
+	"context"
+	"io"
+	"net/http"
+	"strings"
+	"testing"
+
+	"github.com/unitronix/betterdesk-server/console/access"
+	"github.com/unitronix/betterdesk-server/console/devicegroups"
+	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
+	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/routes/cdap"
+)
+
+// knownDevices are the devices of the device layer in the scope tests:
+// the API server knows them as peers, every other id is unknown.
+var knownDevices = map[string]bool{"dev-1": true, "dev-2": true}
+
+// peers is the API server's peer lookup of the device layer, kept apart
+// from the scripted API server of the world, so the calls a vector
+// expects stay the gateway's own.
+func peers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	id := strings.TrimPrefix(r.URL.Path, "/api/peers/")
+	if r.Method == http.MethodGet && knownDevices[id] {
+		_, _ = io.WriteString(w, `{"id":"`+id+`","hostname":"h"}`)
+		return
+	}
+	w.WriteHeader(http.StatusNotFound)
+	_, _ = io.WriteString(w, `{"error":"not found"}`)
+}
+
+// withScope gives the routes the device scope of package access under a
+// restricted default: the accounts and their granted devices are added
+// to the world's database.
+func withScope(t *testing.T, grants map[int64][]string) func(d *kit.Deps) {
+	return func(d *kit.Deps) {
+		ctx := context.Background()
+		for id, role := range map[int64]string{5: "operator", 6: "viewer"} {
+			if _, err := d.Store.Exec(ctx, "INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, 'x', ?)", id, "e2e_"+role, role); err != nil {
+				t.Fatal(err)
+			}
+			for _, device := range grants[id] {
+				if _, err := d.Store.Exec(ctx, "INSERT INTO user_peer_grants (user_id, peer_id) VALUES (?, ?)", id, device); err != nil {
+					t.Fatal(err)
+				}
+			}
+		}
+		d.Access = access.New(d.Store, access.NewDBRoleSource(nil), access.Options{DeviceScopeDefault: "restricted"})
+		d.DeviceGroups = devicegroups.New(devicegroups.Options{DB: d.Store, Access: d.Access})
+		d.Backend = goapi.NewBackend(goapi.New(http.HandlerFunc(peers)), devicegroups.DeviceStore{Groups: d.DeviceGroups})
+		cdap.Register(d)
+	}
+}
+
+func account(id int64, role string) *proxytest.Account {
+	a := &proxytest.Account{UserID: id}
+	a.User.Username, a.User.Role = "e2e_"+role, role
+	return a
+}
+
+// TestDeviceRoutesKeepToTheScope: the routes of one gateway device answer
+// 403 for a device the account may not see and do not ask the API server
+// (BUGS RC8). A device in the account's scope, any device for an admin,
+// and an id the device layer does not know go on to the API server.
+func TestDeviceRoutesKeepToTheScope(t *testing.T) {
+	w := proxytest.NewWorld(t, withScope(t, map[int64][]string{5: {"dev-1"}, 6: {"dev-1"}}))
+	ok := &proxytest.Answer{Status: 200, Type: "application/json", Body: `{"ok":true}`}
+	command := `{"widget_id":"power","action":"set"}`
+	link := `{"linked_peer_id":"dev-9"}`
+	routes := []struct {
+		method, path string
+		body         *string
+	}{
+		{"GET", "", nil},
+		{"GET", "/manifest", nil},
+		{"GET", "/state", nil},
+		{"GET", "/linked", nil},
+		{"POST", "/command", &command},
+		{"POST", "/link", &link},
+	}
+	forbidden := `{"success":false,"error":"errors.forbidden"}`
+	for _, route := range routes {
+		writes := route.method == "POST"
+		for _, c := range []struct {
+			who     *proxytest.Account
+			device  string
+			refused bool
+		}{
+			{account(5, "operator"), "dev-2", true},
+			{account(5, "operator"), "dev-1", false},
+			{account(5, "operator"), "no-such-device", false},
+			{account(6, "viewer"), "dev-2", !writes},
+			{account(6, "viewer"), "dev-1", false},
+			{account(1, "admin"), "dev-2", false},
+		} {
+			req := proxytest.Request{Method: route.method, Path: "/api/cdap/devices/" + c.device + route.path, Session: c.who, Body: route.body}
+			if route.body != nil {
+				req.Type = "application/json"
+			}
+			rec, calls := w.Do(req, ok)
+			what := route.method + " " + req.Path + " as " + c.who.User.Role
+			switch {
+			case c.refused:
+				if rec.Code != http.StatusForbidden || rec.Body.String() != forbidden || len(calls) != 0 {
+					t.Errorf("%s: %d %s, %d calls to the API server; want 403 %s and none", what, rec.Code, rec.Body, len(calls), forbidden)
+				}
+			case c.who.User.Role == "viewer" && writes:
+				// The command permission comes first
+				if rec.Code != http.StatusForbidden || rec.Body.String() == forbidden || len(calls) != 0 {
+					t.Errorf("%s: %d %s; want the permission's 403", what, rec.Code, rec.Body)
+				}
+			default:
+				if rec.Code != http.StatusOK || len(calls) != 1 || !strings.Contains(calls[0].URL, "/"+c.device) {
+					t.Errorf("%s: %d %s, calls %+v; want the API server's answer", what, rec.Code, rec.Body, calls)
+				}
+			}
+		}
+	}
+}

@@ -4,8 +4,12 @@
 // commands to a device, the link between a gateway device and a peer, and
 // the switch that turns the gateway on or off at the next restart.
 //
-// Every route asks the API server. The websockets of the gateway pages
-// (terminal, media) are not here.
+// Every route asks the API server. The routes of one device first check
+// that the account may see it (kit.RequireDeviceInScope, after the sign-in
+// and the permission), as the gateway's sockets do: a device outside the
+// account's scope is 403, a device the device layer does not know goes on
+// to the API server. The websockets of the gateway pages (terminal,
+// media) are not here.
 package cdap
 
 import (
@@ -28,18 +32,19 @@ type handlers struct {
 func Register(d *kit.Deps) {
 	h := &handlers{api: d.GoAPI, restart: d.Restart, log: d.Log.Child("CDAP")}
 	command := d.RequirePermission("cdap.command")
+	scope := d.RequireDeviceInScope
 
 	r := d.Router
 	r.Get("/api/cdap/status", h.status, d.RequireAuth)
 	r.Get("/api/cdap/devices", h.devices, d.RequireAuth)
-	r.Get("/api/cdap/devices/{id}", h.device, d.RequireAuth)
-	r.Get("/api/cdap/devices/{id}/manifest", h.manifest, d.RequireAuth)
-	r.Get("/api/cdap/devices/{id}/state", h.state, d.RequireAuth)
-	r.Post("/api/cdap/devices/{id}/command", h.command, d.RequireAuth, command)
+	r.Get("/api/cdap/devices/{id}", h.device, d.RequireAuth, scope)
+	r.Get("/api/cdap/devices/{id}/manifest", h.manifest, d.RequireAuth, scope)
+	r.Get("/api/cdap/devices/{id}/state", h.state, d.RequireAuth, scope)
+	r.Post("/api/cdap/devices/{id}/command", h.command, d.RequireAuth, command, scope)
 	r.Post("/api/cdap/toggle", h.toggle, d.RequireAuth, d.RequirePermission("server.config"))
 	r.Get("/api/cdap/alerts", h.alerts, d.RequireAuth)
-	r.Get("/api/cdap/devices/{id}/linked", h.linked, d.RequireAuth)
-	r.Post("/api/cdap/devices/{id}/link", h.link, d.RequireAuth, command)
+	r.Get("/api/cdap/devices/{id}/linked", h.linked, d.RequireAuth, scope)
+	r.Post("/api/cdap/devices/{id}/link", h.link, d.RequireAuth, command, scope)
 }
 
 // answer sends what a call into the API server gave: the API server's

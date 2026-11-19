@@ -60,13 +60,21 @@ func TestVectors(t *testing.T) {
 
 	dataDir := filepath.Join(t.TempDir(), "data")
 	statePath := filepath.Join(dataDir, ".restart-transaction.json")
+	// The device layer knows dev-1 and keeps it outside the scope of the
+	// viewer and the operator
+	scoped := withScope(t, nil)
 	w := proxytest.NewWorld(t, func(d *kit.Deps) {
 		d.Restart = restart.New(restart.Options{DataDir: dataDir, GoAPI: d.GoAPI})
-		cdap.Register(d)
+		scoped(d)
 	})
 
-	failures, spelledDifferently := 0, 0
+	failures, spelledDifferently, fixed := 0, 0, map[string]int{}
 	for i, v := range vectors {
+		for bug, changes := range fixes {
+			if changes(&v) {
+				fixed[bug]++
+			}
+		}
 		if v.Request.Method == "STATE" {
 			if v.Request.Body == nil {
 				if err := os.Remove(statePath); err != nil && !os.IsNotExist(err) {
@@ -128,7 +136,35 @@ func TestVectors(t *testing.T) {
 		t.Errorf("%d calls reached the API server in another spelling than the Node console's", spelledDifferently)
 	}
 	t.Logf("%d vectors, %d of them with a query for the API server spelled differently", len(vectors), spelledDifferently)
+	for bug := range fixes {
+		if fixed[bug] == 0 {
+			t.Errorf("the fix of %s changes no vector", bug)
+		}
+		t.Logf("%d vectors changed by the fix of %s", fixed[bug], bug)
+	}
 }
+
+// fixes are the changes a bug fix made on purpose to what the Node
+// console answered. Each turns a vector it changes into the Go console's
+// answer and reports that it did.
+var fixes = map[string]func(v *vector) bool{
+	// The routes of one device check the device scope after the sign-in
+	// and the permission: a viewer's or an operator's request for dev-1
+	// that Node let through is refused with 403 before the API server is
+	// asked.
+	"RC8": func(v *vector) bool {
+		session := v.Request.Session
+		if session == nil || (session.User.Role != "viewer" && session.User.Role != "operator") ||
+			v.Status == 401 || v.Status == 403 || !deviceRoute.MatchString(v.Request.Path) {
+			return false
+		}
+		v.Status, v.Type, v.Body, v.Calls = 403, "application/json; charset=utf-8", `{"success":false,"error":"errors.forbidden"}`, nil
+		return true
+	},
+}
+
+// deviceRoute is the address of a route of the device dev-1.
+var deviceRoute = regexp.MustCompile(`(?i)^/api/cdap/devices/dev-1(/(manifest|state|linked|command|link))?/?(\?.*)?$`)
 
 var listIndex = regexp.MustCompile(`\[[0-9]+\]`)
 
