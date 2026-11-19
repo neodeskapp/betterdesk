@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"math"
 	"strconv"
-	"time"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -160,27 +159,37 @@ type NewAlert struct {
 	Severity jsbind.Value
 	Message  jsbind.Value
 	// TriggeredAt is the time as ISO text; when it is not set the alert
-	// gets the time of the call.
+	// gets the database's time, the clock GetRecentAlert checks against.
 	TriggeredAt jsbind.Value
 }
 
 // CreateAlert writes an alert (dbAdapter createAlert), with the values
-// bound as the Node database drivers bound them.
-func CreateAlert(ctx context.Context, q store.Querier, alert NewAlert, now time.Time) error {
+// bound as the Node database drivers bound them, and returns its time as
+// ISO text.
+func CreateAlert(ctx context.Context, q store.Querier, alert NewAlert) (string, error) {
 	deviceID := alert.DeviceID.Or(jsbind.Null)
 	severity := alert.Severity.Or(jsbind.String("warning"))
 	message := alert.Message.Or(jsbind.String(""))
-	triggeredAt := alert.TriggeredAt.Or(jsbind.String(store.ISOTime(now)))
+	triggeredAt := alert.TriggeredAt
+	if !triggeredAt.Truthy() {
+		var now string
+		err := q.QueryRow(ctx, q.Pick(`SELECT strftime('%Y-%m-%dT%H:%M:%fZ', 'now')`,
+			`SELECT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`)).Scan(&now)
+		if err != nil {
+			return "", fmt.Errorf("read the database's time: %w", err)
+		}
+		triggeredAt = jsbind.String(now)
+	}
 	args, err := jsbind.Args(q.Dialect(), 5, alert.RuleID, deviceID, severity, message, triggeredAt)
 	if err != nil {
-		return err
+		return "", err
 	}
 	_, err = q.Exec(ctx, `INSERT INTO alert_history (rule_id, device_id, severity, message, triggered_at)
 		VALUES (?, ?, ?, ?, ?)`, args...)
 	if err != nil {
-		return fmt.Errorf("write the alert: %w", err)
+		return "", fmt.Errorf("write the alert: %w", err)
 	}
-	return nil
+	return triggeredAt.Str(), nil
 }
 
 // ruleStore is the engine's view of the database.
@@ -188,7 +197,8 @@ type ruleStore interface {
 	// enabledRules is getAlertRules({ enabled: true, condition_type }).
 	enabledRules(ctx context.Context, conditionType string) ([]Rule, error)
 	recentAlert(ctx context.Context, ruleID, deviceID, cooldown jsbind.Value) (bool, error)
-	createAlert(ctx context.Context, alert NewAlert, now time.Time) error
+	// createAlert writes an alert and returns its time as ISO text.
+	createAlert(ctx context.Context, alert NewAlert) (string, error)
 }
 
 type dbStore struct{ db *store.DB }
@@ -202,6 +212,6 @@ func (s dbStore) recentAlert(ctx context.Context, ruleID, deviceID, cooldown jsb
 	return GetRecentAlert(ctx, s.db, ruleID, deviceID, cooldown)
 }
 
-func (s dbStore) createAlert(ctx context.Context, alert NewAlert, now time.Time) error {
-	return CreateAlert(ctx, s.db, alert, now)
+func (s dbStore) createAlert(ctx context.Context, alert NewAlert) (string, error) {
+	return CreateAlert(ctx, s.db, alert)
 }

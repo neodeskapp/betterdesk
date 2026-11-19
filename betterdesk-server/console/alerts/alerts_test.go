@@ -384,10 +384,10 @@ func TestSweepLogsAFailure(t *testing.T) {
 
 func alertAgo(t *testing.T, db *store.DB, ruleID int64, deviceID string, ago time.Duration) {
 	t.Helper()
-	err := CreateAlert(context.Background(), db, NewAlert{
+	_, err := CreateAlert(context.Background(), db, NewAlert{
 		RuleID: jsbind.Number(float64(ruleID)), DeviceID: jsbind.String(deviceID), Severity: jsbind.String("warning"), Message: jsbind.String("x"),
 		TriggeredAt: jsbind.String(store.ISOTime(time.Now().Add(-ago))),
-	}, time.Now())
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -596,24 +596,26 @@ func (quietMailLog) Error(...any) {}
 
 // What createAlert fills in for an alert that leaves something out: no
 // device is NULL, no severity is "warning", no message is the empty text,
-// no time is the time of the call.
+// no time is the database's time, which it returns.
 func TestCreateAlertFillsInWhatIsMissing(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		ctx := context.Background()
 		id := addRule(t, db, "cpu_usage", "gt", 90, nil)
-		at := time.Date(2026, 11, 10, 8, 30, 15, 987654321, time.UTC)
+		var times []string
 		for _, alert := range []NewAlert{
 			{RuleID: jsbind.Number(float64(id))},
 			{RuleID: jsbind.Number(float64(id)), DeviceID: jsbind.String(""), Severity: jsbind.String(""), Message: jsbind.String(""), TriggeredAt: jsbind.String("")},
 			{RuleID: jsbind.Number(float64(id)), DeviceID: jsbind.Null, Severity: jsbind.Null, Message: jsbind.Null, TriggeredAt: jsbind.Null},
 		} {
-			if err := CreateAlert(ctx, db, alert, at); err != nil {
+			at, err := CreateAlert(ctx, db, alert)
+			if err != nil {
 				t.Fatal(err)
 			}
+			times = append(times, at)
 		}
-		if err := CreateAlert(ctx, db, NewAlert{RuleID: jsbind.Number(float64(id)), DeviceID: jsbind.String("dev-1"), Severity: jsbind.String("critical"),
-			Message: jsbind.String("text"), TriggeredAt: jsbind.String("2026-01-02T03:04:05.006Z")}, at); err != nil {
-			t.Fatal(err)
+		if at, err := CreateAlert(ctx, db, NewAlert{RuleID: jsbind.Number(float64(id)), DeviceID: jsbind.String("dev-1"), Severity: jsbind.String("critical"),
+			Message: jsbind.String("text"), TriggeredAt: jsbind.String("2026-01-02T03:04:05.006Z")}); err != nil || at != "2026-01-02T03:04:05.006Z" {
+			t.Fatal(at, err)
 		}
 		rows, err := store.Select(ctx, db, "SELECT device_id, severity, message, triggered_at FROM alert_history ORDER BY id")
 		if err != nil {
@@ -630,10 +632,17 @@ func TestCreateAlertFillsInWhatIsMissing(t *testing.T) {
 			instant, _ := triggered.Instant()
 			got = append(got, strings.Join([]string{strconv.FormatBool(device.Valid), device.String, severity.String, message.String, store.ISOTime(instant)}, "|"))
 		}
-		missing := "false||warning||2026-11-10T08:30:15.987Z"
-		want := []string{missing, missing, missing, "true|dev-1|critical|text|2026-01-02T03:04:05.006Z"}
+		var want []string
+		for _, at := range times {
+			stamped, err := time.Parse(time.RFC3339Nano, at)
+			if err != nil || time.Since(stamped) > time.Minute || time.Since(stamped) < -time.Minute {
+				t.Fatalf("stamped %q, not the database's time", at)
+			}
+			want = append(want, "false||warning||"+at)
+		}
+		want = append(want, "true|dev-1|critical|text|2026-01-02T03:04:05.006Z")
 		if !sameStrings(got, want) {
-			t.Fatalf("rows %q", got)
+			t.Fatalf("rows %q, want %q", got, want)
 		}
 	})
 }

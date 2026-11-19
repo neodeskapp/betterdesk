@@ -238,6 +238,9 @@ type memCase struct {
 	Logs      [][2]string  `json:"logs"`
 }
 
+// memStoreTime is the time memStore stamps an alert with.
+const memStoreTime = "2026-11-10T08:30:15.123Z"
+
 // memStore stands in for the database as the oracle's replaced adapter
 // methods did.
 type memStore struct {
@@ -280,14 +283,14 @@ func (s *memStore) recentAlert(_ context.Context, ruleID, deviceID, cooldown jsb
 	return s.c.Recent == "all", nil
 }
 
-func (s *memStore) createAlert(_ context.Context, alert NewAlert, _ time.Time) error {
+func (s *memStore) createAlert(_ context.Context, alert NewAlert) (string, error) {
 	s.created = append(s.created, `{"rule_id":`+dumpBind(alert.RuleID)+`,"device_id":`+dumpBind(alert.DeviceID)+`,"severity":`+dumpBind(alert.Severity)+
 		`,"message":`+dumpBind(alert.Message)+`,"acknowledged":false}`)
-	s.times = append(s.times, alert.TriggeredAt.Str())
+	s.times = append(s.times, dumpBind(alert.TriggeredAt))
 	if s.c.Create == "throws" {
-		return errors.New("create failed")
+		return "", errors.New("create failed")
 	}
-	return nil
+	return memStoreTime, nil
 }
 
 type sentMail struct {
@@ -608,8 +611,10 @@ func TestEngineAsNodeWithoutDatabase(t *testing.T) {
 		if len(mem.created) != len(c.Created) {
 			t.Fatalf("case %d %s: %d alerts %q, Node: %v", i, describe(), len(mem.created), mem.created, c.Created)
 		}
+		// Node stamped an alert with its own clock as ISO text; the Go
+		// console leaves the time to the database (BUGS AE6)
 		for k := range mem.created {
-			if mem.created[k] != c.Created[k].Alert || !c.Created[k].ISO || mem.times[k] != "2026-11-10T08:30:15.123Z" {
+			if mem.created[k] != c.Created[k].Alert || !c.Created[k].ISO || mem.times[k] != "undefined" {
 				t.Fatalf("case %d %s: alert %s at %s, Node: %s", i, describe(), mem.created[k], mem.times[k], c.Created[k].Alert)
 			}
 		}
@@ -623,8 +628,8 @@ func TestEngineAsNodeWithoutDatabase(t *testing.T) {
 			}
 		}
 		for _, m := range mailer.sent {
-			if m.alert.TriggeredAt.Str() != "2026-11-10T08:30:15.123Z" {
-				t.Fatalf("case %d: alert time %q", i, m.alert.TriggeredAt.Str())
+			if m.alert.TriggeredAt.Str() != memStoreTime {
+				t.Fatalf("case %d: alert time %q, the store's %q", i, m.alert.TriggeredAt.Str(), memStoreTime)
 			}
 		}
 		counts["mails"] += len(c.Mails)

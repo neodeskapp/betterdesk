@@ -72,8 +72,8 @@ type Options struct {
 	// no filter. The sweep reads id, online, banned, soft_deleted,
 	// remote_target and last_online of each.
 	Devices func(ctx context.Context) ([]*goapi.Object, error)
-	// Now is the clock for the time of an alert and for the sweep. Nil
-	// means time.Now.
+	// Now is the clock of the sweep. Nil means time.Now. The time of an
+	// alert is the database's.
 	Now func() time.Time
 	// Location is the time zone a last_online without a zone is read in.
 	// Nil means time.Local, the zone of the process, as in Node.
@@ -247,13 +247,10 @@ func (e *Engine) evaluateAgainst(ctx context.Context, rules []Rule, deviceID jsb
 		if t.err != nil {
 			return t.err
 		}
-		now := e.now()
 		severity := rule.Severity.Or(jsbind.String("warning"))
-		triggeredAt := jsbind.String(store.ISOTime(now))
-
-		err = e.store.createAlert(ctx, NewAlert{
-			RuleID: rule.ID, DeviceID: deviceID, Severity: severity, Message: jsbind.String(message), TriggeredAt: triggeredAt,
-		}, now)
+		// The database stamps the alert: its clock is the one the cooldown
+		// is checked against
+		triggeredAt, err := e.store.createAlert(ctx, NewAlert{RuleID: rule.ID, DeviceID: deviceID, Severity: severity, Message: jsbind.String(message)})
 		var device string
 		if err == nil {
 			device, err = jsString(deviceID)
@@ -266,7 +263,7 @@ func (e *Engine) evaluateAgainst(ctx context.Context, rules []Rule, deviceID jsb
 
 		if rule.NotifyEmails.Truthy() && e.opts.Mail != nil {
 			e.mailAlert(
-				mail.Alert{Severity: severity, DeviceID: deviceID, Message: jsbind.String(message), TriggeredAt: triggeredAt},
+				mail.Alert{Severity: severity, DeviceID: deviceID, Message: jsbind.String(message), TriggeredAt: jsbind.String(triggeredAt)},
 				mail.AlertRule{
 					Name: rule.Name, Description: rule.Description, ConditionType: rule.ConditionType,
 					ConditionOp: rule.ConditionOp, ConditionValue: rule.ConditionValue, NotifyEmails: rule.NotifyEmails,
@@ -418,7 +415,7 @@ func (e *Engine) PeriodicCheck(ctx context.Context) error {
 
 // PeriodicCheckAt is PeriodicCheck with the time to measure "offline
 // since" from, which the Node function took as its `now` option. The
-// alerts it raises carry the engine's own clock.
+// alerts it raises carry the database's time.
 func (e *Engine) PeriodicCheckAt(ctx context.Context, at time.Time) error {
 	rules := e.loadRules(ctx, "offline_duration")
 	if len(rules) == 0 {
