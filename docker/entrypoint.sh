@@ -1,6 +1,7 @@
 #!/bin/sh
-# BetterDesk — All-in-One Container Entrypoint
-# Runs Go server + Node.js console via supervisord
+# BetterDesk — container entrypoint
+# Prepares the volumes and settings, then runs betterdesk-server (signal,
+# relay, API and web console in one process) as the betterdesk user.
 set -e
 
 # shellcheck source=/dev/null
@@ -8,32 +9,23 @@ set -e
 ensure_betterdesk_user
 
 echo "========================================"
-echo "  BetterDesk All-in-One Container"
+echo "  BetterDesk"
 echo "  Version: ${BETTERDESK_IMAGE_VERSION:-3.5.264}"
 echo "========================================"
 echo ""
-echo "Components:"
-echo "  Go Server:    signal + relay + API (ports 21115-21121)"
-echo "  Node.js Console: web panel (port ${PORT:-5000})"
-echo "  Client API:   port ${API_PORT:-21121}"
-echo ""
-echo "Configuration:"
-echo "  NODE_ENV:      ${NODE_ENV:-production}"
-echo "  DB_TYPE:       ${DB_TYPE:-sqlite}"
-echo "  ENCRYPTED_ONLY: ${ENCRYPTED_ONLY:-1}"
-echo "  DATA_DIR:      ${DATA_DIR:-/app/data}"
+echo "  Server:       signal + relay + API (ports 21115-21121)"
+echo "  Web console:  port ${CONSOLE_PORT:-5000}"
+echo "  DB_TYPE:      ${DB_TYPE:-sqlite}"
+echo "  DATA_DIR:     ${DATA_DIR:-/app/data}"
 echo ""
 
 # Ensure data directories exist and have correct permissions
-mkdir -p /opt/rustdesk /app/data /var/log/betterdesk 2>/dev/null || true
-chown -R betterdesk:betterdesk /opt/rustdesk /app/data /var/log/betterdesk 2>/dev/null || true
+mkdir -p /opt/rustdesk /app/data 2>/dev/null || true
+chown -R betterdesk:betterdesk /opt/rustdesk /app/data 2>/dev/null || true
 
-# Shared bootstrap password for Go + Node before supervisord (issue #385).
+# Shared bootstrap password of the admin account (issue #385).
 # shellcheck source=/docker/bootstrap-admin-credentials.sh
 . /docker/bootstrap-admin-credentials.sh
-# shellcheck source=/docker/guard-sqlite-auth-split.sh
-. /docker/guard-sqlite-auth-split.sh
-guard_sqlite_auth_split
 
 # Write a file as betterdesk. Fresh named volumes inherit image ownership
 # (UID 10001 by default, or PUID after remap); with compose cap_drop:ALL root
@@ -41,30 +33,13 @@ guard_sqlite_auth_split
 # .api_key, issue #299).
 write_as_betterdesk() {
     # usage: write_as_betterdesk <path> <content>
-    _wad_path="$1"
-    _wad_content="$2"
-    if command -v su-exec >/dev/null 2>&1; then
-        printf '%s\n' "$_wad_content" | su-exec betterdesk sh -c "umask 077; cat > \"$_wad_path\""
-    else
-        printf '%s\n' "$_wad_content" | su -s /bin/sh betterdesk -c "umask 077; cat > \"$_wad_path\""
-    fi
-}
-touch_as_betterdesk() {
-    if command -v su-exec >/dev/null 2>&1; then
-        su-exec betterdesk touch "$1"
-    else
-        su -s /bin/sh betterdesk -c "touch \"$1\""
-    fi
+    printf '%s\n' "$2" | su-exec betterdesk sh -c "umask 077; cat > \"$1\""
 }
 
-# Bootstrap API key (shared between Go server and Node.js console)
+# API key of the server's API
 API_KEY_FILE="/opt/rustdesk/.api_key"
 if [ -z "${API_KEY:-}" ] && ! file_exists_as_betterdesk "$API_KEY_FILE"; then
-    if command -v openssl >/dev/null 2>&1; then
-        API_KEY=$(openssl rand -hex 32)
-    else
-        API_KEY=$(cat /dev/urandom | head -c 32 | od -An -tx1 | tr -d ' \n')
-    fi
+    API_KEY=$(openssl rand -hex 32)
     write_as_betterdesk "$API_KEY_FILE" "$API_KEY"
     echo "Auto-generated API key → $API_KEY_FILE"
 elif [ -n "${API_KEY:-}" ] && ! file_exists_as_betterdesk "$API_KEY_FILE"; then
@@ -91,17 +66,14 @@ else
             export ENROLLMENT_MODE="managed"
             echo "Enrollment:   managed (fresh install — new devices need approval)"
         fi
-        touch_as_betterdesk "$ENROLLMENT_SENTINEL" 2>/dev/null || true
+        su-exec betterdesk touch "$ENROLLMENT_SENTINEL" 2>/dev/null || true
     fi
 fi
-# Always export so supervisord's %(ENV_ENROLLMENT_MODE)s interpolation resolves.
-# An empty value is ignored by the Go server (keeps default/DB-restored mode).
-export ENROLLMENT_MODE="${ENROLLMENT_MODE:-}"
 
 # Verify write access — SQLite WAL mode requires writable directory (Issue #78)
 _app_uid="${PUID:-10001}"
 _app_gid="${PGID:-10001}"
-if ! touch_as_betterdesk /opt/rustdesk/.write_test 2>/dev/null; then
+if ! su-exec betterdesk touch /opt/rustdesk/.write_test 2>/dev/null; then
     echo ""
     echo "ERROR: /opt/rustdesk is NOT writable by the betterdesk user (UID ${_app_uid})."
     echo "  SQLite WAL mode requires write access to the database directory."
@@ -125,8 +97,9 @@ if [ -n "${ADMIN_PASSWORD}" ] && [ ${#ADMIN_PASSWORD} -lt 12 ]; then
     echo "WARNING [SECURITY]: ADMIN_PASSWORD is shorter than 12 characters — use a stronger password"
 fi
 
-# Determine database DSN for Go server
-# DB_URL env var is read by Go server's config.LoadEnv()
+# The server's database: DB_URL, the SQLite path or the postgres:// URI. A
+# separate auth.db of an older install (AUTH_DB_PATH) is imported into it at
+# the first start.
 if [ "${DB_TYPE}" = "postgres" ] || [ "${DB_TYPE}" = "postgresql" ]; then
     if [ -n "${DATABASE_URL}" ]; then
         export DB_URL="${DATABASE_URL}"
@@ -139,29 +112,6 @@ else
     export DB_URL="${DB_PATH:-/opt/rustdesk/db_v2.sqlite3}"
     export AUTH_DB_PATH="${AUTH_DB_PATH:-/app/data/auth.db}"
     echo "Database:     SQLite (${DB_URL})"
-    echo "Legacy panel store: ${AUTH_DB_PATH}"
-fi
-
-# SQLite identity-store consolidation is explicit and runs before either
-# service starts. It produces candidate/backup snapshots and aborts the
-# container start on conflict instead of ever creating or overwriting auth.db.
-if [ "${MIGRATE_SQLITE_AUTH_DB:-N}" = "Y" ] && [ "${DB_TYPE}" != "postgres" ] && [ "${DB_TYPE}" != "postgresql" ]; then
-    if ! file_exists_as_betterdesk "${AUTH_DB_PATH}"; then
-        echo "ERROR: MIGRATE_SQLITE_AUTH_DB=Y but legacy auth.db is missing: ${AUTH_DB_PATH}"
-        exit 1
-    fi
-    if [ "${MIGRATE_SQLITE_AUTH_DRY_RUN:-N}" = "Y" ]; then
-        echo "Validating legacy SQLite auth migration..."
-        /usr/local/bin/betterdesk-server -migrate-sqlite-auth -migrate-sqlite-auth-dry-run \
-            -db "${DB_URL}" -migrate-sqlite-auth-backup-dir /app/data/backups
-    else
-        echo "Consolidating legacy auth.db into ${DB_URL}..."
-        /usr/local/bin/betterdesk-server -migrate-sqlite-auth \
-            -db "${DB_URL}" -migrate-sqlite-auth-backup-dir /app/data/backups
-    fi
-    if [ "${MIGRATE_SQLITE_AUTH_DRY_RUN:-N}" != "Y" ]; then
-        export SQLITE_AUTH_DB_MODE=consolidated
-    fi
 fi
 
 # Wait for PostgreSQL if configured
@@ -188,12 +138,9 @@ if [ "${DB_TYPE}" = "postgres" ] || [ "${DB_TYPE}" = "postgresql" ]; then
     fi
 fi
 
-# Ensure Go server uses correct signal port (not NODE.js PORT)
+# The signal port is SIGNAL_PORT, never the PORT an older compose file sets
 export SIGNAL_PORT="${SIGNAL_PORT:-21116}"
 export SIGNAL_RATE_LIMIT_PER_IP="${SIGNAL_RATE_LIMIT_PER_IP:-20}"
-
-# Ensure Node.js Client API binds to all interfaces (not just localhost)
-export API_HOST="${API_HOST:-0.0.0.0}"
 export HOST="${HOST:-0.0.0.0}"
 
 # Relay server address: if not explicitly set, try to auto-detect public IP.
@@ -228,25 +175,17 @@ else
 fi
 export RELAY_SERVERS="${RELAY_SERVERS:-}"
 
-# Always export so supervisord's %(ENV_*)s interpolation resolves (#299).
-# Compose usually sets these; Portainer / bare docker run may omit them.
-export NTP_SERVERS="${NTP_SERVERS:-pool.ntp.org,time.google.com,time.cloudflare.com}"
-export BILLING_MAX_CLOCK_SKEW_MS="${BILLING_MAX_CLOCK_SKEW_MS:-2000}"
-export BILLING_REQUIRE_SYNCED_CLOCK="${BILLING_REQUIRE_SYNCED_CLOCK:-1}"
-export BILLING_TRUST_OS_NTP="${BILLING_TRUST_OS_NTP:-Y}"
-export SQLITE_AUTH_DB_MODE="${SQLITE_AUTH_DB_MODE:-}"
-
 echo ""
-echo "Starting services via supervisord..."
 if [ "${HTTPS_ENABLED:-false}" = "true" ]; then
-    echo "  Web Console:  https://localhost:${HTTPS_PORT:-5443}"
-    echo "  HTTP redirect: http://localhost:${PORT:-5000} → https://…:${HTTPS_PORT:-5443}"
+    echo "  Web console:  https://localhost:${HTTPS_PORT:-5443}"
+    echo "  HTTP redirect: http://localhost:${CONSOLE_PORT:-5000} → https://…:${HTTPS_PORT:-5443}"
 else
-    echo "  Web Console:  http://localhost:${PORT:-5000}"
+    echo "  Web console:  http://localhost:${CONSOLE_PORT:-5000}"
 fi
-echo "  Go API:       http://localhost:21121/api"
+echo "  API:          http://localhost:21121/api"
 echo "========================================"
 echo ""
 
-# Start supervisord (manages both processes)
-exec /usr/bin/supervisord -c /etc/supervisor/conf.d/betterdesk.conf
+# One process as betterdesk. tini passes its exit on; status 3 is a restart
+# request and the restart policy starts the container again.
+exec su-exec betterdesk "$@"

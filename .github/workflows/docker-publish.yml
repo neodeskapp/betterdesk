@@ -2,9 +2,8 @@
 # BetterDesk Docker Images - Build & Publish to GitHub Container Registry
 # =============================================================================
 # Images:
-#   ghcr.io/<owner>/betterdesk-server
-#   ghcr.io/<owner>/betterdesk-console
-#   ghcr.io/<owner>/betterdesk          (all-in-one)
+#   ghcr.io/<owner>/betterdesk-server   (server only, console off)
+#   ghcr.io/<owner>/betterdesk          (server with its web console, one process)
 #
 # Tags:
 #   - main push: latest, sha-<commit>
@@ -221,82 +220,6 @@ jobs:
           path: /tmp/digests/betterdesk-server
           if-no-files-found: error
 
-  build-console:
-    needs: [read-version, ghcr-preflight]
-    # Release/dispatch always; branch pushes only on CI version-bump subjects (#401).
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'release' ||
-      (github.event_name == 'push' &&
-        (startsWith(github.event.head_commit.message, 'chore: bump version') ||
-         startsWith(github.event.head_commit.message, 'chore: release version')) &&
-        contains(github.event.head_commit.message, '[version-bump]'))
-    runs-on: ubuntu-latest
-    timeout-minutes: 330
-    permissions:
-      contents: read
-      packages: write
-    outputs:
-      tags: ${{ steps.meta.outputs.tags }}
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
-
-      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
-        with:
-          images: ${{ env.IMAGE_PREFIX }}/betterdesk-console
-          labels: |
-            org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
-          tags: |
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))) }}
-            type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/dev' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
-            type=ref,event=tag
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}},enable=${{ !contains(github.ref_name, '-') && (github.event_name != 'workflow_dispatch' || !contains(github.event.inputs.tag, '-')) }}
-            type=raw,value=${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main' }}
-            type=raw,value=v${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main' }}
-            type=raw,value=${{ github.event.inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '' && github.event.inputs.tag != 'latest' && github.event.inputs.tag != 'dev' }}
-            type=sha,prefix=sha-,enable=${{ (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
-
-      - id: build
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
-        with:
-          context: .
-          file: ./Dockerfile.console
-          outputs: type=image,name=${{ env.IMAGE_PREFIX }}/betterdesk-console,push-by-digest=true,name-canonical=true,push=true
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            BETTERDESK_COMMIT_SHA=${{ github.sha }}
-            BETTERDESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
-          cache-from: type=gha,scope=betterdesk-console-amd64
-          cache-to: type=gha,mode=max,scope=betterdesk-console-amd64
-          platforms: linux/amd64
-
-      - name: Export image digest
-        run: |
-          set -euo pipefail
-          digest="${{ steps.build.outputs.digest }}"
-          test -n "$digest"
-          mkdir -p /tmp/digests/betterdesk-console
-          touch "/tmp/digests/betterdesk-console/${digest#sha256:}"
-
-      - name: Upload image digest
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: digests-console-amd64
-          path: /tmp/digests/betterdesk-console
-          if-no-files-found: error
-
   build-allinone:
     needs: [read-version, ghcr-preflight]
     # Release/dispatch always; branch pushes only on CI version-bump subjects (#401).
@@ -365,7 +288,6 @@ jobs:
           cache-from: |
             type=gha,scope=betterdesk-aio-amd64
             type=gha,scope=betterdesk-server-amd64
-            type=gha,scope=betterdesk-console-amd64
           cache-to: type=gha,mode=max,scope=betterdesk-aio-amd64
           platforms: ${{ steps.plats.outputs.platforms }}
 
@@ -387,12 +309,11 @@ jobs:
   # Phase 2: ARM64 on native runners (after amd64). Soft-merge still
   # publishes amd64 tags if this job fails (#476).
   build-arm64:
-    needs: [read-version, ghcr-preflight, build-server, build-console]
+    needs: [read-version, ghcr-preflight, build-server]
     if: |
       always() &&
       needs.read-version.result == 'success' &&
       needs.build-server.result == 'success' &&
-      needs.build-console.result == 'success' &&
       (github.event_name == 'workflow_dispatch' ||
        github.event_name == 'release' ||
        (github.event_name == 'push' &&
@@ -406,9 +327,6 @@ jobs:
           - name: server
             image: betterdesk-server
             file: Dockerfile.server
-          - name: console
-            image: betterdesk-console
-            file: Dockerfile.console
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 330
     permissions:
@@ -457,7 +375,7 @@ jobs:
           path: /tmp/digests/${{ matrix.image }}
           if-no-files-found: error
 
-  # Last ARM job: AIO after server/console ARM (warm GHA cache) and amd64 AIO.
+  # Last ARM job: AIO after the server ARM image (warm GHA cache) and amd64 AIO.
   build-aio-arm64:
     needs: [read-version, ghcr-preflight, build-allinone, build-arm64]
     if: |
@@ -503,7 +421,6 @@ jobs:
           cache-from: |
             type=gha,scope=betterdesk-aio-arm64
             type=gha,scope=betterdesk-server-arm64
-            type=gha,scope=betterdesk-console-arm64
           cache-to: type=gha,mode=max,scope=betterdesk-aio-arm64
           platforms: linux/arm64
 
@@ -525,12 +442,11 @@ jobs:
   # Soft-merge (#476): require amd64 success; include ARM digests when present.
   # ARM failure still publishes amd64-only (or partial) tags so the channel stays live.
   merge-images:
-    needs: [read-version, ghcr-preflight, build-server, build-console, build-allinone, build-arm64, build-aio-arm64]
+    needs: [read-version, ghcr-preflight, build-server, build-allinone, build-arm64, build-aio-arm64]
     if: |
       always() &&
       needs.read-version.result == 'success' &&
       needs.build-server.result == 'success' &&
-      needs.build-console.result == 'success' &&
       needs.build-allinone.result == 'success'
     strategy:
       fail-fast: false
@@ -538,8 +454,6 @@ jobs:
         include:
           - name: server
             image: betterdesk-server
-          - name: console
-            image: betterdesk-console
           - name: aio
             image: betterdesk
     runs-on: ubuntu-latest
@@ -672,7 +586,6 @@ jobs:
             echo "Product version: \`${pin_ver}\`"
             echo ""
             echo "- \`ghcr.io/${{ github.repository_owner }}/betterdesk-server\`"
-            echo "- \`ghcr.io/${{ github.repository_owner }}/betterdesk-console\`"
             echo "- \`ghcr.io/${{ github.repository_owner }}/betterdesk\`"
             echo ""
             echo "### Pin a version (production — recommended)"
@@ -687,12 +600,6 @@ jobs:
             echo "\`\`\`bash"
             echo "curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/docker-compose.quick.single.yml -o docker-compose.yml"
             echo "BETTERDESK_IMAGE_TAG=latest docker compose up -d"
-            echo "\`\`\`"
-            echo ""
-            echo "### Legacy split layout (two images)"
-            echo "\`\`\`bash"
-            echo "curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/docker-compose.quick.yml -o docker-compose.yml"
-            echo "docker compose pull && docker compose up -d"
             echo "\`\`\`"
             echo ""
             echo "### Package visibility"

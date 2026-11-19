@@ -27,11 +27,8 @@ const SECURITY_TIMEOUT_MS = 20 * 60 * 1000;
 const POSTGRES_PASSWORD = 'BetterDeskLocalGateOnly2026';
 
 const COMPOSE_FILES = [
-    'docker-compose.yml',
     'docker-compose.single.yml',
-    'docker-compose.quick.yml',
     'docker-compose.quick.single.yml',
-    'docker-compose.quick.macvlan.yml',
     'docker-compose.quick.single.macvlan.yml',
 ];
 
@@ -40,7 +37,7 @@ const BASH_INSTALLER_FILES = [
     'betterdesk.sh',
     'betterdesk-docker.sh',
     'scripts/test-native-installer.sh',
-    'scripts/test-betterdesk-node-install.sh',
+    'scripts/test-go-installer.sh',
     'scripts/test-postgresql-hba.sh',
     'scripts/test-docker-hardening.sh',
     'scripts/local-gate.sh',
@@ -743,7 +740,7 @@ async function runInstallerChecks(report, tools) {
     ], { timeoutMs: 120_000 });
 
     for (const [id, script, label] of [
-        ['installer-node-recovery', 'scripts/test-betterdesk-node-install.sh', 'Test Node installer recovery'],
+        ['installer-go-upgrade', 'scripts/test-go-installer.sh', 'Test the upgrade to the server with its web console'],
         ['installer-native-recovery', 'scripts/test-native-installer.sh', 'Test native installer recovery'],
         ['installer-postgres-hba', 'scripts/test-postgresql-hba.sh', 'Test PostgreSQL HBA setup'],
     ]) {
@@ -817,12 +814,13 @@ async function runComposeConfigChecks(report, tools) {
     const singleBuild = await runCheck(report, 'docker-build-single', 'Build local single-container image', tools.docker, [
         'compose', '-f', path.join(ROOT, 'docker-compose.single.yml'), 'build', 'betterdesk',
     ], { cwd: ROOT, timeoutMs: COMMAND_TIMEOUT_MS });
-    const splitBuild = await runCheck(report, 'docker-build-split', 'Build local split server and console images', tools.docker, [
-        'compose', '-f', path.join(ROOT, 'docker-compose.yml'), 'build', 'server', 'console',
+    await runCheck(report, 'docker-build-server', 'Build local server-only image', tools.docker, [
+        'build', '-f', path.join(ROOT, 'Dockerfile.server'), '-t', 'betterdesk-server:local', ROOT,
     ], { cwd: ROOT, timeoutMs: COMMAND_TIMEOUT_MS });
+    // There is no console image: the server serves the web console
     return {
         singleBuilt: singleBuild.status === 'PASS',
-        splitBuilt: splitBuild.status === 'PASS',
+        splitBuilt: false,
     };
 }
 
@@ -906,7 +904,7 @@ async function runDockerRuntimeChecks(report, tools, postgres, builds) {
         addInternalResult(report, 'docker-smoke-postgres', 'Smoke-test local Docker image with PostgreSQL', 'BLOCKED', 'PostgreSQL container was not ready');
     }
 
-    for (const image of ['betterdesk:local', 'betterdesk-server:local', 'betterdesk-console:local']) {
+    for (const image of ['betterdesk:local', 'betterdesk-server:local']) {
         await runCheck(report, `trivy-image-${image.replace(/[^a-z0-9]+/giu, '-')}`, `Scan local image ${image}`, tools.trivy, [
             'image',
             '--scanners', 'vuln,secret,misconfig',
@@ -931,7 +929,7 @@ async function runFullNodeTests(report, tools, builds) {
             'console-docker-integration-prerequisite',
             'Console Docker integration prerequisite',
             'BLOCKED',
-            'The split server/console image build failed; integration tests will not use stale local images.',
+            'There is no console image any more (the server serves the web console); the Node.js console tests run without Docker integration.',
         );
         await runCheck(report, 'console-tests-unit-only', 'Run console tests without unavailable Docker integration', npmCommand(tools), [
             'run', 'test:ci',

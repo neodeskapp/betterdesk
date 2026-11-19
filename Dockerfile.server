@@ -87,7 +87,7 @@ RUN chmod +x /ensure-app-user.sh /server-entrypoint.sh /docker/bootstrap-admin-c
 WORKDIR /opt/rustdesk
 
 # Server only: the console in this binary is on by default (DECISIONS A27)
-# and stays off here; the console runs in its own image
+# and stays off in this image; the betterdesk image runs both in one process
 ENV CONSOLE_PORT=0
 
 # Ports:
@@ -107,4 +107,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
 # server-entrypoint.sh drops to betterdesk user via su-exec before running the server.
 
 ENTRYPOINT ["/sbin/tini", "--", "/server-entrypoint.sh"]
-CMD ["/usr/local/bin/betterdesk-server", "-mode", "all", "-key-file", "/opt/rustdesk/id_ed25519"]
+CMD ["/usr/local/bin/betterdesk-server", "-mode", "all", "-api-port", "21121", "-key-file", "/opt/rustdesk/id_ed25519"]

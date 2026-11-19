@@ -19,7 +19,7 @@ fail() { printf 'FAIL  %s\n' "$*"; FAILED=1; }
 pass() { printf 'PASS  %s\n' "$*"; }
 
 # Paths owned by the project (never caches, never node_modules).
-SCAN_SCRIPTS=(betterdesk.sh betterdesk.ps1 install.sh docker-entrypoint.sh)
+SCAN_SCRIPTS=(betterdesk.sh betterdesk.ps1 install.sh docker/entrypoint.sh)
 
 # 1. Installers must not emit a credential as a systemd Environment= line.
 #    Non-secret keys (`Environment=DB_TYPE=…`) remain allowed.

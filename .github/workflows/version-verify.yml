@@ -15,11 +15,9 @@ on:
       - 'CHANGELOG.md'
       - 'README.md'
       - 'Dockerfile*'
-      - 'docker-compose.quick.yml'
       - 'docker-compose.quick.single.yml'
       - 'docker-compose.quick.single.macvlan.yml'
       - 'docker/**'
-      - 'docker-entrypoint.sh'
       - 'scripts/bump-version.js'
       - '.github/workflows/version-verify.yml'
   pull_request:
@@ -36,11 +34,9 @@ on:
       - 'CHANGELOG.md'
       - 'README.md'
       - 'Dockerfile*'
-      - 'docker-compose.quick.yml'
       - 'docker-compose.quick.single.yml'
       - 'docker-compose.quick.single.macvlan.yml'
       - 'docker/**'
-      - 'docker-entrypoint.sh'
       - 'scripts/bump-version.js'
       - '.github/workflows/version-verify.yml'
 

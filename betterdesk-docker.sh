@@ -5,8 +5,9 @@
 #   All-in-One Interactive Tool for Docker
 #
 #   Features:
-#     - Fresh installation with Docker Compose
-#     - Update containers
+#     - Fresh installation with Docker Compose: one container, one process
+#       (betterdesk-server serves signal, relay, API and the web console)
+#     - Update containers (a split install moves to the one container)
 #     - Repair/rebuild containers
 #     - Validate installation
 #     - Backup & restore volumes
@@ -64,13 +65,12 @@ COMMON_DATA_PATHS=(
     "$HOME/betterdesk-data"
 )
 
-# Container names
+# Container names. The split layout (server and console containers) is
+# replaced by the one container; its names are kept to find and stop it.
 SERVER_CONTAINER="betterdesk-server"
 CONSOLE_CONTAINER="betterdesk-console"
 AIO_CONTAINER="betterdesk"
-DOCKER_LAYOUT="${DOCKER_LAYOUT:-single}"
-# Set by update_docker_from_github; consumed after container rebuild (#192)
-LAST_UPDATE_REMOTE_SHA=""
+DOCKER_LAYOUT="single"
 # Legacy aliases for backwards compatibility in detect functions
 HBBS_CONTAINER="$SERVER_CONTAINER"
 HBBR_CONTAINER="$SERVER_CONTAINER"
@@ -470,14 +470,13 @@ check_docker_compose() {
 # Management capabilities and allowlisted runtime configuration
 #===============================================================================
 
-management_cli_path() {
-    if [ -f "$SCRIPT_DIR/web-nodejs/scripts/management-cli.js" ]; then
-        printf '%s\n' "$SCRIPT_DIR/web-nodejs/scripts/management-cli.js"
-    elif [ -f "$SCRIPT_DIR/scripts/management-cli.js" ]; then
-        printf '%s\n' "$SCRIPT_DIR/scripts/management-cli.js"
-    else
-        return 1
+# The image the compose file runs (betterdesk:local or the GHCR image).
+compose_image() {
+    local image=""
+    if [ -f "$COMPOSE_FILE" ]; then
+        image=$(grep -m1 -E '^[[:space:]]+image:' "$COMPOSE_FILE" | sed -E 's/^[[:space:]]+image:[[:space:]]*//; s/["'"'"']//g')
     fi
+    printf '%s\n' "${image:-betterdesk:local}"
 }
 
 check_management_capabilities() {
@@ -523,19 +522,21 @@ repair_management_permissions() {
 }
 
 apply_managed_config() {
-    local cli
-    cli=$(management_cli_path 2>/dev/null) || {
-        print_error "Management configuration tool is missing"
-        return 1
-    }
     [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ] || {
         print_error "No allowlisted configuration changes supplied"
         return 1
     }
     print_step "Applying allowlisted Docker configuration..."
-    BETTERDESK_CONSOLE_PATH="$SCRIPT_DIR/web-nodejs" \
-        BETTERDESK_PATH="$DATA_DIR" DATA_DIR="$DATA_DIR" \
-        node "$cli" set "${MANAGED_CONFIG_CHANGES[@]}"
+    # The image's own betterdesk-server checks the keys against its allowlist
+    # and writes the manager's env file
+    local env_file env_dir
+    env_file=$(docker_update_env_file)
+    env_dir=$(dirname "$env_file")
+    mkdir -p "$env_dir"
+    [ -f "$env_file" ] || touch "$env_file"
+    docker run --rm --user "$(id -u):$(id -g)" --entrypoint /usr/local/bin/betterdesk-server \
+        -v "$env_dir:/cfg" -e BETTERDESK_ENV_FILE="/cfg/$(basename "$env_file")" \
+        "$(compose_image)" config set "${MANAGED_CONFIG_CHANGES[@]}" || return 1
     cd "$SCRIPT_DIR"
     $COMPOSE_CMD -f "$COMPOSE_FILE" up -d
     start_containers
@@ -832,31 +833,30 @@ install_docker() {
     print_success "Docker installed"
 }
 
+# One container runs the server with its web console. A split install
+# (server and console containers) is replaced by it: its containers go,
+# its data folder and console_data volume stay and are mounted by the one
+# container.
 choose_docker_layout() {
-    if [ "$AUTO_MODE" = true ]; then
-        print_info "Using ${DOCKER_LAYOUT} container layout (auto mode)"
-        return
+    if [ "$DOCKER_LAYOUT" = "split" ]; then
+        migrate_split_containers
     fi
+    DOCKER_LAYOUT="single"
+    print_info "One container: signal, relay, API and the web console in betterdesk-server"
+}
 
-    echo ""
-    local _menu_items=(
-        $'Single container\tOfficial all-in-one image (recommended)'
-        $'Split containers\tLegacy server + console images'
-    )
-    local _menu_returns=( 1 2 )
-    menu_choose "Select Docker Layout" "Single container is easier to update (one image pull)"
-    local layout_choice="$MENU_CHOICE"
-
-    case "$layout_choice" in
-        2)
-            DOCKER_LAYOUT="split"
-            print_info "Split container layout selected (legacy)"
-            ;;
-        *)
-            DOCKER_LAYOUT="single"
-            print_info "Single container layout selected (recommended)"
-            ;;
-    esac
+migrate_split_containers() {
+    print_step "Replacing the split containers with the one container..."
+    print_info "The data folder ($DATA_DIR) and the console_data volume stay"
+    local c
+    for c in "$CONSOLE_CONTAINER" "$SERVER_CONTAINER"; do
+        if docker ps -a --format '{{.Names}}' | grep -q "^${c}$"; then
+            docker stop "$c" >/dev/null 2>&1 || true
+            docker rm "$c" >/dev/null 2>&1 || true
+            print_info "Removed container $c"
+        fi
+    done
+    DOCKER_LAYOUT="single"
 }
 
 choose_database_type() {
@@ -928,7 +928,7 @@ preserve_compose_database_config() {
     fi
 }
 
-create_compose_file_single() {
+create_compose_file() {
         print_step "Creating docker-compose.yml (single container)..."
 
         local admin_password signal_rate_limit server_ip
@@ -969,7 +969,7 @@ services:
             - console_data:/app/data
         environment:
             - NODE_ENV=production
-            - PORT=5000
+            - CONSOLE_PORT=5000
             - HOST=0.0.0.0
             - API_HOST=0.0.0.0
             - API_ENABLED=false
@@ -1013,244 +1013,6 @@ EOF
         print_success "docker-compose.yml created (single container)"
 }
 
-create_compose_file() {
-        if [ "$DOCKER_LAYOUT" = "single" ]; then
-            create_compose_file_single
-            return
-        fi
-
-        print_step "Creating docker-compose.yml..."
-
-        # Start composing docker-compose.yml
-        cat > "$COMPOSE_FILE" << EOF
-version: '3.8'
-
-services:
-EOF
-
-        # Add PostgreSQL service if selected
-        if [ "$DB_TYPE" = "postgresql" ]; then
-                cat >> "$COMPOSE_FILE" << EOF
-    postgres:
-        container_name: betterdesk-postgres
-        image: postgres:16-alpine
-        environment:
-            POSTGRES_USER: $POSTGRESQL_USER
-            POSTGRES_PASSWORD: $POSTGRESQL_PASS
-            POSTGRES_DB: $POSTGRESQL_DB
-        volumes:
-            - postgres_data:/var/lib/postgresql/data
-        healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U $POSTGRESQL_USER -d $POSTGRESQL_DB"]
-            interval: 10s
-            timeout: 5s
-            retries: 5
-        restart: unless-stopped
-        networks:
-            - betterdesk
-
-EOF
-        fi
-
-        # Generate or preserve shared API key for Node.js <-> Go server communication
-        local api_key
-        if [ -f "$DATA_DIR/.api_key" ] && [ -s "$DATA_DIR/.api_key" ]; then
-            api_key=$(cat "$DATA_DIR/.api_key")
-            print_info "Preserved existing API key"
-        else
-            api_key=$(openssl rand -hex 32)
-            echo "$api_key" > "$DATA_DIR/.api_key"
-            chmod 600 "$DATA_DIR/.api_key"
-            print_info "Generated API key for console <-> server communication"
-        fi
-
-        # Generate or preserve admin password (shared between Go server and Node.js console)
-        local admin_password
-        if [ -f "$DATA_DIR/.admin_credentials" ] && [ -s "$DATA_DIR/.admin_credentials" ]; then
-            # Support both old format (admin:pass) and new format (Admin Password: pass)
-            admin_password=$(grep -m1 '^Admin Password:' "$DATA_DIR/.admin_credentials" 2>/dev/null | sed 's/^Admin Password:[[:space:]]*//')
-            if [ -z "$admin_password" ]; then
-                admin_password=$(cut -d: -f2 "$DATA_DIR/.admin_credentials" 2>/dev/null)
-            fi
-        fi
-        if [ -z "$admin_password" ]; then
-            # Respect user-provided ADMIN_PASSWORD env var if set
-            if [ -n "$ADMIN_PASSWORD" ]; then
-                admin_password="$ADMIN_PASSWORD"
-                print_info "Using custom admin password from ADMIN_PASSWORD env var"
-            else
-                # SECURITY (audit fix M-05, 2026-04-10): full hex entropy
-                admin_password=$(openssl rand -hex 16)
-            fi
-            # Only clean auth.db on FRESH install (no existing credentials)
-            if docker volume inspect "${PROJECT_NAME:-betterdesk}_console_data" >/dev/null 2>&1; then
-                print_info "Cleaning old auth database from console_data volume..."
-                docker run --rm -v "${PROJECT_NAME:-betterdesk}_console_data:/data" alpine \
-                        sh -c "rm -f /data/auth.db /data/auth.db-wal /data/auth.db-shm" 2>/dev/null || true
-            fi
-        else
-            print_info "Preserved existing admin password"
-        fi
-        DOCKER_ADMIN_PASSWORD="$admin_password"
-
-        # Get relay server address according to RELAY_MODE / RELAY_SERVERS
-        local server_ip
-        server_ip=$(resolve_relay_ip)
-
-        local signal_rate_limit="${SIGNAL_RATE_LIMIT_PER_IP:-20}"
-        if ! [[ "$signal_rate_limit" =~ ^[0-9]+$ ]]; then
-            print_warning "Invalid SIGNAL_RATE_LIMIT_PER_IP='$signal_rate_limit'; using 20"
-            signal_rate_limit="20"
-        fi
-
-        # Add BetterDesk server (Go single binary - signal + relay + API)
-        cat >> "$COMPOSE_FILE" << EOF
-    server:
-        container_name: $SERVER_CONTAINER
-        build:
-            context: .
-            dockerfile: Dockerfile.server
-        pull_policy: never
-        command: ["/usr/local/bin/betterdesk-server", "-mode", "all", "-api-port", "21121", "-key-file", "/opt/rustdesk/id_ed25519"]
-        ports:
-            - "21121:21121"
-            - "21115:21115"
-            - "21116:21116"
-            - "21116:21116/udp"
-            - "21117:21117"
-            - "21118:21118"
-            - "21119:21119"
-        volumes:
-            - $DATA_DIR:/opt/rustdesk
-EOF
-
-        if [ "$DB_TYPE" != "postgresql" ]; then
-                cat >> "$COMPOSE_FILE" << EOF
-            - console_data:/app/data:ro
-EOF
-        fi
-
-        cat >> "$COMPOSE_FILE" << EOF
-        environment:
-            - RELAY_SERVERS=$server_ip
-            - INIT_ADMIN_PASS=$admin_password
-            - SIGNAL_RATE_LIMIT_PER_IP=$signal_rate_limit
-EOF
-
-        if [ "$DB_TYPE" != "postgresql" ]; then
-                cat >> "$COMPOSE_FILE" << EOF
-            - AUTH_DB_PATH=/app/data/auth.db
-EOF
-        fi
-
-        if [ "$DB_TYPE" = "postgresql" ]; then
-                cat >> "$COMPOSE_FILE" << EOF
-            - DB_URL=postgres://$POSTGRESQL_USER:$POSTGRESQL_PASS@postgres:5432/$POSTGRESQL_DB?sslmode=disable
-        depends_on:
-            postgres:
-                condition: service_healthy
-EOF
-        fi
-
-        cat >> "$COMPOSE_FILE" << EOF
-        healthcheck:
-            test: ["CMD", "curl", "-sf", "http://localhost:21121/api/health"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
-            start_period: 15s
-        restart: unless-stopped
-        networks:
-            - betterdesk
-
-    console:
-        container_name: $CONSOLE_CONTAINER
-        build:
-            context: .
-            dockerfile: Dockerfile.console
-        pull_policy: never
-        ports:
-            - "5000:5000"
-        volumes:
-            - $DATA_DIR:/opt/rustdesk:ro
-            - console_data:/app/data
-        environment:
-            - NODE_ENV=production
-            - PORT=5000
-            - HOST=0.0.0.0
-            - API_HOST=0.0.0.0
-            - API_ENABLED=false
-            - RUSTDESK_PATH=/opt/rustdesk
-            - HBBS_API_URL=http://$SERVER_CONTAINER:21121/api
-            - BETTERDESK_API_URL=http://$SERVER_CONTAINER:21121/api
-            - SERVER_BACKEND=betterdesk
-            - DATA_DIR=/app/data
-            - DB_PATH=/opt/rustdesk/db_v2.sqlite3
-            - PUB_KEY_PATH=/opt/rustdesk/id_ed25519.pub
-            - API_KEY_PATH=/opt/rustdesk/.api_key
-            - KEYS_PATH=/opt/rustdesk
-            - DEFAULT_ADMIN_PASSWORD=$admin_password
-            - FORCE_PASSWORD_UPDATE=true
-            - WS_HBBS_HOST=$SERVER_CONTAINER
-            - WS_HBBS_PORT=21116
-            - WS_HBBR_HOST=$SERVER_CONTAINER
-            - WS_HBBR_PORT=21117
-            - DOCKER=true
-EOF
-
-        if [ "$DB_TYPE" = "postgresql" ]; then
-                cat >> "$COMPOSE_FILE" << EOF
-            - DB_TYPE=postgresql
-            - DATABASE_URL=postgres://$POSTGRESQL_USER:$POSTGRESQL_PASS@postgres:5432/$POSTGRESQL_DB?sslmode=disable
-        depends_on:
-            postgres:
-                condition: service_healthy
-            server:
-                condition: service_healthy
-EOF
-        else
-                cat >> "$COMPOSE_FILE" << EOF
-        depends_on:
-            server:
-                condition: service_started
-EOF
-        fi
-
-        cat >> "$COMPOSE_FILE" << EOF
-        healthcheck:
-            test: ["CMD", "curl", "-sf", "http://localhost:5000/health"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
-            start_period: 30s
-        restart: unless-stopped
-        networks:
-            - betterdesk
-
-networks:
-    betterdesk:
-        driver: bridge
-EOF
-
-        # Add volumes
-        if [ "$DB_TYPE" = "postgresql" ]; then
-                cat >> "$COMPOSE_FILE" << EOF
-
-volumes:
-    console_data:
-    postgres_data:
-EOF
-        else
-                cat >> "$COMPOSE_FILE" << EOF
-
-volumes:
-    console_data:
-EOF
-        fi
-
-        print_success "docker-compose.yml created"
-}
-
 build_images() {
     print_step "Building Docker images..."
     
@@ -1269,47 +1031,18 @@ start_containers() {
     $COMPOSE_CMD up -d
     
     sleep 5
-    
-    # Inject shared API key into Go server database for Node.js <-> Go communication
-    local api_key_file="$DATA_DIR/.api_key"
-    if [ -f "$api_key_file" ]; then
-        local api_key
-        api_key=$(cat "$api_key_file")
-        local api_key_sql
-        api_key_sql=$(sql_escape_literal "$api_key")
-        # Use sqlite3 inside the server container to insert the API key
-        local exec_container="$SERVER_CONTAINER"
-        if [ "$DOCKER_LAYOUT" = "single" ] || docker ps --format '{{.Names}}' | grep -q "^${AIO_CONTAINER}$"; then
-            exec_container="$AIO_CONTAINER"
-        fi
-        docker exec "$exec_container" sh -c "
-            if command -v sqlite3 >/dev/null 2>&1; then
-                sqlite3 /opt/rustdesk/db_v2.sqlite3 \"INSERT OR REPLACE INTO server_config (key, value) VALUES ('api_key', '$api_key_sql');\" 2>/dev/null
-            fi
-        " 2>/dev/null || true
-        # Also try from host if sqlite3 is available
-        if [ -f "$DATA_DIR/db_v2.sqlite3" ] && command -v sqlite3 &>/dev/null; then
-            sqlite3 "$DATA_DIR/db_v2.sqlite3" "INSERT OR REPLACE INTO server_config (key, value) VALUES ('api_key', '$api_key_sql');" 2>/dev/null || true
-        fi
-        print_info "API key synced to Go server database"
-    fi
-    
+
     detect_installation
-    
+
     if [ "$AIO_RUNNING" = true ]; then
-        print_success "All-in-one container running"
-    elif [ "$SERVER_RUNNING" = true ] && [ "$CONSOLE_RUNNING" = true ]; then
-        print_success "All containers running"
+        print_success "BetterDesk container running"
     else
-        print_error "Required BetterDesk containers are not running"
+        print_error "The BetterDesk container is not running"
         return 1
     fi
 
-    local api_port="21114"
-    if [ "$DOCKER_LAYOUT" = "single" ] || [ "$AIO_RUNNING" = true ]; then
-        api_port="21121"
-    fi
-    local health_deadline=60
+    local api_port="21121"
+    local health_deadline=90
     while [ "$health_deadline" -gt 0 ]; do
         if curl -fsS --max-time 3 "http://127.0.0.1:${api_port}/api/health" >/dev/null 2>&1 \
             && curl -fsS --max-time 3 "http://127.0.0.1:5000/health" >/dev/null 2>&1; then
@@ -1335,13 +1068,15 @@ stop_containers() {
     print_success "Containers stopped"
 }
 
-# Resolve the container that runs the Node.js panel (single AIO vs split console).
+# The container that runs the server with its web console.
 resolve_panel_container() {
-    if [ "$DOCKER_LAYOUT" = "single" ] || docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^${AIO_CONTAINER}$"; then
-        echo "$AIO_CONTAINER"
-        return 0
-    fi
-    echo "$CONSOLE_CONTAINER"
+    echo "$AIO_CONTAINER"
+}
+
+# set_admin_password_in_container CONTAINER PASSWORD: the password of the
+# account admin, set by the server's reset-password (password on stdin).
+set_admin_password_in_container() {
+    printf '%s\n' "$2" | docker exec -i -u betterdesk "$1" /usr/local/bin/betterdesk-server reset-password admin
 }
 
 create_admin_user() {
@@ -1357,14 +1092,9 @@ create_admin_user() {
     # Wait for database to be created
     sleep 3
     
-    # Node.js console auto-creates admin user on startup if no users exist
-    # We use the reset-password script to set a secure password
-    # Arguments: <password> [username] — password first, then optional username
-    local target_container
-    target_container=$(resolve_panel_container)
-
-    if ! docker exec -u betterdesk "$target_container" \
-        node /app/scripts/reset-password.js "$admin_password" admin 2>/dev/null; then
+    # The server makes the admin at its first start; reset-password sets the
+    # installer's password on it (or makes it), the password on stdin
+    if ! set_admin_password_in_container "$(resolve_panel_container)" "$admin_password" >/dev/null; then
         print_error "Could not set the admin password safely"
         print_info "The installation is incomplete; inspect container logs before retrying"
         return 1
@@ -1516,10 +1246,8 @@ UPDATE_GITHUB_BRANCH="${UPDATE_GITHUB_BRANCH:-main}"
 docker_update_env_file() {
     if [ -f "$SCRIPT_DIR/web-nodejs/.env" ]; then
         echo "$SCRIPT_DIR/web-nodejs/.env"
-    elif [ -f "$SCRIPT_DIR/.env" ]; then
-        echo "$SCRIPT_DIR/.env"
     else
-        echo "$SCRIPT_DIR/web-nodejs/.env"
+        echo "$SCRIPT_DIR/.env"
     fi
 }
 
@@ -1618,8 +1346,8 @@ switch_update_channel() {
 }
 
 # Pull latest project files from GitHub before rebuilding Docker images.
-# This ensures the Dockerfiles, compose files, and source code (Go server,
-# Node.js console) are up-to-date before docker compose build.
+# This ensures the Dockerfiles, compose files, and source code (server and
+# web app) are up-to-date before docker compose build.
 update_docker_from_github() {
     local clone_dir="/tmp/betterdesk-docker-update-$$"
     rm -rf "$clone_dir"
@@ -1655,7 +1383,7 @@ update_docker_from_github() {
     fi
 
     # Validate
-    if [ ! -f "$clone_dir/betterdesk-server/go.mod" ] || [ ! -f "$clone_dir/web-nodejs/server.js" ]; then
+    if [ ! -f "$clone_dir/betterdesk-server/go.mod" ] || [ ! -f "$clone_dir/Dockerfile" ]; then
         print_error "Downloaded source is incomplete or invalid"
         rm -rf "$clone_dir"
         return 1
@@ -1684,7 +1412,8 @@ update_docker_from_github() {
     cp -rf "$clone_dir/betterdesk-server/." "$SCRIPT_DIR/betterdesk-server/"
     files_updated=$((files_updated + 1))
 
-    # Update Node.js console source
+    # The console's language files, themes and images (web-nodejs) while the
+    # checkout has them; the image copies them in
     if [ -d "$SCRIPT_DIR/web-nodejs" ]; then
         # Preserve data/ and node_modules/ if they exist locally
         local preserve_dirs=("data" "node_modules")
@@ -1696,9 +1425,10 @@ update_docker_from_github() {
         rm -rf "$SCRIPT_DIR/web-nodejs.pre-update" 2>/dev/null || true
         mv "$SCRIPT_DIR/web-nodejs" "$SCRIPT_DIR/web-nodejs.pre-update" 2>/dev/null || true
     fi
-    # Copy *contents* into a guaranteed dir (see issue #158 note above).
-    mkdir -p "$SCRIPT_DIR/web-nodejs"
-    cp -rf "$clone_dir/web-nodejs/." "$SCRIPT_DIR/web-nodejs/"
+    if [ -d "$clone_dir/web-nodejs" ]; then
+        mkdir -p "$SCRIPT_DIR/web-nodejs"
+        cp -rf "$clone_dir/web-nodejs/." "$SCRIPT_DIR/web-nodejs/"
+    fi
     # Restore preserved directories
     for pd in "${preserve_dirs[@]}"; do
         if [ -d "/tmp/betterdesk-docker-preserve-$$-$pd" ]; then
@@ -1720,10 +1450,11 @@ update_docker_from_github() {
     fi
 
     # Update Dockerfiles and compose files
-    for df in Dockerfile Dockerfile.server Dockerfile.console \
-              docker-compose.yml docker-compose.single.yml docker-compose.quick.yml \
+    for df in Dockerfile Dockerfile.server \
+              docker-compose.single.yml \
               docker-compose.quick.single.yml docker-compose.quick.single.macvlan.yml \
-              docker/entrypoint.sh docker/supervisord.conf docker/server-entrypoint.sh docker/console-entrypoint.sh \
+              docker/entrypoint.sh docker/server-entrypoint.sh docker/ensure-app-user.sh \
+              docker/bootstrap-admin-credentials.sh docker/show-admin-credentials.sh \
               betterdesk-docker.sh betterdesk.sh betterdesk.ps1 VERSION; do
         if [ -f "$clone_dir/$df" ]; then
             mkdir -p "$(dirname "$SCRIPT_DIR/$df")"
@@ -1735,33 +1466,9 @@ update_docker_from_github() {
 
     print_success "$files_updated project components updated from GitHub"
 
-    # ---- Update SHA tracking for in-app updater (#192) ----
-    LAST_UPDATE_REMOTE_SHA=""
-    if command -v git &>/dev/null && [ -d "$clone_dir/.git" ]; then
-        LAST_UPDATE_REMOTE_SHA=$(git -C "$clone_dir" rev-parse HEAD 2>/dev/null || true)
-        if [ -n "$LAST_UPDATE_REMOTE_SHA" ]; then
-            mkdir -p "$SCRIPT_DIR/web-nodejs/data"
-            echo "$LAST_UPDATE_REMOTE_SHA" > "$SCRIPT_DIR/web-nodejs/data/.update_sha"
-            echo "$LAST_UPDATE_REMOTE_SHA" > "$SCRIPT_DIR/web-nodejs/data/.agent_source_sha"
-            rm -f "$SCRIPT_DIR/web-nodejs/data/.last_update_result.json"
-            print_info "SHA tracking updated: ${LAST_UPDATE_REMOTE_SHA:0:7}"
-        fi
-    fi
 
     rm -rf "$clone_dir"
     return 0
-}
-
-# Push SHA baseline into the running console volume after container rebuild (#192).
-sync_console_update_tracking_in_container() {
-    local remote_sha="${1:-}"
-    [ -n "$remote_sha" ] || return 0
-    if ! docker ps --format '{{.Names}}' | grep -q "^${CONSOLE_CONTAINER}$"; then
-        return 0
-    fi
-    docker exec "$CONSOLE_CONTAINER" sh -c \
-        "mkdir -p /app/data && printf '%s\n' '$remote_sha' > /app/data/.update_sha && rm -f /app/data/.last_update_result.json" \
-        2>/dev/null || true
 }
 
 do_update() {
@@ -1800,6 +1507,7 @@ do_update() {
             print_info "Creating backup before update..."
             do_backup_silent
             preserve_compose_database_config
+            choose_docker_layout
             create_compose_file
             stop_containers
             build_images
@@ -1821,13 +1529,13 @@ do_update() {
     fi
 
     preserve_compose_database_config
+    choose_docker_layout
     print_info "Regenerating docker-compose.yml with latest template..."
     create_compose_file
     
     stop_containers
     build_images
     start_containers
-    sync_console_update_tracking_in_container "${LAST_UPDATE_REMOTE_SHA:-}"
     
     print_success "Docker update completed!"
     press_enter
@@ -1898,9 +1606,9 @@ do_repair() {
 repair_database_docker() {
     print_step "Repair database..."
     
-    # Node.js console auto-initializes tables on startup.
-    # Restarting the console container triggers full table check.
-    docker restart "$CONSOLE_CONTAINER" 2>/dev/null || {
+    # The server migrates its tables at every start;
+    # restarting the container runs that check.
+    docker restart "$AIO_CONTAINER" 2>/dev/null || {
         print_warning "Console container is not running"
         return
     }
@@ -1908,7 +1616,7 @@ repair_database_docker() {
     sleep 5
     
     # Verify via health endpoint
-    if docker exec "$CONSOLE_CONTAINER" curl -sf http://localhost:5000/health >/dev/null 2>&1; then
+    if docker exec "$AIO_CONTAINER" curl -sf http://localhost:5000/health >/dev/null 2>&1; then
         print_success "Database repaired (console restarted, tables verified)"
     else
         print_warning "Console restarted but health check failed"
@@ -1998,7 +1706,7 @@ restart_containers_safe() {
 
     if [ ! -f "$COMPOSE_FILE" ]; then
         print_warning "Compose file not found; trying docker restart for known containers"
-        docker restart "$SERVER_CONTAINER" "$CONSOLE_CONTAINER" >/dev/null 2>&1 || {
+        docker restart "$AIO_CONTAINER" >/dev/null 2>&1 || {
             print_warning "Could not restart known containers"
             return 1
         }
@@ -2069,11 +1777,9 @@ print_rescue_diagnostics() {
 
     echo ""
     echo -e "${WHITE}${BOLD}═══ Container logs (last 15 lines) ═══${NC}"
-    for container in "$SERVER_CONTAINER" "$CONSOLE_CONTAINER"; do
-        echo ""
-        echo -e "${CYAN}--- $container ---${NC}"
-        docker logs --tail 15 "$container" 2>&1 || echo "Container does not exist"
-    done
+    echo ""
+    echo -e "${CYAN}--- $AIO_CONTAINER ---${NC}"
+    docker logs --tail 15 "$AIO_CONTAINER" 2>&1 || echo "Container does not exist"
 
     echo ""
     echo -e "${WHITE}${BOLD}═══ Local health checks ═══${NC}"
@@ -2331,39 +2037,13 @@ do_reset_password() {
             ;;
     esac
     
-    # Update password using reset-password.js (supports both SQLite and PostgreSQL)
-    # Arguments: <password> [username] — password first, then optional username
-    # Single-container layout uses "betterdesk", not "betterdesk-console" (#299).
-    local panel_container
-    panel_container=$(resolve_panel_container)
-    # Run as betterdesk: auth.db is mode 0600 / owned by PUID (default 10001); root lacks CAP_DAC_OVERRIDE (#299).
-    docker exec -u betterdesk "$panel_container" node /app/scripts/reset-password.js "$new_password" admin 2>/dev/null || {
-        print_warning "reset-password.js failed, trying inline fallback..."
-        docker exec -u betterdesk -e RESET_ADMIN_PASSWORD="$new_password" "$panel_container" node -e "
-const bcrypt = require('bcrypt');
-const Database = require('better-sqlite3');
-const path = require('path');
-
-const dataDir = process.env.DATA_DIR || '/app/data';
-const dbPath = path.join(dataDir, 'auth.db');
-const resetPassword = process.env.RESET_ADMIN_PASSWORD || '';
-
-const db = new Database(dbPath);
-const hash = bcrypt.hashSync(resetPassword, 10);
-
-const update = db.prepare('UPDATE users SET password_hash = ? WHERE username = ?');
-const result = update.run(hash, 'admin');
-
-if (result.changes === 0) {
-    const insert = db.prepare('INSERT INTO users (username, password_hash, role, is_active, created_at) VALUES (?, ?, ?, 1, datetime(\"now\"))');
-    insert.run('admin', hash, 'admin');
-    console.log('Admin user created');
-} else {
-    console.log('Password updated');
-}
-db.close();
-"
-    }
+    # The server sets it on its database (SQLite or PostgreSQL), as the
+    # betterdesk user; the password goes in on stdin, never in the arguments
+    if ! set_admin_password_in_container "$(resolve_panel_container)" "$new_password"; then
+        print_error "Failed to reset the password"
+        press_enter
+        return 1
+    fi
 
     echo ""
     echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"
@@ -2393,29 +2073,19 @@ CREDEOF
 
 do_build() {
     local _menu_items=(
-        $'Rebuild all images\tServer + console containers'
-        $'Rebuild server (Go)\tOnly the Go server image'
-        $'Rebuild console (Node.js)\tOnly the console image'
+        $'Rebuild the image\tServer and web console (one image)'
         $'Back\tReturn to the main menu'
     )
-    local _menu_returns=( 1 2 3 0 )
-    menu_choose "Build Images" "Rebuild Docker images"
+    local _menu_returns=( 1 0 )
+    menu_choose "Build Image" "Rebuild the BetterDesk image"
     local build_choice="$MENU_CHOICE"
-    
+
     cd "$SCRIPT_DIR"
-    
+
     case $build_choice in
         1)
-            print_step "Building all images..."
+            print_step "Building the image..."
             $COMPOSE_CMD build --no-cache
-            ;;
-        2)
-            print_step "Building Server (Go)..."
-            $COMPOSE_CMD build --no-cache server
-            ;;
-        3)
-            print_step "Building Console (Node.js)..."
-            $COMPOSE_CMD build --no-cache console
             ;;
         0)
             return
@@ -2528,11 +2198,9 @@ do_diagnostics() {
     echo -e "${WHITE}${BOLD}═══ Container logs (last 15 lines) ═══${NC}"
     echo ""
 
-    for container in "$SERVER_CONTAINER" "$CONSOLE_CONTAINER"; do
-        echo -e "${CYAN}--- $container ---${NC}"
-        docker logs --tail 15 "$container" 2>&1 || echo "Container does not exist"
-        echo ""
-    done
+    echo -e "${CYAN}--- $AIO_CONTAINER ---${NC}"
+    docker logs --tail 15 "$AIO_CONTAINER" 2>&1 || echo "Container does not exist"
+    echo ""
 
     echo -e "${WHITE}${BOLD}═══ Resource usage ═══${NC}"
     echo ""
@@ -2544,7 +2212,7 @@ do_diagnostics() {
     echo ""
 
     if [ "$CONSOLE_RUNNING" = true ]; then
-        docker exec "$CONSOLE_CONTAINER" sh -c '
+        docker exec "$AIO_CONTAINER" sh -c '
             STATS=$(curl -sf http://localhost:5000/health 2>/dev/null)
             if [ -n "$STATS" ]; then
                 echo "  Console: healthy"
@@ -2553,7 +2221,7 @@ do_diagnostics() {
             fi
         '
         if [ "$SERVER_RUNNING" = true ]; then
-            docker exec "$SERVER_CONTAINER" sh -c '
+            docker exec "$AIO_CONTAINER" sh -c '
                 RESP=$(curl -sf http://localhost:21121/api/peers 2>/dev/null)
                 if [ -n "$RESP" ]; then
                     echo "  Server API: responding"
@@ -3198,8 +2866,8 @@ do_migrate_postgresql() {
     # Get device count
     local device_count
     # Go server uses 'peers' table; legacy Rust uses 'peer'
-    device_count=$(docker exec "$CONSOLE_CONTAINER" sqlite3 "$sqlite_db" "SELECT COUNT(*) FROM peers;" 2>/dev/null || \
-                   docker exec "$CONSOLE_CONTAINER" sqlite3 "$sqlite_db" "SELECT COUNT(*) FROM peer;" 2>/dev/null || echo "0")
+    device_count=$(docker exec "$AIO_CONTAINER" sqlite3 "$sqlite_db" "SELECT COUNT(*) FROM peers;" 2>/dev/null || \
+                   docker exec "$AIO_CONTAINER" sqlite3 "$sqlite_db" "SELECT COUNT(*) FROM peer;" 2>/dev/null || echo "0")
     print_info "Devices in database: $device_count"
     echo ""
     
@@ -3364,10 +3032,10 @@ EOSQL
     print_step "Migrating peer data..."
     
     # Extract data from SQLite (try 'peers' table first, fall back to 'peer' for legacy Rust)
-    docker exec "$CONSOLE_CONTAINER" sqlite3 "/opt/rustdesk/db_v2.sqlite3" -csv \
+    docker exec "$AIO_CONTAINER" sqlite3 "/opt/rustdesk/db_v2.sqlite3" -csv \
         "SELECT guid, id, uuid, pk, created_at, last_online, info, hostname, username, os, version, cpu, memory, is_banned, ban_reason, banned_at, banned_until, coalesce(deleted, 0) FROM peers;" \
         > /tmp/peers_export.csv 2>/dev/null || \
-    docker exec "$CONSOLE_CONTAINER" sqlite3 "/opt/rustdesk/db_v2.sqlite3" -csv \
+    docker exec "$AIO_CONTAINER" sqlite3 "/opt/rustdesk/db_v2.sqlite3" -csv \
         "SELECT guid, id, uuid, pk, created_at, last_online, info, hostname, username, os, version, cpu, memory, is_banned, ban_reason, banned_at, banned_until, coalesce(deleted, 0) FROM peer;" \
         > /tmp/peers_export.csv 2>/dev/null || true
     
@@ -3407,7 +3075,7 @@ EOSQL
     
     # Migrate users if they exist
     print_step "Migrating users..."
-    docker exec "$CONSOLE_CONTAINER" sqlite3 "/opt/rustdesk/db_v2.sqlite3" -csv \
+    docker exec "$AIO_CONTAINER" sqlite3 "/opt/rustdesk/db_v2.sqlite3" -csv \
         "SELECT username, password_hash, role, coalesce(is_active, 1), created_at, last_login FROM users;" \
         > /tmp/users_export.csv 2>/dev/null || true
     

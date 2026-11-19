@@ -125,16 +125,6 @@ const FILE_RULES = [
         },
     },
     {
-        id: 'dockerfile-console',
-        path: 'Dockerfile.console',
-        extract: (content) => content.match(/LABEL version="([^"]+)"/)?.[1],
-        apply: (content, version) => {
-            const fileVersion = content.match(/LABEL version="([^"]+)"/)?.[1];
-            if (!fileVersion || fileVersion === version) return content;
-            return content.replace(`LABEL version="${fileVersion}"`, `LABEL version="${version}"`);
-        },
-    },
-    {
         id: 'install-sh',
         path: 'install.sh',
         extract: (content) => {
@@ -152,16 +142,6 @@ const FILE_RULES = [
             );
             return next;
         },
-    },
-    {
-        id: 'docker-compose-quick',
-        path: 'docker-compose.quick.yml',
-        extract: (content) => {
-            const m = content.match(/\$\{BETTERDESK_IMAGE_TAG:-([^}]+)\}/);
-            return m?.[1];
-        },
-        apply: (content, version) =>
-            content.replace(/\$\{BETTERDESK_IMAGE_TAG:-[^}]+\}/g, `\${BETTERDESK_IMAGE_TAG:-${version}}`),
     },
     {
         id: 'docker-compose-quick-single',
@@ -186,31 +166,8 @@ const FILE_RULES = [
             content.replace(/\$\{BETTERDESK_IMAGE_TAG:-[^}]+\}/g, `\${BETTERDESK_IMAGE_TAG:-${version}}`),
     },
     {
-        id: 'docker-compose-quick-macvlan',
-        path: 'docker-compose.quick.macvlan.yml',
-        extract: (content) => {
-            const m = content.match(/\$\{BETTERDESK_IMAGE_TAG:-([^}]+)\}/);
-            return m?.[1];
-        },
-        apply: (content, version) =>
-            content.replace(/\$\{BETTERDESK_IMAGE_TAG:-[^}]+\}/g, `\${BETTERDESK_IMAGE_TAG:-${version}}`),
-    },
-    {
         id: 'docker-entrypoint',
         path: 'docker/entrypoint.sh',
-        extract: (content) => content.match(/\$\{BETTERDESK_IMAGE_VERSION:-([^}]+)\}/)?.[1],
-        apply: (content, version) => {
-            const fileVersion = content.match(/\$\{BETTERDESK_IMAGE_VERSION:-([^}]+)\}/)?.[1];
-            if (!fileVersion || fileVersion === version) return content;
-            return content.replace(
-                `\${BETTERDESK_IMAGE_VERSION:-${fileVersion}}`,
-                `\${BETTERDESK_IMAGE_VERSION:-${version}}`
-            );
-        },
-    },
-    {
-        id: 'docker-entrypoint-root',
-        path: 'docker-entrypoint.sh',
         extract: (content) => content.match(/\$\{BETTERDESK_IMAGE_VERSION:-([^}]+)\}/)?.[1],
         apply: (content, version) => {
             const fileVersion = content.match(/\$\{BETTERDESK_IMAGE_VERSION:-([^}]+)\}/)?.[1];

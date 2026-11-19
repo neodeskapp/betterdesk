@@ -2,7 +2,7 @@
 # BetterDesk — Official Quick Start (Single Container, Pre-built Image)
 # =============================================================================
 # NO BUILD REQUIRED — uses the official all-in-one image from GHCR.
-# Go server + Node.js console in one container (recommended for all deployments).
+# One container, one process: signal, relay, API and the web console.
 #
 # Image tag (aligned with CHANGELOG / git tag):
 #   Default: 3.5.264  |  Rolling: BETTERDESK_IMAGE_TAG=latest
@@ -21,9 +21,6 @@
 # RustDesk client API: http://localhost:21121 (Go server — all-in-one default port)
 # Default credentials are written to the shared credentials file:
 #   docker compose exec betterdesk betterdesk-show-admin-credentials
-#
-# Legacy two-container layout (split images): use docker-compose.quick.yml or
-#   curl .../install.sh | sudo bash -s -- --split
 #
 # MACVLAN / dedicated LAN IP: use docker-compose.quick.single.macvlan.yml instead.
 # See docs/docker/DOCKER_QUICKSTART.md
@@ -54,7 +51,7 @@ services:
       - NODE_ENV=production
       # Set TRUST_PROXY=1 when the panel is behind one reverse proxy.
       - TRUST_PROXY=${TRUST_PROXY:-}
-      - PORT=5000
+      - CONSOLE_PORT=5000
       - HOST=0.0.0.0
       - API_HOST=0.0.0.0
       - API_ENABLED=false
@@ -82,7 +79,7 @@ services:
       - PUB_KEY_PATH=/opt/rustdesk/id_ed25519.pub
       - API_KEY_PATH=/opt/rustdesk/.api_key
       - SESSION_SECRET=${SESSION_SECRET:-}
-      # Panel session policy (empty = built-in defaults; see web-nodejs/.env.example)
+      # Panel session policy (empty = built-in defaults)
       - SESSION_IDLE_TIMEOUT=${SESSION_IDLE_TIMEOUT:-}
       - SESSION_MAX_AGE=${SESSION_MAX_AGE:-}
       - SESSION_IDLE_WARN_MS=${SESSION_IDLE_WARN_MS:-}
@@ -97,7 +94,6 @@ services:
       - DB_TYPE=${DB_TYPE:-sqlite}
       - DATABASE_URL=${DATABASE_URL:-}
       - DB_URL=${DATABASE_URL:-}
-      - SQLITE_AUTH_DB_MODE=${SQLITE_AUTH_DB_MODE:-}
       # Set this when clients are outside the Docker network. Use the host's
       # public IP/DNS, or the host LAN IP for LAN-only deployments.
       # Example: RELAY_SERVERS=203.0.113.10:21117 docker compose up -d
@@ -116,7 +112,7 @@ services:
       # Admin credentials (first run only; existing users are not overwritten).
       # Do NOT comment these out — ADMIN_PASSWORD on the host shell only reaches
       # the container when referenced here (issue #385). Fresh installs also need
-      # DEFAULT_ADMIN_PASSWORD for the Node.js panel bootstrap.
+      # DEFAULT_ADMIN_PASSWORD for the web console's first admin.
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - INIT_ADMIN_USER=${ADMIN_USERNAME:-admin}
       - INIT_ADMIN_PASS=${ADMIN_PASSWORD:-}

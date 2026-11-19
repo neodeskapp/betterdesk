@@ -1,22 +1,22 @@
 # check=skip=SecretsUsedInArgOrEnv
-# BetterDesk — Single Container Image
-# =====================================
-# Combines Go server (signal + relay + API) and Node.js web console
-# into a single container using supervisord as process manager.
+# BetterDesk — one image, one process
+# ====================================
+# betterdesk-server serves the signal and relay server, the API and the web
+# console (DECISIONS A32). The web app is built into the binary.
 #
 # Build:  docker build -t betterdesk:local .
-# Run:    docker compose up -d
+# Run:    docker compose -f docker-compose.single.yml up -d
 #
 # Ports:
-#   21121 - HTTP API (Go server: RustDesk client API + REST)
+#   5000  - Web console (5443 with HTTPS_ENABLED)
+#   21121 - HTTP API (RustDesk client API + REST)
 #   21115 - NAT type test
 #   21116 - Signal TCP/UDP
 #   21117 - Relay TCP
 #   21118 - WebSocket Signal
 #   21119 - WebSocket Relay
-#   5000  - Web Console (Node.js admin panel)
 
-# ============= Web UI build (the Svelte console) =============
+# ============= Web app build (only the build machine needs Node.js) =============
 FROM node:22.23.2-alpine3.24 AS web-ui-builder
 
 WORKDIR /web-ui
@@ -28,7 +28,7 @@ RUN npx -y npm@11.6.2 ci --no-audit --no-fund
 COPY web-ui/ .
 RUN npm run build
 
-# ============= Stage 1: Build Go server =============
+# ============= Go server with the web app built in =============
 FROM golang:1.26.11-alpine AS go-builder
 ARG TARGETARCH
 
@@ -41,141 +41,100 @@ RUN go mod download
 
 COPY betterdesk-server/ .
 
-# The binary carries the web app (DECISIONS A25), as the release binaries do
+# The embed step copies the web app build into the module before go build
+# (DECISIONS A25), as the release binaries are built
 COPY --from=web-ui-builder /web-ui/build /web-ui-build
 RUN go run ./cmd/embed-webui -from /web-ui-build
 
 ARG BETTERDESK_PRODUCT_VERSION=dev
+ARG BETTERDESK_COMMIT_SHA=
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build \
-    -ldflags="-s -w -X main.Version=${BETTERDESK_PRODUCT_VERSION}" \
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -trimpath \
+    -ldflags="-s -w -X main.Version=${BETTERDESK_PRODUCT_VERSION} -X main.Commit=${BETTERDESK_COMMIT_SHA}" \
     -tags "netgo osusergo" \
     -o /betterdesk-server .
 
-# ============= Stage 2: Build Node.js console =============
-# TEMPORARY: Node 24.19.0 triggers a native better-sqlite3 cleanup-hook
-# assertion during Statement GC. Keep the production console on the latest
-# Node 22 LTS patch until the Node 24 backport is released and validated.
-FROM node:22.23.2-alpine3.24 AS node-builder
+# ============= The console's language files, themes and images =============
+# Copied into /app when the checkout has them (web-nodejs); the server reads
+# them there unless its binary carries them.
+FROM alpine:3.22 AS console-static
+RUN --mount=type=bind,target=/ctx \
+    mkdir -p /static && \
+    if [ -f /ctx/web-nodejs/lang/en.json ]; then \
+        for d in lang public themes protos wallpapers config; do \
+            if [ -d "/ctx/web-nodejs/$d" ]; then cp -a "/ctx/web-nodejs/$d" /static/; fi; \
+        done; \
+    fi
 
-WORKDIR /app
-
-# Build dependencies for native modules (better-sqlite3, bcrypt)
-# Note: sqlite-dev is NOT needed — better-sqlite3 bundles its own SQLite
-RUN apk add --no-cache python3 make g++ || { sleep 2 && apk add --no-cache python3 make g++; }
-
-COPY web-nodejs/package.json web-nodejs/package-lock.json* ./
-RUN npm ci --omit=dev
-
-# ============= Stage 3: Production runtime =============
-# Note: supervisord requires root to manage child processes with user= directive.
-# Both betterdesk-server and betterdesk-console run as non-root 'betterdesk' user
-# via supervisord configuration (user=betterdesk).
-FROM node:22.23.2-alpine3.24
+# ============= Runtime =============
+FROM alpine:3.22
 
 LABEL maintainer="UNITRONIX"
-LABEL description="BetterDesk — All-in-One (Go Server + Node.js Console)"
+LABEL description="BetterDesk — server and web console in one process"
 LABEL version="3.5.264"
 
-# Install runtime packages (retry for transient DNS failures)
-RUN apk add --no-cache \
-    ca-certificates \
-    curl \
-    sqlite \
-    tini \
-    supervisor \
-    su-exec \
-    shadow \
-    && mkdir -p /var/log/supervisor \
-    || { sleep 2 && apk add --no-cache \
-    ca-certificates \
-    curl \
-    sqlite \
-    tini \
-    supervisor \
-    su-exec \
-    shadow \
-    && mkdir -p /var/log/supervisor; }
-
-# The production image never runs npm; remove its bundled CLI and transitive
-# package tree (including tar) from the runtime attack surface.
-RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+# Runtime packages (retry for transient DNS failures). sqlite stays for the
+# admin credential bootstrap, which counts users with the sqlite3 CLI.
+RUN apk add --no-cache ca-certificates curl sqlite tini su-exec shadow openssl \
+    || { sleep 2 && apk add --no-cache ca-certificates curl sqlite tini su-exec shadow openssl; }
 
 # Create betterdesk user and directories
 RUN addgroup -g 10001 -S betterdesk && \
     adduser -u 10001 -S -G betterdesk betterdesk && \
-    mkdir -p /opt/rustdesk /app/data /var/log/betterdesk && \
-    chown -R betterdesk:betterdesk /opt/rustdesk /app/data /var/log/betterdesk
+    mkdir -p /opt/rustdesk /app/data && \
+    chown -R betterdesk:betterdesk /opt/rustdesk /app/data
 
-# ---- Go server binary ----
 COPY --from=go-builder /betterdesk-server /usr/local/bin/betterdesk-server
-RUN chmod +x /usr/local/bin/betterdesk-server
+COPY --from=console-static /static/ /app/
 
-# ---- Node.js console ----
-WORKDIR /app
-# IMPORTANT: Copy app code FIRST, then overlay compiled node_modules.
-# This prevents local node_modules (if any) from overwriting the
-# properly compiled Alpine/musl native modules from the builder.
-COPY web-nodejs/ .
-COPY --from=node-builder /app/node_modules ./node_modules/
-# The Svelte console's build (lib/webUi.js serves it from ../web-ui/build)
-COPY --from=web-ui-builder /web-ui/build /web-ui/build
-
-ARG BETTERDESK_COMMIT_SHA=unknown
 ARG BETTERDESK_IMAGE_VERSION=unknown
-ENV BETTERDESK_IMAGE_SHA=${BETTERDESK_COMMIT_SHA}
 ENV BETTERDESK_IMAGE_VERSION=${BETTERDESK_IMAGE_VERSION}
-ENV BETTERDESK_UPDATE_MODE=image
-RUN printf '%s\n' "${BETTERDESK_COMMIT_SHA}" > /app/.image-commit
 
-# ---- Supervisord config ----
-COPY docker/supervisord.conf /etc/supervisor/conf.d/betterdesk.conf
-
-# ---- Entrypoint ----
 COPY docker/ensure-app-user.sh /ensure-app-user.sh
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/bootstrap-admin-credentials.sh /docker/bootstrap-admin-credentials.sh
-COPY docker/guard-sqlite-auth-split.sh /docker/guard-sqlite-auth-split.sh
-COPY docker/wait-panel-auth-db.sh /app/docker/wait-panel-auth-db.sh
 COPY docker/show-admin-credentials.sh /usr/local/bin/betterdesk-show-admin-credentials
-RUN chmod +x /ensure-app-user.sh /entrypoint.sh /docker/bootstrap-admin-credentials.sh /docker/guard-sqlite-auth-split.sh /app/docker/wait-panel-auth-db.sh /usr/local/bin/betterdesk-show-admin-credentials
+RUN chmod +x /ensure-app-user.sh /entrypoint.sh /docker/bootstrap-admin-credentials.sh /usr/local/bin/betterdesk-show-admin-credentials
 
-# Environment variables (defaults)
-ENV NODE_ENV=production
-ENV PORT=5000
-# The Node console serves port 5000 in this image; the Go server's own
-# console stays off (it is on by default, DECISIONS A27)
-ENV CONSOLE_PORT=0
-ENV SIGNAL_PORT=21116
-ENV SIGNAL_RATE_LIMIT_PER_IP=20
-ENV HOST=0.0.0.0
-ENV API_HOST=0.0.0.0
-ENV DATA_DIR=/app/data
-ENV RUSTDESK_PATH=/opt/rustdesk
-ENV DB_PATH=/opt/rustdesk/db_v2.sqlite3
-ENV PUB_KEY_PATH=/opt/rustdesk/id_ed25519.pub
-ENV API_KEY_PATH=/opt/rustdesk/.api_key
-ENV SERVER_BACKEND=betterdesk
-# API consolidated onto the Go server (21121); console proxies to it and does
-# not run its own client API listener.
-ENV API_ENABLED=false
-ENV HBBS_API_URL=http://127.0.0.1:21121/api
-ENV BETTERDESK_API_URL=http://127.0.0.1:21121/api
-ENV DOCKER=true
-ENV ENCRYPTED_ONLY=1
-ENV RELAY_SERVERS=
-# Billing clock / NTP — required by supervisord %(ENV_*)s (#299 / #223)
-ENV NTP_SERVERS=pool.ntp.org,time.google.com,time.cloudflare.com
-ENV BILLING_MAX_CLOCK_SKEW_MS=2000
-ENV BILLING_REQUIRE_SYNCED_CLOCK=1
-ENV BILLING_TRUST_OS_NTP=Y
+# The console on 5000 (DECISIONS A27), the API on 21121. The console's own
+# client API listener stays off: the API serves RustDesk clients on 21121.
+# BETTERDESK_SUPERVISOR: Docker's restart policy starts the process again
+# after it ends with status 3 (a restart, an update or a restore from the
+# panel, DECISIONS A30).
+ENV NODE_ENV=production \
+    CONSOLE_PORT=5000 \
+    SIGNAL_PORT=21116 \
+    SIGNAL_RATE_LIMIT_PER_IP=20 \
+    HOST=0.0.0.0 \
+    API_ENABLED=false \
+    DOCKER=true \
+    CONSOLE_DIR=/app \
+    DATA_DIR=/app/data \
+    RUSTDESK_PATH=/opt/rustdesk \
+    KEYS_PATH=/opt/rustdesk \
+    DB_PATH=/opt/rustdesk/db_v2.sqlite3 \
+    PUB_KEY_PATH=/opt/rustdesk/id_ed25519.pub \
+    API_KEY_PATH=/opt/rustdesk/.api_key \
+    HBBS_API_URL=http://127.0.0.1:21121/api \
+    BETTERDESK_API_URL=http://127.0.0.1:21121/api \
+    SERVER_BACKEND=betterdesk \
+    ENCRYPTED_ONLY=1 \
+    RELAY_SERVERS= \
+    NTP_SERVERS=pool.ntp.org,time.google.com,time.cloudflare.com \
+    BILLING_MAX_CLOCK_SKEW_MS=2000 \
+    BILLING_REQUIRE_SYNCED_CLOCK=1 \
+    BILLING_TRUST_OS_NTP=Y \
+    BETTERDESK_UPDATE_MODE=image \
+    BETTERDESK_SUPERVISOR=docker
 
-# Expose all ports
 EXPOSE 5000 21115 21116/tcp 21116/udp 21117 21118 21119 21121
 
-# Health check: both Go server API and Node.js console must be healthy
+# The server writes files of its own (mesh_agent_server.pem) in its folder
+WORKDIR /opt/rustdesk
+
+# The API and the web console of the one process
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -sf http://localhost:21121/api/health && curl -sf http://localhost:5000/health || exit 1
 
-ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["/entrypoint.sh"]
+ENTRYPOINT ["/sbin/tini", "--", "/entrypoint.sh"]
+CMD ["/usr/local/bin/betterdesk-server", "-mode", "all", "-api-port", "21121", "-key-file", "/opt/rustdesk/id_ed25519"]
