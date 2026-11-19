@@ -63,6 +63,76 @@ func TestWriteRefusesWhatIsNoRegularFile(t *testing.T) {
 	}
 }
 
+// Delete and rename leave the folders the browser may change in place: a
+// root itself, or a folder that holds one, is refused, also as the new
+// name of a rename. A link is removed or moved itself, never what it
+// points to, and a link outside the folders that points into one is
+// refused.
+func TestDeleteAndRenameKeepTheRoots(t *testing.T) {
+	base := t.TempDir()
+	server, console, data := filepath.Join(base, "server"), filepath.Join(base, "console"), filepath.Join(base, "server", "keep", "data")
+	for _, d := range []string{server, console, data, filepath.Join(server, "sub"), filepath.Join(server, "empty")} {
+		if err := os.MkdirAll(d, 0o777); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for name, target := range map[string]string{
+		filepath.Join(server, "link-in"): "sub", filepath.Join(server, "link-console"): console, filepath.Join(base, "serverlink"): "server",
+	} {
+		if err := os.Symlink(target, name); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(server, "sub", "b.txt"), []byte("bee"), 0o666); err != nil {
+		t.Fatal(err)
+	}
+	env := map[string]string{"BETTERDESK_PATH": server, "BETTERDESK_CONSOLE_PATH": console, "BETTERDESK_MUTABLE_ROOTS": data}
+	s := New(Options{GOOS: "linux", Getenv: func(k string) string { return env[k] }, WorkDir: console, beforeChange: onlyBelow(t, base)})
+
+	for _, p := range []string{server, server + "/", console, data, filepath.Join(server, "keep"), filepath.Join(server, "sub", "..")} {
+		if _, err := s.DeletePath(p); !errors.Is(err, ErrChangeRoot) {
+			t.Errorf("delete %s: %v, want %v", p, err, ErrChangeRoot)
+		}
+	}
+	for _, r := range [][2]string{
+		{server, filepath.Join(console, "moved")}, {filepath.Join(server, "keep"), filepath.Join(server, "moved")},
+		{filepath.Join(server, "empty"), data}, {filepath.Join(server, "empty"), console},
+	} {
+		if _, err := s.RenamePath(r[0], r[1]); !errors.Is(err, ErrChangeRoot) {
+			t.Errorf("rename %s to %s: %v, want %v", r[0], r[1], err, ErrChangeRoot)
+		}
+	}
+	if _, err := s.DeletePath(filepath.Join(base, "serverlink")); err == nil {
+		t.Error("deleted through a link outside the folders")
+	}
+	for _, d := range []string{server, console, data, filepath.Join(server, "empty")} {
+		if st, err := os.Stat(d); err != nil || !st.IsDir() {
+			t.Errorf("%s is gone: %v", d, err)
+		}
+	}
+
+	if got, err := s.RenamePath(filepath.Join(server, "link-in"), filepath.Join(server, "link-moved")); err != nil || got.From != filepath.Join(server, "link-in") {
+		t.Errorf("rename of a link: %+v %v", got, err)
+	}
+	if target, err := os.Readlink(filepath.Join(server, "link-moved")); err != nil || target != "sub" {
+		t.Errorf("the moved link points to %q: %v", target, err)
+	}
+	for _, link := range []string{filepath.Join(server, "link-moved"), filepath.Join(server, "link-console")} {
+		if got, err := s.DeletePath(link); err != nil || got.Path != link {
+			t.Errorf("delete of the link %s: %+v %v", link, got, err)
+		}
+		if _, err := os.Lstat(link); err == nil {
+			t.Errorf("the link %s is still there", link)
+		}
+	}
+	if b, err := os.ReadFile(filepath.Join(server, "sub", "b.txt")); err != nil || string(b) != "bee" {
+		t.Errorf("the folder behind the link: %q %v", b, err)
+	}
+	if _, err := os.Stat(console); err != nil {
+		t.Errorf("the console's folder behind the link: %v", err)
+	}
+}
+
 // The open behind a write holds when the path changed after the checks:
 // it follows no link in the last part and does not wait for a FIFO's
 // reader.

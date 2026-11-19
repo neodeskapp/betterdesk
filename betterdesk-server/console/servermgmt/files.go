@@ -32,6 +32,7 @@ var (
 	ErrFileTooLarge   = errors.New("File too large for inline edit (>8 MB)")
 	ErrContentTooBig  = errors.New("Content exceeds 8 MB limit")
 	ErrDeleteRoot     = errors.New("Refusing to delete filesystem root")
+	ErrChangeRoot     = errors.New("Refusing to move or delete an allowed directory root")
 )
 
 // within checks a path the browser got against folders, the way
@@ -224,8 +225,9 @@ type PathResult struct {
 var driveRoot = regexp.MustCompile(`^[A-Za-z]:\\?$`)
 
 // DeletePath removes a file, or a folder with everything in it, that the
-// browser may change. The root of the file system is refused. A path that
-// is a link to a folder removes the folder it points to.
+// browser may change. The root of the file system is refused, and so is a
+// folder the browser may change itself or one that holds such a folder
+// (ErrChangeRoot). A link is removed itself; what it points to stays.
 func (s *Service) DeletePath(p string) (*PathResult, error) {
 	roots := s.WriteRoots()
 	abs, err := s.within(p, roots)
@@ -235,14 +237,13 @@ func (s *Service) DeletePath(p string) (*PathResult, error) {
 	if abs == "/" || driveRoot.MatchString(abs) {
 		return nil, ErrDeleteRoot
 	}
-	st, err := os.Lstat(abs)
-	if err != nil {
-		return nil, fileError(err, "lstat", abs)
-	}
-	// The path is checked again right before the removal.
-	target, err := s.within(p, roots)
+	target, err := s.entry(p, roots)
 	if err != nil {
 		return nil, err
+	}
+	st, err := os.Lstat(target)
+	if err != nil {
+		return nil, fileError(err, "lstat", target)
 	}
 	if err := s.guard(target); err != nil {
 		return nil, err
@@ -254,7 +255,55 @@ func (s *Service) DeletePath(p string) (*PathResult, error) {
 	} else if err := unlink(target); err != nil {
 		return nil, fileError(err, "unlink", target)
 	}
-	return &PathResult{Path: abs}, nil
+	return &PathResult{Path: target}, nil
+}
+
+// entry is the path a delete or rename acts on: the last name of p as it
+// is, in its folder with the links resolved, which has to be one the
+// browser may change. So a link is acted on itself, and a link outside
+// the folders that points into one is refused. A folder of roots, or one
+// that holds one of them, is ErrChangeRoot.
+func (s *Service) entry(p string, roots []string) (string, error) {
+	abs := s.resolve(p)
+	if s.holdsRoot(abs, roots) {
+		return "", ErrChangeRoot
+	}
+	parent, err := s.within(filepath.Dir(abs), roots)
+	if err != nil {
+		return "", err
+	}
+	target := filepath.Join(parent, filepath.Base(abs))
+	if s.holdsRoot(target, roots) {
+		return "", ErrChangeRoot
+	}
+	return target, nil
+}
+
+// holdsRoot reports whether path is one of roots or a folder they lie in,
+// with each root taken as written and with its links resolved.
+func (s *Service) holdsRoot(path string, roots []string) bool {
+	for _, root := range roots {
+		forms := []string{s.resolve(root)}
+		if real, err := filepath.EvalSymlinks(forms[0]); err == nil {
+			forms = append(forms, real)
+		}
+		for _, r := range forms {
+			if s.inside(r, path) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// inside reports whether path is dir or lies below it, in any letter case
+// on Windows.
+func (s *Service) inside(path, dir string) bool {
+	if s.windows() {
+		path, dir = strings.ToLower(path), strings.ToLower(dir)
+	}
+	sep := string(filepath.Separator)
+	return path == dir || strings.HasPrefix(path, strings.TrimSuffix(dir, sep)+sep)
 }
 
 // MakeDirectory makes one folder the browser may change; its parent must
@@ -280,14 +329,22 @@ type Renamed struct {
 }
 
 // RenamePath moves a file or folder; both paths must be ones the browser
-// may change. What is at the new path is replaced as rename(2) does.
+// may change. What is at the new path is replaced as rename(2) does. A
+// link is moved itself, and a folder the browser may change, or one that
+// holds such a folder, is neither moved nor replaced (ErrChangeRoot).
 func (s *Service) RenamePath(from, to string) (*Renamed, error) {
 	roots := s.WriteRoots()
-	a, err := s.within(from, roots)
+	if _, err := s.within(from, roots); err != nil {
+		return nil, err
+	}
+	if _, err := s.within(to, roots); err != nil {
+		return nil, err
+	}
+	a, err := s.entry(from, roots)
 	if err != nil {
 		return nil, err
 	}
-	b, err := s.within(to, roots)
+	b, err := s.entry(to, roots)
 	if err != nil {
 		return nil, err
 	}

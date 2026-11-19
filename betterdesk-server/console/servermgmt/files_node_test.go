@@ -236,6 +236,10 @@ type fileChange struct {
 //   - SM5: a write does not go through a link, also not one that points
 //     nowhere (the recording created server/nothing, and outside/planted.txt
 //     outside every folder) or to itself.
+//   - SM6: a delete or rename acts on a link itself, not on the folder it
+//     points to (the recording removed server/sub through link-in, and
+//     moved it), and the server's folder itself is neither removed nor
+//     moved.
 var fileChanges = map[string]map[int]fileChange{
 	"writes": {
 		17: {bug: "SM5", err: "Not a regular file", drop: []string{"server/nothing"}},
@@ -243,7 +247,22 @@ var fileChanges = map[string]map[int]fileChange{
 		19: {bug: "SM5", err: "Not a regular file"},
 		38: {bug: "SM5", result: writesListing},
 	},
+	"deletes": {
+		2:  {bug: "SM6", result: answer(map[string]any{"path": "{B}/server/link-in"}), drop: []string{"server/link-in"}, keep: []string{"server/sub"}},
+		3:  {bug: "SM6", err: "ENOENT: no such file or directory, lstat '{B}/server/link-in'"},
+		18: {bug: "SM6", err: ErrChangeRoot.Error(), unchanged: true},
+	},
+	"renames": {
+		11: {
+			bug: "SM6", result: answer(map[string]any{"from": "{B}/server/link-in", "to": "{B}/server/link-in-renamed"}),
+			drop: []string{"server/link-in", "server/link-in-renamed"}, keep: []string{"server/sub"}, add: [][]any{{"server/link-in-renamed", "link", "sub"}},
+		},
+		20: {bug: "SM6", err: ErrChangeRoot.Error(), unchanged: true},
+	},
 }
+
+// answer is a change's answer that does not depend on the recorded one.
+func answer(v any) func(any) any { return func(any) any { return v } }
 
 // writesListing is the list of the server's folder at the end of the
 // writes: server/nothing was never made, and dangling-out still points
