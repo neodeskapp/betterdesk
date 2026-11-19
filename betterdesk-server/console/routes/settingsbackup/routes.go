@@ -58,6 +58,7 @@ func Register(d *kit.Deps) {
 		APIKeyPath: cfg.APIKeyPath,
 		DBPath:     cfg.DBPath,
 		AppVersion: serverinfo.ReadProductVersion(serverinfo.OSFS{}, filepath.Join(cfg.ConsoleDir, ".."), cfg.ConsoleDir, serverinfo.DefaultVersionFallback),
+		Limits:     archiveLimits(cfg.Getenv),
 	})
 	scheduled := scheduledbackup.New(scheduledbackup.Options{
 		Store:   d.Store,
@@ -66,6 +67,20 @@ func Register(d *kit.Deps) {
 		AppDir:  cfg.ConsoleDir,
 	})
 	register(d, backups, scheduled)
+}
+
+// archiveLimits are the limits of an uploaded archive, read once at the
+// start as the old console's module read them: Number() of
+// BACKUP_MAX_DECOMPRESSED_BYTES and BACKUP_MAX_ENTRIES, the default for
+// what is unset, 0 or no number.
+func archiveLimits(getenv func(string) string) backup.Limits {
+	if getenv == nil {
+		return backup.Limits{}
+	}
+	return backup.Limits{
+		MaxBytes:   backup.EnvLimit(getenv("BACKUP_MAX_DECOMPRESSED_BYTES")),
+		MaxEntries: backup.EnvLimit(getenv("BACKUP_MAX_ENTRIES")),
+	}
 }
 
 func register(d *kit.Deps, backups *backup.Service, scheduled *scheduledbackup.Service) {

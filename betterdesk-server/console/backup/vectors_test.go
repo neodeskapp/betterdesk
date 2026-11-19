@@ -6,12 +6,15 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/branding"
+	"github.com/unitronix/betterdesk-server/console/jsbind"
 )
 
 // The vectors are what the Node console's own modules answered
@@ -72,6 +75,132 @@ type archiveVectors struct {
 		Output string `json:"output"`
 		Error  *jsErr `json:"error"`
 	} `json:"gunzip"`
+	// Limits is extractTarGz(input, options) with maxBytes and maxEntries.
+	Limits []struct {
+		Input   string `json:"input"`
+		Options struct {
+			MaxBytes   float64 `json:"maxBytes"`
+			MaxEntries float64 `json:"maxEntries"`
+		} `json:"options"`
+		Files [][2]string `json:"files"`
+		Error *jsErr      `json:"error"`
+	} `json:"limits"`
+	// Env is the module loaded with BACKUP_MAX_DECOMPRESSED_BYTES and
+	// BACKUP_MAX_ENTRIES (null: unset): the limits it took and what it made
+	// of each of the archives.
+	Env struct {
+		Archives []string `json:"archives"`
+		Cases    []struct {
+			Bytes      *string `json:"bytes"`
+			Entries    *string `json:"entries"`
+			MaxBytes   string  `json:"maxBytes"`
+			MaxEntries string  `json:"maxEntries"`
+			Results    []struct {
+				Files [][2]string `json:"files"`
+				Error *jsErr      `json:"error"`
+			} `json:"results"`
+		} `json:"cases"`
+	} `json:"env"`
+}
+
+// extractDiff compares what ExtractTarGz gave with Node's answer: its
+// files in order, or its error. "" when they agree.
+func extractDiff(files *Files, err error, want [][2]string, wantErr *jsErr) string {
+	if wantErr != nil {
+		if err == nil || err.Error() != wantErr.Message {
+			return fmt.Sprintf("want error %q, got %v", wantErr.Message, err)
+		}
+		return ""
+	}
+	if err != nil {
+		return err.Error()
+	}
+	var got [][2]string
+	for _, name := range files.Names() {
+		data, _ := files.Get(name)
+		got = append(got, [2]string{name, base64.StdEncoding.EncodeToString(data)})
+	}
+	if len(got) != len(want) {
+		return fmt.Sprintf("%d files, want %d: %q", len(got), len(want), got)
+	}
+	for k := range got {
+		if got[k] != want[k] {
+			return fmt.Sprintf("file %d: got %q, want %q", k, got[k][0], want[k][0])
+		}
+	}
+	return ""
+}
+
+// TestExtractLimitsMatchNode: the options of extractTarGz, maxBytes and
+// maxEntries, with fractions and at the edges of the tar file's length
+// and of the number of regular files.
+func TestExtractLimitsMatchNode(t *testing.T) {
+	var v archiveVectors
+	loadVectors(t, "archive.json.gz", &v)
+	if len(v.Limits) < 3000 {
+		t.Fatalf("only %d limit vectors", len(v.Limits))
+	}
+	failed, kinds := 0, map[string]int{}
+	for i, c := range v.Limits {
+		files, err := ExtractTarGz(unb64(t, c.Input), Limits{MaxBytes: c.Options.MaxBytes, MaxEntries: c.Options.MaxEntries})
+		if diff := extractDiff(files, err, c.Files, c.Error); diff != "" {
+			t.Errorf("limits %d %+v: %s", i, c.Options, diff)
+			failed++
+		}
+		if c.Error != nil {
+			kinds[strings.Fields(c.Error.Message)[1]]++
+		}
+		if failed > 10 {
+			t.FailNow()
+		}
+	}
+	// "Backup archive ...", "Cannot create a Buffer ...", "The value of ..."
+	for _, kind := range []string{"archive", "create", "value"} {
+		if kinds[kind] < 3 {
+			t.Errorf("only %d vectors refused with %q: %v", kinds[kind], kind, kinds)
+		}
+	}
+}
+
+// TestEnvLimitsMatchNode: BACKUP_MAX_DECOMPRESSED_BYTES and
+// BACKUP_MAX_ENTRIES as Number() reads them, and what the limits they
+// give do to the same eight archives.
+func TestEnvLimitsMatchNode(t *testing.T) {
+	var v archiveVectors
+	loadVectors(t, "archive.json.gz", &v)
+	if len(v.Env.Cases) < 400 || len(v.Env.Archives) != 8 {
+		t.Fatalf("%d env cases over %d archives", len(v.Env.Cases), len(v.Env.Archives))
+	}
+	failed := 0
+	for i, c := range v.Env.Cases {
+		env := map[string]string{}
+		if c.Bytes != nil {
+			env["BACKUP_MAX_DECOMPRESSED_BYTES"] = *c.Bytes
+		}
+		if c.Entries != nil {
+			env["BACKUP_MAX_ENTRIES"] = *c.Entries
+		}
+		limits := Limits{MaxBytes: EnvLimit(env["BACKUP_MAX_DECOMPRESSED_BYTES"]), MaxEntries: EnvLimit(env["BACKUP_MAX_ENTRIES"])}
+		inForce := limits.orDefault()
+		if got := jsbind.NumberString(inForce.MaxBytes); got != c.MaxBytes {
+			t.Errorf("env %d %q: bytes limit %s, Node %s", i, env, got, c.MaxBytes)
+			failed++
+		}
+		if got := jsbind.NumberString(inForce.MaxEntries); got != c.MaxEntries {
+			t.Errorf("env %d %q: entries limit %s, Node %s", i, env, got, c.MaxEntries)
+			failed++
+		}
+		for k, want := range c.Results {
+			files, err := ExtractTarGz(unb64(t, v.Env.Archives[k]), limits)
+			if diff := extractDiff(files, err, want.Files, want.Error); diff != "" {
+				t.Errorf("env %d %q archive %d: %s", i, env, k, diff)
+				failed++
+			}
+		}
+		if failed > 10 {
+			t.FailNow()
+		}
+	}
 }
 
 func TestTarMatchesNodeByteForByte(t *testing.T) {
@@ -118,7 +247,7 @@ func TestExtractMatchesNode(t *testing.T) {
 	}
 	failed := 0
 	for i, c := range v.Extract {
-		files, err := ExtractTarGz(unb64(t, c.Input), DefaultMaxArchiveBytes)
+		files, err := ExtractTarGz(unb64(t, c.Input), Limits{})
 		if c.Error != nil {
 			if err == nil || err.Error() != c.Error.Message {
 				t.Errorf("extract %d: want error %q, got %v", i, c.Error.Message, err)

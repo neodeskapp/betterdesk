@@ -10,6 +10,9 @@
  *   node vectors.js      writes ../archive.json.gz, ../values.json.gz,
  *                        ../../../scheduledbackup/testdata/schedule.json.gz
  *                        and ../counts.json
+ *
+ * ORACLE_PARTS (a comma list of archive, values, schedule) writes only
+ * those files; the counts of the others stay as they were.
  */
 
 const fs = require('fs');
@@ -192,6 +195,119 @@ function extractVectors() {
         }
         out.push({ input: b64(gz), ...files });
     }
+    return out;
+}
+
+// ---- the limits of extractTarGz (upstream 3.5.264, audit M4) ----
+
+const filesOf = (map) => [...map.entries()].map(([k, v]) => [k, b64(v)]);
+
+// An archive of regular files (and other entries when asked), as tar and
+// as gzip.
+function limitArchive(r) {
+    const blocks = [];
+    const n = r.int(9);
+    for (let j = 0; j < n; j++) {
+        const size = r.pick([0, 1, 100, 511, 512, 513, 4096]);
+        const data = Buffer.alloc(size, 0x41 + j);
+        const type = r.pick(['0', '0', '0', '\0', '5', '2']);
+        const name = r.chance(0.2) ? 'dup' : `f-${j}`;
+        blocks.push(header({ name, size: octal(size), type }), pad(data));
+    }
+    if (r.chance(0.15)) {
+        // The last entry claims more than there is
+        blocks.push(header({ name: r.pick(['cut.bin', 'cut\nname', '']), size: octal(r.pick([1, 512, 4096])), type: r.pick(['0', '5']) }));
+        if (r.chance(0.5)) blocks.push(Buffer.alloc(r.pick([100, 512])));
+    } else if (r.chance(0.8)) {
+        blocks.push(Buffer.alloc(1024));
+    }
+    return Buffer.concat(blocks);
+}
+
+// extractTarGz with its options: maxBytes and maxEntries as numbers a
+// caller passes (finite and above 0).
+function limitVectors() {
+    const r = rng(4);
+    const out = [];
+    const record = (gz, options) => {
+        try {
+            out.push({ input: b64(gz), options, files: filesOf(archive.extractTarGz(gz, options)) });
+        } catch (err) {
+            out.push({ input: b64(gz), options, error: errOf(err) });
+        }
+    };
+    for (let i = 0; i < 3000; i++) {
+        const tar = limitArchive(r);
+        const gz = zlib.gzipSync(tar, { level: r.pick([1, 9]) });
+        const regular = r.int(10);
+        const options = {};
+        if (r.chance(0.7)) {
+            options.maxBytes = r.pick([tar.length - 1, tar.length, tar.length + 1, tar.length - 0.5, tar.length + 0.5, 1, 1.5, 511, 512, 1024, 4096, 1e9, 2 ** 31, 2 ** 53 - 1]);
+            if (options.maxBytes <= 0) delete options.maxBytes;
+        }
+        if (r.chance(0.7)) {
+            options.maxEntries = r.pick([1, 1.5, 2, 2.5, 3, regular, regular + 1, 8, 9, 1e9]);
+            if (options.maxEntries <= 0) delete options.maxEntries;
+        }
+        record(gz, options);
+    }
+    // tests/backupArchive.limits.test.js
+    const twelve = Array.from({ length: 12 }, (_, i) => ({ name: `f-${i}.txt`, data: 'x', mtime: 1700000000 }));
+    record(archive.createTarGz(twelve), { maxEntries: 5 });
+    record(archive.createTarGz(twelve), { maxEntries: 12 });
+    record(archive.createTarGz(twelve), { maxEntries: 11 });
+    const bomb = archive.createTarGz([{ name: 'bomb.bin', data: Buffer.alloc(4 * 1024 * 1024), mtime: 1700000000 }]);
+    record(bomb, { maxBytes: 1024 * 1024 });
+    record(bomb, { maxBytes: 4 * 1024 * 1024 + 1024 });
+    record(bomb, { maxBytes: 4 * 1024 * 1024 + 1023 });
+    const truncated = header({ name: 'truncated.bin', size: '000010000\0' });
+    record(zlib.gzipSync(truncated), {});
+    return out;
+}
+
+// BACKUP_MAX_DECOMPRESSED_BYTES and BACKUP_MAX_ENTRIES: the module reads
+// them once when it loads (Number(value) || default). Each pair loads the
+// module anew and extracts the same archives.
+function envVectors() {
+    const file = require.resolve(path.join(WEB, 'services/backupArchive'));
+    const values = [null, '', ' ', '0', '-0', '1', '3', '100', '1000', ' 2048 ', '2048abc', 'abc', '1e3', '1E3', '0x400', '0X400',
+        '0o2000', '0b10000000000', '1.5', '0.5', '2.5', '-1', '-5', '-1.5', '1e21', '9007199254740991', '9007199254740992',
+        'Infinity', '-Infinity', '+Infinity', '1e400', '-1e400', 'NaN', '+512', '.5e3', '5.', '\t7\n', ' 300', '0x', '1_000',
+        '2147483647', '2147483648', '4294967296', '4294967297', '00012', '-0x10', '1e-3', '5000', '12', '1e16', '-1e16', '-4294967297', '100000000000000000', '-100000000000', '-1000000000000000'];
+    const r = rng(5);
+    const archives = [
+        archive.createTarGz([{ name: 'a', data: 'x'.repeat(10), mtime: 1 }, { name: 'b', data: 'y'.repeat(10), mtime: 1 }, { name: 'c', data: 'z'.repeat(10), mtime: 1 }]),
+        archive.createTarGz([]),
+        archive.createTarGz([{ name: 'big', data: Buffer.alloc(3000, 0x61), mtime: 1 }]),
+        archive.createTarGz(Array.from({ length: 13 }, (_, i) => ({ name: `n${i}`, data: String(i), mtime: 1 }))),
+        zlib.gzipSync(Buffer.concat([header({ name: 'dir', size: octal(0), type: '5' }), header({ name: 'one', size: octal(2) }), pad(Buffer.from('ok')), Buffer.alloc(1024)])),
+        zlib.gzipSync(header({ name: 'past', size: octal(600) })),
+        Buffer.from('not gzip at all'),
+        zlib.gzipSync(limitArchive(r)),
+    ];
+    const keep = { bytes: process.env.BACKUP_MAX_DECOMPRESSED_BYTES, entries: process.env.BACKUP_MAX_ENTRIES };
+    const set = (key, value) => { if (value === null || value === undefined) delete process.env[key]; else process.env[key] = value; };
+    const out = { archives: archives.map(b64), cases: [] };
+    const pairs = [];
+    for (const v of values) pairs.push([v, null], [null, v]);
+    for (let i = 0; i < 300; i++) pairs.push([r.pick(values), r.pick(values)]);
+    for (const [bytes, entries] of pairs) {
+        set('BACKUP_MAX_DECOMPRESSED_BYTES', bytes);
+        set('BACKUP_MAX_ENTRIES', entries);
+        delete require.cache[file];
+        const mod = require(file);
+        delete require.cache[file];
+        const results = archives.map((gz) => {
+            try {
+                return { files: filesOf(mod.extractTarGz(gz)) };
+            } catch (err) {
+                return { error: errOf(err) };
+            }
+        });
+        out.cases.push({ bytes, entries, maxBytes: String(mod.MAX_DECOMPRESSED_BYTES), maxEntries: String(mod.MAX_ARCHIVE_ENTRIES), results });
+    }
+    set('BACKUP_MAX_DECOMPRESSED_BYTES', keep.bytes);
+    set('BACKUP_MAX_ENTRIES', keep.entries);
     return out;
 }
 
@@ -436,14 +552,16 @@ function write(file, data) {
 }
 
 (async () => {
-    const archiveData = { tar: tarVectors(), extract: extractVectors(), gunzip: gunzipVectors() };
+    const archiveData = { tar: tarVectors(), extract: extractVectors(), gunzip: gunzipVectors(), limits: limitVectors(), env: envVectors() };
     const values = { validate: validateVectors(), numbers: numberVectors() };
     const schedule = await scheduleVectors();
-    write(path.join(OUT, 'archive.json.gz'), archiveData);
-    write(path.join(OUT, 'values.json.gz'), values);
-    write(path.join(SCHEDULE_OUT, 'schedule.json.gz'), schedule);
+    const parts = (process.env.ORACLE_PARTS || 'archive,values,schedule').split(',');
+    if (parts.includes('archive')) write(path.join(OUT, 'archive.json.gz'), archiveData);
+    if (parts.includes('values')) write(path.join(OUT, 'values.json.gz'), values);
+    if (parts.includes('schedule')) write(path.join(SCHEDULE_OUT, 'schedule.json.gz'), schedule);
     const counts = {
         tar: archiveData.tar.length, extract: archiveData.extract.length, gunzip: archiveData.gunzip.length,
+        limits: archiveData.limits.length, env: archiveData.env.cases.length,
         validateFull: values.validate.full.length, validateSnapshot: values.validate.snapshots.length,
         toFixed: values.numbers.fixed.length, base64: values.numbers.base64.length,
         scheduleSave: schedule.save.length, scheduleGet: schedule.get.length, destination: schedule.destination.length,

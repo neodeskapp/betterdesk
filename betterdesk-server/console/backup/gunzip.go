@@ -3,9 +3,17 @@ package backup
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"hash/crc32"
+	"math"
+	"strconv"
+	"strings"
+
+	"github.com/unitronix/betterdesk-server/console/jsbind"
 )
+
+// maxBufferLength is the largest Buffer of Node 22 (buffer.constants.MAX_LENGTH),
+// the most zlib's maxOutputLength takes.
+const maxBufferLength = 1<<53 - 1
 
 // gunzip decompresses a gzip file as Node's zlib.gunzipSync does, with the
 // messages zlib gives for broken input:
@@ -18,11 +26,60 @@ import (
 //     failure has the text zlib set: "incorrect header check", "invalid
 //     distance too far back", "incorrect data check" and the rest.
 //
-// limit caps the output. Node's limit is the largest Buffer, which is more
-// memory than a server has; past limit the error is the RangeError Node
-// throws for a Buffer that is too large.
+// limit caps the output; past it the error is the RangeError Node throws
+// for a Buffer that is too large.
 func gunzip(data []byte, limit int) ([]byte, error) {
-	in := &inflater{src: data, limit: limit}
+	return inflate(data, limit, strconv.Itoa(limit))
+}
+
+// gunzipMax is zlib.gunzipSync(data, {maxOutputLength: maxBytes}). zlib
+// checks the option first: an infinite one, and one below 1 or above
+// the largest Buffer, is a RangeError before any input is read. Then an
+// output longer than maxBytes stops it. maxBytes may have a fraction (the
+// environment gives one); the messages write it as JavaScript does.
+func gunzipMax(data []byte, maxBytes float64) ([]byte, error) {
+	switch {
+	case math.IsInf(maxBytes, 0):
+		return nil, optionOutOfRange("a finite number", maxBytes)
+	case maxBytes < 1 || maxBytes > maxBufferLength:
+		return nil, optionOutOfRange(">= 1 and <= "+strconv.FormatInt(maxBufferLength, 10), maxBytes)
+	}
+	limit := math.MaxInt
+	if whole := math.Floor(maxBytes); whole < math.MaxInt {
+		limit = int(whole)
+	}
+	return inflate(data, limit, jsbind.NumberString(maxBytes))
+}
+
+// optionOutOfRange is Node's ERR_OUT_OF_RANGE for maxOutputLength. It
+// writes a whole number beyond 2^32 with "_" between groups of three
+// digits, counted from the end of its text.
+func optionOutOfRange(want string, received float64) error {
+	text := jsbind.NumberString(received)
+	if !math.IsInf(received, 0) && received == math.Trunc(received) && math.Abs(received) > 1<<32 {
+		text = numericSeparators(text)
+	}
+	return errors.New(`The value of "options.maxOutputLength" is out of range. It must be ` + want + ". Received " + text)
+}
+
+// numericSeparators is addNumericalSeparator of Node's errors.
+func numericSeparators(val string) string {
+	start := 0
+	if strings.HasPrefix(val, "-") {
+		start = 1
+	}
+	res := ""
+	i := len(val)
+	for ; i >= start+4; i -= 3 {
+		res = "_" + val[i-3:i] + res
+	}
+	return val[:i] + res
+}
+
+// inflate decompresses data with at most limit bytes of output; text is
+// the limit as the RangeError names it.
+func inflate(data []byte, limit int, text string) ([]byte, error) {
+	in := &inflater{src: data, limit: limit, limitText: text}
 	for {
 		if err := in.member(); err != nil {
 			return nil, err
@@ -42,22 +99,24 @@ func (e zlibError) Error() string { return string(e) }
 // gzip stream does.
 const errUnexpectedEOF = zlibError("unexpected end of file")
 
-// errTooLarge is Node's RangeError for a result above the limit.
-type errTooLarge int
+// errTooLarge is Node's RangeError for a result above the limit; it holds
+// the limit as the message writes it.
+type errTooLarge string
 
 func (e errTooLarge) Error() string {
-	return fmt.Sprintf("Cannot create a Buffer larger than %d bytes", int(e))
+	return "Cannot create a Buffer larger than " + string(e) + " bytes"
 }
 
 // inflater holds the state of one decompression: the input with its bit
 // position and the output so far.
 type inflater struct {
-	src   []byte
-	pos   int    // next byte of src
-	bits  uint64 // bits read ahead, lowest first
-	nbits uint
-	out   []byte
-	limit int
+	src       []byte
+	pos       int    // next byte of src
+	bits      uint64 // bits read ahead, lowest first
+	nbits     uint
+	out       []byte
+	limit     int
+	limitText string
 	// start is where the current member's output begins; distances may not
 	// reach before it.
 	start int
@@ -387,7 +446,7 @@ func (z *inflater) stored() error {
 
 func (z *inflater) emit(b ...byte) error {
 	if len(z.out)+len(b) > z.limit {
-		return errTooLarge(z.limit)
+		return errTooLarge(z.limitText)
 	}
 	z.out = append(z.out, b...)
 	return nil
@@ -495,7 +554,7 @@ func (z *inflater) codes(lens, dists *huffman) error {
 		}
 		if sym < 256 {
 			if len(z.out) >= z.limit {
-				return errTooLarge(z.limit)
+				return errTooLarge(z.limitText)
 			}
 			z.out = append(z.out, byte(sym))
 			continue
@@ -525,7 +584,7 @@ func (z *inflater) codes(lens, dists *huffman) error {
 			return zlibError("invalid distance too far back")
 		}
 		if len(z.out)+length > z.limit {
-			return errTooLarge(z.limit)
+			return errTooLarge(z.limitText)
 		}
 		from := len(z.out) - dist
 		for i := 0; i < length; i++ {

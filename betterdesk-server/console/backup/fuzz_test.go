@@ -14,7 +14,11 @@ import (
 // The archive reader takes uploaded files: it must not panic, not loop,
 // and not hand out more than its limit, whatever it is given.
 
-const fuzzLimit = 1 << 20
+// fuzzLimit and fuzzEntries are the limits of the fuzzed reader.
+const (
+	fuzzLimit   = 1 << 20
+	fuzzEntries = 8
+)
 
 func fuzzSeeds(f *testing.F) {
 	small, _ := CreateTarGz([]Entry{{Name: "manifest.json", Data: []byte(`{"_format":"betterdesk-full-backup","_version":1}`)},
@@ -39,7 +43,7 @@ func FuzzExtractTarGz(f *testing.F) {
 		var err error
 		go func() {
 			defer close(done)
-			files, err = ExtractTarGz(data, fuzzLimit)
+			files, err = ExtractTarGz(data, Limits{MaxBytes: fuzzLimit, MaxEntries: fuzzEntries})
 		}()
 		select {
 		case <-done:
@@ -56,6 +60,9 @@ func FuzzExtractTarGz(f *testing.F) {
 				t.Fatalf("listed name %q has no data", name)
 			}
 			total += len(d)
+		}
+		if n := len(files.Names()); n > fuzzEntries {
+			t.Fatalf("%d files out of an archive limited to %d", n, fuzzEntries)
 		}
 		if total > fuzzLimit {
 			t.Fatalf("%d bytes out of an archive limited to %d", total, fuzzLimit)
@@ -110,7 +117,7 @@ func FuzzTarRoundTrip(f *testing.F) {
 				return
 			}
 		}
-		files, err := ExtractTarGz(archive, fuzzLimit*4)
+		files, err := ExtractTarGz(archive, Limits{MaxBytes: fuzzLimit * 4})
 		if err != nil {
 			t.Fatal(err)
 		}

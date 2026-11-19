@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,10 +23,6 @@ const (
 	FullFormatName    = "betterdesk-full-backup"
 	FullFormatVersion = 1
 )
-
-// DefaultMaxArchiveBytes is the largest unpacked archive Restore and the
-// checks accept: 2 GiB, or what an int holds on a 32-bit platform.
-const DefaultMaxArchiveBytes = min(2<<30, math.MaxInt)
 
 // Branding is the part of the branding service a backup reads and writes.
 type Branding interface {
@@ -78,9 +73,11 @@ type Options struct {
 	AppVersion string
 	// Now is the clock; nil is time.Now.
 	Now func() time.Time
-	// MaxArchiveBytes caps the unpacked size of an archive that is read;
-	// 0 is DefaultMaxArchiveBytes.
-	MaxArchiveBytes int
+	// Limits cap an archive that is read (a restore and its check):
+	// MaxBytes is BACKUP_MAX_DECOMPRESSED_BYTES, MaxEntries
+	// BACKUP_MAX_ENTRIES, each read with EnvLimit; 0 is the default (2 GiB,
+	// 50,000).
+	Limits Limits
 }
 
 // Service makes and restores backups (services/backupService.js).
@@ -92,9 +89,6 @@ type Service struct {
 func New(o Options) *Service {
 	if o.Now == nil {
 		o.Now = time.Now
-	}
-	if o.MaxArchiveBytes <= 0 {
-		o.MaxArchiveBytes = DefaultMaxArchiveBytes
 	}
 	return &Service{o: o}
 }
@@ -443,7 +437,7 @@ type Validation struct {
 // instead of answering (a manifest that is null, a version that cannot be
 // turned into text).
 func (s *Service) ValidateFullBackup(buf []byte) (Validation, error) {
-	files, err := ExtractTarGz(buf, s.o.MaxArchiveBytes)
+	files, err := ExtractTarGz(buf, s.o.Limits)
 	if err != nil {
 		return Validation{Errors: []string{"Not a valid gzip/tar archive: " + err.Error()}}, nil
 	}

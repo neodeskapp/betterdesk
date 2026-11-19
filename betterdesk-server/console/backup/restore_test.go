@@ -301,10 +301,10 @@ func TestGunzipLimit(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ExtractTarGz(archive, 50000); err == nil || err.Error() != "Cannot create a Buffer larger than 50000 bytes" {
+	if _, err := ExtractTarGz(archive, Limits{MaxBytes: 50000}); err == nil || err.Error() != "Cannot create a Buffer larger than 50000 bytes" {
 		t.Errorf("limit: %v", err)
 	}
-	if _, err := ExtractTarGz(archive, 200000); err != nil {
+	if _, err := ExtractTarGz(archive, Limits{MaxBytes: 200000}); err != nil {
 		t.Errorf("under the limit: %v", err)
 	}
 }
@@ -325,7 +325,7 @@ func TestExtractStopsOnALoop(t *testing.T) {
 	writeOctal(tar, int64(sum), 148, 7)
 	done := make(chan error, 1)
 	go func() {
-		_, err := ExtractTarGz(gzipBytes(t, tar), DefaultMaxArchiveBytes)
+		_, err := ExtractTarGz(gzipBytes(t, tar), Limits{})
 		done <- err
 	}()
 	select {

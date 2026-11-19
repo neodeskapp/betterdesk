@@ -2,9 +2,11 @@ package settingsbackup_test
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -126,7 +128,7 @@ func TestDownloads(t *testing.T) {
 		if res.Header.Get("ETag") == "" || res.Header.Get("Content-Encoding") != "" {
 			t.Errorf("headers %v", res.Header)
 		}
-		files, err := backup.ExtractTarGz([]byte(res.Body), backup.DefaultMaxArchiveBytes)
+		files, err := backup.ExtractTarGz([]byte(res.Body), backup.Limits{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -260,6 +262,61 @@ func TestRestore(t *testing.T) {
 			t.Errorf("after the restore: %d", res.Status)
 		}
 	})
+}
+
+// TestRestoreArchiveLimits: an uploaded archive with more regular files
+// than BACKUP_MAX_ENTRIES, one that unpacks past
+// BACKUP_MAX_DECOMPRESSED_BYTES (or meets a byte limit zlib refuses) and
+// one with an entry past its end are refused with 400 and the reader's
+// message, as the old route answered them.
+func TestRestoreArchiveLimits(t *testing.T) {
+	archive, err := backup.CreateTarGz([]backup.Entry{
+		{Name: "manifest.json", Data: []byte(`{"_format":"betterdesk-full-backup","_version":1}`)},
+		{Name: "a", Data: []byte("1")}, {Name: "b", Data: []byte("2")},
+	}, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var cut bytes.Buffer
+	zw := gzip.NewWriter(&cut)
+	header, err := backup.CreateTarGz([]backup.Entry{{Name: "cut.bin", Data: make([]byte, 600)}}, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tar, err := gunzipAll(header)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _ = zw.Write(tar[:512+100])
+	_ = zw.Close()
+	const prefix = `{"success":false,"error":"Invalid backup archive: Not a valid gzip/tar archive: `
+	for _, c := range []struct {
+		env  map[string]string
+		body []byte
+		want string
+	}{
+		{map[string]string{"BACKUP_MAX_ENTRIES": "2"}, archive, `Backup archive has more than 2 entries"}`},
+		{map[string]string{"BACKUP_MAX_ENTRIES": " 1.5 "}, archive, `Backup archive has more than 1.5 entries"}`},
+		{map[string]string{"BACKUP_MAX_DECOMPRESSED_BYTES": "0x800"}, archive, `Cannot create a Buffer larger than 2048 bytes"}`},
+		{map[string]string{"BACKUP_MAX_DECOMPRESSED_BYTES": "-1"}, archive,
+			`The value of \"options.maxOutputLength\" is out of range. It must be >= 1 and <= 9007199254740991. Received -1"}`},
+		{nil, cut.Bytes(), `Backup archive entry cut.bin extends past the end of the archive"}`},
+	} {
+		w := newWorld(t, nil, c.env)
+		body, ct := multipartBody(t, "backup", "b.tar.gz", c.body, nil)
+		res := w.As("admin").Do("POST", "/api/settings/restore", body, "Content-Type", ct)
+		if res.Status != 400 || res.Body != prefix+c.want {
+			t.Errorf("%v: %d %s", c.env, res.Status, res.Body)
+		}
+	}
+}
+
+func gunzipAll(b []byte) ([]byte, error) {
+	zr, err := gzip.NewReader(bytes.NewReader(b))
+	if err != nil {
+		return nil, err
+	}
+	return io.ReadAll(zr)
 }
 
 func TestRetention(t *testing.T) {

@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"compress/gzip"
 	"errors"
+	"math"
 	"strconv"
 	"strings"
 	"unicode/utf16"
 	"unicode/utf8"
+
+	"github.com/unitronix/betterdesk-server/console/jsbind"
 )
 
 // The archive is a gzip-compressed tar file in the ustar format with
@@ -197,14 +200,62 @@ func padToBlock(size int64) int64 {
 // header again and again, for ever (BUGS.md BK4).
 var ErrNoProgress = errors.New("tar entry size leads back to a header read before")
 
+// The limits of an archive that is read, by default.
+const (
+	// DefaultMaxArchiveBytes is the largest unpacked tar file: 2 GiB.
+	DefaultMaxArchiveBytes = 2 << 30
+	// DefaultMaxEntries is the most regular files an archive may hold.
+	DefaultMaxEntries = 50000
+)
+
+// Limits cap what ExtractTarGz takes from an archive. A field is a number
+// as JavaScript's Number() read the setting (BACKUP_MAX_DECOMPRESSED_BYTES,
+// BACKUP_MAX_ENTRIES) and is taken as it is, fractions, negative and
+// infinite values included; 0 (or NaN) is the default.
+type Limits struct {
+	// MaxBytes caps the unpacked tar file (zlib's maxOutputLength). Below
+	// 1, above the largest Buffer (2^53-1) and infinite, every archive is
+	// refused with zlib's RangeError for the option.
+	MaxBytes float64
+	// MaxEntries caps the regular files: a regular file found when
+	// MaxEntries names or more are taken is refused.
+	MaxEntries float64
+}
+
+// orDefault is the limits with the defaults for 0 and NaN.
+func (l Limits) orDefault() Limits {
+	if l.MaxBytes == 0 || math.IsNaN(l.MaxBytes) {
+		l.MaxBytes = DefaultMaxArchiveBytes
+	}
+	if l.MaxEntries == 0 || math.IsNaN(l.MaxEntries) {
+		l.MaxEntries = DefaultMaxEntries
+	}
+	return l
+}
+
+// EnvLimit is Number(value) of a limit's environment variable, with NaN
+// (text that is no number) as 0, the default: Node's
+// Number(process.env.X) || default.
+func EnvLimit(value string) float64 {
+	n := jsbind.ParseNumber(value)
+	if math.IsNaN(n) {
+		return 0
+	}
+	return n
+}
+
 // ExtractTarGz unpacks an archive made by CreateTarGz, as the old console
 // read it: up to the first block of zeros, regular files only (type '0'
 // or NUL), names cut at the first NUL that no line break follows, a size
 // field read with parseInt in base 8 after its spaces and NULs are
-// removed, and a file that runs past the end of the archive cut short.
-// limit caps the size of the unpacked tar file.
-func ExtractTarGz(buf []byte, limit int) (*Files, error) {
-	tar, err := gunzip(buf, limit)
+// removed. Within the limits: an archive that unpacks to more than
+// MaxBytes is zlib's RangeError, a regular file beyond MaxEntries is
+// "Backup archive has more than <n> entries", and an entry whose size
+// runs past the end of the tar file is "Backup archive entry <name>
+// extends past the end of the archive".
+func ExtractTarGz(buf []byte, limits Limits) (*Files, error) {
+	limits = limits.orDefault()
+	tar, err := gunzipMax(buf, limits.MaxBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -237,10 +288,16 @@ func ExtractTarGz(buf []byte, limit int) (*Files, error) {
 			regular = t[0]&0x7f == '0' || t[0]&0x7f == 0
 		}
 		offset += blockSize
+		if offset+size > n {
+			return nil, errors.New("Backup archive entry " + name + " extends past the end of the archive")
+		}
 		from, to := subarray(n, offset, offset+size)
 		data := tar[from:to]
 		offset += size + padToBlock(size)
 		if regular {
+			if float64(len(files.names)) >= limits.MaxEntries {
+				return nil, errors.New("Backup archive has more than " + jsbind.NumberString(limits.MaxEntries) + " entries")
+			}
 			files.set(name, bytes.Clone(data))
 		}
 	}

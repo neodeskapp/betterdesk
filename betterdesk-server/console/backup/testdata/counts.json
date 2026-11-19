@@ -2,6 +2,8 @@
   "tar": 400,
   "extract": 2500,
   "gunzip": 4000,
+  "limits": 3007,
+  "env": 410,
   "validateFull": 27,
   "validateSnapshot": 18,
   "toFixed": 3021,
