@@ -376,6 +376,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 			Allowed:      ws.ParseAllowedOrigins(getenv("WS_ALLOWED_ORIGINS")),
 			AllowMissing: getenv("BD_ALLOW_MISSING_ORIGIN") == "true",
 		},
+		ClientIP: cfg.TrustProxy.ClientIP,
 	})
 	s.deps.StatusPush = statuspush.New(statuspush.Options{Events: api.Events, Cascade: s.deps.DeviceGroups.CascadePeerIDChange})
 	s.jobs.Add("device status push", s.deps.StatusPush.Run)

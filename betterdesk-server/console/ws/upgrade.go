@@ -204,6 +204,22 @@ func (u *Upgrade) ClientAddr() string {
 	return "unknown"
 }
 
+// ClientIP is the client's address as the console's TRUST_PROXY setting
+// gives it (req.ip): X-Forwarded-For counts only when it comes from a
+// proxy the setting trusts. Without Options.ClientIP it is the
+// connection's address.
+func (u *Upgrade) ClientIP() string {
+	if f := u.reg.opts.ClientIP; f != nil {
+		if ip := f(u.R); ip != "" {
+			return ip
+		}
+	}
+	if addr := u.SocketAddr(); addr != "" {
+		return addr
+	}
+	return "unknown"
+}
+
 // SocketAddr is the address of the connection (req.socket.remoteAddress).
 func (u *Upgrade) SocketAddr() string {
 	host, _, err := net.SplitHostPort(u.R.RemoteAddr)

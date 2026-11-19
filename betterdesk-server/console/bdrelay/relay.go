@@ -26,7 +26,8 @@ import (
 // The limits of the old relay.
 const (
 	// MaxRelayPerIP is how many relay and signal sockets one address may
-	// hold together.
+	// hold together. The address is the client's as the console's
+	// TRUST_PROXY setting gives it (ws.Upgrade.ClientIP).
 	MaxRelayPerIP = 10
 	// MaxFrameBytes is the largest message on a relay socket.
 	MaxFrameBytes = 2 << 20

@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/ws"
 	"github.com/unitronix/betterdesk-server/console/ws/wstest"
 )
@@ -370,5 +371,57 @@ func TestClientAddr(t *testing.T) {
 		if g := <-got; g != want {
 			t.Errorf("%q: %q, want %q", header, g, want)
 		}
+	}
+}
+
+// TestClientIPIgnoresForwardedWithoutTrustProxy: ClientIP is the address
+// the console's TRUST_PROXY gives. Without a trusted proxy, and without
+// the option, X-Forwarded-For is ignored and the connection's address
+// counts; a trusted proxy (here loopback) speaks for the client with the
+// last entry it added.
+func TestClientIPIgnoresForwardedWithoutTrustProxy(t *testing.T) {
+	trusted, err := httpx.ParseTrustProxy("loopback")
+	if err != nil {
+		t.Fatal(err)
+	}
+	untrusted, err := httpx.ParseTrustProxy("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		name     string
+		clientIP func(*http.Request) string
+		want     map[string]string
+	}{
+		{"no option", nil, map[string]string{
+			"": "127.0.0.1",
+			"X-Forwarded-For: 10.0.0.1, 10.0.0.2\r\n": "127.0.0.1",
+		}},
+		{"trust nobody", untrusted.ClientIP, map[string]string{
+			"": "127.0.0.1",
+			"X-Forwarded-For: 10.0.0.1, 10.0.0.2\r\n": "127.0.0.1",
+		}},
+		{"trust loopback", trusted.ClientIP, map[string]string{
+			"": "127.0.0.1",
+			"X-Forwarded-For: 10.0.0.1, 10.0.0.2\r\n":      "10.0.0.2",
+			"X-Forwarded-For: a\r\nX-Forwarded-For: b\r\n": "b",
+		}},
+	} {
+		reg := ws.New(ws.Options{ClientIP: c.clientIP})
+		got := make(chan string, 1)
+		reg.Handle("/ws/x", func(u *ws.Upgrade) {
+			got <- u.ClientIP()
+			u.Refuse(http.StatusForbidden)
+		})
+		srv := httptest.NewServer(reg)
+		addr := strings.TrimPrefix(srv.URL, "http://")
+		for header, want := range c.want {
+			_, _ = wstest.Raw(addr, "GET /ws/x HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"+header+"\r\n")
+			if g := <-got; g != want {
+				t.Errorf("%s, %q: %q, want %q", c.name, header, g, want)
+			}
+		}
+		srv.Close()
+		reg.Close()
 	}
 }

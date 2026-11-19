@@ -28,6 +28,10 @@ type Options struct {
 	Permission func(ctx context.Context, role, permission string) (bool, error)
 	// Origins is the origin policy of CheckOrigin.
 	Origins OriginPolicy
+	// ClientIP is the client's address as the console's TRUST_PROXY
+	// setting gives it (httpx.TrustProxy.ClientIP, req.ip). nil: the
+	// connection's address.
+	ClientIP func(r *http.Request) string
 }
 
 // Session is what a socket's checks read from the session.

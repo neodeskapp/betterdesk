@@ -39,7 +39,7 @@ func (s *Service) serveSignal(u *ws.Upgrade) {
 		return
 	}
 	defer conn.Wait()
-	ip := u.ClientAddr()
+	ip := u.ClientIP()
 	deviceID, _ := u.SearchParam("device_id")
 	token, _ := u.SearchParam("token")
 

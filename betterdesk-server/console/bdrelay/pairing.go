@@ -94,7 +94,7 @@ func (s *Service) joinRelay(u *ws.Upgrade, conn *ws.Conn, waitMu *sync.Mutex) (j
 			j, ok = relayJoin{}, false
 		}
 	}()
-	ip := u.ClientAddr()
+	ip := u.ClientIP()
 	id, _ := u.SearchParam("session")
 	token, _ := u.SearchParam("token")
 	role, _ := u.SearchParam("role")

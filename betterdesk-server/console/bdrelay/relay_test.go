@@ -2,6 +2,8 @@ package bdrelay
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
@@ -9,6 +11,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/ws"
 	"github.com/unitronix/betterdesk-server/console/ws/wstest"
 )
@@ -24,6 +27,72 @@ func newRelay(t *testing.T) (*Service, string) {
 		reg.Close()
 	})
 	return svc, strings.TrimPrefix(srv.URL, "http://")
+}
+
+// openSignal opens a signal socket of a device with headers and waits for
+// its welcome or its close: welcomed is false when it was closed, with the
+// code.
+func openSignal(t *testing.T, addr, device string, header http.Header) (c *wstest.Client, welcomed bool, code int) {
+	t.Helper()
+	c, _, err := wstest.Dial(addr, "/ws/bd-signal?device_id="+device+"&token=tok-"+device+"-good", header)
+	if err != nil || c == nil {
+		t.Fatalf("dial: %v", err)
+	}
+	if !c.Wait(3*time.Second, func(f []wstest.Frame, closed bool) bool { return closed || len(f) > 0 }) {
+		t.Fatalf("%s got nothing", device)
+	}
+	closed, code, _ := c.Closed()
+	return c, !closed, code
+}
+
+// TestAddressLimitCountsTheTrustedAddress: the limit of MaxRelayPerIP
+// sockets per address counts the address the console's TRUST_PROXY gives.
+// Without a trusted proxy an X-Forwarded-For the client wrote buys no
+// fresh budget; behind a trusted proxy each client has its own.
+func TestAddressLimitCountsTheTrustedAddress(t *testing.T) {
+	t.Cleanup(wstest.Goroutines(t))
+	loopback, err := httpx.ParseTrustProxy("loopback")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		name      string
+		clientIP  func(*http.Request) string
+		otherGets bool
+	}{
+		{"trust nobody", nil, false},
+		{"trust loopback", loopback.ClientIP, true},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			svc := New(Options{VerifyDevice: oracleVerify})
+			reg := ws.New(ws.Options{ClientIP: c.clientIP})
+			svc.Register(reg)
+			srv := httptest.NewServer(reg)
+			defer func() {
+				srv.Close()
+				reg.Close()
+			}()
+			addr := strings.TrimPrefix(srv.URL, "http://")
+			from := func(ip string) http.Header { return http.Header{"X-Forwarded-For": {ip}} }
+			for i := range MaxRelayPerIP {
+				s, ok, code := openSignal(t, addr, fmt.Sprintf("dev%d", i), from("10.0.0.1"))
+				defer s.Close(1000)
+				if !ok {
+					t.Fatalf("socket %d closed with %d", i, code)
+				}
+			}
+			over, ok, code := openSignal(t, addr, "dev10", from("10.0.0.1"))
+			defer over.Drop()
+			if ok || code != 4429 {
+				t.Errorf("the eleventh socket of 10.0.0.1: welcomed %v, closed with %d", ok, code)
+			}
+			other, ok, code := openSignal(t, addr, "dev11", from("10.0.0.2"))
+			defer other.Drop()
+			if ok != c.otherGets {
+				t.Errorf("a socket that says it is 10.0.0.2: welcomed %v (closed with %d), want %v", ok, code, c.otherGets)
+			}
+		})
+	}
 }
 
 // TestTokenOfAnotherLength: a relay token of another length is refused
