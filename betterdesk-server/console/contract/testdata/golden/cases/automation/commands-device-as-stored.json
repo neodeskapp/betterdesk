@@ -92,56 +92,7 @@
   },
   {
    "roles": [
-    "server_admin"
-   ],
-   "status": 200,
-   "headers": {
-    "cache-control": "no-cache, no-store, must-revalidate",
-    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "application/json; charset=utf-8",
-    "cross-origin-resource-policy": "same-origin",
-    "etag": "<present>",
-    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "ratelimit-limit": "1000000",
-    "ratelimit-policy": "1000000;w=60",
-    "ratelimit-remaining": "<n>",
-    "ratelimit-reset": "<n>",
-    "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": [
-     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
-    ],
-    "x-content-type-options": "nosniff",
-    "x-dns-prefetch-control": "off",
-    "x-download-options": "noopen",
-    "x-frame-options": "DENY",
-    "x-permitted-cross-domain-policies": "none",
-    "x-xss-protection": "0"
-   },
-   "volatile": [
-    {
-     "path": "commands[*].created_at",
-     "format": "9999-99-99 99:99:99"
-    },
-    {
-     "path": "commands[*].created_by",
-     "pattern": "^[9aA+/_=-]+$"
-    },
-    {
-     "path": "commands[*].id",
-     "integer": true
-    }
-   ],
-   "body": {
-    "kind": "json",
-    "json": {
-     "commands": [],
-     "total": 0
-    }
-   }
-  },
-  {
-   "roles": [
+    "server_admin",
     "super_admin",
     "admin"
    ],
@@ -170,37 +121,15 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    {
-     "path": "commands[*].created_at",
-     "format": "9999-99-99 99:99:99"
-    },
-    {
-     "path": "commands[*].created_by",
-     "pattern": "^[9aA+/_=-]+$"
-    },
-    {
-     "path": "commands[*].id",
-     "integer": true
-    }
+    "commands[*].created_at",
+    "commands[*].created_by",
+    "commands[*].id"
    ],
    "body": {
     "kind": "json",
     "json": {
-     "commands": [
-      {
-       "command_type": "shell",
-       "completed_at": null,
-       "created_at": "<volatile>",
-       "created_by": "<volatile>",
-       "device_id": "7.0",
-       "executed_at": null,
-       "id": 0,
-       "payload": "hostname",
-       "result": null,
-       "status": "pending"
-      }
-     ],
-     "total": 1
+     "commands": [],
+     "total": 0
     }
    }
   }

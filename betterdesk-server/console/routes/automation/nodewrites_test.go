@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
@@ -100,11 +101,12 @@ func nodeRule(t *testing.T, w *replay.World, step replay.Step) {
 	nodeAudit(t, w, step, "alert_rule_created", "Rule: "+get("name").Str())
 }
 
-// nodeAudit is the audit log entry an old route wrote for the step.
+// nodeAudit is the audit log entry an old route wrote for the step, with
+// the details cleaned as the audit log cleans them.
 func nodeAudit(t *testing.T, w *replay.World, step replay.Step, action, details string) {
 	t.Helper()
 	nodeExec(t, w, "INSERT INTO audit_log (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)",
-		jsbind.Number(float64(replay.Users[step.Role].ID)), jsbind.String(action), jsbind.String(details), jsbind.String("203.0.113.7"))
+		jsbind.Number(float64(replay.Users[step.Role].ID)), jsbind.String(action), jsbind.String(auditlog.RedactDetails(details)), jsbind.String("203.0.113.7"))
 }
 
 // nodeRuleUpdate is what PATCH rules/{id} wrote for a change Node took:
@@ -147,4 +149,36 @@ func nodeAck(t *testing.T, w *replay.World, step replay.Step) {
 	parts := strings.Split(step.Path, "/")
 	nodeExec(t, w, "UPDATE alert_history SET acknowledged = "+w.DB.Pick("1", "TRUE")+", acknowledged_by = ?, acknowledged_at = "+store.NowSQL(w.DB.Dialect())+" WHERE id = ?",
 		jsbind.String(replay.Users[step.Role].Username), jsbind.Number(jsbind.ParseNumber(parts[len(parts)-2])))
+}
+
+// nodeCommand is what POST commands wrote for a device the old route took:
+// the device as it came, with the audit log entry of a command that was
+// answered 201. The route inserted before it wrote its log line, so a
+// device it could not make text of (a member named toString) failed with
+// 500 after the row was stored; where the driver refused the device,
+// nothing was.
+func nodeCommand(t *testing.T, w *replay.World, step replay.Step) {
+	t.Helper()
+	if step.Status != http.StatusCreated && step.Status != http.StatusInternalServerError {
+		return
+	}
+	body := nodeBody(t, step)
+	device := jsbind.Of(body.Get("device_id"))
+	commandType := jsbind.Of(body.Get("command_type")).Or(jsbind.String("shell"))
+	const insert = `INSERT INTO remote_commands (device_id, command_type, payload, status, created_by)
+                VALUES (?, ?, ?, 'pending', ?)`
+	args, err := jsbind.Args(w.DB.Dialect(), 4, device, commandType, jsbind.String(jsbind.Trim(jsbind.Of(body.Get("payload")).Str())),
+		jsbind.String(replay.Users[step.Role].Username))
+	if err != nil {
+		return
+	}
+	if _, err := w.DB.Exec(context.Background(), insert, args...); err != nil {
+		if step.Status == http.StatusCreated {
+			t.Fatalf("%s: %v", step.Name, err)
+		}
+		return
+	}
+	if step.Status == http.StatusCreated {
+		nodeAudit(t, w, step, "remote_command_sent", commandType.Str()+" to "+device.ToString())
+	}
 }

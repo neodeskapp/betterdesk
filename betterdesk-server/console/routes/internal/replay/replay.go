@@ -100,6 +100,17 @@ func (o RoleOverrides) DeleteRolePermission(role, permission string) error {
 // built-in ones by the overrides.
 func NewWorldWithRoles(t *testing.T, db *store.DB, configure func(cfg *config.Config), roles RoleOverrides) *World {
 	t.Helper()
+	return NewWorldWithAPI(t, db, configure, roles, nil)
+}
+
+// NewWorldWithAPI is NewWorldWithRoles for a console whose calls into the
+// API server (package goapi) reach api. With nil every call is answered
+// 404, as in NewWorld.
+func NewWorldWithAPI(t *testing.T, db *store.DB, configure func(cfg *config.Config), roles RoleOverrides, api http.Handler) *World {
+	t.Helper()
+	if api == nil {
+		api = http.NotFoundHandler()
+	}
 	ctx := context.Background()
 	for _, user := range Users {
 		if _, err := db.Exec(ctx, "INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, 'x', ?)", user.ID, user.Username, user.Role); err != nil {
@@ -129,7 +140,7 @@ func NewWorldWithRoles(t *testing.T, db *store.DB, configure func(cfg *config.Co
 	if configure != nil {
 		configure(cfg)
 	}
-	options := console.Options{Config: cfg, Store: db, API: http.NotFoundHandler()}
+	options := console.Options{Config: cfg, Store: db, API: api}
 	if roles != nil {
 		options.Roles = roles
 	}

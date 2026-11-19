@@ -46,7 +46,7 @@ import (
 // be Node's and the answer what a read of the row gives.
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		w := replay.NewWorld(t, db, nil)
+		w := newWorld(t, db)
 		guarded, elsewhere, slashes, undecoded, created := 0, 0, 0, 0, 0
 		defer panelFixes.Unused(t, db)
 		w.Run(replay.Load(t, db, "node"), panelFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
@@ -102,7 +102,7 @@ func TestNodeAnswers(t *testing.T) {
 
 // createdOnSQLite is the number of rules and commands the recording on
 // SQLite creates.
-const createdOnSQLite = 352
+const createdOnSQLite = 333
 
 // answersTheRow checks the answer to a new rule or command on SQLite: it
 // has Node's id and is the row as a read of it gives it.
@@ -263,7 +263,7 @@ func state(w *replay.World) string {
 func TestPermissions(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		seedOne(t, db)
-		w := replay.NewWorldWithRoles(t, db, nil, replay.RoleOverrides{"operator": {"server.config": true}})
+		w := replay.NewWorldWithAPI(t, db, nil, replay.RoleOverrides{"operator": {"server.config": true}}, knownDevices)
 		before := state(w)
 		const denied = `{"success":false,"error":"Permission denied: server.config"}`
 		const guarded = `{"success":false,"error":"Panel access denied: automation","code":"panel_access_denied"}`
@@ -339,7 +339,7 @@ func TestPermissions(t *testing.T) {
 func TestTheAuditLog(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		seedOne(t, db)
-		w := replay.NewWorld(t, db, nil)
+		w := newWorld(t, db)
 		for _, req := range []replay.Request{
 			{Role: "admin", Method: "POST", Path: "/api/automation/rules", Body: replay.Text(`{"name":"  Disk full ","condition_type":"disk_usage"}`)},
 			{Role: "super_admin", Method: "PATCH", Path: "/api/automation/rules/3", Body: replay.Text(`{"name":"Disk nearly full"}`)},
@@ -347,7 +347,7 @@ func TestTheAuditLog(t *testing.T) {
 			{Role: "admin", Method: "DELETE", Path: "/api/automation/rules/3"},
 			{Role: "admin", Method: "POST", Path: "/api/automation/alerts/1/ack", Body: replay.Text(`{}`)},
 			{Role: "admin", Method: "POST", Path: "/api/automation/commands", Body: replay.Text(`{"device_id":"D7","payload":"uptime"}`)},
-			{Role: "super_admin", Method: "POST", Path: "/api/automation/commands", Body: replay.Text(`{"device_id":["D8"],"payload":"x","command_type":"reboot"}`)},
+			{Role: "super_admin", Method: "POST", Path: "/api/automation/commands", Body: replay.Text(`{"device_id":"D8","payload":"x","command_type":"reboot"}`)},
 			{Role: "admin", Method: "POST", Path: "/api/automation/rules", Body: replay.Text(`{"name":"","condition_type":"disk_usage"}`)},
 			{Role: "admin", Method: "POST", Path: "/api/automation/commands", Body: replay.Text(`{"device_id":"D7","payload":"x","command_type":"nonsense"}`)},
 			{Role: "admin", Path: "/api/automation/rules"},
@@ -404,7 +404,7 @@ func TestARuleKeepsTheStateItWasCreatedWith(t *testing.T) {
 // values of the request (BUGS AU3).
 func TestWhatANewRuleAndANewCommandAreAnsweredWith(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		w := replay.NewWorld(t, db, nil)
+		w := newWorld(t, db)
 		created := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/automation/rules",
 			Body: replay.Text(`{"name":" Types ","condition_type":"custom","description":"text","condition_value":12.5,"severity":"fatal","scope_device_id":"D7","cooldown_secs":900,"notify_emails":"","enabled":"0"}`)})
 		read := w.Do(replay.Request{Role: "admin", Path: "/api/automation/rules/1"})
@@ -418,11 +418,11 @@ func TestWhatANewRuleAndANewCommandAreAnsweredWith(t *testing.T) {
 			t.Errorf("new rule: %d %s\nwant 201 with %s", created.Status, have, want)
 		}
 
-		created = w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/automation/commands", Body: replay.Text(`{"device_id":[7],"payload":"  uptime "}`)})
+		created = w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/automation/commands", Body: replay.Text(`{"device_id":"D7","payload":"  uptime "}`)})
 		read = w.Do(replay.Request{Role: "admin", Path: "/api/automation/commands/1"})
 		want = db.Pick(
-			`{"id":1,"device_id":"7.0","command_type":"shell","payload":"uptime","status":"pending","result":null,"created_by":"e2e_admin","created_at":"<now, SQLite form>","executed_at":null,"completed_at":null}`,
-			`{"id":1,"device_id":"{\"7\"}","command_type":"shell","payload":"uptime","status":"pending","result":null,"created_by":"e2e_admin","created_at":"<now, ISO form>","executed_at":null,"completed_at":null}`)
+			`{"id":1,"device_id":"D7","command_type":"shell","payload":"uptime","status":"pending","result":null,"created_by":"e2e_admin","created_at":"<now, SQLite form>","executed_at":null,"completed_at":null}`,
+			`{"id":1,"device_id":"D7","command_type":"shell","payload":"uptime","status":"pending","result":null,"created_by":"e2e_admin","created_at":"<now, ISO form>","executed_at":null,"completed_at":null}`)
 		if have := replay.Normalize(read.Body); read.Status != 200 || have != want {
 			t.Errorf("the command read back: %d %s\nwant 200 %s", read.Status, have, want)
 		}
@@ -432,33 +432,11 @@ func TestWhatANewRuleAndANewCommandAreAnsweredWith(t *testing.T) {
 	})
 }
 
-// A command for a device JavaScript cannot make text of is stored on
-// PostgreSQL and answered with 500 all the same, without an audit log
-// entry. SQLite does not take the device.
-func TestACommandForADeviceThatIsNoText(t *testing.T) {
-	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		w := replay.NewWorld(t, db, nil)
-		for _, device := range []string{`{"toString":1}`, `[["x"],{"toString":null}]`} {
-			got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/automation/commands", Body: replay.Text(`{"device_id":` + device + `,"payload":"whoami"}`)})
-			if want := `{"error":"Internal server error"}`; got.Status != 500 || got.Body != want {
-				t.Errorf("device %s: %d %s, want 500 %s", device, got.Status, got.Body, want)
-			}
-		}
-		want := db.Pick(`[]`, `[{"id":1,"device_id":"{\"toString\":1}"},{"id":2,"device_id":"{{\"x\"},\"{\\\"toString\\\":null}\"}"}]`)
-		if got := w.Rows("SELECT id, device_id FROM remote_commands ORDER BY id", nil); got != want {
-			t.Errorf("stored commands: %s, want %s", got, want)
-		}
-		if got := w.Rows("SELECT action FROM audit_log", nil); got != "[]" {
-			t.Errorf("the audit log: %s, want nothing", got)
-		}
-	})
-}
-
 // A query that fails is a 500 with the text of every route's catch block.
 func TestFailures(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		seedOne(t, db)
-		w := replay.NewWorld(t, db, nil)
+		w := newWorld(t, db)
 		for _, statement := range []string{"DROP TABLE alert_history", "DROP TABLE alert_rules", "DROP TABLE remote_commands"} {
 			if _, err := db.Exec(context.Background(), statement); err != nil {
 				t.Fatal(err)

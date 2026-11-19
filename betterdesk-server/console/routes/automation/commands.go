@@ -16,19 +16,18 @@ type commandSent struct {
 // command_type?} and the command as it is stored: the command waits for
 // the device's agent to fetch it.
 //
-// The payload has to be a text that is not blank and the type, when
-// given, one of five. The device can be anything that is not empty: the
-// database decides what it stores for a number or a list.
-//
-// A device that JavaScript cannot make text of (an object with a member
-// named toString) gets its command stored on PostgreSQL and the request
-// answered with 500 all the same, without an audit log entry: the old
-// route failed while it wrote its log line.
+// The device has to be the id, as text, of a device the API server knows,
+// the payload a text that is not blank and the type, when given, one of
+// five.
 func (h *handlers) sendCommand(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	device := jsbind.Of(body.Get("device_id"))
 	if !device.Truthy() {
 		fail(w, r, http.StatusBadRequest, "device_id is required")
+		return
+	}
+	if !device.IsString() {
+		fail(w, r, http.StatusBadRequest, "Invalid device_id")
 		return
 	}
 	payload := jsbind.Of(body.Get("payload"))
@@ -42,6 +41,10 @@ func (h *handlers) sendCommand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	commandType = commandType.Or(jsbind.String("shell"))
+	if h.d.GoAPI.GetPeer(r.Context(), device.Str()) == nil {
+		fail(w, r, http.StatusBadRequest, "Unknown device")
+		return
+	}
 
 	command, err := createCommand(r.Context(), h.db, newCommand{
 		DeviceID:    device,
@@ -53,13 +56,8 @@ func (h *handlers) sendCommand(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Command create error", err)
 		return
 	}
-	deviceText, err := asText(body.Get("device_id"))
-	if err != nil {
-		h.serverError(w, r, "Command create error", err)
-		return
-	}
-	_ = h.d.LogAction(r, "remote_command_sent", commandType.Str()+" to "+deviceText)
-	h.log.Info("Command sent to " + deviceText + ": " + commandType.Str())
+	_ = h.d.LogAction(r, "remote_command_sent", commandType.Str()+" to "+device.Str())
+	h.log.Info("Command sent to " + device.Str() + ": " + commandType.Str())
 	kit.JSON(w, r, http.StatusCreated, commandSent{Success: true, Command: command})
 }
 

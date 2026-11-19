@@ -21,8 +21,8 @@ import (
 //
 // Nothing writes alerts on a test instance, so the alert history stays
 // empty here. Remote commands cannot be deleted: every turn of a role that
-// may send them leaves four, and the command lists mark what depends on
-// the turns before.
+// may send them leaves one (the only command for a seeded device), and
+// the command lists mark what depends on the turns before.
 //
 // The SMTP cases come last, because saved SMTP settings cannot be removed
 // either. They point at 127.0.0.1 port 1, where nothing listens, so the
