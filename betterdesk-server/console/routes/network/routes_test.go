@@ -268,9 +268,9 @@ func maskTimes(text string) string {
 }
 
 // orderSameNames puts neighbours with the same name in a list of targets
-// into the order of their ids, and leaves every other byte as it is. The
-// list is ordered by name only, so PostgreSQL returns targets of one name
-// in the order it finds them, which differs from run to run (NM12).
+// into the order of their ids, and leaves every other byte as it is.
+// Node ordered the list by name only, so PostgreSQL gave it targets of one
+// name in the order it found them; the routes order them by id (NM12).
 func orderSameNames(text string) string {
 	var list []json.RawMessage
 	if !strings.HasPrefix(text, "[{") || json.Unmarshal([]byte(text), &list) != nil {
@@ -529,7 +529,7 @@ func TestNodeSteps(t *testing.T) {
 			if s.Method == "HEAD" {
 				continue
 			}
-			if got, want := orderSameNames(maskTimes(rec.Body.String())), orderSameNames(maskTimes(s.Text)); got != want {
+			if got, want := maskTimes(rec.Body.String()), orderSameNames(maskTimes(s.Text)); got != want {
 				t.Errorf("%s: %s", s.Name, firstDifference(got, want))
 			}
 		}

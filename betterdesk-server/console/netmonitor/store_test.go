@@ -36,3 +36,33 @@ func TestHistoryOfOneSecondKeepsItsOrder(t *testing.T) {
 		}
 	})
 }
+
+// Targets of one name come in the order of their ids, also after one of
+// them was changed, which moves its row on PostgreSQL (BUGS.md NM12).
+func TestTargetsOfOneNameKeepTheirOrder(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		for _, row := range []string{"(1, 'same', 'a')", "(2, 'same', 'b')", "(3, 'other', 'c')", "(4, 'same', 'd')"} {
+			if _, err := db.Exec(ctx, "INSERT INTO network_targets (id, name, host, check_type) VALUES "+row[:len(row)-1]+", 'ping')"); err != nil {
+				t.Fatal(err)
+			}
+		}
+		for _, id := range []int{1, 2, 1} {
+			status := Text("up")
+			if _, err := UpdateTarget(ctx, db, Num(Number(id)), TargetChanges{LastStatus: &status}); err != nil {
+				t.Fatal(err)
+			}
+		}
+		targets, err := ListTargets(ctx, db, TargetFilter{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var order []int64
+		for _, target := range targets {
+			order = append(order, target.ID.V)
+		}
+		if fmt.Sprint(order) != "[3 1 2 4]" {
+			t.Errorf("targets %v, want [3 1 2 4]: by name, then id", order)
+		}
+	})
+}

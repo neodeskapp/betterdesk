@@ -103,9 +103,9 @@ func pathID(r *http.Request) netmonitor.Param {
 	return netmonitor.Text(r.PathValue("id"))
 }
 
-// listTargets answers GET /targets: the targets by name. ?enabled=true
-// lists the enabled ones, any other value of enabled the disabled ones;
-// ?check_type= lists one type.
+// listTargets answers GET /targets: the targets by name, then id.
+// ?enabled=true lists the enabled ones, any other value of enabled the
+// disabled ones; ?check_type= lists one type.
 func (h *handlers) listTargets(w http.ResponseWriter, r *http.Request) {
 	var filter netmonitor.TargetFilter
 	if enabled := query(r.URL.RawQuery, "enabled"); enabled.kind != queryUndefined {

@@ -311,7 +311,8 @@ type TargetFilter struct {
 	CheckType *Param
 }
 
-// ListTargets is getNetworkTargets(filters): the targets by name.
+// ListTargets is getNetworkTargets(filters): the targets by name, targets
+// of one name in the order of their ids.
 func ListTargets(ctx context.Context, db store.Querier, filter TargetFilter) ([]Target, error) {
 	query := "SELECT " + targetColumns + " FROM network_targets WHERE 1=1"
 	var params []Param
@@ -336,7 +337,7 @@ func ListTargets(ctx context.Context, db store.Querier, filter TargetFilter) ([]
 	if err != nil {
 		return nil, err
 	}
-	targets, err := selectTargets(ctx, db, query+" ORDER BY name", args)
+	targets, err := selectTargets(ctx, db, query+" ORDER BY name, id", args)
 	if err != nil {
 		return nil, fmt.Errorf("list network targets: %w", err)
 	}
