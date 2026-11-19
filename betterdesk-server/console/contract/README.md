@@ -75,6 +75,7 @@ hides the summary of a passing run.
 | `CONTRACT_GOLDEN` | Golden folder. Default `testdata/golden`. |
 | `CONTRACT_ROUTES` | Route list. Default `testdata/routes.json`. |
 | `CONTRACT_REQUIRE_GO` | `1` fails every route and case the Go console did not answer itself. |
+| `CONTRACT_NODE_ONLY` | `1`: the console is the Node console alone (`STACK_MODE=node`), with no routing report. Every answer counts as Node's, so a recording writes all goldens and freezes none. For spec recordings of a Node tree: it needs `CONTRACT_GOLDEN` set to another folder and refuses `CONTRACT_REQUIRE_GO`. `contract.sh spec` sets it. |
 | `CONTRACT_COVERAGE` | `report` lists uncovered routes without failing. `contract.sh` sets it until the cases exist. |
 | `CONTRACT_TIMEOUT` | Limit for one request. Default `60s`: a 50 MB upload takes 20 seconds on a loaded machine. |
 

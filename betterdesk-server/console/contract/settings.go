@@ -3,6 +3,7 @@ package contract
 import (
 	"fmt"
 	"net/url"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -58,14 +59,24 @@ type Settings struct {
 	RequireGo bool
 	// Timeout is the limit for one request.
 	Timeout time.Duration
+	// NodeOnly says the console is the Node console alone, without a Go
+	// console in front and so without the routing report
+	// (CONTRACT_NODE_ONLY=1). Every answer is Node's: a recording writes all
+	// of them and freezes none. It is for spec recordings of a Node tree
+	// (STACK_MODE=node), so it needs a GoldenDir other than the default:
+	// the committed goldens are never written this way.
+	NodeOnly bool
 }
+
+// defaultGoldenDir is where the committed goldens are.
+const defaultGoldenDir = "testdata/golden"
 
 // LoadSettings reads the settings through getenv (os.Getenv in a run).
 func LoadSettings(getenv func(string) string) (*Settings, error) {
 	s := &Settings{
 		PasswordFile: "/stack/secrets/e2e_password",
 		SecretsDir:   "/stack/secrets",
-		GoldenDir:    "testdata/golden",
+		GoldenDir:    defaultGoldenDir,
 		RoutesFile:   "testdata/routes.json",
 		Timeout:      60 * time.Second,
 	}
@@ -122,6 +133,19 @@ func LoadSettings(getenv func(string) string) (*Settings, error) {
 		s.Rewrite = re
 	}
 	s.RequireGo = strings.TrimSpace(getenv("CONTRACT_REQUIRE_GO")) == "1"
+	switch v := strings.TrimSpace(getenv("CONTRACT_NODE_ONLY")); v {
+	case "", "0":
+	case "1":
+		if filepath.Clean(s.GoldenDir) == filepath.Clean(defaultGoldenDir) {
+			return nil, fmt.Errorf("CONTRACT_NODE_ONLY=1 needs CONTRACT_GOLDEN set to a folder of its own: the goldens in %s are the specification of the moved routes", defaultGoldenDir)
+		}
+		if s.RequireGo {
+			return nil, fmt.Errorf("CONTRACT_NODE_ONLY=1 and CONTRACT_REQUIRE_GO=1 exclude each other: a Node console alone has no Go answers")
+		}
+		s.NodeOnly = true
+	default:
+		return nil, fmt.Errorf("CONTRACT_NODE_ONLY %q: use 1 (the console is Node alone)", v)
+	}
 	if v := strings.TrimSpace(getenv("CONTRACT_TIMEOUT")); v != "" {
 		d, err := time.ParseDuration(v)
 		if err != nil || d <= 0 {

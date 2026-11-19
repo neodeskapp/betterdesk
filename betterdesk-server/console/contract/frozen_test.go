@@ -357,3 +357,59 @@ func TestRoutingIsAskedAboutTheFilledPath(t *testing.T) {
 		t.Errorf("frozen %v; want the read step frozen", s.Report.frozen)
 	}
 }
+
+// A Node console alone (CONTRACT_NODE_ONLY=1) has no routing report, and
+// every answer is Node's: a recording writes the golden of each request,
+// none is frozen, and a first recording prunes what nothing stands for.
+func TestNodeOnlyRecordsEveryAnswer(t *testing.T) {
+	dir := t.TempDir()
+	for _, mode := range []RecordMode{RecordFirst, RecordMerge} {
+		stale := goldenFile(dir, "cases", "gone", "list")
+		nodeGolden(t, stale, "gone/list", "GET", "/api/item/{item}")
+		s, _ := newMovedSuite(t, mode, dir, nil)
+		s.Settings.NodeOnly = true
+		if problem := s.recordingBlocked(); problem != "" {
+			t.Fatalf("mode %d: a Node-only recording is blocked: %s", mode, problem)
+		}
+		s.runGroup(t, movedGroup())
+		for _, name := range []string{"make", "read"} {
+			golden, err := LoadGolden(goldenFile(dir, "cases", "moved", name))
+			if err != nil {
+				t.Fatalf("mode %d: %s has no golden: %v", mode, name, err)
+			}
+			if golden.Recordings != int(mode) {
+				t.Errorf("mode %d: %s has %d recordings, want %d", mode, name, golden.Recordings, int(mode))
+			}
+		}
+		if len(s.Report.frozen) != 0 {
+			t.Errorf("mode %d: frozen %v, want none", mode, s.Report.frozen)
+		}
+		s.prune(t, filepath.Join(dir, "cases"), map[string]bool{
+			filepath.Clean(goldenFile(dir, "cases", "moved", "make")): true,
+			filepath.Clean(goldenFile(dir, "cases", "moved", "read")): true,
+		})
+		if _, err := os.Stat(stale); isNotExist(err) != (mode == RecordFirst) {
+			t.Errorf("mode %d: the golden nothing stands for: stat %v, want removed %v", mode, err, mode == RecordFirst)
+		}
+	}
+}
+
+// CONTRACT_NODE_ONLY=1 never writes into the committed goldens, and does
+// not go with CONTRACT_REQUIRE_GO.
+func TestNodeOnlySettings(t *testing.T) {
+	env := func(m map[string]string) func(string) string { return func(k string) string { return m[k] } }
+	s, err := LoadSettings(env(map[string]string{"BD_URL": "http://x", "CONTRACT_NODE_ONLY": "1", "CONTRACT_GOLDEN": "/spec/golden"}))
+	if err != nil || !s.NodeOnly || s.GoldenDir != "/spec/golden" {
+		t.Fatalf("LoadSettings = %+v, %v", s, err)
+	}
+	for _, bad := range []map[string]string{
+		{"BD_URL": "http://x", "CONTRACT_NODE_ONLY": "1"},
+		{"BD_URL": "http://x", "CONTRACT_NODE_ONLY": "1", "CONTRACT_GOLDEN": "testdata/golden/"},
+		{"BD_URL": "http://x", "CONTRACT_NODE_ONLY": "1", "CONTRACT_GOLDEN": "/g", "CONTRACT_REQUIRE_GO": "1"},
+		{"BD_URL": "http://x", "CONTRACT_NODE_ONLY": "yes", "CONTRACT_GOLDEN": "/g"},
+	} {
+		if _, err := LoadSettings(env(bad)); err == nil {
+			t.Errorf("LoadSettings(%v) accepted a bad value", bad)
+		}
+	}
+}

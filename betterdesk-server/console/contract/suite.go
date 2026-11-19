@@ -111,9 +111,9 @@ func newSlot(layer, group, name, id string, request RequestInfo) *slot {
 func (s *Suite) judge(t *testing.T, sl *slot, role Role, answer Answer) {
 	t.Helper()
 	tally := sl.layer + "/" + sl.group
-	handler := HandlerUnknown
+	handler := s.handler("", "", false)
 	if sl.method != "" {
-		handler = s.Client.handlerOf(sl.method, sl.target, sl.upgrade)
+		handler = s.handler(sl.method, sl.target, sl.upgrade)
 		s.Report.answeredBy(sl.layer, sl.rec.ID, handler)
 	}
 	if answer.Failed != "" {
@@ -249,11 +249,24 @@ func recordable(handler string) (record bool, problem string) {
 // recording needs the routing report: without it the suite cannot tell the
 // frozen goldens from the others and would overwrite them.
 func (s *Suite) recordingBlocked() string {
-	if s.Settings.Record == Compare || s.Client.HasRouting() {
+	if s.Settings.Record == Compare || s.Settings.NodeOnly || s.Client.HasRouting() {
 		return ""
 	}
 	return "recording needs a Go console with the routing report in front of the Node console (STACK_MODE=front): " +
 		"it says which routes the Go console answers, and their goldens are frozen"
+}
+
+// handler is who answers a request: the routing report's word, or the Node
+// console for every request when the console is Node alone (NodeOnly). An
+// empty method asks about a slot that names no request.
+func (s *Suite) handler(method, target string, upgrade bool) string {
+	if s.Settings.NodeOnly {
+		return HandlerNode
+	}
+	if method == "" {
+		return HandlerUnknown
+	}
+	return s.Client.handlerOf(method, target, upgrade)
 }
 
 // requireRouting stops a run that must not record.
@@ -354,7 +367,7 @@ func (s *Suite) prune(t *testing.T, dir string, keep map[string]bool) {
 			return err
 		}
 		target, _, _ := strings.Cut(variables{}.fill(golden.Request.Path), "?")
-		if s.Client.Handler(golden.Request.Method, target) != HandlerNode {
+		if s.handler(golden.Request.Method, target, false) != HandlerNode {
 			s.Report.froze(path)
 			return nil
 		}
