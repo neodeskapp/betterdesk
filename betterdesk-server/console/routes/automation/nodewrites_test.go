@@ -138,3 +138,13 @@ func nodeRuleUpdate(t *testing.T, w *replay.World, step replay.Step) {
 	nodeExec(t, w, "UPDATE alert_rules SET "+strings.Join(sets, "")+"updated_at = "+store.NowSQL(w.DB.Dialect())+" WHERE id = ?",
 		append(values, jsbind.Number(jsbind.ParseNumber(id)))...)
 }
+
+// nodeAck is what POST alerts/{id}/ack wrote for an alert that exists:
+// the alert acknowledged by the account, now, also over an earlier
+// acknowledgement.
+func nodeAck(t *testing.T, w *replay.World, step replay.Step) {
+	t.Helper()
+	parts := strings.Split(step.Path, "/")
+	nodeExec(t, w, "UPDATE alert_history SET acknowledged = "+w.DB.Pick("1", "TRUE")+", acknowledged_by = ?, acknowledged_at = "+store.NowSQL(w.DB.Dialect())+" WHERE id = ?",
+		jsbind.String(replay.Users[step.Role].Username), jsbind.Number(jsbind.ParseNumber(parts[len(parts)-2])))
+}

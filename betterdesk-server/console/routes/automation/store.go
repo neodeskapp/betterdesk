@@ -3,6 +3,7 @@ package automation
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -88,14 +89,24 @@ func (q *query) args(db *store.DB) (string, []any, error) {
 
 // exec runs the statement.
 func (q *query) exec(ctx context.Context, db *store.DB, doing string) error {
+	_, err := q.changed(ctx, db, doing)
+	return err
+}
+
+// changed runs the statement and returns the number of rows it changed.
+func (q *query) changed(ctx context.Context, db *store.DB, doing string) (int64, error) {
 	text, args, err := q.args(db)
+	var n int64
 	if err == nil {
-		_, err = db.Exec(ctx, text, args...)
+		var result sql.Result
+		if result, err = db.Exec(ctx, text, args...); err == nil {
+			n, err = result.RowsAffected()
+		}
 	}
 	if err != nil {
-		return fmt.Errorf("%s: %w", doing, err)
+		return 0, fmt.Errorf("%s: %w", doing, err)
 	}
-	return nil
+	return n, nil
 }
 
 // rows reads the rows of the statement.
@@ -271,12 +282,22 @@ func listAlerts(ctx context.Context, db *store.DB, filter alertFilter) ([]record
 	return q.rows(ctx, db, "list the alert history")
 }
 
-// acknowledgeAlert marks an alert as acknowledged by username, now.
-func acknowledgeAlert(ctx context.Context, db *store.DB, id jsbind.Value, username string) error {
+// acknowledgeAlert marks the alert as acknowledged by username, now,
+// unless it is acknowledged already: the first acknowledgement stays.
+// found is false when no alert has the id.
+func acknowledgeAlert(ctx context.Context, db *store.DB, id jsbind.Value, username string) (found bool, err error) {
 	var q query
-	q.add("UPDATE alert_history SET acknowledged = "+db.Pick("1", "TRUE")+", acknowledged_by = ?, acknowledged_at = "+store.NowSQL(db.Dialect())+" WHERE id = ?",
+	q.add("UPDATE alert_history SET acknowledged = "+db.Pick("1", "TRUE")+", acknowledged_by = ?, acknowledged_at = "+store.NowSQL(db.Dialect())+
+		" WHERE id = ? AND "+db.Pick("COALESCE(acknowledged, 0) = 0", "NOT COALESCE(acknowledged, FALSE)"),
 		jsbind.String(username), id)
-	return q.exec(ctx, db, "acknowledge alert "+id.ToString())
+	n, err := q.changed(ctx, db, "acknowledge alert "+id.ToString())
+	if err != nil || n > 0 {
+		return n > 0, err
+	}
+	var exists query
+	exists.add("SELECT id FROM alert_history WHERE id = ?", id)
+	row, err := exists.row(ctx, db, "load alert "+id.ToString())
+	return row != nil, err
 }
 
 // newCommand is what a command for a device is made from.

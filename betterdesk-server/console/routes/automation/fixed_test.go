@@ -911,3 +911,29 @@ var _ = panelFixes.Add("AU4", map[string]replay.Fix{
 	`admin PATCH /api/automation/rules/2 {"enabled":"false"}`:                                                                                   {Status: 200, Answer: `{"success":true}`, After: nodeRuleUpdate},
 	`admin PATCH /api/automation/rules/2 {"enabled":"0"}`:                                                                                       {Status: 200, Answer: `{"success":true}`, After: nodeRuleUpdate},
 })
+
+// AU5: acknowledging an alert that does not exist is 404, and an alert that is acknowledged
+// keeps its first acknowledgement, where the old route answered success for any id and wrote
+// over the first. After writes what Node's request wrote over.
+var _ = panelFixes.Add("AU5", map[string]replay.Fix{
+	`admin POST /api/automation/alerts/999/ack {}`:                                   {Status: 404, Answer: `{"error":"Alert not found"}`},
+	`super_admin POST /api/automation/alerts/999/ack {}`:                             {Status: 404, Answer: `{"error":"Alert not found"}`},
+	`admin POST /api/automation/alerts/0/ack {}`:                                     {Status: 404, Answer: `{"error":"Alert not found"}`},
+	`super_admin POST /api/automation/alerts/0/ack {}`:                               {Status: 404, Answer: `{"error":"Alert not found"}`},
+	`super_admin POST /api/automation/alerts/00/ack {}`:                              {Status: 404, Answer: `{"error":"Alert not found"}`},
+	`super_admin POST /api/automation/alerts/2147483647/ack {}`:                      {Status: 404, Answer: `{"error":"Alert not found"}`},
+	`super_admin POST /api/automation/alerts/2147483648/ack {}`:                      {Dialect: "sqlite", Status: 404, Answer: `{"error":"Alert not found"}`},
+	`super_admin POST /api/automation/alerts/3000000000/ack {}`:                      {Dialect: "sqlite", Status: 404, Answer: `{"error":"Alert not found"}`},
+	`super_admin POST /api/automation/alerts/4294967297/ack {}`:                      {Dialect: "sqlite", Status: 404, Answer: `{"error":"Alert not found"}`},
+	`super_admin POST /api/automation/alerts/9223372036854775807/ack {}`:             {Dialect: "sqlite", Status: 404, Answer: `{"error":"Alert not found"}`},
+	`super_admin POST /api/automation/alerts/9223372036854775808/ack {}`:             {Dialect: "sqlite", Status: 404, Answer: `{"error":"Alert not found"}`},
+	`super_admin POST /api/automation/alerts/99999999999999999999/ack {}`:            {Dialect: "sqlite", Status: 404, Answer: `{"error":"Alert not found"}`},
+	`super_admin POST /api/automation/alerts/1000000000000000000000000000000/ack {}`: {Dialect: "sqlite", Status: 404, Answer: `{"error":"Alert not found"}`},
+	`super_admin POST /api/automation/alerts/10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000/ack {}`: {Dialect: "sqlite", Status: 404, Answer: `{"error":"Alert not found"}`},
+	`super_admin POST /api/automation/alerts/9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999/ack {}`:  {Dialect: "sqlite", Status: 404, Answer: `{"error":"Alert not found"}`},
+	`super_admin POST /api/automation/alerts/1/ack {}`:                               {Status: 200, Answer: `{"success":true}`, After: nodeAck},
+	`super_admin POST /api/automation/alerts/2/ack {}`:                               {Status: 200, Answer: `{"success":true}`, After: nodeAck},
+	`super_admin POST /api/automation/alerts/01/ack {}`:                              {Status: 200, Answer: `{"success":true}`, After: nodeAck},
+	`super_admin POST /api/automation/alerts/001/ack {}`:                             {Status: 200, Answer: `{"success":true}`, After: nodeAck},
+	`super_admin POST /api/automation/alerts/0000000000000000000000000000001/ack {}`: {Status: 200, Answer: `{"success":true}`, After: nodeAck},
+})

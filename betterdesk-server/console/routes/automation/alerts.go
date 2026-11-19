@@ -46,12 +46,17 @@ func (h *handlers) alerts(w http.ResponseWriter, r *http.Request) {
 }
 
 // acknowledge answers POST alerts/{id}/ack: the alert is marked as
-// acknowledged by the account, now. An alert that does not exist is no
-// error, and an alert can be acknowledged again by someone else.
+// acknowledged by the account, now. An alert that is acknowledged already
+// keeps its first acknowledgement, and one that does not exist is 404.
 func (h *handlers) acknowledge(w http.ResponseWriter, r *http.Request) {
 	username := kit.User(r).Username
-	if err := acknowledgeAlert(r.Context(), h.db, number(r, "id"), username); err != nil {
+	found, err := acknowledgeAlert(r.Context(), h.db, number(r, "id"), username)
+	if err != nil {
 		h.serverError(w, r, "Ack error", err)
+		return
+	}
+	if !found {
+		fail(w, r, http.StatusNotFound, "Alert not found")
 		return
 	}
 	h.log.Info("Alert #" + r.PathValue("id") + " acknowledged by " + username)
