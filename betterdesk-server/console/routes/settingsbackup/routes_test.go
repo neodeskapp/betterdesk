@@ -79,10 +79,10 @@ var routes = []struct{ method, path, body string }{
 }
 
 // Every route needs a session and server.config; a refused request changes
-// nothing. The operator gets read access to the settings section, so the
-// section guard lets the reads through and the route itself has to refuse
-// them. Writes need write access there, which is server.config, so the
-// guard refuses those first.
+// nothing. The operator is given read access to the settings section by a
+// policy row, which since upstream 3.5.264 cannot reach above what the
+// operator's role allows there: nothing, as the section's permissions are
+// server.config.
 func TestRoutesNeedServerConfig(t *testing.T) {
 	w := newWorld(t, nil, nil)
 	if _, err := w.DB.Exec(context.Background(), `INSERT INTO panel_access_policies (subject_type, subject_id, resource_key, access_level, updated_at)
@@ -93,10 +93,11 @@ func TestRoutesNeedServerConfig(t *testing.T) {
 		if res := w.SignedOut().Do(r.method, r.path, r.body); res.Status != http.StatusUnauthorized {
 			t.Errorf("%s %s signed out: %d %s", r.method, r.path, res.Status, shown(res))
 		}
-		want := `{"success":false,"error":"Permission denied: server.config"}`
-		if r.method != "GET" {
-			want = `{"success":false,"error":"Panel access denied: settings","code":"panel_access_denied"}`
-		}
+		// A policy row cannot give a role more than its permissions (audit
+		// H7): the operator, without server.config, has no access to the
+		// settings section whatever the row says, so the panel access guard
+		// refuses every method before the route's own check.
+		want := `{"success":false,"error":"Panel access denied: settings","code":"panel_access_denied"}`
 		if res := w.As("operator").Do(r.method, r.path, r.body); res.Status != http.StatusForbidden || res.Body != want {
 			t.Errorf("%s %s as operator: %d %s", r.method, r.path, res.Status, shown(res))
 		}
