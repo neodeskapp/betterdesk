@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/unitronix/betterdesk-server/console/managedconfig"
 )
 
 // writableDir is a service whose server folder is a folder of the test,
@@ -19,6 +21,27 @@ func writableDir(t *testing.T) (*Service, string) {
 	dir := t.TempDir()
 	env := map[string]string{"BETTERDESK_PATH": dir, "BETTERDESK_CONSOLE_PATH": dir}
 	return New(Options{GOOS: "linux", Getenv: func(k string) string { return env[k] }, WorkDir: dir, beforeChange: onlyBelow(t, dir)}), dir
+}
+
+// The server's folder follows the rule of the update and management
+// routes (managedconfig): BETTERDESK_PATH, RUSTDESK_DIR, RUSTDESK_PATH,
+// else /opt/betterdesk, on Windows C:\BetterDesk.
+func TestServerFolderFollowsManagedConfig(t *testing.T) {
+	for _, env := range []map[string]string{
+		{}, {"RUSTDESK_PATH": "/srv/rp"}, {"RUSTDESK_DIR": "/srv/rd", "RUSTDESK_PATH": "/srv/rp"},
+		{"BETTERDESK_PATH": "/srv/bd", "RUSTDESK_DIR": "/srv/rd", "RUSTDESK_PATH": "/srv/rp"}, {"BETTERDESK_PATH": "", "RUSTDESK_PATH": "/srv/rp"},
+	} {
+		getenv := func(k string) string { return env[k] }
+		want := managedconfig.New(managedconfig.Options{Getenv: getenv, GOOS: "linux"}).Paths().ServerPath
+		s := New(Options{Getenv: getenv, GOOS: "linux", WorkDir: "/srv/console"})
+		if read, write := s.ReadRoots(), s.WriteRoots(); read[0] != want || write[0] != want {
+			t.Errorf("%v: read %v, write %v, want %s first", env, read, write, want)
+		}
+	}
+	win := New(Options{Getenv: func(string) string { return "" }, GOOS: "windows", WorkDir: `C:\console`})
+	if got := win.WriteRoots()[0]; got != `C:\BetterDesk` {
+		t.Errorf("windows: %s", got)
+	}
 }
 
 // A write refuses what is no regular file before it opens anything: a

@@ -8,7 +8,7 @@ import (
 
 // ReadRoots are the folders the file browser may list and read
 // (getAllowedFileRoots), each once, in this order: the server's folder
-// (BETTERDESK_PATH, default /opt/rustdesk), the console's folder
+// (serverPath), the console's folder
 // (BETTERDESK_CONSOLE_PATH, default WorkDir), the account's home, LogDir,
 // the temp folder, the TempDirs, then BETTERDESK_FILE_ALLOWED_ROOTS. All
 // are made absolute except LogDir, the temp folder and the TempDirs, which
@@ -38,8 +38,20 @@ func (s *Service) WriteRoots() []string {
 	return roots.list
 }
 
+// serverPath is the server's folder by the rule of the update and
+// management routes (managedconfig.Config.Paths): BETTERDESK_PATH,
+// RUSTDESK_DIR or RUSTDESK_PATH, else /opt/betterdesk, on Windows
+// C:\BetterDesk.
 func (s *Service) serverPath() string {
-	return s.resolve(firstSet(s.opts.Getenv("BETTERDESK_PATH"), "/opt/rustdesk"))
+	env := s.opts.Getenv
+	dir := firstSet(env("BETTERDESK_PATH"), env("RUSTDESK_DIR"), env("RUSTDESK_PATH"))
+	if dir == "" {
+		dir = "/opt/betterdesk"
+		if s.windows() {
+			dir = `C:\BetterDesk`
+		}
+	}
+	return s.resolve(dir)
 }
 
 func (s *Service) consolePath() string {

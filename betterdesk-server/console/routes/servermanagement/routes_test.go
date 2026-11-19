@@ -37,6 +37,8 @@ type site struct {
 	steps http.Handler
 	root  string
 	run   *fakeRun
+	// env is the environment the server management reads
+	env map[string]string
 }
 
 // fakeRun answers every command with a fixed result and notes it.
@@ -109,7 +111,7 @@ func newSite(t *testing.T, db *store.DB) *site {
 			http.NotFound(w, r)
 		}
 	})))
-	return &site{t: t, d: d, db: db, steps: steps, root: root, run: run}
+	return &site{t: t, d: d, db: db, steps: steps, root: root, run: run, env: env}
 }
 
 func (s *site) call(cookie, method, target, body string, header ...string) *httptest.ResponseRecorder {
@@ -374,6 +376,17 @@ func TestInfo(t *testing.T) {
 	want := []any{s.root + "/server", s.root + "/console", s.root + "/home", s.root + "/log", s.root + "/tmp"}
 	if !reflect.DeepEqual(got["fileRoots"], want) || !reflect.DeepEqual(got["mutableFileRoots"], want[:2]) {
 		t.Errorf("roots %v %v", got["fileRoots"], got["mutableFileRoots"])
+	}
+
+	// The server's folder as the update routes name it: RUSTDESK_PATH, as
+	// the Docker image sets it, else /opt/betterdesk.
+	delete(s.env, "BETTERDESK_PATH")
+	for value, folder := range map[string]string{s.root + "/rd": s.root + "/rd", "": "/opt/betterdesk"} {
+		s.env["RUSTDESK_PATH"] = value
+		got := decode(t, s.call(s.signIn("admin"), "GET", "/api/server-management/info", "").Body.String())
+		if read, write := got["fileRoots"].([]any), got["mutableFileRoots"].([]any); read[0] != folder || write[0] != folder {
+			t.Errorf("RUSTDESK_PATH %q: roots %v %v", value, read, write)
+		}
 	}
 }
 

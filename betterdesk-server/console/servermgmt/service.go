@@ -25,7 +25,8 @@ import (
 // Options configure the service. A zero field is the real thing.
 type Options struct {
 	// Getenv reads the environment as the service reads it on every call:
-	// BETTERDESK_PATH (the server's folder, default /opt/rustdesk),
+	// BETTERDESK_PATH, RUSTDESK_DIR and RUSTDESK_PATH (the server's folder,
+	// default /opt/betterdesk or C:\BetterDesk),
 	// BETTERDESK_CONSOLE_PATH (the console's folder, default WorkDir),
 	// BETTERDESK_FILE_ALLOWED_ROOTS and BETTERDESK_MUTABLE_ROOTS (more
 	// folders to read and to change, separated by commas), HOME and

@@ -240,7 +240,18 @@ type fileChange struct {
 //     points to (the recording removed server/sub through link-in, and
 //     moved it), and the server's folder itself is neither removed nor
 //     moved.
+//   - SM13: without BETTERDESK_PATH, RUSTDESK_DIR and RUSTDESK_PATH the
+//     server's folder is /opt/betterdesk, as for the update and management
+//     routes, not /opt/rustdesk.
 var fileChanges = map[string]map[int]fileChange{
+	"roots by default": {
+		0: {bug: "SM13", result: serverDefault},
+		3: {bug: "SM13", err: "Path outside allowed directory roots"},
+	},
+	"roots, empty values":          {0: {bug: "SM13", result: serverDefault}},
+	"roots, temp folder from TMP":  {0: {bug: "SM13", result: serverDefault}},
+	"roots, temp folder from TEMP": {0: {bug: "SM13", result: serverDefault}},
+	"roots, temp folder /":         {0: {bug: "SM13", result: serverDefault}},
 	"writes": {
 		17: {bug: "SM5", err: "Not a regular file", drop: []string{"server/nothing"}},
 		18: {bug: "SM5", err: "Not a regular file", drop: []string{"outside/planted.txt"}},
@@ -263,6 +274,23 @@ var fileChanges = map[string]map[int]fileChange{
 
 // answer is a change's answer that does not depend on the recorded one.
 func answer(v any) func(any) any { return func(any) any { return v } }
+
+// serverDefault is a recorded pair of folder lists with /opt/betterdesk as
+// the server's default folder.
+func serverDefault(recorded any) any {
+	out := map[string]any{}
+	for key, list := range recorded.(map[string]any) {
+		var dirs []any
+		for _, dir := range list.([]any) {
+			if dir == "/opt/rustdesk" {
+				dir = "/opt/betterdesk"
+			}
+			dirs = append(dirs, dir)
+		}
+		out[key] = dirs
+	}
+	return out
+}
 
 // writesListing is the list of the server's folder at the end of the
 // writes: server/nothing was never made, and dangling-out still points
