@@ -23,6 +23,7 @@ type scenarioFix struct {
 var scenarioFixes = []scenarioFix{
 	{"S3", stopAtSyncsFromTheSignalServer},
 	{"AN4", noPasswordFromTheNextLine},
+	{"AN6", logTheWrittenCredentialsPath},
 }
 
 // fixScenario applies every fix to sc and counts the ones that changed it.
@@ -32,6 +33,58 @@ func fixScenario(sc *scenarioVector, changed map[string]int) {
 			changed[fix.bug]++
 		}
 	}
+}
+
+// rewriteLogs runs edit over every log line of the scenario's steps.
+func rewriteLogs(sc *scenarioVector, edit func(level, text string) string) bool {
+	changed := false
+	for i := range sc.Steps {
+		for _, line := range sc.Steps[i].Logs {
+			if len(line) != 2 {
+				continue
+			}
+			if next := edit(line[0], line[1]); next != line[1] {
+				line[1], changed = next, true
+			}
+		}
+	}
+	return changed
+}
+
+// logTheWrittenCredentialsPath: the line about a made-up password names
+// the file it was written to (AN6). Node named <DATA_DIR>/.admin_credentials
+// also when the file went to KEYS_PATH; the step's own line about the write
+// names the real path.
+func logTheWrittenCredentialsPath(sc *scenarioVector) bool {
+	const (
+		generated = "[AUTH] Generated admin credentials written to "
+		wrote     = "[AUTH] Wrote generated admin credentials to "
+		failed    = "[AUTH] Could not write .admin_credentials to "
+	)
+	changed := false
+	for i := range sc.Steps {
+		path := ""
+		for _, line := range sc.Steps[i].Logs {
+			if len(line) != 2 {
+				continue
+			}
+			switch text := line[1]; {
+			case strings.HasPrefix(text, wrote):
+				path = strings.TrimSuffix(strings.TrimPrefix(text, wrote), " (mode 0600)")
+			case strings.HasPrefix(text, failed):
+				rest := strings.TrimPrefix(text, failed)
+				if cut := strings.Index(rest, ": "); cut >= 0 {
+					path = rest[:cut]
+				}
+			case strings.HasPrefix(text, generated) && path != "":
+				next := generated + path + " — change password immediately"
+				if next != text {
+					line[1], changed = next, true
+				}
+			}
+		}
+	}
+	return changed
 }
 
 // topBitCleared reads bytes with their top bit cleared, as Node turned the

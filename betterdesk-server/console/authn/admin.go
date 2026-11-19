@@ -226,6 +226,8 @@ func (s *Service) EnsureDefaultAdmin(ctx context.Context) (created bool, err err
 	}
 
 	known := password != ""
+	// credentialsPath is where a made-up password was written.
+	var credentialsPath string
 	if !known {
 		for i, delay := range retryDelays {
 			s.log.Info(fmt.Sprintf("[AUTH] No admin password found. Waiting for Go server (attempt %d/%d)...", i+1, len(retryDelays)))
@@ -243,7 +245,7 @@ func (s *Service) EnsureDefaultAdmin(ctx context.Context) (created bool, err err
 		if password, err = s.randomHex(16); err != nil {
 			return false, fmt.Errorf("admin password: %w", err)
 		}
-		s.writeCredentials(username, password)
+		credentialsPath = s.writeCredentials(username, password)
 	}
 
 	hash, err := s.HashPassword(ctx, password)
@@ -280,7 +282,7 @@ func (s *Service) EnsureDefaultAdmin(ctx context.Context) (created bool, err err
 		s.log.Info("[AUTH] Default admin account created from configured credentials")
 	} else {
 		s.log.Info(fmt.Sprintf("[AUTH] Generated admin credentials written to %s — change password immediately",
-			filepath.Join(s.set.DataDir, credentialsFile)))
+			credentialsPath))
 	}
 	return true, nil
 }
@@ -329,8 +331,9 @@ func (s *Service) reviewExistingAdmin(ctx context.Context, username, password st
 }
 
 // writeCredentials writes the made-up password where the user and the
-// installers find it. A failure is logged; the account is created anyway.
-func (s *Service) writeCredentials(username, password string) {
+// installers find it, and returns the path of the file. A failure is
+// logged; the account is created anyway.
+func (s *Service) writeCredentials(username, password string) string {
 	dir := s.set.KeysPath
 	if dir == "" {
 		dir = s.set.DataDir
@@ -345,13 +348,14 @@ func (s *Service) writeCredentials(username, password string) {
 		"Timestamp: " + store.ISOTime(s.now()) + "\n"
 	if err := s.fs.WriteFile(path, []byte(content), 0o600); err != nil {
 		s.log.Warn(fmt.Sprintf("[AUTH] Could not write .admin_credentials to %s: %s", path, err.Error()))
-		return
+		return path
 	}
 	// A file that was there already keeps its mode through WriteFile, so
 	// the mode is set afterwards. A file system without modes stays as it
 	// is.
 	_ = s.fs.Chmod(path, 0o600)
 	s.log.Info("[AUTH] Wrote generated admin credentials to " + path + " (mode 0600)")
+	return path
 }
 
 // verifyAdminPasswordHash tries the password on the stored hash of the new
