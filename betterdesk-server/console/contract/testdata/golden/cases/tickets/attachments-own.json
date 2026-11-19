@@ -121,14 +121,6 @@
        "mimetype": "application/octet-stream",
        "size_bytes": 4,
        "uploaded_by": "e2e_operator"
-      },
-      {
-       "created_at": "<volatile>",
-       "filename": "odd.bin",
-       "id": 7,
-       "mimetype": "application/octet-stream",
-       "size_bytes": 3,
-       "uploaded_by": "e2e_operator"
       }
      ]
     }
@@ -175,17 +167,9 @@
       {
        "created_at": "<volatile>",
        "filename": "role.bin",
-       "id": 9,
+       "id": 8,
        "mimetype": "application/octet-stream",
        "size_bytes": 4,
-       "uploaded_by": "e2e_global_admin"
-      },
-      {
-       "created_at": "<volatile>",
-       "filename": "odd.bin",
-       "id": 10,
-       "mimetype": "application/octet-stream",
-       "size_bytes": 3,
        "uploaded_by": "e2e_global_admin"
       }
      ]
@@ -233,17 +217,9 @@
       {
        "created_at": "<volatile>",
        "filename": "role.bin",
-       "id": 13,
+       "id": 11,
        "mimetype": "application/octet-stream",
        "size_bytes": 4,
-       "uploaded_by": "e2e_super_admin"
-      },
-      {
-       "created_at": "<volatile>",
-       "filename": "odd.bin",
-       "id": 14,
-       "mimetype": "application/octet-stream",
-       "size_bytes": 3,
        "uploaded_by": "e2e_super_admin"
       }
      ]
@@ -291,23 +267,15 @@
       {
        "created_at": "<volatile>",
        "filename": "role.bin",
-       "id": 16,
+       "id": 13,
        "mimetype": "application/octet-stream",
        "size_bytes": 4,
        "uploaded_by": "e2e_admin"
       },
       {
        "created_at": "<volatile>",
-       "filename": "odd.bin",
-       "id": 17,
-       "mimetype": "application/octet-stream",
-       "size_bytes": 3,
-       "uploaded_by": "e2e_admin"
-      },
-      {
-       "created_at": "<volatile>",
        "filename": "three.bin",
-       "id": 18,
+       "id": 14,
        "mimetype": "application/octet-stream",
        "size_bytes": 2359296,
        "uploaded_by": "e2e_admin"

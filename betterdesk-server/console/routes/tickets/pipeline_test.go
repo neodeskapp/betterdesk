@@ -119,7 +119,7 @@ func TestTheLargeBodyLimitIsTheAttachmentRoutesAlone(t *testing.T) {
 		{"a small upload", "operator", "POST", "/api/tickets/1/attachments", "data", 8, false, 201, `{"success":true,"attachment":{"id":1,"filename":"big.bin","size_bytes":6}}`},
 		{"4 MB, more than any other route takes", "operator", "POST", "/api/tickets/1/attachments", "data", 4 * megabyte, false, 201, `{"success":true,"attachment":{"id":2,"filename":"big.bin","size_bytes":3145728}}`},
 		{"4 MB without a length", "admin", "POST", "/api/tickets/1/attachments", "data", 4 * megabyte, true, 201, `{"success":true,"attachment":{"id":3,"filename":"big.bin","size_bytes":3145728}}`},
-		{"a file of 25 MB", "admin", "POST", "/api/tickets/1/attachments", "data", 25 * megabyte * 4 / 3, false, 201, `{"success":true,"attachment":{"id":4,"filename":"big.bin","size_bytes":26214399}}`},
+		{"a file of 25 MB less a byte, as base64 with its padding", "admin", "POST", "/api/tickets/1/attachments", "data", 25*megabyte*4/3 - 1, false, 201, `{"success":true,"attachment":{"id":4,"filename":"big.bin","size_bytes":26214399}}`},
 		{"a file over 25 MB in a body under 35 MB", "admin", "POST", "/api/tickets/1/attachments", "data", 34 * megabyte, false, 413, `{"error":"Attachment too large. Max 25 MB"}`},
 		{"a body just under 35 MB", "admin", "POST", "/api/tickets/1/attachments", "data", 35*megabyte - 64, false, 413, `{"error":"Attachment too large. Max 25 MB"}`},
 		{"a body just over 35 MB", "admin", "POST", "/api/tickets/1/attachments", "data", 35 * megabyte, false, 413, tooLarge},

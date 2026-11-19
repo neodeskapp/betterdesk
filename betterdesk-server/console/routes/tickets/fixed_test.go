@@ -252,3 +252,20 @@ var _ = ticketFixes.Add("TK4", map[string]replay.Fix{
 	"viewer GET /api/tickets?status[]=open ":                    {Status: 400, Answer: `{"error":"Invalid status"}`},
 	"viewer GET /api/tickets?status=open&status=closed ":        {Status: 400, Answer: `{"error":"Invalid status"}`},
 })
+
+// TK7: file data is standard base64; white space in it is skipped.
+var _ = ticketFixes.Add("TK7", map[string]replay.Fix{
+	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":"aGVsbG8"}`:  {Status: 400, Answer: dataRefused, After: resendFile("data.bin", 'h', 'e', 'l', 'l', 'o')},
+	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":"a-_b"}`:     {Status: 400, Answer: dataRefused, After: resendFile("data.bin", 0x6b, 0xef, 0xdb)},
+	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":"aGk=aGk="}`: {Status: 400, Answer: dataRefused, After: resendFile("data.bin", 'h', 'i')},
+	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":"="}`:        {Status: 400, Answer: dataRefused, After: emptyFile("data.bin")},
+	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":"=="}`:       {Status: 400, Answer: dataRefused, After: emptyFile("data.bin")},
+	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":"a"}`:        {Status: 400, Answer: dataRefused, After: emptyFile("data.bin")},
+	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":"ab"}`:       {Status: 400, Answer: dataRefused, After: resendFile("data.bin", 0x69)},
+	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":"abc"}`:      {Status: 400, Answer: dataRefused, After: resendFile("data.bin", 0x69, 0xb7)},
+	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":"!!!!"}`:     {Status: 400, Answer: dataRefused, After: emptyFile("data.bin")},
+	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":"a!b@c#d$"}`: {Status: 400, Answer: dataRefused, After: resendFile("data.bin", 0x69, 0xb7, 0x1d)},
+	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":"YQ==YQ=="}`: {Status: 400, Answer: dataRefused, After: resendFile("data.bin", 'a')},
+	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":"YQ=YQ"}`:    {Status: 400, Answer: dataRefused, After: resendFile("data.bin", 'a')},
+	`admin POST /api/tickets/5/attachments {"filename":"data.bin","data":"éééé"}`:     {Status: 400, Answer: dataRefused, After: emptyFile("data.bin")},
+})

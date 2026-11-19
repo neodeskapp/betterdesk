@@ -332,13 +332,19 @@ func TestAnUploadIsStoredUnderTheTicketAndARandomName(t *testing.T) {
 	}
 }
 
+// File data is standard base64 with its padding; white space in it is
+// skipped, and anything else is no file (BUGS TK7).
 func TestFileBytes(t *testing.T) {
 	for _, tt := range []struct{ text, want string }{
-		{"aGVsbG8=", "hello"}, {"aGVsbG8", "hello"}, {"aGVs bG8=\n", "hello"}, {"aGk=aGk=", "hi"}, {"=", ""}, {"a", ""}, {"ab", "i"},
-		{"a-_b", "k\xef\xdb"}, {"a+/b", "k\xef\xdb"}, {"!!!!", ""}, {"YQ==YQ==", "a"}, {"中中中中", "\xfb\xef\xbe"},
+		{"aGVsbG8=", "hello"}, {"aGVs bG8=\n", "hello"}, {"\taGk=\r\n", "hi"}, {"a+/b", "k\xef\xdb"}, {"AAAA", "\x00\x00\x00"},
 	} {
-		if got := decodeBase64(tt.text); string(got) != tt.want {
-			t.Errorf("decodeBase64(%q) = %q, want %q", tt.text, got, tt.want)
+		if got, err := fileBytes(jsbind.String(tt.text)); err != nil || string(got) != tt.want {
+			t.Errorf("fileBytes(%q) = %q, %v; want %q", tt.text, got, err, tt.want)
+		}
+	}
+	for _, text := range []string{"aGVsbG8", "aGk=aGk=", "=", "a", "ab", "a-_b", "!!!!", "YQ==YQ==", "中中中中", "", " \n", "aGk=!"} {
+		if got, err := fileBytes(jsbind.String(text)); err == nil {
+			t.Errorf("fileBytes(%q) = %q, want an error", text, got)
 		}
 	}
 	if _, err := fileBytes(jsbind.Number(5)); err == nil {
@@ -528,6 +534,39 @@ func TestListFiltersTakeOneTextEach(t *testing.T) {
 	})
 }
 
+// File data is standard base64, with or without white space in it; text
+// that is no base64, or that holds no bytes, is refused (BUGS TK7).
+func TestAttachmentNotBase64IsRefused(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		g := newGroup(t, db)
+		g.want(g.do("admin", "POST", "/api/tickets", `{"title":"files"}`), 201, "")
+		refused := `{"error":"Filename and data (base64) are required"}`
+		for _, data := range []string{"a G-k_!=Zm9v", "!!!!", "=", "a", "ab", "aGVsbG8", "a-_b", "aGk=aGk=", "éééé", " ", "YQ=YQ"} {
+			body, _ := json.Marshal(map[string]string{"filename": "x.bin", "data": data})
+			g.want(g.do("admin", "POST", "/api/tickets/1/attachments", string(body)), 400, refused)
+		}
+		if files, err := os.ReadDir(g.h.uploads); err != nil || len(files) != 0 {
+			t.Errorf("files stored: %d, %v", len(files), err)
+		}
+		g.want(g.do("admin", "POST", "/api/tickets/1/attachments", `{"filename":"x.bin","data":"aGVs bG8=\n"}`), 201, `{"success":true,"attachment":{"id":1,"filename":"x.bin","size_bytes":5}}`)
+	})
+}
+
+// A file whose row cannot be written does not stay in the folder.
+func TestAFailedUploadLeavesNoFile(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		g := newGroup(t, db)
+		g.want(g.do("admin", "POST", "/api/tickets", `{"title":"files"}`), 201, "")
+		if _, err := db.Exec(context.Background(), "ALTER TABLE ticket_attachments RENAME TO ticket_attachments_gone"); err != nil {
+			t.Fatal(err)
+		}
+		g.want(g.do("admin", "POST", "/api/tickets/1/attachments", `{"filename":"x.bin","data":"aGk="}`), 500, `{"error":"Internal server error"}`)
+		if files, err := os.ReadDir(g.h.uploads); err != nil || len(files) != 0 {
+			t.Errorf("files left: %d, %v", len(files), err)
+		}
+	})
+}
+
 // unread is a request body that counts what is read of it.
 type unread struct {
 	left int64
@@ -593,28 +632,27 @@ func TestTheRouteChecksBeforeItReadsAnUpload(t *testing.T) {
 	}
 }
 
-// What an upload carries is read leniently, but never past its end and
-// never wrongly where it is well formed: base64 with or without padding,
-// in either alphabet, with white space in it, decodes to the bytes it
-// stands for.
-func FuzzDecodeBase64(f *testing.F) {
+// What an upload carries decodes to the bytes it stands for when it is
+// standard base64, also with white space in it, and any text gives at
+// most three bytes per four characters.
+func FuzzFileBytes(f *testing.F) {
 	for _, seed := range []string{"", "hello", "\x00\xff\xfe", "a", "ab", "abc", "any carnal pleasure."} {
 		f.Add([]byte(seed), "junk=!")
 	}
 	f.Fuzz(func(t *testing.T, data []byte, text string) {
-		for _, encoding := range []*base64.Encoding{base64.StdEncoding, base64.RawStdEncoding, base64.URLEncoding, base64.RawURLEncoding} {
-			encoded := encoding.EncodeToString(data)
-			if got := decodeBase64(encoded); !bytes.Equal(got, data) {
-				t.Errorf("decodeBase64(%q) = %x, want %x", encoded, got, data)
+		encoded := base64.StdEncoding.EncodeToString(data)
+		spaced := strings.Join(strings.Split(encoded, ""), " \n")
+		for _, form := range []string{encoded, spaced} {
+			got, err := fileBytes(jsbind.String(form))
+			if len(data) == 0 && err == nil {
+				t.Errorf("fileBytes(%q) = %x, want an error for no bytes", form, got)
 			}
-			spaced := strings.Join(strings.Split(encoded, ""), " \n")
-			if got := decodeBase64(spaced); !bytes.Equal(got, data) && !strings.HasSuffix(encoded, "=") {
-				t.Errorf("decodeBase64 with white space of %q = %x, want %x", encoded, got, data)
+			if len(data) > 0 && (err != nil || !bytes.Equal(got, data)) {
+				t.Errorf("fileBytes(%q) = %x, %v; want %x", form, got, err, data)
 			}
 		}
-		// Any text decodes to at most three bytes per four characters
-		if got := decodeBase64(text); len(got) > len(text)*3/4+3 {
-			t.Errorf("decodeBase64(%q) has %d bytes", text, len(got))
+		if got, err := fileBytes(jsbind.String(text)); err == nil && len(got) > len(text)*3/4 {
+			t.Errorf("fileBytes(%q) has %d bytes", text, len(got))
 		}
 		if name := safeName(text); strings.ContainsAny(name, "/\\\x00") || len(name) < len([]rune(text)) {
 			t.Errorf("safeName(%q) = %q", text, name)

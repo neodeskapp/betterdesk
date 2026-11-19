@@ -62,8 +62,11 @@ func TestNodeAnswers(t *testing.T) {
 		w.Run(replay.Load(t, db, "node"), ticketFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			switch {
 			case step.Files != nil:
-				if have := storedFiles(t, w); strings.Join(have, "\n") != strings.Join(step.Files, "\n") {
-					t.Errorf("files left in the attachment folder:\n   node: %q\n     go: %q", step.Files, have)
+				// Node left the files of uploads whose row it could not
+				// write; the Go console removes them (BUGS TK7), so nothing
+				// is left
+				if have := storedFiles(t, w); len(have) != 0 {
+					t.Errorf("files left in the attachment folder: %q (node left %q)", have, step.Files)
 				}
 				return true
 			case step.Status == 403 && strings.Contains(step.Answer, "Permission denied: device.edit") && got.Status == 403 && strings.Contains(got.Body, `"code":"panel_access_denied"`):

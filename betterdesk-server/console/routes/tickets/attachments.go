@@ -2,6 +2,7 @@ package tickets
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -10,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"unicode/utf16"
 
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
@@ -44,79 +44,31 @@ func (h *handlers) removeFile(storagePath string) {
 	}
 }
 
-// errDataNotText is the answer to file data that is no text: the file goes
-// in as base64 text, as the web app sends it.
-var errDataNotText = errors.New("the file data is no text")
+// errNotBase64 is the answer to file data that is no base64 text, or
+// holds no bytes: the file goes in as base64 text, as the web app sends it.
+var errNotBase64 = errors.New("the file data is no base64 text")
 
-// fileBytes is the bytes of the uploaded file: data is base64 text, read
-// leniently. Any other value is an error, before anything is made of it.
+// fileBytes is the bytes of the uploaded file: data is standard base64
+// text with its padding, read strictly; white space in it is skipped. Any
+// other value, and text that decodes to nothing, is an error, before
+// anything is made of it.
 func fileBytes(data jsbind.Value) ([]byte, error) {
 	if !data.IsString() {
-		return nil, errDataNotText
+		return nil, errNotBase64
 	}
-	return decodeBase64(data.Str()), nil
+	compact := strings.Map(func(r rune) rune {
+		switch r {
+		case ' ', '\t', '\n', '\r', '\f', '\v':
+			return -1
+		}
+		return r
+	}, data.Str())
+	file, err := base64.StdEncoding.Strict().DecodeString(compact)
+	if err != nil || len(file) == 0 {
+		return nil, errNotBase64
+	}
+	return file, nil
 }
-
-// decodeBase64 reads base64 the way Buffer.from(text, 'base64') does. It
-// takes the standard and the URL alphabet, skips every character that is
-// in neither, and stops at the first "=" that comes where a character of
-// the alphabet is looked for. A last group of two or three characters
-// gives one or two bytes, a single left-over character gives none. A
-// character outside Latin-1 counts by its low byte.
-func decodeBase64(text string) []byte {
-	units := utf16.Encode([]rune(text))
-	out := make([]byte, 0, len(units)/4*3+3)
-	i := 0
-	// next returns the value of the next character of the alphabet
-	next := func() (byte, bool) {
-		for i < len(units) {
-			c := byte(units[i])
-			i++
-			if v := base64Value[c]; v < 64 {
-				return v, true
-			}
-			if c == '=' {
-				return 0, false
-			}
-		}
-		return 0, false
-	}
-	for {
-		a, ok := next()
-		if !ok {
-			break
-		}
-		b, ok := next()
-		if !ok {
-			break
-		}
-		out = append(out, a<<2|b>>4)
-		c, ok := next()
-		if !ok {
-			break
-		}
-		out = append(out, b<<4|c>>2)
-		d, ok := next()
-		if !ok {
-			break
-		}
-		out = append(out, c<<6|d)
-	}
-	return out
-}
-
-// base64Value maps a character to its six bits, 64 for a character that
-// is not in the alphabet.
-var base64Value = func() (table [256]byte) {
-	for i := range table {
-		table[i] = 64
-	}
-	for i, c := range "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" {
-		table[c] = byte(i)
-	}
-	table['-'], table['_'] = 62, 63
-	return table
-}()
 
 // safeName replaces every character of a file name that is not a letter
 // of a to z, a digit, a dot, a dash or an underscore by an underscore. A
@@ -194,6 +146,10 @@ func (h *handlers) attach(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		mimetype := jsbind.Of(body.Get("mimetype")).Or(jsbind.String("application/octet-stream"))
 		id, err = addAttachment(r.Context(), h.db, t.id(), name, mimetype, len(file), storagePath, kit.User(r).Username)
+		if err != nil {
+			// A file without a row is reached by nothing
+			_ = os.Remove(storagePath)
+		}
 	}
 	if err != nil {
 		h.serverError(w, r, "Attachment upload error", err)
