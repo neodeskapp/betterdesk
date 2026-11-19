@@ -368,12 +368,13 @@ func TestNewStartsNothing(t *testing.T) {
 
 func TestSweepLogsAFailure(t *testing.T) {
 	logs := &logLines{}
-	mem := &memStore{t: t, c: &memCase{Rules: []map[string]string{{"id": "1", "condition_op": `"valueOf"`, "condition_value": "1"}}}}
+	// A rule name JavaScript cannot make text of fails the alert's message
+	mem := &memStore{t: t, c: &memCase{Rules: []map[string]string{{"id": "1", "name": `{"toString":1}`, "condition_op": `"gt"`, "condition_value": "1"}}}}
 	engine := New(Options{Logger: logs, Now: func() time.Time { return sweepNow }, Devices: listOf(sweepDevices())})
 	engine.store = mem
 	engine.Sweep(context.Background())
 	engine.Sweep(context.Background())
-	want := [2]string{"error", "[AlertEngine] Sweep failed: Cannot convert undefined or null to object"}
+	want := [2]string{"error", "[AlertEngine] Sweep failed: Cannot convert object to primitive value"}
 	if len(logs.lines) != 2 || logs.lines[0] != want || logs.lines[1] != want {
 		t.Fatalf("logs %q", logs.lines)
 	}
