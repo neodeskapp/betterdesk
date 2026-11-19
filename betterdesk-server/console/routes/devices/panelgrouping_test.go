@@ -71,9 +71,9 @@ func (a *identityAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // the API server as. Without PANEL_TRUST_SECRET they act as the console's
 // API key. With it, Node signed the operator's name and role and the API
 // server took the role from the account's users row (the claimed role when
-// there is no row, none for a role it does not know), and refused a
-// statement signed for another path than the one requested, which a guid
-// with a colon gives: encodeURIComponent escapes it in the request only.
+// there is no row, none for a role it does not know). A guid with a colon,
+// which the request escapes, acts as the operator too (BUGS UM34: Node
+// signed the path unescaped and the API server refused the statement).
 func TestPanelTrustActsAsTheOperator(t *testing.T) {
 	ctx := context.Background()
 	run := func(t *testing.T, db *store.DB, trust bool) (*routetest.World, *identityAPI) {
@@ -126,7 +126,10 @@ func TestPanelTrustActsAsTheOperator(t *testing.T) {
 		expect(t, a, "members as a viewer in the table",
 			"GET /api/panel/device-groups/g-default/peers as e2e_operator/viewer",
 			"GET /api/panel/device-groups/g-one/peers as e2e_operator/viewer",
-			"GET /api/panel/device-groups/g%3Atwo/peers as e2e_operator/",
+			"GET /api/panel/device-groups/g%3Atwo/peers as e2e_operator/viewer",
+			"PUT /api/panel/device-groups/g-default/peers as e2e_operator/viewer",
+			"PUT /api/panel/device-groups/g-one/peers as e2e_operator/viewer",
+			"PUT /api/panel/device-groups/g%3Atwo/peers as e2e_operator/viewer",
 		)
 
 		// A role the API server does not know: no role, 401
@@ -146,12 +149,12 @@ func TestPanelTrustActsAsTheOperator(t *testing.T) {
 		operator.Do("POST", "/api/device-groups", `{"name":"New"}`)
 		expect(t, a, "save without a users row", "POST /api/panel/device-groups as e2e_operator/operator")
 
-		// A guid with a colon: the statement does not hold
+		// A guid with a colon acts as the operator like any other
 		got = w.As("admin").Do("DELETE", "/api/device-groups/g:two", "")
-		if got.Status != http.StatusUnauthorized {
+		if got.Status != http.StatusOK {
 			t.Errorf("delete of g:two: %d %s", got.Status, got.Body)
 		}
-		expect(t, a, "delete of g:two", "DELETE /api/panel/device-groups/g%3Atwo as e2e_admin/")
+		expect(t, a, "delete of g:two", "DELETE /api/panel/device-groups/g%3Atwo as e2e_admin/admin")
 		w.As("admin").Do("DELETE", "/api/device-groups/g-one", "")
 		expect(t, a, "delete of g-one", "DELETE /api/panel/device-groups/g-one as e2e_admin/admin")
 

@@ -72,9 +72,7 @@ func fromGo(result *goapi.Object, fallback string) error {
 // own writer takes over (the API server cannot take the write, or it
 // answered success without a group).
 func (h *handlers) saveGroupToGo(r *http.Request, payload *goapi.Object) (any, error) {
-	path := "/api/panel/device-groups"
-	opts := h.panelCall(r, path, path)
-	result := h.api.SavePanelDeviceGroup(r.Context(), payload, opts...)
+	result := h.api.SavePanelDeviceGroup(r.Context(), payload, h.panelCall(r)...)
 	if goapi.Truthy(result.Get("success")) {
 		return result.Get("data"), nil
 	}
@@ -84,8 +82,7 @@ func (h *handlers) saveGroupToGo(r *http.Request, payload *goapi.Object) (any, e
 // deleteGroupFromGo is deleteGroupFromGo: true when the API server deleted
 // the group, false when the console's own writer takes over.
 func (h *handlers) deleteGroupFromGo(r *http.Request, guid string) (bool, error) {
-	opts := h.panelCall(r, "/api/panel/device-groups/"+guid, "/api/panel/device-groups/"+sentGUID(guid))
-	result := h.api.DeletePanelDeviceGroup(r.Context(), guid, opts...)
+	result := h.api.DeletePanelDeviceGroup(r.Context(), guid, h.panelCall(r)...)
 	if goapi.Truthy(result.Get("success")) {
 		return true, nil
 	}
@@ -95,8 +92,7 @@ func (h *handlers) deleteGroupFromGo(r *http.Request, guid string) (bool, error)
 // groupPeersFromGo is getGroupPeersFromGo: the ids of the group's members,
 // ok false when the API server gave no list.
 func (h *handlers) groupPeersFromGo(r *http.Request, guid string) (peers []any, ok bool) {
-	opts := h.panelCall(r, "/api/panel/device-groups/"+guid+"/peers", "/api/panel/device-groups/"+sentGUID(guid)+"/peers")
-	result := h.api.GetPanelDeviceGroupPeers(r.Context(), guid, opts...)
+	result := h.api.GetPanelDeviceGroupPeers(r.Context(), guid, h.panelCall(r)...)
 	if !goapi.Truthy(result.Get("success")) || !goapi.Truthy(result.Get("data")) {
 		return nil, false
 	}
@@ -107,8 +103,7 @@ func (h *handlers) groupPeersFromGo(r *http.Request, guid string) (peers []any, 
 // setGroupPeersInGo is setGroupPeersInGo: saved is false when the console's
 // own writer takes over, also after an answer of success without data.
 func (h *handlers) setGroupPeersInGo(r *http.Request, guid string, peers []any) (saved bool, err error) {
-	opts := h.panelCall(r, "/api/panel/device-groups/"+guid+"/peers", "/api/panel/device-groups/"+sentGUID(guid)+"/peers")
-	result := h.api.SetPanelDeviceGroupPeers(r.Context(), guid, peers, opts...)
+	result := h.api.SetPanelDeviceGroupPeers(r.Context(), guid, peers, h.panelCall(r)...)
 	if goapi.Truthy(result.Get("success")) {
 		return goapi.Truthy(result.Get("data")), nil
 	}
@@ -143,20 +138,16 @@ func (h *handlers) membershipToGo(r *http.Request, id string, manual, selected [
 	return true, nil
 }
 
-// sentGUID is the guid as the request path held it: trimmed and escaped
-// with encodeURIComponent.
-func sentGUID(guid string) string { return goapi.EncodeURIComponent(jsTrim(guid)) }
-
 // panelCall is panelConfig: the options of a call into the panel grouping
 // of the API server. With the panel trust bridge on, the Node console sent
-// a statement of the operator's name and role, signed for the method and
-// the path signed; the API server then acted as that operator, with the
-// role the account has in the users table. In process the call carries
-// that identity. Where the statement did not hold (signed is not the path
-// sent, a line break in the name or role), the API server refused it with
-// 401, which an identity without a role gets too. Without a name or a role
-// in the session Node sent no statement, and the call acts as the API key.
-func (h *handlers) panelCall(r *http.Request, signed, sent string) []goapi.CallOption {
+// a statement of the operator's name and role; the API server then acted
+// as that operator, with the role the account has in the users table. In
+// process the call carries that identity, for every guid in the path.
+// Where the statement did not hold (a line break in the name or role), the
+// API server refused it with 401, which an identity without a role gets
+// too. Without a name or a role in the session Node sent no statement, and
+// the call acts as the API key.
+func (h *handlers) panelCall(r *http.Request) []goapi.CallOption {
 	user := kit.User(r)
 	if !h.d.Config.PanelTrust || user == nil {
 		return nil
@@ -166,7 +157,7 @@ func (h *handlers) panelCall(r *http.Request, signed, sent string) []goapi.CallO
 		return nil
 	}
 	id := api.Identity{Username: subject}
-	if signed == sent && !strings.ContainsRune(subject+role, '\n') {
+	if !strings.ContainsRune(subject+role, '\n') {
 		id.Role = panelRole(r.Context(), h.d.Store, subject, role)
 	}
 	return []goapi.CallOption{goapi.As(id)}
