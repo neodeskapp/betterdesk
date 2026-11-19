@@ -416,14 +416,18 @@ func TestAuditLimit(t *testing.T) {
 				t.Errorf("%s: %d rows, want %d (%.200s)", query, got, want, body)
 			}
 		}
-		got, body := count("?limit=-1")
-		if db.IsPostgres() && got != -500 || !db.IsPostgres() && got < 105 {
+		// The limit is held between 1 and 500 (audit M5): a negative one reads
+		// one row, and one beyond every integer type no longer fails
+		if got, body := count("?limit=-1"); got != 1 {
 			t.Errorf("negative limit: %d %.200s", got, body)
 		}
-		if got, _ := count("?limit=99999999999999999999"); got != -500 {
-			t.Errorf("limit beyond 64 bits: %d", got)
+		if got, body := count("?limit=99999999999999999999"); got != 105 {
+			t.Errorf("limit beyond 64 bits: %d %.200s", got, body)
 		}
-		_, body = count("?limit=1")
+		if got, body := count("?limit=0x10"); got != 100 {
+			t.Errorf("hexadecimal limit: %d %.200s", got, body)
+		}
+		_, body := count("?limit=1")
 		row := decode(t, body)["data"].([]any)[0].(map[string]any)
 		if row["username"] != "e2e_admin" || row["action"] != "a104" || row["user_id"] != 1.0 {
 			t.Errorf("row %v", row)

@@ -243,19 +243,21 @@ func TestValuesMatchJavaScript(t *testing.T) {
 	}
 }
 
-func TestIntOr(t *testing.T) {
+func TestClampedInt(t *testing.T) {
 	for _, tc := range []struct {
-		v     any
-		radix int
-		want  string
+		v    any
+		want string
 	}{
-		{nil, 0, "50"}, {"", 0, "50"}, {"0", 0, "50"}, {"-0", 0, "50"}, {"abc", 0, "50"},
-		{"7", 0, "7"}, {"-3", 0, "-3"}, {"0x1F", 0, "31"}, {"0x1F", 10, "50"}, {"12.9", 0, "12"},
-		{"99999999999999999999999", 0, "1e+23"}, {[]any{"8", "9"}, 0, "8"},
+		{nil, "50"}, {"", "50"}, {"0", "50"}, {"-0", "50"}, {"abc", "50"}, {"0x1F", "50"},
+		{"7", "7"}, {"-3", "1"}, {"12.9", "12"}, {"500", "500"}, {"501", "500"},
+		{"99999999999999999999999", "500"}, {[]any{"8", "9"}, "8"}, {"   9", "9"},
 	} {
-		if got := IntOr(tc.v, tc.radix, 50); got != tc.want {
-			t.Errorf("IntOr(%v, %d) = %q, want %q", tc.v, tc.radix, got, tc.want)
+		if got := NumberString(ClampedInt(tc.v, 50, 1, 500)); got != tc.want {
+			t.Errorf("ClampedInt(%v) = %q, want %q", tc.v, got, tc.want)
 		}
+	}
+	if got := ClampedInt("-9", 0, 0, 10000); got != 0 {
+		t.Errorf("a negative offset gives %v, want 0", got)
 	}
 }
 

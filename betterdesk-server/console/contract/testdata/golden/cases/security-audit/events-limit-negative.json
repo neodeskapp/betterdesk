@@ -45,7 +45,9 @@
     "json": {
      "count": 0,
      "enabled": true,
-     "events": null,
+     "events": [
+      {}
+     ],
      "total": 0
     }
    }

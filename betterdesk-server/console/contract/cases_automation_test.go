@@ -342,7 +342,9 @@ func init() {
 		contract.Case{Name: "commands-device-as-stored", Path: "/api/automation/commands", Query: url.Values{"device_id": {"7.0"}, "limit": {"1"}}, Volatile: newest},
 		contract.Case{Name: "commands-limit-zero", Path: "/api/automation/commands", Query: url.Values{"device_id": {"no-such-device"}, "limit": {"0"}}},
 		contract.Case{Name: "commands-limit-negative", Path: "/api/automation/commands", Query: url.Values{"device_id": {"no-such-device"}, "limit": {"-1"}}},
-		contract.Case{Name: "commands-limit-too-large", Path: "/api/automation/commands", Query: url.Values{"limit": {"99999999999999999999"}}},
+		// Since 3.5.264 the limit is held at 500 and the whole list comes
+		// back, in an order the creation second of the earlier cases decides
+		contract.Case{Name: "commands-limit-too-large", Path: "/api/automation/commands", Query: url.Values{"limit": {"99999999999999999999"}}, Volatile: []string{"commands"}},
 		contract.Case{Name: "commands-limit-object", Path: "/api/automation/commands", Query: url.Values{"device_id": {"no-such-device"}, "limit[rows]": {"1"}}},
 		contract.Case{Name: "commands-status-twice", Path: "/api/automation/commands", Query: url.Values{"status": {"pending", "running"}}},
 		contract.Case{Name: "commands-status-object", Path: "/api/automation/commands", Query: url.Values{"status[is]": {"pending"}}},

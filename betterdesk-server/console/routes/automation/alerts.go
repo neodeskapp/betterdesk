@@ -17,8 +17,8 @@ type alertList struct {
 // triggered last first.
 //
 // acknowledged filters as soon as the query names it: "true" asks for the
-// acknowledged alerts and every other value for the rest. A limit that is
-// 0 or no number does not limit.
+// acknowledged alerts and every other value for the rest. A limit in the
+// query is held between 1 and 500, 100 when it is 0 or no number.
 func (h *handlers) alerts(w http.ResponseWriter, r *http.Request) {
 	filter := alertFilter{DeviceID: queryValue(r, "device_id"), Severity: queryValue(r, "severity")}
 	if acknowledged := queryValue(r, "acknowledged"); !acknowledged.IsUndefined() {

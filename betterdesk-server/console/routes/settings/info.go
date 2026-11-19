@@ -97,12 +97,10 @@ func (g *general) serverInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 // audit answers GET /api/settings/audit?limit=: the newest entries of the
-// audit log with the account's name, 100 when limit is no number or 0.
+// audit log with the account's name, limit held between 1 and 500, 100
+// when it is no number or 0.
 func (g *general) audit(w http.ResponseWriter, r *http.Request) {
-	limit, ok := jsreq.ParseInt(jsreq.Query(r, "limit"), 10)
-	if !ok || limit == 0 {
-		limit = 100
-	}
+	limit := jsreq.ClampedInt(jsreq.Query(r, "limit"), 100, 1, 500)
 	logs, err := auditLogs(r.Context(), g.d.Store, limit)
 	if err != nil {
 		g.serverError(w, r, "Get audit logs error", err)

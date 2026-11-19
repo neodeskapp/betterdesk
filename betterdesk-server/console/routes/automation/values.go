@@ -124,9 +124,10 @@ func queryValue(r *http.Request, name string) jsbind.Value {
 	return jsbind.Query(query, name)
 }
 
-// limit is "if (req.query.limit) parseInt(req.query.limit, 10)": the limit
-// of a request, and false when it gives none. It fails where JavaScript
-// could not make text of the value.
+// limit is "if (req.query.limit) Math.min(Math.max(parseInt(req.query.limit,
+// 10) || 100, 1), 500)": the limit of a request, from 1 to 500 and 100 when
+// the text gives 0 or no number, and false when the query gives none. It
+// fails where JavaScript could not make text of the value.
 func limit(r *http.Request) (n float64, ok bool, err error) {
 	value := goapipath.Query(r, "limit")
 	if !value.Truthy() {
@@ -136,7 +137,15 @@ func limit(r *http.Request) (n float64, ok bool, err error) {
 	if err != nil {
 		return 0, false, err
 	}
-	return parseInt10(text), true, nil
+	return clampLimit(parseInt10(text)), true, nil
+}
+
+// clampLimit is Math.min(Math.max(n || 100, 1), 500).
+func clampLimit(n float64) float64 {
+	if n == 0 || math.IsNaN(n) {
+		n = 100
+	}
+	return math.Min(math.Max(n, 1), 500)
 }
 
 // parseInt10 is parseInt(text, 10): the whole number the text starts

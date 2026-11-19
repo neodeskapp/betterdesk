@@ -299,11 +299,12 @@ type failure struct {
 const noBody = "Converting circular structure to JSON\n    --> starting at object with constructor 'ClientRequest'\n    |     property 'res' -> object with constructor 'IncomingMessage'\n    --- property 'req' closes the circle"
 
 // events answers GET /api/panel/security-audit/events?limit=&offset=&action=
-// with the API server's audit events. A refusal has the API server's
-// status, a call without an answer 502.
+// with the API server's audit events: limit from 1 to 500 (50 for 0 or no
+// number), offset from 0 to 10000, both read as decimal numbers. A refusal
+// has the API server's status, a call without an answer 502.
 func (h *handlers) events(w http.ResponseWriter, r *http.Request) {
-	path := "/audit/events?limit=" + jsreq.IntOr(jsreq.Query(r, "limit"), 0, 50) +
-		"&offset=" + jsreq.IntOr(jsreq.Query(r, "offset"), 0, 0)
+	path := "/audit/events?limit=" + jsreq.NumberString(jsreq.ClampedInt(jsreq.Query(r, "limit"), 50, 1, 500)) +
+		"&offset=" + jsreq.NumberString(jsreq.ClampedInt(jsreq.Query(r, "offset"), 0, 0, 10000))
 	if action := jsreq.Query(r, "action"); goapi.Truthy(action) {
 		path += "&action=" + goapi.EncodeURIComponent(jsreq.String(action))
 	}

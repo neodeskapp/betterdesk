@@ -115,15 +115,19 @@ func ParseInt(v any, radix int) (value float64, ok bool) {
 	return value, true
 }
 
-// IntOr is parseInt(v, radix) || fallback as text: the whole number
-// JavaScript wrote into a string, and the fallback for NaN and 0.
-func IntOr(v any, radix int, fallback float64) string {
-	n, ok := ParseInt(v, radix)
+// ClampedInt is Math.min(Math.max(parseInt(v, 10) || fallback, low), high):
+// the whole number v starts with, the fallback for NaN and 0, held between
+// low and high.
+func ClampedInt(v any, fallback, low, high float64) float64 {
+	n, ok := ParseInt(v, 10)
 	if !ok || n == 0 {
 		n = fallback
 	}
-	return numberString(n)
+	return math.Min(math.Max(n, low), high)
 }
+
+// NumberString is String(n) of JavaScript.
+func NumberString(n float64) string { return numberString(n) }
 
 // isJSSpace reports the white space JavaScript skips in front of a number.
 func isJSSpace(r rune) bool {

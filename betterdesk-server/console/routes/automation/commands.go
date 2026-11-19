@@ -76,8 +76,8 @@ type commandList struct {
 }
 
 // commands answers GET commands?device_id=&status=&limit=: the commands,
-// the one created last first. A limit that is 0 or no number does not
-// limit.
+// the one created last first. A limit in the query is held between 1 and
+// 500, 100 when it is 0 or no number.
 func (h *handlers) commands(w http.ResponseWriter, r *http.Request) {
 	filter := commandFilter{DeviceID: queryValue(r, "device_id"), Status: queryValue(r, "status")}
 	max, limited, err := limit(r)
