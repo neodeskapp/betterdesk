@@ -223,30 +223,13 @@ func (h *Handlers) Upload(w http.ResponseWriter, r *http.Request) {
 	if !truthy(code) {
 		code = strings.Replace(form.originalName, ".json", "", 1)
 	}
-	if !truthy(code) {
-		fail(w, r, http.StatusBadRequest, "Invalid language code")
-		return
-	}
-	refused, throws := codeLengthRefused(code)
-	if throws {
-		crash("TypeError: Cannot convert object to primitive value")
-		return
-	}
-	if refused {
-		fail(w, r, http.StatusBadRequest, "Invalid language code")
-		return
-	}
-	result := Result{Error: "Invalid language code format"}
+	// Only a string that names a language of the table is ever loaded
 	name, isString := code.(string)
-	if isString {
-		// Only a language of the table is ever loaded
-		if _, known := knownLanguageFor(name); !known {
-			fail(w, r, http.StatusBadRequest, "Invalid language code")
-			return
-		}
-		result = h.Bundle.Save(name, translations)
+	if _, known := knownLanguageFor(name); !isString || !known {
+		fail(w, r, http.StatusBadRequest, "Invalid language code")
+		return
 	}
-	if !result.Success {
+	if result := h.Bundle.Save(name, translations); !result.Success {
 		fail(w, r, http.StatusInternalServerError, result.Error)
 		return
 	}

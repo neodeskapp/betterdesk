@@ -417,6 +417,39 @@ func TestUploadRefusesCodeOutsideTheLanguageTable(t *testing.T) {
 	}
 }
 
+// A code that is not a string is refused with 400 like any other code
+// outside the language table, whatever its length says (BUGS.md L10).
+func TestUploadCodeChecks(t *testing.T) {
+	for _, parts := range [][]string{
+		{filePart("fr.json", `{"_meta":{"code":12345}}`)},
+		{filePart("fr.json", `{"_meta":{"code":true}}`)},
+		{filePart("fr.json", `{"_meta":{"code":["de"]}}`)},
+		{filePart("fr.json", `{"_meta":{"code":["de","fr"]}}`)},
+		{filePart("fr.json", `{"_meta":{"code":{"length":3}}}`)},
+		{filePart("fr.json", `{"_meta":{"code":{"toString":"de"}}}`)},
+		{"Content-Disposition: form-data; name=\"code[length]\"\r\n\r\n3", filePart("foo.json", `{"a":1}`)},
+		{codePart("de"), codePart("fr"), filePart("foo.json", `{"a":1}`)},
+		{"Content-Disposition: form-data; name=\"code[3]\"\r\n\r\nde", filePart("foo.json", `{"a":1}`)},
+	} {
+		dir := copyDir(t, "testdata/lang-upload")
+		h, rec, _ := handlersFor(t, dir, time.Now())
+		before := fileNames(t, dir)
+		got := postForm(t, h, parts...)
+		if got.status != 400 || got.body != `{"success":false,"error":"Invalid language code"}` {
+			t.Errorf("%q: %d %s", parts, got.status, got.body)
+		}
+		if after := fileNames(t, dir); !reflect.DeepEqual(after, before) || len(rec.audit) != 0 {
+			t.Errorf("%q: files %v (before %v), audit %v", parts, after, before, rec.audit)
+		}
+	}
+	for _, code := range []string{"zh-TW", "nb", "de"} {
+		h, _, _ := handlersFor(t, copyDir(t, "testdata/lang-upload"), time.Now())
+		if got := postForm(t, h, filePart("x.json", `{"_meta":{"code":"`+code+`"}}`)); got.status != 200 || !h.Bundle.Has(code) {
+			t.Errorf("%s: %d %s", code, got.status, got.body)
+		}
+	}
+}
+
 // The translations page's routes against Node, on the odd fixture files
 // and with files added and removed.
 func TestPanelRoutesLikeNode(t *testing.T) {

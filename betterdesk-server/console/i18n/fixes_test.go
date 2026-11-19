@@ -51,6 +51,12 @@ var vectorFixes = []vectorFix{
 	// What the form parser refuses is 413 or 400 with its message, also
 	// in production.
 	{"L8", "upload.json", parserRefusalsAre4xx},
+
+	// A code that is not a string is refused like any code outside the
+	// table, whatever its length.
+	{"L10", "upload.json", uploadsRefused(400, "Invalid language code",
+		"meta code number", "meta code array of two", "meta code true", "meta code object",
+		"code twice", "code object", "code index three", "code then code object", "code object then code")},
 }
 
 // fixedVectors reads a file of vectors with every fix applied.
