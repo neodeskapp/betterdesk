@@ -72,15 +72,14 @@
    "body": {
     "kind": "json",
     "json": {
-     "alert_email": "8",
+     "alert_email": "",
      "configured": true,
-     "from": 7,
+     "from": "betterdesk@localhost",
      "host": "127.0.0.1",
      "pass": "********",
-     "port": 1,
-     "secure": true,
-     "tlsVerify": false,
-     "user": 5
+     "port": 587,
+     "secure": false,
+     "user": ""
     }
    }
   }

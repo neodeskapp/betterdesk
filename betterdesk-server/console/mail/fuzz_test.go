@@ -143,21 +143,16 @@ func FuzzSettingsBody(f *testing.F) {
 		if err != nil {
 			existing = undefined
 		}
-		host := bodyValue(body, "host")
-		config, err := nextConfig(body, existing)
-		if err != nil {
-			if err != errNotPrimitive {
-				t.Fatalf("%s: %v", raw, err)
+		config, refused := nextConfig(body, existing)
+		if refused != "" {
+			if refused != "SMTP host is required" && !strings.HasPrefix(refused, "Invalid ") {
+				t.Fatalf("%s: refused with %q", raw, refused)
 			}
 			return
 		}
 		out := config.json()
 		if !json.Valid([]byte(out)) || !utf8.ValidString(out) {
 			t.Fatalf("%s stores %q", raw, out)
-		}
-		if !host.truthy() {
-			// The handler has answered 400 before it gets here
-			return
 		}
 		// The members, in the order the console wrote them
 		wantKeys := []string{"host", "port", "secure", "user", "pass", "from", "alert_email"}
@@ -171,14 +166,21 @@ func FuzzSettingsBody(f *testing.F) {
 		if err != nil {
 			t.Fatalf("%s stores %q: %v", raw, out, err)
 		}
-		if h := stored.member("host"); h.kind != kindString || h.str != jsbind.Trim(h.str) {
+		// Every member has its type (BUGS EM5)
+		if h := stored.member("host"); h.kind != kindString || h.str == "" || h.str != jsbind.Trim(h.str) {
 			t.Fatalf("%s stores the host %s", raw, h.json())
 		}
-		if p := config.member("port"); p.kind != kindNumber || p.num == 0 || math.IsNaN(p.num) || (p.num != math.Trunc(p.num) && !math.IsInf(p.num, 0)) {
+		if p := config.member("port"); p.kind != kindNumber || p.num != math.Trunc(p.num) || p.num < 1 || p.num > 65535 {
 			t.Fatalf("%s stores the port %v", raw, p.num)
 		}
-		if stored.member("secure").kind != kindBool || stored.member("alert_email").kind != kindString {
+		if stored.member("secure").kind != kindBool || stored.member("user").kind != kindString || stored.member("from").kind != kindString {
 			t.Fatalf("%s stores %q", raw, out)
+		}
+		if a := stored.member("alert_email"); a.kind != kindString || !PlainAddressList(a.str) {
+			t.Fatalf("%s stores the alert address %s", raw, a.json())
+		}
+		if v := stored.member("tlsVerify"); !v.isUndefined() && v.kind != kindBool {
+			t.Fatalf("%s stores tlsVerify %s", raw, v.json())
 		}
 		if !stored.member("from").truthy() {
 			t.Fatalf("%s stores no sender: %q", raw, out)
@@ -190,7 +192,7 @@ func FuzzSettingsBody(f *testing.F) {
 		kept := existing.member("pass")
 		got := config.member("pass").json()
 		switch {
-		case sent.truthy() && !(sent.kind == kindString && sent.str == MaskedPass):
+		case sent.kind == kindString && sent.str != "" && sent.str != MaskedPass:
 			if got != sent.json() {
 				t.Fatalf("%s stores the password %s", raw, got)
 			}

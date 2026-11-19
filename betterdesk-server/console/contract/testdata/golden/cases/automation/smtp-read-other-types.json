@@ -147,15 +147,15 @@
    "body": {
     "kind": "json",
     "json": {
-     "alert_email": "8",
+     "alert_email": "ops@example.com",
      "configured": true,
-     "from": 7,
+     "from": "console@example.com",
      "host": "127.0.0.1",
      "pass": "********",
-     "port": 587,
-     "secure": true,
+     "port": 1,
+     "secure": false,
      "tlsVerify": false,
-     "user": 5
+     "user": "contract"
     }
    }
   }

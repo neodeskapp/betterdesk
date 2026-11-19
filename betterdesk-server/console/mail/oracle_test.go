@@ -248,6 +248,9 @@ type replay struct {
 	transport *fakeTransport
 	log       *logLines
 	counts    map[string]int
+	// refusedSave is set after a save the Go console refused and Node
+	// stored, until the next state
+	refusedSave bool
 }
 
 func (r *replay) setState(step oracleStep) {
@@ -317,6 +320,66 @@ func (r *replay) invalidConfig() bool {
 	n, err := port.toNumber()
 	goodPort := (port.kind == kindNumber || port.kind == kindString) && err == nil && n == math.Trunc(n) && n >= 1 && n <= 65535
 	return cfg.get("host").kind != kindString || port.truthy() && !goodPort
+}
+
+// refusedForCause reports whether a save's request has the fault its
+// refusal names (BUGS EM5): read with encoding/json, a member of another
+// type than the save takes.
+func refusedForCause(request, message string) bool {
+	var members map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(request), &members); err != nil {
+		return message == "SMTP host is required"
+	}
+	text := func(name string) (string, bool) {
+		var s string
+		err := json.Unmarshal(members[name], &s)
+		return s, err == nil && len(members[name]) > 0 && members[name][0] == '"'
+	}
+	missing := func(name string) bool {
+		raw, ok := members[name]
+		return !ok || string(raw) == "null"
+	}
+	number := func(name string) (float64, bool) {
+		raw := string(members[name])
+		if raw == "" || !strings.ContainsAny(raw[:1], "-0123456789") {
+			return 0, false
+		}
+		n, err := strconv.ParseFloat(raw, 64)
+		return n, err == nil
+	}
+	switch message {
+	case "SMTP host is required":
+		host, isText := text("host")
+		n, isNumber := number("host")
+		raw := string(members["host"])
+		return missing("host") || isText && jsbind.Trim(host) == "" || isNumber && n == 0 || raw == "false"
+	case "Invalid host":
+		_, isText := text("host")
+		n, isNumber := number("host")
+		raw := string(members["host"])
+		return !missing("host") && !isText && !(isNumber && n == 0) && raw != "false"
+	case "Invalid port":
+		if missing("port") {
+			return false
+		}
+		n, isNumber := number("port")
+		if digits, isText := text("port"); isText {
+			isNumber = digits != "" && strings.Trim(digits, "0123456789") == ""
+			n, _ = strconv.ParseFloat(digits, 64)
+		}
+		return !isNumber || n != math.Trunc(n) || n < 1 || n > 65535
+	case "Invalid secure", "Invalid tlsVerify":
+		raw, ok := members[strings.TrimPrefix(message, "Invalid ")]
+		return ok && string(raw) != "true" && string(raw) != "false"
+	case "Invalid user", "Invalid pass", "Invalid from":
+		name := strings.TrimPrefix(message, "Invalid ")
+		_, isText := text(name)
+		return !missing(name) && !isText
+	case "Invalid alert_email":
+		emails, isText := text("alert_email")
+		return !missing("alert_email") && (!isText || !PlainAddressList(jsbind.Trim(emails)))
+	}
+	return false
 }
 
 // tlsVerifyMember is the member a settings answer ends with when the
@@ -611,8 +674,18 @@ func (r *replay) run(i int, step oracleStep) {
 		r.log.lines = nil
 	}
 	r.counts[step.Op]++
+	if r.refusedSave && step.Op != "state" {
+		// BUGS EM5: Node stored the save the step before refused, so it
+		// read another configuration than the Go console
+		if step.Op != "load" && step.Op != "get" {
+			t.Fatalf("step %d %s after a save Node took and the Go console refused", i, step.Op)
+		}
+		r.counts["EM5: a read after a refused save"]++
+		return
+	}
 	switch step.Op {
 	case "state":
+		r.refusedSave = false
 		r.setState(step)
 	case "env":
 		r.env = step.Env
@@ -733,7 +806,26 @@ func (r *replay) run(i int, step oracleStep) {
 		if step.Request != nil {
 			body = bodyOf(*step.Request)
 		}
+		before, hadRow, err := getSetting(ctx, r.db, settingKey)
+		if err != nil {
+			t.Fatal(err)
+		}
 		answer := r.service.PutSMTPSettings(ctx, body)
+		if refused := marshal(t, answer.Body); answer.Status == 400 && (step.Status != 400 || step.Body != refused) {
+			// BUGS EM5: a member of the wrong type is refused, where Node
+			// stored it or failed on it
+			r.counts["EM5: a save with a member of the wrong type"]++
+			var reason errorBody
+			if err := json.Unmarshal([]byte(refused), &reason); err != nil || step.Request == nil || !refusedForCause(*step.Request, reason.Error) {
+				t.Fatalf("step %d put %s: refused with %s", i, show(step.Request), refused)
+			}
+			after, hasRow, err := getSetting(ctx, r.db, settingKey)
+			if err != nil || hasRow != hadRow || after != before || answer.Audit != nil || answer.LogError != "" || len(r.log.lines) != 0 {
+				t.Fatalf("step %d put %s: a refused save changed the row to %q (%v), audit %+v, logs %q %q", i, *step.Request, after, err, answer.Audit, answer.LogError, r.log.lines)
+			}
+			r.refusedSave = step.StoredAfter != nil && (!hadRow || *step.StoredAfter != before)
+			return
+		}
 		r.checkAnswer(i, step, answer)
 		stored, ok, err := getSetting(ctx, r.db, settingKey)
 		if err != nil || ok != (step.StoredAfter != nil) || (ok && stored != *step.StoredAfter) {
@@ -895,7 +987,8 @@ func TestNodeRecording(t *testing.T) {
 		for _, name := range []string{"state", "env", "reset", "load", "get", "test", "send", "alert", "help", "baseurl", "put", "has", "logsent", "logcount",
 			"credentials that are no text", "a sender that is no text", "a sender that is no text, sent as text",
 			"recipients that are no text", "EM1: a stored tlsVerify that is no flag", "EM3: an alert value with markup is escaped",
-			"EM7: a help request mail with its blank lines", "EM4: a stored configuration that is invalid"} {
+			"EM7: a help request mail with its blank lines", "EM4: a stored configuration that is invalid",
+			"EM5: a save with a member of the wrong type", "EM5: a read after a refused save"} {
 			if r.counts[name] == 0 {
 				t.Errorf("the recording has no %q", name)
 			}

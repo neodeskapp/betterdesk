@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"math"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/middleware"
@@ -102,36 +104,35 @@ func bodyValue(body middleware.JSONObject, name string) value {
 // PutSMTPSettings saves the configuration a request sends and answers
 // {"success":true} with the audit entry "smtp_config_updated".
 //
-// body is req.body. Its host is required: without one the answer is 400
-// {"error":"SMTP host is required"}. What is stored:
+// body is req.body. Each member has to have its type, and the first one
+// that has not is answered with 400 {"error":"..."}: "SMTP host is
+// required" for a host that is missing, blank or another empty value,
+// else "Invalid <member>". What is stored:
 //
-//	host         String(host) without the white space around it
-//	port         parseInt(port, 10), 587 when that is no number or 0
-//	secure       true for any value that counts as set
-//	user         the value as sent, "" when not set
-//	pass         the value as sent; when it is not set or is "********",
-//	             the password stored so far, else ""
-//	from         the value as sent, "betterdesk@localhost" when not set
-//	alert_email  String(alert_email) trimmed, "" when not set
+//	host         text, without the white space around it
+//	port         a whole number from 1 to 65535, or text of its digits,
+//	             stored as the number; 587 when missing or null
+//	secure       true or false; false when missing
+//	user         text; "" when missing or null
+//	pass         text; when missing, null, "" or "********", the
+//	             password stored so far, else ""
+//	from         text; "betterdesk@localhost" when missing, null or ""
+//	alert_email  plain addresses separated by commas (PlainAddressList),
+//	             without the white space around them; "" when missing or
+//	             null
 //	tlsVerify    true or false when the request has the member, left out
 //	             when it has not
 //
-// user, pass and from keep whatever JSON type the request used. A value
-// JavaScript cannot make text of where it needs text (host, port,
-// alert_email) and a failing database answer 500
-// {"error":"Internal server error"}.
+// A failing database answers 500 {"error":"Internal server error"}.
 func (s *Service) PutSMTPSettings(ctx context.Context, body middleware.JSONObject) Answer {
 	const failed = "SMTP update error:"
-	if !bodyValue(body, "host").truthy() {
-		return Answer{Status: http.StatusBadRequest, Body: errorBody{Error: "SMTP host is required"}}
-	}
 	existing, err := s.storedConfig(ctx)
 	if err != nil {
 		return serverError(failed, err)
 	}
-	config, err := nextConfig(body, existing)
-	if err != nil {
-		return serverError(failed, err)
+	config, refused := nextConfig(body, existing)
+	if refused != "" {
+		return Answer{Status: http.StatusBadRequest, Body: errorBody{Error: refused}}
 	}
 	if err := setSetting(ctx, s.opts.DB, settingKey, config.json()); err != nil {
 		return serverError(failed, err)
@@ -147,60 +148,88 @@ func (s *Service) PutSMTPSettings(ctx context.Context, body middleware.JSONObjec
 	}
 }
 
-// nextConfig is the configuration to store for a request whose host is
-// set, given what is stored so far (any JSON value, or undefined). The
-// error is the TypeError for a host, port or alert_email JavaScript
-// cannot make text of.
-func nextConfig(body middleware.JSONObject, existing value) (value, error) {
+// nextConfig is the configuration to store for a request, given what is
+// stored so far (any JSON value, or undefined), or the reason the request
+// is refused.
+func nextConfig(body middleware.JSONObject, existing value) (config value, refused string) {
+	host := bodyValue(body, "host")
+	switch {
+	case host.kind == kindString && jsbind.Trim(host.str) != "":
+	case host.kind == kindString || !host.truthy():
+		return undefined, "SMTP host is required"
+	default:
+		return undefined, "Invalid host"
+	}
+	port, ok := savedPort(bodyValue(body, "port"))
+	if !ok {
+		return undefined, "Invalid port"
+	}
+	secure := bodyValue(body, "secure")
+	if secure.kind != kindUndefined && secure.kind != kindBool {
+		return undefined, "Invalid secure"
+	}
+	// The members that are text, "" when missing or null
+	texts := map[string]string{}
+	for _, name := range []string{"user", "pass", "from", "alert_email"} {
+		switch v := bodyValue(body, name); v.kind {
+		case kindUndefined, kindNull:
+		case kindString:
+			texts[name] = v.str
+		default:
+			return undefined, "Invalid " + name
+		}
+	}
+	alertEmail := jsbind.Trim(texts["alert_email"])
+	if !PlainAddressList(alertEmail) {
+		return undefined, "Invalid alert_email"
+	}
+	tlsVerify := bodyValue(body, "tlsVerify")
+	if tlsVerify.kind != kindUndefined && tlsVerify.kind != kindBool {
+		return undefined, "Invalid tlsVerify"
+	}
 	// The password stays what it was unless the request brings a new one:
 	// the settings page sends the mask back, or nothing.
-	pass := bodyValue(body, "pass")
-	if !pass.truthy() || (pass.kind == kindString && pass.str == MaskedPass) {
+	pass := stringValue(texts["pass"])
+	if pass.str == "" || pass.str == MaskedPass {
 		pass = stringValue("")
 		if kept := existing.member("pass"); kept.truthy() {
 			pass = kept
 		}
 	}
-
-	hostText, err := bodyValue(body, "host").toString()
-	if err != nil {
-		return undefined, err
+	from := texts["from"]
+	if from == "" {
+		from = defaultFrom
 	}
-	portText, err := bodyValue(body, "port").toString()
-	if err != nil {
-		return undefined, err
-	}
-	port := parseInt10(portText)
-	if port == 0 || math.IsNaN(port) {
-		port = 587
-	}
-	orText := func(name, fallback string) value {
-		if v := bodyValue(body, name); v.truthy() {
-			return v
-		}
-		return stringValue(fallback)
-	}
-	alertEmail := stringValue("")
-	if v := bodyValue(body, "alert_email"); v.truthy() {
-		text, err := v.toString()
-		if err != nil {
-			return undefined, err
-		}
-		alertEmail = stringValue(jsbind.Trim(text))
-	}
-	config := objectValue(
-		"host", stringValue(jsbind.Trim(hostText)),
+	config = objectValue(
+		"host", stringValue(jsbind.Trim(host.str)),
 		"port", numberValue(port),
-		"secure", boolValue(bodyValue(body, "secure").truthy()),
-		"user", orText("user", ""),
+		"secure", boolValue(secure.flag),
+		"user", stringValue(texts["user"]),
 		"pass", pass,
-		"from", orText("from", defaultFrom),
-		"alert_email", alertEmail,
+		"from", stringValue(from),
+		"alert_email", stringValue(alertEmail),
 	)
-	if v := bodyValue(body, "tlsVerify"); !v.isUndefined() {
-		config.set("tlsVerify", boolValue(v.truthy()))
+	if tlsVerify.kind == kindBool {
+		config.set("tlsVerify", tlsVerify)
 	}
-	return config, nil
+	return config, ""
+}
+
+// savedPort reads the port of a save: a whole number from 1 to 65535, or
+// text of its digits; 587 when the request has none (missing or null).
+func savedPort(v value) (float64, bool) {
+	n := math.NaN()
+	switch v.kind {
+	case kindUndefined, kindNull:
+		return 587, true
+	case kindNumber:
+		n = v.num
+	case kindString:
+		if v.str != "" && strings.Trim(v.str, "0123456789") == "" {
+			n, _ = strconv.ParseFloat(v.str, 64)
+		}
+	}
+	return n, n == math.Trunc(n) && n >= 1 && n <= 65535
 }
 
 // TestSMTPSettings tests the connection to the mail server of the
