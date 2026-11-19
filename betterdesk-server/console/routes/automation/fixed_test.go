@@ -1056,3 +1056,12 @@ var _ = deviceFixes.Add("AU9", map[string]replay.Fix{
 	` POST /api/bd/commands/99999999999999999999/result {"status":"running"}`: {Dialect: "postgres", Status: 404, Answer: `{"error":"Command not found"}`},
 	` POST /api/bd/commands/10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000/result {"status":"running"}`: {Dialect: "postgres", Status: 404, Answer: `{"error":"Command not found"}`},
 })
+
+// AU13: an agent reports on its command only while it waits or runs, and a result that is no
+// text is stored as its JSON, null as no result. Node took any state after any other and
+// stored String() of the result, so a member named toString failed with 500 and left the row
+// as it was. After writes what Node's request left.
+var _ = deviceFixes.Add("AU13", map[string]replay.Fix{
+	` POST /api/bd/commands/2/result {"status":"running","result":{"toString":1}}`:   {Status: 200, Answer: `{"success":true}`, After: replay.Write("UPDATE remote_commands SET result = '[object Object]' WHERE id = 2")},
+	` POST /api/bd/commands/2/result {"status":"running","result":[{"toString":1}]}`: {Status: 200, Answer: `{"success":true}`, After: replay.Write("UPDATE remote_commands SET result = '[object Object]' WHERE id = 2")},
+})

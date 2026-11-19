@@ -360,19 +360,21 @@ func pendingCommandsOf(ctx context.Context, db *store.DB, device string) ([]reco
 	return q.rows(ctx, db, "list the pending commands of device "+device)
 }
 
-// updateRemoteCommand is updateRemoteCommand(id, {status, result}) as the
-// result route calls it: the status and the result are always set, the
-// time it began running with "running", the time it ended with
-// "completed" and "failed".
-func updateRemoteCommand(ctx context.Context, db *store.DB, id jsbind.Value, status string, result jsbind.Value) error {
+// updateRemoteCommand records an agent's report on a command that is
+// pending or running: the status and the result are always set, the time
+// it began running with "running", and the time it ended with
+// "completed" and "failed" unless it has one. changed is false when the
+// command is pending or running no more.
+func updateRemoteCommand(ctx context.Context, db *store.DB, id jsbind.Value, status string, result jsbind.Value) (changed bool, err error) {
 	var q query
 	q.add("UPDATE remote_commands SET status = ?, result = ?", jsbind.String(status), result)
 	switch status {
 	case "running":
 		q.add(", executed_at = " + store.NowSQL(db.Dialect()))
 	case "completed", "failed":
-		q.add(", completed_at = " + store.NowSQL(db.Dialect()))
+		q.add(", completed_at = COALESCE(completed_at, " + store.NowSQL(db.Dialect()) + ")")
 	}
-	q.add(" WHERE id = ?", id)
-	return q.exec(ctx, db, "update remote command "+id.ToString())
+	q.add(" WHERE id = ? AND status IN ('pending', 'running')", id)
+	n, err := q.changed(ctx, db, "update remote command "+id.ToString())
+	return n > 0, err
 }

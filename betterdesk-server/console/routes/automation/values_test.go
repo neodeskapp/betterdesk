@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -41,22 +42,17 @@ func TestTurnedOff(t *testing.T) {
 	}
 }
 
-func TestAsText(t *testing.T) {
+// A result is stored as text, as no result for null, and as JSON for any
+// other value (BUGS AU13).
+func TestResultText(t *testing.T) {
 	for value, want := range map[string]string{
-		`"D1"`: "D1", `5`: "5", `1.50`: "1.5", `1e21`: "1e+21", `1e400`: "Infinity", `true`: "true", `null`: "null",
-		`[]`: "", `["a","b"]`: "a,b", `[1,[2,["x"]],null,"q"]`: "1,2,x,,q", `[null]`: "", `{}`: "[object Object]", `{"a":1}`: "[object Object]",
-		`{"valueOf":1}`: "[object Object]", `[{}]`: "[object Object]", `"half \ud83d pair"`: "half \ufffd pair",
+		`"D1"`: `"D1"`, `""`: `""`, `null`: `null`, `5`: `"5"`, `1.50`: `"1.5"`, `1e21`: `"1e+21"`, `1e400`: `"null"`, `true`: `"true"`,
+		`[]`: `"[]"`, `["a","b"]`: `"[\"a\",\"b\"]"`, `{"b":1,"a":2,"a":3,"10":0}`: `"{\"10\":0,\"b\":1,\"a\":3}"`,
+		`{"toString":1}`: `"{\"toString\":1}"`, `[null,{"x":[1.0]}]`: `"[null,{\"x\":[1]}]"`, `"half \ud83d pair"`: `"half ` + "\ufffd" + ` pair"`,
 	} {
-		body := bodyOf(t, `{"device_id":`+value+`}`)
-		got, err := asText(body.Get("device_id"))
-		if err != nil || got != want {
-			t.Errorf("asText(%s) = %q, %v; want %q", value, got, err, want)
-		}
-	}
-	for _, value := range []string{`{"toString":1}`, `{"toString":null}`, `{"toString":"x","valueOf":"y"}`, `[{"toString":1}]`, `[1,[2,{"toString":{}}]]`} {
-		body := bodyOf(t, `{"device_id":`+value+`}`)
-		if got, err := asText(body.Get("device_id")); err == nil || err.Error() != "Cannot convert object to primitive value" {
-			t.Errorf("asText(%s) = %q, %v; want the TypeError", value, got, err)
+		body := bodyOf(t, `{"result":`+value+`}`)
+		if got := resultText(body.Get("result")).JSON(); got != want {
+			t.Errorf("resultText(%s) = %s, want %s", value, got, want)
 		}
 	}
 }
@@ -172,10 +168,10 @@ func FuzzQueryAndPath(f *testing.F) {
 	})
 }
 
-// Whatever a body holds, making text of a member of it either works or is
-// the TypeError of an object with a member named toString.
-func FuzzAsText(f *testing.F) {
-	for _, seed := range []string{`"text"`, `5`, `1e400`, `true`, `null`, `[1,[2],null,{"a":1}]`, `{"toString":1}`, `"\ud83d"`, `[{"toString":[]}]`} {
+// Whatever a body holds, a result is stored as null, as the text it was,
+// or as JSON that reads back as the same value.
+func FuzzResultText(f *testing.F) {
+	for _, seed := range []string{`"text"`, `5`, `1e400`, `true`, `null`, `[1,[2],null,{"a":1}]`, `{"toString":1}`, `"\ud83d"`, `{"b":1,"a":2,"a":3,"10":0}`} {
 		f.Add(seed)
 	}
 	f.Fuzz(func(t *testing.T, value string) {
@@ -186,10 +182,25 @@ func FuzzAsText(f *testing.F) {
 		if !body.Has("v") {
 			return
 		}
-		text, err := asText(body.Get("v"))
-		if err != nil && (err.Error() != "Cannot convert object to primitive value" || !strings.Contains(value, "toString")) {
-			t.Fatalf("asText(%s) = %q, %v", value, text, err)
+		got, sent := resultText(body.Get("v")), jsbind.Of(body.Get("v"))
+		switch {
+		case sent.IsNull():
+			if !got.IsNull() {
+				t.Fatalf("resultText(null) = %s", got.JSON())
+			}
+			return
+		case sent.IsString():
+			if !got.IsString() || got.Str() != sent.Str() {
+				t.Fatalf("resultText(%s) = %s", value, got.JSON())
+			}
+			return
 		}
-		_ = turnedOff(jsbind.Of(body.Get("v")))
+		var want, stored any
+		if !got.IsString() || json.Unmarshal([]byte(got.Str()), &stored) != nil {
+			t.Fatalf("resultText(%s) = %s, which is no JSON", value, got.JSON())
+		}
+		if json.Unmarshal(body.Get("v").Raw(), &want) == nil && !reflect.DeepEqual(want, stored) {
+			t.Fatalf("resultText(%s) = %s", value, got.Str())
+		}
 	})
 }

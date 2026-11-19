@@ -205,3 +205,30 @@ func nodeRuleDelete(t *testing.T, w *replay.World, step replay.Step) {
 	nodeExec(t, w, "DELETE FROM alert_rules WHERE id = ?", id)
 	nodeAudit(t, w, step, "alert_rule_deleted", "Rule #"+id.ToString()+": "+name)
 }
+
+// nodeResult is what POST commands/{id}/result wrote for a report Node
+// took, in any state of the command: the status, the result as String()
+// made it (NULL when there is none), the time it began running with
+// "running" and the time it ended with "completed" and "failed".
+func nodeResult(t *testing.T, w *replay.World, step replay.Step) {
+	t.Helper()
+	if step.Status != http.StatusOK {
+		return
+	}
+	body := nodeBody(t, step)
+	result := jsbind.Null
+	if raw := body.Get("result"); raw.Exists() {
+		result = jsbind.String(jsbind.Of(raw).ToString())
+	}
+	status := jsbind.Of(body.Get("status")).Str()
+	set := ""
+	switch status {
+	case "running":
+		set = ", executed_at = " + store.NowSQL(w.DB.Dialect())
+	case "completed", "failed":
+		set = ", completed_at = " + store.NowSQL(w.DB.Dialect())
+	}
+	parts := strings.Split(strings.TrimSuffix(step.Path, "/"), "/")
+	nodeExec(t, w, "UPDATE remote_commands SET status = ?, result = ?"+set+" WHERE id = ?",
+		jsbind.String(status), result, jsbind.Number(jsbind.ParseNumber(parts[len(parts)-2])))
+}

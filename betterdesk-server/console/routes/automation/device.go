@@ -33,9 +33,9 @@ func (h *handlers) pendingCommands(w http.ResponseWriter, r *http.Request) {
 // result?}: the agent reports that a command of its device runs, or has
 // completed or failed. The status is checked first, then whether the
 // command exists and is the device's: another device's command is not
-// found either, so a device cannot learn which ids exist. The result is
-// stored as String() made it, or NULL when there is none; any state may
-// follow any other, also after a command completed.
+// found either, so a device cannot learn which ids exist. A command that
+// completed or failed takes no more reports (409). The result is stored
+// as resultText makes it, or NULL when there is none.
 func (h *handlers) commandResult(w http.ResponseWriter, r *http.Request) {
 	device := kit.Device(r).DeviceID
 	body := kit.Body(r)
@@ -60,16 +60,16 @@ func (h *handlers) commandResult(w http.ResponseWriter, r *http.Request) {
 	}
 	result := jsbind.Null
 	if raw := body.Get("result"); raw.Exists() {
-		text, err := asText(raw)
-		if err != nil {
-			h.serverError(w, r, "Command result error", err)
-			return
-		}
-		result = jsbind.String(text)
+		result = resultText(raw)
 	}
 	id = command.number("id")
-	if err := updateRemoteCommand(r.Context(), h.db, id, status.Str(), result); err != nil {
+	changed, err := updateRemoteCommand(r.Context(), h.db, id, status.Str(), result)
+	if err != nil {
 		h.serverError(w, r, "Command result error", err)
+		return
+	}
+	if !changed {
+		fail(w, r, http.StatusConflict, "Command already finished")
 		return
 	}
 	h.log.Info("Command #" + id.ToString() + " result from " + device + ": " + status.Str())

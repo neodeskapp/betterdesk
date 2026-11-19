@@ -11,15 +11,20 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
-// asText is String(v) for a body value. It fails where JavaScript throws:
-// for an object with a member named toString, also inside a list.
-func asText(raw middleware.Value) (string, error) {
-	if v, err := jsjson.Parse(string(raw.Raw())); err == nil {
-		if _, err := v.Text(); err != nil {
-			return "", err
+// resultText is an agent's result as it is stored: text as it came, null
+// as no result, anything else as its JSON as JavaScript writes it (keys in
+// JavaScript's order, of two equal keys the last).
+func resultText(raw middleware.Value) jsbind.Value {
+	v := jsbind.Of(raw)
+	if v.IsString() || v.IsNull() {
+		return v
+	}
+	if parsed, err := jsjson.Parse(string(raw.Raw())); err == nil {
+		if out, err := parsed.MarshalJSON(); err == nil {
+			return jsbind.String(string(out))
 		}
 	}
-	return jsbind.Of(raw).ToString(), nil
+	return jsbind.String(v.JSON())
 }
 
 // turnedOff is enabled === false || enabled === 0 || enabled === '0' ||

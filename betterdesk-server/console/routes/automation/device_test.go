@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
@@ -32,14 +33,30 @@ import (
 //     request without a session to the sign-in page.
 //
 // The steps the bug fixes change are listed in deviceFixes
-// (fixed_test.go).
+// (fixed_test.go). One fix changes a whole kind of answer: a report Node
+// took on a command that had completed or failed is 409, and a result
+// that is no text is stored as its JSON (BUGS AU13). There the command
+// must have finished, and the row is then made what Node's report made
+// it, so the reads after it compare.
 func TestNodeDeviceAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
-		elsewhere, slashes, spelled := 0, 0, 0
+		elsewhere, slashes, spelled, refused := 0, 0, 0, 0
 		defer deviceFixes.Unused(t, db)
 		w.Run(replay.Load(t, db, "node_device"), deviceFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			switch {
+			case step.Method == "POST" && step.Status == 200 && strings.HasSuffix(strings.ToLower(strings.TrimSuffix(step.Path, "/")), "/result"):
+				if got.Status == 409 && got.Body == `{"error":"Command already finished"}` {
+					refused++
+					parts := strings.Split(strings.TrimSuffix(step.Path, "/"), "/")
+					if status := w.Rows("SELECT status FROM remote_commands WHERE id = ?", []any{int64(jsbind.ParseNumber(parts[len(parts)-2]))}); status != `[{"status":"completed"}]` && status != `[{"status":"failed"}]` {
+						t.Errorf("%s: refused for a command that is %s", step.Name, status)
+					}
+				} else if got.Status != 200 || replay.Normalize(got.Body) != replay.Normalize(step.Answer) {
+					t.Errorf("%s: %d %s, Node answered %d %s", step.Name, got.Status, got.Body, step.Status, step.Answer)
+				}
+				nodeResult(t, w, step)
+				return true
 			case step.Path == "/API/BD/COMMANDS":
 				spelled++
 				if got.Status != 302 || got.Header.Get("Location") != "/login" {
@@ -64,8 +81,15 @@ func TestNodeDeviceAnswers(t *testing.T) {
 		if elsewhere != 6 || slashes != 1 || spelled != 1 {
 			t.Errorf("%d answers were compared by status only, %d had two slashes and %d went to the inventory route, want 6, 1 and 1", elsewhere, slashes, spelled)
 		}
+		if refused != finishedReports {
+			t.Errorf("%d reports on finished commands were refused, want %d", refused, finishedReports)
+		}
 	})
 }
+
+// finishedReports is the number of reports the device recording sends for
+// a command that completed or failed, on each database.
+const finishedReports = 6
 
 // deviceWorld is a console with a token bound to device-a (tok-device-a)
 // and one pending command of device-a, with the id 1.
