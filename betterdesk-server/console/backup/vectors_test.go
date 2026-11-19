@@ -414,11 +414,30 @@ type valueVectors struct {
 	} `json:"numbers"`
 }
 
+// The checks Go answers otherwise than Node on purpose (BUGS.md BK14):
+// Node threw a TypeError for a manifest that is null and for a version
+// object with its own toString key; Go answers them as invalid, null like
+// any other manifest that is no object, the version as "[object Object]".
+var (
+	fullCheckDifferences = map[string][]string{
+		`null`: {"Archive is not a BetterDesk full backup (wrong _format)", "Unsupported full-backup version: undefined"},
+		`{"_format":"betterdesk-full-backup","_version":{"toString":1}}`: {"Unsupported full-backup version: [object Object]"},
+	}
+	snapshotCheckDifferences = map[string][]string{
+		`{"_format":"betterdesk-backup","_version":{"toString":2},"console":{}}`: {"Unsupported backup version: [object Object] (max supported: 1)"},
+	}
+)
+
 func TestValidationMatchesNode(t *testing.T) {
 	var v valueVectors
 	loadVectors(t, "values.json.gz", &v)
 	s := New(Options{})
+	changed := 0
 	for i, c := range v.Validate.Full {
+		if want, ok := fullCheckDifferences[string(unb64(t, c.Manifest))]; ok && c.Manifest != "" {
+			changed++
+			c.Valid, c.Errors, c.Error = false, want, nil
+		}
 		var buf []byte
 		switch {
 		case c.Broken != "":
@@ -428,15 +447,9 @@ func TestValidationMatchesNode(t *testing.T) {
 		default:
 			buf, _ = CreateTarGz([]Entry{{Name: "manifest.json", Data: unb64(t, c.Manifest)}}, 0)
 		}
-		got, err := s.ValidateFullBackup(buf)
+		got := s.ValidateFullBackup(buf)
 		if c.Error != nil {
-			if err == nil || errorText(err) != c.Error.Message {
-				t.Errorf("full %d (%q): want thrown %q, got %v", i, unb64(t, c.Manifest), c.Error.Message, err)
-			}
-			continue
-		}
-		if err != nil {
-			t.Errorf("full %d: %v", i, err)
+			t.Errorf("full %d (%q): Node threw %q", i, unb64(t, c.Manifest), c.Error.Message)
 			continue
 		}
 		if got.Valid != c.Valid || !equalStrings(got.Errors, c.Errors) {
@@ -448,16 +461,25 @@ func TestValidationMatchesNode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		valid, errs, err := ValidateBackup(data)
+		if want, ok := snapshotCheckDifferences[branding.Stringify(data)]; ok {
+			changed++
+			c.Error = nil
+			c.Result = &struct {
+				Valid  bool     `json:"valid"`
+				Errors []string `json:"errors"`
+			}{false, want}
+		}
+		valid, errs := ValidateBackup(data)
 		if c.Error != nil {
-			if err == nil || errorText(err) != c.Error.Message {
-				t.Errorf("snapshot %d: want thrown %q, got %v", i, c.Error.Message, err)
-			}
+			t.Errorf("snapshot %d %s: Node threw %q", i, c.Data, c.Error.Message)
 			continue
 		}
-		if err != nil || valid != c.Result.Valid || !equalStrings(errs, c.Result.Errors) {
-			t.Errorf("snapshot %d %s: got %v %q %v, want %+v", i, c.Data, valid, errs, err, c.Result)
+		if valid != c.Result.Valid || !equalStrings(errs, c.Result.Errors) {
+			t.Errorf("snapshot %d %s: got %v %q, want %+v", i, c.Data, valid, errs, c.Result)
 		}
+	}
+	if changed != len(fullCheckDifferences)+len(snapshotCheckDifferences) {
+		t.Errorf("%d of the differences met a vector", changed)
 	}
 }
 

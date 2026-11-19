@@ -130,12 +130,7 @@ func (h *handlers) restore(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "backup.invalid_json", nil))
 		return
 	}
-	valid, errs, err := backup.ValidateBackup(parsed)
-	if err != nil {
-		h.log.Error("Restore error:", err)
-		h.serverError(w, r)
-		return
-	}
+	valid, errs := backup.ValidateBackup(parsed)
 	if !valid {
 		kit.Fail(w, r, http.StatusBadRequest, strings.Join(errs, "; "))
 		return

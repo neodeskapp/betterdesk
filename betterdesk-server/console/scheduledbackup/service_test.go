@@ -58,7 +58,7 @@ func (f *fakeBackups) CreateFullBackup(context.Context) ([]byte, string, error) 
 	return archive, name, nil
 }
 
-func (f *fakeBackups) ValidateFullBackup(buf []byte) (backup.Validation, error) {
+func (f *fakeBackups) ValidateFullBackup(buf []byte) backup.Validation {
 	return backup.New(backup.Options{}).ValidateFullBackup(buf)
 }
 

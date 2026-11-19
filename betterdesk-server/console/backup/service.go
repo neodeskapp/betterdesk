@@ -466,40 +466,31 @@ type Validation struct {
 }
 
 // ValidateFullBackup unpacks an archive and checks its manifest: it must
-// be JSON with _format "betterdesk-full-backup" and a numeric _version of
-// at most 1. The error is a JavaScript TypeError the old check threw
-// instead of answering (a manifest that is null, a version that cannot be
-// turned into text).
-func (s *Service) ValidateFullBackup(buf []byte) (Validation, error) {
+// be a JSON object with _format "betterdesk-full-backup" and a numeric
+// _version of at most 1. A manifest that is no object (null, a list, text)
+// has neither.
+func (s *Service) ValidateFullBackup(buf []byte) Validation {
 	files, err := ExtractTarGz(buf, s.o.Limits)
 	if err != nil {
-		return Validation{Errors: []string{"Not a valid gzip/tar archive: " + err.Error()}}, nil
+		return Validation{Errors: []string{"Not a valid gzip/tar archive: " + err.Error()}}
 	}
 	raw, ok := files.Get("manifest.json")
 	if !ok {
-		return Validation{Errors: []string{"Archive is missing manifest.json"}}, nil
+		return Validation{Errors: []string{"Archive is missing manifest.json"}}
 	}
 	manifest, err := branding.ParseJSON(raw)
 	if err != nil {
-		return Validation{Errors: []string{"manifest.json is not valid JSON: " + errorText(err)}}, nil
+		return Validation{Errors: []string{"manifest.json is not valid JSON: " + errorText(err)}}
 	}
 	var errs []string
-	format, err := readProp(manifest, "_format")
-	if err != nil {
-		return Validation{}, err
-	}
-	if format != FullFormatName {
+	if prop(manifest, "_format") != FullFormatName {
 		errs = append(errs, "Archive is not a BetterDesk full backup (wrong _format)")
 	}
 	version := prop(manifest, "_version")
 	if n, isNumber := version.(float64); !isNumber || n > FullFormatVersion {
-		text, err := jsString(version)
-		if err != nil {
-			return Validation{}, err
-		}
-		errs = append(errs, "Unsupported full-backup version: "+text)
+		errs = append(errs, "Unsupported full-backup version: "+jsString(version))
 	}
-	return Validation{Valid: len(errs) == 0, Errors: errs, Manifest: manifest, Files: files}, nil
+	return Validation{Valid: len(errs) == 0, Errors: errs, Manifest: manifest, Files: files}
 }
 
 // RestoreOptions say which parts of an archive Restore puts back.
@@ -546,10 +537,7 @@ func (e *ErrInvalidArchive) Error() string {
 // old one in place; a new file gets the mode of its part.
 func (s *Service) RestoreFullBackup(ctx context.Context, buf []byte, o RestoreOptions) (RestoreResult, error) {
 	res := RestoreResult{Restored: []string{}, Skipped: []string{}, Warnings: []string{}}
-	v, err := s.ValidateFullBackup(buf)
-	if err != nil {
-		return res, err
-	}
+	v := s.ValidateFullBackup(buf)
 	if !v.Valid {
 		return res, &ErrInvalidArchive{Errors: v.Errors}
 	}

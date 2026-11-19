@@ -94,38 +94,32 @@ func objectKeys(v any) ([]string, error) {
 // truthy is JavaScript's !!v.
 func truthy(v any) bool { return branding.Truthy(v) }
 
-// jsString is String(v), and the TypeError JavaScript throws for an object
-// whose own toString key hides the method.
-func jsString(v any) (string, error) {
+// jsString is String(v) for a value read from a backup: a list joins its
+// items with commas, and an object is "[object Object]" whatever keys it
+// has (an own toString key is data, not a method to call).
+func jsString(v any) string {
 	switch x := v.(type) {
 	case nil:
-		return "null", nil
+		return "null"
 	case bool:
-		return strconv.FormatBool(x), nil
+		return strconv.FormatBool(x)
 	case float64:
-		return jsbind.NumberString(x), nil
+		return jsbind.NumberString(x)
 	case string:
-		return x, nil
+		return x
 	case []any:
 		parts := make([]string, len(x))
 		for i, e := range x {
 			if e == nil || e == branding.Undefined {
 				continue
 			}
-			s, err := jsString(e)
-			if err != nil {
-				return "", err
-			}
-			parts[i] = s
+			parts[i] = jsString(e)
 		}
-		return strings.Join(parts, ","), nil
+		return strings.Join(parts, ",")
 	case *branding.Object:
-		if x.Has("toString") {
-			return "", jsTypeError("Cannot convert object to primitive value")
-		}
-		return "[object Object]", nil
+		return "[object Object]"
 	}
-	return "undefined", nil
+	return "undefined"
 }
 
 // isBufferObject is v && typeof v === 'object' && typeof v.__buf__ ===

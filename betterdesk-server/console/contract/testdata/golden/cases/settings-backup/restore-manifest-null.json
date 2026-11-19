@@ -7,7 +7,7 @@
    "multipart form: backup (file backup.tar.gz, 173 bytes)"
   ]
  },
- "recordings": 3,
+ "recordings": 2,
  "answers": [
   {
    "roles": [
@@ -37,7 +37,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Cannot read properties of null (reading '_format')",
+     "error": "Invalid backup archive: Archive is not a BetterDesk full backup (wrong _format); Unsupported full-backup version: undefined",
      "success": false
     }
    }

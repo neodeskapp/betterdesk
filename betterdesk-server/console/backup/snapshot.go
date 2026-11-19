@@ -155,28 +155,22 @@ func smtpObject(text string) (*branding.Object, bool) {
 	return o, ok && o != nil
 }
 
-// ValidateBackup checks a parsed snapshot (validateBackup). The error is
-// the TypeError JavaScript threw for a version it could not turn into
-// text.
-func ValidateBackup(data any) (valid bool, errs []string, err error) {
+// ValidateBackup checks a parsed snapshot (validateBackup).
+func ValidateBackup(data any) (valid bool, errs []string) {
 	if !truthy(data) || !isObject(data) {
-		return false, []string{"Invalid backup file: not a JSON object"}, nil
+		return false, []string{"Invalid backup file: not a JSON object"}
 	}
 	if prop(data, "_format") != FormatName {
 		errs = append(errs, "Invalid backup file: missing or wrong _format field")
 	}
 	version := prop(data, "_version")
 	if n, isNumber := version.(float64); !isNumber || n > FormatVersion {
-		text, err := jsString(version)
-		if err != nil {
-			return false, nil, err
-		}
-		errs = append(errs, "Unsupported backup version: "+text+" (max supported: 1)")
+		errs = append(errs, "Unsupported backup version: "+jsString(version)+" (max supported: 1)")
 	}
 	if c := prop(data, "console"); !truthy(c) || !isObject(c) {
 		errs = append(errs, "Invalid backup file: missing console section")
 	}
-	return len(errs) == 0, errs, nil
+	return len(errs) == 0, errs
 }
 
 // isObject is typeof v === 'object' for a value that is not null.

@@ -57,7 +57,7 @@ const (
 // Backups makes and checks archives (package backup).
 type Backups interface {
 	CreateFullBackup(ctx context.Context) ([]byte, string, error)
-	ValidateFullBackup(buf []byte) (backup.Validation, error)
+	ValidateFullBackup(buf []byte) backup.Validation
 }
 
 // Command is a program the SMB test starts: its arguments, variables it
@@ -534,10 +534,7 @@ func (s *Service) write(ctx context.Context, status *branding.Object) (*Result, 
 	if err != nil {
 		return nil, err
 	}
-	first, err := s.o.Backups.ValidateFullBackup(archive)
-	if err != nil {
-		return nil, err
-	}
+	first := s.o.Backups.ValidateFullBackup(archive)
 	if !first.Valid {
 		return nil, fmt.Errorf("Generated backup failed validation: %s", strings.Join(first.Errors, "; "))
 	}
@@ -553,10 +550,7 @@ func (s *Service) write(ctx context.Context, status *branding.Object) (*Result, 
 	if err != nil {
 		return nil, backup.NodeFSError(err, "open", finalPath)
 	}
-	second, err := s.o.Backups.ValidateFullBackup(persisted)
-	if err != nil {
-		return nil, err
-	}
+	second := s.o.Backups.ValidateFullBackup(persisted)
 	if !second.Valid {
 		_ = os.Remove(finalPath)
 		return nil, fmt.Errorf("Stored backup failed validation: %s", strings.Join(second.Errors, "; "))
