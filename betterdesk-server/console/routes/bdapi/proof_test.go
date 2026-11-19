@@ -8,8 +8,9 @@ import (
 )
 
 // canonicalKey reads a key the forgiving way Node's Buffer.from(text,
-// 'base64') does and gives the standard form of 32 bytes; anything that
-// is not text of 32 bytes is no key.
+// 'base64') does and gives the standard form of 32 bytes; a stored key of
+// 32 bytes is the key, other bytes are read as the text they hold (BUGS
+// BD6); anything else is no key.
 func TestCanonicalKey(t *testing.T) {
 	raw := make([]byte, 32)
 	for i := range raw {
@@ -31,7 +32,11 @@ func TestCanonicalKey(t *testing.T) {
 		{std[:42], ""},
 		{"", ""},
 		{"   ", ""},
-		{[]byte(std), ""},
+		{[]byte(std), std},
+		{raw, std},
+		{[]byte(" " + url + " "), std},
+		{[]byte{}, ""},
+		{raw[:31], ""},
 		{float64(5), ""},
 		{nil, ""},
 	} {

@@ -2,13 +2,16 @@ package bdapi_test
 
 import (
 	"context"
+	"crypto/ed25519"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/httpx"
@@ -220,6 +223,54 @@ func TestBannedTarget(t *testing.T) {
 		} {
 			if got := w.SignedOut().Do("GET", "/api/bd/peer/"+id, "", auth...); got.Status != 200 || got.Body != want {
 				t.Errorf("peer %s: %d %s, want %s", id, got.Status, got.Body, want)
+			}
+		}
+	})
+}
+
+// A stored key that is bytes counts as the device's key: 32 bytes as the
+// key itself (a row copied from the signal server's table), other bytes as
+// the base64 text the console stored in them. Then a registration with
+// another key, or another uuid, needs a proof made with the stored key, on
+// both databases (BUGS BD6).
+func TestStoredKeyAsBytes(t *testing.T) {
+	stored, storedPriv, _ := ed25519.GenerateKey(nil)
+	other, _, _ := ed25519.GenerateKey(nil)
+	storedText := base64.StdEncoding.EncodeToString(stored)
+	otherText := base64.StdEncoding.EncodeToString(other)
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		ctx := context.Background()
+		for id, pk := range map[string][]byte{"RAWKEY1": stored, "TEXTKEY1": []byte(storedText)} {
+			if _, err := w.DB.Exec(ctx, "INSERT INTO peer (id, uuid, pk, info) VALUES (?, 'uuid-1', ?, '{}')", id, pk); err != nil {
+				t.Fatal(err)
+			}
+			register := func(body string, header ...string) string {
+				got := w.SignedOut().Do("POST", "/api/bd/register", body, append([]string{"X-Device-Id", id}, header...)...)
+				if got.Status == 200 {
+					return "200"
+				}
+				return fmt.Sprint(got.Status, " ", got.Body)
+			}
+			refused := `403 {"error":"identity_proof_required","message":"Changing device identity requires proof of possession (missing_proof_headers)"}`
+			// The stored key last: on SQLite registering writes it as text
+			for _, c := range []struct{ name, body, want string }{
+				{"another key", `{"public_key":"` + otherText + `","uuid":"uuid-1"}`, refused},
+				{"another uuid", `{"uuid":"uuid-2"}`, refused},
+				{"the stored key", `{"public_key":"` + storedText + `","uuid":"uuid-1"}`, "200"},
+			} {
+				if got := register(c.body); got != c.want {
+					t.Errorf("%s, %s: %s, want %s", id, c.name, got, c.want)
+				}
+			}
+			// A proof made with the stored key allows the change
+			timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+			nonce := "nonce-" + id
+			payload := strings.Join([]string{"bd-enrollment-v1", "POST", "/api/bd/register", id, storedText, timestamp, nonce}, "\n")
+			proof := []string{"X-BD-Enrollment-Timestamp", timestamp, "X-BD-Enrollment-Nonce", nonce,
+				"X-BD-Enrollment-Signature", base64.StdEncoding.EncodeToString(ed25519.Sign(storedPriv, []byte(payload)))}
+			if got := register(`{"public_key":"`+otherText+`","uuid":"uuid-1"}`, proof...); got != "200" {
+				t.Errorf("%s, another key with a proof of the stored one: %s", id, got)
 			}
 		}
 	})

@@ -89,9 +89,17 @@ func (n *nonces) markUsed(key string, now int64) bool {
 }
 
 // canonicalKey is canonicalizePublicKey: the standard base64 of a key
-// that is text and decodes to 32 bytes the forgiving way Node decodes;
-// ok is false for everything else, a key stored as bytes included.
+// that is text and decodes to 32 bytes the forgiving way Node decodes.
+// A key stored as bytes counts too: 32 bytes are the key itself, as the
+// signal server keeps it, and other bytes hold the text the console
+// stored in a column of bytes. ok is false for everything else.
 func canonicalKey(v any) (key string, ok bool) {
+	if raw, isBytes := v.([]byte); isBytes {
+		if len(raw) == ed25519.PublicKeySize {
+			return base64.StdEncoding.EncodeToString(raw), true
+		}
+		v = string(raw)
+	}
 	s, isText := v.(string)
 	if !isText || trim(s) == "" {
 		return "", false

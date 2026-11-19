@@ -255,6 +255,10 @@ type fix struct {
 	answer string
 	// edits are pairs of the text Node wrote and the text Go writes
 	edits []string
+	// like names the other database, whose recording has the status and
+	// the answer Go gives now: a fix that makes both databases answer
+	// alike
+	like string
 }
 
 // fixes are the bug fixes that changed answers of the recording.
@@ -275,6 +279,23 @@ var fixes = []fix{
 	// A banned device is no target, and the lookup says it is banned
 	{bug: "BD4", steps: []string{"87 banned target POST /api/bd/connect"}, status: http.StatusForbidden, answer: `{"error":"Target device is banned"}`},
 	{bug: "BD4", steps: []string{"101 GET /api/bd/peer/BANNED1"}, edits: []string{`"banned":false`, `"banned":true`}},
+	// A key stored as bytes, as PostgreSQL keeps every key, is the
+	// device's key: a key or uuid change needs the proof there too
+	{bug: "BD6", dialect: "postgres", like: "sqlite", steps: []string{
+		"27 key swap without proof POST /api/bd/register",
+		"28 key swap, proof by another key POST /api/bd/register",
+		"29 key swap, proof too old POST /api/bd/register",
+		"30 key swap, proof from the future POST /api/bd/register",
+		"31 key swap, unreadable time POST /api/bd/register",
+		"32 key swap, nonce too long POST /api/bd/register",
+		"33 key swap, signature too short POST /api/bd/register",
+		"34 key swap, signature of another path POST /api/bd/register",
+		"35 key swap, uuid change with proof POST /api/bd/register",
+		"36 the same proof again POST /api/bd/register",
+	}},
+	{bug: "BD6", dialect: "postgres", steps: []string{"38 known devices after"}, edits: []string{
+		`{"id":"KEYDEV","uuid":"uuid-k",`, `{"id":"KEYDEV","uuid":"uuid-k2",`,
+	}},
 }
 
 // fixedSteps returns the steps as the Go console answers them since the
@@ -283,9 +304,18 @@ var fixes = []fix{
 func fixedSteps(dialect string, steps []recordedStep) ([]recordedStep, []error) {
 	out := append([]recordedStep(nil), steps...)
 	var errs []error
+	others := map[string]map[string]recordedStep{}
 	for _, f := range fixes {
 		if f.dialect != "" && f.dialect != dialect {
 			continue
+		}
+		if f.like != "" && others[f.like] == nil {
+			other, err := otherRecording(f.like)
+			if err != nil {
+				errs = append(errs, err)
+				continue
+			}
+			others[f.like] = other
 		}
 		changed := 0
 		for _, name := range f.steps {
@@ -306,6 +336,14 @@ func fixedSteps(dialect string, steps []recordedStep) ([]recordedStep, []error) 
 				last = len(out) - 1
 			}
 			for i := first; i <= last; i++ {
+				if f.like != "" {
+					like, ok := others[f.like][out[i].Name]
+					if !ok {
+						errs = append(errs, fmt.Errorf("the %s fix names a step the %s recording does not have: %q", f.bug, f.like, out[i].Name))
+						continue
+					}
+					f.status, f.answer = like.Status, like.Answer
+				}
 				if f.apply(&out[i]) {
 					changed++
 				} else if !isRange {
@@ -318,6 +356,23 @@ func fixedSteps(dialect string, steps []recordedStep) ([]recordedStep, []error) 
 		}
 	}
 	return out, errs
+}
+
+// otherRecording is the steps of another database's recording by name.
+func otherRecording(dialect string) (map[string]recordedStep, error) {
+	raw, err := os.ReadFile(filepath.Join("testdata", "node_"+dialect+".json"))
+	if err != nil {
+		return nil, err
+	}
+	var rec recording
+	if err := json.Unmarshal(raw, &rec); err != nil {
+		return nil, err
+	}
+	out := map[string]recordedStep{}
+	for _, step := range rec.Steps {
+		out[step.Name] = step
+	}
+	return out, nil
 }
 
 // apply changes the step and reports whether anything changed.
