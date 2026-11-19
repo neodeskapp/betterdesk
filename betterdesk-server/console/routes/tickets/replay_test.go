@@ -3,6 +3,7 @@ package tickets_test
 import (
 	"encoding/base64"
 	"encoding/json"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -93,6 +94,11 @@ func download(t *testing.T, step replay.Step, got replay.Answer) {
 	raw, _ := json.Marshal(step.Extra)
 	if err := json.Unmarshal(raw, &want); err != nil {
 		t.Fatal(err)
+	}
+	if step.Status == http.StatusRequestedRangeNotSatisfiable || step.Status == http.StatusPreconditionFailed {
+		// A refused range or condition answers JSON and names no file
+		// (BUGS TK9)
+		want.Headers["content-type"], want.Headers["content-disposition"] = "application/json; charset=utf-8", ""
 	}
 	body, _ := base64.StdEncoding.DecodeString(want.Base64)
 	if got.Status != step.Status || replay.Normalize(got.Body) != replay.Normalize(string(body)) {

@@ -265,9 +265,8 @@ func headerValue(text string) (value string, ok bool) {
 }
 
 // fileError answers a download that failed after its headers were set:
-// the console's error answer as JSON, under the status of the failure.
-// The Content-Type of the attachment stays and gets the charset of the
-// answer, as it did.
+// the console's error answer as JSON, under the status of the failure,
+// without the attachment's Content-Disposition.
 func (h *handlers) fileError(w http.ResponseWriter, r *http.Request, status int, err error) {
 	message := "Internal Server Error"
 	if !h.d.Config.Production {
@@ -288,12 +287,6 @@ func (h *handlers) fileError(w http.ResponseWriter, r *http.Request, status int,
 		Success bool   `json:"success"`
 		Error   string `json:"error"`
 	}{Error: message})
-	contentType := "application/json; charset=utf-8"
-	if mediaType, params, err := mime.ParseMediaType(httpx.Latin1(w.Header().Get("Content-Type"))); err == nil {
-		params["charset"] = "utf-8"
-		if formatted := mime.FormatMediaType(mediaType, params); formatted != "" {
-			contentType = formatted
-		}
-	}
-	httpx.WriteBody(w, r, status, contentType, body)
+	w.Header().Del("Content-Disposition")
+	httpx.WriteBody(w, r, status, "application/json; charset=utf-8", body)
 }

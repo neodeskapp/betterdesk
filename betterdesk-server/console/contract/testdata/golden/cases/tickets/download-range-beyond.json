@@ -56,10 +56,9 @@
    "headers": {
     "accept-ranges": "bytes",
     "cache-control": "no-cache, no-store, must-revalidate",
-    "content-disposition": "attachment; filename=\"re_port__.txt\"",
     "content-range": "bytes */12",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "text/plain; charset=utf-8",
+    "content-type": "application/json; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
     "etag": "<present>",
     "last-modified": "<present>",
@@ -81,11 +80,11 @@
     "x-xss-protection": "0"
    },
    "body": {
-    "kind": "bytes",
-    "type": "text/plain",
-    "length": 49,
-    "sha256": "40f1b13c23454df9f0e5ea1234565ff88803727b138cc917259d37f424fd3e97",
-    "head": "{\"success\":false,\"error\":\"Internal Server Error\"}"
+    "kind": "json",
+    "json": {
+     "error": "Internal Server Error",
+     "success": false
+    }
    }
   }
  ]

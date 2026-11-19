@@ -215,10 +215,11 @@ func TestADownloadFromADotFolderIsNotFound(t *testing.T) {
 	if got.Status != 404 || got.Body != `{"success":false,"error":"Internal Server Error"}` {
 		t.Errorf("download: %d %s", got.Status, got.Body)
 	}
-	if ct := got.Header.Get("Content-Type"); ct != "text/plain; charset=utf-8; format=flowed" {
+	// The refusal is JSON and names no file (BUGS TK9)
+	if ct := got.Header.Get("Content-Type"); ct != "application/json; charset=utf-8" {
 		t.Errorf("Content-Type of the refusal = %q", ct)
 	}
-	if cd := got.Header.Get("Content-Disposition"); cd != `attachment; filename="a.txt"` {
+	if cd := got.Header.Get("Content-Disposition"); cd != "" {
 		t.Errorf("Content-Disposition of the refusal = %q", cd)
 	}
 }
