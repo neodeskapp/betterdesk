@@ -107,8 +107,9 @@ jobs:
           name: web-ui-build
           path: ${{ runner.temp }}/web-ui-build
       # The web app goes where the binary embeds it from (DECISIONS A25),
-      # with the time of every file. The step runs for the build machine,
-      # before GOOS and GOARCH are set.
+      # with the time of every file, and the times of the console's own
+      # files (console/static/files) are recorded. The step runs for the
+      # build machine, before GOOS and GOARCH are set.
       - name: Embed the web app
         working-directory: ${{ env.SERVER_DIR }}
         run: go run ./cmd/embed-webui -from "${RUNNER_TEMP}/web-ui-build"

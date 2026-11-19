@@ -7,8 +7,8 @@
 /betterdesk-server/peer/ @UNITRONIX
 /betterdesk-server/auth/ @UNITRONIX
 /betterdesk-server/db/ @UNITRONIX
-/web-nodejs/services/wsRelay.js @UNITRONIX
-/web-nodejs/routes/ @UNITRONIX
-/web-nodejs/lang/ @UNITRONIX
+/betterdesk-server/console/wsrelay/ @UNITRONIX
+/betterdesk-server/console/routes/ @UNITRONIX
+/betterdesk-server/console/static/files/lang/ @UNITRONIX
 /docker* @UNITRONIX
 /.github/workflows/ @UNITRONIX

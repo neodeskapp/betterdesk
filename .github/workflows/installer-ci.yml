@@ -16,6 +16,9 @@ on:
       - 'betterdesk-server/go.mod'
       - 'scripts/test-postgresql-hba.sh'
       - 'scripts/test-docker-hardening.sh'
+      - 'betterdesk-server/cli/**'
+      - 'betterdesk-server/console/safepath/**'
+      - 'betterdesk-server/console/updater/**'
       - 'Dockerfile*'
       - 'docker-compose*.yml'
       - 'docker/**'
@@ -35,6 +38,9 @@ on:
       - 'betterdesk-server/go.mod'
       - 'scripts/test-postgresql-hba.sh'
       - 'scripts/test-docker-hardening.sh'
+      - 'betterdesk-server/cli/**'
+      - 'betterdesk-server/console/safepath/**'
+      - 'betterdesk-server/console/updater/**'
       - 'Dockerfile*'
       - 'docker-compose*.yml'
       - 'docker/**'
@@ -132,6 +138,24 @@ jobs:
               throw "$file failed to parse: $($messages -join '; ')"
             }
           }
+
+  installer-unit:
+    name: Installer reliability unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: betterdesk-server
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: betterdesk-server/go.mod
+          cache-dependency-path: betterdesk-server/go.sum
+      # The subcommands the installers call (check, env merge, config,
+      # reset-password), the path checks and the updater
+      - name: Run installer-focused tests
+        run: go test -count=1 ./cli/... ./console/safepath/... ./console/updater/...
 
   installer-dry-run:
     name: Installer non-mutating CLI checks

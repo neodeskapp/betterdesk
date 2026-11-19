@@ -5,7 +5,6 @@
 # Checks:
 #   1. No credentials written into systemd units by the installers (H3).
 #   2. No committed unit file carries a secret (H3).
-#   3. Templates escape data embedded in inline <script> (M11).
 #
 # Only repository source paths are scanned; build caches, vendored dependency
 # trees and archived *_old projects are ignored so the gate stays fast.
@@ -50,15 +49,6 @@ if [ -n "$UNIT_LEAK" ]; then
     printf '%s' "$UNIT_LEAK"
 else
     pass "committed unit files are credential-free"
-fi
-
-# 3. Inline <script> data must go through the escaping helper (M11).
-JSON_SINK="$(grep -rn --include='*.ejs' -E '<%-[[:space:]]*JSON\.stringify\(|\$\{JSON\.stringify\(' web-nodejs/views 2>/dev/null || true)"
-if [ -n "$JSON_SINK" ]; then
-    fail "unescaped JSON.stringify in a template script sink:"
-    printf '%s\n' "$JSON_SINK"
-else
-    pass "templates escape inline script data (safeJsonScript)"
 fi
 
 printf '\n'

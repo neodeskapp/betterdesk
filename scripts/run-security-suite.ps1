@@ -2,21 +2,12 @@
 # Run before publishing a release to GitHub.
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $PSScriptRoot
-if (-not (Test-Path (Join-Path $Root 'web-nodejs'))) {
+if (-not (Test-Path (Join-Path $Root 'betterdesk-server'))) {
     throw "Cannot locate repo root from $PSScriptRoot"
 }
 
 Write-Host "== BetterDesk security suite ==" -ForegroundColor Cyan
 Write-Host "Root: $Root"
-
-Push-Location (Join-Path $Root 'web-nodejs')
-try {
-    Write-Host "`n-- Node: tests/security --" -ForegroundColor Yellow
-    npm run test:security
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-} finally {
-    Pop-Location
-}
 
 Push-Location (Join-Path $Root 'betterdesk-server')
 try {

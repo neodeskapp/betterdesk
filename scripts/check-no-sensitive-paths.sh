@@ -20,7 +20,6 @@ SCAN_PATHS=(
   betterdesk-agent/
   betterdesk-agent-client/
   betterdesk-server/
-  web-nodejs/
   sdks/
   scripts/
   .github/

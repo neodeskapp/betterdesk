@@ -17,7 +17,7 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const DOC = path.join(ROOT, 'docs', 'CONNECTION_PORTS.md');
 const GO_CONSTANTS = path.join(ROOT, 'betterdesk-server', 'config', 'constants.go');
-const NODE_CONFIG = path.join(ROOT, 'web-nodejs', 'config', 'config.js');
+const CONSOLE_CONFIG = path.join(ROOT, 'betterdesk-server', 'console', 'config', 'config.go');
 
 const failures = [];
 
@@ -32,16 +32,16 @@ function read(file) {
 
 // --- Ports declared in code -------------------------------------------------------------
 const goSource = read(GO_CONSTANTS);
-const nodeSource = read(NODE_CONFIG);
+const consoleSource = read(CONSOLE_CONFIG);
 
 function goPort(name) {
     const match = goSource.match(new RegExp(`${name}\\s*=\\s*(\\d+)`));
     return match ? Number(match[1]) : null;
 }
 
-function nodePort(expression) {
-    // `const GO_API_PORT_DEFAULT = 21114;` / `parseInt(...) || 21121;`
-    const match = nodeSource.match(new RegExp(`${expression}[^;]*?(\\d{4,5})\\s*;`, 's'));
+function consolePort(variable) {
+    // `cfg.APIPort = parseIntOr(getenv("API_PORT"), 21121)`
+    const match = consoleSource.match(new RegExp(`getenv\\("${variable}"\\), (\\d{4,5})\\)`));
     return match ? Number(match[1]) : null;
 }
 
@@ -49,14 +49,14 @@ const codePorts = {
     signal: goPort('DefaultSignalPort'),
     relay: goPort('DefaultRelayPort'),
     api: goPort('DefaultAPIPort'),
-    nodeClientApi: nodePort('CLIENT_API_PORT_DEFAULT'),
+    clientApi: consolePort('API_PORT'),
 };
 
 if (codePorts.signal === null) failures.push('constants.go: DefaultSignalPort not found');
 if (codePorts.relay === null) failures.push('constants.go: DefaultRelayPort not found');
 if (codePorts.api === null) failures.push('constants.go: DefaultAPIPort not found');
-if (codePorts.nodeClientApi === null) {
-    failures.push('config.js: CLIENT_API_PORT_DEFAULT not found');
+if (codePorts.clientApi === null) {
+    failures.push('console/config/config.go: the API_PORT default not found');
 }
 
 // --- Ports documented in the cheat sheet ------------------------------------------------
@@ -85,7 +85,7 @@ if (doc) {
 }
 
 // --- 21120 must never be presented as a live port ---------------------------------------
-const SCAN = ['docs', 'web-nodejs', 'betterdesk-server', 'scripts'];
+const SCAN = ['docs', 'betterdesk-server', 'scripts'];
 const STALE_PORT = /21120/;
 
 function walk(dir) {
@@ -142,5 +142,5 @@ if (failures.length) {
 
 console.log(
     `Port docs OK (signal ${codePorts.signal}, relay ${codePorts.relay}, api ${codePorts.api}, ` +
-        `client-api proxy ${codePorts.nodeClientApi})`
+        `client-api proxy ${codePorts.clientApi})`
 );

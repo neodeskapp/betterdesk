@@ -15,7 +15,7 @@ const path = require('path');
 const { spawn, spawnSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
-const WEB_ROOT = path.join(ROOT, 'web-nodejs');
+const WEB_UI_ROOT = path.join(ROOT, 'web-ui');
 const SDK_NODE_ROOT = path.join(ROOT, 'sdks', 'nodejs');
 const SDK_PYTHON_ROOT = path.join(ROOT, 'sdks', 'python');
 const REPORT_DIR = process.env.BETTERDESK_LOCAL_GATE_REPORT_DIR
@@ -579,16 +579,16 @@ async function runNodeChecks(report, tools) {
     await runCheck(report, 'node-root-install', 'Install root Node dependencies', npmCommand(tools), [
         'ci', '--no-audit', '--no-fund',
     ], { cwd: ROOT });
-    await runCheck(report, 'node-console-install', 'Install console Node dependencies', npmCommand(tools), [
+    await runCheck(report, 'node-web-ui-install', 'Install web app Node dependencies', npmCommand(tools), [
         'ci', '--no-audit', '--no-fund',
-    ], { cwd: WEB_ROOT });
+    ], { cwd: WEB_UI_ROOT });
     await runCheck(report, 'node-sdk-install', 'Install Node SDK dependencies', npmCommand(tools), [
         'ci', '--no-audit', '--no-fund',
     ], { cwd: SDK_NODE_ROOT });
 
     for (const [id, cwd, label] of [
         ['npm-audit-root', ROOT, 'Audit root npm dependencies'],
-        ['npm-audit-console', WEB_ROOT, 'Audit console npm dependencies'],
+        ['npm-audit-web-ui', WEB_UI_ROOT, 'Audit web app npm dependencies'],
         ['npm-audit-sdk', SDK_NODE_ROOT, 'Audit Node SDK dependencies'],
     ]) {
         await runCheck(report, id, label, npmCommand(tools), [
@@ -596,15 +596,12 @@ async function runNodeChecks(report, tools) {
         ], { cwd, timeoutMs: SECURITY_TIMEOUT_MS });
     }
 
-    await runCheck(report, 'protocol-artifacts', 'Verify protocol schema artifacts', npmCommand(tools), [
-        'run', 'protocols:check',
-    ], { cwd: WEB_ROOT });
     await runCheck(report, 'i18n-parity', 'Verify all locale keys and translations', npmCommand(tools), [
         'run', 'i18n:check',
     ], { cwd: ROOT });
     await runCheck(report, 'provenance-policy', 'Verify clean-room provenance policy', npmCommand(tools), [
         'run', 'check:provenance',
-    ], { cwd: WEB_ROOT });
+    ], { cwd: ROOT });
 }
 
 async function runGoChecks(report, tools, postgresDsn = '') {
@@ -826,7 +823,6 @@ async function runComposeConfigChecks(report, tools) {
     // There is no console image: the server serves the web console
     return {
         singleBuilt: singleBuild.status === 'PASS',
-        splitBuilt: false,
     };
 }
 
@@ -928,37 +924,13 @@ async function runDockerRuntimeChecks(report, tools, postgres, builds) {
     });
 }
 
-async function runFullNodeTests(report, tools, builds) {
-    if (!builds.splitBuilt) {
-        addInternalResult(
-            report,
-            'console-docker-integration-prerequisite',
-            'Console Docker integration prerequisite',
-            'BLOCKED',
-            'There is no console image any more (the server serves the web console); the Node.js console tests run without Docker integration.',
-        );
-        await runCheck(report, 'console-tests-unit-only', 'Run console tests without unavailable Docker integration', npmCommand(tools), [
-            'run', 'test:ci',
-        ], {
-            cwd: WEB_ROOT,
-            env: { RUN_DOCKER_INTEGRATION: '0' },
-            expectedSkip: true,
-            timeoutMs: COMMAND_TIMEOUT_MS,
-        });
-        return;
-    }
-    await runCheck(report, 'console-tests', 'Run full Node.js console test suite including Docker integration', npmCommand(tools), [
-        'run', 'test:ci',
-    ], {
-        cwd: WEB_ROOT,
-        env: {
-            RUN_DOCKER_INTEGRATION: '1',
-            BETTERDESK_SERVER_IMAGE: 'betterdesk-server:local',
-            BETTERDESK_CONSOLE_IMAGE: 'betterdesk-console:local',
-        },
-        expectedSkip: true,
-        timeoutMs: COMMAND_TIMEOUT_MS,
-    });
+async function runFullNodeTests(report, tools) {
+    await runCheck(report, 'web-ui-tests', 'Run the web app unit tests', npmCommand(tools), [
+        'run', 'test',
+    ], { cwd: WEB_UI_ROOT, timeoutMs: COMMAND_TIMEOUT_MS });
+    await runCheck(report, 'web-ui-check', 'Type-check the web app', npmCommand(tools), [
+        'run', 'check',
+    ], { cwd: WEB_UI_ROOT, timeoutMs: COMMAND_TIMEOUT_MS });
     await runCheck(report, 'node-sdk-tests', 'Run Node.js SDK tests', npmCommand(tools), [
         'test',
     ], { cwd: SDK_NODE_ROOT, timeoutMs: 120_000 });
@@ -1089,7 +1061,7 @@ async function run(options = {}) {
 
                 postgres = await startPostgres(report, tools);
                 await runGoChecks(report, tools, postgres.dsn);
-                await runFullNodeTests(report, tools, dockerBuilds);
+                await runFullNodeTests(report, tools);
                 await runDockerRuntimeChecks(report, tools, postgres, dockerBuilds);
             }
         }

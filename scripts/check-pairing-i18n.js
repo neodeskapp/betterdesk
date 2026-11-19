@@ -14,7 +14,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const LANG_DIR = path.resolve(__dirname, '..', 'web-nodejs', 'lang');
+const LANG_DIR = path.resolve(__dirname, '..', 'betterdesk-server', 'console', 'static', 'files', 'lang');
 const NAMESPACE = 'pairing';
 
 function readJson(file) {

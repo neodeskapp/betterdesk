@@ -6,10 +6,14 @@ on:
     branches: [main, dev]
     paths:
       - 'betterdesk-server/**'
+      - 'web-ui/**'
+      - 'scripts/i18n-check.js'
       - '.github/workflows/go-server-ci.yml'
   pull_request:
     paths:
       - 'betterdesk-server/**'
+      - 'web-ui/**'
+      - 'scripts/i18n-check.js'
       - '.github/workflows/go-server-ci.yml'
 
 permissions:
@@ -68,3 +72,46 @@ jobs:
         working-directory: betterdesk-server
         continue-on-error: true
         run: go test -tags=meshagent_live ./meshcentral/... -run TestMeshAgentLiveConnect -count=1 -timeout 10m
+
+  # The release build: the web app and the console's own files go into the
+  # binary (cmd/embed-webui), then it builds. The language files are checked
+  # here too, since they are part of the server now.
+  embed:
+    if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[version-bump]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: web-ui/package-lock.json
+
+      - name: Check the console's language files
+        working-directory: .
+        run: node scripts/i18n-check.js --system console
+
+      - name: Build the web app
+        working-directory: web-ui
+        run: |
+          npx -y npm@11.6.2 ci --no-audit --no-fund
+          npm run build
+
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: betterdesk-server/go.mod
+          cache-dependency-path: betterdesk-server/go.sum
+
+      - name: Embed the web app and record the times of the console's files
+        run: go run ./cmd/embed-webui
+
+      - name: The embedded folders hold what the binary serves
+        run: |
+          test -f console/webui/dist/index.html
+          test -s console/webui/dist/.embedfs-times.json
+          test -s console/static/files/.embedfs-times.json
+
+      - name: Build with the embedded files
+        run: go build -o /tmp/betterdesk-server . && /tmp/betterdesk-server -version

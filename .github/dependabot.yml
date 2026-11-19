@@ -1,12 +1,12 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directory: "/web-nodejs"
+    directory: "/web-ui"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 3
     groups:
-      web-nodejs-npm:
+      web-ui-npm:
         patterns:
           - "*"
 
