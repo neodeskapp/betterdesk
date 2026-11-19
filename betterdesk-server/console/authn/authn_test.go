@@ -466,49 +466,6 @@ func TestLockoutEndFollowsTheProcessZone(t *testing.T) {
 // states the behaviour as it is, so the commit that fixes one changes its
 // test with it.
 func TestKeptDefects(t *testing.T) {
-	twoFactor := json.RawMessage(`{"status":200,"body":{"requires_2fa":true,"partial_token":"partial"}}`)
-
-	t.Run("S3: a second-factor answer from the Go server writes the role admin", func(t *testing.T) {
-		db := storetest.Migrated(t)
-		ctx := context.Background()
-		s, stub, _ := testService(t, db, nil)
-		id := addUser(t, s, "viewer", "pw", "viewer", "local")
-		stub.load(&goScript{Login: []json.RawMessage{twoFactor}})
-		outcome, err := s.Authenticate(ctx, "viewer", "the newer password")
-		if err != nil || outcome.User == nil {
-			t.Fatalf("sign-in: %+v, %v", outcome, err)
-		}
-		user, _ := getUserByID(ctx, db, id)
-		if user.Role.String != "admin" || outcome.User.Role.String != "admin" {
-			t.Errorf("role in the row %q, in the answer %q; the defect writes admin", user.Role.String, outcome.User.Role.String)
-		}
-		// S10: the server's partial token is gone, and with no local second
-		// factor the sign-in is complete without one.
-		if outcome.User.TOTPRequired {
-			t.Error("the second factor is due; the defect skips it for a local account")
-		}
-	})
-
-	t.Run("S3, S10: a directory account gets admin and a second factor nobody can give", func(t *testing.T) {
-		db := storetest.Migrated(t)
-		ctx := context.Background()
-		s, stub, _ := testService(t, db, nil)
-		id := addUser(t, s, "dir", "x", "viewer", "ldap")
-		stub.load(&goScript{SSO: json.RawMessage(`{"status":200,"body":{"ldap_enabled":true,"oidc_enabled":false,"any_enabled":true}}`), Login: []json.RawMessage{twoFactor}})
-		outcome, err := s.Authenticate(ctx, "dir", "directory password")
-		if err != nil || outcome.User == nil {
-			t.Fatalf("sign-in: %+v, %v", outcome, err)
-		}
-		user, _ := getUserByID(ctx, db, id)
-		raw, _ := json.Marshal(outcome.User)
-		if user.Role.String != "admin" || !outcome.User.TOTPRequired || user.TOTPEnabled.True() || bytes.Contains(raw, []byte("goPartialToken")) {
-			t.Errorf("row role %q, answer %s, local second factor %v", user.Role.String, raw, user.TOTPEnabled.True())
-		}
-		if ok, _ := s.VerifyTOTPCode(ctx, id, "123456"); ok {
-			t.Error("a code passes without a local secret")
-		}
-	})
-
 	t.Run("S6: a locked account signs in", func(t *testing.T) {
 		db := storetest.Migrated(t)
 		ctx := context.Background()

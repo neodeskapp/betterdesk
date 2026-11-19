@@ -177,9 +177,9 @@ func (c *Client) GetGoSSOStatus(ctx context.Context) *Object {
 
 // TryGoServerAuth calls POST /api/auth/login with {username, password}. It
 // returns {role, auth_provider} when the API server signed the user in,
-// {role:"admin", requires2fa:true} when it asks for a second factor, and
-// nil for everything else: wrong credentials, the sign-in limit (429) and a
-// missing answer look the same.
+// {requires2fa:true} when it asks for a second factor (that answer names
+// neither role nor provider), and nil for everything else: wrong
+// credentials, the sign-in limit (429) and a missing answer look the same.
 func (c *Client) TryGoServerAuth(ctx context.Context, username, password string) *Object {
 	status, parsed, ok := c.signIn(ctx, "/api/auth/login",
 		NewObject("username", username, "password", password), c.ownTimeout())
@@ -194,7 +194,7 @@ func (c *Client) TryGoServerAuth(ctx context.Context, username, password string)
 		return o
 	}
 	if Truthy(prop(parsed, "requires_2fa")) {
-		return NewObject("role", "admin", "requires2fa", true)
+		return NewObject("requires2fa", true)
 	}
 	return nil
 }

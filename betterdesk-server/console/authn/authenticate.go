@@ -141,7 +141,7 @@ func (s *Service) goSSOStatus(ctx context.Context) ssoStatus {
 	return ssoStatus{ldap: status.Bool("ldap"), oidc: status.Bool("oidc"), any: status.Bool("any")}
 }
 
-// inferAuthProvider is the provider of an account the signal server
+// inferAuthProvider is the provider of a new account the signal server
 // accepted: the one it names, else the one single sign-on that is on, else
 // "local".
 func inferAuthProvider(accept *goAccept, sso ssoStatus) string {
@@ -170,11 +170,19 @@ func (s *Service) unusablePasswordHash(ctx context.Context) (string, error) {
 // syncLocalUserFromGo brings the local row in line with what the signal
 // server said about the account: provider, role, and the password hash
 // when password is given for a local account. An account that turns into
-// a directory or single sign-on account gets an unusable hash. It returns
-// the account as it is afterwards.
-func (s *Service) syncLocalUserFromGo(ctx context.Context, local *Account, accept *goAccept, password string, sso ssoStatus) (*Account, error) {
-	provider := inferAuthProvider(accept, sso)
+// a directory or single sign-on account gets an unusable hash. A provider
+// the answer does not name stays as the row has it, and an answer that asks
+// for a second factor changes nothing: it names neither role nor provider.
+// It returns the account as it is afterwards.
+func (s *Service) syncLocalUserFromGo(ctx context.Context, local *Account, accept *goAccept, password string) (*Account, error) {
+	if accept.requires2FA {
+		return local, nil
+	}
 	localProvider := normalizeAuthProvider(local.AuthProvider.String)
+	provider := localProvider
+	if accept.provider != "" {
+		provider = normalizeAuthProvider(accept.provider)
+	}
 	role := accept.role
 	if role == "" {
 		role = local.Role.String
@@ -256,7 +264,7 @@ func (s *Service) provisionLocalUserFromGo(ctx context.Context, username, passwo
 		return nil, err
 	}
 	if user != nil {
-		return s.syncLocalUserFromGo(ctx, user, accept, "", sso)
+		return s.syncLocalUserFromGo(ctx, user, accept, "")
 	}
 	if createErr := createUser(ctx, s.db, username, hash, role, provider); createErr != nil {
 		// The signal server shares the table and may have made the row in
@@ -268,7 +276,7 @@ func (s *Service) provisionLocalUserFromGo(ctx context.Context, username, passwo
 		if user == nil {
 			return nil, createErr
 		}
-		return s.syncLocalUserFromGo(ctx, user, accept, "", sso)
+		return s.syncLocalUserFromGo(ctx, user, accept, "")
 	}
 
 	user, err = getUserByUsername(ctx, s.db, username)
@@ -328,7 +336,8 @@ func (s *Service) finish(ctx context.Context, user *Account, accept *goAccept) (
 //     with a password.
 //   - A directory account (provider "ldap") is checked by the signal
 //     server every time, and its role and provider are copied from the
-//     server's answer.
+//     server's answer. An answer that asks for a second factor names
+//     neither and changes nothing on the row.
 //   - A local account is checked against its stored hash. When that fails
 //     the signal server is asked, because it may hold a newer hash; if it
 //     accepts through a directory or single sign-on, or if the directory
@@ -372,7 +381,7 @@ func (s *Service) Authenticate(ctx context.Context, username, password string) (
 			return Outcome{}, nil
 		}
 		s.log.Info(fmt.Sprintf("[AUTH] Go server accepted LDAP login for '%s' — syncing local account", username))
-		user, err = s.syncLocalUserFromGo(ctx, user, accept, "", sso)
+		user, err = s.syncLocalUserFromGo(ctx, user, accept, "")
 		if err != nil {
 			return Outcome{}, err
 		}
@@ -413,7 +422,7 @@ func (s *Service) authenticateLocal(ctx context.Context, user *Account, username
 				return Outcome{Failure: FailureUsernameCollision}, nil
 			}
 			s.log.Info(fmt.Sprintf("[AUTH] Go server accepted password for local '%s' — syncing hash", username))
-			user, err = s.syncLocalUserFromGo(ctx, user, accept, password, sso)
+			user, err = s.syncLocalUserFromGo(ctx, user, accept, password)
 			if err != nil {
 				return Outcome{}, err
 			}
