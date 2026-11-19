@@ -190,15 +190,19 @@ func (s *Service) GetRelaySession(id string) *SessionInfo {
 	return &SessionInfo{SessionID: id, InitiatorID: sess.initiatorID, TargetID: sess.targetID, Status: sess.status, CreatedAt: sess.createdAt}
 }
 
-// DeleteSession forgets a session without closing its sockets, as the
-// device API's DELETE did (activeSessions.delete), and reports whether
+// DeleteSession ends a session for the device API's DELETE: the sides
+// that joined are closed with 1000 "Session deleted". It reports whether
 // there was one.
 func (s *Service) DeleteSession(id string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	_, ok := s.sessions.get(id)
-	s.sessions.delete(id)
-	return ok
+	sess, ok := s.sessions.get(id)
+	if !ok {
+		return false
+	}
+	s.stopIdleLocked(sess)
+	s.teardownLocked(id, 1000, "Session deleted")
+	return true
 }
 
 // PendingFor lists the sessions that wait for a device to join as target,

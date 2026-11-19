@@ -623,6 +623,10 @@ var fixes = []fix{
 	// socket fits, not two
 	{bug: "WS4", scenario: "an error counts down twice", step: 12, events: `[{"socket":"x2","head":` + head101 + `},
 		{"socket":"x2","close":4429,"reason":"Too many connections"},{"socket":"x2","end":true}]`},
+	// The delete closes the side that joined; its own close later finds
+	// the socket gone
+	{bug: "WS6", scenario: "relay cleanup and delete", step: 4, events: `[{"socket":"i2","close":1000,"reason":"Session deleted"},{"socket":"i2","end":true}]`},
+	{bug: "WS6", scenario: "relay cleanup and delete", step: 11, events: `[]`},
 }
 
 // fixFor is the fix of a step, ok false for a step no fix changed.

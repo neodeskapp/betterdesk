@@ -513,3 +513,55 @@ func TestSignalEndedDuringTheCheckIsNotCounted(t *testing.T) {
 		c.Close(1000)
 	}
 }
+
+// TestDeleteSessionClosesTheJoinedSides: deleting a session (DELETE
+// /api/bd/session/<id>) ends it: a side that already joined is closed with
+// 1000 "Session deleted" instead of waiting with nothing to end it, and its
+// address is counted down.
+func TestDeleteSessionClosesTheJoinedSides(t *testing.T) {
+	t.Cleanup(wstest.Goroutines(t))
+	svc, addr := newRelay(t)
+	join := func(id, role, token string) *wstest.Client {
+		q := url.Values{"session": {id}, "token": {token}, "role": {role}}
+		c, _, err := wstest.Dial(addr, "/ws/bd-relay?"+q.Encode(), nil)
+		if err != nil || c == nil {
+			t.Fatalf("dial: %v", err)
+		}
+		return c
+	}
+	closedWith := func(c *wstest.Client, name string) {
+		t.Helper()
+		if !c.Wait(3*time.Second, func(_ []wstest.Frame, closed bool) bool { return closed }) {
+			t.Fatalf("the %s stayed open", name)
+		}
+		if _, code, reason := c.Closed(); code != 1000 || reason != "Session deleted" {
+			t.Errorf("the %s closed with %d %q, want 1000 Session deleted", name, code, reason)
+		}
+		c.Drop()
+	}
+
+	waiting, initiatorToken, _ := svc.CreateRelaySession("dev2", "dev1")
+	alone := join(waiting, "initiator", initiatorToken)
+	waitCount(t, svc, 1)
+	if !svc.DeleteSession(waiting) {
+		t.Fatal("DeleteSession found no session")
+	}
+	closedWith(alone, "side that waited")
+
+	paired, initiatorToken, targetToken := svc.CreateRelaySession("dev2", "dev1")
+	initiator := join(paired, "initiator", initiatorToken)
+	target := join(paired, "target", targetToken)
+	if !target.Wait(3*time.Second, func(f []wstest.Frame, _ bool) bool { return len(f) > 0 }) {
+		t.Fatal("not paired")
+	}
+	svc.DeleteSession(paired)
+	closedWith(initiator, "initiator")
+	closedWith(target, "target")
+	waitCount(t, svc, 0)
+	if svc.GetRelaySession(waiting) != nil || svc.GetRelaySession(paired) != nil {
+		t.Error("a deleted session is still there")
+	}
+	if svc.DeleteSession(paired) {
+		t.Error("a second delete found the session")
+	}
+}
