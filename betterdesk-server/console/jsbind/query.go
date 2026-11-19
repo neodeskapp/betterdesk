@@ -1,10 +1,13 @@
 package jsbind
 
 import (
+	"errors"
 	"net/url"
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/unitronix/betterdesk-server/console/httpx"
 )
 
 // queryParts is the number of pairs the old console's query parser read
@@ -241,3 +244,112 @@ func queryDecode(s string) string {
 // statement parameter it is an error on SQLite and the text "{}" on
 // PostgreSQL.
 func (v Value) IsComplex() bool { return v.complex }
+
+// ErrNotOneText is QueryText's answer for a parameter the old console's
+// query parser made a list or an object of.
+var ErrNotOneText = errors.New("not one text")
+
+// QueryText reads a query parameter that takes one text, such as the
+// filter of a list: its text, and whether the query names it at all. The
+// error is ErrNotOneText when the old console's query parser (qs as
+// Express 4.22 set it up, which goapipath follows step by step) made a
+// list or an object of the parameter: given twice, with brackets after
+// the name (name[]=, name[0]=, name[key]=), or beside such a spelling.
+// rawQuery is the text after the "?" as the client sent it; a "#" ends
+// it, and only the first 1000 pairs count. A byte above 0x7F is the
+// Latin-1 character with that number, as the old console's HTTP parser
+// read it.
+//
+// The parser made a text of the parameter when the first key that names
+// it names it plainly ("name" or "[name]") and comes once, and every later
+// key that names it does so plainly, once and with an empty value. name
+// must be no whole number.
+func QueryText(rawQuery, name string) (text string, given bool, err error) {
+	raw, _, _ := strings.Cut(rawQuery, "#")
+	parts := strings.Split(bracketEscapes.Replace(httpx.Latin1(raw)), "&")
+	if len(parts) > queryParts {
+		parts = parts[:queryParts]
+	}
+	// The values of each key that names the parameter, by the key as it
+	// was decoded, in the order the keys first appear
+	type spelling struct {
+		plain  bool
+		values []string
+	}
+	var spellings []*spelling
+	seen := map[string]*spelling{}
+	for _, part := range parts {
+		key, value := splitPair(part)
+		under, plain := namesParameter(key, name)
+		if !under {
+			continue
+		}
+		s := seen[key]
+		if s == nil {
+			s = &spelling{plain: plain}
+			seen[key] = s
+			spellings = append(spellings, s)
+		}
+		s.values = append(s.values, value)
+	}
+	if len(spellings) == 0 {
+		return "", false, nil
+	}
+	first := spellings[0]
+	if !first.plain || len(first.values) != 1 {
+		return "", true, ErrNotOneText
+	}
+	for _, s := range spellings[1:] {
+		if !s.plain || len(s.values) != 1 || s.values[0] != "" {
+			return "", true, ErrNotOneText
+		}
+	}
+	return first.values[0], true, nil
+}
+
+// splitPair splits a pair of the query into its decoded key and value as
+// the parser did: after the "]" of the first "]=", else at the first "=".
+func splitPair(part string) (key, value string) {
+	pos := strings.Index(part, "]=")
+	if pos >= 0 {
+		pos++
+	} else {
+		pos = strings.IndexByte(part, '=')
+	}
+	if pos < 0 {
+		return queryDecode(part), ""
+	}
+	return queryDecode(part[:pos]), queryDecode(part[pos+1:])
+}
+
+// namesParameter reports whether a decoded key is a spelling of the
+// parameter, and whether it names the parameter plainly (as a text) and
+// not as a list or an object. The parser took the text before the first
+// "[" for the name; a key that starts with a bracket group took the text
+// inside the group, and another group after it made an object.
+func namesParameter(key, name string) (under, plain bool) {
+	first := strings.IndexByte(key, '[')
+	switch {
+	case key == "":
+		return false, false
+	case first < 0:
+		return key == name, true
+	case first > 0:
+		return key[:first] == name, false
+	}
+	level, closed := 1, -1
+	for i := 1; i < len(key) && closed < 0; i++ {
+		switch key[i] {
+		case '[':
+			level++
+		case ']':
+			if level--; level == 0 {
+				closed = i
+			}
+		}
+	}
+	if closed < 0 || key[1:closed] != name {
+		return false, false
+	}
+	return true, strings.IndexByte(key[closed+1:], '[') < 0
+}
