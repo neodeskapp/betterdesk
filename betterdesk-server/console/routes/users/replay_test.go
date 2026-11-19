@@ -237,7 +237,11 @@ func (p *replayer) run() {
 				}
 				continue
 			}
-			if have := p.rows(step.SQL, step.Params); normalize(have) != normalize(step.Rows) {
+			have := p.rows(step.SQL, step.Params)
+			if strings.Contains(step.SQL, "FROM audit_log") {
+				have = nodeLabels(have)
+			}
+			if normalize(have) != normalize(step.Rows) {
 				report("step %d %q:\n   node: %s\n     go: %s", i, step.Name, step.Rows, have)
 			}
 			continue

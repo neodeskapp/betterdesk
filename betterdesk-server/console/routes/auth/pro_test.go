@@ -24,7 +24,7 @@ func TestLoginRefusesProWith403(t *testing.T) {
 		want(t, "wrong password", a.post("/api/auth/login", login("pia", "not-the-password")), http.StatusUnauthorized, invalidCredentials)
 
 		equal(t, "attempts", w.attempts(), []string{"pia|127.0.0.1|1", "pia|127.0.0.1|0"})
-		equal(t, "audit", w.audit(), []string{"login_failed|Username: p***; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0"})
+		equal(t, "audit", w.audit(), []string{"login_failed|Username: p***a; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0"})
 		if n := w.int(`SELECT COUNT(*) FROM panel_sessions WHERE user_id = ?`, pia); n != 0 {
 			t.Errorf("%d sessions of the pro account", n)
 		}

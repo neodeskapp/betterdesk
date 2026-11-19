@@ -20,6 +20,7 @@ type flowFix struct {
 
 var flowFixes = []flowFix{
 	{"S11", proAccountGets403},
+	{"S19", wholeNameInSignInEntries},
 	{"S1", signOutClearsOnlySessionCookies},
 }
 
@@ -77,6 +78,19 @@ func proAccountGets403(t *testing.T, steps []flowStep) bool {
 		}
 		return kept
 	}) && changed
+}
+
+// wholeNameInSignInEntries: the name of a login_failed entry is shortened
+// whole, its last character included.
+func wholeNameInSignInEntries(t *testing.T, steps []flowStep) bool {
+	return auditEntries(t, steps, func(entries []map[string]any) []map[string]any {
+		for _, e := range entries {
+			if details, _ := e["details"].(string); strings.HasPrefix(details, "Username: f***;") {
+				e["details"] = "Username: f***p;" + strings.TrimPrefix(details, "Username: f***;")
+			}
+		}
+		return entries
+	})
 }
 
 // signOutClearsOnlySessionCookies: a sign-out through the API clears the

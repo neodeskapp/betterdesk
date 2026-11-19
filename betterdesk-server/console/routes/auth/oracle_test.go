@@ -172,12 +172,30 @@ func TestLockoutAnswersOfNode(t *testing.T) {
 			for _, row := range sel.Rows {
 				want = append(want, rowLine(sel.SQL, row))
 			}
-			equal(t, name, w.rows(sel.SQL), want)
+			got := w.rows(sel.SQL)
+			if name == "audit" {
+				want, got = withoutSignInNames(want), withoutSignInNames(got)
+			}
+			equal(t, name, got, want)
 		}
 		if len(rec.Steps) < 60 {
 			t.Errorf("the recording has only %d requests", len(rec.Steps))
 		}
 	})
+}
+
+// signInName is the shortened name of a sign-in entry's details.
+var signInName = regexp.MustCompile(`(^|\|)Username: [ \t]*[^ \t|]*`)
+
+// withoutSignInNames writes "<name>" for the shortened name of the sign-in
+// entries: Node took the ";" after the name for its last character, the
+// console shortens the name whole (BUGS.md S19).
+func withoutSignInNames(rows []string) []string {
+	out := make([]string, len(rows))
+	for i, row := range rows {
+		out[i] = signInName.ReplaceAllString(row, "${1}Username: <name>")
+	}
+	return out
 }
 
 // selectColumns are the column names of a recorded SELECT, in order.

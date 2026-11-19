@@ -79,13 +79,12 @@ func TestRedactDetails(t *testing.T) {
 	cases := []struct{ name, in, want string }{
 		{"empty stays empty", "", ""},
 		{"plain text", "User logged in", "User logged in"},
-		// The name runs to the next white space, so the semicolon is taken
-		// for its last character.
-		{"punctuation after the name", "Username: alice; ip=203.0.113.7", "Username: a***; ip=203.0.113.7"},
+		// The name ends before the semicolon
+		{"punctuation after the name", "Username: alice; ip=203.0.113.7", "Username: a***e; ip=203.0.113.7"},
 		{"user label", "User: bob, IP: 198.51.100.4", "User: b***, IP: 198.51.100.4"},
 		{"label in any letter case", "USERNAME: carol", "USERNAME: c***l"},
 		{"label inside a word", "Users: bob XUser: bob", "Users: bob XUser: bob"},
-		{"no colon", "Updated user: erin and Created user dave", "Updated user: e***n and Created user dave"},
+		{"a label after the start", "Updated user: erin and Created user dave", "Updated user: erin and Created user dave"},
 		{"no space after the colon", "User:bob", "User: b***b"},
 		{"every key", "password=a secret:b token = c api_key=d api-key=e key=f", "password=*** secret:*** token = *** api_key=*** api-key=*** key=***"},
 		{"key in any letter case", "PASSWORD=a Token: b", "PASSWORD=*** Token: ***"},
@@ -98,9 +97,9 @@ func TestRedactDetails(t *testing.T) {
 		{"U+0085 is not", "token=a\u0085b c", "token=*** c"},
 		{"only ASCII letters fold", "\u017fecret=x to\u212aen=y", "\u017fecret=x to\u212aen=y"},
 		{"label then key", "User: token=abc", "User: t***c"},
-		{"key then label", "token: User: bob", "token: *** b***b"},
+		{"key then label", "token: User: bob", "token: *** bob"},
 		{"emoji name", "Username: \U0001F600xy", "Username: \uFFFD***y"},
-		{"bytes that are no UTF-8", "token=a\xffb User: \xffbc", "token=*** User: \uFFFD***c"},
+		{"bytes that are no UTF-8", "token=a\xffb User: \xffbc", "token=*** User: \uFFFDbc"},
 	}
 	for _, c := range cases {
 		if got := RedactDetails(c.in); got != c.want {

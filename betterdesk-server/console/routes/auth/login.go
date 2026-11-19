@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/httpx"
@@ -228,7 +229,7 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		h.recordAttempt(r, username, false)
 		details := "Username: " + jsString(username) + client
 		if outcome.IsFailure() {
-			details = "Username collision: " + jsString(username) + client
+			details = "Username collision: " + auditlog.RedactUsername(jsString(username)) + client
 		}
 		if err := h.audit(r, 0, "login_failed", details); err != nil {
 			h.serverError(w, r, "Login error:", err)

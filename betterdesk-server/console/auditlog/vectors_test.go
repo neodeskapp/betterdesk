@@ -53,8 +53,8 @@ func replay(t *testing.T, name string, vectors []vector, atLeast int, fn func(st
 		t.Fatalf("%s: %d vectors, want at least %d", name, len(vectors), atLeast)
 	}
 	for _, v := range vectors {
-		if got := fn(v.In); got != v.Out {
-			t.Errorf("%s(%q) = %q, Node answers %q", name, v.In, got, v.Out)
+		if got, want := fn(v.In), nodeOrFixed(name, v); got != want {
+			t.Errorf("%s(%q) = %q, want %q (Node answers %q)", name, v.In, got, want, v.Out)
 		}
 	}
 }
@@ -96,8 +96,8 @@ func TestRedactURLAgainstNode(t *testing.T) {
 	for _, v := range vectors {
 		got, internationalHost := redactURL(v.In)
 		if !internationalHost {
-			if got != v.Out {
-				t.Errorf("RedactURL(%q) = %q, Node answers %q", v.In, got, v.Out)
+			if want := nodeOrFixed("RedactURL", v); got != want {
+				t.Errorf("RedactURL(%q) = %q, want %q (Node answers %q)", v.In, got, want, v.Out)
 			}
 			continue
 		}

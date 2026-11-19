@@ -7,11 +7,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/access"
+	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
 )
 
@@ -348,4 +350,27 @@ func (n *nodeWrites) deleteAccount(id int64) {
 	} {
 		n.exec(query, id)
 	}
+}
+
+// nodeUserLabel is the user label rule of Node's audit log: the name after
+// "user:" or "username:" anywhere in the text, up to white space.
+var nodeUserLabel = regexp.MustCompile(`\b([Uu][Ss][Ee][Rr](?:[Nn][Aa][Mm][Ee])?):\s*(\S+)`)
+
+// auditDetails finds the details of audit rows as p.rows writes them
+// (text without quotes or escapes in it).
+var auditDetails = regexp.MustCompile(`"details":"([^"\\]*)"`)
+
+// nodeLabels writes the details of audit rows the Go console stored as
+// Node stored them: Node shortened the name after a user label anywhere in
+// the text, so "Created user: frank" became "Created user: f***k"; the
+// console keeps the names of the accounts the user management changed
+// (BUGS.md AL1).
+func nodeLabels(rows string) string {
+	return auditDetails.ReplaceAllStringFunc(rows, func(m string) string {
+		details := auditDetails.FindStringSubmatch(m)[1]
+		return `"details":"` + nodeUserLabel.ReplaceAllStringFunc(details, func(label string) string {
+			parts := nodeUserLabel.FindStringSubmatch(label)
+			return parts[1] + ": " + auditlog.RedactUsername(parts[2])
+		}) + `"`
+	})
 }

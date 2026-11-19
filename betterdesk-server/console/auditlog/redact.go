@@ -74,10 +74,10 @@ func foldAll(words ...string) string {
 }
 
 var (
-	// "Username: alice" and "User: bob". The name is every character up to
-	// the next white space, so punctuation that follows a name counts as
-	// part of it.
-	userLabel = regexp.MustCompile(`\b(` + foldAll("Username", "User") + `):` + jsSpace + `*(` + jsNonSpace + `+)`)
+	// "Username: alice" and "User: bob" at the start of the text, where
+	// sign-in writes them. The name runs to the next white space or ";":
+	// "Username: alice; ip=..." holds the name "alice".
+	userLabel = regexp.MustCompile(`^(` + foldAll("Username", "User") + `):` + jsSpace + `*([^` + jsSpaceClass + `;]+)`)
 	// "token=abc", "password: abc".
 	secretPair = regexp.MustCompile(`(\b(?:` + foldAll("password", "secret", "token", "api_key", "api-key", "key") + `)` +
 		jsSpace + `*[:=]` + jsSpace + `*)` + jsNonSpace + `+`)
@@ -135,12 +135,14 @@ func utf16Length(s string) int {
 
 // RedactDetails prepares the free text of an audit entry for the details
 // column: line breaks are made harmless (SanitizeLogValue), the name after
-// "Username:" or "User:" is shortened (RedactUsername), and the value after
-// password, secret, token, api_key, api-key or key with ":" or "=" becomes
-// "***". An empty text stays empty.
+// "Username:" or "User:" at the start of the text is shortened
+// (RedactUsername), and the value after password, secret, token, api_key,
+// api-key or key with ":" or "=" becomes "***". An empty text stays empty.
 //
-// The name after a label runs to the next white space. "Username: alice;"
-// therefore becomes "Username: a***;".
+// The name after a label ends before white space or ";", so
+// "Username: alice; ip=..." becomes "Username: a***e; ip=...". A name
+// elsewhere in the text stays: "Created user: frank" names the account an
+// administrator created.
 func RedactDetails(details string) string {
 	if details == "" {
 		return ""

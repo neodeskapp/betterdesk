@@ -68,10 +68,10 @@ func TestLoginWithWrongCredentials(t *testing.T) {
 		want(t, "blank username", a.post("/api/auth/login", login("  ", password)), http.StatusUnauthorized, invalidCredentials)
 
 		equal(t, "audit", w.audit(), []string{
-			"login_failed|Username: a***; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
-			"login_failed|Username: n***; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
-			"login_failed|Username: s***; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
-			"login_failed|Username: *** ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
+			"login_failed|Username: a***e; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
+			"login_failed|Username: n***y; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
+			"login_failed|Username: s***o; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
+			"login_failed|Username:   ; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
 		})
 		equal(t, "attempts", w.attempts(), []string{
 			"alice|127.0.0.1|0", "nobody|127.0.0.1|0", "sso|127.0.0.1|0", "  |127.0.0.1|0",
@@ -119,14 +119,14 @@ func TestLoginWithValuesThatAreNoText(t *testing.T) {
 		failed := func(name string) string {
 			return "login_failed|Username: " + name + "; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0"
 		}
-		others := []string{failed("s***"), failed("d***"), "login_failed|Username: *** ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0"}
+		others := []string{failed("s***o"), failed("d***a"), "login_failed|Username:  ; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0"}
 		// SQLite took a number as a double, which a text column keeps as
 		// "12345.0", and a list of one value as that value. PostgreSQL
 		// stored the text of every value.
-		wantAudit := append([]string{failed("1***"), failed("a***")}, others...)
+		wantAudit := append([]string{failed("1***5"), failed("a***c")}, others...)
 		wantAttempts := []string{"12345.0|127.0.0.1|0", "abc|127.0.0.1|0", "sso|127.0.0.1|0", "dora|127.0.0.1|0", " |127.0.0.1|0"}
 		if w.db.IsPostgres() {
-			wantAudit = append([]string{failed("1***"), failed("t***"), failed("a***"), failed("a***"), failed("[***t Object]")}, others...)
+			wantAudit = append([]string{failed("1***5"), failed("t***e"), failed("a***b"), failed("a***c"), failed("[***t Object]")}, others...)
 			wantAttempts = []string{
 				"12345|127.0.0.1|0", "true|127.0.0.1|0", `{"a",NULL,{"b"}}|127.0.0.1|0`, `{"abc"}|127.0.0.1|0`, `{"a":1}|127.0.0.1|0`,
 				"sso|127.0.0.1|0", "dora|127.0.0.1|0", " |127.0.0.1|0",
@@ -523,8 +523,8 @@ func TestLoginThroughTheSignalServer(t *testing.T) {
 
 		rows := w.audit()
 		equal(t, "audit of the refusals", []string{rows[0], rows[2]}, []string{
-			"login_failed|Username: d***; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
-			"login_failed|Username collision: bob; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
+			"login_failed|Username: d***a; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
+			"login_failed|Username collision: b***b; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0",
 		})
 		equal(t, "attempts", w.attempts(), []string{"dora|127.0.0.1|0", "dora|127.0.0.1|1", "bob|127.0.0.1|0", "newcomer|127.0.0.1|1"})
 	})
