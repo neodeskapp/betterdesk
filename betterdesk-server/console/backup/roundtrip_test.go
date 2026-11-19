@@ -550,10 +550,16 @@ func compareArchives(t *testing.T, goArchive, nodeArchive []byte) {
 			}
 		}
 		sizeMayDiffer := false
-		if g.name == "console/data.json" {
+		switch g.name {
+		case "console/data.json":
 			asNode := dumpAsNodeWroteIt(gd)
 			sizeMayDiffer = !bytes.Equal(asNode, gd)
 			gd = asNode
+		case "console/auth.db", "goserver/db_v2.sqlite3":
+			// BK6: Go's entry is a VACUUM INTO copy of the open file,
+			// Node's the file's bytes: the two must hold the same rows
+			sameDatabase(t, g.name, gd, nd)
+			gd, sizeMayDiffer = nd, true
 		}
 		if !bytes.Equal(gd, nd) {
 			// An archive holds secrets: the failure names sizes and the
@@ -597,6 +603,25 @@ func dumpAsNodeWroteIt(dump []byte) []byte {
 		}
 		return []byte(jsbind.NumberString(float64(n)))
 	})
+}
+
+// sameDatabase opens two SQLite files given as bytes and compares their
+// tables row by row.
+func sameDatabase(t *testing.T, name string, a, b []byte) {
+	t.Helper()
+	open := func(data []byte) map[string][]string {
+		path := filepath.Join(t.TempDir(), "db.sqlite3")
+		if err := os.WriteFile(path, data, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		db, err := store.OpenSQLite(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer db.Close()
+		return snapshot(t, db)
+	}
+	diffSnapshots(t, "entry "+name, open(a), open(b))
 }
 
 // withoutSize is a tar header without its size field.

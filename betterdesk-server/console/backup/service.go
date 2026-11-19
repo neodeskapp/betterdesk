@@ -78,8 +78,9 @@ type Options struct {
 	PubKeyPath string
 	APIKeyPath string
 	// DBPath is DB_PATH (default KeysPath/db_v2.sqlite3): the SQLite file
-	// a full backup copies twice, as the console's and as the server's
-	// database. Ignored on PostgreSQL for the console's copy.
+	// a full backup holds twice, as the console's and as the server's
+	// database, on SQLite the one open file copied once with VACUUM INTO.
+	// Ignored on PostgreSQL for the console's copy.
 	DBPath string
 	// ChatFilesDir is the folder of the chat files
 	// (CONSOLE_DIR/data/chat-files) with their links in .links/.
@@ -282,13 +283,13 @@ type Manifest struct {
 //	goserver/data.json               devices, blocklist, the last 500 audit events and the health of the API server
 //	console/.env                     the old console's .env
 //	console/.session_secret          DATA_DIR/.session_secret
-//	console/auth.db                  the SQLite file (DB_PATH), on SQLite only
+//	console/auth.db                  a copy of the SQLite file (DB_PATH), on SQLite only
 //	console/uploads/...              every file below DATA_DIR/uploads
 //	console/chat-files/...           the chat files and their .links
 //	console/attachments/...          the ticket attachments
 //	goserver/id_ed25519(.pub)        the server's key pair
 //	goserver/.api_key                the API key
-//	goserver/db_v2.sqlite3           DB_PATH again, as the server's database
+//	goserver/db_v2.sqlite3           the same copy as the server's database
 //	goserver/mesh_agent_server.pem   the mesh agent certificate
 //	README.txt                       how to restore by hand
 //
@@ -314,17 +315,29 @@ func (s *Service) CreateFullBackup(ctx context.Context) ([]byte, string, error) 
 		present = append(present, "goserver/data.json")
 	}
 
+	// sqliteCopy is the open SQLite file (DB_PATH) on SQLite, copied once
+	// for both its entries; nil when the copy failed, which leaves both out.
+	var sqliteCopy []byte
+	if p.consoleDB != "" {
+		sqliteCopy, _ = copySQLite(ctx, s.o.Store)
+	}
 	addFile := func(name, path string) {
 		if path == "" {
 			return
 		}
-		info, err := os.Stat(path)
-		if err != nil || !info.Mode().IsRegular() {
-			return
-		}
-		data, err := os.ReadFile(path)
-		if err != nil {
-			return
+		var data []byte
+		if path == p.consoleDB {
+			if data = sqliteCopy; data == nil {
+				return
+			}
+		} else {
+			info, err := os.Stat(path)
+			if err != nil || !info.Mode().IsRegular() {
+				return
+			}
+			if data, err = os.ReadFile(path); err != nil {
+				return
+			}
 		}
 		entries = append(entries, Entry{Name: name, Data: data, Mode: 0o600})
 		present = append(present, name)
@@ -531,7 +544,9 @@ func (e *ErrInvalidArchive) Error() string {
 //  2. the uploads, below DATA_DIR/uploads,
 //  3. the secrets, each to its own path,
 //  4. the .env,
-//  5. the server's SQLite file.
+//  5. the server's SQLite file, written next to DB_PATH as DB_PATH +
+//     RestoredSuffix, never over the open file: the next start puts it in
+//     place (SwapInRestoredDatabase).
 //
 // Parts 3 to 5 take effect at the next start. A file is written over the
 // old one in place; a new file gets the mode of its part.
@@ -614,7 +629,7 @@ func (s *Service) RestoreFullBackup(ctx context.Context, buf []byte, o RestoreOp
 	}
 
 	if data, ok := files.Get("goserver/db_v2.sqlite3"); o.GoDB && ok && p.goDB != "" {
-		if err := writeFile(p.goDB, data, 0o600); err != nil {
+		if err := writeFile(p.goDB+RestoredSuffix, data, 0o600); err != nil {
 			res.Warnings = append(res.Warnings, "Go server DB restore failed: "+err.Error())
 		} else {
 			res.Restored = append(res.Restored, "goserver-db")
