@@ -43,7 +43,7 @@
    "roles": [
     "guest_issuer"
    ],
-   "status": 200,
+   "status": 403,
    "headers": {
     "cache-control": "no-store",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -67,54 +67,11 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    {
-     "path": "data[*].created_at",
-     "format": "9999-99-99 99:99:99"
-    }
-   ],
    "body": {
     "kind": "json",
     "json": {
-     "data": [
-      {
-       "action": "new",
-       "conn_type": 1,
-       "created_at": "<volatile>",
-       "host_id": "rdc-host-1",
-       "host_uuid": "rdc-uuid-1",
-       "id": 4,
-       "ip": "198.51.100.7",
-       "peer_id": "rdc-peer-1",
-       "peer_name": "Contract peer",
-       "session_id": "s-1"
-      },
-      {
-       "action": "new",
-       "conn_type": 1,
-       "created_at": "<volatile>",
-       "host_id": "rdc-host-1",
-       "host_uuid": "rdc-uuid-1",
-       "id": 3,
-       "ip": "198.51.100.7",
-       "peer_id": "rdc-peer-1",
-       "peer_name": "Contract peer",
-       "session_id": "s-1"
-      },
-      {
-       "action": "new",
-       "conn_type": 1,
-       "created_at": "<volatile>",
-       "host_id": "rdc-host-1",
-       "host_uuid": "rdc-uuid-1",
-       "id": 1,
-       "ip": "198.51.100.7",
-       "peer_id": "rdc-peer-1",
-       "peer_name": "Contract peer",
-       "session_id": "s-1"
-      }
-     ],
-     "total": 3
+     "error": "Permission denied: audit.view",
+     "success": false
     }
    }
   },

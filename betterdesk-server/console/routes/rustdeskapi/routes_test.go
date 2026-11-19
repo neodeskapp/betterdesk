@@ -577,6 +577,32 @@ func TestThePeerList(t *testing.T) {
 	})
 }
 
+// Someone signed in to the console reads the client connection records
+// only with audit.view: a guest issuer and a role that lost it get 403, a
+// viewer and an admin the list. A client with a token reads them as
+// before.
+func TestConnectionRecordsNeedAuditView(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorldWithRoles(t, db, nil, replay.RoleOverrides{"operator": {"audit.view": false}})
+		const issuerToken = "9999999999999999999999999999999999999999999999999999999999999999"
+		tokenFor(w, db, 7, issuerToken)
+		const list = `{"data":[],"total":0}`
+		const refused = `{"success":false,"error":"Permission denied: audit.view"}`
+		for role, want := range map[string]string{"admin": list, "viewer": list, "guest_issuer": refused, "operator": refused} {
+			status := http.StatusOK
+			if want == refused {
+				status = http.StatusForbidden
+			}
+			if got := w.Do(replay.Request{Role: role, Path: "/api/audit/conn?host_id=h1"}); got.Status != status || got.Body != want {
+				t.Errorf("as %s: %d %s", role, got.Status, got.Body)
+			}
+		}
+		if got := w.Do(replay.Request{Path: "/api/audit/conn", Headers: bearer(issuerToken)}); got.Status != http.StatusOK || got.Body != list {
+			t.Errorf("a guest issuer's client with a token: %d %s", got.Status, got.Body)
+		}
+	})
+}
+
 // The audit uploads take connection types 0 to 4 and alarm types 0 to 6.
 func TestTheAuditTypes(t *testing.T) {
 	db := storetest.Migrated(t)

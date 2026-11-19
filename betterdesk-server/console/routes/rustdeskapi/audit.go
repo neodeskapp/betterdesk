@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/reqquery"
@@ -287,7 +288,8 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request, l auditList, key
 }
 
 // connections answers GET /api/audit/conn: with a bearer token, or for
-// someone signed in to the console.
+// someone signed in to the console whose role may read the audit log
+// (audit.view; the console's refusal otherwise).
 func (h *handlers) connections(w http.ResponseWriter, r *http.Request) {
 	if token := bearerToken(r); token != "" {
 		if h.validate(r.Context(), token) == nil {
@@ -296,6 +298,9 @@ func (h *handlers) connections(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if kit.UserID(r) == 0 {
 		fail(w, r, http.StatusUnauthorized, msgAuthRequired)
+		return
+	} else if decision := kit.Access(r).RequirePermission("audit.view", httpx.OriginalURL(r)); !decision.Passed() {
+		h.d.Refuse(w, r, decision)
 		return
 	}
 	h.list(w, r, auditList{table: "audit_connections", fromAPI: h.d.GoAPI.GetClientAuditConnections}, []string{"host_id", "peer_id", "action"}, false)
