@@ -152,10 +152,9 @@ var logNameAfterWord = regexp.MustCompile(`(?:[fF][oO][rR]|[uU][sS][eE][rR]|[aA]
 // formatLogPart prepares one string argument: line breaks become "\n" in
 // letters, then user names in single quotes are shortened in two passes.
 //
-// The first pass looks at every match of logNameAfterWord and shortens the
-// first place the name shows up in the match. That is the quoted name,
-// unless the word before it holds the name too: "for 'or'" becomes
-// "f*** 'or'". The second pass (maskQuotedNames) takes every quoted text.
+// The first pass shortens the quoted name of every match of
+// logNameAfterWord, in its place between the quotes: "for 'or'" becomes
+// "for '***'". The second pass (maskQuotedNames) takes every quoted text.
 func formatLogPart(s string) string {
 	s = auditlog.SanitizeLogValue(s)
 	if !strings.Contains(s, "'") {
@@ -165,10 +164,9 @@ func formatLogPart(s string) string {
 		var b strings.Builder
 		end := 0
 		for _, m := range matches {
-			match, name := s[m[0]:m[1]], s[m[2]:m[3]]
-			b.WriteString(s[end:m[0]])
-			b.WriteString(strings.Replace(match, name, auditlog.RedactUsername(name), 1))
-			end = m[1]
+			b.WriteString(s[end:m[2]])
+			b.WriteString(auditlog.RedactUsername(s[m[2]:m[3]]))
+			end = m[3]
 		}
 		b.WriteString(s[end:])
 		s = b.String()

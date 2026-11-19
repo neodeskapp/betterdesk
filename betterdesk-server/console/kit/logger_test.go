@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/logging"
 )
 
@@ -134,11 +135,70 @@ func TestLoggerPartsAgainstNode(t *testing.T) {
 	}
 	logger := NewLogger("debug", false)
 	lines := captureLog(logger)
+	changed := 0
 	for _, v := range vectors {
 		*lines = nil
 		logger.Info(v.In)
-		if len(*lines) != 1 || (*lines)[0].line != v.Out {
-			t.Errorf("Info(%q) prints %q, Node prints %q", v.In, *lines, v.Out)
+		if len(*lines) != 1 {
+			t.Fatalf("Info(%q) prints %q", v.In, *lines)
+		}
+		got := (*lines)[0].line
+		// AL5: where the word before a quoted name holds the name, Node
+		// shortened the word; the console shortens the quoted name and
+		// prints the word as it is
+		if kept := wordsBeforeShortenedNames(v.In); len(kept) > 0 {
+			changed++
+			for _, word := range kept {
+				if !strings.Contains(got, word) {
+					t.Errorf("Info(%q) prints %q without %q (Node prints %q)", v.In, got, word, v.Out)
+				}
+			}
+			if got == v.Out {
+				t.Errorf("Info(%q) prints %q as Node does", v.In, got)
+			}
+			continue
+		}
+		if got != v.Out {
+			t.Errorf("Info(%q) prints %q, Node prints %q", v.In, got, v.Out)
+		}
+	}
+	if changed == 0 {
+		t.Error("no vector changes with AL5")
+	}
+}
+
+// wordsBeforeShortenedNames lists, for each match of logNameAfterWord in a
+// log text whose name shows up in the match before its quotes, the text
+// from the word to the opening quote: what Node shortened in place of the
+// name (BUGS.md AL5).
+func wordsBeforeShortenedNames(text string) []string {
+	s := auditlog.SanitizeLogValue(text)
+	var words []string
+	for _, m := range logNameAfterWord.FindAllStringSubmatchIndex(s, -1) {
+		if strings.Index(s[m[0]:m[1]], s[m[2]:m[3]]) < m[2]-m[0] {
+			words = append(words, s[m[0]:m[2]])
+		}
+	}
+	return words
+}
+
+// TestLoggerMasksTheQuotedNameNotTheWordBeforeIt: the first pass shortens
+// the quoted name between its quotes, also when the word before it holds
+// the name (BUGS.md AL5).
+func TestLoggerMasksTheQuotedNameNotTheWordBeforeIt(t *testing.T) {
+	logger := NewLogger("debug", false)
+	lines := captureLog(logger)
+	for in, want := range map[string]string{
+		"Login failed for 'or'":               "Login failed for '***'",
+		"Login failed: user 'user' not found": "Login failed: user 'u***r' not found",
+		"Login failed for ' '":                "Login failed for '(empty)'",
+		"Login failed for 'alice'":            "Login failed for 'a***e'",
+		"account 'count' and for 'fo'":        "account 'c***t' and for '***'",
+	} {
+		*lines = nil
+		logger.Info(in)
+		if len(*lines) != 1 || (*lines)[0].line != want {
+			t.Errorf("Info(%q) prints %q, want %q", in, *lines, want)
 		}
 	}
 }
@@ -242,7 +302,7 @@ func TestLoggerArguments(t *testing.T) {
 		{"name after a word", []any{"Login successful for 'alice'"}, "Login successful for 'a***e'"},
 		{"name alone", []any{"'alice' signed in"}, "'a***e' signed in"},
 		{"short name", []any{"user 'al' and 'x'"}, "user '***' and 'x'"},
-		{"the first place the name shows up", []any{"for 'or'"}, "f*** '***'"},
+		{"the quoted name, not the word before it", []any{"for 'or'"}, "for '***'"},
 		{"name with spaces around", []any{"for ' bob '"}, "for 'b***b'"},
 		{"role and provider words stay", []any{"role 'Admin' provider 'local' hash 'bcrypt' and 'PBKDF2-SHA256'"}, "role 'Admin' provider 'l***l' hash 'bcrypt' and 'PBKDF2-SHA256'"},
 		{"paths, addresses and settings stay", []any{"file '/etc/x' host 'a.b' at '10:30' env 'BETTERDESK_API_KEY' kind 'hash type'"}, "file '/etc/x' host 'a.b' at '10:30' env 'BETTERDESK_API_KEY' kind 'hash type'"},
