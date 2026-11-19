@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/access"
@@ -81,8 +82,9 @@ func groupData(f devicegroups.GroupFields) devicegroups.GroupData {
 
 // saveDeviceGroup answers POST /api/device-groups: a group without guid
 // is created, one with a guid is changed; a name, guid, note, team id or
-// tag filter that is no text is refused with 400. The API server writes it and
-// answers with what it saved; with the console's own writer
+// tag filter that is no text, and an access list of more than 100
+// accounts or user groups, are refused with 400. The API server writes
+// it and answers with what it saved; with the console's own writer
 // (BACKEND_PANEL_GROUPING=node, or an API server that cannot take it),
 // allowed_users and allowed_groups replace the access lists when the body
 // has them, and the answer is the group's row.
@@ -91,6 +93,10 @@ func (h *handlers) saveDeviceGroup(w http.ResponseWriter, r *http.Request) {
 	payload := devicegroups.NormalizeGroupPayload(bodyMap(r))
 	if payload.NotText != "" {
 		answer(w, r, http.StatusBadRequest, failure{Error: payload.NotText + " must be text"})
+		return
+	}
+	if payload.TooLong != "" {
+		answer(w, r, http.StatusBadRequest, failure{Error: tooLong(payload.TooLong)})
 		return
 	}
 	if payload.Name == "" {
@@ -173,6 +179,12 @@ func (h *handlers) saveDeviceGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	answer(w, r, http.StatusOK, withData{Success: true, Data: group})
+}
+
+// tooLong is the refusal of an access list with more entries than
+// devicegroups.MaxAccessListEntries.
+func tooLong(list string) string {
+	return list + " can hold at most " + strconv.Itoa(devicegroups.MaxAccessListEntries) + " entries"
 }
 
 // groupWriteFailed answers a failed group write: a refusal of the API

@@ -278,6 +278,24 @@ func (h *handlers) checkLook(w http.ResponseWriter, r *http.Request, body middle
 	return true
 }
 
+// checkAccessLists answers 400 for an access list of the body with more
+// than devicegroups.MaxAccessListEntries different accounts or user
+// groups, which the save would cut, and then reports false.
+func (h *handlers) checkAccessLists(w http.ResponseWriter, r *http.Request, body middleware.JSONObject) bool {
+	var users, groups any
+	if body.Has("allowed_users") {
+		users = decoded(body.Get("allowed_users"))
+	}
+	if body.Has("allowed_groups") {
+		groups = decoded(body.Get("allowed_groups"))
+	}
+	if list := devicegroups.AccessListTooLong(users, groups); list != "" {
+		kit.Fail(w, r, http.StatusBadRequest, list+" can hold at most "+strconv.Itoa(devicegroups.MaxAccessListEntries)+" entries")
+		return false
+	}
+	return true
+}
+
 // create answers POST /api/folders with {name, color?, icon?,
 // allowed_users?, allowed_groups?}.
 func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
@@ -294,7 +312,7 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	text, _ := name.Str()
-	if !h.checkLook(w, r, body) {
+	if !h.checkLook(w, r, body) || !h.checkAccessLists(w, r, body) {
 		return
 	}
 	color, icon := jsbind.Of(body.Get("color")), jsbind.Of(body.Get("icon"))
@@ -355,7 +373,7 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 		}
 		name, newName = jsbind.String(trimmed), trimmed
 	}
-	if !h.checkLook(w, r, body) {
+	if !h.checkLook(w, r, body) || !h.checkAccessLists(w, r, body) {
 		return
 	}
 	if err := h.groups.UpdateFolder(ctx, id, name, jsbind.Of(body.Get("color")), jsbind.Of(body.Get("icon"))); err != nil {

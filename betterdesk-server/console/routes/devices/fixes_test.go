@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -398,6 +399,45 @@ func TestSaveGroupTakesTextOnly(t *testing.T) {
 		}
 		if got := admin.Do("POST", "/api/device-groups", `{"name":"Lab","note":null,"team_id":null}`); got.Status != http.StatusOK {
 			t.Errorf("a group with null note and team id (console writer %v): %d %s", node, got.Status, got.Body)
+		}
+	}
+}
+
+// TestSaveGroupRefusesLongAccessLists: a device group with more than 100
+// different usernames or user groups on its access list is refused with
+// 400 before anything is written, where the first 100 were kept and the
+// rest left out without a word; 100 are saved (BUGS PA10).
+func TestSaveGroupRefusesLongAccessLists(t *testing.T) {
+	list := func(n int, prefix string) string {
+		items := make([]string, n)
+		for i := range items {
+			items[i] = `"` + prefix + strconv.Itoa(i) + `"`
+		}
+		return "[" + strings.Join(items, ",") + "]"
+	}
+	for _, node := range []bool{false, true} {
+		w, api := world(t, storetest.Migrated(t), nil, func(cfg *config.Config) { cfg.PanelGroupingNode = node })
+		admin := w.As("admin")
+		for _, c := range []struct{ body, list string }{
+			{`{"name":"Lab","allowed_users":` + list(101, "user") + `}`, "allowed_users"},
+			{`{"name":"Lab","allowed_groups":` + list(101, "ug-") + `}`, "allowed_groups"},
+			{`{"name":"Lab","guid":"g-viewer","allowed_user_groups":` + list(150, "ug-") + `}`, "allowed_groups"},
+		} {
+			api.Calls()
+			want := `{"success":false,"error":"` + c.list + ` can hold at most 100 entries"}`
+			if got := admin.Do("POST", "/api/device-groups", c.body); got.Status != http.StatusBadRequest || got.Body != want {
+				t.Errorf("%.60s... (console writer %v): %d %s, want 400 %s", c.body, node, got.Status, got.Body, want)
+			}
+			if calls := api.Calls(); len(calls) > 0 {
+				t.Errorf("%.60s... (console writer %v) reached the server: %q", c.body, node, calls)
+			}
+		}
+		var names string
+		if err := w.DB.QueryRow(context.Background(), `SELECT name FROM device_groups WHERE guid = 'g-viewer'`).Scan(&names); err != nil || names != "Viewer only" {
+			t.Errorf("g-viewer after the refusals: %q, %v", names, err)
+		}
+		if got := admin.Do("POST", "/api/device-groups", `{"name":"Lab","allowed_users":`+list(100, "user")+`}`); got.Status != http.StatusOK {
+			t.Errorf("100 usernames (console writer %v): %d %s", node, got.Status, got.Body)
 		}
 	}
 }

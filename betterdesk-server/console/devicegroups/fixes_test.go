@@ -103,6 +103,43 @@ func TestSanitizeTagTrimsAfterTheCut(t *testing.T) {
 	}
 }
 
+// TestAccessListsOfMoreThan100: a submitted access list of more than 100
+// different usernames or user groups is named, so the routes refuse it
+// instead of keeping the first 100; repeats and blanks do not count
+// (BUGS PA10).
+func TestAccessListsOfMoreThan100(t *testing.T) {
+	names := func(n int, prefix string) []any {
+		out := make([]any, n)
+		for i := range out {
+			out[i] = prefix + strconv.Itoa(i)
+		}
+		return out
+	}
+	repeated := append(names(100, "u"), "u1", " u2 ", "", nil)
+	for _, c := range []struct {
+		body map[string]any
+		want string
+	}{
+		{map[string]any{"name": "G", "allowed_users": names(100, "u"), "allowed_groups": names(100, "g")}, ""},
+		{map[string]any{"name": "G", "allowed_users": repeated}, ""},
+		{map[string]any{"name": "G", "allowed_users": names(101, "u")}, "allowed_users"},
+		{map[string]any{"name": "G", "allowed_users": strings.Repeat("x,", 100) + "y,z"}, ""},
+		{map[string]any{"name": "G", "allowed_groups": names(101, "g")}, "allowed_groups"},
+		{map[string]any{"name": "G", "allowed_user_groups": names(101, "g")}, "allowed_groups"},
+		{map[string]any{"name": "G", "user_group_guids": names(101, "g")}, "allowed_groups"},
+	} {
+		if got := NormalizeGroupPayload(c.body).TooLong; got != c.want {
+			t.Errorf("%v: TooLong %q, want %q", c.body, got, c.want)
+		}
+	}
+	if got := AccessListTooLong(names(101, "u"), nil); got != "allowed_users" {
+		t.Errorf("AccessListTooLong of 101 names: %q", got)
+	}
+	if got := AccessListTooLong(nil, strings.TrimSuffix(strings.Repeat("g,", 101), ",")); got != "" {
+		t.Errorf("AccessListTooLong of one guid 101 times: %q", got)
+	}
+}
+
 // TestCutKeepsWholeCharacters: a tag, and the fields of a device group,
 // cut to a length in UTF-16 units stop before a character outside the
 // Basic Multilingual Plane that does not fit whole, where half of it was

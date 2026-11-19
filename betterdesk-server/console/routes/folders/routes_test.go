@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -341,6 +342,37 @@ func TestFolderIDsAreWholeNumbers(t *testing.T) {
 		want(t, "move into folder 1.0", admin.Do("PATCH", "/api/devices/B/folder", `{"folderId":1.0}`), 200, ok)
 		if got := rows(t, db, `SELECT device_id FROM device_folder_assignments ORDER BY device_id`); got != "A,B" {
 			t.Errorf("assignments: %q", got)
+		}
+	})
+}
+
+// TestAccessListsOfMoreThan100: a folder whose access list names more than
+// 100 different accounts or user groups is refused with 400 when it is
+// made or changed, and nothing is written, where the first 100 were kept
+// and the rest left out without a word; 100 are saved (BUGS PA10).
+func TestAccessListsOfMoreThan100(t *testing.T) {
+	list := func(n int, prefix string) string {
+		items := make([]string, n)
+		for i := range items {
+			items[i] = `"` + prefix + strconv.Itoa(i) + `"`
+		}
+		return "[" + strings.Join(items, ",") + "]"
+	}
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		admin := newWorld(t, db).As("admin")
+		users := `{"success":false,"error":"allowed_users can hold at most 100 entries"}`
+		groups := `{"success":false,"error":"allowed_groups can hold at most 100 entries"}`
+		want(t, "create with 101 accounts", admin.Do("POST", "/api/folders", `{"name":"Lab","allowed_users":`+list(101, "user")+`}`), 400, users)
+		want(t, "create with 101 user groups", admin.Do("POST", "/api/folders", `{"name":"Lab","allowed_groups":`+list(101, "ug-")+`}`), 400, groups)
+		if got := rows(t, db, `SELECT name FROM folders`); got != "" {
+			t.Errorf("folders after the refused creates: %q", got)
+		}
+		want(t, "create with 100 accounts", admin.Do("POST", "/api/folders", `{"name":"Lab","allowed_users":`+list(100, "user")+`}`),
+			200, `{"success":true,"data":{"id":1,"name":"Lab","color":"#6366f1","icon":"folder","allowed_users":[],"allowed_groups":[]}}`)
+		want(t, "change with 101 user groups", admin.Do("PATCH", "/api/folders/1", `{"name":"Renamed","allowed_groups":`+list(101, "ug-")+`}`), 400, groups)
+		want(t, "change with 101 accounts", admin.Do("PATCH", "/api/folders/1", `{"name":"Renamed","allowed_users":`+list(101, "user")+`}`), 400, users)
+		if got := rows(t, db, `SELECT name FROM folders`); got != "Lab" {
+			t.Errorf("folders after the refused changes: %q", got)
 		}
 	})
 }

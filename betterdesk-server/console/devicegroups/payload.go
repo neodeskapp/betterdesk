@@ -43,6 +43,29 @@ type GroupPayload struct {
 	// note, team_id, and for a tag group tag_filter and tag. "" when there
 	// is none; null counts as not given. A route refuses such a group.
 	NotText string
+	// TooLong names the access list that holds more than
+	// MaxAccessListEntries entries (AccessListTooLong), "" when neither
+	// does. AllowedUsers and AllowedGroups keep only the first 100; a route
+	// refuses such a group.
+	TooLong string
+}
+
+// MaxAccessListEntries is the most usernames, and the most user groups, an
+// access list of a device group or a folder takes.
+const MaxAccessListEntries = 100
+
+// AccessListTooLong names the submitted access list that holds more than
+// MaxAccessListEntries different entries, read as the save reads it
+// (trimmed, without blanks and repeats): "allowed_users" for the
+// usernames, "allowed_groups" for the user groups, "" when neither does.
+func AccessListTooLong(users, groups any) string {
+	switch {
+	case len(access.StoredUsernames(users)) > MaxAccessListEntries:
+		return "allowed_users"
+	case len(access.StoredGroupGUIDs(groups)) > MaxAccessListEntries:
+		return "allowed_groups"
+	}
+	return ""
 }
 
 // NormalizeGroupPayload reads a submitted device group. A nil body reads
@@ -65,8 +88,10 @@ func NormalizeGroupPayload(body map[string]any) GroupPayload {
 		p.GUID = cut(jsTrim(jsString(body["guid"])), 64)
 	}
 	p.Name = cut(jsTrim(text(body["name"])), 80)
+	groups := or(or(body["allowed_groups"], body["allowed_user_groups"]), body["user_group_guids"])
 	p.AllowedUsers = access.NormalizeUsernames(body["allowed_users"])
-	p.AllowedGroups = access.NormalizeGroupGUIDs(or(or(body["allowed_groups"], body["allowed_user_groups"]), body["user_group_guids"]))
+	p.AllowedGroups = access.NormalizeGroupGUIDs(groups)
+	p.TooLong = AccessListTooLong(body["allowed_users"], groups)
 	if value, ok := body["note"]; ok {
 		note := cut(jsTrim(text(value)), 512)
 		p.Note = &note
