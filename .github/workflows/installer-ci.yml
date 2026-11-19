@@ -8,7 +8,7 @@ on:
       - 'betterdesk.sh'
       - 'betterdesk.ps1'
       - 'betterdesk-docker.sh'
-      - 'scripts/test-betterdesk-node-install.sh'
+      - 'scripts/test-go-installer.sh'
       - 'scripts/test-postgresql-hba.sh'
       - 'scripts/test-docker-hardening.sh'
       - 'scripts/installer-protocol-check.js'
@@ -27,7 +27,7 @@ on:
       - 'betterdesk.sh'
       - 'betterdesk.ps1'
       - 'betterdesk-docker.sh'
-      - 'scripts/test-betterdesk-node-install.sh'
+      - 'scripts/test-go-installer.sh'
       - 'scripts/test-postgresql-hba.sh'
       - 'scripts/test-docker-hardening.sh'
       - 'scripts/installer-protocol-check.js'
@@ -71,7 +71,7 @@ jobs:
             betterdesk.sh \
             betterdesk-docker.sh \
             scripts/test-native-installer.sh \
-            scripts/test-betterdesk-node-install.sh \
+            scripts/test-go-installer.sh \
             scripts/test-postgresql-hba.sh \
             scripts/test-docker-hardening.sh)
       - name: Run ShellCheck
@@ -81,11 +81,11 @@ jobs:
             betterdesk.sh \
             betterdesk-docker.sh \
             scripts/test-native-installer.sh \
-            scripts/test-betterdesk-node-install.sh \
+            scripts/test-go-installer.sh \
             scripts/test-postgresql-hba.sh \
             scripts/test-docker-hardening.sh
-      - name: Test native Node.js installer recovery
-        run: bash scripts/test-betterdesk-node-install.sh
+      - name: Test the upgrade to the server with its web console
+        run: bash scripts/test-go-installer.sh
       - name: Test native installer watchdog and clone recovery
         run: bash scripts/test-native-installer.sh
       - name: Test PostgreSQL pg_hba.conf setup
