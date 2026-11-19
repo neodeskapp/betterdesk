@@ -472,6 +472,19 @@ func TestNodeSteps(t *testing.T) {
 				}
 				continue
 			}
+			if refusedIntervals[s.Name] {
+				if want := `{"error":"interval_ms must be from 1000 to 2147483647"}`; rec.Code != http.StatusBadRequest || rec.Body.String() != want {
+					t.Errorf("%s: %d %s, want 400 %s", s.Name, rec.Code, rec.Body.String(), want)
+				}
+				var nodes struct {
+					IntervalMs float64 `json:"interval_ms"`
+				}
+				if err := json.Unmarshal([]byte(s.Text), &nodes); err != nil {
+					t.Fatal(err)
+				}
+				w.monitor.Start(netmonitor.Number(nodes.IntervalMs))
+				continue
+			}
 			if unchangedTargets[s.Name] {
 				if read := w.do(as, "GET", s.Path, nil, ""); rec.Code != http.StatusOK || rec.Body.String() != read.Body.String() {
 					t.Errorf("%s: %d %s, want 200 and the target, %s", s.Name, rec.Code, rec.Body.String(), read.Body.String())
@@ -523,6 +536,18 @@ func TestNodeSteps(t *testing.T) {
 var enabledByZero = map[string]bool{
 	"create with keys in another order": true,
 	"create odd: enabled zero":          true,
+}
+
+// refusedIntervals are the starts of the monitor with an interval below a
+// second or longer than a timer waits, which the route refuses (BUGS.md
+// NM6). Node started the monitor; the replay starts it with Node's
+// interval, so the steps after it see the monitor Node had.
+var refusedIntervals = map[string]bool{
+	`monitor start with interval "1e5"`:      true,
+	"monitor start with interval -5":         true,
+	"monitor start with interval 2147483648": true,
+	"monitor start with interval 1e+21":      true,
+	"monitor start with interval 1e-7":       true,
 }
 
 // unchangedTargets are the updates that name no column of a target that

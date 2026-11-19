@@ -133,10 +133,19 @@ type monitorState struct {
 	IntervalMs netmonitor.Number `json:"interval_ms"`
 }
 
-// startMonitor answers POST /monitor/start with the body {interval_ms}.
-// A monitor that runs keeps its interval.
+// minPollMs is the shortest interval of the monitor.
+const minPollMs = 1000
+
+// startMonitor answers POST /monitor/start with the body {interval_ms}:
+// from a second to the longest a timer waits, the default when it is no
+// number or 0. A monitor that runs keeps its interval.
 func (h *handlers) startMonitor(w http.ResponseWriter, r *http.Request) {
-	h.monitor.Start(parseInt(kit.Body(r).Get("interval_ms")))
+	interval := parseInt(kit.Body(r).Get("interval_ms"))
+	if interval.Truthy() && (interval < minPollMs || interval > maxMs) {
+		fail(w, r, http.StatusBadRequest, "interval_ms must be from 1000 to 2147483647")
+		return
+	}
+	h.monitor.Start(interval)
 	kit.JSON(w, r, http.StatusOK, started{Status: "started", IntervalMs: h.monitor.PollInterval()})
 }
 

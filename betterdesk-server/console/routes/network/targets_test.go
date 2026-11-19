@@ -198,3 +198,42 @@ func TestStatsAverageTheLastRoundTrip(t *testing.T) {
 		}
 	})
 }
+
+// The monitor takes an interval from one second to the longest a timer
+// waits; below or above that it is not started (BUGS.md NM6). An interval
+// that is no number still means the default.
+func TestMonitorRefusesAnIntervalBelowASecond(t *testing.T) {
+	w := newWorld(t, storetest.Migrated(t), names{})
+	start := func(body string) (int, string) {
+		t.Helper()
+		rec := w.do("adm", "POST", "/api/network/monitor/start", &body, "")
+		return rec.Code, rec.Body.String()
+	}
+	stop := func() {
+		t.Helper()
+		body := "{}"
+		w.do("adm", "POST", "/api/network/monitor/stop", &body, "")
+	}
+	const refused = `{"error":"interval_ms must be from 1000 to 2147483647"}`
+	for _, body := range []string{`{"interval_ms":-5}`, `{"interval_ms":1}`, `{"interval_ms":999}`, `{"interval_ms":"1e5"}`, `{"interval_ms":2147483648}`, `{"interval_ms":1e21}`} {
+		if status, answer := start(body); status != 400 || answer != refused {
+			t.Errorf("%s: %d %s, want 400 %s", body, status, answer, refused)
+		}
+		if w.monitor.Running() {
+			t.Errorf("%s: the monitor runs", body)
+			stop()
+		}
+	}
+	for body, want := range map[string]string{
+		`{"interval_ms":1000}`:       `{"status":"started","interval_ms":1000}`,
+		`{"interval_ms":2147483647}`: `{"status":"started","interval_ms":2147483647}`,
+		`{"interval_ms":"soon"}`:     `{"status":"started","interval_ms":60000}`,
+		`{"interval_ms":0}`:          `{"status":"started","interval_ms":60000}`,
+		`{}`:                         `{"status":"started","interval_ms":60000}`,
+	} {
+		if status, answer := start(body); status != 200 || answer != want {
+			t.Errorf("%s: %d %s, want 200 %s", body, status, answer, want)
+		}
+		stop()
+	}
+}
