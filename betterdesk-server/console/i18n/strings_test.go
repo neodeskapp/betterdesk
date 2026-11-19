@@ -226,7 +226,7 @@ func TestLanguageSetsTheCookieForTheQuery(t *testing.T) {
 	}{
 		{"", "", "", "", "en", ""},
 		{"lang=de", "pl", "betterdesk_lang=en", "pl", "de", "betterdesk_lang=de; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 12:00:00 GMT; SameSite=Lax"},
-		{"lang=xx", "pl", "", "", "en", ""},
+		{"lang=xx", "pl", "", "", "pl", ""},
 		{"", "pl", "betterdesk_lang=de", "de", "pl", ""},
 		{"", "", "betterdesk_lang=de", "pl", "de", ""},
 		{"", "", "", "pl;q=0.5, de;q=0.8", "de", ""},

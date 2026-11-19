@@ -150,6 +150,42 @@ func TestRequestLanguageIgnoresValuesThatAreNotText(t *testing.T) {
 	}
 }
 
+// A query, stored preference or cookie that names no language gives way
+// to the next source, so a stale cookie or a wrong ?lang= no longer hides
+// a good preference, cookie or Accept-Language (BUGS.md L4).
+func TestPickLanguageSkipsValuesThatAreNoLanguage(t *testing.T) {
+	b, _ := loaded(t, copyDir(t, "testdata/lang-upload"), "en")
+	now := time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
+	cases := []struct{ query, pref, cookie, accept, want string }{
+		{"lang=xx", "de", "", "", "de"},
+		{"lang=xx", "", "betterdesk_lang=pl", "", "pl"},
+		{"lang=xx", "", "", "de", "de"},
+		{"", "xx", "betterdesk_lang=pl", "", "pl"},
+		{"", "xx", "", "de-AT", "de"},
+		{"", "", "betterdesk_lang=xx", "pl;q=0.9, de", "de"},
+		{"lang=xx", "yy", "betterdesk_lang=zz", "qq", "en"},
+		{"lang=de", "pl", "betterdesk_lang=pl", "pl", "de"},
+	}
+	for _, c := range cases {
+		r := &http.Request{URL: &url.URL{Path: "/", RawQuery: c.query}, Header: http.Header{}}
+		if c.cookie != "" {
+			r.Header.Set("Cookie", c.cookie)
+		}
+		if c.accept != "" {
+			r.Header.Set("Accept-Language", c.accept)
+		}
+		sel := b.RequestLanguage(r, c.pref, now)
+		wantCookie := ""
+		if c.query == "lang=de" {
+			wantCookie = LangCookie("de", false, now)
+		}
+		if sel.Lang != c.want || sel.SetCookie != wantCookie {
+			t.Errorf("query %q, preference %q, cookie %q, Accept-Language %q: language %q, Set-Cookie %q; want %q, %q",
+				c.query, c.pref, c.cookie, c.accept, sel.Lang, sel.SetCookie, c.want, wantCookie)
+		}
+	}
+}
+
 func short(s string) string {
 	if len(s) > 120 {
 		return s[:120] + "..."
@@ -168,11 +204,12 @@ func TestPickLanguageOrder(t *testing.T) {
 	}{
 		{"nothing given", "", "", "", "", "en"},
 		{"query wins", "de", "fr", "zh", "zh-TW", "de"},
-		{"an unknown query language gives the default, not the preference", "xx", "fr", "zh", "zh-TW", "en"},
+		{"an unknown query language gives way to the preference", "xx", "fr", "zh", "zh-TW", "fr"},
 		{"preference before cookie", "", "fr", "zh", "zh-TW", "fr"},
-		{"an unknown preference gives the default, not the cookie", "", "xx", "zh", "zh-TW", "en"},
+		{"an unknown preference gives way to the cookie", "", "xx", "zh", "zh-TW", "zh"},
 		{"cookie before header", "", "", "zh", "de", "zh"},
-		{"an unknown cookie gives the default, not the header", "", "", "xx", "de", "en"},
+		{"an unknown cookie gives way to the header", "", "", "xx", "de", "de"},
+		{"nothing known gives the default", "xx", "yy", "zz", "qq", "en"},
 		{"header", "", "", "", "fr-CH, fr;q=0.9, de;q=0.8", "fr"},
 		{"header by q", "", "", "", "de;q=0.5, fr;q=0.9", "fr"},
 		{"equal q keeps the order", "", "", "", "xx, de;q=1, fr;q=1.0", "de"},

@@ -23,34 +23,26 @@ var ErrNotText = errors.New("Cannot convert object to primitive value")
 // PickLanguage returns the language of a request.
 //
 // query and cookie are the lang query parameter and the language cookie,
-// "" when they are not given. The first given value of query, the
-// signed-in user's preferred language, cookie and the Accept-Language
-// header is taken; when none is given the default language. If the taken
-// value is not a language (has says no), the default language is used: a
-// wrong ?lang= does not fall through to the cookie.
+// "" when they are not given. The first of query, the signed-in user's
+// preferred language, cookie and the Accept-Language header that names a
+// language (has says yes) is taken, else the default language. A value
+// that names none gives way to the next: a wrong ?lang= or a stale cookie
+// does not hide the cookie or the header after it.
 //
 // Accept-Language is read loosely: entries sorted by q (missing q is 1,
 // an unreadable q compares equal to everything, as in JavaScript), and for
 // each entry first the full tag, case-sensitive ("zh-TW"), then the part
 // before the first dash ("zh").
 func PickLanguage(has func(string) bool, query, preferred, cookie, acceptLanguage, defaultLang string) string {
-	chosen := defaultLang
-	switch {
-	case query != "":
-		chosen = query
-	case preferred != "":
-		chosen = preferred
-	case cookie != "":
-		chosen = cookie
-	default:
-		if lang := acceptedLanguage(has, acceptLanguage); lang != "" {
-			chosen = lang
+	for _, lang := range []string{query, preferred, cookie} {
+		if lang != "" && has(lang) {
+			return lang
 		}
 	}
-	if !has(chosen) {
-		return defaultLang
+	if lang := acceptedLanguage(has, acceptLanguage); lang != "" {
+		return lang
 	}
-	return chosen
+	return defaultLang
 }
 
 // Selection is the language of a request and the cookie to set for it.

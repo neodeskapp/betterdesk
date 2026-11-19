@@ -30,6 +30,9 @@ var vectorFixes = []vectorFix{
 
 	// A query or cookie value that is not a string counts as not given.
 	{"L2", "pick.json", pickWith(pickRules{loadedOnly: true, textOnly: true})},
+
+	// A value that is no language gives way to the next source.
+	{"L4", "pick.json", pickWith(pickRules{loadedOnly: true, textOnly: true, skipUnknown: true})},
 }
 
 // fixedVectors reads a file of vectors with every fix applied.
@@ -146,6 +149,9 @@ type pickRules struct {
 	// textOnly: a query or cookie value counts only when it is a string
 	// (L2).
 	textOnly bool
+	// skipUnknown: a value that is no language gives way to the next
+	// source instead of to the default language (L4).
+	skipUnknown bool
 }
 
 // referencePick is the request language of one vector of pick.json,
@@ -201,13 +207,17 @@ func referencePick(b *Bundle, c any, rules pickRules, now time.Time) (lang, setC
 		sources = append(sources, picked)
 	}
 	lang = str(c, "def")
-	if len(sources) > 0 {
-		name, ok := jsString(sources[0])
+	for _, source := range sources {
+		name, ok := jsString(source)
 		if !ok {
 			return "", "", ErrNotText.Error()
 		}
 		if has(name) {
 			lang = name
+			break
+		}
+		if !rules.skipUnknown {
+			break
 		}
 	}
 	if given(query) {
