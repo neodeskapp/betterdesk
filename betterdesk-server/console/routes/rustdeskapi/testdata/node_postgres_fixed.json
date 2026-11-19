@@ -10,6 +10,39 @@
   },
   "bug": "RD1"
  },
+ "511 GET /api/strategies": {
+  "answer": {
+   "answer": "{\"data\":[{\"guid\":\"s-fixed-1\",\"name\":\"Alpha\",\"user_group_guid\":\"ug-fixed\",\"device_group_guid\":\"\",\"enabled\":true,\"permissions\":{\"a\":2,\"b\":1}},{\"guid\":\"s-fixed-2\",\"name\":\"Beta\",\"user_group_guid\":\"\",\"device_group_guid\":\"dg-manual\",\"enabled\":false,\"permissions\":{}}],\"total\":2}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RD3"
+ },
+ "519 GET /api/strategies": {
+  "answer": {
+   "answer": "{\"data\":[{\"guid\":\"s-fixed-1\",\"name\":\"Alpha\",\"user_group_guid\":\"ug-fixed\",\"device_group_guid\":\"\",\"enabled\":true,\"permissions\":{\"a\":2,\"b\":1}},{\"guid\":\"s-fixed-2\",\"name\":\"Beta\",\"user_group_guid\":\"\",\"device_group_guid\":\"dg-manual\",\"enabled\":false,\"permissions\":{}}],\"total\":2}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RD3"
+ },
+ "527 GET /api/strategies": {
+  "answer": {
+   "answer": "{\"data\":[{\"guid\":\"s-fixed-1\",\"name\":\"Alpha\",\"user_group_guid\":\"ug-fixed\",\"device_group_guid\":\"\",\"enabled\":true,\"permissions\":{\"a\":2,\"b\":1}},{\"guid\":\"s-fixed-2\",\"name\":\"Beta\",\"user_group_guid\":\"\",\"device_group_guid\":\"dg-manual\",\"enabled\":false,\"permissions\":{}}],\"total\":2}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RD3"
+ },
  "666 PUT /api/strategies/s-fixed-1/status": {
   "answer": {
    "answer": "{\"error\":\"enabled must be true or false\"}",
@@ -31,5 +64,16 @@
    "status": 400
   },
   "bug": "RD2"
+ },
+ "668 GET /api/strategies": {
+  "answer": {
+   "answer": "{\"data\":[{\"guid\":\"s-fixed-1\",\"name\":\"Alpha\",\"user_group_guid\":\"ug-fixed\",\"device_group_guid\":\"\",\"enabled\":true,\"permissions\":{\"a\":2,\"b\":1}},{\"guid\":\"s-fixed-2\",\"name\":\"Beta 3\",\"user_group_guid\":\"\",\"device_group_guid\":\"\",\"enabled\":true,\"permissions\":{}},{\"guid\":\"<uuid>\",\"name\":\"New\",\"user_group_guid\":\"\",\"device_group_guid\":\"\",\"enabled\":false,\"permissions\":[1]},{\"guid\":\"<uuid>\",\"name\":\"New 2\",\"user_group_guid\":\"\",\"device_group_guid\":\"\",\"enabled\":true,\"permissions\":{}},{\"guid\":\"<uuid>\",\"name\":\"New 3\",\"user_group_guid\":\"\",\"device_group_guid\":\"\",\"enabled\":true,\"permissions\":{}}],\"total\":5}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RD3"
  }
 }

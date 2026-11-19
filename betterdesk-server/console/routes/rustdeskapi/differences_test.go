@@ -40,6 +40,12 @@ var fixedSteps = []fixedStep{
 	{"node_sqlite", "668 GET /api/strategies", "RD2"},
 	{"flow", "admin-strategy-status", "RD2"},
 	{"flow", "admin-strategy-status-unknown", "RD2"},
+	// The list reads a stored true as switched on.
+	{"node_postgres", "511 GET /api/strategies", "RD3"},
+	{"node_postgres", "519 GET /api/strategies", "RD3"},
+	{"node_postgres", "527 GET /api/strategies", "RD3"},
+	{"node_postgres", "668 GET /api/strategies", "RD3"},
+	{"flow_postgres", "admin-strategies", "RD3"},
 }
 
 // fixedStep is a step of the recordings of both databases ("node",

@@ -78,3 +78,30 @@ func TestStrategyStatusSwitchesOn(t *testing.T) {
 		}
 	})
 }
+
+// GET /api/strategies reports a strategy that is switched on as enabled
+// on both databases: a stored 1 on SQLite, a stored true on PostgreSQL.
+func TestStrategyListReadsTheSwitch(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := strategyWorld(t, db)
+		on := createStrategy(t, w, `{"name":"rd-on","enabled":true}`)
+		off := createStrategy(t, w, `{"name":"rd-off","enabled":false}`)
+		got := w.Do(replay.Request{Path: "/api/strategies", Headers: bearer(adminToken)})
+		var list struct {
+			Data []struct {
+				GUID    string `json:"guid"`
+				Enabled bool   `json:"enabled"`
+			} `json:"data"`
+		}
+		if err := json.Unmarshal([]byte(got.Body), &list); err != nil || got.Status != http.StatusOK {
+			t.Fatalf("GET /api/strategies: %d %s", got.Status, got.Body)
+		}
+		enabled := map[string]bool{}
+		for _, s := range list.Data {
+			enabled[s.GUID] = s.Enabled
+		}
+		if !enabled[on] || enabled[off] || len(enabled) != 2 {
+			t.Errorf("the switches in the list: %s", got.Body)
+		}
+	})
+}

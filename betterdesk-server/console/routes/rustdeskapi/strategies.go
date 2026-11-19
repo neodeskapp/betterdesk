@@ -25,8 +25,14 @@ type strategyItem struct {
 	Permissions     any  `json:"permissions"`
 }
 
-// strategies answers GET /api/strategies with a bearer token. enabled is
-// the stored value 1, which a PostgreSQL boolean never is (BUGS RD3).
+// switchedOn reads the stored switch of a strategy: 1 on SQLite, true on
+// PostgreSQL.
+func switchedOn(s *goapi.Object) bool {
+	enabled := plain(col(s, "enabled"))
+	return enabled == float64(1) || enabled == true
+}
+
+// strategies answers GET /api/strategies with a bearer token.
 func (h *handlers) strategies(w http.ResponseWriter, r *http.Request) {
 	rows, err := h.store.allStrategies(r.Context())
 	if err != nil {
@@ -39,7 +45,7 @@ func (h *handlers) strategies(w http.ResponseWriter, r *http.Request) {
 		list[i] = strategyItem{
 			GUID: col(s, "guid"), Name: col(s, "name"),
 			UserGroupGUID: or(col(s, "user_group_guid"), ""), DeviceGroupGUID: or(col(s, "device_group_guid"), ""),
-			Enabled: plain(col(s, "enabled")) == float64(1), Permissions: or(col(s, "permissions"), goapi.NewObject()),
+			Enabled: switchedOn(s), Permissions: or(col(s, "permissions"), goapi.NewObject()),
 		}
 	}
 	kit.JSON(w, r, http.StatusOK, listAnswer{Data: list, Total: len(rows)})
@@ -154,11 +160,10 @@ func (h *handlers) strategy(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusInternalServerError, msgServerError)
 		return
 	}
-	enabled := plain(col(s, "enabled"))
 	kit.JSON(w, r, http.StatusOK, goapi.NewObject(
 		"guid", col(s, "guid"), "name", col(s, "name"),
 		"user_group_guid", or(col(s, "user_group_guid"), ""), "device_group_guid", or(col(s, "device_group_guid"), ""),
-		"enabled", enabled == float64(1) || enabled == true,
+		"enabled", switchedOn(s),
 		"permissions", or(col(s, "permissions"), goapi.NewObject()),
 		"peer_count", float64(summary.PeerCount), "user_count", float64(summary.UserCount), "device_group_count", float64(summary.DeviceGroupCount),
 		"peers", summary.Peers, "users", summary.Users, "groups", summary.Groups,
