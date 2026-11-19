@@ -164,11 +164,7 @@ func TestOperatorRoutesNeedAnOperator(t *testing.T) {
 func TestEnrollmentToken(t *testing.T) {
 	w := routetest.New(t, routetest.Options{})
 	ctx := context.Background()
-	if _, err := w.DB.Exec(ctx, `CREATE TABLE agent_templates (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE,
-		description TEXT NOT NULL DEFAULT '', config_json TEXT NOT NULL DEFAULT '{}', enrollment_token TEXT NOT NULL UNIQUE,
-		enrolled_device_id TEXT DEFAULT NULL, enrolled_at TEXT DEFAULT NULL)`); err != nil {
-		t.Fatal(err)
-	}
+	// The console schema creates agent_templates
 	token := strings.Repeat("t", 64)
 	if _, err := w.DB.Exec(ctx, "INSERT INTO agent_templates (name, enrollment_token) VALUES ('kiosk', ?)", token); err != nil {
 		t.Fatal(err)
