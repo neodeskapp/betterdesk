@@ -343,6 +343,9 @@ var stepDifferences = map[string]struct {
 	"tcp: timeout below zero and a bad port": {400, `{"error":"timeout must be at least 1"}`},
 	"http: timeout below zero":               {400, `{"error":"timeout must be at least 1"}`},
 	"http: timeout checked after the url":    {400, `{"error":"timeout must be at least 1"}`},
+	// NM5: the check connects to an IPv6 address the guard passed, where
+	// nothing listens on this test's machine; Node looked it up as a name
+	"http: a v6 address": {200, `{"url":"http://[2001:db8::1]:9/","success":false,"rtt_ms":null,"status_code":null,"error":"connect ECONNREFUSED 2001:db8::1:9"}`},
 }
 
 // refusedTargets are the steps whose body the checks of a target refuse
