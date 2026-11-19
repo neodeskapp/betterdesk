@@ -7,14 +7,14 @@ import (
 
 // Enrollment: the mode and the devices that wait for approval.
 
-// GetEnrollmentMode calls GET /api/enrollment/mode. W or F1.
+// GetEnrollmentMode calls GET /api/enrollment/mode. W or F3.
 func (c *Client) GetEnrollmentMode(ctx context.Context) *Object {
-	return c.wrapped(ctx, f1, http.MethodGet, "/enrollment/mode")
+	return c.wrapped(ctx, f3, http.MethodGet, "/enrollment/mode")
 }
 
-// SetEnrollmentMode calls PUT /api/enrollment/mode with {mode}. W or F1.
+// SetEnrollmentMode calls PUT /api/enrollment/mode with {mode}. W or F3.
 func (c *Client) SetEnrollmentMode(ctx context.Context, mode any) *Object {
-	return c.wrapped(ctx, f1, http.MethodPut, "/enrollment/mode", Body(NewObject("mode", mode)))
+	return c.wrapped(ctx, f3, http.MethodPut, "/enrollment/mode", Body(NewObject("mode", mode)))
 }
 
 // GetEnrollmentPending calls GET /api/enrollment/pending. It returns

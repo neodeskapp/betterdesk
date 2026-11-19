@@ -102,8 +102,8 @@ func TestCallsAndAnswers(t *testing.T) {
 			`{"success":true,"data":{"role":"operator","permissions":["device.view"]}}`, []string{"GET /api/roles/operator/permissions"}},
 		{"the role is trimmed", "GET", "/api/panel/roles/%20operator%09/permissions", "", 200,
 			`{"success":true,"data":{"role":"operator","permissions":["device.view"]}}`, []string{"GET /api/roles/operator/permissions"}},
-		{"a role the API server refuses is a 500 with the client's text", "GET", "/api/panel/roles/nobody/permissions", "", 500,
-			`{"success":false,"error":"Request failed with status code 400"}`, []string{"GET /api/roles/nobody/permissions"}},
+		{"a role the API server refuses has its status and reason", "GET", "/api/panel/roles/nobody/permissions", "", 400,
+			`{"success":false,"error":"Invalid role"}`, []string{"GET /api/roles/nobody/permissions"}},
 		{"an error told in a good answer is a 500", "GET", "/api/panel/roles/told/permissions", "", 500,
 			`{"success":false,"error":"told in the body"}`, []string{"GET /api/roles/told/permissions"}},
 		{"an error that is null is sent as null", "GET", "/api/panel/roles/quiet/permissions", "", 500,
@@ -127,8 +127,8 @@ func TestCallsAndAnswers(t *testing.T) {
 			`{"success":true,"data":{"overrides":[]}}`, []string{"GET /api/role-permissions?role=a%2Cb"}},
 		{"a role as an object", "GET", "/api/panel/role-permissions?role[x]=1", "", 200,
 			`{"success":true,"data":{"overrides":[]}}`, []string{"GET /api/role-permissions?role=%5Bobject%20Object%5D"}},
-		{"the role is escaped, and a refusal is a 500", "GET", "/api/panel/role-permissions?role=a%20b%2Fc%3Fd", "", 500,
-			`{"success":false,"error":"Request failed with status code 500"}`, []string{"GET /api/role-permissions?role=a%20b%2Fc%3Fd"}},
+		{"the role is escaped, and a refusal has its status and reason", "GET", "/api/panel/role-permissions?role=a%20b%2Fc%3Fd", "", 500,
+			`{"success":false,"error":"boom"}`, []string{"GET /api/role-permissions?role=a%20b%2Fc%3Fd"}},
 
 		{"set", "POST", "/api/panel/role-permissions", setBody, 200,
 			`{"success":true,"data":{"status":"ok"}}`, []string{`POST /api/role-permissions {"role":"operator","permission":"device.delete","granted":true}`}},
@@ -161,8 +161,8 @@ func TestCallsAndAnswers(t *testing.T) {
 			`{"success":true,"data":{"status":"ok"}}`, []string{"DELETE /api/role-permissions/operator/device.delete"}},
 		{"delete trims the names", "DELETE", "/api/panel/role-permissions/%20operator%20/%20device.delete%20", "", 200,
 			`{"success":true,"data":{"status":"ok"}}`, []string{"DELETE /api/role-permissions/operator/device.delete"}},
-		{"a refused delete is a 400 with the client's text", "DELETE", "/api/panel/role-permissions/admin/device.view", "", 400,
-			`{"success":false,"error":"Request failed with status code 400"}`, []string{"DELETE /api/role-permissions/admin/device.view"}},
+		{"a refused delete has the API server's status and reason", "DELETE", "/api/panel/role-permissions/admin/device.view", "", 400,
+			`{"success":false,"error":"Cannot override super admin permissions"}`, []string{"DELETE /api/role-permissions/admin/device.view"}},
 		{"a failure without a reason gets the general one", "DELETE", "/api/panel/role-permissions/quiet/device.view", "", 400,
 			`{"success":false,"error":"Failed to delete override"}`, []string{"DELETE /api/role-permissions/quiet/device.view"}},
 		{"delete with a role that is no plain word", "DELETE", "/api/panel/role-permissions/a%20b/device.view", "", 400,
@@ -232,5 +232,34 @@ func TestAChangeCountsAtOnce(t *testing.T) {
 	}
 	if got := operator.Do("GET", "/api/panel/tokens", ""); got.Status != 403 {
 		t.Errorf("operator right after the override was deleted: %d %s", got.Status, got.Body)
+	}
+}
+
+// TestAnUnknownRoleIsTheAPIServersRefusal: what the API server refuses
+// comes back with its status and its reason, also when it answers text or
+// gives no answer.
+func TestAnUnknownRoleIsTheAPIServersRefusal(t *testing.T) {
+	api := routetest.NewAPI()
+	api.On("GET /api/roles/ghost/permissions", 400, `{"error":"Invalid role"}`)
+	api.On("POST /api/role-permissions", 400, `{"error":"Cannot override super admin permissions"}`)
+	api.OnText("GET /api/roles", 503, "Service Unavailable\n")
+	api.On("DELETE /api/role-permissions/viewer/device.view", 0, "")
+	api.On("GET /api/role-permissions", 403, `{}`)
+	admin := routetest.New(t, routetest.Options{API: api}).As("admin")
+	for _, tc := range []struct {
+		method, target, body string
+		status               int
+		want                 string
+	}{
+		{"GET", "/api/panel/roles/ghost/permissions", "", 400, `{"success":false,"error":"Invalid role"}`},
+		{"POST", "/api/panel/role-permissions", `{"role":"super_admin","permission":"device.view","granted":false}`, 400,
+			`{"success":false,"error":"Cannot override super admin permissions"}`},
+		{"GET", "/api/panel/roles", "", 503, `{"success":false,"error":"Service Unavailable"}`},
+		{"DELETE", "/api/panel/role-permissions/viewer/device.view", "", 502, `{"success":false,"error":"socket hang up"}`},
+		{"GET", "/api/panel/role-permissions", "", 403, `{"success":false,"error":"Request failed with status code 403"}`},
+	} {
+		if got := admin.Do(tc.method, tc.target, tc.body); got.Status != tc.status || got.Body != tc.want {
+			t.Errorf("%s %s: %d %s, want %d %s", tc.method, tc.target, got.Status, got.Body, tc.status, tc.want)
+		}
 	}
 }

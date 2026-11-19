@@ -188,8 +188,13 @@ func TestEnrollment(t *testing.T) {
 		}
 		s.API.On("PUT /api/enrollment/mode", http.StatusBadRequest, `{"error":"no"}`)
 		res = admin.Do("PUT", "/api/settings/enrollment", `{"mode":"open"}`)
-		if res.Status != http.StatusInternalServerError || res.Body != `{"success":false,"error":"Request failed with status code 400"}` {
+		if res.Status != http.StatusInternalServerError || res.Body != `{"success":false,"error":"no"}` {
 			t.Errorf("refused mode: %d %s", res.Status, res.Body)
+		}
+		s.API.OnText("PUT /api/enrollment/mode", http.StatusInternalServerError, "Internal server error\n")
+		res = admin.Do("PUT", "/api/settings/enrollment", `{"mode":"open"}`)
+		if res.Status != http.StatusInternalServerError || res.Body != `{"success":false,"error":"Failed to set enrollment mode"}` {
+			t.Errorf("mode refused with text: %d %s", res.Status, res.Body)
 		}
 	})
 }

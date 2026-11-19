@@ -2,7 +2,8 @@
 // built-in permissions, a role's permissions in effect, and the stored
 // overrides, which only super admins may change. The data is the API
 // server's; the answers are those of its client (console/goapi), {success,
-// data} or {success, error}.
+// data} or {success, error}. A call the API server refused is answered
+// with its status and its reason, one that got no answer with 502.
 package permissions
 
 import (
@@ -58,8 +59,13 @@ type jsonNull struct{}
 func (jsonNull) MarshalJSON() ([]byte, error) { return []byte("null"), nil }
 
 // answerRead sends the result of a read: as it is when it worked, with
-// status 500 and its error otherwise.
+// the API server's status and reason when it refused, and with status 500
+// and the error when the API server named one in a good answer.
 func answerRead(w http.ResponseWriter, r *http.Request, result *goapi.Object) {
+	if status, reason, refused := jsreq.Refusal(result); refused {
+		kit.JSON(w, r, status, failed{Error: reason})
+		return
+	}
 	if !result.Bool("success") {
 		kit.JSON(w, r, http.StatusInternalServerError, failed{Error: errorOf(result)})
 		return
@@ -116,9 +122,10 @@ func (h *handlers) deleteOverride(w http.ResponseWriter, r *http.Request) {
 		})
 }
 
-// change checks the two names, makes the call and answers. Everything
-// that does not work answers 400: a name that is no plain word, and a
-// call the API server refused, with the client's error or fallback.
+// change checks the two names, makes the call and answers. A name that
+// is no plain word answers 400, a call the API server refused its status
+// and reason, and an error the API server named in a good answer 400;
+// fallback stands in for a reason that is empty.
 func (h *handlers) change(w http.ResponseWriter, r *http.Request, role, permission, fallback string, call func(safeRole, safePermission string) *goapi.Object) {
 	safeRole, err := access.SafeAPIID(role, "role")
 	if err != nil {
@@ -131,6 +138,13 @@ func (h *handlers) change(w http.ResponseWriter, r *http.Request, role, permissi
 		return
 	}
 	result := call(safeRole, safePermission)
+	if status, reason, refused := jsreq.Refusal(result); refused {
+		if !goapi.Truthy(reason) {
+			reason = fallback
+		}
+		kit.JSON(w, r, status, failed{Error: reason})
+		return
+	}
 	if !result.Bool("success") {
 		reason := result.Get("error")
 		if !goapi.Truthy(reason) {

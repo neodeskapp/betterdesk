@@ -238,7 +238,7 @@ func (g *general) setEnrollment(w http.ResponseWriter, r *http.Request) {
 			kit.Fail(w, r, http.StatusBadRequest, "Invalid enrollment mode")
 			return
 		}
-		if result := g.d.GoAPI.SetEnrollmentMode(r.Context(), mode); !goapi.Truthy(result.Get("success")) {
+		if result := g.d.GoAPI.SetEnrollmentMode(r.Context(), mode); !goapi.Truthy(result.Get("success")) || result.Has("status") {
 			kit.JSON(w, r, http.StatusInternalServerError, failure{Error: orText(result.Get("error"), "Failed to set enrollment mode")})
 			return
 		}

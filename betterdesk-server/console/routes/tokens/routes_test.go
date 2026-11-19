@@ -1,7 +1,9 @@
 package tokens_test
 
 import (
+	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
@@ -26,6 +28,10 @@ var routes = []struct{ method, target, body string }{
 
 func TestGuards(t *testing.T) {
 	api := routetest.NewAPI()
+	for _, request := range []string{"GET /api/tokens", "POST /api/tokens", "POST /api/tokens/generate-bulk", "PUT /api/tokens/7",
+		"DELETE /api/tokens/7", "POST /api/tokens/7/bind", "GET /api/enrollment/mode", "PUT /api/enrollment/mode"} {
+		api.On(request, 200, `{}`)
+	}
 	w := routetest.New(t, routetest.Options{API: api})
 	for _, route := range routes {
 		name := route.method + " " + route.target
@@ -68,6 +74,15 @@ func TestCallsAndAnswers(t *testing.T) {
 	api.On("PUT /api/enrollment/mode", 200, `{"success":true,"mode":"managed","description":"m"}`)
 	api.On("DELETE /api/tokens/5", 0, "")
 	admin := routetest.New(t, routetest.Options{API: api}).As("admin")
+	// The cases the API server refused, with its status; an id the console
+	// refuses itself is a 400
+	statuses := map[string]int{
+		"a refusal has the API server's status and text": 404,
+		"an id is escaped for the path":                  404,
+		"revoke with a bad id":                           400,
+		"revoke while the API server hangs up":           502,
+		"bind sends true as text":                        409,
+	}
 
 	for _, tc := range []struct {
 		name                 string
@@ -105,19 +120,19 @@ func TestCallsAndAnswers(t *testing.T) {
 			`{"success":true,"data":{"id":7,"name":"renamed"}}`, []string{`PUT /api/tokens/7 {"max_uses":5,"name":"renamed"}`}},
 		{"update trims the id", "PUT", "/api/panel/tokens/%207%20", `{"name":"renamed"}`,
 			`{"success":true,"data":{"id":7,"name":"renamed"}}`, []string{`PUT /api/tokens/7 {"name":"renamed"}`}},
-		{"a refusal keeps the client's text, not the API server's", "PUT", "/api/panel/tokens/8", `{"name":"x"}`,
-			`{"success":false,"error":"Request failed with status code 404"}`, []string{`PUT /api/tokens/8 {"name":"x"}`}},
+		{"a refusal has the API server's status and text", "PUT", "/api/panel/tokens/8", `{"name":"x"}`,
+			`{"success":false,"error":"Token not found"}`, []string{`PUT /api/tokens/8 {"name":"x"}`}},
 		{"an error key in a good answer is a failure", "PUT", "/api/panel/tokens/9", `{"name":"x"}`,
 			`{"success":false,"error":"told in the body"}`, []string{`PUT /api/tokens/9 {"name":"x"}`}},
 		{"an id with a slash never reaches the API server", "PUT", "/api/panel/tokens/1%2F2", `{"name":"x"}`,
 			`{"success":false,"error":"Invalid tokenId"}`, nil},
 		{"an id is escaped for the path", "PUT", "/api/panel/tokens/a%25b", `{"name":"x"}`,
-			`{"success":false,"error":"Request failed with status code 404"}`, []string{`PUT /api/tokens/a%25b {"name":"x"}`}},
+			`{"success":false,"error":"not found"}`, []string{`PUT /api/tokens/a%25b {"name":"x"}`}},
 
 		{"revoke", "DELETE", "/api/panel/tokens/7", "",
 			`{"success":true,"data":{"success":true,"message":"Token revoked"}}`, []string{"DELETE /api/tokens/7"}},
 		{"revoke with a bad id", "DELETE", "/api/panel/tokens/abc", "",
-			`{"success":false,"error":"Request failed with status code 400"}`, []string{"DELETE /api/tokens/abc"}},
+			`{"success":false,"error":"Invalid token ID"}`, []string{"DELETE /api/tokens/abc"}},
 		{"revoke with an unsafe id", "DELETE", "/api/panel/tokens/a%20b", "",
 			`{"success":false,"error":"Invalid tokenId"}`, nil},
 		{"revoke while the API server hangs up", "DELETE", "/api/panel/tokens/5", "",
@@ -132,7 +147,7 @@ func TestCallsAndAnswers(t *testing.T) {
 		{"bind joins a list", "POST", "/api/panel/tokens/7/bind", `{"peer_id":["900100001"]}`,
 			`{"success":true,"data":{"success":true,"message":"Token bound to peer","token_id":7,"peer_id":"900100001"}}`, []string{`POST /api/tokens/7/bind {"peer_id":"900100001"}`}},
 		{"bind sends true as text", "POST", "/api/panel/tokens/8/bind", `{"peer_id":true}`,
-			`{"success":false,"error":"Request failed with status code 409"}`, []string{`POST /api/tokens/8/bind {"peer_id":"true"}`}},
+			`{"success":false,"error":"Token has been revoked"}`, []string{`POST /api/tokens/8/bind {"peer_id":"true"}`}},
 		{"bind without a peer", "POST", "/api/panel/tokens/7/bind", `{}`,
 			`{"success":false,"error":"Invalid peerId"}`, nil},
 		{"bind with peer null", "POST", "/api/panel/tokens/7/bind", `{"peer_id":null}`,
@@ -158,14 +173,46 @@ func TestCallsAndAnswers(t *testing.T) {
 			`{"success":true,"data":{"success":true,"mode":"managed","description":"m"}}`, []string{`PUT /api/enrollment/mode {"mode":null}`}},
 	} {
 		got := admin.Do(tc.method, tc.target, tc.body)
-		if got.Status != 200 || got.Body != tc.want {
-			t.Errorf("%s: %d %s\nwant 200 %s", tc.name, got.Status, got.Body, tc.want)
+		status := http.StatusOK
+		if s, ok := statuses[tc.name]; ok {
+			status = s
+		} else if strings.Contains(tc.want, `"error":"Invalid `) {
+			status = http.StatusBadRequest
+		}
+		if got.Status != status || got.Body != tc.want {
+			t.Errorf("%s: %d %s\nwant %d %s", tc.name, got.Status, got.Body, status, tc.want)
 		}
 		if got.Header.Get("Content-Type") != "application/json; charset=utf-8" {
 			t.Errorf("%s: Content-Type %q", tc.name, got.Header.Get("Content-Type"))
 		}
 		if calls := api.Calls(); !reflect.DeepEqual(calls, tc.calls) {
 			t.Errorf("%s: the API server was asked %q, want %q", tc.name, calls, tc.calls)
+		}
+	}
+}
+
+// TestARefusalKeepsTheAPIServersStatus: what the API server refuses comes
+// back with its status and its reason, as text or as the error of its
+// JSON, for the tokens and the enrollment mode alike.
+func TestARefusalKeepsTheAPIServersStatus(t *testing.T) {
+	api := routetest.NewAPI()
+	api.OnText("POST /api/tokens/9/bind", 409, "Token already bound to different peer\n")
+	api.OnText("PUT /api/enrollment/mode", 400, "Invalid mode (open, managed, locked)\n")
+	api.On("POST /api/tokens", 403, `{"error":"Not allowed for this role"}`)
+	api.On("GET /api/enrollment/mode", 500, `{}`)
+	admin := routetest.New(t, routetest.Options{API: api}).As("admin")
+	for _, tc := range []struct {
+		method, target, body string
+		status               int
+		want                 string
+	}{
+		{"POST", "/api/panel/tokens/9/bind", `{"peer_id":"900100001"}`, 409, `{"success":false,"error":"Token already bound to different peer"}`},
+		{"PUT", "/api/panel/enrollment/mode", `{"mode":"closed"}`, 400, `{"success":false,"error":"Invalid mode (open, managed, locked)"}`},
+		{"POST", "/api/panel/tokens", `{"name":"x"}`, 403, `{"success":false,"error":"Not allowed for this role"}`},
+		{"GET", "/api/panel/enrollment/mode", "", 500, `{"success":false,"error":"Request failed with status code 500"}`},
+	} {
+		if got := admin.Do(tc.method, tc.target, tc.body); got.Status != tc.status || got.Body != tc.want {
+			t.Errorf("%s %s: %d %s, want %d %s", tc.method, tc.target, got.Status, got.Body, tc.status, tc.want)
 		}
 	}
 }

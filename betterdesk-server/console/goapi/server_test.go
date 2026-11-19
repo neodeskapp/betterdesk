@@ -201,21 +201,21 @@ func TestAgainstAPIServer(t *testing.T) {
 		if c.GetDeviceToken(ctx, tokenID).Object("data").Has("token") {
 			t.Error("GetDeviceToken gave the token itself")
 		}
-		wantJSON(t, "GetDeviceToken with a bad id", c.GetDeviceToken(ctx, "abc"), badRequest400)
+		wantJSON(t, "GetDeviceToken with a bad id", c.GetDeviceToken(ctx, "abc"), `{"success":true,"data":"Invalid token ID\n","status":400}`)
 		wantAt(t, "UpdateDeviceToken", c.UpdateDeviceToken(ctx, tokenID, NewObject("name", "t2", "max_uses", 2.0, "note", "")), `"t2"`, "data", "name")
 		wantAt(t, "BindTokenToPeer", c.BindTokenToPeer(ctx, tokenID, "PEERAAA1"), `"PEERAAA1"`, "data", "peer_id")
 		wantJSON(t, "BindTokenToPeer with a bad peer id", c.BindTokenToPeer(ctx, tokenID, "bad id"), `{"success":false,"error":"Invalid peerId"}`)
-		wantJSON(t, "BulkGenerateTokens of none", c.BulkGenerateTokens(ctx, NewObject("count", 0.0)), badRequest400)
+		wantJSON(t, "BulkGenerateTokens of none", c.BulkGenerateTokens(ctx, NewObject("count", 0.0)), `{"success":true,"data":"Count must be between 1 and 100\n","status":400}`)
 		wantAt(t, "BulkGenerateTokens", c.BulkGenerateTokens(ctx, NewObject("count", 2.0, "name_prefix", "bulk")), `2`, "data", "count")
 		wantJSON(t, "RevokeDeviceToken", c.RevokeDeviceToken(ctx, tokenID), `{"success":true,"data":{"message":"Token revoked","success":true}}`)
-		wantJSON(t, "RevokeDeviceToken of an unknown id", c.RevokeDeviceToken(ctx, "99999"), notFound404)
+		wantJSON(t, "RevokeDeviceToken of an unknown id", c.RevokeDeviceToken(ctx, "99999"), `{"success":true,"data":"Token not found\n","status":404}`)
 		wantAt(t, "ListDeviceTokens without revoked", c.ListDeviceTokens(ctx, false), `2`, "data", "count")
 		wantAt(t, "ListDeviceTokens with revoked", c.ListDeviceTokens(ctx, true), `3`, "data", "count")
 	})
 
 	t.Run("enrollment", func(t *testing.T) {
 		wantAt(t, "GetEnrollmentMode", c.GetEnrollmentMode(ctx), `"open"`, "data", "mode")
-		wantJSON(t, "SetEnrollmentMode with an unknown mode", c.SetEnrollmentMode(ctx, "bogus"), badRequest400)
+		wantJSON(t, "SetEnrollmentMode with an unknown mode", c.SetEnrollmentMode(ctx, "bogus"), `{"success":true,"data":"Invalid mode (open, managed, locked)\n","status":400}`)
 		wantAt(t, "SetEnrollmentMode", c.SetEnrollmentMode(ctx, "managed"), `"managed"`, "data", "mode")
 		wantAt(t, "GetEnrollmentMode after the change", c.GetEnrollmentMode(ctx), `"managed"`, "data", "mode")
 
@@ -280,7 +280,7 @@ func TestAgainstAPIServer(t *testing.T) {
 		wantAt(t, "ListRoles", roles, `true`, "success")
 		wantAt(t, "ListRoles", roles, `"super_admin"`, "data", "roles", 0, "name")
 		wantAt(t, "GetRolePermissions", c.GetRolePermissions(ctx, "viewer"), `"viewer"`, "data", "role")
-		wantJSON(t, "GetRolePermissions of an unknown role", c.GetRolePermissions(ctx, "bogus"), badRequest400)
+		wantJSON(t, "GetRolePermissions of an unknown role", c.GetRolePermissions(ctx, "bogus"), `{"success":false,"error":"Invalid role","status":400}`)
 		wantJSON(t, "ListRolePermissionOverrides", c.ListRolePermissionOverrides(ctx, ""), `{"success":true,"data":{"overrides":[]}}`)
 		wantJSON(t, "SetRolePermission", c.SetRolePermission(ctx, "viewer", "device.edit", true), `{"success":true,"data":{"status":"ok"}}`)
 		wantJSON(t, "ListRolePermissionOverrides of a role", c.ListRolePermissionOverrides(ctx, "viewer"),
@@ -289,7 +289,7 @@ func TestAgainstAPIServer(t *testing.T) {
 		if !strings.Contains(toJSON(t, permissions), `"device.edit"`) {
 			t.Errorf("the override is not in the role's permissions: %s", toJSON(t, permissions))
 		}
-		wantJSON(t, "SetRolePermission for admin", c.SetRolePermission(ctx, "admin", "device.edit", false), badRequest400)
+		wantJSON(t, "SetRolePermission for admin", c.SetRolePermission(ctx, "admin", "device.edit", false), `{"success":false,"error":"Cannot override super admin permissions","status":400}`)
 		wantJSON(t, "DeleteRolePermission", c.DeleteRolePermission(ctx, "viewer", "device.edit"), `{"success":true,"data":{"status":"ok"}}`)
 		wantJSON(t, "ListRolePermissionOverrides after the delete", c.ListRolePermissionOverrides(ctx, "viewer"), `{"success":true,"data":{"overrides":[]}}`)
 	})
