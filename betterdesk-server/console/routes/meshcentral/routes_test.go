@@ -328,20 +328,23 @@ func TestStatus(t *testing.T) {
 	var next answer
 	w := newWorld(t, func(string, string) answer { return next })
 	cases := []struct {
-		name string
-		api  answer
-		body string
+		name   string
+		api    answer
+		status int
+		body   string
 	}{
-		{"the status", jsonAnswer(200, `{"enabled":true,"agents_online":0}`), `{"enabled":true,"agents_online":0}`},
-		{"the API server is down", answer{}, `{"enabled":false}`},
-		{"the API server refuses", jsonAnswer(403, `{"error":"forbidden"}`), `{"enabled":false}`},
-		{"an answer with an error in it", jsonAnswer(200, `{"error":"broken","enabled":true}`), `{"success":false,"error":"broken"}`},
-		{"an empty answer", answer{status: 200}, `{"success":true,"data":""}`},
-		{"a list", jsonAnswer(200, `[]`), `[]`},
+		{"the status", jsonAnswer(200, `{"enabled":true,"agents_online":0}`), 200, `{"enabled":true,"agents_online":0}`},
+		{"a mesh server that is off", jsonAnswer(200, `{"enabled":false}`), 200, `{"enabled":false}`},
+		// Without a status from the API server the answer is 502 (BUGS.md MC4)
+		{"the API server is down", answer{}, 502, `{"enabled":false,"error":"socket hang up"}`},
+		{"the API server refuses", jsonAnswer(403, `{"error":"forbidden"}`), 502, `{"enabled":false,"error":"Request failed with status code 403"}`},
+		{"an answer with an error in it", jsonAnswer(200, `{"error":"broken","enabled":true}`), 502, `{"enabled":false,"error":"broken"}`},
+		{"an empty answer", answer{status: 200}, 200, `{"success":true,"data":""}`},
+		{"a list", jsonAnswer(200, `[]`), 200, `[]`},
 	}
 	for _, c := range cases {
 		next = c.api
-		expect(t, c.name, w.do("viewer", "GET", "/api/mesh/status", ""), 200, c.body)
+		expect(t, c.name, w.do("viewer", "GET", "/api/mesh/status", ""), c.status, c.body)
 	}
 }
 

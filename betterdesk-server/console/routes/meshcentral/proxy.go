@@ -88,11 +88,22 @@ func (h *handlers) device(action string, withBody bool) http.HandlerFunc {
 	}
 }
 
+// meshOff is the answer of GET /api/mesh/status when the API server gave
+// no status.
+type meshOff struct {
+	Enabled bool `json:"enabled"`
+	Error   any  `json:"error"`
+}
+
 // status answers GET /api/mesh/status with the API server's status
-// object. When the API server cannot be reached the answer is still 200:
-// {"enabled":false}.
+// object. When the API server cannot be reached, refuses the call or
+// answers with an error, the answer is 502 {"enabled":false,"error":...}.
 func (h *handlers) status(w http.ResponseWriter, r *http.Request) {
 	result := h.api.GetMeshStatus(r.Context())
+	if !goapi.Truthy(result.Get("success")) {
+		kit.JSON(w, r, http.StatusBadGateway, meshOff{Error: result.Get("error")})
+		return
+	}
 	if data := result.Get("data"); goapi.Truthy(data) {
 		kit.JSON(w, r, http.StatusOK, data)
 		return
