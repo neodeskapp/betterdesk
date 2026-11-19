@@ -2962,6 +2962,407 @@
      "events": []
     }
    ]
+  },
+  {
+   "name": "relay token lengths",
+   "clock": 1700000601000,
+   "steps": [
+    {
+     "step": {
+      "call": "create",
+      "args": [
+       "dev2",
+       "dev1"
+      ],
+      "as": "s1"
+     },
+     "result": {
+      "sessionId": "a584e7d8-ac55-4eec-be73-84b7f74d6d3e",
+      "initiatorToken": "207eb38fddb17d6cc1d85c5d579b582d95df022de089ef02e9c6d6bc50885808",
+      "targetToken": "695fccb07e6d2911dff6ff93581f20a9dc2cfadcbe4df0ba0bc77b86fb590fed"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "short",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token=x&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "short",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "short",
+       "close": 4403,
+       "reason": "Invalid token"
+      },
+      {
+       "socket": "short",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "plus",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token=+&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "plus",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "plus",
+       "close": 4403,
+       "reason": "Invalid token"
+      },
+      {
+       "socket": "plus",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "one-less",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token=000000000000000000000000000000000000000000000000000000000000000&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "one-less",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "one-less",
+       "close": 4403,
+       "reason": "Invalid token"
+      },
+      {
+       "socket": "one-less",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "one-more",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}0&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "one-more",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "one-more",
+       "close": 4403,
+       "reason": "Invalid token"
+      },
+      {
+       "socket": "one-more",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "twice",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}{s1.initiatorToken}&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "twice",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "twice",
+       "close": 4403,
+       "reason": "Invalid token"
+      },
+      {
+       "socket": "twice",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "other-role",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.targetToken}&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "other-role",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "other-role",
+       "close": 4403,
+       "reason": "Invalid token"
+      },
+      {
+       "socket": "other-role",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "bytes",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token=%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9&role=target"
+     },
+     "events": [
+      {
+       "socket": "bytes",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "bytes",
+       "close": 4403,
+       "reason": "Invalid token"
+      },
+      {
+       "socket": "bytes",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "broken",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token=%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF&role=target"
+     },
+     "events": [
+      {
+       "socket": "broken",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "broken",
+       "close": 4403,
+       "reason": "Invalid token"
+      },
+      {
+       "socket": "broken",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "empty",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token=&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "empty",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "empty",
+       "close": 4400,
+       "reason": "Missing or invalid parameters"
+      },
+      {
+       "socket": "empty",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "long",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token=\u0001RUN:4000:a\u0001&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "long",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "long",
+       "close": 4403,
+       "reason": "Invalid token"
+      },
+      {
+       "socket": "long",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "get",
+      "args": [
+       "{s1.sessionId}"
+      ]
+     },
+     "result": {
+      "sessionId": "a584e7d8-ac55-4eec-be73-84b7f74d6d3e",
+      "initiatorId": "dev2",
+      "targetId": "dev1",
+      "status": "pending",
+      "createdAt": 1700000601000
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "init",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "init",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "tgt",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.targetToken}&role=target"
+     },
+     "events": [
+      {
+       "socket": "tgt",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "tgt",
+       "text": "{\"type\":\"paired\",\"session\":\"a584e7d8-ac55-4eec-be73-84b7f74d6d3e\"}"
+      },
+      {
+       "socket": "init",
+       "text": "{\"type\":\"paired\",\"session\":\"a584e7d8-ac55-4eec-be73-84b7f74d6d3e\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "init",
+      "text": "after the wrong tokens"
+     },
+     "events": [
+      {
+       "socket": "tgt",
+       "text": "after the wrong tokens"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "relay handler throws",
+   "clock": 1700000601000,
+   "steps": [
+    {
+     "step": {
+      "call": "create",
+      "args": [
+       "dev2",
+       "dev1"
+      ],
+      "as": "s1"
+     },
+     "result": {
+      "sessionId": "c6e1157a-7341-40a5-8144-f53b8e9e2382",
+      "initiatorToken": "b53b1d22f278fac17a6608a1d004fa530dc9325d78a6526939e7a2ec2b683cad",
+      "targetToken": "f84fbab3d2415e879866b87f4450bbf4fc93a9b6dd88f99b268733086737f932"
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "throwNow": true
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "a",
+       "close": 1011,
+       "reason": "Internal error"
+      },
+      {
+       "socket": "a",
+       "end": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "call": "get",
+      "args": [
+       "{s1.sessionId}"
+      ]
+     },
+     "result": {
+      "sessionId": "c6e1157a-7341-40a5-8144-f53b8e9e2382",
+      "initiatorId": "dev2",
+      "targetId": "dev1",
+      "status": "pending",
+      "createdAt": 1700000601000
+     },
+     "events": []
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "c",
+      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.targetToken}&role=target"
+     },
+     "events": [
+      {
+       "socket": "c",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "c",
+       "text": "{\"type\":\"paired\",\"session\":\"c6e1157a-7341-40a5-8144-f53b8e9e2382\"}"
+      },
+      {
+       "socket": "b",
+       "text": "{\"type\":\"paired\",\"session\":\"c6e1157a-7341-40a5-8144-f53b8e9e2382\"}"
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "b",
+      "text": "still relayed"
+     },
+     "events": [
+      {
+       "socket": "c",
+       "text": "still relayed"
+      }
+     ]
+    }
+   ]
   }
  ]
 }

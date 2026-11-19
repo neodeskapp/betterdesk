@@ -27,12 +27,14 @@ import (
 
 // fakeClock is the clock of the Node oracle: time moves only when a test
 // moves it, and due timers fire in the order of their time, then of their
-// creation, in the goroutine that moves the clock.
+// creation, in the goroutine that moves the clock. With panicNext set the
+// next Now panics, as the oracle's Date.now throws after a throwNow step.
 type fakeClock struct {
-	mu     sync.Mutex
-	now    time.Time
-	seq    int
-	timers []*fakeTimer
+	mu        sync.Mutex
+	now       time.Time
+	seq       int
+	timers    []*fakeTimer
+	panicNext bool
 }
 
 type fakeTimer struct {
@@ -47,6 +49,10 @@ type fakeTimer struct {
 func (c *fakeClock) Now() time.Time {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.panicNext {
+		c.panicNext = false
+		panic("clock failed")
+	}
 	return c.now
 }
 
@@ -148,6 +154,8 @@ type step struct {
 	Call    string            `json:"call"`
 	Args    []json.RawMessage `json:"args"`
 	As      string            `json:"as"`
+	// ThrowNow makes the clock fail once, at the next read
+	ThrowNow bool `json:"throwNow"`
 }
 
 // event is one thing a socket saw, in the oracle's JSON.
@@ -526,6 +534,11 @@ func TestNodeScenarios(t *testing.T) {
 					case st.Drop:
 						sock.conn.Close()
 					}
+				}
+				if st.ThrowNow {
+					clock.mu.Lock()
+					clock.panicNext = true
+					clock.mu.Unlock()
 				}
 				if st.Advance > 0 {
 					p.quiet()

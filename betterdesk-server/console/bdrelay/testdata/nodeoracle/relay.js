@@ -36,7 +36,16 @@ global.setTimeout = (fn, delay, ...args) => fakeTimer(fn, delay, false, args);
 global.setInterval = (fn, delay, ...args) => fakeTimer(fn, delay, true, args);
 global.clearTimeout = (t) => { if (t) timers.delete(typeof t === 'object' ? t.id : t); };
 global.clearInterval = global.clearTimeout;
-Date.now = () => clock;
+// A step with throwNow makes the next Date.now() throw: the relay handler
+// reads the clock right after the token check, so its catch is reached.
+let throwNow = false;
+Date.now = () => {
+    if (throwNow) {
+        throwNow = false;
+        throw new Error('clock failed');
+    }
+    return clock;
+};
 function advance(ms) {
     const until = clock + ms;
     for (;;) {
@@ -195,6 +204,7 @@ async function run(step, port) {
         if (step.close !== undefined) writeFrame(s, 8, Buffer.from([step.close >> 8, step.close & 0xff]));
         if (step.drop) s.sock.destroy();
     }
+    if (step.throwNow) throwNow = true;
     if (step.advance) advance(step.advance);
     if (step.call) {
         const args = (step.args || []).map((a) => (typeof a === 'string' ? fill(a) : a));
@@ -457,6 +467,38 @@ scenario('relay reject and errors', [
     { send: 't2', repeat: 2 * 1024 * 1024, opcode: 2 },
     { send: 'i2', repeat: 2 * 1024 * 1024 + 1, opcode: 2 },
     { call: 'get', args: ['{s2.sessionId}'] },
+]);
+
+// GHSA-98mc-f6p7-gj85: a token of another length is refused like a
+// wrong one, and the right token still joins afterwards.
+const tokenAs = (token, role = 'initiator') => `/ws/bd-relay?session={s1.sessionId}&token=${token}&role=${role}`;
+scenario('relay token lengths', [
+    { call: 'create', args: ['dev2', 'dev1'], as: 's1' },
+    { open: 'short', path: tokenAs('x') },
+    { open: 'plus', path: tokenAs('+') },
+    { open: 'one-less', path: tokenAs('0'.repeat(63)) },
+    { open: 'one-more', path: tokenAs('{s1.initiatorToken}0') },
+    { open: 'twice', path: tokenAs('{s1.initiatorToken}{s1.initiatorToken}') },
+    { open: 'other-role', path: tokenAs('{s1.targetToken}') },
+    { open: 'bytes', path: tokenAs('%C3%A9'.repeat(32), 'target') },
+    { open: 'broken', path: tokenAs('%FF'.repeat(64), 'target') },
+    { open: 'empty', path: tokenAs('') },
+    { open: 'long', path: tokenAs('a'.repeat(4000)) },
+    { call: 'get', args: ['{s1.sessionId}'] },
+    { open: 'init', path: relay('s1', 'initiator') },
+    { open: 'tgt', path: relay('s1', 'target') },
+    { send: 'init', text: 'after the wrong tokens' },
+]);
+// A throw inside the relay handler closes that socket with 1011 and the
+// process goes on; the session is still there for the next socket.
+scenario('relay handler throws', [
+    { call: 'create', args: ['dev2', 'dev1'], as: 's1' },
+    { throwNow: true },
+    { open: 'a', path: relay('s1', 'initiator') },
+    { call: 'get', args: ['{s1.sessionId}'] },
+    { open: 'b', path: relay('s1', 'initiator') },
+    { open: 'c', path: relay('s1', 'target') },
+    { send: 'b', text: 'still relayed' },
 ]);
 
 (async () => {

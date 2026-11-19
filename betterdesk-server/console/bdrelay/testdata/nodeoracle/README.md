@@ -9,24 +9,32 @@ same bytes the Go test reads). The token check is stubbed:
 fail. Sockets are opened with raw upgrade requests and read frame by frame.
 
 A step opens a socket, sends a message (text, binary, bytes that are not
-UTF-8, a repeated byte up to megabytes, a close), moves the clock, or calls
-a function the routes used (`createRelaySession`, `getRelaySession`, the
+UTF-8, a repeated byte up to megabytes, a close), moves the clock, makes
+the next `Date.now()` throw (`throwNow`: the relay handler reads the clock
+right after its token check, so the handler's catch answers), or calls a
+function the routes used (`createRelaySession`, `getRelaySession`, the
 map's `delete`, `notifyTarget`, `getOnlineDeviceIds`, `isDeviceOnline`, the
 heartbeat's list of pending sessions, `requestFromDevice` and its result).
 After each step it records what every socket got (the answer's head, text
 and binary messages, the close frame, the end of the connection) and what
-the call returned. `../node_relay.json` holds 12 scenarios with 198 steps.
+the call returned. `../node_relay.json` holds 14 scenarios with 220 steps.
 `TestNodeScenarios` plays them on the Go service with the same clock and
-random source; every socket must see the same, in order, and every call
-must return the same JSON.
+random source (a `throwNow` step makes the Go clock panic once); every
+socket must see the same, in order, and every call must return the same
+JSON.
 
-Not in the recording, because it ends the Node process: a relay token of
-another length (BUGS WS2); `TestTokenOfAnotherLength` covers the Go side.
+The recording is of upstream 3.5.264 (GHSA-98mc-f6p7-gj85): a relay token
+of another length closes with 4403 "Invalid token" (scenario `relay token
+lengths`), and a throw in the relay handler closes that socket with 1011
+"Internal error" (`relay handler throws`). The other twelve scenarios are
+the same as in the recording of the tree before the move.
 
 This folder is a test fixture for the time both servers exist. The service
-is gone from `web-nodejs` since it moved, so the script runs only on a tree
-that still has it (the commit before the move); the recording stays.
+is gone from `web-nodejs` since it moved, so the script runs on the spec
+tree of the upstream merge, mounted at `/spec/web-nodejs` with the
+dependencies of the dev image; the recording stays.
 
-    tools/dev.sh "cd betterdesk-server/console/bdrelay/testdata && node nodeoracle/relay.js"
+    DEV_DOCKER_ARGS="-v <spec tree>/web-nodejs:/spec/web-nodejs:ro -v bdgo-node-nm:/spec/web-nodejs/node_modules" \
+      tools/dev.sh "cd betterdesk-server/console/bdrelay/testdata && WEB_NODEJS=/spec/web-nodejs node nodeoracle/relay.js"
 
 After a run, `node ../../ws/wstest/squeeze.js <recording>` (from `testdata`) writes the long runs of the size limits as markers; the test reads the file through `wstest.Expand`.

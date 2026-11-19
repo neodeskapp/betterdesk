@@ -12,10 +12,12 @@ import (
 // origin check (403). After it, each refusal is a close: a missing
 // parameter or a role other than initiator and target 4400 "Missing or
 // invalid parameters", the address's socket limit 4429 "Too many
-// connections", an unknown session 4404 "Session not found", a wrong
-// token 4403 "Invalid token", a session still waiting after SessionTTL
-// 4408 "Session expired" (and it is gone), the role's place taken 4409
-// "Slot already taken".
+// connections", an unknown session 4404 "Session not found", a token that
+// is not the role's (also one of another length) 4403 "Invalid token", a
+// session still waiting after SessionTTL 4408 "Session expired" (and it
+// is gone), the role's place taken 4409 "Slot already taken". A panic
+// while the socket joins closes it with 1011 "Internal error"; the
+// service goes on.
 //
 // When both sides are there, each gets {"type":"paired","session":id}
 // and from then on every message goes to the other side as it came, text
@@ -33,87 +35,11 @@ func (s *Service) serveRelay(u *ws.Upgrade) {
 		return
 	}
 	defer conn.Wait()
-	ip := u.ClientAddr()
-	id, _ := u.SearchParam("session")
-	token, _ := u.SearchParam("token")
-	role, _ := u.SearchParam("role")
-
-	refuse := func(code int, reason string) {
-		conn.Close(code, reason)
-		_ = conn.Discard()
-	}
-	if id == "" || token == "" || role == "" || (role != "initiator" && role != "target") {
-		refuse(4400, "Missing or invalid parameters")
-		return
-	}
-
-	s.mu.Lock()
-	if s.perIP.Count(ip) >= MaxRelayPerIP {
-		s.mu.Unlock()
-		refuse(4429, "Too many connections")
-		return
-	}
-	sess, found := s.sessions.get(id)
-	if !found {
-		s.mu.Unlock()
-		refuse(4404, "Session not found")
-		return
-	}
-	expected := sess.initiatorToken
-	if role == "target" {
-		expected = sess.targetToken
-	}
-	if len(token) != len(expected) {
-		// Node's compare threw on tokens of another length and the process
-		// ended; this server drops the connection and goes on.
-		s.mu.Unlock()
-		logging.Logf("console", "WARN: [bd-relay] token of the wrong length for session %s, connection dropped", id)
-		conn.CloseNow()
-		_ = conn.Discard()
-		return
-	}
-	if subtle.ConstantTimeCompare([]byte(token), []byte(expected)) != 1 {
-		s.mu.Unlock()
-		refuse(4403, "Invalid token")
-		return
-	}
-	if s.nowMillis()-sess.createdAt > SessionTTL.Milliseconds() && sess.status == "pending" {
-		s.sessions.delete(id)
-		s.mu.Unlock()
-		refuse(4408, "Session expired")
-		return
-	}
-	s.perIP.Add(ip)
-	slot := &sess.initiator
-	if role == "target" {
-		slot = &sess.target
-	}
-	if *slot != nil {
-		s.mu.Unlock()
-		conn.Close(4409, "Slot already taken")
-		s.mu.Lock()
-		s.perIP.Done(ip)
-		s.mu.Unlock()
-		_ = conn.Discard()
-		return
-	}
-	*slot = conn
-	if sess.initiator != nil && sess.target != nil {
-		s.activateLocked(sess)
-	}
-	s.mu.Unlock()
-
-	// Waiting for the other side.
 	var waitMu sync.Mutex
-	waiting := s.clock.AfterFunc(SessionTTL, func() {
-		waitMu.Lock()
-		defer waitMu.Unlock()
-		s.mu.Lock()
-		defer s.mu.Unlock()
-		if sess.status == "pending" {
-			s.teardownLocked(id, 4408, "Timeout waiting for peer")
-		}
-	})
+	j, ok := s.joinRelay(u, conn, &waitMu)
+	if !ok {
+		return
+	}
 
 	var err error
 	for {
@@ -123,10 +49,10 @@ func (s *Service) serveRelay(u *ws.Upgrade) {
 		if err != nil {
 			break
 		}
-		s.relayMessage(sess, conn, binary, data)
+		s.relayMessage(j.sess, conn, binary, data)
 	}
 	waitMu.Lock()
-	waiting.Stop()
+	j.waiting.Stop()
 	waitMu.Unlock()
 
 	s.mu.Lock()
@@ -134,13 +60,118 @@ func (s *Service) serveRelay(u *ws.Upgrade) {
 	if ws.ProtocolError(err) {
 		// "error" and then "close": counted down twice, and the other
 		// side hears of the error first.
-		s.perIP.Done(ip)
-		s.stopIdleLocked(sess)
-		s.teardownLocked(id, 1011, "WebSocket error")
+		s.perIP.Done(j.ip)
+		s.stopIdleLocked(j.sess)
+		s.teardownLocked(j.id, 1011, "WebSocket error")
 	}
-	s.perIP.Done(ip)
-	s.stopIdleLocked(sess)
-	s.teardownLocked(id, 1000, "Peer disconnected")
+	s.perIP.Done(j.ip)
+	s.stopIdleLocked(j.sess)
+	s.teardownLocked(j.id, 1000, "Peer disconnected")
+}
+
+// relayJoin is a socket that took its place in a session.
+type relayJoin struct {
+	sess    *session
+	id, ip  string
+	waiting Timer
+}
+
+// joinRelay checks a relay socket and puts it into its session: the
+// steps of handleRelayConnection up to the timer that waits for the other
+// side, which takes waitMu before it ends the session. A socket that is
+// refused has been closed when ok is false.
+//
+// A panic on the way, where the old handler threw, is logged and closes
+// the socket with 1011 "Internal error". What the steps before it did
+// stays, as in Node: a socket that already holds its slot keeps it until
+// the session ends, and its address stays counted.
+func (s *Service) joinRelay(u *ws.Upgrade, conn *ws.Conn, waitMu *sync.Mutex) (j relayJoin, ok bool) {
+	defer func() {
+		if r := recover(); r != nil {
+			logging.Logf("console", "ERROR: [bd-relay] connection handler failed: %v", r)
+			conn.Close(1011, "Internal error")
+			_ = conn.Discard()
+			j, ok = relayJoin{}, false
+		}
+	}()
+	ip := u.ClientAddr()
+	id, _ := u.SearchParam("session")
+	token, _ := u.SearchParam("token")
+	role, _ := u.SearchParam("role")
+	if id == "" || token == "" || role == "" || (role != "initiator" && role != "target") {
+		conn.Close(4400, "Missing or invalid parameters")
+		_ = conn.Discard()
+		return relayJoin{}, false
+	}
+	sess, code, reason := s.attachRelay(conn, id, token, role, ip)
+	if code != 0 {
+		conn.Close(code, reason)
+		if code == 4409 {
+			s.mu.Lock()
+			s.perIP.Done(ip)
+			s.mu.Unlock()
+		}
+		_ = conn.Discard()
+		return relayJoin{}, false
+	}
+	waiting := s.clock.AfterFunc(SessionTTL, func() {
+		waitMu.Lock()
+		defer waitMu.Unlock()
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		if sess.status == "pending" {
+			s.teardownLocked(id, 4408, "Timeout waiting for peer")
+		}
+	})
+	return relayJoin{sess: sess, id: id, ip: ip, waiting: waiting}, true
+}
+
+// attachRelay runs the checks of a relay socket that need the sessions
+// and puts the socket into its slot, pairing the session when both sides
+// are there. code is the close code of a refusal, 0 when the socket took
+// its place. A refused 4409 has been counted for its address.
+func (s *Service) attachRelay(conn *ws.Conn, id, token, role, ip string) (sess *session, code int, reason string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.perIP.Count(ip) >= MaxRelayPerIP {
+		return nil, 4429, "Too many connections"
+	}
+	sess, found := s.sessions.get(id)
+	if !found {
+		return nil, 4404, "Session not found"
+	}
+	expected := sess.initiatorToken
+	if role == "target" {
+		expected = sess.targetToken
+	}
+	if !tokensMatch(token, expected) {
+		return nil, 4403, "Invalid token"
+	}
+	if s.nowMillis()-sess.createdAt > SessionTTL.Milliseconds() && sess.status == "pending" {
+		s.sessions.delete(id)
+		return nil, 4408, "Session expired"
+	}
+	s.perIP.Add(ip)
+	slot := &sess.initiator
+	if role == "target" {
+		slot = &sess.target
+	}
+	if *slot != nil {
+		return nil, 4409, "Slot already taken"
+	}
+	*slot = conn
+	if sess.initiator != nil && sess.target != nil {
+		s.activateLocked(sess)
+	}
+	return sess, 0, ""
+}
+
+// tokensMatch compares the token a relay socket brought with the one of
+// its role in constant time. A token of another length does not match
+// (every token is 64 hex digits, so the length is no secret), and neither
+// does an empty one, also against an empty token.
+func tokensMatch(provided, expected string) bool {
+	return provided != "" && subtle.ConstantTimeCompare([]byte(provided), []byte(expected)) == 1
 }
 
 // activateLocked pairs the two sides of a session.

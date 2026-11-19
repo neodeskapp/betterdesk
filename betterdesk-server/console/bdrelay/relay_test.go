@@ -26,29 +26,33 @@ func newRelay(t *testing.T) (*Service, string) {
 	return svc, strings.TrimPrefix(srv.URL, "http://")
 }
 
-// TestTokenOfAnotherLength: Node's token compare threw on a token of
-// another length and the process ended (BUGS WS2). The Go relay drops
-// that connection without a close frame, keeps the session and goes on.
+// TestTokenOfAnotherLength: a relay token of another length is refused
+// with 4403 "Invalid token" like a wrong one (GHSA-98mc-f6p7-gj85: Node's
+// compare threw on it and the process ended), the session stays, and the
+// right token still joins.
 func TestTokenOfAnotherLength(t *testing.T) {
 	// Checked after the server of the test has stopped
 	t.Cleanup(wstest.Goroutines(t))
 	svc, addr := newRelay(t)
 	id, initiatorToken, _ := svc.CreateRelaySession("dev2", "dev1")
-	q := url.Values{"session": {id}, "token": {"short"}, "role": {"initiator"}}
-	c, _, err := wstest.Dial(addr, "/ws/bd-relay?"+q.Encode(), nil)
-	if err != nil || c == nil {
-		t.Fatalf("dial: %v", err)
-	}
-	if !c.Wait(3*time.Second, func(_ []wstest.Frame, closed bool) bool { return closed }) {
-		t.Fatal("the connection stayed open")
-	}
-	if _, code, _ := c.Closed(); code != 1006 {
-		t.Errorf("closed with %d, want the connection dropped (1006)", code)
+	for _, token := range []string{"x", initiatorToken[:63], initiatorToken + "0", initiatorToken + initiatorToken, strings.Repeat("é", 32)} {
+		q := url.Values{"session": {id}, "token": {token}, "role": {"initiator"}}
+		c, _, err := wstest.Dial(addr, "/ws/bd-relay?"+q.Encode(), nil)
+		if err != nil || c == nil {
+			t.Fatalf("dial: %v", err)
+		}
+		if !c.Wait(3*time.Second, func(_ []wstest.Frame, closed bool) bool { return closed }) {
+			t.Fatalf("token of %d bytes: the connection stayed open", len(token))
+		}
+		if _, code, reason := c.Closed(); code != 4403 || reason != "Invalid token" {
+			t.Errorf("token of %d bytes: closed with %d %q, want 4403 Invalid token", len(token), code, reason)
+		}
+		c.Drop()
 	}
 	if svc.GetRelaySession(id) == nil {
-		t.Error("the session is gone")
+		t.Fatal("the session is gone")
 	}
-	q.Set("token", initiatorToken)
+	q := url.Values{"session": {id}, "token": {initiatorToken}, "role": {"initiator"}}
 	good, _, err := wstest.Dial(addr, "/ws/bd-relay?"+q.Encode(), nil)
 	if err != nil || good == nil {
 		t.Fatalf("dial: %v", err)
@@ -58,7 +62,73 @@ func TestTokenOfAnotherLength(t *testing.T) {
 		t.Errorf("the right token was closed with %d %q", code, reason)
 	}
 	good.Close(1000)
-	c.Drop()
+}
+
+// TestTokensMatch is the comparison of tests/bdRelay.tokenCompare.test.js:
+// the exact token matches; a wrong token of the same length, a shorter or
+// longer one, and an empty one on either side (also two empty ones) do
+// not.
+func TestTokensMatch(t *testing.T) {
+	right := strings.Repeat("0123456789abcdef", 4)
+	wrong := strings.Repeat("fedcba9876543210", 4)
+	for _, c := range []struct {
+		provided, expected string
+		want               bool
+	}{
+		{right, right, true},
+		{wrong, right, false},
+		{"x", right, false},
+		{right + right, right, false},
+		{right[:63], right, false},
+		{"", right, false},
+		{right, "", false},
+		{"", "", false},
+	} {
+		if got := tokensMatch(c.provided, c.expected); got != c.want {
+			t.Errorf("tokensMatch(%q, %q) = %v, want %v", c.provided, c.expected, got, c.want)
+		}
+	}
+}
+
+// TestSlotTakenIsNotCounted: a socket refused with 4409 "Slot already
+// taken" is counted for its address only while it is refused, so ten of
+// them do not use up the address's limit and the other side still joins.
+func TestSlotTakenIsNotCounted(t *testing.T) {
+	t.Cleanup(wstest.Goroutines(t))
+	svc, addr := newRelay(t)
+	id, initiatorToken, targetToken := svc.CreateRelaySession("dev2", "dev1")
+	join := func(role, token string) *wstest.Client {
+		q := url.Values{"session": {id}, "token": {token}, "role": {role}}
+		c, _, err := wstest.Dial(addr, "/ws/bd-relay?"+q.Encode(), nil)
+		if err != nil || c == nil {
+			t.Fatalf("dial: %v", err)
+		}
+		return c
+	}
+	first := join("initiator", initiatorToken)
+	defer first.Close(1000)
+	time.Sleep(50 * time.Millisecond)
+	for range MaxRelayPerIP {
+		again := join("initiator", initiatorToken)
+		if !again.Wait(3*time.Second, func(_ []wstest.Frame, closed bool) bool { return closed }) {
+			t.Fatal("the second initiator stayed open")
+		}
+		if _, code, reason := again.Closed(); code != 4409 {
+			t.Fatalf("second initiator closed with %d %q", code, reason)
+		}
+		again.Drop()
+	}
+	target := join("target", targetToken)
+	defer target.Close(1000)
+	if !target.Wait(3*time.Second, func(f []wstest.Frame, closed bool) bool { return closed || len(f) > 0 }) {
+		t.Fatal("the target got nothing")
+	}
+	if closed, code, reason := target.Closed(); closed {
+		t.Fatalf("the target was closed with %d %q", code, reason)
+	}
+	if f := target.Frames(); len(f) == 0 || !strings.Contains(f[0].Text(), `"paired"`) {
+		t.Errorf("target frames %v", f)
+	}
 }
 
 // TestRequestEndsWithItsCaller: a caller that goes away stops waiting;
