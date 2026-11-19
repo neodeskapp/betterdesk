@@ -151,8 +151,9 @@ func (h *handlers) one(w http.ResponseWriter, r *http.Request) {
 // server on port 21116 of that host, the server's key and a new access
 // token. Then the device goes into the folder and the device groups, and
 // gets the display name and the tags when the API server knows it. A
-// display name or tags that are truthy but no text answer 500 after the
-// approval is stored, without the event and the audit entry (BUGS RG6).
+// display name or tags that are truthy but no text answer 400 before
+// anything is stored, so an approval always has its event and its audit
+// entry.
 func (h *handlers) approve(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := registrationID(r)
@@ -167,6 +168,17 @@ func (h *handlers) approve(w http.ResponseWriter, r *http.Request) {
 	}
 	if status := reg.Get("status"); status != "pending" {
 		failure(w, r, http.StatusBadRequest, "Cannot approve: status is "+jsreq.String(status))
+		return
+	}
+	body := jsreq.Body(r)
+	displayName, err := textOr(jsreq.Prop(body, "display_name"), "")
+	if err != nil {
+		failure(w, r, http.StatusBadRequest, "Invalid display_name")
+		return
+	}
+	tags, err := textOr(jsreq.Prop(body, "tags"), "")
+	if err != nil {
+		failure(w, r, http.StatusBadRequest, "Invalid tags")
 		return
 	}
 	cfg, err := h.serverConfig(r)
@@ -184,22 +196,11 @@ func (h *handlers) approve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body := jsreq.Body(r)
 	if deviceID := reg.Get("device_id"); goapi.Truthy(deviceID) {
 		device := jsreq.String(deviceID)
 		h.assignFolder(r, device, jsreq.Prop(body, "folder_id"), "Assign folder on LAN approve:")
 		if err := h.applyGroups(r, device, jsreq.Prop(body, "group_guids")); err != nil {
 			h.log.Error("Assign groups on LAN approve:", err)
-		}
-		displayName, err := textOr(jsreq.Prop(body, "display_name"), "")
-		if err != nil {
-			h.serverError(w, r, "Approve registration error:", err)
-			return
-		}
-		tags, err := textOr(jsreq.Prop(body, "tags"), "")
-		if err != nil {
-			h.serverError(w, r, "Approve registration error:", err)
-			return
 		}
 		h.applyPeerFields(r, device, jsbind.Trim(displayName), jsbind.Trim(tags))
 	}

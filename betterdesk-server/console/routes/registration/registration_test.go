@@ -499,3 +499,37 @@ func TestRejectWithoutAReason(t *testing.T) {
 		}
 	})
 }
+
+// An approval whose display name or tags are truthy but no text is
+// refused before anything is stored: the request stays pending, and
+// there is neither an event nor an audit entry without its approval
+// (BUGS RG6).
+func TestApprovalChecksTheBodyFirst(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		if got := w.SignedOut().Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"odd-body"}`); got.Status != http.StatusOK {
+			t.Fatalf("request: %d %s", got.Status, got.Body)
+		}
+		for body, want := range map[string]string{
+			`{"display_name":5}`:  `400 {"success":false,"error":"Invalid display_name"}`,
+			`{"tags":["a","b"]}`:  `400 {"success":false,"error":"Invalid tags"}`,
+			`{"display_name":{}}`: `400 {"success":false,"error":"Invalid display_name"}`,
+		} {
+			got := w.As("admin").Do(http.MethodPut, "/api/registrations/1/approve", body)
+			if have := strconv.Itoa(got.Status) + " " + got.Body; have != want {
+				t.Errorf("%s: %s, want %s", body, have, want)
+			}
+		}
+		var status string
+		if err := db.QueryRow(context.Background(), "SELECT status FROM pending_registrations WHERE id = 1").Scan(&status); err != nil || status != "pending" {
+			t.Errorf("status %q (%v), want pending", status, err)
+		}
+		if rows := w.AuditRows(); len(rows) != 0 {
+			t.Errorf("audit %q", rows)
+		}
+		got := w.As("admin").Do(http.MethodPut, "/api/registrations/1/approve", `{"display_name":"Kiosk","tags":"a, b"}`)
+		if got.Status != http.StatusOK || len(w.AuditRows()) != 1 {
+			t.Errorf("a good body: %d %s, audit %q", got.Status, got.Body, w.AuditRows())
+		}
+	})
+}
