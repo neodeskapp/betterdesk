@@ -60,35 +60,17 @@ func mayAccess(user *session.User, f *flow) bool {
 	return user != nil && (access.IsSuperAdminRole(user.Role) || string(f.CreatedBy) == user.Username)
 }
 
-// flowToRead loads the flow of the address for an account that may see
-// it. For any other account, and for an id that names no flow, it
-// answers 404 and returns nil.
-func (h *handlers) flowToRead(w http.ResponseWriter, r *http.Request) (*flow, error) {
+// flowOfAccount loads the flow of the address for an account that may see
+// and change it. For any other account, and for an id that names no flow,
+// it answers 404 and returns nil, so the flow of somebody else reads like
+// one that does not exist.
+func (h *handlers) flowOfAccount(w http.ResponseWriter, r *http.Request) (*flow, error) {
 	f, err := getFlow(r.Context(), h.db, r.PathValue("id"))
 	if err != nil {
 		return nil, err
 	}
 	if f == nil || !mayAccess(kit.User(r), f) {
 		kit.Fail(w, r, http.StatusNotFound, notFound)
-		return nil, nil
-	}
-	return f, nil
-}
-
-// flowToChange loads the flow of the address for an account that may
-// change it. It answers 404 for an id that names no flow and 403 for the
-// flow of somebody else, and returns nil.
-func (h *handlers) flowToChange(w http.ResponseWriter, r *http.Request) (*flow, error) {
-	f, err := getFlow(r.Context(), h.db, r.PathValue("id"))
-	if err != nil {
-		return nil, err
-	}
-	if f == nil {
-		kit.Fail(w, r, http.StatusNotFound, notFound)
-		return nil, nil
-	}
-	if !mayAccess(kit.User(r), f) {
-		kit.Fail(w, r, http.StatusForbidden, "Not authorized")
 		return nil, nil
 	}
 	return f, nil
@@ -203,7 +185,7 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 
 // get answers GET /api/cdap-studio/flows/{id} with the whole flow.
 func (h *handlers) get(w http.ResponseWriter, r *http.Request) {
-	f, err := h.flowToRead(w, r)
+	f, err := h.flowOfAccount(w, r)
 	if err != nil {
 		h.failed(w, r, "get flow", err, "Failed to get flow")
 		return
@@ -238,7 +220,7 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 // out keeps its value; so does a name that is empty or no string.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
-	existing, err := h.flowToChange(w, r)
+	existing, err := h.flowOfAccount(w, r)
 	if err != nil {
 		h.failed(w, r, "update flow", err, "Failed to update flow")
 		return
@@ -271,7 +253,7 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 
 // remove answers DELETE /api/cdap-studio/flows/{id}.
 func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
-	existing, err := h.flowToChange(w, r)
+	existing, err := h.flowOfAccount(w, r)
 	if err == nil && existing != nil {
 		err = deleteFlow(r.Context(), h.db, string(existing.ID))
 	}
@@ -287,7 +269,7 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 // deploy answers POST /api/cdap-studio/flows/{id}/deploy: it marks the
 // flow as deployed. Nothing is started.
 func (h *handlers) deploy(w http.ResponseWriter, r *http.Request) {
-	existing, err := h.flowToChange(w, r)
+	existing, err := h.flowOfAccount(w, r)
 	if err == nil && existing != nil {
 		err = setFlowStatus(r.Context(), h.db, string(existing.ID), "deployed", h.now())
 	}
@@ -304,7 +286,7 @@ func (h *handlers) deploy(w http.ResponseWriter, r *http.Request) {
 // made-up result per node of the flow, and the numbers of nodes and
 // wires. Nothing of the flow runs.
 func (h *handlers) test(w http.ResponseWriter, r *http.Request) {
-	f, err := h.flowToRead(w, r)
+	f, err := h.flowOfAccount(w, r)
 	if err != nil {
 		h.failed(w, r, "test flow", err, "Failed to test flow")
 		return
@@ -385,7 +367,7 @@ func (e exported) text() string {
 // flow with everything but letters, digits, _ and - replaced by _. The
 // file is never compressed.
 func (h *handlers) export(w http.ResponseWriter, r *http.Request) {
-	f, err := h.flowToRead(w, r)
+	f, err := h.flowOfAccount(w, r)
 	if err != nil {
 		h.failed(w, r, "export flow", err, "Failed to export flow")
 		return
