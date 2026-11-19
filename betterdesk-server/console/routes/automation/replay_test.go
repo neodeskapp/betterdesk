@@ -2,6 +2,8 @@ package automation_test
 
 import (
 	"context"
+	"encoding/json"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -38,14 +40,21 @@ import (
 //     console refuses the address with 400 before it asks the route.
 //
 // The steps the bug fixes change are listed in panelFixes
-// (fixed_test.go).
+// (fixed_test.go). One fix changes a whole kind of answer: on SQLite a
+// new rule or command is answered with the stored row, where Node
+// answered with the values of the request (BUGS AU3). There the id must
+// be Node's and the answer what a read of the row gives.
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
-		guarded, elsewhere, slashes, undecoded := 0, 0, 0, 0
+		guarded, elsewhere, slashes, undecoded, created := 0, 0, 0, 0, 0
 		defer panelFixes.Unused(t, db)
 		w.Run(replay.Load(t, db, "node"), panelFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			switch {
+			case !db.IsPostgres() && step.Method == "POST" && step.Status == 201 && got.Status == 201:
+				created++
+				answersTheRow(t, w, step, got)
+				return true
 			case step.Method != "GET" && got.Status == 403 && strings.Contains(got.Body, `"code":"panel_access_denied"`) &&
 				(step.Role == "guest_issuer" || step.Role == "viewer" || step.Role == "server_admin"):
 				guarded++
@@ -81,7 +90,47 @@ func TestNodeAnswers(t *testing.T) {
 		if elsewhere != 165 || slashes != 1 || undecoded != 1 {
 			t.Errorf("%d answers were compared by status only, %d had two slashes and %d an id that is no text, want 165, 1 and 1", elsewhere, slashes, undecoded)
 		}
+		want := createdOnSQLite
+		if db.IsPostgres() {
+			want = 0
+		}
+		if created != want {
+			t.Errorf("%d new rules and commands were answered with the stored row, want %d", created, want)
+		}
 	})
+}
+
+// createdOnSQLite is the number of rules and commands the recording on
+// SQLite creates.
+const createdOnSQLite = 352
+
+// answersTheRow checks the answer to a new rule or command on SQLite: it
+// has Node's id and is the row as a read of it gives it.
+func answersTheRow(t *testing.T, w *replay.World, step replay.Step, got replay.Answer) {
+	t.Helper()
+	kind, list := "rule", "rules"
+	if strings.HasSuffix(strings.ToLower(step.Path), "/commands") {
+		kind, list = "command", "commands"
+	}
+	idOf := func(body string) float64 {
+		var members map[string]json.RawMessage
+		var row struct {
+			ID float64 `json:"id"`
+		}
+		if json.Unmarshal([]byte(body), &members) != nil || json.Unmarshal(members[kind], &row) != nil {
+			return 0
+		}
+		return row.ID
+	}
+	id := idOf(got.Body)
+	if id == 0 || id != idOf(step.Answer) {
+		t.Errorf("%s: %s, Node answered %s", step.Name, got.Body, step.Answer)
+		return
+	}
+	read := w.Do(replay.Request{Role: "admin", Path: "/api/automation/" + list + "/" + strconv.Itoa(int(id))})
+	if want := `{"success":true,"` + kind + `":` + read.Body + `}`; read.Status != 200 || got.Body != want {
+		t.Errorf("%s: %s, want the row %s", step.Name, got.Body, read.Body)
+	}
 }
 
 // The console has the group's fifteen routes at /api/automation and at
@@ -342,49 +391,43 @@ func TestARuleKeepsTheStateItWasCreatedWith(t *testing.T) {
 			if want := map[bool]string{true: `[{"enabled":1}]`, false: `[{"enabled":0}]`}[tt.on]; stored != want {
 				t.Errorf("enabled %s: stored as %s, want %s", tt.enabled, stored, want)
 			}
-			// SQLite answers with the values of the request, PostgreSQL with the row
-			if want := map[bool]string{true: `"enabled":true`, false: `"enabled":false`}[tt.on]; !strings.Contains(got.Body, want) {
+			// The answer is the stored row
+			if want := map[bool]string{true: db.Pick(`"enabled":1`, `"enabled":true`), false: db.Pick(`"enabled":0`, `"enabled":false`)}[tt.on]; !strings.Contains(got.Body, want) {
 				t.Errorf("enabled %s: answered %s, want %s", tt.enabled, got.Body, want)
 			}
 		}
 	})
 }
 
-// A new rule and a new command are answered with the values of the
-// request on SQLite, in the order the old console listed them, and with
-// the stored row on PostgreSQL.
+// A new rule and a new command are answered with the row as it is stored,
+// on both databases: what a later read gives. SQLite answered with the
+// values of the request (BUGS AU3).
 func TestWhatANewRuleAndANewCommandAreAnsweredWith(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
-		got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/automation/rules",
+		created := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/automation/rules",
 			Body: replay.Text(`{"name":" Types ","condition_type":"custom","description":"text","condition_value":12.5,"severity":"fatal","scope_device_id":"D7","cooldown_secs":900,"notify_emails":"","enabled":"0"}`)})
+		read := w.Do(replay.Request{Role: "admin", Path: "/api/automation/rules/1"})
 		want := db.Pick(
-			`{"success":true,"rule":{"id":1,"name":"Types","description":"text","condition_type":"custom","condition_op":"gt","condition_value":12.5,"severity":"warning","scope_device_id":"D7","cooldown_secs":900,"notify_emails":"","enabled":false,"created_by":"e2e_admin"}}`,
-			`{"success":true,"rule":{"id":1,"name":"Types","description":"text","enabled":false,"condition_type":"custom","condition_op":"gt","condition_value":12.5,"severity":"warning","scope_device_id":"D7","cooldown_secs":900,"notify_emails":"","created_by":"e2e_admin","created_at":"<now, ISO form>","updated_at":"<now, ISO form>"}}`)
-		if have := replay.Normalize(got.Body); got.Status != 201 || have != want {
-			t.Errorf("new rule: %d %s\nwant 201 %s", got.Status, have, want)
-		}
-		got = w.Do(replay.Request{Role: "admin", Path: "/api/automation/rules/1"})
-		want = db.Pick(
 			`{"id":1,"name":"Types","description":"text","enabled":0,"condition_type":"custom","condition_op":"gt","condition_value":12.5,"severity":"warning","scope_device_id":"D7","cooldown_secs":900,"notify_emails":"","created_by":"e2e_admin","created_at":"<now, SQLite form>","updated_at":"<now, SQLite form>"}`,
 			`{"id":1,"name":"Types","description":"text","enabled":false,"condition_type":"custom","condition_op":"gt","condition_value":12.5,"severity":"warning","scope_device_id":"D7","cooldown_secs":900,"notify_emails":"","created_by":"e2e_admin","created_at":"<now, ISO form>","updated_at":"<now, ISO form>"}`)
-		if have := replay.Normalize(got.Body); got.Status != 200 || have != want {
-			t.Errorf("the rule read back: %d %s\nwant 200 %s", got.Status, have, want)
+		if have := replay.Normalize(read.Body); read.Status != 200 || have != want {
+			t.Errorf("the rule read back: %d %s\nwant 200 %s", read.Status, have, want)
+		}
+		if have := replay.Normalize(created.Body); created.Status != 201 || have != `{"success":true,"rule":`+want+`}` {
+			t.Errorf("new rule: %d %s\nwant 201 with %s", created.Status, have, want)
 		}
 
-		got = w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/automation/commands", Body: replay.Text(`{"device_id":[7],"payload":"  uptime "}`)})
-		want = db.Pick(
-			`{"success":true,"command":{"id":1,"device_id":[7],"status":"pending"}}`,
-			`{"success":true,"command":{"id":1,"device_id":"{\"7\"}","command_type":"shell","payload":"uptime","status":"pending","result":null,"created_by":"e2e_admin","created_at":"<now, ISO form>","executed_at":null,"completed_at":null}}`)
-		if have := replay.Normalize(got.Body); got.Status != 201 || have != want {
-			t.Errorf("new command: %d %s\nwant 201 %s", got.Status, have, want)
-		}
-		got = w.Do(replay.Request{Role: "admin", Path: "/api/automation/commands/1"})
+		created = w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/automation/commands", Body: replay.Text(`{"device_id":[7],"payload":"  uptime "}`)})
+		read = w.Do(replay.Request{Role: "admin", Path: "/api/automation/commands/1"})
 		want = db.Pick(
 			`{"id":1,"device_id":"7.0","command_type":"shell","payload":"uptime","status":"pending","result":null,"created_by":"e2e_admin","created_at":"<now, SQLite form>","executed_at":null,"completed_at":null}`,
 			`{"id":1,"device_id":"{\"7\"}","command_type":"shell","payload":"uptime","status":"pending","result":null,"created_by":"e2e_admin","created_at":"<now, ISO form>","executed_at":null,"completed_at":null}`)
-		if have := replay.Normalize(got.Body); got.Status != 200 || have != want {
-			t.Errorf("the command read back: %d %s\nwant 200 %s", got.Status, have, want)
+		if have := replay.Normalize(read.Body); read.Status != 200 || have != want {
+			t.Errorf("the command read back: %d %s\nwant 200 %s", read.Status, have, want)
+		}
+		if have := replay.Normalize(created.Body); created.Status != 201 || have != `{"success":true,"command":`+want+`}` {
+			t.Errorf("new command: %d %s\nwant 201 with %s", created.Status, have, want)
 		}
 	})
 }

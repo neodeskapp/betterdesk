@@ -143,6 +143,16 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "rule.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "rule.updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -151,14 +161,16 @@
       "condition_type": "cpu_usage",
       "condition_value": 90,
       "cooldown_secs": 600,
+      "created_at": "<volatile>",
       "created_by": "e2e_super_admin",
       "description": "CPU over 90 percent",
-      "enabled": false,
+      "enabled": 0,
       "id": 1,
       "name": "CPU high",
       "notify_emails": "ops@example.com",
       "scope_device_id": "900100001",
-      "severity": "critical"
+      "severity": "critical",
+      "updated_at": "<volatile>"
      },
      "success": true
     }
@@ -189,6 +201,16 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "rule.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "rule.updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -197,14 +219,16 @@
       "condition_type": "cpu_usage",
       "condition_value": 90,
       "cooldown_secs": 600,
+      "created_at": "<volatile>",
       "created_by": "e2e_admin",
       "description": "CPU over 90 percent",
-      "enabled": false,
+      "enabled": 0,
       "id": 3,
       "name": "CPU high",
       "notify_emails": "ops@example.com",
       "scope_device_id": "900100001",
-      "severity": "critical"
+      "severity": "critical",
+      "updated_at": "<volatile>"
      },
      "success": true
     }

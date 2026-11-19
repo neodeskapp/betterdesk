@@ -11,68 +11,6 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
-// given is a value of a request: as the statements bind it, and as the
-// JSON an answer repeats it with.
-type given struct {
-	value jsbind.Value
-	json  []byte
-}
-
-// member is body[key].
-func member(body middleware.JSONObject, key string) given {
-	raw := body.Get(key)
-	g := given{value: jsbind.Of(raw)}
-	if raw.Exists() {
-		g.json = stringify(raw)
-	}
-	return g
-}
-
-// constant is a value the route fills in itself.
-func constant(v jsbind.Value) given { return given{value: v, json: []byte(v.JSON())} }
-
-// text is the text s.
-func text(s string) given { return constant(jsbind.String(s)) }
-
-// or is g || fallback.
-func (g given) or(fallback given) given {
-	if g.value.Truthy() {
-		return g
-	}
-	return fallback
-}
-
-// trimmed is g.trim() for a text. Half of a surrogate pair stays half in
-// the answer and is the replacement character in the database.
-func (g given) trimmed() given {
-	out := given{value: jsbind.String(jsbind.Trim(g.value.Str()))}
-	out.json = []byte(out.value.JSON())
-	if v, err := jsjson.Parse(string(g.json)); err == nil && v.Kind() == jsjson.String {
-		out.json = jsjson.AppendQuoted(nil, jsbind.Trim(v.Str()))
-	}
-	return out
-}
-
-// MarshalJSON implements json.Marshaler: JSON.stringify of the value.
-func (g given) MarshalJSON() ([]byte, error) {
-	if len(g.json) == 0 {
-		return []byte("null"), nil
-	}
-	return g.json, nil
-}
-
-// stringify is JSON.stringify of a body value after JSON.parse: numbers as
-// JavaScript prints them, an object's keys in JavaScript's order, of two
-// equal keys the last.
-func stringify(raw middleware.Value) []byte {
-	v, err := jsjson.Parse(string(raw.Raw()))
-	if err != nil {
-		return []byte(jsbind.Of(raw).JSON())
-	}
-	out, _ := v.MarshalJSON()
-	return out
-}
-
 // asText is String(v) for a body value. It fails where JavaScript throws:
 // for an object with a member named toString, also inside a list.
 func asText(raw middleware.Value) (string, error) {

@@ -8,12 +8,13 @@ import (
 )
 
 type commandSent struct {
-	Success bool `json:"success"`
-	Command any  `json:"command"`
+	Success bool    `json:"success"`
+	Command *record `json:"command"`
 }
 
 // sendCommand answers POST commands with the body {device_id, payload,
-// command_type?}: the command waits for the device's agent to fetch it.
+// command_type?} and the command as it is stored: the command waits for
+// the device's agent to fetch it.
 //
 // The payload has to be a text that is not blank and the type, when
 // given, one of five. The device can be anything that is not empty: the
@@ -25,8 +26,8 @@ type commandSent struct {
 // route failed while it wrote its log line.
 func (h *handlers) sendCommand(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
-	device := member(body, "device_id")
-	if !device.value.Truthy() {
+	device := jsbind.Of(body.Get("device_id"))
+	if !device.Truthy() {
 		fail(w, r, http.StatusBadRequest, "device_id is required")
 		return
 	}

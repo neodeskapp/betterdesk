@@ -135,12 +135,25 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "command.created_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
      "command": {
+      "command_type": "shell",
+      "completed_at": null,
+      "created_at": "<volatile>",
+      "created_by": "e2e_super_admin",
       "device_id": "contract-defaults",
+      "executed_at": null,
       "id": 2,
+      "payload": "uptime",
+      "result": null,
       "status": "pending"
      },
      "success": true
@@ -172,12 +185,25 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "command.created_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
      "command": {
+      "command_type": "shell",
+      "completed_at": null,
+      "created_at": "<volatile>",
+      "created_by": "e2e_admin",
       "device_id": "contract-defaults",
+      "executed_at": null,
       "id": 6,
+      "payload": "uptime",
+      "result": null,
       "status": "pending"
      },
      "success": true

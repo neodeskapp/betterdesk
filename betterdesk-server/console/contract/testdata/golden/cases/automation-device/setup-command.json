@@ -41,6 +41,10 @@
    },
    "volatile": [
     {
+     "path": "command.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
      "path": "command.id",
      "integer": true
     }
@@ -49,8 +53,15 @@
     "kind": "json",
     "json": {
      "command": {
+      "command_type": "shell",
+      "completed_at": null,
+      "created_at": "<volatile>",
+      "created_by": "e2e_admin",
       "device_id": "900100002",
+      "executed_at": null,
       "id": 0,
+      "payload": "hostname",
+      "result": null,
       "status": "pending"
      },
      "success": true

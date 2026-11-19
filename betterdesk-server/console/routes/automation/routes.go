@@ -15,9 +15,8 @@
 // (rulecheck.go). Other values go to the database as the request gives
 // them, bound by package jsbind as the old console's drivers bound them,
 // so a command's device that is a number is stored as "5.0" on SQLite and
-// as "5" on PostgreSQL. A new rule or command is answered with
-// the values of the request on SQLite and with the stored row on
-// PostgreSQL. The SMTP settings routes hand their work to package mail.
+// as "5" on PostgreSQL. A new rule or command is answered with the row as
+// it is stored. The SMTP settings routes hand their work to package mail.
 package automation
 
 import (
@@ -140,13 +139,14 @@ func (h *handlers) rules(w http.ResponseWriter, r *http.Request) {
 }
 
 type ruleCreated struct {
-	Success bool `json:"success"`
-	Rule    any  `json:"rule"`
+	Success bool    `json:"success"`
+	Rule    *record `json:"rule"`
 }
 
 // createRule answers POST rules with the body {name, condition_type,
 // description?, condition_op?, condition_value?, severity?,
-// scope_device_id?, cooldown_secs?, notify_emails?, enabled?}.
+// scope_device_id?, cooldown_secs?, notify_emails?, enabled?} and the
+// rule as it is stored.
 //
 // The name has to be a text that is not blank, the type one of six and
 // the comparison, when given, one of six, and the fields of wrongType
@@ -154,18 +154,19 @@ type ruleCreated struct {
 // rule is on unless enabled is false, 0, "0" or "false".
 func (h *handlers) createRule(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
-	name := member(body, "name")
-	if !name.value.IsString() || jsbind.Trim(name.value.Str()) == "" {
+	get := func(key string) jsbind.Value { return jsbind.Of(body.Get(key)) }
+	name := get("name")
+	if !name.IsString() || jsbind.Trim(name.Str()) == "" {
 		fail(w, r, http.StatusBadRequest, "Rule name is required")
 		return
 	}
-	conditionType := member(body, "condition_type")
-	if !oneOf(conditionTypes, conditionType.value) {
+	conditionType := get("condition_type")
+	if !oneOf(conditionTypes, conditionType) {
 		fail(w, r, http.StatusBadRequest, "Invalid condition_type. Valid: cpu_usage, memory_usage, disk_usage, offline_duration, idle_duration, custom")
 		return
 	}
-	op := member(body, "condition_op")
-	if op.value.Truthy() && !oneOf(operators, op.value) {
+	op := get("condition_op")
+	if op.Truthy() && !oneOf(operators, op) {
 		fail(w, r, http.StatusBadRequest, "Invalid condition_op. Valid: gt, gte, lt, lte, eq, neq")
 		return
 	}
@@ -174,34 +175,34 @@ func (h *handlers) createRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	severity := member(body, "severity")
-	if !oneOf(severities, severity.value) {
-		severity = text("warning")
+	severity := get("severity")
+	if !oneOf(severities, severity) {
+		severity = jsbind.String("warning")
 	}
 	// condition_value ?? 0
-	value := member(body, "condition_value")
-	if value.value.IsUndefined() || value.value.IsNull() {
-		value = constant(jsbind.Number(0))
+	value := get("condition_value")
+	if value.IsUndefined() || value.IsNull() {
+		value = jsbind.Number(0)
 	}
 	rule, err := createRule(r.Context(), h.db, newRule{
-		Name:           name.trimmed(),
-		Description:    member(body, "description").or(text("")),
+		Name:           jsbind.String(jsbind.Trim(name.Str())),
+		Description:    get("description").Or(jsbind.String("")),
 		ConditionType:  conditionType,
-		ConditionOp:    op.or(text("gt")),
+		ConditionOp:    op.Or(jsbind.String("gt")),
 		ConditionValue: value,
 		Severity:       severity,
-		ScopeDeviceID:  member(body, "scope_device_id").or(constant(jsbind.Null)),
-		CooldownSecs:   member(body, "cooldown_secs").or(constant(jsbind.Number(300))),
-		NotifyEmails:   member(body, "notify_emails").or(text("")),
-		Enabled:        !turnedOff(jsbind.Of(body.Get("enabled"))),
+		ScopeDeviceID:  get("scope_device_id").Or(jsbind.Null),
+		CooldownSecs:   get("cooldown_secs").Or(jsbind.Number(300)),
+		NotifyEmails:   get("notify_emails").Or(jsbind.String("")),
+		Enabled:        !turnedOff(get("enabled")),
 		CreatedBy:      kit.User(r).Username,
 	})
 	if err != nil {
 		h.serverError(w, r, "Rule create error", err)
 		return
 	}
-	_ = h.d.LogAction(r, "alert_rule_created", "Rule: "+name.value.Str())
-	h.log.Info("Alert rule created: " + name.value.Str())
+	_ = h.d.LogAction(r, "alert_rule_created", "Rule: "+name.Str())
+	h.log.Info("Alert rule created: " + name.Str())
 	kit.JSON(w, r, http.StatusCreated, ruleCreated{Success: true, Rule: rule})
 }
 

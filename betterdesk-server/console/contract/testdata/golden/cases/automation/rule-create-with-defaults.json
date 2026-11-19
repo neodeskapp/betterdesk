@@ -135,6 +135,16 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "rule.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "rule.updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -143,14 +153,16 @@
       "condition_type": "custom",
       "condition_value": 0,
       "cooldown_secs": 300,
+      "created_at": "<volatile>",
       "created_by": "e2e_super_admin",
       "description": "",
-      "enabled": true,
+      "enabled": 1,
       "id": 2,
       "name": "Defaults",
       "notify_emails": "",
       "scope_device_id": null,
-      "severity": "warning"
+      "severity": "warning",
+      "updated_at": "<volatile>"
      },
      "success": true
     }
@@ -181,6 +193,16 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "rule.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "rule.updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -189,14 +211,16 @@
       "condition_type": "custom",
       "condition_value": 0,
       "cooldown_secs": 300,
+      "created_at": "<volatile>",
       "created_by": "e2e_admin",
       "description": "",
-      "enabled": true,
+      "enabled": 1,
       "id": 4,
       "name": "Defaults",
       "notify_emails": "",
       "scope_device_id": null,
-      "severity": "warning"
+      "severity": "warning",
+      "updated_at": "<volatile>"
      },
      "success": true
     }

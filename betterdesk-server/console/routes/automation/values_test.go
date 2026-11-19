@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -59,35 +58,6 @@ func TestAsText(t *testing.T) {
 		if got, err := asText(body.Get("device_id")); err == nil || err.Error() != "Cannot convert object to primitive value" {
 			t.Errorf("asText(%s) = %q, %v; want the TypeError", value, got, err)
 		}
-	}
-}
-
-func TestGiven(t *testing.T) {
-	body := bodyOf(t, `{"n":1.0,"big":1e21,"inf":1e400,"s":"a\u2028<b>é","half":" x \ud83d ","o":{"b":1,"a":2,"10":"x","2":"y","a":3},"l":[1.0,"x",null,{"z":[]}],"zero":0,"empty":"","no":null,"f":false}`)
-	for key, want := range map[string]string{
-		"n": `1`, "big": `1e+21`, "inf": `null`, "s": "\"a\u2028<b>é\"", "half": `" x \ud83d "`, "o": `{"2":"y","10":"x","b":1,"a":3}`, "l": `[1,"x",null,{"z":[]}]`,
-		"zero": `0`, "empty": `""`, "no": `null`, "f": `false`, "missing": `null`,
-	} {
-		got, _ := member(body, key).MarshalJSON()
-		if string(got) != want {
-			t.Errorf("JSON of %s = %s, want %s", key, got, want)
-		}
-	}
-	// g || fallback
-	for key, want := range map[string]string{"n": `1`, "zero": `"d"`, "empty": `"d"`, "no": `"d"`, "f": `"d"`, "missing": `"d"`, "o": `{"2":"y","10":"x","b":1,"a":3}`, "l": `[1,"x",null,{"z":[]}]`, "inf": `null`} {
-		got, _ := member(body, key).or(text("d")).MarshalJSON()
-		if string(got) != want {
-			t.Errorf("JSON of %s || \"d\" = %s, want %s", key, got, want)
-		}
-	}
-	// name.trim(): half a pair stays in the answer and is the replacement
-	// character for the database
-	trimmed := member(body, "half").trimmed()
-	if got, _ := trimmed.MarshalJSON(); string(got) != `"x \ud83d"` || trimmed.value.Str() != "x \ufffd" {
-		t.Errorf("trimmed half pair: JSON %s, value %q", got, trimmed.value.Str())
-	}
-	if got, _ := constant(jsbind.Null).MarshalJSON(); string(got) != `null` {
-		t.Errorf("JSON of null = %s", got)
 	}
 }
 
@@ -158,55 +128,6 @@ func TestWrittenInDigits(t *testing.T) {
 	}
 }
 
-// Whatever a body holds, a member of it is repeated as JSON that reads
-// back as the same value, and making text of it either works or is the
-// TypeError.
-func FuzzGiven(f *testing.F) {
-	for _, seed := range []string{`"text"`, `5`, `1.0`, `1e400`, `-0`, `true`, `null`, `[]`, `[1,[2],null,{"a":1}]`, `{"b":1,"a":2,"a":3,"10":0}`, `{"toString":1}`,
-		`"\ud83d"`, `"\u0000"`, `" x "`, `12345678901234567890`, `[{"toString":[]}]`, `{"":""}`} {
-		f.Add(seed)
-	}
-	f.Fuzz(func(t *testing.T, value string) {
-		if !json.Valid([]byte(value)) || len(value) > 4096 {
-			return
-		}
-		body := bodyOf(t, `{"v":`+value+`}`)
-		if !body.Has("v") {
-			return
-		}
-		g := member(body, "v")
-		out, err := g.MarshalJSON()
-		if err != nil || !json.Valid(out) {
-			t.Fatalf("member %s: JSON %q, %v", value, out, err)
-		}
-		// The same value again, as the body parser handed it over: bytes
-		// that are no UTF-8 are replacement characters by then
-		var sent, repeated any
-		if json.Unmarshal(body.Get("v").Raw(), &sent) == nil && json.Unmarshal(out, &repeated) == nil {
-			if !reflect.DeepEqual(sent, repeated) {
-				t.Fatalf("member %s is repeated as %s", value, out)
-			}
-		}
-		if either := g.or(text("fallback")); !either.value.Truthy() || !g.value.Truthy() && either.value.Str() != "fallback" {
-			t.Fatalf("member %s: || gives a value that is not truthy", value)
-		}
-		text, err := asText(body.Get("v"))
-		if err != nil && (err.Error() != "Cannot convert object to primitive value" || !strings.Contains(value, "toString")) {
-			t.Fatalf("asText(%s) = %q, %v", value, text, err)
-		}
-		_ = turnedOff(g.value)
-		if g.value.IsString() {
-			trimmed := g.trimmed()
-			if out, err := trimmed.MarshalJSON(); err != nil || !json.Valid(out) {
-				t.Fatalf("trimmed %s: JSON %q, %v", value, out, err)
-			}
-			if trimmed.value.Str() != jsbind.Trim(g.value.Str()) {
-				t.Fatalf("trimmed %s = %q", value, trimmed.value.Str())
-			}
-		}
-	})
-}
-
 // Whatever a query string holds, a filter is one text or refused, the
 // limit is a whole number from 1 to 500 or refused, and the id rule lets
 // through digits only.
@@ -248,5 +169,27 @@ func FuzzQueryAndPath(f *testing.F) {
 				t.Fatalf("the id rule let %q through as %q", text, rec.Body.String())
 			}
 		}
+	})
+}
+
+// Whatever a body holds, making text of a member of it either works or is
+// the TypeError of an object with a member named toString.
+func FuzzAsText(f *testing.F) {
+	for _, seed := range []string{`"text"`, `5`, `1e400`, `true`, `null`, `[1,[2],null,{"a":1}]`, `{"toString":1}`, `"\ud83d"`, `[{"toString":[]}]`} {
+		f.Add(seed)
+	}
+	f.Fuzz(func(t *testing.T, value string) {
+		if !json.Valid([]byte(value)) || len(value) > 4096 {
+			return
+		}
+		body := bodyOf(t, `{"v":`+value+`}`)
+		if !body.Has("v") {
+			return
+		}
+		text, err := asText(body.Get("v"))
+		if err != nil && (err.Error() != "Cannot convert object to primitive value" || !strings.Contains(value, "toString")) {
+			t.Fatalf("asText(%s) = %q, %v", value, text, err)
+		}
+		_ = turnedOff(jsbind.Of(body.Get("v")))
 	})
 }

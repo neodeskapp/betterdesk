@@ -171,63 +171,45 @@ func ruleByID(ctx context.Context, db *store.DB, id jsbind.Value) (*record, erro
 // newRule is what a new rule is made from, with the defaults of the route
 // filled in already.
 type newRule struct {
-	Name, Description, ConditionType, ConditionOp, ConditionValue given
-	Severity, ScopeDeviceID, CooldownSecs, NotifyEmails           given
+	Name, Description, ConditionType, ConditionOp, ConditionValue jsbind.Value
+	Severity, ScopeDeviceID, CooldownSecs, NotifyEmails           jsbind.Value
 	Enabled                                                       bool
 	CreatedBy                                                     string
 }
 
-// createdRule is the answer for a new rule on SQLite: the values of the
-// request with the new id, not the row. A number sent for a text field is
-// a number here and the text "5.0" in every later answer.
-type createdRule struct {
-	ID             int64  `json:"id"`
-	Name           given  `json:"name"`
-	Description    given  `json:"description"`
-	ConditionType  given  `json:"condition_type"`
-	ConditionOp    given  `json:"condition_op"`
-	ConditionValue given  `json:"condition_value"`
-	Severity       given  `json:"severity"`
-	ScopeDeviceID  given  `json:"scope_device_id"`
-	CooldownSecs   given  `json:"cooldown_secs"`
-	NotifyEmails   given  `json:"notify_emails"`
-	Enabled        bool   `json:"enabled"`
-	CreatedBy      string `json:"created_by"`
-}
-
-// createRule inserts a rule. It returns the stored row on PostgreSQL and
-// the values it was given on SQLite. A condition value that is empty text
-// is stored as 0.
-func createRule(ctx context.Context, db *store.DB, rule newRule) (any, error) {
+// createRule inserts a rule and returns it as it is stored. A condition
+// value that is empty text is stored as 0.
+func createRule(ctx context.Context, db *store.DB, rule newRule) (*record, error) {
 	var q query
 	q.add(`INSERT INTO alert_rules (name, description, enabled, condition_type, condition_op, condition_value,
                     severity, scope_device_id, cooldown_secs, notify_emails, created_by)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		rule.Name.value, rule.Description.value, flag(db, rule.Enabled),
-		rule.ConditionType.value, rule.ConditionOp.value, rule.ConditionValue.value.Or(jsbind.Number(0)),
-		rule.Severity.value, rule.ScopeDeviceID.value,
-		rule.CooldownSecs.value, rule.NotifyEmails.value, jsbind.String(rule.CreatedBy))
+		rule.Name, rule.Description, flag(db, rule.Enabled),
+		rule.ConditionType, rule.ConditionOp, rule.ConditionValue.Or(jsbind.Number(0)),
+		rule.Severity, rule.ScopeDeviceID,
+		rule.CooldownSecs, rule.NotifyEmails, jsbind.String(rule.CreatedBy))
+	return insertRow(ctx, db, &q, "alert_rules", "create alert rule")
+}
+
+// insertRow runs the INSERT of q and returns the new row of the table: on
+// PostgreSQL through RETURNING, on SQLite read back by its id, so both
+// answer with what is stored.
+func insertRow(ctx context.Context, db *store.DB, q *query, table, doing string) (*record, error) {
 	if db.IsPostgres() {
 		q.add(" RETURNING *")
-		row, err := q.row(ctx, db, "create alert rule")
-		if err != nil || row == nil {
-			return nil, err
-		}
-		return row, nil
+		return q.row(ctx, db, doing)
 	}
 	text, args, err := q.args(db)
 	if err != nil {
-		return nil, fmt.Errorf("create alert rule: %w", err)
+		return nil, fmt.Errorf("%s: %w", doing, err)
 	}
 	id, err := db.Insert(ctx, text, args...)
 	if err != nil {
-		return nil, fmt.Errorf("create alert rule: %w", err)
+		return nil, fmt.Errorf("%s: %w", doing, err)
 	}
-	return createdRule{
-		ID: id, Name: rule.Name, Description: rule.Description, ConditionType: rule.ConditionType, ConditionOp: rule.ConditionOp,
-		ConditionValue: rule.ConditionValue, Severity: rule.Severity, ScopeDeviceID: rule.ScopeDeviceID, CooldownSecs: rule.CooldownSecs,
-		NotifyEmails: rule.NotifyEmails, Enabled: rule.Enabled, CreatedBy: rule.CreatedBy,
-	}, nil
+	var read query
+	read.add("SELECT * FROM "+table+" WHERE id = ?", jsbind.Number(float64(id)))
+	return read.row(ctx, db, doing)
 }
 
 // change is one column an update sets.
@@ -299,44 +281,19 @@ func acknowledgeAlert(ctx context.Context, db *store.DB, id jsbind.Value, userna
 
 // newCommand is what a command for a device is made from.
 type newCommand struct {
-	DeviceID    given
+	DeviceID    jsbind.Value
 	CommandType string
 	Payload     string
 	CreatedBy   string
 }
 
-// createdCommand is the answer for a new command on SQLite: the device as
-// the request gave it, not as it is stored.
-type createdCommand struct {
-	ID       int64  `json:"id"`
-	DeviceID given  `json:"device_id"`
-	Status   string `json:"status"`
-}
-
-// createCommand inserts a pending command. It returns the stored row on
-// PostgreSQL and the id with the device it was given on SQLite.
-func createCommand(ctx context.Context, db *store.DB, command newCommand) (any, error) {
+// createCommand inserts a pending command and returns it as it is stored.
+func createCommand(ctx context.Context, db *store.DB, command newCommand) (*record, error) {
 	var q query
 	q.add(`INSERT INTO remote_commands (device_id, command_type, payload, status, created_by)
                 VALUES (?, ?, ?, 'pending', ?)`,
-		command.DeviceID.value, jsbind.String(command.CommandType), jsbind.String(command.Payload), jsbind.String(command.CreatedBy))
-	if db.IsPostgres() {
-		q.add(" RETURNING *")
-		row, err := q.row(ctx, db, "create remote command")
-		if err != nil || row == nil {
-			return nil, err
-		}
-		return row, nil
-	}
-	text, args, err := q.args(db)
-	if err != nil {
-		return nil, fmt.Errorf("create remote command: %w", err)
-	}
-	id, err := db.Insert(ctx, text, args...)
-	if err != nil {
-		return nil, fmt.Errorf("create remote command: %w", err)
-	}
-	return createdCommand{ID: id, DeviceID: command.DeviceID, Status: "pending"}, nil
+		command.DeviceID, jsbind.String(command.CommandType), jsbind.String(command.Payload), jsbind.String(command.CreatedBy))
+	return insertRow(ctx, db, &q, "remote_commands", "create remote command")
 }
 
 // commandFilter narrows the command list. A text that is
