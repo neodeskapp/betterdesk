@@ -384,6 +384,62 @@ func TestDesktopSendsTheCheckedTokenAsGuest(t *testing.T) {
 	}
 }
 
+// TestCreateChecksTheTypes: the create route checks ttl_minutes, label
+// and max_uses itself and answers 400 in its own words, where the API
+// server answered "invalid json" (BUGS.md GA4). Good values go on as they
+// came.
+func TestCreateChecksTheTypes(t *testing.T) {
+	w := newWorld(t)
+	admin := &proxytest.Account{UserID: 1}
+	admin.User.Username, admin.User.Role = "e2e_admin", "admin"
+	created := &proxytest.Answer{Status: 201, Type: "application/json", Body: `{"id":"g1"}`}
+	post := func(body string) (*httptest.ResponseRecorder, []proxytest.Call) {
+		return w.Do(proxytest.Request{Method: "POST", Path: "/api/guest/access-links", Session: admin, Type: "application/json", Body: &body}, created)
+	}
+	refused := map[string]string{
+		`"ttl_minutes":"soon"`:     "Invalid ttl_minutes",
+		`"ttl_minutes":"30"`:       "Invalid ttl_minutes",
+		`"ttl_minutes":0`:          "Invalid ttl_minutes",
+		`"ttl_minutes":-5`:         "Invalid ttl_minutes",
+		`"ttl_minutes":2.5`:        "Invalid ttl_minutes",
+		`"ttl_minutes":1e300`:      "Invalid ttl_minutes",
+		`"ttl_minutes":true`:       "Invalid ttl_minutes",
+		`"ttl_minutes":[5]`:        "Invalid ttl_minutes",
+		`"label":7`:                "Invalid label",
+		`"label":true`:             "Invalid label",
+		`"label":false`:            "Invalid label",
+		`"label":{"a":1}`:          "Invalid label",
+		`"label":["x"]`:            "Invalid label",
+		`"max_uses":"2"`:           "Invalid max_uses",
+		`"max_uses":-1`:            "Invalid max_uses",
+		`"max_uses":1.5`:           "Invalid max_uses",
+		`"max_uses":false`:         "Invalid max_uses",
+		`"max_uses":{}`:            "Invalid max_uses",
+		`"label":7,"max_uses":"2"`: "Invalid label",
+	}
+	for fields, message := range refused {
+		rec, calls := post(`{"peer_ids":["dev-1"],` + fields + `}`)
+		if want := `{"error":"` + message + `"}`; rec.Code != 400 || rec.Body.String() != want || len(calls) != 0 {
+			t.Errorf("%s: %d %s, %d calls; want 400 %s", fields, rec.Code, rec.Body, len(calls), want)
+		}
+	}
+	sent := map[string]string{
+		``:                                    `{"peer_ids":["dev-1"],"view_only":false,"label":"","max_uses":0}`,
+		`,"ttl_minutes":30`:                   `{"peer_ids":["dev-1"],"ttl_minutes":30,"view_only":false,"label":"","max_uses":0}`,
+		`,"ttl_minutes":null`:                 `{"peer_ids":["dev-1"],"ttl_minutes":null,"view_only":false,"label":"","max_uses":0}`,
+		`,"label":"Desk","max_uses":3`:        `{"peer_ids":["dev-1"],"view_only":false,"label":"Desk","max_uses":3}`,
+		`,"label":null,"max_uses":null`:       `{"peer_ids":["dev-1"],"view_only":false,"label":"","max_uses":0}`,
+		`,"label":"","max_uses":0`:            `{"peer_ids":["dev-1"],"view_only":false,"label":"","max_uses":0}`,
+		`,"ttl_minutes":1440,"view_only":"x"`: `{"peer_ids":["dev-1"],"ttl_minutes":1440,"view_only":true,"label":"","max_uses":0}`,
+	}
+	for fields, want := range sent {
+		rec, calls := post(`{"peer_ids":["dev-1"]` + fields + `}`)
+		if rec.Code != 201 || len(calls) != 1 || calls[0].Body != want {
+			t.Errorf("%q: %d %s, calls %+v; want the API server to get %s", fields, rec.Code, rec.Body, calls, want)
+		}
+	}
+}
+
 // TestDeviceScopeOfTheAccount runs the create route on the real device
 // scope of package access: an operator under a restricted default reaches
 // nothing, a device granted to the account, and an admin everything.

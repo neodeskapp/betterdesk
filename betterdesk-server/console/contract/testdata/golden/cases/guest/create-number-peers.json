@@ -50,7 +50,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "invalid json"
+     "error": "Invalid label"
     }
    }
   }

@@ -10,6 +10,7 @@ package guest
 
 import (
 	"context"
+	"math"
 	"net/http"
 	"strings"
 
@@ -68,7 +69,8 @@ type failure struct {
 
 // create answers POST /api/guest/access-links with the body {peer_ids,
 // ttl_minutes, view_only, label, max_uses}. Every peer id is taken as
-// text. The account must have all of the devices in its device scope.
+// text; ttl_minutes, label and max_uses are checked here (linkTypes). The
+// account must have all of the devices in its device scope.
 func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	list, _ := body.Get("peer_ids").Array()
@@ -88,6 +90,13 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 		peerIDs[i] = text
 		devices[i] = access.Device{ID: text}
 	}
+	ttl, hasTTL := bodyValue(r, "ttl_minutes")
+	label, _ := bodyValue(r, "label")
+	uses, _ := bodyValue(r, "max_uses")
+	if problem := linkTypes(ttl, label, uses); problem != "" {
+		kit.JSON(w, r, http.StatusBadRequest, failure{Error: problem})
+		return
+	}
 
 	scope, err := h.scope(r.Context(), scopeUser(r), devices)
 	if err != nil {
@@ -104,19 +113,42 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	link := goapi.NewObject("peer_ids", peerIDs)
-	if ttl, defined := bodyValue(r, "ttl_minutes"); defined {
+	if hasTTL {
 		link.Set("ttl_minutes", ttl)
 	}
 	link.Set("view_only", body.Get("view_only").Truthy())
 	link.Set("label", "")
-	if label, _ := bodyValue(r, "label"); goapi.Truthy(label) {
+	if goapi.Truthy(label) {
 		link.Set("label", label)
 	}
 	link.Set("max_uses", float64(0))
-	if uses, _ := bodyValue(r, "max_uses"); goapi.Truthy(uses) {
+	if goapi.Truthy(uses) {
 		link.Set("max_uses", uses)
 	}
 	goapipath.ProxyToGo(h.api, w, r, http.MethodPost, goapipath.Fixed("/guest/access-links"), goapipath.Body(link))
+}
+
+// linkTypes checks the values of a new link the API server reads as
+// numbers and text: ttl_minutes a whole number from 1, label a text,
+// max_uses a whole number from 0, each also missing or null. It returns
+// the message for the first value that is not, "" when all are good.
+func linkTypes(ttl, label, uses any) string {
+	if ttl != nil && !wholeNumber(ttl, 1) {
+		return "Invalid ttl_minutes"
+	}
+	if _, isText := label.(string); label != nil && !isText {
+		return "Invalid label"
+	}
+	if uses != nil && !wholeNumber(uses, 0) {
+		return "Invalid max_uses"
+	}
+	return ""
+}
+
+// wholeNumber reports a number without a fraction from min to 2^53.
+func wholeNumber(v any, min float64) bool {
+	f, isNumber := v.(float64)
+	return isNumber && f == math.Trunc(f) && f >= min && f <= 1<<53
 }
 
 // scopeUser is the signed-in account for the device scope.
