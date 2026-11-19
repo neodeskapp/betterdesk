@@ -138,7 +138,7 @@
      "port": null,
      "timeout_ms": 5000,
      "updated_at": "<volatile>",
-     "url": "http://0.0.0.0:5000/health"
+     "url": "<base>/health"
     }
    }
   },
@@ -202,7 +202,7 @@
      "port": null,
      "timeout_ms": 5000,
      "updated_at": "<volatile>",
-     "url": "http://0.0.0.0:5000/health"
+     "url": "<base>/health"
     }
    }
   }

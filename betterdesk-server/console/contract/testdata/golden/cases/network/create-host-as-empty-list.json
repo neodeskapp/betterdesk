@@ -101,7 +101,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Too few parameter values were provided"
+     "error": "host must be text"
     }
    }
   }

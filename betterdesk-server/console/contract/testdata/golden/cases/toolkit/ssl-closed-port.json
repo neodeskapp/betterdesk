@@ -4,7 +4,7 @@
   "method": "POST",
   "path": "/api/toolkit/ssl",
   "body": {
-   "host": "0.0.0.0",
+   "host": "{console_host}",
    "port": 1
   }
  },
@@ -101,7 +101,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "connect ECONNREFUSED 0.0.0.0:1",
+     "error": "connect ECONNREFUSED <console-ip>:1",
      "success": false
     }
    }

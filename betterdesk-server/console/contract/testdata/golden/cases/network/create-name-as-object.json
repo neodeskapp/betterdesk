@@ -5,7 +5,7 @@
   "path": "/api/network/targets",
   "body": {
    "check_type": "ping",
-   "host": "0.0.0.0",
+   "host": "{console_host}",
    "name": {
     "a": 1
    }
@@ -103,7 +103,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Too few parameter values were provided"
+     "error": "name must be text"
     }
    }
   }

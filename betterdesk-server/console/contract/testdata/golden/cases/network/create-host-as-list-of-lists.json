@@ -7,7 +7,7 @@
    "check_type": "ping",
    "host": [
     [
-     "0.0.0.0"
+     "{console_host}"
     ]
    ],
    "name": "x"
@@ -105,7 +105,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "SQLite3 can only bind numbers, strings, bigints, buffers, and null"
+     "error": "host must be text"
     }
    }
   }

@@ -5,7 +5,7 @@
   "path": "/api/network/http",
   "body": {
    "timeout": 2000,
-   "url": "  HTTP://0.0.0.0:5000/health?probe=1#top  "
+   "url": "  HTTP://{console_host}:5000/health?probe=1#top  "
   }
  },
  "recordings": 2,
@@ -148,7 +148,7 @@
      "rtt_ms": 0,
      "status_code": 200,
      "success": true,
-     "url": "  HTTP://0.0.0.0:5000/health?probe=1#top  "
+     "url": "  HTTP://<host>/health?probe=1#top  "
     }
    }
   }

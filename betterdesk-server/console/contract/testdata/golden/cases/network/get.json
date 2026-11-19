@@ -134,7 +134,7 @@
      "check_type": "tcp",
      "created_at": "<volatile>",
      "enabled": 1,
-     "host": "0.0.0.0",
+     "host": "<hostname>",
      "id": 0,
      "interval_ms": 30000,
      "last_check_at": null,

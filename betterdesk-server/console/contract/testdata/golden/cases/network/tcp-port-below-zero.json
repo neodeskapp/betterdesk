@@ -4,7 +4,7 @@
   "method": "POST",
   "path": "/api/network/tcp",
   "body": {
-   "host": "0.0.0.0",
+   "host": "{console_host}",
    "port": -1
   }
  },
@@ -133,7 +133,7 @@
     "kind": "json",
     "json": {
      "error": "Port should be >= 0 and < 65536. Received type number (-1).",
-     "host": "0.0.0.0",
+     "host": "<hostname>",
      "port": -1,
      "rtt_ms": null,
      "success": false

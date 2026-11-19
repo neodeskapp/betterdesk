@@ -86,7 +86,6 @@
    "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
-    "content-encoding": "gzip",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "application/json; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
@@ -101,7 +100,6 @@
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
      "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
-    "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -128,22 +126,6 @@
     "kind": "json",
     "json": [
      {
-      "check_type": "tcp",
-      "created_at": "<volatile>",
-      "enabled": 1,
-      "host": "0.0.0.0",
-      "id": 0,
-      "interval_ms": 1500,
-      "last_check_at": null,
-      "last_rtt_ms": null,
-      "last_status": null,
-      "name": "42",
-      "port": 1,
-      "timeout_ms": 5000,
-      "updated_at": "<volatile>",
-      "url": null
-     },
-     {
       "check_type": "http",
       "created_at": "<volatile>",
       "enabled": 1,
@@ -157,13 +139,13 @@
       "port": null,
       "timeout_ms": 5000,
       "updated_at": "<volatile>",
-      "url": "http://0.0.0.0:5000/health"
+      "url": "<base>/health"
      },
      {
       "check_type": "ping",
       "created_at": "<volatile>",
       "enabled": 0,
-      "host": "0.0.0.0",
+      "host": "<hostname>",
       "id": 0,
       "interval_ms": 60000,
       "last_check_at": null,
@@ -178,8 +160,8 @@
      {
       "check_type": "tcp",
       "created_at": "<volatile>",
-      "enabled": 1,
-      "host": "0.0.0.0",
+      "enabled": 0,
+      "host": "<hostname>",
       "id": 0,
       "interval_ms": 45000,
       "last_check_at": null,
@@ -188,22 +170,6 @@
       "name": "Contract tcp renamed",
       "port": 5000,
       "timeout_ms": 2500,
-      "updated_at": "<volatile>",
-      "url": null
-     },
-     {
-      "check_type": "ping",
-      "created_at": "<volatile>",
-      "enabled": 1,
-      "host": "0.0.0.0",
-      "id": 0,
-      "interval_ms": 60000,
-      "last_check_at": null,
-      "last_rtt_ms": null,
-      "last_status": null,
-      "name": "x",
-      "port": null,
-      "timeout_ms": 5000,
       "updated_at": "<volatile>",
       "url": null
      }
@@ -217,7 +183,6 @@
    "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
-    "content-encoding": "gzip",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "application/json; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
@@ -232,7 +197,6 @@
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
      "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
-    "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -249,35 +213,16 @@
      "path": "[*].id",
      "integer": true
     },
+    "[*].last_check_at",
     "[*].last_rtt_ms",
     {
      "path": "[*].updated_at",
      "format": "9999-99-99 99:99:99"
-    },
-    "[0].last_check_at",
-    "[1].last_check_at",
-    "[2].last_check_at",
-    "[3].last_check_at"
+    }
    ],
    "body": {
     "kind": "json",
     "json": [
-     {
-      "check_type": "tcp",
-      "created_at": "<volatile>",
-      "enabled": 1,
-      "host": "0.0.0.0",
-      "id": 0,
-      "interval_ms": 1500,
-      "last_check_at": "<volatile>",
-      "last_rtt_ms": null,
-      "last_status": "down",
-      "name": "42",
-      "port": 1,
-      "timeout_ms": 5000,
-      "updated_at": "<volatile>",
-      "url": null
-     },
      {
       "check_type": "http",
       "created_at": "<volatile>",
@@ -292,13 +237,13 @@
       "port": null,
       "timeout_ms": 5000,
       "updated_at": "<volatile>",
-      "url": "http://0.0.0.0:5000/health"
+      "url": "<base>/health"
      },
      {
       "check_type": "ping",
       "created_at": "<volatile>",
       "enabled": 0,
-      "host": "0.0.0.0",
+      "host": "<hostname>",
       "id": 0,
       "interval_ms": 60000,
       "last_check_at": "<volatile>",
@@ -313,8 +258,8 @@
      {
       "check_type": "tcp",
       "created_at": "<volatile>",
-      "enabled": 1,
-      "host": "0.0.0.0",
+      "enabled": 0,
+      "host": "<hostname>",
       "id": 0,
       "interval_ms": 45000,
       "last_check_at": "<volatile>",
@@ -323,22 +268,6 @@
       "name": "Contract tcp renamed",
       "port": 5000,
       "timeout_ms": 2500,
-      "updated_at": "<volatile>",
-      "url": null
-     },
-     {
-      "check_type": "ping",
-      "created_at": "<volatile>",
-      "enabled": 1,
-      "host": "0.0.0.0",
-      "id": 0,
-      "interval_ms": 60000,
-      "last_check_at": null,
-      "last_rtt_ms": null,
-      "last_status": null,
-      "name": "x",
-      "port": null,
-      "timeout_ms": 5000,
       "updated_at": "<volatile>",
       "url": null
      }

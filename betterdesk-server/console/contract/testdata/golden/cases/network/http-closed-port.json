@@ -4,7 +4,7 @@
   "method": "POST",
   "path": "/api/network/http",
   "body": {
-   "url": "http://0.0.0.0:1/"
+   "url": "http://{console_host}:1/"
   }
  },
  "recordings": 2,
@@ -136,11 +136,11 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "connect ECONNREFUSED 0.0.0.0:1",
+     "error": "connect ECONNREFUSED <console-ip>:1",
      "rtt_ms": null,
      "status_code": null,
      "success": false,
-     "url": "http://0.0.0.0:1/"
+     "url": "http://<hostname>:1/"
     }
    }
   }

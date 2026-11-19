@@ -4,7 +4,7 @@
   "method": "POST",
   "path": "/api/network/http",
   "body": {
-   "url": "ftp://0.0.0.0/file"
+   "url": "ftp://{console_host}/file"
   }
  },
  "recordings": 2,
@@ -135,7 +135,7 @@
      "rtt_ms": null,
      "status_code": null,
      "success": false,
-     "url": "ftp://0.0.0.0/file"
+     "url": "ftp://<hostname>/file"
     }
    }
   }

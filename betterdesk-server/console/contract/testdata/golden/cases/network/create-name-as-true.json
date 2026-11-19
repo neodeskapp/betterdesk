@@ -5,7 +5,7 @@
   "path": "/api/network/targets",
   "body": {
    "check_type": "ping",
-   "host": "0.0.0.0",
+   "host": "{console_host}",
    "name": true
   }
  },
@@ -101,7 +101,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "SQLite3 can only bind numbers, strings, bigints, buffers, and null"
+     "error": "name must be text"
     }
    }
   }

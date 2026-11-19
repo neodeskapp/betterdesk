@@ -12,7 +12,7 @@ import (
 // The toolkit: text tools that answer from the request alone, and network
 // tools. The network tools are sent only what they refuse before any
 // lookup or connection, or what stays on the instance: a certificate check
-// of a closed port on 0.0.0.0, a magic packet to the local broadcast
+// of a closed port of the instance, a magic packet to the local broadcast
 // address, the records of a name that is an address. What a certificate
 // check answers for a real server is covered by the unit tests of
 // console/routes/toolkit.
@@ -182,9 +182,9 @@ func init() {
 		post("ssl-metadata-name", "/api/toolkit/ssl", map[string]any{"host": " metadata.google.internal "}, few...),
 		post("ssl-port-too-high", "/api/toolkit/ssl", map[string]any{"host": "10.255.255.1", "port": 65536}, few...),
 		post("ssl-port-negative", "/api/toolkit/ssl", map[string]any{"host": "10.255.255.1", "port": "-1"}, few...),
-		// Nothing listens on port 1 of the instance; 0.0.0.0 is the
-		// instance itself and passes the guard
-		post("ssl-closed-port", "/api/toolkit/ssl", map[string]any{"host": "0.0.0.0", "port": 1}, few...),
+		// Nothing listens on port 1 of the instance, which its own host name
+		// reaches. 0.0.0.0 would reach it too and is refused
+		post("ssl-closed-port", "/api/toolkit/ssl", map[string]any{"host": "{console_host}", "port": 1}, few...),
 		post("ssl-closed-port-as-text", "/api/toolkit/ssl", map[string]any{"host": "0.0.0.0", "port": "1.9e3"}, few...),
 
 		// Wake-on-LAN

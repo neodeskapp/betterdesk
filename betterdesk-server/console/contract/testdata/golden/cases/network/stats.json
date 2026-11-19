@@ -108,8 +108,8 @@
     "json": {
      "avg_latency": null,
      "down": 0,
-     "total": 5,
-     "unknown": 5,
+     "total": 3,
+     "unknown": 3,
      "up": 0
     }
    }
@@ -145,10 +145,10 @@
    "body": {
     "kind": "json",
     "json": {
-     "avg_latency": null,
+     "avg_latency": 0.5,
      "down": 1,
-     "total": 4,
-     "unknown": 1,
+     "total": 3,
+     "unknown": 0,
      "up": 2
     }
    }
@@ -181,13 +181,16 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "avg_latency"
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "avg_latency": null,
-     "down": 2,
-     "total": 5,
-     "unknown": 1,
+     "avg_latency": 0,
+     "down": 1,
+     "total": 3,
+     "unknown": 0,
      "up": 2
     }
    }

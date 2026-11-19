@@ -3,7 +3,7 @@
  "request": {
   "method": "POST",
   "path": "/api/network/http",
-  "body": "{\"url\":{\"href\":\"http://0.0.0.0:5000/health\",\"b\":1.50,\"a\":\"xé\",\"10\":true,\"2\":null}}",
+  "body": "{\"url\":{\"href\":\"http://{console_host}:5000/health\",\"b\":1.50,\"a\":\"xé\",\"10\":true,\"2\":null}}",
   "notes": [
    "raw body, content type \"application/json\""
   ]
@@ -141,7 +141,7 @@
       "2": null,
       "a": "xé",
       "b": 1.5,
-      "href": "http://0.0.0.0:5000/health"
+      "href": "<base>/health"
      }
     }
    }

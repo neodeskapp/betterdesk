@@ -99,7 +99,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "NOT NULL constraint failed: network_targets.name"
+     "error": "name must be text"
     }
    }
   }

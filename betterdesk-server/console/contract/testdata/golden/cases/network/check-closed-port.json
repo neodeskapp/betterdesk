@@ -114,7 +114,7 @@
    "roles": [
     "admin"
    ],
-   "status": 200,
+   "status": 404,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -136,19 +136,12 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    {
-     "path": "target_id",
-     "integer": true
-    }
+    "target_id"
    ],
    "body": {
     "kind": "json",
     "json": {
-     "error": "connect ECONNREFUSED 0.0.0.0:1",
-     "rtt_ms": null,
-     "status": "down",
-     "success": false,
-     "target_id": 0
+     "error": "Target not found"
     }
    }
   }

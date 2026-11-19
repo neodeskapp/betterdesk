@@ -12,11 +12,11 @@ import (
 // ad-hoc tools.
 //
 // Checks and tools only reach addresses inside the instance. The guard in
-// front of every outbound check refuses loopback (127.0.0.1, localhost,
-// ::1), so the cases that need an open port use 0.0.0.0, which the guard
-// lets through and which the instance's own stack answers: port 5000 is
-// the console, port 1 is closed. The instance has no ping command, so a
-// ping that passes the guard fails at starting it.
+// front of every outbound check refuses loopback and 0.0.0.0, so the cases
+// that need an open port use the instance's own host name ({console_host},
+// a private address the guard lets through): port 5000 is the console,
+// port 1 is closed. The instance has no ping command, so a ping that
+// passes the guard fails at starting it.
 //
 // The monitor is started and stopped while there are no targets, so its
 // poll finds nothing to check. Each role's turn deletes the targets it
@@ -58,52 +58,52 @@ func init() {
 		// Targets
 		contract.Case{
 			Name: "create-tcp", Method: "POST", Path: "/api/network/targets",
-			Body:    map[string]any{"name": "Contract tcp", "host": "0.0.0.0", "port": 5000, "check_type": "tcp", "timeout_ms": 3000, "interval_ms": 30000},
+			Body:    map[string]any{"name": "Contract tcp", "host": "{console_host}", "port": 5000, "check_type": "tcp", "timeout_ms": 3000, "interval_ms": 30000},
 			Capture: map[string]string{"tcp": "id"}, Volatile: row,
 		},
 		contract.Case{
 			Name: "create-http", Method: "POST", Path: "/api/network/targets",
-			Body:    map[string]any{"name": "Contract http", "url": "http://0.0.0.0:5000/health", "check_type": "http", "enabled": true},
+			Body:    map[string]any{"name": "Contract http", "url": "http://{console_host}:5000/health", "check_type": "http", "enabled": true},
 			Capture: map[string]string{"http": "id"}, Volatile: row,
 		},
 		contract.Case{
 			Name: "create-ping", Method: "POST", Path: "/api/network/targets",
-			Body:    map[string]any{"name": "Contract ping", "host": "0.0.0.0", "check_type": "ping", "enabled": false},
+			Body:    map[string]any{"name": "Contract ping", "host": "{console_host}", "check_type": "ping", "enabled": false},
 			Capture: map[string]string{"ping": "id"}, Volatile: row,
 		},
 		contract.Case{
 			Name: "create-odd-types", Method: "POST", Path: "/api/network/targets",
 			Body: map[string]any{
-				"name": 42, "host": "0.0.0.0", "port": "1x", "url": 0, "check_type": "tcp",
+				"name": 42, "host": "{console_host}", "port": "1x", "url": 0, "check_type": "tcp",
 				"timeout_ms": "abc", "interval_ms": "1500.9", "enabled": "no",
 			},
 			Capture: map[string]string{"odd": "id"}, Volatile: row,
 		},
-		post("create-without-name", "/api/network/targets", map[string]any{"check_type": "ping", "host": "0.0.0.0"}, few),
-		post("create-without-type", "/api/network/targets", map[string]any{"name": "x", "host": "0.0.0.0"}, few),
-		post("create-unknown-type", "/api/network/targets", map[string]any{"name": "x", "host": "0.0.0.0", "check_type": "icmp"}, few),
-		post("create-type-in-capitals", "/api/network/targets", map[string]any{"name": "x", "host": "0.0.0.0", "check_type": "TCP"}, few),
+		post("create-without-name", "/api/network/targets", map[string]any{"check_type": "ping", "host": "{console_host}"}, few),
+		post("create-without-type", "/api/network/targets", map[string]any{"name": "x", "host": "{console_host}"}, few),
+		post("create-unknown-type", "/api/network/targets", map[string]any{"name": "x", "host": "{console_host}", "check_type": "icmp"}, few),
+		post("create-type-in-capitals", "/api/network/targets", map[string]any{"name": "x", "host": "{console_host}", "check_type": "TCP"}, few),
 		post("create-without-host", "/api/network/targets", map[string]any{"name": "x", "check_type": "ping", "host": "", "url": nil}, few),
-		post("create-name-as-object", "/api/network/targets", map[string]any{"name": map[string]any{"a": 1}, "check_type": "ping", "host": "0.0.0.0"}, few),
-		post("create-name-as-true", "/api/network/targets", map[string]any{"name": true, "check_type": "ping", "host": "0.0.0.0"}, few),
+		post("create-name-as-object", "/api/network/targets", map[string]any{"name": map[string]any{"a": 1}, "check_type": "ping", "host": "{console_host}"}, few),
+		post("create-name-as-true", "/api/network/targets", map[string]any{"name": true, "check_type": "ping", "host": "{console_host}"}, few),
 		contract.Case{
 			Name: "create-host-as-list", Method: "POST", Path: "/api/network/targets",
-			Body:    map[string]any{"name": "x", "check_type": "ping", "host": []any{"0.0.0.0"}},
+			Body:    map[string]any{"name": "x", "check_type": "ping", "host": []any{"{console_host}"}},
 			Capture: map[string]string{"listed": "id"}, Roles: few, Volatile: row,
 		},
 		post("create-host-as-empty-list", "/api/network/targets", map[string]any{"name": "x", "check_type": "ping", "host": []any{}}, few),
-		post("create-host-as-list-of-lists", "/api/network/targets", map[string]any{"name": "x", "check_type": "ping", "host": []any{[]any{"0.0.0.0"}}}, few),
+		post("create-host-as-list-of-lists", "/api/network/targets", map[string]any{"name": "x", "check_type": "ping", "host": []any{[]any{"{console_host}"}}}, few),
 		contract.Case{
 			Name: "create-body-is-a-list", Method: "POST", Path: "/api/network/targets",
-			RawBody: `[{"name":"x","check_type":"ping","host":"0.0.0.0"}]`, ContentType: "application/json", Roles: few,
+			RawBody: `[{"name":"x","check_type":"ping","host":"{console_host}"}]`, ContentType: "application/json", Roles: few,
 		},
 		contract.Case{
 			Name: "create-as-form", Method: "POST", Path: "/api/network/targets",
-			RawBody: "name=x&check_type=ping&host=0.0.0.0", ContentType: "application/x-www-form-urlencoded", Roles: few,
+			RawBody: "name=x&check_type=ping&host={console_host}", ContentType: "application/x-www-form-urlencoded", Roles: few,
 		},
 		contract.Case{
 			Name: "create-without-csrf-token", Method: "POST", Path: "/api/network/targets",
-			Body: map[string]any{"name": "x", "check_type": "ping", "host": "0.0.0.0"}, NoCSRF: true, Roles: few,
+			Body: map[string]any{"name": "x", "check_type": "ping", "host": "{console_host}"}, NoCSRF: true, Roles: few,
 		},
 
 		contract.Case{Name: "list", Path: "/api/network/targets", Volatile: rows},
@@ -181,7 +181,7 @@ func init() {
 		},
 		contract.Case{
 			Name: "update-odd-back", Method: "PATCH", Path: "/api/network/targets/{odd}",
-			Body: map[string]any{"name": "42", "host": "0.0.0.0", "port": 1, "timeout_ms": 5000, "interval_ms": 1500, "enabled": true}, Roles: few, Volatile: row,
+			Body: map[string]any{"name": "42", "host": "{console_host}", "port": 1, "timeout_ms": 5000, "interval_ms": 1500, "enabled": true}, Roles: few, Volatile: row,
 		},
 		contract.Case{
 			Name: "update-unknown", Method: "PATCH", Path: "/api/network/targets/999999999",
@@ -212,7 +212,8 @@ func init() {
 		contract.Case{Name: "get-http-after-check", Path: "/api/network/targets/{http}", Roles: few, Volatile: row},
 		contract.Case{Name: "get-ping-after-check", Path: "/api/network/targets/{ping}", Roles: few, Volatile: row},
 		contract.Case{Name: "list-after-checks", Path: "/api/network/targets", Roles: few, Volatile: rows},
-		contract.Case{Name: "stats", Path: "/api/network/stats"},
+		// The mean round trip of the checks above, which the clock decides
+		contract.Case{Name: "stats", Path: "/api/network/stats", Volatile: []string{"~avg_latency"}},
 		contract.Case{
 			Name: "history", Path: "/api/network/targets/{tcp}/history",
 			Volatile: []string{"[*].id", "[*].target_id", "~[*].rtt_ms"},
@@ -250,22 +251,22 @@ func init() {
 
 		// The tools
 		post("ping-without-host", "/api/network/ping", map[string]any{}, few),
-		post("ping", "/api/network/ping", map[string]any{"host": "0.0.0.0"}, nil),
+		post("ping", "/api/network/ping", map[string]any{"host": "{console_host}"}, nil),
 		post("ping-loopback", "/api/network/ping", map[string]any{"host": "127.0.0.1", "timeout": 1000}, nil),
 		post("ping-localhost", "/api/network/ping", map[string]any{"host": "LocalHost"}, few),
-		post("ping-shell-characters", "/api/network/ping", map[string]any{"host": "0.0.0.0; id"}, few),
+		post("ping-shell-characters", "/api/network/ping", map[string]any{"host": "{console_host}; id"}, few),
 		post("ping-option-as-host", "/api/network/ping", map[string]any{"host": "-c5"}, few),
 		post("ping-host-as-number", "/api/network/ping", map[string]any{"host": 2130706433}, few),
-		post("ping-host-as-list", "/api/network/ping", map[string]any{"host": []any{"0.0.0.0"}}, few),
-		post("ping-timeout-below-zero", "/api/network/ping", map[string]any{"host": "0.0.0.0", "timeout": -5000}, few),
-		post("ping-timeout-as-text", "/api/network/ping", map[string]any{"host": "0.0.0.0", "timeout": "2500ms"}, few),
+		post("ping-host-as-list", "/api/network/ping", map[string]any{"host": []any{"{console_host}"}}, few),
+		post("ping-timeout-below-zero", "/api/network/ping", map[string]any{"host": "{console_host}", "timeout": -5000}, few),
+		post("ping-timeout-as-text", "/api/network/ping", map[string]any{"host": "{console_host}", "timeout": "2500ms"}, few),
 
 		post("tcp-without-host", "/api/network/tcp", map[string]any{"port": 5000}, few),
-		post("tcp-without-port", "/api/network/tcp", map[string]any{"host": "0.0.0.0"}, few),
-		post("tcp-port-zero", "/api/network/tcp", map[string]any{"host": "0.0.0.0", "port": 0}, few),
-		post("tcp", "/api/network/tcp", map[string]any{"host": "0.0.0.0", "port": 5000}, nil, "~rtt_ms"),
-		post("tcp-port-as-text", "/api/network/tcp", map[string]any{"host": "0.0.0.0", "port": "5000/tcp", "timeout": "1000"}, few, "~rtt_ms"),
-		post("tcp-closed-port", "/api/network/tcp", map[string]any{"host": "0.0.0.0", "port": 1}, nil),
+		post("tcp-without-port", "/api/network/tcp", map[string]any{"host": "{console_host}"}, few),
+		post("tcp-port-zero", "/api/network/tcp", map[string]any{"host": "{console_host}", "port": 0}, few),
+		post("tcp", "/api/network/tcp", map[string]any{"host": "{console_host}", "port": 5000}, nil, "~rtt_ms"),
+		post("tcp-port-as-text", "/api/network/tcp", map[string]any{"host": "{console_host}", "port": "5000/tcp", "timeout": "1000"}, few, "~rtt_ms"),
+		post("tcp-closed-port", "/api/network/tcp", map[string]any{"host": "{console_host}", "port": 1}, nil),
 		post("tcp-loopback", "/api/network/tcp", map[string]any{"host": "127.0.0.1", "port": 5000}, nil),
 		post("tcp-loopback-other-address", "/api/network/tcp", map[string]any{"host": "127.8.9.10", "port": 5000}, few),
 		post("tcp-loopback-v6", "/api/network/tcp", map[string]any{"host": "::1", "port": 5000}, few),
@@ -277,21 +278,21 @@ func init() {
 		post("tcp-loopback-as-number", "/api/network/tcp", map[string]any{"host": "2130706433", "port": 5000}, few),
 		post("tcp-loopback-in-hex", "/api/network/tcp", map[string]any{"host": "0x7f.1", "port": 5000}, few),
 		post("tcp-loopback-with-zeros", "/api/network/tcp", map[string]any{"host": "127.000.000.001", "port": 5000}, few),
-		post("tcp-host-with-space", "/api/network/tcp", map[string]any{"host": " 0.0.0.0", "port": 5000}, few),
+		post("tcp-host-with-space", "/api/network/tcp", map[string]any{"host": " {console_host}", "port": 5000}, few),
 		post("tcp-host-in-brackets", "/api/network/tcp", map[string]any{"host": "[::1]", "port": 5000}, few),
-		post("tcp-port-too-large", "/api/network/tcp", map[string]any{"host": "0.0.0.0", "port": 70000}, few),
-		post("tcp-port-below-zero", "/api/network/tcp", map[string]any{"host": "0.0.0.0", "port": -1}, few),
-		post("tcp-port-not-a-number", "/api/network/tcp", map[string]any{"host": "0.0.0.0", "port": "http"}, few),
-		post("tcp-port-text-zero", "/api/network/tcp", map[string]any{"host": "0.0.0.0", "port": "0"}, few),
-		post("tcp-timeout-below-zero", "/api/network/tcp", map[string]any{"host": "0.0.0.0", "port": 5000, "timeout": -1}, few),
+		post("tcp-port-too-large", "/api/network/tcp", map[string]any{"host": "{console_host}", "port": 70000}, few),
+		post("tcp-port-below-zero", "/api/network/tcp", map[string]any{"host": "{console_host}", "port": -1}, few),
+		post("tcp-port-not-a-number", "/api/network/tcp", map[string]any{"host": "{console_host}", "port": "http"}, few),
+		post("tcp-port-text-zero", "/api/network/tcp", map[string]any{"host": "{console_host}", "port": "0"}, few),
+		post("tcp-timeout-below-zero", "/api/network/tcp", map[string]any{"host": "{console_host}", "port": 5000, "timeout": -1}, few),
 
 		post("http-without-url", "/api/network/http", map[string]any{}, few),
-		post("http", "/api/network/http", map[string]any{"url": "http://0.0.0.0:5000/health"}, nil, "~rtt_ms"),
-		post("http-with-query", "/api/network/http", map[string]any{"url": "  HTTP://0.0.0.0:5000/health?probe=1#top  ", "timeout": 2000}, few, "~rtt_ms"),
-		post("http-redirect", "/api/network/http", map[string]any{"url": "http://0.0.0.0:5000/"}, few, "~rtt_ms"),
-		post("http-refused-by-console", "/api/network/http", map[string]any{"url": "http://0.0.0.0:5000/api/network/targets"}, few, "~rtt_ms"),
-		post("http-not-found", "/api/network/http", map[string]any{"url": "http://0.0.0.0:5000/api/nothing/here"}, few, "~rtt_ms"),
-		post("http-closed-port", "/api/network/http", map[string]any{"url": "http://0.0.0.0:1/"}, nil),
+		post("http", "/api/network/http", map[string]any{"url": "http://{console_host}:5000/health"}, nil, "~rtt_ms"),
+		post("http-with-query", "/api/network/http", map[string]any{"url": "  HTTP://{console_host}:5000/health?probe=1#top  ", "timeout": 2000}, few, "~rtt_ms"),
+		post("http-redirect", "/api/network/http", map[string]any{"url": "http://{console_host}:5000/"}, few, "~rtt_ms"),
+		post("http-refused-by-console", "/api/network/http", map[string]any{"url": "http://{console_host}:5000/api/network/targets"}, few, "~rtt_ms"),
+		post("http-not-found", "/api/network/http", map[string]any{"url": "http://{console_host}:5000/api/nothing/here"}, few, "~rtt_ms"),
+		post("http-closed-port", "/api/network/http", map[string]any{"url": "http://{console_host}:1/"}, nil),
 		post("http-loopback", "/api/network/http", map[string]any{"url": "http://127.0.0.1:5000/health"}, nil),
 		post("http-localhost", "/api/network/http", map[string]any{"url": "http://localhost:5000/health"}, few),
 		post("http-loopback-v6", "/api/network/http", map[string]any{"url": "http://[::1]:5000/health"}, few),
@@ -300,22 +301,22 @@ func init() {
 		post("http-loopback-short", "/api/network/http", map[string]any{"url": "http://127.1:5000/health"}, few),
 		post("http-loopback-with-backslashes", "/api/network/http", map[string]any{"url": `http:\\127.0.0.1:5000\health`}, few),
 		post("http-link-local", "/api/network/http", map[string]any{"url": "http://169.254.169.254/latest/meta-data/"}, few),
-		post("http-credentials", "/api/network/http", map[string]any{"url": "http://user:secret@0.0.0.0:5000/health"}, few),
-		post("http-user-only", "/api/network/http", map[string]any{"url": "http://user@0.0.0.0:5000/health"}, few),
-		post("http-other-scheme", "/api/network/http", map[string]any{"url": "ftp://0.0.0.0/file"}, few),
+		post("http-credentials", "/api/network/http", map[string]any{"url": "http://user:secret@{console_host}:5000/health"}, few),
+		post("http-user-only", "/api/network/http", map[string]any{"url": "http://user@{console_host}:5000/health"}, few),
+		post("http-other-scheme", "/api/network/http", map[string]any{"url": "ftp://{console_host}/file"}, few),
 		post("http-file", "/api/network/http", map[string]any{"url": "file:///etc/passwd"}, few),
 		post("http-not-a-url", "/api/network/http", map[string]any{"url": "0.0.0.0:5000/health"}, few),
 		post("http-no-scheme", "/api/network/http", map[string]any{"url": "//0.0.0.0:5000/health"}, few),
-		post("http-bad-port", "/api/network/http", map[string]any{"url": "http://0.0.0.0:99999/"}, few),
+		post("http-bad-port", "/api/network/http", map[string]any{"url": "http://{console_host}:99999/"}, few),
 		post("http-url-as-number", "/api/network/http", map[string]any{"url": 5}, few),
 		contract.Case{
 			Name: "http-url-as-object", Method: "POST", Path: "/api/network/http", Roles: few, ContentType: "application/json",
-			RawBody: `{"url":{"href":"http://0.0.0.0:5000/health","b":1.50,"a":"xé","10":true,"2":null}}`,
+			RawBody: `{"url":{"href":"http://{console_host}:5000/health","b":1.50,"a":"xé","10":true,"2":null}}`,
 		},
-		post("http-timeout-below-zero", "/api/network/http", map[string]any{"url": "http://0.0.0.0:5000/health", "timeout": -1}, few),
+		post("http-timeout-below-zero", "/api/network/http", map[string]any{"url": "http://{console_host}:5000/health", "timeout": -1}, few),
 
 		post("resolve-without-host", "/api/network/resolve", map[string]any{}, few),
-		post("resolve", "/api/network/resolve", map[string]any{"host": "0.0.0.0"}, nil),
+		post("resolve", "/api/network/resolve", map[string]any{"host": "{console_host}"}, nil),
 		post("resolve-private-address", "/api/network/resolve", map[string]any{"host": "10.255.255.1"}, few),
 		post("resolve-v6", "/api/network/resolve", map[string]any{"host": "FD00::1"}, few),
 		post("resolve-loopback", "/api/network/resolve", map[string]any{"host": "127.0.0.1"}, nil),
@@ -325,11 +326,11 @@ func init() {
 		post("resolve-host-as-number", "/api/network/resolve", map[string]any{"host": 5}, few),
 		contract.Case{
 			Name: "resolve-without-csrf-token", Method: "POST", Path: "/api/network/resolve",
-			Body: map[string]any{"host": "0.0.0.0"}, NoCSRF: true, Roles: few,
+			Body: map[string]any{"host": "{console_host}"}, NoCSRF: true, Roles: few,
 		},
 		contract.Case{
 			Name: "resolve-as-form", Method: "POST", Path: "/api/network/resolve",
-			RawBody: "host=0.0.0.0", ContentType: "application/x-www-form-urlencoded", Roles: few,
+			RawBody: "host={console_host}", ContentType: "application/x-www-form-urlencoded", Roles: few,
 		},
 
 		// Clean up

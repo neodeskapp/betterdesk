@@ -6,7 +6,7 @@
   "body": {
    "check_type": "ping",
    "enabled": false,
-   "host": "0.0.0.0",
+   "host": "{console_host}",
    "name": "Contract ping"
   }
  },
@@ -133,7 +133,7 @@
      "check_type": "ping",
      "created_at": "<volatile>",
      "enabled": 0,
-     "host": "0.0.0.0",
+     "host": "<hostname>",
      "id": 0,
      "interval_ms": 60000,
      "last_check_at": null,

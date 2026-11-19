@@ -5,7 +5,7 @@
   "path": "/api/network/ping",
   "body": {
    "host": [
-    "0.0.0.0"
+    "{console_host}"
    ]
   }
  },
@@ -135,7 +135,7 @@
     "json": {
      "error": "Invalid host format",
      "host": [
-      "0.0.0.0"
+      "<hostname>"
      ],
      "rtt_ms": null,
      "success": false

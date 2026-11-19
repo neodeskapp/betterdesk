@@ -85,7 +85,7 @@
     "server_admin",
     "admin"
    ],
-   "status": 200,
+   "status": 400,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -107,37 +107,13 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    {
-     "path": "created_at",
-     "format": "9999-99-99 99:99:99"
-    },
-    {
-     "path": "id",
-     "integer": true
-    },
-    "last_rtt_ms",
-    {
-     "path": "updated_at",
-     "format": "9999-99-99 99:99:99"
-    }
+    "id",
+    "last_rtt_ms"
    ],
    "body": {
     "kind": "json",
     "json": {
-     "check_type": "tcp",
-     "created_at": "<volatile>",
-     "enabled": 1,
-     "host": "7.5",
-     "id": 0,
-     "interval_ms": null,
-     "last_check_at": null,
-     "last_rtt_ms": null,
-     "last_status": null,
-     "name": "5000000000.0",
-     "port": 5000000000,
-     "timeout_ms": 1e+23,
-     "updated_at": "<volatile>",
-     "url": null
+     "error": "name must be text"
     }
    }
   }

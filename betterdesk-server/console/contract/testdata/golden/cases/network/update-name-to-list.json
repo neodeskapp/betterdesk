@@ -102,7 +102,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Too many parameter values were provided"
+     "error": "name must be text"
     }
    }
   }

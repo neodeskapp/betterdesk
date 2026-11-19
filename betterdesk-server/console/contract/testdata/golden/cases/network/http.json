@@ -4,7 +4,7 @@
   "method": "POST",
   "path": "/api/network/http",
   "body": {
-   "url": "http://0.0.0.0:5000/health"
+   "url": "http://{console_host}:5000/health"
   }
  },
  "recordings": 2,
@@ -152,7 +152,7 @@
      "rtt_ms": 0,
      "status_code": 200,
      "success": true,
-     "url": "http://0.0.0.0:5000/health"
+     "url": "<base>/health"
     }
    }
   }

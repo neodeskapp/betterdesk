@@ -4,7 +4,7 @@
   "method": "POST",
   "path": "/api/network/http",
   "body": {
-   "url": "http://0.0.0.0:99999/"
+   "url": "http://{console_host}:99999/"
   }
  },
  "recordings": 2,
@@ -135,7 +135,7 @@
      "rtt_ms": null,
      "status_code": null,
      "success": false,
-     "url": "http://0.0.0.0:99999/"
+     "url": "http://<hostname>:99999/"
     }
    }
   }

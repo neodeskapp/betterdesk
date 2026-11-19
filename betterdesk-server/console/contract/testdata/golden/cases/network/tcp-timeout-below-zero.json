@@ -4,7 +4,7 @@
   "method": "POST",
   "path": "/api/network/tcp",
   "body": {
-   "host": "0.0.0.0",
+   "host": "{console_host}",
    "port": 5000,
    "timeout": -1
   }
@@ -109,7 +109,7 @@
    "roles": [
     "admin"
    ],
-   "status": 200,
+   "status": 400,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -133,11 +133,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "The value of \"msecs\" is out of range. It must be a non-negative finite number. Received -1",
-     "host": "0.0.0.0",
-     "port": 5000,
-     "rtt_ms": null,
-     "success": false
+     "error": "timeout must be at least 1"
     }
    }
   }

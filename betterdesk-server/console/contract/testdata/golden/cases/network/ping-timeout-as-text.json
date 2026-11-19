@@ -4,7 +4,7 @@
   "method": "POST",
   "path": "/api/network/ping",
   "body": {
-   "host": "0.0.0.0",
+   "host": "{console_host}",
    "timeout": "2500ms"
   }
  },
@@ -133,7 +133,7 @@
     "kind": "json",
     "json": {
      "error": "spawn ping ENOENT",
-     "host": "0.0.0.0",
+     "host": "<hostname>",
      "rtt_ms": null,
      "success": false
     }
