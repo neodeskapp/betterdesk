@@ -1255,8 +1255,9 @@ func TestInteropSessionList(t *testing.T) {
 	})
 }
 
-// A stored session neither server can read: both answer the request with
-// an error, and neither ends the row.
+// A stored session neither server can read: Node answers the request with
+// an error and leaves the row; Go ends the row and goes on without a
+// session (BUGS.md S21), and Node then finds the row ended too.
 func TestInteropBrokenStoredSession(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		g, node := both(t, db, defaultSetup(), true)
@@ -1264,13 +1265,20 @@ func TestInteropBrokenStoredSession(t *testing.T) {
 			b := newBrowser(t)
 			sid := b.login(node, aliceUser)["sid"].(string)
 			exec1(t, db, `UPDATE panel_sessions SET session_json = ? WHERE sid = ?`, text, sid)
-			for _, s := range []*server{g.server, node} {
-				if r := b.copy().do(s, "GET", "/t/whoami", nil); r.status != http.StatusInternalServerError {
-					t.Fatalf("%s answered %d %s for the stored session %s", s.name, r.status, r.body, text)
-				}
+			if r := b.copy().do(node, "GET", "/t/whoami", nil); r.status != http.StatusInternalServerError {
+				t.Fatalf("node answered %d %s for the stored session %s", r.status, r.body, text)
 			}
 			if after := readRow(t, db, sid); !after.active || after.json != text {
-				t.Fatalf("row after both answered: %+v", after)
+				t.Fatalf("row after node answered: %+v", after)
+			}
+			if r := b.copy().do(g.server, "GET", "/t/whoami", nil); r.status != http.StatusOK || r.json(t)["userId"] != nil {
+				t.Fatalf("go answered %d %s for the stored session %s", r.status, r.body, text)
+			}
+			if after := readRow(t, db, sid); after.active || str(after.reason) != "unreadable" || after.json != "{}" {
+				t.Fatalf("row after go answered: %+v", after)
+			}
+			if r := b.copy().do(node, "GET", "/t/whoami", nil); r.status != http.StatusOK || r.json(t)["userId"] != nil {
+				t.Fatalf("node answered %d %s after go ended the row", r.status, r.body)
 			}
 		}
 	})
