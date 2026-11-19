@@ -1,8 +1,9 @@
 // Package tickets holds the helpdesk routes under /api/tickets: tickets,
 // their comments and their attachments.
 //
-// Reading needs the permission device.view, changing a ticket device.edit.
-// A viewer sees the tickets assigned to it and no internal comments.
+// Reading needs the permission device.view, changing a ticket or
+// commenting on it device.edit. A viewer sees the tickets assigned to it
+// and no internal comments.
 //
 // The two routes for devices, POST and GET /api/tickets/bd, take a device
 // token instead of a session (device.go).
@@ -51,7 +52,7 @@ func register(d *kit.Deps, h *handlers) {
 	r.Get("/{id}", h.get, id, requireAuth, canRead)
 	r.Patch("/{id}", h.update, id, requireAuth, canWrite)
 	r.Delete("/{id}", h.remove, id, upload, requireAuth, canWrite)
-	r.Post("/{id}/comments", h.addComment, id, upload, requireAuth, canRead)
+	r.Post("/{id}/comments", h.addComment, id, upload, requireAuth, canWrite)
 	r.Get("/{id}/comments", h.comments, id, requireAuth, canRead)
 	// The body of an upload is read by this route, after the checks: up
 	// to 35 MB of JSON for a file of 25 MB

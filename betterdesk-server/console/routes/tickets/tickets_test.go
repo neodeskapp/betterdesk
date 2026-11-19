@@ -153,8 +153,9 @@ func TestTheDeviceRoutesComeLast(t *testing.T) {
 }
 
 // What the routes decide by themselves (tests/tickets.permissions.test.js):
-// nobody without a session, reads and comments with device.view, writes
-// with device.edit.
+// nobody without a session, reads with device.view, writes and comments
+// with device.edit, as the panel access guard in front of them asks
+// (DECISIONS A43, BUGS TK5).
 func TestWhoMayReadCommentAndWrite(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		g := newGroup(t, db)
@@ -167,9 +168,11 @@ func TestWhoMayReadCommentAndWrite(t *testing.T) {
 			g.want(g.do(role, "GET", "/api/tickets", ""), 200, "")
 			g.want(g.do(role, "GET", "/api/tickets/1", ""), 200, "")
 			g.want(g.do(role, "GET", "/api/tickets/1/comments", ""), 200, "")
-			g.want(g.do(role, "POST", "/api/tickets/1/comments", `{"body":"hi","is_internal":true}`), 201, "")
 		}
-		// A viewer's comment is never internal, and a viewer sees no internal one
+		g.want(g.do("viewer", "POST", "/api/tickets/1/comments", `{"body":"hi"}`), 403, `{"success":false,"error":"Permission denied: device.edit"}`)
+		g.want(g.do("operator", "POST", "/api/tickets/1/comments", `{"body":"public"}`), 201, "")
+		g.want(g.do("admin", "POST", "/api/tickets/1/comments", `{"body":"hi","is_internal":true}`), 201, "")
+		// A viewer sees no internal comment
 		var internal []bool
 		rows, err := db.Query(context.Background(), "SELECT author, is_internal FROM ticket_comments ORDER BY id")
 		if err != nil {
@@ -184,8 +187,8 @@ func TestWhoMayReadCommentAndWrite(t *testing.T) {
 			internal = append(internal, flag.True())
 		}
 		rows.Close()
-		if len(internal) != 3 || internal[0] || !internal[1] || !internal[2] {
-			t.Errorf("internal flags of the comments by viewer, operator, admin: %v", internal)
+		if len(internal) != 2 || internal[0] || !internal[1] {
+			t.Errorf("internal flags of the comments by operator, admin: %v", internal)
 		}
 		var seen struct {
 			Comments []struct {
@@ -193,7 +196,7 @@ func TestWhoMayReadCommentAndWrite(t *testing.T) {
 			} `json:"comments"`
 		}
 		_ = json.Unmarshal(g.do("viewer", "GET", "/api/tickets/1/comments", "").Body.Bytes(), &seen)
-		if len(seen.Comments) != 1 || seen.Comments[0].Author != "e2e_viewer" {
+		if len(seen.Comments) != 1 || seen.Comments[0].Author != "e2e_operator" {
 			t.Errorf("a viewer sees the comments %+v", seen.Comments)
 		}
 
@@ -205,7 +208,7 @@ func TestWhoMayReadCommentAndWrite(t *testing.T) {
 		for _, target := range []string{"/api/tickets", "/api/tickets/1", "/api/tickets/1/comments", "/api/tickets/stats", "/api/tickets/1/attachments", "/api/tickets/attachments/1"} {
 			g.want(g.do("pro", "GET", target, ""), 403, `{"success":false,"error":"Permission denied: device.view"}`)
 		}
-		g.want(g.do("pro", "POST", "/api/tickets/1/comments", `{"body":"hi"}`), 403, `{"success":false,"error":"Permission denied: device.view"}`)
+		g.want(g.do("pro", "POST", "/api/tickets/1/comments", `{"body":"hi"}`), 403, `{"success":false,"error":"Permission denied: device.edit"}`)
 
 		// PATCH sets and clears the device (tests/dbAdapter.ticketDevice.test.js)
 		device := func() store.NullString {
