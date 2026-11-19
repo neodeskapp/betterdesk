@@ -220,36 +220,48 @@ func TestGuards(t *testing.T) {
 	})
 }
 
-// TestNoAnswerWithoutSlug closes the connection where the old route never
-// answered (BUGS GN1): a new bundle without a slug, and a change of a
-// bundle that has none. Nothing is written.
-func TestNoAnswerWithoutSlug(t *testing.T) {
+// TestSlugFromTheName gives a new bundle without a usable slug a free one
+// made from its name, else from its id, with -2, -3 and so on while
+// taken (BUGS GN1: the old route never answered).
+func TestSlugFromTheName(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		var dataDir string
 		w := replay.NewWorld(t, db, func(cfg *config.Config) { dataDir = cfg.DataDir })
 		ready(t, w, dataDir)
-		for _, body := range []string{
-			`{"name":"Acme","branding":{"server_host":"h.example"}}`,
-			`{"name":"Acme","slug":"!!","branding":{"server_host":"h.example"}}`,
-			`{"name":"Acme","slug":null,"branding":{"server_host":"h.example"}}`,
+		for _, c := range []struct{ body, slug string }{
+			{`{"name":"Acme","branding":{"server_host":"h.example"}}`, "acme"},
+			{`{"name":"Acme","slug":"!!","branding":{"server_host":"h.example"}}`, "acme-2"},
+			{`{"name":"Acme","slug":null,"branding":{"server_host":"h.example"}}`, "acme-3"},
+			{`{"name":"!","branding":{"server_host":"h.example"}}`, "<bundle id>"},
 		} {
-			aborted := func() (aborted bool) {
-				defer func() {
-					if p := recover(); p != nil {
-						aborted = p == http.ErrAbortHandler
-					}
-				}()
-				w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/generator/bundles", Body: replay.Text(body)})
-				return false
-			}()
-			if !aborted {
-				t.Errorf("%s was answered", body)
+			got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/generator/bundles", Body: replay.Text(c.body)})
+			slug, id := bundleSlug(t, got)
+			if c.slug == "<bundle id>" && slug == id || slug == c.slug {
+				continue
 			}
+			t.Errorf("%s: %d %s, want the slug %s", c.body, got.Status, got.Body, c.slug)
 		}
-		if rows := w.Rows("SELECT COUNT(*) AS n FROM agent_bundles", nil); rows != `[{"n":0}]` {
+		if rows := w.Rows("SELECT COUNT(*) AS n FROM agent_bundles", nil); rows != `[{"n":4}]` {
 			t.Errorf("bundles written: %s", rows)
 		}
 	})
+}
+
+// bundleSlug is the slug and the id of the bundle an answer names.
+func bundleSlug(t *testing.T, got replay.Answer) (slug, id string) {
+	t.Helper()
+	var answer struct {
+		Data struct {
+			Bundle struct {
+				Slug     string `json:"slug"`
+				BundleID string `json:"bundle_id"`
+			} `json:"bundle"`
+		} `json:"data"`
+	}
+	if got.Status != http.StatusOK || json.Unmarshal([]byte(got.Body), &answer) != nil {
+		return "", ""
+	}
+	return answer.Data.Bundle.Slug, answer.Data.Bundle.BundleID
 }
 
 // ready installs a module with a template tree from a recording's
@@ -288,28 +300,29 @@ func ready(t *testing.T, w *replay.World, dataDir string) {
 	t.Fatal("no install step in the recording")
 }
 
-// TestNoAnswerForBundleWithoutSlug closes the connection on a change of a
-// bundle that has no slug when the body names none (BUGS GN1).
-func TestNoAnswerForBundleWithoutSlug(t *testing.T) {
+// TestChangedBundleWithoutSlugGetsOne gives a bundle that has no slug a
+// free one made from its name when a change names none, and when the
+// name is taken one with -2 (BUGS GN1: the old route never answered). A
+// bundle's own slug counts as free for it.
+func TestChangedBundleWithoutSlugGetsOne(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		var dataDir string
 		w := replay.NewWorld(t, db, func(cfg *config.Config) { dataDir = cfg.DataDir })
 		ready(t, w, dataDir)
 		w.Exec(`INSERT INTO agent_bundles (bundle_id, slug, name, branding, branding_hash) VALUES ('noslug00001', NULL, 'Old', '{"server_host":"h.example"}', 'h')`, nil)
-		aborted := func() (aborted bool) {
-			defer func() {
-				if p := recover(); p != nil {
-					aborted = p == http.ErrAbortHandler
-				}
-			}()
-			w.Do(replay.Request{Role: "admin", Method: "PUT", Path: "/api/generator/bundles/noslug00001", Body: replay.Text(`{"name":"New"}`)})
-			return false
-		}()
-		if !aborted {
-			t.Fatal("the change was answered")
+		w.Exec(`INSERT INTO agent_bundles (bundle_id, slug, name, branding, branding_hash) VALUES ('noslug00002', NULL, 'Old', '{"server_host":"h.example"}', 'h')`, nil)
+		for _, c := range []struct{ id, body, slug string }{
+			{"noslug00001", `{"name":"New"}`, "new"},
+			{"noslug00002", `{"name":"New","slug":""}`, "new-2"},
+			{"noslug00001", `{"slug":"!!"}`, "new"},
+		} {
+			got := w.Do(replay.Request{Role: "admin", Method: "PUT", Path: "/api/generator/bundles/" + c.id, Body: replay.Text(c.body)})
+			if slug, _ := bundleSlug(t, got); slug != c.slug {
+				t.Errorf("%s %s: %d %s, want the slug %s", c.id, c.body, got.Status, got.Body, c.slug)
+			}
 		}
-		if rows := w.Rows("SELECT name FROM agent_bundles WHERE bundle_id = 'noslug00001'", nil); rows != `[{"name":"Old"}]` {
-			t.Errorf("bundle changed: %s", rows)
+		if rows := w.Rows("SELECT bundle_id, name, slug FROM agent_bundles ORDER BY bundle_id", nil); rows != `[{"bundle_id":"noslug00001","name":"New","slug":"new"},{"bundle_id":"noslug00002","name":"New","slug":"new-2"}]` {
+			t.Errorf("bundles: %s", rows)
 		}
 	})
 }

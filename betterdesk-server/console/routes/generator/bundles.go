@@ -279,22 +279,27 @@ func (h *handlers) failValidation(w http.ResponseWriter, r *http.Request, errs [
 	kit.JSON(w, r, http.StatusBadRequest, validationFailure{Error: kit.T(r, "generator.errors.validation_failed", nil), Errors: errs, Details: errs})
 }
 
-// errHang is a request the old route never answered: it looped forever
-// looking for a free slug (BUGS GN1). The connection is closed instead.
-func errHang() { panic(http.ErrAbortHandler) }
-
 // resolveSlug is the address part of a new or changed bundle: the one
 // asked for, checked and free, or, when none was asked for, a free one
-// made from the name.
-func (h *handlers) resolveSlug(ctx context.Context, preferred, exclude string) (slug, problem string, err error) {
+// made from the name, else from the bundle's id, with -2, -3 and so on
+// while it is taken. exclude is the bundle being changed, whose own slug
+// counts as free.
+func (h *handlers) resolveSlug(ctx context.Context, preferred, name, bundleID, exclude string) (slug, problem string, err error) {
 	normalized := ""
 	if preferred != "" {
 		normalized = store.SlugifyBundleName(preferred)
 	}
 	if normalized == "" {
-		// The old route looked for a free slug with a check that always
-		// said "taken" and never stopped.
-		errHang()
+		var lookupErr error
+		slug := store.AllocateBundleSlug("", name, bundleID, func(candidate string) bool {
+			if lookupErr != nil {
+				return false
+			}
+			taken, err := h.gen.IsSlugTaken(ctx, candidate, exclude)
+			lookupErr = err
+			return taken
+		})
+		return slug, "", lookupErr
 	}
 	if problem := gen.ValidateSlug(normalized); problem != "" {
 		return "", problem, nil
@@ -363,7 +368,7 @@ func (h *handlers) createBundle(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "create bundle", err)
 		return
 	}
-	slug, problem, err := h.resolveSlug(ctx, jsTrim(jsString(or(prop(body, "slug"), ""))), "")
+	slug, problem, err := h.resolveSlug(ctx, jsTrim(jsString(or(prop(body, "slug"), ""))), name, bundleID, "")
 	if err != nil {
 		h.serverError(w, r, "create bundle", err)
 		return
@@ -463,8 +468,12 @@ func (h *handlers) updateBundle(w http.ResponseWriter, r *http.Request) {
 		hash = h.generationFor(fingerprint, commit)
 	}
 	slug := existing.Slug.String
-	if o, isObject := body.(*goapi.Object); isObject && o.Has("slug") {
-		next, problem, err := h.resolveSlug(ctx, jsTrim(jsString(or(o.Get("slug"), ""))), existing.BundleID)
+	if o, isObject := body.(*goapi.Object); isObject && o.Has("slug") || slug == "" {
+		preferred := ""
+		if isObject {
+			preferred = jsTrim(jsString(or(o.Get("slug"), "")))
+		}
+		next, problem, err := h.resolveSlug(ctx, preferred, name, existing.BundleID, existing.BundleID)
 		if err != nil {
 			h.serverError(w, r, "update bundle", err)
 			return
@@ -474,8 +483,6 @@ func (h *handlers) updateBundle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		slug = next
-	} else if slug == "" {
-		errHang()
 	}
 	keepCommit := commit
 	if keepCommit == "" {
