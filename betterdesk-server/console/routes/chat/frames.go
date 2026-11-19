@@ -5,6 +5,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
+	"github.com/unitronix/betterdesk-server/logging"
 )
 
 // capabilities are what the welcome message says the relay can do.
@@ -323,9 +324,23 @@ func (r *Relay) operatorFrame(c *client, frame jsjson.Value) error {
 		return r.reaction(c, frame)
 
 	case "file_share":
+		r.linkFile(c, frame.Get("file_id"), conversation)
 		r.route(c, conversation, r.fileShare(frame, text("operator"), name, conversation))
 	}
 	return nil
+}
+
+// linkFile notes that the operator shared a chat file into a
+// conversation, so the accounts that see the conversation may download it
+// (shareFile).
+func (r *Relay) linkFile(c *client, fileID, conversation jsjson.Value) {
+	if fileID.Kind() != jsjson.String || conversation.Kind() != jsjson.String {
+		return
+	}
+	err := shareFile(c.conn.Context(), r.opts.FilesDir, r.opts.Scope, c.user, lowerASCII(fileID.Str()), conversation.Str())
+	if err != nil {
+		logging.Logf("console", "WARN: [Chat] Failed to link a shared file: %v", err)
+	}
 }
 
 // route sends what an operator says (typing, keys, receipts, files) where

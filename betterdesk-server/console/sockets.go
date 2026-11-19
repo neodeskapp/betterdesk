@@ -27,7 +27,7 @@ func registerSockets(d *kit.Deps) {
 	webClient.Register(d.Sockets)
 	d.Relay.Register(d.Sockets) // services/bdRelay.js: /ws/bd-relay, /ws/bd-signal
 	// services/chatRelay.js: /ws/chat/<id>, /ws/chat-operator/<id>
-	chat.NewRelay(chat.RelayOptions{API: d.GoAPI, VerifyDevice: d.Authn.VerifyDeviceWSAuth}).Register(d.Sockets)
+	chat.NewRelay(chat.RelayOptions{API: d.GoAPI, VerifyDevice: d.Authn.VerifyDeviceWSAuth, Scope: chat.ScopeOf(d), FilesDir: chat.FilesDir(d.Config)}).Register(d.Sockets)
 	d.RemoteRelay.Register(d.Sockets) // services/remoteRelay.js: /ws/remote-agent/<id>, /ws/remote-viewer/<id>
 	// services/cdapTerminalProxy.js, services/cdapMediaProxy.js: /api/cdap/devices/<id>/terminal, desktop, video, files, audio
 	cdapproxy.New(cdapproxy.Options{API: d.GoAPI.Handler()}).Register(d.Sockets)

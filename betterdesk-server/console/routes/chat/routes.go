@@ -7,7 +7,8 @@
 // Files are kept in <console folder>/data/chat-files as
 // <32 hex digits><extension>, where the extension is the first ten
 // characters of the uploaded name's extension. A message links to a file
-// as /api/chat/files/<32 hex digits>. Files are never deleted.
+// as /api/chat/files/<32 hex digits>. Who may download a file is noted
+// next to it (links.go). Files are never deleted.
 package chat
 
 import (
@@ -16,9 +17,11 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/webui"
 )
 
@@ -37,15 +40,25 @@ type handlers struct {
 	// routes do not answer themselves. Without it the answer is the one
 	// the handler gives in production.
 	errors *webui.Host
+	// scope is the device scope a download is checked against.
+	scope Scope
+	// user is the signed-in account (kit.User).
+	user func(r *http.Request) *session.User
+}
+
+// FilesDir is the folder of the chat files: <console folder>/data/chat-files.
+func FilesDir(cfg *config.Config) string {
+	return filepath.Join(cfg.ConsoleDir, "data", "chat-files")
 }
 
 // Register adds the group's routes.
 func Register(d *kit.Deps) {
-	register(d, filepath.Join(d.Config.ConsoleDir, "data", "chat-files"))
+	h := register(d, FilesDir(d.Config))
+	h.scope = ScopeOf(d)
 }
 
 func register(d *kit.Deps, dir string) *handlers {
-	h := &handlers{api: d.GoAPI, dir: dir, random: rand.Reader, errors: d.WebUI}
+	h := &handlers{api: d.GoAPI, dir: dir, random: rand.Reader, errors: d.WebUI, user: kit.User}
 	h.files = httpx.NewStatic(dir, httpx.StaticOptions{
 		NoIndex:       true,
 		NoFallthrough: true,

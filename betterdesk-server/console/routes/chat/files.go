@@ -47,6 +47,13 @@ func (h *handlers) upload(w http.ResponseWriter, r *http.Request) {
 	}
 	name := form.File.Filename
 	id := strings.TrimSuffix(name, extname(name))
+	if user := h.user(r); user != nil && user.ID != 0 {
+		if err := addLink(h.dir, id, link{Owner: user.ID}); err != nil {
+			_ = os.Remove(filepath.Join(h.dir, name))
+			h.serverError(w, r, err, 0)
+			return
+		}
+	}
 	kit.JSON(w, r, http.StatusOK, uploaded{Success: true, FileID: id, Filename: name, Size: form.File.Size, URL: "/api/chat/files/" + id})
 }
 
@@ -66,26 +73,27 @@ func (h *handlers) storedName(file *middleware.UploadedFile) (string, error) {
 
 // download answers GET /api/chat/files/{fileId} with the file whose name
 // is the id or starts with the id and a dot. Only a whole id finds its
-// file: 32 hex digits, in either case.
+// file: 32 hex digits, in either case. A file the account may not
+// download (see mayDownload) is not found either.
 func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
 	id := lowerASCII(r.PathValue("fileId"))
 	if !isFileID(id) {
 		kit.Fail(w, r, http.StatusBadRequest, "Invalid file ID")
 		return
 	}
-	entries, err := os.ReadDir(h.dir)
-	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+	name, err := findFile(h.dir, id)
+	if err != nil {
 		h.serverError(w, r, err, 0)
 		return
 	}
-	name := ""
-	for _, entry := range entries {
-		if entry.Name() == id || strings.HasPrefix(entry.Name(), id+".") {
-			name = entry.Name()
-			break
+	allowed := false
+	if name != "" {
+		if allowed, err = mayDownload(r.Context(), h.dir, h.scope, h.user(r), id); err != nil {
+			h.serverError(w, r, err, 0)
+			return
 		}
 	}
-	if name == "" {
+	if !allowed {
 		kit.Fail(w, r, http.StatusNotFound, "File not found")
 		return
 	}

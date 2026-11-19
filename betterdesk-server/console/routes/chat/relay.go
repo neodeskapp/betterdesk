@@ -9,6 +9,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
+	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/ws"
 	"github.com/unitronix/betterdesk-server/logging"
 )
@@ -46,6 +47,11 @@ type RelayOptions struct {
 	Now func() time.Time
 	// PingInterval overrides PingInterval (tests).
 	PingInterval time.Duration
+	// Scope is the device scope of the accounts (ScopeOf).
+	Scope Scope
+	// FilesDir is the folder of the chat files (FilesDir), where a file
+	// an operator shares is linked to the conversation. "" links nothing.
+	FilesDir string
 }
 
 // Relay is the chat between devices and operators
@@ -157,6 +163,7 @@ func (r *Relay) serveOperator(u *ws.Upgrade) {
 		name = "operator"
 	}
 	c := r.newClient(u, conn, u.Param("id"), name)
+	c.user = session.User()
 	r.operatorJoins(c)
 	c.run(r.operatorFrame)
 	r.operatorLeaves(c)
@@ -171,6 +178,8 @@ type client struct {
 	id string
 	// operator is the operator's name, "" for an agent
 	operator string
+	// user is the operator's account, nil for an agent
+	user *session.User
 	// api is the context of the socket's calls to the API server: it ends
 	// with the console, not with the socket, so a message sent just
 	// before the socket closed is still stored

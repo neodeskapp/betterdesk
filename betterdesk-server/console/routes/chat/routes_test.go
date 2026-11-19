@@ -18,6 +18,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
+	"github.com/unitronix/betterdesk-server/console/session"
 )
 
 const (
@@ -46,6 +47,7 @@ func (c *counter) Read(p []byte) (int, error) {
 type world struct {
 	t       *testing.T
 	dir     string
+	h       *handlers
 	handler http.Handler
 	mu      sync.Mutex
 	calls   []string
@@ -75,11 +77,13 @@ func newWorldIn(t *testing.T, dir string) *world {
 	d := &kit.Deps{Router: kit.NewRouter(), GoAPI: api}
 	h := register(d, dir)
 	h.random = &counter{}
+	h.user = testUser
+	w.h = h
 	w.handler = middleware.Bodies(middleware.BodyOptions{})(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		r = kit.Begin(r, httpx.TrustProxy{}, nil)
 		who := &access.Context{}
-		if role := r.Header.Get("X-Test-Role"); role != "" {
-			who = &access.Context{UserID: 7, HasUser: true, Role: role}
+		if user := testUser(r); user != nil {
+			who = &access.Context{UserID: user.ID, HasUser: true, Role: user.Role}
 		}
 		kit.SetAccess(r, who)
 		if !d.Router.Serve(rw, r) {
@@ -87,6 +91,19 @@ func newWorldIn(t *testing.T, dir string) *world {
 		}
 	}))
 	return w
+}
+
+// testUser is the account of a test request: one of scopeAccounts named
+// by X-Test-User, else account 7 with the role X-Test-Role names, else
+// nobody.
+func testUser(r *http.Request) *session.User {
+	if a, ok := scopeAccounts[r.Header.Get("X-Test-User")]; ok {
+		return &a
+	}
+	if role := r.Header.Get("X-Test-Role"); role != "" {
+		return &session.User{ID: 7, Username: "tester", Role: role}
+	}
+	return nil
 }
 
 func (w *world) send(role string, r *http.Request) *httptest.ResponseRecorder {
@@ -116,6 +133,19 @@ type part struct {
 // upload posts a multipart form to the upload route.
 func (w *world) upload(role string, parts ...part) *httptest.ResponseRecorder {
 	w.t.Helper()
+	return w.send(role, w.uploadRequest(parts...))
+}
+
+// uploadBy posts a multipart form as one of scopeAccounts.
+func (w *world) uploadBy(who string, parts ...part) *httptest.ResponseRecorder {
+	w.t.Helper()
+	r := w.uploadRequest(parts...)
+	r.Header.Set("X-Test-User", who)
+	return w.send("", r)
+}
+
+func (w *world) uploadRequest(parts ...part) *http.Request {
+	w.t.Helper()
 	var body bytes.Buffer
 	form := multipart.NewWriter(&body)
 	for _, p := range parts {
@@ -139,10 +169,10 @@ func (w *world) upload(role string, parts ...part) *httptest.ResponseRecorder {
 	}
 	r := httptest.NewRequest("POST", "/api/chat/upload", &body)
 	r.Header.Set("Content-Type", form.FormDataContentType())
-	return w.send(role, r)
+	return r
 }
 
-// stored lists the names in the files folder.
+// stored lists the names in the files folder, without the links folder.
 func (w *world) stored() []string {
 	w.t.Helper()
 	entries, err := os.ReadDir(w.dir)
@@ -151,7 +181,9 @@ func (w *world) stored() []string {
 	}
 	names := []string{}
 	for _, entry := range entries {
-		names = append(names, entry.Name())
+		if entry.Name() != linksFolder {
+			names = append(names, entry.Name())
+		}
 	}
 	return names
 }
