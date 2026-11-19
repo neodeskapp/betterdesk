@@ -617,6 +617,32 @@ func TestPostgresTimesKeepTheirMicroseconds(t *testing.T) {
 	}
 }
 
+// BK8: a list in a json or jsonb column comes back on PostgreSQL; it was
+// sent as an array literal, which PostgreSQL refuses for JSON.
+func TestPostgresRestoresListsInJSONColumns(t *testing.T) {
+	if os.Getenv(storetest.PostgresEnv) == "" {
+		t.Skipf("%s is not set", storetest.PostgresEnv)
+	}
+	ctx := context.Background()
+	src := newInstall(t, "postgres")
+	mustExec(t, src.db, `INSERT INTO dlp_policies (name, rules) VALUES ('list', '[{"a":1},[2,"x"],null]'), ('empty', '[]'), ('object', '{"b":[1]}')`)
+	mustExec(t, src.db, `INSERT INTO peer (id, uuid, pk, info) VALUES ('p1', 'u', '\x00', '["a",{"b":true}]')`)
+	archive, _, err := src.service(t, "x").CreateFullBackup(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dst := newInstall(t, "postgres")
+	res, err := dst.service(t, "x").RestoreFullBackup(ctx, archive, RestoreOptions{Database: true})
+	if err != nil || len(res.Warnings) != 0 {
+		t.Fatalf("restore: %+v %v", res, err)
+	}
+	for _, table := range []string{"dlp_policies", "peer"} {
+		if got, want := snapshot(t, dst.db)[table], snapshot(t, src.db)[table]; strings.Join(got, "\n") != strings.Join(want, "\n") {
+			t.Errorf("%s:\n got  %q\n want %q", table, got, want)
+		}
+	}
+}
+
 // telemetryOf is the device_telemetry part of a dump, for a failure.
 func telemetryOf(dump string) string {
 	i := strings.Index(dump, `"device_telemetry":`)

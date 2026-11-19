@@ -6,11 +6,13 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -718,18 +720,30 @@ func TestArchivesRoundTripWithNode(t *testing.T) {
 				return table == "device_telemetry"
 			}
 			for label, o := range outcomes {
-				if o.result != base.result {
-					t.Errorf("%s: result %s, node restore of the node archive %s", label, o.result, base.result)
+				fromGo, byGo := strings.HasPrefix(label, "go archive"), strings.HasSuffix(label, "go restore")
+				wantResult := base.result
+				if byGo {
+					wantResult = resultOfGo(t, dialect, wantResult)
 				}
-				expect := base.tables
-				if strings.HasPrefix(label, "go archive") {
-					expect = map[string][]string{}
-					for table, rows := range base.tables {
-						if exactInGoArchive(table) && !strings.Contains(o.result, "Table "+table+":") {
-							rows = want[table]
+				if o.result != wantResult {
+					t.Errorf("%s: result %s, want %s (node restore of the node archive %s)", label, o.result, wantResult, base.result)
+				}
+				expect := map[string][]string{}
+				for table, rows := range base.tables {
+					failed := "Table " + table + ":"
+					switch {
+					case strings.Contains(o.result, failed):
+					case fromGo && exactInGoArchive(table):
+						rows = want[table]
+					case strings.Contains(base.result, failed):
+						// restored by Go from Node's archive, with Node's
+						// milliseconds
+						rows = append([]string(nil), want[table]...)
+						for i := range rows {
+							rows[i] = microseconds.ReplaceAllStringFunc(rows[i], toMilliseconds)
 						}
-						expect[table] = rows
 					}
+					expect[table] = rows
 				}
 				diffSnapshots(t, label, expect, o.tables)
 				for name, content := range wantFiles {
@@ -789,8 +803,56 @@ func recordFixture(t *testing.T, dialect string, archive []byte, result string, 
 	}
 }
 
+// refusedByNodeOnly are the warnings of Node's restore, by dialect, for
+// tables Go restores (BUGS.md BK8: the list in dlp_policies.rules goes in
+// as JSON text).
+var refusedByNodeOnly = map[string][]string{
+	"postgres": {"Table dlp_policies: invalid input syntax for type json"},
+}
+
+// resultOfGo is a result of Node's restore as Go's restore of the same
+// archive answers: without the warnings of refusedByNodeOnly, and with
+// each of those tables counted in "database (N tables)".
+func resultOfGo(t *testing.T, dialect, result string) string {
+	t.Helper()
+	v, err := branding.ParseJSON([]byte(result))
+	if err != nil {
+		t.Fatal(err)
+	}
+	o := v.(*branding.Object)
+	warnings, _ := o.Get("warnings")
+	var kept []any
+	more := 0
+	for _, w := range warnings.([]any) {
+		if slices.Contains(refusedByNodeOnly[dialect], w.(string)) {
+			more++
+			continue
+		}
+		kept = append(kept, w)
+	}
+	if kept == nil {
+		kept = []any{}
+	}
+	o.Set("warnings", kept)
+	restored, _ := o.Get("restored")
+	list := restored.([]any)
+	var n int
+	if _, err := fmt.Sscanf(list[0].(string), "database (%d tables)", &n); err == nil {
+		list[0] = fmt.Sprintf("database (%d tables)", n+more)
+	}
+	return branding.Stringify(o)
+}
+
+// fixtureTables are the rows Go restores from the Node archives otherwise
+// than Node's own restore did, on purpose, by dialect and table.
+var fixtureTables = map[string]map[string][]string{
+	// BK8: Node's restore refused dlp_policies
+	"postgres": {"dlp_policies": {`(1,p1,"","",log,"",t,"[{""a"": 1}]","2026-11-10 01:05:50.93+00","2026-11-18 14:58:46.584+00")`}},
+}
+
 // Archives the Node console made, restored by Go: the database must hold
-// what the Node console's own restore put there, table by table.
+// what the Node console's own restore put there, table by table, but for
+// refusedByNodeOnly and fixtureTables.
 func TestNodeArchiveFixtures(t *testing.T) {
 	for _, dialect := range []string{"sqlite", "postgres"} {
 		t.Run(dialect, func(t *testing.T) {
@@ -814,11 +876,15 @@ func TestNodeArchiveFixtures(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if got := restoreResultJSON(r); got != canonJSON(t, want.Result) {
-				t.Errorf("result %s, want %s", got, want.Result)
+			wantResult := resultOfGo(t, dialect, canonJSON(t, want.Result))
+			if got := restoreResultJSON(r); got != wantResult {
+				t.Errorf("result %s, want %s", got, wantResult)
 			}
 			got := snapshot(t, dst.db)
 			for table, rows := range want.Tables {
+				if fixed, ok := fixtureTables[dialect][table]; ok {
+					rows = fixed
+				}
 				if strings.Join(rows, "\n") != strings.Join(got[table], "\n") {
 					t.Errorf("table %s:\n  got  %q\n  want %q", table, got[table], rows)
 				}

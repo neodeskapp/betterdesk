@@ -27,7 +27,8 @@ type ImportResult struct {
 // with the dumped rows, in one transaction per table, so a table that
 // fails is left as it was and the others go on. Only the columns the table
 // has are written. Values are bound as the old console's driver bound
-// them, so the database accepts and refuses what it did.
+// them, so the database accepts and refuses what it did, but for a list in
+// a json or jsonb column, which goes in as its JSON text.
 //
 // SQLite: foreign keys are off for the whole run and rows are written with
 // INSERT OR REPLACE. PostgreSQL: each transaction asks for
@@ -118,23 +119,31 @@ func entriesOf(v any) []entry {
 	return nil
 }
 
-func tableColumns(ctx context.Context, db *store.DB, table string) (map[string]bool, error) {
-	var names []string
-	var err error
-	if db.IsPostgres() {
-		names, err = readStrings(ctx, db, `SELECT column_name FROM information_schema.columns
-			WHERE table_schema = current_schema() AND table_name = ?`, table)
-	} else {
-		names, err = sqliteColumns(ctx, db, table)
+// tableColumns lists the columns of a table with their type on
+// PostgreSQL (data_type of information_schema), "" on SQLite.
+func tableColumns(ctx context.Context, db *store.DB, table string) (map[string]string, error) {
+	cols := map[string]string{}
+	if !db.IsPostgres() {
+		names, err := sqliteColumns(ctx, db, table)
+		for _, n := range names {
+			cols[n] = ""
+		}
+		return cols, err
 	}
+	rows, err := db.Query(ctx, `SELECT column_name, data_type FROM information_schema.columns
+		WHERE table_schema = current_schema() AND table_name = ?`, table)
 	if err != nil {
 		return nil, err
 	}
-	cols := map[string]bool{}
-	for _, n := range names {
-		cols[n] = true
+	defer rows.Close()
+	for rows.Next() {
+		var name, typ string
+		if err := rows.Scan(&name, &typ); err != nil {
+			return nil, err
+		}
+		cols[name] = typ
 	}
-	return cols, nil
+	return cols, rows.Err()
 }
 
 func sqliteColumns(ctx context.Context, q store.Querier, table string) ([]string, error) {
@@ -154,8 +163,10 @@ func sqliteColumns(ctx context.Context, q store.Querier, table string) ([]string
 	return out, rows.Err()
 }
 
-// replaceTable empties a table and writes the rows in one transaction.
-func replaceTable(ctx context.Context, db *store.DB, table string, cols map[string]bool, rows []any) error {
+// replaceTable empties a table and writes the rows in one transaction. A
+// list for a json or jsonb column is sent as its JSON text, as an object
+// is (pgArg would make it an array literal, which JSON refuses).
+func replaceTable(ctx context.Context, db *store.DB, table string, cols map[string]string, rows []any) error {
 	return db.InTx(ctx, func(tx *store.Tx) error {
 		if db.IsPostgres() {
 			if _, err := tx.Exec(ctx, `SAVEPOINT replica`); err != nil {
@@ -182,13 +193,17 @@ func replaceTable(ctx context.Context, db *store.DB, table string, cols map[stri
 			var names []string
 			var values []any
 			for _, k := range keys {
-				if !cols[k] || !isSafeIdent(k) {
+				typ, has := cols[k]
+				if !has || !isSafeIdent(k) {
 					continue
 				}
 				names = append(names, quoteIdent(k))
 				v := prop(row, k)
 				if text, ok := isBufferObject(v); ok {
 					v = buffer(nodeBase64(text))
+				}
+				if list, isList := v.([]any); isList && (typ == "json" || typ == "jsonb") {
+					v = branding.Stringify(list)
 				}
 				values = append(values, v)
 			}
