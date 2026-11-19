@@ -667,3 +667,23 @@ func TestPanelLanguagesKeepsTheListWithABrokenFile(t *testing.T) {
 		}
 	}
 }
+
+// The missing keys of a code that is not a language code are refused with
+// 400; the code is no longer cut down to its letters (BUGS.md L14).
+func TestPanelMissingRefusesCodeWithOtherCharacters(t *testing.T) {
+	h, _, _ := handlersFor(t, copyDir(t, "testdata/lang-upload"), time.Now())
+	srv := httptest.NewServer(routes(h))
+	defer srv.Close()
+	for _, code := range []string{"e1n", "d.e", "123", "-", "x_x", "zh_TW", "de.json", "EN", "%2e%2e%2fen", "..%2F..%2Fpackage", "abcdefghi", "en-us"} {
+		got := do(t, srv.URL, "GET", "/api/panel/languages/"+code+"/missing", nil, nil, 0)
+		if got.status != 400 || got.body != `{"error":"Invalid language code"}` {
+			t.Errorf("%s: %d %s", code, got.status, got.body)
+		}
+	}
+	if got := do(t, srv.URL, "GET", "/api/panel/languages/fr/missing", nil, nil, 0); got.status != 404 {
+		t.Errorf("fr: %d %s", got.status, got.body)
+	}
+	if got := do(t, srv.URL, "GET", "/api/panel/languages/de/missing", nil, nil, 0); got.status != 200 || str(mustParse(t, got.body), "code") != "de" {
+		t.Errorf("de: %d %s", got.status, got.body)
+	}
+}

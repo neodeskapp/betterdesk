@@ -2,6 +2,7 @@ package i18n
 
 import (
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"slices"
@@ -75,6 +76,10 @@ var vectorFixes = []vectorFix{
 	// A file that holds null and a broken reference file get a row with
 	// their error instead of a 500 for the whole page.
 	{"L13", "panel-edge.json", brokenFilesListed},
+
+	// The missing keys of a code that is not a language code are refused.
+	{"L14", "panel-edge.json", missingRefusesBadCodes},
+	{"L14", "panel-real.json", missingRefusesBadCodes},
 }
 
 // fixedVectors reads a file of vectors with every fix applied.
@@ -485,6 +490,31 @@ func withErrorRows(t testing.TB, body string, errs map[string]string) string {
 	}
 	slices.SortStableFunc(rows, func(a, b any) int { return strings.Compare(str(a, "code")+".json", str(b, "code")+".json") })
 	return stringify(obj("languages", rows, "refKeyCount", total), "")
+}
+
+// missingRefusesBadCodes rewrites the missing keys of a code that is not a
+// language code into 400. The vectors of panel-real.json hold a hash of
+// the body.
+func missingRefusesBadCodes(t testing.TB, file any) int {
+	const refused = `{"error":"Invalid language code"}`
+	n := 0
+	for _, c := range list(file) {
+		escaped, isMissing := strings.CutSuffix(strings.TrimPrefix(str(c, "path"), "/api/panel/languages/"), "/missing")
+		code, err := url.PathUnescape(escaped)
+		if !isMissing || err != nil || ValidCode(code) || goMuxRedirects(str(c, "path")) {
+			continue
+		}
+		changed := false
+		if _, hashed := c.(*Object).Get("bodySha"); hashed {
+			changed = setAll(c, "status", 400.0, "bodySha", sha(refused), "bodyLen", float64(len(refused)), "etag", httpx.ETag([]byte(refused)))
+		} else {
+			changed = answerPanel(c, 400, refused)
+		}
+		if changed {
+			n++
+		}
+	}
+	return n
 }
 
 // --- the request language (L1, L2, L4) ---

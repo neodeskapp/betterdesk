@@ -237,34 +237,28 @@ func jsRound(x float64) float64 {
 
 // PanelMissing answers GET /api/panel/languages/{code}/missing: the
 // reference keys a language file lacks, with their English and Polish
-// texts, and the keys only it has. Every character of the code that is
-// not a letter or a dash is dropped before the file is looked up; the
-// answer repeats the code as it was sent.
+// texts, and the keys only it has. A code that is not a language code
+// (ValidCode) is refused with 400.
 func (h *Handlers) PanelMissing(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
 	result, status := h.panelMissing(code)
-	if status == http.StatusNotFound {
+	switch {
+	case status == http.StatusBadRequest:
+		send(w, r, status, obj("error", "Invalid language code"))
+	case status == http.StatusNotFound:
 		send(w, r, status, obj("error", "Language not found"))
-		return
-	}
-	if result == nil {
+	case result == nil:
 		send(w, r, http.StatusInternalServerError, obj("error", "Failed to analyze language"))
-		return
+	default:
+		send(w, r, http.StatusOK, result)
 	}
-	send(w, r, http.StatusOK, result)
 }
 
 func (h *Handlers) panelMissing(code string) (*Object, int) {
-	var letters strings.Builder
-	for _, c := range code {
-		if c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '-' {
-			letters.WriteRune(c)
-		}
+	if !ValidCode(code) {
+		return nil, http.StatusBadRequest
 	}
-	if letters.Len() == 0 {
-		return nil, http.StatusInternalServerError
-	}
-	path := filepath.Join(h.Bundle.Dir, letters.String()+".json")
+	path := filepath.Join(h.Bundle.Dir, code+".json")
 	if err := h.Bundle.stat(path); err != nil {
 		return nil, http.StatusNotFound
 	}
