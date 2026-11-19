@@ -43,6 +43,7 @@
   },
   {
    "roles": [
+    "server_admin",
     "admin"
    ],
    "status": 403,

@@ -14,8 +14,9 @@ import (
 //
 // A capacity test puts the server under load for minutes, so no case
 // starts one: POST /api/server-attestation/run goes only to the roles the
-// guards refuse, and to admin without a CSRF token or with a body that is
-// not JSON. A test instance has run no capacity test, so the public badge
+// guards refuse, and to server_admin and admin without a CSRF token or
+// with a body that is not JSON, and every role's turn finds no test
+// running. A test instance has run no capacity test, so the public badge
 // has no tier here; the tests of console/attestation pin a run, the
 // result it stores and the badge made from it against the Node code.
 //
@@ -30,7 +31,10 @@ import (
 func init() {
 	some := contract.Roles("signed-out", "viewer", "server_admin", "admin")
 	signedIn := contract.Roles("viewer", "server_admin", "admin")
-	refusedRun := contract.Roles("signed-out", "pro", "guest_issuer", "viewer", "operator", "server_admin")
+	refusedRun := contract.Roles("signed-out", "pro", "guest_issuer", "viewer", "operator")
+	// Refused by the guards (viewer, global_admin) or by the route itself
+	// (server_admin, admin)
+	refusedLater := contract.Roles("viewer", "global_admin", "server_admin", "admin")
 	labels := map[string]any{
 		"badgeTitle": "Measured capacity",
 		"tierLabels": map[string]any{"bronze": "Starter", "iron": "", "obsidian": "Top"},
@@ -62,11 +66,11 @@ func init() {
 		contract.Case{Name: "run-refused", Method: "POST", Path: "/api/server-attestation/run", Body: map[string]any{}, Roles: refusedRun},
 		contract.Case{
 			Name: "run-without-csrf", Method: "POST", Path: "/api/server-attestation/run",
-			Body: map[string]any{}, NoCSRF: true, Roles: contract.Roles("viewer", "global_admin", "admin"),
+			Body: map[string]any{}, NoCSRF: true, Roles: refusedLater,
 		},
 		contract.Case{
 			Name: "run-text-body", Method: "POST", Path: "/api/server-attestation/run",
-			RawBody: "run", ContentType: "text/plain", Roles: contract.Roles("viewer", "global_admin", "admin"),
+			RawBody: "run", ContentType: "text/plain", Roles: refusedLater,
 		},
 		contract.Case{
 			Name: "run-form-body", Method: "POST", Path: "/api/server-attestation/run",
