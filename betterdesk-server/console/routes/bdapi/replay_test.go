@@ -613,7 +613,7 @@ func (p *replayer) sameSecond() {
 
 // calls are the API server's calls of the step, without the role
 // permission lookups, which the Node console made and the Go console
-// does not.
+// does not, with the escapes of the query that axios did not make undone.
 func (p *replayer) calls() []apiCall {
 	var out []apiCall
 	for _, line := range p.api.Calls() {
@@ -622,7 +622,7 @@ func (p *replayer) calls() []apiCall {
 		if strings.HasPrefix(target, "/api/roles/") {
 			continue
 		}
-		out = append(out, apiCall{Method: method, URL: target, Body: body})
+		out = append(out, apiCall{Method: method, URL: axiosQuery.Replace(target), Body: body})
 	}
 	return out
 }

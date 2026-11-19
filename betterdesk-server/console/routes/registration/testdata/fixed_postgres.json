@@ -1463,6 +1463,51 @@
   "rows": "[{\"user_id\":\"6\",\"action\":\"help_request_accepted\",\"details\":\"Help request 21 accepted\",\"ip_address\":\"10.9.9.9\"},{\"user_id\":\"6\",\"action\":\"help_request_accepted\",\"details\":\"Help request 22 accepted\",\"ip_address\":\"10.9.9.9\"},{\"user_id\":null,\"action\":\"help_request_resolved\",\"details\":\"Help request 23 resolved\",\"ip_address\":\"10.9.9.9\"},{\"user_id\":\"5\",\"action\":\"help_request_accepted\",\"details\":\"Help request 24 accepted by the night shift\",\"ip_address\":\"10.9.9.9\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device DEV1 (pc-1)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"4\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device DEV2 (Laptop 100%_off)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device DEV5 (École-PC)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR0 (approve-0)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR1 (approve-1)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR2 (approve-2)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR3 (approve-3)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR4 (approve-4)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR5 (approve-5)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR6 (approve-6)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR7 (approve-7)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR10 (approve-10)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_rejected\",\"details\":\"Rejected registration for device REJ1 (): rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr�\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"2\",\"action\":\"registration_rejected\",\"details\":\"Rejected registration for device REJ2 (): \",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_approved\",\"details\":\"Approved enrollment for device DEV1 (mode: standard)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_approved\",\"details\":\"Approved enrollment for device DEV1 (mode: full, groups: [dg-a, dg-c])\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_approved\",\"details\":\"Approved enrollment for device DEV1 (mode: standard)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_approved\",\"details\":\"Approved enrollment for device E1 (mode: standard)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"4\",\"action\":\"enrollment_approved\",\"details\":\"Approved enrollment for device DEV1 (mode: standard, groups: [dg-b])\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_rejected\",\"details\":\"Rejected enrollment for device E1 (banned)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_rejected\",\"details\":\"Rejected enrollment for device E1 (banned)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_rejected\",\"details\":\"Rejected enrollment for device E1 (banned)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_rejected\",\"details\":\"Rejected enrollment for device E1\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_rejected\",\"details\":\"Rejected enrollment for device E1\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_rejected\",\"details\":\"Rejected enrollment for device E1\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_rejected\",\"details\":\"Rejected enrollment for device E1 (banned)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_rejected\",\"details\":\"Rejected enrollment for device E1 (banned)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_rejected\",\"details\":\"Rejected enrollment for device E1\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_rejected\",\"details\":\"Rejected enrollment for device E1\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_rejection_cleared\",\"details\":\"Cleared enrollment rejection for device E1 (unbanned)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_rejection_cleared\",\"details\":\"Cleared enrollment rejection for device E2\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_rejection_cleared\",\"details\":\"Cleared enrollment rejection for device E1 (unbanned)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"enrollment_rejection_cleared\",\"details\":\"Cleared enrollment rejection for device E1\",\"ip_address\":\"127.0.0.1\"}]"
  },
  {
+  "step": "651 odd entries GET /api/help/requests",
+  "bugs": [
+   "RG10"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"requests\":[{\"id\":\"\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":1795056322053,\"updated_at\":null},{\"id\":\"\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":1795056322053,\"updated_at\":null}]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/help/requests?limit=200",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "652 odd fields GET /api/help/requests",
+  "bugs": [
+   "RG10"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"requests\":[{\"id\":\"39\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\" apikey:no\",\"created_at\":1795056322077,\"updated_at\":null},{\"id\":\"40\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":1795056322077,\"updated_at\":null},{\"id\":\"38\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"accepted\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":988675210000,\"updated_at\":null},{\"id\":\"\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":988675208123,\"updated_at\":988671609999},{\"id\":\"\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":988675207000,\"updated_at\":null},{\"id\":\"\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"accepted\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":988675207000,\"updated_at\":null},{\"id\":\"41\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":988675207000,\"updated_at\":null},{\"id\":\"\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":988675206000,\"updated_at\":null},{\"id\":\"36\",\"device_id\":\"\",\"hostname\":\"\",\"message\":5,\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":988675205000,\"updated_at\":null},{\"id\":\"35\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":[\"acknowledged\"],\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":988675204000,\"updated_at\":null},{\"id\":\"34\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":5,\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":988675203000,\"updated_at\":null},{\"id\":\"33\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"toString\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":988675202000,\"updated_at\":null},{\"id\":\"32\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"__proto__\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":988675201000,\"updated_at\":null},{\"id\":\"31\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"constructor\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":988675200000,\"updated_at\":null},{\"id\":\"37\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"accepted\",\"accepted_by\":\"APIKEY:no\",\"resolved_by\":\"\",\"created_at\":988675200000,\"updated_at\":null}]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/help/requests?limit=200",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "653 an id without text GET /api/help/requests",
+  "bugs": [
+   "RG10"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"requests\":[{\"id\":\"\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":1795056322093,\"updated_at\":null}]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/help/requests?limit=200",
+    "body": ""
+   }
+  ]
+ },
+ {
   "step": "654 audit log",
   "bugs": [
    "RG2",

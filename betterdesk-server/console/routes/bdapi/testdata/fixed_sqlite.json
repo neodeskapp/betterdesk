@@ -106,6 +106,66 @@
   "answer": "{\"success\":true,\"devices\":[{\"id\":\"900100001\",\"hostname\":5,\"platform\":[\"w\"],\"online\":false,\"last_online\":\"\"},{\"id\":\"APPROVED1\",\"hostname\":\"ap\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19 01:25:16\"},{\"id\":\"BANNED1\",\"hostname\":\"\",\"platform\":\"\",\"online\":false,\"last_online\":\"\"},{\"id\":\"DEV1\",\"hostname\":\"Front desk\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19 01:25:17\"},{\"id\":\"DEV2\",\"hostname\":{\"a\":[1,\"é\"]},\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19 01:25:18\"},{\"id\":\"DEV3\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19 01:25:18\"},{\"id\":\"KEYDEV\",\"hostname\":\"Keyed\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19 01:25:16\"},{\"id\":\"NEWID1\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19 01:25:16\"},{\"id\":\"NEWID2\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19 01:25:16\"},{\"id\":\"PROOF1\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19 01:25:17\"},{\"id\":\"PROOF10\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19 01:25:17\"},{\"id\":\"PROOF2\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19 01:25:17\"},{\"id\":\"PROOF3\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19 01:25:17\"},{\"id\":\"PROOF5\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19 01:25:17\"},{\"id\":\"PROOF8\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19 01:25:17\"},{\"id\":\"TOKDEV1\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19 01:25:16\"},{\"id\":\"TOKDEV3\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19 01:25:16\"},{\"id\":\"TOKDEV4\",\"hostname\":\"\",\"platform\":\"\",\"online\":true,\"last_online\":\"2026-11-19 01:25:16\"}]}"
  },
  {
+  "step": "137 GET /api/bd/help-requests",
+  "bugs": [
+   "RG10"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"requests\":[{\"id\":\"22\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"message\":\"vpn\",\"status\":\"accepted\",\"accepted_by\":\"apikey:console-bridge\",\"resolved_by\":\"\",\"created_at\":983491200000},{\"id\":\"21\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"message\":\"printer\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":983404830000},{\"id\":\"23\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"message\":\"font\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"helpdesk\",\"created_at\":980985600000},{\"id\":\"25\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"__proto__\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978386400000},{\"id\":\"24\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"message\":\"\",\"status\":\"constructor\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978343200000}]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/help/requests?limit=200",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "138 filtered GET /api/bd/help-requests?status=pending\u0026device_id=DEV1",
+  "bugs": [
+   "RG10"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"requests\":[{\"id\":\"22\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"message\":\"vpn\",\"status\":\"accepted\",\"accepted_by\":\"apikey:console-bridge\",\"resolved_by\":\"\",\"created_at\":983491200000},{\"id\":\"21\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"message\":\"printer\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":983404830000},{\"id\":\"23\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"message\":\"font\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"helpdesk\",\"created_at\":980985600000},{\"id\":\"25\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"__proto__\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978386400000},{\"id\":\"24\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"message\":\"\",\"status\":\"constructor\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978343200000}]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/help/requests?status=pending\u0026device_id=DEV1\u0026limit=200",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "139 status twice GET /api/bd/help-requests?status[]=a\u0026status[]=b",
+  "bugs": [
+   "RG10"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"requests\":[{\"id\":\"22\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"message\":\"vpn\",\"status\":\"accepted\",\"accepted_by\":\"apikey:console-bridge\",\"resolved_by\":\"\",\"created_at\":983491200000},{\"id\":\"21\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"message\":\"printer\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":983404830000},{\"id\":\"23\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"message\":\"font\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"helpdesk\",\"created_at\":980985600000},{\"id\":\"25\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"__proto__\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978386400000},{\"id\":\"24\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"message\":\"\",\"status\":\"constructor\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978343200000}]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/help/requests?status=a,b\u0026limit=200",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "142 API gives an id without text GET /api/bd/help-requests",
+  "bugs": [
+   "RG10"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"requests\":[{\"id\":\"\",\"device_id\":\"\",\"hostname\":\"\",\"message\":\"\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":1795056283026}]}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/help/requests?limit=200",
+    "body": ""
+   }
+  ]
+ },
+ {
   "step": "159 GET /api/bd/operator/sessions",
   "bugs": [
    "BD12"
@@ -152,5 +212,170 @@
   ],
   "status": 200,
   "answer": "{\"success\":true,\"sessions\":[{\"id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"device_id\":\"DEV1\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-19 02:23:54\",\"ended_at\":\"\",\"duration_secs\":1,\"action\":\"session_start\"},{\"id\":\"s-9\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"operator\":\"e2e_operator\",\"started_at\":\"2026-11-19 02:23:54\",\"ended_at\":\"2026-11-19 02:23:54\",\"duration_secs\":0,\"action\":\"session_start\"}],\"count\":2}"
+ },
+ {
+  "step": "167 GET /api/bd/notifications",
+  "bugs": [
+   "RG10"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":\"__proto__\"},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"status\":\"constructor\"}],\"unread_count\":5}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/help/requests?limit=200",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "168 GET /api/bd/notifications",
+  "bugs": [
+   "RG10"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":\"__proto__\"},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"status\":\"constructor\"}],\"unread_count\":5}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/help/requests?limit=200",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "169 GET /api/bd/notifications",
+  "bugs": [
+   "RG10"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":\"__proto__\"},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"status\":\"constructor\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":6}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/help/requests?limit=200",
+    "body": ""
+   },
+   {
+    "method": "GET",
+    "url": "/api/enrollment/pending",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "172 GET /api/bd/notifications?limit=99",
+  "bugs": [
+   "RG10"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":\"__proto__\"},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"status\":\"constructor\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":6}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/help/requests?limit=200",
+    "body": ""
+   },
+   {
+    "method": "GET",
+    "url": "/api/enrollment/pending",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "173 GET /api/bd/notifications?limit=x",
+  "bugs": [
+   "RG10"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":\"__proto__\"},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"status\":\"constructor\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":6}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/help/requests?limit=200",
+    "body": ""
+   },
+   {
+    "method": "GET",
+    "url": "/api/enrollment/pending",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "174 GET /api/bd/notifications?unread_only=TRUE",
+  "bugs": [
+   "RG10"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":\"__proto__\"},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"status\":\"constructor\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":6}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/help/requests?limit=200",
+    "body": ""
+   },
+   {
+    "method": "GET",
+    "url": "/api/enrollment/pending",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "175 GET /api/bd/notifications?unread_only=1",
+  "bugs": [
+   "RG10"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":\"__proto__\"},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"status\":\"constructor\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":6}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/help/requests?limit=200",
+    "body": ""
+   },
+   {
+    "method": "GET",
+    "url": "/api/enrollment/pending",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "182 GET /api/bd/notifications",
+  "bugs": [
+   "RG10"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":\"__proto__\"},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"status\":\"constructor\"}],\"unread_count\":4}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/help/requests?limit=200",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "184 GET /api/bd/notifications",
+  "bugs": [
+   "RG10"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":true,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":\"__proto__\"},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"status\":\"constructor\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":true,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":0}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/help/requests?limit=200",
+    "body": ""
+   },
+   {
+    "method": "GET",
+    "url": "/api/enrollment/pending",
+    "body": ""
+   }
+  ]
  }
 ]

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
 )
@@ -26,28 +27,25 @@ type helpItem struct {
 	created float64
 }
 
-// statusMap is the route file's { acknowledged: 'accepted' } looked up by
-// a status: the names a plain JavaScript object inherits answer too.
-// inherited reports a function there, which JSON leaves out; prototype
-// reports Object.prototype, which JSON writes as {}.
-func statusMap(key string) (mapped any, found, inherited bool) {
-	switch key {
-	case "acknowledged":
-		return "accepted", true, false
-	case "__proto__":
-		return goapi.NewObject(), true, false
-	case "constructor", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "toLocaleString", "toString",
-		"valueOf", "__defineGetter__", "__defineSetter__", "__lookupGetter__", "__lookupSetter__":
-		return nil, true, true
+// helpStatus is the status the device API shows: "accepted" for the API
+// server's "acknowledged", any other status as it is, "pending" for none.
+func helpStatus(status any) any {
+	if status == "acknowledged" {
+		return "accepted"
 	}
-	return nil, false, false
+	return orValue(status, "pending")
 }
 
-// hasMember reports whether v is an object with the member name, also
-// when its value is null.
-func hasMember(v any, name string) bool {
-	o, ok := v.(*goapi.Object)
-	return ok && o.Has(name)
+// helpRequestID is the id of a help request as text: the API server's id
+// when it is text or a number, else "".
+func helpRequestID(v any) string {
+	switch t := v.(type) {
+	case string:
+		return t
+	case float64:
+		return jsbind.NumberString(t)
+	}
+	return ""
 }
 
 // normalizeHelpRequest is the route file's normalizeHelpRequest for one
@@ -64,13 +62,7 @@ func normalizeHelpRequest(v any, now float64) (*helpItem, error) {
 		return nil, nil
 	}
 	get := func(name string) any { return jsreq.Prop(v, name) }
-	id := "undefined"
-	if hasMember(v, "id") {
-		var err error
-		if id, err = text(get("id")); err != nil {
-			return nil, err
-		}
-	}
+	id := helpRequestID(get("id"))
 	created := now
 	if c := get("created_at"); goapi.Truthy(c) {
 		s, err := text(c)
@@ -88,20 +80,7 @@ func normalizeHelpRequest(v any, now float64) (*helpItem, error) {
 		"message", orValue(get("message"), ""),
 	)
 	status := get("status")
-	key := "undefined"
-	if hasMember(v, "status") {
-		var err error
-		if key, err = text(status); err != nil {
-			return nil, err
-		}
-	}
-	if mapped, found, inherited := statusMap(key); found {
-		if !inherited {
-			item.Set("status", mapped)
-		}
-	} else {
-		item.Set("status", orValue(status, "pending"))
-	}
+	item.Set("status", helpStatus(status))
 	handledBy := orValue(get("handled_by"), "")
 	acceptedBy, resolvedBy := any(""), any("")
 	switch status {

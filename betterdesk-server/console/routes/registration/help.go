@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
 )
@@ -59,23 +60,6 @@ func helpAuditDetails(action, id string) string {
 	return "Help request " + cut(id, 40) + " " + verb
 }
 
-// statusMap is the old route's { acknowledged: 'accepted' } looked up by a
-// status: the names a plain JavaScript object inherits answer too.
-// inherited reports a function there, which JSON leaves out;
-// prototype reports Object.prototype, which JSON writes as {}.
-func statusMap(key string) (mapped any, found, inherited bool) {
-	switch key {
-	case "acknowledged":
-		return "accepted", true, false
-	case "__proto__":
-		return goapi.NewObject(), true, false
-	case "constructor", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "toLocaleString", "toString",
-		"valueOf", "__defineGetter__", "__defineSetter__", "__lookupGetter__", "__lookupSetter__":
-		return nil, true, true
-	}
-	return nil, false, false
-}
-
 // helpItem is a help request as the list shows it, with its time to sort
 // by.
 type helpItem struct {
@@ -96,13 +80,7 @@ func normalizeHelpRequest(v any, now float64, loc *time.Location) (*helpItem, er
 		return nil, nil
 	}
 	get := func(name string) any { return jsreq.Prop(v, name) }
-	id := "undefined"
-	if hasMember(v, "id") {
-		var err error
-		if id, err = text(get("id")); err != nil {
-			return nil, err
-		}
-	}
+	id := helpRequestID(get("id"))
 	created := now
 	if c := get("created_at"); goapi.Truthy(c) {
 		s, err := text(c)
@@ -130,20 +108,7 @@ func normalizeHelpRequest(v any, now float64, loc *time.Location) (*helpItem, er
 		"message", orValue(get("message"), ""),
 	)
 	status := get("status")
-	key := "undefined"
-	if hasMember(v, "status") {
-		var err error
-		if key, err = text(status); err != nil {
-			return nil, err
-		}
-	}
-	if mapped, found, inherited := statusMap(key); found {
-		if !inherited {
-			item.Set("status", mapped)
-		}
-	} else {
-		item.Set("status", orValue(status, "pending"))
-	}
+	item.Set("status", helpStatus(status))
 	handledBy := orValue(get("handled_by"), "")
 	acceptedBy, resolvedBy := any(""), any("")
 	switch status {
@@ -159,11 +124,25 @@ func normalizeHelpRequest(v any, now float64, loc *time.Location) (*helpItem, er
 	return &helpItem{obj: item, created: created}, nil
 }
 
-// hasMember reports whether v is an object with the member name, also
-// when its value is null.
-func hasMember(v any, name string) bool {
-	o, ok := v.(*goapi.Object)
-	return ok && o.Has(name)
+// helpStatus is the status the console shows: "accepted" for the API
+// server's "acknowledged", any other status as it is, "pending" for none.
+func helpStatus(status any) any {
+	if status == "acknowledged" {
+		return "accepted"
+	}
+	return orValue(status, "pending")
+}
+
+// helpRequestID is the id of a help request as text: the API server's id
+// when it is text or a number, else "".
+func helpRequestID(v any) string {
+	switch t := v.(type) {
+	case string:
+		return t
+	case float64:
+		return jsbind.NumberString(t)
+	}
+	return ""
 }
 
 // helpRequests answers GET /api/help/requests?status=&device_id=: at
