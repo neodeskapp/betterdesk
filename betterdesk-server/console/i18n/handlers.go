@@ -128,12 +128,7 @@ func (h *Handlers) Language(w http.ResponseWriter, r *http.Request) (string, err
 // Languages answers GET /api/i18n/languages: the listed languages keyed by
 // code and as a list sorted by name.
 func (h *Handlers) Languages(w http.ResponseWriter, r *http.Request) {
-	sorted, err := h.Bundle.AvailableList()
-	if err != nil {
-		h.logf("Get languages error: %v", err)
-		fail(w, r, http.StatusInternalServerError, "Failed to get languages")
-		return
-	}
+	sorted := h.Bundle.sortedList()
 	items := make([]any, len(sorted))
 	for i, e := range sorted {
 		items[i] = e

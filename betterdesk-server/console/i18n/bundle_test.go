@@ -484,29 +484,35 @@ func TestDelete(t *testing.T) {
 	}
 }
 
-func TestAvailableListFailsForNamesThatAreNotText(t *testing.T) {
-	dir := copyDir(t, "testdata/lang-upload")
-	if err := os.WriteFile(filepath.Join(dir, "de.json"), []byte(`{"_meta":{"native":["D"]}}`), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	b, _ := loaded(t, dir, "en")
-	if _, err := b.AvailableList(); err == nil {
-		t.Error("no error for a native name that is a list")
-	}
-	// The first entry is only ever compared against, so a number there is fine.
-	if err := os.WriteFile(filepath.Join(dir, "en.json"), []byte(`{"_meta":{"native":5}}`), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Remove(filepath.Join(dir, "de.json")); err != nil {
-		t.Fatal(err)
-	}
-	b, _ = loaded(t, dir, "en")
-	l, err := b.AvailableList()
-	if err != nil || len(l) != 2 {
-		t.Fatalf("AvailableList = %v, %v", l, err)
-	}
-	if got := str(l[0], "code") + " " + str(l[1], "code"); got != "en pl" {
-		t.Errorf("order %q, want the number 5 before Polski", got)
+// A native name or name that is not text is passed over for sorting: the
+// next of native name, name and code that is text counts, and the list and
+// GET /api/i18n/languages answer (BUGS.md L16).
+func TestAvailableListWithNativeNameThatIsNotText(t *testing.T) {
+	for _, c := range []struct{ de, order string }{
+		{`{"_meta":{"native":["D"]}}`, "en de pl"},
+		{`{"_meta":{"native":{"a":1}}}`, "en de pl"},
+		{`{"_meta":{"native":5,"name":"Zulu"}}`, "en pl de"},
+		{`{"_meta":{"native":5,"name":7}}`, "de en pl"},
+		{`{"_meta":{"native":true,"name":["x"]}}`, "de en pl"},
+	} {
+		dir := copyDir(t, "testdata/lang-upload")
+		if err := os.WriteFile(filepath.Join(dir, "de.json"), []byte(c.de), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		h, _, _ := handlersFor(t, dir, time.Now())
+		l, err := h.Bundle.AvailableList()
+		if err != nil || len(l) != 3 {
+			t.Errorf("%s: AvailableList = %v, %v", c.de, l, err)
+			continue
+		}
+		if got := str(l[0], "code") + " " + str(l[1], "code") + " " + str(l[2], "code"); got != c.order {
+			t.Errorf("%s: order %q, want %q", c.de, got, c.order)
+		}
+		w := httptest.NewRecorder()
+		h.Languages(w, httptest.NewRequest("GET", "/api/i18n/languages", nil))
+		if w.Code != 200 || !strings.Contains(w.Body.String(), `"list":[`) {
+			t.Errorf("%s: %d %s", c.de, w.Code, w.Body.String())
+		}
 	}
 }
 

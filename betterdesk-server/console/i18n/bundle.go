@@ -330,45 +330,37 @@ func (b *Bundle) Available() *Object {
 	return out
 }
 
-// errSortKey is the failure of AvailableList when a language's name is not
-// text: such a name has no way to be compared (a TypeError in JavaScript).
-var errSortKey = errors.New("language name is not a string")
-
-// AvailableList returns the listed languages sorted by their native name
-// (then name, then code), ignoring case and accents. Names that compare
-// equal keep their load order.
+// AvailableList returns the listed languages sorted as sortedList sorts
+// them. The error is always nil.
 func (b *Bundle) AvailableList() ([]*Object, error) {
+	return b.sortedList(), nil
+}
+
+// sortedList returns the listed languages sorted by their native name,
+// else their name, else their code, the first of these that is a string
+// that is not empty, ignoring case and accents. Names that compare equal
+// keep their load order.
+func (b *Bundle) sortedList() []*Object {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 	list := make([]*Object, 0, len(b.order))
 	keys := make([]string, 0, len(b.order))
-	for i, code := range b.order {
+	for _, code := range b.order {
 		entry := b.available[code]
-		var key any = code
+		key := code
 		for _, field := range []string{"native", "name"} {
-			if v, _ := entry.Get(field); truthy(v) {
-				key = v
-				break
-			}
-		}
-		text, isString := key.(string)
-		if !isString && len(b.order) > 1 {
-			// Every entry but the first is at some point the one whose
-			// localeCompare method is called; the first is only ever
-			// the argument, which is turned into text.
-			if i > 0 {
-				return nil, errSortKey
-			}
-			var ok bool
-			if text, ok = jsString(key); !ok {
-				return nil, errSortKey
+			if v, _ := entry.Get(field); v != "" {
+				if text, ok := v.(string); ok {
+					key = text
+					break
+				}
 			}
 		}
 		list = append(list, entry)
-		keys = append(keys, text)
+		keys = append(keys, key)
 	}
 	sortByBaseLetters(list, keys)
-	return list, nil
+	return list
 }
 
 // Var is one placeholder value for Translate.

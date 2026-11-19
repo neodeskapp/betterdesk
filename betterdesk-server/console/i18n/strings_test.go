@@ -259,23 +259,6 @@ func TestLanguageSetsTheCookieForTheQuery(t *testing.T) {
 	}
 }
 
-func TestLanguagesAnswers500WhenANameIsNotText(t *testing.T) {
-	dir := copyDir(t, "testdata/lang-upload")
-	if err := os.WriteFile(filepath.Join(dir, "de.json"), []byte(`{"_meta":{"native":{"a":1}}}`), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	h, _, l := handlersFor(t, dir, time.Now())
-	l.take()
-	w := httptest.NewRecorder()
-	h.Languages(w, httptest.NewRequest("GET", "/api/i18n/languages", nil))
-	if w.Code != 500 || w.Body.String() != `{"success":false,"error":"Failed to get languages"}` {
-		t.Errorf("%d %s", w.Code, w.Body.String())
-	}
-	if lines := l.take(); len(lines) != 1 || !strings.HasPrefix(lines[0], "Get languages error:") {
-		t.Errorf("log lines %q", lines)
-	}
-}
-
 // A multipart request without a body (no Content-Length, no
 // Transfer-Encoding) never reaches the form parser.
 func TestUploadWithoutABody(t *testing.T) {
