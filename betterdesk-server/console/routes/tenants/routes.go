@@ -8,6 +8,7 @@
 package tenants
 
 import (
+	"math"
 	"net/http"
 	"regexp"
 	"strings"
@@ -116,8 +117,10 @@ func slugOf(name string) string {
 }
 
 // create answers POST /api/tenants with the body
-// {name, slug?, contact_name?, contact_email?, max_devices?, notes?}.
-// Only the name is checked. A slug that is taken is 409 on SQLite; on
+// {name, slug?, contact_name?, contact_email?, max_devices?, notes?}: a
+// name that is text, the other texts text or null (null and empty take the
+// default) and max_devices a whole number from 0. A slug that is taken is
+// 409 on SQLite; on
 // PostgreSQL it is the 500 of every other failure, because the route
 // looked for "UNIQUE" in the error's text and PostgreSQL words it
 // differently.
@@ -127,6 +130,9 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	name = jsbind.Trim(name)
 	if !isText || name == "" {
 		fail(w, r, http.StatusBadRequest, "Tenant name is required")
+		return
+	}
+	if !checkMembers(w, r, true) {
 		return
 	}
 	empty := jsbind.String("")
@@ -150,14 +156,75 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusCreated, t)
 }
 
+// textMembers are the members of a tenant that hold text, in the order
+// they are checked.
+var textMembers = []string{"slug", "contact_name", "contact_email", "max_devices", "notes"}
+
+// checkMembers answers 400 for the first member of the body that is not
+// what a tenant takes: texts are text or null (a slug only text in a
+// change), max_devices a whole number from 0 (or null on create), and in a
+// change active a flag.
+func checkMembers(w http.ResponseWriter, r *http.Request, creating bool) bool {
+	body := kit.Body(r)
+	for _, member := range textMembers {
+		v := jsbind.Of(body.Get(member))
+		ok := v.IsUndefined() || v.IsString() || (v.IsNull() && (creating || member != "slug"))
+		if member == "max_devices" {
+			ok = v.IsUndefined() || (v.IsNull() && creating) || wholeNumber(v)
+		}
+		if !ok {
+			fail(w, r, http.StatusBadRequest, "Invalid "+member)
+			return false
+		}
+	}
+	if active := jsbind.Of(body.Get("active")); !creating && !active.IsUndefined() {
+		if _, ok := flag(active); !ok {
+			fail(w, r, http.StatusBadRequest, "Invalid active")
+			return false
+		}
+	}
+	return true
+}
+
+// wholeNumber reports whether v is a whole number from 0 that an INTEGER
+// column holds.
+func wholeNumber(v jsbind.Value) bool {
+	n := v.ToNumber()
+	return v.IsNumber() && n >= 0 && n <= math.MaxInt32 && n == math.Trunc(n)
+}
+
+// flag reads a flag from a body: true or false, also written 1 or 0. A
+// text has quotes in its JSON, so "true" as text is no flag.
+func flag(v jsbind.Value) (on, ok bool) {
+	switch v.JSON() {
+	case "true", "1":
+		return true, true
+	case "false", "0":
+		return false, true
+	}
+	return false, false
+}
+
 // update answers PATCH /api/tenants/{id}: every member of the body that
-// names a column is written, null included. The answer is the row.
+// names a column is written, each checked: a name that is text with
+// something in it, the other texts text (also null, but for the slug),
+// max_devices a whole number from 0, active a flag. The answer is the row.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	id := number(r, "id")
 	existing, err := tenantByID(r.Context(), h.db, id)
 	if err == nil && existing == nil {
 		fail(w, r, http.StatusNotFound, "Tenant not found")
 		return
+	}
+	if err == nil {
+		body := kit.Body(r)
+		if name, isText := body.String("name"); body.Has("name") && (!isText || jsbind.Trim(name) == "") {
+			fail(w, r, http.StatusBadRequest, "Tenant name is required")
+			return
+		}
+		if !checkMembers(w, r, false) {
+			return
+		}
 	}
 	var updated *tenant
 	if err == nil {
@@ -172,18 +239,22 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 }
 
 // changes lists the columns a PATCH body sets, in the order the update
-// statement names them. active is written by its truth: 1 or 0 on SQLite,
-// true or false on PostgreSQL.
+// statement names them, the name trimmed. active is written as 1 or 0 on
+// SQLite, true or false on PostgreSQL.
 func (h *handlers) changes(r *http.Request) []tenantChange {
 	body := kit.Body(r)
 	var changes []tenantChange
 	for _, column := range []string{"name", "slug", "contact_name", "contact_email", "max_devices", "notes"} {
 		if body.Has(column) {
-			changes = append(changes, tenantChange{column, jsbind.Of(body.Get(column))})
+			value := jsbind.Of(body.Get(column))
+			if column == "name" {
+				value = jsbind.String(jsbind.Trim(value.Str()))
+			}
+			changes = append(changes, tenantChange{column, value})
 		}
 	}
 	if body.Has("active") {
-		active := body.Truthy("active")
+		active, _ := flag(jsbind.Of(body.Get("active")))
 		value := jsbind.Bool(active)
 		if !h.db.IsPostgres() {
 			value = jsbind.Number(0)
