@@ -11,17 +11,15 @@ import (
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/goapipath"
 	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/webui"
 )
 
 type handlers struct {
 	api *goapi.Client
-	web *webui.Host
 }
 
 // Register adds the group's routes.
 func Register(d *kit.Deps) {
-	h := &handlers{api: d.GoAPI, web: d.WebUI}
+	h := &handlers{api: d.GoAPI}
 	r := d.Router
 	manage := []kit.Middleware{d.RequireAuth, d.RequirePermission("org.manage_devices")}
 
@@ -143,9 +141,9 @@ type filter struct {
 const maxFilterLength = 64
 
 // list is a GET route that passes the filters of its query on. A filter
-// that is missing or empty is left out. A value that is no id is answered
-// with 400 before any call. A value that JavaScript cannot turn into text
-// (orgId[toString]=x) is answered as a server error.
+// that is missing or empty is left out. A filter that is no single text
+// (orgId[]=a, orgId=a&orgId=b, orgId[x]=a), or no id where an id is
+// needed, is answered with 400 "Invalid <param>" before any call.
 func (h *handlers) list(path string, filters ...filter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var pairs []string
@@ -154,12 +152,13 @@ func (h *handlers) list(path string, filters ...filter) http.HandlerFunc {
 			if !value.Truthy() {
 				continue
 			}
-			text, err := value.Text()
-			if err != nil {
-				h.web.ServerError(w, r, err, 0)
+			text, ok := value.OneText()
+			if !ok {
+				kit.JSON(w, r, http.StatusBadRequest, goapipath.ErrorBody{Error: "Invalid " + f.param})
 				return
 			}
 			if f.id {
+				var err error
 				if text, err = goapipath.AssertSafeAPIID(text, f.param); err != nil {
 					kit.JSON(w, r, http.StatusBadRequest, goapipath.ErrorBody{Error: err.Error()})
 					return

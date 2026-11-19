@@ -171,12 +171,309 @@
   "calls": []
  },
  {
+  "vector": 1306,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?orgId[]=acme",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1307,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/compliance?orgId[]=acme",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1310,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?orgId[0]=acme",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1311,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/compliance?orgId[0]=acme",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1312,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?orgId[][]=acme",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1313,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/compliance?orgId[][]=acme",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1316,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?orgId[toString]=acme",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1317,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/compliance?orgId[toString]=acme",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1318,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?orgId%5B%5D=acme",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1319,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/compliance?orgId%5B%5D=acme",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1322,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?status=running&status=failed",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid status\"}",
+  "calls": []
+ },
+ {
+  "vector": 1324,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?status[]=a&status[]=b",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid status\"}",
+  "calls": []
+ },
+ {
+  "vector": 1326,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?status[x]=a",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid status\"}",
+  "calls": []
+ },
+ {
+  "vector": 1328,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?status[toString]=a",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid status\"}",
+  "calls": []
+ },
+ {
+  "vector": 1342,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?deviceId[toString]=x",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ },
+ {
   "vector": 1344,
   "bug": "FL4",
   "request": "GET /api/panel/fleet/tasks?deviceId=a..b",
   "status": 400,
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1368,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?status=x&orgId[toString]=1",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1369,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/compliance?status=x&orgId[toString]=1",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1370,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?orgId=acme&status[toString]=1&deviceId=bad+id",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid status\"}",
+  "calls": []
+ },
+ {
+  "vector": 1450,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?&status[x]",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid status\"}",
+  "calls": []
+ },
+ {
+  "vector": 1570,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?orgId[toString]",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1571,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/compliance?orgId[toString]",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1680,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?&status[]1",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid status\"}",
+  "calls": []
+ },
+ {
+  "vector": 1722,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?orgId[toString]acme[x]%20",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1723,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/compliance?orgId[toString]acme[x]%20",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1774,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?deviceId[toString]&[toString]1orgIdx",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ },
+ {
+  "vector": 1996,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?status[0]deviceIddeviceId",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid status\"}",
+  "calls": []
+ },
+ {
+  "vector": 2030,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?status[0]",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid status\"}",
+  "calls": []
+ },
+ {
+  "vector": 2256,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?status[]acme",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid status\"}",
+  "calls": []
+ },
+ {
+  "vector": 2316,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?deviceId[toString]bad+id&%5B1&&[0]",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid deviceId\"}",
+  "calls": []
+ },
+ {
+  "vector": 2370,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?orgId[0]x%5D,status[toString].",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 2371,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/compliance?orgId[0]x%5D,status[toString].",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid orgId\"}",
+  "calls": []
+ },
+ {
+  "vector": 2632,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?status[0][0]statusorgId",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid status\"}",
+  "calls": []
+ },
+ {
+  "vector": 2726,
+  "bug": "FL2",
+  "request": "GET /api/panel/fleet/tasks?status[toString]=status[]",
+  "status": 400,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"error\":\"Invalid status\"}",
   "calls": []
  }
 ]

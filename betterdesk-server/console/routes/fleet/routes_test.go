@@ -2,6 +2,7 @@ package fleet_test
 
 import (
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -19,12 +20,18 @@ func register(d *kit.Deps) {
 
 // fixes are the vectors of vectors.json whose answer a bug fix of
 // BUGS.md changed on purpose (proxytest.Replay).
-var fixes = proxytest.Fixes("FL4",
+var fixes = slices.Concat(proxytest.Fixes("FL4",
 	// An id with two dots in it is refused with 400 before any call, also
 	// the device filter of the task list.
 	921, 940, 960, 961, 998, 999, 1035, 1054, 1073, 1092, 1111, 1130, 1149, 1168,
 	1187, 1206, 1225, 1244, 1263, 1344,
-)
+), proxytest.Fixes("FL2",
+	// A filter of the lists that is no single text is refused with 400
+	// before any call.
+	1306, 1307, 1310, 1311, 1312, 1313, 1316, 1317, 1318, 1319, 1322, 1324, 1326, 1328,
+	1342, 1368, 1369, 1370, 1450, 1570, 1571, 1680, 1722, 1723, 1774, 1996, 2030, 2256,
+	2316, 2370, 2371, 2632, 2726,
+))
 
 // TestVectors replays what routes/fleet.routes.js of the Node console
 // answered and asked the API server (testdata/nodeoracle/run.js).
@@ -75,5 +82,44 @@ func TestRegisteredRoutes(t *testing.T) {
 	sort.Strings(want)
 	if strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Errorf("registered routes:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
+	}
+}
+
+// TestListFiltersThatAreNoText: a filter of the task and compliance lists
+// is taken only as one text; a list or an object is refused with 400
+// "Invalid <param>" before any call (BUGS.md FL2).
+func TestListFiltersThatAreNoText(t *testing.T) {
+	w := proxytest.NewWorld(t, register)
+	operator := &proxytest.Account{UserID: 5}
+	operator.User.Username, operator.User.Role = "e2e_operator", "operator"
+	empty := &proxytest.Answer{Status: 200, Type: "application/json", Body: `{"ok":true,"items":[]}`}
+	for target, want := range map[string]string{
+		"/api/panel/fleet/tasks?orgId[toString]=x":             "Invalid orgId",
+		"/api/panel/fleet/tasks?orgId[]=acme":                  "Invalid orgId",
+		"/api/panel/fleet/tasks?orgId=a&orgId=b":               "Invalid orgId",
+		"/api/panel/fleet/tasks?status[toString]=x":            "Invalid status",
+		"/api/panel/fleet/tasks?status[]=a&status[]=b":         "Invalid status",
+		"/api/panel/fleet/tasks?deviceId[toString]=x":          "Invalid deviceId",
+		"/api/panel/fleet/tasks?deviceId[x]=d1":                "Invalid deviceId",
+		"/api/panel/fleet/tasks?orgId=acme&status[x]=1":        "Invalid status",
+		"/api/panel/fleet/compliance?orgId[toString]=x":        "Invalid orgId",
+		"/api/panel/fleet/compliance?orgId[]=acme":             "Invalid orgId",
+		"/api/bd/api/panel/fleet/compliance?orgId[][]=acme":    "Invalid orgId",
+		"/api/bd/api/panel/fleet/tasks?status=x&orgId[x]=acme": "Invalid orgId",
+	} {
+		rec, calls := w.Do(proxytest.Request{Path: target, Session: operator}, empty)
+		if rec.Code != 400 || rec.Body.String() != `{"error":"`+want+`"}` || len(calls) != 0 {
+			t.Errorf("GET %s: %d %s after %+v, want 400 %s", target, rec.Code, rec.Body, calls, want)
+		}
+	}
+	for target, sent := range map[string]string{
+		"/api/panel/fleet/tasks?orgId=acme&status=done&deviceId=d1": "/api/fleet/tasks?org_id=acme&status=done&device_id=d1",
+		"/api/panel/fleet/tasks?orgId=&status=":                     "/api/fleet/tasks",
+		"/api/panel/fleet/compliance?orgId=acme&status[]=x":         "/api/fleet/compliance?org_id=acme",
+	} {
+		rec, calls := w.Do(proxytest.Request{Path: target, Session: operator}, empty)
+		if rec.Code != 200 || len(calls) != 1 || calls[0].URL != sent {
+			t.Errorf("GET %s: %d after %+v, want a call to %s", target, rec.Code, calls, sent)
+		}
 	}
 }
