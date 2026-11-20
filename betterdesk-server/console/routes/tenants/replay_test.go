@@ -18,7 +18,7 @@ import (
 // tenantFixes and tenantSteps list (fixed_test.go).
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		w := replay.NewWorld(t, db, nil)
+		w := newWorld(t, db)
 		steps, done := stepsCheck(db)
 		defer done(t)
 		defer tenantFixes.Unused(t, db)
@@ -29,7 +29,7 @@ func TestNodeAnswers(t *testing.T) {
 // Someone who is not signed in gets the console's 401 on every tenant
 // route, reads included, where the routes answered 403 (BUGS TN6).
 func TestSignedOutGets401(t *testing.T) {
-	w := replay.NewWorld(t, storetest.Migrated(t), nil)
+	w := newWorld(t, storetest.Migrated(t))
 	for _, route := range []string{"GET /api/tenants", "GET /api/tenants/1", "POST /api/tenants", "PATCH /api/tenants/1", "DELETE /api/tenants/1",
 		"GET /api/tenants/1/devices", "POST /api/tenants/1/devices", "DELETE /api/tenants/1/devices/x", "GET /api/tenants/1/users",
 		"POST /api/tenants/1/users", "DELETE /api/tenants/1/users/1", "GET /api/tenants/1/stats"} {
@@ -51,7 +51,7 @@ func TestSignedOutGets401(t *testing.T) {
 // so a value goes in the same on both databases or not at all (BUGS TN1).
 func TestCreateRefusesMembersOfTheWrongType(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		w := replay.NewWorld(t, db, nil)
+		w := newWorld(t, db)
 		for body, want := range map[string]string{
 			`{"name":"x","slug":{},"max_devices":[5,"x"]}`: `{"error":"Invalid slug"}`,
 			`{"name":"x","slug":77}`:                       `{"error":"Invalid slug"}`,
@@ -81,7 +81,7 @@ func TestCreateRefusesMembersOfTheWrongType(t *testing.T) {
 // active only as a flag: "no" no longer switches a tenant on (BUGS TN7).
 func TestUpdateChecksEveryMember(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		w := replay.NewWorld(t, db, nil)
+		w := newWorld(t, db)
 		if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tenants", Body: replay.Text(`{"name":"Kept","max_devices":3}`)}); got.Status != 201 {
 			t.Fatalf("create: %d %s", got.Status, got.Body)
 		}
@@ -121,7 +121,7 @@ func TestUpdateChecksEveryMember(t *testing.T) {
 // found, on both databases (BUGS TN3).
 func TestTenantIDsThatAreNoWholeNumber(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		w := replay.NewWorld(t, db, nil)
+		w := newWorld(t, db)
 		if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tenants", Body: replay.Text(`{"name":"One"}`)}); got.Status != 201 {
 			t.Fatalf("create: %d %s", got.Status, got.Body)
 		}
@@ -152,7 +152,7 @@ func TestTenantIDsThatAreNoWholeNumber(t *testing.T) {
 // change, decided by the error's code and not its text (BUGS TN2).
 func TestTakenSlugIs409(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		w := replay.NewWorld(t, db, nil)
+		w := newWorld(t, db)
 		post := func(body string) replay.Answer {
 			return w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tenants", Body: replay.Text(body)})
 		}
@@ -178,7 +178,7 @@ func TestTakenSlugIs409(t *testing.T) {
 // is, with its id and the time it was made, on both databases (BUGS TN8).
 func TestAssigningAgainKeepsTheRow(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		w := replay.NewWorld(t, db, nil)
+		w := newWorld(t, db)
 		if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tenants", Body: replay.Text(`{"name":"One"}`)}); got.Status != 201 {
 			t.Fatalf("create: %d %s", got.Status, got.Body)
 		}

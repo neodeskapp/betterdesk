@@ -110,7 +110,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "device_id or device_ids required"
+     "error": "Invalid device_ids"
     }
    }
   }

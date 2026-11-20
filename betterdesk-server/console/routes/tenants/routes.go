@@ -20,6 +20,7 @@ import (
 	sqlite3 "modernc.org/sqlite/lib"
 
 	"github.com/unitronix/betterdesk-server/console/access"
+	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
@@ -28,12 +29,13 @@ import (
 
 type handlers struct {
 	db  *store.DB
+	api *goapi.Client
 	log *kit.Logger
 }
 
 // Register adds the group's routes below the mount (/api/tenants).
 func Register(d *kit.Deps) {
-	h := &handlers{db: d.Store, log: d.Log.Child("Tenants")}
+	h := &handlers{db: d.Store, api: d.GoAPI, log: d.Log.Child("Tenants")}
 	r := d.Router
 	r.Get("/", h.list, d.RequireAuth, requireAdmin)
 	r.Get("/{id}", h.get, d.RequireAuth, requireAdmin)
@@ -370,8 +372,9 @@ type assigned struct {
 }
 
 // assignDevices answers POST /api/tenants/{id}/devices with the body
-// {device_id} or {device_ids: [...]}. It counts the assignments that went
-// through, also those that were there before.
+// {device_ids: [...]} or {device_id}: devices the API server knows, named
+// by their ids as text. assigned counts the devices the tenant did not
+// have before.
 func (h *handlers) assignDevices(w http.ResponseWriter, r *http.Request) {
 	id, ok := tenantFromPath(w, r, "Tenant not found")
 	if !ok {
@@ -382,65 +385,66 @@ func (h *handlers) assignDevices(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusNotFound, "Tenant not found")
 		return
 	}
-	var ids []jsbind.Value
-	var none bool
-	if err == nil {
-		ids, none, err = deviceIDs(kit.Body(r).Get("device_ids"), kit.Body(r).Get("device_id"))
-	}
 	if err != nil {
 		h.log.Error("POST /:id/devices error:", err)
 		fail(w, r, http.StatusInternalServerError, "Failed to assign devices")
 		return
 	}
-	if none {
-		fail(w, r, http.StatusBadRequest, "device_id or device_ids required")
+	ids, problem := deviceIDs(kit.Body(r).Get("device_ids"), kit.Body(r).Get("device_id"))
+	if problem != "" {
+		fail(w, r, http.StatusBadRequest, problem)
 		return
+	}
+	for _, device := range ids {
+		if h.api.GetPeer(r.Context(), device) == nil {
+			fail(w, r, http.StatusBadRequest, "Unknown device")
+			return
+		}
 	}
 	count := 0
 	for _, device := range ids {
-		if assignDevice(r.Context(), h.db, id, device) {
+		added, err := assignDevice(r.Context(), h.db, id, device)
+		if err != nil {
+			h.log.Error("POST /:id/devices error:", err)
+			fail(w, r, http.StatusInternalServerError, "Failed to assign devices")
+			return
+		}
+		if added {
 			count++
 		}
 	}
 	kit.JSON(w, r, http.StatusOK, assigned{OK: true, Assigned: count})
 }
 
-// errNotIterable is the TypeError of a for...of loop over a value that is
-// no list and no text.
-type errNotIterable struct{ value string }
-
-func (e errNotIterable) Error() string { return e.value + " is not iterable" }
-
-// deviceIDs is what the route loops over:
-//
-//	ids = body.device_ids || (body.device_id ? [body.device_id] : [])
-//
-// device_ids is taken when it is anything but empty. A list gives its
-// elements and a text its characters. none is true when ids.length is 0:
-// an empty list, or an object with a member "length" of 0. Any other
-// value cannot be looped over, which is an error.
-func deviceIDs(many, single middleware.Value) (ids []jsbind.Value, none bool, err error) {
+// deviceIDs reads the devices of an assignment: device_ids when it is
+// given (anything but false for JavaScript), a list of device ids, else
+// device_id, one device id. A device id is text that is not empty.
+// problem is the text of the 400 for anything else.
+func deviceIDs(many, single middleware.Value) (ids []string, problem string) {
 	list := jsbind.Of(many)
 	if !list.Truthy() {
-		if one := jsbind.Of(single); one.Truthy() {
-			return []jsbind.Value{one}, false, nil
+		one := jsbind.Of(single)
+		switch {
+		case !one.Truthy():
+			return nil, "device_id or device_ids required"
+		case !one.IsString():
+			return nil, "Invalid device_id"
 		}
-		return nil, true, nil
+		return []string{one.Str()}, ""
 	}
-	switch {
-	case list.IsArray():
-		return list.Items(), len(list.Items()) == 0, nil
-	case list.IsString():
-		for _, char := range list.Str() {
-			ids = append(ids, jsbind.String(string(char)))
-		}
-		return ids, false, nil
-	case list.IsObject():
-		if length := list.Member("length"); length.IsNumber() && length.ToNumber() == 0 {
-			return nil, true, nil
-		}
+	if !list.IsArray() {
+		return nil, "Invalid device_ids"
 	}
-	return nil, false, errNotIterable{list.ToString()}
+	for _, item := range list.Items() {
+		if !item.IsString() || item.Str() == "" {
+			return nil, "Invalid device_ids"
+		}
+		ids = append(ids, item.Str())
+	}
+	if len(ids) == 0 {
+		return nil, "device_id or device_ids required"
+	}
+	return ids, ""
 }
 
 // removeDevice answers DELETE /api/tenants/{id}/devices/{deviceId}.

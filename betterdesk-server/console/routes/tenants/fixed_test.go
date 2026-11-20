@@ -2,6 +2,7 @@ package tenants_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"net/url"
 	"strings"
@@ -674,18 +675,6 @@ func stepsCheck(db *store.DB) (check replay.Check, done func(t *testing.T)) {
 // so it stays where its first assignment put it in the lists. On SQLite
 // Node replaced the row with a new one; PostgreSQL kept it already.
 var _ = addSteps("TN8", map[string]replay.Fix{
-	"sqlite: 702 GET /api/tenants/1/devices": {Status: 200, Answer: `[{"device_id":"via-single-3","assigned_at":"2001-01-01 00:35:00","online":false,"hostname":"","ip":""},` +
-		`{"device_id":"via-single-2","assigned_at":"2001-01-01 00:34:00","online":false,"hostname":"","ip":""},{"device_id":"via-single","assigned_at":"2001-01-01 00:33:00","online":false,"hostname":"","ip":""},` +
-		`{"device_id":"q","assigned_at":"2001-01-01 00:32:00","online":false,"hostname":"","ip":""},{"device_id":"5.0","assigned_at":"2001-01-01 00:31:00","online":false,"hostname":"","ip":""},` +
-		`{"device_id":"1.0e+21","assigned_at":"2001-01-01 00:30:00","online":false,"hostname":"","ip":""},{"device_id":"","assigned_at":"2001-01-01 00:29:00","online":false,"hostname":"","ip":""},` +
-		`{"device_id":"1.5","assigned_at":"2001-01-01 00:28:00","online":false,"hostname":"","ip":""},{"device_id":"nested","assigned_at":"2001-01-01 00:27:00","online":false,"hostname":"","ip":""},` +
-		`{"device_id":"7.0","assigned_at":"2001-01-01 00:26:00","online":false,"hostname":"","ip":""},{"device_id":"x","assigned_at":"2001-01-01 00:25:00","online":false,"hostname":"","ip":""},` +
-		`{"device_id":"💻","assigned_at":"2001-01-01 00:24:00","online":false,"hostname":"","ip":""},{"device_id":"b","assigned_at":"2001-01-01 00:23:00","online":false,"hostname":"","ip":""},` +
-		`{"device_id":"a","assigned_at":"2001-01-01 00:22:00","online":false,"hostname":"","ip":""},{"device_id":"D-REAL","assigned_at":"2001-01-01 00:21:00","online":false,"hostname":"real","ip":"10.0.0.7"},` +
-		`{"device_id":"D-TEXT","assigned_at":"2001-01-01 00:20:00","online":false,"hostname":"text","ip":"10.0.0.6"},{"device_id":"D-TWO","assigned_at":"2001-01-01 00:19:00","online":false,"hostname":"two","ip":"10.0.0.5"},` +
-		`{"device_id":"ghost","assigned_at":"2001-01-01 00:18:00","online":false,"hostname":"","ip":""},{"device_id":"D-NULLDEL","assigned_at":"2001-01-01 00:17:00","online":true,"hostname":"","ip":"10.0.0.4"},` +
-		`{"device_id":"D-GONE","assigned_at":"2001-01-01 00:16:00","online":false,"hostname":"","ip":""},{"device_id":"D-OFF","assigned_at":"2001-01-01 00:15:00","online":false,"hostname":"","ip":""},` +
-		`{"device_id":"D-ON","assigned_at":"2001-01-01 00:14:00","online":true,"hostname":"pc-on","ip":"10.0.0.1"}]`},
 	"sqlite: 741 GET /api/tenants/1/users": {Status: 200, Answer: `[{"user_id":null,"assigned_at":"2001-01-01 00:30:00"},{"user_id":3000000000,"assigned_at":"2001-01-01 00:29:00"},` +
 		`{"user_id":1e+21,"assigned_at":"2001-01-01 00:27:00"},{"user_id":-1,"assigned_at":"2001-01-01 00:26:00"},{"user_id":11,"assigned_at":"2001-01-01 00:24:00"},` +
 		`{"user_id":0,"assigned_at":"2001-01-01 00:23:00"},{"user_id":8,"assigned_at":"2001-01-01 00:22:00"},{"user_id":6,"assigned_at":"2001-01-01 00:21:00"},` +
@@ -696,3 +685,108 @@ var _ = addSteps("TN8", map[string]replay.Fix{
 		`{"user_id":11,"assigned_at":"2001-01-01 00:24:00"},{"user_id":0,"assigned_at":"2001-01-01 00:23:00"},{"user_id":8,"assigned_at":"2001-01-01 00:22:00"},` +
 		`{"user_id":6,"assigned_at":"2001-01-01 00:21:00"},{"user_id":1,"assigned_at":"2001-01-01 00:20:00"},{"user_id":4,"assigned_at":"2001-01-01 00:16:00"}]`},
 })
+
+var (
+	unknownDevice  = `{"error":"Unknown device"}`
+	invalidIDs     = `{"error":"Invalid device_ids"}`
+	invalidID      = `{"error":"Invalid device_id"}`
+	notAssigned    = `{"error":"Assignment not found"}`
+	knownOfTheList = `{"device_ids":["D-OFF","D-GONE","D-NULLDEL","D-TWO","D-TEXT","D-REAL"]}`
+)
+
+// TN4: a tenant gets devices the API server knows (knownDevices), named by
+// their ids as text, and the answer counts the ones it did not have. A
+// request with anything else assigns nothing, so the devices Node
+// assigned from it are not there to be removed later.
+var _ = tenantFixes.Add("TN4", map[string]replay.Fix{
+	`admin POST /api/tenants/1/devices {"device_id":"spelling-0"}`:  {Status: 400, Answer: unknownDevice},
+	`admin DELETE /api/tenants/1/devices/spelling-0 `:               {Status: 404, Answer: notAssigned},
+	`admin POST /api/tenants/01/devices {"device_id":"spelling-1"}`: {Status: 400, Answer: unknownDevice},
+	`admin DELETE /api/tenants/01/devices/spelling-1 `:              {Status: 404, Answer: notAssigned},
+	// The list with a device nobody knows: the others are assigned by a
+	// list of them alone
+	`admin POST /api/tenants/1/devices {"device_ids":["D-OFF","D-GONE","D-NULLDEL","ghost","D-TWO","D-TEXT","D-REAL"]}`: {
+		Status: 400, Answer: unknownDevice, After: assignTheKnown,
+	},
+	`admin POST /api/tenants/1/devices {"device_ids":"ab"}`:                                                               {Status: 400, Answer: invalidIDs},
+	`admin POST /api/tenants/1/devices {"device_ids":"💻x"}`:                                                               {Status: 400, Answer: invalidIDs},
+	`admin POST /api/tenants/1/devices {"device_ids":5}`:                                                                  {Status: 400, Answer: invalidIDs},
+	`admin POST /api/tenants/1/devices {"device_ids":true}`:                                                               {Status: 400, Answer: invalidIDs},
+	`admin POST /api/tenants/1/devices {"device_ids":{}}`:                                                                 {Status: 400, Answer: invalidIDs},
+	`admin POST /api/tenants/1/devices {"device_ids":{"length":0}}`:                                                       {Status: 400, Answer: invalidIDs},
+	`admin POST /api/tenants/1/devices {"device_ids":{"length":"0"}}`:                                                     {Status: 400, Answer: invalidIDs},
+	`admin POST /api/tenants/1/devices {"device_ids":{"length":2}}`:                                                       {Status: 400, Answer: invalidIDs},
+	`admin POST /api/tenants/1/devices {"device_ids":{"length":0.0}}`:                                                     {Status: 400, Answer: invalidIDs},
+	`admin POST /api/tenants/1/devices {"device_ids":{"length":-0}}`:                                                      {Status: 400, Answer: invalidIDs},
+	`admin POST /api/tenants/1/devices {"device_ids":[7,null,true,["nested"],{},[],1.5,"",["p","q"],{"length":0},1e+21]}`: {Status: 400, Answer: invalidIDs},
+	`admin POST /api/tenants/1/devices {"device_id":5}`:                                                                   {Status: 400, Answer: invalidID},
+	`admin POST /api/tenants/1/devices {"device_id":["q"]}`:                                                               {Status: 400, Answer: invalidID},
+	`admin POST /api/tenants/1/devices {"device_id":{}}`:                                                                  {Status: 400, Answer: invalidID},
+	`admin POST /api/tenants/1/devices {"device_id":true}`:                                                                {Status: 400, Answer: invalidID},
+	`admin POST /api/tenants/1/devices {"device_ids":null,"device_id":"via-single"}`:                                      {Status: 400, Answer: unknownDevice},
+	`admin POST /api/tenants/1/devices {"device_ids":0,"device_id":"via-single-2"}`:                                       {Status: 400, Answer: unknownDevice},
+	`admin POST /api/tenants/1/devices {"device_ids":"","device_id":"via-single-3"}`:                                      {Status: 400, Answer: unknownDevice},
+	// D-ON was the tenant's already
+	`admin POST /api/tenants/1/devices {"device_ids":["D-ON","D-ON"],"device_id":"ignored"}`: {Status: 200, Answer: `{"ok":true,"assigned":0}`},
+	`admin DELETE /api/tenants/1/devices/ghost `:                                             {NodeStatus: 200, Status: 404, Answer: notAssigned},
+	`admin DELETE /api/tenants/1/devices/7.0 `:                                               {Dialect: "sqlite", NodeStatus: 200, Status: 404, Answer: notAssigned},
+	`admin DELETE /api/tenants/1/devices/7 `:                                                 {Dialect: "postgres", NodeStatus: 200, Status: 404, Answer: notAssigned},
+	`admin DELETE /api/tenants/1/devices/1.5 `:                                               {NodeStatus: 200, Status: 404, Answer: notAssigned},
+	`admin DELETE /api/tenants/1/devices/%F0%9F%92%BB `:                                      {NodeStatus: 200, Status: 404, Answer: notAssigned},
+})
+
+// assignTheKnown assigns the devices of the list the API server knows.
+func assignTheKnown(t *testing.T, w *replay.World, step replay.Step) {
+	t.Helper()
+	if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: step.Path, Body: replay.Text(knownOfTheList)}); got.Status != 200 || got.Body != `{"ok":true,"assigned":6}` {
+		t.Errorf("%s: the known devices alone: %d %s", step.Name, got.Status, got.Body)
+	}
+}
+
+// The lists and statistics of tenant 1 after its assignments: the seven
+// devices the API server knows (TN4), each assigned once, so the times
+// that follow from their ids are those of their first assignment (TN8).
+// D-ON is taken away after the first two reads.
+var _ = addSteps("TN4 TN8", map[string]replay.Fix{
+	"sqlite: 702 GET /api/tenants/1/devices":   {Status: 200, Answer: tenantDevicesAfterTN4("sqlite", true)},
+	"postgres: 702 GET /api/tenants/1/devices": {Status: 200, Answer: tenantDevicesAfterTN4("postgres", true)},
+	"sqlite: 713 GET /api/tenants/1/devices":   {Status: 200, Answer: tenantDevicesAfterTN4("sqlite", false)},
+	"postgres: 713 GET /api/tenants/1/devices": {Status: 200, Answer: tenantDevicesAfterTN4("postgres", false)},
+	"sqlite: 703 GET /api/tenants/1/stats":     {Status: 200, Answer: tenantStats(7, 2, 0)},
+	"postgres: 703 GET /api/tenants/1/stats":   {Status: 200, Answer: tenantStats(7, 2, 0)},
+	"sqlite: 742 GET /api/tenants/1/stats":     {Status: 200, Answer: tenantStats(6, 1, 15)},
+	"postgres: 742 GET /api/tenants/1/stats":   {Status: 200, Answer: tenantStats(6, 1, 10)},
+	"sqlite: 756 GET /api/tenants/1/stats":     {Status: 200, Answer: tenantStats(6, 1, 8)},
+	"postgres: 756 GET /api/tenants/1/stats":   {Status: 200, Answer: tenantStats(6, 1, 6)},
+})
+
+// tenantDevicesAfterTN4 is the list of tenant 1's devices: D-OFF to
+// D-REAL assigned at the minutes 13 to 18 and D-ON, when it is there, at
+// 12. The console's table of the PostgreSQL recording has no names for
+// D-TWO, D-TEXT and D-REAL.
+func tenantDevicesAfterTN4(dialect string, withOn bool) string {
+	type device struct{ id, hostname, ip string }
+	devices := []device{{"D-REAL", "real", "10.0.0.7"}, {"D-TEXT", "text", "10.0.0.6"}, {"D-TWO", "two", "10.0.0.5"}, {"D-NULLDEL", "", "10.0.0.4"}, {"D-GONE", "", ""}, {"D-OFF", "", ""}}
+	if withOn {
+		devices = append(devices, device{"D-ON", "pc-on", "10.0.0.1"})
+	}
+	var entries []string
+	for i, d := range devices {
+		minute := fmt.Sprintf("%02d", 18-i)
+		at := "2001-01-01 00:" + minute + ":00"
+		if dialect == "postgres" {
+			at = "2001-01-01T00:" + minute + ":00.000Z"
+			if i < 3 {
+				d.hostname, d.ip = "", ""
+			}
+		}
+		online := d.id == "D-NULLDEL" || d.id == "D-ON"
+		entries = append(entries, fmt.Sprintf(`{"device_id":%q,"assigned_at":%q,"online":%v,"hostname":%q,"ip":%q}`, d.id, at, online, d.hostname, d.ip))
+	}
+	return "[" + strings.Join(entries, ",") + "]"
+}
+
+// tenantStats is the statistics of tenant 1.
+func tenantStats(devices, online, users int) string {
+	return fmt.Sprintf(`{"tenant_id":1,"tenant_name":"By admin","total_devices":%d,"online_devices":%d,"total_users":%d,"max_devices":0}`, devices, online, users)
+}

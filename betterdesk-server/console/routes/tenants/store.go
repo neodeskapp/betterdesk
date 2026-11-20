@@ -218,22 +218,30 @@ func tenantDevices(ctx context.Context, db *store.DB, tenantID jsbind.Value) ([]
 	return devices, nil
 }
 
-// assign runs an insert of an assignment and reports whether it went
-// through. A row that is there already counts and stays as it is, with
-// its id and the time of the first assignment.
-func assign(ctx context.Context, db *store.DB, table, column string, tenantID, other jsbind.Value) bool {
+// assign inserts an assignment and reports whether it is new. A row that
+// is there already stays as it is, with its id and the time of the first
+// assignment.
+func assign(ctx context.Context, db *store.DB, table, column string, tenantID, other jsbind.Value) (bool, error) {
+	doing := "assign to tenant " + tenantID.ToString()
 	args, err := jsbind.Args(db.Dialect(), 2, tenantID, other)
 	if err != nil {
-		return false
+		return false, fmt.Errorf("%s: %w", doing, err)
 	}
-	_, err = db.Exec(ctx, "INSERT INTO "+table+" (tenant_id, "+column+") VALUES (?, ?) ON CONFLICT (tenant_id, "+column+") DO NOTHING", args...)
-	return err == nil
+	res, err := db.Exec(ctx, "INSERT INTO "+table+" (tenant_id, "+column+") VALUES (?, ?) ON CONFLICT (tenant_id, "+column+") DO NOTHING", args...)
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", doing, err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", doing, err)
+	}
+	return n > 0, nil
 }
 
-// assignDevice assigns a device to a tenant. Every failure is false: a
-// tenant that does not exist, a value the database does not take.
-func assignDevice(ctx context.Context, db *store.DB, tenantID, deviceID jsbind.Value) bool {
-	return assign(ctx, db, "tenant_devices", "device_id", tenantID, deviceID)
+// assignDevice assigns a device to a tenant and reports whether the
+// tenant did not have it before.
+func assignDevice(ctx context.Context, db *store.DB, tenantID jsbind.Value, deviceID string) (bool, error) {
+	return assign(ctx, db, "tenant_devices", "device_id", tenantID, jsbind.String(deviceID))
 }
 
 // removeDevice takes a device from a tenant.
@@ -280,7 +288,8 @@ func tenantUsers(ctx context.Context, db *store.DB, tenantID jsbind.Value) ([]te
 
 // assignUser assigns a user to a tenant. Every failure is false.
 func assignUser(ctx context.Context, db *store.DB, tenantID, userID jsbind.Value) bool {
-	return assign(ctx, db, "tenant_users", "user_id", tenantID, userID)
+	_, err := assign(ctx, db, "tenant_users", "user_id", tenantID, userID)
+	return err == nil
 }
 
 // removeUser takes a user from a tenant.
