@@ -223,6 +223,72 @@ func TestTargetIDsReadAsSQLiteReadsThem(t *testing.T) {
 	})
 }
 
+// The history's limit is a whole number from 1 written in digits, held at
+// 500, and the list's check_type one text: anything else is 400 on both
+// databases, where a negative limit listed every check on SQLite and
+// failed on PostgreSQL, and a type given twice or in brackets failed on
+// SQLite and found nothing on PostgreSQL (BUGS NM13).
+func TestTargetFiltersAnswerAlikeOnBothDatabases(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db, names{})
+		send := func(as, method, path, body string) (int, string) {
+			t.Helper()
+			var b *string
+			if body != "" {
+				b = &body
+			}
+			rec := w.do(as, method, path, b, "")
+			return rec.Code, rec.Body.String()
+		}
+		for _, body := range []string{
+			`{"name":"Printer","host":"10.1.2.3","check_type":"tcp","port":9}`,
+			`{"name":"Router","host":"10.1.2.4","check_type":"ping"}`,
+		} {
+			if status, answer := send("adm", "POST", "/api/network/targets", body); status != 201 {
+				t.Fatalf("create: %d %s", status, answer)
+			}
+		}
+		for i := 0; i < 3; i++ {
+			if _, err := db.Exec(context.Background(), "INSERT INTO network_checks (target_id, status) VALUES (1, 'up')"); err != nil {
+				t.Fatal(err)
+			}
+		}
+		for _, query := range []string{"limit=-1", "limit=0", "limit=00", "limit=all", "limit=2.9", "limit=%202", "limit=1e1", "limit=+2",
+			"limit=2&limit=5", "limit[]=4", "limit[a]=4"} {
+			if status, answer := send("vera", "GET", "/api/network/targets/1/history?"+query, ""); status != 400 || answer != `{"error":"Invalid limit"}` {
+				t.Errorf("history?%s: %d %s, want 400 Invalid limit", query, status, answer)
+			}
+		}
+		for query, want := range map[string]int{"": 3, "limit=": 3, "limit=2": 2, "limit=002": 2, "limit=99999999999999999999": 3} {
+			status, answer := send("vera", "GET", "/api/network/targets/1/history?"+query, "")
+			if got := strings.Count(answer, `"target_id":1`); status != 200 || got != want {
+				t.Errorf("history?%s: %d with %d checks, want 200 with %d: %s", query, status, got, want, answer)
+			}
+		}
+		for _, query := range []string{"check_type=tcp&check_type=ping", "check_type[]=tcp", "check_type[]=tcp&check_type[]=ping",
+			"check_type[0]=tcp", "check_type[is]=tcp", "check_type[a][b]=tcp", "enabled=true&check_type[]=tcp&check_type[]=x"} {
+			if status, answer := send("vera", "GET", "/api/network/targets?"+query, ""); status != 400 || answer != `{"error":"Invalid check_type"}` {
+				t.Errorf("targets?%s: %d %s, want 400 Invalid check_type", query, status, answer)
+			}
+		}
+		for query, want := range map[string]string{"check_type=tcp": "Printer", "check_type=": "Printer Router", "check_type": "Printer Router",
+			"check_type=icmp": "", "check_type=%74cp&enabled=true": "Printer"} {
+			status, answer := send("vera", "GET", "/api/network/targets?"+query, "")
+			var targets []struct {
+				Name string `json:"name"`
+			}
+			_ = json.Unmarshal([]byte(answer), &targets)
+			got := make([]string, len(targets))
+			for i, target := range targets {
+				got[i] = target.Name
+			}
+			if status != 200 || strings.Join(got, " ") != want {
+				t.Errorf("targets?%s: %d %q, want 200 %q", query, status, strings.Join(got, " "), want)
+			}
+		}
+	})
+}
+
 // The stats average the last round trip of the targets that have one
 // (BUGS.md NM3).
 func TestStatsAverageTheLastRoundTrip(t *testing.T) {

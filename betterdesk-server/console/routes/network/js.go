@@ -185,19 +185,6 @@ func (v queryValue) truthy() bool {
 	return v.kind == queryList || v.kind == queryObject || v.kind == queryString && v.text != ""
 }
 
-// string is String(v).
-func (v queryValue) string() string {
-	switch v.kind {
-	case queryUndefined:
-		return "undefined"
-	case queryString:
-		return v.text
-	case queryList:
-		return strings.Join(v.items, ",")
-	}
-	return "[object Object]"
-}
-
 // param is the value as a statement parameter.
 func (v queryValue) param() netmonitor.Param {
 	switch v.kind {

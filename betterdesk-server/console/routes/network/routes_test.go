@@ -329,24 +329,51 @@ func TestOrderSameNames(t *testing.T) {
 }
 
 // stepDifferences are the steps the Go routes answer otherwise than the
-// Node console on purpose, with the row of BUGS.md that says why.
+// Node console on purpose, with the row of BUGS.md that says why. A step
+// with sameAs answers what Node answered that step.
 var stepDifferences = map[string]struct {
-	status int
-	text   string
+	status       int
+	text, sameAs string
 }{
+	// NM13: the history's limit is a whole number from 1 written in digits,
+	// given once and held at 500, and the list's check_type one text;
+	// anything else is 400 on both databases. A limit too large for the
+	// databases lists every check, as one that names none
+	"history ?limit=0":                                   {status: 400, text: invalidLimit},
+	"history ?limit=-1":                                  {status: 400, text: invalidLimit},
+	"history ?limit=all":                                 {status: 400, text: invalidLimit},
+	"history ?limit=2.9":                                 {status: 400, text: invalidLimit},
+	"history ?limit=%202":                                {status: 400, text: invalidLimit},
+	"history ?limit=2&limit=5":                           {status: 400, text: invalidLimit},
+	"history ?limit[]=4":                                 {status: 400, text: invalidLimit},
+	"history ?limit[a]=4":                                {status: 400, text: invalidLimit},
+	"history ?limit=1e1":                                 {status: 400, text: invalidLimit},
+	"history ?limit=99999999999999999999":                {sameAs: "history ?to=2999-01-01"},
+	"list ?check_type=tcp&check_type=http":               {status: 400, text: invalidCheckTypeFilter},
+	"list ?check_type[]=tcp":                             {status: 400, text: invalidCheckTypeFilter},
+	"list ?check_type[]=tcp&check_type[]=ping":           {status: 400, text: invalidCheckTypeFilter},
+	"list ?check_type[0]=https":                          {status: 400, text: invalidCheckTypeFilter},
+	"list ?check_type[is]=tcp":                           {status: 400, text: invalidCheckTypeFilter},
+	"list ?check_type[a][b]=tcp":                         {status: 400, text: invalidCheckTypeFilter},
+	"list ?enabled=true&check_type[]=tcp&check_type[]=x": {status: 400, text: invalidCheckTypeFilter},
 	// SC3: 0.0.1.0 is in 0.0.0.0/8, which the guard refuses
-	"resolve: 256": {500, `{"error":"Hostname 256 resolves to blocked address 0.0.1.0"}`},
+	"resolve: 256": {status: 500, text: `{"error":"Hostname 256 resolves to blocked address 0.0.1.0"}`},
 	// NM7: a timeout below 1 is refused before anything leaves the server
-	"ping: timeout below zero":               {400, `{"error":"timeout must be at least 1"}`},
-	"ping: timeout far below zero":           {400, `{"error":"timeout must be at least 1"}`},
-	"tcp: timeout below zero":                {400, `{"error":"timeout must be at least 1"}`},
-	"tcp: timeout below zero and a bad port": {400, `{"error":"timeout must be at least 1"}`},
-	"http: timeout below zero":               {400, `{"error":"timeout must be at least 1"}`},
-	"http: timeout checked after the url":    {400, `{"error":"timeout must be at least 1"}`},
+	"ping: timeout below zero":               {status: 400, text: `{"error":"timeout must be at least 1"}`},
+	"ping: timeout far below zero":           {status: 400, text: `{"error":"timeout must be at least 1"}`},
+	"tcp: timeout below zero":                {status: 400, text: `{"error":"timeout must be at least 1"}`},
+	"tcp: timeout below zero and a bad port": {status: 400, text: `{"error":"timeout must be at least 1"}`},
+	"http: timeout below zero":               {status: 400, text: `{"error":"timeout must be at least 1"}`},
+	"http: timeout checked after the url":    {status: 400, text: `{"error":"timeout must be at least 1"}`},
 	// NM5: the check connects to an IPv6 address the guard passed, where
 	// nothing listens on this test's machine; Node looked it up as a name
-	"http: a v6 address": {200, `{"url":"http://[2001:db8::1]:9/","success":false,"rtt_ms":null,"status_code":null,"error":"connect ECONNREFUSED 2001:db8::1:9"}`},
+	"http: a v6 address": {status: 200, text: `{"url":"http://[2001:db8::1]:9/","success":false,"rtt_ms":null,"status_code":null,"error":"connect ECONNREFUSED 2001:db8::1:9"}`},
 }
+
+const (
+	invalidLimit           = `{"error":"Invalid limit"}`
+	invalidCheckTypeFilter = `{"error":"Invalid check_type"}`
+)
 
 // refusedTargets are the steps whose body the checks of a target refuse
 // (BUGS.md NM1), with the refusal. Where Node stored what such a body
@@ -467,6 +494,9 @@ func TestNodeSteps(t *testing.T) {
 			}
 			if d, ok := stepDifferences[s.Name]; ok {
 				s.Status, s.Text = d.status, d.text
+				if d.sameAs != "" {
+					s.Status, s.Text = stepNamed(t, steps, d.sameAs)
+				}
 			}
 			idStep, readAsSQLite := postgresIDSteps[s.Name]
 			if readAsSQLite && db.IsPostgres() {

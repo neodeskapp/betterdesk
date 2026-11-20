@@ -28,20 +28,16 @@ func FuzzQuery(f *testing.F) {
 		}
 		switch v.kind {
 		case queryUndefined:
-			if len(v.items) != 0 || v.truthy() || v.string() != "undefined" {
+			if len(v.items) != 0 || v.truthy() {
 				t.Fatalf("%q: nothing, with %+v", raw, v)
 			}
 		case queryString:
-			if len(v.items) != 1 || v.text != v.items[0] || v.string() != v.text || v.truthy() != (v.text != "") {
+			if len(v.items) != 1 || v.text != v.items[0] || v.truthy() != (v.text != "") {
 				t.Fatalf("%q: a string, with %+v", raw, v)
 			}
-		case queryList:
-			if len(v.items) == 0 || !v.truthy() || v.string() != strings.Join(v.items, ",") {
-				t.Fatalf("%q: a list, with %+v", raw, v)
-			}
-		case queryObject:
-			if len(v.items) == 0 || !v.truthy() || v.string() != "[object Object]" {
-				t.Fatalf("%q: an object, with %+v", raw, v)
+		case queryList, queryObject:
+			if len(v.items) == 0 || !v.truthy() {
+				t.Fatalf("%q: a list or an object, with %+v", raw, v)
 			}
 		default:
 			t.Fatalf("%q: kind %d", raw, v.kind)

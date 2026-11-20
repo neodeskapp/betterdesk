@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/netmonitor"
@@ -136,15 +137,23 @@ func decimalNumber(s string) (float64, bool) {
 
 // listTargets answers GET /targets: the targets by name, then id.
 // ?enabled=true lists the enabled ones, any other value of enabled the
-// disabled ones; ?check_type= lists one type.
+// disabled ones; ?check_type= lists one type. A check_type given twice,
+// in brackets or as an object is refused with 400, which the two
+// databases would take apart (an error on SQLite, nothing found on
+// PostgreSQL).
 func (h *handlers) listTargets(w http.ResponseWriter, r *http.Request) {
 	var filter netmonitor.TargetFilter
 	if enabled := query(r.URL.RawQuery, "enabled"); enabled.kind != queryUndefined {
 		on := enabled.kind == queryString && enabled.text == "true"
 		filter.Enabled = &on
 	}
-	if checkType := query(r.URL.RawQuery, "check_type"); checkType.truthy() {
-		p := checkType.param()
+	checkType, _, err := jsbind.QueryText(r.URL.RawQuery, "check_type")
+	if err != nil {
+		fail(w, r, http.StatusBadRequest, "Invalid check_type")
+		return
+	}
+	if checkType != "" {
+		p := netmonitor.Text(checkType)
 		filter.CheckType = &p
 	}
 	targets, err := netmonitor.ListTargets(r.Context(), h.db, filter)

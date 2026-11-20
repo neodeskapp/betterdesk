@@ -2,7 +2,10 @@ package network
 
 import (
 	"net/http"
+	"strconv"
+	"strings"
 
+	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/netmonitor"
@@ -32,10 +35,15 @@ func (h *handlers) checkTarget(w http.ResponseWriter, r *http.Request) {
 }
 
 // history answers GET /targets/{id}/history: the target's checks, the
-// newest first, at most ?limit= of them (100 when it names none), from
-// ?from= to ?to=. An id that names no row has none.
+// newest first, at most ?limit= of them (historyLimit), from ?from= to
+// ?to=. An id that names no row has none.
 func (h *handlers) history(w http.ResponseWriter, r *http.Request) {
-	limit := netmonitor.Num(netmonitor.ParseInt(query(r.URL.RawQuery, "limit").string()).Or(100))
+	n, ok := historyLimit(r.URL.RawQuery)
+	if !ok {
+		fail(w, r, http.StatusBadRequest, "Invalid limit")
+		return
+	}
+	limit := netmonitor.Num(netmonitor.Number(n))
 	filter := netmonitor.HistoryFilter{Limit: &limit}
 	if from := query(r.URL.RawQuery, "from"); from.truthy() {
 		p := from.param()
@@ -56,6 +64,36 @@ func (h *handlers) history(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	kit.JSON(w, r, http.StatusOK, checks)
+}
+
+// The history's limit: 100 checks when the query names none, at most
+// maxHistory.
+const (
+	defaultHistory = 100
+	maxHistory     = 500
+)
+
+// historyLimit reads ?limit= of the history: defaultHistory without one or
+// with an empty one, else a whole number from 1 written in digits, given
+// once, held at maxHistory. ok is false for anything else, which the two
+// databases would take apart: a negative limit is no limit on SQLite and
+// an error on PostgreSQL.
+func historyLimit(rawQuery string) (int, bool) {
+	text, _, err := jsbind.QueryText(rawQuery, "limit")
+	if err != nil {
+		return 0, false
+	}
+	if text == "" {
+		return defaultHistory, true
+	}
+	if strings.Trim(text, "0123456789") != "" || strings.Trim(text, "0") == "" {
+		return 0, false
+	}
+	n, err := strconv.Atoi(text)
+	if err != nil || n > maxHistory {
+		return maxHistory, true
+	}
+	return n, true
 }
 
 // toolTimeout is the timeout of a tool's body in milliseconds, the default
