@@ -6,7 +6,10 @@ import (
 	"errors"
 	"math"
 	"net/http"
-	"strings"
+
+	"github.com/jackc/pgx/v5/pgconn"
+	"modernc.org/sqlite"
+	sqlite3 "modernc.org/sqlite/lib"
 
 	"github.com/unitronix/betterdesk-server/console/branding"
 	"github.com/unitronix/betterdesk-server/console/goapipath"
@@ -88,16 +91,33 @@ func (h *handlers) createTemplate(w http.ResponseWriter, r *http.Request) {
 		createdBy = &id
 	}
 	if err := insertTemplate(r.Context(), h.d.Store, name, description, branding.Stringify(config), token, createdBy); err != nil {
-		message := jsbind.Message(err)
-		if strings.Contains(message, "UNIQUE") {
+		// A name (or, by chance, a token) another template has
+		if isUniqueViolation(err) {
 			fail(w, r, http.StatusConflict, "name_exists")
 			return
 		}
-		fail(w, r, http.StatusInternalServerError, message)
+		h.log.Error("Create agent template error:", err)
+		fail(w, r, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 	_ = h.d.LogAction(r, "template_created", "Created agent template: "+name)
 	kit.JSON(w, r, http.StatusCreated, templateCreated{Success: true, EnrollmentToken: token})
+}
+
+// isUniqueViolation reports whether err is a unique constraint the write
+// broke: SQLite's codes for a unique or primary key constraint, or
+// PostgreSQL's 23505.
+func isUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == "23505"
+	}
+	var sqliteErr *sqlite.Error
+	if errors.As(err, &sqliteErr) {
+		code := sqliteErr.Code()
+		return code == sqlite3.SQLITE_CONSTRAINT_UNIQUE || code == sqlite3.SQLITE_CONSTRAINT_PRIMARYKEY
+	}
+	return false
 }
 
 // newEnrollmentToken is crypto.randomBytes(24).toString('hex').

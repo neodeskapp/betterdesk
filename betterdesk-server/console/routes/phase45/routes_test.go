@@ -179,7 +179,8 @@ func TestProfilePicture(t *testing.T) {
 
 // Without the template table (a database the console has not migrated
 // yet), enrollment finds no token, as Node's getAgentTemplateByToken does,
-// and the list answers 500 with the database's message.
+// and the list answers 500 with the database's message. A new template
+// gets the generic 500, without the database's text (UM3).
 func TestTemplatesWithoutTheirTable(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := routetest.New(t, routetest.Options{DB: db})
@@ -192,6 +193,23 @@ func TestTemplatesWithoutTheirTable(t *testing.T) {
 		res := w.As("admin").Do("GET", "/api/agent-templates", "")
 		if res.Status != http.StatusInternalServerError || !strings.HasPrefix(res.Body, `{"success":false,"error":"`) || !strings.HasSuffix(res.Body, `","templates":[]}`) || !strings.Contains(res.Body, "agent_templates") {
 			t.Errorf("list: %d %s", res.Status, res.Body)
+		}
+		res = w.As("admin").Do("POST", "/api/agent-templates", `{"name":"Front desk"}`)
+		if res.Status != http.StatusInternalServerError || res.Body != `{"success":false,"error":"Internal Server Error"}` {
+			t.Errorf("create: %d %s", res.Status, res.Body)
+		}
+	})
+}
+
+// A name that is taken is name_exists on both databases (UM3).
+func TestTemplateNameTaken(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		admin := routetest.New(t, routetest.Options{DB: db}).As("admin")
+		if res := admin.Do("POST", "/api/agent-templates", `{"name":"Front desk"}`); res.Status != http.StatusCreated {
+			t.Fatalf("first: %d %s", res.Status, res.Body)
+		}
+		if res := admin.Do("POST", "/api/agent-templates", `{"name":"Front desk","description":"again"}`); res.Status != http.StatusConflict || res.Body != `{"success":false,"error":"name_exists"}` {
+			t.Errorf("taken: %d %s", res.Status, res.Body)
 		}
 	})
 }

@@ -62,6 +62,12 @@ func TestNodeAnswers(t *testing.T) {
 			// A new template's token is random: 48 hex digits in place of
 			// each other
 			if strings.HasPrefix(step.Path, "/api/agent-templates") {
+				// UM3: a name that is taken is name_exists on PostgreSQL
+				// too, where Node looked for SQLite's "UNIQUE" in the
+				// message and answered the database's text with 500
+				if strings.Contains(step.Answer, "duplicate key value violates unique constraint") {
+					step.Status, step.Answer = http.StatusConflict, `{"success":false,"error":"name_exists"}`
+				}
 				want, have := randomToken.ReplaceAllString(replay.Normalize(step.Answer), "<token>"), randomToken.ReplaceAllString(replay.Normalize(got.Body), "<token>")
 				if got.Status != step.Status || have != want {
 					t.Errorf("step %q: %d %s\n   node: %d %s", step.Name, got.Status, have, step.Status, want)
