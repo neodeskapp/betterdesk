@@ -25,9 +25,12 @@ var deviceFixes = []deviceFix{
 	// A chunk beyond the size the transfer announced is refused
 	{88, "FT3", 200, `{"action":"error","error":"Chunk goes beyond the size of the transfer (12 bytes)"}`},
 	{89, "FT3", 200, `{"transferId":"12db0ec02320087958183cbb162b10a8","status":"completed","bytesTransferred":12,"totalBytes":12,"chunksReceived":2,"totalChunks":1,"percent":100,"filename":"q3_report.pdf","direction":"download"}`},
-	// The device sends no chunk into an upload
-	{102, "FT2", 200, `{"action":"error","error":"Transfer is an upload"}`},
-	{103, "FT2", 200, `{"transferId":"c00386451099cce4b54bdd85a93d0164","status":"pending","bytesTransferred":0,"totalBytes":1,"chunksReceived":0,"totalChunks":1,"percent":0,"filename":"n.txt","direction":"upload"}`},
+	// A transfer for the device 123 as a number is refused, so there is
+	// none to read, write into or list
+	{100, "FT10", 400, `{"error":"device_id must be text"}`},
+	{101, "FT10", 404, `{"error":"Transfer not found"}`},
+	{102, "FT10", 200, `{"action":"error","error":"Transfer not found"}`},
+	{103, "FT10", 404, `{"error":"Transfer not found"}`},
 }
 
 // fixDeviceVectors puts the console's answers in place of Node's for the

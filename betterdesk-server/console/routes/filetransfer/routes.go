@@ -65,12 +65,17 @@ func bodyValue(r *http.Request, key string) any {
 
 // start answers POST /transfer with the body {direction, device_id,
 // filename, size, mime_type}: it starts a transfer and answers 201 with
-// its record. The size is read as a whole number, the file name is made
+// its record. The device is text, so the transfer is the one the device's
+// token reads. The size is read as a whole number, the file name is made
 // safe, and the account is noted as the one who started it.
 func (h *handlers) start(w http.ResponseWriter, r *http.Request) {
 	device, filename, direction := bodyValue(r, "device_id"), bodyValue(r, "filename"), bodyValue(r, "direction")
 	if !goapi.Truthy(device) || !goapi.Truthy(filename) {
 		fail(w, r, http.StatusBadRequest, "device_id and filename are required")
+		return
+	}
+	if _, isText := device.(string); !isText {
+		fail(w, r, http.StatusBadRequest, "device_id must be text")
 		return
 	}
 	if direction != "upload" && direction != "download" {

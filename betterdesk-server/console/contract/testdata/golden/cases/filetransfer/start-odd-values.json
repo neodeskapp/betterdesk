@@ -50,69 +50,10 @@
   },
   {
    "roles": [
-    "operator"
-   ],
-   "status": 201,
-   "headers": {
-    "cache-control": "no-cache, no-store, must-revalidate",
-    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "application/json; charset=utf-8",
-    "cross-origin-resource-policy": "same-origin",
-    "etag": "<present>",
-    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "ratelimit-limit": "1000000",
-    "ratelimit-policy": "1000000;w=60",
-    "ratelimit-remaining": "<n>",
-    "ratelimit-reset": "<n>",
-    "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
-    "x-content-type-options": "nosniff",
-    "x-dns-prefetch-control": "off",
-    "x-download-options": "noopen",
-    "x-frame-options": "DENY",
-    "x-permitted-cross-domain-policies": "none",
-    "x-xss-protection": "0"
-   },
-   "volatile": [
-    {
-     "path": "createdAt",
-     "integer": true
-    },
-    {
-     "path": "id",
-     "pattern": "^[9aA+/_=-]{32}$"
-    },
-    {
-     "path": "updatedAt",
-     "integer": true
-    }
-   ],
-   "body": {
-    "kind": "json",
-    "json": {
-     "bytesTransferred": 0,
-     "chunksReceived": 0,
-     "createdAt": 0,
-     "createdBy": "e2e_operator",
-     "deviceId": 5,
-     "direction": "upload",
-     "filename": "a_b_c",
-     "id": "<volatile>",
-     "mimeType": {
-      "x": 1
-     },
-     "size": 12,
-     "status": "pending",
-     "totalChunks": 1,
-     "updatedAt": 0
-    }
-   }
-  },
-  {
-   "roles": [
+    "operator",
     "admin"
    ],
-   "status": 201,
+   "status": 400,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -133,38 +74,10 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    {
-     "path": "createdAt",
-     "integer": true
-    },
-    {
-     "path": "id",
-     "pattern": "^[9aA+/_=-]{32}$"
-    },
-    {
-     "path": "updatedAt",
-     "integer": true
-    }
-   ],
    "body": {
     "kind": "json",
     "json": {
-     "bytesTransferred": 0,
-     "chunksReceived": 0,
-     "createdAt": 0,
-     "createdBy": "e2e_admin",
-     "deviceId": 5,
-     "direction": "upload",
-     "filename": "a_b_c",
-     "id": "<volatile>",
-     "mimeType": {
-      "x": 1
-     },
-     "size": 12,
-     "status": "pending",
-     "totalChunks": 1,
-     "updatedAt": 0
+     "error": "device_id must be text"
     }
    }
   }

@@ -119,7 +119,7 @@ func TestVectors(t *testing.T) {
 	}
 	w := newWorld(t)
 	etags := map[string]string{}
-	failures, unstored, noPath, refusedDownloads := 0, 0, 0, 0
+	failures, unstored, noPath, refusedDownloads, deviceRefusals := 0, 0, 0, 0, 0
 	for i, v := range vectors {
 		switch {
 		case v.Feed != nil:
@@ -152,6 +152,9 @@ func TestVectors(t *testing.T) {
 			req.Headers = headers
 		}
 		rec, _ := w.Do(req, nil)
+		if deviceNotText(&v) {
+			deviceRefusals++
+		}
 		if refusedDownload(&v) {
 			refusedDownloads++
 		}
@@ -193,8 +196,8 @@ func TestVectors(t *testing.T) {
 		}
 		gotText, wantText := string(got), string(want)
 		if isJSON {
-			// FT5: a transfer whose device has no text is not stored, where
-			// Node listed it although its request failed
+			// FT5, FT10: a transfer whose device is no text is not stored,
+			// where Node listed it (also when its request failed)
 			if kept, dropped := withoutUnstored(wantText); dropped {
 				wantText = kept
 				unstored++
@@ -245,6 +248,9 @@ func TestVectors(t *testing.T) {
 	if refusedDownloads == 0 {
 		t.Error("no download fails after its file was found: the fix of FT7 changes no vector")
 	}
+	if deviceRefusals == 0 {
+		t.Error("no start names a device that is no text: the fix of FT10 changes no vector")
+	}
 }
 
 // downloadFailed is the body Node answered a download with that failed
@@ -285,8 +291,8 @@ func withoutTempPath(text string) (string, bool) {
 }
 
 // withoutUnstored is a list of transfers of the Node run without the
-// ones whose device or direction has no text (an object with a member
-// named toString), and whether it had any.
+// ones whose device is no text or whose direction has none (an object
+// with a member named toString), and whether it had any.
 func withoutUnstored(list string) (string, bool) {
 	var records []json.RawMessage
 	if !strings.HasPrefix(list, "[") || json.Unmarshal([]byte(list), &records) != nil {
@@ -299,7 +305,7 @@ func withoutUnstored(list string) (string, bool) {
 			Direction json.RawMessage `json:"direction"`
 		}
 		_ = json.Unmarshal(record, &fields)
-		if noText(fields.DeviceID) || noText(fields.Direction) {
+		if noText(fields.DeviceID) || noText(fields.Direction) || !isText(fields.DeviceID) {
 			continue
 		}
 		kept = append(kept, string(record))
@@ -362,4 +368,63 @@ func TestRegisteredRoutes(t *testing.T) {
 	if strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Errorf("registered routes:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
 	}
+}
+
+// A transfer someone starts names its device as text: a device id of
+// another type is refused, so every transfer belongs to the device whose
+// token reads it (BUGS FT10).
+func TestStartTakesTheDeviceAsText(t *testing.T) {
+	w := newWorld(t)
+	admin := &proxytest.Account{UserID: 1}
+	admin.User.Username, admin.User.Role = "e2e_admin", "admin"
+	start := func(body string) (int, string) {
+		rec, _ := w.Do(proxytest.Request{Method: "POST", Path: "/api/files/transfer", Session: admin, Type: "application/json", Body: &body}, nil)
+		return rec.Code, rec.Body.String()
+	}
+	for _, device := range []string{`123`, `true`, `["123"]`, `{"id":"123"}`} {
+		if status, body := start(`{"direction":"download","device_id":` + device + `,"filename":"a.txt"}`); status != http.StatusBadRequest || body != `{"error":"device_id must be text"}` {
+			t.Errorf("device_id %s: %d %s", device, status, body)
+		}
+	}
+	if list := w.transfers.ListTransfers(service.Filter{}); len(list) != 0 {
+		t.Errorf("%d transfers stored", len(list))
+	}
+	if status, body := start(`{"direction":"download","device_id":"123","filename":"a.txt"}`); status != http.StatusCreated || !strings.Contains(body, `"deviceId":"123"`) {
+		t.Errorf("device_id \"123\": %d %s", status, body)
+	}
+}
+
+// isText reports whether a JSON value is a text, or missing.
+func isText(value json.RawMessage) bool {
+	var text string
+	return value == nil || json.Unmarshal(value, &text) == nil
+}
+
+// deviceNotText is the fix of FT10 on a vector: a start whose device_id is
+// there but no text answers 400 and stores nothing, where Node started
+// the transfer.
+func deviceNotText(v *vector) bool {
+	if v.Request == nil || v.Request.Method != http.MethodPost || v.Request.Body == nil ||
+		!strings.HasSuffix(strings.ToLower(strings.TrimSuffix(v.Request.Path, "/")), "/transfer") {
+		return false
+	}
+	var body map[string]json.RawMessage
+	if json.Unmarshal([]byte(*v.Request.Body), &body) != nil || isText(body["device_id"]) {
+		return false
+	}
+	for _, key := range []string{"device_id", "filename"} {
+		var value any
+		if json.Unmarshal(body[key], &value) != nil || value == nil || value == false || value == 0.0 || value == "" {
+			return false
+		}
+	}
+	v.Status = http.StatusBadRequest
+	v.Body = base64.StdEncoding.EncodeToString([]byte(`{"error":"device_id must be text"}`))
+	headers := map[string]string{}
+	for name, value := range v.Headers {
+		headers[name] = value
+	}
+	headers["content-type"] = "application/json; charset=utf-8"
+	v.Headers = headers
+	return true
 }
