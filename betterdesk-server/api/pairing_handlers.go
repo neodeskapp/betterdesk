@@ -310,7 +310,7 @@ func (s *Server) handleCreatePairingCode(w http.ResponseWriter, r *http.Request)
 		Label:     label,
 		CreatedAt: now.Format(time.RFC3339),
 		ExpiresAt: now.Add(pairingCodeTTL).Format(time.RFC3339),
-		CreatedBy: getUsernameFromCtx(r),
+		CreatedBy: actorFromCtx(r),
 		UsesLeft:  pairingCodeMaxUses,
 	}
 	if err := s.storePairingRecord(hash, record); err != nil {

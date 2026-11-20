@@ -228,7 +228,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		Logf: func(format string, args ...any) { logging.Logf("console", "ERROR: "+format, args...) },
 	}
 
-	api := goapi.New(opts.API, goapi.WithHost(cfg.APIHost), goapi.WithEventBus(opts.Events))
+	api := goapi.New(opts.API, goapi.WithHost(cfg.APIHost), goapi.WithEventBus(opts.Events), goapi.WithActor(accountName))
 
 	s.deps = &kit.Deps{
 		Router:   s.router,
@@ -445,6 +445,18 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	s.newClientAPI()
 	s.pipeline = s.buildPipeline()
 	return s, nil
+}
+
+// accountName is the name of the account signed in on the request ctx
+// belongs to, "" for none: the person the API server records as the
+// creator or handler of what a call makes (goapi.WithActor).
+func accountName(ctx context.Context) string {
+	if s := session.FromContext(ctx); s != nil {
+		if user := s.User(); user != nil {
+			return user.Username
+		}
+	}
+	return ""
 }
 
 // userKey is the id of the signed-in account as the rate limiters key it.

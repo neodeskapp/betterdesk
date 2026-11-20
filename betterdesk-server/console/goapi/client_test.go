@@ -624,3 +624,37 @@ func TestForwardHandlerKeepsTheCallersAddress(t *testing.T) {
 		}
 	}
 }
+
+// WithActor names the person of the call's context, or of the request
+// for Handler and ForwardHandler, next to the client's identity; a call
+// made As another identity keeps that identity as it is.
+func TestActorComesFromTheContext(t *testing.T) {
+	type key struct{}
+	var id api.Identity
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id, _ = api.IdentityFromContext(r.Context())
+		_, _ = io.WriteString(w, `{}`)
+	})
+	c := New(inner, WithActor(func(ctx context.Context) string {
+		name, _ := ctx.Value(key{}).(string)
+		return name
+	}))
+	ctx := context.WithValue(context.Background(), key{}, "alice")
+	if _, err := c.Get(ctx, "/x"); err != nil || id != (api.Identity{Username: BridgeUsername, Role: BridgeRole, Actor: "alice"}) {
+		t.Errorf("a call: %+v, %v", id, err)
+	}
+	if _, _ = c.Get(context.Background(), "/x"); id.Actor != "" {
+		t.Errorf("a call without an account: %+v", id)
+	}
+	operator := api.Identity{Username: "op", Role: "operator"}
+	if _, _ = c.Get(ctx, "/x", As(operator)); id != operator {
+		t.Errorf("a call as another identity: %+v", id)
+	}
+	for name, h := range map[string]http.Handler{"Handler": c.Handler(), "ForwardHandler": c.ForwardHandler()} {
+		id = api.Identity{}
+		h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("GET", "/x", nil).WithContext(ctx))
+		if id.Actor != "alice" || id.Username != BridgeUsername {
+			t.Errorf("%s: %+v", name, id)
+		}
+	}
+}

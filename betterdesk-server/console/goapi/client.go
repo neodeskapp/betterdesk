@@ -50,6 +50,7 @@ const (
 type Client struct {
 	handler    http.Handler
 	identity   api.Identity
+	actor      func(ctx context.Context) string
 	host       string
 	remoteAddr string
 	timeout    time.Duration
@@ -95,6 +96,15 @@ func WithTimeout(d time.Duration) Option {
 	return func(c *Client) { c.timeout = d }
 }
 
+// WithActor names the person a call acts for: actor gets the call's
+// context (the request's, for Handler and ForwardHandler) and returns the
+// signed-in account's name, "" for none. The API server records the name
+// as the creator or handler of what the call makes (api.Identity.Actor);
+// it decides nothing, the calls keep the client's identity.
+func WithActor(actor func(ctx context.Context) string) Option {
+	return func(c *Client) { c.actor = actor }
+}
+
 // WithEventBus gives the client the server's event bus for Events.
 func WithEventBus(bus *events.Bus) Option {
 	return func(c *Client) { c.bus = bus }
@@ -124,11 +134,20 @@ func New(handler http.Handler, opts ...Option) *Client {
 // headers and body are the caller's.
 func (c *Client) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r = r.WithContext(api.WithIdentity(r.Context(), c.identity))
+		r = r.WithContext(api.WithIdentity(r.Context(), c.identityFor(r.Context())))
 		r.Host = c.host
 		r.RemoteAddr = c.remoteAddr
 		c.handler.ServeHTTP(w, r)
 	})
+}
+
+// identityFor is the client's identity with the actor of ctx.
+func (c *Client) identityFor(ctx context.Context) api.Identity {
+	id := c.identity
+	if c.actor != nil {
+		id.Actor = c.actor(ctx)
+	}
+	return id
 }
 
 // ForwardHandler is Handler for requests the console passes on for a
@@ -138,7 +157,7 @@ func (c *Client) Handler() http.Handler {
 // the client's caller address, as with Handler.
 func (c *Client) ForwardHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r = r.WithContext(api.WithIdentity(r.Context(), c.identity))
+		r = r.WithContext(api.WithIdentity(r.Context(), c.identityFor(r.Context())))
 		r.Host = c.host
 		if _, _, err := net.SplitHostPort(r.RemoteAddr); err != nil {
 			r.RemoteAddr = c.remoteAddr
@@ -473,7 +492,7 @@ func (c *Client) send(ctx context.Context, method, target string, cl *call) (*Re
 // it is set. The handler runs on its own goroutine, so that a handler that
 // does not return in time cannot hold the caller.
 func (c *Client) roundTrip(ctx context.Context, method, target string, header http.Header, body []byte, hasBody bool, as *api.Identity) (*Response, error) {
-	identity := c.identity
+	identity := c.identityFor(ctx)
 	if as != nil {
 		identity = *as
 	}

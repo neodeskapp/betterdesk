@@ -134,7 +134,13 @@ type contextKey struct{}
 // From returns the request's session. Behind Middleware it is never nil; a
 // visitor without a session has an empty one.
 func From(r *http.Request) *Session {
-	s, _ := r.Context().Value(contextKey{}).(*Session)
+	return FromContext(r.Context())
+}
+
+// FromContext is From for the context of a request behind Middleware, or
+// one made from it; nil for any other context.
+func FromContext(ctx context.Context) *Session {
+	s, _ := ctx.Value(contextKey{}).(*Session)
 	return s
 }
 

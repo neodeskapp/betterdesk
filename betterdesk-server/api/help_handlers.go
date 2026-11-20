@@ -234,7 +234,7 @@ func (s *Server) updateHelpRequestStatus(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	operator := getUsernameFromCtx(r)
+	operator := actorFromCtx(r)
 	if err := s.db.UpdateHelpRequestStatus(id, status, operator); err != nil {
 		log.Printf("[help] UpdateHelpRequestStatus error: %v", err)
 		http.Error(w, `{"error":"internal"}`, http.StatusInternalServerError)

@@ -300,7 +300,7 @@ func (s *Server) handleSubmitBillingReport(w http.ResponseWriter, r *http.Reques
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
 		return
 	}
-	operatorID := getUsernameFromCtx(r)
+	operatorID := actorFromCtx(r)
 	if operatorID == "" {
 		operatorID = r.Header.Get("X-Operator-Id")
 	}

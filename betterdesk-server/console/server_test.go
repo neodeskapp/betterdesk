@@ -14,6 +14,7 @@ import (
 
 	"github.com/coder/websocket"
 
+	"github.com/unitronix/betterdesk-server/api"
 	"github.com/unitronix/betterdesk-server/console/avatars"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -472,5 +473,30 @@ func TestStopWaitsForPictureSyncs(t *testing.T) {
 	case <-stopped:
 	case <-time.After(10 * time.Second):
 		t.Fatal("Stop did not return after the picture sync ended")
+	}
+}
+
+// TestAPICallsNameTheSignedInAccount: the console's calls to the API
+// server name the account signed in on the request as their actor, which
+// the API server records as creator or handler; a call outside a request
+// names none (BUGS G7).
+func TestAPICallsNameTheSignedInAccount(t *testing.T) {
+	actors := make(chan string, 4)
+	w := goOnly(t, setup{api: http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		id, _ := api.IdentityFromContext(r.Context())
+		actors <- id.Username + "/" + id.Actor
+		rw.Header().Set("Content-Type", "application/json")
+		_, _ = rw.Write([]byte(`{"success":true,"code":"ABC123","id":"x"}`))
+	})})
+	a := w.agent().signIn("admin")
+	if res := a.post("/api/panel/pairing/codes", `{"label":"x"}`); res.status >= 500 {
+		t.Fatalf("pairing code: %d %s", res.status, res.body)
+	}
+	if got := <-actors; got != "apikey:console-bridge/e2e_admin" {
+		t.Errorf("the API saw the caller %q", got)
+	}
+	_, _ = w.s.Deps().GoAPI.Get(context.Background(), "/health")
+	if got := <-actors; got != "apikey:console-bridge/" {
+		t.Errorf("a call outside a request: %q", got)
 	}
 }

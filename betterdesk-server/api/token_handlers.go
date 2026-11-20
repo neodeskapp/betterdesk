@@ -146,8 +146,8 @@ func (s *Server) handleCreateDeviceToken(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Get creator from context
-	creator := ""
-	if user, ok := r.Context().Value(ctxKeyUser).(*db.User); ok && user != nil {
+	creator := actorOf(r)
+	if user, ok := r.Context().Value(ctxKeyUser).(*db.User); ok && user != nil && creator == "" {
 		creator = user.Username
 	}
 
@@ -336,8 +336,8 @@ func (s *Server) handleBulkGenerateTokens(w http.ResponseWriter, r *http.Request
 	}
 
 	// Get creator from context
-	creator := ""
-	if user, ok := r.Context().Value(ctxKeyUser).(*db.User); ok && user != nil {
+	creator := actorOf(r)
+	if user, ok := r.Context().Value(ctxKeyUser).(*db.User); ok && user != nil && creator == "" {
 		creator = user.Username
 	}
 

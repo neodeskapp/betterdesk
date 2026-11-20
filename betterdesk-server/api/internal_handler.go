@@ -17,6 +17,12 @@ type Identity struct {
 	// OrgID scopes the caller to one organization, like the org_id claim of
 	// a token. Empty for a caller without an organization scope.
 	OrgID string
+	// Actor is the person the caller acts for: the console's signed-in
+	// account. The API server records it where it records who created or
+	// handled something (pairing codes, device tokens, help requests,
+	// billing work reports, CDAP commands and sessions). It decides
+	// nothing: role, permissions and delegations go by Username and Role.
+	Actor string
 }
 
 type identityCtxKey struct{}
@@ -38,6 +44,26 @@ func IdentityFromContext(ctx context.Context) (Identity, bool) {
 // request from the listener never does: only InternalHandler sets the mark.
 func arrivedInternally(r *http.Request) bool {
 	return r.Context().Value(internalCtxKey{}) != nil
+}
+
+// actorOf is the Actor of an in-process caller that names one, "" for
+// any other request.
+func actorOf(r *http.Request) string {
+	if !arrivedInternally(r) {
+		return ""
+	}
+	id, _ := IdentityFromContext(r.Context())
+	return id.Actor
+}
+
+// actorFromCtx is who the request acts for, for what the API server
+// records as the creator, handler or operator of something: the Actor of
+// an in-process caller that names one, else the caller's username.
+func actorFromCtx(r *http.Request) string {
+	if actor := actorOf(r); actor != "" {
+		return actor
+	}
+	return getUsernameFromCtx(r)
 }
 
 // sharedMux builds the route table once, for whichever of Start and
