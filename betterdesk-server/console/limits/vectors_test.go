@@ -242,6 +242,10 @@ var intendedCounts = map[string]struct {
 	"small: poll paths/s6-22": {200, "[[widgetLimiter 4 4 passed] [apiLimiter 1 5 passed]]"},
 	"small: poll paths/s6-23": {429, "[[widgetLimiter 5 4 refused]]"},
 	"small: poll paths/s6-44": {200, "[[apiLimiter 2 5 passed]]"},
+	// The password change budget belongs to the signed-in account, not to
+	// the address (BUGS C4)
+	"defaults: password change limit, five minutes/s1-4": {200, "[[widgetLimiter 1 600 passed] [apiLimiter 5 100 passed] [passwordChangeLimiter 1 3 passed]]"},
+	"defaults: password change limit, five minutes/s1-5": {429, "[[apiLimiter 1 100 passed] [passwordChangeLimiter 5 3 refused]]"},
 }
 
 func TestConsoleLimitersAgainstNode(t *testing.T) {

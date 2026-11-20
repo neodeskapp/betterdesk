@@ -218,7 +218,8 @@ func NewSet(opts Options) *Set {
 	s.RDClientPage = limiter("rdClientPageLimiter", minute, env("RDCLIENT_PAGE_RATE_LIMIT_MAX", 120), "Too many remote page requests. Please slow down.", s.addressKey, nil)
 	s.Login = limiter("loginLimiter", window, env("LOGIN_RATE_LIMIT_MAX", 5), "Too many login attempts. Please try again in a minute.", s.addressKey, nil)
 	s.TOTPVerify = limiter("totpVerifyLimiter", window, env("LOGIN_RATE_LIMIT_MAX", 5), "Too many verification attempts. Please try again in a minute.", s.addressKey, nil)
-	s.PasswordChange = limiter("passwordChangeLimiter", 5*minute, 3, "Too many password change attempts. Please try again later.", opts.ClientIP, nil)
+	s.PasswordChange = limiter("passwordChangeLimiter", 5*minute, 3, "Too many password change attempts. Please try again later.",
+		func(r *http.Request) string { return s.userOrAddressKey("password:", r) }, nil)
 	s.Upload = limiter("uploadLimiter", minute, env("UPLOAD_RATE_LIMIT_MAX", 30), "Too many upload requests. Please try again later.", s.addressKey, nil)
 	s.FileAccess = limiter("fileAccessLimiter", minute, env("FILE_ACCESS_RATE_LIMIT_MAX", 120), "Too many file requests. Please try again later.", s.addressKey, nil)
 	s.Register = limiter("registerLimiter", minute, env("BD_REGISTER_RATE_LIMIT_MAX", 20), "Too many registration requests. Please slow down.", s.addressKey, nil)

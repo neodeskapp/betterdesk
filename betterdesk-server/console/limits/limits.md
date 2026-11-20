@@ -24,7 +24,7 @@ read" is a GET or HEAD with a session.
 | `RDClientPage` | `rdClientPageLimiter` | 60 s | `RDCLIENT_PAGE_RATE_LIMIT_MAX`, 120 | address | nothing | Too many remote page requests. Please slow down. |
 | `Login` | `loginLimiter` | `W` | `LOGIN_RATE_LIMIT_MAX`, 5 | address | nothing | Too many login attempts. Please try again in a minute. |
 | `TOTPVerify` | `totpVerifyLimiter` | `W` | `LOGIN_RATE_LIMIT_MAX`, 5 | address | nothing | Too many verification attempts. Please try again in a minute. |
-| `PasswordChange` | `passwordChangeLimiter` | 5 min | 3, fixed | the address alone (no fallback) | nothing | Too many password change attempts. Please try again later. |
+| `PasswordChange` | `passwordChangeLimiter` | 5 min | 3, fixed | `password:<user>`, signed out the address | nothing | Too many password change attempts. Please try again later. |
 | `Upload` | `uploadLimiter` | 60 s | `UPLOAD_RATE_LIMIT_MAX`, 30 | address | nothing | Too many upload requests. Please try again later. |
 | `FileAccess` | `fileAccessLimiter` | 60 s | `FILE_ACCESS_RATE_LIMIT_MAX`, 120 | address | nothing | Too many file requests. Please try again later. |
 | `Register` | `registerLimiter` | 60 s | `BD_REGISTER_RATE_LIMIT_MAX`, 20 | address | nothing | Too many registration requests. Please slow down. |

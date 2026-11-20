@@ -77,7 +77,8 @@
   {
    "roles": [
     "global_admin",
-    "super_admin"
+    "super_admin",
+    "admin"
    ],
    "status": 400,
    "headers": {
@@ -104,40 +105,6 @@
     "kind": "json",
     "json": {
      "error": "Please fill in all required fields",
-     "success": false
-    }
-   }
-  },
-  {
-   "roles": [
-    "admin"
-   ],
-   "status": 429,
-   "headers": {
-    "cache-control": "no-cache, no-store, must-revalidate",
-    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "application/json; charset=utf-8",
-    "cross-origin-resource-policy": "same-origin",
-    "etag": "<present>",
-    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "ratelimit-limit": "3",
-    "ratelimit-policy": "3;w=300",
-    "ratelimit-remaining": "<n>",
-    "ratelimit-reset": "<n>",
-    "referrer-policy": "strict-origin-when-cross-origin",
-    "retry-after": "<n>",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
-    "x-content-type-options": "nosniff",
-    "x-dns-prefetch-control": "off",
-    "x-download-options": "noopen",
-    "x-frame-options": "DENY",
-    "x-permitted-cross-domain-policies": "none",
-    "x-xss-protection": "0"
-   },
-   "body": {
-    "kind": "json",
-    "json": {
-     "error": "Too many password change attempts. Please try again later.",
      "success": false
     }
    }

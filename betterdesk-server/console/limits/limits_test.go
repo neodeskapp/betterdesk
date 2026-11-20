@@ -387,19 +387,39 @@ func TestKeys(t *testing.T) {
 	r.Header.Set("X-User", "7")
 	for l, want := range map[*Limiter]string{set.SessionRead: "session-read:7", set.PanelRead: "panel-read:7", set.PanelPreference: "pref:7",
 		set.API: "203.0.113.5", set.Widget: "203.0.113.5", set.Login: "203.0.113.5", set.Upload: "203.0.113.5", set.FileAccess: "203.0.113.5", set.Register: "203.0.113.5",
-		set.RDClientPage: "203.0.113.5", set.PasswordChange: "203.0.113.5"} {
+		set.RDClientPage: "203.0.113.5", set.PasswordChange: "password:7"} {
 		if got := l.cfg.Key(r); got != want {
 			t.Errorf("%s: key %q, want %q", l.Name(), got, want)
 		}
 	}
-	// PasswordChange has the address alone, without the fallbacks; the
-	// others fall back to X-Forwarded-For
+	// Without an address the keys fall back to X-Forwarded-For
 	address = ""
 	if got := set.Register.cfg.Key(r); got != "203.0.113.9, 10.0.0.1, 10.0.0.2" {
 		t.Errorf("Register without an address: %q", got)
 	}
-	if got := set.PasswordChange.cfg.Key(r); got != "" {
-		t.Errorf("PasswordChange without an address: %q", got)
+}
+
+// The password change budget belongs to the signed-in account: people
+// behind one address each have their own three changes in five minutes,
+// and one account has three from any address.
+func TestPasswordChangeBudgetPerAccount(t *testing.T) {
+	set := newSet(&clock{}, nil)
+	h := set.PasswordChange.Middleware(http.HandlerFunc(ok))
+	change := func(user, ip string) int {
+		r := request("POST", "/api/auth/password", ip)
+		r.Header.Set("X-User", user)
+		return hit(h, r).Code
+	}
+	var got []int
+	for _, c := range []struct{ user, ip string }{
+		{"1", "203.0.113.1"}, {"1", "203.0.113.1"}, {"1", "203.0.113.1"},
+		{"2", "203.0.113.1"}, {"3", "203.0.113.1"},
+		{"1", "198.51.100.7"},
+	} {
+		got = append(got, change(c.user, c.ip))
+	}
+	if fmt.Sprint(got) != "[200 200 200 200 200 429]" {
+		t.Errorf("password changes: %v, want three for account 1 from any address and one each for 2 and 3", got)
 	}
 }
 
