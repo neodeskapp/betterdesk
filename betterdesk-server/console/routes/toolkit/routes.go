@@ -82,14 +82,16 @@ func Register(d *kit.Deps) { RegisterWith(d, Options{}) }
 func RegisterWith(d *kit.Deps, o Options) {
 	h := newHandlers(d.Log.Child("TOOLKIT"), o)
 	r := d.Router
-	r.Post("/api/toolkit/ssl", h.ssl, d.RequireAuth)
-	r.Post("/api/toolkit/hash", h.hash, d.RequireAuth)
-	r.Post("/api/toolkit/password", h.password, d.RequireAuth)
-	r.Post("/api/toolkit/base64", h.base64, d.RequireAuth)
-	r.Post("/api/toolkit/wol", h.wol, d.RequireAuth, d.RequirePermission("device.connect"))
-	r.Post("/api/toolkit/whois", h.whois, d.RequireAuth)
-	r.Post("/api/toolkit/urlencode", h.urlencode, d.RequireAuth)
-	r.Post("/api/toolkit/jwt-decode", h.jwtDecode, d.RequireAuth)
+	// Every tool asks device.connect, the toolkit section's permission
+	connect := d.RequirePermission("device.connect")
+	r.Post("/api/toolkit/ssl", h.ssl, d.RequireAuth, connect)
+	r.Post("/api/toolkit/hash", h.hash, d.RequireAuth, connect)
+	r.Post("/api/toolkit/password", h.password, d.RequireAuth, connect)
+	r.Post("/api/toolkit/base64", h.base64, d.RequireAuth, connect)
+	r.Post("/api/toolkit/wol", h.wol, d.RequireAuth, connect)
+	r.Post("/api/toolkit/whois", h.whois, d.RequireAuth, connect)
+	r.Post("/api/toolkit/urlencode", h.urlencode, d.RequireAuth, connect)
+	r.Post("/api/toolkit/jwt-decode", h.jwtDecode, d.RequireAuth, connect)
 }
 
 // newHandlers fills in the real network, clock and random source where

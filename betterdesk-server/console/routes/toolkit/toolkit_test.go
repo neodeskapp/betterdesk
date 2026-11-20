@@ -71,15 +71,25 @@ func TestEveryRouteNeedsASession(t *testing.T) {
 	}
 }
 
-func TestWakeOnLANNeedsThePermissionToConnect(t *testing.T) {
+// Every tool asks device.connect, the permission of the toolkit section
+// the guard checks in front of them, so a tool answers no account the
+// toolkit page is closed to (BUGS PA3, panel access analysis F7).
+func TestEveryToolNeedsThePermissionToConnect(t *testing.T) {
 	s := newSite(t, Options{Network: unreachable(t)})
-	status, answer := s.post(s.signIn("viewer"), "/api/toolkit/wol", `{"mac":"aabbccddeeff"}`)
-	if status != 403 || answer != `{"success":false,"error":"Permission denied: device.connect"}` {
-		t.Errorf("viewer: %d %s", status, answer)
+	bodies := map[string]string{
+		"ssl": `{"host":"example.com"}`, "hash": `{"text":"x"}`, "password": `{}`, "base64": `{"text":"x"}`,
+		"wol": `{"mac":"aabbccddeeff"}`, "whois": `{"domain":"example.com"}`, "urlencode": `{"text":"x"}`, "jwt-decode": `{"token":"e30.e30"}`,
 	}
-	// The text tools ask for a session only
-	if status, answer := s.post(s.signIn("viewer"), "/api/toolkit/hash", `{"text":""}`); status != 200 || !strings.Contains(answer, `"e3b0c44298fc1c14`) {
-		t.Errorf("viewer hashes: %d %s", status, answer)
+	for _, role := range []string{"viewer", "guest_issuer", "server_admin"} {
+		cookie := s.signIn(role)
+		for route, body := range bodies {
+			if status, answer := s.post(cookie, "/api/toolkit/"+route, body); status != 403 || answer != `{"success":false,"error":"Permission denied: device.connect"}` {
+				t.Errorf("%s as %s: %d %s", route, role, status, answer)
+			}
+		}
+	}
+	if status, answer := s.post(s.signIn("operator"), "/api/toolkit/hash", `{"text":""}`); status != 200 || !strings.Contains(answer, `"e3b0c44298fc1c14`) {
+		t.Errorf("operator hashes: %d %s", status, answer)
 	}
 }
 
