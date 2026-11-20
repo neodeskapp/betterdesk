@@ -217,26 +217,29 @@ func TestGroupPolicy(t *testing.T) {
 			t.Errorf("order of the answer: %s", got.Body)
 		}
 
-		// A group's policy with section rows cannot be saved (BUGS UM2): the
-		// save fails after the group was found and the subject checked, and
-		// stores nothing.
-		serverError := `{"success":false,"error":"Server error"}`
-		if got = admin.Do("PUT", "/api/panel/access/groups/team-1", policy); got.Status != 500 || got.Body != serverError {
+		// A group's policy is stored as given: the group has no members, and
+		// its levels are not capped at any role (BUGS UM2, DECISIONS A70).
+		given := `{"sections":[{"resource_key":"settings","access_level":"write"},{"resource_key":"devices","access_level":"read"}],"features":[{"feature_key":"audio","enabled":false}]}`
+		got = admin.Do("PUT", "/api/panel/access/groups/team-1", given)
+		if a = decode(t, got); got.Status != 200 ||
+			!strings.HasPrefix(got.Body, `{"success":true,"data":{"group_guid":"team-1","sections":[{"resource_key":"settings","access_level":"write"},{"resource_key":"devices","access_level":"read"}],"features":[{"feature_key":"audio","enabled":false}],"effective":{`) ||
+			a.Data.Effective.Sections["settings"].Access != "write" || a.Data.Effective.Sections["settings"].Source != "group" {
 			t.Errorf("save the policy: %d %s", got.Status, got.Body)
 		}
-		if rows := w.AuditRows(); len(rows) != 0 {
-			t.Errorf("audit log after a failed save: %q", rows)
+		if rows := w.AuditRows(); len(rows) != 1 || !strings.HasPrefix(rows[0], "user_group_access_policy_updated|Updated access policy for group team-1|") {
+			t.Errorf("audit log after a save: %q", rows)
 		}
 		got = admin.Do("GET", "/api/panel/access/groups/team-1", "")
-		if a = decode(t, got); got.Status != 200 || string(a.Data.Sections) != "[]" || string(a.Data.Features) != "[]" {
+		if a = decode(t, got); got.Status != 200 || string(a.Data.Sections) != `[{"resource_key":"devices","access_level":"read"},{"resource_key":"settings","access_level":"write"}]` ||
+			string(a.Data.Features) != `[{"feature_key":"audio","enabled":false}]` {
 			t.Errorf("after: %d %s", got.Status, got.Body)
 		}
-		// One without section rows needs no ceiling and is saved.
+		// One without section rows clears them.
 		if got = admin.Do("PUT", "/api/panel/access/groups/team-1", `{}`); got.Status != 200 ||
 			!strings.HasPrefix(got.Body, `{"success":true,"data":{"group_guid":"team-1","sections":[],"features":[],"effective":{`) {
 			t.Errorf("save nothing: %d %s", got.Status, got.Body)
 		}
-		if rows := w.AuditRows(); len(rows) != 1 || !strings.HasPrefix(rows[0], "user_group_access_policy_updated|Updated access policy for group team-1|") {
+		if rows := w.AuditRows(); len(rows) != 2 {
 			t.Errorf("audit log after a save without rows: %q", rows)
 		}
 
@@ -265,8 +268,8 @@ func TestGroupPolicy(t *testing.T) {
 		if got := admin.Do("PUT", "/api/panel/access/groups/odd%20guid", policy); got.Status != 400 || got.Body != `{"success":false,"error":"Invalid policy subject"}` {
 			t.Errorf("save for a guid with a space: %d %s", got.Status, got.Body)
 		}
-		if rows := w.AuditRows(); len(rows) != 1 {
-			t.Errorf("audit log after refused saves: %q; want only the save without rows", rows)
+		if rows := w.AuditRows(); len(rows) != 2 {
+			t.Errorf("audit log after refused saves: %q; want only the two saves", rows)
 		}
 	})
 }

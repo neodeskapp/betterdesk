@@ -123,14 +123,14 @@ func TestSaveForAnAccountWithAnUnknownRole(t *testing.T) {
 		if err != nil || jsJSON(t, saved.Sections) != `[{"resource_key":"devices","access_level":"none"}]` {
 			t.Errorf("rows for an unknown role: %s, %v", jsJSON(t, saved.Sections), err)
 		}
-		// A user group's policy without section rows needs no ceiling and is
-		// saved, so a group can be deleted; one with rows still cannot be
-		// saved (BUGS UM2).
+		// A user group's policy needs no role and is stored as given, with
+		// rows or without (BUGS UM2, DECISIONS A70).
 		if _, err := s.SavePolicy(ctx, "group", "g1", nil, nil); err != nil {
 			t.Errorf("an empty user group policy: %v", err)
 		}
-		if _, err := s.SavePolicy(ctx, "group", "g1", []any{map[string]any{"resource_key": "devices", "access_level": "read"}}, nil); !errors.Is(err, errGroupCeiling) {
-			t.Errorf("a user group policy with rows: %v", err)
+		groupSaved, err := s.SavePolicy(ctx, "group", "g1", []any{map[string]any{"resource_key": "devices", "access_level": "read"}}, nil)
+		if err != nil || jsJSON(t, groupSaved.Sections) != `[{"resource_key":"devices","access_level":"read"}]` {
+			t.Errorf("a user group policy with rows: %s, %v", jsJSON(t, groupSaved.Sections), err)
 		}
 		// A policy without section rows looks up no ceiling, so a role
 		// lookup that fails stops only a save with rows.
@@ -568,18 +568,25 @@ func TestPolicyStore(t *testing.T) {
 			}
 		}
 
-		// A user group's policy cannot be saved: its ceiling is never worked
-		// out, so the save fails with a 500 and writes nothing (BUGS UM2).
+		// A user group's policy is stored as given, also above every role:
+		// a group can be prepared before it has members, and each member is
+		// capped at its own role when its access is resolved (BUGS UM2,
+		// DECISIONS A70 and A14). Its rows replace the group's old ones.
 		mustExec(t, db, `INSERT INTO panel_access_policies (subject_type, subject_id, resource_key, access_level) VALUES (?, ?, ?, ?)`,
 			"group", "ops", "chat", "write")
-		for _, guid := range []string{"ops", "no-such-group"} {
-			_, err := s.SavePolicy(ctx, "group", guid, []any{map[string]any{"resource_key": "users", "access_level": "read"}}, nil)
-			if !errors.Is(err, errGroupCeiling) || ErrorStatus(err) != 500 {
-				t.Errorf("save for group %q: %v", guid, err)
+		for _, guid := range []string{"ops", "no-members-yet"} {
+			stored := `[{"resource_key":"chat","access_level":"write"},{"resource_key":"group:security","access_level":"write"},{"resource_key":"users","access_level":"write"}]`
+			saved, err := s.SavePolicy(ctx, "group", guid, []any{
+				map[string]any{"resource_key": "chat", "access_level": "write"},
+				map[string]any{"resource_key": "group:security", "access_level": "write"},
+				map[string]any{"resource_key": "users", "access_level": "write"},
+			}, nil)
+			if err != nil || jsJSON(t, saved.Sections) != stored {
+				t.Errorf("save for group %q: %s, %v", guid, jsJSON(t, saved.Sections), err)
 			}
-		}
-		if rows, _ := s.PanelAccessPolicies(ctx, "group", "ops"); jsJSON(t, rows) != `[{"resource_key":"chat","access_level":"write"}]` {
-			t.Errorf("the group's rows after a failed save: %v", rows)
+			if rows, _ := s.PanelAccessPolicies(ctx, "group", guid); jsJSON(t, rows) != stored {
+				t.Errorf("the rows of group %q after a save: %s", guid, jsJSON(t, rows))
+			}
 		}
 		// Without section rows it is saved: deleting a group empties its
 		// policy that way first (BUGS UM2).

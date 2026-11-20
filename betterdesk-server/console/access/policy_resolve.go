@@ -50,19 +50,10 @@ func (s *Service) roleCeiling(ctx context.Context, role string) (map[string]Leve
 	return ceilingFor(permissions), nil
 }
 
-// errGroupCeiling is why a user group's policy cannot be saved: its
-// ceiling would come from its members' roles, and the members are not
-// looked up.
-var errGroupCeiling = errors.New("role ceiling of a user group: its members cannot be looked up")
-
-// subjectCeiling returns the ceiling a saved policy is capped at. An
-// account's is its role's (an id that names no account counts as a
-// viewer); a role the server does not know reaches none anywhere. A user
-// group's always fails.
-func (s *Service) subjectCeiling(ctx context.Context, subjectType, subjectID string) (map[string]Level, error) {
-	if subjectType != SubjectUser {
-		return nil, errGroupCeiling
-	}
+// subjectCeiling returns the ceiling an account's saved policy is capped
+// at: its role's (an id that names no account counts as a viewer); a role
+// the server does not know reaches none anywhere.
+func (s *Service) subjectCeiling(ctx context.Context, subjectID string) (map[string]Level, error) {
 	user, err := s.subjectUser(ctx, subjectID)
 	if err != nil {
 		return nil, err

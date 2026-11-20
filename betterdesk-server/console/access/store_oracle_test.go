@@ -216,7 +216,14 @@ func TestOracleStore(t *testing.T) {
 			case "savePolicy":
 				id, _ := step.ID.(string)
 				body, _ := step.Body.(map[string]any)
+				var putBack func()
+				if step.Type == SubjectGroup && step.Error {
+					putBack = keepGroupPolicy(t, s, id)
+				}
 				result, err = s.SavePolicy(ctx, step.Type, id, body["sections"], body["features"])
+				if putBack != nil && err == nil {
+					putBack()
+				}
 			case "setSetting":
 				mustExec(t, db, `INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
 					scopeDefaultSetting, step.Value)
@@ -270,10 +277,11 @@ func TestOracleStore(t *testing.T) {
 					continue
 				}
 			}
-			// UM2: a user group's policy without section rows needs no
-			// ceiling and is saved, where Node failed for every group.
-			if saved, isSave := result.(SavedPolicy); step.Op == "savePolicy" && step.Error && step.Status == nil && err == nil &&
-				step.Type == SubjectGroup && isSave && len(saved.Sections) == 0 {
+			// UM2: a user group's policy is stored as given, where Node
+			// failed for every group (DECISIONS A70). The group's rows were
+			// put back, so the steps after it see what Node had.
+			if _, isSave := result.(SavedPolicy); step.Op == "savePolicy" && step.Error && step.Status == nil && err == nil &&
+				step.Type == SubjectGroup && isSave {
 				differ++
 				continue
 			}
@@ -349,6 +357,27 @@ func withoutGroupRows(t *testing.T, raw string) string {
 		policy.Features = []FeatureRow{}
 	}
 	return jsJSON(t, policy)
+}
+
+// keepGroupPolicy reads a user group's stored rows and returns a function
+// that writes them back as they were.
+func keepGroupPolicy(t *testing.T, s *Service, guid string) func() {
+	t.Helper()
+	ctx := context.Background()
+	sections, err := s.PanelAccessPolicies(ctx, SubjectGroup, guid)
+	if err != nil {
+		t.Fatal(err)
+	}
+	features, err := s.ClientFeaturePolicies(ctx, SubjectGroup, guid)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return func() {
+		t.Helper()
+		if err := errors.Join(s.setPanelAccessPolicies(ctx, SubjectGroup, guid, sections), s.setClientFeaturePolicies(ctx, SubjectGroup, guid, features)); err != nil {
+			t.Fatal(err)
+		}
+	}
 }
 
 // mustAtoi reads an account id of the scenario, 0 for one that is no
