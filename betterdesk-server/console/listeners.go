@@ -83,7 +83,7 @@ func (s *Server) loadCertificates() error {
 	case ok && !apiTLSOff[cfg.ClientAPITLS]:
 		s.net.apiCert = cert
 		logging.Logf("client-api", "API TLS: Enabled (HTTPS on :%d)", cfg.APIPort)
-	case (cfg.CertFile != "" || cfg.KeyFile != "") && cfg.ClientAPITLS != "false":
+	case !ok && (cfg.CertFile != "" || cfg.KeyFile != "") && cfg.ClientAPITLS != "false":
 		logging.Logf("client-api", "WARN: SSL certs configured but invalid — API running insecure HTTP on :%d", cfg.APIPort)
 	}
 	if ok && cfg.ClientAPITLS == "false" {

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -18,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/listen"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
@@ -501,6 +503,40 @@ func TestFallbackAgainstNode(t *testing.T) {
 	}
 	if n != 6 {
 		t.Errorf("%d fallback scenarios replayed", n)
+	}
+}
+
+// TestClientAPICertificateWarning: the start says the certificates of the
+// client API port are invalid only when they did not load, whatever
+// RUSTDESK_API_TLS turns off.
+func TestClientAPICertificateWarning(t *testing.T) {
+	certs := makeTestCerts(t)
+	const invalid = "SSL certs configured but invalid"
+	for _, c := range []struct {
+		cert, key, mode string
+		warns           bool
+	}{
+		{certs.files["rsa.crt"], certs.files["rsa.key"], "off", false},
+		{certs.files["rsa.crt"], certs.files["rsa.key"], "0", false},
+		{certs.files["rsa.crt"], certs.files["rsa.key"], "http", false},
+		{certs.files["rsa.crt"], certs.files["rsa.key"], "false", false},
+		{certs.files["rsa.crt"], certs.files["rsa.key"], "", false},
+		{certs.files["rsa.crt"], "/nonexistent/c.key", "", true},
+		{certs.files["rsa.crt"], "/nonexistent/c.key", "off", true},
+		{certs.files["rsa.crt"], "/nonexistent/c.key", "false", false},
+	} {
+		var logged bytes.Buffer
+		previous := log.Writer()
+		log.SetOutput(&logged)
+		s := &Server{cfg: &config.Config{APIEnabled: true, APIPort: 21121, CertFile: c.cert, KeyFile: c.key, ClientAPITLS: c.mode}}
+		err := s.loadCertificates()
+		log.SetOutput(previous)
+		if err != nil {
+			t.Fatalf("%+v: %v", c, err)
+		}
+		if warns := strings.Contains(logged.String(), invalid); warns != c.warns {
+			t.Errorf("RUSTDESK_API_TLS=%q, key %s: warned %v, want %v; log:\n%s", c.mode, c.key, warns, c.warns, logged.String())
+		}
 	}
 }
 
