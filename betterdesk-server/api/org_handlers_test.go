@@ -69,6 +69,30 @@ func TestAssignUserToOrgAcceptsNumericOrgID(t *testing.T) {
 	}
 }
 
+// TestOrgPolicyAndInviteOfAnUnknownOrgAre404: saving a policy of an
+// organization that does not exist, or inviting into one, is answered 404,
+// not as a server error; a known organization works as before (BUGS C5).
+func TestOrgPolicyAndInviteOfAnUnknownOrgAre404(t *testing.T) {
+	srv, database := newInternalServer(t, nil)
+	if err := database.CreateOrganization(&db.Organization{ID: "org-a", Name: "Acme", Slug: "acme", CreatedAt: time.Now().UTC()}); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		method, path, body string
+		want               int
+	}{
+		{http.MethodPut, "/api/org/no-such-org/policy/connection", `{"x":1}`, http.StatusNotFound},
+		{http.MethodPost, "/api/org/no-such-org/invite", `{"email":"a@example.org"}`, http.StatusNotFound},
+		{http.MethodPut, "/api/org/no-such-org/policy/nonsense", `{"x":1}`, http.StatusBadRequest},
+		{http.MethodPut, "/api/org/org-a/policy/connection", `{"x":1}`, http.StatusOK},
+		{http.MethodPost, "/api/org/org-a/invite", `{"email":"a@example.org"}`, http.StatusCreated},
+	} {
+		if status, body := asConsole(t, srv, c.method, c.path, c.body); status != c.want {
+			t.Errorf("%s %s: %d %s, want %d", c.method, c.path, status, body, c.want)
+		}
+	}
+}
+
 // TestListOrganizationsSuperAdminSeesAll: the organization list skips the
 // membership filter for both super admin roles, admin and super_admin;
 // other roles see the organizations they belong to (BUGS G15).

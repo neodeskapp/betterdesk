@@ -586,6 +586,9 @@ func (s *Server) handleUnassignOrgDevice(w http.ResponseWriter, r *http.Request)
 // POST /api/org/{id}/invite
 func (s *Server) handleCreateOrgInvitation(w http.ResponseWriter, r *http.Request) {
 	orgID := r.PathValue("id")
+	if !s.orgFound(w, orgID) {
+		return
+	}
 
 	var body struct {
 		Email     string `json:"email"`
@@ -882,6 +885,22 @@ func (s *Server) handleGetOrgPolicy(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
+// orgFound answers 404 for an organization that does not exist and 500 when
+// it cannot be read; it reports whether the handler goes on.
+func (s *Server) orgFound(w http.ResponseWriter, orgID string) bool {
+	org, err := s.db.GetOrganization(orgID)
+	if err != nil {
+		log.Printf("[org] GetOrganization error: %v", err)
+		http.Error(w, `{"error":"internal"}`, http.StatusInternalServerError)
+		return false
+	}
+	if org == nil {
+		http.Error(w, `{"error":"organization not found"}`, http.StatusNotFound)
+		return false
+	}
+	return true
+}
+
 // PUT /api/org/{id}/policy/{category}
 func (s *Server) handleSetOrgPolicy(w http.ResponseWriter, r *http.Request) {
 	orgID := r.PathValue("id")
@@ -889,6 +908,9 @@ func (s *Server) handleSetOrgPolicy(w http.ResponseWriter, r *http.Request) {
 
 	if !isPolicyCategory(category) {
 		http.Error(w, `{"error":"invalid policy category"}`, http.StatusBadRequest)
+		return
+	}
+	if !s.orgFound(w, orgID) {
 		return
 	}
 
