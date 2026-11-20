@@ -1,6 +1,7 @@
 package cdap_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/url"
 	"os"
@@ -11,7 +12,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/goapipath"
 	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
+	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/restart"
 	"github.com/unitronix/betterdesk-server/console/routes/cdap"
@@ -175,6 +179,61 @@ var fixes = map[string]func(v *vector) bool{
 		}
 		return true
 	},
+	// The way back of the gateway switch is the setting's value when the
+	// API server named it as text, else "N", never its whole answer.
+	"RC5": returnsToText,
+}
+
+// returnsToText is the fix of RC5 on a transaction file: the gateway
+// switch's way back is the "value" of the API server's answer when it is
+// text, else "N". Node took the value when the answer had one, else the
+// whole answer. A way back that an earlier change set stays.
+func returnsToText(v *vector) bool {
+	if v.State == nil || v.API == nil || !strings.HasPrefix(strings.ToLower(v.Request.Path), "/api/cdap/toggle") {
+		return false
+	}
+	parsed, err := goapi.Parse([]byte(*v.State))
+	state, isObject := parsed.(*goapi.Object)
+	if err != nil || !isObject {
+		return false
+	}
+	// The setting as the API server answered it: JSON, or the text itself
+	var answer any = v.API.Body
+	if read, err := goapi.Parse([]byte(v.API.Body)); err == nil {
+		answer = read
+	}
+	nodeWay, goWay := answer, any("N")
+	if o, isObject := answer.(*goapi.Object); isObject && o.Get("value") != nil {
+		nodeWay = o.Get("value")
+		if text, isText := nodeWay.(string); isText {
+			goWay = text
+		}
+	}
+	nodeText, _ := httpx.Marshal(goapipath.Plain(nodeWay))
+	changes, _ := state.Get("changes").([]any)
+	changed := false
+	for _, item := range changes {
+		entry, _ := item.(*goapi.Object)
+		rollback, _ := entry.Get("rollback").(*goapi.Object)
+		if entry.Get("key") != "cdap-enabled" || rollback == nil {
+			continue
+		}
+		if stored, _ := httpx.Marshal(goapipath.Plain(rollback.Get("value"))); string(stored) == string(nodeText) && nodeWay != goWay {
+			rollback.Set("value", goWay)
+			changed = true
+		}
+	}
+	if !changed {
+		return false
+	}
+	compact, err := httpx.Marshal(goapipath.Plain(state))
+	var text bytes.Buffer
+	if err != nil || json.Indent(&text, compact, "", "  ") != nil {
+		return false
+	}
+	rewritten := text.String()
+	v.State = &rewritten
+	return true
 }
 
 // foreignPending reports whether a transaction file holds a pending

@@ -191,13 +191,12 @@ func (h *handlers) toggle(w http.ResponseWriter, r *http.Request) {
 		goapipath.WriteJSON(w, r, http.StatusInternalServerError, toggleFailure{Error: message})
 		return
 	}
-	// The value to return to: the setting's value, the whole answer when
-	// it names none, "N" when there was no answer
-	var before any = "N"
-	if data := previous.Get("data"); data != nil {
-		before = data
-		if o, isObject := data.(*goapi.Object); isObject && o.Get("value") != nil {
-			before = o.Get("value")
+	// The value to return to: the setting's value when the API server
+	// named it as text, else "N"
+	before := "N"
+	if data, isObject := previous.Get("data").(*goapi.Object); isObject {
+		if value, isText := data.Get("value").(string); isText {
+			before = value
 		}
 	}
 	transaction, err := h.restart.RegisterChange(kit.UserID(r), restart.Change{
