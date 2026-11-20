@@ -6,6 +6,7 @@ import (
 	"crypto/ed25519"
 	"encoding/base64"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -87,6 +88,41 @@ func TestCapabilities(t *testing.T) {
 	windows := newInstall(t, func(o *Options) { o.GOOS = "windows" })
 	if c := windows.svc.Capabilities(); c.Platform != "win32" || c.Services[0] != "BetterDeskServer" {
 		t.Errorf("windows %+v", c)
+	}
+}
+
+// The report looks at the env file the management config routes save to:
+// with BETTERDESK_ENV_FILE unset that is the .env of the console folder
+// BETTERDESK_CONSOLE_PATH names, also when CONSOLE_DIR names another one
+// (BN1). The channel still goes into the console folder's .env.
+func TestCapabilitiesFollowTheConsolePath(t *testing.T) {
+	in := newInstall(t)
+	installed := filepath.Join(t.TempDir(), "installed-console")
+	if err := os.MkdirAll(installed, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	in.env["BETTERDESK_CONSOLE_PATH"] = installed
+	svc := New(in.opts)
+	c := svc.Capabilities()
+	want := filepath.Join(installed, ".env")
+	if c.Paths.EnvPath != want || c.Checks[6].ID != "env-write" || c.Checks[6].Path != want {
+		t.Errorf("env path %q, check %+v, want %q", c.Paths.EnvPath, c.Checks[6], want)
+	}
+	// BETTERDESK_ENV_FILE still decides when it is set
+	named := filepath.Join(t.TempDir(), "named.env")
+	opts := in.opts
+	opts.EnvFile = named
+	if c := New(opts).Capabilities(); c.Paths.EnvPath != named || c.Checks[6].Path != named {
+		t.Errorf("BETTERDESK_ENV_FILE: %q, check %+v", c.Paths.EnvPath, c.Checks[6])
+	}
+	if err := os.MkdirAll(in.opts.ConsoleDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := svc.SetChannel("development"); err != nil {
+		t.Fatal(err)
+	}
+	if text, err := os.ReadFile(filepath.Join(in.opts.ConsoleDir, ".env")); err != nil || string(text) != "UPDATE_GITHUB_BRANCH=dev\n" {
+		t.Errorf("channel: %q %v", text, err)
 	}
 }
 

@@ -41,8 +41,9 @@ type Options struct {
 	DataDir string
 	// ConsoleDir is the console's folder (CONSOLE_DIR).
 	ConsoleDir string
-	// EnvFile is the env file the channel is saved in
-	// (BETTERDESK_ENV_FILE, else the .env of the console's folder).
+	// EnvFile is BETTERDESK_ENV_FILE. The channel is saved in it, else in
+	// the .env of the console's folder; the capability report checks it,
+	// else the env file managedconfig finds, as the config routes do.
 	EnvFile string
 	// Version and Commit are the running binary's (main.Version, and
 	// main.Commit set by the release build).
@@ -147,10 +148,15 @@ func New(opts Options) *Service {
 	if opts.Transport == nil {
 		opts.Transport = defaultTransport()
 	}
+	// The capability report looks at the env file the management config
+	// routes save to: BETTERDESK_ENV_FILE, else the one managedconfig finds
+	// from BETTERDESK_CONSOLE_PATH. The channel is saved in the console
+	// folder's .env without BETTERDESK_ENV_FILE.
+	managed := managedconfig.New(managedconfig.Options{ConsoleDir: opts.ConsoleDir, EnvFile: opts.EnvFile, Getenv: opts.Getenv})
 	if opts.EnvFile == "" {
 		opts.EnvFile = filepath.Join(opts.ConsoleDir, ".env")
 	}
-	s := &Service{opts: opts, files: dataFiles{dir: opts.DataDir, now: opts.Now}, log: opts.Logger}
+	s := &Service{opts: opts, files: dataFiles{dir: opts.DataDir, now: opts.Now}, log: opts.Logger, managed: managed}
 	s.gh = &githubClient{
 		transport: opts.Transport,
 		userAgent: "BetterDesk-Console/" + opts.Version,
@@ -159,7 +165,6 @@ func New(opts Options) *Service {
 		now:       opts.Now,
 		cache:     map[string]cached{},
 	}
-	s.managed = managedconfig.New(managedconfig.Options{ConsoleDir: opts.ConsoleDir, EnvFile: opts.EnvFile, Getenv: opts.Getenv})
 	return s
 }
 
