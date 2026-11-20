@@ -42,6 +42,9 @@ const (
 	AgentIdleTTL = 90 * time.Second
 	// AgentTokenTTL is how long a single-use agent token is good for.
 	AgentTokenTTL = 60 * time.Second
+	// SessionCheck is how often a viewer's session, permission and device
+	// scope are looked at again while its socket is open.
+	SessionCheck = 10 * time.Second
 )
 
 // Clock is the time the relay sees: the old code's Date.now and
@@ -86,6 +89,8 @@ type Options struct {
 	Random io.Reader
 	// PingInterval overrides PingInterval (tests).
 	PingInterval time.Duration
+	// SessionCheck overrides SessionCheck (tests).
+	SessionCheck time.Duration
 }
 
 // Service holds the remote sessions and the agents' pending tokens.
@@ -125,6 +130,9 @@ func New(opts Options) *Service {
 	}
 	if opts.PingInterval <= 0 {
 		opts.PingInterval = PingInterval
+	}
+	if opts.SessionCheck <= 0 {
+		opts.SessionCheck = SessionCheck
 	}
 	s := &Service{opts: opts, clock: opts.Clock, sessions: map[string]*remoteSession{}, tokens: map[string]agentToken{}}
 	if s.opts.Devices == nil {

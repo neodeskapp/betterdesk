@@ -101,6 +101,9 @@ func (w *world) options() Options {
 			return true, nil
 		},
 		API: http.HandlerFunc(w.api),
+		// The oracle had no session check; an hour keeps its lookups out of
+		// the recorded calls (TestRemoteTargetEndsWithItsSession covers it)
+		SessionCheck: time.Hour,
 	}
 }
 

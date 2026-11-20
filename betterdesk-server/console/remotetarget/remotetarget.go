@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/session"
@@ -29,6 +30,10 @@ import (
 
 // MaxPayload is the largest message either side may send.
 const MaxPayload = 16 << 20
+
+// SessionCheck is how often an open socket's session, permission and
+// target scope are looked at again.
+const SessionCheck = 10 * time.Second
 
 // Options configure the gateway.
 type Options struct {
@@ -43,6 +48,8 @@ type Options struct {
 	// API is the API server's handler the tunnel is opened on
 	// (goapi.Client.Handler).
 	API http.Handler
+	// SessionCheck overrides SessionCheck (tests).
+	SessionCheck time.Duration
 }
 
 // Gateway is the remote target socket.
@@ -52,6 +59,9 @@ type Gateway struct {
 
 // New returns the gateway. Register adds its socket.
 func New(opts Options) *Gateway {
+	if opts.SessionCheck <= 0 {
+		opts.SessionCheck = SessionCheck
+	}
 	return &Gateway{opts: opts}
 }
 
@@ -125,6 +135,8 @@ func (g *Gateway) serve(u *ws.Upgrade) {
 		return
 	}
 	defer browser.Wait()
+	stopWatch := g.watch(u, browser, sn.UserID(), id)
+	defer stopWatch()
 	header := http.Header{}
 	header.Set("X-Username", latin1(username))
 	header.Set("X-Role", latin1(role))
@@ -142,6 +154,60 @@ func (g *Gateway) serve(u *ws.Upgrade) {
 			logging.Logf("console", "WARN: [remote-target] upstream error: %v", err)
 		},
 	})
+}
+
+// watch looks at the socket's session every SessionCheck while it is open,
+// and closes it with 1008 "Session ended" (which ends the tunnel) once the
+// session has ended or belongs to another account, its role no longer has
+// remote_target.connect, or the target is gone or outside the account's
+// scope. A failed lookup counts as no, as at the upgrade. The returned
+// function stops the watch and waits for it.
+func (g *Gateway) watch(u *ws.Upgrade, browser *ws.Conn, userID int64, id string) (stop func()) {
+	done, stopped := make(chan struct{}), make(chan struct{})
+	go func() {
+		defer close(stopped)
+		tick := time.NewTicker(g.opts.SessionCheck)
+		defer tick.Stop()
+		for {
+			select {
+			case <-done:
+				return
+			case <-browser.Context().Done():
+				return
+			case <-tick.C:
+				if !g.stillAllowed(u, browser.Context(), userID, id) {
+					browser.Close(1008, "Session ended")
+					return
+				}
+			}
+		}
+	}()
+	return func() {
+		close(done)
+		<-stopped
+	}
+}
+
+// stillAllowed reads the socket's session again and runs the checks of the
+// upgrade on it.
+func (g *Gateway) stillAllowed(u *ws.Upgrade, parent context.Context, userID int64, id string) bool {
+	ctx, cancel := context.WithTimeout(parent, 5*time.Second)
+	defer cancel()
+	check := *u
+	check.R = u.R.WithContext(ctx)
+	sn := check.Session()
+	if !sn.SignedIn() || sn.UserID() != userID {
+		return false
+	}
+	if allowed, err := check.RoleHasPermission(sn.Role(), "remote_target.connect"); err != nil || !allowed {
+		return false
+	}
+	target := g.opts.RemoteTarget(ctx, id)
+	if target == nil {
+		return false
+	}
+	visible, err := g.opts.CanAccess(ctx, sn.User(), target)
+	return err == nil && visible
 }
 
 // acceptGUID is the websocket handshake's fixed key suffix (RFC 6455).

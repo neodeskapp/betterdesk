@@ -1,9 +1,11 @@
 package remoterelay
 
 import (
+	"context"
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/unitronix/betterdesk-server/console/ws"
@@ -124,7 +126,8 @@ func (s *Service) serveAgent(u *ws.Upgrade) {
 // (both 404, so a scope miss looks like no device), a failed lookup or
 // scope check (403). The id is the path segment as sent, not decoded.
 // After the handshake, a sixth viewer of a device is closed with 1008
-// "Max viewers reached".
+// "Max viewers reached", and the others are checked again every
+// SessionCheck (watchViewer).
 func (s *Service) serveViewer(u *ws.Upgrade) {
 	if !u.CheckOrigin("remote-viewer " + u.Path) {
 		return
@@ -181,6 +184,8 @@ func (s *Service) serveViewer(u *ws.Upgrade) {
 	}
 	s.mu.Unlock()
 	conn.KeepAlive(s.opts.PingInterval)
+	stopWatch := s.watchViewer(u, conn, sn.UserID(), deviceID)
+	defer stopWatch()
 
 read:
 	for {
@@ -228,6 +233,60 @@ read:
 		s.scheduleIdleCloseLocked(sess, deviceID)
 	}
 	s.mu.Unlock()
+}
+
+// watchViewer looks at a viewer's session every SessionCheck while its
+// socket is open, and closes the socket with 1008 "Session ended" once
+// the session has ended or belongs to another account, its role no longer
+// has device.connect, or the device is gone or outside the account's
+// scope. A failed lookup counts as no, as at the upgrade. The returned
+// function stops the watch and waits for it.
+func (s *Service) watchViewer(u *ws.Upgrade, conn *ws.Conn, userID int64, deviceID string) (stop func()) {
+	done, stopped := make(chan struct{}), make(chan struct{})
+	go func() {
+		defer close(stopped)
+		tick := time.NewTicker(s.opts.SessionCheck)
+		defer tick.Stop()
+		for {
+			select {
+			case <-done:
+				return
+			case <-conn.Context().Done():
+				return
+			case <-tick.C:
+				if !s.viewerStillAllowed(u, conn.Context(), userID, deviceID) {
+					conn.Close(1008, "Session ended")
+					return
+				}
+			}
+		}
+	}()
+	return func() {
+		close(done)
+		<-stopped
+	}
+}
+
+// viewerStillAllowed reads a viewer's session again and runs the checks of
+// the upgrade on it.
+func (s *Service) viewerStillAllowed(u *ws.Upgrade, parent context.Context, userID int64, deviceID string) bool {
+	ctx, cancel := context.WithTimeout(parent, 5*time.Second)
+	defer cancel()
+	check := *u
+	check.R = u.R.WithContext(ctx)
+	sn := check.Session()
+	if !sn.SignedIn() || sn.UserID() != userID {
+		return false
+	}
+	if allowed, err := check.RoleHasPermission(sn.UserRole(), "device.connect"); err != nil || !allowed {
+		return false
+	}
+	device, err := s.opts.Devices(ctx, deviceID)
+	if err != nil || device == nil {
+		return false
+	}
+	visible, err := s.opts.CanAccess(ctx, sn.User(), device)
+	return err == nil && visible
 }
 
 func boolText(b bool) string {

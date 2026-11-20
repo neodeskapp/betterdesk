@@ -176,6 +176,9 @@ func (w *oracleWorld) options(clock Clock, random io.Reader) Options {
 		},
 		Clock:  clock,
 		Random: random,
+		// The oracle had no session check; an hour keeps its lookups out of
+		// the recorded calls (TestViewerEndsWithItsSession covers it)
+		SessionCheck: time.Hour,
 	}
 }
 
