@@ -15,8 +15,9 @@ import (
 )
 
 // The recordings of testdata/nodeoracle/auth.js: what the Node console
-// answered for the account typeahead and for sign-ins that the lockout
-// check decides, on each database.
+// answered for sign-ins that the lockout check decides, on each database.
+// The script also recorded the account typeahead, which this console does
+// not have (BUGS UM26).
 
 type oracleSeed struct {
 	SQL    string
@@ -32,16 +33,6 @@ func (s *oracleSeed) UnmarshalJSON(raw []byte) error {
 		return err
 	}
 	return json.Unmarshal(pair[1], &s.Params)
-}
-
-type lookupRecording struct {
-	Dialect string       `json:"dialect"`
-	Seed    []oracleSeed `json:"seed"`
-	Steps   []struct {
-		Query  string `json:"query"`
-		Status int    `json:"status"`
-		Answer string `json:"answer"`
-	} `json:"steps"`
 }
 
 type lockoutRecording struct {
@@ -92,49 +83,6 @@ func seedRecording(w *world, seed []oracleSeed) {
 	for _, s := range seed {
 		w.exec(s.SQL, oracleArgs(s.Params)...)
 	}
-}
-
-// matchRole is the role of a typeahead match in Node's answers.
-var matchRole = regexp.MustCompile(`,"role":"(admin|super_admin|server_admin|global_admin|operator|viewer|guest_issuer|pro)"\}`)
-
-// TestLookupAnswersOfNode replays every typeahead request of the
-// recording: missing, repeated and bracketed parameters, prefixes in
-// every letter case with white space around them, the length limits in
-// UTF-16 units, and names whose lower case JavaScript writes its own way.
-// The console leaves the role of each match out (BUGS UM26).
-func TestLookupAnswersOfNode(t *testing.T) {
-	eachWorld(t, setup{env: map[string]string{"LOGIN_RATE_LIMIT_MAX": "1000000"}}, func(t *testing.T, w *world) {
-		var rec lookupRecording
-		readRecording(t, "lookup_"+dialectName(w.db)+".json", &rec)
-		seedRecording(w, rec.Seed)
-		a := w.agent()
-		failed, withRoles := 0, 0
-		for _, step := range rec.Steps {
-			target := "/login/lookup"
-			if step.Query != "" {
-				target += "?" + step.Query
-			}
-			if answer := matchRole.ReplaceAllString(step.Answer, "}"); answer != step.Answer {
-				step.Answer = answer
-				withRoles++
-			}
-			got := a.get(target)
-			if got.status != step.Status || got.body != step.Answer {
-				if failed++; failed <= 20 {
-					t.Errorf("%s:\n   node: %d %s\n     go: %d %s", step.Query, step.Status, step.Answer, got.status, got.body)
-				}
-			}
-		}
-		if failed > 20 {
-			t.Errorf("%d more differences", failed-20)
-		}
-		if len(rec.Steps) < 800 {
-			t.Errorf("the recording has only %d requests", len(rec.Steps))
-		}
-		if withRoles == 0 {
-			t.Error("no answer of the recording names a role: the fix of UM26 changes no step")
-		}
-	})
 }
 
 // retryAfter matches the seconds of a lockout in an answer.

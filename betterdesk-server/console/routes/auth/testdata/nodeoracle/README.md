@@ -19,13 +19,9 @@ translations and the sign-in limiter, against a made-up API server that
 answers 404 to everything (so the password is checked locally), and
 records two things per database:
 
-- `../lookup_<db>.json`: about 870 requests to the account typeahead
-  `GET /login/lookup` over 70 accounts: the parameter missing, given twice,
-  in brackets, empty, too short and too long (in UTF-16 units), prefixes of
-  every name in upper, lower and given case with white space of every kind
-  around them, and names whose lower case JavaScript writes its own way
-  (final sigma, the dotted capital I, the Kelvin sign, title case letters).
-  `TestLookupAnswersOfNode` replays them.
+- `../lookup_<db>.json`: requests to the account typeahead
+  `GET /login/lookup`. The console has no such route (BUGS UM26), so these
+  recordings are not kept here.
 - `../lockout_<db>.json`: about 70 sign-ins that the lockout check decides:
   locked and unlocked accounts with the right and the wrong password,
   user names of every JSON type (each database driver binds them its own

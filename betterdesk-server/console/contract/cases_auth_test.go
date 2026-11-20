@@ -10,8 +10,7 @@ import (
 )
 
 // The sign-in routes (routes/auth.routes.js): what a sign-in refuses, the
-// account typeahead, the session of every role, sign-out through the API
-// and the page (GET /logout only explains that a POST is needed), single
+// session of every role, sign-out through the API and the page (GET /logout only explains that a POST is needed), single
 // sign-on without a provider, and one account of its own that signs in, is
 // signed in a second time, changes its password and signs out.
 //
@@ -48,18 +47,6 @@ func init() {
 		contract.Case{Name: "verify", Path: "/api/auth/verify"},
 		contract.Case{Name: "sessions", Path: "/api/auth/sessions"},
 		contract.Case{Name: "totp-status", Path: "/api/auth/totp/status"},
-
-		// The account typeahead of the sign-in page: at most eight accounts
-		// whose name starts with a prefix of 2 to 64 characters, in lower
-		// case. The instance has the e2e accounts of eight roles.
-		contract.Case{Name: "lookup", Path: "/login/lookup", Query: url.Values{"q": {"e2e_"}}, Roles: some},
-		contract.Case{Name: "lookup-letter-case", Path: "/login/lookup", Query: url.Values{"q": {" E2E_V "}}, Roles: signedOut},
-		contract.Case{Name: "lookup-one-letter", Path: "/login/lookup", Query: url.Values{"q": {"e"}}, Roles: signedOut},
-		contract.Case{Name: "lookup-too-long", Path: "/login/lookup", Query: url.Values{"q": {strings.Repeat("e", 65)}}, Roles: signedOut},
-		contract.Case{Name: "lookup-without-prefix", Path: "/login/lookup", Roles: signedOut},
-		contract.Case{Name: "lookup-prefix-twice", Path: "/login/lookup", Query: url.Values{"q": {"e2e_", "adm"}}, Roles: signedOut},
-		contract.Case{Name: "lookup-prefix-in-brackets", Path: "/login/lookup", Query: url.Values{"q[]": {"e2e_"}}, Roles: signedOut},
-		contract.Case{Name: "lookup-no-match", Path: "/login/lookup", Query: url.Values{"q": {"contract-nobody"}}, Roles: signedOut},
 
 		// A sign-in that is refused before or by the password check.
 		login("login-empty-body", map[string]any{}),

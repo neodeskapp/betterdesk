@@ -106,21 +106,6 @@ func TestStrictEqual(t *testing.T) {
 	}
 }
 
-// The answers of "...".toLowerCase() in Node 22. The lookup vectors
-// (testdata/lookup_*.json) hold many more.
-func TestJSLower(t *testing.T) {
-	for _, c := range []struct{ in, want string }{
-		{"Alice", "alice"}, {"ÄÖÜ", "äöü"}, {"İstanbul", "i̇stanbul"},
-		{"ΟΔΟΣ", "οδος"}, {"ΣΑ", "σα"}, {"Σ", "σ"}, {"ΑΣ ΒΣ", "ας βς"}, {"ΑΣΑ", "ασα"},
-		{"ΑΣ.", "ας."}, {"ΑΣ.Α", "ασ.α"}, {"Α.Σ", "α.ς"}, {"ΆΣ", "άς"}, {"ΣΣ", "σς"},
-		{"1Σ", "1σ"}, {"K", "k"}, {"ẞ", "ß"},
-	} {
-		if got := jsLower(c.in); got != c.want {
-			t.Errorf("jsLower(%q) = %q, want %q", c.in, got, c.want)
-		}
-	}
-}
-
 func TestCutUTF16(t *testing.T) {
 	for _, c := range []struct {
 		s    string
