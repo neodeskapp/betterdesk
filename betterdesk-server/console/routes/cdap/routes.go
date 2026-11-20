@@ -15,6 +15,7 @@
 package cdap
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -205,12 +206,14 @@ type toggleFailure struct {
 	Error   any  `json:"error"`
 }
 
-// toggle answers POST /api/cdap/toggle with the body {enabled}. It adds
-// the change to the operator's restart transaction, with the value the
-// setting had so that a cancel puts it back, and then saves the setting
-// on the API server, which reads it at its next start. A transaction the
-// change cannot join (another operator's, 409) leaves the setting as it
-// was; a save the API server refuses is answered with its error.
+// toggle answers POST /api/cdap/toggle with the body {enabled}. It saves
+// the setting on the API server, which reads it at its next start, and
+// adds the change to the operator's restart transaction, with the value
+// the setting had so that a cancel puts it back. Both are one step of the
+// restart service: a transaction the change cannot join (another
+// operator's, 409) leaves the setting as it was, and a save the API
+// server refuses is answered with its error and leaves the transaction as
+// it was.
 func (h *handlers) toggle(w http.ResponseWriter, r *http.Request) {
 	enabled, isBool := kit.Body(r).Get("enabled").Bool()
 	if !isBool {
@@ -235,32 +238,42 @@ func (h *handlers) toggle(w http.ResponseWriter, r *http.Request) {
 			before = value
 		}
 	}
-	transaction, err := h.restart.RegisterChange(kit.UserID(r), restart.Change{
-		Key:      "cdap-enabled",
-		Label:    kit.T(r, "cdap.devices_title", nil),
-		Rollback: goapi.NewObject("type", "go-config", "key", "cdap_enabled", "value", before),
+	value := "N"
+	if enabled {
+		value = "Y"
+	}
+	transaction, err := h.restart.RegisterChangeAfter(kit.UserID(r), "cdap-enabled", func() (restart.Change, error) {
+		if refusal := h.save(r, value); refusal != nil {
+			return restart.Change{}, &refusedSave{answer: refusal}
+		}
+		return restart.Change{
+			Label:    kit.T(r, "cdap.devices_title", nil),
+			Rollback: goapi.NewObject("type", "go-config", "key", "cdap_enabled", "value", before),
+		}, nil
 	})
+	var refused *refusedSave
+	if errors.As(err, &refused) {
+		h.log.Error("Toggle error: the API server refused the setting:", refused.answer)
+		goapipath.WriteJSON(w, r, http.StatusInternalServerError, toggleFailure{Error: refused.answer})
+		return
+	}
 	if err != nil {
 		h.log.Error("Toggle error:", err.Error())
 		status := http.StatusInternalServerError
-		if refused, isRefusal := err.(*restart.Error); isRefusal && refused.StatusCode() == http.StatusConflict {
+		if refusal, isRefusal := err.(*restart.Error); isRefusal && refusal.StatusCode() == http.StatusConflict {
 			status = http.StatusConflict
 		}
 		kit.Fail(w, r, status, "Failed to toggle CDAP")
 		return
 	}
-
-	value := "N"
-	if enabled {
-		value = "Y"
-	}
-	if refusal := h.save(r, value); refusal != nil {
-		h.log.Error("Toggle error: the API server refused the setting:", refusal)
-		goapipath.WriteJSON(w, r, http.StatusInternalServerError, toggleFailure{Error: refusal})
-		return
-	}
 	kit.JSON(w, r, http.StatusOK, toggled{Success: true, Enabled: enabled, RestartRequired: true, Transaction: transaction})
 }
+
+// refusedSave is a save of cdap_enabled the API server refused; answer
+// is the error to answer with (see save).
+type refusedSave struct{ answer any }
+
+func (e *refusedSave) Error() string { return "the API server refused cdap_enabled" }
 
 // save writes cdap_enabled on the API server. It returns nil when the
 // API server took it, else the error to answer: the "error" of the API

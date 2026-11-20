@@ -109,3 +109,69 @@ func TestToggleWritesNothingWhenTheTransactionIsTaken(t *testing.T) {
 		t.Errorf("toggle with a refused save: %d %s", status, answer)
 	}
 }
+
+// A save the API server refuses leaves the operator's restart transaction
+// as it was (BUGS RC4): no transaction is started, no change is added to
+// one that is pending, and the way back of an earlier switch stays.
+func TestARefusedSaveLeavesTheTransactionAsItWas(t *testing.T) {
+	api := &configServer{read: `{"key":"cdap_enabled","value":"N"}`, save: http.StatusInternalServerError}
+	dataDir := filepath.Join(t.TempDir(), "data")
+	statePath := filepath.Join(dataDir, ".restart-transaction.json")
+	w := proxytest.NewWorld(t, func(d *kit.Deps) {
+		d.GoAPI = goapi.New(api)
+		d.Restart = restart.New(restart.Options{DataDir: dataDir, GoAPI: d.GoAPI})
+		cdap.Register(d)
+	})
+	toggle := func(enabled string) (int, string) {
+		body := `{"enabled":` + enabled + `}`
+		rec, _ := w.Do(proxytest.Request{Method: "POST", Path: "/api/cdap/toggle", Session: account(3, "server_admin"), Type: "application/json", Body: &body}, nil)
+		return rec.Code, rec.Body.String()
+	}
+	state := func() string {
+		file, err := os.ReadFile(statePath)
+		if os.IsNotExist(err) {
+			return "(no file)"
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		return string(file)
+	}
+
+	// no transaction yet: none is started
+	if status, answer := toggle("true"); status != http.StatusInternalServerError || answer != `{"success":false,"error":"failed to save"}` {
+		t.Errorf("toggle with a refused save: %d %s", status, answer)
+	}
+	if got := state(); got != "(no file)" {
+		t.Errorf("a refused save started a transaction:\n%s", got)
+	}
+
+	// a pending transaction of the operator gets no change
+	if err := os.MkdirAll(dataDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	pending := `{"id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","userId":"3","phase":"pending","createdAt":"2026-01-01T00:00:00.000Z","updatedAt":"2026-01-01T00:00:00.000Z","changes":[{"key":"connection-mode","label":"Connection mode","rollback":{"type":"connection-mode","settings":{}}}]}`
+	if err := os.WriteFile(statePath, []byte(pending), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	toggle("true")
+	if got := state(); got != pending {
+		t.Errorf("a refused save changed the pending transaction:\n%s", got)
+	}
+
+	// a switch the API server took, then one it refused: the way back is
+	// still the value before the first
+	api.save = http.StatusOK
+	if status, _ := toggle("true"); status != http.StatusOK {
+		t.Fatalf("toggle: %d", status)
+	}
+	took := state()
+	api.read, api.save = `{"key":"cdap_enabled","value":"Y"}`, http.StatusInternalServerError
+	toggle("false")
+	if got := state(); got != took {
+		t.Errorf("a refused save changed the transaction:\n%s\nwant\n%s", got, took)
+	}
+	if !strings.Contains(took, `"key": "cdap-enabled"`) || !strings.Contains(took, `"value": "N"`) {
+		t.Errorf("the transaction after the first switch:\n%s", took)
+	}
+}
