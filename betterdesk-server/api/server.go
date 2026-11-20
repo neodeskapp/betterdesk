@@ -103,6 +103,7 @@ type Server struct {
 	mux               sharedMux // the route table, built once (internal_handler.go)
 	wg                sync.WaitGroup
 	version           string
+	now               func() time.Time // the clock of the export file names
 }
 
 // SetPanelStore attaches the panel data source for RustDesk group/folder sync.
@@ -134,6 +135,7 @@ func New(cfg *config.Config, database db.Database, peerMap *peer.Map, relaySrv *
 		clientTFASessions: newTFASessionStore(),
 		secureClientKeys:  make(map[string][32]byte),
 		panelNonces:       newPanelNonceCache(),
+		now:               time.Now,
 	}
 }
 

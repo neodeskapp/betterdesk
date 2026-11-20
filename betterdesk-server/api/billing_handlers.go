@@ -405,7 +405,7 @@ func (s *Server) handleExportBillingReports(w http.ResponseWriter, r *http.Reque
 		sessMap[sess.ID] = sess
 	}
 	rows := billing.BuildReportExportRows(reports, sessMap)
-	stamp := time.Now().UTC().Format("20060102")
+	stamp := s.exportStamp()
 
 	switch format {
 	case "csv":
@@ -461,10 +461,25 @@ func (s *Server) handleExportBillingSessions(w http.ResponseWriter, r *http.Requ
 		writeInternalError(w, err, "WriteSessionsCSV")
 		return
 	}
-	stamp := time.Now().UTC().Format("20060102")
+	stamp := s.exportStamp()
 	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="billing-sessions-%s.csv"`, stamp))
 	w.Write(data)
+}
+
+// exportStamp is the day an export's file name carries: today in the
+// billing time zone, where the billing months begin and end; in UTC when
+// none is set or it does not load.
+func (s *Server) exportStamp() string {
+	loc := time.UTC
+	if s.timeSync != nil {
+		if tz := s.timeSync.BillingTimezone(); tz != "" {
+			if l, err := time.LoadLocation(tz); err == nil {
+				loc = l
+			}
+		}
+	}
+	return s.now().In(loc).Format("20060102")
 }
 
 // GET /api/billing/packages/{id}/preview?period=YYYY-MM
