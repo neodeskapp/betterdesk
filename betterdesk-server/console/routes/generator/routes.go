@@ -5,10 +5,10 @@
 // download portal of a bundle (/api/d/{publicId}/...) and the old
 // rustdesk.toml generator. The work is done by package console/generator.
 //
-// The bundle and preview routes were meant to take JSON of up to 16 MB
-// (a logo in base64). The console's own JSON parser reads every body
-// first and stops at 2 MB, so the larger limit never applied (BUGS M1);
-// these routes add no parser of their own.
+// The bundle and preview routes take JSON of up to 16 MB (a logo in
+// base64): the console's JSON parser leaves their bodies to them
+// (middleware.BodyOptions.RouteBodies), and they read them after their
+// checks.
 package generator
 
 import (
@@ -21,6 +21,7 @@ import (
 	gen "github.com/unitronix/betterdesk-server/console/generator"
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
 	"github.com/unitronix/betterdesk-server/console/webui"
 )
@@ -58,6 +59,13 @@ func Register(d *kit.Deps) {
 		},
 	})
 	admin := []kit.Middleware{d.RequireAuth, d.RequireAdmin}
+	// The bundles and the preview read their JSON after the checks
+	large := []kit.Middleware{d.RequireAuth, d.RequireAdmin, middleware.RouteJSON(middleware.BodyOptions{
+		Limit: 16 << 20,
+		OnError: func(w http.ResponseWriter, r *http.Request, status int, err error) {
+			h.errors.ServerError(w, r, err, status)
+		},
+	})}
 	r := d.Router
 	r.Get("/generator", h.oldAddress)
 
@@ -69,14 +77,14 @@ func Register(d *kit.Deps) {
 	r.Get("/api/generator/bundles", h.listBundles, admin...)
 	r.Get("/api/generator/bundles/{bundleId}", h.getBundle, admin...)
 	r.Get("/api/generator/defaults", h.defaults, admin...)
-	r.Post("/api/generator/bundles", h.createBundle, admin...)
-	r.Put("/api/generator/bundles/{bundleId}", h.updateBundle, admin...)
+	r.Post("/api/generator/bundles", h.createBundle, large...)
+	r.Put("/api/generator/bundles/{bundleId}", h.updateBundle, large...)
 	r.Post("/api/generator/bundles/{bundleId}/rebuild", h.rebuild, admin...)
 	r.Post("/api/generator/bundles/{bundleId}/rebuild/{platform}/{arch}/{format}", h.rebuildPlatform, admin...)
 	r.Get("/api/generator/build-status", h.buildStatus, admin...)
 	r.Post("/api/generator/bundles/{bundleId}/revoke", h.revoke, admin...)
 	r.Delete("/api/generator/bundles/{bundleId}", h.deleteBundle, admin...)
-	r.Post("/api/generator/preview", h.preview, admin...)
+	r.Post("/api/generator/preview", h.preview, large...)
 	r.Get("/api/generator/platforms", h.platforms, admin...)
 
 	r.Get("/api/d/{publicId}/manifest", h.manifest)

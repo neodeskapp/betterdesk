@@ -45,7 +45,7 @@ func (s *Server) steps() []step {
 	return []step{
 		{1, "security headers", s.securityHeaders()},
 		{3, "CORS", middleware.CORS()},
-		{4, "bodies", middleware.Bodies(middleware.BodyOptions{OnError: onError})},
+		{4, "bodies", middleware.Bodies(middleware.BodyOptions{RouteBodies: true, OnError: onError})},
 		{6, "session", d.Sessions.Middleware},
 		{8, "CSRF token", d.CSRF.Provider},
 		{9, "static folders", s.withoutNode(middleware.StaticFolders(middleware.StaticFoldersOptions{PublicDir: cfg.PublicDir, FontsDir: cfg.FontsDir, ProtosDir: cfg.ProtosDir, UploadsDir: cfg.UploadsDir, WallpapersDir: cfg.WallpapersDir, Static: cfg.Static, Production: cfg.Production, OnError: onError}))},

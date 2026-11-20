@@ -12,6 +12,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
 )
 
@@ -28,9 +29,13 @@ func Register(d *kit.Deps) {
 	h := &handlers{d: d, log: d.Log.Child("PAIRING")}
 	r := d.Router
 	approve := d.RequirePermission("enrollment.approve")
+	// A new code's JSON is read after the checks, up to 4 KB
+	body := middleware.RouteJSON(middleware.BodyOptions{Limit: 4 << 10, OnError: func(w http.ResponseWriter, r *http.Request, status int, err error) {
+		d.WebUI.ServerError(w, r, err, status)
+	}})
 	r.Get("/api/panel/pairing/host", h.host, d.RequireAuth, approve)
 	r.Get("/api/panel/pairing/codes", h.list, d.RequireAuth, approve)
-	r.Post("/api/panel/pairing/codes", h.create, d.RequireAuth, approve)
+	r.Post("/api/panel/pairing/codes", h.create, d.RequireAuth, approve, body)
 	r.Delete("/api/panel/pairing/codes/{id}", h.revoke, d.RequireAuth, approve)
 }
 

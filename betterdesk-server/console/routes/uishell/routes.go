@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/middleware"
 )
 
 const (
@@ -28,7 +29,10 @@ type handlers struct {
 func Register(d *kit.Deps) {
 	h := &handlers{https: d.Config.HTTPS, now: time.Now}
 	r := d.Router
-	r.Post("/api/ui-shell", h.set, d.RequireAuth)
+	// The choice's JSON is read after the sign-in check, up to 2 KB
+	r.Post("/api/ui-shell", h.set, d.RequireAuth, middleware.RouteJSON(middleware.BodyOptions{Limit: 2 << 10, OnError: func(w http.ResponseWriter, r *http.Request, status int, err error) {
+		d.WebUI.ServerError(w, r, err, status)
+	}}))
 	r.Get("/api/ui-shell", h.get, d.RequireAuth)
 }
 

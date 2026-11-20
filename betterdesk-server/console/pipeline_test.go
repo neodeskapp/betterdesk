@@ -147,6 +147,40 @@ func TestStep4BodyErrorSkipsTheRestAndIsAnsweredByTheErrorHandler(t *testing.T) 
 	}
 }
 
+// TestRouteBodyLimits: the routes with a body limit of their own read the
+// JSON themselves, after their guards, so the limit is theirs and not the
+// console's 2 MB (BUGS I2): the generator's bundles and preview take 16 MB,
+// pairing codes 4 KB and /api/ui-shell 2 KB.
+func TestRouteBodyLimits(t *testing.T) {
+	w := goOnly(t, setup{})
+	a := w.agent().signIn("admin")
+	padded := func(n int) string { return `{"label":"x","pad":"` + strings.Repeat("x", n) + `"}` }
+	for _, c := range []struct {
+		method, path string
+		size         int
+		tooLarge     bool
+	}{
+		{"POST", "/api/generator/bundles", 3 << 20, false},
+		{"PUT", "/api/generator/bundles/b1", 3 << 20, false},
+		{"POST", "/api/generator/preview", 3 << 20, false},
+		{"POST", "/api/generator/preview", 17 << 20, true},
+		{"POST", "/api/panel/pairing/codes", 3 << 10, false},
+		{"POST", "/api/panel/pairing/codes", 5 << 10, true},
+		{"POST", "/api/ui-shell", 1 << 10, false},
+		{"POST", "/api/ui-shell", 3 << 10, true},
+	} {
+		res := a.do(c.method, c.path, padded(c.size), "Content-Type", "application/json", "X-CSRF-Token", a.csrf())
+		if (res.status == http.StatusRequestEntityTooLarge) != c.tooLarge {
+			t.Errorf("%s %s with %d bytes: %d %.100s", c.method, c.path, c.size, res.status, res.body)
+		}
+	}
+	// The guards come first: a signed-out request is refused unread
+	signedOut := w.agent()
+	if res := signedOut.do("POST", "/api/generator/bundles", padded(17<<20), "Content-Type", "application/json", "X-CSRF-Token", signedOut.csrf()); res.status != http.StatusUnauthorized {
+		t.Errorf("signed out: %d %.100s", res.status, res.body)
+	}
+}
+
 func TestStep4BodyReachesTheHandler(t *testing.T) {
 	w := goOnly(t, setup{})
 	res := w.agent().post("/api/probe", `{"name":"x","n":1}`)
