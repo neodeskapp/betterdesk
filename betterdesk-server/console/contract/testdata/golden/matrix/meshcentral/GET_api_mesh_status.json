@@ -89,7 +89,7 @@
     "kind": "json",
     "json": {
      "agents_online": 0,
-     "cert_file": "mesh_agent_server.pem",
+     "cert_file": "/opt/rustdesk/mesh_agent_server.pem",
      "cert_modified": "<volatile>",
      "cert_present": true,
      "core_version": "1.2.0",
