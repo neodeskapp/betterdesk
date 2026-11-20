@@ -190,19 +190,21 @@ func isMissing(err error) bool {
 // precompressed copy of the file (.br, then .gz) is sent when the browser
 // names its encoding in Accept-Encoding and the copy exists.
 //
-// It answers false when there is no such file. The headers of the answer
-// are set by then and stay on the response. A path whose dot segments lead
-// out of the hashed files gets an empty 404: the build's other files are
-// not sent with the year-long caching, and index.html only comes from the
-// page handler.
+// It answers false, with no header set, when there is no such file; a
+// directory is no file, also with a slash at the end. A path whose dot
+// segments lead out of the hashed files gets an empty 404: the build's
+// other files are not sent with the year-long caching, and index.html
+// only comes from the page handler.
 func (h *Host) serveImmutable(w http.ResponseWriter, r *http.Request, rel string) (bool, *httpError) {
 	root := strings.TrimSuffix(filepath.ToSlash(h.dir), "/")
 	full := path.Clean(root + "/" + rel)
-	trailingSlash := strings.HasSuffix(rel, "/")
 	inside, ok := strings.CutPrefix(full, root+"/")
 	if !ok || !(asciiEqualFold(inside, hashedDir) || hasPrefixFold(inside, hashedDir+"/")) {
 		endEmpty(w, r, http.StatusNotFound)
 		return true, nil
+	}
+	if strings.HasSuffix(rel, "/") {
+		return false, nil
 	}
 
 	type candidate struct{ suffix, encoding string }
@@ -221,17 +223,16 @@ func (h *Host) serveImmutable(w http.ResponseWriter, r *http.Request, rel string
 		contentType = "application/octet-stream"
 	}
 	for _, c := range candidates {
-		if trailingSlash && c.suffix != "" {
-			// "dir/.br": no build has such a file
-			continue
-		}
 		name, ok := h.inBuild(inside + c.suffix)
 		if !ok {
 			continue
 		}
 		info, err := h.files.Stat(name)
-		if err != nil || (trailingSlash && !info.IsDir()) {
+		if err != nil {
 			continue
+		}
+		if info.IsDir() {
+			return false, nil
 		}
 		header := w.Header()
 		header.Set("Content-Type", contentType)
@@ -240,22 +241,8 @@ func (h *Host) serveImmutable(w http.ResponseWriter, r *http.Request, rel string
 		if c.encoding != "" {
 			header.Set("Content-Encoding", c.encoding)
 		}
-		switch {
-		case trailingSlash:
-			// A directory asked for with a slash at the end is looked up
-			// as its index.html
-			name = filepath.Join(name, "index.html")
-			info, err = h.files.Stat(name)
-			if err != nil {
-				return true, &httpError{http.StatusNotFound, "ENOENT: no such file or directory, stat '" + name + "'"}
-			}
-			if info.IsDir() {
-				return true, &httpError{http.StatusNotFound, "Not Found"}
-			}
-		case strings.HasPrefix(filepath.Base(name), ".") && len(filepath.Base(name)) > 1:
+		if base := filepath.Base(name); strings.HasPrefix(base, ".") && len(base) > 1 {
 			return true, &httpError{http.StatusNotFound, "Not Found"}
-		case info.IsDir():
-			return false, nil
 		}
 		if err := h.sendFile(w, r, name, info, "public, max-age=0"); err != nil {
 			return true, err

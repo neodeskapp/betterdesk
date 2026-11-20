@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -42,9 +43,10 @@ type goldenCase struct {
 	// NamesDir: the answer names the build directory ({DIR} in the body),
 	// so its length and its tag depend on where the build is.
 	NamesDir bool `json:"namesDir"`
-	// notCSRF: a bug fix replaced Node's CSRF refusal (W2); only the status
-	// is compared, and that the answer is no CSRF refusal.
-	notCSRF bool
+	// check, when a bug fix set it, replaces the comparison with Node's
+	// answer where the recording cannot say what the fix answers: the
+	// status is compared, then check names what is wrong ("" for nothing).
+	check func(header http.Header, body string) string
 }
 
 func loadGolden(t *testing.T, name string) goldenFile {
@@ -155,9 +157,9 @@ func TestAnswersMatchNode(t *testing.T) {
 					if res.StatusCode != c.Status {
 						problems = append(problems, "status "+strconv.Itoa(res.StatusCode)+", Node "+strconv.Itoa(c.Status))
 					}
-					if c.notCSRF {
-						if strings.Contains(rec.Body.String(), "CSRF token") {
-							problems = append(problems, "the CSRF refusal: "+strconv.Quote(clip(rec.Body.String())))
+					if c.check != nil {
+						if problem := c.check(res.Header, rec.Body.String()); problem != "" {
+							problems = append(problems, problem)
 						}
 						if len(problems) > 0 {
 							differences++
@@ -264,7 +266,12 @@ func intended(base string, c *goldenCase) string {
 		default:
 			return ""
 		}
-		c.notCSRF = true
+		c.check = func(_ http.Header, body string) string {
+			if strings.Contains(body, "CSRF token") {
+				return "the CSRF refusal: " + strconv.Quote(clip(body))
+			}
+			return ""
+		}
 		return "W2"
 	}
 	// W3: a hashed-file path whose dot segments lead out of the hashed
@@ -278,7 +285,42 @@ func intended(base string, c *goldenCase) string {
 		c.Body = &empty
 		return "W3"
 	}
+	// W4: a directory of hashed files is no file, with or without a slash
+	// at the end. The request goes on to the pages, which answer the app
+	// with 404, and keeps none of the hashed files' headers (Node's answer
+	// carries their Vary where a build was there to find the directory)
+	if (c.Method == http.MethodGet || c.Method == http.MethodHead) && c.Answer["vary"] != "" && hashedDirectory(base, c.Target) {
+		head := c.Method == http.MethodHead
+		c.Status = http.StatusNotFound
+		c.check = func(header http.Header, body string) string {
+			switch {
+			case header.Get("Vary") != "" || header.Get("Content-Encoding") != "" || strings.Contains(header.Get("Cache-Control"), "immutable"):
+				return "headers of a hashed file: " + fmt.Sprint(header)
+			case !head && (!strings.Contains(body, "console app") || strings.Contains(body, "bd-error")):
+				return "not the app's page: " + strconv.Quote(clip(body))
+			}
+			return ""
+		}
+		return "W4"
+	}
 	return ""
+}
+
+// hashedDirectory reports whether a request target names a directory of
+// the test build's hashed files (<base>/_ui/immutable/...).
+func hashedDirectory(base, target string) bool {
+	if i := strings.IndexAny(target, "?#"); i >= 0 {
+		target = target[:i]
+	}
+	rest, ok := strings.CutPrefix(target, base+"/")
+	if !ok || strings.Contains(rest, "..") {
+		return false
+	}
+	switch strings.Trim(path.Clean("/"+rest), "/") {
+	case hashedDir, hashedDir + "/entry", hashedDir + "/chunks", hashedDir + "/nodes", hashedDir + "/assets", hashedDir + "/withindex":
+		return true
+	}
+	return false
 }
 
 // leavesHashedFiles reports whether a request target is a path under the

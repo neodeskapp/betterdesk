@@ -399,18 +399,37 @@ func TestDotFilesDirectoriesAndOddNames(t *testing.T) {
 		if a.status != 404 || !a.handled || a.body != `{"success":false,"error":"Internal Server Error"}` {
 			t.Errorf("a hashed dot file: %d %q (handled %v)", a.status, a.body, a.handled)
 		}
-		// A directory of hashed files: passed on without the slash, a failed request with it
-		a = serve(h, "GET", base+"/_ui/immutable/entry", admin)
-		if a.status != 404 || !isAppPage(a) || a.get("Vary") != "Accept-Encoding" {
-			t.Errorf("a directory of hashed files: %d, Vary %q", a.status, a.get("Vary"))
-		}
-		a = serve(h, "GET", base+"/_ui/immutable/entry/", map[string]string{"Accept": "application/json"})
-		if a.status != 404 || !a.handled || a.body != `{"success":false,"error":"Internal Server Error"}` {
-			t.Errorf("a directory of hashed files with a slash: %d %q (handled %v)", a.status, a.body, a.handled)
-		}
 		// The routes match in any letter case, the files on disk do not (on Linux)
 		a = serve(h, "GET", base+"/_UI/IMMUTABLE/nope.js", admin)
 		wantDeclined(t, a, "a missing hashed file in capitals")
+	})
+}
+
+// A directory of hashed files is no file, with or without a slash at the
+// end (W4): the request goes on to the pages as any address without a
+// file, with none of the hashed files' headers, no server error and no
+// word of where the build is.
+func TestHashedDirectoriesAreNotFound(t *testing.T) {
+	bases(t, func(t *testing.T, h *Host, base, dir string) {
+		dev := New(Options{Dir: dir, Session: sessionFromHeader})
+		for _, host := range []*Host{h, dev} {
+			for _, target := range []string{"/_ui/immutable/", "/_ui/immutable", "/_ui/immutable/entry", "/_ui/immutable/entry/", "/_ui/immutable/chunks/",
+				"/_ui/immutable/withindex/", "/_ui/immutable/withindex", "/_ui/immutable/entry/./"} {
+				for _, headers := range []map[string]string{admin, {"Accept": "application/json"}, with(admin, "Accept-Encoding", "br, gzip")} {
+					logged := captureLog(t)
+					a := serve(host, "GET", base+target, headers)
+					if a.status != 404 || a.get("Vary") != "" || strings.Contains(a.get("Cache-Control"), "immutable") || a.get("Content-Encoding") != "" {
+						t.Errorf("%s %v: %d, headers %v", target, headers, a.status, a.header)
+					}
+					if strings.Contains(a.body, "ENOENT") || strings.Contains(a.body, dir) || strings.Contains(a.body, "index inside immutable") {
+						t.Errorf("%s %v: body %q", target, headers, clip(a.body))
+					}
+					if strings.Contains(logged.String(), "Server error") {
+						t.Errorf("%s %v: logged %q", target, headers, logged.String())
+					}
+				}
+			}
+		}
 	})
 }
 
