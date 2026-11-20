@@ -56,7 +56,13 @@ func (h *handlers) ruleFrom(body middleware.JSONObject, existing *object) (*obje
 
 // listRules answers GET /api/panel/scaling/rules: {"data":[...]}.
 func (h *handlers) listRules(w http.ResponseWriter, r *http.Request) {
-	kit.JSON(w, r, http.StatusOK, dataAnswer{list(h.load(r.Context(), keyRules))})
+	rules, err := h.load(r.Context(), keyRules)
+	if err != nil {
+		h.log.Error("[Scaling] list rules:", err)
+		fail(w, r, http.StatusInternalServerError, "failed to load rules")
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, dataAnswer{list(rules)})
 }
 
 // createRule answers POST /api/panel/scaling/rules with the body
@@ -69,12 +75,15 @@ func (h *handlers) createRule(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, problem)
 		return
 	}
-	rules := h.load(r.Context(), keyRules)
-	if len(rules) >= maxRules {
+	rules, err := h.load(r.Context(), keyRules)
+	if err == nil && len(rules) >= maxRules {
 		fail(w, r, http.StatusBadRequest, "too many rules (max 200)")
 		return
 	}
-	rule, err := h.ruleFrom(body, nil)
+	var rule *object
+	if err == nil {
+		rule, err = h.ruleFrom(body, nil)
+	}
 	if err == nil {
 		err = h.save(r.Context(), keyRules, append(rules, rule))
 	}
@@ -94,8 +103,11 @@ func (h *handlers) updateRule(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, problem)
 		return
 	}
-	rules := h.load(r.Context(), keyRules)
-	i, err := find(rules, r.PathValue("ruleId"))
+	rules, err := h.load(r.Context(), keyRules)
+	i := -1
+	if err == nil {
+		i, err = find(rules, r.PathValue("ruleId"))
+	}
 	if err == nil && i < 0 {
 		fail(w, r, http.StatusNotFound, "not found")
 		return

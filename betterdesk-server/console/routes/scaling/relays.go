@@ -129,14 +129,24 @@ func addressTaken(items []any, address string, skip int) (bool, error) {
 
 // listRelays answers GET /api/panel/scaling/relays: {"data":[...]}.
 func (h *handlers) listRelays(w http.ResponseWriter, r *http.Request) {
-	kit.JSON(w, r, http.StatusOK, dataAnswer{list(h.load(r.Context(), keyRelays))})
+	relays, err := h.load(r.Context(), keyRelays)
+	if err != nil {
+		h.log.Error("[Scaling] list relays:", err)
+		fail(w, r, http.StatusInternalServerError, "failed to load relay nodes")
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, dataAnswer{list(relays)})
 }
 
 // getRelay answers GET /api/panel/scaling/relays/{nodeId}.
 func (h *handlers) getRelay(w http.ResponseWriter, r *http.Request) {
-	relays := h.load(r.Context(), keyRelays)
-	i, err := find(relays, r.PathValue("nodeId"))
+	relays, err := h.load(r.Context(), keyRelays)
+	i := -1
+	if err == nil {
+		i, err = find(relays, r.PathValue("nodeId"))
+	}
 	if err != nil {
+		h.log.Error("[Scaling] read relay:", err)
 		fail(w, r, http.StatusInternalServerError, "failed to load relay node")
 		return
 	}
@@ -157,8 +167,11 @@ func (h *handlers) createRelay(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, problem)
 		return
 	}
-	relays := h.load(r.Context(), keyRelays)
-	taken, err := addressTaken(relays, text(body.Get("address"), ""), -1)
+	relays, err := h.load(r.Context(), keyRelays)
+	var taken bool
+	if err == nil {
+		taken, err = addressTaken(relays, text(body.Get("address"), ""), -1)
+	}
 	if err == nil && taken {
 		fail(w, r, http.StatusConflict, "a relay with this address already exists")
 		return
@@ -191,8 +204,11 @@ func (h *handlers) updateRelay(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, problem)
 		return
 	}
-	relays := h.load(r.Context(), keyRelays)
-	i, err := find(relays, r.PathValue("nodeId"))
+	relays, err := h.load(r.Context(), keyRelays)
+	i := -1
+	if err == nil {
+		i, err = find(relays, r.PathValue("nodeId"))
+	}
 	if err == nil && i < 0 {
 		fail(w, r, http.StatusNotFound, "not found")
 		return
@@ -225,8 +241,11 @@ func (h *handlers) updateRelay(w http.ResponseWriter, r *http.Request) {
 // remove answers a DELETE for an entry of a stored list: {"ok":true}, or
 // 404 when no entry has the id.
 func (h *handlers) remove(w http.ResponseWriter, r *http.Request, key, id, failure string) {
-	items := h.load(r.Context(), key)
-	i, err := find(items, id)
+	items, err := h.load(r.Context(), key)
+	i := -1
+	if err == nil {
+		i, err = find(items, id)
+	}
 	if err == nil && i < 0 {
 		// Every entry with the id goes, and without one nothing is stored
 		fail(w, r, http.StatusNotFound, "not found")
@@ -280,7 +299,12 @@ type capacityData struct {
 // relays are configured for, 50 sessions and 100 Mbit/s when they sum to
 // nothing, and 500 devices plus 200 for each relay.
 func (h *handlers) capacity(w http.ResponseWriter, r *http.Request) {
-	relays := h.load(r.Context(), keyRelays)
+	relays, err := h.load(r.Context(), keyRelays)
+	if err != nil {
+		h.log.Error("[Scaling] capacity:", err)
+		fail(w, r, http.StatusInternalServerError, "failed to compute capacity")
+		return
+	}
 	data := capacityData{RelayCount: len(relays), MaxDevices: 500 + len(relays)*200}
 	for _, relay := range relays {
 		sessions, err := member(relay, "max_sessions")

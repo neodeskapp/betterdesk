@@ -180,6 +180,44 @@ func TestRelays(t *testing.T) {
 	})
 }
 
+// TestAWriteKeepsTheListWhenItCannotBeRead: when a stored list cannot be
+// read, the reads answer 500 and the writes refuse with 500 and leave the
+// stored value as it is, where they stored a list of only the new entry
+// (BUGS.md SC14).
+func TestAWriteKeepsTheListWhenItCannotBeRead(t *testing.T) {
+	each(t, func(t *testing.T, s *site, db *store.DB) {
+		ctx := context.Background()
+		admin := s.signIn("admin")
+		const broken = `[{"id":"r-a","address":"a:1"},`
+		for _, key := range []string{keyRelays, keyRules} {
+			if err := setSetting(ctx, db, key, broken); err != nil {
+				t.Fatal(err)
+			}
+		}
+		for _, c := range []struct{ method, path, body, want string }{
+			{"GET", relays, "", `500 {"error":"failed to load relay nodes"}`},
+			{"GET", relays + "/r-a", "", `500 {"error":"failed to load relay node"}`},
+			{"POST", relays, `{"name":"x","address":"c:1"}`, `500 {"error":"failed to save relay node"}`},
+			{"PUT", relays + "/r-a", `{"name":"x","address":"c:1"}`, `500 {"error":"failed to update relay node"}`},
+			{"DELETE", relays + "/r-a", "", `500 {"error":"failed to delete relay node"}`},
+			{"GET", "/api/panel/scaling/capacity", "", `500 {"error":"failed to compute capacity"}`},
+			{"GET", rules, "", `500 {"error":"failed to load rules"}`},
+			{"POST", rules, `{"name":"x","match_type":"tag","match_value":"y"}`, `500 {"error":"failed to save rule"}`},
+			{"PUT", rules + "/r-a", `{"name":"x","match_type":"tag","match_value":"y"}`, `500 {"error":"failed to update rule"}`},
+			{"DELETE", rules + "/r-a", "", `500 {"error":"failed to delete rule"}`},
+		} {
+			if status, answer := s.send(admin, c.method, c.path, c.body); fmt.Sprintf("%d %s", status, answer) != c.want {
+				t.Errorf("%s %s: %d %s, want %s", c.method, c.path, status, answer, c.want)
+			}
+		}
+		for _, key := range []string{keyRelays, keyRules} {
+			if got := stored(t, db, key); got != broken {
+				t.Errorf("%s after the writes: %s", key, got)
+			}
+		}
+	})
+}
+
 func TestRelayValidation(t *testing.T) {
 	each(t, func(t *testing.T, s *site, db *store.DB) {
 		admin := s.signIn("admin")
@@ -277,12 +315,19 @@ func TestRelayLimitAndStoredOddities(t *testing.T) {
 			t.Errorf("update of an old entry:\n got  %d %s\n want 200 %s", status, answer, want)
 		}
 
-		// A stored value that is no list of relays reads as an empty list
-		for _, raw := range []string{"", "not json", `{"id":"r-a"}`, `"text"`, "null", "[1,2", "[] x"} {
+		// An empty value is an empty list, one that is no list of relays
+		// cannot be read (BUGS.md SC14)
+		if err := setSetting(ctx, db, keyRelays, ""); err != nil {
+			t.Fatal(err)
+		}
+		if status, answer := s.send(admin, "GET", relays, ""); status != 200 || answer != `{"data":[]}` {
+			t.Errorf("stored \"\": %d %s", status, answer)
+		}
+		for _, raw := range []string{"not json", `{"id":"r-a"}`, `"text"`, "null", "[1,2", "[] x"} {
 			if err := setSetting(ctx, db, keyRelays, raw); err != nil {
 				t.Fatal(err)
 			}
-			if status, answer := s.send(admin, "GET", relays, ""); status != 200 || answer != `{"data":[]}` {
+			if status, answer := s.send(admin, "GET", relays, ""); status != 500 || answer != `{"error":"failed to load relay nodes"}` {
 				t.Errorf("stored %q: %d %s", raw, status, answer)
 			}
 		}

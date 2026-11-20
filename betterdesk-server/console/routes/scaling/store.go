@@ -41,27 +41,25 @@ func setSetting(ctx context.Context, db *store.DB, key, value string) error {
 	return nil
 }
 
-// load reads a stored list. A row that is missing, empty, no JSON or no
-// JSON array is an empty list, and so is a list that cannot be read: the
-// reason goes to the log.
-func (h *handlers) load(ctx context.Context, key string) []any {
+// load reads a stored list. A row that is missing or empty is an empty
+// list; a value that is no JSON array, or a failed read, is an error, so
+// that no write replaces a list it could not read.
+func (h *handlers) load(ctx context.Context, key string) ([]any, error) {
 	raw, ok, err := getSetting(ctx, h.db, key)
 	if err != nil {
-		h.log.Error("[Scaling] Failed to parse "+key+":", err)
-		return []any{}
+		return nil, err
 	}
 	if !ok || raw == "" {
-		return []any{}
+		return []any{}, nil
 	}
 	items, err := parseArray(raw)
+	if err == nil && items == nil {
+		err = errors.New("no list")
+	}
 	if err != nil {
-		h.log.Error("[Scaling] Failed to parse "+key+":", err)
-		return []any{}
+		return nil, fmt.Errorf("read setting %s: %w", key, err)
 	}
-	if items == nil {
-		return []any{}
-	}
-	return items
+	return items, nil
 }
 
 // save stores a list as JSON.
