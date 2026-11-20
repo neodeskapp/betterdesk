@@ -29,6 +29,10 @@ var peerIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{3,64}$`)
 //  4. a signed-in account needs device.connect (403; a failed lookup
 //     counts as no);
 //  5. the handshake, then the bridge's own checks (the address's limit).
+//
+// The bridge reads the frames of a guest and of an account with a device
+// scope, and ends on a request for a device the link or the scope does
+// not hold.
 func (s *Service) serve(u *ws.Upgrade, label string) {
 	pathname := u.Path
 	if !u.CheckOrigin("ws-proxy " + pathname) {
@@ -60,6 +64,7 @@ func (s *Service) serve(u *ws.Upgrade, label string) {
 		u.Refuse(http.StatusUnauthorized)
 		return
 	}
+	var signedIn *account
 	if hasUser {
 		role := sess.UserRole()
 		allowed, err := u.RoleHasPermission(role, "device.connect")
@@ -75,6 +80,7 @@ func (s *Service) serve(u *ws.Upgrade, label string) {
 			u.Refuse(http.StatusForbidden)
 			return
 		}
+		signedIn = s.newAccount(u, sess)
 	}
 	target := s.signalAddr
 	messageTransport := false
@@ -88,7 +94,7 @@ func (s *Service) serve(u *ws.Upgrade, label string) {
 		return
 	}
 	defer conn.Wait()
-	s.bridge(conn, u.ClientAddr(), label, target, messageTransport, guest)
+	s.bridge(conn, u.ClientAddr(), label, target, messageTransport, guest, signedIn)
 }
 
 // guestToken reads a guest's token and device: ?guest=, else ?t=, else

@@ -42,6 +42,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/ws"
 	"github.com/unitronix/betterdesk-server/logging"
 )
@@ -122,6 +123,15 @@ type Options struct {
 	// Interfaces lists the machine's addresses in the order the old
 	// console saw them. nil: the interfaces of the net package.
 	Interfaces func() []InterfaceAddr
+	// Devices looks a device up for the device scope of a signed-in
+	// account (the console's device table, remoterelay.Service.Device);
+	// nil is no device.
+	Devices func(ctx context.Context, id string) (*goapi.Object, error)
+	// CanAccess is the account's device scope
+	// (devicegroups.Service.UserCanAccessDevice); a nil device passes only
+	// for an account without a limit. nil: every account sees every
+	// device.
+	CanAccess func(ctx context.Context, user *session.User, device *goapi.Object) (bool, error)
 }
 
 // Service holds the bridges of the two sockets.

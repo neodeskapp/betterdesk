@@ -18,7 +18,9 @@ import (
 // other path goes to the Node console while it is behind this one.
 func registerSockets(d *kit.Deps) {
 	// services/wsRelay.js: /ws/rendezvous, /ws/relay. A guest link that is
-	// taken back ends its bridges at once.
+	// taken back ends its bridges at once; an account with a device scope
+	// reaches the devices of its scope only, looked up as the remote
+	// viewer's socket looks them up.
 	webClient := wsrelay.New(wsrelay.Options{
 		SignalHost:  d.Config.SignalHost,
 		SignalPort:  d.Config.SignalPort,
@@ -26,6 +28,8 @@ func registerSockets(d *kit.Deps) {
 		RelayPort:   d.Config.RelayPort,
 		GoAPI:       d.GoAPI,
 		GuestCookie: d.GuestAccess.CookieName(),
+		Devices:     d.RemoteRelay.Device,
+		CanAccess:   d.DeviceGroups.UserCanAccessDevice,
 	})
 	d.GuestAccess.OnRevoke(webClient.InvalidateGuestGrant)
 	webClient.Register(d.Sockets)

@@ -25,14 +25,17 @@ type bridge struct {
 	ip               string
 	messageTransport bool
 	guest            *guestGrant
+	// account is the signed-in account, nil for a guest.
+	account *account
 	// background is the context of calls to the API server: they run to
 	// their end like the old service's, also when the bridge ends first.
 	background context.Context
 	cancel     context.CancelFunc
 	unregister func()
 
-	// Used by the socket's reader only.
-	guestDecoder   *frameDecoder
+	// Used by the socket's reader only. frames reads the rendezvous frames
+	// of a guest or of an account with a device scope.
+	frames         *frameDecoder
 	relayBuffer    []byte
 	relayValidated bool
 	consumed       bool
@@ -59,9 +62,9 @@ type bridge struct {
 
 // bridge counts the socket against its address's limit and passes bytes
 // between it and a new TCP connection to target until either side ends,
-// nothing passes for IdleTimeout, or a guest check ends it. It returns
-// when everything the bridge started has ended.
-func (s *Service) bridge(conn *ws.Conn, ip, label, target string, messageTransport bool, guest *guestGrant) {
+// nothing passes for IdleTimeout, or a guest or scope check ends it. It
+// returns when everything the bridge started has ended.
+func (s *Service) bridge(conn *ws.Conn, ip, label, target string, messageTransport bool, guest *guestGrant, signedIn *account) {
 	s.mu.Lock()
 	if s.perIP.Count(ip) >= MaxConnectionsPerIP {
 		s.mu.Unlock()
@@ -76,7 +79,7 @@ func (s *Service) bridge(conn *ws.Conn, ip, label, target string, messageTranspo
 	ctx, cancel := context.WithCancel(conn.Context())
 	b := &bridge{
 		s: s, conn: conn, label: label, target: target, ip: ip,
-		messageTransport: messageTransport, guest: guest,
+		messageTransport: messageTransport, guest: guest, account: signedIn,
 		background: context.WithoutCancel(conn.Context()), cancel: cancel,
 		unregister: func() {},
 		dialed:     make(chan struct{}), connected: make(chan struct{}), done: make(chan struct{}),
@@ -85,8 +88,8 @@ func (s *Service) bridge(conn *ws.Conn, ip, label, target string, messageTranspo
 	if messageTransport {
 		b.tcpDecoder = &frameDecoder{}
 	}
-	if guest != nil && label == "rendezvous" {
-		b.guestDecoder = &frameDecoder{}
+	if (guest != nil || signedIn.reads()) && label == "rendezvous" {
+		b.frames = &frameDecoder{}
 	}
 	if guest != nil && guest.token != "" && guest.peerID != "" {
 		b.unregister = s.registerGrant(guest, b)
@@ -141,53 +144,20 @@ func (b *bridge) isCleaned() bool {
 func (b *bridge) nowMillis() int64 { return b.s.clock.Now().UnixMilli() }
 
 // onMessage passes one message of the browser to the server, after the
-// guest checks: on /ws/rendezvous every frame of a guest must be a
-// rendezvous message whose request names the link's device; on /ws/relay
-// a guest's first bytes must decode to a relay request for that device.
-// The first such request uses up one use of the link.
+// target checks of a guest or of an account with a device scope (see
+// readTargets). A guest's first request uses up one use of the link.
 func (b *bridge) onMessage(data []byte) {
 	b.resetIdle()
 	if b.isCleaned() {
 		return
 	}
 	opening := false
-	if g := b.guest; g != nil {
-		if b.label == "rendezvous" {
-			frames, err := b.guestDecoder.feed(data)
-			if err != nil {
-				logf("ERROR: WS proxy [%s]: invalid relay WS frame: %s", b.label, err.Error())
-				b.cleanup("invalid-ws-frame", err.Error())
-				return
-			}
-			for _, payload := range frames {
-				msg, err := decodeRendezvous(payload)
-				if err != nil || !guestTargetMatches(msg, g.peerID) {
-					logf("WARN: WS proxy [%s]: guest target mismatch for grant %s", b.label, grantLabel(g))
-					b.cleanup("guest-target-mismatch", "")
-					return
-				}
-				if msg.PunchHoleRequest != nil || msg.RequestRelay != nil {
-					opening = true
-				}
-			}
-		} else if !b.relayValidated {
-			if len(b.relayBuffer)+len(data) > guestRelayBuffer {
-				b.cleanup("guest-invalid-relay-frame", "")
-				return
-			}
-			b.relayBuffer = append(b.relayBuffer, data...)
-			msg, err := decodeRendezvous(b.relayBuffer)
-			if err != nil {
-				return
-			}
-			if msg.RequestRelay == nil || msg.RequestRelay.ID != g.peerID {
-				logf("WARN: WS proxy [%s]: guest relay target mismatch for grant %s", b.label, grantLabel(g))
-				b.cleanup("guest-target-mismatch", "")
-				return
-			}
-			b.relayValidated = true
-			opening = true
+	if b.guest != nil || b.account.reads() {
+		pass, opens := b.readTargets(data)
+		if !pass {
+			return
 		}
+		opening = opens
 	}
 	if b.guest != nil && opening && !b.consumed {
 		if err := b.s.consume(b.background, b.guest); err != nil {
@@ -223,6 +193,88 @@ func (b *bridge) onMessage(data []byte) {
 	case b.writes <- payload:
 	case <-b.done:
 	}
+}
+
+// readTargets runs the target checks on a message of a guest or of an
+// account with a device scope. On /ws/rendezvous every frame must be a
+// rendezvous message whose request (punch_hole_request, else
+// request_relay) names a device the link or the scope holds, or none. On
+// /ws/relay the first bytes must decode to a rendezvous message: for a
+// guest a relay request for the link's device, for an account a relay
+// request for a device of its scope or no relay request; later bytes are
+// not read. pass reports whether the message goes on to the server
+// (false: it waits for more bytes, or the bridge ended); opening whether
+// it holds a request that opens a connection.
+func (b *bridge) readTargets(data []byte) (pass, opening bool) {
+	if b.label == "rendezvous" {
+		frames, err := b.frames.feed(data)
+		if err != nil {
+			logf("ERROR: WS proxy [%s]: invalid relay WS frame: %s", b.label, err.Error())
+			b.cleanup("invalid-ws-frame", err.Error())
+			return false, false
+		}
+		for _, payload := range frames {
+			msg, err := decodeRendezvous(payload)
+			if err != nil || !b.targetAllowed(msg) {
+				b.targetMismatch("")
+				return false, false
+			}
+			if msg.PunchHoleRequest != nil || msg.RequestRelay != nil {
+				opening = true
+			}
+		}
+		return true, opening
+	}
+	if b.relayValidated {
+		return true, false
+	}
+	if len(b.relayBuffer)+len(data) > guestRelayBuffer {
+		b.cleanup("guest-invalid-relay-frame", "")
+		return false, false
+	}
+	b.relayBuffer = append(b.relayBuffer, data...)
+	msg, err := decodeRendezvous(b.relayBuffer)
+	if err != nil {
+		return false, false
+	}
+	var allowed bool
+	if b.guest != nil {
+		allowed = msg.RequestRelay != nil && msg.RequestRelay.ID == b.guest.peerID
+	} else {
+		allowed = msg.RequestRelay == nil || b.s.inScope(b.conn.Context(), b.account, msg.RequestRelay.ID)
+	}
+	if !allowed {
+		b.targetMismatch("relay ")
+		return false, false
+	}
+	b.relayValidated = true
+	return true, true
+}
+
+// targetAllowed reports whether a rendezvous message's request names a
+// device the guest's link or the account's scope holds; a message without
+// one passes.
+func (b *bridge) targetAllowed(msg *rendezvousMessage) bool {
+	if b.guest != nil {
+		return guestTargetMatches(msg, b.guest.peerID)
+	}
+	req := msg.PunchHoleRequest
+	if req == nil {
+		req = msg.RequestRelay
+	}
+	return req == nil || b.s.inScope(b.conn.Context(), b.account, req.ID)
+}
+
+// targetMismatch ends the bridge on a request for a device the link or
+// the scope does not hold.
+func (b *bridge) targetMismatch(kind string) {
+	if b.guest != nil {
+		logf("WARN: WS proxy [%s]: guest %starget mismatch for grant %s", b.label, kind, grantLabel(b.guest))
+		b.cleanup("guest-target-mismatch", "")
+		return
+	}
+	logf("WARN: WS proxy [%s]: %srequest for a device outside the scope of user %d", b.label, kind, b.account.userID)
+	b.cleanup("scope-mismatch", "")
 }
 
 // grantLabel names a link in a log line: its id, or "unknown".
