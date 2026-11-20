@@ -14,6 +14,7 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"github.com/unitronix/betterdesk-server/codec"
 	pb "github.com/unitronix/betterdesk-server/proto"
 )
 
@@ -165,45 +166,58 @@ func TestNodeFrameDecoder(t *testing.T) {
 	}
 }
 
-// TestNodeRendezvousDecoding decodes every recorded payload and compares
-// with protobufjs: whether it decoded, its exception, the two requests
-// and their ids, and the guest check for the recorded device.
+// The guest check's verdicts on the recorded payloads that differ from
+// protobufjs's since the check reads frames as the servers do (RM20):
+// frames the old check let through and the servers read as no message or
+// as a request for another device, and frames protobufjs could not decode
+// that the servers read as no request or one for the link's device.
+const (
+	closedSinceRM20 = 447
+	passedSinceRM20 = 74
+)
+
+// TestNodeRendezvousDecoding decodes every recorded payload and holds the
+// guest check to what the signal server reads of it (codec.DecodeUDP,
+// decoded apart): a frame passes when the server reads no request or one
+// for the link's device, and only then. Where that differs from the
+// verdict protobufjs gave the old check, the counts above pin how many.
 func TestNodeRendezvousDecoding(t *testing.T) {
 	rec := loadCodec(t)
 	if len(rec.Vectors) < 5000 {
 		t.Fatalf("only %d vectors", len(rec.Vectors))
 	}
+	closed, passed := 0, 0
 	for _, v := range rec.Vectors {
 		payload, err := hex.DecodeString(v.Hex)
 		if err != nil {
 			t.Fatal(err)
 		}
 		msg, err := decodeRendezvous(payload)
-		errText := ""
-		if err != nil {
-			errText = err.Error()
-		}
-		if errText != v.Error || (msg != nil) != v.OK {
-			t.Errorf("%s: node ok=%v %q, go ok=%v %q", v.Hex, v.OK, v.Error, msg != nil, errText)
-			continue
-		}
-		if msg == nil {
-			continue
-		}
-		same := func(want *struct {
-			ID string `json:"id"`
-		}, got *rendezvousRequest) bool {
-			if want == nil || got == nil {
-				return want == nil && got == nil
+		goPasses := err == nil && guestTargetMatches(msg, rec.Peer)
+		serverPasses := false
+		if server, err := codec.DecodeUDP(payload); err == nil {
+			switch {
+			case server.GetPunchHoleRequest() != nil:
+				serverPasses = server.GetPunchHoleRequest().GetId() == rec.Peer
+			case server.GetRequestRelay() != nil:
+				serverPasses = server.GetRequestRelay().GetId() == rec.Peer
+			default:
+				serverPasses = true
 			}
-			return want.ID == got.ID
 		}
-		if !same(v.Punch, msg.PunchHoleRequest) || !same(v.Relay, msg.RequestRelay) {
-			t.Errorf("%s: requests node %+v %+v, go %+v %+v", v.Hex, v.Punch, v.Relay, msg.PunchHoleRequest, msg.RequestRelay)
+		if goPasses != serverPasses {
+			t.Errorf("%s: the check passes %v, the server reads a frame that should pass %v", v.Hex, goPasses, serverPasses)
 		}
-		if v.Matches == nil || guestTargetMatches(msg, rec.Peer) != *v.Matches {
-			t.Errorf("%s: guest check node %v, go %v", v.Hex, v.Matches, guestTargetMatches(msg, rec.Peer))
+		nodePasses := v.OK && v.Matches != nil && *v.Matches
+		switch {
+		case nodePasses && !goPasses:
+			closed++
+		case !nodePasses && goPasses:
+			passed++
 		}
+	}
+	if closed != closedSinceRM20 || passed != passedSinceRM20 {
+		t.Errorf("against protobufjs %d frames are closed and %d pass since RM20, want %d and %d", closed, passed, closedSinceRM20, passedSinceRM20)
 	}
 }
 

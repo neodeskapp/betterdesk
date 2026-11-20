@@ -12,6 +12,8 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/unitronix/betterdesk-server/codec"
 )
 
 // The fuzz tests check properties of their own, and with
@@ -74,9 +76,10 @@ func (h *nodeHelper) ask(t testing.TB, line string) []byte {
 	return answer
 }
 
-// FuzzRendezvousDecode decodes any payload without failing to stop, and
-// with the helper compares with protobufjs: decoded or the exception, the
-// two requests with their ids, and the guest check.
+// FuzzRendezvousDecode decodes any payload without failing to stop and
+// reads it as the signal server does (codec.DecodeUDP): decoded or not,
+// and the request with its id. The check reads frames as the servers do
+// (RM20), so protobufjs is not asked.
 func FuzzRendezvousDecode(f *testing.F) {
 	rec := loadCodec(f)
 	for _, v := range rec.Vectors {
@@ -88,38 +91,28 @@ func FuzzRendezvousDecode(f *testing.F) {
 		if (msg == nil) == (err == nil) {
 			t.Fatalf("message %v and error %v", msg, err)
 		}
-		h := startHelper(t)
-		if h == nil {
-			return
-		}
-		var want struct {
-			Error   string  `json:"error"`
-			OK      bool    `json:"ok"`
-			Punch   *string `json:"punch"`
-			Relay   *string `json:"relay"`
-			Matches bool    `json:"matches"`
-		}
-		if err := json.Unmarshal(h.ask(t, "D "+hex.EncodeToString(payload)), &want); err != nil {
-			t.Fatal(err)
-		}
-		errText := ""
-		if err != nil {
-			errText = err.Error()
-		}
-		if want.OK != (msg != nil) || want.Error != errText {
-			t.Fatalf("%x: node ok=%v %q, go %q", payload, want.OK, want.Error, errText)
+		server, serverErr := codec.DecodeUDP(payload)
+		if (serverErr == nil) != (msg != nil) {
+			t.Fatalf("%x: decoded %v, the server %v", payload, err, serverErr)
 		}
 		if msg == nil {
 			return
 		}
-		same := func(w *string, g *rendezvousRequest) bool {
-			if w == nil || g == nil {
-				return w == nil && g == nil
+		read := func(r *rendezvousRequest) string {
+			if r == nil {
+				return "none"
 			}
-			return *w == g.ID
+			return "id " + r.ID
 		}
-		if !same(want.Punch, msg.PunchHoleRequest) || !same(want.Relay, msg.RequestRelay) || want.Matches != guestTargetMatches(msg, "TARGET01") {
-			t.Fatalf("%x: node %v %v %v, go %+v %+v", payload, want.Punch, want.Relay, want.Matches, msg.PunchHoleRequest, msg.RequestRelay)
+		punch, relay := "none", "none"
+		if p := server.GetPunchHoleRequest(); p != nil {
+			punch = "id " + p.GetId()
+		}
+		if r := server.GetRequestRelay(); r != nil {
+			relay = "id " + r.GetId()
+		}
+		if read(msg.PunchHoleRequest) != punch || read(msg.RequestRelay) != relay {
+			t.Fatalf("%x: the server reads %v, the check %+v %+v", payload, server, msg.PunchHoleRequest, msg.RequestRelay)
 		}
 	})
 }

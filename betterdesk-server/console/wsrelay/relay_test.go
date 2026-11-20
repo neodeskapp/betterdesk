@@ -3,6 +3,7 @@ package wsrelay
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -407,24 +408,19 @@ func TestJSDelay(t *testing.T) {
 	}
 }
 
-// TestOneofOrderLetsAGuestThrough pins the bypass the old check had (BUGS
-// RM20): the check reads a frame as protobufjs did, the signal server as
-// Go's protobuf does, and they disagree. A frame with punch_hole_request
-// for the link's device and then request_relay for another passes the
-// check, and the signal server reads the second; so does a
-// punch_hole_request tagged as a varint, whose bytes the server reads as
-// fields of the top level.
-func TestOneofOrderLetsAGuestThrough(t *testing.T) {
+// TestOneofOrderDoesNotLetAGuestThrough: the check reads a guest's frame
+// as the signal server does (BUGS RM20). A frame with punch_hole_request
+// for the link's device and then request_relay for another, which the
+// server reads as the request_relay, and a punch_hole_request tagged as a
+// varint, whose bytes the server reads as fields of the top level, end
+// the bridge, and the server gets neither.
+func TestOneofOrderDoesNotLetAGuestThrough(t *testing.T) {
 	inner := append([]byte{0x0a, 0x08}, "TARGET01"...)
 	inner = append(inner, rendezvousBytes(18, "OTHER01")...)
 	for _, payload := range [][]byte{
 		append(rendezvousBytes(8, "TARGET01"), rendezvousBytes(18, "OTHER01")...),
 		append([]byte{0x40, byte(len(inner))}, inner...),
 	} {
-		msg, err := decodeRendezvous(payload)
-		if err != nil || !guestTargetMatches(msg, "TARGET01") {
-			t.Fatalf("%x: decoded %+v %v", payload, msg, err)
-		}
 		var server pb.RendezvousMessage
 		if err := proto.Unmarshal(payload, &server); err != nil {
 			t.Fatal(err)
@@ -432,5 +428,22 @@ func TestOneofOrderLetsAGuestThrough(t *testing.T) {
 		if server.GetPunchHoleRequest() != nil || server.GetRequestRelay().GetId() != "OTHER01" {
 			t.Fatalf("%x: the signal server reads %v", payload, &server)
 		}
+		t.Run(hex.EncodeToString(payload), func(t *testing.T) {
+			check := wstest.Goroutines(t)
+			defer check()
+			h := newHarness(t, Options{})
+			defer h.close()
+			c := h.dial("/ws/rendezvous?guest=tok&peer_id=TARGET01&guest_session=s1", nil)
+			waitFor(t, "the signal server's connection", func() bool { h.sig.mu.Lock(); defer h.sig.mu.Unlock(); return len(h.sig.conns) == 1 })
+			_ = c.Binary(framed(t, payload))
+			if !c.Wait(5*time.Second, func(_ []wstest.Frame, closed bool) bool { return closed }) {
+				t.Fatal("the guest's bridge stays open")
+			}
+			time.Sleep(100 * time.Millisecond)
+			if got := h.sig.received(1); len(got) != 0 {
+				t.Errorf("the signal server got %x", got)
+			}
+			c.Drop()
+		})
 	}
 }
