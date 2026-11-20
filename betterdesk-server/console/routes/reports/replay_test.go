@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/goapi"
+	engine "github.com/unitronix/betterdesk-server/console/reports"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
@@ -112,6 +114,125 @@ func recordedStepsOn(dialect string) []replay.Step {
 	return rec.Steps
 }
 
+// RP5: from and to are read as times. A value that is no date or time is
+// 400 in every route, where Node made a report of it or failed with 500.
+// The filters of a report are from and to: device_id and limit leave
+// the report's filters, and a saved report's filters; After puts Node's
+// filters back into the saved row, so the steps that read it compare with
+// Node. On SQLite, where Node compared the text, the date alone as to
+// covers that whole day: the Chrome session that ends at midnight of
+// 2019-11-01 counts in the range from 2019-10-31 to 2019-11-01, as it did
+// on PostgreSQL.
+var _ = reportFixes.Add("RP5", rangeFixes("sqlite"))
+var _ = reportFixes.Add("RP5", rangeFixes("postgres"))
+
+func rangeFixes(dialect string) map[string]replay.Fix {
+	const chrome = `{"name":"Chrome","category":"browser","total_secs":3600,"sessions":1,"devices":1}`
+	saves := map[string]map[string][]string{
+		`{"type":"tickets","title":"Contract tickets","from":"2019-11-01","limit":5}`: {
+			"sqlite":   {`"filters":"{\"from\":\"2019-11-01\"}"`},
+			"postgres": {`"filters":{"from":"2019-11-01"}`},
+		},
+		`{"type":"activity","title":"Range","from":"2019-10-31","to":"2019-11-01","device_id":["x"]}`: {
+			"sqlite": {`"filters":"{\"from\":\"2019-10-31\",\"to\":\"2019-11-01\"}"`, strings.ReplaceAll(`"top_applications":[`+chrome+`]`, `"`, `\"`)},
+			// jsonb keeps the shorter key first
+			"postgres": {`"filters":{"to":"2019-11-01","from":"2019-10-31"}`},
+		},
+	}
+	steps := map[string]replay.Fix{}
+	for _, step := range recordedStepsOn(dialect) {
+		switch step.Path {
+		case "/api/reports/generate", "/api/reports/generate/csv", "/api/reports/save":
+		default:
+			continue
+		}
+		if step.Status == 401 || step.Status == 403 {
+			continue
+		}
+		var fix replay.Fix
+		body := *step.Body
+		from, _ := bodyMember(step, "from")
+		to, _ := bodyMember(step, "to")
+		_, deviceID := bodyMember(step, "device_id")
+		_, limit := bodyMember(step, "limit")
+		switch {
+		case !isTime(from):
+			fix = replay.Fix{Status: 400, Answer: `{"error":"from must be a date or a time"}`}
+		case !isTime(to):
+			fix = replay.Fix{Status: 400, Answer: `{"error":"to must be a date or a time"}`}
+		case saves[body] != nil:
+			fix = replay.Fix{Status: 201, Has: saves[body][dialect], Lacks: []string{"device_id", "limit"}, After: restoreAsNode}
+		case deviceID || limit:
+			fix = replay.Fix{Status: step.Status, Answer: withAnswerFixes(withoutFilters(step.Answer, "device_id", "limit"))}
+		case dialect == "sqlite" && body == `{"type":"activity","from":"2019-10-31","to":"2019-11-01"}`:
+			fix = replay.Fix{Status: 200, Answer: strings.Replace(step.Answer, `"top_applications":[]`, `"top_applications":[`+chrome+`]`, 1)}
+		default:
+			continue
+		}
+		fix.Dialect = dialect
+		steps[replay.FixKey(step)] = fix
+	}
+	return steps
+}
+
+// isTime reports whether a from or to of a recorded body sets a valid
+// bound or none: a value that is not true, a date alone, or a time with
+// seconds.
+func isTime(v any) bool {
+	text, isText := v.(string)
+	if v == nil || v == false || v == 0.0 || v == "" {
+		return true
+	}
+	if !isText {
+		return false
+	}
+	for _, layout := range []string{time.DateOnly, time.RFC3339Nano, time.DateTime} {
+		if _, err := time.Parse(layout, text); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
+// withoutFilters is a report's JSON without the named members of its
+// filters.
+func withoutFilters(report string, names ...string) string {
+	parsed, err := goapi.Parse([]byte(report))
+	if err != nil {
+		panic(err)
+	}
+	filters, _ := goapi.Dig(parsed, "filters").(*goapi.Object)
+	for _, name := range names {
+		filters.Delete(name)
+	}
+	return string(engine.Stringify(parsed))
+}
+
+// restoreAsNode is a Fix.After for a save whose row the fix changed: it
+// puts the filters and payload Node stored into the row.
+func restoreAsNode(t *testing.T, w *replay.World, step replay.Step) {
+	t.Helper()
+	var row struct {
+		ID               float64
+		Filters, Payload json.RawMessage
+	}
+	if err := json.Unmarshal([]byte(step.Answer), &row); err != nil {
+		t.Fatal(err)
+	}
+	stored := func(raw json.RawMessage) any {
+		if w.DB.IsPostgres() {
+			return string(raw)
+		}
+		var text string
+		if err := json.Unmarshal(raw, &text); err != nil {
+			t.Fatal(err)
+		}
+		return text
+	}
+	value := w.DB.Pick("?", "CAST(? AS jsonb)")
+	w.Exec("UPDATE saved_reports SET filters = "+value+", payload = "+value+" WHERE id = ?", []any{stored(row.Filters), stored(row.Payload), row.ID})
+}
+
 // answerFix is a change a bug fix makes to answers wherever they show a
 // part of a report: in many steps, also in a request sent again with
 // another answer, which reportFixes cannot tell apart. Node's answer of a
@@ -135,6 +256,14 @@ var answerFixes = []answerFix{
 			return m[1] + ":" + strconv.Itoa(len(m[2]))
 		})
 	}},
+}
+
+// withAnswerFixes is an answer after every answer fix.
+func withAnswerFixes(answer string) string {
+	for _, f := range answerFixes {
+		answer = f.rewrite(answer)
+	}
+	return answer
 }
 
 // nativeCount is a count Node made of a name every object has, in JSON

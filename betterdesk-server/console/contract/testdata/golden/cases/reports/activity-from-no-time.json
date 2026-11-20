@@ -47,7 +47,7 @@
     "super_admin",
     "admin"
    ],
-   "status": 200,
+   "status": 400,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -68,28 +68,10 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    {
-     "path": "generated_at",
-     "format": "9999-99-99A99:99:99.999A"
-    }
-   ],
    "body": {
     "kind": "json",
     "json": {
-     "data": {
-      "daily_reports": 0,
-      "devices_with_activity": 0,
-      "top_applications": [],
-      "total_active_secs": 0,
-      "total_idle_secs": 0
-     },
-     "filters": {
-      "from": "garbage"
-     },
-     "generated_at": "<volatile>",
-     "label": "Activity Summary",
-     "type": "activity"
+     "error": "from must be a date or a time"
     }
    }
   }

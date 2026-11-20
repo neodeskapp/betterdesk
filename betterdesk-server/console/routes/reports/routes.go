@@ -99,14 +99,9 @@ func requireAdmin(next http.Handler) http.Handler {
 	})
 }
 
-// filtersOf are {from, to, device_id, limit} of the body.
+// filtersOf are {from, to} of the body.
 func filtersOf(body middleware.JSONObject) engine.Filters {
-	return engine.Filters{
-		From:     jsbind.Of(body.Get("from")),
-		To:       jsbind.Of(body.Get("to")),
-		DeviceID: jsbind.Of(body.Get("device_id")),
-		Limit:    jsbind.Of(body.Get("limit")),
-	}
+	return engine.Filters{From: jsbind.Of(body.Get("from")), To: jsbind.Of(body.Get("to"))}
 }
 
 // number is Number(req.params[name]).
@@ -120,8 +115,9 @@ func (h *handlers) types(w http.ResponseWriter, r *http.Request) {
 }
 
 // generated is the report the body asks for. It answers itself and
-// returns nil when there is none: 400 without a type and for a type there
-// is no report of (the engine's text), 500 with failed for anything else.
+// returns nil when there is none: 400 without a type, for a type there is
+// no report of and for a range that is no time (the engine's text), 500
+// with failed for anything else.
 func (h *handlers) generated(w http.ResponseWriter, r *http.Request, body middleware.JSONObject, logPrefix, failed string) *engine.Report {
 	typ := jsbind.Of(body.Get("type"))
 	if !typ.Truthy() {
@@ -132,8 +128,9 @@ func (h *handlers) generated(w http.ResponseWriter, r *http.Request, body middle
 	if err != nil {
 		h.log.Error(logPrefix, err)
 		var unknown *engine.UnknownTypeError
-		if errors.As(err, &unknown) {
-			fail(w, r, http.StatusBadRequest, unknown.Error())
+		var badRange *engine.RangeError
+		if errors.As(err, &unknown) || errors.As(err, &badRange) {
+			fail(w, r, http.StatusBadRequest, err.Error())
 			return nil
 		}
 		fail(w, r, http.StatusInternalServerError, failed)
@@ -143,7 +140,7 @@ func (h *handlers) generated(w http.ResponseWriter, r *http.Request, body middle
 }
 
 // generate answers POST /api/reports/generate with the body {type, from?,
-// to?, device_id?, limit?}.
+// to?}.
 func (h *handlers) generate(w http.ResponseWriter, r *http.Request) {
 	if report := h.generated(w, r, kit.Body(r), "generate error:", "Failed to generate report"); report != nil {
 		kit.JSON(w, r, http.StatusOK, report)
@@ -214,8 +211,8 @@ func (h *handlers) getSaved(w http.ResponseWriter, r *http.Request) {
 }
 
 // save answers POST /api/reports/save with the body {type, title?, from?,
-// to?, device_id?, limit?}: it generates the report and stores it, with
-// the title "<label> — <time>" when the body has none.
+// to?}: it generates the report and stores it, with the title "<label> —
+// <time>" when the body has none.
 func (h *handlers) save(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	report := h.generated(w, r, body, "save error:", "Failed to save report")

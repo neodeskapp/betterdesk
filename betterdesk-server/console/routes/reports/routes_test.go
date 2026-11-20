@@ -194,6 +194,50 @@ func TestTypeMustBeTheNameOfAReport(t *testing.T) {
 	}
 }
 
+// TestActivityRangeMustBeTimes: from and to are read as times (BUGS.md
+// RP5). A date alone as to covers that whole day, an offset counts, and
+// anything that is no date or time is 400 in every route. The filters of
+// a report are from and to; device_id and limit, which no report reads,
+// are left out.
+func TestActivityRangeMustBeTimes(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		if _, err := db.Exec(context.Background(), `INSERT INTO activity_summaries (device_id, total_active_secs, idle_seconds, reported_at, received_at)
+			VALUES ('A', 100, 0, '2019-11-30T10:00:00.000Z', '2019-11-30 10:00:00'), ('B', 50, 0, '2019-12-01T10:00:00.000Z', '2019-12-01 10:00:00')`); err != nil {
+			t.Fatal(err)
+		}
+		admin := w.As("admin")
+		for body, want := range map[string]string{
+			`{"type":"activity","from":"2019-11-30","to":"2019-11-30"}`:                                        `"daily_reports":1,"total_active_secs":100,`,
+			`{"type":"activity","to":"2019-11-30T23:59:59.999Z"}`:                                              `"daily_reports":1,"total_active_secs":100,`,
+			`{"type":"activity","from":"2019-11-30T11:00:00+01:00"}`:                                           `"daily_reports":2,"total_active_secs":150,`,
+			`{"type":"activity","from":"2019-11-30T11:00:01+01:00"}`:                                           `"daily_reports":1,"total_active_secs":50,`,
+			`{"type":"activity","from":"2019-12-01 10:00:00","to":"2019-12-01"}`:                               `"daily_reports":1,"total_active_secs":50,`,
+			`{"type":"activity","from":0,"to":""}`:                                                             `"daily_reports":2,"total_active_secs":150,`,
+			`{"type":"tickets","from":"2019-11-01","to":"2019-11-30T23:59:59.999Z","device_id":"x","limit":5}`: `"filters":{"from":"2019-11-01","to":"2019-11-30T23:59:59.999Z"},`,
+			`{"type":"devices","device_id":{"a":1},"limit":[1]}`:                                               `"filters":{},`,
+		} {
+			if got := admin.Do("POST", "/api/reports/generate", body); got.Status != 200 || !strings.Contains(got.Body, want) {
+				t.Errorf("%s: %d %s\nwant %s", body, got.Status, got.Body, want)
+			}
+		}
+		for _, bad := range []string{`"garbage"`, `"2019-11"`, `"2019"`, `"2019-02-30"`, `5`, `true`, `["2019-11-01"]`, `{"a":1}`} {
+			for _, name := range []string{"from", "to"} {
+				body := `{"type":"activity","` + name + `":` + bad + `}`
+				answer := `{"error":"` + name + ` must be a date or a time"}`
+				for _, path := range []string{"/api/reports/generate", "/api/reports/generate/csv", "/api/reports/save"} {
+					if got := admin.Do("POST", path, body); got.Status != 400 || got.Body != answer {
+						t.Errorf("%s %s: %d %s", path, body, got.Status, got.Body)
+					}
+				}
+			}
+		}
+		if rows := savedCount(t, w); rows != 0 {
+			t.Errorf("%d reports saved with a range that is no time", rows)
+		}
+	})
+}
+
 // TestDatabaseFailures: a failing query answers each route's own 500.
 func TestDatabaseFailures(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {

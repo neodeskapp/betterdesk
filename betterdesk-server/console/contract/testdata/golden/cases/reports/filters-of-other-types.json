@@ -98,9 +98,7 @@
       "total_inventoried": 14
      },
      "filters": {
-      "device_id": 900100001,
       "from": null,
-      "limit": "10",
       "to": false
      },
      "generated_at": "<volatile>",

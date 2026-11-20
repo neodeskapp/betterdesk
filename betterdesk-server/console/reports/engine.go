@@ -64,21 +64,53 @@ func New(opts Options) *Engine {
 	return &Engine{db: opts.DB, now: opts.Now, clock: clock{loc: opts.Location, zoneName: opts.ZoneName}, sync: opts.SyncPeers}
 }
 
-// Filters are the options of a report as the request gave them. Only the
-// activity report reads any (From and To); all four go back in the
-// report's filters.
+// Filters are the time range of a report as the request gave it. Only the
+// activity report reads it; it goes back in every report's filters.
 type Filters struct {
-	From, To, DeviceID, Limit jsbind.Value
+	From, To jsbind.Value
+	// from and to are the range as the statements bind it (see bound),
+	// set by Generate.
+	from, to string
+}
+
+// RangeError is the error for a from or to that is no date or time.
+type RangeError struct {
+	Name string
+}
+
+func (e *RangeError) Error() string { return e.Name + " must be a date or a time" }
+
+// bound reads from or to (name) of a request as an ISO time in UTC with
+// milliseconds, the form the activity tables hold; "" for a value that is
+// not true, which sets no bound. A date alone is the start of that day in
+// UTC, as to its last millisecond; a time without a zone is UTC. Anything
+// else is a RangeError.
+func bound(v jsbind.Value, name string) (string, error) {
+	if !v.Truthy() {
+		return "", nil
+	}
+	if v.IsString() {
+		if day, err := time.Parse(time.DateOnly, v.Str()); err == nil {
+			if name == "to" {
+				day = day.Add(24*time.Hour - time.Millisecond)
+			}
+			return store.ISOTime(day), nil
+		}
+		if t, ok := store.ParseTime(v.Str()); ok {
+			return store.ISOTime(t), nil
+		}
+	}
+	return "", &RangeError{Name: name}
 }
 
 // JSON is JSON.stringify of the filters: the members that are not
-// undefined, in the order from, to, device_id, limit.
+// undefined, in the order from, to.
 func (f Filters) JSON() string {
 	out := []byte{'{'}
 	for _, m := range []struct {
 		key   string
 		value jsbind.Value
-	}{{"from", f.From}, {"to", f.To}, {"device_id", f.DeviceID}, {"limit", f.Limit}} {
+	}{{"from", f.From}, {"to", f.To}} {
 		if m.value.IsUndefined() {
 			continue
 		}
@@ -159,11 +191,18 @@ func (e *UnknownTypeError) Error() string { return "Unknown report type: " + e.T
 
 // Generate is generateReport(type, opts). The type has to be a text that
 // is the name of a report; anything else, a list that holds the name too,
-// is an UnknownTypeError.
+// is an UnknownTypeError. From and to have to be dates or times (bound).
 func (e *Engine) Generate(ctx context.Context, typ jsbind.Value, f Filters) (*Report, error) {
 	for _, entry := range registry {
 		if !typ.IsString() || entry.key != typ.Str() {
 			continue
+		}
+		var err error
+		if f.from, err = bound(f.From, "from"); err != nil {
+			return nil, err
+		}
+		if f.to, err = bound(f.To, "to"); err != nil {
+			return nil, err
 		}
 		data, err := entry.generate(e, ctx, f)
 		if err != nil {
@@ -226,7 +265,7 @@ type appUsage struct {
 
 // activity is generateActivityReport.
 func (e *Engine) activity(ctx context.Context, f Filters) (*goapi.Object, error) {
-	summaries, err := e.allActivitySummaries(ctx, f.From, f.To)
+	summaries, err := e.allActivitySummaries(ctx, f.from, f.to)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +293,7 @@ func (e *Engine) activity(ctx context.Context, f Filters) (*goapi.Object, error)
 
 	usage := goapi.NewObject()
 	for _, id := range devices {
-		apps, err := e.topApps(ctx, id, f.From, f.To)
+		apps, err := e.topApps(ctx, id, f.from, f.to)
 		if err != nil {
 			apps = nil
 		}

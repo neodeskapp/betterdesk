@@ -114,16 +114,7 @@
       "total_tickets": 9
      },
      "filters": {
-      "device_id": {
-       "10": "x",
-       "2": [
-        1.5,
-        null
-       ],
-       "b": 1
-      },
       "from": "2026-01-01",
-      "limit": 1e+21,
       "to": "<volatile>"
      },
      "generated_at": "<volatile>",

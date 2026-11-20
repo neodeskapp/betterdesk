@@ -127,19 +127,19 @@ func (e *Engine) count(ctx context.Context, query string) (float64, error) {
 	return n, nil
 }
 
-// rangeArgs binds the leading values and those of a time range the way
-// the old drivers bound them; it returns the conditions to add. A value
-// of the range is used when it is true for JavaScript.
-func (e *Engine) rangeArgs(from, to jsbind.Value, fromCondition, toCondition string, leading ...jsbind.Value) (string, []any, error) {
+// rangeArgs binds the leading values the way the old drivers bound them,
+// and the bounds of a time range (see bound) that are set; it returns the
+// conditions to add.
+func (e *Engine) rangeArgs(from, to string, fromCondition, toCondition string, leading ...jsbind.Value) (string, []any, error) {
 	conditions := ""
 	values := leading
-	if from.Truthy() {
+	if from != "" {
 		conditions += fromCondition
-		values = append(values, from)
+		values = append(values, jsbind.String(from))
 	}
-	if to.Truthy() {
+	if to != "" {
 		conditions += toCondition
-		values = append(values, to)
+		values = append(values, jsbind.String(to))
 	}
 	args, err := jsbind.Args(e.db.Dialect(), len(values), values...)
 	if err != nil {
@@ -165,7 +165,7 @@ func bindValue(v any) jsbind.Value {
 
 // allActivitySummaries is getAllActivitySummaries({from, to}): every
 // summary of the range, newest received first.
-func (e *Engine) allActivitySummaries(ctx context.Context, from, to jsbind.Value) ([]*goapi.Object, error) {
+func (e *Engine) allActivitySummaries(ctx context.Context, from, to string) ([]*goapi.Object, error) {
 	conditions, args, err := e.rangeArgs(from, to, " AND s.reported_at >= ?", " AND s.reported_at <= ?")
 	if err != nil {
 		return nil, err
@@ -185,7 +185,7 @@ func (e *Engine) allActivitySummaries(ctx context.Context, from, to jsbind.Value
 
 // topApps is getTopApps(deviceId, {from, to}): the time per app of one
 // device. SQLite groups by app, PostgreSQL by app and category.
-func (e *Engine) topApps(ctx context.Context, deviceID any, from, to jsbind.Value) ([]*goapi.Object, error) {
+func (e *Engine) topApps(ctx context.Context, deviceID any, from, to string) ([]*goapi.Object, error) {
 	conditions, args, err := e.rangeArgs(from, to, " AND started_at >= ?", " AND ended_at <= ?", bindValue(deviceID))
 	if err != nil {
 		return nil, err

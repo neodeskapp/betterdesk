@@ -59,7 +59,7 @@
     "json": {
      "created_at": "<volatile>",
      "created_by": "e2e_admin",
-     "filters": "{\"from\":\"2026-01-01\",\"limit\":5}",
+     "filters": "{\"from\":\"2026-01-01\"}",
      "id": 0,
      "payload": "{\"stats\":{\"total\":9,\"open\":4,\"in_progress\":2,\"resolved\":1,\"closed\":2},\"total_tickets\":9,\"category_distribution\":{\"network\":2,\"hardware\":3,\"software\":3,\"access\":1},\"priority_distribution\":{\"high\":2,\"medium\":2,\"critical\":2,\"low\":3}}",
      "report_type": "tickets",

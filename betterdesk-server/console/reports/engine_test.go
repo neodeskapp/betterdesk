@@ -127,14 +127,27 @@ func seed(t *testing.T, db *store.DB, raw json.RawMessage) {
 
 // engineFix is a case of the recordings whose result a bug fix changes on
 // purpose. Go fails with err where it is set; otherwise its report holds
-// every text of has and none of lacks.
+// every text of has and none of lacks, and where as is set, its data are
+// those of the report Go makes for the body as.
 type engineFix struct {
 	bug        string
 	err        string
 	has, lacks []string
+	as         string
 	// dialect limits the fix to one database ("sqlite", "postgres").
 	dialect string
 }
+
+// engineRewrite is a change a bug fix makes to every report: Node's
+// report goes through rewrite before it is compared.
+type engineRewrite struct {
+	bug     string
+	rewrite func(report string) string
+}
+
+// engineRewrites are the changes of every report, applied before
+// engineRules.
+var engineRewrites []engineRewrite
 
 // engineFixes are the cases of testdata/engine_*.json that the bug fixes
 // change, by world and body ("* <body>" for every world): the package's
@@ -269,6 +282,69 @@ var _ = fixEngine("RP4", map[string]engineFix{
 	`device tags that are no text {"type":"security"}`: {dialect: "sqlite", has: []string{`"banned_devices":[]`}},
 })
 
+// RP5: from and to are read as times and bound as ISO times in UTC. A
+// value that is no date or time fails every report with a RangeError,
+// where Node bound it as it came: compared as text on SQLite, an error
+// for PostgreSQL to find, or for the driver. A date alone as to covers
+// that whole day, and a time with an offset is that instant, where Node
+// compared the text; such a case makes the report of the same range
+// written in UTC with milliseconds, which the cases that did not change
+// show to be Node's. device_id and limit leave the filters.
+var _ = fixEngine("RP5", map[string]engineFix{
+	`* {"type":"activity","from":"2019-11"}`:                        badRange("from"),
+	`* {"type":"activity","from":"2019"}`:                           badRange("from"),
+	`* {"type":"activity","to":"2019-11"}`:                          badRange("to"),
+	`* {"type":"activity","from":"garbage"}`:                        badRange("from"),
+	`* {"type":"activity","from":"Ü"}`:                              badRange("from"),
+	`* {"type":"activity","from":"0"}`:                              badRange("from"),
+	`* {"type":"activity","from":5}`:                                badRange("from"),
+	`* {"type":"activity","from":1.5}`:                              badRange("from"),
+	`* {"type":"activity","from":true}`:                             badRange("from"),
+	`* {"type":"activity","to":true}`:                               badRange("to"),
+	`* {"type":"activity","from":["2019-11-01"]}`:                   badRange("from"),
+	`* {"type":"activity","from":["a","b"]}`:                        badRange("from"),
+	`* {"type":"activity","from":[]}`:                               badRange("from"),
+	`* {"type":"activity","from":{}}`:                               badRange("from"),
+	`* {"type":"activity","from":{"a":1}}`:                          badRange("from"),
+	`* {"type":"activity","from":"2019-11-01","to":["2019-11-30"]}`: badRange("to"),
+	`* {"type":"activity","from":{"a":1},"to":["2019-11-30"]}`:      badRange("from"),
+	`* {"type":"activity","from":["2019-10-31","2019-11-01"]}`:      badRange("from"),
+	`* {"type":"activity","to":"2019-10-31"}`:                       {as: `{"type":"activity","to":"2019-10-31T23:59:59.999Z"}`},
+	`* {"type":"activity","to":"2019-11-01"}`:                       {as: `{"type":"activity","to":"2019-11-01T23:59:59.999Z"}`},
+	`* {"type":"activity","from":"2019-10-31","to":"2019-11-01"}`:   {as: `{"type":"activity","from":"2019-10-31T00:00:00.000Z","to":"2019-11-01T23:59:59.999Z"}`},
+	`* {"type":"activity","from":"2019-11-01","to":"2019-11-30"}`:   {as: `{"type":"activity","from":"2019-11-01T00:00:00.000Z","to":"2019-11-30T23:59:59.999Z"}`},
+	`* {"type":"activity","from":"2019-11-30","to":"2019-12-01"}`:   {as: `{"type":"activity","from":"2019-11-30T00:00:00.000Z","to":"2019-12-01T23:59:59.999Z"}`},
+	`* {"type":"activity","from":"2019-10-31T23:00:00Z"}`:           {as: `{"type":"activity","from":"2019-10-31T23:00:00.000Z"}`},
+	`* {"type":"activity","from":"2019-11-01T00:00:00+01:00"}`:      {as: `{"type":"activity","from":"2019-10-31T23:00:00.000Z"}`},
+	`* {"type":"activity","to":"2019-10-31T23:59:59.999+01:00"}`:    {as: `{"type":"activity","to":"2019-10-31T22:59:59.999Z"}`},
+	`* {"type":"activity","from":"2019-10-27T02:00:00+02:00"}`:      {as: `{"type":"activity","from":"2019-10-27T00:00:00.000Z"}`},
+})
+
+var _ = rewriteEngine("RP5", func(report string) string {
+	parsed, err := goapi.Parse([]byte(report))
+	if err != nil {
+		return report
+	}
+	filters := goapi.Dig(parsed, "filters")
+	o, isObject := filters.(*goapi.Object)
+	if !isObject || !o.Has("device_id") && !o.Has("limit") {
+		return report
+	}
+	o.Delete("device_id")
+	o.Delete("limit")
+	return string(Stringify(parsed))
+})
+
+func rewriteEngine(bug string, rewrite func(report string) string) bool {
+	engineRewrites = append(engineRewrites, engineRewrite{bug: bug, rewrite: rewrite})
+	return true
+}
+
+// badRange is the fix of a case whose from or to (name) is no time.
+func badRange(name string) engineFix {
+	return engineFix{err: name + " must be a date or a time"}
+}
+
 // engineFixOf is the fix of a case on db, with the key it is listed under.
 func engineFixOf(db *store.DB, world, body string) (string, engineFix, bool) {
 	for _, key := range []string{world + " " + body, "* " + body} {
@@ -282,7 +358,7 @@ func engineFixOf(db *store.DB, world, body string) (string, engineFix, bool) {
 }
 
 // checkEngineFix compares the result of a case with its fix.
-func checkEngineFix(t *testing.T, key string, f engineFix, report *Report, err error) {
+func checkEngineFix(t *testing.T, e *Engine, key string, f engineFix, report *Report, err error) {
 	t.Helper()
 	if f.err != "" {
 		if err == nil || err.Error() != f.err {
@@ -293,6 +369,16 @@ func checkEngineFix(t *testing.T, key string, f engineFix, report *Report, err e
 	if err != nil {
 		t.Errorf("%s (%s): go failed: %v", key, f.bug, err)
 		return
+	}
+	if f.as != "" {
+		body := bodyOf(t, f.as)
+		same, err := e.Generate(context.Background(), jsbind.Of(body.Get("type")), Filters{From: jsbind.Of(body.Get("from")), To: jsbind.Of(body.Get("to"))})
+		if err != nil {
+			t.Fatalf("%s (%s): %s: %v", key, f.bug, f.as, err)
+		}
+		if want, got := Stringify(same.Data), Stringify(report.Data); string(want) != string(got) {
+			t.Errorf("%s (%s): the data differ from those of %s:\n   as: %s\n   go: %s", key, f.bug, f.as, want, got)
+		}
 	}
 	got, _ := report.MarshalJSON()
 	for _, part := range f.has {
@@ -384,7 +470,8 @@ func TestReportsSurviveADeviceWithNullInfo(t *testing.T) {
 // TestNodeReports makes every report the Node engine made
 // (testdata/engine_*.json, written by testdata/nodeoracle/engine.js) on
 // the same rows and compares the JSON and the CSV of every part, byte for
-// byte, but for the cases the bug fixes change (engineFixes).
+// byte, but for the cases the bug fixes change (engineFixes,
+// engineRewrites and engineRules).
 func TestNodeReports(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		files, err := filepath.Glob(filepath.Join("testdata", "engine_"+db.Dialect().String()+"_*.json"))
@@ -403,6 +490,11 @@ func TestNodeReports(t *testing.T) {
 		for _, rule := range engineRules {
 			if !used["rule "+rule.bug+" "+rule.world] {
 				t.Errorf("the fix of %s changes no report of the world %s", rule.bug, rule.world)
+			}
+		}
+		for _, r := range engineRewrites {
+			if !used["rewrite "+r.bug] {
+				t.Errorf("the fix of %s changes no report", r.bug)
 			}
 		}
 	})
@@ -455,12 +547,21 @@ func replayRecording(t *testing.T, db *store.DB, file string, used map[string]bo
 		for _, c := range world.Cases {
 			reports++
 			body := bodyOf(t, c.Body)
-			f := Filters{From: jsbind.Of(body.Get("from")), To: jsbind.Of(body.Get("to")), DeviceID: jsbind.Of(body.Get("device_id")), Limit: jsbind.Of(body.Get("limit"))}
+			f := Filters{From: jsbind.Of(body.Get("from")), To: jsbind.Of(body.Get("to"))}
 			report, err := e.Generate(ctx, jsbind.Of(body.Get("type")), f)
 			if key, fix, listed := engineFixOf(db, world.Name, c.Body); listed {
 				used[key] = true
-				checkEngineFix(t, key, fix, report, err)
+				checkEngineFix(t, e, key, fix, report, err)
 				continue
+			}
+			nodeReport := c.Report
+			if nodeReport != nil {
+				for _, r := range engineRewrites {
+					if rewritten := r.rewrite(*nodeReport); rewritten != *nodeReport {
+						used["rewrite "+r.bug] = true
+						nodeReport = &rewritten
+					}
+				}
 			}
 			if c.Error != nil {
 				var unknown *UnknownTypeError
@@ -481,15 +582,15 @@ func replayRecording(t *testing.T, db *store.DB, file string, used map[string]bo
 				continue
 			}
 			got, _ := report.MarshalJSON()
-			if rule, ruled := ruleOf(world.Name); ruled && string(got) != *c.Report {
+			if rule, ruled := ruleOf(world.Name); ruled && string(got) != *nodeReport {
 				used["rule "+rule.bug+" "+world.Name] = true
-				if err := rule.same(*c.Report, string(got)); err != nil {
-					fail("%s %s (%s): %v:\n node: %s\n   go: %s", world.Name, c.Body, rule.bug, err, *c.Report, got)
+				if err := rule.same(*nodeReport, string(got)); err != nil {
+					fail("%s %s (%s): %v:\n node: %s\n   go: %s", world.Name, c.Body, rule.bug, err, *nodeReport, got)
 				}
 				continue
 			}
-			if string(got) != *c.Report {
-				fail("%s %s:\n node: %s\n   go: %s", world.Name, c.Body, *c.Report, got)
+			if string(got) != *nodeReport {
+				fail("%s %s:\n node: %s\n   go: %s", world.Name, c.Body, *nodeReport, got)
 			}
 			for _, s := range c.CSV {
 				if csv := e.ToCSV(report.CSVRows(valueOf(t, s.Section))); csv != s.CSV {

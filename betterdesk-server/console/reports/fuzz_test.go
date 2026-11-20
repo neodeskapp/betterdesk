@@ -159,7 +159,7 @@ func FuzzGenerate(f *testing.F) {
 			return
 		}
 		typ := jsbind.Of(body.Get("type"))
-		filters := Filters{From: jsbind.Of(body.Get("from")), To: jsbind.Of(body.Get("to")), DeviceID: jsbind.Of(body.Get("device_id")), Limit: jsbind.Of(body.Get("limit"))}
+		filters := Filters{From: jsbind.Of(body.Get("from")), To: jsbind.Of(body.Get("to"))}
 		report, err := e.Generate(context.Background(), typ, filters)
 		if err != nil {
 			return

@@ -128,7 +128,7 @@
      {
       "created_at": "<volatile>",
       "created_by": "e2e_admin",
-      "filters": "{\"from\":\"2026-01-01\",\"limit\":5}",
+      "filters": "{\"from\":\"2026-01-01\"}",
       "id": 0,
       "payload": "<volatile>",
       "report_type": "tickets",
