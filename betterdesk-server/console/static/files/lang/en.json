@@ -1936,7 +1936,7 @@
         "empty_title": "No users found",
         "empty_text": "No users yet.",
         "fill_required": "Please fill in all required fields",
-        "invalid_username": "A username has 3 to 32 characters: letters, numbers and underscores only.",
+        "invalid_username": "A username has 3 to 64 characters: letters, numbers and . _ @ - only.",
         "username_exists": "Username already exists",
         "weak_password": "Password is too weak",
         "password_too_short": "The password needs at least 8 characters.",

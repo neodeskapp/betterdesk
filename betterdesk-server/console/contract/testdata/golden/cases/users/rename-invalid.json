@@ -102,7 +102,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "A username has 3 to 32 characters: letters, numbers and underscores only.",
+     "error": "A username has 3 to 64 characters: letters, numbers and . _ @ - only.",
      "success": false
     }
    }

@@ -1869,7 +1869,7 @@
     "empty_title": "Keine Geräte gefunden",
     "empty_text": "Noch keine Benutzer.",
     "fill_required": "Bitte füllen Sie alle Pflichtfelder aus",
-    "invalid_username": "Ein Benutzername hat 3 bis 32 Zeichen, nur Buchstaben, Ziffern und Unterstriche.",
+    "invalid_username": "Ein Benutzername hat 3 bis 64 Zeichen, nur Buchstaben, Ziffern und . _ @ -.",
     "username_exists": "Benutzername existiert bereits",
     "weak_password": "Passwort ist zu schwach",
     "password_too_short": "Das Passwort braucht mindestens 8 Zeichen.",

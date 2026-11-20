@@ -1874,7 +1874,7 @@
     "empty_title": "Ingen brugere fundet",
     "empty_text": "Tilføj brugere for at administrere konsoladgang",
     "fill_required": "Udfyld venligst alle obligatoriske felter",
-    "invalid_username": "Brugernavn må kun bestå af 3-32 tegn, bogstaver, tal og understregninger",
+    "invalid_username": "Brugernavn må kun bestå af 3-64 tegn, bogstaver, tal og . _ @ -",
     "username_exists": "Brugernavnet eksisterer allerede",
     "weak_password": "Adgangskoden er for svag",
     "password_too_short": "Adgangskoden skal være på mindst 8 tegn",

@@ -89,7 +89,8 @@ export function passwordProblem(password: string, required: boolean): string | n
 	return null;
 }
 
-export const USERNAME_RE = /^[a-zA-Z0-9_]{3,32}$/;
+/** The server's rule for an account name: 3 to 64 letters, digits and _ . @ - */
+export const USERNAME_RE = /^[A-Za-z0-9_.@-]{3,64}$/;
 
 /** Why a new username would be refused (a string key), or null */
 export function usernameProblem(username: string): string | null {

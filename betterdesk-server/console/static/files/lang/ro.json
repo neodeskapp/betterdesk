@@ -1874,7 +1874,7 @@
     "empty_title": "Nu s-au găsit utilizatori",
     "empty_text": "Adăugați utilizatori pentru a gestiona accesul la consolă",
     "fill_required": "Vă rugăm să completați toate câmpurile obligatorii",
-    "invalid_username": "Numele de utilizator trebuie să aibă doar 3-32 de caractere, litere, cifre și caractere de subliniere",
+    "invalid_username": "Numele de utilizator trebuie să aibă doar 3-64 de caractere, litere, cifre și . _ @ -",
     "username_exists": "Numele de utilizator există deja",
     "weak_password": "Parola este prea slabă",
     "password_too_short": "Parola trebuie să aibă cel puțin 8 caractere",

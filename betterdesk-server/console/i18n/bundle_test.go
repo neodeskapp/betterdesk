@@ -725,3 +725,16 @@ func TestLanguageFilesHaveNoCdepKey(t *testing.T) {
 		}
 	}
 }
+
+// The refusal of an account name describes the rule the server checks:
+// 3 to 64 letters, digits and . _ @ - (BUGS.md UM25).
+func TestUsernameRuleTextsDescribeTheServersRule(t *testing.T) {
+	dir := copyDir(t, realLangDir)
+	b, _ := loaded(t, dir, "en")
+	for _, name := range fileNames(t, dir) {
+		text, _ := lookup(b.Translations(strings.TrimSuffix(name, ".json")), "users.invalid_username").(string)
+		if !strings.Contains(text, "64") || strings.Contains(text, "32") || !strings.Contains(text, ". _ @ -") {
+			t.Errorf("%s: users.invalid_username is %q", name, text)
+		}
+	}
+}

@@ -1874,7 +1874,7 @@
     "empty_title": "Kullanıcı bulunamadı",
     "empty_text": "Konsol erişimini yönetmek için kullanıcı ekleyin",
     "fill_required": "Lütfen gerekli tüm alanları doldurun",
-    "invalid_username": "Kullanıcı adı yalnızca 3-32 karakter, harf, rakam ve alt çizgiden oluşmalıdır",
+    "invalid_username": "Kullanıcı adı yalnızca 3-64 karakter, harf, rakam ve . _ @ - karakterlerinden oluşmalıdır",
     "username_exists": "Kullanıcı adı zaten mevcut",
     "weak_password": "Şifre çok zayıf",
     "password_too_short": "Şifre en az 8 karakter olmalıdır",

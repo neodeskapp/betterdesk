@@ -1874,7 +1874,7 @@
     "empty_title": "Nem található felhasználó",
     "empty_text": "Felhasználók hozzáadása a konzolhoz való hozzáférés kezeléséhez",
     "fill_required": "Kérjük, töltse ki az összes kötelező mezőt",
-    "invalid_username": "A felhasználónév 3-32 karakterből állhat, csak betűk, számok és aláhúzás",
+    "invalid_username": "A felhasználónév 3-64 karakterből állhat, csak betűk, számok és . _ @ -",
     "username_exists": "A felhasználónév már létezik",
     "weak_password": "A jelszó túl gyenge",
     "password_too_short": "A jelszónak legalább 8 karakterből kell állnia",

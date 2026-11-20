@@ -7646,7 +7646,7 @@
       "groups_line": "群組：{groups}",
       "invalid_email": "請輸入有效的電子郵件地址。",
       "invalid_role": "無效的角色",
-      "invalid_username": "用戶名必須爲 3-32 個字符，僅限字母、數字和下劃線",
+      "invalid_username": "用戶名必須爲 3-64 個字符，僅限字母、數字和 . _ @ -",
       "last_admin": "無法刪除最後一個管理員",
       "last_admin_go": "無法刪除：這是 BetterDesk 伺服器上唯一的 Super Admin。請先建立或同步另一個 Super Admin（不是 Global Admin）。",
       "last_login": "上次登入",

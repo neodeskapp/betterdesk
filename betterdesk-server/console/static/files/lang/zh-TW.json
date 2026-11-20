@@ -1912,7 +1912,7 @@
     "empty_title": "未找到用戶",
     "empty_text": "添加用戶以管理控制檯訪問權限",
     "fill_required": "請填寫所有必填字段",
-    "invalid_username": "用戶名必須爲 3-32 個字符，僅限字母、數字和下劃線",
+    "invalid_username": "用戶名必須爲 3-64 個字符，僅限字母、數字和 . _ @ -",
     "username_exists": "用戶名已存在",
     "weak_password": "密碼強度太弱",
     "password_too_short": "密碼至少需要 8 個字符",

@@ -69,12 +69,17 @@ describe('passwords and usernames (the server rules)', () => {
 		expect(passwordProblem('Correct-Horse-9', true)).toBeNull();
 	});
 
-	test('usernames: 3 to 32 letters, digits and underscores', () => {
+	test('usernames: 3 to 64 letters, digits and _ . @ -, as the server checks them', () => {
 		expect(usernameProblem('')).toBe('users.username_required');
 		expect(usernameProblem('ab')).toBe('users.invalid_username');
-		expect(usernameProblem('anna.k')).toBe('users.invalid_username');
-		expect(usernameProblem('a'.repeat(33))).toBe('users.invalid_username');
-		expect(usernameProblem('anna_k2')).toBeNull();
+		expect(usernameProblem('anna.k')).toBeNull();
+		expect(usernameProblem('anna@example.org')).toBeNull();
+		expect(usernameProblem('anna-k_2')).toBeNull();
+		expect(usernameProblem('a'.repeat(64))).toBeNull();
+		expect(usernameProblem('a'.repeat(65))).toBe('users.invalid_username');
+		expect(usernameProblem('anna k')).toBe('users.invalid_username');
+		expect(usernameProblem('anna+k')).toBe('users.invalid_username');
+		expect(usernameProblem('änna')).toBe('users.invalid_username');
 	});
 
 	test('direct device IDs split on commas, semicolons and spaces', () => {

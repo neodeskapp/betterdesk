@@ -1874,7 +1874,7 @@
     "empty_title": "Käyttäjiä ei löytynyt",
     "empty_text": "Lisää käyttäjiä hallitaksesi konsolin käyttöoikeuksia",
     "fill_required": "Täytä kaikki pakolliset kentät",
-    "invalid_username": "Käyttäjätunnuksessa saa olla vain 3-32 merkkiä, kirjaimia, numeroita ja alaviivoja",
+    "invalid_username": "Käyttäjätunnuksessa saa olla vain 3-64 merkkiä, kirjaimia, numeroita ja merkkejä . _ @ -",
     "username_exists": "Käyttäjätunnus on jo olemassa",
     "weak_password": "Salasana on liian heikko",
     "password_too_short": "Salasanassa on oltava vähintään 8 merkkiä",

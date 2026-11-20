@@ -1869,7 +1869,7 @@
     "empty_title": "No se encontraron dispositivos",
     "empty_text": "Ningún dispositivo coincide con sus filtros actuales",
     "fill_required": "Por favor, rellene todos los campos obligatorios",
-    "invalid_username": "El nombre de usuario debe tener 3-32 caracteres, solo letras, números y guiones bajos",
+    "invalid_username": "El nombre de usuario debe tener 3-64 caracteres, solo letras, números y . _ @ -",
     "username_exists": "El nombre de usuario ya existe",
     "weak_password": "La contraseña es demasiado débil",
     "password_too_short": "La contraseña debe tener al menos 8 caracteres",

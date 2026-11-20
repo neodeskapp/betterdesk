@@ -1874,7 +1874,7 @@
     "empty_title": "Ingen brukere funnet",
     "empty_text": "Legg til brukere for å administrere konsolltilgang",
     "fill_required": "Vennligst fyll ut alle obligatoriske felter",
-    "invalid_username": "Brukernavnet må bestå av 3-32 tegn, kun bokstaver, tall og understreking",
+    "invalid_username": "Brukernavnet må bestå av 3-64 tegn, kun bokstaver, tall og . _ @ -",
     "username_exists": "Brukernavnet finnes allerede",
     "weak_password": "Passordet er for svakt",
     "password_too_short": "Passordet må være på minst 8 tegn",

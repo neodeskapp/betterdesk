@@ -1872,7 +1872,7 @@
     "empty_title": "未找到用户",
     "empty_text": "添加用户以管理控制台访问权限",
     "fill_required": "请填写所有必填字段",
-    "invalid_username": "用户名必须为 3-32 个字符，仅限字母、数字和下划线",
+    "invalid_username": "用户名必须为 3-64 个字符，仅限字母、数字和 . _ @ -",
     "username_exists": "用户名已存在",
     "weak_password": "密码强度太弱",
     "password_too_short": "密码至少需要 8 个字符",

@@ -1868,7 +1868,7 @@
     "empty_title": "Nessun utente trovato",
     "empty_text": "Aggiungi utenti per gestire l'accesso alla console",
     "fill_required": "Compila tutti i campi obbligatori",
-    "invalid_username": "Il nome utente deve essere di 3-32 caratteri, solo lettere, numeri e underscore",
+    "invalid_username": "Il nome utente deve essere di 3-64 caratteri, solo lettere, numeri e . _ @ -",
     "username_exists": "Il nome utente esiste già",
     "weak_password": "La password è troppo debole",
     "password_too_short": "La password deve avere almeno 8 caratteri",

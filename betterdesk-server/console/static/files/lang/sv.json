@@ -1874,7 +1874,7 @@
     "empty_title": "Inga användare hittades",
     "empty_text": "Lägg till användare för att hantera konsolåtkomst",
     "fill_required": "Vänligen fyll i alla obligatoriska fält",
-    "invalid_username": "Användarnamn måste bestå av 3-32 tecken, bokstäver, siffror och endast understreck",
+    "invalid_username": "Användarnamn måste bestå av 3-64 tecken, bokstäver, siffror och endast . _ @ -",
     "username_exists": "Användarnamnet finns redan",
     "weak_password": "Lösenordet är för svagt",
     "password_too_short": "Lösenordet måste vara minst 8 tecken",

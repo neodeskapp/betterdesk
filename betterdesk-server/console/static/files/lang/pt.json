@@ -1868,7 +1868,7 @@
     "empty_title": "Nenhum utilizador encontrado",
     "empty_text": "Adicione utilizadores para gerir o acesso à consola",
     "fill_required": "Preencha todos os campos obrigatórios",
-    "invalid_username": "O nome de utilizador deve ter 3-32 caracteres, apenas letras, números e underscores",
+    "invalid_username": "O nome de utilizador deve ter 3-64 caracteres, apenas letras, números e . _ @ -",
     "username_exists": "O nome de utilizador já existe",
     "weak_password": "A palavra-passe é demasiado fraca",
     "password_too_short": "A palavra-passe deve ter pelo menos 8 caracteres",

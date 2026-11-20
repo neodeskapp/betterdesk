@@ -1868,7 +1868,7 @@
     "empty_title": "Nebyli nalezeni žádní uživatelé",
     "empty_text": "Přidejte uživatele pro správu přístupu do konzole",
     "fill_required": "Vyplňte prosím všechna povinná pole",
-    "invalid_username": "Uživatelské jméno musí mít 3–32 znaků a obsahovat pouze písmena, číslice a podtržítka",
+    "invalid_username": "Uživatelské jméno musí mít 3–64 znaků a obsahovat pouze písmena, číslice a znaky . _ @ -",
     "username_exists": "Uživatelské jméno již existuje",
     "weak_password": "Heslo je příliš slabé",
     "password_too_short": "Heslo musí mít alespoň 8 znaků",

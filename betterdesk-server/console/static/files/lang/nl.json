@@ -1868,7 +1868,7 @@
     "empty_title": "Geen gebruikers gevonden",
     "empty_text": "Voeg gebruikers toe om consoletoegang te beheren",
     "fill_required": "Vul alle verplichte velden in",
-    "invalid_username": "Gebruikersnaam moet 3-32 tekens zijn, alleen letters, cijfers en underscores",
+    "invalid_username": "Gebruikersnaam moet 3-64 tekens zijn, alleen letters, cijfers en . _ @ -",
     "username_exists": "Gebruikersnaam bestaat al",
     "weak_password": "Wachtwoord is te zwak",
     "password_too_short": "Wachtwoord moet minimaal 8 tekens zijn",

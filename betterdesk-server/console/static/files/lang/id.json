@@ -1874,7 +1874,7 @@
     "empty_title": "Tidak ada pengguna yang ditemukan",
     "empty_text": "Tambahkan pengguna untuk mengelola akses konsol",
     "fill_required": "Silakan isi semua bidang yang wajib diisi",
-    "invalid_username": "Nama pengguna harus terdiri dari 3-32 karakter, hanya huruf, angka, dan garis bawah",
+    "invalid_username": "Nama pengguna harus terdiri dari 3-64 karakter, hanya huruf, angka, dan . _ @ -",
     "username_exists": "Nama pengguna sudah ada",
     "weak_password": "Kata sandi terlalu lemah",
     "password_too_short": "Kata sandi minimal harus 8 karakter",

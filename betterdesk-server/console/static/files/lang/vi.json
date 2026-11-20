@@ -1874,7 +1874,7 @@
     "empty_title": "Không tìm thấy người dùng nào",
     "empty_text": "Thêm người dùng để quản lý quyền truy cập bảng điều khiển",
     "fill_required": "Vui lòng điền vào tất cả các trường bắt buộc",
-    "invalid_username": "Tên người dùng chỉ được từ 3-32 ký tự, chữ cái, số và dấu gạch dưới",
+    "invalid_username": "Tên người dùng chỉ được từ 3-64 ký tự, chữ cái, số và . _ @ -",
     "username_exists": "Tên người dùng đã tồn tại",
     "weak_password": "Mật khẩu quá yếu",
     "password_too_short": "Mật khẩu phải có ít nhất 8 ký tự",

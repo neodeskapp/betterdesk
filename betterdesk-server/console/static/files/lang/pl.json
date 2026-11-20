@@ -1908,7 +1908,7 @@
     "empty_title": "Brak użytkowników",
     "empty_text": "Dodaj użytkowników, aby zarządzać dostępem do konsoli",
     "fill_required": "Wypełnij wszystkie wymagane pola",
-    "invalid_username": "Nazwa użytkownika musi mieć 3-32 znaki, tylko litery, cyfry i podkreślenia",
+    "invalid_username": "Nazwa użytkownika musi mieć 3-64 znaki, tylko litery, cyfry i znaki . _ @ -",
     "username_exists": "Nazwa użytkownika już istnieje",
     "weak_password": "Hasło jest zbyt słabe",
     "password_too_short": "Hasło musi mieć co najmniej 8 znaków",
