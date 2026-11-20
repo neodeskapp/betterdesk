@@ -45,20 +45,12 @@ func consoleRoutes(t *testing.T) []string {
 	return paths
 }
 
-// stillDead are the API rules that still name a prefix no route has, with
-// the reason.
-var stillDead = map[string]string{
-	// The routes are under /api/panel/security-audit. Moving the rule there
-	// changes what the security audit routes' own tests pin (BUGS PA4).
-	"/api/security-audit": "PA4",
-}
-
 // PA4: a rule for an API prefix no route has leaves the section's API
 // unguarded while the page is hidden. Every API rule names routes.
 func TestEveryAPIRuleMatchesARoute(t *testing.T) {
 	routes := consoleRoutes(t)
 	for _, rule := range RouteRules {
-		if !strings.HasPrefix(rule.pattern(), apiPrefix) || stillDead[rule.pattern()] != "" {
+		if !strings.HasPrefix(rule.pattern(), apiPrefix) {
 			continue
 		}
 		found := false
@@ -163,6 +155,24 @@ func TestSettingsAuditIsTheSecurityAuditsTrail(t *testing.T) {
 	c := &Context{UserID: 1, HasUser: true, Role: "super_admin", Policy: policyWith("security-audit", LevelNone)}
 	if got := c.Guard("GET", "/api/settings/audit"); got.Verdict != VerdictDenied || got.Section != "security-audit" {
 		t.Errorf("audit with security-audit at none: %+v", got)
+	}
+}
+
+// PA4 (F2): the Security audit page's routes are under
+// /api/panel/security-audit, and its section guards them: they ask
+// audit.view, the section's read permission, so the roles with it pass
+// and guest_issuer gets the guard's refusal; a row that closes the section
+// closes them.
+func TestSecurityAuditRoutesAreGuarded(t *testing.T) {
+	// viewer, operator, guest_issuer, global_admin, server_admin
+	var cases []routeCase
+	for _, route := range []string{"overview", "events", "hardening", "vulnerabilities"} {
+		cases = append(cases, routeCase{"GET", "/api/panel/security-audit/" + route, "audit.view", [5]string{"ok", "ok", "guard", "ok", "ok"}})
+	}
+	checkRouteCases(t, cases)
+	c := &Context{UserID: 1, HasUser: true, Role: "super_admin", Policy: policyWith("security-audit", LevelNone)}
+	if got := c.Guard("GET", "/api/panel/security-audit/overview"); got.Verdict != VerdictDenied || got.Section != "security-audit" {
+		t.Errorf("overview with security-audit at none: %+v", got)
 	}
 }
 

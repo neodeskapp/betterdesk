@@ -29,7 +29,7 @@ var guardPaths = []struct {
 	{"/api/tickets", "tickets"}, {"/api/automation", "automation"}, {"/api/network", "network"},
 	{"/api/dataguard", "dataguard"}, {"/api/reports", "reports"}, {"/api/activity", "activity"},
 	{"/api/files", "files"}, {"/api/panel/scaling", "scaling"}, {"/api/panel/cross-platform", "cross-platform"},
-	{"/api/toolkit", "toolkit"}, {"/api/security-audit", "security-audit"}, {"/api/panel/languages", "languages"},
+	{"/api/toolkit", "toolkit"}, {"/api/panel/security-audit", "security-audit"}, {"/api/panel/languages", "languages"},
 	{"/api/panel/resource-control", "resource-control"}, {"/api/server-management", "server-management"},
 	{"/api/panel/fleet", "fleet"}, {"/api/chat", "chat"},
 	{"/api/server-attestation", "server-attestation"}, {"/api/registrations", "registrations"},
@@ -88,10 +88,11 @@ var guardPaths = []struct {
 	{"/api/bd/api/panel/resource-control/devices", "resource-control"},
 	{"/api/organizations", ""}, {"/api/scaling", ""}, {"/api/cross-platform", ""}, {"/api/languages", ""},
 	{"/api/resource-control", ""}, {"/api/panel/orgx", ""}, {"/api/chatx", ""},
+	{"/api/panel/security-audit/events", "security-audit"}, {"/api/security-audit", ""},
 
 	// API paths without a rule
 	{"/api", ""}, {"/api/", ""}, {"/api/panel", ""},
-	{"/api/panel/roles", ""}, {"/api/panel/role-permissions", ""}, {"/api/panel/security-audit/events", ""},
+	{"/api/panel/roles", ""}, {"/api/panel/role-permissions", ""},
 	{"/api/cdap/devices", ""}, {"/api/bd/commands", ""}, {"/api/auth/login", ""}, {"/api/bd/api/registrations", ""},
 	{"/api/console/bootstrap", ""}, {"/api/inventory", ""}, {"/api/keys", ""}, {"/api/tenants", ""},
 

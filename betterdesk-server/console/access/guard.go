@@ -81,7 +81,7 @@ var RouteRules = []Rule{
 	{Prefix: "/api/panel/scaling", Section: "scaling"},
 	{Prefix: "/api/panel/cross-platform", Section: "cross-platform"},
 	{Prefix: "/api/toolkit", Section: "toolkit"},
-	{Prefix: "/api/security-audit", Section: "security-audit"},
+	{Prefix: "/api/panel/security-audit", Section: "security-audit"},
 	{Prefix: "/api/panel/languages", Section: "languages"},
 	{Prefix: "/api/panel/resource-control", Section: "resource-control"},
 	{Prefix: "/api/server-management", Section: "server-management"},

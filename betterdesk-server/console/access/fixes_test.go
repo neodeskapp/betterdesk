@@ -34,6 +34,7 @@ var ruleFixes = []ruleFix{
 	{bug: "PA4", remove: Rule{Prefix: "/api/cross-platform", Section: "cross-platform"}, add: Rule{Prefix: "/api/panel/cross-platform", Section: "cross-platform"}},
 	{bug: "PA4", remove: Rule{Prefix: "/api/languages", Section: "languages"}, add: Rule{Prefix: "/api/panel/languages", Section: "languages"}},
 	{bug: "PA4", remove: Rule{Prefix: "/api/resource-control", Section: "resource-control"}, add: Rule{Prefix: "/api/panel/resource-control", Section: "resource-control"}},
+	{bug: "PA4 (F2)", remove: Rule{Prefix: "/api/security-audit", Section: "security-audit"}, add: Rule{Prefix: "/api/panel/security-audit", Section: "security-audit"}},
 	// fleet and chat had no API rule.
 	{bug: "PA4", add: Rule{Prefix: "/api/panel/fleet", Section: "fleet"}},
 	{bug: "PA4", add: Rule{Prefix: "/api/chat", Section: "chat"}},
