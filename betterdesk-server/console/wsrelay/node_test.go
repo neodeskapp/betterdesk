@@ -808,6 +808,12 @@ var fixes = []fix{
 	// relay reads the second, which is no relay request for the link's
 	// device
 	{bug: "RM20", scenario: "guest relay", step: 19, events: `[{"socket":"g","close":1005,"reason":""},{"socket":"g","end":true},{"tcp":"hbbr#7","closed":true}]`},
+	// Socket d's relay request came in two messages: once it decodes, the
+	// relay gets all of it in one frame, not only the second part
+	{bug: "RM22", scenario: "guest relay", step: 12, events: `[
+		{"api":"POST /guest/access-links/consume","body":"{\"token\":\"tok-valid\",\"peer_id\":\"TARGET01\"}","answer":{"status":200,"data":{"valid":true,"id":"g1","token_prefix":"tok-","peer_ids":["TARGET01"],"view_only":false,"label":"oracle","expires_at":"2023-11-14T22:23:20.000Z"}}},
+		{"tcp":"hbbr#4","data":"VJIBEgoIVEFSR0VUMDESBnV1aWQtMQ=="},
+		{"api":"POST /guest/access-links/events","body":"{\"event\":\"opened\",\"grant_id\":\"g1\",\"peer_id\":\"TARGET01\",\"session_id\":\"s4\",\"transport\":\"relay\",\"source_ip\":\"127.0.0.1\",\"duration_ms\":0,\"reason\":\"\"}","answer":{"status":200,"data":{"success":true}}}]`},
 	// The address is the one TRUST_PROXY gives (a proxy on loopback here):
 	// " 10.0.0.1 , 10.0.0.9" is 10.0.0.9, the address the trusted proxy
 	// saw, not the first entry, so the socket gets a budget of its own and

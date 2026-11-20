@@ -153,11 +153,11 @@ func (b *bridge) onMessage(data []byte) {
 	}
 	opening := false
 	if b.guest != nil || b.account.reads() {
-		pass, opens := b.readTargets(data)
+		send, pass, opens := b.readTargets(data)
 		if !pass {
 			return
 		}
-		opening = opens
+		data, opening = send, opens
 	}
 	if b.guest != nil && opening && !b.consumed {
 		if err := b.s.consume(b.background, b.guest); err != nil {
@@ -198,41 +198,42 @@ func (b *bridge) onMessage(data []byte) {
 // request_relay) names a device the link or the scope holds, or none. On
 // /ws/relay the first bytes must decode to a rendezvous message: for a
 // guest a relay request for the link's device, for an account a relay
-// request for a device of its scope or no relay request; later bytes are
-// not read. pass reports whether the message goes on to the server
-// (false: it waits for more bytes, or the bridge ended); opening whether
-// it holds a request that opens a connection.
-func (b *bridge) readTargets(data []byte) (pass, opening bool) {
+// request for a device of its scope or no relay request. They are held
+// until they decode and then go on together, as one message; later bytes
+// are not read. send is what goes on to the server when pass is true
+// (false: the bytes wait for more, or the bridge ended); opening says it
+// holds a request that opens a connection.
+func (b *bridge) readTargets(data []byte) (send []byte, pass, opening bool) {
 	if b.label == "rendezvous" {
 		frames, err := b.frames.feed(data)
 		if err != nil {
 			logf("ERROR: WS proxy [%s]: invalid relay WS frame: %s", b.label, err.Error())
 			b.cleanup("invalid-ws-frame", err.Error())
-			return false, false
+			return nil, false, false
 		}
 		for _, payload := range frames {
 			msg, err := decodeRendezvous(payload)
 			if err != nil || !b.targetAllowed(msg) {
 				b.targetMismatch("")
-				return false, false
+				return nil, false, false
 			}
 			if msg.PunchHoleRequest != nil || msg.RequestRelay != nil {
 				opening = true
 			}
 		}
-		return true, opening
+		return data, true, opening
 	}
 	if b.relayValidated {
-		return true, false
+		return data, true, false
 	}
 	if len(b.relayBuffer)+len(data) > guestRelayBuffer {
 		b.cleanup("guest-invalid-relay-frame", "")
-		return false, false
+		return nil, false, false
 	}
 	b.relayBuffer = append(b.relayBuffer, data...)
 	msg, err := decodeRendezvous(b.relayBuffer)
 	if err != nil {
-		return false, false
+		return nil, false, false
 	}
 	var allowed bool
 	if b.guest != nil {
@@ -242,10 +243,11 @@ func (b *bridge) readTargets(data []byte) (pass, opening bool) {
 	}
 	if !allowed {
 		b.targetMismatch("relay ")
-		return false, false
+		return nil, false, false
 	}
 	b.relayValidated = true
-	return true, true
+	send, b.relayBuffer = b.relayBuffer, nil
+	return send, true, true
 }
 
 // targetAllowed reports whether a rendezvous message's request names a
