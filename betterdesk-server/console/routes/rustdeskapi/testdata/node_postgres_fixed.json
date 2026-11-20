@@ -98,6 +98,17 @@
   },
   "bug": "DGR5"
  },
+ "665 PUT /api/strategies/s-fixed-1/status": {
+  "answer": {
+   "answer": "{\"success\":false,\"error\":\"invalid JSON: the body has to be an object or an array\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 400
+  },
+  "bug": "S17"
+ },
  "666 PUT /api/strategies/s-fixed-1/status": {
   "answer": {
    "answer": "{\"error\":\"enabled must be true or false\"}",

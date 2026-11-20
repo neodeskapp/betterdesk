@@ -32,6 +32,9 @@ var fixedSteps = []fixedStep{
 	// The version of the system information hbok1 uploaded, not the
 	// empty text.
 	{"node", "396 POST /api/sysinfo_ver", "RD1"},
+	// A body that is no JSON object says why, also in production, where
+	// Node said "Internal Server Error".
+	{"node", "665 PUT /api/strategies/s-fixed-1/status", "S17"},
 	// The switch of a strategy is read from {"enabled": <boolean>}; any
 	// other body is refused before the strategy is looked up, so it stays
 	// switched on.

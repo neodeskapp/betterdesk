@@ -442,6 +442,12 @@ var fixes = []fix{
 	// and a search for one of them finds nothing
 	{bug: "RG1", steps: []string{"355 address POST /api/bd/register-request..."}, edits: forwardedAddresses()},
 	{bug: "RG1", steps: []string{"411 GET /api/registrations?search=100%25_"}, answer: `{"success":true,"data":[],"total":0}`},
+	// S17: a path parameter or a body the console refuses says why, also
+	// in production, where Node said "Internal Server Error"
+	{bug: "S17", steps: []string{"309 escape of no UTF-8 GET /api/registrations/%E0%A4"}, answer: `{"success":false,"error":"Failed to decode param '%E0%A4'"}`},
+	{bug: "S17", steps: []string{"340 raw POST /api/bd/register-request", "343 raw POST /api/bd/register-request", "344 raw POST /api/bd/register-request", "345 raw POST /api/bd/register-request"},
+		answer: `{"success":false,"error":"invalid JSON: the body has to be an object or an array"}`},
+	{bug: "S17", steps: []string{"347 raw POST /api/bd/register-request"}, answer: `{"success":false,"error":"invalid JSON: unexpected end of JSON input"}`},
 }
 
 // forwardedAddresses are the edits of RG1: each address the requests of

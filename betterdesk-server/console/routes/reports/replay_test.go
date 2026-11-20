@@ -95,6 +95,24 @@ var reportFixes replay.Fixes
 // session, the same on both databases; signedOutWrites lists them.
 var _ = reportFixes.Add("RP1", signedOutWrites())
 
+// S17: a body that is no JSON object says why, also in production, where
+// Node said "Internal Server Error". The recording sends one, the text
+// "devices" to generate, as three accounts; refusedBodies lists them.
+var _ = reportFixes.Add("S17", refusedBodies())
+
+func refusedBodies() map[string]replay.Fix {
+	steps := map[string]replay.Fix{}
+	for _, step := range recordedSteps() {
+		if step.Status == 400 && step.Answer == `{"success":false,"error":"Internal Server Error"}` {
+			steps[replay.FixKey(step)] = replay.Fix{Status: 400, Answer: `{"success":false,"error":"invalid JSON: the body has to be an object or an array"}`}
+		}
+	}
+	if len(steps) != 3 {
+		panic(fmt.Sprintf("S17: %d bodies the parser refused, want 3", len(steps)))
+	}
+	return steps
+}
+
 // recordedSteps are the steps of the recording on SQLite; the recording
 // on PostgreSQL sends the same requests.
 func recordedSteps() []replay.Step {

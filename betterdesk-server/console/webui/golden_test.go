@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -145,8 +146,9 @@ func TestAnswersMatchNode(t *testing.T) {
 
 				differences := 0
 				fixed := map[string]int{}
+				failing := failingTargets(golden.Cases)
 				for _, c := range golden.Cases {
-					if bug := intended(config.base, &c); bug != "" {
+					if bug := intended(config.base, &c, failing); bug != "" {
 						fixed[bug]++
 					}
 					rec := httptest.NewRecorder()
@@ -237,8 +239,8 @@ func TestAnswersMatchNode(t *testing.T) {
 
 // intended turns a recorded answer into what the console answers since a
 // bug fix changed it on purpose, and names the bug ("" for an answer no
-// fix changed).
-func intended(base string, c *goldenCase) string {
+// fix changed). failing holds the targets of failingTargets.
+func intended(base string, c *goldenCase, failing map[string]bool) string {
 	// S15: a file of the build replaces the Cache-Control the steps before
 	// set (the recording's preset) with its own hour
 	if preset := c.Headers["X-Test-Preset"]; preset != "" && c.Answer["cache-control"] == preset && c.Answer["last-modified"] != "" {
@@ -323,7 +325,122 @@ func intended(base string, c *goldenCase) string {
 		}
 		return "W4"
 	}
+	// S17: below 500 the error answer says what was wrong with the request
+	// also in production, where Node said "Internal Server Error". The
+	// recording has only that text, so the status is compared, then the
+	// headers other than the length and the tag, then the message. An error
+	// without a message still says the generic text
+	op, message := c.Headers["X-Test-Op"], c.Headers["X-Test-Message"]
+	head := c.Method == http.MethodHead
+	failed := genericFailure(c)
+	if head {
+		failed = c.Status >= 400 && c.Status < http.StatusInternalServerError && (failing[c.Target] || failing["etag "+c.Answer["etag"]])
+	}
+	if failed && (op == "" || op == "error" && message != "") {
+		answer, target := c.Answer, c.Target
+		kind := "text"
+		switch {
+		case c.Page != nil:
+			kind = "page"
+		case c.Body != nil && strings.HasPrefix(*c.Body, "{"):
+			kind = "json"
+		}
+		c.check = func(header http.Header, body string) string {
+			for name, want := range answer {
+				if name != "content-length" && name != "etag" && want != "{POLICY}" && header.Get(name) != want {
+					return name + ": " + strconv.Quote(header.Get(name)) + ", Node " + strconv.Quote(want)
+				}
+			}
+			if head {
+				if body != "" {
+					return "a body: " + strconv.Quote(clip(body))
+				}
+				return ""
+			}
+			shown, ok := shownMessage(kind, body)
+			switch {
+			case !ok:
+				return "no error answer: " + strconv.Quote(clip(body))
+			case op == "error" && shown != message,
+				op == "" && !clientMessage(target, shown):
+				return "message " + strconv.Quote(shown)
+			}
+			return ""
+		}
+		return "S17"
+	}
 	return ""
+}
+
+// genericFailure reports whether Node's answer is its error handler's
+// in production: "Internal Server Error" as JSON or text, or the error
+// page without a message.
+func genericFailure(c *goldenCase) bool {
+	if c.Status < 400 || c.Status >= http.StatusInternalServerError {
+		return false
+	}
+	switch {
+	case c.Body != nil:
+		return *c.Body == `{"success":false,"error":"Internal Server Error"}` || *c.Body == "Internal Server Error"
+	case c.Page != nil:
+		return *c.Page == `<meta name="bd-error" content="500">`
+	}
+	return false
+}
+
+// failingTargets are the targets and the tags ("etag <tag>") of the
+// recorded answers of genericFailure: a HEAD request for such a target, or
+// with such a tag, got the same failure without a body.
+func failingTargets(cases []goldenCase) map[string]bool {
+	out := map[string]bool{}
+	for i := range cases {
+		if cases[i].Method != http.MethodHead && genericFailure(&cases[i]) {
+			out[cases[i].Target] = true
+			out["etag "+cases[i].Answer["etag"]] = true
+		}
+	}
+	return out
+}
+
+// shownMessage is the message of an error answer of a kind ("json",
+// "page" or "text"): the error of the JSON, the message of the error page,
+// or the text.
+func shownMessage(kind, body string) (string, bool) {
+	switch kind {
+	case "json":
+		var answer struct {
+			Success *bool  `json:"success"`
+			Error   string `json:"error"`
+		}
+		if err := json.Unmarshal([]byte(body), &answer); err != nil || answer.Success == nil || *answer.Success {
+			return "", false
+		}
+		return answer.Error, true
+	case "page":
+		_, rest, ok := strings.Cut(body, `<head><meta name="bd-error" content="500" data-message="`)
+		if !ok {
+			return "", false
+		}
+		message, _, _ := strings.Cut(rest, `">`)
+		return html.UnescapeString(message), true
+	}
+	return body, true
+}
+
+// clientMessage reports whether a message is one the web app's own
+// failures give below 500 for a request to target: a parameter of the
+// target that does not decode, a failed precondition, a range outside
+// the file, a file that is not there.
+func clientMessage(target, message string) bool {
+	if param, ok := strings.CutPrefix(message, "Failed to decode param '"); ok {
+		param, ok = strings.CutSuffix(param, "'")
+		return ok && param != "" && strings.Contains(target, param)
+	}
+	switch message {
+	case "Precondition Failed", "Range Not Satisfiable", "Not Found":
+		return true
+	}
+	return false
 }
 
 // hashedDirectory reports whether a request target names a directory of

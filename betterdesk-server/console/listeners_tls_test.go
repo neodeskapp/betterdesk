@@ -649,7 +649,8 @@ func TestHTTPSFallbackCookiesAreNotSecure(t *testing.T) {
 // the console's 400 with the security headers (JSON under /api/) on the
 // console's listener, plain and with TLS, also as the second request of a
 // connection, which then closes (BUGS P2). The answer names the path
-// segment that does not decode, as the old console's router did.
+// segment that does not decode, as the old console's router did, also in
+// production (S17).
 func TestBrokenEscapeGetsTheConsolesAnswer(t *testing.T) {
 	certs := makeTestCerts(t)
 	db := storetest.Migrated(t)
@@ -675,7 +676,7 @@ func TestBrokenEscapeGetsTheConsolesAnswer(t *testing.T) {
 		}
 		a := answers[1]
 		if a.status != http.StatusBadRequest || a.header.Get("Content-Type") != "application/json; charset=utf-8" ||
-			string(a.body) != `{"success":false,"error":"Internal Server Error"}` {
+			string(a.body) != `{"success":false,"error":"Failed to decode param '%zz'"}` {
 			t.Errorf("%s: %d %q %s", c.scenario, a.status, a.header.Get("Content-Type"), a.body)
 		}
 		for _, name := range []string{"Content-Security-Policy", "X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy"} {

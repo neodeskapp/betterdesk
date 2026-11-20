@@ -43,8 +43,7 @@ type handlers struct {
 	// random gives the bytes of a new file's id.
 	random io.Reader
 	// errors is the web app host, whose error handler answers what the
-	// routes do not answer themselves. Without it the answer is the one
-	// the handler gives in production.
+	// routes do not answer themselves.
 	errors *webui.Host
 	// scope is the device scope a download is checked against.
 	scope Scope
@@ -65,6 +64,10 @@ func Register(d *kit.Deps) {
 
 func register(d *kit.Deps, dir string) *handlers {
 	h := &handlers{api: d.GoAPI, dir: dir, maxFolder: maxFolderSize, random: rand.Reader, errors: d.WebUI, user: kit.User}
+	if h.errors == nil {
+		// Without the web app the error handler is the one of production
+		h.errors = webui.New(webui.Options{Production: true})
+	}
 	h.files = httpx.NewStatic(dir, httpx.StaticOptions{
 		NoIndex:       true,
 		NoFallthrough: true,
@@ -86,15 +89,9 @@ func register(d *kit.Deps, dir string) *handlers {
 	return h
 }
 
-// serverError answers through the console's error handler: the status,
-// and in production "Internal Server Error" in place of the message.
+// serverError answers through the console's error handler (webui): the
+// status, and in production "Internal Server Error" in place of the
+// message of a failure of the server.
 func (h *handlers) serverError(w http.ResponseWriter, r *http.Request, err error, status int) {
-	if h.errors != nil {
-		h.errors.ServerError(w, r, err, status)
-		return
-	}
-	if status == 0 {
-		status = http.StatusInternalServerError
-	}
-	kit.Fail(w, r, status, "Internal Server Error")
+	h.errors.ServerError(w, r, err, status)
 }

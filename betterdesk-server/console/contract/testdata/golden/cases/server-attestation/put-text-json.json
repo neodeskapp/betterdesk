@@ -33,7 +33,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Internal Server Error",
+     "error": "invalid JSON: the body has to be an object or an array",
      "success": false
     }
    }

@@ -296,10 +296,13 @@ func headerValue(text string) (value string, ok bool) {
 
 // fileError answers a download that failed after its headers were set:
 // the console's error answer as JSON, under the status of the failure,
-// without the attachment's Content-Disposition.
+// without the attachment's Content-Disposition. In production a failure
+// of the server (500 and above) says "Internal Server Error"; a refused
+// request says why, as outside production (S17). A missing file says "Not
+// Found", never the path the file sender looked at.
 func (h *handlers) fileError(w http.ResponseWriter, r *http.Request, status int, err error) {
 	message := "Internal Server Error"
-	if !h.d.Config.Production {
+	if !h.d.Config.Production || status < http.StatusInternalServerError {
 		switch status {
 		case http.StatusPreconditionFailed:
 			message = "Precondition Failed"

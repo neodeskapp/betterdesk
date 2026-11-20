@@ -24,10 +24,10 @@
 // A parser error ends the request: the middleware calls OnError and the
 // rest of the pipeline does not run. The handler behind OnError is the
 // console's error handler (console/webui), which answers with the error's
-// status and, in production, without its text:
+// status and its text, also in production:
 //
-//	400 {"success":false,"error":"Internal Server Error"}   malformed JSON
-//	413 {"success":false,"error":"Internal Server Error"}   body over the limit
+//	400 {"success":false,"error":"invalid JSON: ..."}           malformed JSON
+//	413 {"success":false,"error":"request entity too large"}   body over the limit
 //
 // # What handlers get
 //

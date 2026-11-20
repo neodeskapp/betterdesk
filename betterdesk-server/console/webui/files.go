@@ -46,12 +46,16 @@ func (noFiles) ReadFile(string) ([]byte, error)        { return nil, fs.ErrNotEx
 type httpError struct {
 	status  int
 	message string
+	// cause is the error the message was taken from, if any
+	cause error
 }
 
 func (e *httpError) Error() string { return e.message }
 
+func (e *httpError) Unwrap() error { return e.cause }
+
 func decodeFailure(param string) *httpError {
-	return &httpError{http.StatusBadRequest, "Failed to decode param '" + param + "'"}
+	return &httpError{status: http.StatusBadRequest, message: "Failed to decode param '" + param + "'"}
 }
 
 // hashedDir is the folder of the build's hashed files.
@@ -242,7 +246,7 @@ func (h *Host) serveImmutable(w http.ResponseWriter, r *http.Request, rel string
 			header.Set("Content-Encoding", c.encoding)
 		}
 		if base := filepath.Base(name); strings.HasPrefix(base, ".") && len(base) > 1 {
-			return true, &httpError{http.StatusNotFound, "Not Found"}
+			return true, &httpError{status: http.StatusNotFound, message: "Not Found"}
 		}
 		if err := h.sendFile(w, r, name, info, "public, max-age=0"); err != nil {
 			return true, err
@@ -276,7 +280,7 @@ func (h *Host) serveStatic(w http.ResponseWriter, r *http.Request, decoded strin
 		if isMissing(err) {
 			return false, nil
 		}
-		return true, &httpError{http.StatusInternalServerError, err.Error()}
+		return true, &httpError{status: http.StatusInternalServerError, message: err.Error(), cause: err}
 	}
 	if info.IsDir() {
 		return false, nil
@@ -335,7 +339,7 @@ func (h *Host) sendFile(w http.ResponseWriter, r *http.Request, name string, inf
 	in := r.Header
 	if in.Get("If-Match") != "" || in.Get("If-Unmodified-Since") != "" || in.Get("If-None-Match") != "" || in.Get("If-Modified-Since") != "" {
 		if preconditionFailed(in, etag, lastModified, lastModifiedErr == nil) {
-			return &httpError{http.StatusPreconditionFailed, "Precondition Failed"}
+			return &httpError{status: http.StatusPreconditionFailed, message: "Precondition Failed"}
 		}
 		if httpx.Fresh(r, etag, lastModified) {
 			for _, name := range []string{"Content-Encoding", "Content-Language", "Content-Length", "Content-Range", "Content-Type"} {
@@ -355,7 +359,7 @@ func (h *Host) sendFile(w http.ResponseWriter, r *http.Request, name string, inf
 		}
 		if !satisfiable {
 			header.Set("Content-Range", fmt.Sprintf("bytes */%d", size))
-			return &httpError{http.StatusRequestedRangeNotSatisfiable, "Range Not Satisfiable"}
+			return &httpError{status: http.StatusRequestedRangeNotSatisfiable, message: "Range Not Satisfiable"}
 		}
 		if len(ranges) == 1 {
 			status = http.StatusPartialContent
@@ -372,14 +376,14 @@ func (h *Host) sendFile(w http.ResponseWriter, r *http.Request, name string, inf
 	file, err := h.files.Open(name)
 	if err != nil {
 		if isMissing(err) {
-			return &httpError{http.StatusNotFound, err.Error()}
+			return &httpError{status: http.StatusNotFound, message: err.Error(), cause: err}
 		}
-		return &httpError{http.StatusInternalServerError, err.Error()}
+		return &httpError{status: http.StatusInternalServerError, message: err.Error(), cause: err}
 	}
 	defer file.Close()
 	if offset > 0 {
 		if _, err := file.Seek(offset, io.SeekStart); err != nil {
-			return &httpError{http.StatusInternalServerError, err.Error()}
+			return &httpError{status: http.StatusInternalServerError, message: err.Error(), cause: err}
 		}
 	}
 	w.WriteHeader(status)

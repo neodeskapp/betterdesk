@@ -390,3 +390,15 @@ var _ = ticketFixes.Add("C7", map[string]replay.Fix{
 	"admin GET /api/tickets/attachments/2147483648 ":           {Dialect: "postgres", Status: 404, Answer: `{"error":"Attachment not found"}`},
 	"admin GET /api/tickets/attachments/99999999999999999999 ": {Dialect: "postgres", Status: 404, Answer: `{"error":"Attachment not found"}`},
 })
+
+// S17: a range outside the file and a condition that does not hold say
+// so, also in production, where Node said "Internal Server Error". The
+// answer stays JSON without the attachment's name (TK9).
+var _ = ticketFixes.Add("S17", map[string]replay.Fix{
+	"admin GET /api/tickets/attachments/4 ": {NodeStatus: 416, Status: 416, Answer: `{"success":false,"error":"Range Not Satisfiable"}`,
+		Headers: map[string]string{"Content-Type": "application/json; charset=utf-8", "Content-Disposition": "", "Content-Range": "bytes */12"}},
+})
+var _ = ticketFixes.Add("S17", map[string]replay.Fix{
+	"admin GET /api/tickets/attachments/4 ": {NodeStatus: 412, Status: 412, Answer: `{"success":false,"error":"Precondition Failed"}`,
+		Headers: map[string]string{"Content-Type": "application/json; charset=utf-8", "Content-Disposition": ""}},
+})

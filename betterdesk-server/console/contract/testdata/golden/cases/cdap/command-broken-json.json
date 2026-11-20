@@ -34,7 +34,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Internal Server Error",
+     "error": "invalid JSON: unexpected end of JSON input",
      "success": false
     }
    }

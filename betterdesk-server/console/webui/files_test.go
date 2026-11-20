@@ -146,12 +146,12 @@ func TestFailedPreconditionAndRange(t *testing.T) {
 				"If-Unmodified-Since an earlier day": {"If-Unmodified-Since": "Sat, 01 Jan 2000 00:00:00 GMT"},
 			} {
 				a := serve(h, "GET", target, with(headers, "Accept", "application/json"))
-				if a.status != 412 || a.body != `{"success":false,"error":"Internal Server Error"}` || a.get("ETag") != "" && !strings.HasPrefix(a.get("ETag"), `W/"`) {
+				if a.status != 412 || a.body != `{"success":false,"error":"Precondition Failed"}` || a.get("ETag") != "" && !strings.HasPrefix(a.get("ETag"), `W/"`) {
 					t.Errorf("%s %s: %d %q", target, name, a.status, a.body)
 				}
 			}
 			a := serve(h, "GET", target, map[string]string{"Range": "bytes=100000-", "Accept": browser})
-			if a.status != 416 || !strings.Contains(a.body, `<meta name="bd-error" content="500">`) || !strings.HasPrefix(a.get("Content-Range"), "bytes */") ||
+			if a.status != 416 || !strings.Contains(a.body, `<meta name="bd-error" content="500" data-message="Range Not Satisfiable">`) || !strings.HasPrefix(a.get("Content-Range"), "bytes */") ||
 				a.get("Cache-Control") != "no-store" || a.get("Accept-Ranges") != "bytes" || a.get("Last-Modified") != siteModified {
 				t.Errorf("%s with a range outside the file: %d, headers %v", target, a.status, a.header)
 			}
@@ -400,7 +400,7 @@ func TestDotFilesDirectoriesAndOddNames(t *testing.T) {
 		}
 		// A hashed file whose name starts with a dot is refused, not passed on
 		a := serve(h, "GET", base+"/_ui/immutable/chunks/.hidden.js", map[string]string{"Accept": "application/json"})
-		if a.status != 404 || !a.handled || a.body != `{"success":false,"error":"Internal Server Error"}` {
+		if a.status != 404 || !a.handled || a.body != `{"success":false,"error":"Not Found"}` {
 			t.Errorf("a hashed dot file: %d %q (handled %v)", a.status, a.body, a.handled)
 		}
 		// The routes match in any letter case, the files on disk do not (on Linux)

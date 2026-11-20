@@ -105,7 +105,8 @@ func TestTheLargeBodyLimitIsTheAttachmentRoutesAlone(t *testing.T) {
 	if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tickets", Body: replay.Text(`{"title":"uploads"}`)}); got.Status != 201 {
 		t.Fatalf("create a ticket: %d %s", got.Status, got.Body)
 	}
-	const tooLarge = `{"success":false,"error":"Internal Server Error"}`
+	// The parser's message is the answer, also in production (S17)
+	const tooLarge = `{"success":false,"error":"request entity too large"}`
 	for _, tt := range []struct {
 		name         string
 		role, method string
@@ -200,7 +201,7 @@ func TestRateLimiters(t *testing.T) {
 // An install below a folder whose name starts with a dot serves its
 // attachments: only a dot in a name below the attachment folder hides a
 // file (BUGS TK10). Such a file is refused with the console's JSON error,
-// without the attachment's name (BUGS TK9).
+// without the attachment's name (BUGS TK9), as not found (S17).
 func TestADownloadBelowADotFolder(t *testing.T) {
 	w := replay.NewWorld(t, storetest.Migrated(t), func(cfg *config.Config) {
 		cfg.ConsoleDir = filepath.Join(cfg.DataDir, ".hidden", "console")
@@ -220,7 +221,7 @@ func TestADownloadBelowADotFolder(t *testing.T) {
 	}
 	w.Exec("INSERT INTO ticket_attachments (ticket_id, filename, storage_path, uploaded_by) VALUES (1, 'h.txt', '.hidden-file', 'admin')", nil)
 	got := w.Do(replay.Request{Role: "admin", Path: "/api/tickets/attachments/2"})
-	if got.Status != 404 || got.Body != `{"success":false,"error":"Internal Server Error"}` {
+	if got.Status != 404 || got.Body != `{"success":false,"error":"Not Found"}` {
 		t.Errorf("download of a dot file: %d %s", got.Status, got.Body)
 	}
 	if ct := got.Header.Get("Content-Type"); ct != "application/json; charset=utf-8" {

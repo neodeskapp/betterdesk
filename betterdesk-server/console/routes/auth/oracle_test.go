@@ -158,6 +158,13 @@ func TestLockoutAnswersOfNode(t *testing.T) {
 				}
 				continue
 			}
+			if step.Status == http.StatusBadRequest && step.Answer == `{"success":false,"error":"Internal Server Error"}` {
+				// S17: a body that is no JSON object says why, also in
+				// production; it is refused before the route, as in Node
+				got := w.agentFrom(step.IP).post("/api/auth/login", step.Body)
+				want(t, step.Label+" (S17)", got, http.StatusBadRequest, `{"success":false,"error":"invalid JSON: the body has to be an object or an array"}`)
+				continue
+			}
 			if step.Status == http.StatusTooManyRequests && !strings.HasPrefix(step.Label, "address with") {
 				got := w.agentFrom(step.IP).post("/api/auth/login", step.Body)
 				if got.status == http.StatusTooManyRequests {

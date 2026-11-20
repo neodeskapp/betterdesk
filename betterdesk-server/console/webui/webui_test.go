@@ -391,11 +391,13 @@ func TestPathThatDoesNotDecodeIsABadRequest(t *testing.T) {
 // answer of ServerError with status 400.
 func TestParameterThatDoesNotDecodeIsAFailedRequest(t *testing.T) {
 	h, _ := testHost(t, "")
-	for _, c := range []struct{ method, target string }{
-		{"GET", "/app/%E0%A4%A"}, {"POST", "/app/%zz"}, {"GET", "/_ui/immutable/%zz"}, {"DELETE", "/_ui/immutable/x%"}, {"POST", "/organizations/%E0%A4%A"},
+	for _, c := range []struct{ method, target, param string }{
+		{"GET", "/app/%E0%A4%A", "%E0%A4%A"}, {"POST", "/app/%zz", "%zz"}, {"GET", "/_ui/immutable/%zz", "%zz"}, {"DELETE", "/_ui/immutable/x%", "x%"},
+		{"POST", "/organizations/%E0%A4%A", "/organizations/%E0%A4%A"},
 	} {
+		// The message says which parameter, also in production (S17)
 		a := serve(h, c.method, c.target, map[string]string{"Accept": "application/json"})
-		if a.status != 400 || a.body != `{"success":false,"error":"Internal Server Error"}` || !a.handled {
+		if a.status != 400 || a.body != `{"success":false,"error":"Failed to decode param '`+c.param+`'"}` || !a.handled {
 			t.Errorf("%s %s: %d %q (handled %v)", c.method, c.target, a.status, a.body, a.handled)
 		}
 	}

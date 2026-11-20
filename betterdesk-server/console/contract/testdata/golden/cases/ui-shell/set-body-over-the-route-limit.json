@@ -72,7 +72,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Internal Server Error",
+     "error": "request entity too large",
      "success": false
     }
    }

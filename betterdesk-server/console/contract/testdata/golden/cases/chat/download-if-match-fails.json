@@ -46,7 +46,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Internal Server Error",
+     "error": "Precondition Failed",
      "success": false
     }
    }

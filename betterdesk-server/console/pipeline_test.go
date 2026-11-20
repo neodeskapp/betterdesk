@@ -142,9 +142,10 @@ func TestStep4BodyErrorSkipsTheRestAndIsAnsweredByTheErrorHandler(t *testing.T) 
 		t.Errorf("status %d body %.100s, want 413", res.status, res.body)
 	}
 
+	// The parser's message is the answer also in production (S17)
 	prod := goOnly(t, setup{production: true})
 	res = prod.agent().do("POST", "/api/probe", "{broken", "Content-Type", "application/json")
-	if res.status != 400 || res.body != `{"success":false,"error":"Internal Server Error"}` {
+	if want := `{"success":false,"error":"invalid JSON: invalid character 'b' looking for beginning of object key string"}`; res.status != 400 || res.body != want {
 		t.Errorf("in production: %d %s", res.status, res.body)
 	}
 }

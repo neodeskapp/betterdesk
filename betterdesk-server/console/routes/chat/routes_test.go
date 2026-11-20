@@ -459,13 +459,14 @@ func TestDownload(t *testing.T) {
 	if ranged.Code != 206 || ranged.Body.String() != "chat" || ranged.Header().Get("Content-Range") != "bytes 9-12/19" {
 		t.Errorf("Range: %d %q %v", ranged.Code, ranged.Body.String(), ranged.Header())
 	}
-	// What the file sender refuses goes to the console's error handler
+	// What the file sender refuses goes to the console's error handler,
+	// which says why also in production (S17)
 	beyond := w.get("viewer", "GET", "/api/chat/files/"+firstID, "Range", "bytes=100-200")
-	expect(t, "a range beyond the file", beyond, 416, failed)
+	expect(t, "a range beyond the file", beyond, 416, `{"success":false,"error":"Range Not Satisfiable"}`)
 	if beyond.Header().Get("Content-Range") != "bytes */19" {
 		t.Errorf("a range beyond the file: Content-Range %q", beyond.Header().Get("Content-Range"))
 	}
-	expect(t, "If-Match that does not hold", w.get("viewer", "GET", "/api/chat/files/"+firstID, "If-Match", `"other"`), 412, failed)
+	expect(t, "If-Match that does not hold", w.get("viewer", "GET", "/api/chat/files/"+firstID, "If-Match", `"other"`), 412, `{"success":false,"error":"Precondition Failed"}`)
 }
 
 // Only a whole id finds its file. A prefix used to be enough, which let

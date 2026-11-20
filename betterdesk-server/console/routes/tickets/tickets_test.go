@@ -630,25 +630,30 @@ func TestDownloadWithAnOddStoredType(t *testing.T) {
 
 // A download the file sender refuses (a range beyond the end, a condition
 // that fails) answers the console's JSON error as JSON, without the
-// attachment's name (BUGS TK9).
+// attachment's name (BUGS TK9). The error says what failed, also in
+// production (S17).
 func TestFailedRangeAnswersJSON(t *testing.T) {
 	g := newGroup(t, storetest.Migrated(t))
 	g.want(g.do("admin", "POST", "/api/tickets", `{"title":"files"}`), 201, "")
 	g.want(g.do("admin", "POST", "/api/tickets/1/attachments", `{"filename":"a.txt","data":"aGVsbG8gdGlja2V0","mimetype":"text/plain"}`), 201, "")
-	for name, value := range map[string]string{"Range": "bytes=50-60", "If-Match": `"nothing"`} {
+	for _, c := range []struct {
+		name, value string
+		status      int
+		body        string
+	}{
+		{"Range", "bytes=50-60", 416, `{"success":false,"error":"Range Not Satisfiable"}`},
+		{"If-Match", `"nothing"`, 412, `{"success":false,"error":"Precondition Failed"}`},
+	} {
 		req := httptest.NewRequest("GET", "/api/tickets/attachments/1", nil)
 		req.Header.Set("Cookie", g.cookies["admin"])
-		req.Header.Set(name, value)
+		req.Header.Set(c.name, c.value)
 		rec := httptest.NewRecorder()
 		g.serve.ServeHTTP(rec, req)
-		if rec.Code != 416 && rec.Code != 412 {
-			t.Errorf("%s: %d %s", name, rec.Code, rec.Body.String())
+		if rec.Code != c.status || rec.Body.String() != c.body {
+			t.Errorf("%s: %d %s", c.name, rec.Code, rec.Body.String())
 		}
 		if ct, cd := rec.Header().Get("Content-Type"), rec.Header().Get("Content-Disposition"); ct != "application/json; charset=utf-8" || cd != "" {
-			t.Errorf("%s: Content-Type %q, Content-Disposition %q", name, ct, cd)
-		}
-		if !json.Valid(rec.Body.Bytes()) {
-			t.Errorf("%s: body %q", name, rec.Body.String())
+			t.Errorf("%s: Content-Type %q, Content-Disposition %q", c.name, ct, cd)
 		}
 	}
 }

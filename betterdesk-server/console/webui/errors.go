@@ -1,6 +1,8 @@
 package webui
 
 import (
+	"errors"
+	"io/fs"
 	"net/http"
 	"strings"
 
@@ -59,8 +61,12 @@ func (h *Host) NotFound(w http.ResponseWriter, r *http.Request) {
 }
 
 // ServerError answers a request that failed. status is the status of the
-// answer; 0 means 500. Outside production the answer says what went wrong
-// (err's message); in production it says "Internal Server Error".
+// answer; 0 means 500. The answer says what went wrong (err's message). In
+// production it does so only below 500, where the messages come from the
+// console's own parsers and checks and are written for the client: a
+// failure of the server (500 and above) says "Internal Server Error", and
+// an error of the file system, whose message names a path on the server,
+// says the status's text ("Not Found").
 //
 // The API and requests that send JSON get JSON, a browser gets the app's
 // error page (plain text without a build), and everyone else JSON.
@@ -73,7 +79,13 @@ func (h *Host) ServerError(w http.ResponseWriter, r *http.Request, err error, st
 		status = http.StatusInternalServerError
 	}
 	detail := ""
-	if !h.production && err != nil {
+	switch {
+	case err == nil:
+	case !h.production:
+		detail = err.Error()
+	case status < http.StatusInternalServerError && fromFileSystem(err):
+		detail = http.StatusText(status)
+	case status < http.StatusInternalServerError:
 		detail = err.Error()
 	}
 	shown := detail
@@ -90,6 +102,14 @@ func (h *Host) ServerError(w http.ResponseWriter, r *http.Request, err error, st
 	default:
 		writeJSON(w, r, status, failure{Error: shown})
 	}
+}
+
+// fromFileSystem reports whether err is or wraps an error of the file
+// system (a failed stat or open), whose message holds the path it failed
+// on.
+func fromFileSystem(err error) bool {
+	var path *fs.PathError
+	return errors.As(err, &path)
 }
 
 // CSRFError answers a request whose CSRF token is missing or wrong, with

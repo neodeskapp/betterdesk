@@ -34,7 +34,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Internal Server Error",
+     "error": "Failed to decode param '%ff'",
      "success": false
     }
    }
@@ -70,7 +70,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Internal Server Error",
+     "error": "Failed to decode param '%ff'",
      "success": false
     }
    }

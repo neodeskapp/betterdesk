@@ -2,8 +2,12 @@ package webui
 
 import (
 	"errors"
+	"fmt"
+	"io"
+	"io/fs"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -256,6 +260,95 @@ func TestServerError(t *testing.T) {
 	}
 }
 
+// openFails is a build whose files are there but cannot be opened: a
+// file removed between the look at it and its sending.
+type openFails struct{ watchedFiles }
+
+func (f *openFails) Open(name string) (io.ReadSeekCloser, error) {
+	return nil, &fs.PathError{Op: "open", Path: name, Err: fs.ErrNotExist}
+}
+
+// Below 500 an error answer says what was wrong with the request, also in
+// production: the message comes from the console's own parsers and checks
+// (S17). A failure of the server keeps the generic text, and an error of
+// the file system, whose message names a path on the server, says only the
+// status's text.
+func TestServerErrorShowsClientErrorsInProduction(t *testing.T) {
+	fail := func(h *Host, target string, headers map[string]string, err error, status int) answer {
+		r := rawRequest("POST", target, headers)
+		return record(func(w http.ResponseWriter) { h.ServerError(w, r, err, status) })
+	}
+	h, dir := testHost(t, "")
+	for _, c := range []struct {
+		status  int
+		message string
+	}{
+		{400, "invalid JSON: unexpected end of JSON input"}, {400, "Failed to decode param '%zz'"}, {404, "Not Found"},
+		{412, "Precondition Failed"}, {413, "request entity too large"}, {415, `unsupported charset "LATIN1"`}, {416, "Range Not Satisfiable"},
+	} {
+		want := `{"success":false,"error":` + strconv.Quote(c.message) + `}`
+		if a := fail(h, "/api/x", nil, errors.New(c.message), c.status); a.status != c.status || a.body != want {
+			t.Errorf("the API with %d: %d %q, want %q", c.status, a.status, a.body, want)
+		}
+		if a := fail(h, "/x", map[string]string{"Accept": "text/plain"}, errors.New(c.message), c.status); a.status != c.status || a.body != want {
+			t.Errorf("a client that takes no HTML with %d: %d %q", c.status, a.status, a.body)
+		}
+	}
+	a := fail(h, "/x", map[string]string{"Accept": browser}, errors.New(`Failed to decode param '<b>%zz'`), 400)
+	if a.status != 400 || marked(a) != "500" || !strings.Contains(a.body, `data-message="Failed to decode param &#39;&lt;b&gt;%zz&#39;"`) {
+		t.Errorf("a browser: %d %q", a.status, clip(a.body))
+	}
+	a = fail(noBuild(t, true), "/x", map[string]string{"Accept": browser}, errors.New("request entity too large"), 413)
+	if a.status != 413 || a.body != "request entity too large" {
+		t.Errorf("without a build: %d %q", a.status, a.body)
+	}
+
+	// A failure of the server says nothing about itself
+	for _, status := range []int{0, 500, 502, 503} {
+		a := fail(h, "/api/x", nil, errors.New("SQLITE_ERROR: no such table: users"), status)
+		if a.body != `{"success":false,"error":"Internal Server Error"}` {
+			t.Errorf("status %d: %d %q", status, a.status, a.body)
+		}
+	}
+
+	// Nor does the file system: its messages name paths on the server
+	secret := filepath.Join(dir, "secret", "start.js")
+	missing := fmt.Errorf("cannot send: %w", &fs.PathError{Op: "stat", Path: secret, Err: fs.ErrNotExist})
+	if a := fail(h, "/api/x", nil, missing, 404); a.status != 404 || a.body != `{"success":false,"error":"Not Found"}` {
+		t.Errorf("an error of the file system: %d %q", a.status, a.body)
+	}
+	a = fail(h, "/x", map[string]string{"Accept": browser}, missing, 404)
+	if a.status != 404 || strings.Contains(a.body, "secret") || !strings.Contains(a.body, `data-message="Not Found"`) {
+		t.Errorf("an error of the file system for a browser: %d %q", a.status, clip(a.body))
+	}
+	if a := fail(New(Options{Dir: dir}), "/api/x", nil, missing, 404); !strings.Contains(a.body, "secret") {
+		t.Errorf("outside production the error says where: %q", a.body)
+	}
+
+	// The answers of Handle
+	json := map[string]string{"Accept": "application/json"}
+	for _, c := range []struct {
+		target  string
+		headers map[string]string
+		status  int
+		message string
+	}{
+		{"/app/x%zz", json, 400, "Failed to decode param 'x%zz'"},
+		{"/licenses.txt", with(json, "If-Match", `"nope"`), 412, "Precondition Failed"},
+		{"/licenses.txt", with(json, "Range", "bytes=100000-"), 416, "Range Not Satisfiable"},
+		{"/_ui/immutable/chunks/.hidden.js", json, 404, "Not Found"},
+	} {
+		want := `{"success":false,"error":` + strconv.Quote(c.message) + `}`
+		if a := serve(h, "GET", c.target, c.headers); a.status != c.status || a.body != want {
+			t.Errorf("GET %s %v: %d %q, want %q", c.target, c.headers, a.status, a.body, want)
+		}
+	}
+	gone := newHost(Options{Dir: dir, Production: true, Session: sessionFromHeader}, dir, &openFails{})
+	if a := serve(gone, "GET", "/licenses.txt", json); a.status != 404 || a.body != `{"success":false,"error":"Not Found"}` {
+		t.Errorf("a file that went away: %d %q", a.status, a.body)
+	}
+}
+
 func TestServerErrorIsLogged(t *testing.T) {
 	h, _ := testHost(t, "")
 	logged := captureLog(t)
@@ -321,7 +414,7 @@ func TestServerErrorIgnoresCsrfInTheMessage(t *testing.T) {
 		for _, status := range []int{400, 500} {
 			r := rawRequest("GET", "/api/x", nil)
 			a := record(func(w http.ResponseWriter) { h.ServerError(w, r, errors.New(message), status) })
-			if a.status != status || strings.Contains(a.body, "CSRF") {
+			if a.status != status || strings.Contains(a.body, "CSRF token") {
 				t.Errorf("%q with %d: %d %q", message, status, a.status, a.body)
 			}
 		}
@@ -329,7 +422,7 @@ func TestServerErrorIgnoresCsrfInTheMessage(t *testing.T) {
 	// Paths that do not decode and hold the word
 	for _, target := range []string{"/app/csrf%zz", "/app/csrf%FF", "/_ui/immutable/csrf%FF"} {
 		a := serve(h, "GET", target, map[string]string{"Accept": "application/json"})
-		if a.status != 400 || strings.Contains(a.body, "CSRF") {
+		if a.status != 400 || strings.Contains(a.body, "CSRF token") {
 			t.Errorf("%s: %d %q", target, a.status, a.body)
 		}
 	}
