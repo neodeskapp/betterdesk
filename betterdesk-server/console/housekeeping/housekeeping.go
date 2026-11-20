@@ -1,7 +1,8 @@
 // Package housekeeping runs the console's periodic clean-up of its own
-// tables: once an hour the old heartbeat metrics and client audit rows are
-// deleted, and every few seconds devices whose last contact is too old
-// are set offline in the console's copy of the device list.
+// tables: once an hour the old heartbeat metrics, client audit rows and
+// audit log rows are deleted, and every few seconds devices whose last
+// contact is too old are set offline in the console's copy of the device
+// list.
 //
 // Both jobs swallow every error, as the old console did: a failed run
 // leaves no log line and the next run comes at its time.
@@ -18,8 +19,8 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
-// IntegrationInterval is how often the old metrics and client audit rows
-// are deleted.
+// IntegrationInterval is how often the old metrics, client audit rows and
+// audit log rows are deleted.
 const IntegrationInterval = time.Hour
 
 // timeoutMax is the longest delay a JavaScript timer takes, in
@@ -27,30 +28,31 @@ const IntegrationInterval = time.Hour
 // becomes one millisecond.
 const timeoutMax = 1<<31 - 1
 
-// integrationStatements delete heartbeat metrics older than 7 days and
-// client audit rows older than 90 days, in this order.
+// integrationStatements delete heartbeat metrics older than 7 days, client
+// audit rows older than 90 days and audit log rows older than 90 days, in
+// this order.
 var integrationStatements = map[store.Dialect][]string{
 	store.SQLite: {
 		`DELETE FROM peer_metrics WHERE created_at < datetime('now', '-7 days')`,
 		`DELETE FROM audit_connections WHERE created_at < datetime('now', '-90 days')`,
 		`DELETE FROM audit_files WHERE created_at < datetime('now', '-90 days')`,
 		`DELETE FROM audit_alarms WHERE created_at < datetime('now', '-90 days')`,
+		`DELETE FROM audit_log WHERE created_at < datetime('now', '-90 days')`,
 	},
 	store.Postgres: {
 		`DELETE FROM peer_metrics WHERE created_at < NOW() - INTERVAL '7 days'`,
 		`DELETE FROM audit_connections WHERE created_at < NOW() - INTERVAL '90 days'`,
 		`DELETE FROM audit_files WHERE created_at < NOW() - INTERVAL '90 days'`,
 		`DELETE FROM audit_alarms WHERE created_at < NOW() - INTERVAL '90 days'`,
+		`DELETE FROM audit_log WHERE created_at < NOW() - INTERVAL '90 days'`,
 	},
 }
 
-// Integration deletes heartbeat metrics older than 7 days and the client
-// audit rows (connections, file transfers, alarms) older than 90 days.
-// The first statement that fails ends the run with its error; the tables
-// after it are left for the next run.
-//
-// The audit log (audit_log) is not pruned: the old console meant to, but
-// its call never ran (BUGS D1).
+// Integration deletes heartbeat metrics older than 7 days, the client
+// audit rows (connections, file transfers, alarms) older than 90 days and
+// the rows of the console's audit log older than 90 days. The first
+// statement that fails ends the run with its error; the tables after it
+// are left for the next run.
 func Integration(ctx context.Context, db *store.DB) error {
 	for _, query := range integrationStatements[db.Dialect()] {
 		if _, err := db.Exec(ctx, query); err != nil {
@@ -111,8 +113,8 @@ func (j *Jobs) StatusSyncInterval() time.Duration { return j.interval }
 // gone.
 func (j *Jobs) StaleThreshold() float64 { return j.threshold }
 
-// RunIntegration deletes old metrics and client audit rows once an hour,
-// first an hour after the start, until ctx ends.
+// RunIntegration deletes old metrics, client audit rows and audit log rows
+// once an hour, first an hour after the start, until ctx ends.
 func (j *Jobs) RunIntegration(ctx context.Context) {
 	j.every(ctx, IntegrationInterval, func() { _ = Integration(ctx, j.opts.DB) })
 }

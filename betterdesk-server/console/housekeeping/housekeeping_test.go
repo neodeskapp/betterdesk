@@ -293,6 +293,35 @@ func TestIntegrationAgainstNode(t *testing.T) {
 	})
 }
 
+// TestIntegrationPrunesTheAuditLog: the hourly run deletes audit log rows
+// older than 90 days, also those of the cut-off's own day that are older,
+// and keeps the younger ones of that day.
+func TestIntegrationPrunesTheAuditLog(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		ago := func(hours int) string {
+			if db.Dialect() == store.SQLite {
+				return fmt.Sprintf("datetime('now', '-%d hours')", hours)
+			}
+			return fmt.Sprintf("NOW() - INTERVAL '%d hours'", hours)
+		}
+		for _, row := range []struct {
+			action string
+			hours  int
+		}{{"young", 89 * 24}, {"cut-off day, younger", 90*24 - 1}, {"cut-off day, older", 90*24 + 1}, {"old", 91 * 24}, {"older", 400 * 24}} {
+			if _, err := db.Exec(ctx, "INSERT INTO audit_log (action, created_at) VALUES (?, "+ago(row.hours)+")", row.action); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if err := housekeeping.Integration(ctx, db); err != nil {
+			t.Fatalf("Integration: %v", err)
+		}
+		if got := strings.Join(rows(t, db, "SELECT action FROM audit_log ORDER BY id"), ", "); got != "young, cut-off day, younger" {
+			t.Errorf("audit log after the clean-up: %s", got)
+		}
+	})
+}
+
 // TestHourBoundRowsFollowTheTextComparison pins the rule the replays above
 // use for the rows whose outcome depends on the hour.
 func TestHourBoundRowsFollowTheTextComparison(t *testing.T) {
