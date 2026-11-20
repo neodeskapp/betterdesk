@@ -94,14 +94,14 @@ type summaryList struct {
 
 // listed is a summary in the list of all devices.
 type listed struct {
-	DeviceID        any `json:"device_id"`
-	Hostname        any `json:"hostname"`
-	IdleSeconds     any `json:"idle_seconds"`
-	SessionCount    any `json:"session_count"`
-	TotalActiveSecs any `json:"total_active_secs"`
-	DetailCount     any `json:"detail_count"`
-	ReportedAt      any `json:"reported_at"`
-	ReceivedAt      any `json:"received_at"`
+	DeviceID        any           `json:"device_id"`
+	Hostname        jsjson.Quoted `json:"hostname"`
+	IdleSeconds     any           `json:"idle_seconds"`
+	SessionCount    any           `json:"session_count"`
+	TotalActiveSecs any           `json:"total_active_secs"`
+	DetailCount     any           `json:"detail_count"`
+	ReportedAt      any           `json:"reported_at"`
+	ReceivedAt      any           `json:"received_at"`
 }
 
 // list answers GET /api/activity?from=&to=: every summary whose report
@@ -131,11 +131,10 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 }
 
 // hostname is the name a device is shown under: the note the console has
-// for it, else the hostname in its info, else its id. A device the
-// console cannot look up has its id, and so has one without a note whose
-// info cannot be read. The hostname in an info can be any JSON value and
-// goes out as it is.
-func (h *handlers) hostname(r *http.Request, id string) any {
+// for it, else the hostname in its info when that is text, else its id.
+// A device the console cannot look up has its id, and so has one without
+// a note whose info cannot be read.
+func (h *handlers) hostname(r *http.Request, id string) jsjson.Quoted {
 	fallback := jsjson.Quoted(id)
 	p, err := h.peerByID(r.Context(), id)
 	switch {
@@ -148,15 +147,15 @@ func (h *handlers) hostname(r *http.Request, id string) any {
 	if err != nil {
 		return fallback
 	}
-	if name := info.Get("hostname"); name.Truthy() {
-		return name
+	if name := info.Get("hostname"); name.Kind() == jsjson.String && name.Str() != "" {
+		return jsjson.Quoted(name.Str())
 	}
 	return fallback
 }
 
 type deviceDetail struct {
 	DeviceID     jsjson.Quoted `json:"device_id"`
-	Hostname     any           `json:"hostname"`
+	Hostname     jsjson.Quoted `json:"hostname"`
 	Sessions     []record      `json:"sessions"`
 	Summaries    []record      `json:"summaries"`
 	SessionCount int           `json:"session_count"`

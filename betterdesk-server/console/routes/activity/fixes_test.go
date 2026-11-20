@@ -55,7 +55,8 @@ func notesOf(t *testing.T, rec replay.Recording) map[string]string {
 // renamed checks the steps whose answer differs from Node's only in the
 // names devices are shown under, and counts them. A device with a note
 // is shown under its note where Node showed its id because it could not
-// read the device's info (BUGS AI5).
+// read the device's info (BUGS AI5), and one whose info has a hostname
+// that is no text under its id (BUGS AI6).
 func renamed(notes map[string]string, count *int) replay.Check {
 	return func(t *testing.T, step replay.Step, got replay.Answer) bool {
 		if step.Status != 200 || got.Status != 200 || got.Body == step.Answer {
@@ -98,6 +99,11 @@ func rename(node, have any, notes map[string]string) {
 			if name, ok := n["hostname"]; ok && name == id && notes[id] != "" && h["hostname"] == notes[id] {
 				n["hostname"] = notes[id]
 			}
+			if name, ok := n["hostname"]; ok && h["hostname"] == id {
+				if _, isText := name.(string); !isText {
+					n["hostname"] = id
+				}
+			}
 		}
 		for key, value := range n {
 			rename(value, h[key], notes)
@@ -111,4 +117,29 @@ func rename(node, have any, notes map[string]string) {
 			rename(n[i], h[i], notes)
 		}
 	}
+}
+
+// A device is shown under the hostname in its info only when that is text
+// with something in it, else under its id: the web app's schema takes
+// text there (BUGS AI6).
+func TestAHostnameThatIsNoTextIsNotShown(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		for id, hostname := range map[string]string{"H-NUMBER": "5", "H-FRACTION": "0.5", "H-TRUE": "true", "H-LIST": `["pc"]`, "H-OBJECT": `{"name":"pc"}`, "H-TEXT": `"pc"`} {
+			w.Exec("INSERT INTO peer (id, note, info) VALUES (?, '', ?)", []any{id, `{"hostname":` + hostname + `}`})
+			w.Exec("INSERT INTO activity_summaries (device_id, reported_at) VALUES (?, '2019-03-04T00:00:00.000Z')", []any{id})
+		}
+		list := w.Do(replay.Request{Role: "admin", Path: "/api/activity"})
+		for _, id := range []string{"H-NUMBER", "H-FRACTION", "H-TRUE", "H-LIST", "H-OBJECT"} {
+			if want := `"device_id":"` + id + `","hostname":"` + id + `"`; list.Status != 200 || !strings.Contains(list.Body, want) {
+				t.Errorf("the list: %d, lacks %s: %s", list.Status, want, list.Body)
+			}
+			if got := w.Do(replay.Request{Role: "admin", Path: "/api/activity/" + id}); !strings.HasPrefix(got.Body, `{"device_id":"`+id+`","hostname":"`+id+`"`) {
+				t.Errorf("GET /api/activity/%s: %d %s", id, got.Status, got.Body)
+			}
+		}
+		if !strings.Contains(list.Body, `"device_id":"H-TEXT","hostname":"pc"`) {
+			t.Errorf("the list lacks the device named by text: %s", list.Body)
+		}
+	})
 }
