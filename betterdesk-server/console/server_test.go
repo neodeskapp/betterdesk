@@ -308,13 +308,18 @@ func TestRoutingReportFollowsTheRouteTables(t *testing.T) {
 		}
 	}
 
+	// Without Node, Go answers everything: routes, files, pages, sockets
+	// and the 404 of what nothing takes
 	alone := newWorld(t, setup{debug: true})
 	alone.s.Router().Get("/api/ported/{id}", probe)
-	if got := who(alone, "GET", "/api/client-devices"); got != "none" {
-		t.Errorf("without Node: %q, want none", got)
+	for _, path := range []string{"/api/client-devices", "/api/ported/7", "/", "/login", "/favicon.svg", "/nothing/here"} {
+		if got := who(alone, "GET", path); got != "go" {
+			t.Errorf("without Node, GET %s: %q, want go", path, got)
+		}
 	}
-	if got := who(alone, "GET", "/api/ported/7"); got != "go" {
-		t.Errorf("without Node: %q, want go", got)
+	q := url.Values{"method": {"GET"}, "path": {"/ws/nothing"}, "upgrade": {"websocket"}}
+	if res := alone.agent().get("/__bd/routing?" + q.Encode()); res.json(t)["handler"] != "go" {
+		t.Errorf("without Node, an upgrade no socket takes: %s", res.body)
 	}
 }
 

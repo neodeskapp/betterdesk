@@ -501,10 +501,14 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.pipeline.ServeHTTP(w, r)
 }
 
-// handles reports whether Go answers r: a Go socket for an upgrade, a Go
-// route in either stage for anything else. The routing report asks the
-// same question.
+// handles reports whether Go answers r. Without the Node console behind
+// this one Go answers everything: routes, sockets, files, pages and the
+// 404. With it, a Go socket for an upgrade and a Go route in either stage
+// for anything else. The routing report asks the same question.
 func (s *Server) handles(r *http.Request) bool {
+	if s.node == nil {
+		return true
+	}
 	if s.routing != nil && r.Method == http.MethodGet && r.URL.Path == proxy.RoutingPath {
 		return true
 	}
