@@ -161,6 +161,39 @@ func TestReportWritesFollowTheRouteRoles(t *testing.T) {
 	}
 }
 
+// TestTypeMustBeTheNameOfAReport: generating, exporting and saving take
+// the type only as a text that names a report (BUGS.md RP2). A name every
+// JavaScript object has, a list holding a name, and any other type are
+// 400 with the text of the type, and nothing is saved.
+func TestTypeMustBeTheNameOfAReport(t *testing.T) {
+	w := routetest.New(t, routetest.Options{})
+	admin := w.As("admin")
+	for _, c := range []struct{ typ, answer string }{
+		{`"constructor"`, `{"error":"Unknown report type: constructor"}`},
+		{`"__proto__"`, `{"error":"Unknown report type: __proto__"}`},
+		{`"toString"`, `{"error":"Unknown report type: toString"}`},
+		{`["devices"]`, `{"error":"Unknown report type: devices"}`},
+		{`[["tickets"]]`, `{"error":"Unknown report type: tickets"}`},
+		{`["devices","x"]`, `{"error":"Unknown report type: devices,x"}`},
+		{`"nope"`, `{"error":"Unknown report type: nope"}`},
+		{`5`, `{"error":"Unknown report type: 5"}`},
+		{`{"a":1}`, `{"error":"Unknown report type: [object Object]"}`},
+	} {
+		body := `{"type":` + c.typ + `,"title":"Odd type"}`
+		for _, path := range []string{"/api/reports/generate", "/api/reports/generate/csv", "/api/reports/save"} {
+			if got := admin.Do("POST", path, body); got.Status != 400 || got.Body != c.answer {
+				t.Errorf("%s %s: %d %s", path, body, got.Status, got.Body)
+			}
+		}
+	}
+	if rows := savedCount(t, w); rows != 0 {
+		t.Errorf("%d reports saved with an odd type", rows)
+	}
+	if got := admin.Do("POST", "/api/reports/save", `{"type":"inventory"}`); got.Status != 201 || !strings.Contains(got.Body, `"report_type":"inventory"`) {
+		t.Errorf("save the inventory report: %d %s", got.Status, got.Body)
+	}
+}
+
 // TestDatabaseFailures: a failing query answers each route's own 500.
 func TestDatabaseFailures(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
@@ -211,11 +244,11 @@ func savedCount(t *testing.T, w *routetest.World) int {
 }
 
 // TestTheExportIsNamedAfterTheDay: the file name of a CSV export holds
-// the type as the request gave it and the day in UTC.
+// the type and the day in UTC.
 func TestTheExportIsNamedAfterTheDay(t *testing.T) {
 	w := routetest.New(t, routetest.Options{})
 	before := time.Now().UTC().Format("2006-01-02")
-	got := w.As("admin").Do("POST", "/api/reports/generate/csv", `{"type":["inventory"]}`)
+	got := w.As("admin").Do("POST", "/api/reports/generate/csv", `{"type":"inventory"}`)
 	after := time.Now().UTC().Format("2006-01-02")
 	disposition := got.Header.Get("Content-Disposition")
 	if got.Status != 200 || got.Header.Get("Content-Type") != "text/csv; charset=utf-8" || got.Body != "total_inventoried,avg_ram_mb\n0,0" {

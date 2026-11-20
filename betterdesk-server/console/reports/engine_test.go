@@ -123,23 +123,115 @@ func seed(t *testing.T, db *store.DB, raw json.RawMessage) {
 	}
 }
 
+// engineFix is a case of the recordings whose result a bug fix changes on
+// purpose. Go fails with err where it is set; otherwise its report holds
+// every text of has and none of lacks.
+type engineFix struct {
+	bug        string
+	err        string
+	has, lacks []string
+	// dialect limits the fix to one database ("sqlite", "postgres").
+	dialect string
+}
+
+// engineFixes are the cases of testdata/engine_*.json that the bug fixes
+// change, by world and body ("* <body>" for every world): the package's
+// list of intended differences.
+var engineFixes = map[string]engineFix{}
+
+// fixEngine puts the cases of a bug fix on the list and returns true, so
+// the list can be filled in var declarations.
+func fixEngine(bug string, cases map[string]engineFix) bool {
+	for key, f := range cases {
+		if f.dialect != "" {
+			key = f.dialect + ": " + key
+		}
+		if _, twice := engineFixes[key]; twice {
+			panic("two fixes for " + key)
+		}
+		f.bug = bug
+		engineFixes[key] = f
+	}
+	return true
+}
+
+// unknownType is the fix of a case whose type names no report.
+func unknownType(text string) engineFix {
+	return engineFix{err: "Unknown report type: " + text}
+}
+
+// RP2: the type is a text that names a report. A list holding the name
+// and a name every JavaScript object has are unknown types.
+var _ = fixEngine("RP2", map[string]engineFix{
+	`empty {"type":["devices"]}`:      unknownType("devices"),
+	`empty {"type":[["alerts"]]}`:     unknownType("alerts"),
+	`empty {"type":"constructor"}`:    unknownType("constructor"),
+	`empty {"type":"__proto__"}`:      unknownType("__proto__"),
+	`empty {"type":"toString"}`:       unknownType("toString"),
+	`empty {"type":"hasOwnProperty"}`: unknownType("hasOwnProperty"),
+})
+
+// engineFixOf is the fix of a case on db, with the key it is listed under.
+func engineFixOf(db *store.DB, world, body string) (string, engineFix, bool) {
+	for _, key := range []string{world + " " + body, "* " + body} {
+		for _, k := range []string{db.Dialect().String() + ": " + key, key} {
+			if f, ok := engineFixes[k]; ok {
+				return k, f, true
+			}
+		}
+	}
+	return "", engineFix{}, false
+}
+
+// checkEngineFix compares the result of a case with its fix.
+func checkEngineFix(t *testing.T, key string, f engineFix, report *Report, err error) {
+	t.Helper()
+	if f.err != "" {
+		if err == nil || err.Error() != f.err {
+			t.Errorf("%s (%s): fix fails with %q, go: %v", key, f.bug, f.err, err)
+		}
+		return
+	}
+	if err != nil {
+		t.Errorf("%s (%s): go failed: %v", key, f.bug, err)
+		return
+	}
+	got, _ := report.MarshalJSON()
+	for _, part := range f.has {
+		if !strings.Contains(string(got), part) {
+			t.Errorf("%s (%s): the report lacks %s: %s", key, f.bug, part, got)
+		}
+	}
+	for _, part := range f.lacks {
+		if strings.Contains(string(got), part) {
+			t.Errorf("%s (%s): the report holds %s: %s", key, f.bug, part, got)
+		}
+	}
+}
+
 // TestNodeReports makes every report the Node engine made
 // (testdata/engine_*.json, written by testdata/nodeoracle/engine.js) on
 // the same rows and compares the JSON and the CSV of every part, byte for
-// byte.
+// byte, but for the cases the bug fixes change (engineFixes).
 func TestNodeReports(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		files, err := filepath.Glob(filepath.Join("testdata", "engine_"+db.Dialect().String()+"_*.json"))
 		if err != nil || len(files) == 0 {
 			t.Fatalf("no recordings for %s: %v", db.Dialect(), err)
 		}
+		used := map[string]bool{}
 		for _, file := range files {
-			t.Run(filepath.Base(file), func(t *testing.T) { replayRecording(t, db, file) })
+			t.Run(filepath.Base(file), func(t *testing.T) { replayRecording(t, db, file, used) })
+		}
+		for key, f := range engineFixes {
+			if (f.dialect == "" || f.dialect == db.Dialect().String()) && !used[key] {
+				t.Errorf("the fix of %s names no case of the recordings: %s", f.bug, key)
+			}
 		}
 	})
 }
 
-func replayRecording(t *testing.T, db *store.DB, file string) {
+func replayRecording(t *testing.T, db *store.DB, file string, used map[string]bool) {
 	raw, err := os.ReadFile(file)
 	if err != nil {
 		t.Fatal(err)
@@ -178,6 +270,11 @@ func replayRecording(t *testing.T, db *store.DB, file string) {
 			body := bodyOf(t, c.Body)
 			f := Filters{From: jsbind.Of(body.Get("from")), To: jsbind.Of(body.Get("to")), DeviceID: jsbind.Of(body.Get("device_id")), Limit: jsbind.Of(body.Get("limit"))}
 			report, err := e.Generate(ctx, jsbind.Of(body.Get("type")), f)
+			if key, fix, listed := engineFixOf(db, world.Name, c.Body); listed {
+				used[key] = true
+				checkEngineFix(t, key, fix, report, err)
+				continue
+			}
 			if c.Error != nil {
 				var unknown *UnknownTypeError
 				switch {

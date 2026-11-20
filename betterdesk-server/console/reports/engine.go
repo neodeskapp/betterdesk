@@ -11,7 +11,6 @@ package reports
 
 import (
 	"context"
-	"errors"
 	"math"
 	"sort"
 	"time"
@@ -95,8 +94,7 @@ func (f Filters) JSON() string {
 
 // Report is a generated report.
 type Report struct {
-	// Type is the type as the request gave it: a text, or a list whose
-	// text is the type.
+	// Type is the name of the report, the text the request gave.
 	Type        jsbind.Value
 	Label       string
 	GeneratedAt string
@@ -159,17 +157,12 @@ type UnknownTypeError struct {
 
 func (e *UnknownTypeError) Error() string { return "Unknown report type: " + e.Type }
 
-// errNoGenerator is the TypeError for a type that names a member every
-// JavaScript object inherits (constructor, toString, __proto__ ...): the
-// registry "has" an entry there, without a generator.
-var errNoGenerator = errors.New("entry.generator is not a function")
-
-// Generate is generateReport(type, opts). The type is looked up by its
-// text, so the list ["devices"] makes the device report.
+// Generate is generateReport(type, opts). The type has to be a text that
+// is the name of a report; anything else, a list that holds the name too,
+// is an UnknownTypeError.
 func (e *Engine) Generate(ctx context.Context, typ jsbind.Value, f Filters) (*Report, error) {
-	key := typ.ToString()
 	for _, entry := range registry {
-		if entry.key != key {
+		if !typ.IsString() || entry.key != typ.Str() {
 			continue
 		}
 		data, err := entry.generate(e, ctx, f)
@@ -178,10 +171,7 @@ func (e *Engine) Generate(ctx context.Context, typ jsbind.Value, f Filters) (*Re
 		}
 		return &Report{Type: typ, Label: entry.label, GeneratedAt: store.ISOTime(e.now()), Filters: f, Data: data}, nil
 	}
-	if isInherited(key) {
-		return nil, errNoGenerator
-	}
-	return nil, &UnknownTypeError{Type: key}
+	return nil, &UnknownTypeError{Type: typ.ToString()}
 }
 
 // numberOrZero is Number(v) || 0; found false is undefined.

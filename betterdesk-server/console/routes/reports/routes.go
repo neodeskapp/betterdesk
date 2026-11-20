@@ -119,28 +119,35 @@ func (h *handlers) types(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, engine.ListTypes())
 }
 
-// generate answers POST /api/reports/generate with the body {type, from?,
-// to?, device_id?, limit?}. A type there is no report of is 400 with the
-// engine's text.
-func (h *handlers) generate(w http.ResponseWriter, r *http.Request) {
-	body := kit.Body(r)
+// generated is the report the body asks for. It answers itself and
+// returns nil when there is none: 400 without a type and for a type there
+// is no report of (the engine's text), 500 with failed for anything else.
+func (h *handlers) generated(w http.ResponseWriter, r *http.Request, body middleware.JSONObject, logPrefix, failed string) *engine.Report {
 	typ := jsbind.Of(body.Get("type"))
 	if !typ.Truthy() {
 		fail(w, r, http.StatusBadRequest, "Report type is required")
-		return
+		return nil
 	}
 	report, err := h.engine.Generate(r.Context(), typ, filtersOf(body))
 	if err != nil {
-		h.log.Error("generate error:", err)
+		h.log.Error(logPrefix, err)
 		var unknown *engine.UnknownTypeError
 		if errors.As(err, &unknown) {
 			fail(w, r, http.StatusBadRequest, unknown.Error())
-			return
+			return nil
 		}
-		fail(w, r, http.StatusInternalServerError, "Failed to generate report")
-		return
+		fail(w, r, http.StatusInternalServerError, failed)
+		return nil
 	}
-	kit.JSON(w, r, http.StatusOK, report)
+	return report
+}
+
+// generate answers POST /api/reports/generate with the body {type, from?,
+// to?, device_id?, limit?}.
+func (h *handlers) generate(w http.ResponseWriter, r *http.Request) {
+	if report := h.generated(w, r, kit.Body(r), "generate error:", "Failed to generate report"); report != nil {
+		kit.JSON(w, r, http.StatusOK, report)
+	}
 }
 
 // generateCSV answers POST /api/reports/generate/csv with the body of
@@ -148,20 +155,13 @@ func (h *handlers) generate(w http.ResponseWriter, r *http.Request) {
 // the top-level values that are not objects are the one row.
 func (h *handlers) generateCSV(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
-	typ := jsbind.Of(body.Get("type"))
-	if !typ.Truthy() {
-		fail(w, r, http.StatusBadRequest, "Report type is required")
-		return
-	}
-	report, err := h.engine.Generate(r.Context(), typ, filtersOf(body))
-	if err != nil {
-		h.log.Error("CSV export error:", err)
-		fail(w, r, http.StatusInternalServerError, "Failed to export CSV")
+	report := h.generated(w, r, body, "CSV export error:", "Failed to export CSV")
+	if report == nil {
 		return
 	}
 	csv := h.engine.ToCSV(report.CSVRows(jsbind.Of(body.Get("section"))))
 	// The date of the export in UTC, as toISOString().slice(0, 10)
-	filename := "betterdesk_" + typ.ToString() + "_" + store.ISOTime(h.now())[:10] + ".csv"
+	filename := "betterdesk_" + report.Type.Str() + "_" + store.ISOTime(h.now())[:10] + ".csv"
 	w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`"`)
 	// res.send: an ETag, never compressed (only JSON answers are)
 	httpx.WriteBody(w, r, http.StatusOK, "text/csv; charset=utf-8", []byte(csv))
@@ -215,19 +215,11 @@ func (h *handlers) getSaved(w http.ResponseWriter, r *http.Request) {
 
 // save answers POST /api/reports/save with the body {type, title?, from?,
 // to?, device_id?, limit?}: it generates the report and stores it, with
-// the title "<label> — <time>" when the body has none. Every failure of
-// the generation is 500 here, an unknown type too.
+// the title "<label> — <time>" when the body has none.
 func (h *handlers) save(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
-	typ := jsbind.Of(body.Get("type"))
-	if !typ.Truthy() {
-		fail(w, r, http.StatusBadRequest, "Report type is required")
-		return
-	}
-	report, err := h.engine.Generate(r.Context(), typ, filtersOf(body))
-	if err != nil {
-		h.log.Error("save error:", err)
-		fail(w, r, http.StatusInternalServerError, "Failed to save report")
+	report := h.generated(w, r, body, "save error:", "Failed to save report")
+	if report == nil {
 		return
 	}
 	title := jsbind.Of(body.Get("title")).Or(jsbind.String(report.Label + " — " + report.GeneratedAt))
@@ -237,7 +229,7 @@ func (h *handlers) save(w http.ResponseWriter, r *http.Request) {
 	}
 	saved, err := createSavedReport(r.Context(), h.db, newSavedReport{
 		title:      title,
-		reportType: typ,
+		reportType: report.Type,
 		filters:    report.Filters.JSON(),
 		payload:    string(engine.Stringify(report.Data)),
 		createdBy:  createdBy,

@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -75,9 +77,9 @@ var reportFixes replay.Fixes
 // session, the same on both databases; signedOutWrites lists them.
 var _ = reportFixes.Add("RP1", signedOutWrites())
 
-// signedOutWrites are the fixes of the steps of the recording that save or
-// delete a report without a session.
-func signedOutWrites() map[string]replay.Fix {
+// recordedSteps are the steps of the recording on SQLite; the recording
+// on PostgreSQL sends the same requests.
+func recordedSteps() []replay.Step {
 	raw, err := os.ReadFile(filepath.Join("testdata", "node_sqlite.json"))
 	if err != nil {
 		panic(err)
@@ -86,8 +88,114 @@ func signedOutWrites() map[string]replay.Fix {
 	if err := json.Unmarshal(raw, &rec); err != nil {
 		panic(err)
 	}
+	return rec.Steps
+}
+
+// bodyMember is a member of the JSON object a step sent, and whether the
+// body is an object that has it.
+func bodyMember(step replay.Step, name string) (any, bool) {
+	if step.Body == nil {
+		return nil, false
+	}
+	var body map[string]any
+	if json.Unmarshal([]byte(*step.Body), &body) != nil {
+		return nil, false
+	}
+	v, ok := body[name]
+	return v, ok
+}
+
+// jsText is String(v) of a JSON value.
+func jsText(v any) string {
+	switch t := v.(type) {
+	case nil:
+		return "null"
+	case string:
+		return t
+	case float64:
+		return strconv.FormatFloat(t, 'f', -1, 64)
+	case bool:
+		return strconv.FormatBool(t)
+	case []any:
+		parts := make([]string, len(t))
+		for i, item := range t {
+			if item != nil {
+				parts[i] = jsText(item)
+			}
+		}
+		return strings.Join(parts, ",")
+	}
+	return "[object Object]"
+}
+
+// RP2: generating, exporting and saving take the type only as a text that
+// names a report, and answer 400 with the type's text for anything else,
+// where Node made the report of a list holding a name, failed with 500 on
+// a name every object has, and exported and saved nothing with 500 for
+// every unknown type. Node stored the one list that names a report it
+// saved; After stores the same row, with the type as Node bound the list:
+// spread over the statement on SQLite, as an array on PostgreSQL.
+var _ = reportFixes.Add("RP2", unknownTypes())
+
+func unknownTypes() map[string]replay.Fix {
+	names := map[string]bool{}
+	for _, entry := range []string{"devices", "activity", "security", "tickets", "network", "inventory", "alerts"} {
+		names[entry] = true
+	}
 	steps := map[string]replay.Fix{}
-	for _, step := range rec.Steps {
+	for _, step := range recordedSteps() {
+		switch step.Path {
+		case "/api/reports/generate", "/api/reports/generate/csv", "/api/reports/save":
+		default:
+			continue
+		}
+		typ, _ := bodyMember(step, "type")
+		if text, isText := typ.(string); isText && names[text] || step.Status == 401 || step.Status == 403 {
+			continue
+		}
+		if typ == nil || typ == false || typ == 0.0 || typ == "" {
+			continue // no type: "Report type is required"
+		}
+		answer := `{"error":"Unknown report type: ` + jsText(typ) + `"}`
+		if step.Status == 400 && step.Answer == answer {
+			continue
+		}
+		fix := replay.Fix{Status: 400, Answer: answer}
+		if step.Status == 201 {
+			fix.After = storeAsNode(typ)
+		}
+		steps[replay.FixKey(step)] = fix
+	}
+	return steps
+}
+
+// storeAsNode is a Fix.After for a save Node made with a type in a list:
+// it saves the report under the name and gives the row the type Node
+// stored.
+func storeAsNode(typ any) func(t *testing.T, w *replay.World, step replay.Step) {
+	return func(t *testing.T, w *replay.World, step replay.Step) {
+		t.Helper()
+		var body map[string]any
+		if err := json.Unmarshal([]byte(*step.Body), &body); err != nil {
+			t.Fatal(err)
+		}
+		body["type"] = jsText(typ)
+		text, _ := json.Marshal(body)
+		got := w.Do(replay.Request{Role: step.Role, Method: step.Method, Path: step.Path, Body: replay.Text(string(text)), Headers: step.Headers})
+		if got.Status != 201 {
+			t.Fatalf("%s again as %s: %d %s", step.Name, text, got.Status, got.Body)
+		}
+		if w.DB.IsPostgres() {
+			w.Exec(`UPDATE saved_reports SET report_type = '{"`+jsText(typ)+`"}' WHERE id = (SELECT MAX(id) FROM saved_reports)`, nil)
+		}
+	}
+}
+
+// signedOutWrites are the fixes of the steps of the recording that save or
+// delete a report without a session.
+func signedOutWrites() map[string]replay.Fix {
+	steps := map[string]replay.Fix{}
+	for _, step := range recordedSteps() {
 		write := step.Method == "POST" && step.Path == "/api/reports/save" || step.Method == "DELETE"
 		if step.Role == "" && write {
 			if step.Status != 403 || step.Answer != `{"error":"Admin access required"}` {

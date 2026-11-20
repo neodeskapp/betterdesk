@@ -50,7 +50,7 @@
     "super_admin",
     "admin"
    ],
-   "status": 200,
+   "status": 400,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -71,40 +71,10 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    {
-     "path": "generated_at",
-     "format": "9999-99-99A99:99:99.999A"
-    }
-   ],
    "body": {
     "kind": "json",
     "json": {
-     "data": {
-      "avg_ram_mb": 37595,
-      "os_distribution": {
-       "Debian 12": 1,
-       "Linux 6.6 (Raspberry Pi)": 1,
-       "Ubuntu 22.04": 2,
-       "Ubuntu 24.04": 1,
-       "Windows 10 IoT": 1,
-       "Windows 10 Pro": 2,
-       "Windows 11 Home": 1,
-       "Windows 11 Pro": 2,
-       "Windows Server 2022": 1,
-       "macOS 14.6": 1,
-       "macOS 15.1": 1
-      },
-      "total_inventoried": 14
-     },
-     "filters": {},
-     "generated_at": "<volatile>",
-     "label": "Inventory Report",
-     "type": [
-      [
-       "inventory"
-      ]
-     ]
+     "error": "Unknown report type: inventory"
     }
    }
   }
