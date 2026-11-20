@@ -125,12 +125,12 @@ func (h *handlers) viewer(w http.ResponseWriter, r *http.Request) {
 		readPeerType(peer, target, &caps)
 	}
 
-	forced := ""
-	if value, ok := queryText(reqquery.Of(r), "transport", ""); ok {
-		forced = jsbind.ToLower(value)
-	} else {
-		abort()
+	value, ok := queryText(reqquery.Of(r), "transport", "")
+	if !ok {
+		badQuery(w, r, "transport")
+		return
 	}
+	forced := jsbind.ToLower(value)
 	switch {
 	case target:
 		protocol, ok := guestaccess.JSText(orValue(device.Get("remote_protocol"), orValue(device.Get("protocol"), "")))
@@ -188,9 +188,10 @@ func (h *handlers) viewer(w http.ResponseWriter, r *http.Request) {
 		}
 		guestToken = token
 	}
-	mock, ok := h.mockFor(r, deviceID)
-	if !ok {
-		abort()
+	mock, bad := h.mockFor(r, deviceID)
+	if bad != "" {
+		badQuery(w, r, bad)
+		return
 	}
 
 	answer := viewerAnswer{
@@ -219,6 +220,12 @@ func (h *handlers) viewer(w http.ResponseWriter, r *http.Request) {
 		answer.WorkReports = kit.HasPermission(r, "billing.reports")
 	}
 	kit.JSON(w, r, http.StatusOK, answer)
+}
+
+// badQuery answers a query value the viewer needs as text that is no text
+// (a list or an object): 400.
+func badQuery(w http.ResponseWriter, r *http.Request, name string) {
+	kit.JSON(w, r, http.StatusBadRequest, viewerFailure{Code: "invalid_query", Error: "Invalid " + name})
 }
 
 // readPeerType reads what kind of device the API server says it is. A

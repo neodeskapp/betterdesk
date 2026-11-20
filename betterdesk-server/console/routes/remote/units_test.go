@@ -17,22 +17,22 @@ import (
 
 // refusedTokens are the requests of testdata/crashes.json whose guest or
 // share token is no text: the Go console refuses them with 400 (MC1), as
-// the guest and MeshCentral routes refuse such a token.
+// the guest and MeshCentral routes refuse such a token; and a transport
+// that is no text, refused with 400 as well (RM13).
 var refusedTokens = map[string]string{
 	"/api/remote/viewer/dev-1?guest[toString]=1":      `{"error":"Invalid guest token"}`,
 	"/api/remote/viewer/dev-1?t[toString]=1":          `{"error":"Invalid guest token"}`,
 	"/api/remote/viewer/dev-1?mesh_share[toString]=1": `{"error":"Invalid share token"}`,
 	"/api/remote/guest-info?t[toString]=1":            `{"error":"Invalid guest token"}`,
 	"/api/remote/guest-info?guest[toString]=1":        `{"error":"Invalid guest token"}`,
+	"/api/remote/viewer/dev-1?transport[toString]=1":  `{"success":false,"code":"invalid_query","error":"Invalid transport"}`,
 }
 
 // TestRequestsThatEndedNode sends the requests that ended the Node
 // process (testdata/crashes.json, from testdata/nodeoracle/crash.js): a
-// query value with a member toString where the route needed text. A
-// guest or share token of that kind is refused with 400 (refusedTokens);
-// for the rest the Go console closes that one connection without an
-// answer (DECISIONS A19). The requests Node still answered get Node's
-// status.
+// query value with a member toString where the route needed text. Every
+// one of them is refused with 400 (refusedTokens). The requests Node
+// still answered get Node's status.
 func TestRequestsThatEndedNode(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("testdata", "crashes.json"))
 	if err != nil {
@@ -75,8 +75,8 @@ func TestRequestsThatEndedNode(t *testing.T) {
 			if aborted || rec.Code != http.StatusBadRequest || strings.TrimSpace(rec.Body.String()) != refusal {
 				t.Errorf("%s (signed in %v): aborted %v; want 400 %s", c.Path, c.SignedIn, aborted, refusal)
 			}
-		case c.Ended && !aborted:
-			t.Errorf("%s (signed in %v) answered %d; Node ended there, so the connection should be dropped", c.Path, c.SignedIn, rec.Code)
+		case c.Ended:
+			t.Errorf("%s (signed in %v) aborted %v; Node ended there and no answer is planned", c.Path, c.SignedIn, aborted)
 		case !c.Ended && aborted:
 			t.Errorf("%s (signed in %v) dropped the connection; Node answered %d", c.Path, c.SignedIn, c.Status)
 		case !c.Ended && rec.Code != c.Status:
@@ -88,6 +88,37 @@ func TestRequestsThatEndedNode(t *testing.T) {
 	}
 	if ended < 8 {
 		t.Fatalf("only %d requests ended Node in the recording, want the 8 of crash.js", ended)
+	}
+}
+
+// TestDevMockQueryThatIsNoTextIsRefused: with the dev mock on, a ?mock or
+// ?scenario that is no text is refused with 400, where the old route
+// ended the process (RM13).
+func TestDevMockQueryThatIsNoTextIsRefused(t *testing.T) {
+	on := newWorld(t, storetest.Migrated(t), "1.0.0", true)
+	operator := &account{UserID: 5}
+	operator.User.ID, operator.User.Username, operator.User.Role = 5, "e2e_operator", "operator"
+	for path, want := range map[string]string{
+		"/api/remote/viewer/dev-1?mock[toString]=1":            `{"success":false,"code":"invalid_query","error":"Invalid mock"}`,
+		"/api/remote/viewer/dev-1?mock=1&scenario[toString]=1": `{"success":false,"code":"invalid_query","error":"Invalid scenario"}`,
+	} {
+		var rec *httptest.ResponseRecorder
+		aborted := func() (aborted bool) {
+			defer func() {
+				if p := recover(); p != nil {
+					aborted = true
+				}
+			}()
+			rec = on.do(&vector{Request: request{Method: "GET", Path: path, Session: operator}})
+			return false
+		}()
+		if aborted || rec.Code != http.StatusBadRequest || strings.TrimSpace(rec.Body.String()) != want {
+			got := "the connection was dropped"
+			if !aborted {
+				got = rec.Body.String()
+			}
+			t.Errorf("%s: %s, want 400 %s", path, got, want)
+		}
 	}
 }
 

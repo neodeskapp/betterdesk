@@ -64,30 +64,31 @@ func (h *handlers) mockScript(w http.ResponseWriter, r *http.Request) {
 // mockFor is devMockRemote.forRequest: the mock's settings for a viewer
 // request, nil when the mock is off. With the mock on, ?mock=1 asks for
 // it and a seeded demo device gets it unless ?mock=0; ?scenario= picks a
-// known scenario in any letter case, else "ok".
-func (h *handlers) mockFor(r *http.Request, deviceID string) (any, bool) {
+// known scenario in any letter case, else "ok". bad names a query value
+// that is no text.
+func (h *handlers) mockFor(r *http.Request, deviceID string) (settings any, bad string) {
 	if h.src.mock == nil {
-		return nil, true
+		return nil, ""
 	}
 	q := reqquery.Of(r)
 	mock, ok := queryText(q, "mock", "")
 	if !ok {
-		return nil, false
+		return nil, "mock"
 	}
 	if mock != "1" && (mock == "0" || !seededDevice.MatchString(deviceID)) {
-		return nil, true
+		return nil, ""
 	}
 	wanted, ok := queryText(q, "scenario", "ok")
 	if !ok {
-		return nil, false
+		return nil, "scenario"
 	}
 	wanted = jsbind.ToLower(wanted)
 	for _, scenario := range mockScenarios {
 		if scenario == wanted {
-			return mockSettings{Scenario: wanted}, true
+			return mockSettings{Scenario: wanted}, ""
 		}
 	}
-	return mockSettings{Scenario: "ok"}, true
+	return mockSettings{Scenario: "ok"}, ""
 }
 
 type mockSettings struct {
