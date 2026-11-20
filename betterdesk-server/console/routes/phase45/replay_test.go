@@ -54,11 +54,22 @@ func writeReleaseCache(t *testing.T, dataDir string) {
 // popup's data, templates, enrollment, the release list, the downloads
 // with their headers and the portal's installers. The audit log and the
 // stored pictures are compared after the requests.
+//
+// A profile save keeps the fields its body leaves out, where Node emptied
+// them (BUGS C3): keptFields checks that at every save and then empties
+// them as Node did, so the steps after it start from Node's profile.
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		writeReleaseCache(t, w.Config.DataDir)
+		kept, keptCount := keptFields(w)
+		defer func() {
+			if *keptCount == 0 {
+				t.Error("no profile save left a field out")
+			}
+		}()
 		w.Run(replay.Load(t, db, "node"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
+			kept(t, step)
 			// A new template's token is random: 48 hex digits in place of
 			// each other
 			if strings.HasPrefix(step.Path, "/api/agent-templates") {
@@ -122,6 +133,52 @@ func deref(s *string) any {
 		return nil
 	}
 	return *s
+}
+
+// profileColumns are the profile fields a save writes.
+var profileColumns = []string{"first_name", "last_name", "email", "phone", "role_display", "avatar_url"}
+
+// keptFields follows the profiles through the recording. At a profile
+// save Node stored, each field the body leaves out must still hold what
+// it held before the save (BUGS C3); it is then emptied, as Node's save
+// emptied it. count is the number of fields so checked.
+func keptFields(w *replay.World) (check func(t *testing.T, step replay.Step), count *int) {
+	count = new(int)
+	last := map[string]map[string]any{}
+	read := func(role string) map[string]any {
+		var rows []map[string]any
+		raw := w.Rows("SELECT "+strings.Join(profileColumns, ", ")+" FROM users WHERE username = ?", []any{"e2e_" + role})
+		if err := json.Unmarshal([]byte(raw), &rows); err != nil || len(rows) != 1 {
+			w.T.Fatalf("the profile of %s: %s", role, raw)
+		}
+		return rows[0]
+	}
+	return func(t *testing.T, step replay.Step) {
+		t.Helper()
+		if step.Role == "" {
+			return
+		}
+		if step.Method == http.MethodPut && step.Path == "/api/users/me/profile" && step.Status == http.StatusOK {
+			var body map[string]json.RawMessage
+			if step.Body != nil {
+				_ = json.Unmarshal([]byte(*step.Body), &body)
+			}
+			before, after := last[step.Role], read(step.Role)
+			for _, column := range profileColumns {
+				if _, sent := body[column]; sent {
+					continue
+				}
+				if before != nil {
+					*count++
+					if after[column] != before[column] {
+						t.Errorf("step %q (C3): %s is %v, it was %v before the save", step.Name, column, after[column], before[column])
+					}
+				}
+				w.Exec("UPDATE users SET "+column+" = '' WHERE username = ?", []any{"e2e_" + step.Role})
+			}
+		}
+		last[step.Role] = read(step.Role)
+	}, count
 }
 
 // randomToken is an enrollment token as a new template gets it.

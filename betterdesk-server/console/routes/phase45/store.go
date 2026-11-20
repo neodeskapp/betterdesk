@@ -44,11 +44,21 @@ func getUserByID(ctx context.Context, db *store.DB, id int64) (*userRow, error) 
 	return &u, nil
 }
 
-// updateUserProfile writes the six profile columns of an account.
-func updateUserProfile(ctx context.Context, db *store.DB, id int64, values []string) error {
-	_, err := db.Exec(ctx,
-		"UPDATE users SET first_name = ?, last_name = ?, email = ?, phone = ?, role_display = ?, avatar_url = ? WHERE id = ?",
-		values[0], values[1], values[2], values[3], values[4], values[5], id)
+// updateUserProfile writes profile columns of an account: values by
+// column, each a name of profileFields. Without values it writes nothing.
+func updateUserProfile(ctx context.Context, db *store.DB, id int64, values map[string]string) error {
+	var set []string
+	var args []any
+	for _, column := range profileFields {
+		if value, ok := values[column]; ok {
+			set = append(set, column+" = ?")
+			args = append(args, value)
+		}
+	}
+	if len(set) == 0 {
+		return nil
+	}
+	_, err := db.Exec(ctx, "UPDATE users SET "+strings.Join(set, ", ")+" WHERE id = ?", append(args, id)...)
 	if err != nil {
 		return fmt.Errorf("update profile of user %d: %w", id, err)
 	}

@@ -73,11 +73,12 @@ type saved struct {
 	AvatarError string `json:"avatar_error,omitempty"`
 }
 
-// saveProfile answers PUT /api/users/me/profile. Every field the body
-// leaves out is saved as empty (BUGS C3), each cut to 200 characters. An
-// http(s) picture address that changed, or whose picture is missing, is
-// fetched and stored like a picture from the identity provider; a failed
-// fetch does not fail the save.
+// saveProfile answers PUT /api/users/me/profile. The fields the body has
+// are saved, each cut to 200 characters (null as empty); a field the body
+// leaves out keeps its value, and a body with none of them changes
+// nothing. An http(s) picture address that changed, or whose picture is
+// missing, is fetched and stored like a picture from the identity
+// provider; a failed fetch does not fail the save.
 func (h *handlers) saveProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := kit.UserID(r)
@@ -101,14 +102,18 @@ func (h *handlers) saveProfile(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusInternalServerError, jsbind.Message(errors.Unwrap(err)))
 		return
 	}
-	values := make([]string, len(profileFields))
-	for i, name := range profileFields {
-		text, err := nullishText(field(r, name))
+	values := map[string]string{}
+	for _, name := range profileFields {
+		value := field(r, name)
+		if value == branding.Undefined {
+			continue
+		}
+		text, err := nullishText(value)
 		if err != nil {
 			serverError(err)
 			return
 		}
-		values[i] = goapipath.Slice(text, 200)
+		values[name] = goapipath.Slice(text, 200)
 	}
 	if err := updateUserProfile(ctx, h.d.Store, userID, values); err != nil {
 		fail(w, r, http.StatusInternalServerError, jsbind.Message(errors.Unwrap(err)))

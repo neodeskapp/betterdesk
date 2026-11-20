@@ -177,6 +177,35 @@ func TestProfilePicture(t *testing.T) {
 	})
 }
 
+// A save changes the fields the body has and keeps the others: saving the
+// phone keeps the names, a field sent as null is emptied, and a body with
+// none of the fields, {} or a list, changes nothing (BUGS C3).
+func TestSaveProfileKeepsFieldsTheBodyLeavesOut(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		admin := routetest.New(t, routetest.Options{DB: db}).As("admin")
+		profile := func() string { return admin.Do("GET", "/api/users/me/profile", "").Body }
+		full := `{"first_name":"Grace","last_name":"Hopper","email":"grace@example.test","phone":"+1 555","role_display":"Rear admiral"}`
+		if res := admin.Do("PUT", "/api/users/me/profile", full); res.Status != http.StatusOK {
+			t.Fatalf("save the whole profile: %d %s", res.Status, res.Body)
+		}
+		for _, c := range []struct{ body, want string }{
+			{`{"phone":"555"}`, `"first_name":"Grace","last_name":"Hopper","email":"grace@example.test","phone":"555","role_display":"Rear admiral"`},
+			{`{"last_name":null,"role_display":""}`, `"first_name":"Grace","last_name":"","email":"grace@example.test","phone":"555","role_display":""`},
+			{`{}`, `"first_name":"Grace","last_name":"","email":"grace@example.test","phone":"555","role_display":""`},
+			{`[{"first_name":"x"}]`, `"first_name":"Grace","last_name":"","email":"grace@example.test","phone":"555","role_display":""`},
+			{`{"email":5,"other":"x"}`, `"first_name":"Grace","last_name":"","email":"5","phone":"555","role_display":""`},
+		} {
+			res := admin.Do("PUT", "/api/users/me/profile", c.body)
+			if res.Status != http.StatusOK || res.Body != `{"success":true,"avatar":"unchanged"}` {
+				t.Errorf("save %s: %d %s", c.body, res.Status, res.Body)
+			}
+			if got := profile(); !strings.Contains(got, c.want) {
+				t.Errorf("after saving %s: %s, want %s", c.body, got, c.want)
+			}
+		}
+	})
+}
+
 // Without the template table (a database the console has not migrated
 // yet), enrollment finds no token, as Node's getAgentTemplateByToken does,
 // and the list answers 500 with the database's message. A new template

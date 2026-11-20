@@ -47,7 +47,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "avatar": "unchanged",
+     "avatar": "skipped",
      "success": true
     }
    }

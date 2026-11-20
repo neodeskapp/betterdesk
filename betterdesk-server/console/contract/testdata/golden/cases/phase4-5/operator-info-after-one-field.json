@@ -38,11 +38,11 @@
     "kind": "json",
     "json": {
      "operator": {
-      "avatar_url": "",
-      "display_name": "e2e_global_admin",
-      "email": "",
+      "avatar_url": "not-an-address",
+      "display_name": "Ada Lovelace",
+      "email": "ada@example.test",
       "phone": "555",
-      "role_display": "global_admin",
+      "role_display": "Engineer",
       "username": "e2e_global_admin"
      },
      "session_id": "",
@@ -82,11 +82,11 @@
     "kind": "json",
     "json": {
      "operator": {
-      "avatar_url": "",
-      "display_name": "e2e_admin",
-      "email": "",
+      "avatar_url": "not-an-address",
+      "display_name": "Ada Lovelace",
+      "email": "ada@example.test",
       "phone": "555",
-      "role_display": "admin",
+      "role_display": "Engineer",
       "username": "e2e_admin"
      },
      "session_id": "",

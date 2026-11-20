@@ -39,10 +39,10 @@
     "json": {
      "profile": {
       "avatar_url": "",
-      "email": "",
+      "email": "1e+21",
       "first_name": "[object Object]",
       "id": 8,
-      "last_name": "",
+      "last_name": "true",
       "phone": "",
       "role": "global_admin",
       "role_display": "",
@@ -85,10 +85,10 @@
     "json": {
      "profile": {
       "avatar_url": "",
-      "email": "",
+      "email": "1e+21",
       "first_name": "[object Object]",
       "id": 5,
-      "last_name": "",
+      "last_name": "true",
       "phone": "",
       "role": "admin",
       "role_display": "",

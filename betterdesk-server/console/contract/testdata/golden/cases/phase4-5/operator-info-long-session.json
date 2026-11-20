@@ -71,11 +71,11 @@
     "kind": "json",
     "json": {
      "operator": {
-      "avatar_url": "",
-      "display_name": "e2e_viewer",
-      "email": "",
-      "phone": "",
-      "role_display": "viewer",
+      "avatar_url": "not-an-address",
+      "display_name": "Ada Lovelace",
+      "email": "ada@example.test",
+      "phone": "+49 30 1234",
+      "role_display": "Engineer",
       "username": "e2e_viewer"
      },
      "session_id": "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss",
@@ -116,9 +116,9 @@
     "json": {
      "operator": {
       "avatar_url": "",
-      "display_name": "e2e_admin",
-      "email": "",
-      "phone": "",
+      "display_name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü�",
+      "email": "123456",
+      "phone": "  padded  ",
       "role_display": "admin",
       "username": "e2e_admin"
      },
