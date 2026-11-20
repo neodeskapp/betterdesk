@@ -15,6 +15,7 @@ import (
 	"os"
 	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/logging"
 )
@@ -169,11 +170,33 @@ func (s Settings) Announcement() ([]byte, error) {
 	return append(out, "}}"...), nil
 }
 
+// The responder answers a sender at most answersPerSecond times a
+// second, and keeps count of at most maxSenders senders a second; a
+// sender beyond them waits for the next second.
+const (
+	answersPerSecond = 5
+	maxSenders       = 1024
+	// networksFor is how long the networks of the host's interfaces are
+	// kept before they are read again.
+	networksFor = 10 * time.Second
+)
+
+// carrierGradeNAT is the shared address space of RFC 6598.
+var carrierGradeNAT = &net.IPNet{IP: net.IPv4(100, 64, 0, 0).To4(), Mask: net.CIDRMask(10, 32)}
+
 // LAN is the UDP responder.
 type LAN struct {
 	settings Settings
 	logf     func(format string, args ...any)
 	listen   func(ctx context.Context, address string) (net.PacketConn, error)
+	now      func() time.Time
+
+	// second is the second the counts in answered belong to
+	second   time.Time
+	answered map[string]int
+	// networks are those of the host's interfaces, read at networksAt
+	networks   []*net.IPNet
+	networksAt time.Time
 }
 
 // NewLAN returns a responder for the settings. Its lines go to the log
@@ -186,6 +209,8 @@ func NewLAN(settings Settings) *LAN {
 			lc := net.ListenConfig{Control: reuseAddress}
 			return lc.ListenPacket(ctx, "udp4", address)
 		},
+		now:      time.Now,
+		answered: map[string]int{},
 	}
 }
 
@@ -222,11 +247,17 @@ func (l *LAN) Run(ctx context.Context) {
 	}
 }
 
-// answer sends the announcement to the sender of a probe. Anything that
-// goes wrong on the way is dropped silently, as Node did, except a failed
-// send.
+// answer sends the announcement to the sender of a probe. Only senders on
+// a local network get one, a few times a second at most: the answer is
+// about ten times the probe's size, and must not be sent to an address a
+// stranger wrote into a probe. Anything that goes wrong on the way is
+// dropped silently, as Node did, except a failed send.
 func (l *LAN) answer(conn net.PacketConn, msg []byte, from net.Addr) {
 	if !IsProbe(msg) {
+		return
+	}
+	udp, ok := from.(*net.UDPAddr)
+	if !ok || !l.local(udp.IP) || !l.allow(udp.IP) {
 		return
 	}
 	reply, err := l.settings.Announcement()
@@ -236,4 +267,66 @@ func (l *LAN) answer(conn net.PacketConn, msg []byte, from net.Addr) {
 	if _, err := conn.WriteTo(reply, from); err != nil {
 		l.logf("WARN: LAN Discovery: failed to send reply: %v", err)
 	}
+}
+
+// local reports whether ip is on a local network: loopback, a private,
+// link-local or carrier-grade NAT range, or the network of one of the
+// host's interfaces.
+func (l *LAN) local(ip net.IP) bool {
+	if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || carrierGradeNAT.Contains(ip) {
+		return true
+	}
+	now := l.now()
+	if l.networksAt.IsZero() || now.Sub(l.networksAt) >= networksFor || now.Before(l.networksAt) {
+		l.networks, l.networksAt = nil, now
+		if ifaces, err := l.settings.interfaces(); err == nil {
+			for _, iface := range ifaces {
+				for _, entry := range iface.Entries {
+					if network := entry.network(); network != nil {
+						l.networks = append(l.networks, network)
+					}
+				}
+			}
+		}
+	}
+	for _, network := range l.networks {
+		if network.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
+// network is the network the address is on, nil when its prefix is not
+// known.
+func (a Address) network() *net.IPNet {
+	ip := net.ParseIP(a.Address)
+	if ip == nil || a.Prefix <= 0 {
+		return nil
+	}
+	bits := 8 * net.IPv6len
+	if v4 := ip.To4(); v4 != nil {
+		ip, bits = v4, 8*net.IPv4len
+	}
+	if a.Prefix > bits {
+		return nil
+	}
+	mask := net.CIDRMask(a.Prefix, bits)
+	return &net.IPNet{IP: ip.Mask(mask), Mask: mask}
+}
+
+// allow counts an answer to ip and reports whether it may go out.
+func (l *LAN) allow(ip net.IP) bool {
+	second := l.now().Truncate(time.Second)
+	if !second.Equal(l.second) {
+		l.second = second
+		clear(l.answered)
+	}
+	key := ip.String()
+	n, known := l.answered[key]
+	if n >= answersPerSecond || (!known && len(l.answered) >= maxSenders) {
+		return false
+	}
+	l.answered[key] = n + 1
+	return true
 }

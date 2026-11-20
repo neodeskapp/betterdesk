@@ -336,6 +336,67 @@ func TestResponderAnswersOverUDP(t *testing.T) {
 	}
 }
 
+// sentTo is a socket that records where the responder sends to.
+type sentTo struct {
+	net.PacketConn
+	to []string
+}
+
+func (s *sentTo) WriteTo(_ []byte, addr net.Addr) (int, error) {
+	s.to = append(s.to, addr.String())
+	return 0, nil
+}
+
+// TestResponderIgnoresForeignSenders answers probes from local networks
+// only (loopback, the private, link-local and carrier-grade NAT ranges,
+// the networks of the host's interfaces), and a sender at most five times
+// a second.
+func TestResponderIgnoresForeignSenders(t *testing.T) {
+	lan := NewLAN(Settings{
+		Hostname: func() (string, error) { return "h", nil },
+		Interfaces: func() ([]Interface, error) {
+			return []Interface{{Name: "eth0", Entries: []Address{
+				{Family: "IPv4", Address: "203.0.113.5", Prefix: 24},
+				{Family: "IPv4", Address: "192.0.2.9"},
+				{Family: "IPv6", Address: "2001:db8::5", Prefix: 64},
+			}}}, nil
+		},
+		Port: 5000, DiscoveryPort: 21119,
+	})
+	now := time.Date(2026, 11, 20, 10, 0, 0, 0, time.UTC)
+	lan.now = func() time.Time { return now }
+	probe := []byte(`{"type":"betterdesk-discover"}`)
+	conn := &sentTo{}
+	send := func(ip string) bool {
+		t.Helper()
+		before := len(conn.to)
+		lan.answer(conn, probe, &net.UDPAddr{IP: net.ParseIP(ip), Port: 40000})
+		return len(conn.to) > before
+	}
+	for ip, want := range map[string]bool{
+		"127.0.0.1": true, "10.1.2.3": true, "172.16.0.1": true, "192.168.1.20": true, "169.254.10.1": true,
+		"100.64.0.1": true, "100.127.255.254": true, "203.0.113.200": true, "2001:db8::77": true, "fe80::1": true,
+		"8.8.8.8": false, "203.0.114.1": false, "100.128.0.1": false, "192.0.2.10": false, "172.32.0.1": false, "2001:db9::1": false,
+	} {
+		if got := send(ip); got != want {
+			t.Errorf("probe from %s: answered %v, want %v", ip, got, want)
+		}
+	}
+	answered := 0
+	for range 8 {
+		if send("192.168.7.7") {
+			answered++
+		}
+	}
+	if answered != 5 {
+		t.Errorf("8 probes in one second: %d answered, want 5", answered)
+	}
+	now = now.Add(time.Second)
+	if !send("192.168.7.7") {
+		t.Error("the next second: no answer")
+	}
+}
+
 // TestResponderOnABusyPort logs Node's warning and returns when another
 // socket holds the port without sharing it.
 func TestResponderOnABusyPort(t *testing.T) {

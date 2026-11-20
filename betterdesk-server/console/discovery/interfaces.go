@@ -18,6 +18,9 @@ type Address struct {
 	// MAC is the interface's hardware address, "00:00:00:00:00:00" when
 	// it has none.
 	MAC string
+	// Prefix is the length in bits of the network the address is on, 0
+	// when the system did not say.
+	Prefix int
 }
 
 // Interface is a network interface with its addresses.
@@ -50,9 +53,11 @@ func SystemInterfaces() ([]Interface, error) {
 		entry := Interface{Name: iface.Name}
 		for _, addr := range addrs {
 			var ip net.IP
+			prefix, bits := 0, 0
 			switch a := addr.(type) {
 			case *net.IPNet:
 				ip = a.IP
+				prefix, bits = a.Mask.Size()
 			case *net.IPAddr:
 				ip = a.IP
 			default:
@@ -61,12 +66,16 @@ func SystemInterfaces() ([]Interface, error) {
 			family := "IPv6"
 			if v4 := ip.To4(); v4 != nil {
 				family, ip = "IPv4", v4
+				if bits == 8*net.IPv6len {
+					prefix -= 8 * (net.IPv6len - net.IPv4len)
+				}
 			}
 			entry.Entries = append(entry.Entries, Address{
 				Family:   family,
 				Address:  ip.String(),
 				Internal: iface.Flags&net.FlagLoopback != 0,
 				MAC:      mac,
+				Prefix:   prefix,
 			})
 		}
 		if len(entry.Entries) > 0 {
