@@ -149,22 +149,20 @@ func check(args []string, env Env, opts checkOptions) int {
 	if opts.now == nil {
 		opts.now = time.Now
 	}
+	// A check that cannot start (a URL that is no URL, a port that is no
+	// port) fails with that reason, and the others still run
 	var results []checkResult
 	for _, raw := range cfg.urls {
 		r, err := checkEndpoint(raw, cfg, opts)
 		if err != nil {
-			// The script stopped at a check it could not start and
-			// printed nothing else
-			fmt.Fprintf(env.Stderr, "FAIL %s\n", err)
-			return 1
+			r.err = err.Error()
 		}
 		results = append(results, r)
 	}
 	for _, port := range cfg.ports {
 		r, err := checkPort(port, cfg.timeout, opts)
 		if err != nil {
-			fmt.Fprintf(env.Stderr, "FAIL %s\n", err)
-			return 1
+			r.err = err.Error()
 		}
 		results = append(results, r)
 	}
@@ -207,7 +205,7 @@ func parseTarget(raw string) (*url.URL, error) {
 }
 
 // checkEndpoint is the script's checkEndpoint. err is for a URL that is
-// no URL, which ended the script.
+// no URL: the check cannot start.
 func checkEndpoint(raw string, cfg checkConfig, opts checkOptions) (checkResult, error) {
 	result := checkResult{label: raw}
 	target, err := parseTarget(raw)
@@ -307,7 +305,7 @@ func certificateHostname(subjectAltName, hostname string) bool {
 }
 
 // checkPort is the script's checkPort: connect, and close at once. err is
-// for a port Node refused to connect to at all, which ended the script.
+// for a port Node refused to connect to at all: the check cannot start.
 func checkPort(port portArg, timeout time.Duration, opts checkOptions) (checkResult, error) {
 	text := port.text
 	if !port.given {

@@ -195,6 +195,21 @@ var checkRunDifferences = map[string]string{
 		"which names a thread; a Go HTTPS server answers plain HTTP with 400 where Node's closed",
 }
 
+// checkRunFixes are the recorded runs that stopped at a check the script
+// could not start and printed only "FAIL <message>" on standard error.
+// The check prints that as the check's own FAIL line and goes on with the
+// others (BN10): the standard output it gives instead, with exit 1 and
+// nothing on standard error.
+var checkRunFixes = map[string]string{
+	"--api-url not a url --panel-url http://127.0.0.1:{HTTP}/health": "FAIL not a url: Invalid URL\nPASS http://127.0.0.1:{HTTP}/health (200)\n",
+	"--api-url http://127.0.0.1:{HTTP}/health --panel-url http://":   "PASS http://127.0.0.1:{HTTP}/health (200)\nFAIL http://: Invalid URL\n",
+	"--api-url  --panel-url  --port abc":                             "FAIL abc: Port should be >= 0 and < 65536. Received type number (NaN).\n",
+	"--api-url  --panel-url  --port 127.0.0.1:":                      "FAIL 127.0.0.1:: Port should be >= 0 and < 65536. Received type number (NaN).\n",
+	"--api-url  --panel-url  --port 127.0.0.1:70000":                 "FAIL 127.0.0.1:70000: Port should be >= 0 and < 65536. Received type number (70000).\n",
+	"--api-url  --panel-url  --port 127.0.0.1:1.5":                   "FAIL 127.0.0.1:1.5: Port should be >= 0 and < 65536. Received type number (1.5).\n",
+	"--api-url  --panel-url  --port 127.0.0.1:{TCP} --port":          "PASS 127.0.0.1:{TCP}\nFAIL undefined: Port should be >= 0 and < 65536. Received type number (NaN).\n",
+}
+
 // checkServers starts what the oracle's runs talked to and answers the
 // placeholders' ports.
 func checkServers(t *testing.T) map[string]int {
@@ -309,11 +324,16 @@ func TestCheckRunsLikeNode(t *testing.T) {
 		}
 		return s
 	}
+	fixed := 0
 	for _, run := range v.Runs {
 		name := strings.Join(run.Args, " ")
 		if reason, ok := checkRunDifferences[name]; ok {
 			t.Logf("%s differs on purpose: %s", name, reason)
 			continue
+		}
+		if stdout, ok := checkRunFixes[name]; ok {
+			run.Stdout, run.Stderr = stdout, ""
+			fixed++
 		}
 		args := make([]string, len(run.Args))
 		for i, a := range run.Args {
@@ -336,6 +356,9 @@ func TestCheckRunsLikeNode(t *testing.T) {
 		if got := hide(errOut.String()); got != run.Stderr {
 			t.Errorf("%s: stderr\n got %q\nwant %q", name, got, run.Stderr)
 		}
+	}
+	if fixed != len(checkRunFixes) {
+		t.Errorf("%d of the %d runs of BN10 were recorded", fixed, len(checkRunFixes))
 	}
 }
 
