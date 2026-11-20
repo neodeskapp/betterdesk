@@ -373,19 +373,22 @@ func enrollmentTemplate(ctx context.Context, db *store.DB, token string) (found 
 
 // bindTemplate is bindAgentTemplateDevice: the template of the token is
 // redeemed for the device unless it was before. It reports whether the
-// binding counts: a table without the binding columns admits without
-// one, any other failure does not.
+// token admits the device: the binding changed the template's row, or the
+// row is bound to this device already. A device that finds the row bound
+// to another one, as when two redeem a fresh token at once, is refused,
+// and so is every device when the table has no binding columns or the
+// write fails.
 func bindTemplate(ctx context.Context, db *store.DB, token, deviceID string) bool {
-	_, err := db.Exec(ctx, `UPDATE agent_templates SET enrolled_device_id = ?, enrolled_at = `+db.Pick("datetime('now')", "NOW()")+`
+	result, err := db.Exec(ctx, `UPDATE agent_templates SET enrolled_device_id = ?, enrolled_at = `+db.Pick("datetime('now')", "NOW()")+`
                     WHERE enrollment_token = ? AND (enrolled_device_id IS NULL OR enrolled_device_id = '')`, deviceID, token)
-	if err == nil {
+	if err != nil {
+		return false
+	}
+	if changed, err := result.RowsAffected(); err == nil && changed == 1 {
 		return true
 	}
-	message := jsbind.Message(err)
-	if db.IsPostgres() {
-		return strings.Contains(message, "does not exist") || strings.Contains(message, "no such column")
-	}
-	return strings.Contains(message, "no such column")
+	found, bound := enrollmentTemplate(ctx, db, token)
+	return found && bound.Truthy() && trim(bound.ToString()) == deviceID
 }
 
 // readNotificationIDs is getReadNotificationIds: the ids the account
