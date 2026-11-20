@@ -31,6 +31,9 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "contracts[*].current_period_ym"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -64,6 +67,9 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "contracts[*].current_period_ym"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -78,9 +84,10 @@
     "operator",
     "admin"
    ],
-   "status": 500,
+   "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "application/json; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
@@ -95,6 +102,7 @@
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
      "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
+    "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -102,11 +110,88 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "contracts[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "contracts[*].current_period_ym",
+     "format": "9999-99"
+    },
+    {
+     "path": "contracts[*].id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "contracts[*].package_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "contracts[*].target_key",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "contracts[*].updated_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "contracts[2].org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "error": "Internal Server Error",
-     "success": false
+     "contracts": [
+      {
+       "created_at": "<volatile>",
+       "currency": "EUR",
+       "current_period_ym": "<volatile>",
+       "hourly_rate": 0,
+       "id": "<volatile>",
+       "package_id": "<volatile>",
+       "package_name": "Demo Business Care",
+       "remaining_minutes": 940,
+       "status": "active",
+       "target_key": "<volatile>",
+       "target_name": "Demo Northwind Clinic",
+       "target_type": "device_group",
+       "updated_at": "<volatile>"
+      },
+      {
+       "created_at": "<volatile>",
+       "currency": "EUR",
+       "current_period_ym": "<volatile>",
+       "hourly_rate": 0,
+       "id": "<volatile>",
+       "package_id": "<volatile>",
+       "package_name": "Demo Basic Support",
+       "remaining_minutes": 0,
+       "status": "active",
+       "target_key": "<volatile>",
+       "target_name": "Demo Harbor Logistics",
+       "target_type": "device_group",
+       "updated_at": "<volatile>"
+      },
+      {
+       "created_at": "<volatile>",
+       "currency": "EUR",
+       "current_period_ym": "<volatile>",
+       "hourly_rate": 0,
+       "id": "<volatile>",
+       "org_id": "<volatile>",
+       "org_name": "Demo Lab Collective",
+       "package_id": "<volatile>",
+       "package_name": "Demo Pay As You Go",
+       "remaining_minutes": 0,
+       "status": "suspended",
+       "target_key": "<volatile>",
+       "target_name": "Demo Lab Collective",
+       "target_type": "org",
+       "updated_at": "<volatile>"
+      }
+     ]
     }
    }
   }

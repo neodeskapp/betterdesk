@@ -173,9 +173,11 @@ func init() {
 			Name: "package-preview-two-periods", Path: "/api/panel/billing/packages/{busy}/preview",
 			Query: url.Values{"period": {"2026-03", "2026-04"}}, Roles: few, Volatile: period,
 		},
+		// The period written with brackets is left out (BUGS CM7); the
+		// period beside it gives the answer a month that does not move.
 		contract.Case{
 			Name: "package-preview-period-object", Path: "/api/panel/billing/packages/{busy}/preview",
-			Query: url.Values{"period[toString]": {"x"}}, Roles: few,
+			Query: url.Values{"period[toString]": {"x"}, "period": {"2026-10"}}, Roles: few, Volatile: period,
 		},
 		contract.Case{
 			Name: "package-preview-extra-query", Path: "/api/panel/billing/packages/{busy}/preview",
@@ -217,6 +219,7 @@ func init() {
 		},
 		contract.Case{
 			Name: "contracts-query-without-text", Path: "/api/panel/billing/contracts", Query: url.Values{"status[toString]": {"x"}},
+			Volatile: []string{"contracts[*].current_period_ym"},
 			Roles: few,
 		},
 		contract.Case{

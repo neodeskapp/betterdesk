@@ -2,6 +2,9 @@ package commercialization_test
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,6 +15,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/commercialization"
+	"github.com/unitronix/betterdesk-server/console/routes/internal/reqquery"
 )
 
 // The vectors are what routes/commercialization.routes.js of the Node
@@ -113,13 +117,136 @@ func TestEveryMemberVectorsAreCounted(t *testing.T) {
 	}
 }
 
+// plainQueries changes the vectors whose query has a parameter written
+// with brackets into the call the console makes now, which leaves such
+// parameters out (BUGS CM7): where Node called the API server, the call's
+// query loses them; where Node could not write the query and answered
+// 500, the console calls the API server and answers as the same route
+// does for the same caller and API answer without such a query
+// (template). It reports whether v is one of them.
+func plainQueries(v *proxytest.Vector, templates map[string]proxytest.Vector) bool {
+	route, raw, ok := bracketedQuery(v)
+	if !ok {
+		return false
+	}
+	plain := withoutBrackets(raw)
+	switch {
+	case len(v.Calls) == 1:
+		api, _, _ := strings.Cut(v.Calls[0].URL, "?")
+		v.Calls[0].URL = api + plain
+	case v.Status == http.StatusInternalServerError && strings.Contains(v.Body, "Cannot convert object to primitive value"):
+		tpl, found := templates[templateKey(*v, route)]
+		if !found {
+			return false
+		}
+		v.Status, v.Type, v.Body, v.Base64, v.Disposition, v.Calls = tpl.Status, tpl.Type, tpl.Body, tpl.Base64, tpl.Disposition, nil
+		if len(tpl.Calls) == 1 {
+			call := tpl.Calls[0]
+			api, _, _ := strings.Cut(call.URL, "?")
+			call.URL = api + plain
+			v.Calls = []proxytest.Call{call}
+		}
+	default:
+		return false
+	}
+	return true
+}
+
+// bracketedQuery returns the path and the query of a vector whose query
+// has a part with a bracket in its name.
+func bracketedQuery(v *proxytest.Vector) (route, raw string, ok bool) {
+	r := httptest.NewRequest(http.MethodGet, "http://console"+v.Request.Path, nil)
+	raw, _, _ = strings.Cut(r.URL.RawQuery, "#")
+	for _, part := range strings.Split(raw, "&") {
+		name, _, _ := strings.Cut(strings.NewReplacer("%5B", "[", "%5b", "[").Replace(part), "=")
+		if before, _, found := strings.Cut(part, "]="); found {
+			name = strings.NewReplacer("%5B", "[", "%5b", "[").Replace(before)
+		}
+		if strings.Contains(name, "[") {
+			route, _, _ = strings.Cut(v.Request.Path, "?")
+			return route, raw, true
+		}
+	}
+	return "", "", false
+}
+
+// withoutBrackets is the query the console sends for a request's query:
+// the parts without a bracket in their name, as req.query writes them.
+func withoutBrackets(raw string) string {
+	var plain []string
+	for _, part := range strings.Split(raw, "&") {
+		name, _, _ := strings.Cut(strings.NewReplacer("%5B", "[", "%5b", "[").Replace(part), "=")
+		if before, _, found := strings.Cut(part, "]="); found {
+			name = strings.NewReplacer("%5B", "[", "%5b", "[").Replace(before)
+		}
+		if !strings.Contains(name, "[") {
+			plain = append(plain, part)
+		}
+	}
+	text, _ := reqquery.Of(&http.Request{URL: &url.URL{RawQuery: strings.Join(plain, "&")}}).Search()
+	if text == "" {
+		return ""
+	}
+	return "?" + text
+}
+
+// templateKey names a request by method, path, caller and API answer.
+func templateKey(v proxytest.Vector, route string) string {
+	who := "signed out"
+	if v.Request.Session != nil {
+		who = v.Request.Session.User.Role
+	}
+	api, _ := json.Marshal(v.API)
+	return v.Request.Method + " " + route + " " + who + " " + string(api)
+}
+
+// templates are the answers of the vectors without a query, by
+// templateKey, as the console gives them.
+func templates(vectors []proxytest.Vector) map[string]proxytest.Vector {
+	out := map[string]proxytest.Vector{}
+	for _, v := range vectors {
+		if strings.Contains(v.Request.Path, "?") {
+			continue
+		}
+		fixed(&v)
+		everyMember(&v)
+		if key := templateKey(v, v.Request.Path); out[key].Status == 0 {
+			out[key] = v
+		}
+	}
+	return out
+}
+
+func TestPlainQueryVectorsAreCounted(t *testing.T) {
+	vectors := proxytest.Load(t, filepath.Join("testdata", "vectors.json"))
+	from := templates(vectors)
+	changed, unwritable := 0, 0
+	for _, v := range vectors {
+		was := v.Status
+		if plainQueries(&v, from) {
+			changed++
+			if was == http.StatusInternalServerError {
+				unwritable++
+			}
+		} else if _, _, bracketed := bracketedQuery(&v); bracketed && v.Status == http.StatusInternalServerError {
+			t.Errorf("no template for %s as %v", v.Request.Path, v.Request.Session)
+		}
+	}
+	if changed != 1376 || unwritable != 194 {
+		t.Errorf("%d vectors with brackets in the query changed, %d of them unwritable before; want 1376 and 194", changed, unwritable)
+	}
+}
+
 func replay(t *testing.T, keep func(proxytest.Vector) bool) {
 	t.Helper()
+	all := proxytest.Load(t, filepath.Join("testdata", "vectors.json"))
+	from := templates(all)
 	var kept []proxytest.Vector
-	for _, v := range proxytest.Load(t, filepath.Join("testdata", "vectors.json")) {
+	for _, v := range all {
 		if keep(v) {
 			fixed(&v)
 			everyMember(&v)
+			plainQueries(&v, from)
 			kept = append(kept, v)
 		}
 	}

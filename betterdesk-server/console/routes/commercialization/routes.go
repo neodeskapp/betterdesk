@@ -16,13 +16,11 @@ import (
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/servicedef"
-	"github.com/unitronix/betterdesk-server/console/webui"
 )
 
 type handlers struct {
 	d     *kit.Deps
 	api   *goapi.Client
-	web   *webui.Host
 	log   *kit.Logger
 	clock *billingclock.Service
 }
@@ -30,7 +28,7 @@ type handlers struct {
 // Register adds the group's routes, in the order of the Node file, and
 // the rollback of a clock save to the restart transaction.
 func Register(d *kit.Deps) {
-	h := &handlers{d: d, api: d.GoAPI, web: d.WebUI, log: d.Log, clock: NewClock(d)}
+	h := &handlers{d: d, api: d.GoAPI, log: d.Log, clock: NewClock(d)}
 	if d.Restart != nil {
 		d.Restart.SetRollback("billing-clock", h.clock.Rollback)
 	}
