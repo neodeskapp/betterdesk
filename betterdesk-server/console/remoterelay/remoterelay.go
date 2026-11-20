@@ -109,12 +109,14 @@ type Service struct {
 }
 
 // remoteSession is one device's session: its agent, its viewers in the
-// order they joined, whether the agent streams, and the timer that
-// closes an agent without viewers.
+// order they joined, whether the agent streams, the viewers that stopped
+// the stream for themselves while it runs, and the timer that closes an
+// agent without viewers.
 type remoteSession struct {
 	agent     *ws.Conn
 	viewers   []*ws.Conn
 	streaming bool
+	paused    map[*ws.Conn]bool
 	idle      Timer
 }
 
@@ -260,13 +262,24 @@ func (sess *remoteSession) broadcastLocked(binary bool, data []byte) {
 
 func (sess *remoteSession) broadcastText(text string) { sess.broadcastLocked(false, []byte(text)) }
 
+// sendFrameLocked sends a screen frame to every viewer that has not
+// stopped the stream for itself.
+func (sess *remoteSession) sendFrameLocked(data []byte) {
+	for _, v := range sess.viewers {
+		if !sess.paused[v] {
+			v.Send(true, data)
+		}
+	}
+}
+
 // startStreamLocked is startAgentStream: the agent is told to start and
-// the viewers that it did.
+// the viewers that it did; every viewer watches again.
 func (s *Service) startStreamLocked(sess *remoteSession, deviceID string) {
 	if sess.agent == nil || sess.streaming {
 		return
 	}
 	sess.streaming = true
+	sess.paused = nil
 	if sess.idle != nil {
 		sess.idle.Stop()
 		sess.idle = nil
@@ -276,17 +289,53 @@ func (s *Service) startStreamLocked(sess *remoteSession, deviceID string) {
 	sess.broadcastText(`{"type":"stream-started"}`)
 }
 
-// stopStreamLocked is stopAgentStream.
+// stopStreamLocked is stopAgentStream: the agent is told to stop and the
+// viewers that it did.
 func (s *Service) stopStreamLocked(sess *remoteSession, deviceID, reason string) {
 	if !sess.streaming {
 		return
 	}
 	sess.streaming = false
+	sess.paused = nil
 	logf("[RemoteRelay] Session %s: sending STOP to agent (%s)", deviceID, reason)
 	if sess.agent != nil {
 		sess.agent.SendText(`{"type":"stop"}`)
 	}
 	sess.broadcastText(`{"type":"stream-stopped","reason":` + string(appendQuoted(nil, reason)) + `}`)
+}
+
+// pauseViewerLocked is a viewer's stop: that viewer is told the stream
+// stopped and gets no more frames, the others keep watching. Once no
+// viewer watches, the agent is told to stop.
+func (s *Service) pauseViewerLocked(sess *remoteSession, deviceID string, viewer *ws.Conn) {
+	if !sess.streaming || sess.paused[viewer] {
+		return
+	}
+	if sess.paused == nil {
+		sess.paused = map[*ws.Conn]bool{}
+	}
+	sess.paused[viewer] = true
+	viewer.SendText(`{"type":"stream-stopped","reason":"operator requested stop"}`)
+	s.stopIfNobodyWatchesLocked(sess, deviceID, "operator requested stop")
+}
+
+// stopIfNobodyWatchesLocked tells the agent to stop when every viewer
+// stopped the stream for itself; each was told so when it stopped.
+func (s *Service) stopIfNobodyWatchesLocked(sess *remoteSession, deviceID, reason string) {
+	if !sess.streaming || len(sess.viewers) == 0 {
+		return
+	}
+	for _, v := range sess.viewers {
+		if !sess.paused[v] {
+			return
+		}
+	}
+	sess.streaming = false
+	sess.paused = nil
+	logf("[RemoteRelay] Session %s: sending STOP to agent (%s)", deviceID, reason)
+	if sess.agent != nil {
+		sess.agent.SendText(`{"type":"stop"}`)
+	}
 }
 
 // scheduleIdleCloseLocked is scheduleIdleClose: after AgentIdleTTL the

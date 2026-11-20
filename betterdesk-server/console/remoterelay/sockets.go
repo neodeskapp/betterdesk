@@ -67,7 +67,7 @@ func (s *Service) serveAgent(u *ws.Upgrade) {
 	if sess.agent != nil {
 		sess.agent.Close(1001, "New agent connected")
 	}
-	sess.streaming = false
+	sess.streaming, sess.paused = false, nil
 	sess.agent = conn
 	logf("[RemoteRelay] Agent connected: %s", deviceID)
 	sess.broadcastText(`{"type":"agent-ready","device_id":` + string(appendQuoted(nil, deviceID)) + `}`)
@@ -85,10 +85,11 @@ func (s *Service) serveAgent(u *ws.Upgrade) {
 			break
 		}
 		if binary {
-			// A screen frame goes to every viewer, unless it is too big
+			// A screen frame goes to every viewer that watches, unless it
+			// is too big
 			if len(data) <= MaxBinaryFrame {
 				s.mu.Lock()
-				sess.broadcastLocked(true, data)
+				sess.sendFrameLocked(data)
 				s.mu.Unlock()
 			}
 			continue
@@ -108,7 +109,7 @@ func (s *Service) serveAgent(u *ws.Upgrade) {
 	s.mu.Lock()
 	if sess.agent == conn {
 		sess.agent = nil
-		sess.streaming = false
+		sess.streaming, sess.paused = false, nil
 		if sess.idle != nil {
 			sess.idle.Stop()
 		}
@@ -203,7 +204,7 @@ read:
 			break read
 		case stop:
 			s.mu.Lock()
-			s.stopStreamLocked(sess, deviceID, "operator requested stop")
+			s.pauseViewerLocked(sess, deviceID, conn)
 			s.mu.Unlock()
 		case forward, tooDeep:
 			s.mu.Lock()
@@ -228,10 +229,13 @@ read:
 			break
 		}
 	}
+	delete(sess.paused, conn)
 	if len(sess.viewers) == 0 {
 		s.stopStreamLocked(sess, deviceID, "last viewer left")
 		s.scheduleIdleCloseLocked(sess, deviceID)
 		s.dropIfEmptyLocked(sess, deviceID)
+	} else {
+		s.stopIfNobodyWatchesLocked(sess, deviceID, "last watching viewer left")
 	}
 	s.mu.Unlock()
 }
