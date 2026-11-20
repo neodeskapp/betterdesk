@@ -177,12 +177,8 @@ func main() {
 		return
 	}
 	if runSQLiteAuthConsolidation {
-		report, err := db.ConsolidateSQLiteAuth(db.SQLiteAuthConsolidationOptions{
-			DBPath:     cfg.DBPath,
-			AuthDBPath: cfg.AuthDBPath,
-			BackupDir:  sqliteAuthConsolidationBackupDir,
-			DryRun:     sqliteAuthConsolidationDryRun,
-		})
+		report, err := migrateSQLiteAuth(context.Background(), cfg.DBPath, cfg.AuthDBPath,
+			sqliteAuthConsolidationBackupDir, sqliteAuthConsolidationDryRun)
 		if err != nil {
 			log.Fatalf("SQLite auth consolidation failed: %v", err)
 		}
