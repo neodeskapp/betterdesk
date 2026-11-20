@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
@@ -463,6 +464,10 @@ func (g *goStack) replayExchanges(t *testing.T, scenario oracleScenario, known m
 	t.Helper()
 	var res replayResult
 	var mu sync.Mutex
+	trust, err := httpx.ParseTrustProxy(scenario.Env["TRUST_PROXY"])
+	if err != nil {
+		t.Fatal(err)
+	}
 	one := func(e oracleExchange) {
 		addr := g.ports[e.Listener]
 		if addr == "" {
@@ -478,6 +483,7 @@ func (g *goStack) replayExchanges(t *testing.T, scenario oracleScenario, known m
 		got, closed, after := send(addr, e.Secure, e.Parts, wait)
 		method := methodOf(e.Parts)
 		want, gotReplies := parseReplies(raw, method), parseReplies(got, method)
+		forwardedAs(t, want, e.Parts, trust)
 		mu.Lock()
 		defer mu.Unlock()
 		if check, ok := known[e.ID]; ok {
@@ -536,6 +542,34 @@ func (g *goStack) replayExchanges(t *testing.T, scenario oracleScenario, known m
 	}
 	wg.Wait()
 	return res
+}
+
+// forwardedAs puts into Node's echo of a forwarded request the client
+// address Go sends the API: the address the console resolves under
+// TRUST_PROXY, alone in X-Forwarded-For and in X-Real-IP. Node passed the
+// first address the client wrote there, whatever TRUST_PROXY said (BUGS
+// LS10). The recording's requests come from loopback.
+func forwardedAs(t *testing.T, want []reply, parts []oraclePart, trust httpx.TrustProxy) {
+	t.Helper()
+	if len(want) != 1 || want[0].header.Get("X-Upstream") != "echo" || len(want[0].body) == 0 {
+		return
+	}
+	r := requestOf(parts)
+	if r == nil {
+		return
+	}
+	r.RemoteAddr = "127.0.0.1:40000"
+	var e echo
+	if err := json.Unmarshal(want[0].body, &e); err != nil {
+		t.Fatalf("Node's echo %q: %v", want[0].body, err)
+	}
+	ip := trust.ClientIP(r)
+	e.XFF, e.XRI = &ip, &ip
+	body, err := httpx.Marshal(e)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want[0].body = body
 }
 
 // compareSlow compares a slow exchange: the same answer (or none), and

@@ -15,12 +15,15 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/unitronix/betterdesk-server/console/httpx"
 )
 
 type certFiles struct {
@@ -372,6 +375,53 @@ func TestRequestTimeoutBeforeTheFirstRequest(t *testing.T) {
 	got := exchange("GET / HTTP/1.1\r\nHost: x\r\n\r\nGET / HT")
 	if !strings.HasPrefix(got, "HTTP/1.1 200 OK") || strings.Contains(got, "408") {
 		t.Errorf("kept-alive connection: %q", got)
+	}
+}
+
+// The forward names the client by the address the console resolves under
+// its own TRUST_PROXY, as X-Real-IP and as the only X-Forwarded-For entry:
+// what a client writes into those headers reaches the API only through a
+// hop the console trusts.
+func TestForwardNamesTheClientTheConsoleResolves(t *testing.T) {
+	var seen http.Header
+	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { seen = r.Header.Clone() }))
+	defer api.Close()
+	origin, _ := url.Parse(api.URL)
+	for _, c := range []struct {
+		trust, remote, xff, xri, want string
+	}{
+		{"", "203.0.113.9:4000", "198.51.100.1", "", "203.0.113.9"},
+		{"", "203.0.113.9:4000", "", "198.51.100.2", "203.0.113.9"},
+		{"", "203.0.113.9:4000", "198.51.100.1, 192.0.2.7", "198.51.100.2", "203.0.113.9"},
+		{"loopback", "203.0.113.9:4000", "198.51.100.1", "", "203.0.113.9"},
+		{"loopback", "127.0.0.1:4000", "198.51.100.1, 192.0.2.7", "", "192.0.2.7"},
+		{"loopback", "127.0.0.1:4000", "", "198.51.100.2", "127.0.0.1"},
+		{"true", "127.0.0.1:4000", "198.51.100.1, 192.0.2.7", "", "192.0.2.7"},
+		{"2", "127.0.0.1:4000", "198.51.100.1, 192.0.2.7", "", "198.51.100.1"},
+	} {
+		trust, err := httpx.ParseTrustProxy(c.trust)
+		if err != nil {
+			t.Fatal(err)
+		}
+		f := newAPIForward(origin, false, trust.ClientIP)
+		req := httptest.NewRequest(http.MethodGet, "/api/health", nil)
+		req.RemoteAddr = c.remote
+		if c.xff != "" {
+			req.Header.Set("X-Forwarded-For", c.xff)
+		}
+		if c.xri != "" {
+			req.Header.Set("X-Real-IP", c.xri)
+		}
+		seen = nil
+		f.ServeHTTP(httptest.NewRecorder(), req)
+		f.close()
+		if seen == nil {
+			t.Fatalf("%+v: the request did not reach the API", c)
+		}
+		if xff, xri := seen.Values("X-Forwarded-For"), seen.Values("X-Real-IP"); len(xff) != 1 || xff[0] != c.want || len(xri) != 1 || xri[0] != c.want {
+			t.Errorf("TRUST_PROXY=%q from %s with X-Forwarded-For %q and X-Real-IP %q: the API saw X-Forwarded-For %q and X-Real-IP %q, want %q",
+				c.trust, c.remote, c.xff, c.xri, xff, xri, c.want)
+		}
 	}
 }
 

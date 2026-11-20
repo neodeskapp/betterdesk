@@ -24,7 +24,8 @@ const apiTimeout = 15 * time.Second
 // apiForward passes a request of the client API port on to the server's
 // API (middleware/goApiProxy.js): same method, path, query and body, the
 // client's headers without the hop-by-hop ones, X-Forwarded-For and
-// X-Real-IP added, Host set to the API's. The answer comes back with its
+// X-Real-IP set to the client's address under TRUST_PROXY, Host set to the
+// API's. The answer comes back with its
 // status, headers and body; its headers replace those the port had set.
 type apiForward struct {
 	origin    *url.URL
@@ -75,22 +76,17 @@ func (f *apiForward) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, name := range hopByHop {
 		out.Header.Del(name)
 	}
-	ip := firstForwarded(r)
-	if ip == "" {
-		ip = strings.Join(r.Header.Values("X-Real-IP"), ", ")
-	}
-	if ip == "" {
-		ip = f.clientIP(r)
-	}
+	// The API learns the client's address from the console alone: what the
+	// client wrote into X-Forwarded-For or X-Real-IP counts only through a
+	// hop TRUST_PROXY trusts
+	out.Header.Del("X-Forwarded-For")
+	out.Header.Del("X-Real-IP")
+	ip := f.clientIP(r)
 	if ip == "" {
 		ip = httpx.SocketIP(r)
 	}
 	if ip != "" {
-		if forwarded := strings.Join(r.Header.Values("X-Forwarded-For"), ", "); forwarded != "" {
-			out.Header.Set("X-Forwarded-For", forwarded+", "+ip)
-		} else {
-			out.Header.Set("X-Forwarded-For", ip)
-		}
+		out.Header.Set("X-Forwarded-For", ip)
 		out.Header.Set("X-Real-IP", ip)
 	}
 	out.Header.Set("Connection", "keep-alive")

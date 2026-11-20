@@ -125,7 +125,7 @@ func plainOnTLS(t *testing.T, g *goStack, scenario oracleScenario, listener stri
 }
 
 func secureOnly(s oracleScenario) oracleScenario {
-	return oracleScenario{Name: s.Name, Exchanges: filter(s.Exchanges, func(e oracleExchange) bool { return e.Secure })}
+	return oracleScenario{Name: s.Name, Env: s.Env, Exchanges: filter(s.Exchanges, func(e oracleExchange) bool { return e.Secure })}
 }
 
 func filter(list []oracleExchange, keep func(oracleExchange) bool) []oracleExchange {
