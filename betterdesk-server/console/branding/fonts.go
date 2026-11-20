@@ -413,24 +413,34 @@ func fontFaceCSS(family, weight, url, format string) string {
 }
 
 // RegisterUploadedFont installs an uploaded font file: it copies filePath
-// into the font's folder as <name>.ttf (when fileName ends in .ttf) or
-// <name>-400.woff2, removes filePath, and writes font.css and meta.json.
-// The content of the file is not looked at. family is trimmed and cut at
-// 80 characters; nothing stands for "Custom Font".
+// into the font's folder under the name of what its first bytes say it
+// is (<name>.ttf, <name>.otf, <name>.woff or <name>-400.woff2, see
+// fontKindOf), removes filePath, and writes font.css and meta.json. A
+// file that is no font is refused with NotAFont, and nothing is written
+// or removed. A file that cannot be read goes by fileName (.ttf, or else
+// .woff2) and fails in the copy. family is trimmed and cut at 80
+// characters; nothing stands for "Custom Font".
 func (s *Service) RegisterUploadedFont(family any, filePath, fileName string) (font *Object, err error) {
 	defer catch(&err)
 	s.ensureFontsDir()
 	display, safeName := uploadedFontName(family)
+	kind, isFont, readable := fontFileKind(filePath)
+	switch {
+	case !readable:
+		kind = fontKind{"-400.woff2", "woff2"}
+		if toLower(posixExtname(fileName)) == ".ttf" {
+			kind = fontKind{".ttf", "truetype"}
+		}
+	case !isFont:
+		throw(NotAFont)
+	}
 	dir := s.fontDir(safeName)
 	if !exists(dir) {
 		if err := os.MkdirAll(dir, 0o777); err != nil {
 			return nil, fsError(err, "mkdir", dir)
 		}
 	}
-	destName, format := safeName+"-400.woff2", "woff2"
-	if toLower(posixExtname(fileName)) == ".ttf" {
-		destName, format = safeName+".ttf", "truetype"
-	}
+	destName, format := safeName+kind.suffix, kind.format
 	dest := s.fontFile(safeName, destName)
 	if err := copyFile(filePath, dest); err != nil {
 		return nil, err

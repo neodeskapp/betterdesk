@@ -542,6 +542,7 @@ func FuzzFontFile(f *testing.F) {
 	})
 	for _, name := range []string{"a.ttf", "a.TTF", "a.woff2", ".ttf", "a/b.ttf", `a\b.woff2`, "..", "x.", "a.ttf\x00.png", "ü.ttf", "CON.ttf", strings.Repeat("n", 300) + ".woff2"} {
 		f.Add("Für 'Fonts' \\ \n", name, "application/octet-stream", []byte("data"))
+		f.Add("Für 'Fonts' \\ \n", name, "application/octet-stream", []byte("OTTO data"))
 	}
 	for _, mimeType := range []string{"image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml", "image/svg"} {
 		f.Add("", "page.html", mimeType, []byte("<script>x</script>"))
@@ -566,8 +567,10 @@ func FuzzFontFile(f *testing.F) {
 		} else {
 			font, err := s.UploadFont(family, fileName, content)
 			inFonts := tree(t, s.opts.FontsDir)
+			kind, isFont := fontKindOf(content)
 			if err != nil {
-				if !ownError(err, "Error") || (Message(err) != "Font family name is required" && Message(err) != "Invalid font family name") {
+				nameRefused := Message(err) == "Font family name is required" || Message(err) == "Invalid font family name"
+				if !ownError(err, "Error") || !(nameRefused || !isFont && Message(err) == NotAFont) {
 					t.Fatalf("UploadFont(%q, %q): %v", family, fileName, err)
 				}
 				if len(inFonts) != 0 {
@@ -578,10 +581,11 @@ func FuzzFontFile(f *testing.F) {
 				if !regexp.MustCompile(`^[a-z0-9-]+$`).MatchString(safe) {
 					t.Fatalf("safeName %q", safe)
 				}
-				stored := safe + "-400.woff2"
-				if strings.ToLower(posixExtname(fileName)) == ".ttf" {
-					stored = safe + ".ttf"
+				// stored by what the bytes are, whatever the name (BUGS BR4)
+				if !isFont {
+					t.Fatalf("%q was installed as a font", content)
 				}
+				stored := safe + kind.suffix
 				if len(inFonts) != 4 || inFonts[0] != safe+"/ = <dir>" {
 					t.Fatalf("the fonts folder after one upload: %s", Stringify(inFonts))
 				}

@@ -134,6 +134,59 @@ func fixedUploadAnswer(entry any) (body, audit any, bug string) {
 		[]any{[]any{"branding_bg_upload", "Uploaded background: " + m[2]}}, "BR10"
 }
 
+// nodeFontKind is how Node stored an installed font: by the name the file
+// came with, as <name>.ttf when it ends in .ttf and as <name>-400.woff2
+// otherwise, whatever the bytes were.
+func nodeFontKind(fileName string) fontKind {
+	if toLower(posixExtname(fileName)) == ".ttf" {
+		return fontKind{".ttf", "truetype"}
+	}
+	return fontKind{"-400.woff2", "woff2"}
+}
+
+// fixedFontFile is BR4 in the replays of a font that Node installed from
+// content under fileName (an upload, or RegisterUploadedFont): the
+// console stores a font by what its first bytes are and refuses a file
+// that is no font. Where that differs from what Node did, it checks the
+// console's outcome (font and err): the refusal for no font, with the
+// fonts folder as it was before the step; for a font of another kind
+// than its name says, the file and its font.css under the console's
+// name. It then installs the font as Node had, so the fonts folder
+// (compared next) and the steps after it are Node's again, and returns
+// what Node answered. It reports whether the step was one of these.
+func (r *filesReplay) fixedFontFile(family any, content []byte, fileName string, before []any, font *Object, err error) (nodeFont *Object, fixed bool) {
+	t := r.t
+	t.Helper()
+	node := nodeFontKind(fileName)
+	kind, isFont := fontKindOf(content)
+	if isFont && kind == node {
+		return nil, false
+	}
+	display, safeName := uploadedFontName(family)
+	if !isFont {
+		if Message(err) != NotAFont || font != nil {
+			t.Errorf("a file that is no font (%q) was installed as %s: %v", clip(string(content)), clip(Stringify(font)), err)
+		}
+		if got := Stringify(tree(t, r.fontsDir())); got != Stringify(before) {
+			t.Errorf("a file that is no font changed the fonts folder: %s", clip(got))
+		}
+	} else {
+		stored := r.s.fontFile(safeName, safeName+kind.suffix)
+		data, readErr := os.ReadFile(stored)
+		css, _ := os.ReadFile(r.s.fontFile(safeName, "font.css"))
+		face := "src: url('/fonts/" + safeName + "/" + safeName + kind.suffix + "') format('" + kind.format + "');"
+		if err != nil || readErr != nil || string(data) != string(content) || !strings.Contains(string(css), face) {
+			t.Errorf("a %s font named %q: %v %v, font.css %q", kind.format, fileName, err, readErr, css)
+		}
+		_ = os.Remove(stored)
+	}
+	url := "/fonts/" + safeName + "/" + safeName + node.suffix
+	r.write(r.s.fontFile(safeName, safeName+node.suffix), content)
+	r.write(r.s.fontFile(safeName, "font.css"), []byte(wellFormed(fontFaceCSS(display, "400", url, node.format))))
+	r.write(r.s.fontFile(safeName, "meta.json"), []byte(wellFormed(Stringify(object("family", display, "category", "custom", "source", "upload")))))
+	return object("family", display, "safeName", safeName, "cssPath", "/fonts/"+safeName+"/font.css", "downloaded", true), true
+}
+
 // refusedRedirect is BR16 in the replay of the font steps: a download
 // that Node followed to another host than Google Fonts. The console
 // refuses that redirect, so the file behind it is missing. It checks that
@@ -701,10 +754,62 @@ func TestRefusedFontUploadLeavesNoTemporaryFile(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(s.opts.FontsDir, "blocked"), []byte("x"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.UploadFont("Blocked", "x.ttf", []byte("font")); err == nil {
+	if _, err := s.UploadFont("Blocked", "x.ttf", []byte("\x00\x01\x00\x00font")); err == nil {
 		t.Error("an install into a file did not fail")
 	}
 	if left, _ := os.ReadDir(s.opts.TempDir); len(left) != 0 {
 		t.Errorf("temporary files: %v", left)
+	}
+}
+
+// TestFontsAreStoredByTheirBytes: a font is stored and served as what its
+// first bytes say it is, whatever the client named it, and a file that is
+// no font is refused before anything is written, also when it reaches
+// RegisterUploadedFont (BUGS BR4).
+func TestFontsAreStoredByTheirBytes(t *testing.T) {
+	rest := strings.Repeat("\x00", 60)
+	for _, tc := range []struct{ content, name, stored, format string }{
+		{"\x00\x01\x00\x00" + rest, "face.woff2", "face.ttf", "truetype"},
+		{"true" + rest, "face.bin", "face.ttf", "truetype"},
+		{"OTTO" + rest, "face.ttf", "face.otf", "opentype"},
+		{"wOFF" + rest, "face.woff2", "face.woff", "woff"},
+		{"wOF2" + rest, "face.ttf", "face-400.woff2", "woff2"},
+	} {
+		s := oracleService(t)
+		font, err := s.UploadFont("Face", tc.name, []byte(tc.content))
+		if err != nil || font.Text("cssPath") != "/fonts/face/font.css" {
+			t.Fatalf("%q as %s: %v %s", tc.content[:4], tc.name, err, Stringify(font))
+		}
+		if got := Stringify(tree(t, s.opts.FontsDir)); !strings.Contains(got, `"face/`+tc.stored+` = `) || strings.Count(got, `"face/`) != 4 {
+			t.Errorf("%q as %s: the fonts folder %s", tc.content[:4], tc.name, got)
+		}
+		css, _ := os.ReadFile(filepath.Join(s.opts.FontsDir, "face", "font.css"))
+		if want := "src: url('/fonts/face/" + tc.stored + "') format('" + tc.format + "');"; !strings.Contains(string(css), want) {
+			t.Errorf("%q as %s: font.css %s", tc.content[:4], tc.name, css)
+		}
+	}
+
+	for _, content := range []string{"\x89PNG\r\n\x1a\n" + rest, "<!doctype html><script>alert(1)</script>", "this is not a font", "wOFX" + rest, "OTT", ""} {
+		s := oracleService(t)
+		if font, err := s.UploadFont("Face", "face.ttf", []byte(content)); Message(err) != NotAFont || font != nil {
+			t.Errorf("%q: %s %v", content, Stringify(font), err)
+		}
+		if left := tree(t, s.opts.FontsDir); len(left) != 0 {
+			t.Errorf("%q left %s in the fonts folder", content, Stringify(left))
+		}
+		if left, _ := os.ReadDir(s.opts.TempDir); len(left) != 0 {
+			t.Errorf("%q left temporary files: %v", content, left)
+		}
+
+		file := filepath.Join(t.TempDir(), "in.ttf")
+		if err := os.WriteFile(file, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := s.RegisterUploadedFont("Face", file, "in.ttf"); Message(err) != NotAFont {
+			t.Errorf("register %q: %v", content, err)
+		}
+		if left := tree(t, s.opts.FontsDir); len(left) != 0 || !exists(file) {
+			t.Errorf("register %q left %s in the fonts folder, its file is there: %v", content, Stringify(left), exists(file))
+		}
 	}
 }

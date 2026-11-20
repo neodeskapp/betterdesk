@@ -288,7 +288,8 @@ func TestUploadFont(t *testing.T) {
 		w := world(t, db)
 		admin := w.As("admin")
 		fonts, tmp := w.Server.Deps().Config.FontsDir, w.Server.Deps().Config.TempDir
-		font := []byte("not a font at all")
+		// a font is stored by what its first bytes are (BUGS BR4)
+		font, woff2 := []byte("\x00\x01\x00\x00 a TrueType font"), []byte("wOF2 a WOFF2 font")
 		res := upload(t, admin, "/api/settings/fonts/upload", part{field: "family", content: []byte("  My Font  ")}, part{field: "font", name: "file.TTF", contentType: "application/octet-stream", content: font})
 		if res.Body != `{"success":true,"data":{"family":"My Font","safeName":"my-font","cssPath":"/fonts/my-font/font.css","downloaded":true}}` {
 			t.Fatalf("upload: %d %s", res.Status, res.Body)
@@ -306,7 +307,7 @@ func TestUploadFont(t *testing.T) {
 			t.Errorf("temporary files: %v", left)
 		}
 		// without a family the file name names the font; a woff2 by type
-		res = upload(t, admin, "/api/settings/fonts/upload", part{field: "font", name: "Other Face.bin", contentType: "font/woff2", content: font})
+		res = upload(t, admin, "/api/settings/fonts/upload", part{field: "font", name: "Other Face.bin", contentType: "font/woff2", content: woff2})
 		if !strings.Contains(res.Body, `"family":"Other Face","safeName":"other-face"`) {
 			t.Errorf("by type: %d %s", res.Status, res.Body)
 		}
@@ -323,6 +324,8 @@ func TestUploadFont(t *testing.T) {
 			want  string
 		}{
 			{"wrong type", []part{{field: "font", name: "x.png", contentType: "image/png", content: font}}, "Invalid font file type"},
+			{"text named like a font", []part{{field: "family", content: []byte("Text")}, {field: "font", name: "x.ttf", contentType: "font/ttf", content: []byte("not a font at all")}}, "Invalid font file type"},
+			{"a page named like a font", []part{{field: "font", name: "page.woff2", contentType: "font/woff2", content: []byte("<!doctype html><script>alert(1)</script>")}}, "Invalid font file type"},
 			{"too large", []part{{field: "font", name: "x.ttf", contentType: "font/ttf", content: bytes.Repeat([]byte("a"), branding.FontMaxBytes+1)}}, "File too large (max 5 MB)"},
 			{"no file", []part{{field: "family", content: []byte("x")}}, "No file provided"},
 			{"family without text", []part{{field: "family[toString]", content: []byte("x")}, {field: "font", name: "x.ttf", contentType: "font/ttf", content: font}}, "Cannot convert object to primitive value"},
@@ -336,9 +339,13 @@ func TestUploadFont(t *testing.T) {
 		if rows := w.AuditRows(); len(rows) != auditBefore {
 			t.Errorf("refused uploads were audited: %v", rows[auditBefore:])
 		}
-		// a refused name leaves no temporary file (BUGS BR3)
+		// a refused name leaves no temporary file (BUGS BR3), and a file
+		// that is no font no folder
 		if left := files(t, tmp); len(left) != 0 {
 			t.Errorf("temporary files after a refused name: %v", left)
+		}
+		if got := strings.Join(files(t, fonts), ","); got != "my-font,other-face" {
+			t.Errorf("font folders after the refused uploads: %s", got)
 		}
 	})
 }
@@ -372,13 +379,16 @@ func TestUploadsLikeNode(t *testing.T) {
 			}
 		}
 		last := ""
-		renames, inheritedTargets := 0, 0
+		renames, inheritedTargets, fontsByBytes := 0, 0, 0
 		defer func() {
 			if renames < 10 {
 				t.Errorf("%d uploads stored under another name than Node's, the recording has more (BUGS I9)", renames)
 			}
 			if inheritedTargets < 3 {
 				t.Errorf("%d background uploads name a target every object has, the recording has more (BUGS BR10)", inheritedTargets)
+			}
+			if fontsByBytes < 10 {
+				t.Errorf("%d font uploads are no font or named as another kind, the recording has more (BUGS BR4)", fontsByBytes)
 			}
 		}()
 		for i, entry := range steps {
@@ -388,6 +398,7 @@ func TestUploadsLikeNode(t *testing.T) {
 			auditBefore := len(w.AuditRows())
 			status, body := 0, ""
 			var renamed []string
+			var byBytes *fontByBytes
 			switch get("op") {
 			case "upload":
 				var content []byte
@@ -421,6 +432,11 @@ func TestUploadsLikeNode(t *testing.T) {
 				parts = append(parts, part{field: field, name: name, contentType: mimeType, content: content})
 				res := upload(t, admin, route, parts...)
 				status, body = res.Status, res.Body
+				if field == "font" {
+					if byBytes = fixedFontUpload(entry, content); byBytes != nil {
+						fontsByBytes++
+					}
+				}
 				if from, to := nodeUploadName(t, body, branding.Field(entry, "body"), mimeType); from != to {
 					// stored under the extension of its type, where Node took
 					// the one of the file name (BUGS I9): the file gets Node's
@@ -468,12 +484,16 @@ func TestUploadsLikeNode(t *testing.T) {
 			default:
 				t.Fatalf("%s: unknown op", what)
 			}
-			if want, ok := branding.Field(entry, "status").(float64); ok && int(want) != status {
-				t.Errorf("%s: status %d, want %d (%s)", what, status, int(want), clipText(body))
-			}
+			wantStatus, ok := branding.Field(entry, "status").(float64)
 			wantBody, wantAudit, fixed := fixedUploadAnswer(entry)
 			if fixed {
 				inheritedTargets++
+			}
+			if byBytes != nil && byBytes.refused {
+				wantStatus, wantBody, wantAudit = 400, `{"success":false,"error":"Invalid font file type"}`, nil
+			}
+			if ok && int(wantStatus) != status {
+				t.Errorf("%s: status %d, want %d (%s)", what, status, int(wantStatus), clipText(body))
 			}
 			if wantBody != "" {
 				if got := maskUploadNames(reRevisionField.ReplaceAllLiteralString(body, `"revision":"<REV>"`)); got != wantBody {
@@ -502,6 +522,9 @@ func TestUploadsLikeNode(t *testing.T) {
 					if strings.HasPrefix(line, safe[1]+"/") {
 						want = append(want, line)
 					}
+				}
+				if byBytes != nil {
+					want = byBytes.folder(want)
 				}
 				var got []string
 				for _, line := range tree(t, fontsDir) {
@@ -545,6 +568,69 @@ func fixedUploadAnswer(entry any) (body string, audit []string, fixed bool) {
 	}
 	return `{"success":true,"url":"` + m[1] + `","applied":false,"data":null}`,
 		[]string{branding.Stringify([]any{"branding_bg_upload", "Uploaded background: " + m[2]})}, true
+}
+
+// fontByBytes is BR4 in the replay of a font upload that Node stored
+// under the name the file came with: the console refuses a file that is
+// no font, and stores a font by what its first bytes are.
+type fontByBytes struct {
+	refused bool
+	// the file Node stored and the one the console stores, below the
+	// fonts folder, each with its format in font.css
+	nodeFile, nodeFormat, file, format string
+}
+
+// fixedFontUpload is the fix of a font upload step Node answered with
+// success, or nil where the console stores the font as Node did.
+func fixedFontUpload(entry any, content []byte) *fontByBytes {
+	body, _ := branding.Field(entry, "body").(string)
+	safe := regexp.MustCompile(`"safeName":"([^"]+)"`).FindStringSubmatch(body)
+	if status, _ := branding.Field(entry, "status").(float64); status != 200 || safe == nil {
+		return nil
+	}
+	kinds := map[string][2]string{
+		"\x00\x01\x00\x00": {".ttf", "truetype"},
+		"true":             {".ttf", "truetype"},
+		"OTTO":             {".otf", "opentype"},
+		"wOFF":             {".woff", "woff"},
+		"wOF2":             {"-400.woff2", "woff2"},
+	}
+	head := string(content[:min(4, len(content))])
+	kind, isFont := kinds[head]
+	if !isFont {
+		return &fontByBytes{refused: true}
+	}
+	fix := &fontByBytes{file: safe[1] + "/" + safe[1] + kind[0], format: kind[1]}
+	for _, line := range lines(branding.Field(entry, "fonts")) {
+		name, _, _ := strings.Cut(line, " = ")
+		if strings.HasPrefix(name, safe[1]+"/"+safe[1]) {
+			fix.nodeFile, fix.nodeFormat = name, "woff2"
+			if strings.HasSuffix(name, ".ttf") {
+				fix.nodeFormat = "truetype"
+			}
+		}
+	}
+	if fix.nodeFile == fix.file {
+		return nil
+	}
+	return fix
+}
+
+// folder is the font's folder as the console leaves it, from the one
+// Node left: the file under the console's name and font.css with its
+// format.
+func (f *fontByBytes) folder(node []string) []string {
+	nodeFace := "/fonts/" + f.nodeFile + "') format('" + f.nodeFormat + "')"
+	face := "/fonts/" + f.file + "') format('" + f.format + "')"
+	var out []string
+	for _, line := range node {
+		if name, rest, _ := strings.Cut(line, " = "); name == f.nodeFile {
+			line = f.file + " = " + rest
+		}
+		out = append(out, strings.Replace(line, nodeFace, face, 1))
+	}
+	sort.Slice(out, func(i, j int) bool { return lessUTF16(out[i], out[j]) })
+	return out
 }
 
 // uploadExtensions are the extensions a logo or background gets by its
@@ -665,16 +751,19 @@ func tree(t *testing.T, dir string) []string {
 		}
 	}
 	walk(dir)
-	sort.Slice(out, func(i, j int) bool {
-		a, b := utf16.Encode([]rune(out[i])), utf16.Encode([]rune(out[j]))
-		for k := 0; k < len(a) && k < len(b); k++ {
-			if a[k] != b[k] {
-				return a[k] < b[k]
-			}
-		}
-		return len(a) < len(b)
-	})
+	sort.Slice(out, func(i, j int) bool { return lessUTF16(out[i], out[j]) })
 	return out
+}
+
+// lessUTF16 orders texts as JavaScript does, by UTF-16 code units.
+func lessUTF16(x, y string) bool {
+	a, b := utf16.Encode([]rune(x)), utf16.Encode([]rune(y))
+	for k := 0; k < len(a) && k < len(b); k++ {
+		if a[k] != b[k] {
+			return a[k] < b[k]
+		}
+	}
+	return len(a) < len(b)
 }
 
 // backgroundList is the background list as the recording wrote it: sorted

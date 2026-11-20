@@ -4,7 +4,7 @@
   "method": "POST",
   "path": "/api/settings/fonts/upload",
   "notes": [
-   "multipart form: family, font (file file.bin, 39 bytes)"
+   "multipart form: family, font (file file.bin, 316 bytes)"
   ]
  },
  "recordings": 2,

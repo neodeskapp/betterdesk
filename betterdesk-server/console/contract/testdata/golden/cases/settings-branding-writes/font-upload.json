@@ -4,7 +4,7 @@
   "method": "POST",
   "path": "/api/settings/fonts/upload",
   "notes": [
-   "multipart form: family, font (file Contract.ttf, 39 bytes)"
+   "multipart form: family, font (file Contract.ttf, 688 bytes)"
   ]
  },
  "recordings": 2,

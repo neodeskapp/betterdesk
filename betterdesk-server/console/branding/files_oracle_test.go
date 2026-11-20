@@ -307,13 +307,26 @@ func (r *filesReplay) fontSteps() {
 		case "register":
 			registered++
 			tmp := filepath.Join(r.tempDir(), "in-"+strconv.Itoa(registered))
-			if data, ok := r.fixture(toString(property(step, "fixture"))); ok {
+			data, ok := r.fixture(toString(property(step, "fixture")))
+			if ok {
 				r.write(tmp, data)
 			} else if err := os.MkdirAll(r.tempDir(), 0o755); err != nil {
 				t.Fatal(err)
 			}
+			before := tree(t, r.fontsDir())
 			var font *Object
 			font, err = s.RegisterUploadedFont(property(step, "family"), tmp, toString(property(step, "fileName")))
+			if ok && property(property(entry, "result"), "r") != Undefined {
+				if nodeFont, fixed := r.fixedFontFile(property(step, "family"), data, toString(property(step, "fileName")), before, font, err); fixed {
+					r.fixed["BR4"]++
+					if err != nil {
+						// Node installed what the console refused, and
+						// removed the file it came from
+						font, err = nodeFont, nil
+						_ = os.Remove(tmp)
+					}
+				}
+			}
 			if err == nil {
 				value = font
 			}
@@ -421,15 +434,25 @@ func (r *filesReplay) uploadBackground(mimeType string, content []byte, target a
 	return 200, Stringify(answer)
 }
 
-// uploadFont does what POST /api/settings/fonts/upload does.
-func (r *filesReplay) uploadFont(name, mimeType string, content []byte, family any, audit *[]any) (int, string) {
+// uploadFont does what POST /api/settings/fonts/upload does. nodeStored
+// is whether Node installed the font.
+func (r *filesReplay) uploadFont(name, mimeType string, content []byte, family any, audit *[]any, nodeStored bool) (int, string) {
 	if !AcceptFontUpload(name, mimeType) {
 		return failure(400, "Invalid font file type")
 	}
 	if len(content) > FontMaxBytes {
 		return failure(400, "File too large (max 5 MB)")
 	}
+	before := tree(r.t, r.fontsDir())
 	font, err := r.s.UploadFont(family, name, content)
+	if nodeStored {
+		if nodeFont, fixed := r.fixedFontFile(fontUploadFamily(family, name), content, name, before, font, err); fixed {
+			r.fixed["BR4"]++
+			if err != nil {
+				font, err = nodeFont, nil
+			}
+		}
+	}
 	if err != nil {
 		return failure(400, orText(Message(err), "Upload failed"))
 	}
@@ -478,7 +501,7 @@ func (r *filesReplay) uploadSteps() {
 			case "background":
 				status, body = r.uploadBackground(mimeType, content, property(fields, "target"), &audit)
 			case "font":
-				status, body = r.uploadFont(name, mimeType, content, property(fields, "family"), &audit)
+				status, body = r.uploadFont(name, mimeType, content, property(fields, "family"), &audit, property(entry, "status") == float64(200))
 			default:
 				t.Fatalf("step %d: unknown kind %s", i, kind)
 			}
@@ -682,10 +705,17 @@ func TestOracleFiles(t *testing.T) {
 		if r.fixed["BR16"] == 0 {
 			t.Error("no font download was sent away from Google Fonts, the recording has one (BUGS BR16)")
 		}
+		if r.fixed["BR4"] < 6 {
+			t.Errorf("%d installed fonts are no font or named as another kind, the recording has more (BUGS BR4)", r.fixed["BR4"])
+		}
 	})
 	t.Run("uploads", func(t *testing.T) {
 		r.t = t
+		registered := r.fixed["BR4"]
 		r.uploadSteps()
+		if uploaded := r.fixed["BR4"] - registered; uploaded < 10 {
+			t.Errorf("%d uploaded fonts are no font or named as another kind, the recording has more (BUGS BR4)", uploaded)
+		}
 		if r.renamed < 10 {
 			t.Errorf("%d uploads stored under another name than Node's, the recording has more (BUGS I9)", r.renamed)
 		}

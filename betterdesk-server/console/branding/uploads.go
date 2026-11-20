@@ -54,7 +54,7 @@ func AcceptImageUpload(mimeType string) bool {
 
 // AcceptFontUpload reports whether a font upload is accepted: a file name
 // that ends in .woff2 or .ttf, or one of the font content types. The
-// content itself is not looked at.
+// content is looked at by UploadFont.
 func AcceptFontUpload(originalName, mimeType string) bool {
 	if reFontFileName.MatchString(originalName) {
 		return true
@@ -217,18 +217,21 @@ func (s *Service) ApplyBackground(ctx context.Context, target, url string) (bran
 // UploadFont installs an uploaded font file. family is the name the form
 // sent; nothing stands for the file name without its extension. A name
 // that RegisterUploadedFont would refuse is refused before anything is
-// written. The bytes go to a temporary file in TempDir with a random name
-// (font-upload-<digits><.ttf or .woff2>), from there into the font's
-// folder (see RegisterUploadedFont), and the temporary file goes in every
-// case. A file name that does not end in .ttf is stored as .woff2.
+// written, and so is content whose first bytes are those of no font
+// (NotAFont). The bytes go to a temporary file in TempDir with a random
+// name (font-upload-<digits><extension of the kind>), from there into
+// the font's folder (see RegisterUploadedFont), and the temporary file
+// goes in every case. The file is stored by what its bytes are, whatever
+// the client named it.
 func (s *Service) UploadFont(family any, originalName string, content []byte) (font *Object, err error) {
 	defer catch(&err)
 	name := fontUploadFamily(family, originalName)
 	uploadedFontName(name)
-	ext := ".woff2"
-	if toLower(posixExtname(originalName)) == ".ttf" {
-		ext = ".ttf"
+	kind, isFont := fontKindOf(content)
+	if !isFont {
+		throw(NotAFont)
 	}
+	ext := filepath.Ext(kind.suffix)
 	if !exists(s.opts.TempDir) {
 		if err := os.MkdirAll(s.opts.TempDir, 0o777); err != nil {
 			return nil, fsError(err, "mkdir", s.opts.TempDir)
@@ -247,6 +250,54 @@ func (s *Service) UploadFont(family any, originalName string, content []byte) (f
 		return nil, fsError(err, "write", tmp.Name())
 	}
 	return s.RegisterUploadedFont(name, tmp.Name(), posixBasename(filepath.ToSlash(tmp.Name())))
+}
+
+// NotAFont is the message of the refusal of a font file whose first
+// bytes are those of no TrueType, OpenType, WOFF or WOFF2 font.
+const NotAFont = "Invalid font file type"
+
+// fontKind is a kind of font file: the end of the name it is stored under
+// after the font's folder name, and its format in font.css.
+type fontKind struct {
+	suffix string
+	format string
+}
+
+// fontKindOf tells a font file by its first four bytes: TrueType
+// (00 01 00 00, or "true" for Apple's), OpenType with CFF outlines
+// ("OTTO"), WOFF ("wOFF") and WOFF2 ("wOF2"). Anything else is no font.
+func fontKindOf(content []byte) (kind fontKind, isFont bool) {
+	if len(content) < 4 {
+		return fontKind{}, false
+	}
+	switch string(content[:4]) {
+	case "\x00\x01\x00\x00", "true":
+		return fontKind{".ttf", "truetype"}, true
+	case "OTTO":
+		return fontKind{".otf", "opentype"}, true
+	case "wOFF":
+		return fontKind{".woff", "woff"}, true
+	case "wOF2":
+		return fontKind{"-400.woff2", "woff2"}, true
+	}
+	return fontKind{}, false
+}
+
+// fontFileKind is fontKindOf for the file at path. readable is false
+// when the file cannot be opened or read.
+func fontFileKind(path string) (kind fontKind, isFont, readable bool) {
+	f, err := os.Open(path)
+	if err != nil {
+		return fontKind{}, false, false
+	}
+	defer f.Close()
+	head := make([]byte, 4)
+	n, err := io.ReadFull(f, head)
+	if err != nil && !errors.Is(err, io.EOF) && !errors.Is(err, io.ErrUnexpectedEOF) {
+		return fontKind{}, false, false
+	}
+	kind, isFont = fontKindOf(head[:n])
+	return kind, isFont, true
 }
 
 // FontUploadFamily is the name UploadFont gives a font: the family the

@@ -20,8 +20,8 @@ import (
 // route deletes one; they are in the instance's DATA_DIR/uploads) and the
 // profile "Contract two", which admin applies in its turn (the active
 // profile cannot be deleted, and nothing makes it inactive again). Font
-// uploads go to the source tree's web-nodejs/public/fonts and are deleted
-// by the cases after them.
+// uploads go to the instance's DATA_DIR/fonts and are deleted by the
+// cases after them.
 //
 // No case downloads a font: that fetches from fonts.googleapis.com. The
 // download cases stop at a check before the fetch; the tests of
@@ -38,7 +38,17 @@ func init() {
 		panic(err)
 	}
 	svg := []byte(`<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"><script>alert(1)</script><rect width="4" height="4"/></svg>`)
-	font := []byte("not really a font, nothing looks at it\n")
+	// Two small fonts with the glyph "A", a TrueType one and the same as
+	// WOFF2, as console/branding/testdata/nodeoracle/fontfiles.js builds
+	// them byte by byte. An upload is stored by what its first bytes are.
+	ttf, err := base64.StdEncoding.DecodeString("AAEAAAAKAIAAAwAgT1MvMmTETrUAAACsAAAAYGNtYXAADAB0AAABDAAAACxnbHlmULyfXgAAATgAAAAgaGVhZGF2Q6EAAAFYAAAANmhoZWEFegGTAAABkAAAACRobXR4BLAAZAAAAbQAAAAIbG9jYQAQAAAAAAG8AAAABm1heHAABAAFAAABxAAAACBuYW1lCZwhAwAAAeQAAACqcG9zdP+fADIAAAKQAAAAIAADAlgBkAAFAAACigK8AAAAjAKKArwAAAHgADIA+gAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAABCRFNLAEAAQQBBAyD/OAAAAyAAyAAAAAEAAAAAAfQCvAAAACAAAQAAAAEAAwABAAAADAAEACAAAAAEAAQAAQAAAEH//wAAAEH////AAAEAAAAAAAEAZAAAAfQCvAACAAABAQEAZAGQ/zgAAAAAArwAAAAAAQAAAAEAAFCf8PtfDzz1AAsD6AAAAAAAAAAAAAAAAAAAAAAAZAAAAfQCvAAAAAgAAgAAAAAAAAABAAADIP84AAACWAAAAAACWAABAAAAAAAAAAAAAAAAAAAAAgJYAAACWABkAAAAAAAQAAAAAQAAAAIAAwABAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAYATgADAAEECQABAAwAAAADAAEECQACAA4ADAADAAEECQADABQAGgADAAEECQAEAAwALgADAAEECQAFABYAOgADAAEECQAGAAwAUABCAGQAdABlAHMAdABSAGUAZwB1AGwAYQByAEIAZAB0AGUAcwB0ACAAMQAuADAAQgBkAHQAZQBzAHQAVgBlAHIAcwBpAG8AbgAgADEALgAwAEIAZAB0AGUAcwB0AAAAAwAAAAAAAP+cADIAAAAAAAAAAAAAAAAAAAAAAAAAAA==")
+	if err != nil {
+		panic(err)
+	}
+	woff2, err := base64.StdEncoding.DecodeString("d09GMgABAAAAAAE8AAoAAAAAArAAAAD1AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmAALMogywYBNgIkAwgEIAWBKgcgG/0BAJ4Htjs06ljXhXfmUWFE1d5fzxJCUE8oksQlTX35yuMUhfAoEyVGIpEx3O7c2vW4Trw+yiu1JSVqm4TkASkcTlseYUDPFXLEUYBRjuF8gBPcbgITmt7w27WWGGTBUPVhhDqrS5xrmHt7viEF6fC4FYjSxqEahjp3COS1LtEJYkgwbViHYcOCg9ao2q2An+5XkVi3ooG6BJgXhMHF48+Y+83U0AMAwK054wqEX7N6kHEEqqoHOMEQZUhAAQBg1AmS4QkxTY0yaxpDlm1i2LQtjFi1/3vUtIGMOWFcJZbvmLTbB7u27PjvO6HM9typIMFq7QEAAA==")
+	if err != nil {
+		panic(err)
+	}
 	file := func(field, name, contentType string, content []byte) contract.Part {
 		return contract.Part{Field: field, FileName: name, ContentType: contentType, Content: content}
 	}
@@ -239,11 +249,15 @@ func init() {
 		// Fonts
 		contract.Case{
 			Name: "font-upload", Method: "POST", Path: fonts + "/upload", Roles: editors,
-			Multipart: []contract.Part{field("family", "Contract Upload"), file("font", "Contract.ttf", "font/ttf", font)},
+			Multipart: []contract.Part{field("family", "Contract Upload"), file("font", "Contract.ttf", "font/ttf", ttf)},
 		},
 		contract.Case{
 			Name: "font-upload-by-type", Method: "POST", Path: fonts + "/upload", Roles: admin,
-			Multipart: []contract.Part{field("family", "  Contract Woff  "), file("font", "file.bin", "application/font-woff2", font)},
+			Multipart: []contract.Part{field("family", "  Contract Woff  "), file("font", "file.bin", "application/font-woff2", woff2)},
+		},
+		contract.Case{
+			Name: "font-upload-text-as-font", Method: "POST", Path: fonts + "/upload", Roles: admin,
+			Multipart: []contract.Part{field("family", "Contract Text"), file("font", "Text.ttf", "font/ttf", []byte("not a font, only text named like one\n"))},
 		},
 		contract.Case{Name: "font-upload-wrong-type", Method: "POST", Path: fonts + "/upload", Multipart: []contract.Part{file("font", "x.png", "image/png", png)}, Roles: admin},
 		contract.Case{Name: "font-upload-no-file", Method: "POST", Path: fonts + "/upload", Multipart: []contract.Part{field("family", "Nothing")}, Roles: admin},
