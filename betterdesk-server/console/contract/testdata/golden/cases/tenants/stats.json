@@ -124,7 +124,7 @@
      "tenant_id": 1,
      "tenant_name": "Acme Corporation",
      "total_devices": 1,
-     "total_users": 3
+     "total_users": 1
     }
    }
   },
@@ -167,7 +167,7 @@
      "tenant_id": 3,
      "tenant_name": "Acme Corporation",
      "total_devices": 1,
-     "total_users": 3
+     "total_users": 1
     }
    }
   },
@@ -210,7 +210,7 @@
      "tenant_id": 5,
      "tenant_name": "Acme Corporation",
      "total_devices": 1,
-     "total_users": 3
+     "total_users": 1
     }
    }
   }

@@ -286,10 +286,14 @@ func tenantUsers(ctx context.Context, db *store.DB, tenantID jsbind.Value) ([]te
 	return users, nil
 }
 
-// assignUser assigns a user to a tenant. Every failure is false.
-func assignUser(ctx context.Context, db *store.DB, tenantID, userID jsbind.Value) bool {
-	_, err := assign(ctx, db, "tenant_users", "user_id", tenantID, userID)
-	return err == nil
+// userExists reports whether an account has the id.
+func userExists(ctx context.Context, db *store.DB, id jsbind.Value) (bool, error) {
+	var n int
+	err := db.QueryRow(ctx, "SELECT COUNT(*) FROM users WHERE id = ?", int64(id.ToNumber())).Scan(&n)
+	if err != nil {
+		return false, fmt.Errorf("look up user %s: %w", id.ToString(), err)
+	}
+	return n > 0, nil
 }
 
 // removeUser takes a user from a tenant.

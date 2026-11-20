@@ -482,8 +482,9 @@ func (h *handlers) users(w http.ResponseWriter, r *http.Request) {
 }
 
 // assignUser answers POST /api/tenants/{id}/users with the body
-// {user_id}. The answer says whether the row was written: {"ok":false}
-// for a tenant that does not exist or an id the database does not take.
+// {user_id}: the id of an account, a whole number from 1. A tenant that
+// does not exist is 404; an id that is no such number, or names no
+// account, is 400.
 func (h *handlers) assignUser(w http.ResponseWriter, r *http.Request) {
 	userID := jsbind.Of(kit.Body(r).Get("user_id"))
 	if !userID.Truthy() {
@@ -494,8 +495,32 @@ func (h *handlers) assignUser(w http.ResponseWriter, r *http.Request) {
 	if !found {
 		return
 	}
-	ok := assignUser(r.Context(), h.db, id, jsbind.Number(userID.ToNumber()))
-	kit.JSON(w, r, http.StatusOK, done{OK: ok})
+	t, err := tenantByID(r.Context(), h.db, id)
+	if err == nil && t == nil {
+		fail(w, r, http.StatusNotFound, "Tenant not found")
+		return
+	}
+	if n := userID.ToNumber(); err == nil && (!userID.IsNumber() || n < 1 || n > math.MaxInt32 || n != math.Trunc(n)) {
+		fail(w, r, http.StatusBadRequest, "Invalid user_id")
+		return
+	}
+	var known bool
+	if err == nil {
+		known, err = userExists(r.Context(), h.db, userID)
+	}
+	if err == nil && !known {
+		fail(w, r, http.StatusBadRequest, "Unknown user")
+		return
+	}
+	if err == nil {
+		_, err = assign(r.Context(), h.db, "tenant_users", "user_id", id, userID)
+	}
+	if err != nil {
+		h.log.Error("POST /:id/users error:", err)
+		fail(w, r, http.StatusInternalServerError, "Failed to assign user")
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, done{OK: true})
 }
 
 // removeUser answers DELETE /api/tenants/{id}/users/{userId}.

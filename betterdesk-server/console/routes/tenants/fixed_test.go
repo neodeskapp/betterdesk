@@ -671,21 +671,6 @@ func stepsCheck(db *store.DB) (check replay.Check, done func(t *testing.T)) {
 	return check, done
 }
 
-// TN8: assigning a device or a user again leaves the assignment as it is,
-// so it stays where its first assignment put it in the lists. On SQLite
-// Node replaced the row with a new one; PostgreSQL kept it already.
-var _ = addSteps("TN8", map[string]replay.Fix{
-	"sqlite: 741 GET /api/tenants/1/users": {Status: 200, Answer: `[{"user_id":null,"assigned_at":"2001-01-01 00:30:00"},{"user_id":3000000000,"assigned_at":"2001-01-01 00:29:00"},` +
-		`{"user_id":1e+21,"assigned_at":"2001-01-01 00:27:00"},{"user_id":-1,"assigned_at":"2001-01-01 00:26:00"},{"user_id":11,"assigned_at":"2001-01-01 00:24:00"},` +
-		`{"user_id":0,"assigned_at":"2001-01-01 00:23:00"},{"user_id":8,"assigned_at":"2001-01-01 00:22:00"},{"user_id":6,"assigned_at":"2001-01-01 00:21:00"},` +
-		`{"user_id":1,"assigned_at":"2001-01-01 00:20:00"},{"user_id":2.5,"assigned_at":"2001-01-01 00:19:00"},{"user_id":1.5,"assigned_at":"2001-01-01 00:18:00"},` +
-		`{"user_id":5,"assigned_at":"2001-01-01 00:17:00"},{"user_id":4,"assigned_at":"2001-01-01 00:16:00"},{"user_id":3,"assigned_at":"2001-01-01 00:15:00"},` +
-		`{"user_id":2,"assigned_at":"2001-01-01 00:14:00"}]`},
-	"sqlite: 752 GET /api/tenants/1/users": {Status: 200, Answer: `[{"user_id":3000000000,"assigned_at":"2001-01-01 00:29:00"},{"user_id":1e+21,"assigned_at":"2001-01-01 00:27:00"},` +
-		`{"user_id":11,"assigned_at":"2001-01-01 00:24:00"},{"user_id":0,"assigned_at":"2001-01-01 00:23:00"},{"user_id":8,"assigned_at":"2001-01-01 00:22:00"},` +
-		`{"user_id":6,"assigned_at":"2001-01-01 00:21:00"},{"user_id":1,"assigned_at":"2001-01-01 00:20:00"},{"user_id":4,"assigned_at":"2001-01-01 00:16:00"}]`},
-})
-
 var (
 	unknownDevice  = `{"error":"Unknown device"}`
 	invalidIDs     = `{"error":"Invalid device_ids"}`
@@ -747,17 +732,17 @@ func assignTheKnown(t *testing.T, w *replay.World, step replay.Step) {
 // devices the API server knows (TN4), each assigned once, so the times
 // that follow from their ids are those of their first assignment (TN8).
 // D-ON is taken away after the first two reads.
-var _ = addSteps("TN4 TN8", map[string]replay.Fix{
+var _ = addSteps("TN4 TN5 TN8", map[string]replay.Fix{
 	"sqlite: 702 GET /api/tenants/1/devices":   {Status: 200, Answer: tenantDevicesAfterTN4("sqlite", true)},
 	"postgres: 702 GET /api/tenants/1/devices": {Status: 200, Answer: tenantDevicesAfterTN4("postgres", true)},
 	"sqlite: 713 GET /api/tenants/1/devices":   {Status: 200, Answer: tenantDevicesAfterTN4("sqlite", false)},
 	"postgres: 713 GET /api/tenants/1/devices": {Status: 200, Answer: tenantDevicesAfterTN4("postgres", false)},
 	"sqlite: 703 GET /api/tenants/1/stats":     {Status: 200, Answer: tenantStats(7, 2, 0)},
 	"postgres: 703 GET /api/tenants/1/stats":   {Status: 200, Answer: tenantStats(7, 2, 0)},
-	"sqlite: 742 GET /api/tenants/1/stats":     {Status: 200, Answer: tenantStats(6, 1, 15)},
-	"postgres: 742 GET /api/tenants/1/stats":   {Status: 200, Answer: tenantStats(6, 1, 10)},
-	"sqlite: 756 GET /api/tenants/1/stats":     {Status: 200, Answer: tenantStats(6, 1, 8)},
-	"postgres: 756 GET /api/tenants/1/stats":   {Status: 200, Answer: tenantStats(6, 1, 6)},
+	"sqlite: 742 GET /api/tenants/1/stats":     {Status: 200, Answer: tenantStats(6, 1, 1)},
+	"postgres: 742 GET /api/tenants/1/stats":   {Status: 200, Answer: tenantStats(6, 1, 1)},
+	"sqlite: 756 GET /api/tenants/1/stats":     {Status: 200, Answer: tenantStats(6, 1, 0)},
+	"postgres: 756 GET /api/tenants/1/stats":   {Status: 200, Answer: tenantStats(6, 1, 0)},
 })
 
 // tenantDevicesAfterTN4 is the list of tenant 1's devices: D-OFF to
@@ -790,3 +775,45 @@ func tenantDevicesAfterTN4(dialect string, withOn bool) string {
 func tenantStats(devices, online, users int) string {
 	return fmt.Sprintf(`{"tenant_id":1,"tenant_name":"By admin","total_devices":%d,"online_devices":%d,"total_users":%d,"max_devices":0}`, devices, online, users)
 }
+
+var (
+	invalidUser    = `{"error":"Invalid user_id"}`
+	tenantNotFound = `{"error":"Tenant not found"}`
+)
+
+// TN5: a tenant gets users that have an account, named by their id, a
+// whole number from 1; a tenant that does not exist is 404. User 2 is the
+// only one tenant 1 gets, and the second time leaves it as it is (TN8).
+var _ = tenantFixes.Add("TN5", map[string]replay.Fix{
+	`admin POST /api/tenants/999/users {"user_id":1}`:        {Status: 404, Answer: tenantNotFound},
+	`super_admin POST /api/tenants/999/users {"user_id":1}`:  {Status: 404, Answer: tenantNotFound},
+	`global_admin POST /api/tenants/999/users {"user_id":1}`: {Status: 404, Answer: tenantNotFound},
+	`admin POST /api/tenants/999/users {"user_id":7}`:        {Status: 404, Answer: tenantNotFound},
+	`admin POST /api/tenants/999/users {"user_id":2}`:        {Status: 404, Answer: tenantNotFound},
+	`admin POST /api/tenants/1/users {"user_id":"3"}`:        {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":" 4 "}`:      {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":"0x5"}`:      {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":1.5}`:        {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":"2.5"}`:      {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":true}`:       {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":[6]}`:        {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":["8"]}`:      {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":[9,10]}`:     {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":[]}`:         {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":[[11]]}`:     {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":{}}`:         {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":"abc"}`:      {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":"0"}`:        {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":-1}`:         {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":1e+21}`:      {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":3000000000}`: {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":"12abc"}`:    {Status: 400, Answer: invalidUser},
+	`admin POST /api/tenants/1/users {"user_id":1e400}`:      {Status: 400, Answer: invalidUser},
+})
+
+var _ = addSteps("TN5 TN8", map[string]replay.Fix{
+	"sqlite: 741 GET /api/tenants/1/users":   {Status: 200, Answer: `[{"user_id":2,"assigned_at":"2001-01-01 00:14:00"}]`},
+	"postgres: 741 GET /api/tenants/1/users": {Status: 200, Answer: `[{"user_id":2,"assigned_at":"2001-01-01T00:18:00.000Z"}]`},
+	"sqlite: 752 GET /api/tenants/1/users":   {Status: 200, Answer: `[]`},
+	"postgres: 752 GET /api/tenants/1/users": {Status: 200, Answer: `[]`},
+})
