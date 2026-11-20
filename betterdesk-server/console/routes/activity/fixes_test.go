@@ -67,7 +67,9 @@ func notesOf(t *testing.T, rec replay.Recording) map[string]string {
 //   - On PostgreSQL the detail count of a summary and the sums and counts
 //     of the top apps are numbers, where Node sent texts of digits (BUGS
 //     AI10).
-func adjusted(notes map[string]string, postgres bool, renames, numbers *int) replay.Check {
+//   - The detail count of a summary of a device that reported again later
+//     stops at that report (BUGS AI11), see recounted.
+func adjusted(notes map[string]string, postgres bool, renames, numbers, recounts *int) replay.Check {
 	return func(t *testing.T, step replay.Step, got replay.Answer) bool {
 		if step.Status != 200 || got.Status != 200 || got.Body == step.Answer {
 			return false
@@ -78,6 +80,7 @@ func adjusted(notes map[string]string, postgres bool, renames, numbers *int) rep
 		}
 		renamed := rename(node, have, notes)
 		numbered := postgres && number(node)
+		recounted := recount(node)
 		if !reflect.DeepEqual(node, have) {
 			return false
 		}
@@ -87,8 +90,37 @@ func adjusted(notes map[string]string, postgres bool, renames, numbers *int) rep
 		if numbered {
 			*numbers++
 		}
+		if recounted {
+			*recounts++
+		}
 		return true
 	}
+}
+
+// recounted are the detail counts of the summaries of the recordings that
+// have a later report of the same device, by device and time of report:
+// D1 reported on three days with 3, 2 and 1 sessions, where Node counted
+// 6, 3 and 1, and ODD reported twice, where Node counted 5 for the first.
+var recounted = map[string]string{
+	"D1 2019-03-04T08:00:00.000Z": "3",
+	"D1 2019-03-05T08:00:00.000Z": "2",
+	"ODD 2019-03-02 08:00:00":     "1",
+}
+
+// recount puts the detail counts of recounted into the summaries of Node's
+// answer. It reports whether it changed one.
+func recount(node any) bool {
+	answer, _ := node.(map[string]any)
+	rows, _ := answer["summaries"].([]any)
+	changed := false
+	for _, row := range rows {
+		o, _ := row.(map[string]any)
+		key := fmt.Sprint(o["device_id"], " ", o["reported_at"])
+		if count, ok := recounted[key]; ok && fmt.Sprint(o["detail_count"]) != count {
+			o["detail_count"], changed = json.Number(count), true
+		}
+	}
+	return changed
 }
 
 // AI10: PostgreSQL makes one row per app too, under the category the app
@@ -478,6 +510,41 @@ func TestTopAppsAreTheSameOnBothDatabases(t *testing.T) {
 		}
 		if got := w.Do(replay.Request{Role: "admin", Path: "/api/activity"}); got.Status != 200 || !strings.Contains(got.Body, `"detail_count":4,`) {
 			t.Errorf("the list: %d %s, want the detail count 4 as a number", got.Status, got.Body)
+		}
+	})
+}
+
+// The detail count of a summary counts the device's sessions from the
+// time of that report up to its next report, where Node counted every
+// later session: Monday's summary counted the whole week (BUGS AI11).
+func TestDetailCountStopsAtTheNextReport(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		for day, sessions := range map[int]int{4: 3, 5: 2, 6: 1} {
+			w.Exec("INSERT INTO activity_summaries (device_id, reported_at, received_at) VALUES ('R', ?, ?)",
+				[]any{fmt.Sprintf("2019-03-0%dT08:00:00.000Z", day), fmt.Sprintf("2019-03-0%dT18:00:00.000Z", day)})
+			for i := range sessions {
+				w.Exec("INSERT INTO activity_sessions (device_id, started_at, ended_at) VALUES ('R', ?, ?)",
+					[]any{fmt.Sprintf("2019-03-0%dT%02d:00:00.000Z", day, 8+i), fmt.Sprintf("2019-03-0%dT%02d:30:00.000Z", day, 8+i)})
+			}
+		}
+		// Before the first report, and of another device
+		w.Exec("INSERT INTO activity_sessions (device_id, started_at, ended_at) VALUES ('R', '2019-03-04T07:00:00.000Z', '2019-03-04T07:30:00.000Z')", nil)
+		w.Exec("INSERT INTO activity_sessions (device_id, started_at, ended_at) VALUES ('S', '2019-03-05T09:00:00.000Z', '2019-03-05T09:30:00.000Z')", nil)
+		got := w.Do(replay.Request{Role: "admin", Path: "/api/activity"})
+		var list struct {
+			Summaries []struct {
+				ReportedAt  string `json:"reported_at"`
+				DetailCount any    `json:"detail_count"`
+			}
+		}
+		_ = json.Unmarshal([]byte(got.Body), &list)
+		counts := make([]string, len(list.Summaries))
+		for i, s := range list.Summaries {
+			counts[i] = fmt.Sprintf("%.10s %v", s.ReportedAt, s.DetailCount)
+		}
+		if have, want := strings.Join(counts, ", "), "2019-03-06 1, 2019-03-05 2, 2019-03-04 3"; got.Status != 200 || have != want {
+			t.Errorf("the detail counts: %d %q, want %q: %s", got.Status, have, want, got.Body)
 		}
 	})
 }

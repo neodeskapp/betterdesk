@@ -36,12 +36,12 @@ import (
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
-		guarded, elsewhere, slashes, renames, numbers, refused, respelled := 0, 0, 0, 0, 0, 0, 0
+		guarded, elsewhere, slashes, renames, numbers, recounts, refused, respelled := 0, 0, 0, 0, 0, 0, 0, 0
 		rec := replay.Load(t, db, "node")
 		if changed := withoutCopies(&rec, db); changed != map[bool]int{false: 3, true: 4}[db.IsPostgres()] {
 			t.Errorf("withoutCopies changed %d steps", changed)
 		}
-		named := adjusted(notesOf(t, rec), db.IsPostgres(), &renames, &numbers)
+		named := adjusted(notesOf(t, rec), db.IsPostgres(), &renames, &numbers, &recounts)
 		windows := checkedWindows(w, &refused, &respelled)
 		defer activityFixes.Unused(t, db)
 		w.Run(rec, activityFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
@@ -79,6 +79,9 @@ func TestNodeAnswers(t *testing.T) {
 		}
 		if want := map[bool]int{false: 0, true: 110}[db.IsPostgres()]; numbers != want {
 			t.Errorf("%d answers had numbers where Node had texts of digits, want %d", numbers, want)
+		}
+		if want := map[bool]int{false: 38, true: 41}[db.IsPostgres()]; recounts != want {
+			t.Errorf("%d answers had detail counts that stop at the next report, want %d", recounts, want)
 		}
 		if renames == 0 {
 			t.Errorf("no answer shows a device under a name the fixes give it")

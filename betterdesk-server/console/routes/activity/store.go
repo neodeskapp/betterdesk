@@ -142,14 +142,20 @@ func (q *query) run(ctx context.Context, db *store.DB, doing string) ([]record, 
 
 // allSummaries returns the summaries of all devices reported in the
 // window, the one received last first, each with the number of the
-// device's sessions that started at or after its report time
-// (detail_count).
+// device's sessions that started at or after its report time and before
+// the device's next report (detail_count).
 func allSummaries(ctx context.Context, db *store.DB, window span) ([]record, error) {
 	var q query
 	q.add(`SELECT s.*, (
                 SELECT COUNT(*) FROM activity_sessions a
                 WHERE a.device_id = s.device_id
                   AND a.started_at >= s.reported_at
+                  AND NOT EXISTS (
+                      SELECT 1 FROM activity_summaries n
+                      WHERE n.device_id = s.device_id
+                        AND n.reported_at > s.reported_at
+                        AND n.reported_at <= a.started_at
+                  )
             ) as detail_count
             FROM activity_summaries s WHERE 1=1`)
 	q.between("s.reported_at", "s.reported_at", window)
