@@ -9,11 +9,12 @@
 //
 // # Passwords
 //
-// New hashes are bcrypt with cost 12 ("$2b$12$..."). A stored hash can
-// also be an older bcrypt form ("$2a$", "$2$") or one of the signal
-// server's PBKDF2 forms; a PBKDF2 hash is replaced by a bcrypt hash at the
-// next sign-in with the right password. bcrypt.go says exactly which
-// stored texts verify.
+// New hashes are the API server's ("pbkdf2-sha256$600000$...", made by
+// auth.HashPasswordFrom), so the API server's sign-in keeps them. A stored
+// hash can also be the API server's older PBKDF2 form or a bcrypt hash
+// ("$2b$", "$2a$", "$2$") that older consoles and the reset-password
+// command write; the console checks every form and replaces none.
+// bcrypt.go says exactly which bcrypt texts verify.
 //
 // # Sign-in
 //
@@ -23,7 +24,9 @@
 // RecordAttempt after, as routes.md says for each route.
 //
 // The second factor is a time-based code (totp.go) or one of 8 recovery
-// codes, which are stored as they are and used once.
+// codes, which are stored as bcrypt hashes, as the API server stores its
+// own, and used once; codes an older console stored as they were shown
+// keep working until they are used.
 //
 // # Tokens
 //
