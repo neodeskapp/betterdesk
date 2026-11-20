@@ -3,6 +3,7 @@ package inventory
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -21,6 +22,9 @@ type inventory struct {
 	software    jsjson.Value
 	collectedAt any
 	receivedAt  any
+	// unreadable says why a document of the row is no JSON; that document
+	// is then an empty object.
+	unreadable error
 }
 
 // timeDest is where a time column is read into: on SQLite whatever the
@@ -68,7 +72,8 @@ func parseDocument(column sql.NullString, document bool) (jsjson.Value, error) {
 }
 
 // scanInventories reads the rows of a SELECT of the five inventory
-// columns.
+// columns. A row whose documents are no JSON is read with the
+// unreadable one empty, and says why.
 func scanInventories(db *store.DB, rows *store.Rows) ([]inventory, error) {
 	types, err := rows.ColumnTypes()
 	if err != nil {
@@ -82,15 +87,23 @@ func scanInventories(db *store.DB, rows *store.Rows) ([]inventory, error) {
 		if err := rows.Scan(&inv.deviceID, &hardware, &software, inv.collectedAt, inv.receivedAt); err != nil {
 			return nil, err
 		}
-		if inv.hardware, err = parseDocument(hardware, isDocument(1)); err != nil {
-			return nil, fmt.Errorf("hardware of device %s: %w", inv.deviceID.Value().ToString(), err)
+		var hwErr, swErr error
+		if inv.hardware, hwErr = parseDocument(hardware, isDocument(1)); hwErr != nil {
+			inv.hardware, hwErr = emptyObject(), fmt.Errorf("hardware of device %s: %w", inv.deviceID.Value().ToString(), hwErr)
 		}
-		if inv.software, err = parseDocument(software, isDocument(2)); err != nil {
-			return nil, fmt.Errorf("software of device %s: %w", inv.deviceID.Value().ToString(), err)
+		if inv.software, swErr = parseDocument(software, isDocument(2)); swErr != nil {
+			inv.software, swErr = emptyObject(), fmt.Errorf("software of device %s: %w", inv.deviceID.Value().ToString(), swErr)
 		}
+		inv.unreadable = errors.Join(hwErr, swErr)
 		out = append(out, inv)
 	}
 	return out, rows.Err()
+}
+
+// emptyObject is {}.
+func emptyObject() jsjson.Value {
+	v, _ := jsjson.Parse("{}")
+	return v
 }
 
 const inventoryColumns = "device_id, hardware, software, collected_at, received_at"
@@ -119,6 +132,9 @@ func inventoryOf(ctx context.Context, db *store.DB, id string) (*inventory, erro
 	}
 	defer rows.Close()
 	inventories, err := scanInventories(db, rows)
+	if err == nil && len(inventories) > 0 {
+		err = inventories[0].unreadable
+	}
 	if err != nil {
 		return nil, fmt.Errorf("load the inventory of device %s: %w", id, err)
 	}

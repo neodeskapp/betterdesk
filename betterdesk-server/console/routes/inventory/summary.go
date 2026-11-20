@@ -77,13 +77,20 @@ func textOf(value jsjson.Value) (string, error) {
 	return value.Text()
 }
 
-// summaryOf makes the list entry of a report. It fails where JavaScript
-// threw: making text or a number of an object that has a member named
-// toString.
-func summaryOf(inv inventory) (summary, error) {
+// summaryOf makes the list entry of a report. A member it cannot make
+// text or a number of (an object that has a member named toString) is
+// left empty in the entry, and why is in the errors, so that one report
+// never takes the list away from everyone.
+func summaryOf(inv inventory) (summary, []error) {
 	hw := inv.hardware
 	cpu, memory, disks := hw.Get("cpu"), hw.Get("memory"), hw.Get("disks")
 	zero, empty := jsjson.OfNumber(0), jsjson.OfText("")
+	var problems []error
+	note := func(err error) {
+		if err != nil {
+			problems = append(problems, err)
+		}
+	}
 
 	s := summary{
 		DeviceID:      inv.deviceID,
@@ -104,30 +111,22 @@ func summaryOf(inv inventory) (summary, error) {
 		s.CPUUsage = jsjson.NullValue
 	}
 	name, err := textOf(hw.Get("os_name"))
-	if err != nil {
-		return summary{}, err
-	}
+	note(err)
 	version, err := textOf(hw.Get("os_version"))
-	if err != nil {
-		return summary{}, err
-	}
+	note(err)
 	s.OS = jsjson.Quoted(jsbind.Trim(name + " " + version))
 
-	fullest, err := fullestDisk(disks)
-	if err != nil {
-		return summary{}, err
-	}
+	fullest, unread := fullestDisk(disks)
+	problems = append(problems, unread...)
 	if fullest != nil {
 		used, free, mount := number(round(fullest.percent*10)/10), number(round(fullest.free)), jsjson.Quoted(fullest.mount)
 		s.DiskMaxUsedPercent, s.DiskMaxMount, s.DiskMaxFreeBytes = &used, &mount, &free
 	}
-	if s.MemoryTotalMB, err = megabytes(memory.Get("total_bytes")); err != nil {
-		return summary{}, err
-	}
-	if s.MemoryUsedMB, err = megabytes(memory.Get("used_bytes")); err != nil {
-		return summary{}, err
-	}
-	return s, nil
+	s.MemoryTotalMB, err = megabytes(memory.Get("total_bytes"))
+	note(err)
+	s.MemoryUsedMB, err = megabytes(memory.Get("used_bytes"))
+	note(err)
+	return s, problems
 }
 
 // disk is the fullest disk of a report.
@@ -167,45 +166,52 @@ func bytesOrGB(disk jsjson.Value, bytes, gb string) (n float64, given bool, err 
 // Removable disks and disks without a size above zero do not count. Of
 // two disks that are equally full the first one wins. nil when no disk
 // counts. What is no list has no items.
-func fullestDisk(disks jsjson.Value) (*disk, error) {
+//
+// A disk with a size that cannot be made a number (an object that has a
+// member named toString) does not count either, and the fullest disk's
+// name is empty when it cannot be made text. Both are in the errors.
+func fullestDisk(disks jsjson.Value) (*disk, []error) {
 	var best *disk
+	var problems []error
 	for _, d := range disks.Items() {
 		if !d.IsObjectLike() || d.Get("removable").Truthy() {
 			continue
 		}
-		total, given, err := bytesOrGB(d, "total_bytes", "total_gb")
+		percent, free, err := usedPart(d)
 		if err != nil {
-			return nil, err
-		}
-		if !given || !(total > 0) {
+			problems = append(problems, err)
 			continue
 		}
-		used, given, err := bytesOrGB(d, "used_bytes", "used_gb")
-		if err != nil {
-			return nil, err
-		}
-		for _, rest := range []string{"available_bytes", "free_bytes"} {
-			if given {
-				break
-			}
-			var left float64
-			if left, given, err = size(d.Get(rest)); err != nil {
-				return nil, err
-			}
-			used = total - left
-		}
-		if !given || math.IsNaN(used) || math.IsInf(used, 0) {
-			continue
-		}
-		percent := math.Max(0, math.Min(100, used/total*100))
-		if best != nil && !(percent > best.percent) {
+		if math.IsNaN(percent) || best != nil && !(percent > best.percent) {
 			continue
 		}
 		name, err := d.Get("mount_point").Or(d.Get("device")).Or(d.Get("name")).Or(jsjson.OfText("")).Text()
 		if err != nil {
-			return nil, err
+			problems = append(problems, err)
 		}
-		best = &disk{percent: percent, free: math.Max(0, total-used), mount: jsjson.Slice(name, 120)}
+		best = &disk{percent: percent, free: free, mount: jsjson.Slice(name, 120)}
 	}
-	return best, nil
+	return best, problems
+}
+
+// usedPart reads the sizes of a disk: the part that is used in percent
+// and the free bytes. The part is NaN for a disk that does not count.
+func usedPart(d jsjson.Value) (percent, free float64, err error) {
+	total, given, err := bytesOrGB(d, "total_bytes", "total_gb")
+	if err != nil || !given || !(total > 0) {
+		return math.NaN(), 0, err
+	}
+	used, given, err := bytesOrGB(d, "used_bytes", "used_gb")
+	for _, rest := range []string{"available_bytes", "free_bytes"} {
+		if given || err != nil {
+			break
+		}
+		var left float64
+		left, given, err = size(d.Get(rest))
+		used = total - left
+	}
+	if err != nil || !given || math.IsNaN(used) || math.IsInf(used, 0) {
+		return math.NaN(), 0, err
+	}
+	return math.Max(0, math.Min(100, used/total*100)), math.Max(0, total-used), nil
 }

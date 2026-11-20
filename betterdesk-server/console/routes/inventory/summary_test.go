@@ -92,7 +92,8 @@ func TestFullestDisk(t *testing.T) {
 		free    float64
 		mount   string
 		none    bool
-		fails   bool
+		// unread is the number of sizes and names that cannot be read
+		unread int
 	}{
 		{disks: `{"0":{"total_bytes":4,"used_bytes":1}}`, none: true},
 		{disks: `"disks"`, none: true},
@@ -119,19 +120,19 @@ func TestFullestDisk(t *testing.T) {
 		{disks: `[{"total_bytes":1e400,"used_bytes":4}]`, percent: 0, free: math.Inf(1)},
 		{disks: `[{"total_bytes":8,"used_bytes":1e400}]`, none: true},
 		{disks: `[{"total_bytes":true,"used_bytes":[0.5]}]`, percent: 50, free: 0.5},
-		{disks: `[{"total_bytes":{"toString":1},"used_bytes":1}]`, fails: true},
-		{disks: `[{"total_bytes":8,"used_bytes":{"toString":1}}]`, fails: true},
-		{disks: `[{"total_bytes":8,"free_bytes":[{"toString":1}]}]`, fails: true},
-		{disks: `[{"total_bytes":8,"used_bytes":1,"name":{"toString":1}}]`, fails: true},
+		{disks: `[{"total_bytes":{"toString":1},"used_bytes":1}]`, none: true, unread: 1},
+		{disks: `[{"total_bytes":8,"used_bytes":{"toString":1}}]`, none: true, unread: 1},
+		{disks: `[{"total_bytes":8,"free_bytes":[{"toString":1}]}]`, none: true, unread: 1},
+		{disks: `[{"total_bytes":8,"used_bytes":1,"name":{"toString":1}}]`, percent: 12.5, free: 7, mount: "", unread: 1},
+		{disks: `[{"total_gb":{"toString":1}},{"total_bytes":4,"used_bytes":1,"mount_point":"/"},{"total_bytes":4,"used_bytes":[{"toString":1}]}]`, percent: 25, free: 3, mount: "/", unread: 2},
 		{disks: `[{"total_bytes":8,"used_bytes":2,"name":"ok"},{"total_bytes":8,"used_bytes":1,"name":{"toString":1}}]`, percent: 25, free: 6, mount: "ok"},
 		{disks: `[{"total_bytes":8,"used_bytes":1,"free_bytes":{"toString":1},"removable":{"toString":1}}]`, none: true},
 		{disks: `[{"total_bytes":8,"used_bytes":1,"mount_point":"` + strings.Repeat("m", 130) + `"}]`, percent: 12.5, free: 7, mount: strings.Repeat("m", 120)},
 	} {
-		got, err := fullestDisk(parse(t, tt.disks))
+		got, unread := fullestDisk(parse(t, tt.disks))
 		switch {
-		case (err != nil) != tt.fails:
-			t.Errorf("%s: error %v, want one: %v", tt.disks, err, tt.fails)
-		case tt.fails:
+		case len(unread) != tt.unread:
+			t.Errorf("%s: errors %v, want %d", tt.disks, unread, tt.unread)
 		case (got == nil) != tt.none:
 			t.Errorf("%s: %+v, want none: %v", tt.disks, got, tt.none)
 		case got != nil && (got.percent != tt.percent || got.free != tt.free || got.mount != tt.mount):

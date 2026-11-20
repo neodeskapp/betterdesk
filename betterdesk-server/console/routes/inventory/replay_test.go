@@ -27,12 +27,19 @@ import (
 //   - An address with two slashes in a row is no address of the Go
 //     console's route table. Express took one of them for the end of the
 //     mount, so /api/inventory//PC-1 was the device PC-1.
+//
+// The steps the bug fixes change are checked by unreadableListed
+// (fixes_test.go).
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		elsewhere, slashes := 0, 0
+		listed, done := unreadableListed(db)
+		defer done(t)
 		w.Run(replay.Load(t, db, "node"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			switch {
+			case listed(t, step, got):
+				return true
 			case strings.Contains(step.Path, "//"):
 				slashes++
 				if got.Status != 404 {

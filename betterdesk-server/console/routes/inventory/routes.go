@@ -103,7 +103,10 @@ type deviceList struct {
 // list answers GET /api/inventory?page=&limit=: one page of the devices
 // that have reported their inventory, the last report first, each with
 // its hardware in short. 50 devices make a page unless limit says
-// otherwise, 100 at most.
+// otherwise, 100 at most. Each entry is made on its own: what a report
+// holds that cannot be read (a document that is no JSON, a member that
+// cannot be made text or a number) is logged and left empty in that
+// report's entry.
 //
 // While no device has reported, the list shows the devices the API
 // server knows instead, marked with source "peer_list".
@@ -122,10 +125,12 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	}
 	devices := []any{}
 	for _, inv := range inventories {
-		device, err := summaryOf(inv)
-		if err != nil {
-			h.serverError(w, r, "List error", err)
-			return
+		device, problems := summaryOf(inv)
+		if inv.unreadable != nil {
+			problems = append(problems, inv.unreadable)
+		}
+		for _, problem := range problems {
+			h.log.Warn("Listing the inventory of device "+inv.deviceID.Value().ToString()+" without what cannot be read:", jsbind.Message(problem))
 		}
 		devices = append(devices, device)
 	}

@@ -146,9 +146,9 @@ func (h *handlers) upload(w http.ResponseWriter, r *http.Request) {
 		h.log.Warn("Failed to update peer info:", jsbind.Message(err))
 	}
 
-	fullest, err := fullestDisk(hardware.Get("disks"))
-	if err != nil {
-		h.failUpload(w, r, h.log, err)
+	fullest, unread := fullestDisk(hardware.Get("disks"))
+	if len(unread) > 0 {
+		h.failUpload(w, r, h.log, unread[0])
 		return
 	}
 	if fullest != nil && h.alerts != nil {
