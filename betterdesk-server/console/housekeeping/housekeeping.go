@@ -24,15 +24,26 @@ import (
 // audit log rows are deleted.
 const IntegrationInterval = time.Hour
 
+// sqliteOlder is the SQLite condition that created_at is more than days
+// old, compared as a time: a time in any form datetime() reads (with a
+// space or a T, a date alone), digits alone as Unix seconds (the column
+// keeps a number as text). Text that datetime() cannot read is compared
+// as text, as the column's own format is.
+func sqliteOlder(days int) string {
+	return "COALESCE(CASE WHEN created_at NOT GLOB '*[^0-9]*' THEN datetime(created_at, 'unixepoch') ELSE datetime(created_at) END, created_at)" +
+		" < datetime('now', '-" + strconv.Itoa(days) + " days')"
+}
+
 // integrationStatements delete heartbeat metrics older than 7 days, client
 // audit rows older than 90 days and audit log rows older than 90 days, in
-// this order.
+// this order. The console writes the audit log only in the column's own
+// format, so its rows compare as text, by the index on created_at.
 var integrationStatements = map[store.Dialect][]string{
 	store.SQLite: {
-		`DELETE FROM peer_metrics WHERE created_at < datetime('now', '-7 days')`,
-		`DELETE FROM audit_connections WHERE created_at < datetime('now', '-90 days')`,
-		`DELETE FROM audit_files WHERE created_at < datetime('now', '-90 days')`,
-		`DELETE FROM audit_alarms WHERE created_at < datetime('now', '-90 days')`,
+		`DELETE FROM peer_metrics WHERE ` + sqliteOlder(7),
+		`DELETE FROM audit_connections WHERE ` + sqliteOlder(90),
+		`DELETE FROM audit_files WHERE ` + sqliteOlder(90),
+		`DELETE FROM audit_alarms WHERE ` + sqliteOlder(90),
 		`DELETE FROM audit_log WHERE created_at < datetime('now', '-90 days')`,
 	},
 	store.Postgres: {

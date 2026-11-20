@@ -145,14 +145,55 @@ func orderedKeys(t *testing.T, raw json.RawMessage) []string {
 }
 
 // The seeds of the recording place rows relative to the time of the run.
-// On SQLite the clean-ups compare times as text, so where a time written
-// as a date alone ("2026-11-12") or with a T ("2026-11-12T23:00:00.000Z")
-// falls against a cut-off ("2026-11-12 13:00:00") depends on the hour of
-// the day the run is in: such a text sorts before the cut-off only when
-// its date does (a date alone also on the cut-off's own day). The
-// recording holds for the hour Node ran in; for these rows the tests work
-// out the outcome for the hour they run in, by the same text comparison.
+// On SQLite the stale device sweep compares times as text, so where a
+// time written as a date alone ("2026-11-12") or with a T
+// ("2026-11-12T23:00:00.000Z") falls against a cut-off ("2026-11-12
+// 13:00:00") depends on the hour of the day the run is in: such a text
+// sorts before the cut-off only when its date does (a date alone also on
+// the cut-off's own day). The recording holds for the hour Node ran in;
+// for these rows the tests work out the outcome for the hour they run in,
+// by the same text comparison.
 var hourBound = regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}(T.*)?$`)
+
+// readableTime is a time text SQLite's datetime() reads: a date, with an
+// optional time after a space or a T.
+var readableTime = regexp.MustCompile(`^([0-9]{4}-[0-9]{2}-[0-9]{2})(?:[ T]([0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]+)?Z?)?$`)
+
+// unixSeconds are digits alone: a number, which the text column keeps as
+// text.
+var unixSeconds = regexp.MustCompile(`^[0-9]+$`)
+
+// timeRows lists the rows of a query (table, id, time) whose time the
+// hourly clean-up reads as a time on SQLite, with the time as datetime()
+// writes it: text datetime() reads, and digits alone as Unix seconds
+// (BUGS JB11). Their outcome is the time comparison with the cut-off;
+// that of the other rows is Node's text comparison, which the recording
+// holds.
+func timeRows(t *testing.T, db *store.DB, query string) []textRow {
+	t.Helper()
+	if db.Dialect() != store.SQLite {
+		return nil
+	}
+	var out []textRow
+	for _, line := range rows(t, db, query) {
+		parts := strings.SplitN(line, "|", 3)
+		if len(parts) != 3 {
+			continue
+		}
+		switch m := readableTime.FindStringSubmatch(parts[2]); {
+		case unixSeconds.MatchString(parts[2]):
+			n, _ := strconv.ParseInt(parts[2], 10, 64)
+			out = append(out, textRow{parts[0], parts[1], time.Unix(n, 0).UTC().Format("2006-01-02 15:04:05")})
+		case m != nil:
+			clock := m[2]
+			if clock == "" {
+				clock = "00:00:00"
+			}
+			out = append(out, textRow{parts[0], parts[1], m[1] + " " + clock})
+		}
+	}
+	return out
+}
 
 // retention is what the hourly clean-up keeps of each table, in days, in
 // the order it deletes them.
@@ -250,7 +291,8 @@ func cutoffsUntil(now time.Time, missing string) map[string]string {
 // TestIntegrationAgainstNode replays the Node adapter's hourly clean-up
 // on rows of every age and form: the same rows must be left, and when a
 // table is missing the run must stop there, leaving the tables after it
-// as they were.
+// as they were. On SQLite the rows whose time reads as a time go by that
+// time, where Node compared text (timeRows).
 func TestIntegrationAgainstNode(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		rec := load(t, db.Dialect())
@@ -263,7 +305,7 @@ func TestIntegrationAgainstNode(t *testing.T) {
 
 		full := rec.Integration[0]
 		run(t, db, full.Seed)
-		bound := hourBoundRows(t, db, times)
+		bound := timeRows(t, db, times)
 		now := sqliteNow(t, db)
 		if err := housekeeping.Integration(ctx, db); err != nil {
 			t.Fatalf("Integration: %v", err)
@@ -279,7 +321,7 @@ func TestIntegrationAgainstNode(t *testing.T) {
 		run(t, db, broken.Seed)
 		const timesWithout = `SELECT 'peer_metrics', id, created_at FROM peer_metrics UNION ALL SELECT 'audit_connections', id, created_at FROM audit_connections
     UNION ALL SELECT 'audit_alarms', id, created_at FROM audit_alarms`
-		bound = hourBoundRows(t, db, timesWithout)
+		bound = timeRows(t, db, timesWithout)
 		now = sqliteNow(t, db)
 		if err := housekeeping.Integration(ctx, db); err == nil {
 			t.Error("a run on a database without audit_files reports no error")
