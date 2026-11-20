@@ -8,6 +8,7 @@ import (
 	"os"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -153,6 +154,61 @@ var _ = fixScenarios("TH14", 200, func(node string) string { return strings.Repl
 	`overview, forwarded proto "https"`, `overview, forwarded proto "HTTPS"`, `overview, forwarded proto " https "`,
 	`overview, forwarded proto "https, http"`, `overview, forwarded proto "https,http"`)
 
+// TH15: a list of keys or events that is no list is 502, where Node
+// answered an empty overview with 200, and so are entries of no kind Node
+// could read; entries that are no objects are skipped instead: a null
+// event or key leaves the overview of the others ("a key that is null" is
+// then "a quiet server"), and the three keys that are text, a number and
+// a list no longer count. An event whose time cannot be read is not
+// recent: six of the failed sign-ins of "failed logins of every kind"
+// (no time, "some day", "", a number, true, an object) leave the count of
+// the last day, which then passes its check. A blocklist count that is
+// no number leaves the count to the entries, three in these scenarios, as
+// "blocklist count 2" counts with 3 bans.
+var _ = fixScenarios("TH15", 502, func(string) string { return `{"success":false,"error":"The API server's audit data cannot be read"}` },
+	"overview, audit events as text", "overview, audit events as an object", "overview, audit events as a number",
+	"overview, keys as text", "overview, keys as an object")
+
+var _ = fixScenarios("TH15", 200, func(string) string { return nodeAnswerOf("overview, a quiet server") },
+	"overview, a key that is null")
+
+var _ = fixScenarios("TH15", 200, func(string) string {
+	return strings.Replace(nodeAnswerOf("overview, a quiet server"), `"config_changes":1`, `"config_changes":0`, 1)
+}, "overview, an audit event that is null")
+
+var _ = fixScenarios("TH15", 200, func(node string) string {
+	return strings.NewReplacer(`"failed_logins":14`, `"failed_logins":8`,
+		`{"id":"failed_logins","name":"Low Failed Login Rate","pass":false}`, `{"id":"failed_logins","name":"Low Failed Login Rate","pass":true}`).Replace(node)
+}, "overview, failed logins of every kind")
+
+var _ = fixScenarios("TH15", 200, func(node string) string { return strings.Replace(node, `"api_keys":20`, `"api_keys":17`, 1) },
+	"overview, keys of every age")
+
+var _ = fixScenarios("TH15", 200, func(string) string {
+	return strings.Replace(nodeAnswerOf("overview, blocklist count 2"), `"bans":2`, `"bans":3`, 1)
+}, `overview, blocklist count null`, `overview, blocklist count "5"`, `overview, blocklist count ""`, `overview, blocklist count " 7 "`,
+	`overview, blocklist count true`, `overview, blocklist count false`, `overview, blocklist count []`, `overview, blocklist count [7]`,
+	`overview, blocklist count "0x10"`, `overview, blocklist count "1e2"`)
+
+// nodeAnswerOf is the text Node answered to a scenario, by "<route>,
+// <name>".
+func nodeAnswerOf(name string) string {
+	raw, err := os.ReadFile("testdata/securityaudit.json")
+	if err != nil {
+		panic(err)
+	}
+	var all []scenario
+	if err := json.Unmarshal(raw, &all); err != nil {
+		panic(err)
+	}
+	for _, sc := range all {
+		if sc.Route+", "+sc.Name == name {
+			return sc.Answer.Text
+		}
+	}
+	panic("no scenario " + name)
+}
+
 func TestRoutesMatchNode(t *testing.T) {
 	used := map[string]bool{}
 	for _, sc := range loadScenarios(t) {
@@ -220,6 +276,50 @@ func TestOverviewCountsWhatTheAPIServerReports(t *testing.T) {
 	want := []string{"GET /api/audit/events?limit=500", "GET /api/blocklist", "GET /api/health", "GET /api/keys"}
 	if !reflect.DeepEqual(calls, want) {
 		t.Errorf("the API server was asked %q, want %q", calls, want)
+	}
+}
+
+// TestOverviewSkipsEntriesOfTheWrongKind: an event or key that is no
+// object is skipped, an event whose time cannot be read is not recent,
+// a blocklist count that is no number leaves the count to the entries,
+// and a list that is no list is 502 (BUGS.md TH15).
+func TestOverviewSkipsEntriesOfTheWrongKind(t *testing.T) {
+	now := time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
+	overview := func(keys, events, blocklist string) (int, string) {
+		t.Helper()
+		var sc scenario
+		raw := `{"route":"overview","now":` + jsonInt(now.UnixMilli()) + `,"api":{
+			"/api/health":{"status":200,"body":"{\"tls\":true}"},
+			"/api/keys":{"status":200,"body":` + strconv.Quote(keys) + `},
+			"events":{"status":200,"body":` + strconv.Quote(events) + `},
+			"/api/blocklist":{"status":200,"body":` + strconv.Quote(blocklist) + `}}}`
+		if err := json.Unmarshal([]byte(raw), &sc); err != nil {
+			t.Fatal(err)
+		}
+		rec, _ := replay(sc)
+		return rec.Code, rec.Body.String()
+	}
+	recent := now.Add(-time.Hour).Format(time.RFC3339)
+	old := now.Add(-100 * 24 * time.Hour).Format(time.RFC3339)
+	status, body := overview(`[null,5,"k",{"created_at":"`+old+`"}]`,
+		`{"events":[null,"x",[1],{"action":"auth_login_failed","timestamp":"`+recent+`"},{"action":"login_failed","timestamp":"garbage"},{"action":"login_failed"}]}`,
+		`{"count":null,"entries":[1,2]}`)
+	if want := `"stats":{"failed_logins":1,"bans":2,"config_changes":0,"api_keys":1,"old_keys":1}`; status != 200 || !strings.Contains(body, want) {
+		t.Errorf("entries of the wrong kind: %d %s\nwant %s", status, body, want)
+	}
+	for _, c := range []struct{ blocklist, bans string }{
+		{`{"count":"5","entries":[]}`, `"bans":0`}, {`{"count":true,"entries":[1]}`, `"bans":1`}, {`{"count":3,"entries":[]}`, `"bans":3`},
+	} {
+		if status, body := overview(`[]`, `[]`, c.blocklist); status != 200 || !strings.Contains(body, c.bans) {
+			t.Errorf("blocklist %s: %d %s", c.blocklist, status, body)
+		}
+	}
+	for _, c := range []struct{ keys, events string }{
+		{`[]`, `{"events":"text"}`}, {`[]`, `{"events":{"a":1}}`}, {`{"keys":"text"}`, `[]`}, {`{"keys":{"a":1}}`, `[]`},
+	} {
+		if status, body := overview(c.keys, c.events, `{}`); status != 502 || body != `{"success":false,"error":"The API server's audit data cannot be read"}` {
+			t.Errorf("keys %s, events %s: %d %s", c.keys, c.events, status, body)
+		}
 	}
 }
 

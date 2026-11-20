@@ -115,16 +115,8 @@ type overview struct {
 	TLS    tlsState      `json:"tls"`
 }
 
-// unreadable is the overview when an answer of the API server has a list
-// or an entry of a kind the count cannot read.
-type unreadable struct {
-	Score  int      `json:"score"`
-	Checks []check  `json:"checks"`
-	Stats  struct{} `json:"stats"`
-	TLS    struct{} `json:"tls"`
-}
-
-// overview answers GET /api/panel/security-audit/overview.
+// overview answers GET /api/panel/security-audit/overview: 502 when the
+// API server's keys or events are of a kind that is no list.
 func (h *handlers) overview(w http.ResponseWriter, r *http.Request) {
 	paths := []string{"/health", "/keys", overviewEvents, "/blocklist"}
 	results := make([]fetched, len(paths))
@@ -140,7 +132,7 @@ func (h *handlers) overview(w http.ResponseWriter, r *http.Request) {
 
 	out, ok := h.score(r, results[0], results[1], results[2], results[3])
 	if !ok {
-		kit.JSON(w, r, http.StatusOK, unreadable{Checks: []check{}})
+		kit.JSON(w, r, http.StatusBadGateway, failure{Error: "The API server's audit data cannot be read"})
 		return
 	}
 	kit.JSON(w, r, http.StatusOK, out)
@@ -160,14 +152,16 @@ func listIn(v any, name string) (list []any, ok bool) {
 	return list, ok
 }
 
-// field is entry[name] for an entry of a list. ok is false for null,
-// which has no fields; text, numbers and lists have none set.
-func field(entry any, name string) (value any, ok bool) {
-	if entry == nil {
-		return nil, false
+// objects are the entries of a list that are objects; the others are
+// skipped.
+func objects(list []any) []*goapi.Object {
+	var out []*goapi.Object
+	for _, entry := range list {
+		if o, isObject := entry.(*goapi.Object); isObject {
+			out = append(out, o)
+		}
 	}
-	o, _ := entry.(*goapi.Object)
-	return o.Get(name), true
+	return out
 }
 
 func (h *handlers) score(r *http.Request, healthRes, keysRes, auditRes, blocklistRes fetched) (*overview, bool) {
@@ -179,25 +173,21 @@ func (h *handlers) score(r *http.Request, healthRes, keysRes, auditRes, blocklis
 	}
 	now := h.now().UnixMilli()
 
-	// An event without a time that can be read counts as recent
+	// An event is recent when its time can be read and lies in the last
+	// day
 	since := now - day.Milliseconds()
 	failedLogins, configChanges := 0, 0
-	for _, event := range events {
-		at, ok := field(event, "timestamp")
-		if !ok {
-			return nil, false
-		}
+	for _, event := range objects(events) {
+		at := event.Get("timestamp")
 		if !goapi.Truthy(at) {
-			at, _ = field(event, "created_at")
+			at = event.Get("created_at")
 		}
-		recent := true
+		recent := false
 		if goapi.Truthy(at) {
-			if ms, read := jsreq.ParseDate(jsreq.String(at), h.local); read && ms < since {
-				recent = false
-			}
+			ms, read := jsreq.ParseDate(jsreq.String(at), h.local)
+			recent = read && ms >= since
 		}
-		action, _ := field(event, "action")
-		switch action {
+		switch event.Get("action") {
 		case "login_failed", "auth_failed", "auth_login_failed":
 			if recent {
 				failedLogins++
@@ -207,24 +197,22 @@ func (h *handlers) score(r *http.Request, healthRes, keysRes, auditRes, blocklis
 		}
 	}
 
+	// The count when it is a number, else the length of the entries
 	bans := 0.0
-	count, _ := blocklist.(*goapi.Object)
-	if n := jsreq.Number(count.Get("count")); count.Has("count") && !isNonFinite(n) {
+	if n, isNumber := goapi.Dig(blocklist, "count").(float64); isNumber && !isNonFinite(n) {
 		bans = n
 	} else if entries, isList := goapi.Dig(blocklist, "entries").([]any); isList {
 		bans = float64(len(entries))
 	}
 
-	keys, ok := listIn(keysRes.or([]any{}), "keys")
+	list, ok := listIn(keysRes.or([]any{}), "keys")
 	if !ok {
 		return nil, false
 	}
+	keys := objects(list)
 	oldKeys := 0
 	for _, key := range keys {
-		created, ok := field(key, "created_at")
-		if !ok {
-			return nil, false
-		}
+		created := key.Get("created_at")
 		if !goapi.Truthy(created) {
 			continue
 		}
