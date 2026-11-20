@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -2246,12 +2247,22 @@ func (pg *PostgresDB) GetPeerMetrics(peerID string, limit int) ([]*PeerMetric, e
 	var metrics []*PeerMetric
 	for rows.Next() {
 		m := &PeerMetric{}
-		if err := rows.Scan(&m.ID, &m.PeerID, &m.CPU, &m.Memory, &m.Disk, &m.CreatedAt); err != nil {
+		// The columns are REAL: four-byte floats, taken as the shortest
+		// decimal that names them (12.3, not 12.300000190734863)
+		var cpu, memory, disk float32
+		if err := rows.Scan(&m.ID, &m.PeerID, &cpu, &memory, &disk, &m.CreatedAt); err != nil {
 			return nil, err
 		}
+		m.CPU, m.Memory, m.Disk = shortFloat(cpu), shortFloat(memory), shortFloat(disk)
 		metrics = append(metrics, m)
 	}
 	return metrics, rows.Err()
+}
+
+// shortFloat is the float64 of the shortest decimal that reads back as f.
+func shortFloat(f float32) float64 {
+	v, _ := strconv.ParseFloat(strconv.FormatFloat(float64(f), 'g', -1, 32), 64)
+	return v
 }
 
 // GetLatestPeerMetric returns the single most recent metric for a peer.
