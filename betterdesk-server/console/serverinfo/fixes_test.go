@@ -292,3 +292,46 @@ func unitCases(m *mismatches, units ...string) *mismatches {
 	}
 	return m
 }
+
+// composeEnvLine is an "environment:" line of a compose file.
+var composeEnvLine = regexp.MustCompile(`^(` + jsSpaceClass + `+)environment:` + jsSpaceClass + `*$`)
+
+// holdsOddComposeEnvironment reports whether a compose file has an
+// "environment:" block that SI5 reads or writes otherwise than Node: one
+// with a comment line, a line that is no "- " item (a mapping entry
+// among them), or an item that is not indented by six spaces. Node wrote
+// six spaces, put list items in front of a mapping, and ended the list at
+// a comment. Such files may differ from Node's answers;
+// TestPatchDockerComposeKeepsIndentMappingAndComments checks what Go does.
+func holdsOddComposeEnvironment(compose string) bool {
+	lines := strings.Split(compose, "\n")
+	for i, line := range lines {
+		m := composeEnvLine.FindStringSubmatch(line)
+		if m == nil {
+			continue
+		}
+		indent := leadingJSSpace(m[1])
+		for _, next := range lines[i+1:] {
+			trimmed := jsTrim(next)
+			if trimmed == "" {
+				continue
+			}
+			if leadingJSSpace(next) <= indent && !strings.HasPrefix(trimmed, "-") && !strings.HasPrefix(trimmed, "#") {
+				break
+			}
+			if !strings.HasPrefix(next, "      - ") || strings.HasPrefix(trimmed, "#") {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// composeCases lets the recorded cases whose compose file has such a
+// block differ from Node's answers (SI5); every other case must match.
+func composeCases(m *mismatches, compose string) *mismatches {
+	if holdsOddComposeEnvironment(compose) {
+		return &mismatches{t: dropped{m.t}}
+	}
+	return m
+}

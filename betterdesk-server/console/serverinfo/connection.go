@@ -357,19 +357,32 @@ var (
 	composeServer      = regexp.MustCompile(`^(` + jsSpaceClass + `*)server:` + jsSpaceClass + `*$`)
 	composeEnvironment = regexp.MustCompile(`^` + jsSpaceClass + `+environment:` + jsSpaceClass + `*$`)
 	composeItem        = regexp.MustCompile(`^` + jsSpaceClass + `+-` + jsSpaceClass + `+`)
+	composeMapEntry    = regexp.MustCompile(`^` + jsSpaceClass + `+([A-Za-z_][A-Za-z0-9_.-]*)` + jsSpaceClass + `*:(?:` + jsSpaceClass + `+(.*))?$`)
 )
 
-// composeScan walks the lines of a compose file up to the end of the
-// "environment:" list of the service named "server" under "services:". It
-// calls item for every "- KEY=value" line of that list. With stopAfterList
-// set it ends at the first line after the list, or at the end of the
-// service; without it, it reads on, and a later "environment:" line in the
-// same service starts a list again. It returns the index of the last
-// "environment:" line seen (or -1) and the index after the last item.
-func composeScan(lines []string, stopAfterList bool, item func(index int, line string)) (envStart, envEnd int) {
-	envStart, envEnd = -1, -1
+// composeBlock is an "environment:" of the service named "server": the
+// index of its line, the index after its last entry, whether its entries
+// are a mapping ("KEY: value") rather than a list ("- KEY=value"), and
+// what the first entry starts with ("" when it has none).
+type composeBlock struct {
+	start, end int
+	mapping    bool
+	lead       string
+}
+
+// composeScan walks the lines of a compose file through the
+// "environment:" of the service named "server" under "services:". It calls
+// entry for every entry of it: a "- KEY=value" item, or a "KEY: value"
+// line of a mapping, which must be indented deeper than "environment:".
+// Blank and comment lines between entries are skipped. With
+// stopAfterBlock set it ends at the first other line after the entries,
+// or at the end of the service; without it, it reads on, and a later
+// "environment:" line in the same service starts a block again. It
+// returns the last block seen (start -1 for none).
+func composeScan(lines []string, stopAfterBlock bool, entry func(line string, mapping bool)) composeBlock {
+	block := composeBlock{start: -1, end: -1}
 	inServices, inServer, inEnvironment := false, false, false
-	serverIndent := 0
+	serverIndent, envIndent := 0, 0
 	for i, line := range lines {
 		if composeServices.MatchString(line) {
 			inServices = true
@@ -388,57 +401,72 @@ func composeScan(lines []string, stopAfterList bool, item func(index int, line s
 		}
 
 		trimmed := jsTrim(line)
-		if trimmed != "" && !strings.HasPrefix(trimmed, "#") {
-			if leadingJSSpace(line) <= serverIndent {
-				if stopAfterList {
-					break
-				}
-				inServer, inEnvironment = false, false
-				continue
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		if leadingJSSpace(line) <= serverIndent {
+			if stopAfterBlock {
+				break
 			}
+			inServer, inEnvironment = false, false
+			continue
 		}
 		if composeEnvironment.MatchString(line) {
 			inEnvironment = true
-			envStart, envEnd = i, i+1
+			envIndent = leadingJSSpace(line)
+			block = composeBlock{start: i, end: i + 1}
 			continue
 		}
-		isItem := composeItem.MatchString(line)
-		if inEnvironment && isItem {
-			envEnd = i + 1
-			item(i, line)
+		if !inEnvironment {
 			continue
 		}
-		if inEnvironment && trimmed != "" && !isItem {
-			if stopAfterList {
-				break
+		first := block.end == block.start+1 && block.lead == ""
+		switch {
+		case !block.mapping && composeItem.MatchString(line):
+			if first {
+				block.lead = composeItem.FindString(line)
+			}
+		case (first || block.mapping) && leadingJSSpace(line) > envIndent && composeMapEntry.MatchString(line):
+			if first {
+				block.mapping = true
+				block.lead = line[:len(line)-len(strings.TrimLeftFunc(line, isJSSpace))]
+			}
+		default:
+			if stopAfterBlock {
+				return block
 			}
 			inEnvironment = false
+			continue
 		}
+		block.end = i + 1
+		entry(line, block.mapping)
 	}
-	return envStart, envEnd
+	return block
 }
 
-// composeItemText returns a "- KEY=value" line without the dash and the
-// white space around it.
-func composeItemText(line string) string {
-	return jsTrim(composeItem.ReplaceAllString(line, ""))
+// composeEntry is the key and the value of an entry of an
+// "environment:" block, as written; ok is false for a list item without
+// "=", whose key is then the whole item.
+func composeEntry(line string, mapping bool) (key, value string, ok bool) {
+	if mapping {
+		m := composeMapEntry.FindStringSubmatch(line)
+		return m[1], jsTrim(m[2]), true
+	}
+	raw := jsTrim(composeItem.ReplaceAllString(line, ""))
+	return strings.Cut(raw, "=")
 }
 
 // ParseDockerComposeEnvironment reads the managed variables out of the
-// text of a compose file: the "- KEY=value" lines of the "environment:"
-// list of the service named "server". Values that refer to another
-// variable ("${...}") are skipped.
+// text of a compose file: the entries of the "environment:" of the
+// service named "server", a list of "- KEY=value" or a mapping of
+// "KEY: value". Values that refer to another variable ("${...}") are
+// skipped.
 func ParseDockerComposeEnvironment(content string) map[string]string {
 	env := map[string]string{}
-	composeScan(strings.Split(content, "\n"), false, func(_ int, line string) {
-		raw := composeItemText(line)
-		eq := strings.IndexByte(raw, '=')
-		if eq <= 0 {
-			return
-		}
-		key := jsTrim(raw[:eq])
-		value := stripQuotes(jsTrim(raw[eq+1:]))
-		if strings.Contains(value, "${") {
+	composeScan(strings.Split(content, "\n"), false, func(line string, mapping bool) {
+		key, value, ok := composeEntry(line, mapping)
+		key, value = jsTrim(key), stripQuotes(jsTrim(value))
+		if !ok || key == "" || strings.Contains(value, "${") {
 			return
 		}
 		if isManagedKey(key) {
@@ -449,30 +477,41 @@ func ParseDockerComposeEnvironment(content string) map[string]string {
 }
 
 // PatchDockerComposeEnvironment returns the text of a compose file with
-// the managed variables of the "server" service set to vars: their lines
-// are taken out of the service's "environment:" list and the new ones are
-// added at its end, indented by six spaces. It fails with
-// ErrComposeServerNotFound when there is no such list.
+// the managed variables of the "server" service set to vars: their
+// entries are taken out of the service's "environment:" and the new ones
+// are added after its last entry, written and indented as its first entry
+// is ("KEY: "value"" in a mapping), or as "      - KEY=value" when it has
+// none. It fails with ErrComposeServerNotFound when there is no such
+// block.
 func PatchDockerComposeEnvironment(content string, vars EnvVars) (string, error) {
 	lines := strings.Split(content, "\n")
-	envStart, envEnd := composeScan(lines, true, func(int, string) {})
-	if envStart < 0 {
+	block := composeScan(lines, true, func(string, bool) {})
+	if block.start < 0 {
 		return "", ErrComposeServerNotFound
 	}
 
-	out := append([]string{}, lines[:envStart+1]...)
-	for _, line := range lines[envStart+1 : envEnd] {
-		key, _, _ := strings.Cut(composeItemText(line), "=")
-		if !isManagedKey(key) {
-			out = append(out, line)
+	out := append([]string{}, lines[:block.start+1]...)
+	for _, line := range lines[block.start+1 : block.end] {
+		if trimmed := jsTrim(line); trimmed != "" && !strings.HasPrefix(trimmed, "#") {
+			if key, _, _ := composeEntry(line, block.mapping); isManagedKey(key) {
+				continue
+			}
 		}
+		out = append(out, line)
 	}
 	for _, key := range ManagedEnvKeys {
-		if value := vars.Get(key); value != "" {
+		value := vars.Get(key)
+		switch {
+		case value == "":
+		case block.mapping:
+			out = append(out, block.lead+key+`: "`+value+`"`)
+		case block.lead != "":
+			out = append(out, strings.TrimRightFunc(block.lead, isJSSpace)+" "+key+"="+value)
+		default:
 			out = append(out, "      - "+key+"="+value)
 		}
 	}
-	out = append(out, lines[envEnd:]...)
+	out = append(out, lines[block.end:]...)
 	return strings.Join(out, "\n"), nil
 }
 

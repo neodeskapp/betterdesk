@@ -190,7 +190,9 @@ func TestComposeEnvironmentAgainstNode(t *testing.T) {
 	atLeast(t, "patch_compose", len(v.PatchCompose), 1400)
 	m := &mismatches{t: t}
 	found := 0
+	all := m
 	for _, c := range v.ParseCompose {
+		m := composeCases(all, c.Text)
 		got := ParseDockerComposeEnvironment(c.Text)
 		found += len(got)
 		if !reflect.DeepEqual(got, c.Out) {
@@ -202,6 +204,7 @@ func TestComposeEnvironmentAgainstNode(t *testing.T) {
 	}
 	patched, refused := 0, 0
 	for _, c := range v.PatchCompose {
+		m := composeCases(all, c.Text)
 		got, err := PatchDockerComposeEnvironment(c.Text, c.Vars.vars())
 		switch {
 		case c.Err != nil:
@@ -211,10 +214,11 @@ func TestComposeEnvironmentAgainstNode(t *testing.T) {
 			}
 		case err != nil:
 			m.errorf("PatchDockerComposeEnvironment(%q) fails with %v; Node answers %q", c.Text, err, *c.Out)
-		case got != *c.Out:
-			m.errorf("PatchDockerComposeEnvironment(%q, %v) =\n%q\nNode answers\n%q", c.Text, c.Vars, got, *c.Out)
 		default:
 			patched++
+			if got != *c.Out {
+				m.errorf("PatchDockerComposeEnvironment(%q, %v) =\n%q\nNode answers\n%q", c.Text, c.Vars, got, *c.Out)
+			}
 		}
 	}
 	if patched < 300 || refused < 200 {
@@ -399,7 +403,7 @@ func TestConnectionServiceAgainstNode(t *testing.T) {
 	all := m
 	for i, c := range v.Service {
 		label := "case " + strconv.Itoa(i)
-		m := unitCases(all, c.State.Unit.Text, c.State.DropIn.Text)
+		m := composeCases(unitCases(all, c.State.Unit.Text, c.State.DropIn.Text), c.State.Compose.Text)
 
 		st := stageConnection(t, root, c.State)
 		if got := st.service.IsDockerSplitDeployment(); got != c.SplitDeployment {
@@ -871,6 +875,52 @@ func TestConnectionModeInputRoundTrip(t *testing.T) {
 	} {
 		if got := NormalizeConnectionMode(mode.Input()); got != mode {
 			t.Errorf("round trip of %+v gives %+v", mode, got)
+		}
+	}
+}
+
+// TestPatchDockerComposeKeepsIndentMappingAndComments writes the new
+// variables in the style and the indent of the server's environment:
+// list items as deep as its items, "KEY: "value"" into a mapping, and
+// after the last entry also when a comment stands between entries. The
+// reader reads the same entries (BUGS SI5: the items always got six
+// spaces, a mapping got list items in front of its entries, and a comment
+// ended the list, so the old values after it stayed and won).
+func TestPatchDockerComposeKeepsIndentMappingAndComments(t *testing.T) {
+	managed := func(indent, form string) string {
+		var b strings.Builder
+		for _, kv := range [][2]string{{"P2P_FIRST", "N"}, {"ALWAYS_USE_RELAY", "Y"}, {"P2P_FALLBACK_MS", "3000"}, {"SAME_NAT_RELAY", "N"},
+			{"ALLOW_SHARED_NAT_INITIATOR", "N"}, {"LOGGED_IN_ONLY_INITIATOR", "Y"}, {"OPERATOR_ONLY_OUTBOUND", "Y"}} {
+			b.WriteString(indent + strings.NewReplacer("KEY", kv[0], "VALUE", kv[1]).Replace(form) + "\n")
+		}
+		return b.String()
+	}
+	for _, c := range []struct {
+		name, compose, want string
+		read                map[string]string
+	}{
+		{"indented by four",
+			"services:\n    server:\n        environment:\n            - P2P_FIRST=Y\n            - LOG=debug\n        ports:\n            - \"21116:21116\"\n",
+			"services:\n    server:\n        environment:\n            - LOG=debug\n" + managed("            ", "- KEY=VALUE") + "        ports:\n            - \"21116:21116\"\n",
+			map[string]string{"P2P_FIRST": "Y"}},
+		{"a mapping",
+			"services:\n  server:\n    environment:\n      P2P_FIRST: \"Y\"\n      LOG: debug\n    ports:\n      - \"21116:21116\"\n",
+			"services:\n  server:\n    environment:\n      LOG: debug\n" + managed("      ", "KEY: \"VALUE\"") + "    ports:\n      - \"21116:21116\"\n",
+			map[string]string{"P2P_FIRST": "Y"}},
+		{"a comment in the list",
+			"services:\n  server:\n    environment:\n      - LOG=debug\n      # relay\n      - ALWAYS_USE_RELAY=N\n    ports:\n      - \"21116:21116\"\n",
+			"services:\n  server:\n    environment:\n      - LOG=debug\n      # relay\n" + managed("      ", "- KEY=VALUE") + "    ports:\n      - \"21116:21116\"\n",
+			map[string]string{"ALWAYS_USE_RELAY": "N"}},
+	} {
+		if got := ParseDockerComposeEnvironment(c.compose); !reflect.DeepEqual(got, c.read) {
+			t.Errorf("%s: read %q, want %q", c.name, got, c.read)
+		}
+		got, err := PatchDockerComposeEnvironment(c.compose, relayOnlyVars())
+		if err != nil || got != c.want {
+			t.Errorf("%s: patched\n%s\n%v\nwant\n%s", c.name, got, err, c.want)
+		}
+		if read := ParseDockerComposeEnvironment(got); read["P2P_FIRST"] != "N" || read["ALWAYS_USE_RELAY"] != "Y" || len(read) != 7 {
+			t.Errorf("%s: the patched file reads %q", c.name, read)
 		}
 	}
 }
