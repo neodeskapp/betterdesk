@@ -277,3 +277,79 @@ var _ = policyFixes.Add("DG5", map[string]replay.Fix{
 	// the stored time; PostgreSQL compared the times already
 	"admin GET /api/dataguard/events?device_id=D1&from=2001-01-01T00:02:00.000Z ": {Status: 200, Has: onlyDeviceOne[:2], Lacks: []string{`"id":1,`}},
 })
+
+// DV6: an event of a device has the types the event list shows; anything
+// else is 400 and stores nothing. Where Node stored a row for such a
+// request, nodeEvent writes it with Node's id, so the ids of the events
+// after it, and the rows the recording reads at its end, stay Node's.
+//
+// Each member of a refused body (beside "event_source":"usb") names the
+// member the answer refuses and, per database (SQLite, then PostgreSQL),
+// the id of the row Node stored and the value it stored in that member:
+// id 0 for no row, a negative id for an id Node's failed insert used up.
+var dv6Events = map[string][]any{
+	`"event_type":0`:                {"event_type", 5, "info", 5, "info"},
+	`"event_type":7`:                {"event_type", 6, "7.0", 6, "7"},
+	`"event_type":true`:             {"event_type", 0, nil, 7, "true"},
+	`"event_type":["a"]`:            {"event_type", 7, "a", 8, `{"a"}`},
+	`"event_type":{"a":1}`:          {"event_type", 0, nil, 9, `{"a":1}`},
+	`"policy_id":0`:                 {"policy_id", 8, nil, 10, nil},
+	`"policy_id":"1"`:               {"policy_id", 9, 1, 11, 1},
+	`"policy_id":"abc"`:             {"policy_id", 0, nil, 0, nil},
+	`"policy_id":999999`:            {"policy_id", 0, nil, -12, nil},
+	`"policy_id":1.5`:               {"policy_id", 0, nil, 0, nil},
+	`"policy_id":[1]`:               {"policy_id", 10, 1, 0, nil},
+	`"policy_name":12`:              {"policy_name", 11, "12.0", 13, "12"},
+	`"policy_name":false`:           {"policy_name", 12, "", 14, ""},
+	`"action":{"a":1}`:              {"action", 0, nil, 17, `{"a":1}`},
+	`"details":""`:                  {"details", 15, "{}", 18, "{}"},
+	`"details":0`:                   {"details", 17, "{}", 20, "{}"},
+	`"details":false`:               {"details", 18, "{}", 21, "{}"},
+	`"details":"plain text"`:        {"details", 19, "plain text", 0, nil},
+	`"details":"{\"as\":\"text\"}"`: {"details", 20, `{"as":"text"}`, 22, `{"as":"text"}`},
+	`"details":42`:                  {"details", 21, "42", 23, "42"},
+	`"details":true`:                {"details", 22, "true", 24, "true"},
+	`"details":[1,"two",null]`:      {"details", 23, `[1,"two",null]`, 25, `[1,"two",null]`},
+}
+
+var (
+	_ = deviceFixes.Add("DV6", dv6Steps("sqlite"))
+	_ = deviceFixes.Add("DV6", dv6Steps("postgres"))
+)
+
+// dv6Steps are the fixes of the refused events on one database.
+func dv6Steps(dialect string) map[string]replay.Fix {
+	at := map[string]int{"sqlite": 1, "postgres": 3}[dialect]
+	steps := map[string]replay.Fix{}
+	for member, e := range dv6Events {
+		steps[` POST /api/bd/dlp-events {"event_source":"usb",`+member+`}`] = replay.Fix{
+			Dialect: dialect, Status: 400, Answer: `{"error":"Invalid ` + e[0].(string) + `"}`,
+			After: nodeEvent(e[at].(int), e[0].(string), e[at+1]),
+		}
+	}
+	return steps
+}
+
+// nodeEvent writes the event Node stored with the id: a plain event of
+// device-a from usb, with the value in the member. An id below 0 is one
+// Node's failed insert used up; 0 is none.
+func nodeEvent(id int, member string, value any) func(t *testing.T, w *replay.World, step replay.Step) {
+	return func(t *testing.T, w *replay.World, step replay.Step) {
+		t.Helper()
+		sequence := "SELECT setval(pg_get_serial_sequence('dlp_events', 'id'), ?)"
+		switch {
+		case id < 0:
+			w.Exec(sequence, []any{-id})
+			return
+		case id == 0:
+			return
+		}
+		row := map[string]any{"event_type": "info", "policy_id": nil, "policy_name": "", "action": "log", "details": "{}"}
+		row[member] = value
+		w.Exec("INSERT INTO dlp_events (id, device_id, event_source, event_type, policy_id, policy_name, action, details) VALUES (?, 'device-a', 'usb', ?, ?, ?, ?, ?)",
+			[]any{id, row["event_type"], row["policy_id"], row["policy_name"], row["action"], row["details"]})
+		if w.DB.IsPostgres() {
+			w.Exec(sequence, []any{id})
+		}
+	}
+}

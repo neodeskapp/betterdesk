@@ -247,3 +247,49 @@ func TestEventFiltersAreChecked(t *testing.T) {
 		}
 	})
 }
+
+// A device's event has the types the event list shows: texts that are
+// text, a policy_id that names a policy, details that are an object.
+// Anything else is 400 and stores nothing, where the route stored what
+// came, differently on each database, or failed with 500, and details of
+// plain text broke the event list (BUGS DV6).
+func TestDeviceEventChecksTheTypes(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at) VALUES (?, ?, 5, 'device-a', '2999-01-01 00:00:00')",
+			[]any{"tok-device-a", "a70dc32ded6e642ec955672a88edb7cc9d6d9e2abb6bf78146a63491adb24155"})
+		w.Exec("INSERT INTO dlp_policies (name) VALUES ('usb block')", nil)
+		send := func(body string) replay.Answer {
+			return w.Do(replay.Request{Method: "POST", Path: "/api/bd/dlp-events", Body: replay.Text(body), Headers: map[string]string{"Authorization": "Bearer tok-device-a"}})
+		}
+		for member, values := range map[string][]string{
+			"event_type":  {`7`, `true`, `["a"]`, `{"a":1}`},
+			"policy_name": {`12`, `false`, `[]`},
+			"action":      {`0`, `{"a":1}`},
+			"policy_id":   {`0`, `"1"`, `"abc"`, `1.5`, `[1]`, `999999`, `-1`, `true`},
+			"details":     {`""`, `"plain text"`, `"{\"as\":\"text\"}"`, `0`, `false`, `42`, `[1,"two"]`},
+		} {
+			for _, value := range values {
+				if got := send(`{"event_source":"usb","` + member + `":` + value + `}`); got.Status != 400 || got.Body != `{"error":"Invalid `+member+`"}` {
+					t.Errorf("%s %s: %d %s, want 400 Invalid %s", member, value, got.Status, got.Body, member)
+				}
+			}
+		}
+		if rows := w.Rows("SELECT id FROM dlp_events", nil); rows != "[]" {
+			t.Fatalf("the refused events stored %s", rows)
+		}
+		if got := send(`{"event_source":"file","event_type":"violation","policy_id":1,"policy_name":"usb block","action":"block","details":{"path":"E:\\"}}`); got.Status != 201 {
+			t.Errorf("an event: %d %s", got.Status, got.Body)
+		}
+		if got := send(`{"event_source":"usb","event_type":"","policy_id":null,"policy_name":null,"action":"","details":null}`); got.Status != 201 {
+			t.Errorf("an event with empty values: %d %s", got.Status, got.Body)
+		}
+		rows := w.Rows("SELECT event_type, policy_id, policy_name, action FROM dlp_events ORDER BY id", nil)
+		if rows != `[{"event_type":"violation","policy_id":1,"policy_name":"usb block","action":"block"},{"event_type":"info","policy_id":null,"policy_name":"","action":"log"}]` {
+			t.Errorf("the events: %s", rows)
+		}
+		if got := w.Do(replay.Request{Role: "admin", Path: "/api/dataguard/events"}); got.Status != 200 || !strings.Contains(got.Body, `"details":{"path":"E:\\"}`) || !strings.Contains(got.Body, `"details":{}`) {
+			t.Errorf("the event list: %d %s", got.Status, got.Body)
+		}
+	})
+}
