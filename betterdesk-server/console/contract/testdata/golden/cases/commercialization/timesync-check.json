@@ -31,6 +31,9 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "stratum"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -67,6 +70,9 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "stratum"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -108,6 +114,10 @@
     {
      "path": "offset_ms",
      "integer": true
+    },
+    {
+     "path": "stratum",
+     "integer": true
     }
    ],
    "body": {
@@ -118,7 +128,7 @@
      "ntp_server": "pool.ntp.org",
      "offset_ms": 0,
      "require_sync_for_billing": false,
-     "stratum": 2,
+     "stratum": 0,
      "synced": true
     }
    }

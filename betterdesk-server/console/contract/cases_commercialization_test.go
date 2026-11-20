@@ -79,6 +79,8 @@ func init() {
 		contract.Case{
 			Name: "timesync-check", Method: "POST", Path: "/api/panel/billing/timesync/check", Body: map[string]any{},
 			Roles: contract.Roles("signed-out", "viewer", "operator", "global_admin", "server_admin"),
+			// The stratum is the time server's that answered this run
+			Volatile: []string{"stratum"},
 		},
 		contract.Case{
 			Name: "timesync-check-without-csrf-token", Method: "POST", Path: "/api/panel/billing/timesync/check",
