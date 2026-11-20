@@ -97,15 +97,23 @@ func TestSaveClockSettings(t *testing.T) {
 		t.Errorf("audit entries %d (%v)", n, err)
 	}
 
-	// Another operator's save is refused by the transaction after the
-	// file was written, with 500 as the old route answered
+	// Another operator's save is refused by the transaction before the
+	// file is written, so the settings stay those the transaction can
+	// undo (BUGS CM5); a refused value still answers 400 first
 	other := account(2, "super_admin")
 	rec, _ = w.Do(put("/api/panel/billing/clock/settings", `{"ntp_servers":"c.example"}`, other), nil)
-	if rec.Code != 500 || rec.Body.String() != `{"success":false,"error":"restart_transaction_owned"}` {
+	if rec.Code != 409 || rec.Body.String() != `{"success":false,"error":"restart_transaction_owned"}` {
 		t.Errorf("a second operator: %d %s", rec.Code, rec.Body)
 	}
-	if content, _ := os.ReadFile(envPath); !strings.Contains(string(content), "NTP_SERVERS=c.example") {
-		t.Errorf("the refused save did not write the file first:\n%s", content)
+	rec, _ = w.Do(put("/api/panel/billing/clock/settings", `{"ntp_servers":"bad host"}`, other), nil)
+	if rec.Code != 400 || rec.Body.String() != `{"success":false,"error":"invalid_ntp_servers"}` {
+		t.Errorf("a second operator's refused value: %d %s", rec.Code, rec.Body)
+	}
+	if content, _ := os.ReadFile(envPath); string(content) != want {
+		t.Errorf("a refused save wrote the file:\n%s", content)
+	}
+	if after, _ := json.Marshal(coordinator.ReadState()); string(after) != string(state) {
+		t.Errorf("a refused save changed the transaction:\n%s\nwas\n%s", after, state)
 	}
 }
 

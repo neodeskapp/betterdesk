@@ -1,6 +1,7 @@
 package commercialization
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/unitronix/betterdesk-server/console/billingclock"
@@ -54,34 +55,40 @@ type savedClock struct {
 // trust_os_ntp, billing_timezone}; what is missing gets its default.
 // The settings take effect when the server restarts, so the save is a
 // change of the operator's restart transaction, which can put back the
-// settings from before (restartRequired). Where the server takes them at
-// once (dockerMode) there is no restart, and a failed restart of an
-// earlier clock save is dismissed.
+// settings from before (restartRequired). The file is written only once
+// the transaction takes the change: while another operator's change
+// waits the answer is 409 restart_transaction_owned and nothing is
+// written. Where the server takes them at once (dockerMode) there is no
+// restart, and a failed restart of an earlier clock save is dismissed.
 //
 // A refused value answers 400 with invalid_ntp_servers, invalid_max_skew
 // or invalid_billing_timezone; anything else that fails answers 500 with
-// its message, also a refusal of the restart transaction, and after the
-// file was written.
+// its message.
 func (h *handlers) saveClockSettings(w http.ResponseWriter, r *http.Request) {
 	previous, err := h.clock.GetRuntimeClockSettings(r.Context())
 	if err != nil {
 		h.failSave(w, r, err)
 		return
 	}
-	result, err := h.clock.SaveClockSettings(r.Context(), jsreq.Body(r))
-	if err != nil {
-		h.failSave(w, r, err)
-		return
-	}
+	body := jsreq.Body(r)
+	var result billingclock.SaveResult
 	var pending *restart.Public
-	if !result.DockerMode {
-		pending, err = h.d.Restart.RegisterChange(kit.UserID(r), restart.Change{
-			Key:      "billing-clock",
-			Label:    kit.T(r, "commercialization.clock.title", nil),
-			Rollback: goapi.NewObject("type", "billing-clock", "settings", previous.Object()),
+	if h.clock.IsDockerSplitDeployment() {
+		if result, err = h.clock.SaveClockSettings(r.Context(), body); err == nil {
+			_, err = h.d.Restart.DismissFailed(kit.UserID(r), "billing-clock")
+		}
+	} else if _, err = h.clock.ValidateSettings(body); err == nil {
+		pending, err = h.d.Restart.RegisterChangeAfter(kit.UserID(r), "billing-clock", func() (restart.Change, error) {
+			var saveErr error
+			if result, saveErr = h.clock.SaveClockSettings(r.Context(), body); saveErr != nil {
+				return restart.Change{}, saveErr
+			}
+			return restart.Change{
+				Key:      "billing-clock",
+				Label:    kit.T(r, "commercialization.clock.title", nil),
+				Rollback: goapi.NewObject("type", "billing-clock", "settings", previous.Object()),
+			}, nil
 		})
-	} else {
-		_, err = h.d.Restart.DismissFailed(kit.UserID(r), "billing-clock")
 	}
 	if err != nil {
 		h.failSave(w, r, err)
@@ -101,8 +108,12 @@ func (h *handlers) saveClockSettings(w http.ResponseWriter, r *http.Request) {
 
 func (h *handlers) failSave(w http.ResponseWriter, r *http.Request, err error) {
 	status := http.StatusInternalServerError
-	if billingclock.IsRefusal(err) {
+	var transaction *restart.Error
+	switch {
+	case billingclock.IsRefusal(err):
 		status = http.StatusBadRequest
+	case errors.As(err, &transaction):
+		status = transaction.StatusCode()
 	}
 	fail(w, r, status, err)
 }
