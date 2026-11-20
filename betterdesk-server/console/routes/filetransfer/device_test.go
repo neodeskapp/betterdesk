@@ -98,6 +98,7 @@ func TestDeviceVectors(t *testing.T) {
 	if len(vectors) < 100 {
 		t.Fatalf("%d vectors, the file should hold more than 100", len(vectors))
 	}
+	fixDeviceVectors(t, vectors)
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := deviceWorld(t, db)
 		ids := &world{goID: map[string]string{}, nodeID: map[string]string{}}
@@ -203,9 +204,10 @@ func TestPeopleAndDevicesShareTheTransfers(t *testing.T) {
 	})
 }
 
-// Any device with a token can write into a transfer of another device and
-// cancel it, which deletes its file (BUGS FT2, kept).
-func TestAnyDeviceCanWriteIntoAndCancelAnyTransfer(t *testing.T) {
+// A device with a token writes into and cancels its own transfers only:
+// another device's chunk and cancel are refused as ones for no transfer
+// (BUGS FT2).
+func TestADeviceReachesOnlyItsOwnTransfers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := deviceWorld(t, db)
 		post := func(token, body string) replay.Answer {
@@ -216,14 +218,18 @@ func TestAnyDeviceCanWriteIntoAndCancelAnyTransfer(t *testing.T) {
 			t.Fatal("device-a announced no transfer")
 		}
 		id := m[1]
-		if got := post("tok-device-b", `{"action":"chunk","transfer_id":"`+id+`","chunk_index":0,"data":"YWJjZA=="}`); !strings.Contains(got.Body, `"status":"completed"`) {
+		notFound := `{"action":"error","error":"Transfer not found"}`
+		if got := post("tok-device-b", `{"action":"chunk","transfer_id":"`+id+`","chunk_index":0,"data":"YWJjZA=="}`); got.Status != 200 || got.Body != notFound {
 			t.Errorf("device-b writes into device-a's transfer: %d %s", got.Status, got.Body)
 		}
-		if got := post("tok-device-b", `{"action":"cancel","transfer_id":"`+id+`"}`); got.Body != `{"action":"cancel_ack","transfer_id":"`+id+`"}` {
+		if got := post("tok-device-b", `{"action":"cancel","transfer_id":"`+id+`"}`); got.Status != 200 || got.Body != notFound {
 			t.Errorf("device-b cancels it: %d %s", got.Status, got.Body)
 		}
-		if got := w.Do(replay.Request{Path: "/api/bd/file-transfer/" + id, Headers: map[string]string{"Authorization": "Bearer tok-device-a"}}); !strings.Contains(got.Body, `"status":"cancelled"`) {
+		if got := w.Do(replay.Request{Path: "/api/bd/file-transfer/" + id, Headers: map[string]string{"Authorization": "Bearer tok-device-a"}}); !strings.Contains(got.Body, `"status":"pending","bytesTransferred":0`) {
 			t.Errorf("device-a's transfer after that: %d %s", got.Status, got.Body)
+		}
+		if got := post("tok-device-a", `{"action":"chunk","transfer_id":"`+id+`","chunk_index":0,"data":"YWJjZA=="}`); !strings.Contains(got.Body, `"status":"completed"`) {
+			t.Errorf("device-a writes into its transfer: %d %s", got.Status, got.Body)
 		}
 		// Reading stays with the transfer's device
 		if got := w.Do(replay.Request{Path: "/api/bd/file-transfer/" + id, Headers: map[string]string{"Authorization": "Bearer tok-device-b"}}); got.Status != 403 || got.Body != `{"error":"Access denied"}` {

@@ -45,12 +45,12 @@
    "body": {
     "kind": "json",
     "json": {
-     "bytesTransferred": 12,
-     "chunksReceived": 3,
+     "bytesTransferred": 11,
+     "chunksReceived": 2,
      "direction": "download",
      "filename": "contract_report.txt",
-     "percent": 109.09090909090908,
-     "status": "cancelled",
+     "percent": 100,
+     "status": "completed",
      "totalBytes": 11,
      "totalChunks": 1,
      "transferId": "<volatile>"

@@ -24,8 +24,8 @@ import (
 // status 200 also when it is {"action":"error"}. The service turns every
 // failure into such an answer, so the handler has no failure of its own.
 //
-// Any device may send a chunk into or cancel any transfer: the message is
-// not checked against the transfer's device (BUGS FT2).
+// A chunk or a cancel reaches only a transfer of the token's device; one
+// for another device's transfer is answered as one for no transfer.
 func (h *handlers) deviceMessage(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, h.transfers.HandleMessage(kit.Device(r).DeviceID, jsreq.Body(r)))
 }

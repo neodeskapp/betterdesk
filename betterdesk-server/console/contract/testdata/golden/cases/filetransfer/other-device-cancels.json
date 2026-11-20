@@ -39,17 +39,11 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    {
-     "path": "transfer_id",
-     "pattern": "^[9aA+/_=-]{32}$"
-    }
-   ],
    "body": {
     "kind": "json",
     "json": {
-     "action": "cancel_ack",
-     "transfer_id": "<volatile>"
+     "action": "error",
+     "error": "Transfer not found"
     }
    }
   }

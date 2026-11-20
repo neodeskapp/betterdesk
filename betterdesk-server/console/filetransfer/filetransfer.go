@@ -413,6 +413,40 @@ func (s *Service) ReceiveChunk(transferID any, chunkIndex any, data any) (*Chunk
 	if !isText || t == nil {
 		return nil, errors.New("Transfer not found")
 	}
+	return s.receive(id, t, chunkIndex, data)
+}
+
+// receiveFrom is ReceiveChunk for a chunk a device sent: the transfer
+// must be the device's and no upload.
+func (s *Service) receiveFrom(deviceID string, transferID any, chunkIndex any, data any) (*ChunkProgress, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	id, _ := transferID.(string)
+	t := s.transfers[id]
+	if t == nil || !isDevicesTransfer(t, deviceID) {
+		return nil, errors.New("Transfer not found")
+	}
+	if t.Direction == "upload" {
+		return nil, errors.New("Transfer is an upload")
+	}
+	return s.receive(id, t, chunkIndex, data)
+}
+
+// isDevicesTransfer reports whether the transfer is the device's: its
+// device, as text, is the device's id.
+func isDevicesTransfer(t *Transfer, deviceID string) bool {
+	switch device := t.DeviceID.(type) {
+	case string:
+		return device == deviceID
+	case float64:
+		text, _ := jsText(device)
+		return text == deviceID
+	}
+	return false
+}
+
+// receive adds a chunk to the transfer t with the id; s.mu is held.
+func (s *Service) receive(id string, t *Transfer, chunkIndex any, data any) (*ChunkProgress, error) {
 	if t.Status == StatusCancelled || t.Status == StatusFailed {
 		return nil, errors.New("Transfer is " + t.Status)
 	}
@@ -507,11 +541,34 @@ func (s *Service) CancelTransfer(id any) bool {
 	if !isText || t == nil {
 		return false
 	}
+	s.cancel(text, t)
+	return true
+}
+
+// cancelFrom is CancelTransfer for a cancel a device sent. It cancels the
+// transfer when it is the device's and reports false for another device's
+// transfer; an id of no transfer changes nothing.
+func (s *Service) cancelFrom(deviceID string, id any) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	text, _ := id.(string)
+	t := s.transfers[text]
+	switch {
+	case t == nil:
+		return true
+	case !isDevicesTransfer(t, deviceID):
+		return false
+	}
+	s.cancel(text, t)
+	return true
+}
+
+// cancel cancels the transfer t with the id; s.mu is held.
+func (s *Service) cancel(id string, t *Transfer) {
 	t.Status = StatusCancelled
 	t.UpdatedAt = s.opts.Now().UnixMilli()
 	removeFile(t.TempPath)
-	s.opts.Logger.Info(fmt.Sprintf("[FileTransfer] Transfer %s cancelled", text))
-	return true
+	s.opts.Logger.Info(fmt.Sprintf("[FileTransfer] Transfer %s cancelled", id))
 }
 
 // GetProgress is how far a transfer is, nil when there is none.
@@ -555,11 +612,13 @@ func (s *Service) GetCompletedFilePath(id string) string {
 // mime_type, path} after JSON.parse (goapi.Parse).
 //
 //	init    starts a download transfer of the device: {action: "init_ack", transfer_id, status: "ok"}
-//	chunk   adds a chunk: {action: "chunk_ack"} with the members of ChunkProgress
-//	cancel  cancels a transfer: {action: "cancel_ack", transfer_id}
+//	chunk   adds a chunk to a download of the device: {action: "chunk_ack"} with the members of ChunkProgress
+//	cancel  cancels a transfer of the device: {action: "cancel_ack", transfer_id}
 //	browse  is passed back for the device: {action: "browse_forward", deviceId, path}
 //
-// Anything else, and every failure, is {action: "error", error}.
+// A chunk or a cancel for another device's transfer is refused as one
+// for no transfer ("Transfer not found"). Anything else, and every
+// failure, is {action: "error", error}.
 func (s *Service) HandleMessage(deviceID string, message any) *goapi.Object {
 	fail := func(text string) *goapi.Object { return goapi.NewObject("action", "error", "error", text) }
 	if message == nil {
@@ -585,13 +644,15 @@ func (s *Service) HandleMessage(deviceID string, message any) *goapi.Object {
 		}
 		return goapi.NewObject("action", "init_ack", "transfer_id", record.ID, "status", "ok")
 	case "chunk":
-		progress, err := s.ReceiveChunk(body.Get("transfer_id"), or(body.Get("chunk_index"), float64(0)), dataOf(body))
+		progress, err := s.receiveFrom(deviceID, body.Get("transfer_id"), or(body.Get("chunk_index"), float64(0)), dataOf(body))
 		if err != nil {
 			return fail(err.Error())
 		}
 		return goapi.NewObject(append([]any{"action", "chunk_ack"}, progress.fields()...)...)
 	case "cancel":
-		s.CancelTransfer(body.Get("transfer_id"))
+		if !s.cancelFrom(deviceID, body.Get("transfer_id")) {
+			return fail("Transfer not found")
+		}
 		answer := goapi.NewObject("action", "cancel_ack")
 		if body.Has("transfer_id") {
 			answer.Set("transfer_id", body.Get("transfer_id"))

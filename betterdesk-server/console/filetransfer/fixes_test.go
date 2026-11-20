@@ -2,6 +2,7 @@ package filetransfer
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -15,13 +16,16 @@ import (
 // the Node service. A fix that changes every step alike rewrites Node's
 // answers (rewrites); the others name the steps they change (stepFixes),
 // by their number counted over all scenarios from 0, and
-// testdata/vectors_fixed.json holds what the console answers there. A
+// testdata/vectors_fixed.json.gz holds what the console answers there. A
 // step a fix changes also changes the records and files the steps after
 // it see, until a boot starts the service over, so those steps are named
 // too.
 
 // stepFixes are the steps each fix changed, as spans ("12-15,40").
-var stepFixes = []struct{ bug, steps string }{}
+var stepFixes = []struct{ bug, steps string }{
+	// A device's chunk and cancel reach only its own transfers
+	{"FT2", "301-332,376-438,455-466,475-539,557-565,583-601,611-737,744-839,857-908,941-1017,1064-1369,1394-1530,1539-1772,1796-2136,2174-2179,2197-2345,2352-2443,2453-2551,2579,2596,2609-2773,2776-2812,2854-2913,2922-3092,3104-3139,3179-3355,3374-3427,3451-3500,3519-3648,3681-3685,3694-3918,3952-4001,4016,4018-4023,4029-4203,4219-4305,4360-4519,4526-4607,4629,4676-4770,4794-4797,4801-4826,4830-5013,5066-5211,5237-5284"},
+}
 
 // rewrite is a fix that changes Node's answer of every step alike. It
 // reports whether it changed the step.
@@ -200,15 +204,15 @@ func spans(numbers []int) string {
 // that is not there). All and Dir hold the whole list or folder where
 // that cannot be said record by record or file by file.
 type fixedStep struct {
-	Step     int                        `json:"step"`
-	Bug      string                     `json:"bug"`
-	Scenario string                     `json:"scenario"`
-	Op       string                     `json:"op"`
-	Outcome  *outcome                   `json:"outcome,omitempty"`
-	Records  map[string]json.RawMessage `json:"records,omitempty"`
-	All      *string                    `json:"all,omitempty"`
-	Files    map[string]*string         `json:"files,omitempty"`
-	Dir      json.RawMessage            `json:"dir,omitempty"`
+	Step     int                `json:"step"`
+	Bug      string             `json:"bug"`
+	Scenario string             `json:"scenario"`
+	Op       string             `json:"op"`
+	Outcome  *outcome           `json:"outcome,omitempty"`
+	Records  map[string]*string `json:"records,omitempty"`
+	All      *string            `json:"all,omitempty"`
+	Files    map[string]*string `json:"files,omitempty"`
+	Dir      json.RawMessage    `json:"dir,omitempty"`
 }
 
 type outcome struct {
@@ -216,7 +220,7 @@ type outcome struct {
 	Err *string `json:"err"`
 }
 
-const fixedFile = "vectors_fixed.json"
+const fixedFile = "vectors_fixed.json.gz"
 
 // fixedFrom is the entry for a listed step, and whether the step differs
 // from Node's answer at all.
@@ -297,14 +301,14 @@ func records(all string) ([]json.RawMessage, []string, bool) {
 
 // recordPatch is the records of got that differ from want's, and null for
 // a record of want that got does not have.
-func recordPatch(t *testing.T, got, want string) map[string]json.RawMessage {
+func recordPatch(t *testing.T, got, want string) map[string]*string {
 	t.Helper()
 	ours, ourIDs, ok1 := records(got)
 	theirs, theirIDs, ok2 := records(want)
 	if !ok1 || !ok2 {
 		return nil
 	}
-	patch := map[string]json.RawMessage{}
+	patch := map[string]*string{}
 	have := map[string]json.RawMessage{}
 	for i, id := range ourIDs {
 		have[id] = ours[i]
@@ -313,16 +317,17 @@ func recordPatch(t *testing.T, got, want string) map[string]json.RawMessage {
 		record, kept := have[id]
 		switch {
 		case !kept:
-			patch[id] = json.RawMessage("null")
+			patch[id] = nil
 		case !bytes.Equal(record, theirs[i]):
-			patch[id] = record
+			text := string(record)
+			patch[id] = &text
 		}
 	}
 	return patch
 }
 
 // patchRecords is want's list with the records of the patch in place.
-func patchRecords(want string, patch map[string]json.RawMessage) (string, bool) {
+func patchRecords(want string, patch map[string]*string) (string, bool) {
 	list, ids, ok := records(want)
 	if !ok {
 		return "", false
@@ -333,8 +338,8 @@ func patchRecords(want string, patch map[string]json.RawMessage) (string, bool) 
 		switch {
 		case !patched:
 			kept = append(kept, string(list[i]))
-		case string(record) != "null":
-			kept = append(kept, string(record))
+		case record != nil:
+			kept = append(kept, *record)
 		}
 	}
 	return "[" + strings.Join(kept, ",") + "]", true
@@ -397,15 +402,20 @@ func patchFiles(want *[][]string, patch map[string]*string) *[][]string {
 // stops the test when the file and the list name other steps or bugs.
 func loadFixedSteps(t *testing.T, listed map[int]string) map[int]fixedStep {
 	t.Helper()
-	raw, err := os.ReadFile(filepath.Join("testdata", fixedFile))
+	f, err := os.Open(filepath.Join("testdata", fixedFile))
 	if os.IsNotExist(err) && len(listed) == 0 {
 		return map[int]fixedStep{}
 	}
 	if err != nil {
 		t.Fatalf("read the fixed steps: %v", err)
 	}
+	defer f.Close()
+	zr, err := gzip.NewReader(f)
+	if err != nil {
+		t.Fatalf("read %s: %v", fixedFile, err)
+	}
 	var entries []fixedStep
-	if err := json.Unmarshal(raw, &entries); err != nil {
+	if err := json.NewDecoder(zr).Decode(&entries); err != nil {
 		t.Fatalf("parse %s: %v", fixedFile, err)
 	}
 	fixed := map[int]fixedStep{}
@@ -443,10 +453,14 @@ func writeFixedSteps(t *testing.T, entries []fixedStep) {
 		return
 	}
 	var out bytes.Buffer
-	enc := json.NewEncoder(&out)
+	zw := gzip.NewWriter(&out)
+	enc := json.NewEncoder(zw)
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", " ")
 	if err := enc.Encode(entries); err != nil {
+		t.Fatal(err)
+	}
+	if err := zw.Close(); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(path, out.Bytes(), 0o644); err != nil {

@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -135,8 +136,70 @@ func (w *oracleWorld) text(v any) *string {
 	return &s
 }
 
+// sync sets the clock to what Node's clock read at the start of a step
+// that the recording shows it for: the creation time of a transfer a step
+// made, and the time a chunk or a cancel wrote into a transfer. The clock
+// moves with every reading, so a fix that reads it less often, for a
+// message it refuses, would shift every time after it; the readings of the
+// later steps stay Node's this way. Without such a fix it changes nothing.
+func (w *oracleWorld) sync(step vectorStep) {
+	var made, touched string
+	switch step.Op {
+	case "create":
+		if step.Err == nil && step.Out != nil {
+			var record struct {
+				ID string `json:"id"`
+			}
+			_ = json.Unmarshal([]byte(*step.Out), &record)
+			made = record.ID
+		}
+	case "chunk", "cancel":
+		if step.Err == nil && step.Out != nil && *step.Out != "false" {
+			touched, _ = parsed(w.t, step.ID).(string)
+		}
+	case "message":
+		message, _ := parsed(w.t, step.Message).(*goapi.Object)
+		var answer struct {
+			Action     string `json:"action"`
+			TransferID string `json:"transfer_id"`
+			Transfer   string `json:"transferId"`
+		}
+		if step.Out != nil {
+			_ = json.Unmarshal([]byte(*step.Out), &answer)
+		}
+		switch answer.Action {
+		case "init_ack":
+			made = answer.TransferID
+		case "chunk_ack":
+			touched = answer.Transfer
+		case "cancel_ack":
+			touched, _ = message.Get("transfer_id").(string)
+		}
+	}
+	if made == "" && touched == "" {
+		return
+	}
+	var records []struct {
+		ID        string `json:"id"`
+		CreatedAt int64  `json:"createdAt"`
+		UpdatedAt int64  `json:"updatedAt"`
+	}
+	if json.Unmarshal([]byte(step.All), &records) != nil {
+		return
+	}
+	for _, record := range records {
+		switch record.ID {
+		case made:
+			w.clock = record.CreatedAt
+		case touched:
+			w.clock = record.UpdatedAt
+		}
+	}
+}
+
 func (w *oracleWorld) run(step vectorStep) (out *string, err error) {
 	t := w.t
+	w.sync(step)
 	id := parsed(t, step.ID)
 	textID, _ := id.(string)
 	switch step.Op {
@@ -247,7 +310,7 @@ func describeDir(dir *[][]string) string {
 // the files of the transfers folder. The changes the bug fixes made on
 // purpose are taken into account first (fixes_test.go): the ones that
 // change every step alike as rewrites of Node's answers, the others as the
-// console's answers at the steps they name (testdata/vectors_fixed.json).
+// console's answers at the steps they name (testdata/vectors_fixed.json.gz).
 // FILETRANSFER_RECORD_FIXED=1 writes that file from this run and fails
 // for a named step that answers as Node did.
 func TestNodeVectors(t *testing.T) {
@@ -290,7 +353,7 @@ func TestNodeVectors(t *testing.T) {
 				if _, isListed := listed[number]; !isListed {
 					unlisted = append(unlisted, number)
 				}
-				if failures <= 15 {
+				if failures <= 15 || os.Getenv("FILETRANSFER_SHOW") == strconv.Itoa(number) {
 					spec, _ := json.Marshal(step)
 					if len(spec) > 600 {
 						spec = append(spec[:600], "..."...)

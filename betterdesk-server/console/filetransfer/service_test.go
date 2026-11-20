@@ -349,3 +349,60 @@ func TestNewRemovesTheLeftovers(t *testing.T) {
 		t.Errorf("the folder holds %s\nwant %s", got, want)
 	}
 }
+
+// A device's message reaches only the transfers of that device: a chunk
+// or a cancel for another device's transfer is refused as one for no
+// transfer, and a device sends no chunk into an upload, which goes the
+// other way (BUGS FT2).
+func TestAMessageReachesOnlyTheDevicesOwnTransfers(t *testing.T) {
+	s, _ := newService(t)
+	init := s.HandleMessage("dev-B", goapi.NewObject("action", "init", "filename", "talk.bin", "size", float64(8)))
+	id, _ := init.Get("transfer_id").(string)
+	if id == "" {
+		t.Fatalf("init: %v", init)
+	}
+	answer := func(device string, message *goapi.Object) string {
+		raw, _ := json.Marshal(s.HandleMessage(device, message))
+		return string(raw)
+	}
+	notFound := `{"action":"error","error":"Transfer not found"}`
+	if got := answer("dev-C", goapi.NewObject("action", "chunk", "transfer_id", id, "chunk_index", float64(0), "data", "QUJDRA==")); got != notFound {
+		t.Errorf("another device's chunk: %s", got)
+	}
+	if got := answer("dev-C", goapi.NewObject("action", "cancel", "transfer_id", id)); got != notFound {
+		t.Errorf("another device's cancel: %s", got)
+	}
+	if record := s.GetTransfer(id); record.Status != StatusPending || record.BytesTransferred != 0 {
+		t.Errorf("the transfer after the other device: %s, %d bytes", record.Status, record.BytesTransferred)
+	}
+	if got := answer("dev-B", goapi.NewObject("action", "chunk", "transfer_id", id, "chunk_index", float64(0), "data", "QUJDRA==")); !strings.Contains(got, `"bytesTransferred":4`) {
+		t.Errorf("the device's own chunk: %s", got)
+	}
+	if got := answer("dev-B", goapi.NewObject("action", "cancel", "transfer_id", id)); got != `{"action":"cancel_ack","transfer_id":"`+id+`"}` {
+		t.Errorf("the device's own cancel: %s", got)
+	}
+
+	// A transfer someone started for a device: the device id as a number
+	// is the device's too
+	upload, err := s.CreateTransfer(Params{Direction: "upload", DeviceID: "dev-B", Filename: "to-device.txt", Size: float64(4)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := answer("dev-B", goapi.NewObject("action", "chunk", "transfer_id", upload.ID, "data", "QUJDRA==")); got != `{"action":"error","error":"Transfer is an upload"}` {
+		t.Errorf("a chunk into an upload: %s", got)
+	}
+	download, err := s.CreateTransfer(Params{Direction: "download", DeviceID: float64(123), Filename: "from-device.txt", Size: float64(4)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := answer("123", goapi.NewObject("action", "chunk", "transfer_id", download.ID, "data", "QUJDRA==")); !strings.Contains(got, `"status":"completed"`) {
+		t.Errorf("a chunk of the device 123: %s", got)
+	}
+	unbound, err := s.CreateTransfer(Params{Filename: "nobody.txt", DeviceID: Undefined, Size: float64(4)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := answer("undefined", goapi.NewObject("action", "chunk", "transfer_id", unbound.ID, "data", "QUJDRA==")); got != notFound {
+		t.Errorf("a chunk into a transfer of no device: %s", got)
+	}
+}
