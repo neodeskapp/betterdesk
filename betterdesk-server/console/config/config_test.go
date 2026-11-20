@@ -44,7 +44,7 @@ func TestLoadDefaults(t *testing.T) {
 	if cfg.Port != 5000 || cfg.Host != "127.0.0.1" || cfg.NodeUpstream != nil || cfg.TrustProxy.Enabled() || cfg.DebugRouting {
 		t.Errorf("defaults = %+v", cfg)
 	}
-	if cfg.NodeEnv != "development" || cfg.Production || cfg.Docker || cfg.HTTPS || cfg.HTTPSExact || cfg.AllowSelfSignedCerts {
+	if cfg.NodeEnv != "development" || cfg.Production || cfg.Docker || cfg.HTTPS || cfg.AllowSelfSignedCerts {
 		t.Errorf("mode defaults = %+v", cfg)
 	}
 	if cfg.DefaultLanguage != "en" || cfg.DeviceScopeDefault != "open" || cfg.LogLevel != "" || cfg.APIHost != "127.0.0.1:21114" {
@@ -142,7 +142,7 @@ func TestLoadValues(t *testing.T) {
 	if !cfg.TrustProxy.Enabled() {
 		t.Error("TrustProxy is off")
 	}
-	if !cfg.Production || !cfg.HTTPS || cfg.HTTPSExact || cfg.HSTSEnabled != "On" || !cfg.AllowSelfSignedCerts {
+	if !cfg.Production || !cfg.HTTPS || cfg.HSTSEnabled != "On" || !cfg.AllowSelfSignedCerts {
 		t.Errorf("mode = %+v", cfg)
 	}
 	if cfg.DefaultLanguage != "de" || cfg.DeviceScopeDefault != "restricted" || cfg.LogLevel != " Debug " || cfg.APIHost != "127.0.0.1:21121" {
@@ -213,16 +213,16 @@ func TestStaticDir(t *testing.T) {
 }
 
 func TestSwitchesReadAsTheOldConsoleDid(t *testing.T) {
-	for value, want := range map[string][2]bool{
-		"true": {true, true}, "True": {true, false}, "TRUE": {true, false},
-		"1": {false, false}, "yes": {false, false}, "": {false, false}, " true": {false, false},
+	for value, want := range map[string]bool{
+		"true": true, "True": true, "TRUE": true,
+		"1": false, "yes": false, "": false, " true": false,
 	} {
 		cfg, err := load(env(map[string]string{"HTTPS_ENABLED": value}), machine())
 		if err != nil {
 			t.Fatal(err)
 		}
-		if cfg.HTTPS != want[0] || cfg.HTTPSExact != want[1] {
-			t.Errorf("HTTPS_ENABLED=%q gives HTTPS %v, exact %v; want %v", value, cfg.HTTPS, cfg.HTTPSExact, want)
+		if cfg.HTTPS != want {
+			t.Errorf("HTTPS_ENABLED=%q gives HTTPS %v, want %v", value, cfg.HTTPS, want)
 		}
 	}
 	for value, want := range map[string]bool{"production": true, "Production": false, "development": false, "": false} {

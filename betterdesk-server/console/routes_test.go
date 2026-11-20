@@ -129,13 +129,31 @@ func TestUIShell(t *testing.T) {
 	}
 }
 
+// In HTTPS mode the shell and language cookies are Secure as the session
+// cookie is: when the console serves HTTPS, and without a usable
+// certificate (plain HTTP) only for a request that came over HTTPS through
+// a trusted proxy. Over plain HTTP a browser would drop a Secure cookie
+// (BUGS LS3).
 func TestUIShellCookieIsSecureInHTTPSMode(t *testing.T) {
 	w := routesWorld(t, setup{https: true, trustProxy: "loopback"})
-	a := w.agent().signIn("admin", "X-Forwarded-Proto", "https")
-	token, _ := a.get("/__test/token", "X-Forwarded-Proto", "https").json(t)["token"].(string)
-	res := a.do("POST", "/api/ui-shell", `{"shell":"ux35"}`, "Content-Type", "application/json", "X-CSRF-Token", token, "X-Forwarded-Proto", "https")
-	if res.status != 200 || !strings.HasSuffix(res.cookie("bd_ui_shell"), "; Secure; SameSite=Lax") {
-		t.Errorf("got %d, cookie %q", res.status, res.cookie("bd_ui_shell"))
+	if w.s.net.cert != nil {
+		t.Fatal("a certificate loaded")
+	}
+	for _, c := range []struct {
+		name   string
+		header []string
+		secure bool
+	}{{"over HTTPS through the proxy", []string{"X-Forwarded-Proto", "https"}, true}, {"over plain HTTP", nil, false}} {
+		a := w.agent().signIn("admin", c.header...)
+		token, _ := a.get("/__test/token", c.header...).json(t)["token"].(string)
+		send := func(path, body string) answer {
+			return a.do("POST", path, body, append([]string{"Content-Type", "application/json", "X-CSRF-Token", token}, c.header...)...)
+		}
+		for name, res := range map[string]answer{"bd_ui_shell": send("/api/ui-shell", `{"shell":"ux35"}`), "betterdesk_lang": send("/api/i18n/set/de", "{}")} {
+			if res.status != 200 || strings.HasSuffix(res.cookie(name), "; Secure; SameSite=Lax") != c.secure {
+				t.Errorf("%s %s: %d, cookie %q, want Secure %v", name, c.name, res.status, res.cookie(name), c.secure)
+			}
+		}
 	}
 }
 
@@ -270,9 +288,11 @@ func TestI18nSetStoresTheChoice(t *testing.T) {
 		t.Errorf("stored session = %s\nwant it to hold %s", data, want)
 	}
 
+	// Production mode alone does not make it Secure: over plain HTTP a
+	// browser would drop it (BUGS LS3)
 	prod := routesWorld(t, setup{production: true})
-	if cookie := prod.agent().post("/api/i18n/set/de", "{}").cookie("betterdesk_lang"); !strings.HasSuffix(cookie, "; Secure; SameSite=Lax") {
-		t.Errorf("in production the cookie is %q, want Secure", cookie)
+	if cookie := prod.agent().post("/api/i18n/set/de", "{}").cookie("betterdesk_lang"); cookie == "" || strings.Contains(cookie, "; Secure") {
+		t.Errorf("in production over plain HTTP the cookie is %q, want it without Secure", cookie)
 	}
 }
 

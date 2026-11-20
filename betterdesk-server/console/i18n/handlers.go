@@ -44,10 +44,11 @@ type Handlers struct {
 	// "production"). The routes answer the same in both modes.
 	Production bool
 
-	// SecureCookie adds Secure to the language cookie that Set sends.
-	// It belongs on when NODE_ENV is "production" or HTTPS_ENABLED is
-	// "true". The cookie Language sets for ?lang= never has it.
-	SecureCookie bool
+	// SecureCookie says whether the language cookie that Set sends in
+	// answer to r is Secure (the console's rule for its cookies,
+	// session.Manager.SecureCookie). Nil means never. The cookie Language
+	// sets for ?lang= never has it.
+	SecureCookie func(r *http.Request) bool
 
 	// PreferredLanguage returns the stored language of the signed-in
 	// user (the session's user.preferred_language), or "" when nobody is
@@ -159,7 +160,7 @@ func (h *Handlers) Set(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "Language not supported")
 		return
 	}
-	w.Header().Add("Set-Cookie", LangCookie(code, h.SecureCookie, h.now()))
+	w.Header().Add("Set-Cookie", LangCookie(code, h.SecureCookie != nil && h.SecureCookie(r), h.now()))
 	if h.SetPreferredLanguage != nil {
 		if err := h.SetPreferredLanguage(r, code); err != nil {
 			h.logf("[i18n] Failed to persist language: %v", err)

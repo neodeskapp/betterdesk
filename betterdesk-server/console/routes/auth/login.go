@@ -138,8 +138,8 @@ func (h *handlers) establish(r *http.Request, who account, meta session.Meta) (r
 }
 
 // clearGuestCookie makes the browser forget the cookie of a guest link.
-func (h *handlers) clearGuestCookie(w http.ResponseWriter) {
-	cookie.Clear(w, h.guestCookie, cookie.Attributes{Path: "/", HTTPOnly: true, Secure: h.d.Config.HTTPS, SameSite: "lax"})
+func (h *handlers) clearGuestCookie(w http.ResponseWriter, r *http.Request) {
+	cookie.Clear(w, h.guestCookie, cookie.Attributes{Path: "/", HTTPOnly: true, Secure: h.d.Sessions.SecureCookie(r), SameSite: "lax"})
 }
 
 // replacedNote is the end of a sign-in's audit text when the sign-in ended
@@ -273,7 +273,7 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		h.sessionFailure(w, r, "Session establish error:", err)
 		return
 	}
-	h.clearGuestCookie(w)
+	h.clearGuestCookie(w, r)
 
 	fingerprint := meta.Fingerprint
 	if fingerprint == "" {
@@ -515,7 +515,7 @@ func (h *handlers) finishSecondFactor(w http.ResponseWriter, r *http.Request, wh
 		h.sessionFailure(w, r, "TOTP session regeneration error:", err)
 		return
 	}
-	h.clearGuestCookie(w)
+	h.clearGuestCookie(w, r)
 
 	err = h.authn.TouchLastLogin(r.Context(), who.id)
 	if err == nil {

@@ -531,6 +531,24 @@ func TestLoginOverHTTPS(t *testing.T) {
 	}
 }
 
+// In HTTPS mode without a usable certificate the console serves plain
+// HTTP. A sign-in there clears the guest cookie without Secure, as the
+// session cookie is set, so the browser takes the clearing (BUGS LS3).
+func TestLoginOverPlainHTTPInHTTPSMode(t *testing.T) {
+	w := newWorld(t, nil, setup{https: true})
+	w.addUser(user{name: "alice"})
+	res := w.agent().post("/api/auth/login", login("alice", password))
+	if res.status != http.StatusOK {
+		t.Fatalf("sign-in: %d %s", res.status, res.body)
+	}
+	if got := res.cookie("betterdesk.guest"); got != "betterdesk.guest=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax" {
+		t.Errorf("guest cookie over plain HTTP: %q", got)
+	}
+	if got := res.cookie("betterdesk.sid"); got == "" || strings.Contains(got, "; Secure") {
+		t.Errorf("session cookie over plain HTTP: %q", got)
+	}
+}
+
 // Where the signal server made the users table on PostgreSQL, ids are
 // 64-bit and have always gone out, and into the session, as text.
 func TestSignInKeepsTheFormOfTheAccountID(t *testing.T) {

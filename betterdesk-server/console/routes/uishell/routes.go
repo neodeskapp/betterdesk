@@ -21,13 +21,15 @@ const (
 var supported = []string{"ux35", "ux36"}
 
 type handlers struct {
-	https bool
-	now   func() time.Time
+	// secure says whether the cookie of an answer to r is Secure
+	// (session.Manager.SecureCookie).
+	secure func(r *http.Request) bool
+	now    func() time.Time
 }
 
 // Register adds the group's routes.
 func Register(d *kit.Deps) {
-	h := &handlers{https: d.Config.HTTPS, now: time.Now}
+	h := &handlers{secure: d.Sessions.SecureCookie, now: time.Now}
 	r := d.Router
 	// The choice's JSON is read after the sign-in check, up to 2 KB
 	r.Post("/api/ui-shell", h.set, d.RequireAuth, middleware.RouteJSON(middleware.BodyOptions{Limit: 2 << 10, OnError: func(w http.ResponseWriter, r *http.Request, status int, err error) {
@@ -50,7 +52,7 @@ func (h *handlers) set(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusBadRequest, "Unsupported shell. Allowed: "+strings.Join(supported, ", "))
 		return
 	}
-	kit.SetCookie(w, shellCookie, shell, kit.CookieOptions{MaxAge: cookieAge, SameSite: "lax", Secure: h.https, Now: h.now()})
+	kit.SetCookie(w, shellCookie, shell, kit.CookieOptions{MaxAge: cookieAge, SameSite: "lax", Secure: h.secure(r), Now: h.now()})
 	kit.OK(w, r, choice{Shell: shell})
 }
 

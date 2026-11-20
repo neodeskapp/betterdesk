@@ -218,7 +218,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	languages := &i18n.Handlers{
 		Bundle:       bundle,
 		Production:   cfg.Production,
-		SecureCookie: cfg.Production || cfg.HTTPSExact,
+		SecureCookie: sessions.SecureCookie,
 		PreferredLanguage: func(r *http.Request) string {
 			if user := kit.User(r); user != nil {
 				return user.PreferredLanguage

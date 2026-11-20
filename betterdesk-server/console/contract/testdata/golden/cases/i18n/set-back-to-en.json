@@ -25,7 +25,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "betterdesk_lang=<value>; Max-Age=<n>; Path=/; Expires=<date>; Secure; SameSite=Lax",
+    "set-cookie": "betterdesk_lang=<value>; Max-Age=<n>; Path=/; Expires=<date>; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",

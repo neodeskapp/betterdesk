@@ -129,9 +129,6 @@ type Config struct {
 	CertFile string
 	KeyFile  string
 	CAFile   string
-	// HTTPSExact is true when HTTPS_ENABLED is "true" letter for letter,
-	// which is what the language cookie's Secure attribute looks at.
-	HTTPSExact bool
 	// HSTSEnabled is the raw HSTS_ENABLED value and AllowSelfSignedCerts
 	// is ALLOW_SELF_SIGNED_CERTS; together with HTTPS they decide whether
 	// Strict-Transport-Security is sent (middleware.HSTSEnabled).
@@ -349,7 +346,6 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 	cfg.TempDir = filepath.Join(cfg.ConsoleDir, "data", "tmp")
 
 	cfg.HTTPS = isTrue(getenv("HTTPS_ENABLED"))
-	cfg.HTTPSExact = getenv("HTTPS_ENABLED") == "true"
 	cfg.HTTPSPort = parseIntOr(getenv("HTTPS_PORT"), 5443)
 	cfg.HTTPRedirect = isTrue(orDefault(getenv("HTTP_REDIRECT_HTTPS"), "true"))
 	cfg.CertFile = getenv("SSL_CERT_PATH")

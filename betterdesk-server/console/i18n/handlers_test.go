@@ -78,7 +78,9 @@ func handlersFor(t testing.TB, dir string, now time.Time) (*Handlers, *recorder,
 func perRequest(h *Handlers, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h.Production = r.Header.Get("X-Production") == "1"
-		h.SecureCookie = h.Production || r.Header.Get("X-Https") == "1"
+		h.SecureCookie = func(r *http.Request) bool {
+			return r.Header.Get("X-Production") == "1" || r.Header.Get("X-Https") == "1"
+		}
 		next.ServeHTTP(w, r)
 	})
 }

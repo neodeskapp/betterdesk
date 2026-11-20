@@ -230,10 +230,11 @@ func clearCookie(w http.ResponseWriter, name string) {
 	cookie.Clear(w, name, cookie.Attributes{})
 }
 
-// secureCookie reports whether a new session's cookie is Secure: when the
-// console serves HTTPS, and in HTTPS mode without a certificate when the
-// request came over HTTPS.
-func (m *Manager) secureCookie(r *http.Request) bool {
+// SecureCookie reports whether a cookie the console sets in answer to r
+// is Secure: when the console serves HTTPS, and in HTTPS mode without a
+// certificate when the request came over HTTPS. A new session's cookie
+// follows it, and so do the console's other cookies.
+func (m *Manager) SecureCookie(r *http.Request) bool {
 	return m.secure || m.https && r != nil && m.secureRequest(r)
 }
 

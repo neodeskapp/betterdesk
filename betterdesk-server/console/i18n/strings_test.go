@@ -236,7 +236,7 @@ func TestStringsAfterUploadHaveTheNewRevision(t *testing.T) {
 func TestLanguageSetsTheCookieForTheQuery(t *testing.T) {
 	now := time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
 	h, _, _ := handlersFor(t, copyDir(t, "testdata/lang-upload"), now)
-	h.SecureCookie = true
+	h.SecureCookie = func(*http.Request) bool { return true }
 	h.PreferredLanguage = func(r *http.Request) string { return r.Header.Get("X-Pref") }
 	cases := []struct {
 		query, pref, cookie, accept string
