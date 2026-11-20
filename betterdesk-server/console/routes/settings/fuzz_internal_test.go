@@ -84,7 +84,7 @@ func FuzzUploadForms(f *testing.F) {
 // against goapipath.ParseInt (parseInt without a radix), which agrees
 // wherever the text does not start with 0x.
 func FuzzProfileID(f *testing.F) {
-	for _, s := range []string{"12", "12abc", " 7", "-0", "+5", "abc", "", "-", "1e5", "0x10", "  3", strings.Repeat("9", 30), strings.Repeat("9", 400), "9007199254740993", "-9223372036854775809"} {
+	for _, s := range []string{"12", "12abc", " 7", "-0", "+5", "abc", "", "-", "1e5", "0x10", "  3", strings.Repeat("9", 30), strings.Repeat("9", 400), "9007199254740993", "-9223372036854775809", "2147483647", "2147483648", "-2147483648", "-2147483649"} {
 		f.Add(s)
 	}
 	f.Fuzz(func(t *testing.T, s string) {
@@ -102,22 +102,20 @@ func FuzzProfileID(f *testing.F) {
 			}
 			return
 		}
+		// an id beyond 32 bits, which no profile has, is refused (BUGS BR11)
+		if want > math.MaxInt32 || want < math.MinInt32 {
+			if ok {
+				t.Fatalf("%q: an id %+v beyond 32 bits", s, id)
+			}
+			return
+		}
 		if !ok {
 			t.Fatalf("%q: no id where JavaScript has %v", s, want)
 		}
 		if text, _ := branding.ToString(want); text != id.text {
 			t.Fatalf("%q: written %q, JavaScript writes %q", s, id.text, text)
 		}
-		switch {
-		case want >= math.MaxInt64:
-			if id.value != math.MaxInt64 {
-				t.Fatalf("%q: %d for %v", s, id.value, want)
-			}
-		case want <= math.MinInt64:
-			if id.value != math.MinInt64 {
-				t.Fatalf("%q: %d for %v", s, id.value, want)
-			}
-		case float64(id.value) != want:
+		if float64(id.value) != want {
 			t.Fatalf("%q: %d for %v", s, id.value, want)
 		}
 	})
