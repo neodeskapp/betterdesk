@@ -169,10 +169,12 @@ type toggleFailure struct {
 	Error   any  `json:"error"`
 }
 
-// toggle answers POST /api/cdap/toggle with the body {enabled}. It saves
-// the setting on the API server, which reads it at its next start, and
-// adds the change to the operator's restart transaction, with the value
-// the setting had so that a cancel puts it back.
+// toggle answers POST /api/cdap/toggle with the body {enabled}. It adds
+// the change to the operator's restart transaction, with the value the
+// setting had so that a cancel puts it back, and then saves the setting
+// on the API server, which reads it at its next start. A transaction the
+// change cannot join (another operator's, 409) leaves the setting as it
+// was; a save the API server refuses is answered with its error.
 func (h *handlers) toggle(w http.ResponseWriter, r *http.Request) {
 	enabled, isBool := kit.Body(r).Get("enabled").Bool()
 	if !isBool {
@@ -189,12 +191,6 @@ func (h *handlers) toggle(w http.ResponseWriter, r *http.Request) {
 		goapipath.WriteJSON(w, r, http.StatusInternalServerError, toggleFailure{Error: message})
 		return
 	}
-	value := "N"
-	if enabled {
-		value = "Y"
-	}
-	h.api.SetConfig(ctx, "cdap_enabled", value)
-
 	// The value to return to: the setting's value, the whole answer when
 	// it names none, "N" when there was no answer
 	var before any = "N"
@@ -211,10 +207,46 @@ func (h *handlers) toggle(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		h.log.Error("Toggle error:", err.Error())
-		kit.Fail(w, r, http.StatusInternalServerError, "Failed to toggle CDAP")
+		status := http.StatusInternalServerError
+		if refused, isRefusal := err.(*restart.Error); isRefusal && refused.StatusCode() == http.StatusConflict {
+			status = http.StatusConflict
+		}
+		kit.Fail(w, r, status, "Failed to toggle CDAP")
+		return
+	}
+
+	value := "N"
+	if enabled {
+		value = "Y"
+	}
+	if refusal := h.save(r, value); refusal != nil {
+		h.log.Error("Toggle error: the API server refused the setting:", refusal)
+		goapipath.WriteJSON(w, r, http.StatusInternalServerError, toggleFailure{Error: refusal})
 		return
 	}
 	kit.JSON(w, r, http.StatusOK, toggled{Success: true, Enabled: enabled, RestartRequired: true, Transaction: transaction})
+}
+
+// save writes cdap_enabled on the API server. It returns nil when the
+// API server took it, else the error to answer: the "error" of the API
+// server's answer when it has one, else the message of the failed call.
+func (h *handlers) save(r *http.Request, value string) any {
+	resp, err := h.api.Request(r.Context(), http.MethodPut, "/config/cdap_enabled", goapi.Body(goapi.NewObject("value", value)))
+	failed := goapi.AsError(err)
+	answer := failed.Data()
+	if err == nil {
+		answer = resp.Data()
+	}
+	if o, isObject := answer.(*goapi.Object); isObject && goapi.Truthy(o.Get("error")) {
+		return o.Get("error")
+	}
+	switch {
+	case err == nil:
+		return nil
+	case failed != nil:
+		return failed.Message
+	}
+	return err.Error()
 }
 
 // alerts answers GET /api/cdap/alerts with the alerts that are firing,

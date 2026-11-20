@@ -161,6 +161,38 @@ var fixes = map[string]func(v *vector) bool{
 		v.Status, v.Type, v.Body, v.Calls = 403, "application/json; charset=utf-8", `{"success":false,"error":"errors.forbidden"}`, nil
 		return true
 	},
+	// The gateway switch joins the restart transaction before it saves:
+	// where Node saved the setting and then failed to toggle, the console
+	// reads the setting, is refused and saves nothing. A pending
+	// transaction that is not the operator's is a 409.
+	"RC4": func(v *vector) bool {
+		if !strings.HasPrefix(strings.ToLower(v.Request.Path), "/api/cdap/toggle") || v.Body != `{"success":false,"error":"Failed to toggle CDAP"}` {
+			return false
+		}
+		v.Calls = v.Calls[:1]
+		if foreignPending(v.State, v.Request.Session.UserID) {
+			v.Status = 409
+		}
+		return true
+	},
+}
+
+// foreignPending reports whether a transaction file holds a pending
+// transaction that is not the account's: its userId is not the account's
+// id as text.
+func foreignPending(state *string, userID int64) bool {
+	if state == nil {
+		return false
+	}
+	var parsed struct {
+		Phase  string `json:"phase"`
+		UserID any    `json:"userId"`
+	}
+	if json.Unmarshal([]byte(*state), &parsed) != nil || parsed.Phase != "pending" {
+		return false
+	}
+	owner, isText := parsed.UserID.(string)
+	return !isText || owner != strconv.FormatInt(userID, 10)
 }
 
 // deviceRoute is the address of a route of the device dev-1.
