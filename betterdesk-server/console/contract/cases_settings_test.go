@@ -180,7 +180,7 @@ func init() {
 		},
 		contract.Case{
 			Name: "audit-limit-object", Path: "/api/settings/audit", Query: url.Values{"limit[x]": {"1"}},
-			Roles: contract.Roles("signed-out", "viewer"),
+			Roles: contract.Roles("signed-out", "viewer"), Volatile: []string{"data[*].id"},
 		},
 
 		// Enrollment

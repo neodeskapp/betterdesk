@@ -31,6 +31,9 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "data[*].id"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -74,6 +77,10 @@
     {
      "path": "data[*].created_at",
      "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "data[*].id",
+     "integer": true
     }
    ],
    "body": {
@@ -84,7 +91,7 @@
        "action": "server_file_delete",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 849,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -93,7 +100,7 @@
        "action": "server_file_delete",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/sub",
-       "id": 848,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -102,7 +109,7 @@
        "action": "server_file_delete",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/sub/moved.txt",
-       "id": 847,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -111,7 +118,7 @@
        "action": "server_file_rename",
        "created_at": "<volatile>",
        "details": "from=/opt/rustdesk/sm-contract/note.txt to=/opt/rustdesk/sm-contract/sub/moved.txt",
-       "id": 846,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -120,7 +127,7 @@
        "action": "server_file_write",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/empty.txt bytes=0",
-       "id": 845,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -129,7 +136,7 @@
        "action": "server_file_write",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/bin.dat bytes=3",
-       "id": 844,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -138,7 +145,7 @@
        "action": "server_file_write",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/sub/grüße ñ.txt bytes=18",
-       "id": 843,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -147,7 +154,7 @@
        "action": "server_file_write",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/note.txt bytes=12",
-       "id": 842,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -156,7 +163,7 @@
        "action": "server_file_mkdir",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/sub2",
-       "id": 841,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -165,7 +172,7 @@
        "action": "server_file_mkdir",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/sub",
-       "id": 840,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -174,7 +181,7 @@
        "action": "server_file_mkdir",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 839,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -183,7 +190,7 @@
        "action": "server_file_delete",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 838,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -192,7 +199,7 @@
        "action": "server_file_delete",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/sub",
-       "id": 837,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
@@ -201,7 +208,7 @@
        "action": "server_file_delete",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/sub/moved.txt",
-       "id": 836,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
@@ -210,7 +217,7 @@
        "action": "server_file_rename",
        "created_at": "<volatile>",
        "details": "from=/opt/rustdesk/sm-contract/note.txt to=/opt/rustdesk/sm-contract/sub/moved.txt",
-       "id": 835,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
@@ -219,7 +226,7 @@
        "action": "server_file_write",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/note.txt bytes=12",
-       "id": 834,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
@@ -228,7 +235,7 @@
        "action": "server_file_mkdir",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/sub",
-       "id": 833,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
@@ -237,7 +244,7 @@
        "action": "server_file_mkdir",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 832,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -246,7 +253,7 @@
        "action": "server_file_delete",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 831,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -255,7 +262,7 @@
        "action": "server_file_delete",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/sub",
-       "id": 830,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
@@ -264,7 +271,7 @@
        "action": "server_file_delete",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/sub/moved.txt",
-       "id": 829,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
@@ -273,7 +280,7 @@
        "action": "server_file_rename",
        "created_at": "<volatile>",
        "details": "from=/opt/rustdesk/sm-contract/note.txt to=/opt/rustdesk/sm-contract/sub/moved.txt",
-       "id": 828,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
@@ -282,7 +289,7 @@
        "action": "server_file_write",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/empty.txt bytes=0",
-       "id": 827,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
@@ -291,7 +298,7 @@
        "action": "server_file_write",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/bin.dat bytes=3",
-       "id": 826,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
@@ -300,7 +307,7 @@
        "action": "server_file_write",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/sub/grüße ñ.txt bytes=18",
-       "id": 825,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
@@ -309,7 +316,7 @@
        "action": "server_file_write",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/note.txt bytes=12",
-       "id": 824,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
@@ -318,7 +325,7 @@
        "action": "server_file_mkdir",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/sub2",
-       "id": 823,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
@@ -327,7 +334,7 @@
        "action": "server_file_mkdir",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract/sub",
-       "id": 822,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
@@ -336,7 +343,7 @@
        "action": "server_file_mkdir",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 821,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -345,7 +352,7 @@
        "action": "server_file_delete",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 820,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -354,7 +361,7 @@
        "action": "server_file_mkdir",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 819,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -363,7 +370,7 @@
        "action": "server_file_delete",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 818,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -372,7 +379,7 @@
        "action": "server_file_mkdir",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 817,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -381,7 +388,7 @@
        "action": "server_file_delete",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 816,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -390,7 +397,7 @@
        "action": "server_file_mkdir",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 815,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -399,7 +406,7 @@
        "action": "server_file_delete",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 814,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -408,7 +415,7 @@
        "action": "server_file_mkdir",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 813,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -417,7 +424,7 @@
        "action": "server_file_delete",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 812,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -426,7 +433,7 @@
        "action": "server_file_mkdir",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 811,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -435,7 +442,7 @@
        "action": "server_file_delete",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 810,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -444,7 +451,7 @@
        "action": "server_file_mkdir",
        "created_at": "<volatile>",
        "details": "path=/opt/rustdesk/sm-contract",
-       "id": 809,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -453,7 +460,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 808,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -462,7 +469,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 807,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -471,7 +478,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 806,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -480,7 +487,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 805,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -489,7 +496,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 804,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -498,7 +505,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 803,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -507,7 +514,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 802,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -516,7 +523,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 801,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -525,7 +532,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 800,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -534,7 +541,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 799,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -543,7 +550,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 798,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
@@ -552,7 +559,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 797,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -561,7 +568,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 796,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -570,7 +577,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 795,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 7,
        "username": "e2e_server_admin"
@@ -579,7 +586,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 794,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -588,7 +595,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 793,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -597,7 +604,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 792,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -606,7 +613,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 791,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -615,7 +622,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 790,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -624,7 +631,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 789,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -633,7 +640,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 788,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -642,7 +649,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 787,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -651,7 +658,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 786,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -660,7 +667,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 785,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -669,7 +676,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 784,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -678,7 +685,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 783,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -687,7 +694,7 @@
        "action": "server_attestation_badge_updated",
        "created_at": "<volatile>",
        "details": "Updated Server Attestation badge labels",
-       "id": 782,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -696,7 +703,7 @@
        "action": "api_login_banned_device",
        "created_at": "<volatile>",
        "details": "Device: 900100028, User: rd_contract_nobody",
-       "id": 781,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": null,
        "username": null
@@ -705,7 +712,7 @@
        "action": "api_login_banned_device",
        "created_at": "<volatile>",
        "details": "Device: 900100028, User: rd_contract_nobody",
-       "id": 780,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": null,
        "username": null
@@ -714,7 +721,7 @@
        "action": "api_login_failed",
        "created_at": "<volatile>",
        "details": "User: r***y",
-       "id": 779,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": null,
        "username": null
@@ -723,7 +730,7 @@
        "action": "api_login_failed",
        "created_at": "<volatile>",
        "details": "User: r***y",
-       "id": 778,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": null,
        "username": null
@@ -732,7 +739,7 @@
        "action": "api_login_failed",
        "created_at": "<volatile>",
        "details": "User: r***y",
-       "id": 777,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": null,
        "username": null
@@ -741,7 +748,7 @@
        "action": "api_login_banned_device",
        "created_at": "<volatile>",
        "details": "Device: 900100029, User: rd_contract_nobody",
-       "id": 776,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": null,
        "username": null
@@ -750,7 +757,7 @@
        "action": "api_login_banned_device",
        "created_at": "<volatile>",
        "details": "Device: 900100028, User: rd_contract_nobody",
-       "id": 775,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": null,
        "username": null
@@ -759,7 +766,7 @@
        "action": "help_request_resolved",
        "created_at": "<volatile>",
        "details": "Help request 2 resolved",
-       "id": 774,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -768,7 +775,7 @@
        "action": "help_request_accepted",
        "created_at": "<volatile>",
        "details": "Help request 2 accepted",
-       "id": 773,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -777,7 +784,7 @@
        "action": "enrollment_rejection_cleared",
        "created_at": "<volatile>",
        "details": "Cleared enrollment rejection for device contract-enroll-y (unbanned)",
-       "id": 772,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -786,7 +793,7 @@
        "action": "enrollment_rejected",
        "created_at": "<volatile>",
        "details": "Rejected enrollment for device contract-enroll-y (banned)",
-       "id": 771,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -795,7 +802,7 @@
        "action": "enrollment_rejection_cleared",
        "created_at": "<volatile>",
        "details": "Cleared enrollment rejection for device contract-enroll-x",
-       "id": 770,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -804,7 +811,7 @@
        "action": "enrollment_rejected",
        "created_at": "<volatile>",
        "details": "Rejected enrollment for device contract-enroll-x",
-       "id": 769,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -813,7 +820,7 @@
        "action": "registration_rejected",
        "created_at": "<volatile>",
        "details": "Rejected registration for device contract-reject (contract-reject-box): Not one of ours",
-       "id": 768,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -822,7 +829,7 @@
        "action": "folder_deleted",
        "created_at": "<volatile>",
        "details": "Deleted folder: Contract registration folder",
-       "id": 767,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -831,7 +838,7 @@
        "action": "device_group_deleted",
        "created_at": "<volatile>",
        "details": "Device group Contract registration group deleted",
-       "id": 766,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -840,7 +847,7 @@
        "action": "device_tags_updated",
        "created_at": "<volatile>",
        "details": "Device 900100021 tags set to [kiosk]",
-       "id": 765,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -849,7 +856,7 @@
        "action": "device_updated",
        "created_at": "<volatile>",
        "details": "Device 900100021 updated",
-       "id": 764,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -858,7 +865,7 @@
        "action": "registration_approved",
        "created_at": "<volatile>",
        "details": "Approved registration for device 900100021 (contract-lan-kiosk)",
-       "id": 763,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -867,7 +874,7 @@
        "action": "device_group_saved",
        "created_at": "<volatile>",
        "details": "Device group Contract registration group saved",
-       "id": 762,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -876,7 +883,7 @@
        "action": "folder_created",
        "created_at": "<volatile>",
        "details": "Created folder: Contract registration folder",
-       "id": 761,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -885,7 +892,7 @@
        "action": "help_request_resolved",
        "created_at": "<volatile>",
        "details": "Help request 2 resolved",
-       "id": 760,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
@@ -894,7 +901,7 @@
        "action": "help_request_accepted",
        "created_at": "<volatile>",
        "details": "Help request 2 accepted",
-       "id": 759,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
@@ -903,7 +910,7 @@
        "action": "enrollment_rejection_cleared",
        "created_at": "<volatile>",
        "details": "Cleared enrollment rejection for device contract-enroll-y (unbanned)",
-       "id": 758,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
@@ -912,7 +919,7 @@
        "action": "enrollment_rejected",
        "created_at": "<volatile>",
        "details": "Rejected enrollment for device contract-enroll-y (banned)",
-       "id": 757,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
@@ -921,7 +928,7 @@
        "action": "enrollment_rejection_cleared",
        "created_at": "<volatile>",
        "details": "Cleared enrollment rejection for device contract-enroll-x",
-       "id": 756,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
@@ -930,7 +937,7 @@
        "action": "enrollment_rejected",
        "created_at": "<volatile>",
        "details": "Rejected enrollment for device contract-enroll-x",
-       "id": 755,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
@@ -939,7 +946,7 @@
        "action": "registration_rejected",
        "created_at": "<volatile>",
        "details": "Rejected registration for device contract-reject (contract-reject-box): Not one of ours",
-       "id": 754,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 6,
        "username": "e2e_super_admin"
@@ -948,7 +955,7 @@
        "action": "folder_deleted",
        "created_at": "<volatile>",
        "details": "Deleted folder: Contract registration folder",
-       "id": 753,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -957,7 +964,7 @@
        "action": "device_group_deleted",
        "created_at": "<volatile>",
        "details": "Device group Contract registration group deleted",
-       "id": 752,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -966,7 +973,7 @@
        "action": "device_tags_updated",
        "created_at": "<volatile>",
        "details": "Device 900100021 tags set to [kiosk]",
-       "id": 751,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
@@ -975,7 +982,7 @@
        "action": "device_updated",
        "created_at": "<volatile>",
        "details": "Device 900100021 updated",
-       "id": 750,
+       "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
        "username": "e2e_admin"
