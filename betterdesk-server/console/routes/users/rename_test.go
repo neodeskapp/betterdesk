@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"strconv"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -47,6 +48,45 @@ func TestRenameSkipsAMissingTable(t *testing.T) {
 			if err := db.QueryRow(ctx, read.query, read.args...).Scan(&got); err != nil || got != "new_name" {
 				t.Errorf("%s: %q, %v", read.query, got, err)
 			}
+		}
+	})
+}
+
+// Where the Node console created address_books on SQLite, the table is
+// keyed by the account's id: a rename leaves the books where they are and
+// goes through. Where it is keyed by name, the books follow the name
+// (BUGS UM23).
+func TestRenameWithAddressBooksKeyedByID(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		db = storetest.Prepare(t, db, storetest.NodeFirst)
+		ctx := context.Background()
+		id, err := db.Insert(ctx, `INSERT INTO users (username, password_hash, role) VALUES ('old_name', 'x', 'operator')`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		byName := db.Shape().Table("address_books").Has("username")
+		if byName == (db.Dialect() == store.SQLite) {
+			t.Fatalf("address_books keyed by name: %v", byName)
+		}
+		book, read := `INSERT INTO address_books (user_id, ab_type, data) VALUES (?, 'legacy', '{}')`, `SELECT CAST(user_id AS TEXT) FROM address_books`
+		args, want := []any{id}, strconv.FormatInt(id, 10)
+		if byName {
+			book, read = `INSERT INTO address_books (username, ab_type, data) VALUES (?, 'legacy', '{}')`, `SELECT username FROM address_books`
+			args, want = []any{"old_name"}, "new_name"
+		}
+		if _, err := db.Exec(ctx, book, args...); err != nil {
+			t.Fatal(err)
+		}
+
+		if outcome, err := renameAccount(ctx, db, id, "new_name"); err != nil || outcome != renamed {
+			t.Fatalf("renameAccount = %v, %v", outcome, err)
+		}
+		var name, owner string
+		if err := db.QueryRow(ctx, `SELECT username FROM users WHERE id = ?`, id).Scan(&name); err != nil || name != "new_name" {
+			t.Errorf("the account's name: %q, %v", name, err)
+		}
+		if err := db.QueryRow(ctx, read).Scan(&owner); err != nil || owner != want {
+			t.Errorf("the address book's owner: %q, %v; want %q", owner, err, want)
 		}
 	})
 }

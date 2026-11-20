@@ -36,6 +36,12 @@ type fix struct {
 	// endsSessionsOf are the roles whose sessions the step ends in the Go
 	// console and not in Node.
 	endsSessionsOf []string
+	// pinnedBy names the recording that pins a step this one does not
+	// compare: neither its answer nor its rows nor its calls. It is for a
+	// step whose request Node failed and the Go console carries out, and
+	// the steps after it that see the difference, where the other
+	// recording made the same requests and Node carried them out.
+	pinnedBy string
 }
 
 // replaced is the recorded answer with one part of it replaced.
@@ -79,8 +85,18 @@ func fixFor(rec recording, name string) (fix, bool) {
 	if f, ok := fixes[variant+": "+name]; ok {
 		return f, true
 	}
-	f, ok := fixes[name]
-	return f, ok
+	if f, ok := fixes[name]; ok {
+		return f, true
+	}
+	// On the SQLite file the Node console set up, address_books is keyed
+	// by the account's id and every rename failed from step 530 on, so the
+	// accounts kept their names to the end of the recording. The Go
+	// console renames there as on the other shapes (BUGS UM23); the
+	// sqlite-go recording has the same requests, which Node carried out.
+	if number, _, _ := strings.Cut(name, " "); variant == "sqlite" && len(number) == 3 && number >= "530" {
+		return fix{bug: "UM23", pinnedBy: "sqlite-go"}, true
+	}
+	return fix{}, false
 }
 
 // fixes are the steps the Go console answers otherwise, by the step's

@@ -237,6 +237,9 @@ func (p *replayer) run() {
 				}
 				continue
 			}
+			if f, fixed := fixFor(p.rec, step.Name); fixed && f.pinnedBy != "" {
+				continue
+			}
 			have := p.rows(step.SQL, step.Params)
 			if strings.Contains(step.SQL, "FROM audit_log") {
 				have = nodeLabels(have)
@@ -246,9 +249,14 @@ func (p *replayer) run() {
 			}
 			continue
 		}
-		got := p.send(step)
-		status, answer, wantCalls := step.Status, step.Answer, nodeCalls(step.Extra.Calls)
 		f, fixed := fixFor(p.rec, step.Name)
+		got := p.send(step)
+		if fixed && f.pinnedBy != "" {
+			p.api.Calls()
+			p.capture(step, got.Body)
+			continue
+		}
+		status, answer, wantCalls := step.Status, step.Answer, nodeCalls(step.Extra.Calls)
 		if fixed {
 			if f.status != 0 {
 				status, wantCalls = f.status, nil

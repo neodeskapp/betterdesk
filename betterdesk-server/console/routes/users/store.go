@@ -218,7 +218,7 @@ func renameAccount(ctx context.Context, db *store.DB, id int64, newName string) 
 		if _, err := tx.Exec(ctx, `UPDATE users SET username = ? WHERE id = ?`, newName, id); err != nil {
 			return err
 		}
-		return renameCascade(ctx, tx, old.Value(), newName)
+		return renameCascade(ctx, tx, db.Shape().Table("address_books").Has("username"), old.Value(), newName)
 	})
 	if err == nil {
 		return outcome, nil
@@ -234,12 +234,14 @@ func renameAccount(ctx context.Context, db *store.DB, id int64, newName string) 
 }
 
 // renameCascade moves what is keyed by an account's name to its new name:
-// its address books (a stale book under the new name goes first), its
-// organization memberships, the strategy assignments made for the name,
-// and its sign-in attempts. A lockout of the new name is removed. Both
-// names are trimmed first; nothing happens when one is empty or they are
-// the same. A table the database does not have is skipped.
-func renameCascade(ctx context.Context, tx *store.Tx, oldValue jsbind.Value, newUsername string) error {
+// its address books when booksByName says address_books is keyed by name
+// (a stale book under the new name goes first; a table keyed by the
+// account's id needs nothing), its organization memberships, the strategy
+// assignments made for the name, and its sign-in attempts. A lockout of
+// the new name is removed. Both names are trimmed first; nothing happens
+// when one is empty or they are the same. A table the database does not
+// have is skipped.
+func renameCascade(ctx context.Context, tx *store.Tx, booksByName bool, oldValue jsbind.Value, newUsername string) error {
 	oldName := ""
 	if oldValue.Truthy() {
 		oldName = jsbind.Trim(oldValue.ToString())
@@ -248,17 +250,22 @@ func renameCascade(ctx context.Context, tx *store.Tx, oldValue jsbind.Value, new
 	if oldName == "" || newName == "" || oldName == newName {
 		return nil
 	}
-	for _, step := range []struct {
+	type step struct {
 		query string
 		args  []any
-	}{
-		{`DELETE FROM address_books WHERE username = ?`, []any{newName}},
-		{`UPDATE address_books SET username = ? WHERE username = ?`, []any{newName, oldName}},
-		{`UPDATE org_users SET username = ? WHERE username = ?`, []any{newName, oldName}},
-		{`UPDATE strategy_assignments SET target_key = ? WHERE target_key = ? AND target_type = 'user'`, []any{newName, oldName}},
-		{`DELETE FROM account_lockouts WHERE username = ?`, []any{newName}},
-		{`UPDATE login_attempts SET username = ? WHERE username = ?`, []any{newName, oldName}},
-	} {
+	}
+	var steps []step
+	if booksByName {
+		steps = append(steps,
+			step{`DELETE FROM address_books WHERE username = ?`, []any{newName}},
+			step{`UPDATE address_books SET username = ? WHERE username = ?`, []any{newName, oldName}})
+	}
+	steps = append(steps,
+		step{`UPDATE org_users SET username = ? WHERE username = ?`, []any{newName, oldName}},
+		step{`UPDATE strategy_assignments SET target_key = ? WHERE target_key = ? AND target_type = 'user'`, []any{newName, oldName}},
+		step{`DELETE FROM account_lockouts WHERE username = ?`, []any{newName}},
+		step{`UPDATE login_attempts SET username = ? WHERE username = ?`, []any{newName, oldName}})
+	for _, step := range steps {
 		if err := cascadeStep(ctx, tx, step.query, step.args...); err != nil {
 			return err
 		}
