@@ -1,16 +1,14 @@
 // Package securityaudit answers the security audit page: an overview with
 // a score made from the API server's health, keys, audit events and
 // blocklist, the audit events themselves, a fixed list of hardening
-// measures, and the count of the console's dependencies.
+// measures, and the count of the Go modules built into the server.
 package securityaudit
 
 import (
 	"math"
 	"net/http"
-	"os"
-	"path/filepath"
+	"runtime/debug"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -23,11 +21,11 @@ import (
 type handlers struct {
 	api    *goapi.Client
 	getenv func(string) string
-	// packageFile is the old console's package.json, whose dependencies
-	// the vulnerabilities route counts.
-	packageFile string
-	now         func() time.Time
-	local       *time.Location
+	// buildInfo reads the build information of the running binary, whose
+	// modules the vulnerabilities route counts.
+	buildInfo func() (*debug.BuildInfo, bool)
+	now       func() time.Time
+	local     *time.Location
 }
 
 // Register adds the group's routes.
@@ -37,11 +35,11 @@ func Register(d *kit.Deps) {
 		getenv = func(string) string { return "" }
 	}
 	h := &handlers{
-		api:         d.GoAPI,
-		getenv:      getenv,
-		packageFile: filepath.Join(d.Config.ConsoleDir, "package.json"),
-		now:         time.Now,
-		local:       time.Local,
+		api:       d.GoAPI,
+		getenv:    getenv,
+		buildInfo: debug.ReadBuildInfo,
+		now:       time.Now,
+		local:     time.Local,
 	}
 	r := d.Router
 	view := d.RequirePermission("audit.view")
@@ -354,50 +352,26 @@ type vulnerabilityReport struct {
 	Counts          severityCounts `json:"counts"`
 	Vulnerabilities []any          `json:"vulnerabilities"`
 	Dependencies    struct {
-		Go     dependencySet `json:"go"`
-		NodeJS dependencySet `json:"nodejs"`
+		Go dependencySet `json:"go"`
 	} `json:"dependencies"`
 	LastScan *string `json:"last_scan"`
 }
 
 // vulnerabilities answers GET /api/panel/security-audit/vulnerabilities.
-// No scan runs: the answer says so and counts the dependencies named in
-// the old console's package.json, 0 when that file is not there.
+// No scan runs: the answer says so and counts the Go modules built into
+// the binary.
 func (h *handlers) vulnerabilities(w http.ResponseWriter, r *http.Request) {
 	out := vulnerabilityReport{Vulnerabilities: []any{}}
-	out.Dependencies.Go.Items = []any{}
-	out.Dependencies.NodeJS.Items = []any{}
-	out.Dependencies.NodeJS.Total = h.packageDependencies()
+	out.Dependencies.Go = dependencySet{Total: h.goModules(), Items: []any{}}
 	kit.JSON(w, r, http.StatusOK, out)
 }
 
-// packageDependencies counts the names under "dependencies" and
-// "devDependencies" of the package file, each name once.
-func (h *handlers) packageDependencies() int {
-	raw, err := os.ReadFile(h.packageFile)
-	if err != nil {
+// goModules counts the modules of the binary's build information besides
+// the main one, 0 when the binary has none.
+func (h *handlers) goModules() int {
+	info, ok := h.buildInfo()
+	if !ok {
 		return 0
 	}
-	pkg, err := goapi.Parse([]byte(strings.TrimPrefix(string(raw), string(rune(0xFEFF)))))
-	if err != nil {
-		return 0
-	}
-	names := map[string]bool{}
-	for _, section := range []string{"dependencies", "devDependencies"} {
-		switch t := goapi.Dig(pkg, section).(type) {
-		case *goapi.Object:
-			for _, name := range t.Keys() {
-				names[name] = true
-			}
-		case []any:
-			for i := range t {
-				names[strconv.Itoa(i)] = true
-			}
-		case string:
-			for i := 0; i < jsreq.Length(t); i++ {
-				names[strconv.Itoa(i)] = true
-			}
-		}
-	}
-	return len(names)
+	return len(info.Deps)
 }

@@ -33,7 +33,7 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "dependencies.nodejs.total"
+    "dependencies.go.total"
    ],
    "body": {
     "kind": "json",
@@ -73,7 +73,7 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "dependencies.nodejs.total"
+    "dependencies.go.total"
    ],
    "body": {
     "kind": "json",
@@ -118,7 +118,7 @@
    },
    "volatile": [
     {
-     "path": "dependencies.nodejs.total",
+     "path": "dependencies.go.total",
      "integer": true
     }
    ],
@@ -134,11 +134,6 @@
      },
      "dependencies": {
       "go": {
-       "items": [],
-       "total": 0,
-       "vulnerable": 0
-      },
-      "nodejs": {
        "items": [],
        "total": 0,
        "vulnerable": 0

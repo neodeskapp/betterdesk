@@ -4,7 +4,9 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime/debug"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -113,37 +115,24 @@ func TestHardeningTellsTheSessionLimit(t *testing.T) {
 	}
 }
 
-func TestVulnerabilitiesCountsThePackageFile(t *testing.T) {
-	report := func(total string) string {
-		return `{"scan_available":false,"counts":{"critical":0,"high":0,"medium":0,"low":0,"total":0},"vulnerabilities":[],` +
-			`"dependencies":{"go":{"total":0,"vulnerable":0,"items":[]},"nodejs":{"total":` + total + `,"vulnerable":0,"items":[]}},"last_scan":null}`
+// TestVulnerabilitiesCountTheGoModules: the dependencies are the Go
+// modules built into the binary, by its build information (a test binary
+// lists none); there is no block for Node's packages, and a package.json
+// the old console left in its folder is not read (BUGS NL2, TH17,
+// DECISIONS A63). TestDependenciesAreTheModulesOfTheBuild counts modules.
+func TestVulnerabilitiesCountTheGoModules(t *testing.T) {
+	modules := 0
+	if info, ok := debug.ReadBuildInfo(); ok {
+		modules = len(info.Deps)
 	}
+	want := `{"scan_available":false,"counts":{"critical":0,"high":0,"medium":0,"low":0,"total":0},"vulnerabilities":[],` +
+		`"dependencies":{"go":{"total":` + strconv.Itoa(modules) + `,"vulnerable":0,"items":[]}},"last_scan":null}`
 	dir := t.TempDir()
-	w := routetest.New(t, routetest.Options{Config: func(cfg *config.Config) { cfg.ConsoleDir = dir }})
-	viewer := w.As("viewer")
-	get := func() string { return viewer.Do("GET", "/api/panel/security-audit/vulnerabilities", "").Body }
-
-	if got := get(); got != report("0") {
-		t.Errorf("without a package file: %s", got)
+	if err := os.WriteFile(filepath.Join(dir, "package.json"), []byte(`{"dependencies":{"a":"1","b":"2"},"devDependencies":{"c":"3"}}`), 0o644); err != nil {
+		t.Fatal(err)
 	}
-	for content, total := range map[string]string{
-		`{"dependencies":{"a":"1","b":"2"},"devDependencies":{"c":"3"}}`: "3",
-		// A name in both lists counts once
-		`{"dependencies":{"a":"1","b":"2"},"devDependencies":{"b":"2","c":"3"}}`: "3",
-		`{"dependencies":{"a":"1"}}`:                            "1",
-		`{"devDependencies":{"a":"1","b":"2"}}`:                 "2",
-		`{"name":"console"}`:                                    "0",
-		`{"dependencies":null,"devDependencies":5}`:             "0",
-		`{"dependencies":["x","y","z"],"devDependencies":"ab"}`: "3",
-		`not json`:                              "0",
-		`[]`:                                    "0",
-		"\uFEFF" + `{"dependencies":{"a":"1"}}`: "1",
-	} {
-		if err := os.WriteFile(filepath.Join(dir, "package.json"), []byte(content), 0o644); err != nil {
-			t.Fatal(err)
-		}
-		if got := get(); got != report(total) {
-			t.Errorf("package file %s:\n%s\nwant\n%s", content, got, report(total))
-		}
+	w := routetest.New(t, routetest.Options{Config: func(cfg *config.Config) { cfg.ConsoleDir = dir }})
+	if got := w.As("viewer").Do("GET", "/api/panel/security-audit/vulnerabilities", ""); got.Status != 200 || got.Body != want {
+		t.Errorf("vulnerabilities: %d %s\nwant %s", got.Status, got.Body, want)
 	}
 }

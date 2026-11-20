@@ -32,6 +32,9 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "dependencies.go.total"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -69,6 +72,9 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "dependencies.go.total"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -110,6 +116,12 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "dependencies.go.total",
+     "integer": true
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -124,11 +136,6 @@
       "go": {
        "items": [],
        "total": 0,
-       "vulnerable": 0
-      },
-      "nodejs": {
-       "items": [],
-       "total": 21,
        "vulnerable": 0
       }
      },

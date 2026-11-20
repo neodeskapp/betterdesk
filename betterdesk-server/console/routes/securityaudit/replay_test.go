@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"reflect"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -346,6 +347,28 @@ func TestKeyAgeIsReadAsUTC(t *testing.T) {
 		h.overview(rec, httptest.NewRequest(http.MethodGet, "/api/panel/security-audit/overview", nil))
 		if !strings.Contains(rec.Body.String(), c.old) {
 			t.Errorf("a key created %s, now %s: %s, want %s", created, now.Format(time.DateTime), rec.Body.String(), c.old)
+		}
+	}
+}
+
+// TestDependenciesAreTheModulesOfTheBuild: dependencies.go.total is the
+// number of modules the build information lists besides the main one, 0
+// for a binary without build information (BUGS NL2, TH17).
+func TestDependenciesAreTheModulesOfTheBuild(t *testing.T) {
+	for _, c := range []struct {
+		info *debug.BuildInfo
+		ok   bool
+		want string
+	}{
+		{&debug.BuildInfo{Main: debug.Module{Path: "server"}, Deps: []*debug.Module{{Path: "a"}, {Path: "b"}, {Path: "c"}}}, true, `"go":{"total":3,`},
+		{&debug.BuildInfo{Main: debug.Module{Path: "server"}}, true, `"go":{"total":0,`},
+		{nil, false, `"go":{"total":0,`},
+	} {
+		h := &handlers{buildInfo: func() (*debug.BuildInfo, bool) { return c.info, c.ok }}
+		rec := httptest.NewRecorder()
+		h.vulnerabilities(rec, httptest.NewRequest(http.MethodGet, "/api/panel/security-audit/vulnerabilities", nil))
+		if body := rec.Body.String(); !strings.Contains(body, `"dependencies":{`+c.want) || strings.Contains(body, "nodejs") {
+			t.Errorf("build information %+v: %s, want %s", c.info, body, c.want)
 		}
 	}
 }
