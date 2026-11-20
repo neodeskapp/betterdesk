@@ -350,15 +350,19 @@ func TestSlowReaderIsDroppedByBytes(t *testing.T) {
 
 // TestReadingClientGetsMoreThanTheQueueHolds: the bytes a client has read
 // leave the queue, so a client that reads gets far more than 16 MiB over
-// the socket's life.
+// the socket's life. The client answers each message once it has read all
+// of it, and the server sends the next one only then, so the client keeps
+// up however slowly the machine runs and the queue never holds more than
+// one message.
 func TestReadingClientGetsMoreThanTheQueueHolds(t *testing.T) {
 	const messages = 48
 	addr := newEcho(t, ws.AcceptOptions{}, func(c *ws.Conn) {
 		big := make([]byte, 1<<20)
 		for i := 0; i < messages && c.Open(); i++ {
 			c.Send(true, big)
-			// The client reads at its pace; the queue never holds much
-			time.Sleep(5 * time.Millisecond)
+			if _, _, err := c.Read(); err != nil {
+				return
+			}
 		}
 		c.Close(ws.CloseNormal, "")
 	})
@@ -367,15 +371,21 @@ func TestReadingClientGetsMoreThanTheQueueHolds(t *testing.T) {
 		t.Fatalf("dial: %v", err)
 	}
 	defer c.Drop()
-	got := 0
-	if !c.Wait(20*time.Second, func(frames []wstest.Frame, closed bool) bool {
+	got, answered := 0, 0
+	if !c.Wait(60*time.Second, func(frames []wstest.Frame, closed bool) bool {
 		got = 0
 		for _, f := range frames {
 			got += len(f.Data)
 		}
+		for ; answered < len(frames); answered++ {
+			_ = c.Text("read")
+		}
 		return closed
 	}) || got != messages<<20 {
 		t.Errorf("the client got %d bytes, want %d", got, messages<<20)
+	}
+	if _, code, _ := c.Closed(); code != ws.CloseNormal {
+		t.Errorf("closed with %d, want %d: the server let the client go", code, ws.CloseNormal)
 	}
 }
 
