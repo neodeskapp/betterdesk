@@ -167,7 +167,7 @@ function openSocket(name, port, target, headers) {
             let len = s.buf[1] & 0x7f;
             let off = 2;
             if (len === 126) { if (s.buf.length < 4) return; len = s.buf.readUInt16BE(2); off = 4; }
-            if (len === 127) { if (s.buf.length < 10) return; len = Number(s.buf.readBigUInt64BE(2)); off = 10; }
+            else if (len === 127) { if (s.buf.length < 10) return; len = Number(s.buf.readBigUInt64BE(2)); off = 10; }
             if (s.buf.length < off + len) return;
             const payload = s.buf.subarray(off, off + len);
             s.buf = s.buf.subarray(off + len);
@@ -442,6 +442,19 @@ scenario('max viewers', [
     { open: 'w6', path: viewer('dev-3'), headers: op },
     { call: 'state', args: ['dev-3'] },
     { call: 'active' },
+]);
+
+// Frames whose length sits at the marks of the frame header (125, 126
+// and 127 bytes; 65535 and 65536) reach the viewer whole.
+scenario('frames around the length marks', [
+    { open: 'agent', path: good('dev1') },
+    { open: 'v1', path: viewer('dev1'), headers: op },
+    { send: 'agent', repeat: 125 },
+    { send: 'agent', repeat: 126 },
+    { send: 'agent', repeat: 127 },
+    { send: 'agent', repeat: 65535 },
+    { send: 'agent', repeat: 65536 },
+    { send: 'agent', text: '{"type":"status","after":"the long ones"}' },
 ]);
 
 // ---- Crash cases: does the Node process end? ----

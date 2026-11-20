@@ -6147,6 +6147,136 @@
      ]
     }
    ]
+  },
+  {
+   "name": "frames around the length marks",
+   "differs": false,
+   "signalClosed": false,
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/rendezvous",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbs#1",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbs",
+      "repeat": 125,
+      "byte": 65
+     },
+     "events": [
+      {
+       "socket": "a",
+       "binary": "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE="
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbs",
+      "repeat": 126,
+      "byte": 66
+     },
+     "events": [
+      {
+       "socket": "a",
+       "binary": "QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJC"
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbs",
+      "repeat": 127,
+      "byte": 67
+     },
+     "events": [
+      {
+       "socket": "a",
+       "binary": "Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQw=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbs",
+      "hex": "0a0b0c"
+     },
+     "events": [
+      {
+       "socket": "a",
+       "binary": "CgsM"
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "b",
+      "path": "/ws/relay?transport=message",
+      "session": {
+       "userId": 1,
+       "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "admin"
+       }
+      }
+     },
+     "events": [
+      {
+       "socket": "b",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "tcp": "hbbr#1",
+       "accept": true
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "fd0144444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "binary": "RERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERA=="
+      }
+     ]
+    },
+    {
+     "step": {
+      "tcp": "hbbr",
+      "hex": "0c454545"
+     },
+     "events": [
+      {
+       "socket": "b",
+       "binary": "RUVF"
+      }
+     ]
+    }
+   ]
   }
  ]
 }

@@ -19,7 +19,7 @@ records what it does; the Go test replays the recording. It goes when
 `web-nodejs` goes: once the service is deleted it runs only on a tree that
 still has it (the commit before the move), and the recording stays.
 
-`gateway.js` writes `../node_gateway.json`: 5 scenarios with 52 steps on a
+`gateway.js` writes `../node_gateway.json`: 6 scenarios with 59 steps on a
 real HTTP server in front of a made-up API server, whose tunnel echoes
 messages, closes with 1000 or 1011, drops the connection, refuses with 503,
 answers after 300 ms, sends a greeting or a message over the 16 MiB limit,

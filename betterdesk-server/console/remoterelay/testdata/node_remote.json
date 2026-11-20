@@ -3246,6 +3246,158 @@
      "calls": []
     }
    ]
+  },
+  {
+   "name": "frames around the length marks",
+   "clock": 1700000604001,
+   "steps": [
+    {
+     "step": {
+      "open": "agent",
+      "path": "/ws/remote-agent/dev1?token=tok-dev1-good"
+     },
+     "events": [
+      {
+       "socket": "agent",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      }
+     ],
+     "calls": [
+      {
+       "verify": [
+        "dev1",
+        "tok-dev1-good"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "open": "v1",
+      "path": "/ws/remote-viewer/dev1",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"session-info\",\"agent_ready\":true,\"streaming\":false}"
+      },
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"stream-started\"}"
+      },
+      {
+       "socket": "agent",
+       "text": "{\"type\":\"start\"}"
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "device.connect"
+       ]
+      },
+      {
+       "getPeerById": "dev1"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "dev1"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "agent",
+      "repeat": 125
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "binary": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg="
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "repeat": 126
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "binary": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "repeat": 127
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "binary": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eA=="
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "repeat": 65535
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "binary": "\u0001RUN:21845:eHh4\u0001"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "repeat": 65536
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "binary": "\u0001RUN:21845:eHh4\u0001eA=="
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "agent",
+      "text": "{\"type\":\"status\",\"after\":\"the long ones\"}"
+     },
+     "events": [
+      {
+       "socket": "v1",
+       "text": "{\"type\":\"status\",\"after\":\"the long ones\"}"
+      }
+     ],
+     "calls": []
+    }
+   ]
   }
  ],
  "crash": {

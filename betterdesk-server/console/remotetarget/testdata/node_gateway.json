@@ -1814,6 +1814,162 @@
      "calls": []
     }
    ]
+  },
+  {
+   "name": "frames around the length marks",
+   "steps": [
+    {
+     "step": {
+      "open": "a",
+      "path": "/ws/remote-target/rt_echo-0001",
+      "headers": {
+       "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"olga\",\"role\":\"operator\"}}"
+      }
+     },
+     "events": [
+      {
+       "socket": "a",
+       "head": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"
+      },
+      {
+       "socket": "up1",
+       "handshake": {
+        "method": "GET",
+        "url": "/api/remote-targets/rt_echo-0001/tunnel",
+        "headers": {
+         "x-api-key": "oracle-api-key",
+         "x-username": "olga",
+         "x-role": "operator",
+         "sec-websocket-version": "13"
+        }
+       }
+      }
+     ],
+     "calls": [
+      {
+       "permission": [
+        "operator",
+        "remote_target.connect"
+       ]
+      },
+      {
+       "getRemoteTarget": "rt_echo-0001"
+      },
+      {
+       "scope": [
+        {
+         "id": 7,
+         "username": "olga",
+         "role": "operator"
+        },
+        "rt_echo-0001"
+       ]
+      }
+     ]
+    },
+    {
+     "step": {
+      "send": "a",
+      "repeat": 125
+     },
+     "events": [
+      {
+       "socket": "up1",
+       "binary": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg="
+      },
+      {
+       "socket": "a",
+       "binary": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg="
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "repeat": 126
+     },
+     "events": [
+      {
+       "socket": "up1",
+       "binary": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4"
+      },
+      {
+       "socket": "a",
+       "binary": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "repeat": 127
+     },
+     "events": [
+      {
+       "socket": "up1",
+       "binary": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eA=="
+      },
+      {
+       "socket": "a",
+       "binary": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eA=="
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "repeat": 65535
+     },
+     "events": [
+      {
+       "socket": "up1",
+       "binary": "big 65535 09ab7495d3e61a76f0deb12cb0306f0696cbb17ffc12131368c7a939f12f56d3"
+      },
+      {
+       "socket": "a",
+       "binary": "big 65535 09ab7495d3e61a76f0deb12cb0306f0696cbb17ffc12131368c7a939f12f56d3"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "repeat": 65536
+     },
+     "events": [
+      {
+       "socket": "up1",
+       "binary": "big 65536 1f8745f0d2d1387ec1af2211a3cf417b2e9e885e853472649c1d979d0e9370e3"
+      },
+      {
+       "socket": "a",
+       "binary": "big 65536 1f8745f0d2d1387ec1af2211a3cf417b2e9e885e853472649c1d979d0e9370e3"
+      }
+     ],
+     "calls": []
+    },
+    {
+     "step": {
+      "send": "a",
+      "text": "after the long ones"
+     },
+     "events": [
+      {
+       "socket": "up1",
+       "text": "after the long ones"
+      },
+      {
+       "socket": "a",
+       "text": "echo:after the long ones"
+      }
+     ],
+     "calls": []
+    }
+   ]
   }
  ]
 }

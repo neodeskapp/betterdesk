@@ -20,11 +20,12 @@ recordings. They go when `web-nodejs` goes: once the service is deleted they
 run only on a tree that still has it (the commit before the move), and the
 recordings stay.
 
-`remote.js` writes `../node_remote.json`: 6 scenarios with 160 steps on a
+`remote.js` writes `../node_remote.json`: 7 scenarios with 168 steps on a
 real HTTP server (the agent's checks, the single-use token with its expiry,
 the viewer's checks with upstream's scope check, streaming with every
 message kind and odd JSON, a viewer before its agent with replacement and
-the idle timeout, the viewer limit), and 13 crash cases, each run in a
+the idle timeout, the viewer limit, frames at the length marks of the
+frame header), and 13 crash cases, each run in a
 child process to see whether the Node process ends (a broken escape in the
 agent's path, the JSON null from an agent or a viewer, messages nested too
 deeply for `JSON.stringify`), plus the deepest status message

@@ -218,7 +218,7 @@ function openSocket(name, port, target, headers) {
             let len = s.buf[1] & 0x7f;
             let off = 2;
             if (len === 126) { if (s.buf.length < 4) return; len = s.buf.readUInt16BE(2); off = 4; }
-            if (len === 127) { if (s.buf.length < 10) return; len = Number(s.buf.readBigUInt64BE(2)); off = 10; }
+            else if (len === 127) { if (s.buf.length < 10) return; len = Number(s.buf.readBigUInt64BE(2)); off = 10; }
             if (s.buf.length < off + len) return;
             const payload = s.buf.subarray(off, off + len);
             s.buf = s.buf.subarray(off + len);
@@ -593,6 +593,20 @@ scenario('guest ordering', [
     { send: 'a', hex: hex(frame(hc)) },
     { release: true },
 ], { differs: true });
+
+// Messages whose length sits at the frame header's mark of 127 bytes
+// reach the browser whole: as the server sends them, and as one frame of
+// message transport.
+scenario('frames around the length marks', [
+    { open: 'a', path: '/ws/rendezvous', session: admin },
+    { tcp: 'hbbs', repeat: 125, byte: 0x41 },
+    { tcp: 'hbbs', repeat: 126, byte: 0x42 },
+    { tcp: 'hbbs', repeat: 127, byte: 0x43 },
+    { tcp: 'hbbs', hex: '0a0b0c' },
+    { open: 'b', path: '/ws/relay?transport=message', session: admin },
+    { tcp: 'hbbr', hex: hex(frame(Buffer.alloc(127, 0x44))) },
+    { tcp: 'hbbr', hex: hex(frame(Buffer.alloc(3, 0x45))) },
+]);
 
 // ---- The relay address: loopback replaced by another interface ----
 

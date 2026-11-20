@@ -139,7 +139,7 @@ function openSocket(name, port, target, headers) {
             let len = s.buf[1] & 0x7f;
             let off = 2;
             if (len === 126) { if (s.buf.length < 4) return; len = s.buf.readUInt16BE(2); off = 4; }
-            if (len === 127) { if (s.buf.length < 10) return; len = Number(s.buf.readBigUInt64BE(2)); off = 10; }
+            else if (len === 127) { if (s.buf.length < 10) return; len = Number(s.buf.readBigUInt64BE(2)); off = 10; }
             if (s.buf.length < off + len) return;
             const payload = s.buf.subarray(off, off + len);
             s.buf = s.buf.subarray(off + len);
@@ -281,6 +281,18 @@ scenario('names in headers', [
     { open: 'b', path: t('rt_echo-0001'), headers: { ...named('tab\tname\u0007'), 'Sec-WebSocket-Protocol': 'guacamole, other' } },
     { open: 'c', path: t('rt_echo-0001'), headers: named('tab\tname') },
     { send: 'c', text: 'still works' },
+]);
+
+// Messages whose length sits at the marks of the frame header (125, 126
+// and 127 bytes; 65535 and 65536) pass both ways whole.
+scenario('frames around the length marks', [
+    { open: 'a', path: t('rt_echo-0001'), headers: op },
+    { send: 'a', repeat: 125 },
+    { send: 'a', repeat: 126 },
+    { send: 'a', repeat: 127 },
+    { send: 'a', repeat: 65535 },
+    { send: 'a', repeat: 65536 },
+    { send: 'a', text: 'after the long ones' },
 ]);
 
 (async () => {

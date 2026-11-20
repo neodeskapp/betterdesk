@@ -38,7 +38,7 @@ commit before the move), and the recordings stay.
 - the schema protobufjs reads from `protos/rendezvous.proto`, which
   `TestSchemaIsNodes` compares with the server's generated descriptors.
 
-`relay.js` writes `../node_relay.json`: 14 scenarios with 209 steps on a
+`relay.js` writes `../node_relay.json`: 15 scenarios with 221 steps on a
 real HTTP server
 with fake signal and relay servers on TCP (the relay one on 127.0.0.2, which
 the loopback replacement picks from a stubbed interface list). Stubbed are
@@ -54,15 +54,17 @@ and what `invalidateGuestGrant` returned. It also records the relay address
 the service logged for 12 configurations of the relay host and interfaces.
 
 `TestNodeScenarios` replays every scenario on the Go service with the
-recorded API answers and the same clock. The scenario `guest ordering` is
-recorded but not replayed: Node let a later frame reach the server while an
-earlier one waited for the use of the link to be counted, the Go bridge
-keeps the order (`TestGuestFramesKeepTheirOrder`).
+recorded API answers and the same clock, with a proxy on loopback trusted;
+the steps a bug fix changed are in the test's list of fixes. The scenario
+`guest ordering` is recorded but not replayed: Node let a later frame reach
+the server while an earlier one waited for the use of the link to be
+counted, the Go bridge keeps the order (`TestGuestFramesKeepTheirOrder`).
 
 `fuzzhelper.js` answers the fuzz tests (`WSRELAY_NODE_HELPER=1`) line by
-line with the old code's results: the guest decode, the frame decoder, and
-the guest cookie reader (copied from the upgrade handler, which the module
-does not export).
+line with the old code's results: the frame decoder and the guest cookie
+reader (copied from the upgrade handler, which the module does not export).
+Its guest decode is no longer asked: the guest check reads frames as the
+signal server does (BUGS RM20), which `FuzzRendezvousDecode` compares with.
 
     tools/dev.sh "cd betterdesk-server/console/wsrelay/testdata && node nodeoracle/codec.js && node nodeoracle/relay.js"
-    DEV_DOCKER_ARGS="-e WSRELAY_NODE_HELPER=1" tools/dev.sh "cd betterdesk-server/console/wsrelay && go test -run '^$' -fuzz '^FuzzRendezvousDecode$' -fuzztime 10m ."
+    DEV_DOCKER_ARGS="-e WSRELAY_NODE_HELPER=1" tools/dev.sh "cd betterdesk-server/console/wsrelay && go test -run '^$' -fuzz '^FuzzFrameDecoder$' -fuzztime 10m ."
