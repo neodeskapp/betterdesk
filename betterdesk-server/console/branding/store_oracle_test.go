@@ -2,11 +2,13 @@ package branding
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -48,7 +50,6 @@ func replayService(t testing.TB, db *store.DB, fonts any) *Service {
 	opts := fixtureOptions(t.TempDir())
 	opts.DB = db
 	opts.Now = func() time.Time { return fixedNow }
-	opts.Location = time.UTC
 	entries(fonts, func(rel string, content any) {
 		file := filepath.Join(opts.FontsDir, filepath.FromSlash(rel))
 		if err := os.MkdirAll(filepath.Dir(file), 0o755); err != nil {
@@ -76,31 +77,20 @@ func sameText(got string, recorded any) (want string, same bool) {
 	return "<nothing recorded>", false
 }
 
-// revisionKind says where a revision came from, given the time of the
-// newest stored setting as text: "initial" before any load, "db" when it
-// is that time with the junk removed, "clock" when it is a time in base
-// 36.
-func revisionKind(dialect store.Dialect, revision, newest string, hasNewest bool) string {
-	if revision == "0" {
-		return "initial"
+// rowsRevisionOf is the revision of stored rows ([key, value] sorted by
+// key) as the console makes it: the first eight hex digits of the SHA-256
+// of every key and value, each ended by a zero byte.
+func rowsRevisionOf(rows []any) string {
+	pairs := make([][]any, len(rows))
+	for i, row := range rows {
+		pairs[i] = row.([]any)
 	}
-	if hasNewest {
-		fromDB := newest
-		if dialect == store.Postgres {
-			instant, err := time.Parse("2006-01-02T15:04:05.000Z", newest)
-			if err != nil {
-				return "unreadable time " + newest
-			}
-			fromDB = jsDateString(instant.UTC(), defaultZoneName)
-		}
-		if revision == reRevisionJunk.ReplaceAllLiteralString(fromDB, "") {
-			return "db"
-		}
+	sort.Slice(pairs, func(i, j int) bool { return toString(pairs[i][0]) < toString(pairs[j][0]) })
+	h := sha256.New()
+	for _, pair := range pairs {
+		h.Write([]byte(toString(pair[0]) + "\x00" + toString(pair[1]) + "\x00"))
 	}
-	if ms, err := strconv.ParseInt(revision, 36, 64); err == nil && ms > 1_600_000_000_000 && ms < 4_000_000_000_000 {
-		return "clock"
-	}
-	return "unknown (" + revision + ")"
+	return hex.EncodeToString(h.Sum(nil))[:8]
 }
 
 func TestOracleStore(t *testing.T) {
@@ -270,16 +260,15 @@ func TestOracleStore(t *testing.T) {
 				}
 			}
 
-			// the revision: made the same way from this database's own time
-			nodeNewest, nodeHas := property(state, "newest").(string)
-			nodeKind := revisionKind(db.Dialect(), toString(property(state, "revision")), nodeNewest, nodeHas)
-			goNewest, goHas := newestChange(t, ctx, db)
-			goKind := revisionKind(db.Dialect(), s.Revision(), goNewest, goHas)
-			if goKind != nodeKind || strings.HasPrefix(nodeKind, "un") {
-				differ("revision", goKind+" ("+s.Revision()+")", nodeKind+" ("+toString(property(state, "revision"))+")")
-			}
-			if goKind == "clock" && s.Revision() != strconv.FormatInt(fixedNow.UnixMilli(), 36) {
-				differ("revision from the clock", s.Revision(), strconv.FormatInt(fixedNow.UnixMilli(), 36))
+			// the revision: Node made it of the newest time of the rows, the
+			// console of the rows themselves (BUGS BR9); "0" before the first
+			// load on both
+			if want := rowsRevisionOf(rows); toString(property(state, "revision")) == "0" {
+				if s.Revision() != "0" {
+					differ("revision before the first load", s.Revision(), "0")
+				}
+			} else if s.Revision() != want {
+				differ("revision of the rows", s.Revision(), want)
 			}
 
 			if recorded := property(entry, "profiles"); recorded != Undefined {
@@ -332,17 +321,6 @@ func getBrandingConfigSorted(ctx context.Context, db *store.DB) ([]any, error) {
 		out = append(out, []any{key, value})
 	}
 	return out, rows.Err()
-}
-
-// newestChange is MAX(updated_at) of the settings as text: SQLite's text,
-// PostgreSQL's time in ISO form.
-func newestChange(t testing.TB, ctx context.Context, db *store.DB) (string, bool) {
-	t.Helper()
-	var newest store.Time
-	if err := store.SelectRow(ctx, db, "SELECT MAX(updated_at) AS rev FROM branding_config").Scan(&newest); err != nil {
-		t.Fatal(err)
-	}
-	return newest.String(), !newest.IsNull()
 }
 
 // profileRows is the profile table as the oracle records it, with the

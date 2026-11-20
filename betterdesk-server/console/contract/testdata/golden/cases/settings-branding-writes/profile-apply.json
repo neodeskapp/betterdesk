@@ -100,12 +100,6 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    {
-     "path": "revision",
-     "format": "9999-99-99999999"
-    }
-   ],
    "body": {
     "kind": "json",
     "json": {
@@ -220,7 +214,7 @@
       "showPoweredBy": "true",
       "themeMode": "light"
      },
-     "revision": "<volatile>",
+     "revision": "afe5cb79",
      "success": true
     }
    }

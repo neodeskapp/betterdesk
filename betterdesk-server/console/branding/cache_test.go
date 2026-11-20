@@ -29,7 +29,6 @@ func cacheService(t *testing.T, db *store.DB) *Service {
 	opts := fixtureOptions(t.TempDir())
 	opts.DB = db
 	opts.Now = (&steppingClock{now: fixedNow}).Now
-	opts.Location = time.UTC
 	s, err := New(opts)
 	if err != nil {
 		t.Fatal(err)
@@ -39,20 +38,11 @@ func cacheService(t *testing.T, db *store.DB) *Service {
 }
 
 // The cache is the one copy every route reads, so each write has to
-// leave it as the database now is: the settings and a new revision. The
-// stored times have a resolution of one second (BUGS BR9); the rows are
-// dated back before each write so that the revision of the write differs.
+// leave it as the database now is: the settings and a new revision.
 func TestWritesReachTheCache(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		ctx := context.Background()
 		s := cacheService(t, db)
-		age := func() {
-			t.Helper()
-			if _, err := db.Exec(ctx, "UPDATE branding_config SET updated_at = '2001-01-01 00:00:00'"); err != nil {
-				t.Fatal(err)
-			}
-			s.LoadBranding(ctx)
-		}
 		profile, err := s.CreateProfile(ctx, "Cached", "", object("type", "betterdesk-theme", "branding", object("appName", "From a profile")))
 		if err != nil {
 			t.Fatal(err)
@@ -90,7 +80,6 @@ func TestWritesReachTheCache(t *testing.T) {
 			{"reset", "BetterDesk", func() error { return s.ResetBranding(ctx) }},
 		}
 		for _, w := range writes {
-			age()
 			before := s.Revision()
 			if err := w.write(); err != nil {
 				t.Fatalf("%s: %v", w.name, err)
@@ -132,8 +121,8 @@ func TestRowsWrittenElsewhereShowAfterTheNextLoad(t *testing.T) {
 	})
 }
 
-// With no stored setting the revision comes from the clock at every load,
-// as Node's loadBranding did.
+// With no stored setting the revision is the one of no rows, the same at
+// every load: the stylesheet is the same too (BUGS BR9).
 func TestRevisionOfAnEmptyTable(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		ctx := context.Background()
@@ -146,8 +135,8 @@ func TestRevisionOfAnEmptyTable(t *testing.T) {
 			t.Errorf("revision changed from %q to %q without a load", first, got)
 		}
 		s.LoadBranding(ctx)
-		if got := s.Revision(); got == first {
-			t.Errorf("LoadBranding kept the revision %q of an empty table", got)
+		if got := s.Revision(); got != first {
+			t.Errorf("LoadBranding changed the revision of an empty table from %q to %q", first, got)
 		}
 	})
 }

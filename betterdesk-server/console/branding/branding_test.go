@@ -25,7 +25,6 @@ func newService(t testing.TB, db *store.DB) *Service {
 	opts := fixtureOptions(t.TempDir())
 	opts.DB = db
 	opts.Now = func() time.Time { return fixedNow }
-	opts.Location = time.UTC
 	opts.Rand = &countingReader{next: 0x0123456789abcdef}
 	s, err := New(opts)
 	if err != nil {
@@ -873,62 +872,53 @@ func TestExportAndImport(t *testing.T) {
 	})
 }
 
+// TestRevision: the revision is "0" before the first load, then eight hex
+// digits of a hash of the stored rows. Two saves in one second give two
+// revisions, the same rows give the same one on any service, and the text
+// does not depend on the database or the time zone (BUGS BR9).
 func TestRevision(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		s := newService(t, db)
 		ctx := context.Background()
-		clock := strconv.FormatInt(fixedNow.UnixMilli(), 36)
+		form := regexp.MustCompile(`^[0-9a-f]{8}$`)
 		if got := s.Revision(); got != "0" {
 			t.Errorf("revision before the first load = %q, want 0", got)
 		}
 		s.LoadBranding(ctx)
-		if got := s.Revision(); got != clock {
-			t.Errorf("revision of an empty table = %q, want the time %q", got, clock)
+		empty := s.Revision()
+		if !form.MatchString(empty) {
+			t.Errorf("revision of an empty table = %q", empty)
 		}
-		if err := s.SaveBranding(ctx, object("appName", "X")); err != nil {
-			t.Fatal(err)
+		seen := map[string]string{empty: "nothing"}
+		for _, name := range []string{"A", "B", "C"} {
+			if err := s.SaveBranding(ctx, object("appName", name)); err != nil {
+				t.Fatal(err)
+			}
+			got := s.Revision()
+			if !form.MatchString(got) || seen[got] != "" {
+				t.Errorf("revision after saving %s = %q, seen for %q", name, got, seen[got])
+			}
+			seen[got] = name
 		}
-		format := `^\d{4}-\d\d-\d\d\d{6}$`
-		if db.IsPostgres() {
-			format = `^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\d{2}\d{4}\d{6}GMT0000CoordinatedUniversalTime$`
-		}
-		saved := s.Revision()
-		if !regexp.MustCompile(format).MatchString(saved) {
-			t.Errorf("revision after a save = %q, want the form %s", saved, format)
-		}
-		// the same on a fresh service: it comes from the table, not from memory
+		last := s.Revision()
 		again := newService(t, db)
 		again.LoadBranding(ctx)
-		if again.Revision() != saved {
-			t.Errorf("revision of a second service = %q, want %q", again.Revision(), saved)
+		if again.Revision() != last {
+			t.Errorf("revision of a second service = %q, want %q", again.Revision(), last)
+		}
+		if err := s.SaveBranding(ctx, object("appName", "A")); err != nil {
+			t.Fatal(err)
+		}
+		if seen[s.Revision()] != "A" {
+			t.Errorf("revision of the rows of A again = %q (%s)", s.Revision(), seen[s.Revision()])
 		}
 		if err := s.ResetBranding(ctx); err != nil {
 			t.Fatal(err)
 		}
-		if got := s.Revision(); got != clock {
-			t.Errorf("revision after a reset = %q, want the time %q", got, clock)
+		if got := s.Revision(); got != empty {
+			t.Errorf("revision after a reset = %q, want %q", got, empty)
 		}
 	})
-}
-
-func TestJSDateString(t *testing.T) {
-	berlin := time.FixedZone("CET", 3600)
-	long := func(time.Time) string { return "Central European Standard Time" }
-	for _, tc := range []struct {
-		when time.Time
-		zone func(time.Time) string
-		want string
-	}{
-		{time.Date(2026, 11, 10, 1, 5, 51, 694e6, time.UTC), defaultZoneName, "Tue Nov 10 2026 01:05:51 GMT+0000 (Coordinated Universal Time)"},
-		{time.Date(2026, 1, 2, 23, 59, 59, 0, time.UTC).In(berlin), long, "Sat Jan 03 2026 00:59:59 GMT+0100 (Central European Standard Time)"},
-		{time.Date(2026, 1, 2, 23, 59, 59, 0, time.UTC).In(berlin), defaultZoneName, "Sat Jan 03 2026 00:59:59 GMT+0100 (CET)"},
-		{time.Date(2026, 7, 4, 12, 0, 0, 0, time.FixedZone("", -9*3600-30*60)), defaultZoneName, "Sat Jul 04 2026 12:00:00 GMT-0930 ()"},
-		{time.Date(999, 12, 31, 0, 0, 0, 0, time.UTC), defaultZoneName, "Tue Dec 31 0999 00:00:00 GMT+0000 (Coordinated Universal Time)"},
-	} {
-		if got := jsDateString(tc.when, tc.zone); got != tc.want {
-			t.Errorf("jsDateString(%v) = %q, want %q", tc.when, got, tc.want)
-		}
-	}
 }
 
 func TestLoadFallsBackToDefaults(t *testing.T) {
@@ -959,8 +949,8 @@ func TestLoadFallsBackToDefaults(t *testing.T) {
 }
 
 // A settings table from before 3.0 has no updated_at column, and the
-// console cannot add it (BUGS D17): saves fail there and the revision is
-// the time.
+// console cannot add it (BUGS D17): saves fail there; the revision is made
+// of the rows as anywhere (BUGS BR9).
 func TestTableWithoutUpdatedAt(t *testing.T) {
 	db := storetest.Migrated(t)
 	ctx := context.Background()
@@ -974,8 +964,8 @@ func TestTableWithoutUpdatedAt(t *testing.T) {
 	if got := s.GetBranding().Text("appName"); got != "Old" {
 		t.Errorf("appName = %q, want the stored one", got)
 	}
-	if s.Revision() != strconv.FormatInt(fixedNow.UnixMilli(), 36) {
-		t.Errorf("revision = %q, want the time", s.Revision())
+	if !regexp.MustCompile(`^[0-9a-f]{8}$`).MatchString(s.Revision()) {
+		t.Errorf("revision = %q, want one of the rows", s.Revision())
 	}
 	if err := s.SaveBranding(ctx, object("appName", "New")); err == nil {
 		t.Errorf("a save into a table without updated_at did not fail")

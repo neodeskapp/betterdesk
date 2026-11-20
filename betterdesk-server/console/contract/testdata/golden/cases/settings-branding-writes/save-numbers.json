@@ -37,16 +37,6 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    {
-     "path": "appearance.revision",
-     "format": "9999-99-99999999"
-    },
-    {
-     "path": "revision",
-     "format": "9999-99-99999999"
-    }
-   ],
    "body": {
     "kind": "json",
     "json": {
@@ -199,7 +189,7 @@
         "warningMuted": ""
        }
       },
-      "revision": "<volatile>",
+      "revision": "bff75f24",
       "surfaces": {
        "glassBlur": "16",
        "glassColor": "#ffffff",
@@ -339,7 +329,7 @@
       ],
       "ok": true
      },
-     "revision": "<volatile>",
+     "revision": "bff75f24",
      "success": true
     }
    }

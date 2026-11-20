@@ -193,7 +193,6 @@ func newFilesReplay(t *testing.T) *filesReplay {
 	opts := fixtureOptions(r.dir)
 	opts.DB = storetest.Migrated(t)
 	opts.HTTP = r.google
-	opts.Location = time.UTC
 	opts.Now = func() time.Time {
 		r.clock = r.clock.Add(time.Millisecond)
 		return r.clock

@@ -37,12 +37,6 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    {
-     "path": "appearance.revision",
-     "format": "9999-99-99999999"
-    }
-   ],
    "body": {
     "kind": "json",
     "json": {
@@ -195,7 +189,7 @@
         "warningMuted": "#fff8c5"
        }
       },
-      "revision": "<volatile>",
+      "revision": "9834a10b",
       "surfaces": {
        "glassBlur": "16",
        "glassColor": "#161b22",

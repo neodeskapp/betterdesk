@@ -225,7 +225,6 @@ var fuzzService = sync.OnceValues(func() (*Service, error) {
 	opts := fixtureOptions(dir)
 	opts.DB = db
 	opts.Now = func() time.Time { return fixedNow }
-	opts.Location = time.UTC
 	return New(opts)
 })
 

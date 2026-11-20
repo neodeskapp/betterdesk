@@ -10,7 +10,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"regexp"
 	"strconv"
 	"sync"
 	"time"
@@ -80,14 +79,6 @@ type Options struct {
 	// Rand gives the random part of upload file names. crypto/rand when
 	// nil.
 	Rand io.Reader
-	// Location is the time zone PostgreSQL times are printed in for the
-	// revision. time.Local when nil: the zone of the process, as in Node.
-	Location *time.Location
-	// ZoneName returns the long name of the zone of t, as JavaScript
-	// prints it in a date ("Central European Standard Time"). It only
-	// shapes the revision text on PostgreSQL. Nil means "Coordinated
-	// Universal Time" for UTC and the zone's abbreviation otherwise.
-	ZoneName func(t time.Time) string
 	// Logf writes the service's warnings. Nil means the server's log.
 	Logf func(format string, args ...any)
 }
@@ -127,12 +118,6 @@ func New(opts Options) (*Service, error) {
 	}
 	if opts.Rand == nil {
 		opts.Rand = rand.Reader
-	}
-	if opts.Location == nil {
-		opts.Location = time.Local
-	}
-	if opts.ZoneName == nil {
-		opts.ZoneName = defaultZoneName
 	}
 	if opts.HTTP == nil {
 		// plain HTTP/1.1 without Accept-Encoding and without a proxy, to
@@ -182,16 +167,14 @@ func (s *Service) bumpRevision() string {
 // Revision returns the token that changes when the settings change. The
 // web console compares it to know when to load /css/branding.css again;
 // the route sends it as X-Branding-Revision. It is "0" before the first
-// load, then the time of the newest stored setting with everything but
-// letters, digits, ".", "_" and "-" removed, and the current time in base
-// 36 when no setting is stored or the time cannot be read.
+// load, then eight hex digits made of the stored settings (rowsRevision),
+// so every save that changes a setting changes it, and the current time in
+// base 36 when the settings cannot be read.
 func (s *Service) Revision() string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.revision
 }
-
-var reRevisionJunk = regexp.MustCompile(`[^a-zA-Z0-9._-]`)
 
 // LoadBranding reads the stored settings over the defaults, fills the
 // cache and sets the revision. It runs at start and after every change.
@@ -211,14 +194,8 @@ func (s *Service) LoadBranding(ctx context.Context) *Object {
 		return fallback
 	}
 
-	var revision string
-	if rev, ok, err := getBrandingConfigRevision(ctx, s.opts.DB, s.opts.Location, s.opts.ZoneName); err == nil && ok {
-		revision = reRevisionJunk.ReplaceAllLiteralString(rev, "")
-	} else {
-		revision = s.bumpRevision()
-	}
 	s.mu.Lock()
-	s.cache, s.revision = branding, revision
+	s.cache, s.revision = branding, rowsRevision(rows)
 	s.mu.Unlock()
 	return branding
 }

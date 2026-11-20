@@ -46,7 +46,7 @@
     },
     {
      "path": "revision",
-     "format": "9999-99-99999999"
+     "pattern": "^[9aA+/_=-]{8}$"
     },
     {
      "path": "url",

@@ -2,13 +2,14 @@ package branding
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"errors"
-	"fmt"
 	"math"
+	"slices"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"modernc.org/sqlite"
@@ -65,51 +66,19 @@ func resetBrandingConfig(ctx context.Context, q store.Querier) error {
 	return err
 }
 
-// getBrandingConfigRevision returns the time of the newest change as the
-// console's JavaScript turned it into text: the stored text on SQLite, and
-// on PostgreSQL the long form of a date in the given zone, "Tue Nov 10
-// 2026 01:05:51 GMT+0000 (Coordinated Universal Time)". ok is false when
-// there is no row or no time.
-func getBrandingConfigRevision(ctx context.Context, q store.Querier, loc *time.Location, zoneName func(time.Time) string) (rev string, ok bool, err error) {
-	var newest store.Time
-	if err := store.SelectRow(ctx, q, "SELECT MAX(updated_at) AS rev FROM branding_config").Scan(&newest); err != nil {
-		return "", false, err
+// rowsRevision is the revision of stored settings: the first eight hex
+// digits of the SHA-256 of every key and value in key order, each ended by
+// a zero byte. Two saves that store other values give other revisions,
+// however close in time, and the text is the same on both databases and
+// in every time zone.
+func rowsRevision(rows []configRow) string {
+	sorted := slices.Clone(rows)
+	slices.SortFunc(sorted, func(a, b configRow) int { return strings.Compare(a.key, b.key) })
+	h := sha256.New()
+	for _, row := range sorted {
+		h.Write([]byte(row.key + "\x00" + row.value + "\x00"))
 	}
-	if newest.IsNull() {
-		return "", false, nil
-	}
-	if q.Dialect() == store.Postgres {
-		instant, known := newest.Instant()
-		if !known {
-			return "", false, nil
-		}
-		return jsDateString(instant.In(loc), zoneName), true, nil
-	}
-	return newest.String(), newest.String() != "", nil
-}
-
-// jsDateString is Date.prototype.toString: "Tue Nov 10 2026 01:05:51
-// GMT+0100 (Central European Standard Time)". The name in brackets comes
-// from zoneName.
-func jsDateString(t time.Time, zoneName func(time.Time) string) string {
-	t = t.Truncate(time.Millisecond)
-	year := t.Year()
-	yearText := fmt.Sprintf("%04d", year)
-	if year < 0 {
-		yearText = fmt.Sprintf("-%06d", -year)
-	}
-	return t.Format("Mon Jan 02 ") + yearText + t.Format(" 15:04:05 GMT-0700") + " (" + zoneName(t) + ")"
-}
-
-// defaultZoneName names the zone of t for jsDateString. UTC has the name
-// JavaScript prints; other zones get their abbreviation, because the long
-// names JavaScript prints come from data this program does not have.
-func defaultZoneName(t time.Time) string {
-	name, offset := t.Zone()
-	if offset == 0 && (name == "UTC" || name == "GMT" || name == "") {
-		return "Coordinated Universal Time"
-	}
-	return name
+	return hex.EncodeToString(h.Sum(nil))[:8]
 }
 
 // Profile is a saved set of settings as the profile list shows it. The
