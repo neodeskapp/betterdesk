@@ -19,8 +19,8 @@ import (
 //
 // On SQLite a column goes out with whatever it holds: activity columns
 // declared INTEGER can hold fractions and text. On PostgreSQL a time is
-// an ISO text with milliseconds, and a count or a sum is a text of
-// digits, because it is a bigint there.
+// an ISO text with milliseconds, and a count or a sum is a number, as on
+// SQLite.
 type record struct {
 	columns []string
 	values  []any // each a json.Marshaler and an sql.Scanner
@@ -127,8 +127,6 @@ func (q *query) run(ctx context.Context, db *store.DB, doing string) ([]record, 
 			switch strings.ToUpper(types[i].DatabaseTypeName()) {
 			case "TIMESTAMPTZ", "TIMESTAMP", "DATE":
 				values[i] = new(store.Time)
-			case "INT8", "NUMERIC":
-				values[i] = new(store.Int64String)
 			}
 		}
 		if err := rows.Scan(values...); err != nil {
@@ -182,17 +180,25 @@ func deviceSummaries(ctx context.Context, db *store.DB, id string, window span) 
 
 // topAppsOf returns the apps of a device's sessions in the window with
 // the seconds spent in each and the number of sessions, the app with the
-// most seconds first, at most limit of them. SQLite makes one row per app
-// and shows one of its categories; PostgreSQL makes one row per app and
-// category.
+// most seconds first, at most limit of them. Each app comes once, under
+// the category it has the most seconds in (on a tie the one with more
+// sessions, then the first by name).
 func topAppsOf(ctx context.Context, db *store.DB, id string, window span, limit int) ([]record, error) {
 	var q query
-	q.add(`SELECT app_name, category,
-                SUM(duration_secs) as total_secs,
+	q.add(`SELECT s.app_name, (
+                SELECT c.category FROM activity_sessions c
+                WHERE c.device_id = ? AND c.app_name = s.app_name`, jsbind.String(id))
+	q.between("c.started_at", "c.ended_at", window)
+	q.add(`
+                GROUP BY c.category
+                ORDER BY COALESCE(SUM(c.duration_secs), 0) DESC, COUNT(*) DESC, c.category
+                LIMIT 1
+            ) as category,
+                SUM(s.duration_secs) as total_secs,
                 COUNT(*) as session_count
-            FROM activity_sessions WHERE device_id = ?`, jsbind.String(id))
-	q.between("started_at", "ended_at", window)
-	q.add(db.Pick(" GROUP BY app_name", " GROUP BY app_name, category")+" ORDER BY total_secs DESC LIMIT ?", jsbind.Number(float64(limit)))
+            FROM activity_sessions s WHERE s.device_id = ?`, jsbind.String(id))
+	q.between("s.started_at", "s.ended_at", window)
+	q.add(" GROUP BY s.app_name ORDER BY total_secs DESC LIMIT ?", jsbind.Number(float64(limit)))
 	return q.run(ctx, db, "list top apps of device "+id)
 }
 

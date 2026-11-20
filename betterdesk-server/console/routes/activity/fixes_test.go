@@ -58,12 +58,16 @@ func notesOf(t *testing.T, rec replay.Recording) map[string]string {
 	return notes
 }
 
-// renamed checks the steps whose answer differs from Node's only in the
-// names devices are shown under, and counts them. A device with a note
-// is shown under its note where Node showed its id because it could not
-// read the device's info (BUGS AI5), and one whose info has a hostname
-// that is no text under its id (BUGS AI6).
-func renamed(notes map[string]string, count *int) replay.Check {
+// adjusted checks the steps whose answer differs from Node's only where
+// the fixes change it, and counts them by the change:
+//
+//   - A device with a note is shown under its note where Node showed its
+//     id because it could not read the device's info (BUGS AI5), and one
+//     whose info has a hostname that is no text under its id (BUGS AI6).
+//   - On PostgreSQL the detail count of a summary and the sums and counts
+//     of the top apps are numbers, where Node sent texts of digits (BUGS
+//     AI10).
+func adjusted(notes map[string]string, postgres bool, renames, numbers *int) replay.Check {
 	return func(t *testing.T, step replay.Step, got replay.Answer) bool {
 		if step.Status != 200 || got.Status != 200 || got.Body == step.Answer {
 			return false
@@ -72,13 +76,56 @@ func renamed(notes map[string]string, count *int) replay.Check {
 		if node == nil || have == nil {
 			return false
 		}
-		rename(node, have, notes)
+		renamed := rename(node, have, notes)
+		numbered := postgres && number(node)
 		if !reflect.DeepEqual(node, have) {
 			return false
 		}
-		*count++
+		if renamed {
+			*renames++
+		}
+		if numbered {
+			*numbers++
+		}
 		return true
 	}
+}
+
+// AI10: PostgreSQL makes one row per app too, under the category the app
+// was used the longest in, with numbers, as SQLite did.
+var _ = activityFixes.Add("AI10", map[string]replay.Fix{
+	"admin GET /api/activity/TWO-CATEGORIES/top ": {Dialect: "postgres", Status: 200,
+		Answer: `{"device_id":"TWO-CATEGORIES","top_apps":[{"app_name":"Mail","category":"communication","total_secs":900,"session_count":2},{"app_name":"Notes","category":"other","total_secs":10,"session_count":1}]}`},
+	"admin GET /api/activity/TWO-CATEGORIES/top?limit=1 ": {Dialect: "postgres", Status: 200,
+		Answer: `{"device_id":"TWO-CATEGORIES","top_apps":[{"app_name":"Mail","category":"communication","total_secs":900,"session_count":2}]}`},
+	"admin GET /api/activity/TWO-CATEGORIES/top?limit=2 ": {Dialect: "postgres", Status: 200,
+		Answer: `{"device_id":"TWO-CATEGORIES","top_apps":[{"app_name":"Mail","category":"communication","total_secs":900,"session_count":2},{"app_name":"Notes","category":"other","total_secs":10,"session_count":1}]}`},
+	"admin GET /api/activity/TWO-CATEGORIES/top?to=2019-03-03T09:10:00.000Z ": {Dialect: "postgres", Status: 200,
+		Answer: `{"device_id":"TWO-CATEGORIES","top_apps":[{"app_name":"Mail","category":"communication","total_secs":900,"session_count":2},{"app_name":"Notes","category":"other","total_secs":10,"session_count":1}]}`},
+})
+
+// digits is a whole number as PostgreSQL's driver gave a bigint: text.
+var digits = regexp.MustCompile(`^-?[0-9]+$`)
+
+// number turns the texts of digits in Node's answer that the Go console
+// sends as numbers into numbers: the detail count of each summary and the
+// sums and counts of each top app. It reports whether it changed one.
+func number(node any) bool {
+	answer, _ := node.(map[string]any)
+	changed := false
+	for list, keys := range map[string][]string{"summaries": {"detail_count"}, "top_apps": {"total_secs", "session_count"}} {
+		rows, _ := answer[list].([]any)
+		for _, row := range rows {
+			o, _ := row.(map[string]any)
+			for _, key := range keys {
+				if text, isText := o[key].(string); isText && digits.MatchString(text) {
+					o[key] = json.Number(text)
+					changed = true
+				}
+			}
+		}
+	}
+	return changed
 }
 
 // decoded is a JSON text as Go values, nil when it is no JSON.
@@ -93,36 +140,39 @@ func decoded(text string) any {
 }
 
 // rename walks Node's answer beside the Go console's and puts the name
-// the fixes give a device into each object of Node's that names one.
-func rename(node, have any, notes map[string]string) {
+// the fixes give a device into each object of Node's that names one. It
+// reports whether it changed one.
+func rename(node, have any, notes map[string]string) bool {
+	changed := false
 	switch n := node.(type) {
 	case map[string]any:
 		h, ok := have.(map[string]any)
 		if !ok {
-			return
+			return false
 		}
 		if id, isText := n["device_id"].(string); isText {
 			if name, ok := n["hostname"]; ok && name == id && notes[id] != "" && h["hostname"] == notes[id] {
-				n["hostname"] = notes[id]
+				n["hostname"], changed = notes[id], true
 			}
 			if name, ok := n["hostname"]; ok && h["hostname"] == id {
 				if _, isText := name.(string); !isText {
-					n["hostname"] = id
+					n["hostname"], changed = id, true
 				}
 			}
 		}
 		for key, value := range n {
-			rename(value, h[key], notes)
+			changed = rename(value, h[key], notes) || changed
 		}
 	case []any:
 		h, ok := have.([]any)
 		if !ok || len(h) != len(n) {
-			return
+			return false
 		}
 		for i := range n {
-			rename(n[i], h[i], notes)
+			changed = rename(n[i], h[i], notes) || changed
 		}
 	}
+	return changed
 }
 
 // sessionsOf reads the apps of a device's sessions in an answer of GET
@@ -400,4 +450,34 @@ func withoutCopies(rec *replay.Recording, db *store.DB) int {
 		}
 	}
 	return changed
+}
+
+// The most used apps are one row per app on both databases, under the
+// category the app was used the longest in, and the sums and counts are
+// numbers, as the web app's schema wants them. PostgreSQL made one row
+// per app and category and sent the numbers as text, as it did the detail
+// count of the list (BUGS AI10).
+func TestTopAppsAreTheSameOnBothDatabases(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		for _, s := range []struct {
+			app, category string
+			minute, secs  int
+		}{{"Mail", "communication", 1, 600}, {"Notes", "other", 2, 10}, {"Mail", "other", 3, 300}, {"Mail", "other", 4, 400}} {
+			w.Exec("INSERT INTO activity_sessions (device_id, app_name, category, started_at, ended_at, duration_secs) VALUES ('T', ?, ?, ?, ?, ?)",
+				[]any{s.app, s.category, fmt.Sprintf("2019-03-04T08:%02d:00.000Z", s.minute), fmt.Sprintf("2019-03-04T08:%02d:30.000Z", s.minute), s.secs})
+		}
+		w.Exec("INSERT INTO activity_summaries (device_id, reported_at) VALUES ('T', '2019-03-04T08:00:00.000Z')", nil)
+		want := `{"device_id":"T","top_apps":[{"app_name":"Mail","category":"other","total_secs":1300,"session_count":3},{"app_name":"Notes","category":"other","total_secs":10,"session_count":1}]}`
+		if got := w.Do(replay.Request{Role: "admin", Path: "/api/activity/T/top"}); got.Status != 200 || got.Body != want {
+			t.Errorf("the top apps: %d %s\nwant %s", got.Status, got.Body, want)
+		}
+		want = `{"device_id":"T","top_apps":[{"app_name":"Mail","category":"other","total_secs":1300,"session_count":3}]}`
+		if got := w.Do(replay.Request{Role: "admin", Path: "/api/activity/T/top?limit=1"}); got.Status != 200 || got.Body != want {
+			t.Errorf("the top app: %d %s\nwant %s", got.Status, got.Body, want)
+		}
+		if got := w.Do(replay.Request{Role: "admin", Path: "/api/activity"}); got.Status != 200 || !strings.Contains(got.Body, `"detail_count":4,`) {
+			t.Errorf("the list: %d %s, want the detail count 4 as a number", got.Status, got.Body)
+		}
+	})
 }
