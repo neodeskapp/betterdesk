@@ -5,7 +5,7 @@
 //   POST /api/chat/messages                  — save a new message
 //   POST /api/chat/read                      — mark messages as read
 //   GET  /api/chat/unread/:device_id         — get unread count
-//   GET  /api/chat/contacts/:device_id       — get chat contacts (online peers)
+//   GET  /api/chat/contacts/:device_id       — get chat contacts (operators, devices of its groups)
 //   POST /api/chat/groups                    — create a group
 //   GET  /api/chat/groups/:member_id         — list groups for member
 //   PUT  /api/chat/groups/:id                — update group
@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -198,7 +199,37 @@ func (s *Server) handleChatUnread(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleChatContacts returns online peers as chat contacts.
+// chatPanelID is the id the console asks for the contacts of its chat
+// inbox with. The console filters that list by the account's device scope.
+const chatPanelID = "panel"
+
+// chatGroupMates returns the ids of the members of every chat group that
+// has deviceID among its members.
+func (s *Server) chatGroupMates(deviceID string) (map[string]bool, error) {
+	groups, err := s.db.ListChatGroups(deviceID)
+	if err != nil {
+		return nil, err
+	}
+	mates := map[string]bool{}
+	for _, g := range groups {
+		members := strings.Split(g.Members, ",")
+		for i := range members {
+			members[i] = strings.TrimSpace(members[i])
+		}
+		// The database matches the id anywhere in the list
+		if !slices.Contains(members, deviceID) {
+			continue
+		}
+		for _, member := range members {
+			mates[member] = true
+		}
+	}
+	return mates, nil
+}
+
+// handleChatContacts returns the chat contacts of a device: the operators
+// and the devices it shares a chat group with. The panel's inbox gets every
+// device.
 // GET /api/chat/contacts/{device_id}
 func (s *Server) handleChatContacts(w http.ResponseWriter, r *http.Request) {
 	deviceID := strings.TrimPrefix(r.URL.Path, "/api/chat/contacts/")
@@ -208,6 +239,14 @@ func (s *Server) handleChatContacts(w http.ResponseWriter, r *http.Request) {
 		log.Printf("[chat] ListPeers error: %v", err)
 		http.Error(w, `{"error":"internal"}`, http.StatusInternalServerError)
 		return
+	}
+	var mates map[string]bool
+	if deviceID != chatPanelID {
+		if mates, err = s.chatGroupMates(deviceID); err != nil {
+			log.Printf("[chat] ListChatGroups error: %v", err)
+			http.Error(w, `{"error":"internal"}`, http.StatusInternalServerError)
+			return
+		}
 	}
 
 	type contact struct {
@@ -239,8 +278,8 @@ func (s *Server) handleChatContacts(w http.ResponseWriter, r *http.Request) {
 
 	var contacts []contact
 	for _, p := range peers {
-		if p.ID == deviceID {
-			continue // exclude self
+		if p.ID == deviceID || (mates != nil && !mates[p.ID]) {
+			continue
 		}
 		c := contact{
 			ID:          p.ID,
