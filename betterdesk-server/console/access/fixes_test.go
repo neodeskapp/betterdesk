@@ -93,6 +93,8 @@ var ruleFixes = []ruleFix{
 	{bug: "DG6", add: Rule{Prefix: "/api/bd/policies", Section: "dataguard"}},
 	{bug: "DG6", add: Rule{Prefix: "/api/bd/events", Section: "dataguard"}},
 	{bug: "DG6", add: Rule{Prefix: "/api/bd/stats", Section: "dataguard"}},
+	// The registration routes for people answer at /api/bd too (I3).
+	{bug: "PA15", add: Rule{Prefix: "/api/bd/api/registrations", Section: "registrations"}},
 }
 
 // sectionFix is a catalog section whose permissions differ from Node's.

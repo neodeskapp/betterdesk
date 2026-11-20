@@ -1,5 +1,117 @@
 [
  {
+  "step": "50 GET /api/bd/api/registrations",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "51 GET /api/bd/api/registrations/count",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "52 GET /api/bd/api/registrations/enrollment-ui",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "53 GET /api/bd/api/registrations/1",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "54 PUT /api/bd/api/registrations/999/approve",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "55 PUT /api/bd/api/registrations/999/reject",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "56 DELETE /api/bd/api/registrations/999",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "84 GET /api/bd/api/registrations",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "85 GET /api/bd/api/registrations/count",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "86 GET /api/bd/api/registrations/enrollment-ui",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "87 GET /api/bd/api/registrations/1",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "88 PUT /api/bd/api/registrations/999/approve",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "89 PUT /api/bd/api/registrations/999/reject",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "90 DELETE /api/bd/api/registrations/999",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
   "step": "116 POST /api/help/requests/999/accept",
   "bugs": [
    "C5"
@@ -28,6 +140,62 @@
     "body": ""
    }
   ]
+ },
+ {
+  "step": "118 GET /api/bd/api/registrations",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "119 GET /api/bd/api/registrations/count",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "120 GET /api/bd/api/registrations/enrollment-ui",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "121 GET /api/bd/api/registrations/1",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "122 PUT /api/bd/api/registrations/999/approve",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "123 PUT /api/bd/api/registrations/999/reject",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "124 DELETE /api/bd/api/registrations/999",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
   "step": "131 POST /api/bd/api/help/requests/999/accept",
@@ -88,6 +256,62 @@
     "body": ""
    }
   ]
+ },
+ {
+  "step": "152 GET /api/bd/api/registrations",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "153 GET /api/bd/api/registrations/count",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "154 GET /api/bd/api/registrations/enrollment-ui",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "155 GET /api/bd/api/registrations/1",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "156 PUT /api/bd/api/registrations/999/approve",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "157 PUT /api/bd/api/registrations/999/reject",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "158 DELETE /api/bd/api/registrations/999",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
   "step": "165 POST /api/bd/api/help/requests/999/accept",
@@ -231,6 +455,62 @@
   "step": "211 DELETE /api/registrations/999",
   "bugs": [
    "UM12"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "220 GET /api/bd/api/registrations",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "221 GET /api/bd/api/registrations/count",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "222 GET /api/bd/api/registrations/enrollment-ui",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "223 GET /api/bd/api/registrations/1",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "224 PUT /api/bd/api/registrations/999/approve",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "225 PUT /api/bd/api/registrations/999/reject",
+  "bugs": [
+   "PA15"
+  ],
+  "status": 403,
+  "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "226 DELETE /api/bd/api/registrations/999",
+  "bugs": [
+   "PA15"
   ],
   "status": 403,
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"

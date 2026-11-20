@@ -80,6 +80,12 @@ var guardPaths = []struct {
 	{"/api/bd/stats", "dataguard"}, {"/api/bd/dlp-policies", ""}, {"/api/bd/dlp-events", ""}, {"/api/bd/policiesx", ""},
 	{"/api/bd/statistics", ""},
 
+	// the second mount below /api/bd of the registration routes (PA15); the
+	// two device routes beside them have no rule
+	{"/api/bd/api/registrations", "registrations"}, {"/api/bd/api/registrations/count", "registrations"},
+	{"/api/bd/api/registrations/5/approve", "registrations"}, {"/API/BD/API/Registrations/5", "registrations"},
+	{"/api/bd/api/registrationsx", ""}, {"/api/bd/register-request", ""}, {"/api/bd/register-status", ""},
+
 	// the real prefixes of the sections whose rules named none (PA4)
 	{"/api/panel/org/1", "organizations"}, {"/api/panel/fleet/tasks", "fleet"}, {"/api/panel/scaling/relays", "scaling"},
 	{"/api/panel/languages/de/missing", "languages"}, {"/api/panel/resource-control/policies", "resource-control"},
@@ -93,7 +99,7 @@ var guardPaths = []struct {
 	// API paths without a rule
 	{"/api", ""}, {"/api/", ""}, {"/api/panel", ""},
 	{"/api/panel/roles", ""}, {"/api/panel/role-permissions", ""},
-	{"/api/cdap/devices", ""}, {"/api/bd/commands", ""}, {"/api/auth/login", ""}, {"/api/bd/api/registrations", ""},
+	{"/api/cdap/devices", ""}, {"/api/bd/commands", ""}, {"/api/auth/login", ""},
 	{"/api/console/bootstrap", ""}, {"/api/inventory", ""}, {"/api/keys", ""}, {"/api/tenants", ""},
 
 	// pages without a rule

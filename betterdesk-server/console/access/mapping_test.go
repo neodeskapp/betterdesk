@@ -87,6 +87,32 @@ func TestClosedSectionsCloseTheirAPI(t *testing.T) {
 	}
 }
 
+// PA15: the registration routes answer at /api/bd/api/registrations too
+// (I3). A policy that closes the registrations section closes them there
+// as at /api/registrations, and every default role gets the same answer
+// at both mounts.
+func TestRegistrationsAreGuardedAtBothMounts(t *testing.T) {
+	routes := []struct{ method, path, permission string }{
+		{"GET", "", "enrollment.approve"}, {"GET", "/count", "enrollment.approve"},
+		{"GET", "/enrollment-ui", "enrollment.approve"}, {"GET", "/5", "enrollment.approve"},
+		{"PUT", "/5/approve", "enrollment.approve"}, {"PUT", "/5/reject", "enrollment.approve"},
+		{"DELETE", "/5", "enrollment.manage"},
+	}
+	for _, r := range routes {
+		path := "/api/bd/api/registrations" + r.path
+		closed := &Context{UserID: 1, HasUser: true, Role: "super_admin", Policy: policyWith("registrations", LevelNone)}
+		if got := closed.Guard(r.method, path); got.Verdict != VerdictDenied || got.Section != "registrations" {
+			t.Errorf("%s %s with registrations at none: %+v", r.method, path, got)
+		}
+		for _, role := range defaultRoles {
+			first := routeAnswer(t, role, r.method, "/api/registrations"+r.path, r.permission)
+			if second := routeAnswer(t, role, r.method, path, r.permission); second != first {
+				t.Errorf("%s %s as %s: %s, at /api/registrations %s", r.method, path, role, second, first)
+			}
+		}
+	}
+}
+
 // PA4 with A39 (G16): organizations are read with user.view, which the
 // roles of the pages that read them have (organizations, billing,
 // policies); the devices with a stored password and every write need

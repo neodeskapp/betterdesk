@@ -141,6 +141,9 @@ var RouteRules = []Rule{
 	{Prefix: "/api/bd/policies", Section: "dataguard"},
 	{Prefix: "/api/bd/events", Section: "dataguard"},
 	{Prefix: "/api/bd/stats", Section: "dataguard"},
+	// The registration routes for people answer at /api/bd too, beside
+	// the two device routes.
+	{Prefix: "/api/bd/api/registrations", Section: "registrations"},
 }
 
 const apiPrefix = "/api/"

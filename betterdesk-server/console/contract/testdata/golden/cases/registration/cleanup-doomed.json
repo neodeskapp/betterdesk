@@ -15,7 +15,8 @@
     "pro",
     "guest_issuer",
     "viewer",
-    "operator"
+    "operator",
+    "server_admin"
    ],
    "status": 200,
    "headers": {
@@ -48,7 +49,6 @@
   {
    "roles": [
     "global_admin",
-    "server_admin",
     "super_admin",
     "admin"
    ],
