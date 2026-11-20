@@ -209,14 +209,20 @@ func (h *handlers) getSaved(w http.ResponseWriter, r *http.Request) {
 
 // save answers POST /api/reports/save with the body {type, title?, from?,
 // to?}: it generates the report and stores it, with the title "<label> —
-// <time>" when the body has none.
+// <time>" when the body has none, null or "". A title that is no text is
+// 400.
 func (h *handlers) save(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	report := h.generated(w, r, body, "save error:", "Failed to save report")
 	if report == nil {
 		return
 	}
-	title := jsbind.Of(body.Get("title")).Or(jsbind.String(report.Label + " — " + report.GeneratedAt))
+	title := jsbind.Of(body.Get("title"))
+	if !title.IsUndefined() && !title.IsNull() && !title.IsString() {
+		fail(w, r, http.StatusBadRequest, "Title must be text")
+		return
+	}
+	title = title.Or(jsbind.String(report.Label + " — " + report.GeneratedAt))
 	createdBy := kit.User(r).Username
 	if createdBy == "" {
 		createdBy = "admin"

@@ -255,6 +255,36 @@ func TestSavedReportWithAPayloadThatIsNoJSON(t *testing.T) {
 	})
 }
 
+// TestSaveRefusesATitleThatIsNoText: a saved report's title is a text; a
+// number, a flag, a list or an object is 400 and nothing is stored, and a
+// title that is missing, null or empty gets the default title (BUGS.md
+// RP10).
+func TestSaveRefusesATitleThatIsNoText(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		admin := w.As("admin")
+		for _, title := range []string{`5`, `0`, `true`, `false`, `["In a list"]`, `[]`, `{"a":1}`} {
+			body := `{"type":"network","title":` + title + `}`
+			if got := admin.Do("POST", "/api/reports/save", body); got.Status != 400 || got.Body != `{"error":"Title must be text"}` {
+				t.Errorf("%s: %d %s", body, got.Status, got.Body)
+			}
+		}
+		if rows := savedCount(t, w); rows != 0 {
+			t.Fatalf("%d reports saved with a title that is no text", rows)
+		}
+		for body, want := range map[string]string{
+			`{"type":"network","title":"Mine"}`: `"title":"Mine"`,
+			`{"type":"network","title":""}`:     `"title":"Network Report — `,
+			`{"type":"network","title":null}`:   `"title":"Network Report — `,
+			`{"type":"network"}`:                `"title":"Network Report — `,
+		} {
+			if got := admin.Do("POST", "/api/reports/save", body); got.Status != 201 || !strings.Contains(got.Body, want) {
+				t.Errorf("%s: %d %s", body, got.Status, got.Body)
+			}
+		}
+	})
+}
+
 // TestDatabaseFailures: a failing query answers each route's own 500.
 func TestDatabaseFailures(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {

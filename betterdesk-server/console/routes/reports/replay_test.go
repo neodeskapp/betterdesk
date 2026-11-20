@@ -256,6 +256,38 @@ func csvFixes(dialect string) map[string]replay.Fix {
 	return steps
 }
 
+// RP10: a saved report's title is a text; a number, a flag, a list or an
+// object is 400, where Node stored the title as its driver bound it (5
+// as "5.0" on SQLite) or failed with 500. Where Node stored a report,
+// After saves it again with the title as text, as Node's answer shows it.
+var _ = reportFixes.Add("RP10", titleFixes("sqlite"))
+var _ = reportFixes.Add("RP10", titleFixes("postgres"))
+
+func titleFixes(dialect string) map[string]replay.Fix {
+	fixes := map[string]replay.Fix{}
+	for _, step := range recordedStepsOn(dialect) {
+		if step.Path != "/api/reports/save" || step.Status == 401 || step.Status == 403 {
+			continue
+		}
+		title, given := bodyMember(step, "title")
+		if _, isText := title.(string); !given || title == nil || isText {
+			continue
+		}
+		fix := replay.Fix{Dialect: dialect, Status: 400, Answer: `{"error":"Title must be text"}`}
+		if step.Status == 201 {
+			var body, saved map[string]any
+			if json.Unmarshal([]byte(*step.Body), &body) != nil || json.Unmarshal([]byte(step.Answer), &saved) != nil {
+				panic("RP10: " + step.Name)
+			}
+			body["title"] = saved["title"]
+			resent, _ := json.Marshal(body)
+			fix.After = replay.ResendBy(string(resent), string(resent))
+		}
+		fixes[replay.FixKey(step)] = fix
+	}
+	return fixes
+}
+
 // RP8: a saved report whose payload is text and no JSON (the seeded report
 // 2) is read with the payload {}, where Node answered 500. The answer is
 // the row as Node's list of saved reports shows it, with that payload.
