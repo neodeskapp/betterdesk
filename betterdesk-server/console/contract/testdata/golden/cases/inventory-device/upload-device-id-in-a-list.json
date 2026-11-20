@@ -77,8 +77,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Device ID mismatch",
-     "success": false
+     "error": "Device ID mismatch"
     }
    }
   }

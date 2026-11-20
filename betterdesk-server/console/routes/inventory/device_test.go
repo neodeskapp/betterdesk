@@ -1,6 +1,8 @@
 package inventory_test
 
 import (
+	"encoding/json"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -32,14 +34,22 @@ import (
 //   - A body that is no JSON was answered by the recording's stand-in for
 //     the rest of the console; there only the status is compared.
 //
-// The steps a bug fix changed are on the list deviceFixes.
+// The steps a bug fix changed are on the list deviceFixes. The steps the
+// device guards answer now (BUGS AI12) are checked by guardedByKit, and
+// withoutShortTokens changes the rows read after them.
 func TestNodeDeviceAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		engine := w.Server.Deps().Alerts
-		trimmed, elsewhere := 0, 0
-		w.Run(replay.Load(t, db, "node_device"), deviceFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		trimmed, elsewhere, guarded := 0, 0, 0
+		rec := replay.Load(t, db, "node_device")
+		withoutShortTokens(&rec, db)
+		byGuards := guardedByKit(tokensOf(rec), &guarded)
+		w.Run(rec, deviceFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			engine.Wait()
+			if byGuards(t, step, got) {
+				return true
+			}
 			if headers, ok := withoutSpaceAround(step.Headers); ok {
 				trimmed++
 				got = w.Do(replay.Request{Role: step.Role, Method: step.Method, Path: step.Path, Body: step.Body, Headers: headers})
@@ -61,6 +71,9 @@ func TestNodeDeviceAnswers(t *testing.T) {
 		deviceFixes.Unused(t, db)
 		if trimmed != 6 || elsewhere != 1 {
 			t.Errorf("%d requests were sent again with a header trimmed and %d answers compared by status only, want 6 and 1", trimmed, elsewhere)
+		}
+		if guarded == 0 {
+			t.Errorf("no answer was the device guards'")
 		}
 	})
 }
@@ -206,4 +219,133 @@ func refuseUpdates(w *replay.World, table string) {
 		return
 	}
 	w.Exec(`CREATE TRIGGER refuse_update BEFORE UPDATE ON `+table+` BEGIN SELECT RAISE(ABORT, 'no updates'); END`, nil)
+}
+
+// The three routes of the desktop agent are behind the device guards of
+// the other device routes (BUGS AI12): a token bound to a client id the
+// guards take for no device is refused, and the device a request names
+// in the body, the query or X-Device-Id is compared with the token's as
+// text, so a number or a list names another device.
+func TestInventoryUsesTheDeviceGuards(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		tokenDeviceA(w)
+		w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at) VALUES (?, ?, 5, 'x', '2999-01-01 00:00:00')",
+			[]any{"tok-short", "7c7b85d90f624dbe2f9196551fdac64191dc4a52460bd9b5d4b938db6b445b1f"})
+		short := map[string]string{"Authorization": "Bearer tok-short"}
+		unbound := `{"error":"Invalid or unbound access token"}`
+		mismatch := `{"error":"Device ID mismatch"}`
+		for _, c := range []struct {
+			name   string
+			req    replay.Request
+			status int
+			answer string
+		}{
+			{"a report with a token of the client id x", replay.Request{Method: "POST", Path: "/api/bd/inventory", Body: replay.Text(`{"device_id":"x","hardware":{"hostname":"pc"}}`), Headers: short}, 401, unbound},
+			{"telemetry with a token of the client id x", replay.Request{Method: "POST", Path: "/api/inventory/telemetry", Body: replay.Text(`{"device_id":"x"}`), Headers: short}, 401, unbound},
+			{"the report of x with its token", replay.Request{Path: "/api/bd/inventory/x", Headers: short}, 401, unbound},
+			{"a device id that is a number", replay.Request{Method: "POST", Path: "/api/bd/inventory", Body: replay.Text(`{"device_id":900100001,"hardware":{"hostname":"pc"}}`), Headers: deviceA}, 403, mismatch},
+			{"a device id in a list", replay.Request{Method: "POST", Path: "/api/inventory/inventory", Body: replay.Text(`{"device_id":["device-a"],"hardware":{"hostname":"pc"}}`), Headers: deviceA}, 403, mismatch},
+			{"telemetry of a device id that is a number", replay.Request{Method: "POST", Path: "/api/bd/telemetry", Body: replay.Text(`{"device_id":5}`), Headers: deviceA}, 403, mismatch},
+			{"another device in the query", replay.Request{Method: "POST", Path: "/api/bd/inventory?device_id=device-b", Body: replay.Text(`{"device_id":"","hardware":{"hostname":"pc"}}`), Headers: deviceA}, 403, mismatch},
+			{"another device in the header", replay.Request{Path: "/api/bd/inventory/device-a", Headers: map[string]string{"Authorization": "Bearer tok-device-a", "X-Device-Id": "device-b"}}, 403, mismatch},
+			{"its own report", replay.Request{Method: "POST", Path: "/api/bd/inventory", Body: replay.Text(`{"device_id":"device-a","hardware":{"hostname":"pc"}}`), Headers: deviceA}, 200, `{"success":true}`},
+		} {
+			if got := w.Do(c.req); got.Status != c.status || got.Body != c.answer {
+				t.Errorf("%s: %d %s, want %d %s", c.name, got.Status, got.Body, c.status, c.answer)
+			}
+		}
+		if rows := w.Rows("SELECT device_id FROM device_inventory", nil); rows != `[{"device_id":"device-a"}]` {
+			t.Errorf("the reports stored: %s", rows)
+		}
+	})
+}
+
+// tokensOf reads the devices the tokens of a recording's seed are bound
+// to, by token.
+func tokensOf(rec replay.Recording) map[string]string {
+	tokens := map[string]string{}
+	for _, seed := range rec.Seed {
+		if strings.HasPrefix(seed.SQL, "INSERT INTO access_tokens (token,") {
+			token, _ := seed.Params[0].(string)
+			device, _ := seed.Params[3].(string)
+			tokens[token] = device
+		}
+	}
+	return tokens
+}
+
+// guardedByKit checks the steps the device guards of package kit answer
+// since the routes are behind them (BUGS AI12), and counts them:
+//
+//   - A token bound to a client id the guards take for no device (x, "dev
+//     a") is refused like an unbound one.
+//   - A request that names another device than its token's, or names it
+//     with a value that is no text (0, false, a number, a list), gets the
+//     guard's refusal, without success, also where Node answered first
+//     that the body lacked something.
+func guardedByKit(tokens map[string]string, count *int) replay.Check {
+	return func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		token := strings.TrimPrefix(step.Headers["Authorization"], "Bearer ")
+		want, status := "", 0
+		switch {
+		case token == "tok-short" || token == "tok-spaced":
+			want, status = `{"error":"Invalid or unbound access token"}`, 401
+		case step.Method == "POST" && tokens[token] != "" && (step.Answer == `{"success":false,"error":"Device ID mismatch"}` || step.Status == 400 && namesAnother(step, tokens[token])):
+			want, status = `{"error":"Device ID mismatch"}`, 403
+		default:
+			return false
+		}
+		*count++
+		if got.Status != status || got.Body != want {
+			t.Errorf("%s (AI12): %d %s, want %d %s", step.Name, got.Status, got.Body, status, want)
+		}
+		return true
+	}
+}
+
+// namesAnother reports whether the body of a step names a device that is
+// not the token's: with text of another device, or a value that is no
+// text but names one for the guards (anything but null and "").
+func namesAnother(step replay.Step, device string) bool {
+	if step.Body == nil {
+		return false
+	}
+	var body map[string]any
+	if json.Unmarshal([]byte(*step.Body), &body) != nil {
+		return false
+	}
+	claim, given := body["device_id"]
+	switch v := claim.(type) {
+	case nil:
+		return false
+	case string:
+		return v != "" && v != device
+	}
+	return given
+}
+
+// shortTokenAlerts are the alerts Node raised for the reports of the
+// tokens bound to x and "dev a", which the guards refuse.
+var shortTokenAlerts = regexp.MustCompile(`,?\{"rule_id":[0-9]+,"device_id":"(x|dev a)","severity":"[^"]*","message":"[^"]*"\}`)
+
+// withoutShortTokens changes the rows the recording reads after the
+// requests of the tokens bound to x and "dev a" (BUGS AI12) into the rows
+// the guards leave: the tokens were not used, x keeps its info, and no
+// alert was raised for those reports.
+func withoutShortTokens(rec *replay.Recording, db *store.DB) {
+	for i, step := range rec.Steps {
+		switch step.Name {
+		case "the tokens were noted":
+			for _, token := range []string{"tok-short", "tok-spaced"} {
+				rows := rec.Steps[i].Rows
+				rows = strings.Replace(rows, `{"token":"`+token+`","used":1}`, `{"token":"`+token+`","used":0}`, 1)
+				rec.Steps[i].Rows = strings.Replace(rows, `{"token":"`+token+`","used":true}`, `{"token":"`+token+`","used":false}`, 1)
+			}
+		case "the info of x":
+			rec.Steps[i].Rows = `[{"id":"x","note":"","info":"{\"hostname\":` + db.Pick(``, ` `) + `\"short\"}","is_deleted":0}]`
+		case "the alerts raised":
+			rec.Steps[i].Rows = strings.Replace(shortTokenAlerts.ReplaceAllString(step.Rows, ""), "[,", "[", 1)
+		}
+	}
 }

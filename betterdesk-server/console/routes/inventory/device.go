@@ -7,69 +7,17 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/alerts"
-	"github.com/unitronix/betterdesk-server/console/authn"
-	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
-// The routes of the desktop agent. A device proves itself with an access
-// token bound to its id, sent as "Authorization: Bearer <token>". The
-// header X-Device-Id names a device and proves nothing.
-//
-// The group checks the token itself, and less than the device guards of
-// package kit do: any live token bound to a device id that is not empty
-// passes, whatever the form of the id ("x", "dev a"). The device a request
-// names is then compared with the token's device as it is: the text
-// "900100001" matches, the number 900100001 and the list ["900100001"]
-// do not.
-
-// deviceKey is where requireDeviceToken puts the token's device id.
-type deviceKey struct{}
-
-// deviceOf is the device id requireDeviceToken accepted (req.deviceId).
-func deviceOf(r *http.Request) string {
-	id, _ := r.Context().Value(deviceKey{}).(string)
-	return id
-}
-
-// requireDeviceToken lets a request through whose Authorization header is
-// "Bearer <token>" with a live access token bound to a device id, and
-// notes the use on the token's row; a failure to note it changes nothing.
-//
-//	no Bearer token                       401 {"error":"Bearer access token required"}
-//	the lookup failed                     401 {"error":"Invalid or expired access token"}
-//	no live token, or one bound to none   401 {"error":"Invalid or unbound access token"}
-//
-// It does not look at the session.
-func (h *handlers) requireDeviceToken(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token, ok := authn.ExtractBearerToken(httpx.Latin1(r.Header.Get("Authorization")))
-		if !ok {
-			fail(w, r, http.StatusUnauthorized, "Bearer access token required")
-			return
-		}
-		row, err := h.authn.LookupAccessToken(r.Context(), token)
-		if err != nil {
-			fail(w, r, http.StatusUnauthorized, "Invalid or expired access token")
-			return
-		}
-		if row == nil || row.ClientID.String == "" {
-			fail(w, r, http.StatusUnauthorized, "Invalid or unbound access token")
-			return
-		}
-		_ = h.authn.TouchAccessToken(r.Context(), token)
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), deviceKey{}, row.ClientID.String)))
-	})
-}
-
-// sameDevice is req.deviceId === value: the value is text and it is the
-// token's device.
-func sameDevice(device string, value jsjson.Value) bool {
-	return value.Kind() == jsjson.String && value.Str() == device
-}
+// The routes of the desktop agent are behind the device guards of package
+// kit, as the other device routes are: an access token bound to a device
+// id, sent as "Authorization: Bearer <token>", and no other device named
+// in the body, the query or X-Device-Id. The routes work on the token's
+// device.
 
 // mismatch is the answer for a request that names another device than
 // its token's.
@@ -106,7 +54,7 @@ type done struct {
 // software?, collected_at?}: the device's report replaces the one it sent
 // before, as it came.
 //
-// The body is checked before the device it names. After the report is
+// The device guards came first. After the report is
 // stored, the device's info in the console's table of devices gets the
 // host name, the system, the processor and the memory of the report; what
 // goes wrong there is logged and changes nothing else. Then the fullest
@@ -115,7 +63,7 @@ type done struct {
 // object that has a member named toString: the answer is then the route's
 // 500, with the report stored.
 func (h *handlers) upload(w http.ResponseWriter, r *http.Request) {
-	device := deviceOf(r)
+	device := kit.Device(r).DeviceID
 	deviceID, err := member(r, "device_id")
 	var hardware, software jsjson.Value
 	if err == nil {
@@ -130,10 +78,6 @@ func (h *handlers) upload(w http.ResponseWriter, r *http.Request) {
 	}
 	if !deviceID.Truthy() || !hardware.Truthy() {
 		kit.Fail(w, r, http.StatusBadRequest, "Missing device_id or hardware")
-		return
-	}
-	if !sameDevice(device, deviceID) {
-		mismatch(w, r)
 		return
 	}
 
@@ -283,7 +227,7 @@ func (o *object) json() string {
 // every value is stored as it came. Then the CPU load and the used memory
 // are checked against the alert rules in the background.
 func (h *handlers) telemetry(w http.ResponseWriter, r *http.Request) {
-	device := deviceOf(r)
+	device := kit.Device(r).DeviceID
 	deviceID, err := member(r, "device_id")
 	if err != nil {
 		h.failUpload(w, r, h.telemetryLog, err)
@@ -291,10 +235,6 @@ func (h *handlers) telemetry(w http.ResponseWriter, r *http.Request) {
 	}
 	if !deviceID.Truthy() {
 		kit.Fail(w, r, http.StatusBadRequest, "Missing device_id")
-		return
-	}
-	if !sameDevice(device, deviceID) {
-		mismatch(w, r)
 		return
 	}
 	body := kit.Body(r)
@@ -339,7 +279,7 @@ type entry struct {
 // token is bound to. The id must be that device's, written the same.
 func (h *handlers) ownReport(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	if id != deviceOf(r) {
+	if id != kit.Device(r).DeviceID {
 		mismatch(w, r)
 		return
 	}

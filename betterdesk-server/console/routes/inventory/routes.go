@@ -5,8 +5,7 @@
 //   - The routes of the desktop agent, which take a device token: it
 //     uploads its hardware and software (POST inventory) and its load
 //     (POST telemetry), and reads its own last report (GET inventory/{id}).
-//     They check the token themselves, not with the device guards of
-//     package kit (device.go).
+//     They are behind the device guards of package kit (device.go).
 //   - The routes people read inventory with: the list of devices with their
 //     hardware in short, and one device's last report with its last
 //     telemetry. Both need the permission device.view, and both step aside
@@ -19,7 +18,6 @@ import (
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/alerts"
-	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
@@ -31,7 +29,6 @@ import (
 type handlers struct {
 	db     *store.DB
 	api    *goapi.Client
-	authn  *authn.Service
 	alerts *alerts.Engine
 	log    *kit.Logger
 	// telemetryLog takes what the telemetry route logs
@@ -41,14 +38,15 @@ type handlers struct {
 // Register adds the group's routes below the mount.
 func Register(d *kit.Deps) {
 	h := &handlers{
-		db: d.Store, api: d.GoAPI, authn: d.Authn, alerts: d.Alerts,
+		db: d.Store, api: d.GoAPI, alerts: d.Alerts,
 		log: d.Log.Child("Inventory"), telemetryLog: d.Log.Child("Telemetry"),
 	}
 	r := d.Router
 	canRead := d.RequirePermission("device.view")
-	r.Post("/inventory", h.upload, h.requireDeviceToken)
-	r.Post("/telemetry", h.telemetry, h.requireDeviceToken)
-	r.Get("/inventory/{id}", h.ownReport, h.requireDeviceToken)
+	device := []kit.Middleware{d.RequireDeviceToken, d.RequireTokenDeviceMatch}
+	r.Post("/inventory", h.upload, device...)
+	r.Post("/telemetry", h.telemetry, device...)
+	r.Get("/inventory/{id}", h.ownReport, device...)
 	r.Get("/", h.list, devicemount.Not, d.RequireAuth, canRead)
 	r.Get("/{id}", h.detail, devicemount.Not, d.RequireAuth, canRead)
 }
