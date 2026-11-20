@@ -231,7 +231,8 @@ func (h *handlers) listBackups(w http.ResponseWriter, r *http.Request) {
 // restore answers POST /api/settings/updates/restore with the body
 // {backupName}: the backup's binary goes back in place, and under a
 // supervisor the process ends two seconds after the answer. A backup of
-// the old console is refused with 400 (DECISIONS A29).
+// the old console is refused with 400 (DECISIONS A29), and so is a name
+// that is no backup's or a backup that is broken, as for a delete.
 func (h *handlers) restore(w http.ResponseWriter, r *http.Request) {
 	name, ok := kit.Body(r).String("backupName")
 	if !ok || name == "" {
@@ -242,7 +243,7 @@ func (h *handlers) restore(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.log.Error("Restore error:", err)
 		status := http.StatusInternalServerError
-		if updater.IsNodeBackup(err) {
+		if updater.IsNodeBackup(err) || reBackupClientError.MatchString(err.Error()) {
 			status = http.StatusBadRequest
 		}
 		kit.JSON(w, r, status, failure{Error: err.Error()})

@@ -370,15 +370,20 @@ func TestBackupRoutes(t *testing.T) {
 		`{"backupName":"pre-update-2030-01-01T10-00-00"}`: `{"success":false,"error":"Backup not found"}`,
 		`{"backupName":"../../etc"}`:                      `{"success":false,"error":"Invalid backup name"}`,
 	} {
-		res := admin.Do("POST", "/api/settings/updates/restore", body)
-		wantStatus := 500
-		if strings.Contains(want, "required") || strings.Contains(want, "Node console") {
-			wantStatus = 400
-		}
-		if res.Status != wantStatus || res.Body != want {
+		// A name that is no backup's is the client's error, as for a
+		// delete (UPD4)
+		if res := admin.Do("POST", "/api/settings/updates/restore", body); res.Status != 400 || res.Body != want {
 			t.Errorf("restore %s: %d %s", body, res.Status, res.Body)
 		}
 	}
+	// A backup whose files are broken too
+	broken := filepath.Join(w.DataDir, "backups", "pre-update-2026-02-01T10-00-00")
+	_ = os.MkdirAll(broken, 0o755)
+	if res := admin.Do("POST", "/api/settings/updates/restore", `{"backupName":"pre-update-2026-02-01T10-00-00"}`); res.Status != 400 ||
+		res.Body != `{"success":false,"error":"Invalid backup — missing manifest"}` {
+		t.Errorf("restore without a manifest: %d %s", res.Status, res.Body)
+	}
+	_ = os.RemoveAll(broken)
 	list := admin.Do("GET", "/api/settings/updates/backups", "").Body
 	if !strings.Contains(list, `"name":"pre-update-2026-01-01T10-00-00"`) || !strings.Contains(list, `"version":"3.5.1","sha":"abcdef1"`) {
 		t.Errorf("list %s", list)
