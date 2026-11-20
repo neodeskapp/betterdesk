@@ -18,10 +18,10 @@ import (
 // or details the routes cannot read.
 //
 // The recording was made without the panel access guard, which sits in
-// front of the routes in the console and lets only roles with
-// server.config into /api/dataguard. Where the guard refuses a role that
-// the routes alone let read, the guard's answer is taken. Node's guard had
-// no rule for the routes at /api/bd; the steps there that the guard
+// front of the routes in the console: it lets the roles with device.view
+// read /api/dataguard and only the roles with server.config write it (PA3
+// F5). Where the guard refuses a write, its answer is taken. Node's guard
+// had no rule for the routes at /api/bd; the writes there that the guard
 // refuses now (DG6) are listed in policyFixes (fixed_test.go) with the
 // steps the other bug fixes change.
 func TestNodeAnswers(t *testing.T) {
@@ -37,7 +37,7 @@ func TestNodeAnswers(t *testing.T) {
 				}
 				return true
 			}
-			if strings.HasPrefix(step.Path, "/api/dataguard") && got.Status == 403 && strings.Contains(got.Body, `"code":"panel_access_denied"`) {
+			if strings.HasPrefix(step.Path, "/api/dataguard") && step.Method != "GET" && got.Status == 403 && strings.Contains(got.Body, `"code":"panel_access_denied"`) {
 				switch step.Role {
 				case "global_admin", "operator", "viewer", "guest_issuer":
 					guarded++
@@ -121,26 +121,15 @@ func TestTheRoutesAtBothMounts(t *testing.T) {
 // database can hold, events with values of every JSON type in every
 // field, and the rows they wrote.
 //
-// One step sends a device token with the session of an operator: at
-// /api/dataguard the panel access guard in front of the routes refuses
-// that session (the section needs server.config), which the recording,
-// made without the guard, does not show.
+// One step sends a device token with the session of an operator to
+// /api/dataguard: the panel access guard in front of the routes lets the
+// operator read there (device.view, PA3 F5), so the answer is the route's,
+// as in the recording made without the guard.
 func TestNodeDeviceAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
-		guarded := 0
 		defer deviceFixes.Unused(t, db)
-		w.Run(replay.Load(t, db, "node_device"), deviceFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
-			if step.Role == "operator" && strings.HasPrefix(step.Path, "/api/dataguard/") && got.Status == 403 &&
-				got.Body == `{"success":false,"error":"Panel access denied: dataguard","code":"panel_access_denied"}` {
-				guarded++
-				return true
-			}
-			return false
-		}))
-		if guarded != 1 {
-			t.Errorf("%d answers were the panel access guard's, want 1", guarded)
-		}
+		w.Run(replay.Load(t, db, "node_device"), deviceFixes.Check(w, nil))
 	})
 }
 

@@ -122,6 +122,9 @@ var sectionFixes = []sectionFix{
 	// Listing, approving and rejecting registrations ask
 	// enrollment.approve, so enrollment.manage alone gives no level.
 	{bug: "UM12 (F10)", key: "registrations", read: "enrollment.approve", write: "enrollment.approve"},
+	// The data guard's policies are read with device.view; its events and
+	// statistics ask audit.view themselves; the writes ask server.config.
+	{bug: "PA3 (F5)", key: "dataguard", read: "device.view", write: "server.config"},
 }
 
 // nodeTables returns the guard's rules and the catalog's sections as the

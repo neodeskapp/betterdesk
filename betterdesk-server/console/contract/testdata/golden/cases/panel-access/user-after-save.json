@@ -136,8 +136,8 @@
          "source": "role"
         },
         "dataguard": {
-         "access": "none",
-         "role_ceiling": "none",
+         "access": "read",
+         "role_ceiling": "read",
          "source": "role"
         },
         "devices": {
@@ -402,8 +402,8 @@
          "source": "role"
         },
         "dataguard": {
-         "access": "none",
-         "role_ceiling": "none",
+         "access": "read",
+         "role_ceiling": "read",
          "source": "user"
         },
         "devices": {

@@ -241,6 +241,24 @@ func TestNetworkReadsAndTools(t *testing.T) {
 	})
 }
 
+// PA3 (F5): the data guard's policies are read with device.view, its
+// events and statistics with audit.view (the routes check that), and every
+// write asks server.config, so the roles that see devices read what their
+// permissions let them and only server_admin writes.
+func TestDataGuardReadsAsItsRoutesSay(t *testing.T) {
+	// viewer, operator, guest_issuer, global_admin, server_admin
+	checkRouteCases(t, []routeCase{
+		{"GET", "/api/dataguard/policies", "device.view", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/dataguard/policies/1", "device.view", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"GET", "/api/dataguard/events", "audit.view", [5]string{"ok", "ok", "route", "ok", "ok"}},
+		{"GET", "/api/dataguard/stats", "audit.view", [5]string{"ok", "ok", "route", "ok", "ok"}},
+		{"GET", "/api/bd/stats", "audit.view", [5]string{"ok", "ok", "route", "ok", "ok"}},
+		{"POST", "/api/dataguard/policies", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
+		{"PATCH", "/api/bd/policies/1", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
+		{"DELETE", "/api/dataguard/policies/1", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
+	})
+}
+
 // PA3 (F7): the toolkit is one section that asks device.connect for
 // reading and writing, as its page and wake-on-LAN route do.
 func TestToolkitAsksDeviceConnect(t *testing.T) {

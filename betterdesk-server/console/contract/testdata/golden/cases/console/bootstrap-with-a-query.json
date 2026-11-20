@@ -177,7 +177,7 @@
        },
        {
         "key": "dataguard",
-        "read": "server.config",
+        "read": "device.view",
         "write": "server.config"
        },
        {
@@ -386,7 +386,7 @@
        "commercialization": "none",
        "cross-platform": "read",
        "dashboard": "read",
-       "dataguard": "none",
+       "dataguard": "read",
        "devices": "read",
        "files": "read",
        "fleet": "none",
@@ -1024,7 +1024,7 @@
        },
        {
         "key": "dataguard",
-        "read": "server.config",
+        "read": "device.view",
         "write": "server.config"
        },
        {

@@ -177,6 +177,7 @@ var _ = deviceFixes.Add("DV7", map[string]replay.Fix{
 	" GET /api/bd/dlp-policies ":                           {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
 	" GET /api/bd/dlp-policies?device_id=device-b ":        {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
 	"operator GET /api/bd/dlp-policies ":                   {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
+	"operator GET /api/dataguard/dlp-policies ":            {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
 	" GET /api/dataguard/dlp-policies ":                    {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
 	" GET /api/dataguard/dlp-policies?device_id=device-b ": {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
 	" GET /API/DATAGUARD/DLP-POLICIES/ ":                   {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
@@ -194,26 +195,24 @@ var (
 )
 
 // DG6: the panel access guard covers the routes for people at /api/bd as
-// at /api/dataguard, so the roles without the data guard section get its
-// refusal there too.
+// at /api/dataguard, so the roles that may read the data guard but not
+// write it (device.view without server.config, PA3 F5) get its refusal
+// of their writes there too. Their reads answer as the routes say, as at
+// /api/bd in the recording.
 var _ = policyFixes.Add("DG6", guardRefuses(bdSteps()...))
 
-// bdSteps are the steps of the recording at /api/bd that a role without
-// the data guard section sends.
+// bdSteps are the writes of the recording at /api/bd that a role without
+// server.config sends.
 func bdSteps() []string {
 	var keys []string
 	for _, role := range []string{"global_admin", "operator", "viewer", "guest_issuer"} {
 		keys = append(keys,
 			role+` POST /api/bd/policies {"name":"By `+role+` at /api/bd"}`,
-			role+" GET /api/bd/policies ",
-			role+" GET /api/bd/policies/1 ",
 			role+` PATCH /api/bd/policies/999 {"name":"x"}`,
 			role+" DELETE /api/bd/policies/999 ",
-			role+" GET /api/bd/events ",
-			role+" GET /api/bd/stats ",
 		)
 	}
-	return append(keys, "viewer GET /api/bd/events?device_id=D1 ", "operator GET /api/bd/events?device_id=D1&limit=1 ")
+	return keys
 }
 
 // guardRefuses are fixes of steps the panel access guard answers with its

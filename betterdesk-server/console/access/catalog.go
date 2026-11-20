@@ -110,7 +110,7 @@ var Catalog = []Section{
 	{"automation", "Automation", "operations", "device.view", "device.edit"},
 	{"files", "File transfer", "operations", "device.view", "device.edit"},
 	{"network", "Network", "operations", "device.view", "server.config"},
-	{"dataguard", "Data guard", "operations", "server.config", "server.config"},
+	{"dataguard", "Data guard", "operations", "device.view", "server.config"},
 	{"reports", "Reports", "operations", "audit.view", "audit.view"},
 	{"agents", "Agents", "operations", "device.view", "device.edit"},
 	{"toolkit", "Toolkit", "operations", "device.connect", "device.connect"},

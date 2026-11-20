@@ -327,7 +327,7 @@
         "group": "operations",
         "key": "dataguard",
         "label": "Data guard",
-        "readPermission": "server.config",
+        "readPermission": "device.view",
         "writePermission": "server.config"
        },
        {
