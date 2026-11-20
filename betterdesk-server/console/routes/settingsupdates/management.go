@@ -3,7 +3,6 @@ package settingsupdates
 import (
 	"errors"
 	"net/http"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -47,10 +46,6 @@ func (h *handlers) getConfig(w http.ResponseWriter, r *http.Request) {
 	}
 	kit.JSON(w, r, http.StatusOK, answer{Success: true, Data: view})
 }
-
-// reConfigClientError are the messages the old route answered with 400;
-// everything else was 500.
-var reConfigClientError = regexp.MustCompile(`(?i)allowlisted|Invalid |No configuration|control character|boolean|port|outside BetterDesk|absolute`)
 
 // dryRun is the answer of a save with dryRun.
 type dryRun struct {
@@ -147,15 +142,19 @@ func (h *handlers) putConfig(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// configFailure answers a save that failed: 400 for a change the
+// configuration refuses, the restart transaction's own status for its
+// refusal (409 restart_transaction_owned), 500 for the rest.
 func (h *handlers) configFailure(w http.ResponseWriter, r *http.Request, err error) {
 	message := err.Error()
-	var refusal *restart.Error
-	if errors.As(err, &refusal) {
-		message = refusal.Message
-	}
 	status := http.StatusInternalServerError
-	if reConfigClientError.MatchString(message) {
+	var invalid *managedconfig.ValidationError
+	var refusal *restart.Error
+	switch {
+	case errors.As(err, &invalid):
 		status = http.StatusBadRequest
+	case errors.As(err, &refusal):
+		message, status = refusal.Message, refusal.StatusCode()
 	}
 	if message == "" {
 		message = "configuration_write_failed"

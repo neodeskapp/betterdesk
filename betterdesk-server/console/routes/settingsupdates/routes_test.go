@@ -426,8 +426,9 @@ func TestManagementConfig(t *testing.T) {
 		status int
 		text   string
 	}{
-		`{}`:                                {500, `{"success":false,"error":"Configuration changes must be an object"}`},
-		`{"changes":[]}`:                    {500, `{"success":false,"error":"Configuration changes must be an object"}`},
+		`{}`:                                {400, `{"success":false,"error":"Configuration changes must be an object"}`},
+		`{"changes":[]}`:                    {400, `{"success":false,"error":"Configuration changes must be an object"}`},
+		`{"changes":"PORT=1"}`:              {400, `{"success":false,"error":"Configuration changes must be an object"}`},
 		`{"changes":{}}`:                    {400, `{"success":false,"error":"No configuration changes supplied"}`},
 		`{"changes":{"NOPE":"1"}}`:          {400, `{"success":false,"error":"Environment key is not allowlisted: NOPE"}`},
 		`{"changes":{"PORT":"1","10":"x"}}`: {400, `{"success":false,"error":"Environment key is not allowlisted: 10"}`},
@@ -516,8 +517,9 @@ func TestManagementConfigUndoneWhenTheTransactionIsRefused(t *testing.T) {
 		t.Fatalf("first save %d %s", res.Status, res.Body)
 	}
 	before, _ := os.ReadFile(env)
+	// The refusal keeps the status the restart transaction gave it (UPD6)
 	res := w.As("admin").Do("PUT", "/api/settings/management/config", `{"changes":{"PORT":"5443"}}`)
-	if res.Status != 500 || res.Body != `{"success":false,"error":"restart_transaction_owned"}` {
+	if res.Status != 409 || res.Body != `{"success":false,"error":"restart_transaction_owned"}` {
 		t.Errorf("second save %d %s", res.Status, res.Body)
 	}
 	if after, _ := os.ReadFile(env); string(after) != string(before) {
