@@ -311,8 +311,8 @@ type inventory struct {
 }
 
 // allInventories is getAllInventories(): every report, newest received
-// first, with hardware and software parsed. One that does not parse
-// fails the whole list.
+// first, with its hardware parsed. A report whose hardware does not parse
+// is left out; the software is not read.
 func (e *Engine) allInventories(ctx context.Context) ([]inventory, error) {
 	rows, err := e.rows(ctx, "SELECT * FROM device_inventory ORDER BY received_at DESC")
 	if err != nil {
@@ -320,14 +320,9 @@ func (e *Engine) allInventories(ctx context.Context) ([]inventory, error) {
 	}
 	out := make([]inventory, 0, len(rows))
 	for _, row := range rows {
-		hardware, err := e.inventoryDocument(row.Get("hardware"))
-		if err != nil {
-			return nil, fmt.Errorf("read the hardware of an inventory: %w", err)
+		if hardware, err := e.inventoryDocument(row.Get("hardware")); err == nil {
+			out = append(out, inventory{hardware: hardware})
 		}
-		if _, err := e.inventoryDocument(row.Get("software")); err != nil {
-			return nil, fmt.Errorf("read the software of an inventory: %w", err)
-		}
-		out = append(out, inventory{hardware: hardware})
 	}
 	return out, nil
 }

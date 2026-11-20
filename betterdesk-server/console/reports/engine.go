@@ -345,14 +345,10 @@ func (e *Engine) security(ctx context.Context, _ Filters) (*goapi.Object, error)
 		stats = goapi.NewObject("total", 0.0, "blocked", 0.0, "logged", 0.0, "usb_events", 0.0, "file_events", 0.0)
 	}
 
-	// The events with details parsed. When one does not parse, the list
-	// is the rows as they were read.
+	// The events with details parsed
 	var recent []*goapi.Object
 	if events, err := e.dlpEvents(ctx, 50); err == nil {
-		recent = events
-		if parsed, err := e.withParsedDetails(events); err == nil {
-			recent = parsed
-		}
+		recent = withParsedDetails(events)
 	}
 
 	peers, err := e.allPeers(ctx)
@@ -385,26 +381,24 @@ func (e *Engine) security(ctx context.Context, _ Filters) (*goapi.Object, error)
 // withParsedDetails is the events with details as
 //
 //	typeof details === 'string' ? JSON.parse(details) : (details || {})
-func (e *Engine) withParsedDetails(events []*goapi.Object) ([]*goapi.Object, error) {
+//
+// where details that are text and no JSON are {}.
+func withParsedDetails(events []*goapi.Object) []*goapi.Object {
 	out := make([]*goapi.Object, len(events))
 	for i, event := range events {
 		details, found := prop(event, "details")
-		var value any
+		var value any = goapi.NewObject()
 		switch text, isText := details.(string); {
 		case isText:
-			parsed, err := ParseJSON(text)
-			if err != nil {
-				return nil, err
+			if parsed, err := ParseJSON(text); err == nil {
+				value = parsed
 			}
-			value = parsed
 		case found && Truthy(details):
 			value = details
-		default:
-			value = goapi.NewObject()
 		}
 		out[i] = event.Clone().Set("details", value)
 	}
-	return out, nil
+	return out
 }
 
 // objects is rows.slice(0, n) as an array.

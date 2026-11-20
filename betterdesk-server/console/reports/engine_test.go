@@ -321,6 +321,31 @@ var _ = fixEngine("RP5", map[string]engineFix{
 	`* {"type":"activity","from":"2019-10-27T02:00:00+02:00"}`:      {as: `{"type":"activity","from":"2019-10-27T00:00:00.000Z"}`},
 })
 
+// RP7: each row is read on its own. An event whose details are no JSON
+// gets details {} while the others are parsed, where Node kept every
+// event's details as stored text. An inventory whose hardware is no JSON
+// (on PostgreSQL the JSON text "str" of fleet's tenth row) is left out
+// alone, and the software is not read, where Node counted no inventory
+// at all: 17 rows on SQLite, of which 7 have no system, and 15 on
+// PostgreSQL.
+var _ = fixEngine("RP7", map[string]engineFix{
+	`event details that are no JSON {"type":"security"}`: {
+		has:   []string{`"action":"log","details":{},"created_at":"2019-11-02`, `"details":{"file":"a,b.txt","size":10}`},
+		lacks: []string{`"details":"`},
+	},
+	`inventory that is no JSON {"type":"inventory"}`: {dialect: "sqlite", has: []string{
+		`"total_inventoried":17,"os_distribution":{"5":1,"12":1,"Unknown":7,"__proto__":1,"A,B":1,"Half":1,"constructor":1,"Windows 11 Pro":2,"macOS 15.1":1,"Ubuntu 24.04":1}`,
+	}},
+	`inventory hardware that is no JSON {"type":"inventory"}`: {has: []string{`"total_inventoried":1,"os_distribution":{"Fine":1},"avg_ram_mb":0`}},
+})
+
+var _ = fixEngine("RP7", map[string]engineFix{
+	`inventory that is no JSON {"type":"inventory"}`: {dialect: "postgres", has: []string{
+		`"total_inventoried":15,"os_distribution":{"5":1,"12":1,"Unknown":5,"__proto__":1,"A,B":1,"Half":1,"constructor":1,"Windows 11 Pro":2,"macOS 15.1":1,"Ubuntu 24.04":1}`,
+	}},
+	`fleet {"type":"inventory"}`: {dialect: "postgres", has: []string{`"total_inventoried":14,`}},
+})
+
 var _ = rewriteEngine("RP5", func(report string) string {
 	parsed, err := goapi.Parse([]byte(report))
 	if err != nil {
@@ -463,6 +488,42 @@ func TestReportsSurviveADeviceWithNullInfo(t *testing.T) {
 			}
 			if got, _ := report.MarshalJSON(); !strings.Contains(string(got), want) {
 				t.Errorf("%s: %s\nwant %s", typ, got, want)
+			}
+		}
+	})
+}
+
+// TestOneUnreadableRowLeavesTheOthers: a data guard event whose details
+// are no JSON gets details {} while the other events keep theirs, and an
+// inventory whose hardware is no JSON is left out of the inventory report
+// alone (BUGS.md RP7).
+func TestOneUnreadableRowLeavesTheOthers(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		bad := db.Pick(`'not json'`, `'"not json"'`)
+		for _, q := range []string{
+			`INSERT INTO dlp_events (device_id, details, created_at) VALUES ('D1', '{"a":1}', '2019-11-01 10:00:00'), ('D2', ` + bad + `, '2019-11-01 09:00:00')`,
+			`INSERT INTO device_inventory (device_id, hardware, software) VALUES
+				('I1', '{"os_name":"Linux","memory":{"total_bytes":1048576}}', '{}'), ('I2', ` + bad + `, '{}')`,
+		} {
+			if _, err := db.Exec(ctx, q); err != nil {
+				t.Fatal(err)
+			}
+		}
+		e := New(Options{DB: db})
+		for typ, want := range map[string][]string{
+			"security":  {`"device_id":"D1"`, `"details":{"a":1}`, `"device_id":"D2"`, `"details":{}`},
+			"inventory": {`"total_inventoried":1,"os_distribution":{"Linux":1},"avg_ram_mb":1`},
+		} {
+			report, err := e.Generate(ctx, jsbind.String(typ), Filters{})
+			if err != nil {
+				t.Fatalf("%s: %v", typ, err)
+			}
+			got, _ := report.MarshalJSON()
+			for _, part := range want {
+				if !strings.Contains(string(got), part) {
+					t.Errorf("%s lacks %s: %s", typ, part, got)
+				}
 			}
 		}
 	})
