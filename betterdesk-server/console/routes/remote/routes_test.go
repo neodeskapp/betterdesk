@@ -129,6 +129,10 @@ type world struct {
 	relayCalls  []relayCall
 	deviceCalls []string
 	issued      int
+	// scope is the device scope of the world's accounts: whether the
+	// account may see the device (nil for a device that was not found).
+	// nil lets every account see every device, as in the vectors.
+	scope func(user *session.User, device *goapi.Object) bool
 
 	cookies map[string]string
 }
@@ -265,6 +269,12 @@ func (w *world) sources(appVersion string) sources {
 		languages:  w.deps.I18n.Bundle.AvailableList,
 		appVersion: appVersion,
 		mock:       w.mock,
+		canAccess: func(_ context.Context, user *session.User, device *goapi.Object) (bool, error) {
+			w.mu.Lock()
+			scope := w.scope
+			w.mu.Unlock()
+			return scope == nil || scope(user, device), nil
+		},
 	}
 }
 
@@ -494,11 +504,12 @@ func appVersionOf(t *testing.T, vectors []vector) string {
 // limit and the body, and what they asked the API server, the device
 // table and the remote relay, on SQLite and PostgreSQL. A vector whose
 // answer a bug fix changed on purpose is held to another vector's answer
-// (answeredAs).
+// (answeredAs) or to the answer it gets since the fix (refusedSessions).
 func TestNodeVectors(t *testing.T) {
 	vectors := loadVectors(t)
 	version := appVersionOf(t, vectors)
 	twins := answeredAs(t, vectors)
+	refused := refusedSessions(t, vectors)
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := newWorld(t, db, version, false)
 		on := newWorld(t, storetest.Migrated(t), version, true)
@@ -525,6 +536,8 @@ func TestNodeVectors(t *testing.T) {
 				target.mu.Lock()
 				target.issued += issues(v) - issues(expected)
 				target.mu.Unlock()
+			} else if fixed, ok := refused[i]; ok {
+				expected = &fixed
 			}
 			if problems := compare(target, expected, rec); len(problems) > 0 {
 				failures++

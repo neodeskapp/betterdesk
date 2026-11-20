@@ -26,6 +26,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/remoterelay"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/unitronix/betterdesk-server/console/session"
 )
 
 // relay is what the routes use of the remote relay (console/remoterelay).
@@ -54,6 +55,10 @@ type sources struct {
 	// mock is the dev mock of the viewer; nil when BD_DEV_MOCK_REMOTE is
 	// not 1.
 	mock *mockScript
+	// canAccess is the account's device scope
+	// (devicegroups.Service.UserCanAccessDevice): whether it holds the
+	// device. A nil device passes only for an account without a limit.
+	canAccess func(ctx context.Context, user *session.User, device *goapi.Object) (bool, error)
 }
 
 type handlers struct {
@@ -88,8 +93,8 @@ func register(d *kit.Deps, src sources) {
 	r.Get("/api/remote/viewer/{deviceId}", h.viewer, page, h.requireRemoteAccess)
 	r.Get("/remote-cdap/{deviceId}", h.cdapRedirect, page)
 	r.Get("/remote-desktop/{deviceId}", h.desktopRedirect, page)
-	r.Get("/api/remote/sessions", h.sessions, d.RequireRdClientAuth(""))
-	r.Get("/api/remote/session/{deviceId}", h.session, d.RequireRdClientAuth(""))
+	r.Get("/api/remote/sessions", h.sessions, connect)
+	r.Get("/api/remote/session/{deviceId}", h.session, connect)
 }
 
 func registerAgentToken(d *kit.Deps, src sources) {
@@ -111,6 +116,7 @@ func defaultSources(d *kit.Deps) sources {
 			return d.Branding.GetBranding()
 		},
 		languages: func() ([]*i18n.Object, error) { return d.I18n.Bundle.AvailableList() },
+		canAccess: d.DeviceGroups.UserCanAccessDevice,
 	}
 	if d.RemoteRelay != nil {
 		src.relay = d.RemoteRelay

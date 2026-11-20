@@ -15,7 +15,8 @@ type sessionFailure struct {
 }
 
 // sessions answers GET /api/remote/sessions with the device ids that have
-// a session on the remote relay. The relay never forgets one.
+// a session on the remote relay, those of the devices the account's
+// device scope holds.
 func (h *handlers) sessions(w http.ResponseWriter, r *http.Request) {
 	ids := []string{}
 	if h.src.relay != nil {
@@ -23,22 +24,75 @@ func (h *handlers) sessions(w http.ResponseWriter, r *http.Request) {
 			ids = active
 		}
 	}
-	kit.JSON(w, r, http.StatusOK, sessionList{Sessions: ids})
+	visible, err := h.inScope(r, ids)
+	if err != nil {
+		h.scopeFailed(w, r, err)
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, sessionList{Sessions: visible})
 }
 
 // session answers GET /api/remote/session/:deviceId with the state of a
-// device's session on the remote relay.
+// device's session on the remote relay. A device outside the account's
+// device scope has no session the account may see.
 func (h *handlers) session(w http.ResponseWriter, r *http.Request) {
 	if h.src.relay == nil {
 		kit.JSON(w, r, http.StatusNotFound, sessionFailure{Error: "Remote relay not available"})
 		return
 	}
-	state := h.src.relay.SessionState(r.PathValue("deviceId"))
+	id := r.PathValue("deviceId")
+	visible, err := h.inScope(r, []string{id})
+	if err != nil {
+		h.scopeFailed(w, r, err)
+		return
+	}
+	if len(visible) == 0 {
+		kit.JSON(w, r, http.StatusNotFound, sessionFailure{Error: "Session not found"})
+		return
+	}
+	state := h.src.relay.SessionState(id)
 	if state == nil {
 		kit.JSON(w, r, http.StatusNotFound, sessionFailure{Error: "Session not found"})
 		return
 	}
 	kit.JSON(w, r, http.StatusOK, state)
+}
+
+// inScope keeps the device ids, in their order, whose device the
+// account's device scope holds. For an account without a limit every id
+// stays and no device is looked up; with a limit, an id whose device the
+// console does not know, or cannot read, is left out.
+func (h *handlers) inScope(r *http.Request, ids []string) ([]string, error) {
+	if len(ids) == 0 {
+		return ids, nil
+	}
+	ctx, user := r.Context(), kit.User(r)
+	unlimited, err := h.src.canAccess(ctx, user, nil)
+	if err != nil || unlimited {
+		return ids, err
+	}
+	visible := make([]string, 0, len(ids))
+	for _, id := range ids {
+		device, err := h.src.relay.Device(ctx, id)
+		if err != nil || device == nil {
+			continue
+		}
+		allowed, err := h.src.canAccess(ctx, user, device)
+		if err != nil {
+			return nil, err
+		}
+		if allowed {
+			visible = append(visible, id)
+		}
+	}
+	return visible, nil
+}
+
+// scopeFailed answers a device scope check that failed, as the device
+// scope guard of the device routes does (kit.RequireDeviceInScope).
+func (h *handlers) scopeFailed(w http.ResponseWriter, r *http.Request, err error) {
+	h.log.Error("Device scope check failed:", err.Error())
+	kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
 }
 
 // agentToken is the answer of POST /api/bd/remote-agent-token.

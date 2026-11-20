@@ -2,7 +2,9 @@ package remote
 
 import (
 	"encoding/json"
+	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -80,6 +82,39 @@ func answeredAs(t *testing.T, vectors []vector) map[int]int {
 		t.Fatal("no agent token request names its device with a value that is no text")
 	}
 	return twins
+}
+
+// refusedSessions holds the Node vectors whose answer RM14 changed on
+// purpose, with the answer they get now. The list of remote sessions and
+// a session's state need device.connect: a request to either route by a
+// role the remote desk refused for lacking device.connect gets the desk's
+// refusal, and the relay is not asked.
+func refusedSessions(t *testing.T, vectors []vector) map[int]vector {
+	t.Helper()
+	const denied = `{"success":false,"error":"Permission denied: device.connect"}`
+	without := map[string]bool{}
+	for _, v := range vectors {
+		if v.Request.Path == "/api/remote/desk" && v.Request.Session != nil && v.Status == http.StatusForbidden && v.Body == denied {
+			without[v.Request.Session.User.Role] = true
+		}
+	}
+	if len(without) == 0 {
+		t.Fatal("no role was refused the remote desk for lacking device.connect")
+	}
+	fixed := map[int]vector{}
+	for i, v := range vectors {
+		path := v.Request.Path
+		if v.Request.Session == nil || !without[v.Request.Session.User.Role] ||
+			(path != "/api/remote/sessions" && !strings.HasPrefix(path, "/api/remote/session/")) {
+			continue
+		}
+		v.Status, v.Body, v.RelayCalls = http.StatusForbidden, denied, nil
+		fixed[i] = v
+	}
+	if len(fixed) == 0 {
+		t.Fatal("no vector asks for the remote sessions with a role without device.connect")
+	}
+	return fixed
 }
 
 // issues counts the agent tokens Node had the relay issue for a vector.
