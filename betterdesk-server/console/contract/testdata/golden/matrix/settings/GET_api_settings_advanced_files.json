@@ -109,16 +109,6 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    {
-     "path": "data[8].mtime",
-     "format": "9999-99-99A99:99:99.999A"
-    },
-    {
-     "path": "data[9].mtime",
-     "format": "9999-99-99A99:99:99.999A"
-    }
-   ],
    "body": {
     "kind": "json",
     "json": {
@@ -222,26 +212,26 @@
       {
        "canCreate": false,
        "category": "console",
-       "exists": true,
+       "exists": false,
        "id": "docker-supervisord",
-       "mtime": "<volatile>",
+       "mtime": null,
        "path": "/repo/docker/supervisord.conf",
-       "readable": true,
+       "readable": false,
        "requiresRestart": "console",
-       "size": 2964,
-       "writable": true
+       "size": 0,
+       "writable": false
       },
       {
        "canCreate": false,
        "category": "console",
-       "exists": true,
+       "exists": false,
        "id": "docker-compose",
-       "mtime": "<volatile>",
+       "mtime": null,
        "path": "/repo/docker-compose.yml",
-       "readable": true,
+       "readable": false,
        "requiresRestart": "console",
-       "size": 8726,
-       "writable": true
+       "size": 0,
+       "writable": false
       }
      ],
      "success": true
