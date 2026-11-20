@@ -1229,10 +1229,12 @@ func (s *Server) handleUpdatePeerFields(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var body struct {
-		Note        *string `json:"note"`
-		User        *string `json:"user"`
-		Tags        *string `json:"tags"`
-		DisplayName *string `json:"display_name"`
+		Note *string `json:"note"`
+		User *string `json:"user"`
+		// Tags is a text or a list of texts, as PUT /api/peers/{id}/tags
+		// takes them
+		Tags        json.RawMessage `json:"tags"`
+		DisplayName *string         `json:"display_name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid JSON"})
@@ -1246,8 +1248,13 @@ func (s *Server) handleUpdatePeerFields(w http.ResponseWriter, r *http.Request) 
 	if body.User != nil {
 		fields["user"] = *body.User
 	}
-	if body.Tags != nil {
-		fields["tags"] = *body.Tags
+	if len(body.Tags) > 0 && string(body.Tags) != "null" {
+		tags, ok := tagsText(body.Tags)
+		if !ok {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid JSON"})
+			return
+		}
+		fields["tags"] = tags
 	}
 	if body.DisplayName != nil {
 		fields["display_name"] = *body.DisplayName
@@ -2045,6 +2052,20 @@ func (s *Server) handleSetPeerTags(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "updated", "id": id, "tags": tagsStr})
+}
+
+// tagsText is a tags value as a peer stores it: a text as it is, a list of
+// texts joined with commas. ok is false for any other value.
+func tagsText(raw json.RawMessage) (string, bool) {
+	var text string
+	if json.Unmarshal(raw, &text) == nil {
+		return text, true
+	}
+	var list []string
+	if json.Unmarshal(raw, &list) == nil {
+		return strings.Join(list, ","), true
+	}
+	return "", false
 }
 
 // handlePeersByTag returns peers matching a tag.
