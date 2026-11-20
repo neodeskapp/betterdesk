@@ -355,7 +355,7 @@ func TestI18nUploadAndDelete(t *testing.T) {
 	// An upload over the file size limit is refused before anything is written
 	large, largeType := upload(t, "big.json", "application/json", `{"_meta":{"code":"sv"},"x":"`+strings.Repeat("a", 1<<20)+`"}`)
 	res = admin.do("POST", "/api/i18n/upload", large, "Content-Type", largeType, "X-CSRF-Token", admin.csrf())
-	if res.status != 500 || res.json(t)["success"] != false {
+	if res.status != 413 || res.body != `{"success":false,"error":"File too large"}` {
 		t.Errorf("upload over the limit: %d %.100s", res.status, res.body)
 	}
 	if _, err := os.Stat(filepath.Join(w.s.cfg.LangDir, "sv.json")); err == nil {

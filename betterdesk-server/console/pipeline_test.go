@@ -449,9 +449,9 @@ func TestStep14RequestLanguage(t *testing.T) {
 	if res := prefers.get("/api/probe", "Accept-Language", "pl"); res.json(t)["lang"] != "fr" {
 		t.Errorf("the account's stored language: %s", res.body)
 	}
-	// A value that cannot be text fails the request, through the error handler
+	// A value that is not text counts as not given: the cookie decides
 	res = a.get("/api/probe?lang[toString]=x")
-	if res.status != 500 || res.body != `{"success":false,"error":"Cannot convert object to primitive value"}` {
+	if res.status != 200 || res.json(t)["lang"] != "de" {
 		t.Errorf("?lang[toString]=x: %d %s", res.status, res.body)
 	}
 	// The language is picked before the CSRF gate refuses
