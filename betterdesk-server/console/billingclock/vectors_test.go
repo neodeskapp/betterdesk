@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -295,6 +296,38 @@ func newVectorService(t *testing.T, linux bool, envPath string, api http.Handler
 	})
 }
 
+// skewFix turns Node's outcomes for a body whose max_skew_ms is a JSON
+// number into what the service gives since CM6: the number is taken as
+// it is, where Node read it with parseInt (2500.9 was 2500, 0.5 the
+// default 2000, 1e21 was 1), and a save refuses one that is no whole
+// number from 1 to 600000. A refusal of the servers comes first, as
+// before. It reports whether the body is one CM6 changes.
+func skewFix(t *testing.T, body any, normalized, validated *outcome) bool {
+	t.Helper()
+	obj, ok := body.(*goapi.Object)
+	if !ok || !obj.Has("max_skew_ms") {
+		return false
+	}
+	n, ok := obj.Get("max_skew_ms").(float64)
+	if !ok || (n == math.Trunc(n) && n >= 1 && n <= 600000) {
+		return false
+	}
+	if normalized.Error == nil {
+		parsed, err := goapi.Parse(normalized.Value)
+		if err != nil {
+			t.Fatal(err)
+		}
+		settings := parsed.(*goapi.Object)
+		settings.Set("max_skew_ms", n)
+		normalized.Value = mustJSON(t, settings)
+	}
+	if validated.Error == nil {
+		message := ErrInvalidMaxSkew.Error()
+		validated.Value, validated.Error = nil, &message
+	}
+	return true
+}
+
 // TestServiceVectors replays services/billingClockConfigService.js:
 // normalizeSettings and validateSettings on Linux and on Windows, the
 // checks of a server and a time zone, the flags and the reading of the
@@ -319,12 +352,19 @@ func TestServiceVectors(t *testing.T) {
 		if len(p.v.Normalize) < 90 {
 			t.Fatalf("%s: only %d bodies", p.name, len(p.v.Normalize))
 		}
+		skews := 0
 		for _, v := range p.v.Normalize {
 			body := raw(t, v.Raw)
+			if skewFix(t, body, &v.Normalized, &v.Validated) {
+				skews++
+			}
 			got, err := s.NormalizeSettings(body)
 			v.Normalized.check(t, p.name+" normalize "+describe(v.Raw), got, err)
 			got, err = s.ValidateSettings(body)
 			v.Validated.check(t, p.name+" validate "+describe(v.Raw), got, err)
+		}
+		if skews < 6 {
+			t.Errorf("%s: only %d bodies whose skew is a number that is no whole number from 1 to 600000 (CM6)", p.name, skews)
 		}
 	}
 

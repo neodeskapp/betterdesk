@@ -20,6 +20,7 @@ package billingclock
 
 import (
 	"errors"
+	"math"
 	"regexp"
 	"strings"
 	"unicode/utf16"
@@ -91,8 +92,10 @@ func CommonTimezones() []string {
 type Settings struct {
 	// NTPServers is a comma separated list.
 	NTPServers string `json:"ntp_servers"`
-	// MaxSkewMS is a whole number above 0. A value read from the file is
-	// not capped, so it can be beyond what a float64 holds exactly.
+	// MaxSkewMS is a whole number above 0 when read from text; a JSON
+	// number is taken as it is, and a save refuses one that is no whole
+	// number from 1 to 600000. A value read from the file is not capped,
+	// so it can be beyond what a float64 holds exactly.
 	MaxSkewMS          float64 `json:"max_skew_ms"`
 	RequireSyncedClock bool    `json:"require_synced_clock"`
 	TrustOSNTP         bool    `json:"trust_os_ntp"`
@@ -127,10 +130,10 @@ func member(raw any, key string) any {
 
 // NormalizeSettings reads settings out of raw the way the console did
 // (normalizeSettings): a missing or null member gets its default, the
-// servers are trimmed and empty entries dropped, the skew is
-// parseInt(value, 10) when that is above 0, the two flags are the
-// truthiness of a member that is there, and the time zone is the trimmed
-// text, "UTC" when empty.
+// servers are trimmed and empty entries dropped, the skew is a JSON
+// number as it is and otherwise parseInt(value, 10) when that is above 0,
+// the two flags are the truthiness of a member that is there, and the
+// time zone is the trimmed text, "UTC" when empty.
 //
 // raw is a parsed JSON value, or Undefined (the default {}). For null the
 // error is the TypeError of reading a member of null, and for an object
@@ -150,13 +153,17 @@ func (s *Service) NormalizeSettings(raw any) (Settings, error) {
 			kept = append(kept, part)
 		}
 	}
-	skewText, err := toText(member(raw, "max_skew_ms"))
-	if err != nil {
-		return Settings{}, err
-	}
-	skew, ok := parseInt10(skewText)
-	if !ok || skew <= 0 {
-		skew = DefaultMaxSkewMS
+	skewMember := member(raw, "max_skew_ms")
+	skew, isNumber := skewMember.(float64)
+	if !isNumber {
+		skewText, err := toText(skewMember)
+		if err != nil {
+			return Settings{}, err
+		}
+		var ok bool
+		if skew, ok = parseInt10(skewText); !ok || skew <= 0 {
+			skew = DefaultMaxSkewMS
+		}
 	}
 	zone, err := textOr(member(raw, "billing_timezone"), DefaultBillingTimezone)
 	if err != nil {
@@ -175,9 +182,9 @@ func (s *Service) NormalizeSettings(raw any) (Settings, error) {
 }
 
 // ValidateSettings is NormalizeSettings with the checks of a save: at
-// least one server and each a host name or an IP address, a skew up to
-// ten minutes, and a time zone Intl knows. The first check that fails is
-// the error.
+// least one server and each a host name or an IP address, a skew that is
+// a whole number of milliseconds from 1 to ten minutes, and a time zone
+// Intl knows. The first check that fails is the error.
 func (s *Service) ValidateSettings(raw any) (Settings, error) {
 	settings, err := s.NormalizeSettings(raw)
 	if err != nil {
@@ -197,7 +204,7 @@ func (s *Service) ValidateSettings(raw any) (Settings, error) {
 			return Settings{}, ErrInvalidNTPServers
 		}
 	}
-	if settings.MaxSkewMS <= 0 || settings.MaxSkewMS > maxSkewLimit {
+	if settings.MaxSkewMS < 1 || settings.MaxSkewMS > maxSkewLimit || settings.MaxSkewMS != math.Trunc(settings.MaxSkewMS) {
 		return Settings{}, ErrInvalidMaxSkew
 	}
 	if !IsValidIANATimezone(settings.BillingTimezone) {
