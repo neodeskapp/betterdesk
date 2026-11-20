@@ -8,6 +8,7 @@
 package tenants
 
 import (
+	"context"
 	"errors"
 	"math"
 	"net/http"
@@ -363,7 +364,29 @@ func (h *handlers) devices(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusInternalServerError, "Failed to fetch tenant devices")
 		return
 	}
+	h.markOnline(r.Context(), devices)
 	kit.JSON(w, r, http.StatusOK, devices)
+}
+
+// markOnline sets the devices online that the API server has online, as
+// the device list shows them. Without an answer of the API server every
+// device is offline.
+func (h *handlers) markOnline(ctx context.Context, devices []tenantDevice) {
+	if len(devices) == 0 {
+		return
+	}
+	online := map[string]bool{}
+	for _, p := range h.api.GetAllPeers(ctx, false) {
+		if p == nil {
+			continue
+		}
+		if id, ok := p.Get("id").(string); ok && p.Get("online") == true {
+			online[id] = true
+		}
+	}
+	for i := range devices {
+		devices[i].Online = online[devices[i].DeviceID]
+	}
 }
 
 type assigned struct {
@@ -579,6 +602,7 @@ func (h *handlers) stats(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusInternalServerError, "Failed to fetch tenant stats")
 		return
 	}
+	h.markOnline(r.Context(), devices)
 	online := 0
 	for _, device := range devices {
 		if device.Online {

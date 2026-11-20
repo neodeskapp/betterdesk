@@ -167,7 +167,8 @@ func deleteTenant(ctx context.Context, db *store.DB, id jsbind.Value) (bool, err
 }
 
 // tenantDevice is a device assigned to a tenant, with what the console's
-// device table knows about it.
+// device table knows about it. Online is set by the route, from the API
+// server.
 type tenantDevice struct {
 	DeviceID   string     `json:"device_id"`
 	AssignedAt store.Time `json:"assigned_at"`
@@ -186,7 +187,7 @@ func tenantDevices(ctx context.Context, db *store.DB, tenantID jsbind.Value) ([]
 		return nil, fmt.Errorf("%s: %w", doing, err)
 	}
 	rows, err := store.Select(ctx, db, `
-		SELECT td.device_id, td.assigned_at, p.note, p.status_online, p.ip
+		SELECT td.device_id, td.assigned_at, p.note, p.ip
 		FROM tenant_devices td
 		LEFT JOIN peer p ON p.id = td.device_id AND `+db.Pick("(p.is_deleted = 0 OR p.is_deleted IS NULL)", "(NOT p.is_deleted OR p.is_deleted IS NULL)")+`
 		WHERE td.tenant_id = ?
@@ -199,17 +200,10 @@ func tenantDevices(ctx context.Context, db *store.DB, tenantID jsbind.Value) ([]
 	for rows.Next() {
 		var d tenantDevice
 		var note, ip store.NullString
-		var online jsbind.Cell
-		if err := rows.Scan(&d.DeviceID, &d.AssignedAt, &note, &online, &ip); err != nil {
+		if err := rows.Scan(&d.DeviceID, &d.AssignedAt, &note, &ip); err != nil {
 			return nil, fmt.Errorf("%s: %w", doing, err)
 		}
 		d.Hostname, d.IP = note.OrEmpty(), ip.OrEmpty()
-		// SQLite: status_online === 1; PostgreSQL: !!status_online
-		if db.IsPostgres() {
-			d.Online = online.Value().Truthy()
-		} else {
-			d.Online = online.Value().ToNumber() == 1
-		}
 		devices = append(devices, d)
 	}
 	if err := rows.Err(); err != nil {

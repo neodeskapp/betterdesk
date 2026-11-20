@@ -1,7 +1,11 @@
 package tenants_test
 
 import (
+	"encoding/json"
+	"fmt"
+	"maps"
 	"net/http"
+	"slices"
 	"strings"
 	"testing"
 
@@ -12,12 +16,21 @@ import (
 
 // knownDevices stands in for the API server. It knows the devices the
 // recordings' console has in its table (D-ON to D-REAL) and the devices D1
-// to D3 of the tests, and no other.
+// to D3 of the tests, and no other. Online are D-ON and D-NULLDEL, which
+// the recordings' console had online, and D1.
 var knownDevices = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	if r.Method == http.MethodGet && r.URL.Path == "/api/peers" {
+		var list []string
+		for _, id := range slices.Sorted(maps.Keys(known)) {
+			list = append(list, peerJSON(id))
+		}
+		_, _ = w.Write([]byte("[" + strings.Join(list, ",") + "]"))
+		return
+	}
 	id, ok := strings.CutPrefix(r.URL.Path, "/api/peers/")
 	if ok && r.Method == http.MethodGet && known[id] {
-		_, _ = w.Write([]byte(`{"id":"` + id + `","hostname":"pc-` + id + `"}`))
+		_, _ = w.Write([]byte(peerJSON(id)))
 		return
 	}
 	w.WriteHeader(http.StatusNotFound)
@@ -27,6 +40,12 @@ var knownDevices = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request)
 var known = map[string]bool{
 	"D-ON": true, "D-OFF": true, "D-GONE": true, "D-NULLDEL": true, "D-TWO": true, "D-TEXT": true, "D-REAL": true,
 	"D1": true, "D2": true, "D3": true,
+}
+
+// peerJSON is a known device as the API server sends it.
+func peerJSON(id string) string {
+	online := id == "D-ON" || id == "D-NULLDEL" || id == "D1"
+	return fmt.Sprintf(`{"id":%q,"hostname":"pc-%s","live_online":%v}`, id, id, online)
 }
 
 // newWorld is the console of the tests, with the devices of knownDevices.
@@ -128,6 +147,42 @@ func TestAssignUserChecksTenantAndUser(t *testing.T) {
 		}
 		if rows := w.Rows("SELECT user_id FROM tenant_users", nil); rows != `[{"user_id":2}]` {
 			t.Errorf("the tenant's users: %s", rows)
+		}
+	})
+}
+
+// A tenant's devices are online when the API server has them online, as
+// in the device list. The console's own device table holds a status that
+// nothing keeps up to date, which the routes counted (BUGS TN9).
+func TestOnlineComesFromTheAPI(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db)
+		if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tenants", Body: replay.Text(`{"name":"One"}`)}); got.Status != 201 {
+			t.Fatalf("create: %d %s", got.Status, got.Body)
+		}
+		// The console's table has D2 and D3 online, the API server only D1
+		for _, id := range []string{"D2", "D3"} {
+			w.Exec("INSERT INTO peer (id, note, status_online) VALUES (?, '', "+db.Pick("1", "TRUE")+")", []any{id})
+		}
+		if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tenants/1/devices", Body: replay.Text(`{"device_ids":["D1","D2","D3"]}`)}); got.Status != 200 {
+			t.Fatalf("assign: %d %s", got.Status, got.Body)
+		}
+		stats := w.Do(replay.Request{Role: "admin", Path: "/api/tenants/1/stats"})
+		if !strings.Contains(stats.Body, `"total_devices":3,"online_devices":1,`) {
+			t.Errorf("the stats: %d %s, want 1 of 3 devices online", stats.Status, stats.Body)
+		}
+		answer := w.Do(replay.Request{Role: "admin", Path: "/api/tenants/1/devices"})
+		var devices []struct {
+			DeviceID string `json:"device_id"`
+			Online   bool   `json:"online"`
+		}
+		_ = json.Unmarshal([]byte(answer.Body), &devices)
+		online := map[string]bool{}
+		for _, d := range devices {
+			online[d.DeviceID] = d.Online
+		}
+		if want := map[string]bool{"D1": true, "D2": false, "D3": false}; !maps.Equal(online, want) {
+			t.Errorf("the devices: %d %s, want only D1 online", answer.Status, answer.Body)
 		}
 	})
 }
