@@ -69,6 +69,37 @@ func TestFirstAdminOnPostgresWritesItsCredentials(t *testing.T) {
 	}
 }
 
+// TestAttachPanelSyncUsesTheMainFileWithoutAuthDB: on a SQLite install
+// without auth.db (a fresh one, where the console keeps its tables in the
+// main file) the panel sync reads the main file; an auth.db that exists is
+// read until it has been moved into the main file (BUGS D6).
+func TestAttachPanelSyncUsesTheMainFileWithoutAuthDB(t *testing.T) {
+	dir := t.TempDir()
+	mainPath := filepath.Join(dir, "db_v2.sqlite3")
+	database, err := db.OpenSQLite(mainPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { database.Close() })
+	if err := database.Migrate(); err != nil {
+		t.Fatal(err)
+	}
+	missing := filepath.Join(dir, "data", "auth.db")
+	if got := panelSyncPath(mainPath, missing); got != mainPath {
+		t.Errorf("without auth.db: %q, want the main file %q", got, mainPath)
+	}
+	if got := panelSyncPath(mainPath, ""); got != mainPath {
+		t.Errorf("without an auth.db path: %q, want the main file %q", got, mainPath)
+	}
+	authPath := filepath.Join(dir, "auth.db")
+	if err := os.WriteFile(authPath, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if got := panelSyncPath(mainPath, authPath); got != authPath {
+		t.Errorf("with an auth.db: %q, want %q", got, authPath)
+	}
+}
+
 func TestResolveEnrollmentModeExplicitEnvironmentWins(t *testing.T) {
 	mode, source := resolveEnrollmentMode(config.EnrollmentModeOpen, config.EnrollmentModeLocked, true)
 	if mode != config.EnrollmentModeOpen || source != "environment" {

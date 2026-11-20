@@ -1098,13 +1098,7 @@ func attachPanelSync(apiSrv *api.Server, billingSvc *billing.Service, database d
 		return func() {}
 	}
 	if _, ok := database.(*db.SQLiteDB); ok {
-		consolidated, err := db.SQLiteAuthConsolidated(primaryDBPath)
-		if err != nil {
-			log.Printf("WARN: cannot determine SQLite consolidation state: %v", err)
-		} else if consolidated {
-			authDBPath = primaryDBPath
-			log.Printf("RustDesk panel sync: consolidated SQLite database")
-		}
+		authDBPath = panelSyncPath(primaryDBPath, authDBPath)
 	}
 	if strings.TrimSpace(authDBPath) == "" {
 		log.Printf("WARN: no panel sync source — device groups/folders unavailable to RustDesk client")
@@ -1121,6 +1115,34 @@ func attachPanelSync(apiSrv *api.Server, billingSvc *billing.Service, database d
 	}
 	log.Printf("RustDesk panel sync: legacy auth.db at %s", authDBPath)
 	return func() { _ = consoleAuth.Close() }
+}
+
+// panelSyncPath is the SQLite file the RustDesk panel sync reads on a
+// SQLite install: the main file once auth.db has been moved into it, or
+// when there is no auth.db, as the console keeps its tables in the main
+// file; else auth.db.
+func panelSyncPath(primaryDBPath, authDBPath string) string {
+	consolidated, err := db.SQLiteAuthConsolidated(primaryDBPath)
+	switch {
+	case err != nil:
+		log.Printf("WARN: cannot determine SQLite consolidation state: %v", err)
+	case consolidated:
+		log.Printf("RustDesk panel sync: consolidated SQLite database")
+		return primaryDBPath
+	case !isFile(authDBPath):
+		log.Printf("RustDesk panel sync: main SQLite database, no auth.db")
+		return primaryDBPath
+	}
+	return authDBPath
+}
+
+// isFile reports whether path names a file that exists.
+func isFile(path string) bool {
+	if strings.TrimSpace(path) == "" {
+		return false
+	}
+	st, err := os.Stat(path)
+	return err == nil && !st.IsDir()
 }
 
 func parseFlags() *config.Config {
