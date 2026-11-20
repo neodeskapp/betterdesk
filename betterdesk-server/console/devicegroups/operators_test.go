@@ -121,3 +121,34 @@ func TestResolveOperatorUsernamesForDevice(t *testing.T) {
 		}
 	})
 }
+
+// A tag group takes the tags of the server's device table peers, which
+// has them on both databases: the console's copy peer has no tags on
+// PostgreSQL, and on SQLite it keeps a tag the server has dropped. A
+// deleted device has no tags (BUGS D4).
+func TestTagGroupOperatorsTakeTheServersTags(t *testing.T) {
+	eachInstall(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		s := newService(t, db)
+		exec(t, db, `INSERT INTO users (username, password_hash, role, email) VALUES ('gina', 'x', 'operator', 'gina@example.org')`)
+		_, err := s.CreateDeviceGroup(ctx, devicegroups.GroupData{
+			GUID: jsbind.String("g-print"), Name: jsbind.String("Printers"),
+			SourceType: jsbind.String("tag"), TagFilter: jsbind.String("Printer"),
+		})
+		mustDo(t, "create the tag group", err)
+		_, err = s.SetDeviceGroupUserAccess(ctx, "g-print", []string{"gina"})
+		mustDo(t, "access list", err)
+		exec(t, db, `INSERT INTO peers (id, tags) VALUES ('dev-3', 'office,printer'), ('dev-4', 'printer'), ('dev-5', 'printer')`)
+		exec(t, db, `UPDATE peers SET soft_deleted = NOT soft_deleted WHERE id = 'dev-5'`)
+		// the console's copy takes dev-4's tag, then the server drops it
+		s.SyncServerPeers(ctx)
+		exec(t, db, `UPDATE peers SET tags = '' WHERE id = 'dev-4'`)
+
+		for id, want := range map[string]string{"dev-3": "gina", "dev-4": "", "dev-5": ""} {
+			got, err := devicegroups.ResolveOperatorUsernamesForDevice(ctx, db, id)
+			if err != nil || strings.Join(got, " ") != want {
+				t.Errorf("operators of %s: %q, %v; want %q", id, got, err, want)
+			}
+		}
+	})
+}

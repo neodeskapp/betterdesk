@@ -126,19 +126,22 @@ func ResolveOperatorUsernamesForDevice(ctx context.Context, db *store.DB, device
 	return names.list, nil
 }
 
-// deviceTags are the tags of a device as the console's device table holds
-// them; none for a device it does not list.
+// deviceTags are the tags of a device as the server's device table peers
+// holds them, which has them on both databases (the console's copy peer
+// has none on PostgreSQL). A deleted device, one the table does not have,
+// and a database without the table have none.
 func (s *Service) deviceTags(ctx context.Context, deviceID string) ([]string, error) {
-	devices, err := s.AllPeers(ctx)
+	row, err := readRow(ctx, s.db, `SELECT tags FROM peers WHERE id = ? AND NOT soft_deleted`, deviceID)
 	if err != nil {
-		return nil, err
-	}
-	for _, device := range devices {
-		if jsText(device.Get("id")) == deviceID {
-			return ScopeDevices([]*goapi.Object{device})[0].Tags, nil
+		if message := err.Error(); strings.Contains(message, "no such table") || strings.Contains(message, "does not exist") {
+			return nil, nil
 		}
+		return nil, fmt.Errorf("load the tags of device %s: %w", deviceID, err)
 	}
-	return nil, nil
+	if row == nil {
+		return nil, nil
+	}
+	return access.NormalizeTags(Plain(row.Get("tags"))), nil
 }
 
 // nameSet keeps account names in the order they were first added.
