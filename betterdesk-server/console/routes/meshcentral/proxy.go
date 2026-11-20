@@ -76,10 +76,27 @@ func devicePath(id, action string) string {
 	return "/mesh/devices/" + goapi.EncodeURIComponent(id) + "/" + action
 }
 
+// isDotSegment reports whether an id is "." or "..", which no device or
+// recording has and which would name another path of the API server.
+func isDotSegment(id string) bool { return id == "." || id == ".." }
+
+// validDevice answers 400 for a device id that is "." or "..", and
+// reports whether the id can go on.
+func validDevice(w http.ResponseWriter, r *http.Request) bool {
+	if isDotSegment(r.PathValue("id")) {
+		kit.JSON(w, r, http.StatusBadRequest, apiFailure{Error: "Invalid device id"})
+		return false
+	}
+	return true
+}
+
 // device answers POST /api/mesh/devices/{id}/<action>. withBody sends the
 // request's JSON body along.
 func (h *handlers) device(action string, withBody bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !validDevice(w, r) {
+			return
+		}
 		var opts []goapi.CallOption
 		if withBody {
 			opts = append(opts, requestBody(r))
@@ -146,9 +163,14 @@ func (h *handlers) validateShare(w http.ResponseWriter, r *http.Request) {
 	h.pass(w, r, http.MethodGet, withSearch("/mesh/share/validate", search))
 }
 
-// recording answers GET /api/mesh/recordings/{id}.
+// recording answers GET /api/mesh/recordings/{id}; "." and ".." are 400.
 func (h *handlers) recording(w http.ResponseWriter, r *http.Request) {
-	h.pass(w, r, http.MethodGet, "/mesh/recordings/"+goapi.EncodeURIComponent(r.PathValue("id")))
+	id := r.PathValue("id")
+	if isDotSegment(id) {
+		kit.JSON(w, r, http.StatusBadRequest, apiFailure{Error: "Invalid recording id"})
+		return
+	}
+	h.pass(w, r, http.MethodGet, "/mesh/recordings/"+goapi.EncodeURIComponent(id))
 }
 
 // withSearch adds a query string to a path when there is one.

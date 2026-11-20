@@ -101,7 +101,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Invalid API path segment"
+     "error": "Invalid device id"
     }
    }
   }

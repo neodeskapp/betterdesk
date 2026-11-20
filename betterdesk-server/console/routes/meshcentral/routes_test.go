@@ -307,8 +307,9 @@ func TestDeviceIDIsOneEscapedSegment(t *testing.T) {
 		{"%C3%A9~!*'()", 400, `{"error":"mesh agent not connected"}`, "POST /mesh/devices/%C3%A9~!*'()/terminal"},
 		{"a%5Cb", 400, `{"error":"mesh agent not connected"}`, "POST /mesh/devices/a%5Cb/terminal"},
 		{"x..y", 500, `{"error":"Go server unreachable"}`, ""},
-		{"%2e%2e", 500, `{"error":"Go server unreachable"}`, ""},
-		{"%2e", 400, `{"error":"Invalid API path segment"}`, ""},
+		// . and .. are no device ids (BUGS.md MC5)
+		{"%2e%2e", 400, `{"error":"Invalid device id"}`, ""},
+		{"%2e", 400, `{"error":"Invalid device id"}`, ""},
 	}
 	for _, c := range cases {
 		expect(t, "device "+c.id, w.do("admin", "POST", "/api/mesh/devices/"+c.id+"/terminal", "{}"), c.status, c.body)
@@ -316,8 +317,15 @@ func TestDeviceIDIsOneEscapedSegment(t *testing.T) {
 			t.Errorf("device %s: the API server got %q, want %q", c.id, got, c.call)
 		}
 	}
-	expect(t, "recording .", w.do("admin", "GET", "/api/mesh/recordings/%2e", ""), 400, `{"error":"Invalid API path segment"}`)
-	expect(t, "recording ..", w.do("admin", "GET", "/api/mesh/recordings/%2e%2e", ""), 500, `{"error":"Go server unreachable"}`)
+	for _, id := range []string{"%2e", "%2e%2e"} {
+		expect(t, "desktop "+id, w.do("admin", "POST", "/api/mesh/devices/"+id+"/desktop", "{}"), 400, `{"error":"Invalid device id"}`)
+		expect(t, "desktop by link "+id, w.do("", "POST", "/api/mesh/devices/"+id+"/desktop?mesh_share=abc", "{}"), 400, `{"error":"Invalid device id"}`)
+		if got := w.sent(); got != "" {
+			t.Errorf("desktop %s: the API server got %q", id, got)
+		}
+	}
+	expect(t, "recording .", w.do("admin", "GET", "/api/mesh/recordings/%2e", ""), 400, `{"error":"Invalid recording id"}`)
+	expect(t, "recording ..", w.do("admin", "GET", "/api/mesh/recordings/%2e%2e", ""), 400, `{"error":"Invalid recording id"}`)
 	w.do("admin", "GET", "/api/mesh/recordings/a%2Fb.webm", "")
 	if got, want := w.sent(), "GET /mesh/recordings/a%2Fb.webm"; got != want {
 		t.Errorf("recording: the API server got %q, want %q", got, want)

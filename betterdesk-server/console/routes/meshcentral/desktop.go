@@ -22,8 +22,11 @@ import (
 //
 // A share token wins over a guest token; the guest token is then not
 // checked here. A token that cannot be turned into text is refused with
-// 400, as the guest routes refuse it.
+// 400, as the guest routes refuse it, and so is a device id "." or "..".
 func (h *handlers) desktop(w http.ResponseWriter, r *http.Request) {
+	if !validDevice(w, r) {
+		return
+	}
 	id := r.PathValue("id")
 	query := requestQuery(r)
 	share, shareIsText := trimmedText(query.get("mesh_share"))
