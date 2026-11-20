@@ -284,20 +284,22 @@ func FuzzHandleMessage(f *testing.F) {
 	})
 }
 
-// FuzzDecodeBase64 checks the forgiving decoder against the strict one of
-// the standard library wherever the text is plain base64, and the file
-// name a text becomes.
+// FuzzDecodeBase64 checks the chunk decoder against the one of the
+// standard library: padded standard base64 without line ends (which the
+// standard decoder skips) gives the same bytes, and the decoder takes
+// nothing that is no standard base64 without its padding. It checks the
+// file name a text becomes too.
 func FuzzDecodeBase64(f *testing.F) {
 	for _, seed := range []string{"", "QUJD", "QUJDRA==", "QU-_", "Q", "QQ=", "QUJD RA", "ŁĽQUJD"} {
 		f.Add(seed)
 	}
 	f.Fuzz(func(t *testing.T, text string) {
-		got := decodeBase64(text)
-		if len(got) > len(text) {
-			t.Fatalf("%d bytes from %d characters", len(got), len(text))
+		got, err := decodeBase64(text)
+		if strict, strictErr := base64.StdEncoding.DecodeString(text); strictErr == nil && !strings.ContainsAny(text, "\r\n") && (err != nil || !bytes.Equal(strict, got)) {
+			t.Fatalf("decodeBase64(%q) = %x, %v; the standard decoder gives %x", text, got, err, strict)
 		}
-		if strict, err := base64.StdEncoding.DecodeString(text); err == nil && !bytes.Equal(strict, got) {
-			t.Fatalf("decodeBase64(%q) = %x, the standard decoder gives %x", text, got, strict)
+		if raw, rawErr := base64.RawStdEncoding.DecodeString(strings.TrimRight(text, "=")); err == nil && (rawErr != nil || !bytes.Equal(raw, got)) {
+			t.Fatalf("decodeBase64(%q) = %x; the standard decoder without padding gives %x, %v", text, got, raw, rawErr)
 		}
 		if name := safeFileName(text); name == "" || strings.Trim(name, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-") != "" {
 			t.Fatalf("safeFileName(%q) = %q", text, name)
@@ -494,5 +496,32 @@ func TestATransferWithoutTextIsNotStored(t *testing.T) {
 	}
 	if _, err := s.ReceiveChunk(record.ID, float64(0), "QUI="); err != nil {
 		t.Errorf("a chunk for a transfer with a long name: %v", err)
+	}
+}
+
+// A chunk's text is plain base64: the standard alphabet with its padding
+// at the end, or without padding. Anything else is refused and writes
+// nothing (BUGS FT9).
+func TestAChunkThatIsNotBase64IsRefused(t *testing.T) {
+	s, _ := newService(t)
+	record, err := s.CreateTransfer(Params{Filename: "b.bin", Size: float64(1000), DeviceID: "d"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, text := range []string{"ŁQ==", "😀QUJD", "QU JD", "QUJD\n", "QU-_", "QQ=A", "Q===", "Q", "QUJDR", "QQ="} {
+		if _, err := s.ReceiveChunk(record.ID, float64(1), text); err == nil || err.Error() != "Chunk is no base64 text" {
+			t.Errorf("chunk %q: %v", text, err)
+		}
+	}
+	if got := s.GetTransfer(record.ID); got.BytesTransferred != 0 || got.ChunksReceived != 0 {
+		t.Errorf("after the refused chunks: %d bytes in %d chunks", got.BytesTransferred, got.ChunksReceived)
+	}
+	for text, bytes := range map[string]int64{"": 0, "QUJD": 3, "QUI=": 2, "QUI": 2, "QQ==": 1, "QQ": 1, "+/+/": 3} {
+		before := s.GetTransfer(record.ID).BytesTransferred
+		if _, err := s.ReceiveChunk(record.ID, float64(1), text); err != nil {
+			t.Errorf("chunk %q: %v", text, err)
+		} else if got := s.GetTransfer(record.ID).BytesTransferred - before; got != bytes {
+			t.Errorf("chunk %q gave %d bytes, want %d", text, got, bytes)
+		}
 	}
 }

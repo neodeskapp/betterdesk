@@ -35,6 +35,8 @@ var stepFixes = []struct{ bug, steps string }{
 	// A transfer whose direction or device has no text is not stored, and
 	// a long file name is cut
 	{"FT5", "64-129,454,473-474,602-610,1383-1388,2192-2196,2352-2377,3507-3518,3664-3680,3937-3951,4210,4338-4359,4658-4675,4776-4793,5226-5228,5231-5236"},
+	// A chunk is plain base64 or refused
+	{"FT9", "1787-1795"},
 }
 
 // rewrite is a fix that changes Node's answer of every step alike. It

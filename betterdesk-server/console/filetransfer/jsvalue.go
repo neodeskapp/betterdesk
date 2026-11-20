@@ -1,6 +1,7 @@
 package filetransfer
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -10,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-	"unicode/utf16"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/goapipath"
@@ -172,14 +172,14 @@ var errChunkTooLarge = fmt.Errorf("Chunk too large (max %d bytes)", MaxChunkSize
 const notBufferLike = "The first argument must be of type string or an instance of Buffer, ArrayBuffer, or Array or an Array-like Object."
 
 // bufferFrom is Buffer.from(data, 'base64') for the "data" of a chunk
-// message: base64 text, or a list of byte values, or the JSON form of a
+// message: plain base64 text, or a list of byte values, or the JSON form of a
 // buffer ({type: "Buffer", data: [...]}), or an object with a length and
 // numbered members, refused above MaxChunkSize before any memory is taken.
 // Anything else is the error JavaScript gave.
 func bufferFrom(data any) ([]byte, error) {
 	switch t := data.(type) {
 	case string:
-		return decodeBase64(t), nil
+		return decodeBase64(t)
 	case []any:
 		return bytesOf(t), nil
 	case undefinedValue:
@@ -234,56 +234,28 @@ func toByte(v any) byte {
 	return byte(int64(math.Mod(math.Trunc(n), 256)))
 }
 
-// decodeBase64 reads base64 the forgiving way Node does: both alphabets
-// (+/ and -_), characters outside them skipped, and the first "=" ends
-// the text. Two characters left at the end give one byte, three give two.
-// Node looks at the low byte of each UTF-16 code unit only, so a
-// character above U+00FF counts as the Latin-1 character with its low
-// byte: U+0141 reads as "A", and U+013D as the "=" that ends the text.
-func decodeBase64(text string) []byte {
-	out := make([]byte, 0, len(text)*3/4)
-	var bits uint32
-	n := 0
-	for _, unit := range utf16.Encode([]rune(text)) {
-		c := byte(unit)
-		var v uint32
-		switch {
-		case c >= 'A' && c <= 'Z':
-			v = uint32(c - 'A')
-		case c >= 'a' && c <= 'z':
-			v = uint32(c-'a') + 26
-		case c >= '0' && c <= '9':
-			v = uint32(c-'0') + 52
-		case c == '+' || c == '-':
-			v = 62
-		case c == '/' || c == '_':
-			v = 63
-		case c == '=':
-			return finishBase64(out, bits, n)
-		default:
-			continue
-		}
-		bits = bits<<6 | v
-		n++
-		if n == 4 {
-			out = append(out, byte(bits>>16), byte(bits>>8), byte(bits))
-			bits, n = 0, 0
-		}
+// errNotBase64 refuses a chunk whose text is not plain base64.
+var errNotBase64 = errors.New("Chunk is no base64 text")
+
+// decodeBase64 reads the text of a chunk as plain base64: the standard
+// alphabet, with "=" padding at the end or without padding. Anything else,
+// such as white space, the URL alphabet or characters outside ASCII, is
+// errNotBase64.
+func decodeBase64(text string) ([]byte, error) {
+	data := strings.TrimRight(text, "=")
+	padding := len(text) - len(data)
+	if strings.Trim(data, base64Alphabet) != "" || len(data)%4 == 1 ||
+		(padding > 0 && (padding > 2 || len(text)%4 != 0)) {
+		return nil, errNotBase64
 	}
-	return finishBase64(out, bits, n)
+	out, err := base64.RawStdEncoding.DecodeString(data)
+	if err != nil {
+		return nil, errNotBase64
+	}
+	return out, nil
 }
 
-// finishBase64 adds the bytes of the last, incomplete group of
-// characters.
-func finishBase64(out []byte, bits uint32, n int) []byte {
-	switch n {
-	case 2:
-		out = append(out, byte(bits>>4))
-	case 3:
-		out = append(out, byte(bits>>10), byte(bits>>2))
-	}
-	return out
-}
+const base64Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
 // baseName is path.basename(name) of Node: the last part of a path,
 // without slashes at the end. On Windows a backslash separates too and a
