@@ -8,11 +8,14 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
+	apiserver "github.com/unitronix/betterdesk-server/api"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
@@ -500,6 +503,38 @@ func TestOperatorLogin(t *testing.T) {
 			t.Errorf("locked: %d %s", status, body)
 		}
 	})
+}
+
+// A password the console cannot check makes the operator sign-in ask the
+// API server, and the call names the desktop client's address (as
+// TRUST_PROXY gives it), which the API server's limits count (BUGS G8).
+func TestOperatorLoginNamesTheClientsAddressToTheAPIServer(t *testing.T) {
+	var mu sync.Mutex
+	var addrs []string
+	api := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/auth/login" {
+			ip, _ := apiserver.SignInAddress(r.Context())
+			mu.Lock()
+			addrs = append(addrs, ip)
+			mu.Unlock()
+		}
+		rw.Header().Set("Content-Type", "application/json")
+		rw.WriteHeader(http.StatusUnauthorized)
+		_, _ = io.WriteString(rw, `{"error":"Invalid credentials"}`)
+	})
+	w := routetest.New(t, routetest.Options{API: api, Config: func(cfg *config.Config) {
+		cfg.TrustProxy, _ = httpx.ParseTrustProxy("1")
+	}})
+	got := w.SignedOut().Do("POST", "/api/bd/operator/login", `{"username":"e2e_operator","password":"wrong","device_id":"OPDESK1"}`,
+		"X-Forwarded-For", "203.0.113.7")
+	if got.Status != http.StatusUnauthorized {
+		t.Fatalf("a password the API server refuses: %d %s", got.Status, got.Body)
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if len(addrs) != 1 || addrs[0] != "203.0.113.7" {
+		t.Errorf("the API server's sign-in calls named %q; want the client's address", addrs)
+	}
 }
 
 // sessionRows writes start and end rows of the connection audit: host,

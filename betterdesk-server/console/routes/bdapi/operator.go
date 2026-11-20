@@ -32,8 +32,10 @@ func (h *handlers) operatorLogin(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "Username and password are required")
 		return
 	}
-	ctx := r.Context()
 	ip := clientIP(r)
+	// The API server's sign-in, when Authenticate asks it, counts the
+	// desktop client's address
+	ctx := authn.WithClientAddress(r.Context(), ip)
 	brute, err := h.d.Authn.CheckBruteForce(ctx, username, ip)
 	if err != nil {
 		h.serverError(w, r, "Operator login error:", err, "Authentication failed")
