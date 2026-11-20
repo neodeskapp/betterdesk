@@ -689,6 +689,16 @@ var knownClientAPI = map[string]func(t *testing.T, got []reply, closed bool) str
 		}
 		return ""
 	},
+	// The JSON rule reads the media type in any letter case; the text
+	// application/json elsewhere in the header counts for nothing (BUGS M7)
+	`type "application/jsonx" POST /api/login`:          statusIs(http.StatusUnsupportedMediaType),
+	`type "text/x; a=application/json" POST /api/login`: statusIs(http.StatusUnsupportedMediaType),
+	`type "APPLICATION/JSON" POST /api/login`: func(_ *testing.T, got []reply, _ bool) string {
+		if len(got) != 1 || got[0].status == http.StatusUnsupportedMediaType {
+			return fmt.Sprintf("want one answer past the JSON rule, got %v", statuses(got))
+		}
+		return ""
+	},
 	"slow keep-alive then partial": func(_ *testing.T, got []reply, closed bool) string {
 		if len(got) != 1 || !closed {
 			return fmt.Sprintf("want the first answer and a close, got %v closed %v", statuses(got), closed)

@@ -842,6 +842,34 @@ func TestClientAPIBodyLimits(t *testing.T) {
 	}
 }
 
+// The JSON rule of POST reads the media type of Content-Type in any
+// letter case; the text application/json elsewhere in the header counts
+// for nothing.
+func TestWANStackJSONRule(t *testing.T) {
+	h := wanHandler(WANOptions{}, nil)
+	for contentType, want := range map[string]int{
+		"application/json":                               200,
+		"APPLICATION/JSON":                               200,
+		"Application/Json; charset=UTF-8":                200,
+		"application/json;charset=utf-8":                 200,
+		" application/json ; charset=utf-8":              200,
+		"application/json; charset":                      200,
+		"text/plain; x=application/json":                 415,
+		"multipart/form-data; boundary=application/json": 415,
+		"application/jsonx":                              415,
+		"application/json-patch+json":                    415,
+		"x-application/json":                             415,
+		"":                                               415,
+	} {
+		r := wanRequest("POST", "/api/heartbeat", 2)
+		r.RemoteAddr = "203.0.113.77:40000"
+		r.Header.Set("Content-Type", contentType)
+		if rec := hit(h, r); rec.Code != want {
+			t.Errorf("POST as %q: %d, want %d", contentType, rec.Code, want)
+		}
+	}
+}
+
 func TestClientAPIHeadersAndOptions(t *testing.T) {
 	reached := false
 	h := wanHandler(WANOptions{}, func(http.ResponseWriter, *http.Request) { reached = true })

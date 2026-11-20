@@ -305,6 +305,16 @@ func TestConsoleLimitersAgainstNode(t *testing.T) {
 	}
 }
 
+// intendedWAN are the recorded steps of the client API port that Go
+// answers otherwise than Node on purpose, with Go's status: the JSON rule
+// reads the media type of a POST in any letter case, and application/json
+// elsewhere in the header counts for nothing (BUGS M7).
+var intendedWAN = map[string]int{
+	"wan-412": http.StatusOK,                   // APPLICATION/JSON
+	"wan-414": http.StatusUnsupportedMediaType, // text/plain; x=application/json
+	"wan-416": http.StatusUnsupportedMediaType, // application/jsonx
+}
+
 type wanVectors struct {
 	Base  int64  `json:"base"`
 	Steps []step `json:"steps"`
@@ -316,6 +326,12 @@ func TestClientAPIStackAgainstNode(t *testing.T) {
 	if len(file.Steps) < 600 {
 		t.Fatalf("%d steps, expected the recorded 687", len(file.Steps))
 	}
+	intended := 0
+	defer func() {
+		if intended != len(intendedWAN) {
+			t.Errorf("%d of the %d intended differences met a recorded step", intended, len(intendedWAN))
+		}
+	}()
 	now := file.Base
 	stack := WANStack(WANOptions{
 		ClientIP: loopback.ClientIP,
@@ -343,6 +359,13 @@ func TestClientAPIStackAgainstNode(t *testing.T) {
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, s.request())
 		name := fmt.Sprintf("%s at %d %s %s", s.ID, s.At, s.Method, s.Path)
+		if want, ok := intendedWAN[s.ID]; ok {
+			intended++
+			if rec.Code != want {
+				t.Errorf("%s: status %d, want %d (Node %d)", name, rec.Code, want, s.Answer.Status)
+			}
+			continue
+		}
 		if rec.Code != s.Answer.Status {
 			t.Errorf("%s: status %d, want %d", name, rec.Code, s.Answer.Status)
 			continue

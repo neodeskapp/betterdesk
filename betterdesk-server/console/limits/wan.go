@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"mime"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -142,8 +143,8 @@ type wanMessage struct {
 //     the path does not take. Both without a body.
 //  5. Limiters per address and minute: 60 for everything, 20 for POST
 //     under /api/audit/, 5 for /api/login and /api/logout.
-//  6. POST needs application/json somewhere in its Content-Type, or it
-//     gets 415.
+//  6. POST needs the media type application/json (any letter case) in
+//     its Content-Type, or it gets 415.
 //  7. The body limit: 1024 bytes, or the path's own. A larger body gets
 //     413 and the connection is closed. The body is read here and handed
 //     on whole. A body that stops before its end gets 408 when the
@@ -196,7 +197,7 @@ func WANStack(opts WANOptions) func(http.Handler) http.Handler {
 					return
 				}
 			}
-			if r.Method == http.MethodPost && !strings.Contains(r.Header.Get("Content-Type"), "application/json") {
+			if r.Method == http.MethodPost && !isJSON(r.Header.Get("Content-Type")) {
 				httpx.WriteJSON(w, r, http.StatusUnsupportedMediaType, wanMessage{"Content-Type must be application/json"})
 				return
 			}
@@ -301,6 +302,13 @@ func WANStack(opts WANOptions) func(http.Handler) http.Handler {
 			status = tw.finish()
 		})
 	}
+}
+
+// isJSON reports a Content-Type whose media type is application/json, in
+// any letter case and with any parameters.
+func isJSON(contentType string) bool {
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	return (err == nil || errors.Is(err, mime.ErrInvalidMediaParameter)) && mediaType == "application/json"
 }
 
 // wanPathStatus is 0 for a path and method the client API port takes,
