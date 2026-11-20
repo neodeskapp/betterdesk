@@ -1,6 +1,9 @@
 package activity_test
 
 import (
+	"fmt"
+	"maps"
+	"strings"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
@@ -27,6 +30,24 @@ var refusedSteps = map[string]string{
 	"53 POST /api/bd/activity?device_id%5B%5D=device-a": "DV4",
 }
 
+// storedSteps are the reports of the device recordings that Node failed
+// with 500 and the Go console stores since a bug fix of BUGS.md, by name
+// and bug. "" in the database's place means the step is no such report
+// there.
+var storedSteps = map[string][2]string{
+	// A session that is null is skipped; a duration that is no number
+	// counts 0, also in a session that is not stored; the log line counts
+	// the stored sessions.
+	"75 POST /api/bd/activity": {"AI16", "AI16"},
+	"76 POST /api/bd/activity": {"AI16", "AI16"},
+	"79 POST /api/bd/activity": {"AI16", "AI16"},
+	"80 POST /api/bd/activity": {"AI16", "AI16"},
+	"82 POST /api/bd/activity": {"AI16", "AI16"},
+	"83 POST /api/bd/activity": {"AI16", "AI16"},
+	// PostgreSQL took the total "0 7 30" for no number
+	"207 POST /api/bd/activity": {"", "AI16"},
+}
+
 // TestNodeDeviceAnswers replays what the Node console's device route
 // answered with its real database adapter, device guards and alert rules
 // engine, on SQLite and on PostgreSQL (testdata/node_device_sqlite.json,
@@ -41,15 +62,29 @@ var refusedSteps = map[string]string{
 // console; each step waits for them before the next one reads the alerts.
 // A body that is no JSON was answered by the recording's stand-in for the
 // rest of the console; there only the status is compared. The steps in
-// refusedSteps are compared with the refusal.
+// refusedSteps are compared with the refusal, those in storedSteps with
+// the answer of a stored report, and the rows read after the reports by
+// storedRows (stored_test.go).
 func TestNodeDeviceAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		engine := w.Server.Deps().Alerts
 		elsewhere := 0
-		refused := map[string]bool{}
-		w.Run(replay.Load(t, db, "node_device"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		refused, answered := map[string]bool{}, map[string]bool{}
+		rec := replay.Load(t, db, "node_device")
+		stored, differ := storedRows(&rec, w)
+		w.Run(rec, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			engine.Wait()
+			if stored(t, step, got) {
+				return true
+			}
+			if bugs, ok := storedSteps[step.Name]; ok && bugs[map[bool]int{false: 0, true: 1}[db.IsPostgres()]] != "" {
+				answered[step.Name] = true
+				if got.Status != 200 || got.Body != `{"success":true}` {
+					t.Errorf("%s (%s): %d %s, want it stored", step.Name, bugs, got.Status, got.Body)
+				}
+				return true
+			}
 			if bug, ok := refusedSteps[step.Name]; ok {
 				refused[step.Name] = true
 				if got.Status != 403 || got.Body != `{"error":"Device ID mismatch"}` {
@@ -68,6 +103,17 @@ func TestNodeDeviceAnswers(t *testing.T) {
 		})
 		if elsewhere != 1 {
 			t.Errorf("%d answers were compared by status only, want the 1 of the body that is no JSON", elsewhere)
+		}
+		if want := map[bool]map[string]int{
+			false: {"alerts": 4, "sessions": 1, "summaries": 32},
+			true:  {"alerts": 5, "sessions": 1, "summaries": 26},
+		}[db.IsPostgres()]; !maps.Equal(differ, want) {
+			t.Errorf("statements whose rows differ from Node's, by table: %v, want %v", differ, want)
+		}
+		for name, bugs := range storedSteps {
+			if !answered[name] && bugs[map[bool]int{false: 0, true: 1}[db.IsPostgres()]] != "" {
+				t.Errorf("the listed step %q is not in the recording", name)
+			}
 		}
 		for name := range refusedSteps {
 			if !refused[name] {
@@ -157,6 +203,48 @@ func TestDeviceRouteFailures(t *testing.T) {
 		// The sessions were stored before the summary failed
 		if got := w.Rows("SELECT COUNT(*) AS n FROM activity_sessions", nil); got != `[{"n":1}]` {
 			t.Errorf("sessions after the report without the summary table: %s, want 1", got)
+		}
+	})
+}
+
+// The summary of a report counts the sessions that are stored and adds
+// their durations as numbers. A session that is no object is skipped, as
+// is one without a start or an end, and the 501st. Node counted every
+// session sent, added the durations with JavaScript's +, answered 500 for
+// a session that is null and for a length that cannot be made text in
+// the log line, the latter after the summary was stored (BUGS AI16).
+func TestTheSummaryCountsWhatIsStored(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		tokenDeviceA(w)
+		session := func(minute int, duration string) string {
+			return fmt.Sprintf(`{"started_at":"2011-03-04T09:%02d:00.000Z","ended_at":"2011-03-04T09:%02d:30.000Z","duration_secs":%s}`, minute, minute, duration)
+		}
+		many := make([]string, 501)
+		for i := range many {
+			many[i] = session(i%60, "1")
+		}
+		for _, c := range []struct {
+			name, sessions string
+			count, total   int
+		}{
+			{"a null session", `[null,` + session(1, "30") + `]`, 1, 30},
+			{"sessions that are no objects", `[5,"x",true,[],` + session(2, "20") + `]`, 1, 20},
+			{"a session without an end", `[{"started_at":"2011-03-04T09:03:00.000Z","duration_secs":99},` + session(4, "10") + `]`, 1, 10},
+			{"durations as text", `[` + session(5, `"60"`) + `,` + session(6, `" 7 "`) + `]`, 2, 67},
+			{"sessions not stored whose durations are no numbers", `[{"duration_secs":{"toString":1}},{"duration_secs":"06a"},` + session(10, "5") + `]`, 1, 5},
+			{"501 sessions", `[` + strings.Join(many, ",") + `]`, 500, 500},
+			{"a length that is no number", `{"length":{"toString":1}}`, 0, 0},
+		} {
+			w.Exec("DELETE FROM activity_summaries", nil)
+			body := `{"device_id":"device-a","sessions":` + c.sessions + `,"idle_seconds":5,"timestamp":"2011-03-04T10:00:00.000Z"}`
+			if got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/activity", Body: replay.Text(body), Headers: deviceA}); got.Status != 200 || got.Body != `{"success":true}` {
+				t.Errorf("%s: %d %s, want it stored", c.name, got.Status, got.Body)
+			}
+			want := fmt.Sprintf(`[{"session_count":%d,"total_active_secs":%d}]`, c.count, c.total)
+			if got := w.Rows("SELECT session_count, total_active_secs FROM activity_summaries", nil); got != want {
+				t.Errorf("%s: the summary %s, want %s", c.name, got, want)
+			}
 		}
 	})
 }
