@@ -368,7 +368,18 @@ func TestMDNSScheduleAgainstNode(t *testing.T) {
 			h.runUntilSent(t)
 		}
 		h.stop(t, true)
-		compareSends(t, fmt.Sprintf("scenario %d %v", i, s.Env), h.sock.sent, want)
+		label := fmt.Sprintf("scenario %d %v", i, s.Env)
+		sent := h.sock.sent
+		if len(want) > probeCount {
+			// After announcing, the stop sends the goodbye Node never sent
+			// (BUGS JB7)
+			if len(sent) != len(want)+1 || string(sent[len(sent)-1].bytes) != string(goodbyeOf(t, settings)) {
+				t.Errorf("%s: no goodbye after %d datagrams", label, len(sent))
+			} else {
+				sent = sent[:len(want)]
+			}
+		}
+		compareSends(t, label, sent, want)
 		var wantLogs []string
 		for _, line := range append(append([]string{}, s.Logs...), s.LaterLogs...) {
 			wantLogs = append(wantLogs, line)
@@ -380,6 +391,50 @@ func TestMDNSScheduleAgainstNode(t *testing.T) {
 		if strings.Join(gotLogs, "\n") != strings.Join(wantLogs, "\n") {
 			t.Errorf("scenario %d %v: log %q, Node %q", i, s.Env, gotLogs, wantLogs)
 		}
+	}
+}
+
+// goodbyeOf is the goodbye of the service the settings describe.
+func goodbyeOf(t *testing.T, settings Settings) []byte {
+	t.Helper()
+	m := NewMDNS(settings)
+	m.logf = func(string, ...any) {}
+	svc, ok := m.prepare()
+	if !ok {
+		t.Fatal("no service")
+	}
+	return m.goodbye(svc)
+}
+
+// TestMDNSSaysGoodbyeAtStop: when its context ends after it announced,
+// the announcement sends its records with a lifetime of 0, the datagram
+// Node sent when it withdrew on a conflict, before the socket closes.
+// Stopped while probing, it sends nothing more.
+func TestMDNSSaysGoodbyeAtStop(t *testing.T) {
+	rec := loadMDNS(t)
+	s := rec.Scenarios[0]
+	settings := mdnsSettings(s.Env, s.Config, toInterfaces(s.Interfaces), s.Hostname)
+	conflict := nodeSends(rec.Conflict.Events)
+	nodeGoodbye, _ := base64.StdEncoding.DecodeString(conflict[len(conflict)-1].Bytes)
+
+	h := startHarness(settings, s.Random, probeCount+1)
+	h.runUntilSent(t)
+	h.stop(t, false)
+	h.sock.mu.Lock()
+	sent := h.sock.sent
+	h.sock.mu.Unlock()
+	if len(sent) != probeCount+2 || string(sent[len(sent)-1].bytes) != string(nodeGoodbye) {
+		t.Fatalf("%d datagrams, the last %x; want the goodbye %x after the first announcement", len(sent), sent[len(sent)-1].bytes, nodeGoodbye)
+	}
+
+	h = startHarness(settings, s.Random, 2)
+	h.clock.fire(t)
+	h.clock.fire(t)
+	h.stop(t, false)
+	h.sock.mu.Lock()
+	defer h.sock.mu.Unlock()
+	if len(h.sock.sent) != 2 {
+		t.Errorf("stopped while probing: %d datagrams, want the 2 queries", len(h.sock.sent))
 	}
 }
 
@@ -412,7 +467,12 @@ func TestMDNSConflictAgainstNode(t *testing.T) {
 	h.sock.packets <- packet
 	h.runUntilSent(t)
 	h.stop(t, true)
-	compareSends(t, "early conflict", h.sock.sent, want)
+	// The goodbye at the stop is Go's own (BUGS JB7)
+	sent := h.sock.sent
+	if len(sent) == len(want)+1 && string(sent[len(want)].bytes) == string(goodbyeOf(t, settings)) {
+		sent = sent[:len(want)]
+	}
+	compareSends(t, "early conflict", sent, want)
 }
 
 // TestMDNSMembershipsAgainstNode joins the group on the addresses Node
@@ -521,7 +581,8 @@ func TestMDNSAnswersWhileRunning(t *testing.T) {
 	h.stop(t, false)
 	h.sock.mu.Lock()
 	defer h.sock.mu.Unlock()
-	if len(h.sock.sent) != 5 {
+	// 3 queries, the announcement, the answer and the goodbye at the stop
+	if len(h.sock.sent) != 6 {
 		t.Fatalf("%d datagrams sent", len(h.sock.sent))
 	}
 	answer := newRegistry()

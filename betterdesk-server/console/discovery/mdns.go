@@ -16,7 +16,8 @@ import (
 // bonjour-service did for the old console: three probe queries for the
 // service's name 250 ms apart (after a random wait of up to 250 ms),
 // then the records, sent again after 3, 9, 27 ... seconds while the
-// wait stays under an hour, and answers to queries for them.
+// wait stays under an hour, and answers to queries for them. At stop the
+// records go out once more with a lifetime of 0.
 
 const (
 	// instanceName is the service's name (the old console's appName).
@@ -370,6 +371,9 @@ func (m *MDNS) Run(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			// Browsers drop the service at once, not when its records
+			// would run out
+			_ = sock.Send(m.goodbye(svc))
 			return
 		case datagram := <-sock.Packets():
 			serve(datagram)
@@ -396,9 +400,15 @@ func (m *MDNS) conflict(datagram []byte, fqdn string) bool {
 	return false
 }
 
-// withdraw sends the service's records with a lifetime of 0 and logs
-// that the name is taken.
+// withdraw sends the goodbye and logs that the name is taken.
 func (m *MDNS) withdraw(sock mdnsSocket, svc *service) {
+	_ = sock.Send(m.goodbye(svc))
+	m.logf("Error: Service name is already in use on the network")
+}
+
+// goodbye is the service's records with a lifetime of 0, which tells
+// browsers the service is gone.
+func (m *MDNS) goodbye(svc *service) []byte {
 	ifaces, err := m.settings.interfaces()
 	if err != nil {
 		ifaces = nil
@@ -407,6 +417,5 @@ func (m *MDNS) withdraw(sock mdnsSocket, svc *service) {
 	for i := range records {
 		records[i].TTL = 0
 	}
-	_ = sock.Send(encodeResponse(records, nil))
-	m.logf("Error: Service name is already in use on the network")
+	return encodeResponse(records, nil)
 }
