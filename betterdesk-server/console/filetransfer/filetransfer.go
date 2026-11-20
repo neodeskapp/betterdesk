@@ -10,7 +10,7 @@
 // file can be downloaded.
 //
 // Records are not stored: a restart of the console forgets every
-// transfer, and the files of completed ones stay in the folder.
+// transfer, and New removes the files they left in the folder.
 //
 // # Housekeeping
 //
@@ -30,6 +30,8 @@ import (
 	"io"
 	"math"
 	"os"
+	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -100,7 +102,9 @@ type Service struct {
 	order []string
 }
 
-// New returns a Service and creates the transfers folder.
+// New returns a Service, creates the transfers folder and removes the
+// files of the transfers an earlier process made there: the service knows
+// no transfer before it starts, so nobody can reach them any more.
 func New(opts Options) *Service {
 	if opts.Now == nil {
 		opts.Now = time.Now
@@ -114,7 +118,35 @@ func New(opts Options) *Service {
 	if err := os.MkdirAll(opts.Dir, 0o777); err != nil {
 		opts.Logger.Warn("[FileTransfer] cannot create the transfers folder: " + err.Error())
 	}
+	removeLeftovers(opts.Dir, opts.Logger)
 	return &Service{opts: opts, transfers: map[string]*Transfer{}}
+}
+
+// transferFile is the start of a transfer file's name: the transfer's id,
+// 32 hex digits, and an underscore.
+var transferFile = regexp.MustCompile(`^[0-9a-f]{32}_`)
+
+// removeLeftovers deletes the files of the folder whose names are those
+// of transfer files. Anything else in the folder stays.
+func removeLeftovers(dir string, logger Logger) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	removed := 0
+	for _, entry := range entries {
+		if !entry.Type().IsRegular() || !transferFile.MatchString(entry.Name()) {
+			continue
+		}
+		if err := os.Remove(filepath.Join(dir, entry.Name())); err != nil {
+			logger.Warn("[FileTransfer] cannot remove a file an earlier transfer left: " + err.Error())
+			continue
+		}
+		removed++
+	}
+	if removed > 0 {
+		logger.Info(fmt.Sprintf("[FileTransfer] Removed %d files earlier transfers left", removed))
+	}
 }
 
 type packageLogger struct{}

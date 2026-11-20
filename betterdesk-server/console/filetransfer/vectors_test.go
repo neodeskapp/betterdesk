@@ -242,45 +242,60 @@ func describeDir(dir *[][]string) string {
 	return string(raw)
 }
 
+// TestNodeVectors replays the lives of transfers and compares every step
+// with what the Node service did: the result or error, every record, and
+// the files of the transfers folder. The changes the bug fixes made on
+// purpose are taken into account first (fixes_test.go): the ones that
+// change every step alike as rewrites of Node's answers, the others as the
+// console's answers at the steps they name (testdata/vectors_fixed.json).
+// FILETRANSFER_RECORD_FIXED=1 writes that file from this run and fails
+// for a named step that answers as Node did.
 func TestNodeVectors(t *testing.T) {
 	file := loadVectors(t)
+	recording := os.Getenv("FILETRANSFER_RECORD_FIXED") == "1"
+	listed := listedSteps(t)
+	fixed := map[int]fixedStep{}
+	if !recording {
+		fixed = loadFixedSteps(t, listed)
+	}
+	var written []fixedStep
+	rewrites := newRewrites()
+
 	w := &oracleWorld{t: t, dir: filepath.Join(t.TempDir(), "data", "transfers"), clock: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).UnixMilli(), random: 20261110}
 	w.boot()
 	steps, failures := 0, 0
+	var unlisted []int
 	for _, scenario := range file.Scenarios {
 		for i, step := range scenario.Steps {
+			number := steps
 			steps++
 			out, err := w.run(step)
-			var problems []string
-			problem := func(what, got, want string) {
-				problems = append(problems, what+":\n      go: "+got+"\n    node: "+want)
-			}
-			switch {
-			case step.Err != nil && err == nil:
-				problem("error", "none, result "+describe(out), *step.Err)
-			case step.Err == nil && err != nil:
-				problem("error", err.Error(), "none, result "+describe(step.Out))
-			case step.Err != nil:
-				if got := w.mask(err.Error()); got != *step.Err {
-					problem("error", got, *step.Err)
+			got := answerOf(w, out, err)
+			want := rewrites.apply(step)
+			if bug, isListed := listed[number]; isListed {
+				if recording {
+					entry, differs := fixedFrom(t, got, want)
+					if !differs {
+						t.Errorf("step %d (%s, step %d) is listed for %s but answers as Node did", number, scenario.Name, i, bug)
+					}
+					entry.Step, entry.Bug, entry.Scenario, entry.Op = number, bug, scenario.Name, step.Op
+					written = append(written, entry)
+					continue
 				}
-			case describe(out) != describe(step.Out):
-				problem("result", describe(out), describe(step.Out))
+				want = fixed[number].onto(t, want)
 			}
-			if all := describe(w.text(w.svc.ListTransfers(Filter{}))); all != step.All {
-				problem("records", all, step.All)
-			}
-			if got, want := describeDir(w.dirState()), describeDir(step.Dir); got != want {
-				problem("transfers folder", got, want)
-			}
+			problems := got.differences(want)
 			if len(problems) > 0 {
 				failures++
+				if _, isListed := listed[number]; !isListed {
+					unlisted = append(unlisted, number)
+				}
 				if failures <= 15 {
 					spec, _ := json.Marshal(step)
 					if len(spec) > 600 {
 						spec = append(spec[:600], "..."...)
 					}
-					t.Errorf("%s, step %d %s\n  %s", scenario.Name, i, spec, strings.Join(problems, "\n  "))
+					t.Errorf("step %d (%s, step %d) %s\n  %s", number, scenario.Name, i, spec, strings.Join(problems, "\n  "))
 				}
 			}
 		}
@@ -288,8 +303,15 @@ func TestNodeVectors(t *testing.T) {
 	if failures > 15 {
 		t.Errorf("%d of %d steps differ; the first 15 are shown", failures, steps)
 	}
+	if len(unlisted) > 0 {
+		t.Errorf("steps that differ and no fix names: %s", spans(unlisted))
+	}
 	if steps < 5000 {
 		t.Errorf("replayed %d steps, the vector file should hold more than 5000", steps)
+	}
+	rewrites.check(t)
+	if recording {
+		writeFixedSteps(t, written)
 	}
 }
 

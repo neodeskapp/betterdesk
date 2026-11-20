@@ -316,3 +316,36 @@ func TestAChunkGivenAsALengthIsCapped(t *testing.T) {
 		t.Errorf("%d bytes after the refused chunks", got)
 	}
 }
+
+// A new service removes the files transfers of an earlier process left in
+// the transfers folder, and nothing else (BUGS FT1, DECISIONS A47).
+func TestNewRemovesTheLeftovers(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "transfers")
+	if err := os.MkdirAll(filepath.Join(dir, "0123456789abcdef0123456789abcdef_folder"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for name, content := range map[string]string{
+		"0123456789abcdef0123456789abcdef_report.pdf": "left",
+		"fedcba9876543210fedcba9876543210_file":       "left",
+		"notes.txt":                                   "kept",
+		"0123456789ABCDEF0123456789ABCDEF_upper.bin":  "kept",
+		"0123456789abcdef_short.bin":                  "kept",
+	} {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	New(Options{Dir: dir, Logger: quiet{}})
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var names []string
+	for _, entry := range entries {
+		names = append(names, entry.Name())
+	}
+	want := "0123456789ABCDEF0123456789ABCDEF_upper.bin 0123456789abcdef0123456789abcdef_folder 0123456789abcdef_short.bin notes.txt"
+	if got := strings.Join(names, " "); got != want {
+		t.Errorf("the folder holds %s\nwant %s", got, want)
+	}
+}
