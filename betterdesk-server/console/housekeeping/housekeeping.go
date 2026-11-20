@@ -24,11 +24,6 @@ import (
 // audit log rows are deleted.
 const IntegrationInterval = time.Hour
 
-// timeoutMax is the longest delay a JavaScript timer takes, in
-// milliseconds (2^31 - 1). A longer one, or one below a millisecond,
-// becomes one millisecond.
-const timeoutMax = 1<<31 - 1
-
 // integrationStatements delete heartbeat metrics older than 7 days, client
 // audit rows older than 90 days and audit log rows older than 90 days, in
 // this order.
@@ -72,7 +67,8 @@ type Options struct {
 	// (devicegroups.Service.CleanupStaleOnlinePeers).
 	StalePeers func(ctx context.Context, thresholdSeconds float64) (int64, error)
 	// StatusSyncInterval is STATUS_SYNC_INTERVAL as written: seconds
-	// between two runs of StalePeers, 15 when it is no number or zero.
+	// between two runs of StalePeers, 15 when it is no number, zero, or
+	// outside 1 to 86400.
 	StatusSyncInterval string
 	// HeartbeatStaleThreshold is HEARTBEAT_STALE_THRESHOLD as written:
 	// the seconds after which a device counts as gone, 90 when it is no
@@ -88,6 +84,9 @@ type Options struct {
 // The longest stale threshold the sweep takes: a larger one (or one below
 // a second) sets every device offline or none, or fails on PostgreSQL.
 const maxStaleThreshold = 30 * 24 * 3600
+
+// The longest time between two stale device sweeps.
+const maxStatusSyncInterval = 24 * 3600
 
 // Jobs are the two periodic clean-ups.
 type Jobs struct {
@@ -110,6 +109,10 @@ func New(opts Options) *Jobs {
 		opts.Logf = func(format string, args ...any) { logging.Logf("console", format, args...) }
 	}
 	seconds := parseIntOr(opts.StatusSyncInterval, 15)
+	if !(seconds >= 1 && seconds <= maxStatusSyncInterval) {
+		opts.Logf("WARN: STATUS_SYNC_INTERVAL=%q is outside 1 to %d seconds; using 15", opts.StatusSyncInterval, maxStatusSyncInterval)
+		seconds = 15
+	}
 	threshold := parseIntOr(opts.HeartbeatStaleThreshold, 90)
 	if !(threshold >= 1 && threshold <= maxStaleThreshold) {
 		opts.Logf("WARN: HEARTBEAT_STALE_THRESHOLD=%q is outside 1 to %d seconds; using 90", opts.HeartbeatStaleThreshold, maxStaleThreshold)
@@ -117,7 +120,7 @@ func New(opts Options) *Jobs {
 	}
 	return &Jobs{
 		opts:      opts,
-		interval:  timerDelay(seconds * 1000),
+		interval:  time.Duration(seconds) * time.Second,
 		threshold: threshold,
 	}
 }
@@ -164,15 +167,6 @@ func (j *Jobs) every(ctx context.Context, interval time.Duration, fn func()) {
 			fn()
 		}
 	}
-}
-
-// timerDelay is the delay a JavaScript timer waits for ms milliseconds:
-// one millisecond for anything below one or above 2^31 - 1.
-func timerDelay(ms float64) time.Duration {
-	if !(ms >= 1 && ms <= timeoutMax) {
-		ms = 1
-	}
-	return time.Duration(ms * float64(time.Millisecond))
 }
 
 // parseIntOr is parseInt(text, 10) || fallback: white space in front is

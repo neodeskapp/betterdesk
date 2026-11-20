@@ -438,8 +438,14 @@ func TestSettingsAgainstNode(t *testing.T) {
 	}
 	for _, c := range rec.Settings {
 		jobs := housekeeping.New(housekeeping.Options{StatusSyncInterval: c.Value, HeartbeatStaleThreshold: c.Value, Logf: func(string, ...any) {}})
-		if got, want := jobs.StatusSyncInterval(), time.Duration(c.DelayMs*float64(time.Millisecond)); got != want {
-			t.Errorf("interval of %q = %v, want %v", c.Value, got, want)
+		// Outside 1 second to a day the interval is 15 seconds, where Node's
+		// timer ran every millisecond or once in up to 24 days (BUGS JB10)
+		interval := time.Duration(c.DelayMs * float64(time.Millisecond))
+		if !(interval >= time.Second && interval <= 24*time.Hour) {
+			interval = 15 * time.Second
+		}
+		if got := jobs.StatusSyncInterval(); got != interval {
+			t.Errorf("interval of %q = %v, want %v", c.Value, got, interval)
 		}
 		want, _ := strconv.ParseFloat(c.Threshold, 64)
 		// Outside 1 second to 30 days the threshold is 90 (BUGS JB9)
@@ -448,6 +454,27 @@ func TestSettingsAgainstNode(t *testing.T) {
 		}
 		if got := jobs.StaleThreshold(); got != want {
 			t.Errorf("threshold of %q = %v, want %v", c.Value, got, want)
+		}
+	}
+}
+
+// TestStatusSyncIntervalOutOfRange: a STATUS_SYNC_INTERVAL outside 1 to
+// 86400 seconds is 15 seconds, with a warning that names the value.
+func TestStatusSyncIntervalOutOfRange(t *testing.T) {
+	for value, want := range map[string]time.Duration{
+		"-5": 15 * time.Second, "86401": 15 * time.Second, "2147484": 15 * time.Second, "99999999999": 15 * time.Second,
+		"86400": 24 * time.Hour, "1": time.Second, "30": 30 * time.Second, "": 15 * time.Second, "abc": 15 * time.Second,
+	} {
+		var logged []string
+		jobs := housekeeping.New(housekeeping.Options{StatusSyncInterval: value, Logf: func(format string, args ...any) {
+			logged = append(logged, fmt.Sprintf(format, args...))
+		}})
+		if got := jobs.StatusSyncInterval(); got != want {
+			t.Errorf("STATUS_SYNC_INTERVAL=%q: %v, want %v", value, got, want)
+		}
+		warned := len(logged) == 1 && strings.Contains(logged[0], "STATUS_SYNC_INTERVAL") && strings.Contains(logged[0], strconv.Quote(value))
+		if outOfRange := value == "-5" || value == "86401" || value == "2147484" || value == "99999999999"; warned != outOfRange {
+			t.Errorf("STATUS_SYNC_INTERVAL=%q: logged %q", value, logged)
 		}
 	}
 }
