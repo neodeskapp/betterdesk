@@ -177,7 +177,7 @@
       {
        "created_at": "<volatile>",
        "id": 8,
-       "operator_id": "apikey:console-bridge",
+       "operator_id": "e2e_operator",
        "session_id": "demo-bs-009",
        "summary": "   ",
        "ticket_ref": "#1"

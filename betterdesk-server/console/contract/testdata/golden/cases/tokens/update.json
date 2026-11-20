@@ -124,6 +124,7 @@
     "json": {
      "data": {
       "created_at": "<volatile>",
+      "created_by": "e2e_global_admin",
       "expires_at": "<volatile>",
       "id": 1,
       "max_uses": 5,
@@ -181,6 +182,7 @@
     "json": {
      "data": {
       "created_at": "<volatile>",
+      "created_by": "e2e_server_admin",
       "expires_at": "<volatile>",
       "id": 4,
       "max_uses": 5,
@@ -238,6 +240,7 @@
     "json": {
      "data": {
       "created_at": "<volatile>",
+      "created_by": "e2e_super_admin",
       "expires_at": "<volatile>",
       "id": 8,
       "max_uses": 5,
@@ -295,6 +298,7 @@
     "json": {
      "data": {
       "created_at": "<volatile>",
+      "created_by": "e2e_admin",
       "expires_at": "<volatile>",
       "id": 11,
       "max_uses": 5,

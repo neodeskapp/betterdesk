@@ -132,6 +132,7 @@
       "tokens": [
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
         "id": 2,
         "max_uses": 1,
@@ -143,6 +144,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
         "id": 3,
         "max_uses": 1,
@@ -209,6 +211,7 @@
       "tokens": [
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_server_admin",
         "expires_at": "<volatile>",
         "id": 6,
         "max_uses": 1,
@@ -220,6 +223,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_server_admin",
         "expires_at": "<volatile>",
         "id": 7,
         "max_uses": 1,
@@ -286,6 +290,7 @@
       "tokens": [
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_super_admin",
         "expires_at": "<volatile>",
         "id": 9,
         "max_uses": 1,
@@ -297,6 +302,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_super_admin",
         "expires_at": "<volatile>",
         "id": 10,
         "max_uses": 1,
@@ -363,6 +369,7 @@
       "tokens": [
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_admin",
         "expires_at": "<volatile>",
         "id": 13,
         "max_uses": 1,
@@ -374,6 +381,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_admin",
         "expires_at": "<volatile>",
         "id": 14,
         "max_uses": 1,

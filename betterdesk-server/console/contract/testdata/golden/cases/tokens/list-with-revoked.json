@@ -129,6 +129,7 @@
       "tokens": [
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
         "id": 1,
         "max_uses": 5,
@@ -152,6 +153,7 @@
    "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "application/json; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
@@ -166,6 +168,7 @@
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
      "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
+    "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -207,6 +210,7 @@
       "tokens": [
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_server_admin",
         "id": 5,
         "max_uses": 2,
         "name": "contract fraction twice",
@@ -216,6 +220,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_server_admin",
         "expires_at": "<volatile>",
         "id": 4,
         "max_uses": 5,
@@ -228,6 +233,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
         "id": 3,
         "max_uses": 1,
@@ -238,6 +244,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
         "id": 2,
         "max_uses": 1,
@@ -248,6 +255,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
         "id": 1,
         "max_uses": 5,
@@ -340,6 +348,7 @@
       "tokens": [
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_super_admin",
         "expires_at": "<volatile>",
         "id": 8,
         "max_uses": 5,
@@ -352,6 +361,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_server_admin",
         "expires_at": "<volatile>",
         "id": 7,
         "max_uses": 1,
@@ -362,6 +372,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_server_admin",
         "expires_at": "<volatile>",
         "id": 6,
         "max_uses": 1,
@@ -372,6 +383,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_server_admin",
         "id": 5,
         "max_uses": 2,
         "name": "contract fraction twice",
@@ -381,6 +393,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_server_admin",
         "expires_at": "<volatile>",
         "id": 4,
         "max_uses": 5,
@@ -393,6 +406,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
         "id": 3,
         "max_uses": 1,
@@ -403,6 +417,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
         "id": 2,
         "max_uses": 1,
@@ -413,6 +428,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
         "id": 1,
         "max_uses": 5,
@@ -517,6 +533,7 @@
       "tokens": [
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_admin",
         "id": 12,
         "max_uses": 2,
         "name": "contract fraction twice",
@@ -526,6 +543,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_admin",
         "expires_at": "<volatile>",
         "id": 11,
         "max_uses": 5,
@@ -538,6 +556,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_super_admin",
         "expires_at": "<volatile>",
         "id": 10,
         "max_uses": 1,
@@ -548,6 +567,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_super_admin",
         "expires_at": "<volatile>",
         "id": 9,
         "max_uses": 1,
@@ -558,6 +578,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_super_admin",
         "expires_at": "<volatile>",
         "id": 8,
         "max_uses": 5,
@@ -570,6 +591,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_server_admin",
         "expires_at": "<volatile>",
         "id": 7,
         "max_uses": 1,
@@ -580,6 +602,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_server_admin",
         "expires_at": "<volatile>",
         "id": 6,
         "max_uses": 1,
@@ -590,6 +613,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_server_admin",
         "id": 5,
         "max_uses": 2,
         "name": "contract fraction twice",
@@ -599,6 +623,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_server_admin",
         "expires_at": "<volatile>",
         "id": 4,
         "max_uses": 5,
@@ -611,6 +636,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
         "id": 3,
         "max_uses": 1,
@@ -621,6 +647,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
         "id": 2,
         "max_uses": 1,
@@ -631,6 +658,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
         "id": 1,
         "max_uses": 5,
