@@ -14,9 +14,9 @@ import (
 // (the port left out when it is 443) and the request target when that is
 // a path (see SafeRedirectURL). host is the one RedirectHost chose when
 // the listener was made; the request's Host header never reaches the
-// answer. The answer is res.redirect(307) of a bare Express app:
-// Cache-Control: no-store, X-Powered-By: Express, a short body in the
-// type the Accept header prefers. CONNECT is closed without an answer.
+// answer. The answer is res.redirect(307) of a bare Express app without
+// its X-Powered-By: Cache-Control: no-store, a short body in the type the
+// Accept header prefers. CONNECT is closed without an answer.
 func Redirect(host string, httpsPort int) http.Handler {
 	origin := redirectOrigin(host, httpsPort)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +31,6 @@ func Redirect(host string, httpsPort int) http.Handler {
 		}
 		location := expressLocation(origin + samePath(r.RequestURI))
 		h := w.Header()
-		h.Set("X-Powered-By", "Express")
 		h.Set("Cache-Control", "no-store")
 		h.Set("Location", location)
 		httpx.AddVary(h, "Accept")

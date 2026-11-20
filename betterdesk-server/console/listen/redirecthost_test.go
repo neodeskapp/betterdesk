@@ -177,6 +177,19 @@ func TestRedirectIgnoresTheRequestHost(t *testing.T) {
 	}
 }
 
+// The redirect names no server: no X-Powered-By, as on every other answer
+// of the console.
+func TestRedirectHasNoPoweredBy(t *testing.T) {
+	for _, method := range []string{http.MethodGet, http.MethodHead, http.MethodPost} {
+		r := httptest.NewRequest(method, "/x", nil)
+		w := httptest.NewRecorder()
+		Redirect("desk.example.com", 5443).ServeHTTP(w, r)
+		if _, ok := w.Header()["X-Powered-By"]; ok || w.Code != http.StatusTemporaryRedirect {
+			t.Errorf("%s: %d, X-Powered-By %q", method, w.Code, w.Header().Values("X-Powered-By"))
+		}
+	}
+}
+
 func w443(t *testing.T) string {
 	t.Helper()
 	r := httptest.NewRequest(http.MethodGet, "/x", nil)

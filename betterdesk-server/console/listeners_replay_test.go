@@ -484,6 +484,13 @@ func (g *goStack) replayExchanges(t *testing.T, scenario oracleScenario, known m
 		method := methodOf(e.Parts)
 		want, gotReplies := parseReplies(raw, method), parseReplies(got, method)
 		forwardedAs(t, want, e.Parts, trust)
+		if e.Listener == "redirect" {
+			// The redirect names no server, where Node's said Express (BUGS
+			// LS7)
+			for _, r := range want {
+				r.header.Del("X-Powered-By")
+			}
+		}
 		mu.Lock()
 		defer mu.Unlock()
 		if check, ok := known[e.ID]; ok {
