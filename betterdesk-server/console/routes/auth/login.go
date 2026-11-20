@@ -2,7 +2,6 @@ package auth
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -13,7 +12,6 @@ import (
 	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/session"
@@ -192,24 +190,21 @@ func (h *handlers) sessionFailure(w http.ResponseWriter, r *http.Request, what s
 // login answers POST /api/auth/login with the body {username, password,
 // return?, clientFingerprint? or fingerprint?}.
 //
-// Before the password is looked at, a lockout of the account and too many
-// failed attempts from the address refuse the sign-in (429). Every
-// attempt that reaches the password check is recorded.
+// A user name that is not text is refused as a missing one (400). Before
+// the password is looked at, a lockout of the account and too many failed
+// attempts from the address refuse the sign-in (429). Every attempt that
+// reaches the password check is recorded.
 func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	username, password := body.Get("username"), body.Get("password")
 	meta := h.clientMeta(r, body)
 
-	if !username.Truthy() || !password.Truthy() || tooLong(username) || tooLong(password) {
+	name, nameIsText := username.Str()
+	if !nameIsText || !username.Truthy() || !password.Truthy() || tooLong(username) || tooLong(password) {
 		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "auth.invalid_credentials", nil))
 		return
 	}
 
-	name, ok := h.boundName(username)
-	if !ok {
-		h.serverError(w, r, "Login error:", errUnboundName)
-		return
-	}
 	lockout, err := h.authn.CheckBruteForceFor(r.Context(), name, kit.ClientIP(r))
 	if err != nil {
 		h.serverError(w, r, "Login error:", err)
@@ -230,13 +225,13 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 	// Accounts for the desktop client only: the password was right, so the
 	// attempt counts as a success, but the console is not theirs.
 	if outcome.Failure == authn.FailureProOnly {
-		h.recordAttempt(r, username, true)
+		h.recordAttempt(r, name, true)
 		kit.Fail(w, r, http.StatusForbidden, kit.T(r, "auth.pro_only_account", nil))
 		return
 	}
 
 	if outcome.IsFailure() || outcome.User == nil {
-		h.recordAttempt(r, username, false)
+		h.recordAttempt(r, name, false)
 		details := "Username: " + jsString(username) + client
 		if outcome.IsFailure() {
 			details = "Username collision: " + auditlog.RedactUsername(jsString(username)) + client
@@ -253,7 +248,7 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.recordAttempt(r, username, true)
+	h.recordAttempt(r, name, true)
 	user := outcome.User
 
 	if user.TOTPRequired {
@@ -300,13 +295,12 @@ type secondFactorDue struct {
 	TOTPRequired bool `json:"totpRequired"`
 }
 
-// authenticate checks the credentials of a sign-in, whatever their JSON
-// type. A user name or a password that is not text is refused like a
-// wrong one.
+// authenticate checks the credentials of a sign-in with a user name that
+// is text. A password that is not text is refused like a wrong one.
 func (h *handlers) authenticate(r *http.Request, username, password middleware.Value) (authn.Outcome, error) {
-	name, nameIsText := username.Str()
+	name, _ := username.Str()
 	pass, passIsText := password.Str()
-	if !nameIsText || !passIsText {
+	if !passIsText {
 		return authn.Outcome{}, nil
 	}
 	return h.authn.Authenticate(r.Context(), name, pass)
@@ -314,35 +308,10 @@ func (h *handlers) authenticate(r *http.Request, username, password middleware.V
 
 // recordAttempt notes a sign-in attempt for the lockout counters. A
 // failure to note it changes no answer.
-//
-// The name is recorded as the database took the value from the old
-// console (boundName). Where SQLite refused it, nothing is recorded.
-func (h *handlers) recordAttempt(r *http.Request, username middleware.Value, success bool) {
-	name, ok := h.boundName(username)
-	if !ok {
-		return
-	}
+func (h *handlers) recordAttempt(r *http.Request, name string, success bool) {
 	if err := h.authn.RecordAttemptFor(r.Context(), name, kit.ClientIP(r), success); err != nil {
 		h.log.Warn("Recording the sign-in attempt failed:", err)
 	}
-}
-
-// errUnboundName stands for the error the old console's SQLite driver
-// threw for a user name it could not bind: true or false, an empty list or
-// one of several values, a list that holds a list or an object, an object.
-var errUnboundName = errors.New("the database cannot take the user name as a parameter")
-
-// boundName is the statement parameter the old console's database driver
-// made of a user name of any JSON type (console/jsbind), and false where
-// it refused the value. SQLite took a text as it is, a number as a double
-// (stored in a text column as "12345.0") and a list of one value as that
-// value; PostgreSQL took the text form of anything.
-func (h *handlers) boundName(username middleware.Value) (any, bool) {
-	args, err := jsbind.Args(h.d.Store.Dialect(), 1, jsbind.Of(username))
-	if err != nil {
-		return nil, false
-	}
-	return args[0], true
 }
 
 // accountLocked is the answer to a sign-in that a lockout refused.

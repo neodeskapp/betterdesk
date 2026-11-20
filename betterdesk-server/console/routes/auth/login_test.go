@@ -90,22 +90,18 @@ func TestLoginWithValuesThatAreNoText(t *testing.T) {
 		a := w.agent()
 		post := func(body string) answer { return a.post("/api/auth/login", body) }
 
-		// A user name that is not text is refused like an unknown one. On
-		// SQLite the lockout query cannot take a boolean, a list that holds
-		// a list, or an object: a server error before the password step.
-		refused := func(what, body string, sqliteStatus int, sqliteBody string) {
-			t.Helper()
-			if w.db.IsPostgres() {
-				want(t, what, post(body), http.StatusUnauthorized, invalidCredentials)
-				return
-			}
-			want(t, what, post(body), sqliteStatus, sqliteBody)
+		// A user name that is not text is refused as a missing one, on both
+		// databases, before the lockout check: no attempt and no audit entry
+		// (BUGS UM20)
+		for what, body := range map[string]string{
+			"number as name":      `{"username":12345,"password":"x"}`,
+			"true as name":        `{"username":true,"password":"x"}`,
+			"list as name":        `{"username":["a",null,["b"]],"password":"x"}`,
+			"list of one as name": `{"username":["abc"],"password":"x"}`,
+			"object as name":      `{"username":{"a":1},"password":"x"}`,
+		} {
+			want(t, what, post(body), http.StatusBadRequest, invalidCredentials)
 		}
-		refused("number as name", `{"username":12345,"password":"x"}`, http.StatusUnauthorized, invalidCredentials)
-		refused("true as name", `{"username":true,"password":"x"}`, http.StatusInternalServerError, serverErrorBody)
-		refused("list as name", `{"username":["a",null,["b"]],"password":"x"}`, http.StatusInternalServerError, serverErrorBody)
-		refused("list of one as name", `{"username":["abc"],"password":"x"}`, http.StatusUnauthorized, invalidCredentials)
-		refused("object as name", `{"username":{"a":1},"password":"x"}`, http.StatusInternalServerError, serverErrorBody)
 		// A password that is not text is a wrong one (BUGS.md AR2)
 		want(t, "number as password, unknown user", post(`{"username":"nobody","password":12345}`), http.StatusUnauthorized, invalidCredentials)
 		want(t, "number as password, local account", post(`{"username":"alice","password":12345}`), http.StatusUnauthorized, invalidCredentials)
@@ -117,19 +113,8 @@ func TestLoginWithValuesThatAreNoText(t *testing.T) {
 		failed := func(name string) string {
 			return "login_failed|Username: " + name + "; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0"
 		}
-		others := []string{failed("n***y"), failed("a***e"), failed("a***e"), failed("s***o"), failed("d***a"), "login_failed|Username:  ; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0"}
-		// SQLite took a number as a double, which a text column keeps as
-		// "12345.0", and a list of one value as that value. PostgreSQL
-		// stored the text of every value.
-		wantAudit := append([]string{failed("1***5"), failed("a***c")}, others...)
-		wantAttempts := []string{"12345.0|127.0.0.1|0", "abc|127.0.0.1|0", "nobody|127.0.0.1|0", "alice|127.0.0.1|0", "alice|127.0.0.1|0", "sso|127.0.0.1|0", "dora|127.0.0.1|0", " |127.0.0.1|0"}
-		if w.db.IsPostgres() {
-			wantAudit = append([]string{failed("1***5"), failed("t***e"), failed("a***b"), failed("a***c"), failed("[***t Object]")}, others...)
-			wantAttempts = []string{
-				"12345|127.0.0.1|0", "true|127.0.0.1|0", `{"a",NULL,{"b"}}|127.0.0.1|0`, `{"abc"}|127.0.0.1|0`, `{"a":1}|127.0.0.1|0`,
-				"nobody|127.0.0.1|0", "alice|127.0.0.1|0", "alice|127.0.0.1|0", "sso|127.0.0.1|0", "dora|127.0.0.1|0", " |127.0.0.1|0",
-			}
-		}
+		wantAudit := []string{failed("n***y"), failed("a***e"), failed("a***e"), failed("s***o"), failed("d***a"), "login_failed|Username:  ; ip=127.0.0.1; ua=auth-test/1|127.0.0.1|0"}
+		wantAttempts := []string{"nobody|127.0.0.1|0", "alice|127.0.0.1|0", "alice|127.0.0.1|0", "sso|127.0.0.1|0", "dora|127.0.0.1|0", " |127.0.0.1|0"}
 		equal(t, "audit", w.audit(), wantAudit)
 		equal(t, "attempts", w.attempts(), wantAttempts)
 		if calls := w.api.seen("POST /api/auth/login"); len(calls) != 0 {
@@ -214,22 +199,16 @@ func TestLoginRefusesAnAddressWithTooManyFailures(t *testing.T) {
 	})
 }
 
+// A user name that is not text is refused before the lockout is looked
+// up, also where a lockout of its text form exists (BUGS UM20).
 func TestLoginLockoutOfNamesThatAreNoText(t *testing.T) {
 	eachWorld(t, setup{}, func(t *testing.T, w *world) {
-		// The lockout a number's own failures wrote: "12345.0" on SQLite,
-		// "12345" on PostgreSQL
-		name := w.db.Pick("12345.0", "12345")
-		w.exec(`INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES (?, '2099-01-01 00:00:00', 10)`, name)
-		res := w.agent().post("/api/auth/login", `{"username":12345,"password":"x"}`)
-		if res.status != http.StatusTooManyRequests {
-			t.Errorf("number with a lockout: %d %s", res.status, res.body)
+		for _, name := range []string{"12345.0", "12345", "abc"} {
+			w.exec(`INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES (?, '2099-01-01 00:00:00', 10)`, name)
 		}
-		// A list of one name finds the lockout of that name on SQLite only
-		w.exec(`INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES ('abc', '2099-01-01 00:00:00', 10)`)
-		status := w.db.Pick("429", "401")
-		if res := w.agent().post("/api/auth/login", `{"username":["abc"],"password":"x"}`); fmt.Sprint(res.status) != status {
-			t.Errorf("list with a lockout: %d %s, want %s", res.status, res.body, status)
-		}
+		want(t, "number with a lockout", w.agent().post("/api/auth/login", `{"username":12345,"password":"x"}`), http.StatusBadRequest, invalidCredentials)
+		want(t, "list with a lockout", w.agent().post("/api/auth/login", `{"username":["abc"],"password":"x"}`), http.StatusBadRequest, invalidCredentials)
+		equal(t, "audit", w.audit(), nil)
 	})
 }
 

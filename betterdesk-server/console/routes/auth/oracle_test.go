@@ -167,7 +167,23 @@ func TestLockoutAnswersOfNode(t *testing.T) {
 		var rec lockoutRecording
 		readRecording(t, "lockout_"+dialectName(w.db)+".json", &rec)
 		seedRecording(w, rec.Seed)
+		// The addresses of the sign-ins UM20 refuses: each step has an
+		// address of its own, so the rows Node wrote for them are found
+		// by it
+		refusedFrom := map[string]bool{}
 		for _, step := range rec.Steps {
+			if nameNoText(step.Body) && step.Status != http.StatusBadRequest {
+				// UM20: a user name that is not text is refused as a
+				// missing one before the lockout check, on both databases;
+				// nothing is recorded for it
+				got := w.agentFrom(step.IP).post("/api/auth/login", step.Body)
+				want(t, step.Label+" (UM20)", got, http.StatusBadRequest, invalidCredentials)
+				if retry := got.header.Get("Retry-After"); retry != "" {
+					t.Errorf("%s: Retry-After %q", step.Label, retry)
+				}
+				refusedFrom[step.IP] = true
+				continue
+			}
 			if passwordNoText(step.Body) && step.Status == 500 {
 				// AR2: Node failed on a password that is not text; the
 				// console refuses it as a wrong one. The attempt and the
@@ -195,10 +211,24 @@ func TestLockoutAnswersOfNode(t *testing.T) {
 				t.Errorf("%s: Retry-After %q, node %q", step.Label, got.header.Get("Retry-After"), step.RetryAfter)
 			}
 		}
+		if len(refusedFrom) == 0 {
+			t.Error("the fix of UM20 changes no step of the recording")
+		}
+		// The names Node noted attempts under for the refused sign-ins,
+		// whose lockouts the console does not write either
+		refusedNames := map[any]bool{}
+		for _, row := range rec.Selects["attempts"].Rows {
+			if refusedFrom[fmt.Sprint(row["ip_address"])] {
+				refusedNames[row["username"]] = true
+			}
+		}
 		for _, name := range []string{"attempts", "lockouts", "audit"} {
 			sel := rec.Selects[name]
 			var want []string
 			for _, row := range sel.Rows {
+				if refusedFrom[fmt.Sprint(row["ip_address"])] || (name == "lockouts" && refusedNames[row["username"]]) {
+					continue
+				}
 				want = append(want, rowLine(sel.SQL, row))
 			}
 			got := w.rows(sel.SQL)
@@ -225,6 +255,17 @@ func withoutSignInNames(rows []string) []string {
 		out[i] = signInName.ReplaceAllString(row, "${1}Username: <name>")
 	}
 	return out
+}
+
+// nameNoText reports whether a sign-in body is an object whose user name
+// is there and is not text.
+func nameNoText(body string) bool {
+	var fields map[string]json.RawMessage
+	if json.Unmarshal([]byte(body), &fields) != nil || fields["username"] == nil {
+		return false
+	}
+	var name string
+	return json.Unmarshal(fields["username"], &name) != nil
 }
 
 // passwordNoText reports whether a sign-in body names a user and gives a
