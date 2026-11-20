@@ -3,6 +3,7 @@ package goapi
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/logging"
@@ -60,10 +61,15 @@ type DeleteOptions struct {
 	Revoke  bool
 	Cascade bool
 	Hard    bool
+	// CascadeOnly, when not nil, names the linked peers the cascade may
+	// delete; the API server keeps any other linked peer. nil lets the
+	// cascade delete every linked peer.
+	CascadeOnly []string
 }
 
 // DeletePeer calls DELETE /api/peers/{id} with revoke=true, cascade=true
-// and hard=true for the options that are set. W or F2.
+// and hard=true for the options that are set, and cascade_only with the
+// ids of CascadeOnly for a cascade that names them. W or F2.
 func (c *Client) DeletePeer(ctx context.Context, id string, opts DeleteOptions) *Object {
 	var flags []string
 	if opts.Revoke {
@@ -71,6 +77,9 @@ func (c *Client) DeletePeer(ctx context.Context, id string, opts DeleteOptions) 
 	}
 	if opts.Cascade {
 		flags = append(flags, "cascade=true")
+		if opts.CascadeOnly != nil {
+			flags = append(flags, "cascade_only="+url.QueryEscape(strings.Join(opts.CascadeOnly, ",")))
+		}
 	}
 	if opts.Hard {
 		flags = append(flags, "hard=true")

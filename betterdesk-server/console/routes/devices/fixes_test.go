@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -296,6 +297,38 @@ func TestCascadeChecksTheLinkedDevices(t *testing.T) {
 		if strings.HasSuffix(call, "/linked") {
 			t.Errorf("a delete without cascade or by admin looked the linked devices up: %s", call)
 		}
+	}
+}
+
+// TestCascadeNamesTheLinkedDevicesItChecked: the server's cascade deletes
+// only the linked devices whose scope the console checked, so a device
+// linked between that check and the delete stays. A role that sees every
+// device names none, and the cascade takes every linked device (BUGS DE13).
+func TestCascadeNamesTheLinkedDevicesItChecked(t *testing.T) {
+	w, api := world(t, storetest.Migrated(t), routetest.Overrides{"operator": {"device.delete": true}}, nil)
+	operator, admin := w.As("operator"), w.As("admin")
+	api.On("GET /api/peers/A/linked", 200, `{"peer_id":"A","linked":[{"id":"A2"},{"id":"A3"}],"total":2}`)
+	deletes := func() []string {
+		var out []string
+		for _, call := range api.Calls() {
+			if strings.HasPrefix(call, "DELETE ") {
+				out = append(out, call)
+			}
+		}
+		return out
+	}
+	api.Calls()
+	if got := operator.Do("DELETE", "/api/devices/A?revoke=true&cascade=true", ""); got.Status != http.StatusOK {
+		t.Fatalf("a cascade with every linked device in scope, as operator: %d %s", got.Status, got.Body)
+	}
+	if got, want := deletes(), []string{"DELETE /api/peers/A?revoke=true&cascade=true&cascade_only=A2%2CA3"}; !slices.Equal(got, want) {
+		t.Errorf("the operator's cascade asked the server for %q, want %q", got, want)
+	}
+	if got := admin.Do("DELETE", "/api/devices/A?cascade=true", ""); got.Status != http.StatusOK {
+		t.Fatalf("a cascade as admin: %d %s", got.Status, got.Body)
+	}
+	if got, want := deletes(), []string{"DELETE /api/peers/A?cascade=true"}; !slices.Equal(got, want) {
+		t.Errorf("the admin's cascade asked the server for %q, want %q", got, want)
 	}
 }
 

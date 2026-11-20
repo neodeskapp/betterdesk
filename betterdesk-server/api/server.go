@@ -1280,11 +1280,23 @@ func (s *Server) handleDeletePeer(w http.ResponseWriter, r *http.Request) {
 	cascade := r.URL.Query().Get("cascade") == "true"
 
 	// Collect linked peers before deletion (for cascade and response).
+	// cascade_only=ID,ID limits the cascade to the linked peers it names:
+	// the console checks an account's scope on the linked peers it read,
+	// and a peer linked after that read is not deleted with this one.
+	var cascadeOnly map[string]bool
+	if r.URL.Query().Has("cascade_only") {
+		cascadeOnly = map[string]bool{}
+		for _, lid := range strings.Split(r.URL.Query().Get("cascade_only"), ",") {
+			cascadeOnly[lid] = true
+		}
+	}
 	var linkedIDs []string
 	if revoke || cascade {
 		if linked, err := s.db.GetLinkedPeers(id); err == nil {
 			for _, lp := range linked {
-				linkedIDs = append(linkedIDs, lp.ID)
+				if cascadeOnly == nil || cascadeOnly[lp.ID] {
+					linkedIDs = append(linkedIDs, lp.ID)
+				}
 			}
 		}
 	}
