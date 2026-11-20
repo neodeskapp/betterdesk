@@ -485,7 +485,8 @@ func withoutCopies(rec *replay.Recording, db *store.DB) int {
 }
 
 // The most used apps are one row per app on both databases, under the
-// category the app was used the longest in, and the sums and counts are
+// category the app was used the longest in (not the one it was used most
+// often in), and the sums and counts are
 // numbers, as the web app's schema wants them. PostgreSQL made one row
 // per app and category and sent the numbers as text, as it did the detail
 // count of the list (BUGS AI10).
@@ -495,21 +496,21 @@ func TestTopAppsAreTheSameOnBothDatabases(t *testing.T) {
 		for _, s := range []struct {
 			app, category string
 			minute, secs  int
-		}{{"Mail", "communication", 1, 600}, {"Notes", "other", 2, 10}, {"Mail", "other", 3, 300}, {"Mail", "other", 4, 400}} {
+		}{{"Mail", "other", 1, 100}, {"Mail", "other", 2, 100}, {"Mail", "other", 3, 100}, {"Notes", "other", 4, 10}, {"Mail", "communication", 5, 400}, {"Mail", "communication", 6, 400}} {
 			w.Exec("INSERT INTO activity_sessions (device_id, app_name, category, started_at, ended_at, duration_secs) VALUES ('T', ?, ?, ?, ?, ?)",
 				[]any{s.app, s.category, fmt.Sprintf("2019-03-04T08:%02d:00.000Z", s.minute), fmt.Sprintf("2019-03-04T08:%02d:30.000Z", s.minute), s.secs})
 		}
 		w.Exec("INSERT INTO activity_summaries (device_id, reported_at) VALUES ('T', '2019-03-04T08:00:00.000Z')", nil)
-		want := `{"device_id":"T","top_apps":[{"app_name":"Mail","category":"other","total_secs":1300,"session_count":3},{"app_name":"Notes","category":"other","total_secs":10,"session_count":1}]}`
+		want := `{"device_id":"T","top_apps":[{"app_name":"Mail","category":"communication","total_secs":1100,"session_count":5},{"app_name":"Notes","category":"other","total_secs":10,"session_count":1}]}`
 		if got := w.Do(replay.Request{Role: "admin", Path: "/api/activity/T/top"}); got.Status != 200 || got.Body != want {
 			t.Errorf("the top apps: %d %s\nwant %s", got.Status, got.Body, want)
 		}
-		want = `{"device_id":"T","top_apps":[{"app_name":"Mail","category":"other","total_secs":1300,"session_count":3}]}`
+		want = `{"device_id":"T","top_apps":[{"app_name":"Mail","category":"communication","total_secs":1100,"session_count":5}]}`
 		if got := w.Do(replay.Request{Role: "admin", Path: "/api/activity/T/top?limit=1"}); got.Status != 200 || got.Body != want {
 			t.Errorf("the top app: %d %s\nwant %s", got.Status, got.Body, want)
 		}
-		if got := w.Do(replay.Request{Role: "admin", Path: "/api/activity"}); got.Status != 200 || !strings.Contains(got.Body, `"detail_count":4,`) {
-			t.Errorf("the list: %d %s, want the detail count 4 as a number", got.Status, got.Body)
+		if got := w.Do(replay.Request{Role: "admin", Path: "/api/activity"}); got.Status != 200 || !strings.Contains(got.Body, `"detail_count":6,`) {
+			t.Errorf("the list: %d %s, want the detail count 6 as a number", got.Status, got.Body)
 		}
 	})
 }
