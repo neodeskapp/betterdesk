@@ -698,7 +698,7 @@ func replay(t *testing.T, mode string, minimum int) {
 	p, server := startPipeline(t, file)
 	addr := server.Listener.Addr().String()
 	skipped := map[string]int{}
-	aborts, fileErrors, fixedHeaders := 0, 0, 0
+	aborts, fileErrors, fixedHeaders, sandboxed := 0, 0, 0, 0
 	for _, v := range file.Vectors {
 		name := v.ID + " " + v.Name
 		resp, body := exchange(t, addr, v.requestBytes(t), v.Method, v.AbortAfter)
@@ -746,9 +746,15 @@ func replay(t *testing.T, mode string, minimum int) {
 			wantHeaders["content-length"] = "0"
 			fileErrors++
 		}
-		if _, file := wantHeaders["last-modified"]; file && strings.HasPrefix(v.Name, "static ") {
+		_, file := wantHeaders["last-modified"]
+		if file && strings.HasPrefix(v.Name, "static ") {
 			wantHeaders["cache-control"] = fileCacheControl(v.Path, p.production)
 			fixedHeaders++
+		}
+		if _, _, uploads := httpx.StripMount(v.Path, "/uploads"); uploads && (file || clientFileError(v)) && strings.HasPrefix(v.Name, "static ") {
+			// BR18: a file of the uploads folder is sandboxed
+			wantHeaders["content-security-policy"] += ";sandbox"
+			sandboxed++
 		}
 		var skipHeaders []string
 		if _, has := wantHeaders["content-length"]; !has {
@@ -810,6 +816,9 @@ func replay(t *testing.T, mode string, minimum int) {
 	}
 	t.Logf("%d failed preconditions and ranges of files compared as the static step's own answer (M6)", fileErrors)
 	t.Logf("%d file answers compared with the folder's Cache-Control in place of Node's (S15)", fixedHeaders)
+	if sandboxed == 0 {
+		t.Error("no answer of the uploads folder compared with its sandbox (BR18)")
+	}
 	// A difference a bug fix makes on purpose names its bug first; those are
 	// counted apart from what Go cannot answer as Node did
 	total, fixed := 0, 0

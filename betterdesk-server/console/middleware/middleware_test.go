@@ -1772,3 +1772,41 @@ func TestStaticFoldersMaxAgeAppliesBehindSecurityHeaders(t *testing.T) {
 		}
 	}
 }
+
+// Files of the uploads folder, where people's logos and backgrounds are,
+// are served with a sandbox in their policy, so markup in an uploaded SVG
+// does not run when the file is opened (BR18). The console's own files
+// keep the policy as it is.
+func TestUploadedFilesAreSandboxed(t *testing.T) {
+	site := t.TempDir()
+	for _, f := range []string{"public/favicon.svg", "uploads/logo.svg", "uploads/bg.png", "wallpapers/w.jpg"} {
+		full := filepath.Join(site, filepath.FromSlash(f))
+		_ = os.MkdirAll(filepath.Dir(full), 0o755)
+		_ = os.WriteFile(full, []byte(`<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>`), 0o644)
+	}
+	opts := StaticFoldersOptions{PublicDir: filepath.Join(site, "public"), UploadsDir: filepath.Join(site, "uploads"), WallpapersDir: filepath.Join(site, "wallpapers")}
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusTeapot) })
+	for _, https := range []bool{false, true} {
+		h := SecurityHeaders(SecurityOptions{HTTPS: https})(StaticFolders(opts)(next))
+		policy := serve(SecurityHeaders(SecurityOptions{HTTPS: https})(next), httptest.NewRequest("GET", "/x", nil)).Header().Get("Content-Security-Policy")
+		for target, want := range map[string]string{
+			"/uploads/logo.svg":  policy + ";sandbox",
+			"/uploads/bg.png":    policy + ";sandbox",
+			"/favicon.svg":       policy,
+			"/wallpapers/w.jpg":  policy,
+			"/uploads/none.svg":  policy,
+			"/uploads/../x.svg":  policy,
+			"/UPLOADS/logo.svg":  policy + ";sandbox",
+			"/uploads//logo.svg": policy + ";sandbox",
+		} {
+			rec := serve(h, httptest.NewRequest("GET", target, nil))
+			if got := rec.Header().Get("Content-Security-Policy"); got != want {
+				t.Errorf("HTTPS %v, %s: %d, policy %q, want %q", https, target, rec.Code, got, want)
+			}
+		}
+	}
+	// Without a policy before it the file still gets the sandbox
+	if got := serve(StaticFolders(opts)(next), httptest.NewRequest("GET", "/uploads/logo.svg", nil)).Header().Get("Content-Security-Policy"); got != "sandbox" {
+		t.Errorf("without the security headers: %q", got)
+	}
+}

@@ -120,7 +120,8 @@ type StaticFoldersOptions struct {
 // redirected to the address with one.
 //
 // A file's Cache-Control is the folder's max-age; it replaces the one
-// SecurityHeaders set before.
+// SecurityHeaders set before. A file of /uploads gets sandbox in its
+// Content-Security-Policy.
 func StaticFolders(opts StaticFoldersOptions) func(http.Handler) http.Handler {
 	week, month := time.Duration(0), time.Duration(0)
 	if opts.Production {
@@ -139,7 +140,7 @@ func StaticFolders(opts StaticFoldersOptions) func(http.Handler) http.Handler {
 		{"", opts.PublicDir, "public", httpx.StaticOptions{MaxAge: week}},
 		{"/fonts", opts.FontsDir, "", httpx.StaticOptions{MaxAge: week}},
 		{"/protos", opts.ProtosDir, "protos", httpx.StaticOptions{MaxAge: week}},
-		{"/uploads", opts.UploadsDir, "", httpx.StaticOptions{MaxAge: month}},
+		{"/uploads", opts.UploadsDir, "", httpx.StaticOptions{MaxAge: month, SetHeaders: sandboxed}},
 		{"/wallpapers", opts.WallpapersDir, "", httpx.StaticOptions{MaxAge: month, Immutable: true}},
 	}
 	return func(next http.Handler) http.Handler {
@@ -163,6 +164,18 @@ func StaticFolders(opts StaticFoldersOptions) func(http.Handler) http.Handler {
 		}
 		return handler
 	}
+}
+
+// sandboxed adds sandbox to the Content-Security-Policy of a file of the
+// uploads folder, where people's logos and backgrounds are: markup in an
+// uploaded SVG does not run when someone opens the file. Pictures shown in
+// a page are not affected.
+func sandboxed(w http.ResponseWriter, _ string, _ fs.FileInfo) {
+	policy := "sandbox"
+	if before := w.Header().Get("Content-Security-Policy"); before != "" {
+		policy = before + ";sandbox"
+	}
+	w.Header().Set("Content-Security-Policy", policy)
 }
 
 // staticRoot is the name a folder of the console's tree goes by in a
