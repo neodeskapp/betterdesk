@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -143,7 +144,7 @@ func TestAnswersMatchNode(t *testing.T) {
 				differences := 0
 				fixed := map[string]int{}
 				for _, c := range golden.Cases {
-					if bug := intended(&c); bug != "" {
+					if bug := intended(config.base, &c); bug != "" {
 						fixed[bug]++
 					}
 					rec := httptest.NewRecorder()
@@ -235,7 +236,7 @@ func TestAnswersMatchNode(t *testing.T) {
 // intended turns a recorded answer into what the console answers since a
 // bug fix changed it on purpose, and names the bug ("" for an answer no
 // fix changed).
-func intended(c *goldenCase) string {
+func intended(base string, c *goldenCase) string {
 	// W1: the way back after sign-in is checked with its dot segments
 	// resolved; one the check refuses sends to the start
 	if loc := c.Answer["location"]; c.Status == http.StatusFound && strings.Contains(loc, "/.") {
@@ -266,7 +267,32 @@ func intended(c *goldenCase) string {
 		c.notCSRF = true
 		return "W2"
 	}
+	// W3: a hashed-file path whose dot segments lead out of the hashed
+	// files gets the empty 404 of a path that leaves the build
+	if (c.Method == http.MethodGet || c.Method == http.MethodHead) && leavesHashedFiles(base, c.Target) {
+		c.Status, c.Answer, c.Page = http.StatusNotFound, map[string]string{}, nil
+		if c.Method == http.MethodGet {
+			c.Answer["content-length"] = "0"
+		}
+		empty := ""
+		c.Body = &empty
+		return "W3"
+	}
 	return ""
+}
+
+// leavesHashedFiles reports whether a request target is a path under the
+// hashed files (<base>/_ui/immutable/) whose dot segments lead out of them.
+func leavesHashedFiles(base, target string) bool {
+	if i := strings.IndexAny(target, "?#"); i >= 0 {
+		target = target[:i]
+	}
+	prefix := base + "/" + hashedDir + "/"
+	if !hasPrefixFold(target, prefix) || !strings.Contains(target, "..") {
+		return false
+	}
+	cleaned := path.Clean(target) + "/"
+	return !hasPrefixFold(cleaned, prefix)
 }
 
 // answerText reports whether the recorded body or page holds a text.

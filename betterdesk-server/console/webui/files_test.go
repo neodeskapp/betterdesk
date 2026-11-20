@@ -415,21 +415,28 @@ func TestDotFilesDirectoriesAndOddNames(t *testing.T) {
 }
 
 // Paths under the hashed files are not decoded, and dot segments in them
-// are resolved inside the build: the same file with the year-long caching.
+// are resolved. What then lies outside the hashed files is not sent with
+// their year-long caching (W3): index.html never comes past the page
+// handler's session check, and version.json is not cached for a year.
 func TestHashedFilePathsAreTakenAsWritten(t *testing.T) {
 	bases(t, func(t *testing.T, h *Host, base, dir string) {
-		a := serve(h, "GET", base+"/_ui/immutable/../version.json", nil)
-		if a.status != 200 || a.body != readSite(t, dir, "_ui/version.json") || a.get("Cache-Control") != "public, max-age=31536000, immutable" ||
-			a.get("Content-Type") != "application/json; charset=utf-8" {
-			t.Errorf("version.json through the hashed files: %d, headers %v", a.status, a.header)
+		for _, target := range []string{"/_ui/immutable/../version.json", "/_ui/immutable/../../index.html", "/_ui/immutable/../../licenses.txt",
+			"/_ui/immutable/entry/../../version.json", "/_ui/immutable/./../version.json", "/_UI/IMMUTABLE/../version.json"} {
+			for _, user := range []map[string]string{nil, admin} {
+				a := serve(h, "GET", base+target, with(user, "Accept-Encoding", "br, gzip"))
+				if a.status != 404 || a.body != "" || !a.handled || strings.Contains(a.get("Cache-Control"), "immutable") || a.get("Vary") != "" {
+					t.Errorf("%s: %d %q (handled %v), headers %v", target, a.status, clip(a.body), a.handled, a.header)
+				}
+			}
 		}
 		wantStatus(t, serve(h, "GET", base+"/_ui/immutable/entry/./start.t3st.js", nil), "a dot segment", 200)
+		wantStatus(t, serve(h, "GET", base+"/_ui/immutable/entry/../entry/start.t3st.js", nil), "a way out and back in", 200)
 		wantStatus(t, serve(h, "GET", base+"/_ui/immutable/entry//start.t3st.js", nil), "a double slash", 200)
 		// With an escape in it the path names no hashed file. The plain
 		// file route decodes it and sends the file as any build file: an
 		// hour of caching, no precompressed copy
 		for _, target := range []string{"/_ui/immutable/entry%2Fstart.t3st.js", "/_ui/immutable/entry/start.t3st%2Ejs"} {
-			a = serve(h, "GET", base+target, map[string]string{"Accept-Encoding": "br"})
+			a := serve(h, "GET", base+target, map[string]string{"Accept-Encoding": "br"})
 			if a.status != 200 || a.body != readSite(t, dir, "_ui/immutable/entry/start.t3st.js") || a.get("Cache-Control") != "public, max-age=3600" ||
 				a.get("Content-Encoding") != "" || a.get("Content-Type") != "application/javascript; charset=UTF-8" {
 				t.Errorf("%s: %d, headers %v", target, a.status, a.header)

@@ -54,6 +54,9 @@ func decodeFailure(param string) *httpError {
 	return &httpError{http.StatusBadRequest, "Failed to decode param '" + param + "'"}
 }
 
+// hashedDir is the folder of the build's hashed files.
+const hashedDir = "_ui/immutable"
+
 // immutableTypes are the content types of hashed build output.
 var immutableTypes = map[string]string{
 	".js":    "application/javascript; charset=utf-8",
@@ -188,16 +191,19 @@ func isMissing(err error) bool {
 // names its encoding in Accept-Encoding and the copy exists.
 //
 // It answers false when there is no such file. The headers of the answer
-// are set by then and stay on the response.
+// are set by then and stay on the response. A path whose dot segments lead
+// out of the hashed files gets an empty 404: the build's other files are
+// not sent with the year-long caching, and index.html only comes from the
+// page handler.
 func (h *Host) serveImmutable(w http.ResponseWriter, r *http.Request, rel string) (bool, *httpError) {
-	root := filepath.ToSlash(h.dir)
+	root := strings.TrimSuffix(filepath.ToSlash(h.dir), "/")
 	full := path.Clean(root + "/" + rel)
 	trailingSlash := strings.HasSuffix(rel, "/")
-	if !strings.HasPrefix(full, strings.TrimSuffix(root, "/")+"/") && (full != root || !trailingSlash) {
+	inside, ok := strings.CutPrefix(full, root+"/")
+	if !ok || !(asciiEqualFold(inside, hashedDir) || hasPrefixFold(inside, hashedDir+"/")) {
 		endEmpty(w, r, http.StatusNotFound)
 		return true, nil
 	}
-	inside := strings.TrimPrefix(strings.TrimPrefix(full, root), "/")
 
 	type candidate struct{ suffix, encoding string }
 	var candidates []candidate
@@ -219,10 +225,8 @@ func (h *Host) serveImmutable(w http.ResponseWriter, r *http.Request, rel string
 			// "dir/.br": no build has such a file
 			continue
 		}
-		var name string
-		if inside == "" {
-			name = h.dir
-		} else if name, ok = h.inBuild(inside + c.suffix); !ok {
+		name, ok := h.inBuild(inside + c.suffix)
+		if !ok {
 			continue
 		}
 		info, err := h.files.Stat(name)
