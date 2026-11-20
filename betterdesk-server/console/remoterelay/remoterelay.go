@@ -8,8 +8,9 @@
 //
 // Where a message made the Node process end (a text message that is the
 // JSON null, a message the relay writes out again that is nested too
-// deeply for JSON.stringify, an agent path with a broken percent escape),
-// the relay drops that one connection instead (DECISIONS A19).
+// deeply for JSON.stringify), the relay drops that one connection instead
+// (DECISIONS A19); an agent path whose escapes spell no text is refused
+// with 400.
 package remoterelay
 
 import (

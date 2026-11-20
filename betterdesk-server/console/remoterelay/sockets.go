@@ -22,18 +22,17 @@ func (s *Service) Register(reg *ws.Registry) {
 
 // serveAgent is an agent's socket. Before the handshake, each refusal a
 // bare status line: the origin check (403), a device id that is not 3 to
-// 64 letters, digits, _ and - after percent decoding (400), a token that
-// is neither the device's pending single-use token nor a device token the
-// device may use (403; 500 when the device token check fails). A broken
-// percent escape in the id ended the Node process; that connection is
-// dropped without an answer.
+// 64 letters, digits, _ and - after percent decoding, or whose escapes
+// spell no text (400), a token that is neither the device's pending
+// single-use token nor a device token the device may use (403; 500 when
+// the device token check fails).
 func (s *Service) serveAgent(u *ws.Upgrade) {
 	if !u.CheckOrigin("remote-agent " + u.Path) {
 		return
 	}
 	deviceID, ok := decodeURIComponent(u.Param("id"))
 	if !ok {
-		u.RefuseRaw("")
+		u.Refuse(http.StatusBadRequest)
 		return
 	}
 	token, _ := u.SearchParam("token")

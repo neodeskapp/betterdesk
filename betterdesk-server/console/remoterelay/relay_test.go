@@ -1,6 +1,7 @@
 package remoterelay
 
 import (
+	"context"
 	"io"
 	"net"
 	"net/http"
@@ -99,7 +100,8 @@ func TestStringifyDepthIsTheRecordedOne(t *testing.T) {
 // crash cases), the Go relay drops that one connection without a close
 // frame and goes on serving; where Node lived on, the socket stays open. A
 // path whose escapes are not even well-formed is refused by the HTTP
-// server before the socket sees it.
+// server before the socket sees it, and one whose escapes are no text by
+// the socket, both with 400 (RM1).
 func TestWhereNodeEndedTheConnectionIsDropped(t *testing.T) {
 	// A broken escape never reaches the socket: Go's HTTP server refuses
 	// the request target first
@@ -118,7 +120,7 @@ func TestWhereNodeEndedTheConnectionIsDropped(t *testing.T) {
 	plans := map[string]plan{
 		"agent path with a broken escape":         {upgrade: "/ws/remote-agent/%E0%A4%A?token=tok-x-good", refused: badRequest},
 		"agent path with a bad escape":            {upgrade: "/ws/remote-agent/dev%ZZ?token=x", refused: badRequest},
-		"agent path with a lone surrogate escape": {upgrade: "/ws/remote-agent/%ED%A0%80?token=x"},
+		"agent path with a lone surrogate escape": {upgrade: "/ws/remote-agent/%ED%A0%80?token=x", refused: badRequest},
 		"agent text null":                         {agent: true, from: "agent", text: "null"},
 		"agent text 5":                            {agent: true, from: "agent", text: "5"},
 		"viewer text null":                        {viewer: "dev1", from: "viewer", text: "null"},
@@ -187,6 +189,34 @@ func TestWhereNodeEndedTheConnectionIsDropped(t *testing.T) {
 			check()
 		})
 	}
+}
+
+// An agent path whose escapes are hex but spell no text (a lone surrogate,
+// a cut sequence) is refused with the bare 400 an id outside the pattern
+// gets, before the token is looked at (RM1).
+func TestAgentPathThatIsNoTextIsRefused(t *testing.T) {
+	check := wstest.Goroutines(t)
+	world := &oracleWorld{}
+	_, addr, stop := testRelay(t, func(o *Options) {
+		o.VerifyDevice = func(_ context.Context, deviceID, token string) (bool, error) {
+			world.note("verify %q %q", deviceID, token)
+			return true, nil
+		}
+	})
+	for _, path := range []string{"/ws/remote-agent/%ED%A0%80?token=tok-x-good", "/ws/remote-agent/ab%E0%A4cd?token=tok-x-good"} {
+		answer, err := wstest.Raw(addr, "GET "+path+" HTTP/1.1\r\nHost: console.test\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if answer != "HTTP/1.1 400 Bad Request\r\n\r\n" {
+			t.Errorf("%s: answer %q, want a bare 400", path, answer)
+		}
+	}
+	if calls := world.take(); len(calls) != 0 {
+		t.Errorf("the token was looked at: %q", calls)
+	}
+	stop()
+	check()
 }
 
 // Agents and viewers are pinged at the interval, and an unanswered ping
