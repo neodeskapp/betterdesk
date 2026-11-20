@@ -42,7 +42,7 @@ func TestPasswordChange(t *testing.T) {
 
 func TestPasswordChangeRefusals(t *testing.T) {
 	// Every request counts against the limit of three in five minutes per
-	// address, so each case gets a console of its own address budget
+	// account, so every three cases get an account of their own
 	const (
 		required = `{"success":false,"error":"Password is required"}`
 		mismatch = `{"success":false,"error":"Passwords do not match"}`
@@ -73,15 +73,21 @@ func TestPasswordChangeRefusals(t *testing.T) {
 		{"true as new password", fmt.Sprintf(`{"currentPassword":%q,"newPassword":true,"confirmPassword":true}`, password), 400, short},
 	}
 	w := newWorld(t, nil, setup{trustProxy: "loopback"})
-	alice := w.addUser(user{name: "alice"})
+	var accounts []int64
 	for i, c := range cases {
-		// A new address for every three requests
-		a := w.agentFrom(fmt.Sprintf("198.51.100.%d", 1+i/3))
-		a.signIn("alice")
+		// A new account for every three requests
+		name := fmt.Sprintf("alice%d", i/3)
+		if i%3 == 0 {
+			accounts = append(accounts, w.addUser(user{name: name}))
+		}
+		a := w.agentFrom("198.51.100.1")
+		a.signIn(name)
 		want(t, c.name, a.post("/api/auth/password", c.body), c.status, c.want)
 	}
-	if hash := w.text(`SELECT password_hash FROM users WHERE id = ?`, alice); hash != passwordHash {
-		t.Error("a refused change replaced the password")
+	for _, id := range accounts {
+		if hash := w.text(`SELECT password_hash FROM users WHERE id = ?`, id); hash != passwordHash {
+			t.Error("a refused change replaced the password")
+		}
 	}
 	for _, row := range w.audit() {
 		if strings.HasPrefix(row, "password_changed|") {
