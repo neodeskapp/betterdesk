@@ -94,30 +94,11 @@ func isJSSpace(r rune) bool {
 	return r >= 0x2000 && r <= 0x200a
 }
 
-// slice is s.slice(0, n): the first n UTF-16 code units. A cut through a
-// character outside the Basic Multilingual Plane leaves its first half,
-// which becomes U+FFFD.
+// slice is s.slice(0, n) for whole characters: at most the first n
+// UTF-16 code units, stopping before a character outside the Basic
+// Multilingual Plane that does not fit whole, so no half of one is left
+// (JavaScript keeps the half, which becomes U+FFFD).
 func slice(s string, n int) string {
-	units := 0
-	for i, r := range s {
-		size := 1
-		if r > 0xffff {
-			size = 2
-		}
-		if units+size > n {
-			if units < n {
-				return s[:i] + "�"
-			}
-			return s[:i]
-		}
-		units += size
-	}
-	return s
-}
-
-// cutWhole is slice that stops before a character outside the Basic
-// Multilingual Plane that does not fit whole, so no half of one is left.
-func cutWhole(s string, n int) string {
 	units := 0
 	for i, r := range s {
 		size := 1

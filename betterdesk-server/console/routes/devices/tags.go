@@ -199,7 +199,7 @@ func (h *handlers) setTags(w http.ResponseWriter, r *http.Request) {
 	cleaned := []string{}
 	for _, item := range list {
 		if s, ok := item.(string); ok && jsTrim(s) != "" {
-			cleaned = append(cleaned, jsTrim(cutWhole(jsTrim(s), 50)))
+			cleaned = append(cleaned, jsTrim(slice(jsTrim(s), 50)))
 		}
 	}
 	if len(cleaned) > 20 {

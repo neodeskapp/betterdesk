@@ -548,6 +548,35 @@ func TestMembershipIsOneWrite(t *testing.T) {
 	}
 }
 
+// TestCutsKeepWholeCharacters: a note, a user name and a display name
+// cut to their length stop before a character outside the Basic
+// Multilingual Plane that does not fit whole, so the server gets no
+// U+FFFD in place of half of one, and so does a connection mode reason
+// (BUGS DE12).
+func TestCutsKeepWholeCharacters(t *testing.T) {
+	w, api := world(t, storetest.Migrated(t), nil, nil)
+	admin := w.As("admin")
+	a511, b127 := strings.Repeat("a", 511), strings.Repeat("b", 127)
+	api.Calls()
+	got := admin.Do("PATCH", "/api/devices/A", `{"note":"`+a511+`😀","display_name":"`+b127+`😀","user":"😀"}`)
+	if got.Status != http.StatusOK {
+		t.Fatalf("update: %d %s", got.Status, got.Body)
+	}
+	r499 := strings.Repeat("r", 499)
+	if got := admin.Do("POST", "/api/devices/A/connection-mode", `{"mode":"normal","reason":"`+r499+`😀"}`); got.Status != http.StatusOK {
+		t.Fatalf("connection mode: %d %s", got.Status, got.Body)
+	}
+	calls := strings.Join(api.Calls(), "\n")
+	if strings.Contains(calls, `�`) || strings.Contains(calls, "�") {
+		t.Errorf("the server got U+FFFD: %s", calls)
+	}
+	for _, want := range []string{`"note":"` + a511 + `"`, `"display_name":"` + b127 + `"`, `"user":"😀"`, `"` + r499 + `"`} {
+		if !strings.Contains(calls, want) {
+			t.Errorf("the server did not get %.40s...: %s", want, calls)
+		}
+	}
+}
+
 // TestListIgnoresQueryLists: search and sortOrder given as a list or an
 // object are ignored like the other parameters, and the list answers
 // (BUGS DE4).
