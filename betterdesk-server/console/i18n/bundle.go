@@ -114,8 +114,8 @@ type Bundle struct {
 	// Dir is the folder with the <code>.json files.
 	Dir string
 	// FS holds the <code>.json files at its top in place of Dir, which then
-	// only names the folder in messages. Its files are read only: saving
-	// or deleting a language fails as on a read-only file system.
+	// only names the folder in messages. Its files are the languages built
+	// into the server: saving or deleting a language is refused.
 	FS fs.FS
 	// DefaultLang is the language whose texts fill what another lacks.
 	DefaultLang string
@@ -604,12 +604,20 @@ func allKeys(v any, prefix string) []string {
 
 // Result is the outcome of Save or Delete. Error holds the text the
 // console's API sends when Success is false; NotFound is set when the
-// language to delete does not exist.
+// language to delete does not exist, BuiltIn when the languages are the
+// ones built into the server, which cannot be changed.
 type Result struct {
 	Success  bool
 	Error    string
 	NotFound bool
+	BuiltIn  bool
 }
+
+// The refusals of Save and Delete for the languages built into the server.
+const (
+	msgBuiltInUpload = "Languages ship with the server and cannot be uploaded"
+	msgBuiltInDelete = "Languages ship with the server and cannot be deleted"
+)
 
 // Save writes texts to <code>.json and loads the language again.
 //
@@ -617,10 +625,14 @@ type Result struct {
 // links are resolved. The file is written as JSON with two spaces of
 // indentation, in UTF-8, without a trailing newline, into a new file that
 // replaces the old one only once it is complete. A code outside the table
-// of known languages is written but not loaded.
+// of known languages is written but not loaded. Languages read from FS,
+// the files built into the server, are not written.
 func (b *Bundle) Save(code string, texts any) Result {
 	if !ValidCode(code) {
 		return Result{Error: "Invalid language code format"}
+	}
+	if b.FS != nil {
+		return Result{Error: msgBuiltInUpload, BuiltIn: true}
 	}
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -638,7 +650,8 @@ func (b *Bundle) Save(code string, texts any) Result {
 
 // Delete removes <code>.json and forgets the language. English and Polish
 // cannot be deleted. A language that has no file and is not loaded is not
-// found.
+// found. A language read from FS, the files built into the server, is not
+// deleted.
 func (b *Bundle) Delete(code string) Result {
 	if !ValidCode(code) {
 		return Result{Error: "Invalid language code format"}
@@ -653,6 +666,8 @@ func (b *Bundle) Delete(code string) Result {
 		return Result{Error: err.Error()}
 	}
 	switch err := b.stat(path); {
+	case err == nil && b.FS != nil:
+		return Result{Error: msgBuiltInDelete, BuiltIn: true}
 	case err == nil:
 		if err := b.remove(path); err != nil {
 			return Result{Error: nodeFSMessage(err, "unlink", path)}

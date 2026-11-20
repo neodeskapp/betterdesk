@@ -226,7 +226,11 @@ func (h *Handlers) Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if result := h.Bundle.Save(name, translations); !result.Success {
-		fail(w, r, http.StatusInternalServerError, result.Error)
+		status := http.StatusInternalServerError
+		if result.BuiltIn {
+			status = http.StatusBadRequest
+		}
+		fail(w, r, status, result.Error)
 		return
 	}
 	h.forgetStrings(name)

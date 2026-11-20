@@ -717,3 +717,51 @@ func TestDeleteUnknownLanguageIsNotFound(t *testing.T) {
 		t.Errorf("audit %v", rec.audit)
 	}
 }
+
+// The languages built into the server cannot be changed: an upload and a
+// delete that pass every other check answer 400 with the reason, where
+// they answered 500 with the read-only file system's error, and change
+// nothing (BUGS NL1, DECISIONS A66). The checks before stay as they were.
+func TestBuiltInLanguagesAreNotChanged(t *testing.T) {
+	dir := copyDir(t, "testdata/lang-upload")
+	h, rec, _ := handlersFor(t, dir, time.Now())
+	h.Bundle = New(filepath.Join("(built in)", "lang"), "en")
+	h.Bundle.FS = os.DirFS(dir)
+	h.Bundle.Logf = (&logs{}).logf
+	h.Bundle.Load()
+	texts := stringify(h.Bundle.Merged("de"), "")
+	before := fileNames(t, dir)
+
+	for _, c := range []struct {
+		parts  []string
+		status int
+		body   string
+	}{
+		{[]string{filePart("de.json", `{"_meta":{"code":"de"},"a":1}`)}, 400, `{"success":false,"error":"Languages ship with the server and cannot be uploaded"}`},
+		{[]string{filePart("fr.json", `{"a":1}`)}, 400, `{"success":false,"error":"Languages ship with the server and cannot be uploaded"}`},
+		{[]string{filePart("xx.json", `{"a":1}`)}, 400, `{"success":false,"error":"Invalid language code"}`},
+		{[]string{filePart("de.json", `{"a":`)}, 400, `{"success":false,"error":"Invalid JSON file"}`},
+	} {
+		if got := postForm(t, h, c.parts...); got.status != c.status || got.body != c.body {
+			t.Errorf("upload %q: %d %s, want %d %s", c.parts, got.status, got.body, c.status, c.body)
+		}
+	}
+	srv := httptest.NewServer(routes(h))
+	defer srv.Close()
+	for code, want := range map[string]answer{
+		"de":   {status: 400, body: `{"success":false,"error":"Languages ship with the server and cannot be deleted"}`},
+		"en":   {status: 400, body: `{"success":false,"error":"Cannot delete core language"}`},
+		"yy":   {status: 404, body: `{"success":false,"error":"Language not found"}`},
+		"d_e!": {status: 400, body: `{"success":false,"error":"Invalid language code format"}`},
+	} {
+		if got := do(t, srv.URL, "DELETE", "/api/i18n/"+code, nil, nil, 0); got.status != want.status || got.body != want.body {
+			t.Errorf("delete %s: %d %s, want %d %s", code, got.status, got.body, want.status, want.body)
+		}
+	}
+	if !h.Bundle.Has("de") || stringify(h.Bundle.Merged("de"), "") != texts || h.Bundle.Has("fr") {
+		t.Error("a refused change changed the loaded languages")
+	}
+	if after := fileNames(t, dir); !reflect.DeepEqual(after, before) || len(rec.audit) != 0 {
+		t.Errorf("files %v (before %v), audit %v", after, before, rec.audit)
+	}
+}

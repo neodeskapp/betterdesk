@@ -10,8 +10,8 @@ import (
 
 // A bundle on FS answers as one on the same files in Dir: the languages,
 // their texts, the load messages and the translations page, odd files
-// included. Only writes differ: in FS they fail as on a read-only file
-// system and change nothing.
+// included. Only writes differ: in FS, the languages built into the
+// server, they are refused and change nothing (BUGS NL1).
 func TestBundleOnFSReadsAsOnDisk(t *testing.T) {
 	dir := copyDir(t, realLangDir)
 	for name, content := range map[string]string{
@@ -83,10 +83,10 @@ func TestBundleOnFSReadsAsOnDisk(t *testing.T) {
 		t.Fatal(err)
 	}
 	texts := stringify(inFS.Merged("de"), "")
-	if r := inFS.Save("de", NewObject()); r.Success || r.Error != "EROFS: read-only file system, open '"+filepath.Join(inFS.Dir, "de.json")+"'" {
+	if r := inFS.Save("de", NewObject()); r.Success || !r.BuiltIn || r.Error != "Languages ship with the server and cannot be uploaded" {
 		t.Errorf("Save in FS: %+v", r)
 	}
-	if r := inFS.Delete("de"); r.Success || r.Error != "EROFS: read-only file system, unlink '"+filepath.Join(inFS.Dir, "de.json")+"'" {
+	if r := inFS.Delete("de"); r.Success || !r.BuiltIn || r.Error != "Languages ship with the server and cannot be deleted" {
 		t.Errorf("Delete in FS: %+v", r)
 	}
 	if after, _ := os.ReadFile(file); string(after) != string(before) {

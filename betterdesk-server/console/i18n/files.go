@@ -9,9 +9,8 @@ import (
 
 // The bundle reads its files from the folder Dir on disk, or from FS when
 // FS is set. A path is Dir joined with a file name either way; in FS the
-// file name is looked up at the top, where every language file is. The
-// files in FS cannot be written: a write fails as it does on a read-only
-// file system.
+// file name is looked up at the top, where every language file is. Save
+// and Delete refuse to change the files in FS, so writes only reach Dir.
 
 func (b *Bundle) dirExists() bool {
 	var err error
@@ -52,9 +51,6 @@ func (b *Bundle) readDir() ([]fs.DirEntry, error) {
 // leaves the old file as it was. The new file gets the old one's
 // permissions, or 0644.
 func (b *Bundle) writeFile(path string, data []byte) error {
-	if b.FS != nil {
-		return &fs.PathError{Op: "open", Path: path, Err: syscall.EROFS}
-	}
 	mode := fs.FileMode(0o644)
 	if info, err := os.Stat(path); err == nil {
 		mode = info.Mode().Perm()
@@ -92,9 +88,6 @@ func (b *Bundle) writeData(f *os.File, data []byte) error {
 
 // remove deletes a language file and refuses a directory, as unlink does.
 func (b *Bundle) remove(path string) error {
-	if b.FS != nil {
-		return &fs.PathError{Op: "unlink", Path: path, Err: syscall.EROFS}
-	}
 	if info, err := os.Lstat(path); err == nil && info.IsDir() {
 		return &fs.PathError{Op: "unlink", Path: path, Err: syscall.EISDIR}
 	}
