@@ -379,8 +379,11 @@ func TestUploadsLikeNode(t *testing.T) {
 			}
 		}
 		last := ""
-		renames, inheritedTargets, fontsByBytes := 0, 0, 0
+		renames, inheritedTargets, fontsByBytes, fontsByUTF8Name := 0, 0, 0, 0
 		defer func() {
+			if fontsByUTF8Name < len(utf8NamedFonts) {
+				t.Errorf("%d font uploads named outside ASCII, the recording has %d (BUGS M5)", fontsByUTF8Name, len(utf8NamedFonts))
+			}
 			if renames < 10 {
 				t.Errorf("%d uploads stored under another name than Node's, the recording has more (BUGS I9)", renames)
 			}
@@ -399,6 +402,7 @@ func TestUploadsLikeNode(t *testing.T) {
 			status, body := 0, ""
 			var renamed []string
 			var byBytes *fontByBytes
+			utf8Named := ""
 			switch get("op") {
 			case "upload":
 				var content []byte
@@ -435,6 +439,9 @@ func TestUploadsLikeNode(t *testing.T) {
 				if field == "font" {
 					if byBytes = fixedFontUpload(entry, content); byBytes != nil {
 						fontsByBytes++
+					}
+					if _, ok := utf8NamedFonts[get("filename")]; ok {
+						utf8Named = get("filename")
 					}
 				}
 				if from, to := nodeUploadName(t, body, branding.Field(entry, "body"), mimeType); from != to {
@@ -491,6 +498,10 @@ func TestUploadsLikeNode(t *testing.T) {
 			}
 			if byBytes != nil && byBytes.refused {
 				wantStatus, wantBody, wantAudit = 400, `{"success":false,"error":"Invalid font file type"}`, nil
+			}
+			if utf8Named != "" {
+				wantStatus, wantBody, wantAudit = 400, utf8NamedFonts[utf8Named], nil
+				fontsByUTF8Name++
 			}
 			if ok && int(wantStatus) != status {
 				t.Errorf("%s: status %d, want %d (%s)", what, status, int(wantStatus), clipText(body))
@@ -568,6 +579,14 @@ func fixedUploadAnswer(entry any) (body string, audit []string, fixed bool) {
 	}
 	return `{"success":true,"url":"` + m[1] + `","applied":false,"data":null}`,
 		[]string{branding.Stringify([]any{"branding_bg_upload", "Uploaded background: " + m[2]})}, true
+}
+
+// utf8NamedFonts are the font uploads of the recording whose file name is
+// not ASCII, with the console's answer. Node read the name as Latin-1 and
+// took the family from that; the console reads it as UTF-8 (BUGS M5), and
+// a family of CJK letters leaves no folder name.
+var utf8NamedFonts = map[string]string{
+	"你好.ttf": `{"success":false,"error":"Invalid font family name"}`,
 }
 
 // fontByBytes is BR4 in the replay of a font upload that Node stored

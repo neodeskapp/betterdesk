@@ -649,6 +649,10 @@ func knownDifference(v vector) (difference, bool) {
 		return difference{"M2: the JSON-only rule takes /API/ as /api/, as the router does", 415, "Content-Type must be application/json"}, true
 	case strings.HasPrefix(v.Name, "rule ") && v.Path == "/api/Upload":
 		return difference{"M2: the JSON-only rule takes /Upload as /upload, as the router does", 200, `"path":"/api/Upload"`}, true
+	case strings.HasPrefix(v.Name, "upload ") && strings.HasSuffix(v.Name, " latin1 name"):
+		return difference{"M5: a file name is read as UTF-8", 200, `"originalname":"é ü.PNG"`}, true
+	case strings.HasPrefix(v.Name, "upload ") && strings.HasSuffix(v.Name, " field names mixed"):
+		return difference{"M5: a field name is read as UTF-8", 200, `"é":{"ü":"ö%0A"}`}, true
 	}
 	return difference{}, false
 }

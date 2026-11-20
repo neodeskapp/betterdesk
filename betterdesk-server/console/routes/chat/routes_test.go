@@ -289,7 +289,8 @@ func TestUpload(t *testing.T) {
 		{".bashrc", ""},
 		{"trailing.", "."},
 		{`we"ird name.a b`, ".a b"},
-		{"x.\xc3\xa9t\xc3\xa9", ".Ã©tÃ©"},
+		// The name is read as UTF-8, where Node read it as Latin-1 (BUGS M5)
+		{"x.\xc3\xa9t\xc3\xa9", ".été"},
 	}
 	for _, c := range names {
 		before := len(w.stored())

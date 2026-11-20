@@ -429,10 +429,13 @@ func parseDisposition(s string) (kind string, params map[string]string, ok bool)
 }
 
 // headerParams reads *( ";" name "=" value ) from position i. A value is
-// a token or a quoted string; with extended set, name*=charset'lang'value
-// is read too. The first value of a name counts. Values are text: bytes
-// above 0x7f are Latin-1 letters unless an extended value says UTF-8.
-func headerParams(s string, i int, extended bool) (map[string]string, bool) {
+// a token or a quoted string. The first value of a name counts.
+//
+// With disposition set (a Content-Disposition), name*=charset'lang'value
+// is read too, and a quoted value is UTF-8, as browsers send file and
+// field names; bytes that are not UTF-8 become U+FFFD. Otherwise bytes
+// above 0x7f are Latin-1 letters.
+func headerParams(s string, i int, disposition bool) (map[string]string, bool) {
 	params := map[string]string{}
 	skipSpace := func() {
 		for i < len(s) && (s[i] == ' ' || s[i] == '\t') {
@@ -461,7 +464,7 @@ func headerParams(s string, i int, extended bool) (map[string]string, bool) {
 		}
 		name := s[start:i]
 		var value string
-		if extended && strings.HasSuffix(name, "*") {
+		if disposition && strings.HasSuffix(name, "*") {
 			text, next, ok := extendedValue(s, i+1)
 			if !ok {
 				return nil, false
@@ -504,7 +507,11 @@ func headerParams(s string, i int, extended bool) (map[string]string, bool) {
 				if !closed {
 					return nil, false
 				}
-				value = latin1(string(b))
+				if disposition {
+					value = decodeUTF8(b)
+				} else {
+					value = latin1(string(b))
+				}
 			} else {
 				start = i
 				for i < len(s) && isTokenByte(s[i]) {

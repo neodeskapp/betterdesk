@@ -1443,7 +1443,7 @@ func TestUploadFileNames(t *testing.T) {
 		`form-data; name="file"; filename="../../etc/pass wd.png"`:                   "pass wd.png",
 		`form-data; name="file"; filename="C:\dir\a.png"`:                            "a.png",
 		`form-data; name="file"; filename="a%22b%0A.png"`:                            "a\"b\n.png",
-		"form-data; name=\"file\"; filename=\"\xc3\xa9.png\"":                        "\xc3\x83\xc2\xa9.png",
+		"form-data; name=\"file\"; filename=\"\xc3\xa9.png\"":                        "\xc3\xa9.png",
 		`form-data; name="file"; filename*=UTF-8''%C3%A9.png`:                        "\xc3\xa9.png",
 		`form-data; name="file"; filename="plain.png"; filename*=utf-8'en'st%C3%A4r`: "st\xc3\xa4r",
 		`form-data; name="file"; filename*=iso-8859-1''%E9.png`:                      "\xc3\xa9.png",
@@ -1482,6 +1482,38 @@ func TestUploadFileNames(t *testing.T) {
 	up, err := ParseUpload(multipartRequest("/x", "b", filePart("file", "", "image/png", "x")), UploadOptions{Field: "file"})
 	if err != nil || up.File != nil || up.Fields.Text("file", "") != "x" {
 		t.Errorf("empty filename: %v %+v", err, up)
+	}
+}
+
+// Browsers send the file name and the field name of a part as UTF-8 in
+// the plain parameter (M5): é.png arrives as é.png, not as Ã©.png.
+func TestUploadFileNameIsUTF8(t *testing.T) {
+	for sent, want := range map[string]string{
+		"é.png":            "é.png",
+		"Schriftart Ü.ttf": "Schriftart Ü.ttf",
+		"日本語.json":         "日本語.json",
+		"\U0001F600.png":   "\U0001F600.png",
+		"a\xffb.png":       "a�b.png",
+		"plain.png":        "plain.png",
+	} {
+		part := "Content-Disposition: form-data; name=\"file\"; filename=\"" + sent + "\"\r\nContent-Type: image/png\r\n\r\nx"
+		up, err := ParseUpload(multipartRequest("/x", "b", part), UploadOptions{Field: "file"})
+		if err != nil || up.File == nil {
+			t.Errorf("%q: %v, file %v", sent, err, up)
+			continue
+		}
+		if up.File.OriginalName != want {
+			t.Errorf("filename %q: OriginalName %q, want %q", sent, up.File.OriginalName, want)
+		}
+	}
+	part := "Content-Disposition: form-data; name=\"größe\"\r\n\r\n12"
+	up, err := ParseUpload(multipartRequest("/x", "b", part), UploadOptions{Field: "file"})
+	if err != nil || up.Fields.Text("größe", "") != "12" {
+		t.Errorf("field named größe: %v, fields %v", err, up.Fields.Keys())
+	}
+	// The charset parameter of a part's type stays a Latin-1 text
+	if _, _, params, ok := partContentType("text/plain; charset=\"\xe9\""); !ok || params["charset"] != "é" {
+		t.Errorf("charset parameter: %q, %v", params["charset"], ok)
 	}
 }
 
