@@ -8,8 +8,9 @@
 // that the account may see it (kit.RequireDeviceInScope, after the sign-in
 // and the permission), as the gateway's sockets do: a device outside the
 // account's scope is 403, a device the device layer does not know goes on
-// to the API server. The websockets of the gateway pages (terminal,
-// media) are not here.
+// to the API server. The lists of devices and alerts keep the entries of
+// the devices the account may see by the same rule. The websockets of the
+// gateway pages (terminal, media) are not here.
 package cdap
 
 import (
@@ -26,11 +27,13 @@ type handlers struct {
 	api     *goapi.Client
 	restart *restart.Service
 	log     *kit.Logger
+	// deps gives the device layer and the device scope of the lists
+	deps *kit.Deps
 }
 
 // Register adds the group's routes.
 func Register(d *kit.Deps) {
-	h := &handlers{api: d.GoAPI, restart: d.Restart, log: d.Log.Child("CDAP")}
+	h := &handlers{api: d.GoAPI, restart: d.Restart, log: d.Log.Child("CDAP"), deps: d}
 	command := d.RequirePermission("cdap.command")
 	scope := d.RequireDeviceInScope
 
@@ -72,9 +75,10 @@ func (h *handlers) status(w http.ResponseWriter, r *http.Request) {
 	answer(w, r, h.api.GetCDAPStatus(r.Context()))
 }
 
-// devices answers GET /api/cdap/devices with the connected devices.
+// devices answers GET /api/cdap/devices with the connected devices the
+// account may see.
 func (h *handlers) devices(w http.ResponseWriter, r *http.Request) {
-	answer(w, r, h.api.GetCDAPDevices(r.Context()))
+	h.scoped(w, r, h.api.GetCDAPDevices(r.Context()), "devices", "id")
 }
 
 // device answers GET /api/cdap/devices/{id}: manifest, state and
@@ -214,9 +218,9 @@ func (h *handlers) toggle(w http.ResponseWriter, r *http.Request) {
 }
 
 // alerts answers GET /api/cdap/alerts with the alerts that are firing,
-// of one device with ?device_id=.
+// of one device with ?device_id=, of the devices the account may see.
 func (h *handlers) alerts(w http.ResponseWriter, r *http.Request) {
-	answer(w, r, h.api.GetCDAPAlerts(r.Context(), reqquery.Of(r).Get("device_id").JSON()))
+	h.scoped(w, r, h.api.GetCDAPAlerts(r.Context(), reqquery.Of(r).Get("device_id").JSON()), "alerts", "device_id")
 }
 
 // linked answers GET /api/cdap/devices/{id}/linked with the peers linked

@@ -121,3 +121,38 @@ func TestDeviceRoutesKeepToTheScope(t *testing.T) {
 		}
 	}
 }
+
+// TestListsKeepToTheScope: the lists of gateway devices and alerts keep
+// only the entries of devices the account may see, as the routes of one
+// device do (BUGS RC9): a device in the account's scope and an id the
+// device layer does not know stay, and total counts what is left. An
+// admin gets the API server's lists as they are.
+func TestListsKeepToTheScope(t *testing.T) {
+	w := proxytest.NewWorld(t, withScope(t, map[int64][]string{5: {"dev-1"}}))
+	devices := &proxytest.Answer{Status: 200, Type: "application/json",
+		Body: `{"devices":[{"id":"dev-1","connected":true},{"id":"dev-2","connected":true},{"id":"gw-9","connected":true}],"total":3}`}
+	alerts := &proxytest.Answer{Status: 200, Type: "application/json",
+		Body: `{"alerts":[{"alert_id":"a1","device_id":"dev-2"},{"alert_id":"a2","device_id":"dev-1"},{"alert_id":"a3","device_id":"gw-9"}],"total":3}`}
+	alertsOfDev2 := &proxytest.Answer{Status: 200, Type: "application/json",
+		Body: `{"alerts":[{"alert_id":"a1","device_id":"dev-2"}],"total":1}`}
+	for _, c := range []struct {
+		who  *proxytest.Account
+		path string
+		api  *proxytest.Answer
+		want string
+	}{
+		{account(5, "operator"), "/api/cdap/devices", devices, `{"devices":[{"id":"dev-1","connected":true},{"id":"gw-9","connected":true}],"total":2}`},
+		{account(6, "viewer"), "/api/cdap/devices", devices, `{"devices":[{"id":"gw-9","connected":true}],"total":1}`},
+		{account(1, "admin"), "/api/cdap/devices", devices, `{"devices":[{"id":"dev-1","connected":true},{"id":"dev-2","connected":true},{"id":"gw-9","connected":true}],"total":3}`},
+		{account(5, "operator"), "/api/cdap/alerts", alerts, `{"alerts":[{"alert_id":"a2","device_id":"dev-1"},{"alert_id":"a3","device_id":"gw-9"}],"total":2}`},
+		{account(6, "viewer"), "/api/cdap/alerts", alerts, `{"alerts":[{"alert_id":"a3","device_id":"gw-9"}],"total":1}`},
+		{account(1, "admin"), "/api/cdap/alerts", alerts, `{"alerts":[{"alert_id":"a1","device_id":"dev-2"},{"alert_id":"a2","device_id":"dev-1"},{"alert_id":"a3","device_id":"gw-9"}],"total":3}`},
+		{account(5, "operator"), "/api/cdap/alerts?device_id=dev-2", alertsOfDev2, `{"alerts":[],"total":0}`},
+		{account(1, "admin"), "/api/cdap/alerts?device_id=dev-2", alertsOfDev2, `{"alerts":[{"alert_id":"a1","device_id":"dev-2"}],"total":1}`},
+	} {
+		rec, calls := w.Do(proxytest.Request{Method: "GET", Path: c.path, Session: c.who}, c.api)
+		if rec.Code != http.StatusOK || rec.Body.String() != c.want || len(calls) != 1 {
+			t.Errorf("GET %s as %s: %d %s, %d calls; want 200 %s", c.path, c.who.User.Role, rec.Code, rec.Body, len(calls), c.want)
+		}
+	}
+}
