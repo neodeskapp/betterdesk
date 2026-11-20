@@ -69,6 +69,21 @@ func TestOverviewThroughTheConsole(t *testing.T) {
 	}
 }
 
+// TestEventsWithoutABodyAreNoEvents: an answer of the API server without a
+// body (or with null, 0, false or "") is no events, which the web app
+// reads, where the route failed with 502 and an error about circular
+// JSON (BUGS.md TH13).
+func TestEventsWithoutABodyAreNoEvents(t *testing.T) {
+	for _, body := range []string{``, `null`, `0`, `false`, `""`} {
+		api := newAPI()
+		api.On("GET /api/audit/events?limit=50&offset=0", 200, body)
+		admin := routetest.New(t, routetest.Options{API: api}).As("admin")
+		if got := admin.Do("GET", "/api/panel/security-audit/events", ""); got.Status != 200 || got.Body != `{"events":[],"total":0}` {
+			t.Errorf("an answer %q: %d %s", body, got.Status, got.Body)
+		}
+	}
+}
+
 func TestHardeningTellsTheSessionLimit(t *testing.T) {
 	for limit, want := range map[string]string{
 		"":  `{"id":"single_session","name":"Concurrent Panel Session Limit per Account","category":"auth","severity":"high","implemented":true,"description":"A new console login ends the least recently active sessions beyond SESSION_MAX_PER_USER (currently 1) and records IP/User-Agent for audit."}`,

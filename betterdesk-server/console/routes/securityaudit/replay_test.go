@@ -117,15 +117,55 @@ func replay(sc scenario) (*httptest.ResponseRecorder, []string) {
 	return rec, calls
 }
 
+// scenarioFix is a scenario whose answer a bug fix changes on purpose:
+// the Go route answers status and text, which answer makes from Node's.
+type scenarioFix struct {
+	bug    string
+	status int
+	answer func(node string) string
+}
+
+// scenarioFixes are the scenarios of testdata/securityaudit.json that the
+// bug fixes change, by "<route>, <name>": the package's list of intended
+// differences.
+var scenarioFixes = map[string]scenarioFix{}
+
+func fixScenarios(bug string, status int, answer func(node string) string, names ...string) bool {
+	for _, name := range names {
+		if _, twice := scenarioFixes[name]; twice {
+			panic("two fixes for " + name)
+		}
+		scenarioFixes[name] = scenarioFix{bug: bug, status: status, answer: answer}
+	}
+	return true
+}
+
+// TH13: an API answer without a body, or with null, 0, false or "", is
+// no events, where Node failed with 502 trying to send the client's
+// answer object.
+var _ = fixScenarios("TH13", 200, func(string) string { return `{"events":[],"total":0}` },
+	"events, an empty answer", "events, a null answer", "events, a zero answer", "events, a false answer", "events, an empty text answer")
+
 func TestRoutesMatchNode(t *testing.T) {
+	used := map[string]bool{}
 	for _, sc := range loadScenarios(t) {
 		name := sc.Route + ", " + sc.Name
 		rec, calls := replay(sc)
-		if rec.Code != sc.Answer.Status || rec.Body.String() != sc.Answer.Text {
+		if fix, listed := scenarioFixes[name]; listed {
+			used[name] = true
+			if want := fix.answer(sc.Answer.Text); rec.Code != fix.status || rec.Body.String() != want {
+				t.Errorf("%s (%s):\n got %d %s\n fix %d %s", name, fix.bug, rec.Code, rec.Body.String(), fix.status, want)
+			}
+		} else if rec.Code != sc.Answer.Status || rec.Body.String() != sc.Answer.Text {
 			t.Errorf("%s:\n got %d %s\nNode %d %s", name, rec.Code, rec.Body.String(), sc.Answer.Status, sc.Answer.Text)
 		}
 		if !reflect.DeepEqual(calls, sc.Calls) && (len(calls) != 0 || len(sc.Calls) != 0) {
 			t.Errorf("%s: the API server was asked %q, Node asked %q", name, calls, sc.Calls)
+		}
+	}
+	for name, fix := range scenarioFixes {
+		if !used[name] {
+			t.Errorf("the fix of %s names no scenario: %s", fix.bug, name)
 		}
 	}
 }

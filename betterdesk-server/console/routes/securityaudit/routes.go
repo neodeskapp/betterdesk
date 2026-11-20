@@ -293,15 +293,17 @@ type failure struct {
 	Error   string `json:"error"`
 }
 
-// noBody is the error of an answer without a body: the route then tried
-// to send the client's whole answer object, which cannot be written as
-// JSON.
-const noBody = "Converting circular structure to JSON\n    --> starting at object with constructor 'ClientRequest'\n    |     property 'res' -> object with constructor 'IncomingMessage'\n    --- property 'req' closes the circle"
+// noEvents is the answer for an API answer without a body.
+type noEvents struct {
+	Events []any `json:"events"`
+	Total  int   `json:"total"`
+}
 
 // events answers GET /api/panel/security-audit/events?limit=&offset=&action=
 // with the API server's audit events: limit from 1 to 500 (50 for 0 or no
 // number), offset from 0 to 10000, both read as decimal numbers. A refusal
-// has the API server's status, a call without an answer 502.
+// has the API server's status, a call without an answer 502. An answer
+// without a body (or null, 0, false, "") is no events.
 func (h *handlers) events(w http.ResponseWriter, r *http.Request) {
 	path := "/audit/events?limit=" + jsreq.NumberString(jsreq.ClampedInt(jsreq.Query(r, "limit"), 50, 1, 500)) +
 		"&offset=" + jsreq.NumberString(jsreq.ClampedInt(jsreq.Query(r, "offset"), 0, 0, 10000))
@@ -319,7 +321,7 @@ func (h *handlers) events(w http.ResponseWriter, r *http.Request) {
 	}
 	data := resp.Data()
 	if !goapi.Truthy(data) {
-		kit.JSON(w, r, http.StatusBadGateway, failure{Error: noBody})
+		kit.JSON(w, r, http.StatusOK, noEvents{Events: []any{}})
 		return
 	}
 	kit.JSON(w, r, http.StatusOK, data)
