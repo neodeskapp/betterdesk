@@ -432,3 +432,87 @@ func sha256Hex(text string) string {
 	sum := sha256.Sum256([]byte(text))
 	return hex.EncodeToString(sum[:])
 }
+
+// A report with a disk whose size or name the route cannot make a number
+// or text of is refused before anything is stored. A count of apps that
+// cannot be made text no longer fails the report: the log counts the
+// apps of a list. Node stored the report and the device's info and then
+// answered 500 (BUGS AI14).
+func TestARefusedReportIsNotStored(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		tokenDeviceA(w)
+		w.Exec("INSERT INTO peer (id, note, info) VALUES ('device-a', '', '{\"hostname\":\"old\"}')", nil)
+		upload := func(hardware, software string) replay.Answer {
+			body := `{"device_id":"device-a","hardware":` + hardware + `,"software":` + software + `,"collected_at":"2011-03-04T10:00:00.000Z"}`
+			return w.Do(replay.Request{Method: "POST", Path: "/api/bd/inventory", Body: replay.Text(body), Headers: deviceA})
+		}
+		for _, disk := range []string{
+			`{"mount_point":"/t","total_bytes":{"toString":1},"used_bytes":10}`,
+			`{"mount_point":"/t","total_gb":{"toString":1},"used_gb":0.5}`,
+			`{"mount_point":"/u","total_bytes":200,"used_bytes":{"toString":1}}`,
+			`{"mount_point":"/u","total_bytes":200,"free_bytes":{"toString":1}}`,
+			`{"mount_point":{"toString":1},"total_bytes":5,"used_bytes":1}`,
+		} {
+			got := upload(`{"hostname":"new","disks":[`+disk+`]}`, `{"apps":[]}`)
+			if got.Status != 400 || got.Body != `{"success":false,"error":"Invalid disks"}` {
+				t.Errorf("a report with the disk %s: %d %s, want 400 Invalid disks", disk, got.Status, got.Body)
+			}
+		}
+		if rows := w.Rows("SELECT device_id FROM device_inventory", nil) + w.Rows("SELECT "+db.Pick("info", "info::text AS info")+" FROM peer", nil); rows != `[][{"info":"{\"hostname\":`+db.Pick("", " ")+`\"old\"}"}]` {
+			t.Errorf("after the refused reports: %s, want no report and the info as it was", rows)
+		}
+		for _, apps := range []string{`{"length":{"toString":1}}`, `{"length":[{"toString":1}]}`, `"many"`} {
+			if got := upload(`{"hostname":"new"}`, `{"apps":`+apps+`}`); got.Status != 200 || got.Body != `{"success":true}` {
+				t.Errorf("a report with the apps %s: %d %s, want it stored", apps, got.Status, got.Body)
+			}
+		}
+	})
+}
+
+// changedUploads are the uploads of the device recordings whose answer a
+// bug fix of BUGS.md changes, by database and name (the names differ
+// between the recordings): a disk the route cannot read is 400 before the
+// report is stored, and a count of apps that cannot be made text no
+// longer fails the stored report (BUGS AI14).
+var changedUploads = map[string]map[string]replay.Fix{
+	"sqlite": {
+		"549 POST /api/bd/inventory": invalidDisks, "550 POST /api/bd/inventory": invalidDisks, "608 POST /api/bd/inventory": invalidDisks,
+		"609 POST /api/bd/inventory": invalidDisks, "610 POST /api/bd/inventory": invalidDisks, "620 POST /api/bd/inventory": invalidDisks,
+		"629 POST /api/bd/inventory": appsCounted, "630 POST /api/bd/inventory": appsCounted,
+	},
+	"postgres": {
+		"547 POST /api/bd/inventory": invalidDisks, "548 POST /api/bd/inventory": invalidDisks, "606 POST /api/bd/inventory": invalidDisks,
+		"607 POST /api/bd/inventory": invalidDisks, "608 POST /api/bd/inventory": invalidDisks, "618 POST /api/bd/inventory": invalidDisks,
+		"627 POST /api/bd/inventory": appsCounted, "628 POST /api/bd/inventory": appsCounted,
+	},
+}
+
+var (
+	invalidDisks = replay.Fix{Bug: "AI14", Status: 400, Answer: `{"success":false,"error":"Invalid disks"}`}
+	appsCounted  = replay.Fix{Bug: "AI14", Status: 200, Answer: `{"success":true}`}
+)
+
+// changedUpload checks the steps of changedUploads, and done fails for
+// those the recording does not have.
+func changedUpload(db *store.DB) (check replay.Check, done func(t *testing.T)) {
+	steps := changedUploads[db.Dialect().String()]
+	seen := map[string]bool{}
+	return func(t *testing.T, step replay.Step, got replay.Answer) bool {
+			fix, ok := steps[step.Name]
+			if !ok {
+				return false
+			}
+			seen[step.Name] = true
+			if got.Status != fix.Status || got.Body != fix.Answer {
+				t.Errorf("%s (%s): %d %s, want %d %s", step.Name, fix.Bug, got.Status, got.Body, fix.Status, fix.Answer)
+			}
+			return true
+		}, func(t *testing.T) {
+			for name := range steps {
+				if !seen[name] {
+					t.Errorf("the listed step %q is not in the recording", name)
+				}
+			}
+		}
+}

@@ -54,14 +54,13 @@ type done struct {
 // software?, collected_at?}: the device's report replaces the one it sent
 // before, as it came.
 //
-// The device guards came first. After the report is
-// stored, the device's info in the console's table of devices gets the
-// host name, the system, the processor and the memory of the report; what
-// goes wrong there is logged and changes nothing else. Then the fullest
-// disk is checked against the disk rules in the background. Making a
-// number of a disk's size or text of the number of apps can fail for an
-// object that has a member named toString: the answer is then the route's
-// 500, with the report stored.
+// The device guards came first. A disk whose size or name cannot be made
+// a number or text (an object that has a member named toString) is 400,
+// before anything is stored. After the report is stored, the device's
+// info in the console's table of devices gets the host name, the system,
+// the processor and the memory of the report; what goes wrong there is
+// logged and changes nothing else. Then the fullest disk is checked
+// against the disk rules in the background.
 func (h *handlers) upload(w http.ResponseWriter, r *http.Request) {
 	device := kit.Device(r).DeviceID
 	deviceID, err := member(r, "device_id")
@@ -81,6 +80,11 @@ func (h *handlers) upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fullest, unread := fullestDisk(hardware.Get("disks"))
+	if len(unread) > 0 {
+		kit.Fail(w, r, http.StatusBadRequest, "Invalid disks")
+		return
+	}
 	collectedAt := jsbind.Of(kit.Body(r).Get("collected_at")).Or(jsbind.String(store.ISOTime(time.Now())))
 	if err := upsertInventory(r.Context(), h.db, device, hardware, software, collectedAt); err != nil {
 		h.failUpload(w, r, h.log, err)
@@ -89,12 +93,6 @@ func (h *handlers) upload(w http.ResponseWriter, r *http.Request) {
 	if err := h.updatePeerInfo(r.Context(), device, hardware); err != nil {
 		h.log.Warn("Failed to update peer info:", jsbind.Message(err))
 	}
-
-	fullest, unread := fullestDisk(hardware.Get("disks"))
-	if len(unread) > 0 {
-		h.failUpload(w, r, h.log, unread[0])
-		return
-	}
 	if fullest != nil && h.alerts != nil {
 		percent := jsbind.Number(round(fullest.percent*10) / 10)
 		h.alerts.EvaluateInBackground(func(ctx context.Context) error {
@@ -102,12 +100,7 @@ func (h *handlers) upload(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	apps, err := software.Get("apps").Get("length").Or(jsjson.OfNumber(0)).Text()
-	if err != nil {
-		h.failUpload(w, r, h.log, err)
-		return
-	}
-	h.log.Info(fmt.Sprintf("Full inventory received from %s (HW + %s apps)", device, apps))
+	h.log.Info(fmt.Sprintf("Full inventory received from %s (HW + %d apps)", device, len(software.Get("apps").Items())))
 	kit.JSON(w, r, http.StatusOK, done{Success: true})
 }
 

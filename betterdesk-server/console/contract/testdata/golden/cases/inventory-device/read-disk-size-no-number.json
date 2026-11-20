@@ -45,7 +45,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "collected_at": "2011-03-04T10:00:00.000Z",
+     "collected_at": "5.0",
      "device_id": "900100001",
      "hardware": {
       "architecture": "x86_64",
@@ -56,11 +56,11 @@
       },
       "disks": [
        {
+        "device": "C:",
+        "filesystem": "NTFS",
         "mount_point": "C:\\",
-        "total_bytes": {
-         "toString": 1
-        },
-        "used_bytes": 1
+        "total_gb": 951.6,
+        "used_gb": 890.7
        }
       ],
       "hostname": "demo-reception-01",

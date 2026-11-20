@@ -38,7 +38,8 @@ import (
 // The steps the device guards answer now (BUGS AI12) are checked by
 // guardedByKit, and withoutShortTokens changes the rows read after them.
 // The statements of the info after the uploads are checked by keptInfo
-// (BUGS AI13, stored_test.go).
+// (BUGS AI13, stored_test.go), and the uploads whose answer a fix changes
+// by changedUpload (fixes_test.go).
 func TestNodeDeviceAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
@@ -49,9 +50,10 @@ func TestNodeDeviceAnswers(t *testing.T) {
 		byGuards := guardedByKit(tokensOf(rec), &guarded)
 		// The copies find only the deleted row of the seed, as it was
 		kept, differ := keptInfo(&rec, w, `[{"id":"del-1","uuid":"","status_online":0}]`)
+		changed, changedDone := changedUpload(db)
 		w.Run(rec, deviceFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			engine.Wait()
-			if kept(t, step, got) {
+			if kept(t, step, got) || changed(t, step, got) {
 				return true
 			}
 			if byGuards(t, step, got) {
@@ -82,6 +84,7 @@ func TestNodeDeviceAnswers(t *testing.T) {
 		if guarded == 0 {
 			t.Errorf("no answer was the device guards'")
 		}
+		changedDone(t)
 		if want := map[bool]int{false: 95, true: 38}[db.IsPostgres()]; *differ != want {
 			t.Errorf("%d statements of the info differ from Node's, want %d", *differ, want)
 		}
