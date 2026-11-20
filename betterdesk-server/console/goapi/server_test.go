@@ -95,7 +95,6 @@ func TestAgainstAPIServer(t *testing.T) {
 		wantJSON(t, "UpdatePeer", c.UpdatePeer(ctx, "PEERAAA1", NewObject("note", "n2")), `{"success":true,"data":{"id":"PEERAAA1","status":"updated"}}`)
 		wantAt(t, "GetPeer after UpdatePeer", c.GetPeer(ctx, "PEERAAA1"), `"n2"`, "note")
 		wantJSON(t, "UpdatePeer without fields", c.UpdatePeer(ctx, "PEERAAA1", NewObject()), `{"success":false,"error":"No fields to update"}`)
-		wantJSON(t, "LinkDevice", c.LinkDevice(ctx, "PEERAAA1", "PEERBBB2"), `{"success":true,"data":{"id":"PEERAAA1","status":"updated"}}`)
 		wantJSON(t, "GetLinkedPeers", c.GetLinkedPeers(ctx, "PEERAAA1"), `{"success":true,"data":{"linked":null,"peer_id":"PEERAAA1","total":0}}`)
 
 		wantJSON(t, "SetPeerTags", c.SetPeerTags(ctx, "PEERAAA1", "x, y"), `{"success":true,"data":{"id":"PEERAAA1","status":"updated","tags":"x,y"}}`)

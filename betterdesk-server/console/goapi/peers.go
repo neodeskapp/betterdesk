@@ -128,12 +128,6 @@ func (c *Client) GetLinkedPeers(ctx context.Context, id string) *Object {
 	return wrap(data)
 }
 
-// LinkDevice calls PATCH /api/peers/{id} with {linked_peer_id}. The API
-// server does not read that field and answers 400, so this returns F1.
-func (c *Client) LinkDevice(ctx context.Context, id string, linkedPeerID any) *Object {
-	return c.wrapped(ctx, f1, http.MethodPatch, "/peers/"+seg(id), Body(NewObject("linked_peer_id", or(linkedPeerID, ""))))
-}
-
 // SetPeerTags calls PUT /api/peers/{id}/tags with {tags: [...]}. Tags given
 // as one text are split at commas; anything that is neither a list nor a
 // text sends an empty list. W or F2.

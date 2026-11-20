@@ -94,7 +94,6 @@ var dispatch = map[string]func(c *Client, ctx context.Context, a []any) any{
 	},
 	"getCDAPAlerts":     func(c *Client, ctx context.Context, a []any) any { return c.GetCDAPAlerts(ctx, arg(a, 0)) },
 	"getLinkedPeers":    func(c *Client, ctx context.Context, a []any) any { return c.GetLinkedPeers(ctx, str(a, 0)) },
-	"linkDevice":        func(c *Client, ctx context.Context, a []any) any { return c.LinkDevice(ctx, str(a, 0), arg(a, 1)) },
 	"listDeviceTokens":  func(c *Client, ctx context.Context, a []any) any { return c.ListDeviceTokens(ctx, Truthy(arg(a, 0))) },
 	"createDeviceToken": func(c *Client, ctx context.Context, a []any) any { return c.CreateDeviceToken(ctx, arg(a, 0)) },
 	"getDeviceToken":    func(c *Client, ctx context.Context, a []any) any { return c.GetDeviceToken(ctx, id(a, 0)) },
@@ -281,6 +280,9 @@ var exportedFunctions = []string{
 var dropped = map[string]string{
 	// No route called it, and the API server refused the body it sent
 	"addBlocklistEntry": "G3",
+	// The device link route no longer calls it: the API server never read
+	// the field it sent
+	"linkDevice": "RC6",
 }
 
 func TestDispatchCoversEveryExportedFunction(t *testing.T) {

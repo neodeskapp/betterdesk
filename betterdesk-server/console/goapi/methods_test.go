@@ -215,8 +215,6 @@ var methodCases = []methodCase{
 		failed: fellBack(notFound, `,"alerts":[],"total":0`), down: fellBack(hangUp, `,"alerts":[],"total":0`)},
 	{fn: "getLinkedPeers", args: `["P1"]`, request: "GET /api/peers/P1/linked", ok: okW,
 		failed: fellBack(notFound, `,"linked":[],"total":0`), down: fellBack(hangUp, `,"linked":[],"total":0`)},
-	{fn: "linkDevice", args: `["P1","P2"]`, request: "PATCH /api/peers/P1", body: `{"linked_peer_id":"P2"}`, kind: "f1"},
-	{fn: "linkDevice", args: `["P1"]`, request: "PATCH /api/peers/P1", body: `{"linked_peer_id":""}`, kind: "f1"},
 	{fn: "listDeviceTokens", request: "GET /api/tokens", kind: "f3"},
 	{fn: "listDeviceTokens", args: `[true]`, request: "GET /api/tokens?include_revoked=true", kind: "f3"},
 	{fn: "createDeviceToken", args: `[{"name":"t","max_uses":1}]`, request: "POST /api/tokens", body: `{"name":"t","max_uses":1}`, kind: "f3"},
