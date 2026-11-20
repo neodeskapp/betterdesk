@@ -60,6 +60,12 @@ type Options struct {
 	// Snapshot reads the host (serverManagement.getResourceSnapshot).
 	// Default: a servermgmt.Host of the service's own (HostSnapshot).
 	Snapshot func() Snapshot
+	// Warm reads the host once when a test starts. A host reports the
+	// processor's load since its reading before, and 0 at its first one,
+	// so the baseline after the wait then measures the processor over the
+	// wait. Default: the own host's reading when Snapshot is not given,
+	// else nothing.
+	Warm func()
 	// ServerStats is betterdeskApi.getServerStats: the data of a
 	// successful answer (branding.Undefined when it has none), nil when the
 	// call failed. Default: always nil.
@@ -103,6 +109,13 @@ type Service struct {
 func New(opts Options) *Service {
 	if opts.Snapshot == nil {
 		opts.Snapshot = ownHost()
+		if opts.Warm == nil {
+			read := opts.Snapshot
+			opts.Warm = func() { read() }
+		}
+	}
+	if opts.Warm == nil {
+		opts.Warm = func() {}
 	}
 	if opts.ServerStats == nil {
 		opts.ServerStats = func(context.Context) any { return nil }

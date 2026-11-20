@@ -65,6 +65,7 @@ func (r *run) pause(ctx context.Context, d time.Duration) error {
 // ramp-up, the stabilization and the result.
 func (r *run) loadTest(ctx context.Context) (*branding.Object, error) {
 	s := r.s
+	s.opts.Warm()
 	s.emit("phase", "baseline", "message", "Collecting baseline metrics…", "connections", float64(0), "rampSteps", []any{})
 	if err := r.pause(ctx, baselineWait); err != nil {
 		return nil, err

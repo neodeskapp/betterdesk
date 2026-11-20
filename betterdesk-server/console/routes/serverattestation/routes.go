@@ -73,6 +73,7 @@ func Options(d *kit.Deps) attestation.Options {
 	if d.ServerMgmt != nil {
 		// the host the resources route reads, so both share one history
 		o.Snapshot = attestation.HostSnapshot(d.ServerMgmt.Snapshot)
+		o.Warm = func() { d.ServerMgmt.Snapshot() }
 	}
 	if cfg := d.Config; cfg != nil {
 		if cfg.Getenv != nil {
