@@ -40,7 +40,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "No fields to update"
+     "error": "Invalid JSON"
     }
    }
   }

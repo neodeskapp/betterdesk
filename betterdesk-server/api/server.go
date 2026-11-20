@@ -1223,7 +1223,9 @@ func (s *Server) handleLinkedPeers(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleUpdatePeerFields partially updates a peer's editable fields (note, user, tags).
+// handleUpdatePeerFields partially updates a peer's editable fields (note,
+// user, tags, display_name, and linked_peer_id, the peer it is linked to;
+// "" removes the link).
 // PATCH /api/peers/{id}
 func (s *Server) handleUpdatePeerFields(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
@@ -1236,8 +1238,9 @@ func (s *Server) handleUpdatePeerFields(w http.ResponseWriter, r *http.Request) 
 		User *string `json:"user"`
 		// Tags is a text or a list of texts, as PUT /api/peers/{id}/tags
 		// takes them
-		Tags        json.RawMessage `json:"tags"`
-		DisplayName *string         `json:"display_name"`
+		Tags         json.RawMessage `json:"tags"`
+		DisplayName  *string         `json:"display_name"`
+		LinkedPeerID *string         `json:"linked_peer_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid JSON"})
@@ -1261,6 +1264,9 @@ func (s *Server) handleUpdatePeerFields(w http.ResponseWriter, r *http.Request) 
 	}
 	if body.DisplayName != nil {
 		fields["display_name"] = *body.DisplayName
+	}
+	if body.LinkedPeerID != nil {
+		fields["linked_peer_id"] = *body.LinkedPeerID
 	}
 
 	if len(fields) == 0 {
