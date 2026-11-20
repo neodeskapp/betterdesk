@@ -114,12 +114,8 @@ func orgItemPath(infix, param, label string) path {
 	}
 }
 
-// credentialPath is /org/<id>/peer-credentials/<peerId>. Only the
-// organization's id is checked; the peer id is just escaped, and the
-// path check of the API client stops what must not go through.
-func credentialPath(r *http.Request) (string, error) {
-	return orgPath("/peer-credentials/" + goapi.EncodeURIComponent(r.PathValue("peerId")))(r)
-}
+// credentialPath is /org/<id>/peer-credentials/<peerId>, both ids checked.
+var credentialPath = orgItemPath("/peer-credentials/", "peerId", "peerId")
 
 // pass is a route that calls the API server at the path and answers with
 // its status and body; withBody sends req.body along.

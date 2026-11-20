@@ -59,14 +59,15 @@ func TestPassingOn(t *testing.T) {
 	want(t, "an odd device id", admin.Do("DELETE", "/api/panel/org/o1/devices/x$", ""), 400, `{"error":"Invalid deviceId"}`)
 	calls(t, "refused ids", api)
 
-	// The peer id of the credential vault is only escaped
-	api.On("PUT /api/org/o%3A1/peer-credentials/a%3Ab%40c%24", 400, `{"error":"invalid peer id"}`)
-	want(t, "credential", admin.Do("PUT", "/api/panel/org/o:1/peer-credentials/a:b@c$", `{"password":"x"}`), 400, `{"error":"invalid peer id"}`)
-	calls(t, "credential", api, `PUT /api/org/o%3A1/peer-credentials/a%3Ab%40c%24 {"password":"x"}`)
-	// "." gets through to the API client's path check, which refuses the
-	// call: that is an unanswered call here, not a 400 (BUGS OR1)
-	want(t, "credential .", admin.Do("DELETE", "/api/panel/org/o1/peer-credentials/%2E", ""), 500, `{"error":"Go server unreachable"}`)
-	calls(t, "credential .", api)
+	// The peer id of the credential vault is checked like the other ids
+	// (BUGS.md OR1) and escaped
+	api.On("PUT /api/org/o%3A1/peer-credentials/a%3Ab%40c", 400, `{"error":"invalid peer id"}`)
+	want(t, "credential", admin.Do("PUT", "/api/panel/org/o:1/peer-credentials/a:b@c", `{"password":"x"}`), 400, `{"error":"invalid peer id"}`)
+	calls(t, "credential", api, `PUT /api/org/o%3A1/peer-credentials/a%3Ab%40c {"password":"x"}`)
+	for _, id := range []string{"%2E", "%2E%2E", "a..b", "a$b"} {
+		want(t, "credential "+id, admin.Do("DELETE", "/api/panel/org/o1/peer-credentials/"+id, ""), 400, `{"error":"Invalid peerId"}`)
+	}
+	calls(t, "odd peer ids", api)
 
 	// A failure of the API server goes back as it came; an id with a
 	// slash in it is refused
