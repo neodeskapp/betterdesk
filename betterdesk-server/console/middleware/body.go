@@ -24,6 +24,13 @@ const (
 	// AttachmentBodyLimit is the limit of the ticket attachment route:
 	// 35 MB, which is a 25 MB file as base64 with its JSON around it.
 	AttachmentBodyLimit = 35 << 20
+	// GeneratorBodyLimit is the limit of the generator's bundle and
+	// preview routes: 16 MB, a logo of 10 MB as base64 in the branding.
+	GeneratorBodyLimit = 16 << 20
+	// PairingBodyLimit is the limit of POST /api/panel/pairing/codes.
+	PairingBodyLimit = 4 << 10
+	// UIShellBodyLimit is the limit of POST /api/ui-shell.
+	UIShellBodyLimit = 2 << 10
 )
 
 // The types of a BodyError, as the console's error handler and logs know
@@ -59,6 +66,11 @@ type BodyOptions struct {
 	// Limit is the largest body in bytes after decompression. Zero means
 	// DefaultBodyLimit.
 	Limit int64
+	// RouteBodies makes Bodies leave the JSON of the routes with a limit of
+	// their own unread (the generator's bundles and preview, pairing codes,
+	// /api/ui-shell; see readsItsOwnBody): each of them reads it with
+	// RouteJSON and its limit after its checks.
+	RouteBodies bool
 	// OnError answers a request whose body was refused.
 	OnError ErrorHandler
 }
@@ -108,6 +120,30 @@ func withState(r *http.Request) (*http.Request, *bodyState) {
 
 var attachmentPath = regexp.MustCompile(`^/api/tickets/[0-9]+/attachments/?$`)
 
+// ownBodyRoutes are the routes that read their JSON body themselves, with
+// a limit of their own, by method and path in any letter case.
+var ownBodyRoutes = []struct {
+	method string
+	path   *regexp.Regexp
+}{
+	{http.MethodPost, regexp.MustCompile(`(?i)^/api/generator/bundles/?$`)},
+	{http.MethodPut, regexp.MustCompile(`(?i)^/api/generator/bundles/[^/]+/?$`)},
+	{http.MethodPost, regexp.MustCompile(`(?i)^/api/generator/preview/?$`)},
+	{http.MethodPost, regexp.MustCompile(`(?i)^/api/panel/pairing/codes/?$`)},
+	{http.MethodPost, regexp.MustCompile(`(?i)^/api/ui-shell/?$`)},
+}
+
+// readsItsOwnBody reports whether r goes to a route of ownBodyRoutes.
+func readsItsOwnBody(r *http.Request) bool {
+	p := httpx.RawPath(r)
+	for _, route := range ownBodyRoutes {
+		if r.Method == route.method && route.path.MatchString(p) {
+			return true
+		}
+	}
+	return false
+}
+
 // Bodies reads the body of a request that says it is JSON
 // (application/json) or a form (application/x-www-form-urlencoded), up to
 // the limit, and keeps it for Body and Bind. Other types are not read.
@@ -117,12 +153,14 @@ var attachmentPath = regexp.MustCompile(`^/api/tickets/[0-9]+/attachments/?$`)
 // identity. A form has flat keys and at most 1000 pairs.
 //
 // POST /api/tickets/{id}/attachments is not read here when it is JSON:
-// its route does that with AttachmentBody.
+// its route does that with AttachmentBody. With RouteBodies the same goes
+// for the routes with a limit of their own.
 func Bodies(opts BodyOptions) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			r, state := withState(r)
-			skipJSON := r.Method == http.MethodPost && attachmentPath.MatchString(httpx.RawPath(r))
+			skipJSON := r.Method == http.MethodPost && attachmentPath.MatchString(httpx.RawPath(r)) ||
+				opts.RouteBodies && readsItsOwnBody(r)
 			if !skipJSON {
 				if err := parseJSONBody(r, state, opts.limit()); err != nil {
 					opts.OnError.handle(w, r, err.Status, err)

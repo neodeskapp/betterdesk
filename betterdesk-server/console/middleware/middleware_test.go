@@ -851,6 +851,74 @@ func TestAttachmentBody(t *testing.T) {
 	}
 }
 
+// The routes with a JSON limit of their own (I2): with RouteBodies the
+// console-wide parser leaves their bodies unread, and RouteJSON with the
+// route's limit reads them after the route's checks.
+func TestRoutesWithTheirOwnBodyLimit(t *testing.T) {
+	var onErr bodyResult
+	opts := BodyOptions{RouteBodies: true, OnError: func(_ http.ResponseWriter, _ *http.Request, status int, err error) {
+		onErr.status = status
+		errors.As(err, &onErr.err)
+	}}
+	global := Bodies(opts)
+	routeJSON := func(limit int64) func(http.Handler) http.Handler {
+		return RouteJSON(BodyOptions{Limit: limit, OnError: opts.OnError})
+	}
+	request := func(method, target string, size int) *http.Request {
+		req := httptest.NewRequest(method, target, strings.NewReader(`{"data":"`+strings.Repeat("B", size)+`"}`))
+		req.Header.Set("Content-Type", "application/json")
+		return req
+	}
+	routes := []struct {
+		method, target string
+		limit          int64
+	}{
+		{"POST", "/api/ui-shell", UIShellBodyLimit},
+		{"POST", "/API/UI-Shell/", UIShellBodyLimit},
+		{"POST", "/api/panel/pairing/codes", PairingBodyLimit},
+		{"POST", "/api/generator/bundles", GeneratorBodyLimit},
+		{"PUT", "/api/generator/bundles/b-1", GeneratorBodyLimit},
+		{"POST", "/api/generator/preview?x=1", GeneratorBodyLimit},
+	}
+	for _, c := range routes {
+		// The console-wide parser leaves even a body over its 2 MB to the route
+		onErr = bodyResult{}
+		res := runBodies(request(c.method, c.target, 3<<20), global)
+		if !res.next || BodyParsed(res.req) || onErr.status != 0 {
+			t.Errorf("%s %s: next %v, parsed %v, status %d; want it left to the route", c.method, c.target, res.next, BodyParsed(res.req), onErr.status)
+		}
+		// The route's own parser takes what fits its limit and refuses more
+		both := func(next http.Handler) http.Handler { return global(routeJSON(c.limit)(next)) }
+		res = runBodies(request(c.method, c.target, int(c.limit)-100), both)
+		if d, _ := Body(res.req).String("data"); !res.next || len(d) != int(c.limit)-100 {
+			t.Errorf("%s %s under its limit: next %v, %d bytes of data", c.method, c.target, res.next, len(d))
+		}
+		onErr = bodyResult{}
+		res = runBodies(request(c.method, c.target, int(c.limit)+1), both)
+		if res.next || onErr.status != 413 {
+			t.Errorf("%s %s over its limit: next %v, status %d, want 413", c.method, c.target, res.next, onErr.status)
+		}
+	}
+	// Other routes keep the console-wide parser and its 2 MB
+	for _, c := range []struct{ method, target string }{
+		{"GET", "/api/ui-shell"},
+		{"POST", "/api/ui-shell/x"},
+		{"POST", "/api/generator/bundles/b-1/rebuild"},
+		{"DELETE", "/api/panel/pairing/codes"},
+		{"POST", "/api/other"},
+	} {
+		onErr = bodyResult{}
+		if res := runBodies(request(c.method, c.target, 3<<20), global); res.next || onErr.status != 413 {
+			t.Errorf("%s %s: next %v, status %d, want the console-wide 413", c.method, c.target, res.next, onErr.status)
+		}
+	}
+	// Without RouteBodies the console-wide parser reads them all
+	onErr = bodyResult{}
+	if res := runBodies(request("POST", "/api/ui-shell", 3<<20), bodies(0, &onErr)); res.next || onErr.status != 413 {
+		t.Errorf("without RouteBodies: next %v, status %d", res.next, onErr.status)
+	}
+}
+
 func bodyOf(t *testing.T, body string) JSONObject {
 	t.Helper()
 	res := parse(t, jsonRequest(body), 0)
