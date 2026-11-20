@@ -236,3 +236,24 @@ var _ = policyFixes.Add("DG3", map[string]replay.Fix{
 	"admin GET /api/dataguard/policies/903 ":            {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":903,"name":"rules a broken string"`, `"rules":[]`}},
 	"admin GET /api/dataguard/policies ":                {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":903,"name":"rules a broken string"`, `"id":1,"name":"By admin at /api/dataguard"`}},
 })
+
+// DG8: a filter of the event list given twice or as a list filters by its
+// first value, and one given as an object does not filter. Node's SQLite
+// driver refused a list of two and an object (500); on PostgreSQL every
+// list and object was bound as a text no row holds ([]).
+var _ = policyFixes.Add("DG8", map[string]replay.Fix{
+	"admin GET /api/dataguard/events?device_id=D1&device_id=D2 ":                       {Status: 200, Has: onlyDeviceOne, Lacks: otherDevices},
+	"admin GET /api/dataguard/events?device_id[]=D1 ":                                  {Status: 200, Has: onlyDeviceOne, Lacks: otherDevices},
+	"admin GET /api/dataguard/events?device_id[0]=D1 ":                                 {Status: 200, Has: onlyDeviceOne, Lacks: otherDevices},
+	"admin GET /api/dataguard/events?device_id[x]=D1 ":                                 {Status: 200, Has: append([]string{`{"id":10,"device_id":"D4"`, `{"id":4,"device_id":"D2"`}, deviceOne...)},
+	"admin GET /api/dataguard/events?device_id[]=D1&event_source[]=usb ":               {Status: 200, Has: deviceOne[1:], Lacks: append([]string{`"event_source":"file"`}, otherDevices...)},
+	"admin GET /api/dataguard/events?device_id=D1&event_source=usb&event_source=file ": {Status: 200, Has: deviceOne[1:], Lacks: append([]string{`"event_source":"file"`}, otherDevices...)},
+})
+
+var (
+	// deviceOne are the starts of the events of D1, the last first
+	// (onlyDeviceOne: in a list that starts with them)
+	deviceOne     = []string{`{"id":3,"device_id":"D1"`, `{"id":2,"device_id":"D1","event_source":"usb"`, `{"id":1,"device_id":"D1","event_source":"usb"`}
+	otherDevices  = []string{`"device_id":"D2"`, `"device_id":"D3"`, `"device_id":"D4"`}
+	onlyDeviceOne = append([]string{"[" + deviceOne[0]}, deviceOne[1:]...)
+)

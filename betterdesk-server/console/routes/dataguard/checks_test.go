@@ -148,3 +148,43 @@ func TestActivePoliciesSkipABadRow(t *testing.T) {
 		}
 	})
 }
+
+// A filter of the event list given twice or as a list filters by its
+// first value, and one given as an object does not filter, where the
+// database refused the list or the object with 500 (BUGS DG8).
+func TestEventFiltersGivenTwiceOrAsAnObject(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		w.Exec("INSERT INTO dlp_events (device_id, event_source, event_type, action, details) VALUES ('D1', 'usb', 'info', 'log', '{}')", nil)
+		w.Exec("INSERT INTO dlp_events (device_id, event_source, event_type, action, details) VALUES ('D2', 'file', 'warn', 'block', '{}')", nil)
+		for query, want := range map[string]string{
+			"device_id=D1&device_id=D2":        "D1",
+			"device_id[]=D2&device_id[]=D1":    "D2",
+			"device_id[x]=D1":                  "D1 D2",
+			"device_id[]=":                     "D1 D2",
+			"event_source=file&event_source=x": "D2",
+			"event_source[x]=file":             "D1 D2",
+			"event_type[]=info":                "D1",
+			"event_type[a][b]=info":            "D1 D2",
+			"from[x]=2999-01-01&to[]=":         "D1 D2",
+			"from=2000-01-01&from=2999-01-01":  "D1 D2",
+			"to[x]=2000-01-01&device_id=D2":    "D2",
+			"device_id=D2&device_id[x]=D1":     "D1 D2",
+			"device_id[x]=D1&device_id=D2":     "D1 D2",
+			"event_source=usb&event_type=warn": "",
+		} {
+			for _, mount := range []string{"/api/dataguard", "/api/bd"} {
+				got := w.Do(replay.Request{Role: "admin", Path: mount + "/events?" + query})
+				devices := ""
+				for _, id := range []string{"D1", "D2"} {
+					if strings.Contains(got.Body, `"device_id":"`+id+`"`) {
+						devices += id + " "
+					}
+				}
+				if got.Status != 200 || strings.TrimSpace(devices) != want {
+					t.Errorf("%s/events?%s: %d with %q, want 200 with %q: %s", mount, query, got.Status, devices, want, got.Body)
+				}
+			}
+		}
+	})
+}

@@ -248,10 +248,29 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, done{OK: true})
 }
 
+// filterText reads a filter of the event list as text: a parameter the
+// query gives once, or the first value of one it gives more than once or
+// as a list. A parameter given as an object, like a missing one, is no
+// filter ("").
+func filterText(rawQuery, name string) string {
+	v := jsbind.Query(rawQuery, name)
+	if v.IsArray() {
+		items := v.Items()
+		if len(items) == 0 {
+			return ""
+		}
+		v = items[0]
+	}
+	if v.IsString() {
+		return v.Str()
+	}
+	return ""
+}
+
 // events answers GET events?device_id=&event_source=&event_type=&limit=
 // &from=&to=: the reported events, newest first.
 func (h *handlers) events(w http.ResponseWriter, r *http.Request) {
-	query := func(name string) jsbind.Value { return jsbind.Query(r.URL.RawQuery, name) }
+	query := func(name string) string { return filterText(r.URL.RawQuery, name) }
 	filter := eventFilter{
 		DeviceID:    query("device_id"),
 		EventSource: query("event_source"),
@@ -260,7 +279,7 @@ func (h *handlers) events(w http.ResponseWriter, r *http.Request) {
 		To:          query("to"),
 	}
 	// limit ? Number(limit) : undefined
-	if limit := query("limit"); limit.Truthy() {
+	if limit := jsbind.Query(r.URL.RawQuery, "limit"); limit.Truthy() {
 		filter.Limit = jsbind.Number(limit.ToNumber())
 	}
 	events, err := listEvents(r.Context(), h.db, filter)

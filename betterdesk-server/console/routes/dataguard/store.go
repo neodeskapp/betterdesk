@@ -356,10 +356,11 @@ func deletePolicy(ctx context.Context, db *store.DB, id jsbind.Value) (bool, err
 	return n > 0, nil
 }
 
-// eventFilter is what the event list is narrowed by. A value that is
-// empty for JavaScript does not filter.
+// eventFilter is what the event list is narrowed by. A text that is empty
+// does not filter, nor does a limit that is empty for JavaScript.
 type eventFilter struct {
-	DeviceID, EventSource, EventType, From, To, Limit jsbind.Value
+	DeviceID, EventSource, EventType, From, To string
+	Limit                                      jsbind.Value
 }
 
 // listEvents returns the events that pass the filter, newest first, with
@@ -369,7 +370,7 @@ func listEvents(ctx context.Context, db *store.DB, f eventFilter) ([]row, error)
 	var values []jsbind.Value
 	for _, condition := range []struct {
 		sql   string
-		value jsbind.Value
+		value string
 	}{
 		{" AND device_id = ?", f.DeviceID},
 		{" AND event_source = ?", f.EventSource},
@@ -377,9 +378,9 @@ func listEvents(ctx context.Context, db *store.DB, f eventFilter) ([]row, error)
 		{" AND created_at >= ?", f.From},
 		{" AND created_at <= ?", f.To},
 	} {
-		if condition.value.Truthy() {
+		if condition.value != "" {
 			query += condition.sql
-			values = append(values, condition.value)
+			values = append(values, jsbind.String(condition.value))
 		}
 	}
 	query += " ORDER BY created_at DESC"
