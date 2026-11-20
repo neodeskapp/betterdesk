@@ -409,7 +409,7 @@
        "users": "none"
       }
      },
-     "appVersion": "3.5.264",
+     "appVersion": "<version>",
      "branding": {
       "appDescription": "Saved by the settings route",
       "appName": "Contract Console",
@@ -1191,7 +1191,7 @@
        "users": "none"
       }
      },
-     "appVersion": "3.5.264",
+     "appVersion": "<version>",
      "branding": {
       "appDescription": "Saved by the settings route",
       "appName": "Contract Console",
@@ -2034,7 +2034,7 @@
        "users": "read"
       }
      },
-     "appVersion": "3.5.264",
+     "appVersion": "<version>",
      "branding": {
       "appDescription": "Saved by the settings route",
       "appName": "Contract Console",
@@ -2966,7 +2966,7 @@
        "users": "write"
       }
      },
-     "appVersion": "3.5.264",
+     "appVersion": "<version>",
      "branding": {
       "appDescription": "Saved by the settings route",
       "appName": "Contract Console",

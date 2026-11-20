@@ -111,7 +111,7 @@
        "env": "production",
        "name": "BetterDesk Console",
        "nodeVersion": "<volatile>",
-       "version": "3.5.264"
+       "version": "<version>"
       },
       "backend": "betterdesk",
       "goServer": {
@@ -140,7 +140,7 @@
        "status": "running",
        "tls": false,
        "uptime": "<volatile>",
-       "version": "3.5.264"
+       "version": "<version>"
       },
       "paths": {
        "apiKey": "/opt/rustdesk/.api_key",

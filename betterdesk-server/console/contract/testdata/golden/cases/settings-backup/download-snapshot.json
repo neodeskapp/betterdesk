@@ -91,7 +91,7 @@
     "kind": "json",
     "json": {
      "_backend": "betterdesk",
-     "_console_version": "3.5.264",
+     "_console_version": "<version>",
      "_created": "<volatile>",
      "_format": "betterdesk-backup",
      "_version": 1,

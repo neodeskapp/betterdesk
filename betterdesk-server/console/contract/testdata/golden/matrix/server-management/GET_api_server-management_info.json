@@ -152,7 +152,7 @@
      "server": {
       "running": true,
       "uptimeSeconds": 0,
-      "version": "3.5.264"
+      "version": "<version>"
      },
      "success": true,
      "terminalSessions": 0

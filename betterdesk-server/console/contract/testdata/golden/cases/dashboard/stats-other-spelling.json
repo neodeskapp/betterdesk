@@ -108,7 +108,7 @@
        "status": "running",
        "tls": false,
        "uptime": "<volatile>",
-       "version": "3.5.264"
+       "version": "<version>"
       },
       "publicKey": true
      },

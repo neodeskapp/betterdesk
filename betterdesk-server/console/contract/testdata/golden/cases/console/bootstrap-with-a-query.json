@@ -413,7 +413,7 @@
        "users": "none"
       }
      },
-     "appVersion": "3.5.264",
+     "appVersion": "<version>",
      "branding": {
       "appDescription": "BetterDesk Server Management",
       "appName": "BetterDesk",
@@ -1260,7 +1260,7 @@
        "users": "write"
       }
      },
-     "appVersion": "3.5.264",
+     "appVersion": "<version>",
      "branding": {
       "appDescription": "BetterDesk Server Management",
       "appName": "BetterDesk",

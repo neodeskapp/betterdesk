@@ -37,7 +37,7 @@
    "volatile": [
     {
      "path": "data.cacheVersion",
-     "format": "9.9.999.9999999999999"
+     "format": "<aaaaaaa>.9999999999999"
     },
     {
      "path": "data.uptime",

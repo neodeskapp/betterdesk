@@ -3,6 +3,7 @@ package contract
 import (
 	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -203,5 +204,21 @@ func TestBodyHashIsTakenAfterTheAddressIsReplaced(t *testing.T) {
 	two := NewAnswer(200, jsonHeader("text/html"), []byte("<a href=http://bdgo-other:5000/x>"), false, NewNormalizer("http://bdgo-other:5000", ""))
 	if one.Body.SHA256 != two.Body.SHA256 || one.Body.Length != two.Body.Length || one.Body.Head != "<a href=<base>/x>" {
 		t.Errorf("the same page from two instances differs: %+v and %+v", one.Body, two.Body)
+	}
+}
+
+// The product version of the tree is written as <version>, so the
+// goldens stay the same from one release to the next.
+func TestNormalizerWritesTheProductVersionAsAWord(t *testing.T) {
+	version := productVersion()
+	if version == "" {
+		t.Fatal("no product version: " + versionFile + " cannot be read")
+	}
+	n := NewNormalizer("http://bdgo-c1:5000", "")
+	if got := n.Text(`{"version":"` + version + `","client":"BetterDesk/` + version + `"}`); got != `{"version":"<version>","client":"BetterDesk/<version>"}` {
+		t.Errorf("the version in an answer: %s", got)
+	}
+	if got := n.Text("1" + version[1:]); strings.Contains(version, ".") && got == "<version>" {
+		t.Errorf("another version was taken for the product version: %s", got)
 	}
 }

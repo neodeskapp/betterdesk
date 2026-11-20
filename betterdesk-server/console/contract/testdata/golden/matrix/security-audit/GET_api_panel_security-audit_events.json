@@ -541,7 +541,7 @@
        "actor": "system",
        "details": {
         "mode": "all",
-        "version": "3.5.264"
+        "version": "<version>"
        },
        "timestamp": "<volatile>"
       }
@@ -1077,7 +1077,7 @@
        "actor": "system",
        "details": {
         "mode": "all",
-        "version": "3.5.264"
+        "version": "<version>"
        },
        "timestamp": "<volatile>"
       }
@@ -1631,7 +1631,7 @@
        "actor": "system",
        "details": {
         "mode": "all",
-        "version": "3.5.264"
+        "version": "<version>"
        },
        "timestamp": "<volatile>"
       }

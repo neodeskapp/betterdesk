@@ -8,10 +8,12 @@ import (
 	"mime"
 	"net"
 	"net/http"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -156,8 +158,9 @@ func headerRuleFor(name string) (headerRule, bool) {
 
 // Normalizer takes what belongs to one instance out of an answer, so two
 // instances give the same answer: the console's own address, the address
-// the suite's requests come from, and the values of the secrets the run
-// knows (secrets.go).
+// the suite's requests come from, the product version of the tree the
+// suite runs from, and the values of the secrets the run knows
+// (secrets.go).
 type Normalizer struct {
 	replacer *strings.Replacer
 	clientIP *regexp.Regexp
@@ -195,12 +198,30 @@ func NewNormalizer(origin, clientIP string) *Normalizer {
 			pairs = append(pairs, name, "<hostname>")
 		}
 	}
+	if version := productVersion(); version != "" {
+		pairs = append(pairs, version, "<version>")
+	}
 	n.replacer = strings.NewReplacer(pairs...)
 	if clientIP != "" {
 		n.clientIP = addressPattern(clientIP)
 	}
 	return n
 }
+
+// versionFile holds the product version of the tree the suite runs from,
+// which is the tree its instance was built from.
+const versionFile = "../../internal/productversion/VERSION"
+
+// productVersion is the product version the console under test reports
+// ("3.5.264"), or "" when the suite runs outside the tree. Goldens hold
+// <version> in its place, so a release changes none of them.
+var productVersion = sync.OnceValue(func() string {
+	text, err := os.ReadFile(versionFile)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(text))
+})
 
 // withConsoleIP makes the Normalizer write the console's own IP address
 // as <console-ip>. An empty or loopback address is left alone.
