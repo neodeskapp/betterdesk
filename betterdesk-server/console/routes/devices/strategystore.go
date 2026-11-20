@@ -197,18 +197,7 @@ func resolvePeerAssignmentKey(ctx context.Context, db *store.DB, key string, wri
 // an account without a guid gets a random one and keeps it; without, its
 // key is "".
 func resolveUserAssignmentKey(ctx context.Context, db *store.DB, key string, write bool) (string, error) {
-	if key == "" {
-		return "", refusal("empty user reference")
-	}
-	var id any
-	var guid string
-	query := db.Pick(
-		`SELECT id, COALESCE(guid, '') AS guid FROM users WHERE guid = ? OR username = ? OR CAST(id AS TEXT) = ? LIMIT 1`,
-		`SELECT id, COALESCE(guid, '') AS guid FROM users WHERE guid = ? OR username = ? OR id::text = ? LIMIT 1`)
-	err := db.QueryRow(ctx, query, key, key, key).Scan(&id, &guid)
-	if errors.Is(err, sql.ErrNoRows) {
-		return "", refusal("user not found")
-	}
+	id, guid, err := assignmentUser(ctx, db, key)
 	if err != nil {
 		return "", err
 	}
@@ -222,6 +211,28 @@ func resolveUserAssignmentKey(ctx context.Context, db *store.DB, key string, wri
 		return "", err
 	}
 	return guid, nil
+}
+
+// assignmentUser finds the account a users reference of an assignment
+// names, by guid, username or id, and returns its id and its guid ("" when
+// it has none).
+func assignmentUser(ctx context.Context, db *store.DB, key string) (int64, string, error) {
+	if key == "" {
+		return 0, "", refusal("empty user reference")
+	}
+	var id int64
+	var guid string
+	query := db.Pick(
+		`SELECT id, COALESCE(guid, '') AS guid FROM users WHERE guid = ? OR username = ? OR CAST(id AS TEXT) = ? LIMIT 1`,
+		`SELECT id, COALESCE(guid, '') AS guid FROM users WHERE guid = ? OR username = ? OR id::text = ? LIMIT 1`)
+	err := db.QueryRow(ctx, query, key, key, key).Scan(&id, &guid)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, "", refusal("user not found")
+	}
+	if err != nil {
+		return 0, "", err
+	}
+	return id, guid, nil
 }
 
 // resolveDeviceGroupAssignmentKey returns the guid of the device group

@@ -804,6 +804,80 @@ func TestAssignChecksTheDeviceScope(t *testing.T) {
 	})
 }
 
+// TestAssignNamesOnlyItselfWithALimitedScope: an account whose device
+// scope is limited may name only its own account in the users list of an
+// assignment, by name, guid or id; any other account is refused with 403
+// on assign and unassign, and nothing is written. An account that sees
+// every device, by its role or because no device group has an access
+// list, names any account (BUGS UM30, DECISIONS A72).
+func TestAssignNamesOnlyItselfWithALimitedScope(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w, api := world(t, db, nil, nil)
+		ctx := context.Background()
+		for _, q := range []string{
+			`CREATE TABLE IF NOT EXISTS peers (id TEXT PRIMARY KEY, uuid TEXT DEFAULT '', guid TEXT DEFAULT '')`,
+			`INSERT INTO peers (id, uuid, guid) VALUES ('A', '', '')`,
+			`UPDATE users SET guid = 'guid-operator' WHERE username = 'e2e_operator'`,
+		} {
+			if _, err := db.Exec(ctx, q); err != nil {
+				t.Fatalf("%s: %v", q, err)
+			}
+		}
+		assignments := func() int {
+			var n int
+			if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM strategy_assignments`).Scan(&n); err != nil {
+				t.Fatal(err)
+			}
+			return n
+		}
+		admin, operator := w.As("admin"), w.As("operator")
+		created := admin.Do("POST", "/api/panel/strategies", `{"name":"Night"}`)
+		m := strategyGUIDField.FindStringSubmatch(created.Body)
+		if m == nil {
+			t.Fatalf("create: %d %s", created.Status, created.Body)
+		}
+		assign := "/api/panel/strategies/" + m[1] + "/assign"
+		forbidden := `{"success":false,"error":"You don't have access to this device."}`
+		for _, body := range []string{
+			`{"users":["e2e_viewer"]}`,
+			`{"users":["6"]}`,
+			`{"users":["e2e_operator","e2e_viewer"]}`,
+			`{"peers":["A"],"users":["e2e_admin"]}`,
+		} {
+			for _, path := range []string{assign, "/api/panel/strategies/unassign"} {
+				api.Calls()
+				if got := operator.Do("POST", path, body); got.Status != http.StatusForbidden || got.Body != forbidden {
+					t.Errorf("%s %s as operator: %d %s, want 403 %s", path, body, got.Status, got.Body, forbidden)
+				}
+				if n := assignments(); n != 0 {
+					t.Fatalf("%s %s as operator wrote %d assignments", path, body, n)
+				}
+				for _, call := range api.Calls() {
+					if !strings.HasPrefix(call, "GET ") {
+						t.Errorf("%s %s as operator reached the server: %s", path, body, call)
+					}
+				}
+			}
+		}
+		for _, body := range []string{`{"users":["e2e_operator"]}`, `{"users":["guid-operator"]}`, `{"users":["5"]}`} {
+			if got := operator.Do("POST", assign, body); got.Status != http.StatusOK {
+				t.Errorf("%s as operator: %d %s, want 200", body, got.Status, got.Body)
+			}
+		}
+		if got := admin.Do("POST", assign, `{"users":["e2e_viewer"]}`); got.Status != http.StatusOK {
+			t.Errorf("another account as admin: %d %s", got.Status, got.Body)
+		}
+		// Without an access list on any device group the operator sees
+		// every device, and names any account
+		if _, err := db.Exec(ctx, `DELETE FROM device_group_user_access`); err != nil {
+			t.Fatal(err)
+		}
+		if got := operator.Do("POST", "/api/panel/strategies/unassign", `{"users":["e2e_viewer"]}`); got.Status != http.StatusOK {
+			t.Errorf("another account as an operator who sees every device: %d %s", got.Status, got.Body)
+		}
+	})
+}
+
 // TestStrategyWriteAnswersPermissions: creating and changing a rule
 // answers the stored permissions, also on PostgreSQL where the signal
 // server created the table with a TEXT column for them (BUGS DE8).

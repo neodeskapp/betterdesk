@@ -351,14 +351,15 @@ type resolved struct {
 }
 
 // errOutOfScope is an assignment that names a device or a device group
-// the account may not see. It is answered with 403.
-var errOutOfScope = errors.New("the assignment names a device or a device group outside the account's scope")
+// the account may not see, or another account while the account's device
+// scope is limited. It is answered with 403.
+var errOutOfScope = errors.New("the assignment names a device, a device group or an account outside the account's scope")
 
 // resolveAssignKeys turns the references of an assignment body into the
 // keys the assignments are stored under. Every reference is checked, and
-// then the account's scope over the devices and device groups named,
-// before the first device or account gets a guid; the first bad one is
-// the refusal.
+// then the account's scope over the devices, device groups and accounts
+// named, before the first device or account gets a guid; the first bad
+// one is the refusal.
 func (h *handlers) resolveAssignKeys(r *http.Request, t targets) (resolved, error) {
 	ctx := r.Context()
 	if _, err := resolveRefs(ctx, h.d.Store, t, false); err != nil {
@@ -372,9 +373,9 @@ func (h *handlers) resolveAssignKeys(r *http.Request, t targets) (resolved, erro
 
 // assignmentInScope returns errOutOfScope when an assignment, whose
 // references were checked, names a device the account may not see (its
-// device scope) or a device group that is closed to it (the group's
-// access list). The roles that see every device pass. The accounts of an
-// assignment are not checked.
+// device scope), a device group that is closed to it (the group's access
+// list), or, while its device scope is limited, an account other than its
+// own. The roles that see every device pass.
 func (h *handlers) assignmentInScope(r *http.Request, t targets) error {
 	ctx := r.Context()
 	user := kit.User(r)
@@ -398,21 +399,48 @@ func (h *handlers) assignmentInScope(r *http.Request, t targets) error {
 		return err
 	}
 	groups, _ := refs(t.groups)
-	if len(groups) == 0 {
+	if len(groups) > 0 {
+		accessUser := h.groups.UserAccessContext(ctx, user)
+		for _, item := range groups {
+			key, _ := item.(string)
+			guid, err := resolveDeviceGroupAssignmentKey(ctx, h.d.Store, jsTrim(key), false)
+			if err != nil {
+				return err
+			}
+			group, err := h.groups.DeviceGroupByGUID(ctx, guid)
+			if err != nil {
+				return err
+			}
+			if group == nil || !access.GroupAllowedForUser(devicegroups.ScopeGroup(group), accessUser) {
+				return errOutOfScope
+			}
+		}
+	}
+	return h.namesOnlyItself(r, t)
+}
+
+// namesOnlyItself returns errOutOfScope when the users list of an
+// assignment names an account other than the caller's own while the
+// caller's device scope is limited. A caller who sees every device names
+// any account.
+func (h *handlers) namesOnlyItself(r *http.Request, t targets) error {
+	ctx := r.Context()
+	users, _ := refs(t.users)
+	if len(users) == 0 {
 		return nil
 	}
-	accessUser := h.groups.UserAccessContext(ctx, user)
-	for _, item := range groups {
+	scope, err := h.groups.DeviceScopeForUser(ctx, kit.User(r), nil)
+	if err != nil || scope == nil {
+		return err
+	}
+	self := kit.UserID(r)
+	for _, item := range users {
 		key, _ := item.(string)
-		guid, err := resolveDeviceGroupAssignmentKey(ctx, h.d.Store, jsTrim(key), false)
+		id, _, err := assignmentUser(ctx, h.d.Store, jsTrim(key))
 		if err != nil {
 			return err
 		}
-		group, err := h.groups.DeviceGroupByGUID(ctx, guid)
-		if err != nil {
-			return err
-		}
-		if group == nil || !access.GroupAllowedForUser(devicegroups.ScopeGroup(group), accessUser) {
+		if id != self {
 			return errOutOfScope
 		}
 	}
