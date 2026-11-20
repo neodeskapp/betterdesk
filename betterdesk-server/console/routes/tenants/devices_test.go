@@ -75,13 +75,14 @@ func TestAssignDevicesNeedsAListOfKnownDevices(t *testing.T) {
 		if rows := w.Rows("SELECT device_id FROM tenant_devices", nil); rows != "[]" {
 			t.Fatalf("the refused requests assigned %s", rows)
 		}
-		for body, want := range map[string]string{
-			`{"device_ids":["D1","D2","D1"]}`:   `{"ok":true,"assigned":2}`,
-			`{"device_id":"D1"}`:                `{"ok":true,"assigned":0}`,
-			`{"device_ids":0,"device_id":"D3"}`: `{"ok":true,"assigned":1}`,
+		// In this order: the count depends on what the tenant has already
+		for _, c := range []struct{ body, want string }{
+			{`{"device_ids":["D1","D2","D1"]}`, `{"ok":true,"assigned":2}`},
+			{`{"device_id":"D1"}`, `{"ok":true,"assigned":0}`},
+			{`{"device_ids":0,"device_id":"D3"}`, `{"ok":true,"assigned":1}`},
 		} {
-			if got := assign(body); got.Status != 200 || got.Body != want {
-				t.Errorf("POST %s: %d %s, want 200 %s", body, got.Status, got.Body, want)
+			if got := assign(c.body); got.Status != 200 || got.Body != c.want {
+				t.Errorf("POST %s: %d %s, want 200 %s", c.body, got.Status, got.Body, c.want)
 			}
 		}
 		if rows := w.Rows("SELECT device_id FROM tenant_devices ORDER BY device_id", nil); rows != `[{"device_id":"D1"},{"device_id":"D2"},{"device_id":"D3"}]` {
