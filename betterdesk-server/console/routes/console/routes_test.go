@@ -252,7 +252,7 @@ func TestBootstrap(t *testing.T) {
 		if branding["appName"] != "Stored Name" || branding["showPoweredBy"] != false {
 			t.Errorf("branding after a load = %v", branding)
 		}
-		if !db.IsPostgres() && branding["revision"] != "2026-01-02030405" {
+		if branding["revision"] != "95f662d6" {
 			t.Errorf("revision = %v", branding["revision"])
 		}
 

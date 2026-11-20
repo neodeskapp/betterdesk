@@ -45,7 +45,7 @@ func TestBrandingAtStart(t *testing.T) {
 		if err := s.Start(ctx); err != nil {
 			t.Fatal(err)
 		}
-		if got, rev := s.Deps().Branding.GetBranding().Text("appName"), s.Deps().Branding.Revision(); got != "Stored" || rev != "2026-01-02030405" {
+		if got, rev := s.Deps().Branding.GetBranding().Text("appName"), s.Deps().Branding.Revision(); got != "Stored" || rev != "8d6cfd59" {
 			t.Errorf("after Start: appName %q, revision %q", got, rev)
 		}
 		s.Stop()
