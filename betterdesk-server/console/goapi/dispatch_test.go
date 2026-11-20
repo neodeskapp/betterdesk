@@ -42,7 +42,6 @@ var dispatch = map[string]func(c *Client, ctx context.Context, a []any) any{
 		return c.QueuePeerTelemetryCommand(ctx, str(a, 0), arg(a, 1), arg(a, 2))
 	},
 	"getBlocklist":         func(c *Client, ctx context.Context, a []any) any { return c.GetBlocklist(ctx) },
-	"addBlocklistEntry":    func(c *Client, ctx context.Context, a []any) any { return c.AddBlocklistEntry(ctx, arg(a, 0)) },
 	"removeBlocklistEntry": func(c *Client, ctx context.Context, a []any) any { return c.RemoveBlocklistEntry(ctx, str(a, 0)) },
 	"setPeerTags":          func(c *Client, ctx context.Context, a []any) any { return c.SetPeerTags(ctx, str(a, 0), arg(a, 1)) },
 	"getPeersByTag":        func(c *Client, ctx context.Context, a []any) any { return c.GetPeersByTag(ctx, str(a, 0)) },
@@ -277,11 +276,24 @@ var exportedFunctions = []string{
 	"listPanelUserGrants", "setPanelUserGrants",
 }
 
+// dropped are the functions of the Node client that the Go client leaves
+// out on purpose, with the bug that took them out.
+var dropped = map[string]string{
+	// No route called it, and the API server refused the body it sent
+	"addBlocklistEntry": "G3",
+}
+
 func TestDispatchCoversEveryExportedFunction(t *testing.T) {
 	if len(exportedFunctions) != 114 {
 		t.Errorf("the list holds %d functions, the Node client exports 114 besides normalisePeer and proxyOIDCCallback", len(exportedFunctions))
 	}
 	for _, name := range exportedFunctions {
+		if dropped[name] != "" {
+			if dispatch[name] != nil {
+				t.Errorf("%s was dropped (BUGS %s) but has a method", name, dropped[name])
+			}
+			continue
+		}
 		if dispatch[name] == nil {
 			t.Errorf("no method for %s", name)
 		}

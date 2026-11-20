@@ -175,7 +175,6 @@ func TestAgainstAPIServer(t *testing.T) {
 
 	t.Run("blocklist and configuration", func(t *testing.T) {
 		wantJSON(t, "GetBlocklist", c.GetBlocklist(ctx), `{"success":true,"data":{"count":0,"enabled":true,"entries":null}}`)
-		wantJSON(t, "AddBlocklistEntry", c.AddBlocklistEntry(ctx, "10.9.8.7"), `{"success":false,"error":"value is required"}`)
 		wantJSON(t, "RemoveBlocklistEntry", c.RemoveBlocklistEntry(ctx, "10.9.8.7"), `{"success":false,"error":"Entry not found"}`)
 
 		wantJSON(t, "GetConfig of an unset key", c.GetConfig(ctx, "k1"), `{"success":true,"data":{"key":"k1","value":""}}`)

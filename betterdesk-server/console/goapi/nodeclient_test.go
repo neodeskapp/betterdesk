@@ -197,9 +197,6 @@ var extraDispatch = map[string]func(c *Client, ctx context.Context, a []any) any
 	"serverBackend.getBlocklist": func(c *Client, ctx context.Context, a []any) any {
 		return NewBackend(c, failingStore()).GetBlocklist(ctx)
 	},
-	"serverBackend.addBlocklistEntry": func(c *Client, ctx context.Context, a []any) any {
-		return NewBackend(c, failingStore()).AddBlocklistEntry(ctx, arg(a, 0))
-	},
 	"serverBackend.removeBlocklistEntry": func(c *Client, ctx context.Context, a []any) any {
 		return NewBackend(c, failingStore()).RemoveBlocklistEntry(ctx, str(a, 0))
 	},
@@ -398,6 +395,9 @@ func runSteps(t *testing.T, phase string, steps []callStep, c *Client, fixtures,
 				got = NewObject("status", float64(resp.Status), "data", resp.Data())
 			}
 		default:
+			if isDropped(step.Fn) {
+				continue
+			}
 			call := dispatch[step.Fn]
 			if call == nil {
 				call = extraDispatch[step.Fn]
@@ -432,6 +432,12 @@ func runSteps(t *testing.T, phase string, steps []callStep, c *Client, fixtures,
 	return outcomes
 }
 
+// isDropped reports whether a step calls a function the Go client left out
+// (dropped), also through the server backend.
+func isDropped(fn string) bool {
+	return dropped[strings.TrimPrefix(fn, "serverBackend.")] != ""
+}
+
 func describe(step callStep) string {
 	if step.HTTP != nil {
 		return "http " + string(step.HTTP[0]) + " " + string(step.HTTP[1])
@@ -444,7 +450,7 @@ func comparePhase(t *testing.T, phase string, steps []callStep, records []vector
 	seen := map[int]bool{}
 	for _, rec := range records {
 		seen[rec.Step] = true
-		if rec.SQL != "" {
+		if rec.SQL != "" || isDropped(rec.Fn) {
 			continue
 		}
 		got, ok := outcomes[rec.Step]

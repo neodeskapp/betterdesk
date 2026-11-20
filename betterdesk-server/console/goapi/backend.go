@@ -303,11 +303,6 @@ func (b *Backend) GetStatusSummary(ctx context.Context) *Object { return b.api.G
 // GetBlocklist is Client.GetBlocklist.
 func (b *Backend) GetBlocklist(ctx context.Context) *Object { return b.api.GetBlocklist(ctx) }
 
-// AddBlocklistEntry is Client.AddBlocklistEntry.
-func (b *Backend) AddBlocklistEntry(ctx context.Context, entry any) *Object {
-	return b.api.AddBlocklistEntry(ctx, entry)
-}
-
 // RemoveBlocklistEntry is Client.RemoveBlocklistEntry.
 func (b *Backend) RemoveBlocklistEntry(ctx context.Context, entry string) *Object {
 	return b.api.RemoveBlocklistEntry(ctx, entry)

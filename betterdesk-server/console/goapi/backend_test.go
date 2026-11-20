@@ -335,7 +335,6 @@ func TestBackendPassesThrough(t *testing.T) {
 		{"ChangePeerID", func() { b.ChangePeerID(ctx, "P1", "P2") }, "POST /api/peers/P1/change-id", `{"new_id":"P2"}`},
 		{"GetStatusSummary", func() { b.GetStatusSummary(ctx) }, "GET /api/peers/status/summary", ""},
 		{"GetBlocklist", func() { b.GetBlocklist(ctx) }, "GET /api/blocklist", ""},
-		{"AddBlocklistEntry", func() { b.AddBlocklistEntry(ctx, "1.2.3.4") }, "POST /api/blocklist", `{"entry":"1.2.3.4"}`},
 		{"RemoveBlocklistEntry", func() { b.RemoveBlocklistEntry(ctx, "1.2.3.4") }, "DELETE /api/blocklist/1.2.3.4", ""},
 		{"SetPeerTags", func() { b.SetPeerTags(ctx, "P1", "a,b") }, "PUT /api/peers/P1/tags", `{"tags":["a","b"]}`},
 		{"GetPeersByTag", func() { b.GetPeersByTag(ctx, "a") }, "GET /api/tags/a/peers", ""},
