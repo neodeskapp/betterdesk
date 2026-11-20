@@ -323,6 +323,33 @@ func TestOverviewSkipsEntriesOfTheWrongKind(t *testing.T) {
 	}
 }
 
+// TestKeyAgeIsReadAsUTC: the API server writes a key's created_at in UTC
+// without a zone, and the overview reads it so, also when the console's
+// clock is east of UTC (BUGS.md TH16).
+func TestKeyAgeIsReadAsUTC(t *testing.T) {
+	now := time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
+	for _, c := range []struct {
+		age time.Duration
+		old string
+	}{{keyMaxAge - 30*time.Minute, `"old_keys":0`}, {keyMaxAge + 30*time.Minute, `"old_keys":1`}} {
+		created := now.Add(-c.age).Format(time.DateTime)
+		api := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			if r.URL.Path == "/api/keys" {
+				_, _ = w.Write([]byte(`[{"id":1,"created_at":"` + created + `"}]`))
+				return
+			}
+			_, _ = w.Write([]byte(`{}`))
+		})
+		h := &handlers{api: goapi.New(api), now: func() time.Time { return now }, local: time.FixedZone("east", 2*3600)}
+		rec := httptest.NewRecorder()
+		h.overview(rec, httptest.NewRequest(http.MethodGet, "/api/panel/security-audit/overview", nil))
+		if !strings.Contains(rec.Body.String(), c.old) {
+			t.Errorf("a key created %s, now %s: %s, want %s", created, now.Format(time.DateTime), rec.Body.String(), c.old)
+		}
+	}
+}
+
 func jsonInt(n int64) string {
 	raw, _ := json.Marshal(n)
 	return string(raw)

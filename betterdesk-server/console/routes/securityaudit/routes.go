@@ -216,7 +216,9 @@ func (h *handlers) score(r *http.Request, healthRes, keysRes, auditRes, blocklis
 		if !goapi.Truthy(created) {
 			continue
 		}
-		if ms, read := jsreq.DateOf(created, h.local); read && now-ms > keyMaxAge.Milliseconds() {
+		// The API server writes the time in UTC; a text without a zone is
+		// read so
+		if ms, read := jsreq.DateOf(created, time.UTC); read && now-ms > keyMaxAge.Milliseconds() {
 			oldKeys++
 		}
 	}
