@@ -684,3 +684,27 @@ func TestFontsMoveIntoTheDataFolder(t *testing.T) {
 		t.Errorf("fonts after the next start: %s", Stringify(fonts))
 	}
 }
+
+// TestRefusedFontUploadLeavesNoTemporaryFile: a font upload leaves no
+// temporary file, neither when its name is refused before anything is
+// written nor when the install fails after the file was written (BUGS
+// BR3).
+func TestRefusedFontUploadLeavesNoTemporaryFile(t *testing.T) {
+	s := oracleService(t)
+	if _, err := s.UploadFont("你好", "x.ttf", []byte("font")); Message(err) != "Invalid font family name" {
+		t.Errorf("a name without a folder name: %v", err)
+	}
+	// a file where the font's folder would go
+	if err := os.MkdirAll(s.opts.FontsDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(s.opts.FontsDir, "blocked"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.UploadFont("Blocked", "x.ttf", []byte("font")); err == nil {
+		t.Error("an install into a file did not fail")
+	}
+	if left, _ := os.ReadDir(s.opts.TempDir); len(left) != 0 {
+		t.Errorf("temporary files: %v", left)
+	}
+}
