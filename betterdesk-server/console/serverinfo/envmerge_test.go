@@ -2,6 +2,7 @@ package serverinfo
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -182,11 +183,16 @@ func TestMergeEnvAgainstNode(t *testing.T) {
 	atLeast(t, "build_fresh", len(v.BuildFresh), 100)
 	m := &mismatches{t: t}
 	added := 0
+	dropped := 0
 	for _, c := range v.Merge {
 		content, keys := MergeEnv(c.Existing, c.Template)
 		added += len(keys)
 		if content != c.Content {
-			m.errorf("MergeEnv(%q, %q) =\n%q\nNode answers\n%q", c.Existing, c.Template, content, c.Content)
+			if withoutCarriedComments(c.Content, content) {
+				dropped++
+			} else {
+				m.errorf("MergeEnv(%q, %q) =\n%q\nNode answers\n%q", c.Existing, c.Template, content, c.Content)
+			}
 		}
 		if !reflect.DeepEqual(keys, c.Added) {
 			m.errorf("MergeEnv(%q, %q) added %q, Node added %q", c.Existing, c.Template, keys, c.Added)
@@ -195,6 +201,10 @@ func TestMergeEnvAgainstNode(t *testing.T) {
 	if added < 1500 {
 		t.Fatalf("only %d keys were added over all cases", added)
 	}
+	if dropped == 0 {
+		t.Error("no recorded merge carried a comment along (SI6): the vectors do not test it")
+	}
+	t.Logf("%d merges leave out comments Node carried along (SI6)", dropped)
 	for _, c := range v.BuildFresh {
 		if got := BuildFreshEnv(c.Text); got != c.Out {
 			m.errorf("BuildFreshEnv(%q) = %q, Node answers %q", c.Text, got, c.Out)
@@ -302,6 +312,7 @@ func TestMergeEnvFileAgainstNode(t *testing.T) {
 	dir := t.TempDir()
 	m := &mismatches{t: t}
 	modes := map[string]int{}
+	dropped := 0
 	for i, c := range v.MergeFile {
 		label := "case " + strconv.Itoa(i)
 		target, template := filepath.Join(dir, c.Name), filepath.Join(dir, c.TemplateName)
@@ -335,8 +346,18 @@ func TestMergeEnvFileAgainstNode(t *testing.T) {
 		var want *fileState
 		if c.After != nil {
 			want = &fileState{Bytes: c.After, Mode: c.Mode}
+			// Go leaves out comments Node carried along (SI6)
+			node := string(decodeBase64(t, *c.After))
+			if raw, err := os.ReadFile(target); err == nil && string(raw) != node && withoutCarriedComments(node, string(raw)) {
+				fixed := base64.StdEncoding.EncodeToString(raw)
+				want.Bytes = &fixed
+				dropped++
+			}
 		}
 		checkFile(t, m, label, target, want)
+	}
+	if dropped == 0 {
+		t.Error("no recorded merge carried a comment along (SI6): the vectors do not test it")
 	}
 	for _, mode := range []string{"fresh", "merge", "error"} {
 		if modes[mode] < 40 {
@@ -357,6 +378,22 @@ func TestMergeEnvKeepsExistingKeys(t *testing.T) {
 		t.Errorf("content\n%q\nwant\n%q", content, want)
 	}
 	if !reflect.DeepEqual(added, []string{"HOST", "TRUST_PROXY"}) {
+		t.Errorf("added %q", added)
+	}
+}
+
+// TestMergeEnvDropsCommentsOfKeysTheFileHas adds a missing key with the
+// comments that stand right above it in the template, not with those of
+// the keys the file has already (BUGS SI6: they were carried along).
+func TestMergeEnvDropsCommentsOfKeysTheFileHas(t *testing.T) {
+	existing := "A=1\nC=3\n"
+	template := "# about A\nA=x\n\n# about B\nB=2\n# about C\nC=x\n# about D\nD=4\n"
+	content, added := MergeEnv(existing, template)
+	want := "A=1\nC=3\n\n# about B\nB=2\n# about D\nD=4\n"
+	if content != want {
+		t.Errorf("content\n%q\nwant\n%q", content, want)
+	}
+	if !reflect.DeepEqual(added, []string{"B", "D"}) {
 		t.Errorf("added %q", added)
 	}
 }

@@ -163,9 +163,13 @@ func TestEnvMergeLikeNode(t *testing.T) {
 				t.Errorf("%s: stderr %q, want a message", c.Name, gotErr)
 			}
 		}
-		compareFiles(t, c.Name, dir, c.After)
+		after := c.After
+		if sum, fixed := envMergeDifferences[c.Name]; fixed {
+			after = goEnvAfter(t, c, dir, sum)
+		}
+		compareFiles(t, c.Name, dir, after)
 	}
-	t.Logf("%d runs replayed (stderr: %v)", len(recorded.Cases), kinds)
+	t.Logf("%d runs replayed (stderr: %v), %d with the .env of SI6", len(recorded.Cases), kinds, len(envMergeDifferences))
 }
 
 type substFileCase struct {

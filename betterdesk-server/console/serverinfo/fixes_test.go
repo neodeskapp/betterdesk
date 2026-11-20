@@ -335,3 +335,23 @@ func composeCases(m *mismatches, compose string) *mismatches {
 	}
 	return m
 }
+
+// withoutCarriedComments reports whether got is Node's merge result with
+// nothing but lines that are no KEY=value pair left out (SI6). Node
+// carried the comment and blank lines above template keys the file has
+// along to the next key it added; Go writes only those right above an
+// added key.
+func withoutCarriedComments(node, got string) bool {
+	gotLines := strings.Split(got, "\n")
+	j := 0
+	for _, line := range strings.Split(node, "\n") {
+		if j < len(gotLines) && line == gotLines[j] {
+			j++
+			continue
+		}
+		if entries := ParseEnvLines(line).Entries; len(entries) > 0 && entries[0].Type == EnvPair {
+			return false
+		}
+	}
+	return j == len(gotLines)
+}

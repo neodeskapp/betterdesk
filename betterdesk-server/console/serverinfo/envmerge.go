@@ -249,9 +249,7 @@ func AssertResolvedSubstitutions(subs []Substitution) error {
 // MergeEnv adds to an env file the keys of a template it does not have.
 // The existing text stays as it is, with a line break added when it lacks
 // the last one. Each missing key is appended as KEY=value, after the
-// comment and blank lines that stand before it in the template since the
-// last key that was appended. Comments above template keys the file
-// already has are carried along to the next missing key.
+// comment and blank lines that stand right before it in the template.
 func MergeEnv(existingContent, templateContent string) (content string, added []string) {
 	existing := ParseEnvLines(existingContent)
 	template := ParseEnvLines(templateContent)
@@ -271,6 +269,7 @@ func MergeEnv(existingContent, templateContent string) (content string, added []
 			continue
 		}
 		if _, ok := existing.Get(entry.Key); ok {
+			pending.Reset()
 			continue
 		}
 		b.WriteString(pending.String())
