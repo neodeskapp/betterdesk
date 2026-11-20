@@ -25,15 +25,16 @@ func (h *handlers) logout(w http.ResponseWriter, r *http.Request) {
 const logoutGetMessage = "Signing out changed to a POST request for CSRF protection. Use the sign-out button in the panel."
 
 // logoutPage answers GET /logout. It signs nobody out: a link or an image
-// on another site could send it. A signed-in browser gets 405 with the
-// console's error page (plain text without a build) and keeps its session;
-// any other goes to the sign-in page.
+// on another site could send it. A signed-in browser gets 405 with "Allow:
+// POST" and the console's error page (plain text without a build) and
+// keeps its session; any other goes to the sign-in page.
 func (h *handlers) logoutPage(w http.ResponseWriter, r *http.Request) {
 	var userID json.RawMessage
 	if kit.Session(r).Get("userId", &userID); !jsonTruthy(userID) {
 		kit.Redirect(w, r, "/login")
 		return
 	}
+	w.Header().Set("Allow", http.MethodPost)
 	options := webui.ErrorOptions{Status: http.StatusMethodNotAllowed, Title: "Logout requires POST", Message: logoutGetMessage}
 	if h.d.WebUI != nil && h.d.WebUI.ErrorPage(w, r, http.StatusInternalServerError, options) {
 		return

@@ -22,6 +22,20 @@ var flowFixes = []flowFix{
 	{"S11", proAccountGets403},
 	{"S19", wholeNameInSignInEntries},
 	{"S1", signOutClearsOnlySessionCookies},
+	{"UM27", signOutPageAllowsPost},
+}
+
+// signOutPageAllowsPost: the 405 that GET /logout gives a signed-in
+// browser names POST in its Allow header.
+func signOutPageAllowsPost(t *testing.T, steps []flowStep) bool {
+	changed := false
+	for i := range steps {
+		if steps[i].Request == "GET /logout" && steps[i].Answer.Status == 405 {
+			steps[i].Answer.Headers["allow"] = []string{"POST"}
+			changed = true
+		}
+	}
+	return changed
 }
 
 // fixFlow applies every fix to the recorded steps.

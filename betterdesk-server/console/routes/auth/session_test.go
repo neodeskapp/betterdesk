@@ -77,6 +77,10 @@ func TestLogoutPage(t *testing.T) {
 		if res.status != http.StatusMethodNotAllowed || res.body != logoutGetText || res.header.Get("Content-Type") != "text/plain; charset=utf-8" {
 			t.Errorf("sign-out page: %d %q %s", res.status, res.header.Get("Content-Type"), res.body)
 		}
+		// The 405 names the method that signs out (BUGS UM27)
+		if allow := res.header.Values("Allow"); len(allow) != 1 || allow[0] != "POST" {
+			t.Errorf("Allow of the sign-out page: %q", allow)
+		}
 		for _, line := range cookiesBut(res) {
 			if strings.Contains(line, "=;") {
 				t.Errorf("the sign-out page clears a cookie: %s", line)
@@ -117,7 +121,7 @@ func TestLogoutPageWithTheWebApp(t *testing.T) {
 	if res.status != http.StatusMethodNotAllowed || !strings.Contains(res.body, "<head>"+meta) || res.header.Get("Content-Type") != "text/html; charset=utf-8" {
 		t.Errorf("sign-out page: %d %q %s", res.status, res.header.Get("Content-Type"), res.body)
 	}
-	if res.header.Get("Cache-Control") != "no-store" || res.header.Get("Content-Security-Policy") == "" {
+	if res.header.Get("Cache-Control") != "no-store" || res.header.Get("Content-Security-Policy") == "" || res.header.Get("Allow") != "POST" {
 		t.Errorf("headers of the error page: %v", res.header)
 	}
 	if res := a.get("/api/auth/verify"); res.status != http.StatusOK {
