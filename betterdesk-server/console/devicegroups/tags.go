@@ -2,7 +2,6 @@ package devicegroups
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"unicode"
 
@@ -254,43 +253,4 @@ func DeleteTagAcrossScope(ctx context.Context, devices []*goapi.Object, groups [
 		}
 	}
 	return res, nil
-}
-
-// ErrAssignmentsNotIterable is the failure of the lookups below for every
-// device id that is not empty (BUGS PA8): the Node console looped over
-// the folder assignments as a list, and they are a map.
-var ErrAssignmentsNotIterable = errors.New("(assignments || []) is not iterable")
-
-// ResolveOperatorUsernamesForDevice names the accounts on the access
-// lists of a device's folder and groups. It answers an empty list for an
-// empty id and fails for every other id (BUGS PA8).
-func ResolveOperatorUsernamesForDevice(deviceID string) ([]string, error) {
-	if jsTrim(deviceID) == "" {
-		return []string{}, nil
-	}
-	return nil, ErrAssignmentsNotIterable
-}
-
-// OperatorEmail is an account with its mail address.
-type OperatorEmail struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-}
-
-// ResolveOperatorEmailsForDevice is ResolveOperatorUsernamesForDevice
-// with the mail addresses of the accounts.
-func ResolveOperatorEmailsForDevice(deviceID string) ([]OperatorEmail, error) {
-	if _, err := ResolveOperatorUsernamesForDevice(deviceID); err != nil {
-		return nil, err
-	}
-	return []OperatorEmail{}, nil
-}
-
-// ResolveFolderNameForDevice names the folder a device is in. It answers
-// "" for an empty id and fails for every other id (BUGS PA8).
-func ResolveFolderNameForDevice(deviceID string) (string, error) {
-	if jsTrim(deviceID) == "" {
-		return "", nil
-	}
-	return "", ErrAssignmentsNotIterable
 }

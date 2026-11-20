@@ -3,7 +3,6 @@ package helpmail
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -278,8 +277,8 @@ func (t *transport) count() int {
 // bus to the job with the real mail service: the alert address gets one
 // mail per request, a repeated event and the status change of a mailed
 // request send nothing more, and the job ends with its context. The
-// folder lookups are the working ones the Node tests stubbed in; the
-// package's own ones fail (BUGS PA8).
+// folder lookups are stubs, as in the Node tests; the real ones (BUGS
+// PA8) have a test of their own.
 func TestRunMailsEachRequestOnce(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		ctx, cancel := context.WithCancel(context.Background())
@@ -373,15 +372,40 @@ func TestRunWithoutBusEnds(t *testing.T) {
 	}
 }
 
-// TestRealLookupsFail pins that with the folder lookups of package
-// devicegroups every request with a device fails before a mail (PA8).
-func TestRealLookupsFail(t *testing.T) {
+// TestRealLookupsFindTheFolderAndItsOperators: with the folder lookups of
+// package devicegroups a request of a device in a folder goes to the
+// operators on the folder's access list, with the folder in the subject,
+// and not to the alert address (PA8).
+func TestRealLookupsFindTheFolderAndItsOperators(t *testing.T) {
 	db := storetest.Migrated(t)
+	ctx := context.Background()
+	for _, query := range []string{
+		`INSERT INTO users (id, username, password_hash, role, email) VALUES (40, 'alice', 'x', 'operator', 'alice@example.org')`,
+		`INSERT INTO folders (id, name, color, icon, sort_order) VALUES (7, 'Büro', '#ffffff', 'folder', 0)`,
+		`INSERT INTO device_folder_assignments (device_id, folder_id) VALUES ('dev', 7)`,
+		`INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('folder_7', 'Büro', '', '', 'manual', '')`,
+		`INSERT INTO device_group_user_access (device_group_id, user_id) SELECT id, 40 FROM device_groups WHERE guid = 'folder_7'`,
+	} {
+		if _, err := db.Exec(ctx, query); err != nil {
+			t.Fatalf("%s: %v", query, err)
+		}
+	}
 	rec := &recorder{alert: "ops@example.com"}
 	s := New(Options{DB: db, Mail: rec, Logger: &lines{}})
-	err := s.HandleEvent(context.Background(), goapi.NewObject("id", "1", "device_id", "dev"))
-	if !errors.Is(err, devicegroups.ErrAssignmentsNotIterable) || len(rec.calls) != 0 {
-		t.Errorf("error %v, calls %v", err, rec.calls)
+	if err := s.HandleEvent(ctx, goapi.NewObject("id", "1", "device_id", "dev")); err != nil {
+		t.Fatal(err)
+	}
+	want := []any{
+		[]any{"has", "help_request", "1", "alice@example.org"},
+		[]any{"send", map[string]any{
+			"to":          "alice@example.org",
+			"helpRequest": map[string]any{"device_id": "dev", "hostname": "dev", "message": ""},
+			"folderName":  "Büro",
+		}},
+		[]any{"log", "help_request", "1", "alice@example.org"},
+	}
+	if !reflect.DeepEqual(rec.calls, want) {
+		t.Errorf("calls %v", rec.calls)
 	}
 }
 

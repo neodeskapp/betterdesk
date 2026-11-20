@@ -141,13 +141,13 @@ type Service struct {
 // New returns a Service. It starts nothing.
 func New(opts Options) *Service {
 	if opts.FolderName == nil {
-		opts.FolderName = func(_ context.Context, id string) (string, error) {
-			return devicegroups.ResolveFolderNameForDevice(id)
+		opts.FolderName = func(ctx context.Context, id string) (string, error) {
+			return devicegroups.ResolveFolderNameForDevice(ctx, opts.DB, id)
 		}
 	}
 	if opts.OperatorEmails == nil {
-		opts.OperatorEmails = func(_ context.Context, id string) ([]devicegroups.OperatorEmail, error) {
-			return devicegroups.ResolveOperatorEmailsForDevice(id)
+		opts.OperatorEmails = func(ctx context.Context, id string) ([]devicegroups.OperatorEmail, error) {
+			return devicegroups.ResolveOperatorEmailsForDevice(ctx, opts.DB, id)
 		}
 	}
 	return &Service{opts: opts}

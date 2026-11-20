@@ -577,27 +577,6 @@ func withoutBanned(t *testing.T, data any, got, node string, banned map[string]b
 	return ""
 }
 
-func TestOperatorLookupsFailAsTheyAlwaysDid(t *testing.T) {
-	if names, err := ResolveOperatorUsernamesForDevice("  "); err != nil || len(names) != 0 {
-		t.Fatalf("an empty id: %v, %v", names, err)
-	}
-	if name, err := ResolveFolderNameForDevice(""); err != nil || name != "" {
-		t.Fatalf("an empty id: %q, %v", name, err)
-	}
-	if emails, err := ResolveOperatorEmailsForDevice(""); err != nil || len(emails) != 0 {
-		t.Fatalf("an empty id: %v, %v", emails, err)
-	}
-	if _, err := ResolveOperatorUsernamesForDevice("dev-1"); err != ErrAssignmentsNotIterable {
-		t.Fatalf("a device id: %v", err)
-	}
-	if _, err := ResolveOperatorEmailsForDevice("dev-1"); err != ErrAssignmentsNotIterable {
-		t.Fatalf("a device id: %v", err)
-	}
-	if _, err := ResolveFolderNameForDevice("dev-1"); err != ErrAssignmentsNotIterable {
-		t.Fatalf("a device id: %v", err)
-	}
-}
-
 // halfCharacter matches half of a character outside the Basic
 // Multilingual Plane as JSON.stringify writes it. Node leaves one where a
 // tag is cut to 50 characters in the middle of such a character; the fix

@@ -177,13 +177,7 @@ func (s *Service) AllFolderAssignments(ctx context.Context) (map[string]any, err
 	}
 	out := make(map[string]any, len(rows))
 	for _, row := range rows {
-		raw := Plain(row.Get("folder_id"))
-		folder := valueOf(raw).ToNumber()
-		if isFinite(folder) {
-			out[jsText(row.Get("device_id"))] = folder
-		} else {
-			out[jsText(row.Get("device_id"))] = raw
-		}
+		out[jsText(row.Get("device_id"))] = folderValue(row.Get("folder_id"))
 	}
 	return out, nil
 }
