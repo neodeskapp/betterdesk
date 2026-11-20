@@ -20,6 +20,9 @@ type grants struct {
 	meshShare  any
 	hasShare   bool
 	guestToken string
+	// session says the account's session let the request through, so the
+	// account's device scope decides too.
+	session bool
 }
 
 type grantsKey struct{}
@@ -73,7 +76,8 @@ type guestDenied struct {
 //   - else the remote client's guard with device.connect.
 //
 // A guest token (query or cookie) or share token that cannot be turned
-// into text is refused with 400.
+// into text is refused with 400. Where a session lets the request
+// through, the viewer checks the account's device scope as well.
 func (h *handlers) requireRemoteAccess(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		deviceID := r.PathValue("deviceId")
@@ -82,17 +86,14 @@ func (h *handlers) requireRemoteAccess(next http.Handler) http.Handler {
 		if target {
 			permission = "remote_target.connect"
 		}
-		if kit.UserID(r) != 0 && kit.HasPermission(r, permission) {
-			h.d.RequireRdClientAuth(permission)(next).ServeHTTP(w, r)
-			return
-		}
-		if target {
+		g := &grants{}
+		r = r.WithContext(context.WithValue(r.Context(), grantsKey{}, g))
+		if (kit.UserID(r) != 0 && kit.HasPermission(r, permission)) || target {
+			g.session = true
 			h.d.RequireRdClientAuth(permission)(next).ServeHTTP(w, r)
 			return
 		}
 
-		g := &grants{}
-		r = r.WithContext(context.WithValue(r.Context(), grantsKey{}, g))
 		guests := h.d.GuestAccess
 		queryToken, err := guests.TokenFromQuery(r)
 		if err != nil {
@@ -148,6 +149,7 @@ func (h *handlers) requireRemoteAccess(next http.Handler) http.Handler {
 				}
 			}
 		}
+		g.session = true
 		h.d.RequireRdClientAuth("device.connect")(next).ServeHTTP(w, r)
 	})
 }

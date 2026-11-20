@@ -99,6 +99,20 @@ func (h *handlers) viewer(w http.ResponseWriter, r *http.Request) {
 		kit.JSON(w, r, http.StatusNotFound, viewerFailure{Code: "not_found", Error: kit.T(r, "errors.not_found_message", nil)})
 		return
 	}
+	// An account's session reaches only the devices and targets of its
+	// device scope, as the viewer's socket does; a device the console does
+	// not know passes only without a limit
+	if g.session {
+		visible, err := h.src.canAccess(ctx, kit.User(r), device)
+		if err != nil {
+			h.scopeFailed(w, r, err)
+			return
+		}
+		if !visible {
+			kit.JSON(w, r, http.StatusNotFound, viewerFailure{Code: "not_found", Error: kit.T(r, "errors.not_found_message", nil)})
+			return
+		}
+	}
 
 	caps := capabilities{GuestPeerIDs: []any{}}
 	var peer *goapi.Object
