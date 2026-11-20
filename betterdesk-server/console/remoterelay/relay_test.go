@@ -86,9 +86,9 @@ func TestStringifyDepthIsTheRecordedOne(t *testing.T) {
 		t.Errorf("a deep input: %v, want tooDeep", v)
 	}
 	input := func(n int) string {
-		return `{"type":"input","a":` + strings.Repeat("[", n-1) + strings.Repeat("]", n-1) + `}`
+		return `{"type":"input","event_type":"mouse_move","a":` + strings.Repeat("[", n-1) + strings.Repeat("]", n-1) + `}`
 	}
-	if v, out := viewerMessage(input(stringifyDepth)); v != forward || out != `{"type":"unknown","a":`+strings.Repeat("[", stringifyDepth-1)+strings.Repeat("]", stringifyDepth-1)+`}` {
+	if v, out := viewerMessage(input(stringifyDepth)); v != forward || out != `{"type":"mouse_move","a":`+strings.Repeat("[", stringifyDepth-1)+strings.Repeat("]", stringifyDepth-1)+`}` {
 		t.Errorf("an input at the limit: %v", v)
 	}
 	if v, _ := viewerMessage(input(stringifyDepth + 1)); v != tooDeep {

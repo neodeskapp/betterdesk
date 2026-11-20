@@ -49,32 +49,6 @@
         "y": 20
        },
        "order": "buttons[] type x y"
-      },
-      {
-       "json": {
-        "key": "a",
-        "kind": "key",
-        "type": "key"
-       },
-       "order": "key kind type"
-      },
-      {
-       "json": {
-        "type": "unknown"
-       },
-       "order": "type"
-      },
-      {
-       "json": {
-        "type": "click"
-       },
-       "order": "type"
-      },
-      {
-       "json": {
-        "type": 5
-       },
-       "order": "type"
       }
      ]
     }

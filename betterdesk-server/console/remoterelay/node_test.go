@@ -529,6 +529,18 @@ var fixes = []fix{
 	{bug: "RM8", scenario: "streaming", step: 46, result: `[]`},
 	{bug: "RM8", scenario: "viewer first", step: 29, result: `null`},
 	{bug: "RM8", scenario: "viewer first", step: 30, result: `[]`},
+	// Input reaches the agent only as one of its input kinds: these name
+	// "key", none ("unknown"), 7, an object, false, "\ud800", "after_stop"
+	// and "to_a2"
+	{bug: "RM5", scenario: "streaming", step: 21, events: `[]`},
+	{bug: "RM5", scenario: "streaming", step: 22, events: `[]`},
+	{bug: "RM5", scenario: "streaming", step: 23, events: `[]`},
+	{bug: "RM5", scenario: "streaming", step: 24, events: `[]`},
+	{bug: "RM5", scenario: "streaming", step: 25, events: `[]`},
+	{bug: "RM5", scenario: "streaming", step: 26, events: `[]`},
+	{bug: "RM5", scenario: "streaming", step: 27, events: `[]`},
+	{bug: "RM5", scenario: "streaming", step: 36, events: `[]`},
+	{bug: "RM5", scenario: "viewer first", step: 9, events: `[]`},
 }
 
 // fixFor is the fix of a step, ok false for a step no fix changed.

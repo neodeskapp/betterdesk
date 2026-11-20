@@ -41,10 +41,19 @@ func agentMessage(text string) (verdict, string) {
 	return forward, msg.value.stringify()
 }
 
+// inputKinds are the kinds of input the agent handles (the BetterDesk
+// agent's InputEvent: mouse and key events).
+var inputKinds = map[string]bool{
+	"mouse_move": true, "mouse_down": true, "mouse_up": true, "wheel": true,
+	"key_down": true, "key_up": true, "key_press": true,
+}
+
 // viewerMessage decides what happens to a viewer's text message: type
-// stop stops the stream; type input goes to the agent as the message with
-// its type replaced by event_type, else kind, else "unknown", and without
-// event_type; everything else is dropped. The JSON null ended Node.
+// stop stops the stream for that viewer; type input whose event_type,
+// else kind, is one of the inputKinds goes to the agent as the message
+// with its type replaced by that kind and without event_type; everything
+// else is dropped, also input that would name the relay's own start or
+// stop. The JSON null ended Node.
 func viewerMessage(text string) (verdict, string) {
 	msg, ok := readMessage(text)
 	if !ok {
@@ -61,8 +70,11 @@ func viewerMessage(text string) (verdict, string) {
 			return tooDeep, ""
 		}
 		v := msg.value
-		event := v.withType(v.get("event_type").or(v.get("kind")).or(jsValue{kind: jsString, text: "unknown"}))
-		return forward, event.stringify()
+		kind := v.get("event_type").or(v.get("kind"))
+		if kind.kind != jsString || !inputKinds[kind.text] {
+			return ignore, ""
+		}
+		return forward, v.withType(kind).stringify()
 	}
 	return ignore, ""
 }
