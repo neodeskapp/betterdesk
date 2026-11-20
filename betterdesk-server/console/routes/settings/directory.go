@@ -2,7 +2,10 @@ package settings
 
 import (
 	"net/http"
+	"reflect"
+	"strings"
 
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/kit"
@@ -53,8 +56,45 @@ func (g *general) getLDAP(w http.ResponseWriter, r *http.Request) {
 	passOn(w, r, g.d.GoAPI.GetLDAPConfig(r.Context()), "Failed to load LDAP config")
 }
 
-// saveLDAP answers PUT /api/settings/ldap.
+// The settings the server keeps for LDAP and OIDC, by their names in JSON.
+var (
+	ldapFields = jsonFields(auth.LDAPConfig{})
+	oidcFields = jsonFields(auth.OIDCConfig{})
+)
+
+// jsonFields are the JSON names of the fields of a struct.
+func jsonFields(v any) []string {
+	var names []string
+	t := reflect.TypeOf(v)
+	for i := 0; i < t.NumField(); i++ {
+		if name, _, _ := strings.Cut(t.Field(i).Tag.Get("json"), ","); name != "" && name != "-" {
+			names = append(names, name)
+		}
+	}
+	return names
+}
+
+// refuseNothingToSave answers 400 for a body that is no object or has
+// none of fields, which a route that saves settings would otherwise take
+// as "set the defaults". It reports whether it answered.
+func refuseNothingToSave(w http.ResponseWriter, r *http.Request, body any, fields ...string) bool {
+	if obj, ok := body.(*goapi.Object); ok {
+		for _, field := range fields {
+			if obj.Has(field) {
+				return false
+			}
+		}
+	}
+	kit.Fail(w, r, http.StatusBadRequest, "No settings to save")
+	return true
+}
+
+// saveLDAP answers PUT /api/settings/ldap; a body with none of the
+// settings is refused.
 func (g *general) saveLDAP(w http.ResponseWriter, r *http.Request) {
+	if refuseNothingToSave(w, r, jsreq.Body(r), ldapFields...) {
+		return
+	}
 	result := g.d.GoAPI.SaveLDAPConfig(r.Context(), jsreq.Body(r))
 	g.saved(w, r, result, "Failed to save LDAP config", "ldap_config_updated", "Updated LDAP configuration", "Save LDAP config error")
 }
@@ -71,9 +111,13 @@ func (g *general) getOIDC(w http.ResponseWriter, r *http.Request) {
 }
 
 // saveOIDC answers PUT /api/settings/oidc. Switched on, single sign-on
-// needs a Redirect URL with the path of the callback.
+// needs a Redirect URL with the path of the callback; a body with none of
+// the settings is refused.
 func (g *general) saveOIDC(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
+	if refuseNothingToSave(w, r, body, oidcFields...) {
+		return
+	}
 	if goapi.Truthy(jsreq.Prop(body, "enabled")) {
 		redirect, _ := jsreq.Prop(body, "redirect_url").(string)
 		if !authn.IsValidOIDCRedirectURL(redirect) {

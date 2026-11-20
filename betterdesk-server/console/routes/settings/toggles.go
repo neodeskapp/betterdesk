@@ -38,8 +38,12 @@ func (g *general) getDeviceScope(w http.ResponseWriter, r *http.Request) {
 }
 
 // setDeviceScope answers POST /api/settings/device-scope with {mode}: the
-// mode in any letter case, "open" when it is missing or empty.
+// mode in any letter case, "open" when it is empty. A body without mode
+// is refused.
 func (g *general) setDeviceScope(w http.ResponseWriter, r *http.Request) {
+	if refuseNothingToSave(w, r, jsreq.Body(r), "mode") {
+		return
+	}
 	mode := jsbind.ToLower(jsreq.StringOr(jsreq.Prop(jsreq.Body(r), "mode"), "open"))
 	if mode != "open" && mode != "restricted" {
 		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "settings.device_scope_invalid", nil))
@@ -359,9 +363,13 @@ func (g *general) getClientSessions(w http.ResponseWriter, r *http.Request) {
 // expiry is also written into the console's .env when that file exists
 // (a .env that cannot be written is only logged), and the next client
 // token lasts that long. When the server refuses a value, those it took
-// are put back as they were, so a failed save changes nothing.
+// are put back as they were, so a failed save changes nothing. A body with
+// none of the values is refused.
 func (g *general) setClientSessions(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
+	if refuseNothingToSave(w, r, body, "expiry_days", "sliding", "max_days") {
+		return
+	}
 	expiryDays := clampSessionDays(jsreq.Prop(body, "expiry_days"), 7)
 	maxDays := clampSessionDays(jsreq.Prop(body, "max_days"), 30)
 	sliding := jsreq.Prop(body, "sliding") != false

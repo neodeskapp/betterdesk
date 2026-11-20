@@ -127,6 +127,10 @@ func TestSaveClockSettingsRefusals(t *testing.T) {
 		`{"billing_timezone":"Mars/Base"}`:    `{"success":false,"error":"invalid_billing_timezone"}`,
 		`{"max_skew_ms":{"toString":1}}`:      `{"success":false,"error":"Cannot convert object to primitive value"}`,
 		`{"billing_timezone":{"toString":1}}`: `{"success":false,"error":"Cannot convert object to primitive value"}`,
+		// A body with none of the settings would save the defaults (BUGS C6)
+		`{}`:          `{"success":false,"error":"No settings to save"}`,
+		`{"other":1}`: `{"success":false,"error":"No settings to save"}`,
+		`["UTC"]`:     `{"success":false,"error":"No settings to save"}`,
 	} {
 		rec, _ := w.Do(put("/api/panel/billing/clock/settings", body, account(1, "admin")), nil)
 		status := 400
@@ -177,7 +181,7 @@ func TestSaveClockSettingsInDocker(t *testing.T) {
 		t.Fatal("a change without rollback was taken")
 	}
 	refused := &proxytest.Answer{Status: 200, Type: "application/json", Body: `{"error":"max_skew_ms must be between 1 and 600000"}`}
-	rec, _ = w.Do(put("/api/panel/billing/clock/settings", `{}`, admin), refused)
+	rec, _ = w.Do(put("/api/panel/billing/clock/settings", `{"trust_os_ntp":true}`, admin), refused)
 	if rec.Code != 500 || rec.Body.String() != `{"success":false,"error":"max_skew_ms must be between 1 and 600000"}` {
 		t.Errorf("an answer with an error: %d %s", rec.Code, rec.Body)
 	}
@@ -219,6 +223,18 @@ func TestEmailConfig(t *testing.T) {
 	rec, _ = w.Do(put("/api/panel/commercialization/email-config", `{}`, account(5, "operator")), nil)
 	if rec.Code != 403 {
 		t.Errorf("operator saves: %d", rec.Code)
+	}
+
+	// A body with none of the switches would switch every one on (BUGS C6)
+	for _, body := range []string{`{}`, `{"other":false}`, `[false,false]`} {
+		rec, _ = w.Do(put("/api/panel/commercialization/email-config", body, admin), nil)
+		if rec.Code != 400 || rec.Body.String() != `{"success":false,"error":"No settings to save"}` {
+			t.Errorf("save %s: %d %s", body, rec.Code, rec.Body)
+		}
+	}
+	rec, _ = w.Do(proxytest.Request{Path: "/api/panel/commercialization/email-config", Session: admin}, nil)
+	if rec.Body.String() != want {
+		t.Errorf("read after the refused saves: %s", rec.Body)
 	}
 }
 

@@ -103,14 +103,19 @@ func validWallpaper(v any) bool {
 }
 
 // save answers POST /api/desktop/layout with the body {widgets,
-// wallpaper}. Without widgets the stored layout stays, as it does for a
-// body that is no object; without wallpaper the stored one stays, and a
-// wallpaper of null or "" takes it away.
+// wallpaper}. Without widgets the stored layout stays; without wallpaper
+// the stored one stays, and a wallpaper of null or "" takes it away. A
+// body with neither, or one that is no object, is refused with 400 and
+// changes nothing.
 func (h *handlers) save(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
 	object, _ := body.(*goapi.Object)
 	widgets, wallpaper := object.Get("widgets"), object.Get("wallpaper")
 	hasWidgets := object.Has("widgets")
+	if !hasWidgets && !object.Has("wallpaper") {
+		kit.Fail(w, r, http.StatusBadRequest, "No settings to save")
+		return
+	}
 	if hasWidgets && !validWidgets(widgets) {
 		kit.Fail(w, r, http.StatusBadRequest, "Invalid widget layout")
 		return

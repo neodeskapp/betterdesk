@@ -116,9 +116,13 @@ func (g *general) getPublicEndpoints(w http.ResponseWriter, r *http.Request) {
 
 // setPublicEndpoints answers PUT /api/settings/public-endpoints with
 // {public_server_id, public_relay_server, public_api_url}: saved in the
-// data folder and in the console's .env.
+// data folder and in the console's .env. A body with none of them is
+// refused.
 func (g *general) setPublicEndpoints(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
+	if refuseNothingToSave(w, r, body, "public_server_id", "public_relay_server", "public_api_url") {
+		return
+	}
 	saved, err := g.d.ServerInfo.SavePublicEndpointSettings(serverinfo.PublicEndpointsInput{
 		PublicServerID:    serverinfo.Field(body, "public_server_id"),
 		PublicRelayServer: serverinfo.Field(body, "public_relay_server"),

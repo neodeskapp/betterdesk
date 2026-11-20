@@ -142,9 +142,14 @@ func init() {
 			Name: "device-scope-list", Method: "POST", Path: "/api/settings/device-scope",
 			Body: map[string]any{"mode": []any{"restricted"}}, Roles: admin,
 		},
+		// a body without the mode is refused (BUGS C6)
+		contract.Case{
+			Name: "device-scope-empty", Method: "POST", Path: "/api/settings/device-scope",
+			Body: map[string]any{}, Roles: admin,
+		},
 		contract.Case{
 			Name: "device-scope-default", Method: "POST", Path: "/api/settings/device-scope",
-			Body: map[string]any{}, Roles: writers,
+			Body: map[string]any{"mode": "open"}, Roles: writers,
 		},
 		contract.Case{Name: "device-scope-restored", Path: "/api/settings/device-scope", Roles: admin},
 
@@ -240,6 +245,10 @@ func init() {
 			Body: map[string]any{"host": "127.0.0.1", "port": 1, "conn_timeout_sec": 2}, Roles: admin,
 		},
 		contract.Case{
+			Name: "ldap-empty", Method: "PUT", Path: "/api/settings/ldap",
+			Body: map[string]any{}, Roles: admin,
+		},
+		contract.Case{
 			Name: "ldap-restore", Method: "PUT", Path: "/api/settings/ldap",
 			Body:  map[string]any{"enabled": false, "host": "", "port": 0, "bind_dn": "", "base_dn": ""},
 			Roles: writers,
@@ -260,8 +269,12 @@ func init() {
 		},
 		contract.Case{Name: "client-sessions-after-odd", Path: "/api/settings/client-sessions", Roles: admin},
 		contract.Case{
+			Name: "client-sessions-empty", Method: "PUT", Path: "/api/settings/client-sessions",
+			Body: map[string]any{}, Roles: admin,
+		},
+		contract.Case{
 			Name: "client-sessions-restore", Method: "PUT", Path: "/api/settings/client-sessions",
-			Body: map[string]any{}, Roles: writers,
+			Body: map[string]any{"expiry_days": 7, "sliding": true, "max_days": 30}, Roles: writers,
 		},
 
 		// Single sign-on (OIDC): the server masks the client secret
@@ -301,6 +314,10 @@ func init() {
 		contract.Case{
 			Name: "oidc-test-nothing-listens", Method: "POST", Path: "/api/settings/oidc/test",
 			Body: map[string]any{"issuer_url": "http://127.0.0.1:1"}, Roles: admin,
+		},
+		contract.Case{
+			Name: "oidc-empty", Method: "PUT", Path: "/api/settings/oidc",
+			Body: map[string]any{}, Roles: admin,
 		},
 		contract.Case{
 			Name: "oidc-restore", Method: "PUT", Path: "/api/settings/oidc",
@@ -418,6 +435,10 @@ func init() {
 		contract.Case{
 			Name: "public-endpoints-invalid-host", Method: "PUT", Path: "/api/settings/public-endpoints",
 			Body: map[string]any{"public_server_id": "bad host!"}, Roles: contract.Roles("signed-out", "operator", "server_admin", "admin"),
+		},
+		contract.Case{
+			Name: "public-endpoints-empty", Method: "PUT", Path: "/api/settings/public-endpoints",
+			Body: map[string]any{}, Roles: admin,
 		},
 		contract.Case{
 			Name: "public-endpoints-line-break", Method: "PUT", Path: "/api/settings/public-endpoints",

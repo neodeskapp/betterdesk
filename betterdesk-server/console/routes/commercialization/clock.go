@@ -61,16 +61,20 @@ type savedClock struct {
 // written. Where the server takes them at once (dockerMode) there is no
 // restart, and a failed restart of an earlier clock save is dismissed.
 //
-// A refused value answers 400 with invalid_ntp_servers, invalid_max_skew
+// A body with none of the settings answers 400 No settings to save; a
+// refused value answers 400 with invalid_ntp_servers, invalid_max_skew
 // or invalid_billing_timezone; anything else that fails answers 500 with
 // its message.
 func (h *handlers) saveClockSettings(w http.ResponseWriter, r *http.Request) {
+	body := jsreq.Body(r)
+	if refuseNothingToSave(w, r, body, "ntp_servers", "max_skew_ms", "require_synced_clock", "trust_os_ntp", "billing_timezone") {
+		return
+	}
 	previous, err := h.clock.GetRuntimeClockSettings(r.Context())
 	if err != nil {
 		h.failSave(w, r, err)
 		return
 	}
-	body := jsreq.Body(r)
 	var result billingclock.SaveResult
 	var pending *restart.Public
 	if h.clock.IsDockerSplitDeployment() {

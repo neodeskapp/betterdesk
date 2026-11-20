@@ -3,6 +3,7 @@ package commercialization
 import (
 	"net/http"
 
+	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/helpmail"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
@@ -27,9 +28,13 @@ func (h *handlers) emailConfig(w http.ResponseWriter, r *http.Request) {
 // saveEmailConfig answers PUT /api/panel/commercialization/email-config
 // with the body {help_requests_enabled, notify_assigned_operators,
 // fallback_alert_email, include_folder_in_subject}: each switch is on
-// unless the body has it as false.
+// unless the body has it as false. A body with none of them is refused.
 func (h *handlers) saveEmailConfig(w http.ResponseWriter, r *http.Request) {
-	config := helpmail.ConfigFrom(jsreq.Body(r))
+	body := jsreq.Body(r)
+	if refuseNothingToSave(w, r, body, "help_requests_enabled", "notify_assigned_operators", "fallback_alert_email", "include_folder_in_subject") {
+		return
+	}
+	config := helpmail.ConfigFrom(body)
 	if err := helpmail.SaveConfig(r.Context(), h.d.Store, config); err != nil {
 		fail(w, r, http.StatusInternalServerError, err)
 		return
@@ -37,6 +42,21 @@ func (h *handlers) saveEmailConfig(w http.ResponseWriter, r *http.Request) {
 	// A failure to write the audit entry does not change the answer
 	_ = h.d.LogAction(r, "commercialization_email_config_updated", "Updated commercialization email notifications")
 	kit.JSON(w, r, http.StatusOK, emailConfigAnswer{Success: true, Config: config})
+}
+
+// refuseNothingToSave answers 400 for a body that is no object or has
+// none of fields, which a save would otherwise take as "set the
+// defaults". It reports whether it answered.
+func refuseNothingToSave(w http.ResponseWriter, r *http.Request, body any, fields ...string) bool {
+	if obj, ok := body.(*goapi.Object); ok {
+		for _, field := range fields {
+			if obj.Has(field) {
+				return false
+			}
+		}
+	}
+	kit.Fail(w, r, http.StatusBadRequest, "No settings to save")
+	return true
 }
 
 // smtpStatus answers GET /api/panel/commercialization/smtp-status: the

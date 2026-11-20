@@ -117,6 +117,8 @@ func init() {
 		clockSave("clock-save-all-bad", map[string]any{
 			"ntp_servers": "bad host", "max_skew_ms": 0.5, "require_synced_clock": "no", "billing_timezone": "Nowhere/Town",
 		}),
+		// A body with none of the settings would save the defaults
+		clockSave("clock-save-empty", map[string]any{}),
 		contract.Case{
 			Name: "clock-save-without-csrf-token", Method: "PUT", Path: "/api/panel/billing/clock/settings",
 			Body: map[string]any{"ntp_servers": "pool.ntp.org"}, NoCSRF: true, Roles: admin,
@@ -395,8 +397,16 @@ func init() {
 			RawBody: "help_requests_enabled=false", ContentType: "application/x-www-form-urlencoded", Roles: admin,
 		},
 		contract.Case{
+			Name: "email-config-save-empty", Method: "PUT", Path: "/api/panel/commercialization/email-config",
+			Body: map[string]any{}, Roles: admin,
+		},
+		contract.Case{
 			Name: "cleanup-email-config", Method: "PUT", Path: "/api/panel/commercialization/email-config",
-			Body: map[string]any{}, As: "admin",
+			Body: map[string]any{
+				"help_requests_enabled": true, "notify_assigned_operators": true, "fallback_alert_email": true,
+				"include_folder_in_subject": true,
+			},
+			As: "admin",
 		},
 		contract.Case{Name: "email-config-after-cleanup", Path: "/api/panel/commercialization/email-config", Roles: few},
 

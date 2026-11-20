@@ -43,7 +43,10 @@ func TestDeviceScope(t *testing.T) {
 			// JavaScript lowers a dotted capital I to an i and a dot
 			{`{"mode":"RESTRİCTED"}`, `400 {"success":false,"error":"settings.device_scope_invalid"}`, "restricted"},
 			{`{"mode":5}`, `400 {"success":false,"error":"settings.device_scope_invalid"}`, "restricted"},
-			{`{}`, `200 {"success":true,"data":{"mode":"open"}}`, "open"},
+			// a body without the mode is refused, not read as open (BUGS C6)
+			{`{}`, `400 {"success":false,"error":"No settings to save"}`, "restricted"},
+			{`["open"]`, `400 {"success":false,"error":"No settings to save"}`, "restricted"},
+			{`{"mode":["open"]}`, `200 {"success":true,"data":{"mode":"open"}}`, "open"},
 			{`{"mode":["restricted"]}`, `200 {"success":true,"data":{"mode":"restricted"}}`, "restricted"},
 			{`{"mode":""}`, `200 {"success":true,"data":{"mode":"open"}}`, "open"},
 		} {
@@ -288,6 +291,15 @@ func TestDirectoryAndSingleSignOn(t *testing.T) {
 	if row := lastAudit(t, s.World); row != "oidc_config_updated|Updated OIDC configuration|127.0.0.1|1" {
 		t.Errorf("audit %s", row)
 	}
+	// a body with none of the settings is refused, not stored as an empty
+	// configuration (BUGS C6)
+	for _, path := range []string{"/api/settings/ldap", "/api/settings/oidc"} {
+		for _, body := range []string{`{}`, `{"other":1}`, `[]`} {
+			if res := admin.Do("PUT", path, body); res.Status != http.StatusBadRequest || res.Body != `{"success":false,"error":"No settings to save"}` || len(s.API.Calls()) != 0 {
+				t.Errorf("%s %s: %d %s", path, body, res.Status, res.Body)
+			}
+		}
+	}
 }
 
 func TestClientSessions(t *testing.T) {
@@ -355,7 +367,7 @@ func TestClientSessions(t *testing.T) {
 	if err := os.Mkdir(envPath, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if res := admin.Do("PUT", "/api/settings/client-sessions", `{}`); res.Body != `{"success":true}` {
+	if res := admin.Do("PUT", "/api/settings/client-sessions", `{"sliding":true}`); res.Body != `{"success":true}` {
 		t.Errorf("save with a .env that is a folder: %s", res.Body)
 	}
 	if calls := s.API.Calls(); len(calls) != 6 || calls[4] != `PUT /api/config/client_session_sliding {"value":"true"}` {
@@ -366,7 +378,7 @@ func TestClientSessions(t *testing.T) {
 	s.API.On("GET /api/config/client_session_expiry_days", http.StatusOK, `{"value":"30"}`)
 	s.API.On("PUT /api/config/client_session_sliding", http.StatusInternalServerError, `{"error":"Go server down"}`)
 	s.API.Calls()
-	res = admin.Do("PUT", "/api/settings/client-sessions", `{}`)
+	res = admin.Do("PUT", "/api/settings/client-sessions", `{"max_days":30}`)
 	if res.Status != http.StatusInternalServerError || res.Body != `{"success":false,"error":"Go server down"}` {
 		t.Errorf("refused: %d %s", res.Status, res.Body)
 	}
@@ -380,6 +392,11 @@ func TestClientSessions(t *testing.T) {
 	}
 	if calls := s.API.Calls(); !reflect.DeepEqual(calls, want) {
 		t.Errorf("calls of a refused save: %v", calls)
+	}
+	// a body with none of the values is refused, not saved as the
+	// defaults (BUGS C6)
+	if res := admin.Do("PUT", "/api/settings/client-sessions", `{}`); res.Status != http.StatusBadRequest || res.Body != `{"success":false,"error":"No settings to save"}` || len(s.API.Calls()) != 0 {
+		t.Errorf("empty body: %d %s", res.Status, res.Body)
 	}
 }
 
@@ -415,6 +432,8 @@ func TestConnectionModeAndPublicEndpoints(t *testing.T) {
 		{`{"public_server_id":"bad host!"}`, `{"success":false,"error":"settings.public_endpoints_invalid_host"}`},
 		{`{"public_relay_server":"relay.example.org\nX=1"}`, `{"success":false,"error":"settings.public_endpoints_invalid_host"}`},
 		{`{"public_api_url":"ftp://api.example.org"}`, `{"success":false,"error":"settings.public_endpoints_invalid_api_url"}`},
+		// a body with none of the addresses is refused (BUGS C6)
+		{`{}`, `{"success":false,"error":"No settings to save"}`},
 	} {
 		if res := admin.Do("PUT", "/api/settings/public-endpoints", c.body); res.Status != http.StatusBadRequest || res.Body != c.want {
 			t.Errorf("%s: %d %s", c.body, res.Status, res.Body)

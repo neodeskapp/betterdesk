@@ -108,8 +108,8 @@ func TestSaveAndLoad(t *testing.T) {
 		if got := admin.Do("GET", "/api/desktop/layout", ""); got.Body != `{"success":true,"data":{"widgets":[{"id":"w2","type":"note","x":0,"y":0,"w":1,"h":1}],"wallpaper":"solid:#1a2B3c"}}` {
 			t.Errorf("after widgets alone: %s", got.Body)
 		}
-		// A list as body has no widgets and no wallpaper
-		if got := admin.Do("POST", "/api/desktop/layout", `[{"id":"w3","type":"note","x":0,"y":0,"w":1,"h":1}]`); got.Status != 200 {
+		// A list as body has no widgets and no wallpaper, and is refused
+		if got := admin.Do("POST", "/api/desktop/layout", `[{"id":"w3","type":"note","x":0,"y":0,"w":1,"h":1}]`); got.Status != 400 {
 			t.Fatalf("save a list: %d %s", got.Status, got.Body)
 		}
 		if got := setting(t, w, "desktop_layout_1"); got != `[{"id":"w2","type":"note","x":0,"y":0,"w":1,"h":1}]` {
@@ -387,9 +387,10 @@ func TestWallpaperNullClearsIt(t *testing.T) {
 	})
 }
 
-// TestWallpaperAloneKeepsTheLayout: a save without widgets, and a body
-// that is no object, leave the stored layout as it is, in the database
-// and in the fallback file.
+// TestWallpaperAloneKeepsTheLayout: a save without widgets leaves the
+// stored layout as it is, in the database and in the fallback file. A
+// body with neither widgets nor wallpaper, or one that is no object, is
+// refused and changes nothing (BUGS C6).
 func TestWallpaperAloneKeepsTheLayout(t *testing.T) {
 	widgets := `[{"id":"w","type":"clock","x":0,"y":0,"w":1,"h":1}]`
 	eachDB(t, func(t *testing.T, w *routetest.World) {
@@ -397,8 +398,17 @@ func TestWallpaperAloneKeepsTheLayout(t *testing.T) {
 		if got := admin.Do("POST", "/api/desktop/layout", `{"widgets":`+widgets+`}`); got.Status != 200 {
 			t.Fatal(got.Body)
 		}
-		for _, body := range []string{`{"wallpaper":"solid:#1a2B3c"}`, `{}`, `[{"id":"x","type":"note","x":0,"y":0,"w":1,"h":1}]`} {
-			if got := admin.Do("POST", "/api/desktop/layout", body); got.Status != 200 || got.Body != `{"success":true}` {
+		for body, want := range map[string]string{
+			`{"wallpaper":"solid:#1a2B3c"}`: `{"success":true}`,
+			`{}`:                            `{"success":false,"error":"No settings to save"}`,
+			`{"other":1}`:                   `{"success":false,"error":"No settings to save"}`,
+			`[{"id":"x","type":"note","x":0,"y":0,"w":1,"h":1}]`: `{"success":false,"error":"No settings to save"}`,
+		} {
+			status := 200
+			if strings.Contains(want, "false") {
+				status = 400
+			}
+			if got := admin.Do("POST", "/api/desktop/layout", body); got.Status != status || got.Body != want {
 				t.Fatalf("save %s: %d %s", body, got.Status, got.Body)
 			}
 			if got := setting(t, w, "desktop_layout_1"); got != widgets {
