@@ -18,7 +18,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/unitronix/betterdesk-server/console/authn"
+	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/unitronix/betterdesk-server/db"
 )
 
 type resetRow struct {
@@ -175,10 +177,118 @@ func describeRow(ctx context.Context, username, role, hash, oldHash, password st
 	return r
 }
 
+// serverStart is the users table a server start makes in an empty
+// database: the signal server's migration, then the console's (main.go
+// and startConsole in console_start.go).
+type serverStart struct {
+	// sqliteTable is the table's SQL on SQLite
+	sqliteTable string
+	// postgresColumns are its columns on PostgreSQL, in order; empty
+	// without a PostgreSQL to test on
+	postgresColumns []string
+}
+
+// startServerSchema migrates an empty database at dsn as a server start
+// does.
+func startServerSchema(t *testing.T, dsn string) {
+	t.Helper()
+	database, err := db.Open(dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	if err := database.Migrate(); err != nil {
+		t.Fatal(err)
+	}
+	var console *store.DB
+	if pg, ok := database.(*db.PostgresDB); ok {
+		console = store.OpenPostgres(pg.Pool())
+	} else if console, err = store.OpenSQLite(dsn); err != nil {
+		t.Fatal(err)
+	}
+	defer console.Close()
+	if err := console.Migrate(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func newServerStart(t *testing.T, pgDSN string) serverStart {
+	t.Helper()
+	file := filepath.Join(t.TempDir(), "start.sqlite3")
+	startServerSchema(t, file)
+	var s serverStart
+	sdb, err := sql.Open("sqlite", "file:"+file+"?mode=ro")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer sdb.Close()
+	if err := sdb.QueryRow("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'users'").Scan(&s.sqliteTable); err != nil {
+		t.Fatal(err)
+	}
+	if pgDSN != "" {
+		dsn, schema, drop := freshSchema(t, pgDSN, "bd_reset_start")
+		defer drop()
+		startServerSchema(t, dsn)
+		s.postgresColumns = postgresColumns(t, pgDSN, schema)
+	}
+	return s
+}
+
+// freshSchema makes an empty PostgreSQL schema and answers a DSN whose
+// search_path is it.
+func freshSchema(t *testing.T, dsn, prefix string) (string, string, func()) {
+	t.Helper()
+	ctx := context.Background()
+	cfg, err := pgx.ParseConfig(dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	admin := stdlib.OpenDB(*cfg)
+	schema := fmt.Sprintf("%s_%d", prefix, os.Getpid())
+	for _, statement := range []string{"DROP SCHEMA IF EXISTS " + schema + " CASCADE", "CREATE SCHEMA " + schema} {
+		if _, err := admin.ExecContext(ctx, statement); err != nil {
+			t.Fatal(err)
+		}
+	}
+	u, err := url.Parse(dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	q := u.Query()
+	q.Set("search_path", schema)
+	u.RawQuery = q.Encode()
+	return u.String(), schema, func() {
+		_, _ = admin.ExecContext(ctx, "DROP SCHEMA "+schema+" CASCADE")
+		_ = admin.Close()
+	}
+}
+
+func postgresColumns(t *testing.T, dsn, schema string) []string {
+	t.Helper()
+	cfg, err := pgx.ParseConfig(dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	admin := stdlib.OpenDB(*cfg)
+	defer admin.Close()
+	rows, err := admin.Query("SELECT column_name FROM information_schema.columns WHERE table_schema = $1 AND table_name = 'users' ORDER BY ordinal_position", schema)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+	var columns []string
+	for rows.Next() {
+		var name string
+		_ = rows.Scan(&name)
+		columns = append(columns, name)
+	}
+	return columns
+}
+
 // resetFix turns a recorded run into what reset-password answers since a
 // bug fix changed it on purpose, and names the bug ("" for a run no fix
 // changed).
-func resetFix(c *resetCase) string {
+func resetFix(c *resetCase, start serverStart) string {
 	// BN5: a password under 6 characters is refused before the database
 	// is chosen or opened: nothing is printed about it and nothing made
 	if password, ok := resetPasswordOf(c.Argv); ok && utf16Length(password) < 6 {
@@ -191,6 +301,17 @@ func resetFix(c *resetCase) string {
 		}
 		return "BN5"
 	}
+	// BN6: a database without a users table gets the one a server start
+	// makes, where the script made a table of its own
+	if (c.Setup == "none" || c.Setup == "emptyfile") && c.Status == 0 {
+		if c.Database == "postgres" {
+			c.State.Columns = start.postgresColumns
+		} else {
+			table := start.sqliteTable
+			c.State.Table = &table
+		}
+		return "BN6"
+	}
 	return ""
 }
 
@@ -200,9 +321,11 @@ func TestResetPasswordLikeNode(t *testing.T) {
 	if len(cases) < 100 {
 		t.Fatalf("only %d cases", len(cases))
 	}
+	dsn := os.Getenv(storetest.PostgresEnv)
+	start := newServerStart(t, dsn)
 	fixed := map[string]int{}
 	for i := range cases {
-		if bug := resetFix(&cases[i]); bug != "" {
+		if bug := resetFix(&cases[i], start); bug != "" {
 			fixed[bug]++
 		}
 	}
@@ -221,7 +344,6 @@ func TestResetPasswordLikeNode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	dsn := os.Getenv(storetest.PostgresEnv)
 	replayed := map[string]int{}
 	for _, c := range cases {
 		switch c.Database {
@@ -410,6 +532,62 @@ func replayPostgresReset(t *testing.T, c resetCase, dsn, pgUsers, oldHash string
 		_ = rows.Close()
 	}
 	compareReset(t, c, status, stdout, stderr, state, oldHash)
+}
+
+// runReset runs reset-password for the account admin with a password on
+// a database the environment names.
+func runReset(t *testing.T, env map[string]string, cwd string) (int, string) {
+	t.Helper()
+	var out bytes.Buffer
+	e := Env{Stdin: strings.NewReader("Neu-Passw0rd\n"), Stdout: &out, Stderr: &out, Getenv: func(k string) string { return env[k] }}
+	status := resetPassword([]string{"admin"}, e, resetOptions{random: rand.Reader, terminal: func(io.Reader) bool { return false },
+		exists: func(p string) bool { _, err := os.Stat(p); return err == nil }, cwd: cwd})
+	return status, out.String()
+}
+
+// Without a users table, reset-password sets the database up as a server
+// start does, so the account is in the table the server and the console
+// make themselves, with every column the console reads (BN6).
+func TestResetPasswordMakesTheUsersTableOfAServerStart(t *testing.T) {
+	dsn := os.Getenv(storetest.PostgresEnv)
+	start := newServerStart(t, dsn)
+	root := t.TempDir()
+	file := filepath.Join(root, "db_v2.sqlite3")
+	if status, out := runReset(t, map[string]string{"DB_PATH": file, "CONSOLE_DIR": root}, root); status != 0 {
+		t.Fatalf("SQLite: %d %q", status, out)
+	}
+	sdb, err := sql.Open("sqlite", "file:"+file+"?mode=ro")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var table string
+	if err := sdb.QueryRow("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'users'").Scan(&table); err != nil {
+		t.Fatal(err)
+	}
+	var language sql.NullString
+	if err := sdb.QueryRow("SELECT preferred_language FROM users WHERE username = 'admin' AND role = 'admin'").Scan(&language); err != nil {
+		t.Errorf("SQLite: the account has no preferred_language: %v", err)
+	}
+	_ = sdb.Close()
+	if table != start.sqliteTable {
+		t.Errorf("SQLite users table\n got %s\nwant %s", table, start.sqliteTable)
+	}
+	// The server starts on it as on its own
+	startServerSchema(t, file)
+
+	if dsn == "" {
+		t.Logf("no %s: PostgreSQL is left out", storetest.PostgresEnv)
+		return
+	}
+	pgDSN, schema, drop := freshSchema(t, dsn, "bd_reset_table")
+	defer drop()
+	if status, out := runReset(t, map[string]string{"DB_TYPE": "postgres", "DATABASE_URL": pgDSN, "CONSOLE_DIR": root}, root); status != 0 {
+		t.Fatalf("PostgreSQL: %d %q", status, out)
+	}
+	if got := postgresColumns(t, dsn, schema); strings.Join(got, ",") != strings.Join(start.postgresColumns, ",") {
+		t.Errorf("PostgreSQL users columns\n got %v\nwant %v", got, start.postgresColumns)
+	}
+	startServerSchema(t, pgDSN)
 }
 
 // A password that is too short is refused before anything is opened: the

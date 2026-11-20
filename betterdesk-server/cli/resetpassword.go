@@ -23,41 +23,11 @@ import (
 	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/unitronix/betterdesk-server/db"
 )
 
 const resetUsage = "Usage: betterdesk-server reset-password [username]   (the new password is the first line of standard input)"
-
-// The users table reset-password.js made when the database had none, as
-// it wrote it (SQLite keeps the text).
-const (
-	resetSQLiteUsers = `
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            role TEXT DEFAULT 'admin',
-            auth_provider TEXT NOT NULL DEFAULT 'local',
-            created_at TEXT DEFAULT (datetime('now')),
-            last_login TEXT,
-            totp_secret TEXT DEFAULT '',
-            totp_enabled INTEGER DEFAULT 0,
-            totp_recovery_codes TEXT DEFAULT NULL
-        )
-    `
-	resetPostgresUsers = `
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            role TEXT DEFAULT 'admin',
-            created_at TIMESTAMPTZ DEFAULT NOW(),
-            last_login TIMESTAMPTZ,
-            totp_secret TEXT DEFAULT NULL,
-            totp_enabled BOOLEAN DEFAULT FALSE,
-            totp_recovery_codes TEXT DEFAULT NULL
-        )
-    `
-)
 
 // resetOptions are what reset-password reads besides Env. Tests replace
 // them.
@@ -80,7 +50,8 @@ type resetOptions struct {
 // RUSTDESK_DIR or the data folder). It reads the console's env file for
 // what the environment does not set, as the script read its .env: the
 // file BETTERDESK_ENV_FILE names (main loads it), else the .env in
-// CONSOLE_DIR.
+// CONSOLE_DIR. A database without a users table is first set up as a
+// server start sets it up.
 //
 // The new password is the first line of standard input, without its line
 // end. It is never taken from the arguments and never printed, and a
@@ -151,10 +122,10 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 
 	ctx := context.Background()
 	var users *sql.DB
-	dialect := "sqlite"
+	dialect, dsn := "sqlite", ""
 	if dbType := strings.ToLower(orElse(getenv("DB_TYPE"), "sqlite")); dbType == "postgres" || dbType == "postgresql" {
 		dialect = "postgres"
-		dsn := getenv("DATABASE_URL")
+		dsn = getenv("DATABASE_URL")
 		if dsn == "" {
 			fmt.Fprintln(e, "DB_TYPE=postgres but DATABASE_URL is not set")
 			return 1
@@ -175,25 +146,31 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 			return 1
 		}
 		users = stdlib.OpenDB(*cfg)
-		if _, err := users.ExecContext(ctx, resetPostgresUsers); err != nil {
-			_ = users.Close()
-			fmt.Fprintf(e, "Error: %v\n", err)
-			return 1
-		}
 	} else {
-		path := sqlitePath(getenv, opts)
-		fmt.Fprintf(o, "Auth database (SQLite): %s\n", path)
-		if !opts.exists(filepath.Dir(path)) {
+		dsn = sqlitePath(getenv, opts)
+		fmt.Fprintf(o, "Auth database (SQLite): %s\n", dsn)
+		if !opts.exists(filepath.Dir(dsn)) {
 			fmt.Fprintln(e, "Error: Cannot open database because the directory does not exist")
 			return 1
 		}
-		users, err = openResetSQLite(ctx, path)
+		users, err = openResetSQLite(ctx, dsn)
 		if err != nil {
 			fmt.Fprintf(e, "Error: %s\n", sqliteMessage(err))
 			return 1
 		}
 	}
 	defer users.Close()
+
+	// A database without accounts is set up as a server start sets it up,
+	// so the console finds the users table it makes itself
+	hasUsers, err := hasUsersTable(ctx, users, dialect)
+	if err == nil && !hasUsers {
+		err = migrateLikeTheServer(ctx, dsn)
+	}
+	if err != nil {
+		fmt.Fprintf(e, "Error: %s\n", sqliteMessage(err))
+		return 1
+	}
 
 	hash, err := authn.NewPasswordHash(ctx, opts.random, password)
 	if err != nil {
@@ -326,18 +303,53 @@ func findDataDir(getenv func(string) string, opts resetOptions) string {
 }
 
 func openResetSQLite(ctx context.Context, path string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", "file:"+path+"?_pragma=busy_timeout(5000)")
+	sdb, err := sql.Open("sqlite", "file:"+path+"?_pragma=busy_timeout(5000)")
 	if err != nil {
 		return nil, err
 	}
-	db.SetMaxOpenConns(1)
-	for _, statement := range []string{"PRAGMA journal_mode = WAL", resetSQLiteUsers} {
-		if _, err := db.ExecContext(ctx, statement); err != nil {
-			_ = db.Close()
-			return nil, err
-		}
+	sdb.SetMaxOpenConns(1)
+	if _, err := sdb.ExecContext(ctx, "PRAGMA journal_mode = WAL"); err != nil {
+		_ = sdb.Close()
+		return nil, err
 	}
-	return db, nil
+	return sdb, nil
+}
+
+// hasUsersTable reports whether the database has a users table.
+func hasUsersTable(ctx context.Context, users *sql.DB, dialect string) (bool, error) {
+	if dialect == "postgres" {
+		var name sql.NullString
+		if err := users.QueryRowContext(ctx, "SELECT to_regclass('users')::text").Scan(&name); err != nil {
+			return false, err
+		}
+		return name.Valid, nil
+	}
+	var n int
+	if err := users.QueryRowContext(ctx, "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'users'").Scan(&n); err != nil {
+		return false, err
+	}
+	return n > 0, nil
+}
+
+// migrateLikeTheServer sets the database dsn up as a server start does:
+// the signal server's tables first, then the console's.
+func migrateLikeTheServer(ctx context.Context, dsn string) error {
+	database, err := db.Open(dsn)
+	if err != nil {
+		return err
+	}
+	defer database.Close()
+	if err := database.Migrate(); err != nil {
+		return fmt.Errorf("server schema: %w", err)
+	}
+	var console *store.DB
+	if pg, ok := database.(*db.PostgresDB); ok {
+		console = store.OpenPostgres(pg.Pool())
+	} else if console, err = store.OpenSQLite(dsn); err != nil {
+		return err
+	}
+	defer console.Close()
+	return console.Migrate(ctx)
 }
 
 // sqliteCode is the " (26)" the SQLite driver puts after a message;
