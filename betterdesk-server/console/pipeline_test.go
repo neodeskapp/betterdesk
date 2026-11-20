@@ -1,7 +1,9 @@
 package console
 
 import (
+	"bytes"
 	"context"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -298,6 +300,34 @@ func publicFolder(t *testing.T) string {
 		}
 	}
 	return dir
+}
+
+// TestStaticPreconditionAndRange: a console file whose If-Match,
+// If-Unmodified-Since or Range does not hold gets an empty 412 or 416
+// from the static step, with the security headers, and no server error
+// in the log (BUGS M6).
+func TestStaticPreconditionAndRange(t *testing.T) {
+	w := goOnly(t, setup{public: publicFolder(t)})
+	var logged bytes.Buffer
+	previous := log.Writer()
+	log.SetOutput(&logged)
+	defer log.SetOutput(previous)
+	for _, c := range []struct {
+		header []string
+		status int
+	}{
+		{[]string{"If-Match", `"nope"`}, http.StatusPreconditionFailed},
+		{[]string{"If-Unmodified-Since", "Thu, 01 Jan 1970 00:00:00 GMT"}, http.StatusPreconditionFailed},
+		{[]string{"Range", "bytes=9999-"}, http.StatusRequestedRangeNotSatisfiable},
+	} {
+		res := w.agent().get("/favicon.svg", append(c.header, "Content-Type", "application/json")...)
+		if res.status != c.status || res.body != "" || res.header.Get("X-Content-Type-Options") != "nosniff" {
+			t.Errorf("%v: %d %q, X-Content-Type-Options %q", c.header, res.status, res.body, res.header.Get("X-Content-Type-Options"))
+		}
+	}
+	if strings.Contains(logged.String(), "Server error") {
+		t.Errorf("logged a server error:\n%s", logged.String())
+	}
 }
 
 func TestStep9StaticFilesComeBeforeGuardLimitersAndCacheHeader(t *testing.T) {
