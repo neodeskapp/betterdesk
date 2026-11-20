@@ -303,7 +303,7 @@ func (h *handlers) authenticate(r *http.Request, username, password middleware.V
 	if !passIsText {
 		return authn.Outcome{}, nil
 	}
-	return h.authn.Authenticate(r.Context(), name, pass)
+	return h.authn.Authenticate(authn.WithClientAddress(r.Context(), kit.ClientIP(r)), name, pass)
 }
 
 // recordAttempt notes a sign-in attempt for the lockout counters. A

@@ -253,7 +253,7 @@ func (s *Server) canReadDeviceOrg(r *http.Request, orgID string) bool {
 // POST /api/auth/login
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	// Per-IP login rate limiting (S8)
-	clientIP := s.remoteIP(r)
+	clientIP := s.signInIP(r)
 	if s.loginLimiter != nil && !s.loginLimiter.Allow(clientIP) {
 		writeJSON(w, http.StatusTooManyRequests, map[string]string{
 			"error": "Too many login attempts. Please try again later.",
@@ -348,7 +348,7 @@ func writeLoginSuccess(w http.ResponseWriter, user *db.User, token string, extra
 // POST /api/auth/login/2fa
 func (s *Server) handleLogin2FA(w http.ResponseWriter, r *http.Request) {
 	// Per-IP rate limiting for 2FA attempts (H3: prevent TOTP brute-force)
-	clientIP := s.remoteIP(r)
+	clientIP := s.signInIP(r)
 	if s.loginLimiter != nil && !s.loginLimiter.Allow(clientIP) {
 		writeJSON(w, http.StatusTooManyRequests, map[string]string{
 			"error": "Too many 2FA attempts. Please try again later.",
@@ -406,7 +406,7 @@ func (s *Server) handleLogin2FA(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				if s.auditLog != nil {
-					s.auditLog.Log(audit.ActionAuthLogin, s.remoteIP(r), user.Username, map[string]string{"2fa": "recovery_code"})
+					s.auditLog.Log(audit.ActionAuthLogin, clientIP, user.Username, map[string]string{"2fa": "recovery_code"})
 				}
 				token, err := s.jwtManager.Generate(user.Username, user.Role)
 				if err != nil {
@@ -420,7 +420,7 @@ func (s *Server) handleLogin2FA(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if s.auditLog != nil {
-			s.auditLog.Log(audit.ActionAuthLoginFailed, s.remoteIP(r), claims.Sub, map[string]string{"reason": "invalid_totp"})
+			s.auditLog.Log(audit.ActionAuthLoginFailed, clientIP, claims.Sub, map[string]string{"reason": "invalid_totp"})
 		}
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "Invalid TOTP code"})
 		return
@@ -435,7 +435,7 @@ func (s *Server) handleLogin2FA(w http.ResponseWriter, r *http.Request) {
 	_ = s.db.UpdateUserLogin(user.ID)
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionAuthLogin, s.remoteIP(r), user.Username, map[string]string{"2fa": "true"})
+		s.auditLog.Log(audit.ActionAuthLogin, clientIP, user.Username, map[string]string{"2fa": "true"})
 	}
 
 	writeLoginSuccess(w, user, token)

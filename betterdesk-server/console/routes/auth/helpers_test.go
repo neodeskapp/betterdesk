@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/api"
 	"github.com/unitronix/betterdesk-server/console"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/httpx"
@@ -38,9 +39,10 @@ const (
 	testAgent     = "auth-test/1"
 )
 
-// apiCall is one request the fake signal server got.
+// apiCall is one request the fake signal server got. Addr is the address
+// of the sign-in it was asked for, "" when the call names none.
 type apiCall struct {
-	Method, Path, Query, Body string
+	Method, Path, Query, Body, Addr string
 }
 
 // fakeAPI stands in for the signal server's API. A test sets the answer
@@ -54,7 +56,8 @@ type fakeAPI struct {
 func (f *fakeAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	raw, _ := io.ReadAll(r.Body)
 	f.mu.Lock()
-	f.calls = append(f.calls, apiCall{r.Method, r.URL.Path, r.URL.RawQuery, string(raw)})
+	addr, _ := api.SignInAddress(r.Context())
+	f.calls = append(f.calls, apiCall{r.Method, r.URL.Path, r.URL.RawQuery, string(raw), addr})
 	answer := f.answers[r.Method+" "+r.URL.Path]
 	f.mu.Unlock()
 	if answer == nil {

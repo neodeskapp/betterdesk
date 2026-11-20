@@ -1,12 +1,43 @@
 package api
 
 import (
+	"context"
 	"log"
+	"net/http"
 
 	"github.com/unitronix/betterdesk-server/audit"
 	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/db"
 )
+
+// signInAddressKey holds the address an in-process sign-in comes from.
+type signInAddressKey struct{}
+
+// WithSignInAddress returns ctx naming the address of the browser or client
+// that signs in through an in-process call of the web console. The login,
+// second-factor and directory checks count and record that address, so the
+// sign-ins of different browsers do not share the console's own budget. A
+// request from the listener is counted by its own address.
+func WithSignInAddress(ctx context.Context, ip string) context.Context {
+	return context.WithValue(ctx, signInAddressKey{}, ip)
+}
+
+// SignInAddress returns the address WithSignInAddress put into ctx.
+func SignInAddress(ctx context.Context) (string, bool) {
+	ip, ok := ctx.Value(signInAddressKey{}).(string)
+	return ip, ok && ip != ""
+}
+
+// signInIP is the address a sign-in counts against: the one an in-process
+// caller names, else the request's.
+func (s *Server) signInIP(r *http.Request) string {
+	if arrivedInternally(r) {
+		if ip, ok := SignInAddress(r.Context()); ok {
+			return ip
+		}
+	}
+	return s.remoteIP(r)
+}
 
 // passwordLoginStatus classifies the outcome of username+password authentication.
 type passwordLoginStatus int

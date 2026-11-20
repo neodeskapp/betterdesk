@@ -138,7 +138,7 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	outcome, err := h.d.Authn.Authenticate(ctx, username, password)
+	outcome, err := h.d.Authn.Authenticate(authn.WithClientAddress(ctx, ip), username, password)
 	if err != nil {
 		serverError(err)
 		return

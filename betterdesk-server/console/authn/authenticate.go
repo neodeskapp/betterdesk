@@ -6,9 +6,19 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/unitronix/betterdesk-server/api"
 	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
+
+// WithClientAddress returns ctx naming the address a sign-in comes from
+// (the browser's, or the client's). Authenticate passes it on to the API
+// server with the checks it asks the API server for, whose limits count
+// failed sign-ins per address: without it they count the console's own
+// address, and every sign-in that reaches them shares one budget.
+func WithClientAddress(ctx context.Context, ip string) context.Context {
+	return api.WithSignInAddress(ctx, ip)
+}
 
 // The providers an account can belong to.
 const (

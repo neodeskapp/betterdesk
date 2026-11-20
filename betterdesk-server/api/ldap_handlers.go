@@ -308,7 +308,7 @@ func (s *Server) handleSaveLDAPConfig(w http.ResponseWriter, r *http.Request) {
 // local account already exists but the user signs in with IdP credentials.
 // POST /api/auth/ldap/verify
 func (s *Server) handleLDAPVerifyCredentials(w http.ResponseWriter, r *http.Request) {
-	clientIP := s.remoteIP(r)
+	clientIP := s.signInIP(r)
 	if s.loginLimiter != nil && !s.loginLimiter.Allow(clientIP) {
 		writeJSON(w, http.StatusTooManyRequests, map[string]string{
 			"error": "Too many login attempts. Please try again later.",

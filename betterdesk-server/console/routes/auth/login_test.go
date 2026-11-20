@@ -82,6 +82,20 @@ func TestLoginWithWrongCredentials(t *testing.T) {
 	})
 }
 
+// A wrong password makes the console ask the API server, and the call
+// names the browser's address, which the API server's limits count
+// (BUGS G8).
+func TestLoginNamesTheBrowsersAddressToTheAPIServer(t *testing.T) {
+	w := newWorld(t, nil, setup{trustProxy: "true"})
+	w.addUser(user{name: "alice"})
+	want(t, "wrong password", w.agentFrom("198.51.100.42").post("/api/auth/login", login("alice", "not-the-password")),
+		http.StatusUnauthorized, invalidCredentials)
+	calls := w.api.seen("POST /api/auth/login")
+	if len(calls) != 1 || calls[0].Addr != "198.51.100.42" {
+		t.Errorf("the API server's sign-in calls: %+v; want one naming the browser's address", calls)
+	}
+}
+
 func TestLoginWithValuesThatAreNoText(t *testing.T) {
 	eachWorld(t, setup{}, func(t *testing.T, w *world) {
 		w.addUser(user{name: "alice"})

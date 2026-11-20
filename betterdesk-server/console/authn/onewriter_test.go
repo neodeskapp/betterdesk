@@ -3,10 +3,15 @@ package authn
 import (
 	"context"
 	"encoding/json"
+	"io"
+	"net/http"
 	"strings"
+	"sync"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/api"
 	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
@@ -87,6 +92,43 @@ func TestPasswordHashStaysAcrossBothSignIns(t *testing.T) {
 		}
 		if got := storedHash(t, db, userID(t, db, "bcrypt-made")); got != old || !auth.VerifyPassword(got, "Old-4!") {
 			t.Errorf("the console's sign-in replaced a bcrypt hash: %q -> %q", old, got)
+		}
+	})
+}
+
+// TestAuthenticateNamesTheClientAddress: the checks Authenticate asks the
+// API server for (its sign-in, and the directory check of a local account
+// whose password failed) carry the address WithClientAddress named, so the
+// API server's limits count each browser on its own (BUGS G8).
+func TestAuthenticateNamesTheClientAddress(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		var mu sync.Mutex
+		seen := map[string][]string{}
+		apiServer := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ip, _ := api.SignInAddress(r.Context())
+			mu.Lock()
+			seen[r.URL.Path] = append(seen[r.URL.Path], ip)
+			mu.Unlock()
+			w.Header().Set("Content-Type", "application/json")
+			if r.URL.Path == "/api/auth/sso/status" {
+				_, _ = io.WriteString(w, `{"ldap_enabled":true,"oidc_enabled":false,"any_enabled":true}`)
+				return
+			}
+			w.WriteHeader(http.StatusUnauthorized)
+			_, _ = io.WriteString(w, `{"error":"Invalid credentials"}`)
+		})
+		s, _, _ := testService(t, db, func(o *Options) { o.GoAPI = goapi.New(apiServer) })
+		addUser(t, s, "alice", "pw", "admin", "local")
+		if outcome, err := s.Authenticate(WithClientAddress(ctx, "198.51.100.23"), "alice", "wrong"); err != nil || outcome.User != nil {
+			t.Fatalf("a wrong password: %+v, %v", outcome, err)
+		}
+		mu.Lock()
+		defer mu.Unlock()
+		for _, path := range []string{"/api/auth/login", "/api/auth/ldap/verify"} {
+			if got := seen[path]; len(got) != 1 || got[0] != "198.51.100.23" {
+				t.Errorf("%s saw the addresses %q; want the browser's", path, got)
+			}
 		}
 	})
 }
