@@ -175,12 +175,38 @@ func describeRow(ctx context.Context, username, role, hash, oldHash, password st
 	return r
 }
 
+// resetFix turns a recorded run into what reset-password answers since a
+// bug fix changed it on purpose, and names the bug ("" for a run no fix
+// changed).
+func resetFix(c *resetCase) string {
+	// BN5: a password under 6 characters is refused before the database
+	// is chosen or opened: nothing is printed about it and nothing made
+	if password, ok := resetPasswordOf(c.Argv); ok && utf16Length(password) < 6 {
+		c.Status, c.Stdout, c.Stderr = 1, "", "Password must be at least 6 characters\n"
+		switch c.Setup {
+		case "none":
+			c.State = resetState{}
+		case "emptyfile":
+			c.State = resetState{Exists: true}
+		}
+		return "BN5"
+	}
+	return ""
+}
+
 func TestResetPasswordLikeNode(t *testing.T) {
 	var cases []resetCase
 	readVectors(t, "resetpassword", &cases)
 	if len(cases) < 100 {
 		t.Fatalf("only %d cases", len(cases))
 	}
+	fixed := map[string]int{}
+	for i := range cases {
+		if bug := resetFix(&cases[i]); bug != "" {
+			fixed[bug]++
+		}
+	}
+	t.Logf("runs that differ from Node by a fix: %v", fixed)
 	// The hash the accounts had: cheap, it is only compared
 	old, err := bcrypt.GenerateFromPassword([]byte("the-old-password"), bcrypt.MinCost)
 	if err != nil {
@@ -384,6 +410,30 @@ func replayPostgresReset(t *testing.T, c resetCase, dsn, pgUsers, oldHash string
 		_ = rows.Close()
 	}
 	compareReset(t, c, status, stdout, stderr, state, oldHash)
+}
+
+// A password that is too short is refused before anything is opened: the
+// folder stays empty (BN5).
+func TestResetPasswordShortPasswordOpensNothing(t *testing.T) {
+	root := t.TempDir()
+	file := filepath.Join(root, "db_v2.sqlite3")
+	for _, password := range []string{"short", "abécd", "\U0001F600\U0001F600", ""} {
+		var out, errOut bytes.Buffer
+		env := map[string]string{"DB_PATH": file, "CONSOLE_DIR": root}
+		e := Env{Stdin: strings.NewReader(password + "\n"), Stdout: &out, Stderr: &errOut, Getenv: func(k string) string { return env[k] }}
+		status := resetPassword([]string{"admin"}, e, resetOptions{random: rand.Reader, terminal: func(io.Reader) bool { return false },
+			exists: func(p string) bool { _, err := os.Stat(p); return err == nil }, cwd: root})
+		if status != 1 || out.String() != "" || errOut.String() != "Password must be at least 6 characters\n" {
+			t.Errorf("%q: %d, stdout %q, stderr %q", password, status, out.String(), errOut.String())
+		}
+		entries, err := os.ReadDir(root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(entries) != 0 {
+			t.Errorf("%q: the folder holds %v", password, entries)
+		}
+	}
 }
 
 // The password comes from standard input only: a second argument, a flag

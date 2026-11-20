@@ -142,6 +142,12 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 	if !ok {
 		return usage("")
 	}
+	// Checked before the database is opened, so a refused password
+	// leaves nothing behind
+	if utf16Length(password) < 6 {
+		fmt.Fprintln(e, "Password must be at least 6 characters")
+		return 1
+	}
 
 	ctx := context.Background()
 	var users *sql.DB
@@ -189,10 +195,6 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 	}
 	defer users.Close()
 
-	if utf16Length(password) < 6 {
-		fmt.Fprintln(e, "Password must be at least 6 characters")
-		return 1
-	}
 	hash, err := authn.NewPasswordHash(ctx, opts.random, password)
 	if err != nil {
 		fmt.Fprintf(e, "Error: %v\n", err)
