@@ -47,10 +47,6 @@
      "pattern": "^[9aA+/_=-]{32}$"
     },
     {
-     "path": "tempPath",
-     "pattern": "^[9aA+/_=-]{68}\\.[9aA+/_=-]{3}$"
-    },
-    {
      "path": "updatedAt",
      "integer": true
     }
@@ -69,7 +65,6 @@
      "mimeType": "application/octet-stream",
      "size": 4294967296,
      "status": "pending",
-     "tempPath": "<volatile>",
      "totalChunks": 16384,
      "updatedAt": 0
     }

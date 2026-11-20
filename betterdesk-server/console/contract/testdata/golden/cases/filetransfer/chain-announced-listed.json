@@ -47,10 +47,6 @@
      "pattern": "^[9aA+/_=-]{32}$"
     },
     {
-     "path": "[*].tempPath",
-     "pattern": "^[9aA+/_=-]{74}\\.[9aA+/_=-]{3}$"
-    },
-    {
      "path": "[*].updatedAt",
      "integer": true
     }
@@ -70,7 +66,6 @@
       "mimeType": "application/pdf",
       "size": 12,
       "status": "pending",
-      "tempPath": "<volatile>",
       "totalChunks": 1,
       "updatedAt": 0
      }

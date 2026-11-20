@@ -197,6 +197,10 @@ func TestMarshalledShapes(t *testing.T) {
 	if strings.Contains(string(raw), "deviceId") || !strings.HasPrefix(string(raw), `{"id":"`+record.ID+`","direction":"download","filename":"a.txt","size":"abc"`) {
 		t.Errorf("record: %s", raw)
 	}
+	// The record names no path on the server (BUGS FT6)
+	if strings.Contains(string(raw), "tempPath") || strings.Contains(string(raw), s.opts.Dir) {
+		t.Errorf("record with the path of its file: %s", raw)
+	}
 	progress, _ := json.Marshal(s.GetProgress(record.ID))
 	want := `{"transferId":"` + record.ID + `","status":"pending","bytesTransferred":0,"totalBytes":"abc","chunksReceived":0,"totalChunks":1,"percent":null,"filename":"a.txt","direction":"download"}`
 	if string(progress) != want {

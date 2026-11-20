@@ -182,10 +182,10 @@ type Transfer struct {
 	UpdatedAt int64
 }
 
-// MarshalJSON writes the record with the keys the routes have always
-// sent: id, direction, deviceId, filename, size, mimeType, status,
-// bytesTransferred, totalChunks, chunksReceived, tempPath, createdBy,
-// createdAt, updatedAt.
+// MarshalJSON writes the record with the keys the routes send: id,
+// direction, deviceId, filename, size, mimeType, status,
+// bytesTransferred, totalChunks, chunksReceived, createdBy, createdAt,
+// updatedAt. The path of the file on the server is not among them.
 func (t *Transfer) MarshalJSON() ([]byte, error) {
 	o := goapi.NewObject("id", t.ID, "direction", t.Direction)
 	if t.DeviceID != Undefined {
@@ -198,7 +198,6 @@ func (t *Transfer) MarshalJSON() ([]byte, error) {
 	o.Set("bytesTransferred", float64(t.BytesTransferred))
 	o.Set("totalChunks", t.TotalChunks)
 	o.Set("chunksReceived", float64(t.ChunksReceived))
-	o.Set("tempPath", t.TempPath)
 	o.Set("createdBy", t.CreatedBy)
 	o.Set("createdAt", float64(t.CreatedAt))
 	o.Set("updatedAt", float64(t.UpdatedAt))

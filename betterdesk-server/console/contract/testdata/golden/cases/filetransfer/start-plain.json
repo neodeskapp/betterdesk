@@ -76,10 +76,6 @@
      "pattern": "^[9aA+/_=-]{32}$"
     },
     {
-     "path": "tempPath",
-     "pattern": "^[9aA+/_=-]{70}$"
-    },
-    {
      "path": "updatedAt",
      "integer": true
     }
@@ -98,7 +94,6 @@
      "mimeType": "application/octet-stream",
      "size": 0,
      "status": "pending",
-     "tempPath": "<volatile>",
      "totalChunks": 1,
      "updatedAt": 0
     }
@@ -139,10 +134,6 @@
      "pattern": "^[9aA+/_=-]{32}$"
     },
     {
-     "path": "tempPath",
-     "pattern": "^[9aA+/_=-]{70}$"
-    },
-    {
      "path": "updatedAt",
      "integer": true
     }
@@ -161,7 +152,6 @@
      "mimeType": "application/octet-stream",
      "size": 0,
      "status": "pending",
-     "tempPath": "<volatile>",
      "totalChunks": 1,
      "updatedAt": 0
     }

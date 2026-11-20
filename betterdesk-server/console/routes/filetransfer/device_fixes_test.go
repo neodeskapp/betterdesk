@@ -2,6 +2,7 @@ package filetransfer_test
 
 import (
 	"encoding/base64"
+	"strings"
 	"testing"
 )
 
@@ -30,10 +31,25 @@ var deviceFixes = []deviceFix{
 }
 
 // fixDeviceVectors puts the console's answers in place of Node's for the
-// vectors deviceFixes names. A listed vector that already holds that
-// answer stops the test: the list must name changes only.
+// vectors deviceFixes names, and takes the path of a transfer's file out
+// of every record Node answered (FT6). A listed vector that already holds
+// that answer stops the test: the list must name changes only.
 func fixDeviceVectors(t *testing.T, vectors []deviceVector) {
 	t.Helper()
+	paths := 0
+	for i := range vectors {
+		raw, err := base64.StdEncoding.DecodeString(vectors[i].Body)
+		if err != nil || !strings.HasPrefix(vectors[i].Headers["content-type"], "application/json") {
+			continue
+		}
+		if kept, had := withoutTempPath(string(raw)); had {
+			vectors[i].Body = base64.StdEncoding.EncodeToString([]byte(kept))
+			paths++
+		}
+	}
+	if paths == 0 {
+		t.Fatal("no answer names the path of a file: the fix of FT6 changes no vector")
+	}
 	for _, fix := range deviceFixes {
 		if fix.vector >= len(vectors) {
 			t.Fatalf("the fixed vector %d (%s) is not in the file", fix.vector, fix.bug)

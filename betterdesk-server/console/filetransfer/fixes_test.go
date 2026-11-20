@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -44,7 +45,25 @@ type rewrite struct {
 }
 
 // globalRewrites are the fixes that change every step alike.
-var globalRewrites = []func() rewrite{leftoversGoAtBoot}
+var globalRewrites = []func() rewrite{leftoversGoAtBoot, noTempPath}
+
+// tempPathMember is the tempPath of a record in Node's answers.
+var tempPathMember = regexp.MustCompile(`,"tempPath":"(?:[^"\\]|\\.)*"`)
+
+// noTempPath: a record names no path on the server (FT6).
+func noTempPath() rewrite {
+	return rewrite{bug: "FT6", change: func(_ vectorStep, want *answer) bool {
+		changed := false
+		if want.out != nil && tempPathMember.MatchString(*want.out) {
+			out := tempPathMember.ReplaceAllString(*want.out, "")
+			want.out, changed = &out, true
+		}
+		if all := tempPathMember.ReplaceAllString(want.all, ""); all != want.all {
+			want.all, changed = all, true
+		}
+		return changed
+	}}
+}
 
 // leftoversGoAtBoot: a service that starts removes the files of the
 // transfers before it from the folder (FT1). Node's folder keeps them,

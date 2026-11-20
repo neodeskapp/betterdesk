@@ -89,7 +89,7 @@ func (w *world) local(text string) string {
 }
 
 // normalize makes a JSON body of this run comparable with the Node run's:
-// its ids, a mark for the transfers folder, no times.
+// its ids, no times.
 func (w *world) normalize(body string) string {
 	body = transferID.ReplaceAllStringFunc(body, func(id string) string {
 		if mapped, ok := w.nodeID[id]; ok {
@@ -97,7 +97,6 @@ func (w *world) normalize(body string) string {
 		}
 		return id
 	})
-	body = tempPath.ReplaceAllString(body, `"tempPath":"<DIR>/$1"`)
 	return stamps.ReplaceAllString(body, `"$1":0`)
 }
 
@@ -120,7 +119,7 @@ func TestVectors(t *testing.T) {
 	}
 	w := newWorld(t)
 	etags := map[string]string{}
-	failures, unstored := 0, 0
+	failures, unstored, noPath := 0, 0, 0
 	for i, v := range vectors {
 		switch {
 		case v.Feed != nil:
@@ -209,7 +208,12 @@ func TestVectors(t *testing.T) {
 				}
 			}
 			gotText = w.normalize(gotText)
-			wantText = tempPath.ReplaceAllString(stamps.ReplaceAllString(wantText, `"$1":0`), `"tempPath":"<DIR>/$1"`)
+			// FT6: a record names no path on the server
+			if kept, had := withoutTempPath(wantText); had {
+				wantText = kept
+				noPath++
+			}
+			wantText = stamps.ReplaceAllString(wantText, `"$1":0`)
 		}
 		if gotText != wantText {
 			problems = append(problems, "body "+around(gotText, wantText)+"\n      want "+around(wantText, gotText))
@@ -232,6 +236,20 @@ func TestVectors(t *testing.T) {
 	if unstored == 0 {
 		t.Error("no list holds a transfer without a text: the fix of FT5 changes no vector")
 	}
+	if noPath == 0 {
+		t.Error("no answer names the path of a file: the fix of FT6 changes no vector")
+	}
+}
+
+// nodeTempPath is the path of a transfer's file in a record of the Node
+// run.
+var nodeTempPath = regexp.MustCompile(`,"tempPath":"(?:[^"\\]|\\.)*"`)
+
+// withoutTempPath is a JSON answer of the Node run without the paths of
+// the files, and whether it named one.
+func withoutTempPath(text string) (string, bool) {
+	kept := nodeTempPath.ReplaceAllString(text, "")
+	return kept, kept != text
 }
 
 // withoutUnstored is a list of transfers of the Node run without the

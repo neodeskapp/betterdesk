@@ -80,10 +80,6 @@
      "pattern": "^[9aA+/_=-]{32}$"
     },
     {
-     "path": "[*].tempPath",
-     "pattern": "^[9aA+/_=-]{73}\\.[9aA+/_=-]{3}$"
-    },
-    {
      "path": "[*].updatedAt",
      "integer": true
     }
@@ -103,7 +99,6 @@
       "mimeType": "text/plain",
       "size": 600000,
       "status": "pending",
-      "tempPath": "<volatile>",
       "totalChunks": 3,
       "updatedAt": 0
      }
@@ -148,10 +143,6 @@
      "pattern": "^[9aA+/_=-]{32}$"
     },
     {
-     "path": "[*].tempPath",
-     "pattern": "^[9aA+/_=-]{73}\\.[9aA+/_=-]{3}$"
-    },
-    {
      "path": "[*].updatedAt",
      "integer": true
     }
@@ -171,7 +162,6 @@
       "mimeType": "text/plain",
       "size": 600000,
       "status": "pending",
-      "tempPath": "<volatile>",
       "totalChunks": 3,
       "updatedAt": 0
      }
