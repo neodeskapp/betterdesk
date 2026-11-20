@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -52,7 +53,7 @@ func NewGateway(cfg *config.Config, database db.Database, peerMap *peer.Map, eve
 	if rate <= 0 {
 		rate = 30
 	}
-	creds, err := LoadOrCreateAgentCredentials(cfg.MeshAgentCertFile)
+	creds, err := LoadOrCreateAgentCredentials(agentCertPath(cfg))
 	if err != nil {
 		return nil, err
 	}
@@ -102,12 +103,25 @@ func (g *Gateway) ServerID() string { return g.creds.ServerID }
 // ActiveAgentCount returns connected mesh agents.
 func (g *Gateway) ActiveAgentCount() int64 { return g.activeAgents.Load() }
 
-// AgentCertInfo returns mesh agent-server certificate path and presence on disk.
-func (g *Gateway) AgentCertInfo() (path string, present bool, modified string) {
-	path = g.cfg.MeshAgentCertFile
+// agentCertPath is the file of the agent-server certificate:
+// MESH_AGENT_CERT_FILE (mesh_agent_server.pem by default), and a bare file
+// name in the folder of the server's key file. The installers keep that
+// key in KEYS_PATH, where a backup takes the certificate from, so the
+// certificate does not depend on the folder the server runs in.
+func agentCertPath(cfg *config.Config) string {
+	path := cfg.MeshAgentCertFile
 	if path == "" {
 		path = "mesh_agent_server.pem"
 	}
+	if filepath.Base(path) == path && cfg.KeyFile != "" {
+		path = filepath.Join(filepath.Dir(cfg.KeyFile), path)
+	}
+	return path
+}
+
+// AgentCertInfo returns mesh agent-server certificate path and presence on disk.
+func (g *Gateway) AgentCertInfo() (path string, present bool, modified string) {
+	path = agentCertPath(g.cfg)
 	info, err := os.Stat(path)
 	if err != nil {
 		return path, false, ""
