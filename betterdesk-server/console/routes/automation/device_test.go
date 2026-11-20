@@ -95,10 +95,9 @@ var deviceA = map[string]string{"Authorization": "Bearer tok-device-a"}
 
 // A device that reports a result with its token and no session needs no
 // CSRF token at either mount (BUGS DV2). A signed-in browser needs the
-// token at both mounts, and at
-// /api/automation the panel access guard of the automation section comes
-// first: it refuses a write from every role that may not edit devices and
-// from a server admin.
+// token at both mounts, and at /api/automation the panel access guard of
+// the automation section comes first: it refuses every role without
+// server.config (PA3 F8).
 func TestTheCSRFGateAtEachMount(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := deviceWorld(t, db)
@@ -122,7 +121,7 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 		}
 		guarded := `{"success":false,"error":"Panel access denied: automation","code":"panel_access_denied"}`
 		for role, passes := range map[string]bool{
-			"": true, "guest_issuer": false, "viewer": false, "operator": true, "global_admin": true, "server_admin": false, "super_admin": true, "admin": true,
+			"": true, "guest_issuer": false, "viewer": false, "operator": false, "global_admin": false, "server_admin": true, "super_admin": true, "admin": true,
 		} {
 			got := w.Do(replay.Request{Role: role, Method: "POST", Path: "/api/automation/commands/1/result", Body: result, Headers: deviceA})
 			if passes && (got.Status != 200 || got.Body != stored) || !passes && (got.Status != 403 || got.Body != guarded) {

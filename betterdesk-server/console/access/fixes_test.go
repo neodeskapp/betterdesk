@@ -125,6 +125,8 @@ var sectionFixes = []sectionFix{
 	// The data guard's policies are read with device.view; its events and
 	// statistics ask audit.view themselves; the writes ask server.config.
 	{bug: "PA3 (F5)", key: "dataguard", read: "device.view", write: "server.config"},
+	// Every automation route and the menu entry ask server.config.
+	{bug: "PA3 (F8)", key: "automation", read: "server.config", write: "server.config"},
 }
 
 // nodeTables returns the guard's rules and the catalog's sections as the

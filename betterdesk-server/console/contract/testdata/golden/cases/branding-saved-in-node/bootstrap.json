@@ -158,8 +158,8 @@
        },
        {
         "key": "automation",
-        "read": "device.view",
-        "write": "device.edit"
+        "read": "server.config",
+        "write": "server.config"
        },
        {
         "key": "files",
@@ -376,7 +376,7 @@
       "sections": {
        "activity": "none",
        "agents": "read",
-       "automation": "read",
+       "automation": "none",
        "cdap": "none",
        "chat": "none",
        "commercialization": "none",
@@ -940,8 +940,8 @@
        },
        {
         "key": "automation",
-        "read": "device.view",
-        "write": "device.edit"
+        "read": "server.config",
+        "write": "server.config"
        },
        {
         "key": "files",
@@ -1158,7 +1158,7 @@
       "sections": {
        "activity": "read",
        "agents": "read",
-       "automation": "read",
+       "automation": "none",
        "cdap": "read",
        "chat": "write",
        "commercialization": "none",
@@ -1783,8 +1783,8 @@
        },
        {
         "key": "automation",
-        "read": "device.view",
-        "write": "device.edit"
+        "read": "server.config",
+        "write": "server.config"
        },
        {
         "key": "files",
@@ -2001,7 +2001,7 @@
       "sections": {
        "activity": "read",
        "agents": "write",
-       "automation": "write",
+       "automation": "none",
        "cdap": "write",
        "chat": "write",
        "commercialization": "write",
@@ -2715,8 +2715,8 @@
        },
        {
         "key": "automation",
-        "read": "device.view",
-        "write": "device.edit"
+        "read": "server.config",
+        "write": "server.config"
        },
        {
         "key": "files",

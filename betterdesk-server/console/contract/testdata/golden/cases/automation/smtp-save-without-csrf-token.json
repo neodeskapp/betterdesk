@@ -56,7 +56,8 @@
    "roles": [
     "guest_issuer",
     "viewer",
-    "server_admin"
+    "operator",
+    "global_admin"
    ],
    "status": 403,
    "headers": {
@@ -86,8 +87,7 @@
   },
   {
    "roles": [
-    "operator",
-    "global_admin",
+    "server_admin",
     "super_admin",
     "admin"
    ],

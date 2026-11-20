@@ -306,8 +306,8 @@
         "group": "operations",
         "key": "automation",
         "label": "Automation",
-        "readPermission": "device.view",
-        "writePermission": "device.edit"
+        "readPermission": "server.config",
+        "writePermission": "server.config"
        },
        {
         "group": "operations",

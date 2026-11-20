@@ -55,7 +55,7 @@ var panelSectionCatalog = []panelSection{
 	{Key: "fleet", Label: "Fleet", Group: "operations", ReadPermission: auth.PermOrgManageDevices, WritePermission: auth.PermOrgManageDevices},
 	{Key: "chat", Label: "Chat", Group: "operations", ReadPermission: auth.PermChatAccess, WritePermission: auth.PermChatAccess},
 	{Key: "activity", Label: "Activity", Group: "operations", ReadPermission: auth.PermAuditView},
-	{Key: "automation", Label: "Automation", Group: "operations", ReadPermission: auth.PermDeviceView, WritePermission: auth.PermDeviceEdit},
+	{Key: "automation", Label: "Automation", Group: "operations", ReadPermission: auth.PermServerConfig, WritePermission: auth.PermServerConfig},
 	{Key: "files", Label: "File transfer", Group: "operations", ReadPermission: auth.PermDeviceView, WritePermission: auth.PermDeviceEdit},
 	{Key: "network", Label: "Network", Group: "operations", ReadPermission: auth.PermDeviceView, WritePermission: auth.PermServerConfig},
 	{Key: "dataguard", Label: "Data guard", Group: "operations", ReadPermission: auth.PermDeviceView, WritePermission: auth.PermServerConfig},

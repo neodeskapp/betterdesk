@@ -56,7 +56,8 @@
    "roles": [
     "guest_issuer",
     "viewer",
-    "server_admin"
+    "operator",
+    "global_admin"
    ],
    "status": 403,
    "headers": {
@@ -86,10 +87,9 @@
   },
   {
    "roles": [
-    "operator",
-    "global_admin"
+    "server_admin"
    ],
-   "status": 403,
+   "status": 201,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -110,11 +110,36 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "rule.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "rule.updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "error": "Permission denied: server.config",
-     "success": false
+     "rule": {
+      "condition_op": "gte",
+      "condition_type": "cpu_usage",
+      "condition_value": 90,
+      "cooldown_secs": 600,
+      "created_at": "<volatile>",
+      "created_by": "e2e_server_admin",
+      "description": "CPU over 90 percent",
+      "enabled": 0,
+      "id": 1,
+      "name": "CPU high",
+      "notify_emails": "ops@example.com",
+      "scope_device_id": "900100001",
+      "severity": "critical",
+      "updated_at": "<volatile>"
+     },
+     "success": true
     }
    }
   },
@@ -165,7 +190,7 @@
       "created_by": "e2e_super_admin",
       "description": "CPU over 90 percent",
       "enabled": 0,
-      "id": 1,
+      "id": 3,
       "name": "CPU high",
       "notify_emails": "ops@example.com",
       "scope_device_id": "900100001",
@@ -223,7 +248,7 @@
       "created_by": "e2e_admin",
       "description": "CPU over 90 percent",
       "enabled": 0,
-      "id": 3,
+      "id": 5,
       "name": "CPU high",
       "notify_emails": "ops@example.com",
       "scope_device_id": "900100001",

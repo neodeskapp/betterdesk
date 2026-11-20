@@ -259,6 +259,20 @@ func TestDataGuardReadsAsItsRoutesSay(t *testing.T) {
 	})
 }
 
+// PA3 (F8): every automation route and the menu entry ask server.config,
+// so server_admin writes rules, commands and the SMTP settings, and the
+// roles that cannot use the page have no level there.
+func TestAutomationAsksServerConfig(t *testing.T) {
+	// viewer, operator, guest_issuer, global_admin, server_admin
+	checkRouteCases(t, []routeCase{
+		{"GET", "/api/automation/rules", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
+		{"GET", "/api/automation/alerts", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
+		{"POST", "/api/automation/rules", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
+		{"POST", "/api/automation/commands", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
+		{"PUT", "/api/automation/smtp", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
+	})
+}
+
 // PA3 (F7): the toolkit is one section that asks device.connect for
 // reading and writing, as its page and wake-on-LAN route do.
 func TestToolkitAsksDeviceConnect(t *testing.T) {

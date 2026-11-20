@@ -50,16 +50,12 @@
    ],
    "status": 403,
    "headers": {
-    "cache-control": "no-cache, no-store, must-revalidate",
+    "cache-control": "no-store",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "application/json; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
     "etag": "<present>",
     "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "ratelimit-limit": "1000000",
-    "ratelimit-policy": "1000000;w=60",
-    "ratelimit-remaining": "<n>",
-    "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
@@ -75,7 +71,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Permission denied: server.config",
+     "code": "panel_access_denied",
+     "error": "Panel access denied: automation",
      "success": false
     }
    }
@@ -84,7 +81,7 @@
    "roles": [
     "server_admin"
    ],
-   "status": 404,
+   "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -108,10 +105,33 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "error": "Rule not found"
+     "condition_op": "gte",
+     "condition_type": "cpu_usage",
+     "condition_value": 90,
+     "cooldown_secs": 600,
+     "created_at": "<volatile>",
+     "created_by": "e2e_server_admin",
+     "description": "CPU over 90 percent",
+     "enabled": 0,
+     "id": 1,
+     "name": "CPU high",
+     "notify_emails": "ops@example.com",
+     "scope_device_id": "900100001",
+     "severity": "critical",
+     "updated_at": "<volatile>"
     }
    }
   },
@@ -164,7 +184,7 @@
      "created_by": "e2e_super_admin",
      "description": "CPU over 90 percent",
      "enabled": 0,
-     "id": 1,
+     "id": 3,
      "name": "CPU high",
      "notify_emails": "ops@example.com",
      "scope_device_id": "900100001",
@@ -222,7 +242,7 @@
      "created_by": "e2e_admin",
      "description": "CPU over 90 percent",
      "enabled": 0,
-     "id": 3,
+     "id": 5,
      "name": "CPU high",
      "notify_emails": "ops@example.com",
      "scope_device_id": "900100001",

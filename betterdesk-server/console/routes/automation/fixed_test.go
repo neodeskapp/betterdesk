@@ -911,8 +911,10 @@ var _ = panelFixes.Add("AU4", map[string]replay.Fix{
 // keeps its first acknowledgement, where the old route answered success for any id and wrote
 // over the first. After writes what Node's request wrote over.
 var _ = panelFixes.Add("AU5", map[string]replay.Fix{
-	`admin POST /api/automation/alerts/999/ack {}`:                                   {Status: 404, Answer: `{"error":"Alert not found"}`},
-	`super_admin POST /api/automation/alerts/999/ack {}`:                             {Status: 404, Answer: `{"error":"Alert not found"}`},
+	`admin POST /api/automation/alerts/999/ack {}`:       {Status: 404, Answer: `{"error":"Alert not found"}`},
+	`super_admin POST /api/automation/alerts/999/ack {}`: {Status: 404, Answer: `{"error":"Alert not found"}`},
+	// The server admin reaches the route since the guard lets it write (PA3 F8)
+	`server_admin POST /api/automation/alerts/999/ack {}`:                            {Status: 404, Answer: `{"error":"Alert not found"}`},
 	`admin POST /api/automation/alerts/0/ack {}`:                                     {Status: 404, Answer: `{"error":"Alert not found"}`},
 	`super_admin POST /api/automation/alerts/0/ack {}`:                               {Status: 404, Answer: `{"error":"Alert not found"}`},
 	`super_admin POST /api/automation/alerts/00/ack {}`:                              {Status: 404, Answer: `{"error":"Alert not found"}`},

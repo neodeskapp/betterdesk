@@ -179,8 +179,8 @@
          "source": "role"
         },
         "automation": {
-         "access": "read",
-         "role_ceiling": "read",
+         "access": "none",
+         "role_ceiling": "none",
          "source": "role"
         },
         "cdap": {
