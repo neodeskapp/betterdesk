@@ -41,6 +41,9 @@ type goldenCase struct {
 	// NamesDir: the answer names the build directory ({DIR} in the body),
 	// so its length and its tag depend on where the build is.
 	NamesDir bool `json:"namesDir"`
+	// notCSRF: a bug fix replaced Node's CSRF refusal (W2); only the status
+	// is compared, and that the answer is no CSRF refusal.
+	notCSRF bool
 }
 
 func loadGolden(t *testing.T, name string) goldenFile {
@@ -151,6 +154,16 @@ func TestAnswersMatchNode(t *testing.T) {
 					if res.StatusCode != c.Status {
 						problems = append(problems, "status "+strconv.Itoa(res.StatusCode)+", Node "+strconv.Itoa(c.Status))
 					}
+					if c.notCSRF {
+						if strings.Contains(rec.Body.String(), "CSRF token") {
+							problems = append(problems, "the CSRF refusal: "+strconv.Quote(clip(rec.Body.String())))
+						}
+						if len(problems) > 0 {
+							differences++
+							t.Errorf("%s %q %v: %s", c.Method, c.Target, c.Headers, strings.Join(problems, "; "))
+						}
+						continue
+					}
 					got := map[string]string{}
 					for name, values := range res.Header {
 						got[strings.ToLower(name)] = strings.Join(values, ", ")
@@ -234,7 +247,31 @@ func intended(c *goldenCase) string {
 			return "W1"
 		}
 	}
+	// W2: an error whose message holds "csrf" keeps its own status; the
+	// answer is no CSRF refusal. Node's recording has only the refusal, so
+	// the status is what is compared
+	refused := answerText(c, "CSRF token") || c.Method == http.MethodHead && strings.Contains(c.Target, "csrf%zz")
+	if c.Status == http.StatusForbidden && c.Headers["X-Test-Op"] != "csrf" && refused {
+		switch {
+		case c.Headers["X-Test-Op"] == "error":
+			c.Status = http.StatusInternalServerError
+			if s, _ := strconv.Atoi(c.Headers["X-Test-Status"]); s != 0 {
+				c.Status = s
+			}
+		case strings.Contains(c.Target, "%zz"):
+			c.Status = http.StatusBadRequest
+		default:
+			return ""
+		}
+		c.notCSRF = true
+		return "W2"
+	}
 	return ""
+}
+
+// answerText reports whether the recorded body or page holds a text.
+func answerText(c *goldenCase, text string) bool {
+	return c.Body != nil && strings.Contains(*c.Body, text) || c.Page != nil && strings.Contains(*c.Page, text)
 }
 
 func clip(s string) string {

@@ -311,23 +311,26 @@ func TestCSRFError(t *testing.T) {
 	}
 }
 
-// Every error whose message names CSRF got the CSRF answer in the old
-// console, and so it does here (BUGS.md W2).
-func TestErrorThatNamesCSRFIsAnsweredAsOne(t *testing.T) {
+// An error is answered with its own status whatever its message says: the
+// CSRF gate answers a refused token itself (CSRFError), so a message that
+// holds the word, such as a path that does not decode, is no CSRF refusal
+// (W2).
+func TestServerErrorIgnoresCsrfInTheMessage(t *testing.T) {
 	h, _ := testHost(t, "")
-	for _, message := range []string{"invalid csrf token", "a CSRF thing"} {
-		r := rawRequest("GET", "/api/x", nil)
-		a := record(func(w http.ResponseWriter) { h.ServerError(w, r, errors.New(message), 500) })
-		if a.status != 403 || !strings.Contains(a.body, csrfAPIText) {
-			t.Errorf("%q: %d %q", message, a.status, a.body)
+	for _, message := range []string{"invalid csrf token", "a CSRF thing", "Failed to decode param 'csrf%FF'"} {
+		for _, status := range []int{400, 500} {
+			r := rawRequest("GET", "/api/x", nil)
+			a := record(func(w http.ResponseWriter) { h.ServerError(w, r, errors.New(message), status) })
+			if a.status != status || strings.Contains(a.body, "CSRF") {
+				t.Errorf("%q with %d: %d %q", message, status, a.status, a.body)
+			}
 		}
 	}
-	r := rawRequest("GET", "/api/x", nil)
-	if a := record(func(w http.ResponseWriter) { h.ServerError(w, r, errors.New("a Csrf thing"), 500) }); a.status != 500 {
-		t.Errorf("another spelling: %d", a.status)
-	}
-	// A path under /app that does not decode and holds the word
-	if a := serve(h, "GET", "/app/csrf%zz", map[string]string{"Accept": "application/json"}); a.status != 403 || !strings.Contains(a.body, "Invalid CSRF token") {
-		t.Errorf("/app/csrf%%zz: %d %q", a.status, a.body)
+	// Paths that do not decode and hold the word
+	for _, target := range []string{"/app/csrf%zz", "/app/csrf%FF", "/_ui/immutable/csrf%FF"} {
+		a := serve(h, "GET", target, map[string]string{"Accept": "application/json"})
+		if a.status != 400 || strings.Contains(a.body, "CSRF") {
+			t.Errorf("%s: %d %q", target, a.status, a.body)
+		}
 	}
 }

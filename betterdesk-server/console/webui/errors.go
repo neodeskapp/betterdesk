@@ -65,13 +65,9 @@ func (h *Host) NotFound(w http.ResponseWriter, r *http.Request) {
 // The API and requests that send JSON get JSON, a browser gets the app's
 // error page (plain text without a build), and everyone else JSON.
 //
-// An error whose message holds "csrf" or "CSRF" is answered by CSRFError,
-// whatever status came with it.
+// A refused CSRF token is answered by CSRFError, which the CSRF gate calls
+// itself; what an error's message says does not change the answer.
 func (h *Host) ServerError(w http.ResponseWriter, r *http.Request, err error, status int) {
-	if err != nil && (strings.Contains(err.Error(), "csrf") || strings.Contains(err.Error(), "CSRF")) {
-		h.CSRFError(w, r)
-		return
-	}
 	logging.Logf("panel", "Server error: %v", err)
 	if status == 0 {
 		status = http.StatusInternalServerError
