@@ -103,30 +103,3 @@ func TestClientAPIBodyReadErrors(t *testing.T) {
 		t.Errorf("broken chunked body: %q (handler reached %v)", got, reached)
 	}
 }
-
-// BeforeBody answers after the path list, the limiters and the type rule,
-// before the body is read: a body over the limit gets its answer, not 413.
-func TestClientAPIBeforeBody(t *testing.T) {
-	reached := false
-	h := wanHandler(WANOptions{BeforeBody: func(w http.ResponseWriter, r *http.Request) bool {
-		if r.URL.Path != "/api/bd/register-request" {
-			return false
-		}
-		w.WriteHeader(http.StatusTeapot)
-		return true
-	}}, func(http.ResponseWriter, *http.Request) { reached = true })
-	if rec := hit(h, wanRequest("POST", "/api/bd/register-request", 5000)); rec.Code != http.StatusTeapot || reached {
-		t.Errorf("before the body: %d, handler reached %v", rec.Code, reached)
-	}
-	if rec := hit(h, wanRequest("POST", "/api/heartbeat", 9000)); rec.Code != http.StatusRequestEntityTooLarge {
-		t.Errorf("other path: %d, want 413", rec.Code)
-	}
-	r := wanRequest("POST", "/api/bd/register-request", 10)
-	r.Header.Set("Content-Type", "text/plain")
-	if rec := hit(h, r); rec.Code != http.StatusUnsupportedMediaType {
-		t.Errorf("wrong type: %d, want 415 before BeforeBody", rec.Code)
-	}
-	if rec := hit(h, wanRequest("GET", "/api/bd/register-request", -1)); rec.Code != http.StatusMethodNotAllowed {
-		t.Errorf("wrong method: %d, want 405 before BeforeBody", rec.Code)
-	}
-}

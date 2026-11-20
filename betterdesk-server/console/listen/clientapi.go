@@ -117,20 +117,20 @@ func NewClientAPI(opts ClientAPIOptions) *ClientAPI {
 		}
 		notFound(w, r)
 	})
-	var inner http.Handler = routes
-	if !opts.Proxy {
-		inner = keepRawBody(middleware.RouteJSON(middleware.BodyOptions{Limit: jsonLimit, OnError: jsonError})(routes))
-	}
-	wan := limits.WANOptions{ClientIP: trust.ClientIP, Now: opts.Now}
+	parsed := middleware.RouteJSON(middleware.BodyOptions{Limit: jsonLimit, OnError: jsonError})(routes)
+	inner := keepRawBody(parsed)
 	if opts.Proxy {
-		// The registration request is answered without its body: the old
-		// port read no JSON in this mode (BUGS I1), and the route answered
-		// before the body arrived
-		wan.BeforeBody = func(w http.ResponseWriter, r *http.Request) bool {
-			return r.Method == http.MethodPost && (c.router.Serve(w, kit.Begin(r, trust, nil)) || c.registration.serve(w, r))
-		}
+		// The forward passes the body on as it came; the port's own routes
+		// read it as JSON, as in local mode
+		inner = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if c.router.Match(r) {
+				parsed.ServeHTTP(w, r)
+				return
+			}
+			routes.ServeHTTP(w, r)
+		})
 	}
-	stack := limits.WANStack(wan)(inner)
+	stack := limits.WANStack(limits.WANOptions{ClientIP: trust.ClientIP, Now: opts.Now})(inner)
 	c.handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		Served(r)
 		if r.Method == http.MethodConnect {

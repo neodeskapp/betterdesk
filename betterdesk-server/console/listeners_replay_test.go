@@ -690,6 +690,54 @@ var knownClientAPI = map[string]func(t *testing.T, got []reply, closed bool) str
 	},
 }
 
+// proxyRegistration are the exchanges of the registration routes whose
+// answer depends on the body. In proxy mode the port reads that body as
+// JSON as in local mode, where Node's port read none and refused every
+// registration (BUGS I1), so they answer as Node's port did in local mode.
+var proxyRegistration = []string{
+	"size 1025 POST /api/bd/register-request", "registration request", "registration request again", "registration status",
+	"registration request malformed", "registration request ip from x-real-ip", "registration status 2",
+}
+
+// knownProxyMode are knownClientAPI with the registration exchanges
+// compared against the local mode recording.
+func knownProxyMode(t *testing.T) map[string]func(t *testing.T, got []reply, closed bool) string {
+	t.Helper()
+	known := map[string]func(t *testing.T, got []reply, closed bool) string{}
+	for id, check := range knownClientAPI {
+		known[id] = check
+	}
+	local := oracleScenarioNamed(t, "legacy")
+	for _, id := range proxyRegistration {
+		var want []reply
+		for _, e := range local.Exchanges {
+			if e.ID == id {
+				raw, _ := base64.StdEncoding.DecodeString(e.Got)
+				want = parseReplies(raw, methodOf(e.Parts))
+			}
+		}
+		if len(want) == 0 {
+			t.Fatalf("no answer to %q in the local mode recording", id)
+		}
+		// The budget of the address was spent otherwise in the local mode
+		// run, so what remains of it is not compared
+		known[id] = func(_ *testing.T, got []reply, _ bool) string {
+			return compareReplies(withoutRemaining(want), withoutRemaining(got))
+		}
+	}
+	return known
+}
+
+func withoutRemaining(rs []reply) []reply {
+	out := make([]reply, len(rs))
+	for i, r := range rs {
+		out[i] = r
+		out[i].header = r.header.Clone()
+		out[i].header.Del("Ratelimit-Remaining")
+	}
+	return out
+}
+
 func checkReplay(t *testing.T, name string, res replayResult) {
 	t.Helper()
 	for _, d := range res.diffs {
@@ -705,7 +753,7 @@ func TestClientAPIProxyModeAgainstNode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	res := g.replayExchanges(t, scenario, knownClientAPI)
+	res := g.replayExchanges(t, scenario, knownProxyMode(t))
 	checkReplay(t, "proxy", res)
 	if res.same < 600 {
 		t.Errorf("only %d answers compared", res.same)
@@ -716,6 +764,36 @@ func TestClientAPIProxyModeAgainstNode(t *testing.T) {
 	defer g.reg.mu.Unlock()
 	if len(g.reg.seen) != 0 {
 		t.Errorf("%d registration requests reached the Node console", len(g.reg.seen))
+	}
+}
+
+// In proxy mode the port reads the JSON body of its own registration
+// routes as in local mode, so a LAN device can register through it.
+func TestClientAPIProxyModeTakesRegistrations(t *testing.T) {
+	db := storetest.Migrated(t)
+	g, err := newGoStack(t, db, oracleScenarioNamed(t, "proxy"), makeTestCerts(t), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	post := func(body string) (int, string) {
+		t.Helper()
+		res, err := http.Post("http://"+g.ports["api"]+"/api/bd/register-request", "application/json", strings.NewReader(body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer res.Body.Close()
+		text, _ := io.ReadAll(res.Body)
+		return res.StatusCode, string(text)
+	}
+	if status, body := post(`{"device_id":"port-dev"}`); status != http.StatusOK || body != `{"success":true,"status":"pending","id":1}` {
+		t.Errorf("registration: %d %s", status, body)
+	}
+	var device string
+	if err := db.QueryRow(context.Background(), "SELECT device_id FROM pending_registrations WHERE id = 1").Scan(&device); err != nil || device != "port-dev" {
+		t.Errorf("stored device %q %v", device, err)
+	}
+	if status, body := post(`{"device_id":`); status != http.StatusBadRequest || body != `{"error":"Invalid JSON"}` {
+		t.Errorf("a body that does not parse: %d %s", status, body)
 	}
 }
 
@@ -748,10 +826,7 @@ func TestClientAPILive(t *testing.T) {
 		t.Skip("BD_CLIENT_API_ADDR is not set")
 	}
 	scenario := oracleScenarioNamed(t, "proxy")
-	known := map[string]func(t *testing.T, got []reply, closed bool) string{}
-	for id, check := range knownClientAPI {
-		known[id] = check
-	}
+	known := knownProxyMode(t)
 	var kept []oracleExchange
 	forwarded := 0
 	for _, e := range scenario.Exchanges {

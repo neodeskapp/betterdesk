@@ -118,11 +118,6 @@ type WANOptions struct {
 	// Log gets one line per request; warn is true for a status of 400 and
 	// above. nil writes through the logging package.
 	Log func(warn bool, line string)
-	// BeforeBody answers a request before its body is read and reports
-	// whether it did. The registration route of the port in proxy mode
-	// answered without waiting for the body, so a body over the limit got
-	// that answer and not 413. nil answers nothing.
-	BeforeBody func(w http.ResponseWriter, r *http.Request) bool
 }
 
 type wanMessage struct {
@@ -198,9 +193,6 @@ func WANStack(opts WANOptions) func(http.Handler) http.Handler {
 			}
 			if r.Method == http.MethodPost && !strings.Contains(r.Header.Get("Content-Type"), "application/json") {
 				httpx.WriteJSON(w, r, http.StatusUnsupportedMediaType, wanMessage{"Content-Type must be application/json"})
-				return
-			}
-			if opts.BeforeBody != nil && opts.BeforeBody(w, r) {
 				return
 			}
 			limit, ok := wanBodyLimits[p]
