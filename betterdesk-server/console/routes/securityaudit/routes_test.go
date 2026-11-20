@@ -33,7 +33,9 @@ func TestGuards(t *testing.T) {
 		if got := w.SignedOut().Do("GET", target, ""); got.Status != 401 || got.Body != `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}` {
 			t.Errorf("%s signed out: %d %s", route, got.Status, got.Body)
 		}
-		if got := w.As("guest_issuer").Do("GET", target, ""); got.Status != 403 || got.Body != `{"success":false,"error":"Permission denied: audit.view"}` {
+		// The panel access guard refuses first: the security audit section
+		// asks audit.view to read (BUGS PA4, F2)
+		if got := w.As("guest_issuer").Do("GET", target, ""); got.Status != 403 || got.Body != `{"success":false,"error":"Panel access denied: security-audit","code":"panel_access_denied"}` {
 			t.Errorf("%s as guest_issuer: %d %s", route, got.Status, got.Body)
 		}
 		if calls := api.Calls(); calls != nil {
