@@ -35,7 +35,7 @@
     "kind": "json",
     "json": {
      "error": "invalid or expired share link",
-     "valid": "false"
+     "valid": false
     }
    }
   },
@@ -71,7 +71,7 @@
     "kind": "json",
     "json": {
      "error": "invalid or expired share link",
-     "valid": "false"
+     "valid": false
     }
    }
   }

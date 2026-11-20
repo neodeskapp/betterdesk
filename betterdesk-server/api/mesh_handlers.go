@@ -194,7 +194,7 @@ func (s *Server) handleMeshShareValidate(w http.ResponseWriter, r *http.Request)
 	}
 	grant, err := s.meshGw.ValidateShareGrant(token, peerID)
 	if err != nil {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": err.Error(), "valid": "false"})
+		writeJSON(w, http.StatusForbidden, map[string]any{"error": err.Error(), "valid": false})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{
