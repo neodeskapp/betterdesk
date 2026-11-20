@@ -219,17 +219,14 @@ func tenantDevices(ctx context.Context, db *store.DB, tenantID jsbind.Value) ([]
 }
 
 // assign runs an insert of an assignment and reports whether it went
-// through. A row that is there already counts: SQLite replaces it,
-// PostgreSQL leaves it.
+// through. A row that is there already counts and stays as it is, with
+// its id and the time of the first assignment.
 func assign(ctx context.Context, db *store.DB, table, column string, tenantID, other jsbind.Value) bool {
 	args, err := jsbind.Args(db.Dialect(), 2, tenantID, other)
 	if err != nil {
 		return false
 	}
-	query := db.Pick(
-		"INSERT OR REPLACE INTO "+table+" (tenant_id, "+column+") VALUES (?, ?)",
-		"INSERT INTO "+table+" (tenant_id, "+column+") VALUES (?, ?) ON CONFLICT (tenant_id, "+column+") DO NOTHING")
-	_, err = db.Exec(ctx, query, args...)
+	_, err = db.Exec(ctx, "INSERT INTO "+table+" (tenant_id, "+column+") VALUES (?, ?) ON CONFLICT (tenant_id, "+column+") DO NOTHING", args...)
 	return err == nil
 }
 

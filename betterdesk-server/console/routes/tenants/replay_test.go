@@ -15,12 +15,14 @@ import (
 // for every role, every field with values of every JSON type, ids in
 // every spelling. The Go console has to answer the same, byte for byte,
 // on the same database, except for the steps the bug fixes change, which
-// tenantFixes lists (fixed_test.go).
+// tenantFixes and tenantSteps list (fixed_test.go).
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
+		steps, done := stepsCheck(db)
+		defer done(t)
 		defer tenantFixes.Unused(t, db)
-		w.Run(replay.Load(t, db, "node"), tenantFixes.Check(w, nil))
+		w.Run(replay.Load(t, db, "node"), tenantFixes.Check(w, steps))
 	})
 }
 
@@ -168,6 +170,37 @@ func TestTakenSlugIs409(t *testing.T) {
 		}
 		if got := post(`{"name":"Third","notes":"UNIQUE"}`); got.Status != 201 {
 			t.Errorf("a text that says UNIQUE: %d %s", got.Status, got.Body)
+		}
+	})
+}
+
+// Assigning a device or a user a second time leaves the assignment as it
+// is, with its id and the time it was made, on both databases (BUGS TN8).
+func TestAssigningAgainKeepsTheRow(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tenants", Body: replay.Text(`{"name":"One"}`)}); got.Status != 201 {
+			t.Fatalf("create: %d %s", got.Status, got.Body)
+		}
+		assign := func() {
+			t.Helper()
+			for path, body := range map[string]string{"/api/tenants/1/devices": `{"device_id":"D1"}`, "/api/tenants/1/users": `{"user_id":2}`} {
+				if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: path, Body: replay.Text(body)}); got.Status != 200 || !strings.HasPrefix(got.Body, `{"ok":true`) {
+					t.Fatalf("POST %s %s: %d %s", path, body, got.Status, got.Body)
+				}
+			}
+		}
+		assign()
+		w.Exec("UPDATE tenant_devices SET assigned_at = '2019-03-04 05:06:07'", nil)
+		w.Exec("UPDATE tenant_users SET assigned_at = '2019-03-04 05:06:07'", nil)
+		const rows = "SELECT id, CASE WHEN assigned_at < '2020-01-01' THEN 'first' ELSE 'again' END AS assigned FROM "
+		before := w.Rows(rows+"tenant_devices", nil) + w.Rows(rows+"tenant_users", nil)
+		if before != `[{"id":1,"assigned":"first"}][{"id":1,"assigned":"first"}]` {
+			t.Fatalf("the assignments: %s", before)
+		}
+		assign()
+		if after := w.Rows(rows+"tenant_devices", nil) + w.Rows(rows+"tenant_users", nil); after != before {
+			t.Errorf("the assignments after they were made again: %s, before %s", after, before)
 		}
 	})
 }

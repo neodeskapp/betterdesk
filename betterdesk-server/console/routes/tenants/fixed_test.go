@@ -626,3 +626,73 @@ var _ = tenantFixes.Add("TN2", map[string]replay.Fix{
 	`admin POST /api/tenants {"name":"???"}`:                    {Dialect: "postgres", Status: 409, Answer: slugTaken},
 	`admin POST /api/tenants {"name":"Tenant 26","slug":"1.5"}`: {Dialect: "postgres", Status: 409, Answer: slugTaken},
 })
+
+// tenantSteps are fixed steps of a request the recording sends at several
+// points, where a fix changes the answer at some of them only: lists read
+// after a change. They are named by the database and the step's name.
+var tenantSteps = map[string]replay.Fix{}
+
+// addSteps puts steps on tenantSteps.
+func addSteps(bug string, steps map[string]replay.Fix) bool {
+	for name, f := range steps {
+		if _, twice := tenantSteps[name]; twice {
+			panic("two fixes for " + name)
+		}
+		f.Bug = bug
+		tenantSteps[name] = f
+	}
+	return true
+}
+
+// stepsCheck compares the steps of tenantSteps with the answers their
+// fixes give. done fails for the steps of the database it did not see.
+func stepsCheck(db *store.DB) (check replay.Check, done func(t *testing.T)) {
+	prefix := db.Dialect().String() + ": "
+	seen := map[string]bool{}
+	check = func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		f, listed := tenantSteps[prefix+step.Name]
+		if !listed {
+			return false
+		}
+		seen[prefix+step.Name] = true
+		if got.Status != f.Status || replay.Normalize(got.Body) != replay.Normalize(f.Answer) {
+			t.Errorf("%s (%s)\n   fix: %d %s\n    go: %d %s", step.Name, f.Bug, f.Status, f.Answer, got.Status, got.Body)
+		}
+		return true
+	}
+	done = func(t *testing.T) {
+		for name, f := range tenantSteps {
+			if strings.HasPrefix(name, prefix) && !seen[name] {
+				t.Errorf("the fix of %s names no step of the recording: %s", f.Bug, name)
+			}
+		}
+	}
+	return check, done
+}
+
+// TN8: assigning a device or a user again leaves the assignment as it is,
+// so it stays where its first assignment put it in the lists. On SQLite
+// Node replaced the row with a new one; PostgreSQL kept it already.
+var _ = addSteps("TN8", map[string]replay.Fix{
+	"sqlite: 702 GET /api/tenants/1/devices": {Status: 200, Answer: `[{"device_id":"via-single-3","assigned_at":"2001-01-01 00:35:00","online":false,"hostname":"","ip":""},` +
+		`{"device_id":"via-single-2","assigned_at":"2001-01-01 00:34:00","online":false,"hostname":"","ip":""},{"device_id":"via-single","assigned_at":"2001-01-01 00:33:00","online":false,"hostname":"","ip":""},` +
+		`{"device_id":"q","assigned_at":"2001-01-01 00:32:00","online":false,"hostname":"","ip":""},{"device_id":"5.0","assigned_at":"2001-01-01 00:31:00","online":false,"hostname":"","ip":""},` +
+		`{"device_id":"1.0e+21","assigned_at":"2001-01-01 00:30:00","online":false,"hostname":"","ip":""},{"device_id":"","assigned_at":"2001-01-01 00:29:00","online":false,"hostname":"","ip":""},` +
+		`{"device_id":"1.5","assigned_at":"2001-01-01 00:28:00","online":false,"hostname":"","ip":""},{"device_id":"nested","assigned_at":"2001-01-01 00:27:00","online":false,"hostname":"","ip":""},` +
+		`{"device_id":"7.0","assigned_at":"2001-01-01 00:26:00","online":false,"hostname":"","ip":""},{"device_id":"x","assigned_at":"2001-01-01 00:25:00","online":false,"hostname":"","ip":""},` +
+		`{"device_id":"💻","assigned_at":"2001-01-01 00:24:00","online":false,"hostname":"","ip":""},{"device_id":"b","assigned_at":"2001-01-01 00:23:00","online":false,"hostname":"","ip":""},` +
+		`{"device_id":"a","assigned_at":"2001-01-01 00:22:00","online":false,"hostname":"","ip":""},{"device_id":"D-REAL","assigned_at":"2001-01-01 00:21:00","online":false,"hostname":"real","ip":"10.0.0.7"},` +
+		`{"device_id":"D-TEXT","assigned_at":"2001-01-01 00:20:00","online":false,"hostname":"text","ip":"10.0.0.6"},{"device_id":"D-TWO","assigned_at":"2001-01-01 00:19:00","online":false,"hostname":"two","ip":"10.0.0.5"},` +
+		`{"device_id":"ghost","assigned_at":"2001-01-01 00:18:00","online":false,"hostname":"","ip":""},{"device_id":"D-NULLDEL","assigned_at":"2001-01-01 00:17:00","online":true,"hostname":"","ip":"10.0.0.4"},` +
+		`{"device_id":"D-GONE","assigned_at":"2001-01-01 00:16:00","online":false,"hostname":"","ip":""},{"device_id":"D-OFF","assigned_at":"2001-01-01 00:15:00","online":false,"hostname":"","ip":""},` +
+		`{"device_id":"D-ON","assigned_at":"2001-01-01 00:14:00","online":true,"hostname":"pc-on","ip":"10.0.0.1"}]`},
+	"sqlite: 741 GET /api/tenants/1/users": {Status: 200, Answer: `[{"user_id":null,"assigned_at":"2001-01-01 00:30:00"},{"user_id":3000000000,"assigned_at":"2001-01-01 00:29:00"},` +
+		`{"user_id":1e+21,"assigned_at":"2001-01-01 00:27:00"},{"user_id":-1,"assigned_at":"2001-01-01 00:26:00"},{"user_id":11,"assigned_at":"2001-01-01 00:24:00"},` +
+		`{"user_id":0,"assigned_at":"2001-01-01 00:23:00"},{"user_id":8,"assigned_at":"2001-01-01 00:22:00"},{"user_id":6,"assigned_at":"2001-01-01 00:21:00"},` +
+		`{"user_id":1,"assigned_at":"2001-01-01 00:20:00"},{"user_id":2.5,"assigned_at":"2001-01-01 00:19:00"},{"user_id":1.5,"assigned_at":"2001-01-01 00:18:00"},` +
+		`{"user_id":5,"assigned_at":"2001-01-01 00:17:00"},{"user_id":4,"assigned_at":"2001-01-01 00:16:00"},{"user_id":3,"assigned_at":"2001-01-01 00:15:00"},` +
+		`{"user_id":2,"assigned_at":"2001-01-01 00:14:00"}]`},
+	"sqlite: 752 GET /api/tenants/1/users": {Status: 200, Answer: `[{"user_id":3000000000,"assigned_at":"2001-01-01 00:29:00"},{"user_id":1e+21,"assigned_at":"2001-01-01 00:27:00"},` +
+		`{"user_id":11,"assigned_at":"2001-01-01 00:24:00"},{"user_id":0,"assigned_at":"2001-01-01 00:23:00"},{"user_id":8,"assigned_at":"2001-01-01 00:22:00"},` +
+		`{"user_id":6,"assigned_at":"2001-01-01 00:21:00"},{"user_id":1,"assigned_at":"2001-01-01 00:20:00"},{"user_id":4,"assigned_at":"2001-01-01 00:16:00"}]`},
+})
