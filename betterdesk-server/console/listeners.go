@@ -26,9 +26,8 @@ import (
 //     HTTP_REDIRECT_HTTPS is false. Ports below 1024 the process may not
 //     bind become 5443 and 5000.
 //   - HTTPS mode whose certificate files are missing or unreadable: the
-//     console on Port with plain HTTP. Its session and CSRF cookies keep
-//     their HTTPS names and Secure, so browsers drop them there (BUGS
-//     LS3).
+//     console on Port with plain HTTP. Its session, CSRF and guest cookies
+//     keep their HTTPS names without Secure (server.go).
 //   - The client API port (API_ENABLED) on API_HOST:API_PORT, with TLS
 //     when the certificate loads and RUSTDESK_API_TLS does not turn it
 //     off.
@@ -73,7 +72,7 @@ func (s *Server) loadCertificates() error {
 		} else {
 			logging.Logf("console", "WARN: HTTPS enabled but certificates not found/invalid")
 			logging.Logf("console", "WARN: Falling back to HTTP mode")
-			logging.Logf("console", "WARN:   → Session and CSRF cookies keep their HTTPS names and Secure")
+			logging.Logf("console", "WARN:   → Session and CSRF cookies downgraded to non-Secure")
 			logging.Logf("console", "WARN:   → Fix: check SSL_CERT_PATH and SSL_KEY_PATH in .env")
 		}
 	}

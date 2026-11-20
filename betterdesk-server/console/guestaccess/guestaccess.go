@@ -43,9 +43,12 @@ var ErrNotText = errors.New("Cannot convert object to primitive value")
 // Options are the settings of a Service.
 type Options struct {
 	// HTTPS is the console's HTTPS mode (config.httpsEnabled,
-	// HTTPS_ENABLED): the cookie is then called betterdesk.guest and is
-	// Secure.
+	// HTTPS_ENABLED): the cookie is then called betterdesk.guest.
 	HTTPS bool
+	// Secure marks the cookie Secure: set it when the console serves
+	// HTTPS. In HTTPS mode without a usable certificate the console serves
+	// plain HTTP, and the cookie keeps its HTTPS name without Secure.
+	Secure bool
 	// GoAPI calls the API server, which keeps the links.
 	GoAPI *goapi.Client
 	// Now is the clock for the cookie's lifetime. Nil means time.Now.
@@ -156,14 +159,14 @@ func (s *Service) SetCookie(w http.ResponseWriter, token string, expiresAt any) 
 		Path:     "/",
 		Expires:  now.Add(maxAge),
 		HTTPOnly: true,
-		Secure:   s.opts.HTTPS,
+		Secure:   s.opts.Secure,
 		SameSite: "lax",
 	})
 }
 
 // ClearCookie removes the guest cookie.
 func (s *Service) ClearCookie(w http.ResponseWriter) {
-	cookie.Clear(w, s.CookieName(), cookie.Attributes{Path: "/", HTTPOnly: true, Secure: s.opts.HTTPS, SameSite: "lax"})
+	cookie.Clear(w, s.CookieName(), cookie.Attributes{Path: "/", HTTPOnly: true, Secure: s.opts.Secure, SameSite: "lax"})
 }
 
 // Grant is a link the API server found good for a request.

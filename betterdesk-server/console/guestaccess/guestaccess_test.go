@@ -161,9 +161,15 @@ func TestSetCookieLastsAsLongAsTheLink(t *testing.T) {
 		}
 	}
 	rec := httptest.NewRecorder()
-	New(Options{HTTPS: true, Now: func() time.Time { return now }}).SetCookie(rec, "t", nil)
+	New(Options{HTTPS: true, Secure: true, Now: func() time.Time { return now }}).SetCookie(rec, "t", nil)
 	if got := rec.Header().Get("Set-Cookie"); got != "betterdesk.guest=t; Max-Age=86400; Path=/; Expires=Tue, 02 Jun 2026 12:00:00 GMT; HttpOnly; Secure; SameSite=Lax" {
 		t.Errorf("HTTPS: %s", got)
+	}
+	// HTTPS mode on plain HTTP (no usable certificate)
+	rec = httptest.NewRecorder()
+	New(Options{HTTPS: true, Now: func() time.Time { return now }}).SetCookie(rec, "t", nil)
+	if got := rec.Header().Get("Set-Cookie"); got != "betterdesk.guest=t; Max-Age=86400; Path=/; Expires=Tue, 02 Jun 2026 12:00:00 GMT; HttpOnly; SameSite=Lax" {
+		t.Errorf("HTTPS on plain HTTP: %s", got)
 	}
 }
 
@@ -174,7 +180,7 @@ func TestClearCookie(t *testing.T) {
 		t.Errorf("plain: %s", got)
 	}
 	rec = httptest.NewRecorder()
-	New(Options{HTTPS: true}).ClearCookie(rec)
+	New(Options{HTTPS: true, Secure: true}).ClearCookie(rec)
 	if got := rec.Header().Get("Set-Cookie"); got != "betterdesk.guest=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=Lax" {
 		t.Errorf("HTTPS: %s", got)
 	}

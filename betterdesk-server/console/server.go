@@ -144,6 +144,11 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		return nil, fmt.Errorf("session secret: %w", err)
 	}
 
+	// The console serves HTTPS only when its certificate loaded. HTTPS mode
+	// without one runs on plain HTTP: the cookies keep their HTTPS names
+	// without Secure, and pages do not ask the browser to upgrade.
+	secure := cfg.HTTPS && s.net.cert != nil
+
 	audit := auditlog.New(opts.Store)
 	if cfg.WebUIDir == "" && !webui.HasEmbeddedBuild() {
 		logging.Logf("console", "WARN: this binary was built without the web app (go run ./cmd/embed-webui before go build) and WEB_UI_DIR is not set: the console answers no pages")
@@ -151,7 +156,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	host := webui.New(webui.Options{
 		Embedded:   cfg.WebUIDir == "",
 		Dir:        cfg.WebUIDir,
-		HTTPS:      cfg.HTTPS,
+		HTTPS:      secure,
 		Production: cfg.Production,
 		Session: func(r *http.Request) (bool, string) {
 			user := kit.User(r)
@@ -166,6 +171,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		DB:         opts.Store,
 		Secret:     secret,
 		HTTPS:      cfg.HTTPS,
+		Secure:     secure,
 		Policy:     session.PolicyFromEnv(getenv),
 		TrustProxy: cfg.TrustProxy,
 		Audit: func(ctx context.Context, userID int64, action, details, ip string) {
@@ -183,6 +189,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	protector, err := csrf.New(csrf.Options{
 		Secret:    secret,
 		HTTPS:     cfg.HTTPS,
+		Secure:    secure,
 		SignedIn:  func(r *http.Request) bool { return kit.UserID(r) != 0 },
 		BodyToken: csrfBodyToken,
 		OnError:   host.CSRFError,
@@ -271,7 +278,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("branding: %w", err)
 	}
-	s.deps.GuestAccess = guestaccess.New(guestaccess.Options{HTTPS: cfg.HTTPS, GoAPI: api})
+	s.deps.GuestAccess = guestaccess.New(guestaccess.Options{HTTPS: cfg.HTTPS, Secure: secure, GoAPI: api})
 	s.deps.FileTransfer = filetransfer.New(filetransfer.Options{Dir: cfg.TransfersDir, Logger: s.deps.Log})
 	s.jobs.Add("file transfer cleanup", s.deps.FileTransfer.Run)
 	// Under a supervisor a restart is the process's own exit (A30);

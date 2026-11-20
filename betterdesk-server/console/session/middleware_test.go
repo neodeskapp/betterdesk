@@ -339,7 +339,7 @@ func TestClearCookies(t *testing.T) {
 }
 
 func httpsMode(o *Options) {
-	o.HTTPS = true
+	o.HTTPS, o.Secure = true, true
 	trust, _ := httpx.ParseTrustProxy("loopback")
 	o.TrustProxy = trust
 }

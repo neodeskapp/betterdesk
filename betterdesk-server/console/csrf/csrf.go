@@ -10,6 +10,7 @@
 //
 //	__csrf_h=<token>|<hash>       HTTP setup
 //	__csrf=<token>|<hash>         HTTPS setup (HTTPS_ENABLED=true), with Secure
+//	                              when the console serves HTTPS
 //
 // with "|" written as %7C, Path=/, HttpOnly and SameSite=Lax, and no
 // expiry. The page cannot read the cookie; it gets the token from the API
@@ -61,8 +62,12 @@ type Options struct {
 	// Secret is the console's session secret.
 	Secret string
 	// HTTPS says the console is set up for HTTPS (HTTPS_ENABLED=true). It
-	// picks the cookie's name and marks the cookie Secure.
+	// picks the cookie's name.
 	HTTPS bool
+	// Secure marks the cookie Secure: set it when the console serves
+	// HTTPS. In HTTPS mode without a usable certificate the console serves
+	// plain HTTP, and the cookie keeps its HTTPS name without Secure.
+	Secure bool
 	// SignedIn reports whether a request carries a signed-in session. Gate
 	// asks it for requests under /api/bd/ and requests with a bearer token.
 	SignedIn func(r *http.Request) bool
@@ -97,7 +102,7 @@ func New(opts Options) (*Protector, error) {
 	p := &Protector{
 		secret:     opts.Secret,
 		cookieName: cookieNameHTTP,
-		secure:     opts.HTTPS,
+		secure:     opts.Secure,
 		signedIn:   opts.SignedIn,
 		bodyToken:  opts.BodyToken,
 		onError:    opts.OnError,

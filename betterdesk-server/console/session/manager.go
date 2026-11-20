@@ -31,8 +31,12 @@ type Options struct {
 	// Secret signs the cookie (see LoadSecret).
 	Secret string
 	// HTTPS says the console is set up for HTTPS (HTTPS_ENABLED=true). It
-	// picks the cookie's name and marks the cookie Secure.
+	// picks the cookie's name.
 	HTTPS bool
+	// Secure marks the cookie Secure: set it when the console serves
+	// HTTPS. In HTTPS mode without a usable certificate the console serves
+	// plain HTTP, and the cookie keeps its HTTPS name without Secure.
+	Secure bool
 	// Policy holds the lifetimes and the per-account limit (see
 	// PolicyFromEnv). The zero value is the default policy.
 	Policy Policy
@@ -56,7 +60,7 @@ type Options struct {
 type Manager struct {
 	table         *table
 	secret        string
-	https         bool
+	secure        bool
 	cookieName    string
 	policy        Policy
 	trust         httpx.TrustProxy
@@ -78,7 +82,7 @@ func New(ctx context.Context, opts Options) (*Manager, error) {
 	}
 	m := &Manager{
 		secret:        opts.Secret,
-		https:         opts.HTTPS,
+		secure:        opts.Secure,
 		cookieName:    cookieNameHTTP,
 		policy:        opts.Policy.normalized(),
 		trust:         opts.TrustProxy,
@@ -87,7 +91,7 @@ func New(ctx context.Context, opts Options) (*Manager, error) {
 		onError:       opts.OnError,
 		now:           opts.Now,
 	}
-	if m.https {
+	if opts.HTTPS {
 		m.cookieName = cookieNameHTTPS
 	}
 	if m.loginRedirect == nil {

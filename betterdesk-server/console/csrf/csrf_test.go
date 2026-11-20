@@ -116,11 +116,19 @@ func TestProviderMakesAPair(t *testing.T) {
 }
 
 func TestProviderHTTPSMode(t *testing.T) {
-	f := newFixture(t, func(o *Options) { o.HTTPS = true })
+	f := newFixture(t, func(o *Options) { o.HTTPS, o.Secure = true, true })
 	token, rec := f.provide(req("GET", "/", "", ""))
 	want := "__csrf=" + token + "%7C" + f.p.hash(token) + "; Path=/; HttpOnly; Secure; SameSite=Lax"
 	if got := setCookies(rec); len(got) != 1 || got[0] != want {
 		t.Fatalf("Set-Cookie:\n got %q\nwant %q", got, want)
+	}
+	// HTTPS mode on plain HTTP (no usable certificate): the HTTPS name
+	// without Secure
+	fallback := newFixture(t, func(o *Options) { o.HTTPS = true })
+	token, rec = fallback.provide(req("GET", "/", "", ""))
+	want = "__csrf=" + token + "%7C" + fallback.p.hash(token) + "; Path=/; HttpOnly; SameSite=Lax"
+	if got := setCookies(rec); len(got) != 1 || got[0] != want {
+		t.Fatalf("fallback Set-Cookie:\n got %q\nwant %q", got, want)
 	}
 	// The HTTP name is not read in HTTPS mode, and the other way round
 	if got, _ := f.provide(req("GET", "/", vectorPair, "")); got == vectorToken {
@@ -190,7 +198,7 @@ func TestProviderReplacesABrokenCookie(t *testing.T) {
 			t.Errorf("%s: token %q, cookie %q", name, token, got[1])
 		}
 	}
-	https := newFixture(t, func(o *Options) { o.HTTPS = true })
+	https := newFixture(t, func(o *Options) { o.HTTPS, o.Secure = true, true })
 	_, rec := https.provide(req("GET", "/", "__csrf=broken", ""))
 	if got := setCookies(rec); len(got) != 2 || got[0] != "__csrf=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=Lax" {
 		t.Errorf("HTTPS clearing header: %q", got)

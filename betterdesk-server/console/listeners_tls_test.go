@@ -10,6 +10,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/http/cookiejar"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -248,8 +250,10 @@ func csrfCookie(rs []reply) string {
 }
 
 // checkConsoleCookies compares the CSRF cookie of the console's answers:
-// its name and its attributes (Secure among them).
-func checkConsoleCookies(t *testing.T, g *goStack, name string, exchanges []oracleExchange, listener string) {
+// its name and its attributes (Secure among them). plain says the console
+// fell back to plain HTTP in HTTPS mode: Node kept Secure on the cookie
+// there, which browsers then drop, and Go leaves it off (BUGS LS3).
+func checkConsoleCookies(t *testing.T, g *goStack, name string, exchanges []oracleExchange, listener string, plain bool) {
 	t.Helper()
 	if len(exchanges) == 0 {
 		t.Fatalf("%s: no console exchanges", name)
@@ -257,6 +261,9 @@ func checkConsoleCookies(t *testing.T, g *goStack, name string, exchanges []orac
 	for _, e := range exchanges {
 		raw, _ := base64.StdEncoding.DecodeString(e.Got)
 		want := csrfCookie(parseReplies(raw, methodOf(e.Parts)))
+		if plain {
+			want = strings.Replace(want, "; Secure", "", 1)
+		}
 		got, _, _ := send(g.ports[listener], e.Secure, e.Parts, 6*time.Second)
 		if have := csrfCookie(parseReplies(got, methodOf(e.Parts))); have != want || want == "" {
 			t.Errorf("%s %s: CSRF cookie %q, Node %q", name, e.ID, have, want)
@@ -385,7 +392,7 @@ func TestConsoleHTTPSAgainstNode(t *testing.T) {
 	if g.ports["redirect"] == "" || g.ports["https"] == "" {
 		t.Fatalf("listeners %v", g.ports)
 	}
-	checkConsoleCookies(t, g, "https", filter(scenario.Exchanges, func(e oracleExchange) bool { return e.Listener == "https" && e.Secure }), "https")
+	checkConsoleCookies(t, g, "https", filter(scenario.Exchanges, func(e oracleExchange) bool { return e.Listener == "https" && e.Secure }), "https", false)
 	plainOnTLS(t, g, scenario, "https")
 	checkCiphers(t, g.ports["https"], scenario.Ciphers, "rsa")
 	if got := chainOf(t, g.ports["https"]); strings.Join(got, "|") != strings.Join(scenario.Chain, "|") {
@@ -468,7 +475,8 @@ func TestHTTPSSettingsAgainstNode(t *testing.T) {
 }
 
 // TestFallbackAgainstNode: HTTPS mode without usable certificate files
-// runs on plain HTTP with the HTTPS cookie names, without Secure.
+// runs on plain HTTP with the HTTPS cookie names, without Secure (Node
+// kept Secure there: BUGS LS3).
 func TestFallbackAgainstNode(t *testing.T) {
 	certs := makeTestCerts(t)
 	db := storetest.Migrated(t)
@@ -488,7 +496,7 @@ func TestFallbackAgainstNode(t *testing.T) {
 		if g.ports["console"] == "" || g.s.net.cert != nil || *scenario.HTTPSPortOpen {
 			t.Fatalf("%s: listeners %v, Node's HTTPS port open %v", scenario.Name, g.ports, *scenario.HTTPSPortOpen)
 		}
-		checkConsoleCookies(t, g, scenario.Name, filter(scenario.Exchanges, func(e oracleExchange) bool { return e.Listener == "console" }), "console")
+		checkConsoleCookies(t, g, scenario.Name, filter(scenario.Exchanges, func(e oracleExchange) bool { return e.Listener == "console" }), "console", scenario.Env["HTTPS_ENABLED"] == "true")
 		api := oracleScenario{Env: scenario.Env, Exchanges: filter(scenario.Exchanges, func(e oracleExchange) bool { return e.Listener == "api" })}
 		known := map[string]func(t *testing.T, got []reply, closed bool) string{}
 		if g.s.net.apiCert != nil {
@@ -504,6 +512,74 @@ func TestFallbackAgainstNode(t *testing.T) {
 	}
 	if n != 6 {
 		t.Errorf("%d fallback scenarios replayed", n)
+	}
+}
+
+// TestHTTPSFallbackCookiesAreNotSecure: in HTTPS mode without a usable
+// certificate the console serves plain HTTP. Its session, CSRF and guest
+// cookies keep their HTTPS names without Secure, so a browser keeps the
+// session and passes the CSRF gate, and its pages do not send the browser
+// to HTTPS (BUGS LS3, S2).
+func TestHTTPSFallbackCookiesAreNotSecure(t *testing.T) {
+	w := goOnly(t, setup{https: true, build: true})
+	if w.s.net.cert != nil {
+		t.Fatal("a certificate loaded")
+	}
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The client keeps the cookies between requests, as a browser does
+	client := &http.Client{Jar: jar, Timeout: 20 * time.Second}
+	do := func(method, path, token string) (*http.Response, map[string]any) {
+		t.Helper()
+		var body io.Reader
+		if method == http.MethodPost {
+			body = strings.NewReader("{}")
+		}
+		req, err := http.NewRequest(method, w.front.URL+path, body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		if token != "" {
+			req.Header.Set("X-CSRF-Token", token)
+		}
+		res, err := client.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer res.Body.Close()
+		var out map[string]any
+		_ = json.NewDecoder(res.Body).Decode(&out)
+		return res, out
+	}
+	res, _ := do(http.MethodGet, "/__test/signin/admin", "")
+	names := map[string]bool{}
+	for _, line := range res.Header.Values("Set-Cookie") {
+		name, _, _ := strings.Cut(line, "=")
+		names[name] = true
+		if strings.Contains(line, "; Secure") {
+			t.Errorf("Secure cookie over the plain HTTP fallback: %s", line)
+		}
+	}
+	if !names["betterdesk.sid"] || !names["__csrf"] {
+		t.Errorf("cookies %v, want betterdesk.sid and __csrf", names)
+	}
+	if _, who := do(http.MethodGet, "/api/probe", ""); who["user"] != float64(roleIDs["admin"]) {
+		t.Errorf("the next request is signed in as %v", who["user"])
+	}
+	_, token := do(http.MethodGet, "/__test/token", "")
+	if res, _ := do(http.MethodPost, "/api/probe", fmt.Sprint(token["token"])); res.StatusCode != http.StatusOK {
+		t.Errorf("a write with the page's token: %d", res.StatusCode)
+	}
+	guest := httptest.NewRecorder()
+	w.s.deps.GuestAccess.SetCookie(guest, "t", nil)
+	if line := guest.Header().Get("Set-Cookie"); !strings.HasPrefix(line, "betterdesk.guest=") || strings.Contains(line, "; Secure") {
+		t.Errorf("guest cookie %q", line)
+	}
+	if res := w.agent().get("/login", "Accept", "text/html"); res.status != http.StatusOK || strings.Contains(res.header.Get("Content-Security-Policy"), "upgrade-insecure-requests") {
+		t.Errorf("sign-in page %d, policy %q", res.status, res.header.Get("Content-Security-Policy"))
 	}
 }
 

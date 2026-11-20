@@ -17,8 +17,9 @@
 // taken as text. A value with another prefix or a wrong mac counts as no
 // cookie: the request goes on signed out, and nothing clears the cookie.
 //
-// The attributes are Path=/, Expires, HttpOnly, Secure in an HTTPS setup,
-// and SameSite=Lax. Every answer to a request that came with a live
+// The attributes are Path=/, Expires, HttpOnly, Secure when the console
+// serves HTTPS (not in an HTTPS setup that fell back to plain HTTP for
+// want of a certificate), and SameSite=Lax. Every answer to a request that came with a live
 // session sends the cookie again with a later Expires. A visitor without a
 // session gets a cookie only once a handler has written to the session. A
 // Secure cookie is never sent over a plain connection.

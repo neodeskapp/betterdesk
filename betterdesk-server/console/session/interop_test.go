@@ -169,7 +169,7 @@ func startGo(t *testing.T, db *store.DB, s setup) *goServer {
 	}
 	g := &goServer{}
 	m, err := session.New(context.Background(), session.Options{
-		DB: db, Secret: s.secret, HTTPS: s.https, Policy: session.PolicyFromEnv(s.getenv), TrustProxy: trust,
+		DB: db, Secret: s.secret, HTTPS: s.https, Secure: s.https, Policy: session.PolicyFromEnv(s.getenv), TrustProxy: trust,
 		Audit: func(_ context.Context, userID int64, action, details, ip string) {
 			g.mu.Lock()
 			defer g.mu.Unlock()
@@ -181,7 +181,7 @@ func startGo(t *testing.T, db *store.DB, s setup) *goServer {
 	}
 	g.m = m
 	protector, err := csrf.New(csrf.Options{
-		Secret: s.secret, HTTPS: s.https,
+		Secret: s.secret, HTTPS: s.https, Secure: s.https,
 		SignedIn: func(r *http.Request) bool { return session.From(r).UserID() != 0 },
 		OnError: func(w http.ResponseWriter, r *http.Request) {
 			httpx.WriteJSON(w, r, http.StatusForbidden, map[string]any{"success": false, "error": "csrf"})
