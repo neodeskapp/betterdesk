@@ -397,9 +397,9 @@ func TestAgainstAPIServer(t *testing.T) {
 			t.Errorf("GET of a path that does not exist: %+v, %+v", resp, e)
 		}
 		// A known path with another method is the same 404.
-		_, err = c.Post(ctx, "/help/requests", Body(NewObject("device_id", "PEERAAA1")))
+		_, err = c.Put(ctx, "/help/requests", Body(NewObject("device_id", "PEERAAA1")))
 		if e := AsError(err); e == nil || e.Status() != 404 || toJSON(t, e.Data()) != `{"error":"not found"}` {
-			t.Errorf("POST /help/requests: %+v", e)
+			t.Errorf("PUT /help/requests: %+v", e)
 		}
 		// An error in plain words stays text.
 		_, err = c.Get(ctx, "/tokens/abc")
