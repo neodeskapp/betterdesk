@@ -63,6 +63,9 @@ const (
 	guestRelayBuffer = 1 << 20
 	// validateTimeout is the limit of a link check with the API server.
 	validateTimeout = 5 * time.Second
+	// SessionCheck is how often a signed-in bridge's session and
+	// permission are looked at again.
+	SessionCheck = 10 * time.Second
 )
 
 // Clock is the time the bridges see: Date.now and setTimeout.
@@ -132,6 +135,8 @@ type Options struct {
 	// for an account without a limit. nil: every account sees every
 	// device.
 	CanAccess func(ctx context.Context, user *session.User, device *goapi.Object) (bool, error)
+	// SessionCheck overrides SessionCheck (tests).
+	SessionCheck time.Duration
 }
 
 // Service holds the bridges of the two sockets.
@@ -163,6 +168,9 @@ func New(opts Options) *Service {
 	}
 	if opts.GuestCookie == "" {
 		opts.GuestCookie = "bd.guest"
+	}
+	if opts.SessionCheck <= 0 {
+		opts.SessionCheck = SessionCheck
 	}
 	signalHost := orText(opts.SignalHost, "localhost")
 	signalPort := orPort(opts.SignalPort, 21116)

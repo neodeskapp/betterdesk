@@ -112,6 +112,10 @@ func (s *Service) bridge(conn *ws.Conn, ip, label, target string, messageTranspo
 			b.revalidate()
 		}()
 	}
+	if signedIn != nil {
+		b.wg.Add(1)
+		go b.watchSession()
+	}
 	b.readSocket()
 	cancel()
 	b.wg.Wait()

@@ -2,6 +2,7 @@ package wsrelay
 
 import (
 	"context"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/ws"
@@ -31,6 +32,42 @@ func (s *Service) newAccount(u *ws.Upgrade, sn ws.Session) *account {
 
 // reads reports whether the bridge reads the account's frames.
 func (a *account) reads() bool { return a != nil && a.limited }
+
+// stillAllowed reads the account's session again: still signed in as the
+// same account, its role still with device.connect. A failed lookup
+// counts as no, as at the upgrade.
+func (a *account) stillAllowed(parent context.Context) bool {
+	ctx, cancel := context.WithTimeout(parent, validateTimeout)
+	defer cancel()
+	check := *a.u
+	check.R = a.u.R.WithContext(ctx)
+	sn := check.Session()
+	if !sn.SignedIn() || sn.UserID() != a.userID {
+		return false
+	}
+	allowed, err := check.RoleHasPermission(sn.UserRole(), "device.connect")
+	return err == nil && allowed
+}
+
+// watchSession looks at a signed-in bridge's session every SessionCheck
+// and ends the bridge (cause session-ended) once the account signed out,
+// another account holds the session or its role lost device.connect.
+func (b *bridge) watchSession() {
+	defer b.wg.Done()
+	tick := time.NewTicker(b.s.opts.SessionCheck)
+	defer tick.Stop()
+	for {
+		select {
+		case <-b.done:
+			return
+		case <-tick.C:
+			if !b.account.stillAllowed(b.conn.Context()) {
+				b.cleanup("session-ended", "")
+				return
+			}
+		}
+	}
+}
 
 // inScope reports whether the account's device scope holds the device of
 // id. A device the console does not know, and a lookup or scope check
