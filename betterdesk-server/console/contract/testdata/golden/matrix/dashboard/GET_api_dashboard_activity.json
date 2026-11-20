@@ -259,7 +259,7 @@
        "action": "pairing_code_created",
        "action_label": "pairing_code_created",
        "details": "",
-       "device_id": "apikey:console-bridge",
+       "device_id": "e2e_global_admin",
        "timestamp": "<volatile>"
       },
       {
@@ -388,7 +388,7 @@
        "action": "pairing_code_created",
        "action_label": "pairing_code_created",
        "details": "",
-       "device_id": "apikey:console-bridge",
+       "device_id": "e2e_global_admin",
        "timestamp": "<volatile>"
       },
       {
@@ -510,7 +510,7 @@
        "action": "pairing_code_created",
        "action_label": "pairing_code_created",
        "details": "",
-       "device_id": "apikey:console-bridge",
+       "device_id": "e2e_super_admin",
        "timestamp": "<volatile>"
       },
       {

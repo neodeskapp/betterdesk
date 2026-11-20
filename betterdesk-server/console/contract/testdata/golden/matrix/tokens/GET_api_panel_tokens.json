@@ -164,6 +164,7 @@
       "tokens": [
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_global_admin",
         "id": 1,
         "max_uses": 0,
         "name": "",
@@ -223,6 +224,7 @@
       "tokens": [
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_server_admin",
         "id": 2,
         "max_uses": 0,
         "name": "",
@@ -232,6 +234,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_global_admin",
         "id": 1,
         "max_uses": 0,
         "name": "",
@@ -291,6 +294,7 @@
       "tokens": [
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_super_admin",
         "id": 3,
         "max_uses": 0,
         "name": "",
@@ -300,6 +304,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_server_admin",
         "id": 2,
         "max_uses": 0,
         "name": "",
@@ -309,6 +314,7 @@
        },
        {
         "created_at": "<volatile>",
+        "created_by": "e2e_global_admin",
         "id": 1,
         "max_uses": 0,
         "name": "",

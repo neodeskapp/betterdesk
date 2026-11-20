@@ -681,7 +681,7 @@
         "id": "<volatile>",
         "label": ""
        },
-       "target": "apikey:console-bridge",
+       "target": "e2e_global_admin",
        "timestamp": "<volatile>"
       },
       {
@@ -1235,7 +1235,7 @@
         "id": "<volatile>",
         "label": ""
        },
-       "target": "apikey:console-bridge",
+       "target": "e2e_global_admin",
        "timestamp": "<volatile>"
       },
       {
@@ -1804,7 +1804,7 @@
         "id": "<volatile>",
         "label": ""
        },
-       "target": "apikey:console-bridge",
+       "target": "e2e_super_admin",
        "timestamp": "<volatile>"
       },
       {
@@ -1880,7 +1880,7 @@
         "id": "<volatile>",
         "label": ""
        },
-       "target": "apikey:console-bridge",
+       "target": "e2e_global_admin",
        "timestamp": "<volatile>"
       },
       {

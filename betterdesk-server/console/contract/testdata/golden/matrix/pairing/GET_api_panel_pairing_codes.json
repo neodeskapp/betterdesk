@@ -164,7 +164,7 @@
      "codes": [
       {
        "created_at": "<volatile>",
-       "created_by": "apikey:console-bridge",
+       "created_by": "e2e_global_admin",
        "expires_at": "<volatile>",
        "id": "<volatile>",
        "label": ""
@@ -222,14 +222,14 @@
      "codes": [
       {
        "created_at": "<volatile>",
-       "created_by": "apikey:console-bridge",
+       "created_by": "e2e_global_admin",
        "expires_at": "<volatile>",
        "id": "<volatile>",
        "label": ""
       },
       {
        "created_at": "<volatile>",
-       "created_by": "apikey:console-bridge",
+       "created_by": "e2e_super_admin",
        "expires_at": "<volatile>",
        "id": "<volatile>",
        "label": ""
