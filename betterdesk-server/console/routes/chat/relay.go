@@ -105,15 +105,20 @@ func (r *Relay) Register(reg *ws.Registry) {
 func (r *Relay) nowMillis() float64 { return float64(r.opts.Now().UnixMilli()) }
 
 // serveAgent is a device's socket. Before the handshake: a foreign origin
-// 403, then the device token (the query's token, else a bearer header)
-// checked for the device in the path: refused 403, a failed check 500.
-// A second socket of the device replaces the first, which is closed
-// with 1001 "New agent connected".
+// 403, the inbox's id "panel" 403 (whose contacts are every device, and
+// whose room is the inbox's), then the device token (the query's token,
+// else a bearer header) checked for the device in the path: refused 403,
+// a failed check 500. A second socket of the device replaces the first,
+// which is closed with 1001 "New agent connected".
 func (r *Relay) serveAgent(u *ws.Upgrade) {
 	if !u.CheckOrigin("chat-agent " + u.Path) {
 		return
 	}
 	deviceID := u.Param("id")
+	if deviceID == panelID {
+		u.Refuse(http.StatusForbidden)
+		return
+	}
 	token, _ := u.SearchParam("token")
 	if token == "" {
 		token = bearerToken(u.R.Header.Get("Authorization"))

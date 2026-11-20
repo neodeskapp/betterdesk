@@ -230,6 +230,18 @@ var fixes = []fix{
 	{"SK4", "fallbacks and odd answers", 17, `[]`},
 	{"SK4", "conversation ids the API path cannot take", 13, `[]`},
 	{"SK4", "conversation ids the API path cannot take", 14, `[{"api":{"method":"GET","path":"/chat/groups/dev1"}}]`},
+	// No device socket comes in under the inbox's id "panel": it is refused
+	// before its token is looked at, sends nothing, and the inbox sees no
+	// agent
+	{"SK8", "agent replaced and gone", 14, `[{"socket":"a5","head":"HTTP/1.1 403 Forbidden\r\n\r\n"},{"socket":"a5","end":true}]`},
+	{"SK8", "agent replaced and gone", 15, `[]`},
+	{"SK8", "agent replaced and gone", 16, `[{"permission":["operator","chat.access"]},` +
+		`{"socket":"p2","head":"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"},` +
+		`{"api":{"method":"GET","path":"/chat/contacts/panel"}},{"api":{"method":"GET","path":"/chat/groups/panel"}},` +
+		`{"socket":"p2","text":"{\"type\":\"status\",\"agent_connected\":false}"},` +
+		`{"socket":"p2","text":"{\"type\":\"contacts\",\"contacts\":[{\"id\":\"dev1\",\"name\":\"one\",\"online\":true},{\"id\":\"operator:admin\",\"name\":\"admin\",\"role\":\"operator\"}]}"},` +
+		`{"socket":"p2","text":"{\"type\":\"groups\",\"groups\":[]}"}]`},
+	{"SK8", "agent replaced and gone", 17, `[]`},
 }
 
 // fixedEvents is what a step of the recording looks like since the fixes:

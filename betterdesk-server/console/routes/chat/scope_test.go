@@ -206,6 +206,39 @@ func TestAgentReadsItsOwnConversations(t *testing.T) {
 	}
 }
 
+// TestNoAgentIsThePanel: "panel" is the room of the inbox, whose contacts
+// are every device of the server. A device socket under that id is
+// refused with 403 before its token is looked at, so a token whose
+// client id is "panel" (an unbound enrollment token, a sign-in that named
+// the device "panel") gets neither the inbox's contacts nor its room
+// (BUGS SK8, G24).
+func TestNoAgentIsThePanel(t *testing.T) {
+	var mu sync.Mutex
+	var verified []string
+	relay := startRelay(t, RelayOptions{VerifyDevice: func(_ context.Context, deviceID, token string) (bool, error) {
+		mu.Lock()
+		verified = append(verified, deviceID)
+		mu.Unlock()
+		return token == "tok-"+deviceID, nil
+	}})
+	relay.api.answer("GET /chat/contacts/panel", `{"contacts":[{"id":"dev1"},{"id":"dev2"}]}`)
+	for _, path := range []string{"/ws/chat/panel?token=tok-panel", "/ws/chat/panel"} {
+		if s, status := relay.dial(t, "", path); s != nil || status != http.StatusForbidden {
+			t.Errorf("%s: %d, want 403", path, status)
+		}
+	}
+	if calls := relay.api.taken(); len(calls) != 0 {
+		t.Errorf("the API server was asked %q", calls)
+	}
+	// A device of another name still comes in
+	relay.agent(t, "dev1")
+	mu.Lock()
+	defer mu.Unlock()
+	if strings.Join(verified, " ") != "dev1" {
+		t.Errorf("tokens looked at for %q, want dev1's only", verified)
+	}
+}
+
 // want compares the messages a socket got with the ones it should have.
 func want(t *testing.T, what string, got []string, messages ...string) {
 	t.Helper()
