@@ -190,6 +190,61 @@ func TestRedirectHasNoPoweredBy(t *testing.T) {
 	}
 }
 
+// PublicHostPage answers every method with the same short page: no
+// redirect, no script, nothing of the request, the HTTPS port and the
+// setting to set (BUGS UM41, DECISIONS A69).
+func TestPublicHostPage(t *testing.T) {
+	h := PublicHostPage(5443)
+	for _, method := range []string{http.MethodGet, http.MethodPost, http.MethodHead, http.MethodDelete} {
+		r := httptest.NewRequest(method, "http://placeholder/", nil)
+		r.Host, r.RequestURI = "attacker.example", "/login?next=%3Cscript%3E"
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		body := w.Body.String()
+		switch {
+		case w.Code != http.StatusOK || w.Header().Get("Location") != "":
+			t.Errorf("%s: %d, Location %q; want 200 and no redirect", method, w.Code, w.Header().Get("Location"))
+		case w.Header().Get("Content-Type") != "text/html; charset=utf-8" || w.Header().Get("Cache-Control") != "no-store" ||
+			w.Header().Get("Content-Security-Policy") != "default-src 'none'":
+			t.Errorf("%s: headers %v", method, w.Header())
+		case w.Header().Get("Content-Length") != strconv.Itoa(len(publicHostPage(5443))):
+			t.Errorf("%s: Content-Length %q", method, w.Header().Get("Content-Length"))
+		case method == http.MethodHead && body != "":
+			t.Errorf("HEAD has a body: %q", body)
+		case method != http.MethodHead && (!strings.Contains(body, "PANEL_PUBLIC_HOST") || !strings.Contains(body, "port 5443") ||
+			strings.Contains(body, "<script") || strings.Contains(body, "attacker") || strings.Contains(body, "login")):
+			t.Errorf("%s: page %q", method, body)
+		}
+	}
+	if page := publicHostPage(443); strings.Contains(page, "port") && strings.Contains(page, "443") {
+		t.Errorf("the page for port 443 names the port: %q", page)
+	}
+	r := httptest.NewRequest(http.MethodGet, "/x", nil)
+	r.ProtoMajor = 2
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, r)
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("HTTP/2 request: %d, want the redirect's 400", w.Code)
+	}
+}
+
+// The start log warns when the plain port answers the page, and names a
+// PANEL_PUBLIC_HOST that is set but names no host.
+func TestPublicHostWarning(t *testing.T) {
+	for configured, want := range map[string]string{
+		"":                      "PANEL_PUBLIC_HOST is not set: the plain HTTP port 5000 answers a page",
+		"   ":                   "PANEL_PUBLIC_HOST is not set: the plain HTTP port 5000 answers a page",
+		"desk.example.com:8443": `PANEL_PUBLIC_HOST "desk.example.com:8443" names no host (write the host name or address alone, without a port or path)`,
+		"desk.example.com":      "",
+		"https://desk.example":  "",
+	} {
+		got := PublicHostWarning(configured, 5000)
+		if want == "" && got != "" || want != "" && !strings.Contains(got, want) {
+			t.Errorf("%q: %q, want %q", configured, got, want)
+		}
+	}
+}
+
 func w443(t *testing.T) string {
 	t.Helper()
 	r := httptest.NewRequest(http.MethodGet, "/x", nil)

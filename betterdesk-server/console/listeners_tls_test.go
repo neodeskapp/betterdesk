@@ -305,11 +305,41 @@ var loadRedirectOracle = sync.OnceValues(func() (*oracleFile, error) {
 	return &f, err
 })
 
+// configuredPublicHost is the PANEL_PUBLIC_HOST a redirect scenario gives
+// the console: from the environment, else from the public endpoints file.
+func configuredPublicHost(scenario oracleScenario) string {
+	if value := scenario.Env["PANEL_PUBLIC_HOST"]; value != "" || scenario.Durable == nil {
+		return value
+	}
+	for _, line := range strings.Split(*scenario.Durable, "\n") {
+		if value, ok := strings.CutPrefix(line, "PANEL_PUBLIC_HOST="); ok {
+			return value
+		}
+	}
+	return ""
+}
+
+// publicHostPage is the known difference of a redirect scenario whose
+// PANEL_PUBLIC_HOST names no host: where Node redirected to the bound
+// address or to localhost, the plain port answers the page that asks to
+// set PANEL_PUBLIC_HOST (BUGS UM41, DECISIONS A69).
+func publicHostPage(method string) func(t *testing.T, got []reply, closed bool) string {
+	return func(t *testing.T, got []reply, closed bool) string {
+		if len(got) != 1 || got[0].status != http.StatusOK || got[0].header.Get("Location") != "" ||
+			got[0].header.Get("Content-Type") != "text/html; charset=utf-8" ||
+			method != http.MethodHead && !bytes.Contains(got[0].body, []byte("set PANEL_PUBLIC_HOST")) {
+			return fmt.Sprintf("want the page that asks to set PANEL_PUBLIC_HOST, got %d answers (closed %v)", len(got), closed)
+		}
+		return ""
+	}
+}
+
 // TestRedirectAgainstNode replays the redirect recording: the plain port
 // sends every request to the host chosen at the start (PANEL_PUBLIC_HOST
-// from the environment, else from the public endpoints file, else the
-// bound address, else localhost), whatever Host header and target the
-// request had.
+// from the environment, else from the public endpoints file), whatever
+// Host header and target the request had. Without a PANEL_PUBLIC_HOST
+// that names a host, where Node used the bound address or localhost, it
+// answers a page that asks to set it.
 func TestRedirectAgainstNode(t *testing.T) {
 	certs := makeTestCerts(t)
 	db := storetest.Migrated(t)
@@ -320,8 +350,22 @@ func TestRedirectAgainstNode(t *testing.T) {
 	if len(f.Scenarios) < 11 {
 		t.Fatalf("only %d redirect scenarios", len(f.Scenarios))
 	}
-	ipv6 := 0
+	ipv6, pages := 0, 0
 	for _, scenario := range f.Scenarios {
+		known, page := knownRedirect, false
+		if _, source := listen.RedirectHost(configuredPublicHost(scenario), scenario.Env["HOST"]); source != "config" {
+			pages, page = pages+1, true
+			known = map[string]func(t *testing.T, got []reply, closed bool) string{}
+			for _, e := range scenario.Exchanges {
+				raw, _ := base64.StdEncoding.DecodeString(e.Got)
+				method := methodOf(e.Parts)
+				if check, ok := knownRedirect[e.ID]; ok {
+					known[e.ID] = check
+				} else if replies := parseReplies(raw, method); len(replies) == 1 && replies[0].status == http.StatusTemporaryRedirect {
+					known[e.ID] = publicHostPage(method)
+				}
+			}
+		}
 		// An IPv6 host goes into the redirect in brackets, where Node put it
 		// in bare (BUGS UM40)
 		if host, _ := listen.RedirectHost(scenario.Env["PANEL_PUBLIC_HOST"], scenario.Env["HOST"]); strings.Contains(host, ":") {
@@ -335,25 +379,40 @@ func TestRedirectAgainstNode(t *testing.T) {
 			scenario.Exchanges = exchanges
 		}
 		t.Run(scenario.Name, func(t *testing.T) {
+			var logged bytes.Buffer
+			previous := log.Writer()
+			log.SetOutput(&logged)
 			g, err := newGoStack(t, db, scenario, certs, nil)
+			log.SetOutput(previous)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if g.ports["redirect"] == "" || g.ports["https"] == "" {
 				t.Fatalf("listeners %v", g.ports)
 			}
+			// The start log warns when the plain port answers the page
+			if warned := strings.Contains(logged.String(), "the plain HTTP port"); warned != page {
+				t.Errorf("warned about PANEL_PUBLIC_HOST %v, want %v; log:\n%s", warned, page, logged.String())
+			}
 			// The redirects name the recording's HTTPS port
 			_, httpsPort, _ := net.SplitHostPort(g.ports["https"])
 			g.ports["redirect"] = portRewriter(t, g.ports["redirect"], ":"+httpsPort, ":25443")
-			res := g.replayExchanges(t, scenario, knownRedirect)
+			res := g.replayExchanges(t, scenario, known)
 			checkReplay(t, scenario.Name, res)
-			if res.same < len(scenario.Exchanges)*3/4 {
-				t.Errorf("only %d of %d redirects compared", res.same, len(scenario.Exchanges))
+			compared := res.same
+			if page {
+				compared += res.differ
+			}
+			if compared < len(scenario.Exchanges)*3/4 {
+				t.Errorf("only %d of %d redirects compared", compared, len(scenario.Exchanges))
 			}
 		})
 	}
 	if ipv6 == 0 {
 		t.Error("no redirect scenario with an IPv6 host")
+	}
+	if pages == 0 {
+		t.Error("no redirect scenario without a public host")
 	}
 }
 

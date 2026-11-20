@@ -34,10 +34,12 @@
 // # The redirect
 //
 // Redirect answers every request on the plain port of an HTTPS setup with
-// 307 to https://<host>:<HTTPS_PORT><path>. RedirectHost picks the host
-// once, when the listener is made: PANEL_PUBLIC_HOST (from the
-// environment or the public endpoints file, as serverinfo reads it), else
-// the address the console binds, else localhost; never the request's
+// 307 to https://<host>:<HTTPS_PORT><path>. The host is chosen once, when
+// the listener is made: PANEL_PUBLIC_HOST (from the environment or the
+// public endpoints file, as serverinfo reads it), never the request's
 // Host. A request target that is not a path (an absolute URL, "//host")
-// becomes "/".
+// becomes "/". When PANEL_PUBLIC_HOST names no host (RedirectHost falls
+// back to the bound address or localhost), the plain port answers
+// PublicHostPage instead, a page that asks to set it, and the start log
+// warns (PublicHostWarning).
 package listen

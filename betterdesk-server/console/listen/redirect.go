@@ -1,6 +1,7 @@
 package listen
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -49,6 +50,76 @@ func Redirect(host string, httpsPort int) http.Handler {
 			_, _ = io.WriteString(w, body)
 		}
 	})
+}
+
+// PublicHostPage is the plain port of a console in HTTPS mode that has no
+// public host (PANEL_PUBLIC_HOST names none): with nothing to name the
+// HTTPS address, every request gets a short page that says to open the
+// console with https:// and asks the administrator to set
+// PANEL_PUBLIC_HOST, instead of a redirect to a host the console would
+// have to guess. The page is plain HTML in English, with no script and
+// nothing of the request in it. CONNECT is closed without an answer, and
+// a target the redirect refuses is refused the same way.
+func PublicHostPage(httpsPort int) http.Handler {
+	page := publicHostPage(httpsPort)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		Served(r)
+		if r.Method == http.MethodConnect {
+			closeUnanswered(w)
+			return
+		}
+		if nonASCII(r.RequestURI) || r.ProtoMajor != 1 {
+			badRequest(w)
+			return
+		}
+		h := w.Header()
+		h.Set("Cache-Control", "no-store")
+		h.Set("Content-Type", "text/html; charset=utf-8")
+		h.Set("Content-Security-Policy", "default-src 'none'")
+		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("Content-Length", strconv.Itoa(len(page)))
+		w.WriteHeader(http.StatusOK)
+		if r.Method != http.MethodHead {
+			_, _ = io.WriteString(w, page)
+		}
+	})
+}
+
+// publicHostPage is the page of PublicHostPage.
+func publicHostPage(httpsPort int) string {
+	open := "Open it with https:// at the address you use for this server."
+	if httpsPort > 0 && httpsPort != 443 {
+		open = "Open it with https:// and port " + strconv.Itoa(httpsPort) + " at the address you use for this server."
+	}
+	return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BetterDesk: use HTTPS</title>
+</head>
+<body>
+<h1>This console uses HTTPS</h1>
+<p>` + open + `</p>
+<p>Administrators: set PANEL_PUBLIC_HOST to the host name or address of this console and restart it. This port then sends browsers to HTTPS.</p>
+</body>
+</html>
+`
+}
+
+// PublicHostWarning is the start log's warning for a console in HTTPS mode
+// whose plain port answers PublicHostPage: configured is the value of
+// PANEL_PUBLIC_HOST, which names no host. It is "" when configured names
+// one.
+func PublicHostWarning(configured string, plainPort int) string {
+	if _, ok := normalizeConfiguredHost(configured); ok {
+		return ""
+	}
+	what := "is not set"
+	if jsTrim(configured) != "" {
+		what = fmt.Sprintf("%q names no host (write the host name or address alone, without a port or path)", configured)
+	}
+	return fmt.Sprintf("HTTPS is on and PANEL_PUBLIC_HOST %s: the plain HTTP port %d answers a page that asks to set it instead of redirecting to HTTPS", what, plainPort)
 }
 
 // expressLocation is the Location header res.location made of an
