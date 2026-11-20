@@ -53,11 +53,13 @@ type done struct {
 	Success bool `json:"success"`
 }
 
-// upload answers POST inventory with the body {device_id, hardware,
+// upload answers POST inventory with the body {device_id?, hardware,
 // software?, collected_at?}: the device's report replaces the one it sent
 // before, as it came.
 //
-// The device guards came first. Before anything is stored, the report is
+// The device guards came first: the report is the token's device's, and a
+// device the body, the query or X-Device-Id names is that device. A report
+// without hardware is 400. Before anything is stored, the report is
 // checked: collected_at, when it is given, is a time; hardware and
 // software hold no U+0000 and no half of a surrogate pair, which the JSON
 // column of PostgreSQL does not take; and a disk whose size or name cannot
@@ -69,11 +71,8 @@ type done struct {
 // against the disk rules in the background.
 func (h *handlers) upload(w http.ResponseWriter, r *http.Request) {
 	device := kit.Device(r).DeviceID
-	deviceID, err := member(r, "device_id")
-	var hardware, software jsjson.Value
-	if err == nil {
-		hardware, err = member(r, "hardware")
-	}
+	hardware, err := member(r, "hardware")
+	var software jsjson.Value
 	if err == nil {
 		software, err = member(r, "software")
 	}
@@ -81,7 +80,7 @@ func (h *handlers) upload(w http.ResponseWriter, r *http.Request) {
 		h.failUpload(w, r, h.log, err)
 		return
 	}
-	if !deviceID.Truthy() || !hardware.Truthy() {
+	if !hardware.Truthy() {
 		kit.Fail(w, r, http.StatusBadRequest, "Missing device_id or hardware")
 		return
 	}
@@ -228,23 +227,19 @@ func (o *object) json() string {
 	return string(append(b, '}'))
 }
 
-// telemetry answers POST telemetry with the body {device_id,
+// telemetry answers POST telemetry with the body {device_id?,
 // cpu_usage_percent?, memory_used_bytes?, memory_total_bytes?,
-// uptime_secs?, timestamp?}: the device's load replaces the one it sent
-// before. A missing value is 0 and a missing time the time of arrival.
-// The CPU load is a finite number, the memory and the uptime whole
-// numbers from 0 that their columns hold, and the time a time; anything
-// else is 400. Then the CPU load and the used memory are checked against
-// the alert rules in the background.
+// uptime_secs?, timestamp?}: the load of the token's device (the device
+// guards came first) replaces the one it sent before. A body that is no
+// JSON object is 400. A missing value is 0 and a missing time the time of
+// arrival. The CPU load is a finite number, the memory and the uptime
+// whole numbers from 0 that their columns hold, and the time a time;
+// anything else is 400. Then the CPU load and the used memory are checked
+// against the alert rules in the background.
 func (h *handlers) telemetry(w http.ResponseWriter, r *http.Request) {
 	device := kit.Device(r).DeviceID
-	deviceID, err := member(r, "device_id")
-	if err != nil {
-		h.failUpload(w, r, h.telemetryLog, err)
-		return
-	}
-	if !deviceID.Truthy() {
-		kit.Fail(w, r, http.StatusBadRequest, "Missing device_id")
+	if middleware.BodyValue(r).Kind() != middleware.KindObject {
+		kit.Fail(w, r, http.StatusBadRequest, "Invalid telemetry")
 		return
 	}
 	body := kit.Body(r)
@@ -272,7 +267,7 @@ func (h *handlers) telemetry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cpu, used, total := values["cpu_usage_percent"], values["memory_used_bytes"], values["memory_total_bytes"]
-	err = upsertTelemetry(r.Context(), h.db, device, deviceTelemetry{
+	err := upsertTelemetry(r.Context(), h.db, device, deviceTelemetry{
 		CPUUsagePercent:  orZero(cpu),
 		MemoryUsedBytes:  orZero(used),
 		MemoryTotalBytes: orZero(total),

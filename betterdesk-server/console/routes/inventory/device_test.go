@@ -282,6 +282,50 @@ func TestInventoryUsesTheDeviceGuards(t *testing.T) {
 	})
 }
 
+// A report and telemetry are stored for the device of their token. The
+// guards have compared every device the request names with the token's,
+// so an upload that names its device only in the query or in X-Device-Id,
+// or nowhere, is stored, where Node asked for the body's device_id (400
+// "Missing device_id or hardware", "Missing device_id"). A report still
+// needs its hardware, and telemetry whose body is no JSON object is no
+// telemetry (BUGS AI18).
+func TestUploadsTakeTheTokensDevice(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		tokenDeviceA(w)
+		hardware := `"hardware":{"hostname":"pc-a"}`
+		for _, c := range []struct {
+			name, path, body string
+			headers          map[string]string
+			status           int
+			answer           string
+		}{
+			{"a report naming its device nowhere", "/api/bd/inventory", `{` + hardware + `}`, deviceA, 200, `{"success":true}`},
+			{"a report naming it only in the query", "/api/inventory/inventory?device_id=device-a", `{` + hardware + `}`, deviceA, 200, `{"success":true}`},
+			{"a report naming it only in X-Device-Id", "/api/bd/inventory", `{` + hardware + `}`, map[string]string{"Authorization": "Bearer tok-device-a", "X-Device-Id": "device-a"}, 200, `{"success":true}`},
+			{"a report with device_id null", "/api/bd/inventory", `{"device_id":null,` + hardware + `}`, deviceA, 200, `{"success":true}`},
+			{"a report with device_id empty", "/api/bd/inventory", `{"device_id":"",` + hardware + `}`, deviceA, 200, `{"success":true}`},
+			{"a report without hardware", "/api/bd/inventory", `{"device_id":"device-a"}`, deviceA, 400, `{"success":false,"error":"Missing device_id or hardware"}`},
+			{"a report in a list", "/api/bd/inventory", `[{` + hardware + `}]`, deviceA, 400, `{"success":false,"error":"Missing device_id or hardware"}`},
+			{"telemetry naming its device nowhere", "/api/bd/telemetry", `{"cpu_usage_percent":5}`, deviceA, 200, `{"success":true}`},
+			{"telemetry of nothing", "/api/inventory/telemetry", `{}`, deviceA, 200, `{"success":true}`},
+			{"telemetry with device_id null", "/api/bd/telemetry", `{"device_id":null,"cpu_usage_percent":7}`, deviceA, 200, `{"success":true}`},
+			{"telemetry in a list", "/api/bd/telemetry", `[{"cpu_usage_percent":5}]`, deviceA, 400, `{"success":false,"error":"Invalid telemetry"}`},
+		} {
+			got := w.Do(replay.Request{Method: "POST", Path: c.path, Body: replay.Text(c.body), Headers: c.headers})
+			if got.Status != c.status || got.Body != c.answer {
+				t.Errorf("%s: %d %s, want %d %s", c.name, got.Status, got.Body, c.status, c.answer)
+			}
+		}
+		if rows := w.Rows("SELECT device_id FROM device_inventory", nil); rows != `[{"device_id":"device-a"}]` {
+			t.Errorf("the reports stored: %s", rows)
+		}
+		if rows := w.Rows("SELECT device_id, cpu_usage_percent FROM device_telemetry", nil); rows != `[{"device_id":"device-a","cpu_usage_percent":7}]` {
+			t.Errorf("the telemetry stored: %s", rows)
+		}
+	})
+}
+
 // tokensOf reads the devices the tokens of a recording's seed are bound
 // to, by token.
 func tokensOf(rec replay.Recording) map[string]string {
