@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -356,18 +357,19 @@ func deletePolicy(ctx context.Context, db *store.DB, id jsbind.Value) (bool, err
 	return n > 0, nil
 }
 
-// eventFilter is what the event list is narrowed by. A text that is empty
-// does not filter, nor does a limit that is empty for JavaScript.
+// eventFilter is what the event list is narrowed by. A text that is
+// empty, a window end that is zero and a limit of 0 do not filter.
 type eventFilter struct {
-	DeviceID, EventSource, EventType, From, To string
-	Limit                                      jsbind.Value
+	DeviceID, EventSource, EventType string
+	From, To                         window
+	Limit                            int
 }
 
 // listEvents returns the events that pass the filter, newest first, with
 // their details parsed.
 func listEvents(ctx context.Context, db *store.DB, f eventFilter) ([]row, error) {
 	query := "SELECT * FROM dlp_events WHERE 1=1"
-	var values []jsbind.Value
+	var args []any
 	for _, condition := range []struct {
 		sql   string
 		value string
@@ -375,28 +377,44 @@ func listEvents(ctx context.Context, db *store.DB, f eventFilter) ([]row, error)
 		{" AND device_id = ?", f.DeviceID},
 		{" AND event_source = ?", f.EventSource},
 		{" AND event_type = ?", f.EventType},
-		{" AND created_at >= ?", f.From},
-		{" AND created_at <= ?", f.To},
 	} {
 		if condition.value != "" {
 			query += condition.sql
-			values = append(values, jsbind.String(condition.value))
+			args = append(args, condition.value)
 		}
 	}
-	query += " ORDER BY created_at DESC"
-	if f.Limit.Truthy() {
-		query += " LIMIT ?"
-		values = append(values, f.Limit)
+	if !f.From.at.IsZero() {
+		query += " AND created_at >= ?"
+		args = append(args, timeArg(db, f.From.at))
 	}
-	args, err := jsbind.Args(db.Dialect(), strings.Count(query, "?"), values...)
-	if err != nil {
-		return nil, fmt.Errorf("list events: %w", err)
+	if !f.To.at.IsZero() {
+		query += map[bool]string{false: " AND created_at <= ?", true: " AND created_at < ?"}[f.To.day]
+		args = append(args, timeArg(db, f.To.at))
+	}
+	query += " ORDER BY created_at DESC"
+	if f.Limit > 0 {
+		query += " LIMIT ?"
+		args = append(args, f.Limit)
 	}
 	rows, err := documentRows(ctx, db, "details", "{}", query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("list events: %w", err)
 	}
 	return rows, nil
+}
+
+// timeArg is a time as a statement compares it with created_at: the
+// instant on PostgreSQL, and on SQLite the text datetime('now') writes in
+// UTC, with the part of a second only when there is one, so that the
+// texts compare as the times do.
+func timeArg(db *store.DB, at time.Time) any {
+	if db.IsPostgres() {
+		return at
+	}
+	if at.Nanosecond() != 0 {
+		return at.UTC().Format("2006-01-02 15:04:05.999999999")
+	}
+	return at.UTC().Format(time.DateTime)
 }
 
 // eventStats is the number of events, all and by action and source.

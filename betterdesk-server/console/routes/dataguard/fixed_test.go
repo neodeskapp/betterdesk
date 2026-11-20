@@ -257,3 +257,23 @@ var (
 	otherDevices  = []string{`"device_id":"D2"`, `"device_id":"D3"`, `"device_id":"D4"`}
 	onlyDeviceOne = append([]string{"[" + deviceOne[0]}, deviceOne[1:]...)
 )
+
+// DG5: the limit of the event list is a whole number from 1 to 500 (the
+// first value of a limit given twice, as every filter), and from and to
+// are times, compared as times on both databases.
+var _ = policyFixes.Add("DG5", map[string]replay.Fix{
+	"admin GET /api/dataguard/events?device_id=D1&limit=0 ":         {Status: 400, Answer: `{"error":"Invalid limit"}`},
+	"admin GET /api/dataguard/events?device_id=D1&limit=abc ":       {Status: 400, Answer: `{"error":"Invalid limit"}`},
+	"admin GET /api/dataguard/events?device_id=D1&limit=1.5 ":       {Status: 400, Answer: `{"error":"Invalid limit"}`},
+	"admin GET /api/dataguard/events?device_id=D1&limit=-1 ":        {Status: 400, Answer: `{"error":"Invalid limit"}`},
+	"admin GET /api/dataguard/events?device_id=D1&limit=1e400 ":     {Status: 400, Answer: `{"error":"Invalid limit"}`},
+	"admin GET /api/dataguard/events?device_id=D1&limit=+2+ ":       {Status: 400, Answer: `{"error":"Invalid limit"}`},
+	"admin GET /api/dataguard/events?device_id=D1&limit=0x1 ":       {Status: 400, Answer: `{"error":"Invalid limit"}`},
+	"admin GET /api/dataguard/events?device_id=D1&from=2002 ":       {Status: 400, Answer: `{"error":"Invalid from"}`},
+	"admin GET /api/dataguard/events?device_id=D1&from=garbage ":    {Status: 400, Answer: `{"error":"Invalid from"}`},
+	"admin GET /api/dataguard/events?device_id=D1&to=garbage ":      {Status: 400, Answer: `{"error":"Invalid to"}`},
+	"admin GET /api/dataguard/events?device_id=D1&limit=2&limit=3 ": {Status: 200, Has: onlyDeviceOne[:2], Lacks: []string{`"id":1,`}},
+	// Node compared the text on SQLite, where a T sorts after the space of
+	// the stored time; PostgreSQL compared the times already
+	"admin GET /api/dataguard/events?device_id=D1&from=2001-01-01T00:02:00.000Z ": {Status: 200, Has: onlyDeviceOne[:2], Lacks: []string{`"id":1,`}},
+})

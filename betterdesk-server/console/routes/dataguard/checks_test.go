@@ -1,6 +1,8 @@
 package dataguard_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -184,6 +186,63 @@ func TestEventFiltersGivenTwiceOrAsAnObject(t *testing.T) {
 				if got.Status != 200 || strings.TrimSpace(devices) != want {
 					t.Errorf("%s/events?%s: %d with %q, want 200 with %q: %s", mount, query, got.Status, devices, want, got.Body)
 				}
+			}
+		}
+	})
+}
+
+// The limit of the event list is a whole number from 1 to 500, and from
+// and to are times, compared as times on both databases: a date alone as
+// to takes in that whole day. Anything else is 400, where the old route
+// passed it to the database: no limit at all, a 500, or a comparison of
+// texts (BUGS DG5).
+func TestEventFiltersAreChecked(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		for i, at := range []string{"2019-03-03 23:59:59", "2019-03-04 10:00:00", "2019-03-04 23:59:59", "2019-03-05 00:00:00"} {
+			w.Exec("INSERT INTO dlp_events (device_id, event_source, created_at) VALUES (?, 'usb', ?)", []any{fmt.Sprintf("E%d", i), db.Pick(at, at+"+00")})
+		}
+		for query, want := range map[string]string{
+			"limit=-1": "limit", "limit=1.5": "limit", "limit=abc": "limit", "limit=0": "limit", "limit=501": "limit",
+			"limit=1e2": "limit", "limit=+5": "limit", "limit=%205": "limit", "limit=2&limit=x": "",
+			"from=garbage": "from", "from=2019-13-01": "from", "from=5": "from", "from=true": "from", "from=2019-03-04%2025:00:00": "from",
+			"to=garbage": "to", "to=2019-03-04T10": "to",
+		} {
+			got := w.Do(replay.Request{Role: "admin", Path: "/api/dataguard/events?" + query})
+			if want == "" {
+				if got.Status != 200 {
+					t.Errorf("events?%s: %d %s, want 200", query, got.Status, got.Body)
+				}
+				continue
+			}
+			if got.Status != 400 || got.Body != `{"error":"Invalid `+want+`"}` {
+				t.Errorf("events?%s: %d %s, want 400 Invalid %s", query, got.Status, got.Body, want)
+			}
+		}
+		for query, want := range map[string]string{
+			"limit=2":                          "E3 E2",
+			"limit=500":                        "E3 E2 E1 E0",
+			"to=2019-03-04":                    "E2 E1 E0",
+			"from=2019-03-04":                  "E3 E2 E1",
+			"from=2019-03-04T10:00:00Z":        "E3 E2 E1",
+			"from=2019-03-04T10:00:00.5Z":      "E3 E2",
+			"to=2019-03-04T10:00:00.000Z":      "E1 E0",
+			"from=2019-03-04%2010:00:00":       "E3 E2 E1",
+			"from=2019-03-04T12:00:00%2B02:00": "E3 E2 E1",
+			"from=2019-03-04&to=2019-03-04":    "E2 E1",
+			"to=2019-03-04&limit=1":            "E2",
+		} {
+			got := w.Do(replay.Request{Role: "admin", Path: "/api/dataguard/events?" + query})
+			var events []struct {
+				DeviceID string `json:"device_id"`
+			}
+			_ = json.Unmarshal([]byte(got.Body), &events)
+			ids := make([]string, len(events))
+			for i, e := range events {
+				ids[i] = e.DeviceID
+			}
+			if got.Status != 200 || strings.Join(ids, " ") != want {
+				t.Errorf("events?%s: %d %q, want 200 %q: %s", query, got.Status, strings.Join(ids, " "), want, got.Body)
 			}
 		}
 	})

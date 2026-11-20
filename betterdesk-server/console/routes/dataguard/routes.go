@@ -9,6 +9,9 @@ package dataguard
 
 import (
 	"net/http"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
@@ -267,20 +270,72 @@ func filterText(rawQuery, name string) string {
 	return ""
 }
 
+// maxEvents is the largest limit of the event list.
+const maxEvents = 500
+
+// limitOf reads the limit of the event list: 0 for none, ok false for
+// text that is no whole number from 1 to maxEvents written in digits.
+func limitOf(text string) (int, bool) {
+	if text == "" {
+		return 0, true
+	}
+	if strings.Trim(text, "0123456789") != "" || len(text) > 4 {
+		return 0, false
+	}
+	n, err := strconv.Atoi(text)
+	return n, err == nil && n >= 1 && n <= maxEvents
+}
+
+// window is one end of the time window of the event list: zero for none.
+// day says a date alone was given as the end, which takes in that day.
+type window struct {
+	at  time.Time
+	day bool
+}
+
+// windowOf reads from (isEnd false) or to (isEnd true): a date, or a date
+// and time as the console writes them, with or without a zone (none is
+// UTC). A date alone as the end stands for the start of the next day,
+// which the window leaves out. ok is false for text that is no time.
+func windowOf(text string, isEnd bool) (window, bool) {
+	if text == "" {
+		return window{}, true
+	}
+	if day, err := time.Parse(time.DateOnly, text); err == nil {
+		if isEnd {
+			return window{at: day.AddDate(0, 0, 1), day: true}, true
+		}
+		return window{at: day}, true
+	}
+	at, ok := store.ParseTime(text)
+	return window{at: at}, ok
+}
+
 // events answers GET events?device_id=&event_source=&event_type=&limit=
-// &from=&to=: the reported events, newest first.
+// &from=&to=: the reported events, newest first. limit, when given, is a
+// whole number from 1 to 500; from and to are times, a date alone as to
+// taking in that whole day. Anything else is 400.
 func (h *handlers) events(w http.ResponseWriter, r *http.Request) {
 	query := func(name string) string { return filterText(r.URL.RawQuery, name) }
 	filter := eventFilter{
 		DeviceID:    query("device_id"),
 		EventSource: query("event_source"),
 		EventType:   query("event_type"),
-		From:        query("from"),
-		To:          query("to"),
 	}
-	// limit ? Number(limit) : undefined
-	if limit := jsbind.Query(r.URL.RawQuery, "limit"); limit.Truthy() {
-		filter.Limit = jsbind.Number(limit.ToNumber())
+	var ok bool
+	if filter.Limit, ok = limitOf(query("limit")); !ok {
+		fail(w, r, http.StatusBadRequest, "Invalid limit")
+		return
+	}
+	for _, end := range []struct {
+		name  string
+		into  *window
+		isEnd bool
+	}{{"from", &filter.From, false}, {"to", &filter.To, true}} {
+		if *end.into, ok = windowOf(query(end.name), end.isEnd); !ok {
+			fail(w, r, http.StatusBadRequest, "Invalid "+end.name)
+			return
+		}
 	}
 	events, err := listEvents(r.Context(), h.db, filter)
 	if err != nil {
