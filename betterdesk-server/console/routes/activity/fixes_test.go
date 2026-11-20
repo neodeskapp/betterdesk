@@ -371,3 +371,33 @@ func TestAHostnameThatIsNoTextIsNotShown(t *testing.T) {
 		}
 	})
 }
+
+// withoutCopies changes what the recording reads after the lookups of
+// devices only the signal server knows, or that the console deleted, into
+// what a read that writes nothing leaves (BUGS AI7): the console's table
+// keeps only the two deleted rows the recording put there, as it put them,
+// and G-DELETED-HERE is named by the signal server's hostname, where Node
+// showed the note of the row its lookup had brought back. It reports how
+// many steps it changed.
+func withoutCopies(rec *replay.Recording, db *store.DB) int {
+	changed := 0
+	for i, step := range rec.Steps {
+		switch {
+		case step.Name == "the copies":
+			rec.Steps[i].Rows = db.Pick(
+				`[{"id":"G-DELETED-HERE","uuid":"old-uuid","note":"old note","info":"{\"hostname\":\"old-host\"}","ip":"10.9.9.9","user":"old-user","status_online":0,"is_deleted":1,"is_banned":0,"banned_reason":"","tags":"","last_online":"2018-01-01 00:00:00","created_at":"2017-01-01 00:00:00","banned_at":null},`+
+					`{"id":"G-DELETED-HERE-INFO","uuid":"old-uuid","note":"","info":"{\"hostname\":\"kept-host\"}","ip":"10.9.9.8","user":"old-user","status_online":0,"is_deleted":1,"is_banned":0,"banned_reason":"","tags":"","last_online":"2018-01-01 00:00:00","created_at":"2017-01-01 00:00:00","banned_at":null}]`,
+				`[{"id":"G-DELETED-HERE","uuid":"old-uuid","note":"old note","info":"{\"hostname\": \"old-host\"}","ip":"10.9.9.9","user":"old-user","status_online":false,"is_deleted":true,"is_banned":false,"banned_reason":""},`+
+					`{"id":"G-DELETED-HERE-INFO","uuid":"old-uuid","note":"","info":"{\"hostname\": \"kept-host\"}","ip":"10.9.9.8","user":"old-user","status_online":false,"is_deleted":true,"is_banned":false,"banned_reason":""}]`)
+			changed++
+		case step.Name == "the times of the copies":
+			rec.Steps[i].Rows = `[{"id":"G-DELETED-HERE","last_online":"2018-01-01 00:00:00","created_at":"2017-01-01 00:00:00","banned_at":null},` +
+				`{"id":"G-DELETED-HERE-INFO","last_online":"2018-01-01 00:00:00","created_at":"2017-01-01 00:00:00","banned_at":null}]`
+			changed++
+		case strings.Contains(step.Answer, `"device_id":"G-DELETED-HERE","hostname":"old note"`):
+			rec.Steps[i].Answer = strings.Replace(step.Answer, `"hostname":"old note"`, `"hostname":"came-back"`, 1)
+			changed++
+		}
+	}
+	return changed
+}

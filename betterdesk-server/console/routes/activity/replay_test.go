@@ -31,13 +31,16 @@ import (
 //     console's route table. Express took one of them for the end of the
 //     mount, so /api/activity//D1 was the device D1.
 //
-// The steps the bug fixes change are listed in activityFixes, or checked
-// by renamed and checkedWindows (fixes_test.go).
+// The steps the bug fixes change are listed in activityFixes, checked by
+// renamed and checkedWindows, or changed by withoutCopies (fixes_test.go).
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		guarded, elsewhere, slashes, renames, refused, respelled := 0, 0, 0, 0, 0, 0
 		rec := replay.Load(t, db, "node")
+		if changed := withoutCopies(&rec, db); changed != map[bool]int{false: 3, true: 4}[db.IsPostgres()] {
+			t.Errorf("withoutCopies changed %d steps", changed)
+		}
 		named := renamed(notesOf(t, rec), &renames)
 		windows := checkedWindows(w, &refused, &respelled)
 		defer activityFixes.Unused(t, db)
@@ -175,8 +178,8 @@ func TestPermissions(t *testing.T) {
 
 // A device that only the signal server knows gets its name from the
 // signal server's table as that server made it, on every way a database
-// can have come about, and the lookup leaves a copy in the console's
-// table.
+// can have come about. The read writes nothing: no copy in the console's
+// table, and a device deleted there stays deleted (BUGS AI7).
 func TestTheSignalServersDevices(t *testing.T) {
 	storetest.EachOrigin(t, func(t *testing.T, db *store.DB, origin storetest.Origin) {
 		ctx := context.Background()
@@ -184,6 +187,8 @@ func TestTheSignalServersDevices(t *testing.T) {
 		for _, statement := range []string{
 			`INSERT INTO peers (id, hostname, os, version, status) VALUES ('S1', 'from-the-signal-server', 'Linux', '1.4.2', 'ONLINE')`,
 			`INSERT INTO peers (id, hostname, soft_deleted) VALUES ('S2', 'deleted there', ` + db.Pick("1", "TRUE") + `)`,
+			`INSERT INTO peers (id, hostname) VALUES ('S4', 'back-here')`,
+			`INSERT INTO peer (id, note, info, is_deleted) VALUES ('S4', 'old note', '{"hostname":"old"}', ` + db.Pick("1", "TRUE") + `)`,
 			`INSERT INTO activity_summaries (device_id, reported_at) VALUES ('S1', '2019-03-04T08:00:00.000Z')`,
 		} {
 			if _, err := db.Exec(ctx, statement); err != nil {
@@ -191,24 +196,21 @@ func TestTheSignalServersDevices(t *testing.T) {
 			}
 		}
 		w := replay.NewWorld(t, db, nil)
+		before := w.Rows(`SELECT id, note, `+db.Pick("info", "info::text AS info")+`, CASE WHEN is_deleted`+db.Pick(" = 1", "")+` THEN 1 ELSE 0 END AS deleted FROM peer ORDER BY id`, nil)
 		for path, want := range map[string]string{
 			"/api/activity/S1": `"hostname":"from-the-signal-server"`,
 			"/api/activity/S2": `"hostname":"S2"`,
 			"/api/activity/S3": `"hostname":"S3"`,
+			"/api/activity/S4": `"hostname":"back-here"`,
 			"/api/activity":    `"device_id":"S1","hostname":"from-the-signal-server"`,
 		} {
 			if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != 200 || !strings.Contains(got.Body, want) {
 				t.Errorf("GET %s: %d %s, want %s", path, got.Status, got.Body, want)
 			}
 		}
-		want := `[{"id":"S1","info":"{\"hostname\":\"from-the-signal-server\",\"os\":\"Linux\",\"platform\":\"Linux\",\"version\":\"1.4.2\"}","online":1}]`
-		rows := w.Rows(`SELECT id, `+db.Pick("info", "info::text AS info")+`, CASE WHEN status_online`+db.Pick(" = 1", "")+` THEN 1 ELSE 0 END AS online FROM peer ORDER BY id`, nil)
-		if db.IsPostgres() {
-			// A JSON column prints its members by length, then name
-			want = `[{"id":"S1","info":"{\"os\": \"Linux\", \"version\": \"1.4.2\", \"hostname\": \"from-the-signal-server\", \"platform\": \"Linux\"}","online":1}]`
-		}
-		if rows != want {
-			t.Errorf("the console's table after the lookups: %s\nwant %s", rows, want)
+		after := w.Rows(`SELECT id, note, `+db.Pick("info", "info::text AS info")+`, CASE WHEN is_deleted`+db.Pick(" = 1", "")+` THEN 1 ELSE 0 END AS deleted FROM peer ORDER BY id`, nil)
+		if after != before || !strings.HasPrefix(before, `[{"id":"S4","note":"old note",`) {
+			t.Errorf("the console's table after the lookups: %s\nbefore them: %s", after, before)
 		}
 	})
 }
