@@ -108,8 +108,12 @@
    },
    "volatile": [
     {
+     "path": "data.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
      "path": "data.expires_at",
-     "pattern": "^9999-99-99A99:99:99\\.9+A$"
+     "format": "9999-99-99A99:99:99A"
     },
     {
      "path": "data.token",
@@ -117,14 +121,14 @@
     },
     {
      "path": "data.token_prefix",
-     "pattern": "^[9aA+/_=-]{32}$"
+     "pattern": "^[9aA+/_=-]{8}$"
     }
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "created_at": "0001-01-01T00:00:00Z",
+      "created_at": "<volatile>",
       "expires_at": "<volatile>",
       "id": 1,
       "max_uses": 3,
@@ -166,8 +170,12 @@
    },
    "volatile": [
     {
+     "path": "data.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
      "path": "data.expires_at",
-     "pattern": "^9999-99-99A99:99:99\\.9+A$"
+     "format": "9999-99-99A99:99:99A"
     },
     {
      "path": "data.token",
@@ -175,14 +183,14 @@
     },
     {
      "path": "data.token_prefix",
-     "pattern": "^[9aA+/_=-]{32}$"
+     "pattern": "^[9aA+/_=-]{8}$"
     }
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "created_at": "0001-01-01T00:00:00Z",
+      "created_at": "<volatile>",
       "expires_at": "<volatile>",
       "id": 4,
       "max_uses": 3,
@@ -224,8 +232,12 @@
    },
    "volatile": [
     {
+     "path": "data.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
      "path": "data.expires_at",
-     "pattern": "^9999-99-99A99:99:99\\.9+A$"
+     "format": "9999-99-99A99:99:99A"
     },
     {
      "path": "data.token",
@@ -233,14 +245,14 @@
     },
     {
      "path": "data.token_prefix",
-     "pattern": "^[9aA+/_=-]{32}$"
+     "pattern": "^[9aA+/_=-]{8}$"
     }
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "created_at": "0001-01-01T00:00:00Z",
+      "created_at": "<volatile>",
       "expires_at": "<volatile>",
       "id": 8,
       "max_uses": 3,
@@ -282,8 +294,12 @@
    },
    "volatile": [
     {
+     "path": "data.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
      "path": "data.expires_at",
-     "pattern": "^9999-99-99A99:99:99\\.9+A$"
+     "format": "9999-99-99A99:99:99A"
     },
     {
      "path": "data.token",
@@ -291,14 +307,14 @@
     },
     {
      "path": "data.token_prefix",
-     "pattern": "^[9aA+/_=-]{32}$"
+     "pattern": "^[9aA+/_=-]{8}$"
     }
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "created_at": "0001-01-01T00:00:00Z",
+      "created_at": "<volatile>",
       "expires_at": "<volatile>",
       "id": 11,
       "max_uses": 3,

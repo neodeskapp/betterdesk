@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -76,6 +77,22 @@ func toDeviceTokenResponse(t *db.DeviceToken, includePlainToken bool) *DeviceTok
 		resp.Token = t.Token
 	}
 	return resp
+}
+
+// createdTokenResponse is the answer for a token just created: the row as a
+// later read shows it (the stored creation time and the eight-character
+// prefix), with the plain token, which is only ever shown here.
+func (s *Server) createdTokenResponse(id int64, plainToken string) (*DeviceTokenResponse, error) {
+	stored, err := s.db.GetDeviceToken(id)
+	if err != nil {
+		return nil, err
+	}
+	if stored == nil {
+		return nil, fmt.Errorf("token %d not found after its insert", id)
+	}
+	resp := toDeviceTokenResponse(stored, false)
+	resp.Token = plainToken
+	return resp, nil
 }
 
 // handleListDeviceTokens returns all device tokens.
@@ -152,9 +169,13 @@ func (s *Server) handleCreateDeviceToken(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Return with plain token (only time it's visible)
-	resp := toDeviceTokenResponse(token, true)
-	resp.Token = plainToken // Ensure plain token is returned
+	// Return the token as stored, with the plain token (only time it's visible)
+	resp, err := s.createdTokenResponse(token.ID, plainToken)
+	if err != nil {
+		log.Printf("[API] GetDeviceToken (create) %d: %v", token.ID, err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -351,8 +372,12 @@ func (s *Server) handleBulkGenerateTokens(w http.ResponseWriter, r *http.Request
 			return
 		}
 
-		resp := toDeviceTokenResponse(token, true)
-		resp.Token = plainToken
+		resp, err := s.createdTokenResponse(token.ID, plainToken)
+		if err != nil {
+			log.Printf("[API] GetDeviceToken (batch) %d: %v", token.ID, err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 		tokens = append(tokens, resp)
 	}
 
