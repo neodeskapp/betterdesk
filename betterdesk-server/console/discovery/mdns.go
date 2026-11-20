@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/rand/v2"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 
@@ -49,10 +50,30 @@ type mdnsSocket interface {
 
 // service is the published service.
 type service struct {
+	// name is the service's instance name, fqdn its name in the service
+	// type
+	name string
 	fqdn string
 	host string
 	port uint16
 	txt  [][]byte
+}
+
+// newService is the service of the instance name.
+func newService(name string) *service {
+	s := &service{}
+	s.setName(name)
+	return s
+}
+
+func (s *service) setName(name string) {
+	s.name = name
+	s.fqdn = strings.ReplaceAll(name, ".", "-") + "." + serviceType + tld
+}
+
+// rename gives the service the attempt-th name: instanceName (n).
+func (s *service) rename(attempt int) {
+	s.setName(instanceName + " (" + strconv.Itoa(attempt) + ")")
 }
 
 // records are the service's records: the pointer to it, its SRV and TXT
@@ -269,14 +290,12 @@ func (m *MDNS) prepare() (*service, bool) {
 	// The host goes out as the first label of the machine's name with
 	// .local, the name mDNS resolves
 	label, _, _ := strings.Cut(strings.Trim(decodeUTF8([]byte(host)), "."), ".")
-	svc := &service{
-		fqdn: strings.ReplaceAll(instanceName, ".", "-") + "." + serviceType + tld,
-		host: label + tld,
-		port: uint16(port),
-		txt: [][]byte{
-			[]byte("url=" + strings.TrimSuffix(panelURL, "/")),
-			[]byte("version=" + m.settings.Version),
-		},
+	svc := newService(instanceName)
+	svc.host = label + tld
+	svc.port = uint16(port)
+	svc.txt = [][]byte{
+		[]byte("url=" + strings.TrimSuffix(panelURL, "/")),
+		[]byte("version=" + m.settings.Version),
 	}
 	m.logf("  mDNS discovery published _betterdesk._tcp port %d (%s)", svc.port, panelURL)
 	return svc, true
@@ -322,12 +341,14 @@ func (m *MDNS) Run(ctx context.Context) {
 		}
 	}
 
-	// Probing: is the name taken already?
+	// Probing: is the name taken already? A response that claims it makes
+	// the probing start again under the next name, "BetterDesk Console
+	// (2)", then 3 and on (RFC 6762 section 9).
 	wait := time.Duration(m.random() * float64(probeInterval))
 	if wait < time.Millisecond {
 		wait = time.Millisecond
 	}
-	sent := false
+	sent, restart, attempt := false, false, 1
 	for i := 0; i <= probeCount; i++ {
 		timer := m.after(wait)
 	waiting:
@@ -337,13 +358,21 @@ func (m *MDNS) Run(ctx context.Context) {
 				return
 			case datagram := <-sock.Packets():
 				if sent && m.conflict(datagram, svc.fqdn) {
-					m.withdraw(sock, svc)
-					return
+					attempt++
+					taken := svc.name
+					svc.rename(attempt)
+					m.logf("WARN: mDNS discovery: the name %q is in use on the network; trying %q", taken, svc.name)
+					sent, restart = false, true
+					continue
 				}
 				serve(datagram)
 			case <-timer:
 				break waiting
 			}
+		}
+		if restart {
+			i, restart, wait = -1, false, probeInterval
+			continue
 		}
 		if i < probeCount {
 			_ = sock.Send(encodeQuery(svc.fqdn))
@@ -401,12 +430,6 @@ func (m *MDNS) conflict(datagram []byte, fqdn string) bool {
 		}
 	}
 	return false
-}
-
-// withdraw sends the goodbye and logs that the name is taken.
-func (m *MDNS) withdraw(sock mdnsSocket, svc *service) {
-	_ = sock.Send(m.goodbye(svc))
-	m.logf("Error: Service name is already in use on the network")
 }
 
 // goodbye is the service's records with a lifetime of 0, which tells

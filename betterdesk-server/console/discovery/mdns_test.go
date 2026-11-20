@@ -510,41 +510,75 @@ func TestMDNSSaysGoodbyeAtStop(t *testing.T) {
 	}
 }
 
-// TestMDNSConflictAgainstNode answers a response that claims the
-// service's name while probing with the goodbye Node sent, and the log
-// line; one that comes before the first query is ignored.
+// TestMDNSConflictAgainstNode: a response that claims the service's name
+// while probing makes the announcement probe again under the next name,
+// "BetterDesk Console (2)", and announce that, where Node withdrew for
+// good (BUGS JB8); one that comes before the first query is ignored.
 func TestMDNSConflictAgainstNode(t *testing.T) {
 	rec := loadMDNS(t)
 	s := rec.Scenarios[0]
 	settings := mdnsSettings(s.Env, s.Config, toInterfaces(s.Interfaces), s.Hostname)
 	packet, _ := base64.StdEncoding.DecodeString(rec.Conflict.Packet)
 
-	want := localized(t, nodeSends(rec.Conflict.Events), s.Hostname)
-	h := startHarness(settings, s.Random, len(want))
+	nodeConflict := localized(t, nodeSends(rec.Conflict.Events), s.Hostname)
+	h := startHarness(settings, s.Random, 1+probeCount+1)
 	h.clock.fire(t)
 	h.sock.packets <- packet
-	select {
-	case <-h.done:
-	case <-time.After(10 * time.Second):
-		t.Fatal("Run kept going after the conflict")
-	}
+	h.runUntilSent(t)
 	h.stop(t, false)
-	compareSends(t, "conflict", h.sock.sent, want)
-	if got := h.logs.String(); !strings.HasSuffix(got, "\n"+rec.Conflict.Logs[1]) {
-		t.Errorf("log %q, Node %q", got, rec.Conflict.Logs)
+	// Node's first query, then three queries for the new name and its
+	// announcement
+	h.sock.mu.Lock()
+	sent := append([]sentPacket(nil), h.sock.sent...)
+	h.sock.mu.Unlock()
+	compareSends(t, "first query", sent[:1], nodeConflict[:1])
+	m := NewMDNS(settings)
+	m.logf = func(string, ...any) {}
+	svc, _ := m.prepare()
+	svc.fqdn = "BetterDesk Console (2)." + serviceType + tld
+	ifaces, _ := settings.interfaces()
+	want := [][]byte{encodeQuery(svc.fqdn), encodeQuery(svc.fqdn), encodeQuery(svc.fqdn), encodeResponse(svc.records(ifaces), nil)}
+	if len(sent) < 1+len(want) {
+		t.Fatalf("%d datagrams", len(sent))
+	}
+	for k, w := range want {
+		if string(sent[1+k].bytes) != string(w) {
+			t.Errorf("datagram %d after the conflict:\n got %x\nwant %x", k, sent[1+k].bytes, w)
+		}
+	}
+	if !strings.Contains(h.logs.String(), `mDNS discovery: the name "BetterDesk Console" is in use on the network; trying "BetterDesk Console (2)"`) {
+		t.Errorf("log %q", h.logs.String())
 	}
 
-	want = localized(t, nodeSends(rec.Early.Events), s.Hostname)
-	h = startHarness(settings, s.Random, len(want))
+	// A conflict on the second name too goes on to the third
+	h = startHarness(settings, s.Random, 1+1+probeCount+1)
+	h.clock.fire(t)
+	h.sock.packets <- packet
+	h.clock.fire(t)
+	h.clock.fire(t)
+	second := svc.records(ifaces)
+	h.sock.packets <- encodeResponse(second, nil)
+	h.runUntilSent(t)
+	h.stop(t, false)
+	h.sock.mu.Lock()
+	last := h.sock.sent[len(h.sock.sent)-2].bytes
+	h.sock.mu.Unlock()
+	svc.fqdn = "BetterDesk Console (3)." + serviceType + tld
+	if string(last) != string(encodeResponse(svc.records(ifaces), nil)) {
+		t.Errorf("after two conflicts: announced %x", last)
+	}
+
+	early := localized(t, nodeSends(rec.Early.Events), s.Hostname)
+	h = startHarness(settings, s.Random, len(early))
 	h.sock.packets <- packet
 	h.runUntilSent(t)
 	h.stop(t, true)
 	// The goodbye at the stop is Go's own (BUGS JB7)
-	sent := h.sock.sent
-	if len(sent) == len(want)+1 && string(sent[len(want)].bytes) == string(goodbyeOf(t, settings)) {
-		sent = sent[:len(want)]
+	sent = h.sock.sent
+	if len(sent) == len(early)+1 && string(sent[len(early)].bytes) == string(goodbyeOf(t, settings)) {
+		sent = sent[:len(early)]
 	}
-	compareSends(t, "early conflict", sent, want)
+	compareSends(t, "early conflict", sent, early)
 }
 
 // TestMDNSMembershipsAgainstNode joins the group on the addresses Node
