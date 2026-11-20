@@ -36,35 +36,27 @@
     "json": {
      "matches": [
       {
-       "role": "admin",
        "username": "e2e_admin"
       },
       {
-       "role": "super_admin",
        "username": "e2e_super_admin"
       },
       {
-       "role": "server_admin",
        "username": "e2e_server_admin"
       },
       {
-       "role": "global_admin",
        "username": "e2e_global_admin"
       },
       {
-       "role": "operator",
        "username": "e2e_operator"
       },
       {
-       "role": "viewer",
        "username": "e2e_viewer"
       },
       {
-       "role": "guest_issuer",
        "username": "e2e_guest_issuer"
       },
       {
-       "role": "pro",
        "username": "e2e_pro"
       }
      ],
@@ -106,35 +98,27 @@
     "json": {
      "matches": [
       {
-       "role": "admin",
        "username": "e2e_admin"
       },
       {
-       "role": "super_admin",
        "username": "e2e_super_admin"
       },
       {
-       "role": "server_admin",
        "username": "e2e_server_admin"
       },
       {
-       "role": "global_admin",
        "username": "e2e_global_admin"
       },
       {
-       "role": "operator",
        "username": "e2e_operator"
       },
       {
-       "role": "viewer",
        "username": "e2e_viewer"
       },
       {
-       "role": "guest_issuer",
        "username": "e2e_guest_issuer"
       },
       {
-       "role": "pro",
        "username": "e2e_pro"
       }
      ],

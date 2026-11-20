@@ -19,11 +19,10 @@ const (
 	lookupMatches   = 8
 )
 
-// lookupMatch is an account the typeahead offers: its name and its role,
-// "operator" for none.
+// lookupMatch is an account the typeahead offers: its name only. The
+// route answers visitors who are not signed in, so it names no role.
 type lookupMatch struct {
 	Username string `json:"username"`
-	Role     string `json:"role"`
 }
 
 type lookupAnswer struct {
@@ -56,25 +55,21 @@ func (h *handlers) loginLookup(w http.ResponseWriter, r *http.Request) {
 // lookupAccounts reads every account and keeps the first ones whose name
 // in lower case starts with the prefix.
 func lookupAccounts(ctx context.Context, h *handlers, prefix string) ([]lookupMatch, error) {
-	rows, err := h.d.Store.Query(ctx, `SELECT username, role FROM users ORDER BY id`)
+	rows, err := h.d.Store.Query(ctx, `SELECT username FROM users ORDER BY id`)
 	if err != nil {
 		return nil, fmt.Errorf("load the accounts: %w", err)
 	}
 	defer rows.Close()
 	matches := []lookupMatch{}
 	for rows.Next() {
-		var username, role sql.NullString
-		if err := rows.Scan(&username, &role); err != nil {
+		var username sql.NullString
+		if err := rows.Scan(&username); err != nil {
 			return nil, fmt.Errorf("read an account: %w", err)
 		}
 		if len(matches) == lookupMatches || !strings.HasPrefix(jsLower(username.String), prefix) {
 			continue
 		}
-		match := lookupMatch{Username: username.String, Role: role.String}
-		if match.Role == "" {
-			match.Role = "operator"
-		}
-		matches = append(matches, match)
+		matches = append(matches, lookupMatch{Username: username.String})
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("load the accounts: %w", err)

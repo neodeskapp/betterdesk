@@ -36,7 +36,6 @@
     "json": {
      "matches": [
       {
-       "role": "viewer",
        "username": "e2e_viewer"
       }
      ],

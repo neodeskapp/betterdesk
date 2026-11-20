@@ -94,21 +94,29 @@ func seedRecording(w *world, seed []oracleSeed) {
 	}
 }
 
+// matchRole is the role of a typeahead match in Node's answers.
+var matchRole = regexp.MustCompile(`,"role":"(admin|super_admin|server_admin|global_admin|operator|viewer|guest_issuer|pro)"\}`)
+
 // TestLookupAnswersOfNode replays every typeahead request of the
 // recording: missing, repeated and bracketed parameters, prefixes in
 // every letter case with white space around them, the length limits in
 // UTF-16 units, and names whose lower case JavaScript writes its own way.
+// The console leaves the role of each match out (BUGS UM26).
 func TestLookupAnswersOfNode(t *testing.T) {
 	eachWorld(t, setup{env: map[string]string{"LOGIN_RATE_LIMIT_MAX": "1000000"}}, func(t *testing.T, w *world) {
 		var rec lookupRecording
 		readRecording(t, "lookup_"+dialectName(w.db)+".json", &rec)
 		seedRecording(w, rec.Seed)
 		a := w.agent()
-		failed := 0
+		failed, withRoles := 0, 0
 		for _, step := range rec.Steps {
 			target := "/login/lookup"
 			if step.Query != "" {
 				target += "?" + step.Query
+			}
+			if answer := matchRole.ReplaceAllString(step.Answer, "}"); answer != step.Answer {
+				step.Answer = answer
+				withRoles++
 			}
 			got := a.get(target)
 			if got.status != step.Status || got.body != step.Answer {
@@ -122,6 +130,9 @@ func TestLookupAnswersOfNode(t *testing.T) {
 		}
 		if len(rec.Steps) < 800 {
 			t.Errorf("the recording has only %d requests", len(rec.Steps))
+		}
+		if withRoles == 0 {
+			t.Error("no answer of the recording names a role: the fix of UM26 changes no step")
 		}
 	})
 }
