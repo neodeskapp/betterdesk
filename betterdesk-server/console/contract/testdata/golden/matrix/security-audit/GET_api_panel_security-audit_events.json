@@ -144,7 +144,7 @@
     },
     {
      "path": "events[6].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
+     "pattern": "^[9aA+/_=-]+$"
     },
     {
      "path": "events[7].details.org_id",
@@ -152,7 +152,7 @@
     },
     {
      "path": "events[8].details.org_id",
-     "pattern": "^[9aA+/_=-]+$"
+     "pattern": "^[9aA+/_=-]{36}$"
     },
     {
      "path": "events[9].details.org_id",
@@ -610,7 +610,7 @@
     },
     {
      "path": "events[15].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
+     "pattern": "^[9aA+/_=-]+$"
     },
     {
      "path": "events[16].details.org_id",
@@ -622,7 +622,7 @@
     },
     {
      "path": "events[6].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
+     "pattern": "^[9aA+/_=-]+$"
     },
     {
      "path": "events[7].details.org_id",
@@ -630,7 +630,7 @@
     },
     {
      "path": "events[8].details.org_id",
-     "pattern": "^[9aA+/_=-]+$"
+     "pattern": "^[9aA+/_=-]{36}$"
     },
     {
      "path": "events[9].details.org_id",
@@ -1146,7 +1146,7 @@
     },
     {
      "path": "events[15].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
+     "pattern": "^[9aA+/_=-]+$"
     },
     {
      "path": "events[16].details.org_id",
@@ -1154,19 +1154,19 @@
     },
     {
      "path": "events[17].details.org_id",
-     "pattern": "^[9aA+/_=-]+$"
+     "pattern": "^[9aA+/_=-]{36}$"
     },
     {
      "path": "events[18].details.org_id",
      "pattern": "^[9aA+/_=-]{36}$"
     },
     {
-     "path": "events[19].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
+     "path": "events[5].details.id",
+     "pattern": "^[9aA+/_=-]{16}$"
     },
     {
-     "path": "events[6].details.id",
-     "pattern": "^[9aA+/_=-]{16}$"
+     "path": "events[8].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
     },
     {
      "path": "events[9].details.org_id",
@@ -1176,20 +1176,9 @@
    "body": {
     "kind": "json",
     "json": {
-     "count": 50,
+     "count": 49,
      "enabled": true,
      "events": [
-      {
-       "action": "ldap_config_updated",
-       "actor": "127.0.0.1",
-       "details": {
-        "enabled": "false",
-        "host": "",
-        "port": "389"
-       },
-       "target": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
       {
        "action": "config_changed",
        "actor": "127.0.0.1",
@@ -1650,7 +1639,7 @@
        "timestamp": "<volatile>"
       }
      ],
-     "total": 50
+     "total": 49
     }
    }
   },
@@ -1690,8 +1679,16 @@
      "pattern": "^9999-99-99A99:99:99\\.9+A$"
     },
     {
-     "path": "events[16].details.id",
+     "path": "events[14].details.id",
      "pattern": "^[9aA+/_=-]{16}$"
+    },
+    {
+     "path": "events[17].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[18].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
     },
     {
      "path": "events[19].details.org_id",
@@ -1730,15 +1727,7 @@
      "pattern": "^[9aA+/_=-]{36}$"
     },
     {
-     "path": "events[28].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
-    },
-    {
-     "path": "events[29].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
-    },
-    {
-     "path": "events[7].details.id",
+     "path": "events[6].details.id",
      "pattern": "^[9aA+/_=-]{16}$"
     }
    ],
@@ -1748,17 +1737,6 @@
      "count": 50,
      "enabled": true,
      "events": [
-      {
-       "action": "ldap_config_updated",
-       "actor": "127.0.0.1",
-       "details": {
-        "enabled": "false",
-        "host": "",
-        "port": "389"
-       },
-       "target": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
       {
        "action": "config_changed",
        "actor": "127.0.0.1",
@@ -1843,17 +1821,6 @@
       {
        "action": "branding_updated",
        "actor": "127.0.0.1",
-       "target": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "ldap_config_updated",
-       "actor": "127.0.0.1",
-       "details": {
-        "enabled": "false",
-        "host": "",
-        "port": "389"
-       },
        "target": "apikey:console-bridge",
        "timestamp": "<volatile>"
       },
@@ -2225,9 +2192,27 @@
        },
        "target": "900100010",
        "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "warehouse,scanner"
+       },
+       "target": "900100009",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "warehouse"
+       },
+       "target": "900100008",
+       "timestamp": "<volatile>"
       }
      ],
-     "total": 60
+     "total": 58
     }
    }
   }

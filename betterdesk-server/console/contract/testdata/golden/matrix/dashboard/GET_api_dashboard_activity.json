@@ -350,13 +350,6 @@
     "json": {
      "events": [
       {
-       "action": "ldap_config_updated",
-       "action_label": "ldap_config_updated",
-       "details": "",
-       "device_id": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
        "action": "config_changed",
        "action_label": "config_changed",
        "details": "",
@@ -418,6 +411,13 @@
        "details": "",
        "device_id": "apikey:console-bridge",
        "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "action_label": "org_policy_changed",
+       "details": "",
+       "device_id": "apikey:console-bridge",
+       "timestamp": "<volatile>"
       }
      ],
      "success": true
@@ -464,13 +464,6 @@
     "kind": "json",
     "json": {
      "events": [
-      {
-       "action": "ldap_config_updated",
-       "action_label": "ldap_config_updated",
-       "details": "",
-       "device_id": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
       {
        "action": "config_changed",
        "action_label": "config_changed",
@@ -532,6 +525,13 @@
        "action_label": "branding_updated",
        "details": "",
        "device_id": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "config_changed",
+       "action_label": "config_changed",
+       "details": "",
+       "device_id": "availability_history_retention_days",
        "timestamp": "<volatile>"
       }
      ],
