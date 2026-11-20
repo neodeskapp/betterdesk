@@ -234,6 +234,13 @@ type ChatMessage struct {
 	CreatedAt      time.Time `json:"created_at"`
 }
 
+// ChatUnread is how many messages of one sender a reader has not read.
+type ChatUnread struct {
+	FromID   string
+	FromName string
+	Count    int
+}
+
 // ChatGroup represents a multi-device chat group.
 type ChatGroup struct {
 	ID        string    `json:"id"`
@@ -666,6 +673,9 @@ type Database interface {
 	GetChatHistoryBefore(conversationID string, beforeID int64, limit int) ([]*ChatMessage, error)
 	MarkChatRead(conversationID, readerID string) error // Mark all messages as read for reader
 	GetUnreadCount(deviceID string) (int, error)        // Total unread messages for device
+	// GetUnreadBySender splits GetUnreadCount by sender (from_id and
+	// from_name)
+	GetUnreadBySender(deviceID string) ([]ChatUnread, error)
 	DeleteChatHistory(conversationID string) error
 
 	// Chat Groups

@@ -2457,6 +2457,29 @@ func (pg *PostgresDB) GetUnreadCount(deviceID string) (int, error) {
 	return count, err
 }
 
+// GetUnreadBySender returns the messages GetUnreadCount counts, as counts
+// per sender.
+func (pg *PostgresDB) GetUnreadBySender(deviceID string) ([]ChatUnread, error) {
+	rows, err := pg.pool.Query(pg.ctx,
+		`SELECT from_id, from_name, COUNT(*) FROM chat_messages
+		 WHERE (conversation_id = $1 OR to_id = $1) AND from_id != $1 AND read = FALSE
+		 GROUP BY from_id, from_name`,
+		deviceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []ChatUnread
+	for rows.Next() {
+		var u ChatUnread
+		if err := rows.Scan(&u.FromID, &u.FromName, &u.Count); err != nil {
+			return nil, err
+		}
+		out = append(out, u)
+	}
+	return out, rows.Err()
+}
+
 func (pg *PostgresDB) DeleteChatHistory(conversationID string) error {
 	_, err := pg.pool.Exec(pg.ctx,
 		`DELETE FROM chat_messages WHERE conversation_id = $1`, conversationID)

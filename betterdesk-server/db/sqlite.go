@@ -2963,6 +2963,33 @@ func (s *SQLiteDB) GetUnreadCount(deviceID string) (int, error) {
 	return count, err
 }
 
+// GetUnreadBySender returns the messages GetUnreadCount counts, as counts
+// per sender.
+func (s *SQLiteDB) GetUnreadBySender(deviceID string) ([]ChatUnread, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query(
+		`SELECT from_id, COALESCE(from_name, ''), COUNT(*) FROM chat_messages
+		 WHERE (conversation_id = ? OR to_id = ?) AND from_id != ? AND read = 0
+		 GROUP BY from_id, COALESCE(from_name, '')`,
+		deviceID, deviceID, deviceID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []ChatUnread
+	for rows.Next() {
+		var u ChatUnread
+		if err := rows.Scan(&u.FromID, &u.FromName, &u.Count); err != nil {
+			return nil, err
+		}
+		out = append(out, u)
+	}
+	return out, rows.Err()
+}
+
 // DeleteChatHistory removes all messages for a conversation.
 func (s *SQLiteDB) DeleteChatHistory(conversationID string) error {
 	s.mu.Lock()

@@ -221,6 +221,22 @@ func (s *Server) handleChatContacts(w http.ResponseWriter, r *http.Request) {
 		Role        string `json:"role"` // "device" or "operator"
 	}
 
+	// The unread messages the asking device has, by contact: a device's
+	// under its id, an operator's (from "operator") under
+	// operator:<name>
+	unread := map[string]int{}
+	if counts, err := s.db.GetUnreadBySender(deviceID); err == nil {
+		for _, c := range counts {
+			sender := c.FromID
+			if sender == "operator" {
+				sender = "operator:" + c.FromName
+			}
+			unread[sender] += c.Count
+		}
+	} else {
+		log.Printf("[chat] GetUnreadBySender error: %v", err)
+	}
+
 	var contacts []contact
 	for _, p := range peers {
 		if p.ID == deviceID {
@@ -238,9 +254,7 @@ func (s *Server) handleChatContacts(w http.ResponseWriter, r *http.Request) {
 		if c.Name == "" {
 			c.Name = p.ID
 		}
-		// Get unread count for this conversation
-		unread, _ := s.db.GetUnreadCount(deviceID)
-		c.Unread = unread
+		c.Unread = unread[p.ID]
 		contacts = append(contacts, c)
 	}
 
@@ -254,6 +268,7 @@ func (s *Server) handleChatContacts(w http.ResponseWriter, r *http.Request) {
 					Name:        u.Username,
 					Hostname:    "Console",
 					Online:      true, // operators are always "available" from device perspective
+					Unread:      unread["operator:"+u.Username],
 					AvatarColor: deviceColor(u.Username),
 					Role:        "operator",
 				})
