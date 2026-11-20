@@ -658,3 +658,30 @@ func TestActorComesFromTheContext(t *testing.T) {
 		}
 	}
 }
+
+// ActingFor names the account in a context that has no session, such as
+// a socket's dial; the name wins over what WithActor finds, also for a
+// client without WithActor.
+func TestActingForNamesTheAccount(t *testing.T) {
+	var id api.Identity
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id, _ = api.IdentityFromContext(r.Context())
+		_, _ = io.WriteString(w, `{}`)
+	})
+	fromSession := New(inner, WithActor(func(context.Context) string { return "from-the-session" }))
+	for name, c := range map[string]*Client{"with WithActor": fromSession, "without": New(inner)} {
+		for kind, h := range map[string]http.Handler{"Handler": c.Handler(), "ForwardHandler": c.ForwardHandler()} {
+			id = api.Identity{}
+			h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("GET", "/x", nil).WithContext(ActingFor(context.Background(), "anna")))
+			if id.Actor != "anna" || id.Username != BridgeUsername {
+				t.Errorf("%s, %s: %+v", name, kind, id)
+			}
+		}
+		if _, err := c.Get(ActingFor(context.Background(), "anna"), "/x"); err != nil || id.Actor != "anna" {
+			t.Errorf("%s, a call: %+v, %v", name, id, err)
+		}
+	}
+	if _, _ = fromSession.Get(context.Background(), "/x"); id.Actor != "from-the-session" {
+		t.Errorf("a call without ActingFor: %+v", id)
+	}
+}

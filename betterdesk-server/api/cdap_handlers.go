@@ -305,7 +305,9 @@ func (s *Server) handleCDAPSendCommand(w http.ResponseWriter, r *http.Request) {
 
 	commandID := fmt.Sprintf("cmd_%s_%d", id, commandCounter.Add(1))
 
-	if err := s.cdapGw.SendCommandJSON(r.Context(), id, commandID, body.WidgetID, body.Action, body.Value, operator, body.Reason); err != nil {
+	// The command names the account the call acts for as its operator; the
+	// role and the delegations above go by the caller.
+	if err := s.cdapGw.SendCommandJSON(r.Context(), id, commandID, body.WidgetID, body.Action, body.Value, actorFromCtx(r), body.Reason); err != nil {
 		log.Printf("[cdap-api] SendCommand to %s failed: %v", id, err)
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "Device not connected or command failed"})
 		return
@@ -591,7 +593,7 @@ func (s *Server) handleCDAPTerminal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Start terminal session on the device
-	session, err := s.cdapGw.StartTerminalSession(ctx, wsConn, id, username, role, initMsg.Cols, initMsg.Rows)
+	session, err := s.cdapGw.StartTerminalSession(ctx, wsConn, id, actorFromCtx(r), role, initMsg.Cols, initMsg.Rows)
 	if err != nil {
 		errMsg, _ := json.Marshal(map[string]string{
 			"type":  "error",
@@ -709,7 +711,7 @@ func (s *Server) handleCDAPDesktop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := s.cdapGw.StartDesktopSession(ctx, wsConn, id, username, role, initMsg.Width, initMsg.Height, initMsg.Quality, initMsg.FPS, initMsg.FpsMode, initMsg.Codecs, initMsg.VideoCodec)
+	session, err := s.cdapGw.StartDesktopSession(ctx, wsConn, id, actorFromCtx(r), role, initMsg.Width, initMsg.Height, initMsg.Quality, initMsg.FPS, initMsg.FpsMode, initMsg.Codecs, initMsg.VideoCodec)
 	if err != nil {
 		errMsg, _ := json.Marshal(map[string]string{"type": "error", "error": fmt.Sprintf("Failed to start desktop: %v", err)})
 		wsConn.Write(ctx, websocket.MessageText, errMsg)
@@ -857,7 +859,7 @@ func (s *Server) handleCDAPVideo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := s.cdapGw.StartVideoSession(ctx, wsConn, id, username, role, initMsg.StreamID, initMsg.Quality, initMsg.FPS)
+	session, err := s.cdapGw.StartVideoSession(ctx, wsConn, id, actorFromCtx(r), role, initMsg.StreamID, initMsg.Quality, initMsg.FPS)
 	if err != nil {
 		errMsg, _ := json.Marshal(map[string]string{"type": "error", "error": fmt.Sprintf("Failed to start video: %v", err)})
 		wsConn.Write(ctx, websocket.MessageText, errMsg)
@@ -941,7 +943,7 @@ func (s *Server) handleCDAPFileBrowser(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
-	session, err := s.cdapGw.StartFileSession(ctx, wsConn, id, username, role)
+	session, err := s.cdapGw.StartFileSession(ctx, wsConn, id, actorFromCtx(r), role)
 	if err != nil {
 		errMsg, _ := json.Marshal(map[string]string{"type": "error", "error": fmt.Sprintf("Failed to start file browser: %v", err)})
 		wsConn.Write(ctx, websocket.MessageText, errMsg)
@@ -1043,7 +1045,7 @@ func (s *Server) handleCDAPAudio(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := s.cdapGw.StartAudioSession(ctx, wsConn, id, username, role, initMsg.Codec, initMsg.SampleRate, initMsg.Channels, initMsg.Direction)
+	session, err := s.cdapGw.StartAudioSession(ctx, wsConn, id, actorFromCtx(r), role, initMsg.Codec, initMsg.SampleRate, initMsg.Channels, initMsg.Direction)
 	if err != nil {
 		errMsg, _ := json.Marshal(map[string]string{"type": "error", "error": fmt.Sprintf("Failed to start audio: %v", err)})
 		wsConn.Write(ctx, websocket.MessageText, errMsg)

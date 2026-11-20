@@ -141,10 +141,23 @@ func (c *Client) Handler() http.Handler {
 	})
 }
 
+// actingForKey holds the account ActingFor names.
+type actingForKey struct{}
+
+// ActingFor returns ctx naming the signed-in account a call acts for, for
+// a call whose context carries no session, such as a socket the console
+// opens to the API server for a browser's socket. The name wins over what
+// WithActor's function finds and decides nothing either.
+func ActingFor(ctx context.Context, account string) context.Context {
+	return context.WithValue(ctx, actingForKey{}, account)
+}
+
 // identityFor is the client's identity with the actor of ctx.
 func (c *Client) identityFor(ctx context.Context) api.Identity {
 	id := c.identity
-	if c.actor != nil {
+	if account, ok := ctx.Value(actingForKey{}).(string); ok {
+		id.Actor = account
+	} else if c.actor != nil {
 		id.Actor = c.actor(ctx)
 	}
 	return id

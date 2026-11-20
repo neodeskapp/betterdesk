@@ -59,8 +59,10 @@ var ErrNoSubprotocol = errors.New("ws: server sent no subprotocol")
 // DialHandler opens a websocket to target ("/api/x?y") on h, without a
 // network: the handshake and the frames go over an in-memory connection
 // that h's side reads as a normal HTTP connection, so h answers as it
-// would on its listener. An answer other than 101 is an error. ctx ends
-// the dial; the open socket ends with Close and Wait.
+// would on its listener. h's request carries the values of ctx, such as
+// the account the socket acts for, but not its end. An answer other than
+// 101 is an error. ctx ends the dial; the open socket ends with Close and
+// Wait.
 func DialHandler(ctx context.Context, h http.Handler, target string, opts DialOptions) (*Upstream, error) {
 	if addr := opts.RemoteAddr; addr != "" {
 		inner := h
@@ -71,7 +73,8 @@ func DialHandler(ctx context.Context, h http.Handler, target string, opts DialOp
 	}
 	client, server := net.Pipe()
 	l := &pipeListener{conn: server, closed: make(chan struct{})}
-	srv := &http.Server{Handler: h, ErrorLog: log.New(io.Discard, "", 0)}
+	values := context.WithoutCancel(ctx)
+	srv := &http.Server{Handler: h, ErrorLog: log.New(io.Discard, "", 0), BaseContext: func(net.Listener) context.Context { return values }}
 	served := make(chan struct{})
 	go func() {
 		defer close(served)

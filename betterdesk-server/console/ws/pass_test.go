@@ -81,6 +81,44 @@ func TestDialHandlerSeesTheRequest(t *testing.T) {
 	check()
 }
 
+// TestDialHandlerPassesTheDialsValues: the handler's request carries the
+// values of the dial's context, such as the account a socket acts for,
+// and lives on after the dial's context has ended.
+func TestDialHandlerPassesTheDialsValues(t *testing.T) {
+	check := wstest.Goroutines(t)
+	type key struct{}
+	seen := make(chan any, 1)
+	ended := make(chan error, 1)
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		seen <- r.Context().Value(key{})
+		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})
+		if err != nil {
+			return
+		}
+		_, _, _ = c.Read(r.Context())
+		ended <- r.Context().Err()
+		_ = c.CloseNow()
+	})
+	ctx, cancel := context.WithCancel(context.WithValue(context.Background(), key{}, "anna"))
+	up, err := ws.DialHandler(ctx, h, "/x", ws.DialOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := <-seen; got != "anna" {
+		t.Errorf("the handler's request carries %v, want anna", got)
+	}
+	cancel()
+	if err := up.Send(false, []byte("still open")); err != nil {
+		t.Errorf("a send after the dial's context ended: %v", err)
+	}
+	if err := <-ended; err != nil {
+		t.Errorf("the handler's request ended with the dial's context: %v", err)
+	}
+	up.Close()
+	up.Wait()
+	check()
+}
+
 // TestUpstreamLimits: a message over the limit and text that is not UTF-8
 // end the upstream with 1009 and 1007, as the old client closed it.
 func TestUpstreamLimits(t *testing.T) {

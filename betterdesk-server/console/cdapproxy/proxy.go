@@ -138,9 +138,15 @@ func (p *Proxy) serve(u *ws.Upgrade, ch Channel) {
 	defer client.closeSilent(conn, 2*p.opts.PingInterval)()
 	logf("[CDAP %s] Proxy started for device %s (role=%s)", ch.Label, deviceID, role)
 	target := "/api/cdap/devices/" + deviceID + "/" + ch.Name
+	account := ""
+	if user := session.User(); user != nil {
+		account = user.Username
+	}
 	ws.Pass(conn, ws.PassOptions{
+		// The API server records the account as the one who started the
+		// session (goapi.ActingFor)
 		Dial: func(ctx context.Context) (*ws.Upstream, error) {
-			return ws.DialHandler(ctx, p.opts.API, target, ws.DialOptions{Subprotocols: []string{ch.Subprotocol}})
+			return ws.DialHandler(goapi.ActingFor(ctx, account), p.opts.API, target, ws.DialOptions{Subprotocols: []string{ch.Subprotocol}})
 		},
 		Queue:    true,
 		Binary:   ch.Binary,

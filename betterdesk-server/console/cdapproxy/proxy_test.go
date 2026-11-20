@@ -8,9 +8,41 @@ import (
 	"testing"
 	"time"
 
+	"github.com/coder/websocket"
+
+	"github.com/unitronix/betterdesk-server/api"
+	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/ws"
 	"github.com/unitronix/betterdesk-server/console/ws/wstest"
 )
+
+// TestTheSocketActsForTheAccount: the socket to the API server is opened
+// for the signed-in account: through the API client, the API server sees
+// the account's name as the actor of the call (BUGS G7), and the caller is
+// still the client's identity.
+func TestTheSocketActsForTheAccount(t *testing.T) {
+	standIn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id, _ := api.IdentityFromContext(r.Context())
+		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{Subprotocols: []string{r.Header.Get("Sec-WebSocket-Protocol")}})
+		if err != nil {
+			return
+		}
+		defer c.CloseNow()
+		_ = c.Write(r.Context(), websocket.MessageBinary, []byte(id.Actor+" as "+id.Username))
+		_, _, _ = c.Read(r.Context())
+	})
+	addr := proxyAt(t, Options{Devices: knownDevices{}, CanAccess: everyDevice, API: goapi.New(standIn).Handler()})
+	for i, name := range []string{"anna", "Zh中"} {
+		c, status := open(t, addr, "/api/cdap/devices/dev1/terminal", as(int64(20+i), name))
+		if c == nil {
+			t.Fatalf("%q: %d, want an open socket", name, status)
+		}
+		want := name + " as " + goapi.BridgeUsername
+		if !c.Wait(5*time.Second, func(frames []wstest.Frame, _ bool) bool { return len(frames) == 1 }) || c.Frames()[0].Text() != want {
+			t.Errorf("%q: the API server saw %v, want %q", name, c.Frames(), want)
+		}
+	}
+}
 
 // TestOnlyDeviceIDsAreServed: a device id is 1 to 64 letters, digits, _
 // and -; any other path is not one of the sockets and goes on as before.
