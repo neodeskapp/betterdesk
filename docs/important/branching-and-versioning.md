@@ -112,9 +112,10 @@ UPDATE_GITHUB_BRANCH=dev    # development
 | Workflow | Trigger | Action |
 |----------|---------|--------|
 | `version-bump-dev.yml` | Push to `dev` | Patch bump + commit `[version-bump]` |
-| `version-bump-main.yml` | PR merged to `main` | Minor bump, tag, GitHub Release |
+| `version-bump-main.yml` | PR merged to `main` | Minor bump, tag, GitHub Release; starts `release-go.yml` for the tag with `channel=stable` and `docker-publish.yml`, since a tag pushed with the workflow's token starts no workflow |
 | `version-verify.yml` | Push/PR touching version files | Fail if files disagree |
-| `release-server.yml` | Tag `v*` | Go server binaries |
+| `release-go.yml` | Tag `v*`, push to `dev`, or dispatch | The only publisher of server binaries: the stable release `vX.Y.Z` for a tag, the pre-release `dev` for `dev`. Binaries with the web console built in, `manifest.json`, `SHA256SUMS` and, when signed, `manifest.sig`, which the console's updater installs from |
+| `release-server.yml` | Push to `main`/`dev`, tag `v*` | Builds the server binaries and the migration tool as run artifacts only; attaches nothing to a release |
 | `docker-publish.yml` | Tag, release, push to `main`/`dev`, or dispatch from `version-bump-dev` | GHCR images: on **branch** pushes, builds only version-bump subjects so image VERSION matches tip (#401); `version-bump-dev` dispatches `tag=dev` because GITHUB_TOKEN pushes do not re-trigger workflows. Tags/release/dispatch always build. `latest` on stable release/main; `dev` on development publishes; semver on `v*` / Release. AIO/server/console are multi-arch (amd64 then native ARM); soft-merge still publishes amd64 if ARM fails (#476) |
 
 ## First stable release note

@@ -180,18 +180,33 @@ The project includes automated builds via GitHub Actions.
 3. Click "Run workflow"
 4. Optionally select RustDesk version and release options
 
-### Artifacts
-The `Build & Release Go Server` workflow publishes one artifact per supported
-server target. Each artifact includes the binary and a JSON manifest containing
-the exact commit SHA, Go target, byte size and SHA-256. The panel uses an
-artifact only when its workflow run and manifest match the requested update
-commit; failed, in-progress or expired artifacts fall back to a local build.
+### Releases and artifacts
+`release-go.yml` ("Release Go server") is the only workflow that publishes
+server binaries to GitHub Releases:
 
-Tag runs also attach the binaries, per-binary manifests and
-`SERVER_CHECKSUMS.sha256` to the GitHub Release. For private repositories,
-native panel updates need `UPDATE_GITHUB_TOKEN` with read access to Actions
-artifacts and repository contents. Do not use a generic `latest` release asset
-as a substitute for an exact commit.
+- A tag `vX.Y.Z` publishes the stable release `vX.Y.Z`. The tag must match
+  `betterdesk-server/internal/productversion/VERSION`. When a merge to `main`
+  makes the tag, `version-bump-main.yml` starts this workflow for the tag with
+  `channel=stable`, because a tag pushed by the workflow's own token starts no
+  other workflow.
+- A push to `dev`, or a manual run with `channel=development`, replaces the
+  pre-release tagged `dev`.
+
+Each release holds the server binary for linux amd64, arm64 and armv7 and
+windows amd64, each with the web console built in, plus `manifest.json`,
+`SHA256SUMS` (bare file names, for `sha256sum -c`) and, when the signing key
+is set, `manifest.sig`. The updater in the console installs from these
+releases: the stable channel takes the newest release that is not a
+pre-release, the development channel the `dev` pre-release. It checks the
+manifest, its signature and the binary's SHA-256 before it installs. For a
+private repository, or to get past GitHub's limit of 60 API requests an hour,
+set `UPDATE_GITHUB_TOKEN` to a token with read access to the repository's
+contents.
+
+`release-server.yml` ("Build & Release Go Server") builds the server for
+linux amd64 and arm64 and windows amd64, and the migration tool, on pushes to
+`main` and `dev` and on tags. It keeps them as artifacts of its run only,
+without the web console built in, and attaches nothing to a release.
 
 ---
 

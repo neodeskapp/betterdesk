@@ -10,7 +10,8 @@
 #   -> "Allow GitHub Actions to create and approve pull requests"
 # Tag/release still succeed if that checkbox is off.
 #
-# release-server / docker-publish attach artifacts to the tag/release.
+# release-go (binaries, manifest and checksums for the updater) and
+# docker-publish (images) attach artifacts to the tag/release.
 # =============================================================================
 
 name: Version Bump & Release (main)
@@ -25,7 +26,7 @@ permissions:
   pull-requests: write
   # Publishing verification reads GHCR package tags.
   packages: read
-  # Required to dispatch release-server / docker-publish: tag and Release
+  # Required to dispatch release-go / docker-publish: tag and Release
   # creation use GITHUB_TOKEN, and GITHUB_TOKEN-produced events never trigger
   # other workflows. Explicit dispatch is the documented exception, so without
   # this scope a stable release ships with zero artifacts and no image (#488).
@@ -43,7 +44,9 @@ jobs:
       !startsWith(github.event.pull_request.head.ref, 'release/v') &&
       !contains(github.event.pull_request.title, '[version-bump]')
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # The checks after the dispatch wait up to 20 minutes for the release's
+    # assets and then up to 15 for the images
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -169,8 +172,8 @@ jobs:
           TAG: ${{ steps.tag.outputs.tag }}
         run: |
           set -euo pipefail
-          echo "Dispatching server artifact release for ${TAG}"
-          gh workflow run "Build & Release Go Server" --ref "$TAG"
+          echo "Dispatching the server release for ${TAG}"
+          gh workflow run .github/workflows/release-go.yml --ref "$TAG" -f channel=stable
           echo "Dispatching container image publish for ${TAG}"
           gh workflow run .github/workflows/docker-publish.yml --ref "$TAG" -f tag=latest
           echo "Dispatched both publishers for ${TAG}"
@@ -223,7 +226,7 @@ jobs:
           fi
 
           if [ "$assets_ok" != true ]; then
-            echo "::error::Stable release ${TAG} has no downloadable assets. Inspect the dispatched 'Build & Release Go Server' run, then upload the binaries manually."
+            echo "::error::Stable release ${TAG} has no downloadable assets. Inspect the dispatched 'Release Go server' run (release-go.yml) and run it again for ${TAG} with channel=stable."
             exit 1
           fi
           echo "Stable release ${TAG} verified."
