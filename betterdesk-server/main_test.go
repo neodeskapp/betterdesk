@@ -47,6 +47,28 @@ func TestReadBootstrapAdminPassword(t *testing.T) {
 	}
 }
 
+// TestFirstAdminOnPostgresWritesItsCredentials: on PostgreSQL the first
+// admin's generated password goes into .admin_credentials beside the key
+// file, as the DSN names no folder; on SQLite it stays beside the database
+// file (BUGS D8).
+func TestFirstAdminOnPostgresWritesItsCredentials(t *testing.T) {
+	keys, data := t.TempDir(), t.TempDir()
+	keyFile := filepath.Join(keys, "id_ed25519")
+	for _, dsn := range []string{"postgres://bd:made-up@db:5432/betterdesk?sslmode=disable", "POSTGRESQL://db/betterdesk"} {
+		dir := bootstrapCredentialsDir(dsn, keyFile)
+		path, err := writeBootstrapAdminCredentials(dir, "admin", "made-up-first-pass")
+		if err != nil || path != filepath.Join(keys, ".admin_credentials") {
+			t.Fatalf("credentials of %s: %q %v", dsn, path, err)
+		}
+		if got := readBootstrapAdminPassword(dir); got != "made-up-first-pass" {
+			t.Errorf("password read back for %s: %q", dsn, got)
+		}
+	}
+	if got := bootstrapCredentialsDir(filepath.Join(data, "db_v2.sqlite3"), keyFile); got != data {
+		t.Errorf("folder on SQLite: %q, want %q", got, data)
+	}
+}
+
 func TestResolveEnrollmentModeExplicitEnvironmentWins(t *testing.T) {
 	mode, source := resolveEnrollmentMode(config.EnrollmentModeOpen, config.EnrollmentModeLocked, true)
 	if mode != config.EnrollmentModeOpen || source != "environment" {

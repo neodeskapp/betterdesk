@@ -364,7 +364,7 @@ func main() {
 		adminPasswordGenerated := false
 		adminPasswordFromFile := false
 		if adminPass == "" {
-			dbDir := filepath.Dir(cfg.DBPath)
+			dbDir := bootstrapCredentialsDir(cfg.DBPath, cfg.KeyFile)
 			if existingPass := readBootstrapAdminPassword(dbDir); existingPass != "" {
 				adminPass = existingPass
 				adminPasswordFromFile = true
@@ -389,7 +389,7 @@ func main() {
 		log.Printf("  INITIAL ADMIN CREDENTIALS")
 		log.Printf("  Username: %s", adminUser)
 		if adminPasswordGenerated {
-			dbDir := filepath.Dir(cfg.DBPath)
+			dbDir := bootstrapCredentialsDir(cfg.DBPath, cfg.KeyFile)
 			credsFile, err := writeBootstrapAdminCredentials(dbDir, adminUser, adminPass)
 			if err != nil {
 				log.Fatalf("Failed to write credentials file: %v", err)
@@ -854,6 +854,17 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// bootstrapCredentialsDir is the folder of .admin_credentials: the SQLite
+// file's folder, or the key file's when the database is PostgreSQL, whose
+// DSN names no folder.
+func bootstrapCredentialsDir(dbPath, keyFile string) string {
+	lower := strings.ToLower(dbPath)
+	if strings.HasPrefix(lower, "postgres://") || strings.HasPrefix(lower, "postgresql://") {
+		return filepath.Dir(keyFile)
+	}
+	return filepath.Dir(dbPath)
 }
 
 func writeBootstrapAdminCredentials(dbDir, adminUser, adminPass string) (string, error) {
