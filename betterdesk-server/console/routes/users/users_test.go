@@ -194,27 +194,68 @@ func TestRoleChangeEndsTheAccountsSessions(t *testing.T) {
 	})
 }
 
-// Creating accounts, resetting passwords and changing one's own password
-// share three requests per five minutes per address (BUGS C4).
-func TestPasswordLimitIsSharedWithTheSignInRoutes(t *testing.T) {
+const (
+	// ownPassword is a change of one's own password that is refused: the
+	// test accounts have no password that "x" matches
+	ownPassword = `{"currentPassword":"x","newPassword":"Other-Pass-2!","confirmPassword":"Other-Pass-2!"}`
+	// passwordPolicy is the RateLimit-Policy of the password change limit
+	passwordPolicy = "3;w=300"
+	tooManyChanges = `{"success":false,"error":"Too many password change attempts. Please try again later."}`
+)
+
+// unlimited checks an answer of the account routes: the status, and no
+// headers of the password change limit.
+func unlimited(t *testing.T, what string, got routetest.Answer, status int) {
+	t.Helper()
+	expect(t, what, got, status, "")
+	if policy := got.Header.Get("RateLimit-Policy"); policy == passwordPolicy {
+		t.Errorf("%s: answered with the password change limit's headers (RateLimit-Policy %s)", what, policy)
+	}
+}
+
+// One admin creates more than three accounts and resets more than three
+// passwords in five minutes from one address: each answers as without a
+// limit, and the admin's own password change still has its three in five
+// minutes (BUGS C4).
+func TestCreatingAccountsDoesNotSpendThePasswordBudget(t *testing.T) {
 	w := world(t, nil, routetest.Options{})
 	admin := w.As("admin")
 	const address = "10.2.0.1"
-	expect(t, "first", admin.Do("POST", "/api/users", `{"username":"dave","password":"Strong-Pass-1!"}`, "X-Forwarded-For", address), 200, "")
-	expect(t, "own password", admin.Do("POST", "/api/auth/password", `{"currentPassword":"x","newPassword":"y","confirmPassword":"y"}`, "X-Forwarded-For", address), 400, "")
-	expect(t, "reset", admin.Do("POST", "/api/users/999999/reset-password", `{}`, "X-Forwarded-For", address), 404, "")
-	expect(t, "fourth", admin.Do("POST", "/api/users", `{"username":"erin","password":"Strong-Pass-1!"}`, "X-Forwarded-For", address),
-		429, `{"success":false,"error":"Too many password change attempts. Please try again later."}`)
-	expect(t, "another address", admin.Do("POST", "/api/users", `{"username":"erin","password":"Strong-Pass-1!"}`, "X-Forwarded-For", "10.2.0.2"), 200, "")
-
-	// The limit counts behind the sign-in check: requests without a
-	// session leave the budget alone
-	const fresh = "10.2.0.3"
-	for i := 0; i < 3; i++ {
-		expect(t, "signed out", w.SignedOut().Do("POST", "/api/users", `{"username":"frank","password":"Strong-Pass-1!"}`, "X-Forwarded-For", fresh), 401, "")
-		expect(t, "signed out reset", w.SignedOut().Do("POST", "/api/users/6/reset-password", `{"newPassword":"Strong-Pass-1!"}`, "X-Forwarded-For", fresh), 401, "")
+	for i := 0; i < 5; i++ {
+		name := "dave_" + strconv.Itoa(i)
+		unlimited(t, "create "+name, admin.Do("POST", "/api/users", `{"username":"`+name+`","password":"Strong-Pass-1!"}`, "X-Forwarded-For", address), 200)
 	}
-	expect(t, "after the signed-out ones", admin.Do("POST", "/api/users", `{"username":"frank","password":"Strong-Pass-1!"}`, "X-Forwarded-For", fresh), 200, "")
+	// operator, viewer, guest_issuer and pro
+	for _, id := range []string{"5", "6", "7", "8"} {
+		unlimited(t, "reset of "+id, admin.Do("POST", "/api/users/"+id+"/reset-password", `{"newPassword":"Strong-Pass-1!"}`, "X-Forwarded-For", address), 200)
+	}
+	unlimited(t, "reset of a missing account", admin.Do("POST", "/api/users/999999/reset-password", `{}`, "X-Forwarded-For", address), 404)
+
+	for i := 1; i <= 3; i++ {
+		expect(t, "own password "+strconv.Itoa(i), admin.Do("POST", "/api/auth/password", ownPassword, "X-Forwarded-For", address), 400, "")
+	}
+	expect(t, "fourth own password", admin.Do("POST", "/api/auth/password", ownPassword, "X-Forwarded-For", address), 429, tooManyChanges)
+}
+
+// Only one's own password change counts against the password change
+// limit, and the budget is the account's: an admin who spent it still
+// creates accounts and resets passwords, has none left from another
+// address, and another account behind the same address has its own three
+// (BUGS C4).
+func TestPasswordLimitCountsOnlyOwnPasswordChanges(t *testing.T) {
+	w := world(t, nil, routetest.Options{})
+	admin := w.As("admin")
+	const address = "10.2.0.1"
+	for i := 1; i <= 3; i++ {
+		expect(t, "own password "+strconv.Itoa(i), admin.Do("POST", "/api/auth/password", ownPassword, "X-Forwarded-For", address), 400, "")
+	}
+	expect(t, "fourth own password", admin.Do("POST", "/api/auth/password", ownPassword, "X-Forwarded-For", address), 429, tooManyChanges)
+
+	unlimited(t, "create", admin.Do("POST", "/api/users", `{"username":"erin","password":"Strong-Pass-1!"}`, "X-Forwarded-For", address), 200)
+	unlimited(t, "reset", admin.Do("POST", "/api/users/6/reset-password", `{"newPassword":"Strong-Pass-1!"}`, "X-Forwarded-For", address), 200)
+
+	expect(t, "own password from another address", admin.Do("POST", "/api/auth/password", ownPassword, "X-Forwarded-For", "10.2.0.2"), 429, tooManyChanges)
+	expect(t, "another account's own password", w.As("super_admin").Do("POST", "/api/auth/password", ownPassword, "X-Forwarded-For", address), 400, "")
 }
 
 // The last administrator is the last account with the role admin or

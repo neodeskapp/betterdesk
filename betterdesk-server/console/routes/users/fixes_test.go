@@ -29,7 +29,8 @@ type fix struct {
 	// keeps it.
 	answer func(node string) string
 	// node writes what Node's request wrote and the Go console's does
-	// not, after the step, so the steps after it start from the rows the
+	// not, or takes back what the Go console's wrote and Node's did not,
+	// after the step, so the steps after it start from the rows the
 	// recording's did. nil writes nothing.
 	node func(n *nodeWrites)
 	// endsSessionsOf are the roles whose sessions the step ends in the Go
@@ -194,6 +195,52 @@ var fixes = map[string]fix{
 	"postgres-go: 509 PATCH /api/users/17":        {bug: "US4", node: renamedTo("srv_renamed")},
 	"postgres-go: 554 PATCH /api/users/{rnAlpha}": {bug: "US4", node: renamedTo("rn_final")},
 	"postgres-go: 571 PATCH /api/users/2":         {bug: "US4", node: renamedTo("super_self")},
+
+	// Node counted creates and resets against the password change limit of
+	// three in five minutes per address, and refused with 429 the admin's
+	// fourth account and fifth request from one address, the super admin's
+	// account after three resets and the admin's fourth empty create. They
+	// count against the API limit alone; what the Go console wrote for them
+	// is taken back. The new account's id differs by shape.
+	"sqlite: 310 POST /api/users":      {bug: "C4", status: http.StatusOK, answer: newViewer("93", "limit_3"), node: uncreated("limit_3")},
+	"sqlite-go: 310 POST /api/users":   {bug: "C4", status: http.StatusOK, answer: newViewer("93", "limit_3"), node: uncreated("limit_3")},
+	"postgres: 310 POST /api/users":    {bug: "C4", status: http.StatusOK, answer: newViewer("94", "limit_3"), node: uncreated("limit_3")},
+	"postgres-go: 310 POST /api/users": {bug: "C4", status: http.StatusOK, answer: newViewer(`"94"`, "limit_3"), node: uncreated("limit_3")},
+	"311 POST /api/users/13/reset-password": {bug: "C4", status: http.StatusOK, answer: is(`{"success":true}`), node: func(n *nodeWrites) {
+		n.exec(`UPDATE users SET password_hash = 'x' WHERE id = 13`)
+		n.exec(`DELETE FROM audit_log WHERE id = (SELECT MAX(id) FROM audit_log WHERE action = 'password_reset')`)
+	}},
+	"sqlite: 315 POST /api/users":      {bug: "C4", status: http.StatusOK, answer: newViewer("93", "limit_after_reset"), node: uncreated("limit_after_reset")},
+	"sqlite-go: 315 POST /api/users":   {bug: "C4", status: http.StatusOK, answer: newViewer("93", "limit_after_reset"), node: uncreated("limit_after_reset")},
+	"postgres: 315 POST /api/users":    {bug: "C4", status: http.StatusOK, answer: newViewer("94", "limit_after_reset"), node: uncreated("limit_after_reset")},
+	"postgres-go: 315 POST /api/users": {bug: "C4", status: http.StatusOK, answer: newViewer(`"94"`, "limit_after_reset"), node: uncreated("limit_after_reset")},
+	"325 POST /api/users":              {bug: "C4", status: http.StatusBadRequest, answer: is(`{"success":false,"error":"Please fill in all required fields"}`)},
+}
+
+// newViewer is the answer to a new account with a username and a password
+// alone. id is written as the shape's driver gave it.
+func newViewer(id, username string) func(string) string {
+	return is(`{"success":true,"data":{"id":` + id + `,"username":"` + username + `","role":"viewer","email":"","user_groups":[],"folder_ids":[],"peer_grants":[]}}`)
+}
+
+// uncreated takes back an account the Go console created and Node did
+// not: its row, its audit entry and the id it took, so the next account
+// gets the id Node gave it.
+func uncreated(username string) func(n *nodeWrites) {
+	return func(n *nodeWrites) {
+		n.p.t.Helper()
+		var id int64
+		if err := n.p.db.QueryRow(context.Background(), `SELECT id FROM users WHERE username = ?`, username).Scan(&id); err != nil {
+			n.p.t.Fatalf("step %q, the account %s: %v", n.step.Name, username, err)
+		}
+		n.exec(`DELETE FROM users WHERE id = ?`, id)
+		n.exec(`DELETE FROM audit_log WHERE id = (SELECT MAX(id) FROM audit_log WHERE action = 'user_created')`)
+		if n.p.db.IsPostgres() {
+			n.exec(`SELECT setval(pg_get_serial_sequence('users', 'id'), ?)`, id-1)
+		} else {
+			n.exec(`UPDATE sqlite_sequence SET seq = ? WHERE name = 'users'`, id-1)
+		}
+	}
 }
 
 // renamedTo gives the step's account the name Node gave it, through the

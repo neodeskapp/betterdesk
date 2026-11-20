@@ -7,12 +7,12 @@
 // sees. A new account's username is text: a number, a flag, a list or an
 // object is refused.
 //
-// Creating an account and resetting a password count against the limit
-// of password changes (three in five minutes per address), which the
-// password change of the sign-in routes shares. A role change, a new
-// name and a deleted account end every session of the account and revoke
-// its access tokens; a new password does that too, but keeps the session
-// of the caller who changed their own.
+// Creating an account and resetting a password count against the API
+// limit alone: the limit of password changes belongs to the signed-in
+// account's change of its own password in the sign-in routes. A role
+// change, a new name and a deleted account end every session of the
+// account and revoke its access tokens; a new password does that too, but
+// keeps the session of the caller who changed their own.
 package users
 
 import (
@@ -36,11 +36,11 @@ func Register(d *kit.Deps) {
 	r.Post("/api/panel/user-groups", h.createUserGroup, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Patch("/api/panel/user-groups/{guid}", h.updateUserGroup, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Delete("/api/panel/user-groups/{guid}", h.deleteUserGroup, d.RequireAuth, d.RequirePermission("user.edit"))
-	r.Post("/api/users", h.create, d.RequireAuth, d.RequirePermission("user.create"), d.Limits.PasswordChange.Middleware)
+	r.Post("/api/users", h.create, d.RequireAuth, d.RequirePermission("user.create"))
 	r.Patch("/api/users/{id}", h.update, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Get("/api/users/{id}/effective-scope", h.effectiveScope, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Delete("/api/users/{id}", h.remove, d.RequireAuth, d.RequirePermission("user.delete"))
-	r.Post("/api/users/{id}/reset-password", h.resetPassword, d.RequireAuth, d.RequirePermission("user.edit"), d.Limits.PasswordChange.Middleware)
+	r.Post("/api/users/{id}/reset-password", h.resetPassword, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Get("/api/users/{id}/organizations", h.organizations, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Post("/api/users/{id}/organizations", h.assignOrganization, d.RequireAuth, d.RequirePermission("org.manage_users"))
 }
