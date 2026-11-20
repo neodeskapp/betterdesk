@@ -178,7 +178,10 @@ func init() {
 		asDevice(contract.Case{Name: "read-other-spelling", Path: "/API/BD/Inventory/900100001/"}),
 		asDevice(contract.Case{Name: "read-other-device", Path: bd + "/inventory/900100002"}),
 		asDevice(contract.Case{Name: "read-as-other-device", Headers: other}),
-		asDevice(contract.Case{Name: "read-other-device-as-it", Path: bd + "/inventory/900100002", Headers: other}),
+		// The seed dates the apps from the day it runs, as the detail cases
+		// of the inventory group know
+		asDevice(contract.Case{Name: "read-other-device-as-it", Path: bd + "/inventory/900100002", Headers: other,
+			Volatile: []string{"software.apps[*].installed_at"}}),
 		asDevice(contract.Case{Name: "read-without-token", Headers: none}),
 		asDevice(contract.Case{Name: "read-unknown-token", Headers: unknown}),
 		asDevice(contract.Case{Name: "read-basic", Headers: basic}),

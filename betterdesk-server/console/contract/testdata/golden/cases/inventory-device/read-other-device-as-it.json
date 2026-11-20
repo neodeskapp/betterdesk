@@ -46,6 +46,10 @@
     {
      "path": "received_at",
      "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "software.apps[*].installed_at",
+     "format": "9999-99-99"
     }
    ],
    "body": {
@@ -91,61 +95,61 @@
      "software": {
       "apps": [
        {
-        "installed_at": "2025-08-13",
+        "installed_at": "<volatile>",
         "name": "Microsoft Edge",
         "publisher": "Microsoft Corporation",
         "version": "130.0.2849.68"
        },
        {
-        "installed_at": "2026-06-06",
+        "installed_at": "<volatile>",
         "name": "Google Chrome",
         "publisher": "Google LLC",
         "version": "130.0.6723.117"
        },
        {
-        "installed_at": "2025-09-27",
+        "installed_at": "<volatile>",
         "name": "Microsoft 365 Apps for business",
         "publisher": "Microsoft Corporation",
         "version": "16.0.18129.20116"
        },
        {
-        "installed_at": "2026-03-27",
+        "installed_at": "<volatile>",
         "name": "Adobe Acrobat Reader",
         "publisher": "Adobe",
         "version": "24.004.20243"
        },
        {
-        "installed_at": "2026-09-09",
+        "installed_at": "<volatile>",
         "name": "7-Zip 24.08 (x64)",
         "publisher": "Igor Pavlov",
         "version": "24.08"
        },
        {
-        "installed_at": "2026-04-15",
+        "installed_at": "<volatile>",
         "name": "Notepad++ (64-bit x64)",
         "publisher": "Notepad++ Team",
         "version": "8.7.1"
        },
        {
-        "installed_at": "2026-04-29",
+        "installed_at": "<volatile>",
         "name": "VLC media player",
         "publisher": "VideoLAN",
         "version": "3.0.21"
        },
        {
-        "installed_at": "2025-06-10",
+        "installed_at": "<volatile>",
         "name": "BetterDesk",
         "publisher": "BetterDesk (demo)",
         "version": "1.4.2"
        },
        {
-        "installed_at": "2026-03-17",
+        "installed_at": "<volatile>",
         "name": "Demo Label Studio",
         "publisher": "Example Software GmbH",
         "version": "5.2.0"
        },
        {
-        "installed_at": "2026-06-08",
+        "installed_at": "<volatile>",
         "name": "Demo Accounting Suite",
         "publisher": "Example Ledger Ltd",
         "version": "2024.3"
