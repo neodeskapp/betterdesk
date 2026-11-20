@@ -30,6 +30,9 @@ const ConfigKey = "commercialization_email_config"
 // notification log.
 const eventType = "help_request"
 
+// pendingStatus is the status of a new help request.
+const pendingStatus = "pending"
+
 // Config is the commercialization email configuration, with the keys and
 // key order of its JSON in the settings row and in the routes' answers.
 type Config struct {
@@ -183,8 +186,13 @@ func (s *Service) Run(ctx context.Context) {
 // HandleEvent sends the mails for one help request event, whose data has
 // the request's id (or request_id), device_id, hostname and message.
 // An event without id or device does nothing, and so does one while
-// help request mails are off.
+// help request mails are off. The API server publishes a status change
+// of a request as the same event, with a status other than pending: it
+// is no new request and sends nothing.
 func (s *Service) HandleEvent(ctx context.Context, data any) error {
+	if status := jsbind.Trim(firstText(data, "status")); status != "" && status != pendingStatus {
+		return nil
+	}
 	config, err := LoadConfig(ctx, s.opts.DB)
 	if err != nil {
 		return err

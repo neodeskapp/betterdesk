@@ -219,6 +219,15 @@ func TestEventVectors(t *testing.T) {
 			}
 			err := s.HandleEvent(ctx, data)
 			what := fmt.Sprintf("run %d (%s, stored %v, event %v)", i, sc.Name, describe(run.Stored), run.Event)
+			if status := run.Event["status"]; status != "" && status != "pending" {
+				// G18: a status change is no new request and sends
+				// nothing, where Node mailed it as one when the request
+				// had not been mailed
+				if err != nil || len(rec.calls) != 0 || len(log.got) != 0 {
+					t.Errorf("%s (G18): error %v, calls %v, log %q, want nothing", what, err, rec.calls, log.got)
+				}
+				continue
+			}
 			switch {
 			case run.Thrown == nil && err != nil:
 				t.Errorf("%s: error %v, Node none", what, err)
@@ -327,6 +336,31 @@ func TestRunMailsEachRequestOnce(t *testing.T) {
 			t.Errorf("the job left %d subscriptions on the bus", bus.Count())
 		}
 	})
+}
+
+// TestStatusChangeSendsNoMail: the API server publishes a status change
+// of a help request as help_request too; it is no new request and sends
+// no mail, also when the request itself was never mailed (BUGS.md G18).
+// A new request comes with the status pending or none.
+func TestStatusChangeSendsNoMail(t *testing.T) {
+	db := storetest.Migrated(t)
+	rec := &recorder{alert: "ops@example.com"}
+	s := New(Options{
+		DB: db, Mail: rec, Logger: &lines{},
+		FolderName:     func(context.Context, string) (string, error) { return "", nil },
+		OperatorEmails: func(context.Context, string) ([]devicegroups.OperatorEmail, error) { return nil, nil },
+	})
+	for _, status := range []string{"acknowledged", "resolved", "cancelled"} {
+		if err := s.HandleEvent(context.Background(), goapi.NewObject("id", "1", "device_id", "dev", "status", status, "handled_by", "admin")); err != nil || len(rec.calls) != 0 {
+			t.Errorf("status %s: error %v, calls %v", status, err, rec.calls)
+		}
+	}
+	for _, status := range []string{"pending", ""} {
+		rec.calls = nil
+		if err := s.HandleEvent(context.Background(), goapi.NewObject("id", "2", "device_id", "dev", "status", status)); err != nil || !strings.Contains(fmt.Sprint(rec.calls), "send") {
+			t.Errorf("a new request with status %q: error %v, calls %v", status, err, rec.calls)
+		}
+	}
 }
 
 // TestRunWithoutBusEnds pins that the job ends at once without a bus.
