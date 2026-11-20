@@ -93,6 +93,14 @@ func TestValidate(t *testing.T) {
 	if _, msg := validate(f.cfg, changes("DB_PATH", "/etc/letsencrypt/live/x/privkey.pem")); msg != "" && runtime.GOOS != "windows" {
 		t.Errorf("letsencrypt: %s", msg)
 	}
+	// STORE_ADMIN_CREDENTIALS is no switch the panel manages (upstream
+	// 0429c408, BN2): any value passes the general checks
+	compiled := New(Options{ConsoleDir: f.console, Getenv: func(string) string { return "" }})
+	for _, value := range []string{"maybe", "true", "0", "never"} {
+		if s, msg := validate(compiled, changes("STORE_ADMIN_CREDENTIALS", value)); msg != "" || s[0].Value != value {
+			t.Errorf("STORE_ADMIN_CREDENTIALS=%s: %v %q", value, s, msg)
+		}
+	}
 }
 
 func TestApplyAndRestore(t *testing.T) {

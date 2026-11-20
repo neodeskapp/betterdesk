@@ -37,15 +37,6 @@ var managementDifferences = map[string]string{
 	"set/noconsoledir": "the allowlist is built in (the folder BETTERDESK_CONSOLE_PATH names has no .env.example)",
 }
 
-// managementSetDifferences are the "set" arguments (sets in the oracle, by
-// index) whose answer differs on every env file.
-var managementSetDifferences = map[string]string{
-	// console/managedconfig checks STORE_ADMIN_CREDENTIALS as a switch;
-	// the spec's managementCapabilities.js stopped doing so in upstream's
-	// 0429c408 (BUGS BN2)
-	"16": "managedconfig refuses STORE_ADMIN_CREDENTIALS=maybe, Node takes it (BUGS BN2)",
-}
-
 var backupStamp = regexp.MustCompile(`\.bak\.\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d-\d{3}Z`)
 
 // managementSetup lays a case out as the oracle did and answers the root
@@ -97,9 +88,6 @@ func TestConfigSetLikeNode(t *testing.T) {
 		}
 		if reason, ok := managementDifferences[c.Name]; ok {
 			t.Logf("%s differs: %s", c.Name, reason)
-			continue
-		}
-		if parts := strings.Split(c.Name, "/"); len(parts) == 3 && managementSetDifferences[parts[2]] != "" {
 			continue
 		}
 		root, env := managementSetup(t, c)
