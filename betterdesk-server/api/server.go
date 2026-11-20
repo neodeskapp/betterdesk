@@ -718,14 +718,23 @@ func (s *Server) routes() *http.ServeMux {
 	return mux
 }
 
+// ListenerHandler is what the API's listener serves: the secure envelope,
+// the credential check and the routes. The console's client API port
+// passes its clients' requests to it in process, each with the client's
+// address as RemoteAddr, so the limits per address count each client.
+//
+// The route table is built on the first call to this method,
+// InternalHandler or Start, so call it after the Set and Init methods.
+func (s *Server) ListenerHandler() http.Handler {
+	return s.secureEnvelopeMiddleware(s.authMiddleware(s.mux.get(s)))
+}
+
 // Start launches the HTTP API server.
 func (s *Server) Start(ctx context.Context) error {
-	mux := s.mux.get(s)
-
 	addr := fmt.Sprintf(":%d", s.cfg.APIPort)
 	s.httpSrv = &http.Server{
 		Addr:        addr,
-		Handler:     s.secureEnvelopeMiddleware(s.authMiddleware(mux)),
+		Handler:     s.ListenerHandler(),
 		ReadTimeout: 10 * time.Second,
 		// No WriteTimeout — WebSocket connections need unlimited write time.
 		// Individual REST handlers are responsible for their own deadlines.

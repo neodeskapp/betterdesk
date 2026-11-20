@@ -43,9 +43,15 @@ type ClientAPIOptions struct {
 	// Shared are the route groups the port answers in both modes.
 	Shared []func(d *kit.Deps)
 	// Proxy passes every request the port lets through to the server's
-	// API at APIOrigin (RUSTDESK_API_PROXY).
+	// API (RUSTDESK_API_PROXY): to API in this process when it is set,
+	// else to APIOrigin over a connection.
 	Proxy     bool
 	APIOrigin *url.URL
+	// API is the handler the server's API listener serves
+	// (api.Server.ListenerHandler). It gets each request with the client's
+	// address as RemoteAddr, so the API's limits per address count each
+	// client.
+	API http.Handler
 	// InsecureAPI accepts any certificate of an https APIOrigin
 	// (ALLOW_SELF_SIGNED_CERTS).
 	InsecureAPI bool
@@ -99,6 +105,7 @@ func NewClientAPI(opts ClientAPIOptions) *ClientAPI {
 	}
 	if opts.Proxy {
 		c.forward = newAPIForward(opts.APIOrigin, opts.InsecureAPI, opts.TrustProxy.ClientIP)
+		c.forward.api = opts.API
 	}
 	var bundle = d.I18n
 	trust := opts.TrustProxy

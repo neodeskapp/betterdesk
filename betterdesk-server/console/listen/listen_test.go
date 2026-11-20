@@ -19,11 +19,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/unitronix/betterdesk-server/console/kit"
 )
 
 type certFiles struct {
@@ -459,6 +461,60 @@ func TestForwardNamesTheClientTheConsoleResolves(t *testing.T) {
 			t.Errorf("TRUST_PROXY=%q from %s with X-Forwarded-For %q and X-Real-IP %q: the API saw X-Forwarded-For %q and X-Real-IP %q, want %q",
 				c.trust, c.remote, c.xff, c.xri, xff, xri, c.want)
 		}
+	}
+}
+
+// TestClientPortLimitsCountEachClient: in proxy mode the port hands each
+// request to the server's API in this process, with the client's address
+// (under TRUST_PROXY) as RemoteAddr, so the API's limits per address count
+// each client: one client that spends its budget leaves another's alone
+// (BUGS G9). The request keeps what the forward over a connection sent.
+func TestClientPortLimitsCountEachClient(t *testing.T) {
+	const budget = 5
+	var mu sync.Mutex
+	counts := map[string]int{}
+	var seen *http.Request
+	api := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		host, _, _ := net.SplitHostPort(r.RemoteAddr)
+		mu.Lock()
+		counts[host]++
+		over := counts[host] > budget
+		seen = r
+		mu.Unlock()
+		if over {
+			w.WriteHeader(http.StatusTooManyRequests)
+			return
+		}
+		_, _ = io.WriteString(w, "ok "+host)
+	})
+	listener := httptest.NewServer(api)
+	defer listener.Close()
+	origin, _ := url.Parse(listener.URL)
+	trust, _ := httpx.ParseTrustProxy("loopback")
+	port := NewClientAPI(ClientAPIOptions{Deps: &kit.Deps{}, Proxy: true, APIOrigin: origin, API: api, TrustProxy: trust})
+	defer port.Stop()
+	ask := func(client string) *httptest.ResponseRecorder {
+		req := httptest.NewRequest(http.MethodGet, "/api/health?x=1", nil)
+		req.RemoteAddr = "127.0.0.1:40000"
+		req.Header.Set("X-Forwarded-For", client)
+		rec := httptest.NewRecorder()
+		port.Handler().ServeHTTP(rec, req)
+		return rec
+	}
+	for i := 0; i < budget; i++ {
+		if rec := ask("198.51.100.1"); rec.Code != http.StatusOK || rec.Body.String() != "ok 198.51.100.1" {
+			t.Fatalf("request %d of the first client: %d %q", i+1, rec.Code, rec.Body.String())
+		}
+	}
+	if rec := ask("198.51.100.1"); rec.Code != http.StatusTooManyRequests {
+		t.Errorf("the first client over its budget: %d", rec.Code)
+	}
+	if rec := ask("198.51.100.2"); rec.Code != http.StatusOK || rec.Body.String() != "ok 198.51.100.2" {
+		t.Errorf("the second client: %d %q", rec.Code, rec.Body.String())
+	}
+	if seen.Host != origin.Host || seen.RequestURI != "/api/health?x=1" || seen.URL.Path != "/api/health" ||
+		seen.Header.Get("X-Forwarded-For") != "198.51.100.2" || seen.Header.Get("X-Real-IP") != "198.51.100.2" {
+		t.Errorf("the API saw Host %q, %q, X-Forwarded-For %q, X-Real-IP %q", seen.Host, seen.RequestURI, seen.Header.Get("X-Forwarded-For"), seen.Header.Get("X-Real-IP"))
 	}
 }
 

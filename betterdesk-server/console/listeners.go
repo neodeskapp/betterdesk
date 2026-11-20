@@ -93,8 +93,9 @@ func (s *Server) loadCertificates() error {
 }
 
 // newClientAPI builds the client API port when API_ENABLED is on. In
-// proxy mode it passes requests to the server's API at the scheme of
-// BETTERDESK_API_URL and the host the console calls the API by.
+// proxy mode it passes requests to the server's API in this process
+// (Options.APIListener), or without it at the scheme of BETTERDESK_API_URL
+// and the host the console calls the API by.
 func (s *Server) newClientAPI() {
 	cfg := s.cfg
 	if !cfg.APIEnabled {
@@ -110,6 +111,7 @@ func (s *Server) newClientAPI() {
 		Shared:      clientAPISharedRoutes,
 		Proxy:       cfg.ClientAPIProxy,
 		APIOrigin:   origin,
+		API:         s.apiListener,
 		InsecureAPI: cfg.AllowSelfSignedCerts,
 		Node:        cfg.NodeUpstream,
 		TrustProxy:  cfg.TrustProxy,

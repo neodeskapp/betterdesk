@@ -30,7 +30,10 @@ const apiTimeout = 15 * time.Second
 type apiForward struct {
 	origin    *url.URL
 	transport *http.Transport
-	clientIP  func(r *http.Request) string
+	// api is the server's API in this process; nil sends the requests to
+	// origin over a connection
+	api      http.Handler
+	clientIP func(r *http.Request) string
 }
 
 func newAPIForward(origin *url.URL, insecure bool, clientIP func(r *http.Request) string) *apiForward {
@@ -105,6 +108,10 @@ func (f *apiForward) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		out.ContentLength = -1
 		out.Body = io.NopCloser(bytes.NewReader(body))
 	}
+	if f.api != nil {
+		f.serveInProcess(w, r, out, ip)
+		return
+	}
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 	res, err := f.transport.RoundTrip(out.WithContext(ctx))
@@ -129,6 +136,26 @@ func (f *apiForward) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(res.StatusCode)
 	_, _ = io.Copy(w, res.Body)
+}
+
+// serveInProcess hands out to the server's API in this process, as the
+// API's listener reads the request the forward would send: with the
+// client's address as RemoteAddr, so the API's limits per address count
+// each client, and with the TLS state of the client's connection. The API
+// answers the client directly.
+func (f *apiForward) serveInProcess(w http.ResponseWriter, r, out *http.Request, ip string) {
+	// The path and query of the request line, without the origin
+	u := *out.URL
+	u.Scheme, u.Host = "", ""
+	in := out.WithContext(r.Context())
+	in.URL, in.RequestURI, in.RemoteAddr, in.TLS = &u, u.RequestURI(), net.JoinHostPort(ip, "0"), r.TLS
+	if in.Body == nil {
+		in.Body = http.NoBody
+	}
+	if in.ContentLength < 0 {
+		in.TransferEncoding = []string{"chunked"}
+	}
+	f.api.ServeHTTP(w, in)
 }
 
 func (f *apiForward) close() { f.transport.CloseIdleConnections() }

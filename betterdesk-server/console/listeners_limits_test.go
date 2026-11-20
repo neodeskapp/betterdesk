@@ -3,12 +3,40 @@ package console
 import (
 	"io"
 	"net"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
+
+// TestClientAPIPortReachesTheAPIInProcess: in proxy mode the client API
+// port hands requests to what the API server's listener serves
+// (Options.APIListener) with the client's address, so the API's limits
+// per address count each client (BUGS G9).
+func TestClientAPIPortReachesTheAPIInProcess(t *testing.T) {
+	seen := make(chan string, 1)
+	w := newWorld(t, setup{
+		listener: http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) { seen <- r.RemoteAddr }),
+		configure: func(cfg *config.Config) {
+			cfg.APIEnabled, cfg.ClientAPIProxy, cfg.APIHost = true, true, "127.0.0.1:1"
+		},
+	})
+	req := httptest.NewRequest(http.MethodGet, "/api/health", nil)
+	req.RemoteAddr = "203.0.113.7:40000"
+	w.s.ClientAPI().Handler().ServeHTTP(httptest.NewRecorder(), req)
+	select {
+	case addr := <-seen:
+		if addr != "203.0.113.7:0" {
+			t.Errorf("the API saw the caller %q", addr)
+		}
+	default:
+		t.Error("the request did not reach the API in process")
+	}
+}
 
 // TestClientAPIServerLimits: the client API port's own server reads a
 // request within 10 seconds (408 before the first request, as Node), keeps

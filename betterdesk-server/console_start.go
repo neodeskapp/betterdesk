@@ -47,12 +47,13 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 	srv, err := console.New(ctx, console.Options{
 		Config:  ccfg,
 		Store:   sdb,
-		API:     apiSrv.InternalHandler(),
-		Events:  bus,
-		Roles:   database,
-		Version: Version,
-		Commit:  Commit,
-		Exit:    requestRestart,
+		API:         apiSrv.InternalHandler(),
+		APIListener: apiSrv.ListenerHandler(),
+		Events:      bus,
+		Roles:       database,
+		Version:     Version,
+		Commit:      Commit,
+		Exit:        requestRestart,
 	})
 	if err != nil {
 		_ = sdb.Close()

@@ -113,6 +113,8 @@ type setup struct {
 	db *store.DB
 	// api is the API server's handler; nil answers 404 to everything.
 	api http.Handler
+	// listener is what the API server's listener serves (APIListener).
+	listener http.Handler
 	// configure changes the configuration before the console is built.
 	configure func(*config.Config)
 }
@@ -190,7 +192,7 @@ func newWorld(t *testing.T, o setup) *world {
 		w.node = newFakeNode(t)
 		cfg.NodeUpstream, _ = url.Parse(w.node.URL)
 	}
-	s, err := New(context.Background(), Options{Config: cfg, Store: db, API: apiHandler})
+	s, err := New(context.Background(), Options{Config: cfg, Store: db, API: apiHandler, APIListener: o.listener})
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}

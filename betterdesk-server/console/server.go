@@ -80,6 +80,11 @@ type Options struct {
 	// API is the API server's handler for calls from inside the process
 	// (api.Server.InternalHandler).
 	API http.Handler
+	// APIListener is what the API server's listener serves
+	// (api.Server.ListenerHandler). The client API port in proxy mode
+	// passes its clients' requests to it, each with the client's address.
+	// nil sends them to the API's address over a connection.
+	APIListener http.Handler
 	// Events is the server's event bus. nil turns the event stream of
 	// GoAPI off.
 	Events *events.Bus
@@ -115,6 +120,8 @@ type Server struct {
 	// authImport says where the old console's auth.db is (Start imports
 	// it).
 	authImport authimport.Options
+	// apiListener is Options.APIListener, for the client API port
+	apiListener http.Handler
 }
 
 // New builds the console server: its services, the pipeline and the
@@ -125,7 +132,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	if getenv == nil {
 		getenv = func(string) string { return "" }
 	}
-	s := &Server{cfg: cfg, early: kit.NewRouter(), router: kit.NewRouter(), jobs: jobs.New()}
+	s := &Server{cfg: cfg, early: kit.NewRouter(), router: kit.NewRouter(), jobs: jobs.New(), apiListener: opts.APIListener}
 	if cfg.NodeUpstream != nil {
 		s.node = proxy.New(cfg.NodeUpstream, cfg.TrustProxy)
 	}
