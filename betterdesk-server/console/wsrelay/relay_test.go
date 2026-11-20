@@ -276,8 +276,12 @@ func TestBadTextCountsDownOnce(t *testing.T) {
 	if _, code, _ := clients[0].Closed(); code != 1007 {
 		t.Fatalf("close %d", code)
 	}
-	waitFor(t, "the place freed", func() bool { h.svc.mu.Lock(); defer h.svc.mu.Unlock(); return h.svc.perIP.Count("127.0.0.1") == 4 })
+	count := func() int { h.svc.mu.Lock(); defer h.svc.mu.Unlock(); return h.svc.perIP.Count("127.0.0.1") }
+	waitFor(t, "the place freed", func() bool { return count() == 4 })
 	clients[0] = h.dial("/ws/rendezvous", adminHeader())
+	// The handshake answers before the bridge counts the socket: without
+	// this wait the sixth can be counted first and the fifth closed
+	waitFor(t, "the fifth bridge counted", func() bool { return count() == MaxConnectionsPerIP })
 	over := h.dial("/ws/rendezvous", adminHeader())
 	if !over.Wait(5*time.Second, func(_ []wstest.Frame, closed bool) bool { return closed }) {
 		t.Fatal("sixth bridge not closed")
