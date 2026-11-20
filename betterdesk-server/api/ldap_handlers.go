@@ -225,8 +225,17 @@ func (s *Server) handleGetLDAPConfig(w http.ResponseWriter, r *http.Request) {
 // handleSaveLDAPConfig saves the LDAP configuration.
 // PUT /api/auth/ldap/config
 func (s *Server) handleSaveLDAPConfig(w http.ResponseWriter, r *http.Request) {
+	var raw json.RawMessage
+	if err := json.NewDecoder(r.Body).Decode(&raw); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid JSON"})
+		return
+	}
 	var cfg auth.LDAPConfig
-	if err := json.NewDecoder(r.Body).Decode(&cfg); err != nil {
+	// sent.BindPassword is nil when the body has no bind_password
+	var sent struct {
+		BindPassword *string `json:"bind_password"`
+	}
+	if json.Unmarshal(raw, &cfg) != nil || json.Unmarshal(raw, &sent) != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid JSON"})
 		return
 	}
@@ -251,8 +260,9 @@ func (s *Server) handleSaveLDAPConfig(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// If password is masked placeholder, preserve the current password
-	if cfg.BindPassword == "••••••••" || cfg.BindPassword == "" {
+	// The masked placeholder, or no password at all, keeps the current
+	// password; an empty one clears it
+	if cfg.BindPassword == "••••••••" || sent.BindPassword == nil {
 		currentCfg := s.loadLDAPConfigFromDB()
 		cfg.BindPassword = currentCfg.BindPassword
 	}
