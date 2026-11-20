@@ -217,19 +217,20 @@ and does not have the column. Existing rows get the column's default.
 | `add users.role_display` | `TEXT DEFAULT ''` | same | tolerated | | 633-658, 4988-5000 |
 | `add users.avatar_url` | `TEXT DEFAULT ''` | same | tolerated | | 633-658, 4988-5000 |
 | `add users.guid` | `TEXT DEFAULT ''` | same | last of the users columns, tolerated | before `first_name` | 647, 4974-4976 |
-| `add settings.updated_at` | `TEXT DEFAULT (datetime('now'))`; fails when the table has rows, see below | `TIMESTAMPTZ DEFAULT NOW()` | after user_avatars, tolerated | last step, tolerated | 678-684, 5016-5022 |
-| `add branding_config.updated_at` | `TEXT DEFAULT (datetime('now'))`; fails when the table has rows, see below | no step | after settings, tolerated | | 687-693 |
+| `add settings.updated_at` | `TEXT` without default, rows filled with `datetime('now')`, see below | `TIMESTAMPTZ DEFAULT NOW()` | after user_avatars, tolerated | last step, tolerated | 678-684, 5016-5022 |
+| `add branding_config.updated_at` | `TEXT` without default, rows filled with `datetime('now')`, see below | no step | after settings, tolerated | | 687-693 |
 | `add device_groups.source_type` | `TEXT DEFAULT 'manual'` | same | after branding_config, tolerated | after the users columns up to `guid` | 709-717, 4978-4985 |
 | `add device_groups.tag_filter` | `TEXT DEFAULT ''` | same | tolerated | | 709-717, 4978-4985 |
 
 `settings.updated_at` and `branding_config.updated_at` on SQLite: SQLite does
 not add a column whose default is an expression to a table that has rows
 (`Cannot add a column with non-constant default`). On a table from before the
-column existed the step fails at every start with a warning, the table stays
-without the column, and the console's statements that write `updated_at` fail
-there. The Node console behaved the same; the behaviour is kept and listed as
-BUGS.md D17. Every 3.x release created both tables with the column, so this
-concerns 2.x files only.
+column existed the step adds it as `TEXT` without a default and gives the
+rows that are there the time of the migration, so the console's statements
+that write `updated_at` work there; a fresh install creates the column with
+its default. The Node console ran the statement with the default, logged the
+error at every start and went on without the column (BUGS.md D17). Every 3.x
+release created both tables with the column, so this concerns 2.x files only.
 
 ### Data fixes
 

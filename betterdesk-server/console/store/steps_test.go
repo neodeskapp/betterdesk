@@ -124,19 +124,21 @@ func TestMigrateAddsEachMissingColumn(t *testing.T) {
 	})
 }
 
-// sqliteCannotAdd are the two column steps that cannot work on SQLite: it
-// refuses to add a column whose default is an expression. The Node console
-// ran the same statement, caught the error and logged it at every start
-// (BUGS.md D17).
+// sqliteCannotAdd are the two column steps that cannot add their column on
+// SQLite as a fresh install defines it: SQLite refuses to add a column whose
+// default is an expression to a table with rows. They add it without the
+// default and fill the rows instead (BUGS.md D17), which
+// TestMigrateAddsUpdatedAtOnSQLite checks.
 var sqliteCannotAdd = map[string]bool{
 	"settings.updated_at":        true,
 	"branding_config.updated_at": true,
 }
 
-// On a SQLite table from before updated_at existed the column cannot be
-// added. The step fails as it did in the Node console: a warning, the
-// table as it was, and the migration goes on.
-func TestMigrateCannotAddUpdatedAtOnSQLite(t *testing.T) {
+// On a SQLite table from before updated_at existed the column is added as
+// TEXT without a default, and the rows that were there get the time of
+// the migration; no warning, and the statements that write updated_at work
+// there (BUGS D17).
+func TestMigrateAddsUpdatedAtOnSQLite(t *testing.T) {
 	for target := range sqliteCannotAdd {
 		table, column, _ := strings.Cut(target, ".")
 		t.Run(target, func(t *testing.T) {
@@ -151,19 +153,21 @@ func TestMigrateCannotAddUpdatedAtOnSQLite(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Migrate: %v", err)
 			}
-			if !strings.Contains(out, "[DB] WARN: Migration add "+target+" error: ") || !strings.Contains(out, "non-constant default") {
-				t.Errorf("no warning about the column SQLite cannot add:\n%s", out)
+			if strings.Contains(out, "WARN: Migration add "+target) {
+				t.Errorf("a warning about %s:\n%s", target, out)
 			}
 			shape := db.Shape()
-			if shape.Table(table).Has(column) {
-				t.Errorf("%s was added; BUGS.md D17 and schema.md say it cannot be", target)
+			if !shape.Table(table).Has(column) {
+				t.Errorf("%s was not added", target)
 			}
 			if !shape.Table("device_groups").Has("tag_filter") {
-				t.Error("the steps after the failed one did not run")
+				t.Error("the steps after it did not run")
 			}
-			if rows := queryStrings(t, db, `SELECT key, value FROM `+table); len(rows) != 1 || rows[0][1] != "v" {
-				t.Errorf("rows of %s after the failed step = %v", table, rows)
+			rows := queryStrings(t, db, `SELECT key, value, `+column+` FROM `+table)
+			if len(rows) != 1 || rows[0][1] != "v" || !regexp.MustCompile(`^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$`).MatchString(rows[0][2]) {
+				t.Errorf("rows of %s after the step = %v", table, rows)
 			}
+			mustExec(t, db, `UPDATE `+table+` SET value = 'w', `+column+` = datetime('now') WHERE key = 'k'`)
 		})
 	}
 }

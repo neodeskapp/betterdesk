@@ -305,8 +305,9 @@ func TestNodeSchemaOldInstallsUpgradeAlike(t *testing.T) {
 
 // A SQLite settings table from before updated_at, with rows in it: SQLite
 // cannot add a column with an expression as default to a table that has
-// rows. The Node console logged the error and went on without the column;
-// Migrate ends with the same table (BUGS.md D17).
+// rows. The Node console logged the error and went on without the column.
+// Migrate adds it without the default (BUGS.md D17, the one intended
+// difference); the tables are otherwise the same.
 func TestNodeSchemaUpdatedAtOnOldSQLiteTables(t *testing.T) {
 	byNode, byGo := newNodeDatabase(t, false), newNodeDatabase(t, false)
 	for _, d := range []nodeDatabase{byNode, byGo} {
@@ -318,10 +319,15 @@ func TestNodeSchemaUpdatedAtOnOldSQLiteTables(t *testing.T) {
 	byNode.node(t, "init")
 	mustMigrate(t, byGo.db)
 	want, got := readCatalog(t, byNode.db), readCatalog(t, byGo.db)
-	requireSameCatalog(t, "old settings tables after Migrate against after Node's init", want, got)
 	for _, table := range []string{"settings", "branding_config"} {
-		if _, has := want["column:"+table+".updated_at"]; has {
+		key := "column:" + table + ".updated_at"
+		if _, has := want[key]; has {
 			t.Errorf("Node added %s.updated_at; BUGS.md D17 and schema.md say it cannot", table)
 		}
+		if _, has := got[key]; !has {
+			t.Errorf("Migrate did not add %s.updated_at (BUGS.md D17)", table)
+		}
+		delete(got, key)
 	}
+	requireSameCatalog(t, "old settings tables after Migrate against after Node's init", want, got)
 }

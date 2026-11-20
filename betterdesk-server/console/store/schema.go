@@ -239,8 +239,7 @@ func sqliteSteps() []step {
 	avatars := createTable("user_avatars")
 	avatars.file, avatars.lenient = false, true
 	s = append(s, avatars)
-	s = append(s, addColumns(lenient, "settings", "updated_at", "TEXT DEFAULT (datetime('now'))")...)
-	s = append(s, addColumns(lenient, "branding_config", "updated_at", "TEXT DEFAULT (datetime('now'))")...)
+	s = append(s, addTimeColumn("settings", "updated_at"), addTimeColumn("branding_config", "updated_at"))
 	s = append(s, addColumns(lenient, "device_groups",
 		"source_type", "TEXT DEFAULT 'manual'",
 		"tag_filter", "TEXT DEFAULT ''",
@@ -512,6 +511,31 @@ func addColumn(tolerant bool, table, column, definition string) step {
 		lenient: tolerant,
 		run: func(ctx context.Context, tx *Tx, _ *migration) error {
 			return ensureColumn(ctx, tx, table, column, definition)
+		},
+	}
+}
+
+// addTimeColumn adds a time column to a SQLite table, which cannot get a
+// column whose default is an expression (datetime('now')) once it has rows:
+// the column comes as TEXT without a default, and the rows the table has
+// get the time of the migration, as such a default would have given them.
+func addTimeColumn(table, column string) step {
+	return step{
+		name:    "add " + table + "." + column,
+		lenient: lenient,
+		run: func(ctx context.Context, tx *Tx, _ *migration) error {
+			cols, err := tableColumns(ctx, tx, table)
+			if err != nil {
+				return err
+			}
+			if _, ok := cols[column]; ok || len(cols) == 0 {
+				return nil
+			}
+			if err := ensureColumn(ctx, tx, table, column, "TEXT"); err != nil {
+				return err
+			}
+			_, err = tx.tx.ExecContext(ctx, "UPDATE "+table+" SET "+column+" = datetime('now')")
+			return err
 		},
 	}
 }
