@@ -3,6 +3,8 @@ package cdap_test
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -157,14 +159,16 @@ var fixes = map[string]func(v *vector) bool{
 	// that Node let through is refused with 403 before the API server is
 	// asked.
 	"RC8": func(v *vector) bool {
-		session := v.Request.Session
-		if session == nil || (session.User.Role != "viewer" && session.User.Role != "operator") ||
-			v.Status == 401 || v.Status == 403 || !deviceRoute.MatchString(v.Request.Path) {
+		if !scopeRefuses(v) {
 			return false
 		}
 		v.Status, v.Type, v.Body, v.Calls = 403, "application/json; charset=utf-8", `{"success":false,"error":"errors.forbidden"}`, nil
 		return true
 	},
+	// A call the API server failed is answered with its status and its
+	// body, 500 {"error": message} without an answer or with an empty one,
+	// where Node answered 200 {"success":false, error}.
+	"RC7": keepsTheAPIStatus,
 	// The gateway switch joins the restart transaction before it saves:
 	// where Node saved the setting and then failed to toggle, the console
 	// reads the setting, is refused and saves nothing. A pending
@@ -182,6 +186,49 @@ var fixes = map[string]func(v *vector) bool{
 	// The way back of the gateway switch is the setting's value when the
 	// API server named it as text, else "N", never its whole answer.
 	"RC5": returnsToText,
+}
+
+// scopeRefuses reports whether the console refuses a vector for the
+// device scope (RC8): a viewer's or an operator's request for dev-1 that
+// Node let through.
+func scopeRefuses(v *vector) bool {
+	session := v.Request.Session
+	return session != nil && (session.User.Role == "viewer" || session.User.Role == "operator") &&
+		v.Status != 401 && v.Status != 403 && deviceRoute.MatchString(v.Request.Path)
+}
+
+// keepsTheAPIStatus is the fix of RC7 on a vector of a gateway route
+// whose call the API server failed: its status and body, or 500 with the
+// call's message.
+func keepsTheAPIStatus(v *vector) bool {
+	if v.API == nil || len(v.Calls) == 0 || v.Status != 200 || scopeRefuses(v) ||
+		strings.HasPrefix(strings.ToLower(v.Request.Path), "/api/cdap/toggle") ||
+		(!v.API.Hang && v.API.Status >= 200 && v.API.Status < 300) {
+		return false
+	}
+	var node struct {
+		Success *bool  `json:"success"`
+		Error   string `json:"error"`
+	}
+	if json.Unmarshal([]byte(v.Body), &node) != nil || node.Success == nil || *node.Success {
+		return false
+	}
+	status := http.StatusInternalServerError
+	var body any = goapipath.ErrorBody{Error: node.Error}
+	if !v.API.Hang {
+		status = v.API.Status
+		var data any = v.API.Body
+		if parsed, err := goapi.Parse([]byte(v.API.Body)); err == nil {
+			data = parsed
+		}
+		if goapi.Truthy(data) {
+			body = data
+		}
+	}
+	rec := httptest.NewRecorder()
+	goapipath.WriteJSON(rec, httptest.NewRequest(http.MethodGet, "/", nil), status, body)
+	v.Status, v.Type, v.Body = status, rec.Header().Get("Content-Type"), rec.Body.String()
+	return true
 }
 
 // returnsToText is the fix of RC5 on a transaction file: the gateway

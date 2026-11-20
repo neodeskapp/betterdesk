@@ -9,7 +9,8 @@
 // and the permission), as the gateway's sockets do: a device outside the
 // account's scope is 403, a device the device layer does not know goes on
 // to the API server. The lists of devices and alerts keep the entries of
-// the devices the account may see by the same rule. The websockets of the
+// the devices the account may see by the same rule. A call the API server
+// fails is answered with its status and body. The websockets of the
 // gateway pages (terminal, media) are not here.
 package cdap
 
@@ -52,8 +53,8 @@ func Register(d *kit.Deps) {
 
 // answer sends what a call into the API server gave: the API server's
 // own answer when the call worked and the answer is not empty, else the
-// wrapper of the client, {success: false, error} or {success: true,
-// data}. The status is 200 either way.
+// wrapper of the client, {success: false, error} for an answer that
+// carries "error" or {success: true, data}, with status 200.
 func answer(w http.ResponseWriter, r *http.Request, result *goapi.Object) {
 	if goapi.Truthy(result.Get("success")) {
 		if data := result.Get("data"); goapi.Truthy(data) {
@@ -64,39 +65,94 @@ func answer(w http.ResponseWriter, r *http.Request, result *goapi.Object) {
 	goapipath.WriteJSON(w, r, http.StatusOK, result)
 }
 
+// failed answers a call the API server failed with its status and its
+// body, or with 500 {"error": message} when it gave no answer or an
+// empty one. A path the client refused before any call (the path guard
+// of package goapi) is 200 {success: false, error}, followed by the
+// key and value pairs of empty.
+func failed(w http.ResponseWriter, r *http.Request, err error, empty ...any) {
+	message := err.Error()
+	e := goapi.AsError(err)
+	if e != nil {
+		message = e.Message
+	}
+	if e != nil && e.Response == nil && e.Code == "" {
+		goapipath.WriteJSON(w, r, http.StatusOK, goapi.NewObject(append([]any{"success", false, "error", message}, empty...)...))
+		return
+	}
+	status, data := goapipath.FailureOf(err, message)
+	goapipath.WriteJSON(w, r, status, data)
+}
+
+// fetch is a call into the API server with the wrapper the methods of the
+// client give when it worked: {success: true, data}, or {success: false,
+// error} for an answer that carries "error". A failed call is the error.
+func (h *handlers) fetch(r *http.Request, method, path string, opts ...goapi.CallOption) (*goapi.Object, error) {
+	resp, err := h.api.Request(r.Context(), method, path, opts...)
+	if err != nil {
+		return nil, err
+	}
+	data := resp.Data()
+	if o, isObject := data.(*goapi.Object); isObject && o != nil && o.Has("error") {
+		return goapi.NewObject("success", false, "error", o.Get("error")), nil
+	}
+	return goapi.NewObject("success", true, "data", data), nil
+}
+
+// relay makes a call into the API server and answers with what it gave.
+func (h *handlers) relay(w http.ResponseWriter, r *http.Request, method, path string, opts ...goapi.CallOption) {
+	result, err := h.fetch(r, method, path, opts...)
+	if err != nil {
+		failed(w, r, err)
+		return
+	}
+	answer(w, r, result)
+}
+
 // failure is the answer {"error": text} of the checks of this group.
 type failure struct {
 	Error string `json:"error"`
 }
 
+// devicePath is the API server's address of the device in the path, with
+// what follows it.
+func devicePath(r *http.Request, rest string) string {
+	return "/cdap/devices/" + goapi.EncodeURIComponent(r.PathValue("id")) + rest
+}
+
 // status answers GET /api/cdap/status: whether the gateway runs, its port
 // and how many devices are connected.
 func (h *handlers) status(w http.ResponseWriter, r *http.Request) {
-	answer(w, r, h.api.GetCDAPStatus(r.Context()))
+	h.relay(w, r, http.MethodGet, "/cdap/status")
 }
 
 // devices answers GET /api/cdap/devices with the connected devices the
 // account may see.
 func (h *handlers) devices(w http.ResponseWriter, r *http.Request) {
-	h.scoped(w, r, h.api.GetCDAPDevices(r.Context()), "devices", "id")
+	result, err := h.fetch(r, http.MethodGet, "/cdap/devices")
+	if err != nil {
+		failed(w, r, err)
+		return
+	}
+	h.scoped(w, r, result, "devices", "id")
 }
 
 // device answers GET /api/cdap/devices/{id}: manifest, state and
 // connection of one device.
 func (h *handlers) device(w http.ResponseWriter, r *http.Request) {
-	answer(w, r, h.api.GetCDAPDeviceInfo(r.Context(), r.PathValue("id")))
+	h.relay(w, r, http.MethodGet, devicePath(r, ""))
 }
 
 // manifest answers GET /api/cdap/devices/{id}/manifest: what the device
 // can do, its widgets and alerts.
 func (h *handlers) manifest(w http.ResponseWriter, r *http.Request) {
-	answer(w, r, h.api.GetCDAPDeviceManifest(r.Context(), r.PathValue("id")))
+	h.relay(w, r, http.MethodGet, devicePath(r, "/manifest"))
 }
 
 // state answers GET /api/cdap/devices/{id}/state with the current widget
 // values.
 func (h *handlers) state(w http.ResponseWriter, r *http.Request) {
-	answer(w, r, h.api.GetCDAPDeviceState(r.Context(), r.PathValue("id")))
+	h.relay(w, r, http.MethodGet, devicePath(r, "/state"))
 }
 
 // bodyValue is req.body[key] as a parsed JSON value. defined is false
@@ -131,27 +187,7 @@ func (h *handlers) command(w http.ResponseWriter, r *http.Request) {
 	if reason, _ := bodyValue(r, "reason"); goapi.Truthy(reason) {
 		body.Set("reason", reason)
 	}
-	path := "/cdap/devices/" + goapi.EncodeURIComponent(r.PathValue("id")) + "/command"
-	answer(w, r, h.call(r, http.MethodPost, path, goapipath.Body(body)))
-}
-
-// call is a call into the API server with the wrapper the methods of the
-// client give: {success: true, data}, or {success: false, error} for a
-// failed call and for an answer that carries "error".
-func (h *handlers) call(r *http.Request, method, path string, opts ...goapi.CallOption) *goapi.Object {
-	resp, err := h.api.Request(r.Context(), method, path, opts...)
-	if err != nil {
-		message := err.Error()
-		if failed := goapi.AsError(err); failed != nil {
-			message = failed.Message
-		}
-		return goapi.NewObject("success", false, "error", message)
-	}
-	data := resp.Data()
-	if o, isObject := data.(*goapi.Object); isObject && o != nil && o.Has("error") {
-		return goapi.NewObject("success", false, "error", o.Get("error"))
-	}
-	return goapi.NewObject("success", true, "data", data)
+	h.relay(w, r, http.MethodPost, devicePath(r, "/command"), goapipath.Body(body))
 }
 
 // toggled is the answer of the gateway switch.
@@ -231,19 +267,19 @@ func (h *handlers) toggle(w http.ResponseWriter, r *http.Request) {
 // server's answer when it has one, else the message of the failed call.
 func (h *handlers) save(r *http.Request, value string) any {
 	resp, err := h.api.Request(r.Context(), http.MethodPut, "/config/cdap_enabled", goapi.Body(goapi.NewObject("value", value)))
-	failed := goapi.AsError(err)
-	answer := failed.Data()
+	e := goapi.AsError(err)
+	body := e.Data()
 	if err == nil {
-		answer = resp.Data()
+		body = resp.Data()
 	}
-	if o, isObject := answer.(*goapi.Object); isObject && goapi.Truthy(o.Get("error")) {
+	if o, isObject := body.(*goapi.Object); isObject && goapi.Truthy(o.Get("error")) {
 		return o.Get("error")
 	}
 	switch {
 	case err == nil:
 		return nil
-	case failed != nil:
-		return failed.Message
+	case e != nil:
+		return e.Message
 	}
 	return err.Error()
 }
@@ -251,13 +287,27 @@ func (h *handlers) save(r *http.Request, value string) any {
 // alerts answers GET /api/cdap/alerts with the alerts that are firing,
 // of one device with ?device_id=, of the devices the account may see.
 func (h *handlers) alerts(w http.ResponseWriter, r *http.Request) {
-	h.scoped(w, r, h.api.GetCDAPAlerts(r.Context(), reqquery.Of(r).Get("device_id").JSON()), "alerts", "device_id")
+	var opts []goapi.CallOption
+	if device := reqquery.Of(r).Get("device_id").JSON(); goapi.Truthy(device) {
+		opts = append(opts, goapi.Query("device_id", device))
+	}
+	result, err := h.fetch(r, http.MethodGet, "/cdap/alerts", opts...)
+	if err != nil {
+		failed(w, r, err, "alerts", []any{}, "total", float64(0))
+		return
+	}
+	h.scoped(w, r, result, "alerts", "device_id")
 }
 
 // linked answers GET /api/cdap/devices/{id}/linked with the peers linked
 // to the device.
 func (h *handlers) linked(w http.ResponseWriter, r *http.Request) {
-	answer(w, r, h.api.GetLinkedPeers(r.Context(), r.PathValue("id")))
+	result, err := h.fetch(r, http.MethodGet, "/peers/"+goapi.EncodeURIComponent(r.PathValue("id"))+"/linked")
+	if err != nil {
+		failed(w, r, err, "linked", []any{}, "total", float64(0))
+		return
+	}
+	answer(w, r, result)
 }
 
 // link answers POST /api/cdap/devices/{id}/link with the body
@@ -268,5 +318,8 @@ func (h *handlers) link(w http.ResponseWriter, r *http.Request) {
 		kit.JSON(w, r, http.StatusBadRequest, failure{Error: "linked_peer_id is required"})
 		return
 	}
-	answer(w, r, h.api.LinkDevice(r.Context(), r.PathValue("id"), peer))
+	if !goapi.Truthy(peer) {
+		peer = ""
+	}
+	h.relay(w, r, http.MethodPatch, "/peers/"+goapi.EncodeURIComponent(r.PathValue("id")), goapi.Body(goapi.NewObject("linked_peer_id", peer)))
 }
