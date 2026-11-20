@@ -50,7 +50,7 @@ func Register(d *kit.Deps) {
 	r := d.Router
 	// id is the pattern :id(\d+) of the old routes. It goes first, because
 	// a pattern decides before any check of a route runs.
-	notOnDeviceMount, id := kit.Middleware(devicemount.Not), kit.Middleware(writtenInDigits)
+	notOnDeviceMount, id := kit.Middleware(devicemount.Not), kit.Digits("id")
 	canConfigure := d.RequirePermission("server.config")
 
 	r.Get("/rules", h.rules, notOnDeviceMount, d.RequireAuth, canConfigure)
@@ -97,30 +97,10 @@ type done struct {
 	Success bool `json:"success"`
 }
 
-// writtenInDigits lets a route with an id answer only when the id is made
-// of digits in the address as the client wrote it, and passes the request
-// on otherwise. The old console matched its pattern before it decoded the
-// address, so an escaped digit (%31 for 1) is no digit. The id is the
-// second part of the path below the mount in every route that has one.
-func writtenInDigits(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		parts := strings.Split(strings.Trim(kit.RoutePath(r), "/"), "/")
-		ok := len(parts) > 1 && parts[1] != ""
-		for i := 0; ok && i < len(parts[1]); i++ {
-			ok = parts[1][i] >= '0' && parts[1][i] <= '9'
-		}
-		if !ok {
-			kit.PassOn(w, r)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
-
 // maxID is the largest id an id column holds: SERIAL on PostgreSQL.
 const maxID = 2147483647
 
-// idOf reads the id of the address, which writtenInDigits let through as
+// idOf reads the id of the address, which kit.Digits let through as
 // digits. ok is false for an id beyond maxID, which names nothing on
 // either database.
 func idOf(r *http.Request) (id jsbind.Value, ok bool) {

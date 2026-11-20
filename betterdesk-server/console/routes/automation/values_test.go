@@ -80,13 +80,14 @@ func TestTheRoutesStepAsideAtTheDeviceMount(t *testing.T) {
 	}
 }
 
-// writtenInDigits lets an id through that is written with digits and
-// nothing else.
+// The id rule (kit.Digits first in every route with an id) lets an id
+// through that is written with digits and nothing else; an id that does
+// not decode to text is no id either (BUGS AU11).
 func TestWrittenInDigits(t *testing.T) {
 	router := kit.NewRouter()
 	mounted := router.Mount("/api/automation")
-	mounted.Get("/rules/{id}", func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte("id " + r.PathValue("id"))) }, writtenInDigits)
-	mounted.Post("/alerts/{id}/ack", func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte("ack " + r.PathValue("id"))) }, writtenInDigits)
+	mounted.Get("/rules/{id}", func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte("id " + r.PathValue("id"))) }, kit.Digits("id"))
+	mounted.Post("/alerts/{id}/ack", func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte("ack " + r.PathValue("id"))) }, kit.Digits("id"))
 	for target, want := range map[string]string{
 		"GET /api/automation/rules/1":                           "id 1",
 		"GET /api/automation/rules/007":                         "id 007",
@@ -112,6 +113,8 @@ func TestWrittenInDigits(t *testing.T) {
 		"POST /api/automation/alerts/ack/ack":                   "",
 		"GET /api/automation/rules/1;x":                         "",
 		"GET /api/automation/rules/1%2C2":                       "",
+		"GET /api/automation/rules/%C3%28":                      "",
+		"POST /api/automation/alerts/%ff/ack":                   "",
 		"GET /api/automation/rules/" + strings.Repeat("9", 400): "id " + strings.Repeat("9", 400),
 	} {
 		method, path, _ := strings.Cut(target, " ")
@@ -132,7 +135,7 @@ func FuzzQueryAndPath(f *testing.F) {
 		f.Add(seed)
 	}
 	router := kit.NewRouter()
-	router.Mount("/api/automation").Get("/rules/{id}", func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte(r.PathValue("id"))) }, writtenInDigits)
+	router.Mount("/api/automation").Get("/rules/{id}", func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte(r.PathValue("id"))) }, kit.Digits("id"))
 	f.Fuzz(func(t *testing.T, text string) {
 		if strings.ContainsAny(text, " \x7f") || strings.IndexFunc(text, func(r rune) bool { return r < 0x21 || r > 0x7e }) >= 0 {
 			return

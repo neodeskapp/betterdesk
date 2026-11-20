@@ -36,8 +36,10 @@ import (
 //     console's route table. Express took one of them for the end of the
 //     mount, so /api/automation//rules was the rule list.
 //   - An id that does not decode to text (%C3%28) is no id of digits, so
-//     the old routes did not answer and the stand-in said 404. The Go
-//     console refuses the address with 400 before it asks the route.
+//     the routes pass it on (BUGS AU11) and the recording's stand-in for
+//     the rest of the console said 404. The console's own last answer for
+//     an address that does not decode is 400, as the old console's catch-all
+//     page route answered.
 //
 // The steps the bug fixes change are listed in panelFixes
 // (fixed_test.go). One fix changes a whole kind of answer: on SQLite a

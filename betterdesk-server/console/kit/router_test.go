@@ -387,3 +387,48 @@ func TestUseIsNoRoute(t *testing.T) {
 	}()
 	rt.Use("/files/{rest...}", guardFor(&seen))
 }
+
+// Digits looks at a parameter as the client wrote it, as the pattern
+// :id(\d+) did before anything was decoded: an escaped digit is no digit,
+// and a parameter that does not decode to text passes the request on like
+// any other that is no digits (BUGS AU11). Without Digits first, such a
+// parameter is refused with 400 before any middleware of the route runs.
+func TestDigitsLooksAtTheWrittenPath(t *testing.T) {
+	alone := NewRouter()
+	alone.Get("/api/tickets/{id}", echo("ticket"), Digits("id"))
+	for path, want := range map[string]string{
+		"/api/tickets/12": "12", "/api/tickets/007": "007", "/api/tickets/%31": "", "/api/tickets/1%32": "",
+		"/api/tickets/%C3%28": "", "/api/tickets/%ff": "", "/api/tickets/%EF%BC%91": "", "/api/tickets/1a": "",
+	} {
+		rec, ok := serve(alone, "GET", path)
+		if ok != (want != "") || rec.Header().Get("X-Id") != want {
+			t.Errorf("GET %s: answered %v with %d and id %q, want id %q", path, ok, rec.Code, rec.Header().Get("X-Id"), want)
+		}
+	}
+
+	next := NewRouter()
+	next.Get("/api/tickets/{id}", echo("ticket"), Digits("id"))
+	next.Get("/api/tickets/{id}", echo("other"))
+	for path, want := range map[string]string{"/api/tickets/5": "ticket 5", "/api/tickets/%35": "other 5", "/api/tickets/%C3%28": "400"} {
+		rec, ok := serve(next, "GET", path)
+		got := rec.Header().Get("X-Route") + " " + rec.Header().Get("X-Id")
+		if rec.Code == http.StatusBadRequest {
+			got = "400"
+		}
+		if !ok || got != want {
+			t.Errorf("GET %s with a route after it: answered %v with %q, want %q", path, ok, got, want)
+		}
+	}
+
+	ran := false
+	late := NewRouter()
+	late.Get("/api/tickets/{id}", echo("ticket"), func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { ran = true; next.ServeHTTP(w, r) })
+	}, Digits("id"))
+	if rec, ok := serve(late, "GET", "/api/tickets/%C3%28"); !ok || ran || rec.Code != http.StatusBadRequest {
+		t.Errorf("Digits behind other middleware: answered %v with %d, middleware ran %v; want the 400 first", ok, rec.Code, ran)
+	}
+	if _, ok := serve(late, "GET", "/api/tickets/%31"); ok || !ran {
+		t.Errorf("Digits behind other middleware: %%31 answered %v, middleware ran %v; want it passed on after the middleware", ok, ran)
+	}
+}

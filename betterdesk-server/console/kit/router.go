@@ -2,6 +2,7 @@ package kit
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -216,12 +217,17 @@ func (rt *Router) Serve(w http.ResponseWriter, r *http.Request) bool {
 			}
 			continue
 		}
-		values, err := entry.values(parts)
+		values, written, err := entry.values(parts)
+		var bad *ParamError
+		if errors.As(err, &bad) && entry.digitsGuard(bad.Name) {
+			// The pattern of digits does not fit a parameter that is not even text
+			continue
+		}
 		if err != nil {
 			rt.refuseParam(w, r, err)
 			return true
 		}
-		state := &routeState{mount: entry.Mount}
+		state := &routeState{mount: entry.Mount, written: written}
 		attempt := r.WithContext(context.WithValue(r.Context(), routeKey{}, state))
 		for name, value := range values {
 			attempt.SetPathValue(name, value)
@@ -254,6 +260,9 @@ type routeKey struct{}
 type routeState struct {
 	mount  string
 	passed bool
+	// written are the path parameters as the client wrote them, escapes
+	// and all.
+	written map[string]string
 }
 
 // PassOn declines the request: the router goes on to the next route that
@@ -310,21 +319,52 @@ func OnMount(prefix string) Middleware {
 }
 
 // Digits lets a route answer only when the path parameter name is made of
-// digits, and passes the request on otherwise: the pattern :id(\d+).
+// digits as the client wrote it, and passes the request on otherwise: the
+// pattern :id(\d+), which the old console matched before it decoded the
+// address, so an escaped digit (%31 for 1) is no digit. Given first among
+// a route's middleware it stands for the pattern: a parameter that does
+// not decode to text then passes the request on too, where the route
+// table refuses it with 400 for every other route.
 func Digits(name string) Middleware {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			value := r.PathValue(name)
-			ok := value != ""
-			for i := 0; i < len(value) && ok; i++ {
-				ok = value[i] >= '0' && value[i] <= '9'
-			}
-			if !ok {
-				PassOn(w, r)
-				return
-			}
-			next.ServeHTTP(w, r)
-		})
+		return &digitsGuard{name: name, next: next}
+	}
+}
+
+// digitsGuard is the handler of Digits.
+type digitsGuard struct {
+	name string
+	next http.Handler
+}
+
+func (g *digitsGuard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	value := r.PathValue(g.name)
+	if state, ok := r.Context().Value(routeKey{}).(*routeState); ok {
+		value = state.written[g.name]
+	}
+	ok := value != ""
+	for i := 0; i < len(value) && ok; i++ {
+		ok = value[i] >= '0' && value[i] <= '9'
+	}
+	if !ok {
+		PassOn(w, r)
+		return
+	}
+	g.next.ServeHTTP(w, r)
+}
+
+// digitsGuard reports whether the route's middleware starts with Digits
+// for the parameter name.
+func (entry *route) digitsGuard(name string) bool {
+	for h := entry.handler; ; {
+		g, ok := h.(*digitsGuard)
+		if !ok {
+			return false
+		}
+		if g.name == name {
+			return true
+		}
+		h = g.next
 	}
 }
 
@@ -402,13 +442,17 @@ func (entry *route) matches(parts []string, trailing bool) bool {
 	return true
 }
 
-// values decodes the path parameters of a path that fits the route.
-func (entry *route) values(parts []string) (map[string]string, error) {
-	var out map[string]string
+// values decodes the path parameters of a path that fits the route, and
+// returns them also as the client wrote them.
+func (entry *route) values(parts []string) (out, written map[string]string, err error) {
 	set := func(name, raw string) error {
+		if written == nil {
+			written = map[string]string{}
+		}
+		written[name] = raw
 		value, err := url.PathUnescape(raw)
 		if err != nil || !utf8.ValidString(value) {
-			return &ParamError{Raw: raw}
+			return &ParamError{Name: name, Raw: raw}
 		}
 		if out == nil {
 			out = map[string]string{}
@@ -426,20 +470,22 @@ func (entry *route) values(parts []string) (map[string]string, error) {
 				rest = strings.Join(parts[i:], "/")
 			}
 			if err := set(seg[1:len(seg)-4], rest); err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			continue
 		}
 		if err := set(seg[1:len(seg)-1], parts[i]); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
-	return out, nil
+	return out, written, nil
 }
 
 // ParamError is a path parameter that does not decode to text. The old
 // console answered it with status 400 through its error handler.
 type ParamError struct {
+	// Name is the name of the parameter in the route.
+	Name string
 	// Raw is the parameter as the client sent it.
 	Raw string
 }
