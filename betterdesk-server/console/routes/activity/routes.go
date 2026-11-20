@@ -11,12 +11,12 @@
 package activity
 
 import (
-	"math"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/alerts"
-	"github.com/unitronix/betterdesk-server/console/goapipath"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/devicemount"
@@ -52,39 +52,86 @@ func (h *handlers) serverError(w http.ResponseWriter, r *http.Request, what stri
 	kit.JSON(w, r, http.StatusInternalServerError, failure{Error: "Internal server error"})
 }
 
-// window is the from and to of a request, as the query gave them: text,
-// a list or an object. The query ends at a "#".
-func window(r *http.Request) (from, to jsbind.Value) {
-	query, _, _ := strings.Cut(r.URL.RawQuery, "#")
-	return jsbind.Query(query, "from"), jsbind.Query(query, "to")
+// badQuery answers 400 for a parameter of the query the route cannot use.
+func badQuery(w http.ResponseWriter, r *http.Request, name string) {
+	kit.JSON(w, r, http.StatusBadRequest, failure{Error: "Invalid " + name})
 }
 
-// limit is "limit ? parseInt(limit, 10) : fallback" for the limit of a
-// request. It fails where JavaScript could not make text of the value.
-func limit(r *http.Request, fallback float64) (float64, error) {
-	value := goapipath.Query(r, "limit")
-	if !value.Truthy() {
-		return fallback, nil
-	}
-	text, err := value.Text()
-	if err != nil {
-		return 0, err
-	}
-	return parseInt10(text), nil
+// queryText is the text of a parameter of the query, "" when the query
+// has none. ok is false when the query gives it more than once, or as a
+// list or an object.
+func queryText(r *http.Request, name string) (text string, ok bool) {
+	text, _, err := jsbind.QueryText(r.URL.RawQuery, name)
+	return text, err == nil
 }
 
-// parseInt10 is parseInt(text, 10): the whole number the text starts
-// with, after white space and a sign, and NaN when it starts with none.
-// "0x10" is 0, where parseInt without a base reads a hexadecimal number.
-func parseInt10(text string) float64 {
-	digits := strings.TrimLeftFunc(text, jsbind.IsSpace)
-	if digits != "" && (digits[0] == '+' || digits[0] == '-') {
-		digits = digits[1:]
+// maxRows is the largest limit of the device routes: the web app asks
+// for 500 top apps.
+const maxRows = 500
+
+// limitOf reads the limit of a request: fallback when the query has none
+// or an empty one, ok false for anything but a whole number from 1 to
+// maxRows written in digits.
+func limitOf(r *http.Request, fallback int) (int, bool) {
+	text, ok := queryText(r, "limit")
+	switch {
+	case !ok:
+		return 0, false
+	case text == "":
+		return fallback, true
+	case strings.Trim(text, "0123456789") != "" || len(text) > 4:
+		return 0, false
 	}
-	if len(digits) > 1 && digits[0] == '0' && (digits[1] == 'x' || digits[1] == 'X') {
-		return 0
+	n, err := strconv.Atoi(text)
+	return n, err == nil && n >= 1 && n <= maxRows
+}
+
+// span is the time window of a request, both ends in it. An end that is
+// not set does not narrow the window.
+type span struct {
+	from, to       time.Time
+	hasFrom, hasTo bool
+}
+
+// spanOf reads from and to of a request: a date, or a date and time as
+// the console and the web app write them, with or without a zone (none is
+// UTC). A date alone as to stands for the last millisecond of that day.
+// bad names the parameter that is no time, "" when both are fine.
+func spanOf(r *http.Request) (s span, bad string) {
+	for _, end := range []struct {
+		name  string
+		at    *time.Time
+		has   *bool
+		isEnd bool
+	}{{"from", &s.from, &s.hasFrom, false}, {"to", &s.to, &s.hasTo, true}} {
+		text, ok := queryText(r, end.name)
+		if !ok {
+			return span{}, end.name
+		}
+		if text == "" {
+			continue
+		}
+		at, day, ok := timeOf(text)
+		if !ok {
+			return span{}, end.name
+		}
+		if day && end.isEnd {
+			at = at.Add(24*time.Hour - time.Millisecond)
+		}
+		*end.at, *end.has = at, true
 	}
-	return goapipath.ParseInt(text)
+	return s, ""
+}
+
+// timeOf reads a date (day true) or a date and time, in the years 1 to
+// 9999 in UTC, which both databases read.
+func timeOf(text string) (at time.Time, day, ok bool) {
+	if at, err := time.Parse(time.DateOnly, text); err == nil {
+		return at, true, at.Year() >= 1
+	}
+	at, ok = store.ParseTime(text)
+	year := at.UTC().Year()
+	return at, false, ok && year >= 1 && year <= 9999
 }
 
 type summaryList struct {
@@ -107,8 +154,12 @@ type listed struct {
 // list answers GET /api/activity?from=&to=: every summary whose report
 // time is in the window, newest first, with the name of its device.
 func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
-	from, to := window(r)
-	summaries, err := allSummaries(r.Context(), h.db, from, to)
+	window, bad := spanOf(r)
+	if bad != "" {
+		badQuery(w, r, bad)
+		return
+	}
+	summaries, err := allSummaries(r.Context(), h.db, window)
 	if err != nil {
 		h.serverError(w, r, "List error", err)
 		return
@@ -166,14 +217,20 @@ type deviceDetail struct {
 // limit says otherwise, and its summaries reported in the window.
 func (h *handlers) detail(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	from, to := window(r)
-	max, err := limit(r, 100)
-	var sessions, summaries []record
-	if err == nil {
-		sessions, err = deviceSessions(r.Context(), h.db, id, from, to, max)
+	window, bad := spanOf(r)
+	max, ok := limitOf(r, 100)
+	switch {
+	case bad != "":
+		badQuery(w, r, bad)
+		return
+	case !ok:
+		badQuery(w, r, "limit")
+		return
 	}
+	sessions, err := deviceSessions(r.Context(), h.db, id, window, max)
+	var summaries []record
 	if err == nil {
-		summaries, err = deviceSummaries(r.Context(), h.db, id, from, to)
+		summaries, err = deviceSummaries(r.Context(), h.db, id, window)
 	}
 	if err != nil {
 		h.serverError(w, r, "Detail error", err)
@@ -198,18 +255,20 @@ type topApps struct {
 // most used first, 10 unless limit says otherwise.
 func (h *handlers) top(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	from, to := window(r)
-	max, err := limit(r, 10)
-	var apps []record
-	if err == nil {
-		apps, err = topAppsOf(r.Context(), h.db, id, from, to, max)
+	window, bad := spanOf(r)
+	max, ok := limitOf(r, 10)
+	switch {
+	case bad != "":
+		badQuery(w, r, bad)
+		return
+	case !ok:
+		badQuery(w, r, "limit")
+		return
 	}
+	apps, err := topAppsOf(r.Context(), h.db, id, window, max)
 	if err != nil {
 		h.serverError(w, r, "Top apps error", err)
 		return
 	}
 	kit.JSON(w, r, http.StatusOK, topApps{DeviceID: jsjson.Quoted(id), TopApps: apps})
 }
-
-// counts reports whether a limit limits: "if (limit)" for a number.
-func counts(limit float64) bool { return limit != 0 && !math.IsNaN(limit) }

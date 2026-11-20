@@ -2,7 +2,6 @@ package activity_test
 
 import (
 	"context"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -10,14 +9,6 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
-
-// What the query parser of package jsbind does not take apart the way
-// the old console's did, in a from or a to: an index of 20 and more
-// (from[25]=x was a list of one value), and an object beside a list. An
-// object bound no value and a list one per element, so a statement could
-// come out with the right number of values and run. The Go console
-// answers 500 where the old one found rows.
-var beyondTheQueryParser = regexp.MustCompile(`\?(from\[25\]=|from\[day\]=x&to\[\]=[^&]+&to\[\]=[^&]+$|to\[day\]=x&from\[\]=[^&]+&from\[\]=[^&]+$)`)
 
 // TestNodeAnswers replays what the Node console's three read routes
 // answered with its real database adapter, on SQLite and on PostgreSQL
@@ -27,7 +18,7 @@ var beyondTheQueryParser = regexp.MustCompile(`\?(from\[25\]=|from\[day\]=x&to\[
 // them, rows with values only SQLite can hold, and devices that only the
 // signal server's table has, with the rows the lookups copy.
 //
-// Four kinds of answers are not compared byte for byte:
+// Three kinds of answers are not compared byte for byte:
 //
 //   - The recording was made without the panel access guard, which sits
 //     in front of the routes in the console and refuses a guest issuer
@@ -39,17 +30,16 @@ var beyondTheQueryParser = regexp.MustCompile(`\?(from\[25\]=|from\[day\]=x&to\[
 //   - An address with two slashes in a row is no address of the Go
 //     console's route table. Express took one of them for the end of the
 //     mount, so /api/activity//D1 was the device D1.
-//   - Windows the query parser does not take apart, see
-//     beyondTheQueryParser.
 //
 // The steps the bug fixes change are listed in activityFixes, or checked
-// by renamed (fixes_test.go).
+// by renamed and checkedWindows (fixes_test.go).
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
-		guarded, elsewhere, slashes, unparsed, renames := 0, 0, 0, 0, 0
+		guarded, elsewhere, slashes, renames, refused, respelled := 0, 0, 0, 0, 0, 0
 		rec := replay.Load(t, db, "node")
 		named := renamed(notesOf(t, rec), &renames)
+		windows := checkedWindows(w, &refused, &respelled)
 		defer activityFixes.Unused(t, db)
 		w.Run(rec, activityFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			switch {
@@ -70,11 +60,8 @@ func TestNodeAnswers(t *testing.T) {
 					t.Errorf("%s: status %d, want %d", step.Name, got.Status, step.Status)
 				}
 				return true
-			case step.Status == 200 && got.Status == 500 && beyondTheQueryParser.MatchString(step.Path):
-				unparsed++
-				return true
 			}
-			return false
+			return windows(t, step, got)
 		}))
 		if guarded != 5 {
 			t.Errorf("%d answers were the panel access guard's, want the guest issuer's 5", guarded)
@@ -82,10 +69,10 @@ func TestNodeAnswers(t *testing.T) {
 		if elsewhere != 3 || slashes != 2 {
 			t.Errorf("%d answers were compared by status only and %d had two slashes, want 3 and 2", elsewhere, slashes)
 		}
-		// PostgreSQL reads neither an object nor a list as a time, so
-		// there only the index is left
-		if want := map[bool]int{false: 9, true: 3}[db.IsPostgres()]; unparsed != want {
-			t.Errorf("%d windows were beyond the query parser, want %d", unparsed, want)
+		// PostgreSQL compared the times already, where they were times in
+		// another spelling
+		if want := map[bool]int{false: 14, true: 7}[db.IsPostgres()]; refused != 318 || respelled != want {
+			t.Errorf("%d windows and limits were refused and %d answers came from times written as ISO text, want 318 and %d", refused, respelled, want)
 		}
 		if renames == 0 {
 			t.Errorf("no answer shows a device under a name the fixes give it")

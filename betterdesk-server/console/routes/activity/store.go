@@ -6,18 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
-
-// The queries take the window of a request as the query string gave it
-// (jsbind.Value) and bind it as the old console's driver for the database
-// did. A from or to that is a list or an object fails on SQLite unless
-// its values happen to fill the statement, and fails on PostgreSQL always,
-// as does text PostgreSQL cannot read as a time.
 
 // record is a row as the old console's driver returned it: the columns
 // in the order of the result, each with the value that goes into JSON.
@@ -83,14 +78,21 @@ func (q *query) add(part string, values ...jsbind.Value) {
 	q.values = append(q.values, values...)
 }
 
-// between appends the two conditions of a window, each when its end is
-// given ("if (from)", "if (to)").
-func (q *query) between(fromColumn string, from jsbind.Value, toColumn string, to jsbind.Value) {
-	if from.Truthy() {
-		q.add(" AND "+fromColumn+" >= ?", from)
+// between appends the conditions of the ends of a window that are set.
+// The times go in as the ISO text with milliseconds that the agent sends
+// and the route stores, which PostgreSQL reads as the time it is, and
+// which on SQLite compares with the stored texts as the times do: from
+// rounded up to the millisecond, to rounded down.
+func (q *query) between(fromColumn, toColumn string, s span) {
+	if s.hasFrom {
+		from := s.from.Truncate(time.Millisecond)
+		if from.Before(s.from) {
+			from = from.Add(time.Millisecond)
+		}
+		q.add(" AND "+fromColumn+" >= ?", jsbind.String(store.ISOTime(from)))
 	}
-	if to.Truthy() {
-		q.add(" AND "+toColumn+" <= ?", to)
+	if s.hasTo {
+		q.add(" AND "+toColumn+" <= ?", jsbind.String(store.ISOTime(s.to.Truncate(time.Millisecond))))
 	}
 }
 
@@ -144,7 +146,7 @@ func (q *query) run(ctx context.Context, db *store.DB, doing string) ([]record, 
 // window, the one received last first, each with the number of the
 // device's sessions that started at or after its report time
 // (detail_count).
-func allSummaries(ctx context.Context, db *store.DB, from, to jsbind.Value) ([]record, error) {
+func allSummaries(ctx context.Context, db *store.DB, window span) ([]record, error) {
 	var q query
 	q.add(`SELECT s.*, (
                 SELECT COUNT(*) FROM activity_sessions a
@@ -152,50 +154,45 @@ func allSummaries(ctx context.Context, db *store.DB, from, to jsbind.Value) ([]r
                   AND a.started_at >= s.reported_at
             ) as detail_count
             FROM activity_summaries s WHERE 1=1`)
-	q.between("s.reported_at", from, "s.reported_at", to)
+	q.between("s.reported_at", "s.reported_at", window)
 	q.add(" ORDER BY s.received_at DESC")
 	return q.run(ctx, db, "list activity summaries")
 }
 
 // deviceSessions returns the sessions of a device that started at or
-// after from and ended at or before to, the one started last first. A
-// limit that is 0 or no number does not limit.
-func deviceSessions(ctx context.Context, db *store.DB, id string, from, to jsbind.Value, limit float64) ([]record, error) {
+// after from and ended at or before to, the one started last first, at
+// most limit of them.
+func deviceSessions(ctx context.Context, db *store.DB, id string, window span, limit int) ([]record, error) {
 	var q query
 	q.add("SELECT * FROM activity_sessions WHERE device_id = ?", jsbind.String(id))
-	q.between("started_at", from, "ended_at", to)
-	q.add(" ORDER BY started_at DESC")
-	if counts(limit) {
-		q.add(" LIMIT ?", jsbind.Number(limit))
-	}
+	q.between("started_at", "ended_at", window)
+	q.add(" ORDER BY started_at DESC LIMIT ?", jsbind.Number(float64(limit)))
 	return q.run(ctx, db, "list activity sessions of device "+id)
 }
 
 // deviceSummaries returns the summaries of a device reported in the
 // window, the one reported last first.
-func deviceSummaries(ctx context.Context, db *store.DB, id string, from, to jsbind.Value) ([]record, error) {
+func deviceSummaries(ctx context.Context, db *store.DB, id string, window span) ([]record, error) {
 	var q query
 	q.add("SELECT * FROM activity_summaries WHERE device_id = ?", jsbind.String(id))
-	q.between("reported_at", from, "reported_at", to)
+	q.between("reported_at", "reported_at", window)
 	q.add(" ORDER BY reported_at DESC")
 	return q.run(ctx, db, "list activity summaries of device "+id)
 }
 
 // topAppsOf returns the apps of a device's sessions in the window with
 // the seconds spent in each and the number of sessions, the app with the
-// most seconds first. SQLite makes one row per app and shows one of its
-// categories; PostgreSQL makes one row per app and category.
-func topAppsOf(ctx context.Context, db *store.DB, id string, from, to jsbind.Value, limit float64) ([]record, error) {
+// most seconds first, at most limit of them. SQLite makes one row per app
+// and shows one of its categories; PostgreSQL makes one row per app and
+// category.
+func topAppsOf(ctx context.Context, db *store.DB, id string, window span, limit int) ([]record, error) {
 	var q query
 	q.add(`SELECT app_name, category,
                 SUM(duration_secs) as total_secs,
                 COUNT(*) as session_count
             FROM activity_sessions WHERE device_id = ?`, jsbind.String(id))
-	q.between("started_at", from, "ended_at", to)
-	q.add(db.Pick(" GROUP BY app_name", " GROUP BY app_name, category") + " ORDER BY total_secs DESC")
-	if counts(limit) {
-		q.add(" LIMIT ?", jsbind.Number(limit))
-	}
+	q.between("started_at", "ended_at", window)
+	q.add(db.Pick(" GROUP BY app_name", " GROUP BY app_name, category")+" ORDER BY total_secs DESC LIMIT ?", jsbind.Number(float64(limit)))
 	return q.run(ctx, db, "list top apps of device "+id)
 }
 

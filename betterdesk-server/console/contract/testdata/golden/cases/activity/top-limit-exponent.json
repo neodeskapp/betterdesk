@@ -95,7 +95,7 @@
     "super_admin",
     "admin"
    ],
-   "status": 200,
+   "status": 400,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -122,27 +122,13 @@
    "volatile": [
     "top_apps[*].app_name",
     "top_apps[*].category",
-    {
-     "path": "top_apps[*].session_count",
-     "integer": true
-    },
-    {
-     "path": "top_apps[*].total_secs",
-     "integer": true
-    }
+    "top_apps[*].session_count",
+    "top_apps[*].total_secs"
    ],
    "body": {
     "kind": "json",
     "json": {
-     "device_id": "900100001",
-     "top_apps": [
-      {
-       "app_name": "<volatile>",
-       "category": "<volatile>",
-       "session_count": 0,
-       "total_secs": 0
-      }
-     ]
+     "error": "Invalid limit"
     }
    }
   }
