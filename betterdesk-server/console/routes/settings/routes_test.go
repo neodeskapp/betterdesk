@@ -212,6 +212,37 @@ func TestFontSearchReadsTheQueryAsExpressDid(t *testing.T) {
 	})
 }
 
+// The favicon is an SVG document from the console's own address: it goes
+// out sandboxed, so nothing in it runs when someone opens it, on top of
+// the console's policy; a stored favicon is served cleaned (BUGS BR13).
+func TestFaviconIsSandboxed(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db)
+		visitor := w.SignedOut()
+		page := visitor.Do("GET", "/api/settings/branding", "").Header.Get("Content-Security-Policy")
+		if !strings.HasPrefix(page, "default-src 'self';") {
+			t.Fatalf("the console's policy: %q", page)
+		}
+		icon := visitor.Do("GET", "/branding/favicon.svg", "")
+		head := visitor.Do("HEAD", "/branding/favicon.svg", "")
+		again := visitor.Do("GET", "/branding/favicon.svg", "", "If-None-Match", icon.Header.Get("ETag"))
+		if again.Status != http.StatusNotModified {
+			t.Errorf("the favicon with its ETag: %d", again.Status)
+		}
+		for _, res := range []routetest.Answer{icon, head, again} {
+			if got := res.Header.Get("Content-Security-Policy"); got != page+";sandbox" {
+				t.Errorf("%d favicon policy %q, want %q", res.Status, got, page+";sandbox")
+			}
+		}
+		exec(t, db, "INSERT INTO branding_config (key, value, updated_at) VALUES ('faviconSvg', ?, '2026-01-02 03:04:05')",
+			`<svg xmlns="http://www.w3.org/2000/svg"><a href="java&#115;cript:alert(1)"><circle r="9"/></a></svg>`)
+		w.Server.Deps().Branding.LoadBranding(context.Background())
+		if res := visitor.Do("GET", "/branding/favicon.svg", ""); res.Body != `<svg xmlns="http://www.w3.org/2000/svg"><a><circle r="9"/></a></svg>` {
+			t.Errorf("a stored favicon: %q", res.Body)
+		}
+	})
+}
+
 func TestStylesheetsAndFavicon(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := world(t, db)

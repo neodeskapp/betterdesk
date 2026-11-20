@@ -88,7 +88,7 @@ of a full backup). The writes are in `console/routes/settings`
 | `/api/server-attestation/badge-config` (GET, PUT), `GET /api/public/server-attestation` | server-attestation.routes.js:68, :81, :107 | `b.Text("appName")` as the brand name |
 | `GET /css/branding.css` | settings.routes.js:925 | `s.GenerateThemeCSS()`. `Content-Type: text/css; charset=utf-8`, `Cache-Control: public, max-age=60`, `X-Branding-Revision: s.Revision()`. On error: 200 with the body `/* branding error */`, the content type, and neither of the other two headers |
 | `GET /css/theme.css` | :941 | the same without `X-Branding-Revision`; on error `/* theme error */` |
-| `GET /branding/favicon.svg` | :956 | `s.GenerateFavicon()`, `Content-Type: image/svg+xml`, `Cache-Control: public, max-age=300` |
+| `GET /branding/favicon.svg` | :956 | `s.GenerateFavicon()`, `Content-Type: image/svg+xml`, `Cache-Control: public, max-age=300`, and the console's `Content-Security-Policy` with `;sandbox` added (BUGS BR13) |
 
 At start, after the database is ready: `s.LoadBranding(ctx)` (server.js:432).
 

@@ -193,8 +193,16 @@ func (h *handlers) themeCSS(w http.ResponseWriter, r *http.Request) {
 }
 
 // favicon answers GET /branding/favicon.svg: the administrator's own
-// favicon, else the BetterDesk mark, cached for five minutes.
+// favicon, else the BetterDesk mark, cached for five minutes. The answer
+// is an SVG document from the console's address, so the console's policy
+// gets the directive sandbox: nothing in the document runs, even when
+// someone opens the address itself.
 func (h *handlers) favicon(w http.ResponseWriter, r *http.Request) {
+	policy := w.Header().Get("Content-Security-Policy")
+	if policy != "" {
+		policy += ";"
+	}
+	w.Header().Set("Content-Security-Policy", policy+"sandbox")
 	w.Header().Set("Cache-Control", "public, max-age=300")
 	httpx.WriteBody(w, r, http.StatusOK, "image/svg+xml; charset=utf-8", []byte(h.d.Branding.GenerateFavicon()))
 }
