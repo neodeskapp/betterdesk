@@ -2,6 +2,7 @@ package filetransfer
 
 import (
 	"errors"
+	"fmt"
 	"io/fs"
 	"math"
 	"regexp"
@@ -165,16 +166,16 @@ func isJSSpace(r rune) bool {
 	return r >= 0x2000 && r <= 0x200A
 }
 
-// maxArrayLike is the longest chunk an object with a "length" may stand
-// for. The old service took any length and tried to make that many bytes.
-const maxArrayLike = 64 << 20
+// errChunkTooLarge refuses a chunk of more than MaxChunkSize bytes.
+var errChunkTooLarge = fmt.Errorf("Chunk too large (max %d bytes)", MaxChunkSize)
 
 const notBufferLike = "The first argument must be of type string or an instance of Buffer, ArrayBuffer, or Array or an Array-like Object."
 
 // bufferFrom is Buffer.from(data, 'base64') for the "data" of a chunk
 // message: base64 text, or a list of byte values, or the JSON form of a
 // buffer ({type: "Buffer", data: [...]}), or an object with a length and
-// numbered members. Anything else is the error JavaScript gave.
+// numbered members, refused above MaxChunkSize before any memory is taken.
+// Anything else is the error JavaScript gave.
 func bufferFrom(data any) ([]byte, error) {
 	switch t := data.(type) {
 	case string:
@@ -195,8 +196,8 @@ func bufferFrom(data any) ([]byte, error) {
 			if !isNumber || math.IsNaN(length) || length <= 0 {
 				return []byte{}, nil
 			}
-			if length > maxArrayLike {
-				return nil, errors.New("Array buffer allocation failed")
+			if length > MaxChunkSize {
+				return nil, errChunkTooLarge
 			}
 			out := make([]byte, int(length))
 			for i := range out {

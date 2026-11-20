@@ -21,8 +21,9 @@ var deviceFixes = []deviceFix{
 	{85, "FT2", 200, `{"action":"error","error":"Transfer not found"}`},
 	{86, "FT2", 200, `{"action":"error","error":"Transfer not found"}`},
 	{87, "FT2", 200, `{"transferId":"12db0ec02320087958183cbb162b10a8","status":"completed","bytesTransferred":12,"totalBytes":12,"chunksReceived":2,"totalChunks":1,"percent":100,"filename":"q3_report.pdf","direction":"download"}`},
-	{88, "FT2", 200, `{"action":"chunk_ack","transferId":"12db0ec02320087958183cbb162b10a8","chunksReceived":3,"totalChunks":1,"bytesTransferred":16,"totalBytes":12,"percent":133.33333333333331,"status":"completed"}`},
-	{89, "FT2", 200, `{"transferId":"12db0ec02320087958183cbb162b10a8","status":"completed","bytesTransferred":16,"totalBytes":12,"chunksReceived":3,"totalChunks":1,"percent":133.33333333333331,"filename":"q3_report.pdf","direction":"download"}`},
+	// A chunk beyond the size the transfer announced is refused
+	{88, "FT3", 200, `{"action":"error","error":"Chunk goes beyond the size of the transfer (12 bytes)"}`},
+	{89, "FT3", 200, `{"transferId":"12db0ec02320087958183cbb162b10a8","status":"completed","bytesTransferred":12,"totalBytes":12,"chunksReceived":2,"totalChunks":1,"percent":100,"filename":"q3_report.pdf","direction":"download"}`},
 	// The device sends no chunk into an upload
 	{102, "FT2", 200, `{"action":"error","error":"Transfer is an upload"}`},
 	{103, "FT2", 200, `{"transferId":"c00386451099cce4b54bdd85a93d0164","status":"pending","bytesTransferred":0,"totalBytes":1,"chunksReceived":0,"totalChunks":1,"percent":0,"filename":"n.txt","direction":"upload"}`},

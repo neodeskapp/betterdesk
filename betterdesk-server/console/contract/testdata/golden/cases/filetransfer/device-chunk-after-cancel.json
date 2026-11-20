@@ -41,23 +41,11 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    {
-     "path": "transferId",
-     "pattern": "^[9aA+/_=-]{32}$"
-    }
-   ],
    "body": {
     "kind": "json",
     "json": {
-     "action": "chunk_ack",
-     "bytesTransferred": 15,
-     "chunksReceived": 3,
-     "percent": 136.36363636363635,
-     "status": "completed",
-     "totalBytes": 11,
-     "totalChunks": 1,
-     "transferId": "<volatile>"
+     "action": "error",
+     "error": "Chunk goes beyond the size of the transfer (11 bytes)"
     }
    }
   }

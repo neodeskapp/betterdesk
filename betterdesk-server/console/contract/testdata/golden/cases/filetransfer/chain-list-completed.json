@@ -48,7 +48,7 @@
     },
     {
      "path": "[*].tempPath",
-     "pattern": "^[9aA+/_=-]{68}\\.[9aA+/_=-]{3}$"
+     "pattern": "^[9aA+/_=-]+\\.[9aA+/_=-]{3}$"
     },
     {
      "path": "[*].updatedAt",
@@ -69,6 +69,22 @@
       "id": "<volatile>",
       "mimeType": "application/octet-stream",
       "size": 5,
+      "status": "completed",
+      "tempPath": "<volatile>",
+      "totalChunks": 1,
+      "updatedAt": 0
+     },
+     {
+      "bytesTransferred": 11,
+      "chunksReceived": 2,
+      "createdAt": 0,
+      "createdBy": "agent:900100001",
+      "deviceId": "900100001",
+      "direction": "download",
+      "filename": "contract_report.txt",
+      "id": "<volatile>",
+      "mimeType": "text/plain",
+      "size": 11,
       "status": "completed",
       "tempPath": "<volatile>",
       "totalChunks": 1,

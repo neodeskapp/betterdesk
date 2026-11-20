@@ -400,11 +400,15 @@ func matches(filter, value any) bool {
 // ReceiveChunk adds a chunk to a transfer's file and returns how far the
 // transfer is. data is the chunk as base64 text. A chunkIndex of 0 starts
 // the file over; every other chunk is appended, whatever its index. The
-// transfer is completed once it has as many bytes as it announced.
+// transfer is completed once it has as many bytes as it announced. A
+// chunk takes at most MaxChunkSize bytes and no byte beyond the size the
+// transfer announced.
 //
 // Errors: "Transfer not found", "Transfer is cancelled", "Transfer is
-// failed", the text JavaScript gave for a chunk that is no text, and
-// errors of the file.
+// failed", "Transfer is completed" for a chunk index 0 after the end,
+// "Chunk too large (max 262144 bytes)", "Chunk goes beyond the size of
+// the transfer (<size> bytes)", the text JavaScript gave for a chunk that
+// is no text, and errors of the file. A refused chunk writes nothing.
 func (s *Service) ReceiveChunk(transferID any, chunkIndex any, data any) (*ChunkProgress, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -450,6 +454,11 @@ func (s *Service) receive(id string, t *Transfer, chunkIndex any, data any) (*Ch
 	if t.Status == StatusCancelled || t.Status == StatusFailed {
 		return nil, errors.New("Transfer is " + t.Status)
 	}
+	index, isNumber := chunkIndex.(float64)
+	startsOver := isNumber && index == 0
+	if startsOver && t.Status == StatusCompleted {
+		return nil, errors.New("Transfer is completed")
+	}
 	if t.Status == StatusPending {
 		t.Status = StatusActive
 	}
@@ -458,8 +467,15 @@ func (s *Service) receive(id string, t *Transfer, chunkIndex any, data any) (*Ch
 	if err != nil {
 		return nil, err
 	}
+	if len(chunk) > MaxChunkSize {
+		return nil, errChunkTooLarge
+	}
+	if size := number(t.Size); float64(t.BytesTransferred+int64(len(chunk))) > size {
+		text, _ := jsText(t.Size)
+		return nil, fmt.Errorf("Chunk goes beyond the size of the transfer (%s bytes)", text)
+	}
 	flags := os.O_WRONLY | os.O_CREATE | os.O_APPEND
-	if index, isNumber := chunkIndex.(float64); isNumber && index == 0 {
+	if startsOver {
 		flags = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
 	}
 	file, err := os.OpenFile(t.TempPath, flags, 0o666)

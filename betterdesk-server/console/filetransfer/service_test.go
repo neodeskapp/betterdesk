@@ -293,9 +293,9 @@ func FuzzDecodeBase64(f *testing.F) {
 	})
 }
 
-// TestAChunkGivenAsALengthIsCapped covers the one place the service is
-// stricter than the old one: an object with a length stands for that many
-// bytes, and above 64 MiB it is refused before any memory is taken.
+// TestAChunkGivenAsALengthIsCapped: an object with a length stands for
+// that many bytes, and above MaxChunkSize it is refused before any memory
+// is taken (BUGS FT3).
 func TestAChunkGivenAsALengthIsCapped(t *testing.T) {
 	s, _ := newService(t)
 	record, err := s.CreateTransfer(Params{Filename: "big", Size: float64(MaxFileSize), DeviceID: "d"})
@@ -306,14 +306,62 @@ func TestAChunkGivenAsALengthIsCapped(t *testing.T) {
 	if err != nil || small.BytesTransferred != 1000 {
 		t.Fatalf("a length of 1000: %+v, %v", small, err)
 	}
-	for _, length := range []float64{64<<20 + 1, 1e300} {
+	for _, length := range []float64{MaxChunkSize + 1, 64<<20 + 1, 1e300} {
 		_, err := s.ReceiveChunk(record.ID, float64(1), goapi.NewObject("length", length))
-		if err == nil || err.Error() != "Array buffer allocation failed" {
+		if err == nil || err.Error() != "Chunk too large (max 262144 bytes)" {
 			t.Errorf("a length of %v: %v", length, err)
 		}
 	}
 	if got := s.GetProgress(record.ID).BytesTransferred; got != 1000 {
 		t.Errorf("%d bytes after the refused chunks", got)
+	}
+}
+
+// A chunk may not hold more than MaxChunkSize bytes nor more bytes than
+// the transfer announced, and a completed transfer takes no chunk that
+// starts the file over; a refused chunk writes nothing (BUGS FT3).
+func TestChunkBeyondTheSizeIsRefused(t *testing.T) {
+	s, _ := newService(t)
+	record, err := s.CreateTransfer(Params{Filename: "note.txt", Size: float64(8), DeviceID: "d"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	chunk := func(index float64, data string) error {
+		_, err := s.ReceiveChunk(record.ID, index, base64.StdEncoding.EncodeToString([]byte(data)))
+		return err
+	}
+	if err := chunk(0, "hello"); err != nil {
+		t.Fatal(err)
+	}
+	if err := chunk(1, "world"); err == nil || err.Error() != "Chunk goes beyond the size of the transfer (8 bytes)" {
+		t.Errorf("a chunk beyond the size: %v", err)
+	}
+	if err := chunk(1, "abc"); err != nil {
+		t.Errorf("the last chunk: %v", err)
+	}
+	if got := s.GetTransfer(record.ID); got.Status != StatusCompleted || got.BytesTransferred != 8 || got.ChunksReceived != 2 {
+		t.Errorf("after the last chunk: %s, %d bytes in %d chunks", got.Status, got.BytesTransferred, got.ChunksReceived)
+	}
+	if err := chunk(0, "again"); err == nil || err.Error() != "Transfer is completed" {
+		t.Errorf("a first chunk again after the end: %v", err)
+	}
+	if err := chunk(2, "!"); err == nil || err.Error() != "Chunk goes beyond the size of the transfer (8 bytes)" {
+		t.Errorf("a byte more after the end: %v", err)
+	}
+	content, err := os.ReadFile(s.GetCompletedFilePath(record.ID))
+	if err != nil || string(content) != "helloabc" {
+		t.Errorf("the file holds %q, %v", content, err)
+	}
+
+	big, err := s.CreateTransfer(Params{Filename: "big.bin", Size: float64(MaxFileSize), DeviceID: "d"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.ReceiveChunk(big.ID, float64(0), base64.StdEncoding.EncodeToString(make([]byte, MaxChunkSize+1))); err == nil || err.Error() != "Chunk too large (max 262144 bytes)" {
+		t.Errorf("a chunk above the chunk size: %v", err)
+	}
+	if _, err := s.ReceiveChunk(big.ID, float64(0), base64.StdEncoding.EncodeToString(make([]byte, MaxChunkSize))); err != nil {
+		t.Errorf("a chunk of the chunk size: %v", err)
 	}
 }
 

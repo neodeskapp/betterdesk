@@ -322,6 +322,8 @@ func TestNodeVectors(t *testing.T) {
 		fixed = loadFixedSteps(t, listed)
 	}
 	var written []fixedStep
+	// differing are the listed steps of each bug that differ from Node's
+	differing := map[string][]int{}
 	rewrites := newRewrites()
 
 	w := &oracleWorld{t: t, dir: filepath.Join(t.TempDir(), "data", "transfers"), clock: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).UnixMilli(), random: 20261110}
@@ -340,6 +342,8 @@ func TestNodeVectors(t *testing.T) {
 					entry, differs := fixedFrom(t, got, want)
 					if !differs {
 						t.Errorf("step %d (%s, step %d) is listed for %s but answers as Node did", number, scenario.Name, i, bug)
+					} else {
+						differing[bug] = append(differing[bug], number)
 					}
 					entry.Step, entry.Bug, entry.Scenario, entry.Op = number, bug, scenario.Name, step.Op
 					written = append(written, entry)
@@ -374,6 +378,9 @@ func TestNodeVectors(t *testing.T) {
 	}
 	rewrites.check(t)
 	if recording {
+		for bug, numbers := range differing {
+			t.Logf("the steps of %s that differ: %s", bug, spans(numbers))
+		}
 		writeFixedSteps(t, written)
 	}
 }
