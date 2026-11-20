@@ -468,9 +468,25 @@ func TestNodeSteps(t *testing.T) {
 			if d, ok := stepDifferences[s.Name]; ok {
 				s.Status, s.Text = d.status, d.text
 			}
+			idStep, readAsSQLite := postgresIDSteps[s.Name]
+			if readAsSQLite && db.IsPostgres() {
+				s.Status, s.Text = idStep.status, idStep.text
+				if idStep.sameAs != "" {
+					s.Status, s.Text = stepNamed(t, steps, idStep.sameAs)
+				}
+			}
 			as := ""
 			if s.As != nil {
 				as = *s.As
+			}
+			if readAsSQLite && db.IsPostgres() && idStep.writes {
+				restore := keepTargets(t, db)
+				rec := w.do(as, s.Method, s.Path, s.Body, s.BodyType)
+				restore()
+				if rec.Code != s.Status || maskTimes(rec.Body.String()) != maskTimes(s.Text) {
+					t.Errorf("%s (C7): %d %s, want %d %s", s.Name, rec.Code, rec.Body.String(), s.Status, s.Text)
+				}
+				continue
 			}
 			rec := w.do(as, s.Method, s.Path, s.Body, s.BodyType)
 			if problem, ok := refusedTargets[s.Name]; ok {
@@ -537,6 +553,94 @@ func TestNodeSteps(t *testing.T) {
 			}
 		}
 	})
+}
+
+// postgresIDSteps are the steps of the recording on PostgreSQL whose id
+// the routes read as SQLite reads it, on both databases (BUGS C7). A text
+// that is no whole number, or a number no id column holds, names no
+// target, where PostgreSQL failed with 500 (400 for a change) and its own
+// message: a read, change, check or delete answers 404, the history no
+// checks. A number written with a fraction or an exponent names the target
+// of its value, and one written in hexadecimal none, as on SQLite: such a
+// step answers what sameAs, a step with the same target, answered. writes
+// marks the steps that now change a target Node's recording kept; the
+// replay puts the targets and checks back afterwards, so the steps after
+// it see what Node had.
+var postgresIDSteps = map[string]struct {
+	status       int
+	text, sameAs string
+	writes       bool
+}{
+	`get "first"`:                {status: 404, text: targetNotFoundText},
+	`get "1.0"`:                  {sameAs: `get "+1"`},
+	`get "1e0"`:                  {sameAs: `get "+1"`},
+	`get "0x1"`:                  {status: 404, text: targetNotFoundText},
+	`get "1abc"`:                 {status: 404, text: targetNotFoundText},
+	`get "1;drop"`:               {status: 404, text: targetNotFoundText},
+	`get "99999999999999999999"`: {status: 404, text: targetNotFoundText},
+	`get "1.5"`:                  {status: 404, text: targetNotFoundText},
+	`update id "first"`:          {status: 404, text: targetNotFoundText},
+	`update id "1.0"`:            {sameAs: `update id "%201"`, writes: true},
+	`update id "1abc"`:           {status: 404, text: targetNotFoundText},
+	`check id "first"`:           {status: 404, text: targetNotFoundText},
+	`check id "1.0"`:             {sameAs: `check id "%201"`, writes: true},
+	`history id "first"`:         {status: 200, text: `[]`},
+	`history id "5.0"`:           {sameAs: `history id "%205"`},
+	`delete id "first"`:          {status: 404, text: targetNotFoundText},
+	`delete id "4.0"`:            {status: 200, text: `{"status":"deleted"}`, writes: true},
+	`delete id "3abc"`:           {status: 404, text: targetNotFoundText},
+}
+
+const targetNotFoundText = `{"error":"Target not found"}`
+
+// stepNamed returns the status and answer of the step with the name.
+func stepNamed(t *testing.T, steps []step, name string) (int, string) {
+	t.Helper()
+	for _, s := range steps {
+		if s.Name == name {
+			return s.Status, s.Text
+		}
+	}
+	t.Fatalf("no step %s", name)
+	return 0, ""
+}
+
+// keepTargets copies the targets and their checks aside and returns a
+// function that puts them back as they were, on PostgreSQL with the
+// counters of their ids, so the rows made after it get Node's ids.
+func keepTargets(t *testing.T, db *store.DB) func() {
+	t.Helper()
+	ctx := context.Background()
+	run := func(statements ...string) {
+		t.Helper()
+		for _, statement := range statements {
+			if _, err := db.Exec(ctx, statement); err != nil {
+				t.Fatalf("%s: %v", statement, err)
+			}
+		}
+	}
+	run("CREATE TABLE kept_targets AS SELECT * FROM network_targets", "CREATE TABLE kept_checks AS SELECT * FROM network_checks")
+	var counters []string
+	if db.IsPostgres() {
+		for _, table := range []string{"network_targets", "network_checks"} {
+			var sequence string
+			var last int64
+			var called bool
+			if err := db.QueryRow(ctx, "SELECT pg_get_serial_sequence('"+table+"', 'id')").Scan(&sequence); err != nil {
+				t.Fatal(err)
+			}
+			if err := db.QueryRow(ctx, "SELECT last_value, is_called FROM "+sequence).Scan(&last, &called); err != nil {
+				t.Fatal(err)
+			}
+			counters = append(counters, "SELECT setval('"+sequence+"', "+strconv.FormatInt(last, 10)+", "+strconv.FormatBool(called)+")")
+		}
+	}
+	return func() {
+		run("DELETE FROM network_checks", "DELETE FROM network_targets",
+			"INSERT INTO network_targets SELECT * FROM kept_targets", "INSERT INTO network_checks SELECT * FROM kept_checks",
+			"DROP TABLE kept_targets", "DROP TABLE kept_checks")
+		run(counters...)
+	}
 }
 
 // enabledByZero are the creates with "enabled": 0. Node disabled a target

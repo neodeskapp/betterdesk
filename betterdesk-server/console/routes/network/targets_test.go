@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -158,6 +159,66 @@ func TestUpdateWithNothingAnswersTheTarget(t *testing.T) {
 		}
 		if status, answer := send("PATCH", "/api/network/targets/2", `{}`); status != 404 || answer != `{"error":"Target not found"}` {
 			t.Errorf("update of a missing target: %d %s", status, answer)
+		}
+	})
+}
+
+// The id of the address is read as SQLite compares a text with an id
+// column, on both databases: a decimal number with spaces around it, a
+// sign, a fraction or an exponent names the target of its value when that
+// is a whole number. Any other text, and a number no id column holds,
+// names no target: 404 for a read, change, delete and check, no checks
+// for the history. PostgreSQL failed with 500 and its own message there
+// (BUGS C7).
+func TestTargetIDsReadAsSQLiteReadsThem(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db, names{})
+		send := func(as, method, path, body string) (int, string) {
+			t.Helper()
+			var b *string
+			if body != "" {
+				b = &body
+			}
+			rec := w.do(as, method, path, b, "")
+			return rec.Code, rec.Body.String()
+		}
+		status, created := send("adm", "POST", "/api/network/targets", `{"name":"Printer","host":"10.1.2.3","check_type":"ping"}`)
+		if status != 201 {
+			t.Fatalf("create: %d %s", status, created)
+		}
+		notFound := `{"error":"Target not found"}`
+		for _, id := range []string{"first", "1abc", "1;drop", "1.5", "0x1", "0x1p0", "0X1P0", "1_0", "-1", "0", "1e", "%2B", "-", "2147483648",
+			"99999999999999999999", "1e400", "Infinity", "NaN", "1%20x", "%C3%BC"} {
+			for _, c := range []struct{ as, method, path, body string }{
+				{"vera", "GET", "/api/network/targets/" + id, ""},
+				{"adm", "PATCH", "/api/network/targets/" + id, `{"timeout_ms":3000}`},
+				{"olga", "POST", "/api/network/targets/" + id + "/check", `{}`},
+				{"adm", "DELETE", "/api/network/targets/" + id, ""},
+			} {
+				if status, answer := send(c.as, c.method, c.path, c.body); status != 404 || answer != notFound {
+					t.Errorf("%s %s: %d %s, want 404", c.method, c.path, status, answer)
+				}
+			}
+			if status, answer := send("vera", "GET", "/api/network/targets/"+id+"/history", ""); status != 200 || answer != `[]` {
+				t.Errorf("history of %s: %d %s, want 200 []", id, status, answer)
+			}
+		}
+		for _, id := range []string{"1", "01", "1.0", "1.", "1e0", "+1", "%201%20", "%091", "0.1e1", "100e-2"} {
+			if status, answer := send("vera", "GET", "/api/network/targets/"+id, ""); status != 200 || answer != created {
+				t.Errorf("GET %s: %d %s, want the target", id, status, answer)
+			}
+			if status, answer := send("adm", "PATCH", "/api/network/targets/"+id, `{}`); status != 200 || answer != created {
+				t.Errorf("PATCH %s: %d %s, want the target", id, status, answer)
+			}
+		}
+		if status, answer := send("olga", "POST", "/api/network/targets/1.0/check", `{}`); status != 200 || !strings.HasPrefix(answer, `{"target_id":1,`) {
+			t.Errorf("check of 1.0: %d %s", status, answer)
+		}
+		if status, answer := send("vera", "GET", "/api/network/targets/%201/history", ""); status != 200 || !strings.HasPrefix(answer, `[{"id":1,"target_id":1,`) {
+			t.Errorf("history of ' 1': %d %s", status, answer)
+		}
+		if status, answer := send("adm", "DELETE", "/api/network/targets/1e0", ""); status != 200 || answer != `{"status":"deleted"}` {
+			t.Errorf("delete of 1e0: %d %s", status, answer)
 		}
 	})
 }

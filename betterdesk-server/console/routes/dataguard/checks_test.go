@@ -96,6 +96,43 @@ func TestUpdateWithoutColumnsAnswersThePolicy(t *testing.T) {
 	})
 }
 
+// The id of the address is read as a JavaScript number, on both databases
+// and at both mounts. A value that is no whole number, or one beyond what
+// an id column holds, names no policy: 404 for a read, a change and a
+// delete, where PostgreSQL failed with 500 (BUGS C7).
+func TestPolicyIDsThatNameNoRow(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		created := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/dataguard/policies", Body: replay.Text(`{"name":"Kept"}`)})
+		if created.Status != 201 {
+			t.Fatalf("create: %d %s", created.Status, created.Body)
+		}
+		notFound := `{"error":"Policy not found"}`
+		for _, mount := range []string{"/api/dataguard", "/api/bd"} {
+			for _, id := range []string{"1.5", "abc", "Infinity", "NaN", "1e400", "2147483648", "3000000000", "99999999999999999999", "%C3%BC", "-0", "1x"} {
+				path := mount + "/policies/" + id
+				for _, req := range []replay.Request{
+					{Role: "admin", Method: "GET", Path: path},
+					{Role: "admin", Method: "PATCH", Path: path, Body: replay.Text(`{"name":"x"}`)},
+					{Role: "admin", Method: "DELETE", Path: path},
+				} {
+					if got := w.Do(req); got.Status != 404 || got.Body != notFound {
+						t.Errorf("%s %s: %d %s", req.Method, path, got.Status, got.Body)
+					}
+				}
+			}
+			for _, id := range []string{"1", "01", "1.0", "0x1", "%201", "1e0"} {
+				if got := w.Do(replay.Request{Role: "admin", Method: "GET", Path: mount + "/policies/" + id}); got.Status != 200 || replay.Normalize(got.Body) != replay.Normalize(created.Body) {
+					t.Errorf("GET %s/policies/%s: %d %s", mount, id, got.Status, got.Body)
+				}
+			}
+		}
+		if got := w.Do(replay.Request{Role: "admin", Method: "DELETE", Path: "/api/bd/policies/1.0"}); got.Status != 200 || got.Body != `{"ok":true}` {
+			t.Errorf("DELETE 1.0: %d %s", got.Status, got.Body)
+		}
+	})
+}
+
 // The statistics of no event are zeros on both databases, where SQLite
 // answered null for the four sums (BUGS DG4).
 func TestStatsWithoutEventsAreZero(t *testing.T) {

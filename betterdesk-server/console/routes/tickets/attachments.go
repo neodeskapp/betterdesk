@@ -123,7 +123,7 @@ type attachedDetail struct {
 // written to the attachment folder under the ticket's id, 16 random hex
 // digits and the cleaned name; its row follows, with that name.
 func (h *handlers) attach(w http.ResponseWriter, r *http.Request) {
-	t, err := ticketByID(r.Context(), h.db, ticketID(r, "id"))
+	t, err := h.ticketOf(r)
 	if err != nil {
 		h.serverError(w, r, "Attachment upload error", err)
 		return
@@ -193,7 +193,12 @@ type attachmentList struct {
 
 // attachments answers GET /api/tickets/{id}/attachments.
 func (h *handlers) attachments(w http.ResponseWriter, r *http.Request) {
-	attachments, err := ticketAttachments(r.Context(), h.db, ticketID(r, "id"))
+	id, ok := ticketID(r, "id")
+	if !ok {
+		kit.JSON(w, r, http.StatusOK, attachmentList{Attachments: []attachment{}})
+		return
+	}
+	attachments, err := ticketAttachments(r.Context(), h.db, id)
 	if err != nil {
 		h.serverError(w, r, "Attachments list error", err)
 		return
@@ -205,7 +210,13 @@ func (h *handlers) attachments(w http.ResponseWriter, r *http.Request) {
 // download under its stored name and with its stored type. Conditional
 // and range requests work as for any file the console serves.
 func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
-	a, err := attachmentByID(r.Context(), h.db, ticketID(r, "aid"))
+	var (
+		a   *attachment
+		err error
+	)
+	if id, ok := ticketID(r, "aid"); ok {
+		a, err = attachmentByID(r.Context(), h.db, id)
+	}
 	if err == nil && a == nil {
 		fail(w, r, http.StatusNotFound, "Attachment not found")
 		return

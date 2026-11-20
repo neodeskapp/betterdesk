@@ -12,7 +12,12 @@ import (
 // check now, stores the result and answers {target_id, success, rtt_ms,
 // error, status}, with status_code for an HTTP check.
 func (h *handlers) checkTarget(w http.ResponseWriter, r *http.Request) {
-	target, err := netmonitor.GetTarget(r.Context(), h.db, pathID(r))
+	id, ok := pathID(r)
+	if !ok {
+		fail(w, r, http.StatusNotFound, targetNotFound)
+		return
+	}
+	target, err := netmonitor.GetTarget(r.Context(), h.db, id)
 	if err != nil {
 		fail(w, r, http.StatusInternalServerError, netmonitor.DriverMessage(err))
 		return
@@ -28,7 +33,7 @@ func (h *handlers) checkTarget(w http.ResponseWriter, r *http.Request) {
 
 // history answers GET /targets/{id}/history: the target's checks, the
 // newest first, at most ?limit= of them (100 when it names none), from
-// ?from= to ?to=.
+// ?from= to ?to=. An id that names no row has none.
 func (h *handlers) history(w http.ResponseWriter, r *http.Request) {
 	limit := netmonitor.Num(netmonitor.ParseInt(query(r.URL.RawQuery, "limit").string()).Or(100))
 	filter := netmonitor.HistoryFilter{Limit: &limit}
@@ -40,7 +45,12 @@ func (h *handlers) history(w http.ResponseWriter, r *http.Request) {
 		p := to.param()
 		filter.To = &p
 	}
-	checks, err := netmonitor.CheckHistory(r.Context(), h.db, pathID(r), filter)
+	id, ok := pathID(r)
+	if !ok {
+		kit.JSON(w, r, http.StatusOK, []netmonitor.Check{})
+		return
+	}
+	checks, err := netmonitor.CheckHistory(r.Context(), h.db, id, filter)
 	if err != nil {
 		fail(w, r, http.StatusInternalServerError, netmonitor.DriverMessage(err))
 		return

@@ -19,7 +19,7 @@ type createdComment struct {
 // addComment answers POST /api/tickets/{id}/comments with the body
 // {body, is_internal?}. A viewer's comment is never internal.
 func (h *handlers) addComment(w http.ResponseWriter, r *http.Request) {
-	t, err := ticketByID(r.Context(), h.db, ticketID(r, "id"))
+	t, err := h.ticketOf(r)
 	if err != nil {
 		h.serverError(w, r, "Comment error", err)
 		return
@@ -51,7 +51,12 @@ type commentList struct {
 // comments answers GET /api/tickets/{id}/comments. A viewer does not get
 // the internal ones.
 func (h *handlers) comments(w http.ResponseWriter, r *http.Request) {
-	comments, err := ticketComments(r.Context(), h.db, ticketID(r, "id"))
+	id, ok := ticketID(r, "id")
+	if !ok {
+		kit.JSON(w, r, http.StatusOK, commentList{Comments: []comment{}})
+		return
+	}
+	comments, err := ticketComments(r.Context(), h.db, id)
 	if err != nil {
 		h.serverError(w, r, "Comments list error", err)
 		return

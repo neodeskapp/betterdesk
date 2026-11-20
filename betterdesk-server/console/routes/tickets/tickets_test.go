@@ -152,6 +152,32 @@ func TestTheDeviceRoutesComeLast(t *testing.T) {
 	}
 }
 
+// An id of digits beyond what an id column holds names no ticket and no
+// attachment on either database: 404 for the ticket's routes and the
+// download, no comments and no attachments for the lists, where
+// PostgreSQL failed with 500 (BUGS C7). Leading zeros still name the row.
+func TestIDsBeyondTheColumnNameNoTicket(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		g := newGroup(t, db)
+		g.want(g.do("operator", "POST", "/api/tickets", `{"title":"Printer"}`), 201, `{"success":true,"ticket":{"id":1,"title":"Printer"}}`)
+		notFound := `{"error":"Ticket not found"}`
+		for _, id := range []string{"2147483648", "4294967297", "99999999999999999999", "99999999999999999999999", "1" + strings.Repeat("0", 400)} {
+			g.want(g.do("admin", "GET", "/api/tickets/"+id, ""), 404, notFound)
+			g.want(g.do("admin", "PATCH", "/api/tickets/"+id, `{"title":"x"}`), 404, notFound)
+			g.want(g.do("admin", "POST", "/api/tickets/"+id+"/comments", `{"body":"x"}`), 404, notFound)
+			g.want(g.do("admin", "POST", "/api/tickets/"+id+"/attachments", `{"filename":"a","data":"aGk="}`), 404, notFound)
+			g.want(g.do("admin", "GET", "/api/tickets/"+id+"/comments", ""), 200, `{"comments":[]}`)
+			g.want(g.do("admin", "GET", "/api/tickets/"+id+"/attachments", ""), 200, `{"attachments":[]}`)
+			g.want(g.do("admin", "GET", "/api/tickets/attachments/"+id, ""), 404, `{"error":"Attachment not found"}`)
+			g.want(g.do("admin", "DELETE", "/api/tickets/"+id, ""), 404, notFound)
+		}
+		if rec := g.do("viewer", "GET", "/api/tickets/0000000001", ""); rec.Code != 200 || !strings.Contains(rec.Body.String(), `"title":"Printer"`) {
+			t.Errorf("ticket 0000000001: %d %s", rec.Code, rec.Body.String())
+		}
+		g.want(g.do("admin", "GET", "/api/tickets/2147483647", ""), 404, notFound)
+	})
+}
+
 // What the routes decide by themselves (tests/tickets.permissions.test.js):
 // nobody without a session, reads with device.view, writes and comments
 // with device.edit, as the panel access guard in front of them asks

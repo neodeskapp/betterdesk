@@ -352,3 +352,24 @@ func nodeEvent(id int, member string, value any) func(t *testing.T, w *replay.Wo
 		}
 	}
 }
+
+// C7: an id that is no whole number, or one beyond 2147483647, names no
+// policy on either database, where PostgreSQL failed with 500.
+var _ = policyFixes.Add("C7", noPolicy(
+	"admin GET /api/dataguard/policies/1.5 ", "admin GET /api/bd/policies/1.5 ", `admin PATCH /api/bd/policies/1.5 {"scope":"set-by-1.5"}`,
+	"admin GET /api/dataguard/policies/abc ", "admin GET /api/bd/policies/abc ", `admin PATCH /api/bd/policies/abc {"scope":"set-by-abc"}`,
+	"admin GET /api/dataguard/policies/Infinity ", "admin GET /api/bd/policies/Infinity ", `admin PATCH /api/bd/policies/Infinity {"scope":"set-by-Infinity"}`,
+	"admin GET /api/dataguard/policies/3000000000 ", "admin GET /api/bd/policies/3000000000 ", `admin PATCH /api/bd/policies/3000000000 {"scope":"set-by-3000000000"}`,
+	"admin GET /api/dataguard/policies/99999999999999999999 ", "admin GET /api/bd/policies/99999999999999999999 ",
+	`admin PATCH /api/bd/policies/99999999999999999999 {"scope":"set-by-99999999999999999999"}`,
+	"admin DELETE /api/bd/policies/abc ", "admin DELETE /api/bd/policies/1e400 ", "admin DELETE /api/bd/policies/3.5 ",
+))
+
+// noPolicy are fixes of PostgreSQL steps that now find no policy.
+func noPolicy(keys ...string) map[string]replay.Fix {
+	steps := make(map[string]replay.Fix, len(keys))
+	for _, key := range keys {
+		steps[key] = replay.Fix{Dialect: "postgres", Status: 404, Answer: `{"error":"Policy not found"}`}
+	}
+	return steps
+}

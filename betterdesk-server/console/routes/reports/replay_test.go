@@ -508,3 +508,22 @@ func TestNodeAnswers(t *testing.T) {
 		}
 	})
 }
+
+// C7: an id that is no whole number, or one beyond 2147483647, names no
+// saved report on either database, where PostgreSQL failed with 500.
+var _ = reportFixes.Add("C7", noSavedReport())
+
+func noSavedReport() map[string]replay.Fix {
+	steps := map[string]replay.Fix{}
+	for _, role := range []string{"viewer", "operator", "server_admin", "global_admin", "super_admin", "admin"} {
+		for _, id := range []string{"1.5", "abc", "Infinity", "99999999999", "%C3%BC"} {
+			steps[role+" GET /api/reports/saved/"+id+" "] = replay.Fix{Dialect: "postgres", Status: 404, Answer: `{"error":"Saved report not found"}`}
+		}
+	}
+	for _, role := range []string{"super_admin", "admin"} {
+		for _, id := range []string{"1.5", "abc", "Infinity", "99999999999"} {
+			steps[role+" DELETE /api/reports/saved/"+id+" "] = replay.Fix{Dialect: "postgres", Status: 404, Answer: `{"error":"Report not found"}`}
+		}
+	}
+	return steps
+}

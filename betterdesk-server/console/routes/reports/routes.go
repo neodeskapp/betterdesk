@@ -9,6 +9,7 @@ package reports
 
 import (
 	"errors"
+	"math"
 	"net/http"
 	"time"
 
@@ -103,9 +104,18 @@ func filtersOf(body middleware.JSONObject) engine.Filters {
 	return engine.Filters{From: jsbind.Of(body.Get("from")), To: jsbind.Of(body.Get("to"))}
 }
 
-// number is Number(req.params[name]).
-func number(r *http.Request, name string) jsbind.Value {
-	return jsbind.Number(jsbind.ParseNumber(r.PathValue(name)))
+// maxID is the largest id an id column holds: SERIAL on PostgreSQL.
+const maxID = 1<<31 - 1
+
+// savedID is Number(req.params.id). ok is false for a value that is no
+// whole number or lies beyond what an id column holds, which names no
+// row on either database.
+func savedID(r *http.Request) (id jsbind.Value, ok bool) {
+	n := jsbind.ParseNumber(r.PathValue("id"))
+	if n != math.Trunc(n) || math.Abs(n) > maxID {
+		return jsbind.Undefined, false
+	}
+	return jsbind.Number(n), true
 }
 
 // types answers GET /api/reports/types.
@@ -182,7 +192,12 @@ func (h *handlers) listSaved(w http.ResponseWriter, r *http.Request) {
 // getSaved answers GET /api/reports/saved/{id}: the saved report with its
 // payload parsed. A payload that is text and no JSON is {}.
 func (h *handlers) getSaved(w http.ResponseWriter, r *http.Request) {
-	report, err := savedReportByID(r.Context(), h.db, number(r, "id"))
+	id, ok := savedID(r)
+	if !ok {
+		fail(w, r, http.StatusNotFound, "Saved report not found")
+		return
+	}
+	report, err := savedReportByID(r.Context(), h.db, id)
 	if err != nil {
 		h.log.Error("get saved/:id error:", err)
 		fail(w, r, http.StatusInternalServerError, "Failed to fetch report")
@@ -250,7 +265,12 @@ type deleted struct {
 
 // deleteSaved answers DELETE /api/reports/saved/{id}.
 func (h *handlers) deleteSaved(w http.ResponseWriter, r *http.Request) {
-	removed, err := deleteSavedReport(r.Context(), h.db, number(r, "id"))
+	id, ok := savedID(r)
+	if !ok {
+		fail(w, r, http.StatusNotFound, "Report not found")
+		return
+	}
+	removed, err := deleteSavedReport(r.Context(), h.db, id)
 	if err != nil {
 		h.log.Error("delete saved error:", err)
 		fail(w, r, http.StatusInternalServerError, "Failed to delete report")

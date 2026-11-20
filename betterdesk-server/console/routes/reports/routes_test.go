@@ -255,6 +255,36 @@ func TestSavedReportWithAPayloadThatIsNoJSON(t *testing.T) {
 	})
 }
 
+// TestSavedReportIDsThatNameNoRow: the id of the address is read as a
+// JavaScript number, on both databases. A value that is no whole number,
+// or one beyond what an id column holds, names no saved report: 404 for a
+// read and a delete, where PostgreSQL failed with 500 (BUGS C7).
+func TestSavedReportIDsThatNameNoRow(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		insert := `INSERT INTO saved_reports (id, title, report_type, filters, payload, created_by) VALUES (2, 'Kept', 'devices', '{}', '{}', 'admin')`
+		if _, err := db.Exec(context.Background(), insert); err != nil {
+			t.Fatal(err)
+		}
+		for _, id := range []string{"1.5", "abc", "Infinity", "-Infinity", "NaN", "1e400", "2147483648", "99999999999", "-2147483649", "%C3%BC", "-0", "2x"} {
+			if got := w.As("viewer").Do("GET", "/api/reports/saved/"+id, ""); got.Status != 404 || got.Body != `{"error":"Saved report not found"}` {
+				t.Errorf("GET %s: %d %s", id, got.Status, got.Body)
+			}
+			if got := w.As("admin").Do("DELETE", "/api/reports/saved/"+id, ""); got.Status != 404 || got.Body != `{"error":"Report not found"}` {
+				t.Errorf("DELETE %s: %d %s", id, got.Status, got.Body)
+			}
+		}
+		for _, id := range []string{"2", "02", "2.0", "0x2", "%20%202%20", "2e0", "0b10"} {
+			if got := w.As("viewer").Do("GET", "/api/reports/saved/"+id, ""); got.Status != 200 || !strings.Contains(got.Body, `"title":"Kept"`) {
+				t.Errorf("GET %s: %d %s", id, got.Status, got.Body)
+			}
+		}
+		if got := w.As("admin").Do("DELETE", "/api/reports/saved/2.0", ""); got.Status != 200 || got.Body != `{"ok":true}` {
+			t.Errorf("DELETE 2.0: %d %s", got.Status, got.Body)
+		}
+	})
+}
+
 // TestSaveRefusesATitleThatIsNoText: a saved report's title is a text; a
 // number, a flag, a list or an object is 400 and nothing is stored, and a
 // title that is missing, null or empty gets the default title (BUGS.md

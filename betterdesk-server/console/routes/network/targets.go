@@ -1,6 +1,7 @@
 package network
 
 import (
+	"errors"
 	"math"
 	"net/http"
 	"strconv"
@@ -98,9 +99,39 @@ func validCheckType(v middleware.Value) bool {
 	return false
 }
 
-// pathID is req.params.id as a statement parameter.
-func pathID(r *http.Request) netmonitor.Param {
-	return netmonitor.Text(r.PathValue("id"))
+// maxID is the largest id an id column holds: SERIAL on PostgreSQL.
+const maxID = 1<<31 - 1
+
+// pathID reads req.params.id the way SQLite compares a text with an id
+// column, on both databases: a decimal number, with spaces around it, a
+// sign, a fraction or an exponent, names the row of its value when that is
+// a whole number. ok is false for any other text (hexadecimal included)
+// and for a number beyond what an id column holds, which name no row.
+func pathID(r *http.Request) (id netmonitor.Param, ok bool) {
+	n, ok := decimalNumber(r.PathValue("id"))
+	if !ok || n != math.Trunc(n) || math.Abs(n) > maxID {
+		return netmonitor.Param{}, false
+	}
+	return netmonitor.Num(netmonitor.Number(n)), true
+}
+
+// decimalNumber reads s as SQLite reads a number in text: spaces around
+// it, an optional sign, digits with at most one decimal point (at least one
+// digit in all), and an optional exponent of digits with an optional sign.
+// strconv.ParseFloat takes exactly that once the text holds no other
+// characters, which keeps out its names (Inf, NaN), hexadecimal and
+// underscores.
+func decimalNumber(s string) (float64, bool) {
+	s = strings.Trim(s, " \t\n\v\f\r")
+	if strings.Trim(s, "0123456789+-.eE") != "" {
+		return 0, false
+	}
+	// A number too large for a float64 is infinite, as in SQLite
+	n, err := strconv.ParseFloat(s, 64)
+	if err != nil && !errors.Is(err, strconv.ErrRange) {
+		return 0, false
+	}
+	return n, true
 }
 
 // listTargets answers GET /targets: the targets by name, then id.
@@ -290,7 +321,12 @@ func (h *handlers) logError(what string, err error) {
 
 // getTarget answers GET /targets/{id}.
 func (h *handlers) getTarget(w http.ResponseWriter, r *http.Request) {
-	target, err := netmonitor.GetTarget(r.Context(), h.db, pathID(r))
+	id, ok := pathID(r)
+	if !ok {
+		fail(w, r, http.StatusNotFound, targetNotFound)
+		return
+	}
+	target, err := netmonitor.GetTarget(r.Context(), h.db, id)
 	if err != nil {
 		fail(w, r, http.StatusInternalServerError, netmonitor.DriverMessage(err))
 		return
@@ -311,7 +347,12 @@ func (h *handlers) updateTarget(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, problem)
 		return
 	}
-	target, err := netmonitor.UpdateTarget(detached(r), h.db, pathID(r), changes)
+	id, ok := pathID(r)
+	if !ok {
+		fail(w, r, http.StatusNotFound, targetNotFound)
+		return
+	}
+	target, err := netmonitor.UpdateTarget(detached(r), h.db, id, changes)
 	if err != nil {
 		h.logError("update a network target:", err)
 		fail(w, r, http.StatusBadRequest, notSaved)
@@ -330,7 +371,12 @@ type deleted struct {
 
 // deleteTarget answers DELETE /targets/{id}.
 func (h *handlers) deleteTarget(w http.ResponseWriter, r *http.Request) {
-	ok, err := netmonitor.DeleteTarget(detached(r), h.db, pathID(r))
+	id, ok := pathID(r)
+	if !ok {
+		fail(w, r, http.StatusNotFound, targetNotFound)
+		return
+	}
+	ok, err := netmonitor.DeleteTarget(detached(r), h.db, id)
 	if err != nil {
 		fail(w, r, http.StatusInternalServerError, netmonitor.DriverMessage(err))
 		return

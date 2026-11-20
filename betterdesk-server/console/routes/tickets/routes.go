@@ -130,9 +130,26 @@ func (h *handlers) slaDue(priority string) string {
 	return store.ISOTime(due)
 }
 
-// ticketID is +req.params.id: the digits of the path as a number.
-func ticketID(r *http.Request, name string) jsbind.Value {
-	return jsbind.Number(jsbind.ParseNumber(r.PathValue(name)))
+// maxID is the largest id an id column holds: SERIAL on PostgreSQL.
+const maxID = 1<<31 - 1
+
+// ticketID is +req.params[name]: the digits of the path as a number. ok is
+// false for a number beyond maxID, which names no row on either database.
+func ticketID(r *http.Request, name string) (id jsbind.Value, ok bool) {
+	n := jsbind.ParseNumber(r.PathValue(name))
+	if n > maxID {
+		return jsbind.Undefined, false
+	}
+	return jsbind.Number(n), true
+}
+
+// ticketOf reads the ticket the address names; nil when there is none.
+func (h *handlers) ticketOf(r *http.Request) (*ticket, error) {
+	id, ok := ticketID(r, "id")
+	if !ok {
+		return nil, nil
+	}
+	return ticketByID(r.Context(), h.db, id)
 }
 
 // number is `${n}` for a row id.
@@ -312,7 +329,7 @@ func visible(r *http.Request, comments []comment) []comment {
 // get answers GET /api/tickets/{id}: the ticket with its comments and
 // attachments.
 func (h *handlers) get(w http.ResponseWriter, r *http.Request) {
-	t, err := ticketByID(r.Context(), h.db, ticketID(r, "id"))
+	t, err := h.ticketOf(r)
 	if err == nil && t == nil {
 		fail(w, r, http.StatusNotFound, "Ticket not found")
 		return
@@ -339,7 +356,7 @@ func (h *handlers) get(w http.ResponseWriter, r *http.Request) {
 // or null, status, priority and category are each one of the known ones,
 // device_id is a device id, empty or null, and sla_due_at a time or null.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
-	t, err := ticketByID(r.Context(), h.db, ticketID(r, "id"))
+	t, err := h.ticketOf(r)
 	if err != nil {
 		h.serverError(w, r, "Update error", err)
 		return
@@ -433,7 +450,7 @@ func utf16Length(s string) int {
 // remove answers DELETE /api/tickets/{id}: the ticket goes with its
 // comments, its attachments and their files.
 func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
-	t, err := ticketByID(r.Context(), h.db, ticketID(r, "id"))
+	t, err := h.ticketOf(r)
 	if err == nil && t == nil {
 		fail(w, r, http.StatusNotFound, "Ticket not found")
 		return

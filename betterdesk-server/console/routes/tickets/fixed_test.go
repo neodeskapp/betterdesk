@@ -375,3 +375,18 @@ var _ = ticketFixes.Add("TK10", map[string]replay.Fix{
 	"admin GET /api/tickets/attachments/2 ": {NodeStatus: 500, Status: 404, Answer: `{"error":"Attachment file missing"}`},
 	"admin GET /api/tickets/attachments/3 ": {NodeStatus: 500, Status: 404, Answer: `{"error":"Attachment file missing"}`},
 })
+
+// C7: an id of digits beyond 2147483647 names no ticket on either
+// database, where PostgreSQL failed with 500: the ticket is not found and
+// its lists are empty, as on SQLite.
+var _ = ticketFixes.Add("C7", map[string]replay.Fix{
+	"admin GET /api/tickets/2147483648 ":                       {Dialect: "postgres", Status: 404, Answer: `{"error":"Ticket not found"}`},
+	"admin GET /api/tickets/2147483648/comments ":              {Dialect: "postgres", Status: 200, Answer: `{"comments":[]}`},
+	"admin GET /api/tickets/2147483648/attachments ":           {Dialect: "postgres", Status: 200, Answer: `{"attachments":[]}`},
+	"admin GET /api/tickets/99999999999999999999 ":             {Dialect: "postgres", Status: 404, Answer: `{"error":"Ticket not found"}`},
+	"admin GET /api/tickets/99999999999999999999/comments ":    {Dialect: "postgres", Status: 200, Answer: `{"comments":[]}`},
+	"admin GET /api/tickets/99999999999999999999/attachments ": {Dialect: "postgres", Status: 200, Answer: `{"attachments":[]}`},
+	"admin DELETE /api/tickets/99999999999999999999 ":          {Dialect: "postgres", Status: 404, Answer: `{"error":"Ticket not found"}`},
+	"admin GET /api/tickets/attachments/2147483648 ":           {Dialect: "postgres", Status: 404, Answer: `{"error":"Attachment not found"}`},
+	"admin GET /api/tickets/attachments/99999999999999999999 ": {Dialect: "postgres", Status: 404, Answer: `{"error":"Attachment not found"}`},
+})

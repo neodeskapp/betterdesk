@@ -8,6 +8,7 @@
 package dataguard
 
 import (
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -47,9 +48,18 @@ func fail(w http.ResponseWriter, r *http.Request, status int, message string) {
 	kit.JSON(w, r, status, failure{Error: message})
 }
 
-// number is Number(req.params[name]).
-func number(r *http.Request, name string) jsbind.Value {
-	return jsbind.Number(jsbind.ParseNumber(r.PathValue(name)))
+// maxID is the largest id an id column holds: SERIAL on PostgreSQL.
+const maxID = 1<<31 - 1
+
+// policyID is Number(req.params.id). ok is false for a value that is no
+// whole number or lies beyond what an id column holds, which names no
+// policy on either database.
+func policyID(r *http.Request) (id jsbind.Value, ok bool) {
+	n := jsbind.ParseNumber(r.PathValue("id"))
+	if n != math.Trunc(n) || math.Abs(n) > maxID {
+		return jsbind.Undefined, false
+	}
+	return jsbind.Number(n), true
 }
 
 // policies answers GET policies: every policy with its rules as a list.
@@ -65,7 +75,12 @@ func (h *handlers) policies(w http.ResponseWriter, r *http.Request) {
 
 // policy answers GET policies/{id}.
 func (h *handlers) policy(w http.ResponseWriter, r *http.Request) {
-	policy, err := policyByID(r.Context(), h.db, number(r, "id"))
+	id, ok := policyID(r)
+	if !ok {
+		fail(w, r, http.StatusNotFound, "Policy not found")
+		return
+	}
+	policy, err := policyByID(r.Context(), h.db, id)
 	if err != nil {
 		h.log.Error("GET /policies/:id error:", err)
 		fail(w, r, http.StatusInternalServerError, "Failed to fetch policy")
@@ -182,7 +197,11 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 // also null), enabled a flag and rules a list. A body that names none
 // answers the policy as it is.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
-	id := number(r, "id")
+	id, ok := policyID(r)
+	if !ok {
+		fail(w, r, http.StatusNotFound, "Policy not found")
+		return
+	}
 	exists, err := policyExists(r.Context(), h.db, id)
 	if err != nil {
 		h.log.Error("PATCH /policies/:id error:", err)
@@ -238,7 +257,12 @@ type done struct {
 
 // remove answers DELETE policies/{id}.
 func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
-	ok, err := deletePolicy(r.Context(), h.db, number(r, "id"))
+	id, ok := policyID(r)
+	if !ok {
+		fail(w, r, http.StatusNotFound, "Policy not found")
+		return
+	}
+	ok, err := deletePolicy(r.Context(), h.db, id)
 	if err != nil {
 		h.log.Error("DELETE /policies/:id error:", err)
 		fail(w, r, http.StatusInternalServerError, "Failed to delete policy")
