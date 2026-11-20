@@ -32,6 +32,7 @@ var scenarioFixes = []scenarioFix{
 	{"AN7", noCodesInOtherLists},
 	{"AN8", strictSecrets},
 	{"S12", oneCredentialWriter},
+	{"UM21", stopAtAccountLockouts},
 	{"AL4", maskNamesInSignInLogs},
 	{"AN6", logTheWrittenCredentialsPath},
 }
@@ -376,4 +377,40 @@ func strictSecrets(sc *scenarioVector) bool {
 		}
 	}
 	return changed
+}
+
+// stopAtAccountLockouts: failed sign-ins lock an account for the address
+// they came from only, counted from the attempts themselves (UM21,
+// DECISIONS A68); Node locked the name for every address and kept the
+// lockout in account_lockouts, with its end on the scenario's clock. A
+// scenario is compared up to its first lockout check of a name that has
+// failed attempts by then, where the two rules part, and its rows at the
+// end are not; TestLockoutIsPerAccountAndAddress and
+// TestLockoutCountsWithinTheWindow hold the new rule. A scenario without
+// such a check is compared whole, without the lockouts Node wrote.
+func stopAtAccountLockouts(sc *scenarioVector) bool {
+	failed := map[string]bool{}
+	for i := range sc.Steps {
+		step := &sc.Steps[i]
+		if len(step.Args) == 0 {
+			continue
+		}
+		name := string(step.Args[0])
+		switch step.Fn {
+		case "recordAttempt":
+			if len(step.Args) > 2 && string(step.Args[2]) == "false" {
+				failed[name] = true
+			}
+		case "checkBruteForce":
+			if failed[name] || strings.Contains(string(step.Result), reasonAccountLocked) {
+				sc.Steps, sc.skipTables = sc.Steps[:i], true
+				return true
+			}
+		}
+	}
+	if _, wrote := sc.Tables["account_lockouts"]; wrote {
+		delete(sc.Tables, "account_lockouts")
+		return true
+	}
+	return false
 }

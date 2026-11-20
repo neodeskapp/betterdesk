@@ -110,15 +110,24 @@ func roundWait(text string) string {
 // JSON type as each database driver bound them, the order of the checks,
 // a name locked by its own failures, and the attempts, lockouts and audit
 // entries all of that left.
+//
+// UM21: a lockout counts the failures of an account from one address
+// (DECISIONS A68), and the console writes no rows to account_lockouts.
+// Each sign-in of the recording comes from an address of its own, so where
+// Node refused one for the lockout of the name (seeded, or made by the
+// name's failures from other addresses) the console goes on to the
+// password: the step is not refused, and the rows it leaves are not
+// compared. The address limit stays as Node had it.
 func TestLockoutAnswersOfNode(t *testing.T) {
 	eachWorld(t, setup{trustProxy: "true", env: map[string]string{"LOGIN_RATE_LIMIT_MAX": "1000000"}}, func(t *testing.T, w *world) {
 		var rec lockoutRecording
 		readRecording(t, "lockout_"+dialectName(w.db)+".json", &rec)
 		seedRecording(w, rec.Seed)
+		seededLockouts := w.rows(rec.Selects["lockouts"].SQL)
 		// The addresses of the sign-ins UM20 refuses: each step has an
 		// address of its own, so the rows Node wrote for them are found
 		// by it
-		refusedFrom := map[string]bool{}
+		refusedFrom, unlockedFrom := map[string]bool{}, map[string]bool{}
 		for _, step := range rec.Steps {
 			if nameNoText(step.Body) && step.Status != http.StatusBadRequest {
 				// UM20: a user name that is not text is refused as a
@@ -149,6 +158,14 @@ func TestLockoutAnswersOfNode(t *testing.T) {
 				}
 				continue
 			}
+			if step.Status == http.StatusTooManyRequests && !strings.HasPrefix(step.Label, "address with") {
+				got := w.agentFrom(step.IP).post("/api/auth/login", step.Body)
+				if got.status == http.StatusTooManyRequests {
+					t.Errorf("%s (UM21): %d %s; the lockout of the name alone refuses no address", step.Label, got.status, got.body)
+				}
+				unlockedFrom[step.IP] = true
+				continue
+			}
 			got := w.agentFrom(step.IP).post("/api/auth/login", step.Body)
 			wantBody := retryAfter.ReplaceAllStringFunc(step.Answer, func(m string) string { return `"retry_after":` + roundWait(m[14:]) })
 			gotBody := retryAfter.ReplaceAllStringFunc(got.body, func(m string) string { return `"retry_after":` + roundWait(m[14:]) })
@@ -162,29 +179,32 @@ func TestLockoutAnswersOfNode(t *testing.T) {
 		if len(refusedFrom) == 0 {
 			t.Error("the fix of UM20 changes no step of the recording")
 		}
-		// The names Node noted attempts under for the refused sign-ins,
-		// whose lockouts the console does not write either
-		refusedNames := map[any]bool{}
-		for _, row := range rec.Selects["attempts"].Rows {
-			if refusedFrom[fmt.Sprint(row["ip_address"])] {
-				refusedNames[row["username"]] = true
-			}
+		if len(unlockedFrom) == 0 {
+			t.Error("the fix of UM21 changes no step of the recording")
 		}
-		for _, name := range []string{"attempts", "lockouts", "audit"} {
+		// The rows of the steps the fixes change are left out on both
+		// sides: each such step has its address
+		skip := func(ip string) bool { return refusedFrom[ip] || unlockedFrom[ip] }
+		for name, column := range map[string]int{"attempts": 1, "audit": 2} {
 			sel := rec.Selects[name]
-			var want []string
+			var want, got []string
 			for _, row := range sel.Rows {
-				if refusedFrom[fmt.Sprint(row["ip_address"])] || (name == "lockouts" && refusedNames[row["username"]]) {
-					continue
+				if !skip(fmt.Sprint(row["ip_address"])) {
+					want = append(want, rowLine(sel.SQL, row))
 				}
-				want = append(want, rowLine(sel.SQL, row))
 			}
-			got := w.rows(sel.SQL)
+			for _, line := range w.rows(sel.SQL) {
+				if parts := strings.Split(line, "|"); len(parts) <= column || !skip(parts[column]) {
+					got = append(got, line)
+				}
+			}
 			if name == "audit" {
 				want, got = withoutSignInNames(want), withoutSignInNames(got)
 			}
 			equal(t, name, got, want)
 		}
+		// The console writes no lockouts: the seeded ones are left
+		equal(t, "lockouts", w.rows(rec.Selects["lockouts"].SQL), seededLockouts)
 		if len(rec.Steps) < 60 {
 			t.Errorf("the recording has only %d requests", len(rec.Steps))
 		}

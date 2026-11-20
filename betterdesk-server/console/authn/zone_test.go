@@ -49,7 +49,7 @@ func secondsFromNow(t *testing.T, db *store.DB, query string, args ...any) float
 // TestLockoutAndTokenTimesInAnotherZone: on a PostgreSQL server whose
 // session time zone is not UTC, a lockout lasts its 15 minutes and an
 // access token its days, and the seconds a locked account has to wait are
-// those of the stored end, also when the process runs in another zone
+// those of the stored failure, also when the process runs in another zone
 // (BUGS.md AN2, AN3).
 func TestLockoutAndTokenTimesInAnotherZone(t *testing.T) {
 	base := storetest.Prepare(t, storetest.Postgres(t), storetest.ConsoleFirst)
@@ -73,11 +73,7 @@ func TestLockoutAndTokenTimesInAnotherZone(t *testing.T) {
 			if err := s.RecordAttempt(ctx, "alice", "198.51.100.7", false); err != nil {
 				t.Fatal(err)
 			}
-			left := secondsFromNow(t, db, `SELECT EXTRACT(EPOCH FROM locked_until - NOW()) FROM account_lockouts WHERE username = 'alice'`)
-			if left < 840 || left > 900 {
-				t.Errorf("the lockout ends in %.0f seconds, want 900", left)
-			}
-			check, err := s.CheckBruteForce(ctx, "alice", "")
+			check, err := s.CheckBruteForce(ctx, "alice", "198.51.100.7")
 			if err != nil || !check.Blocked || check.RetryAfter < 840 || check.RetryAfter > 900 {
 				t.Errorf("check after the lockout: %+v, %v; want blocked for 900 seconds", check, err)
 			}
@@ -88,7 +84,7 @@ func TestLockoutAndTokenTimesInAnotherZone(t *testing.T) {
 				t.Fatal(err)
 			}
 			week := float64(7 * 24 * 3600)
-			left = secondsFromNow(t, db, `SELECT EXTRACT(EPOCH FROM expires_at - NOW()) FROM access_tokens WHERE user_id = ?`, id)
+			left := secondsFromNow(t, db, `SELECT EXTRACT(EPOCH FROM expires_at - NOW()) FROM access_tokens WHERE user_id = ?`, id)
 			if left < week-60 || left > week {
 				t.Errorf("the token expires in %.0f seconds, want %.0f", left, week)
 			}
@@ -96,13 +92,13 @@ func TestLockoutAndTokenTimesInAnotherZone(t *testing.T) {
 				t.Errorf("the new token: %v, %v", user, err)
 			}
 
-			// The wait counts to the millisecond of the stored end: 600.5
-			// seconds are 601 to wait
+			// The wait counts to the millisecond of the stored failure: an
+			// end 600.5 seconds away is 601 to wait
 			now := time.Now().Add(time.Hour).Truncate(time.Second)
 			s.now = func() time.Time { return now }
-			end := now.Add(600*time.Second + 500*time.Millisecond)
-			mustExec(t, db, `UPDATE account_lockouts SET locked_until = ? WHERE username = 'alice'`, end.UTC().Format("2006-01-02 15:04:05.000")+"+00")
-			check, err = s.CheckBruteForce(ctx, "alice", "")
+			failed := now.Add(600*time.Second + 500*time.Millisecond - 15*time.Minute)
+			mustExec(t, db, `UPDATE login_attempts SET created_at = ? WHERE username = 'alice'`, failed.UTC().Format("2006-01-02 15:04:05.000")+"+00")
+			check, err = s.CheckBruteForce(ctx, "alice", "198.51.100.7")
 			if err != nil || !check.Blocked || check.RetryAfter != 601 {
 				t.Errorf("check of an end 600.5 seconds away: %+v, %v; want 601 seconds", check, err)
 			}

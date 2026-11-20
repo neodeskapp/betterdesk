@@ -143,15 +143,27 @@ func lockedOut(seconds int) string {
 	return fmt.Sprintf(`{"success":false,"error":"Too many sign-in attempts. Please try again later.","code":"account_locked","retry_after":%d}`, seconds)
 }
 
+// failFrom writes failed attempts of a name from an address, made at the
+// database's clock now or the given minutes ago.
+func failFrom(w *world, name, ip string, n, minutesAgo int) {
+	w.t.Helper()
+	for i := 0; i < n; i++ {
+		w.exec(`INSERT INTO login_attempts (username, ip_address, success, created_at) VALUES (?, ?, `+w.db.Pick("0", "false")+`, `+
+			w.db.Pick(`datetime('now', ?)`, `NOW() + CAST(? AS INTERVAL)`)+`)`, name, ip, fmt.Sprintf("-%d minutes", minutesAgo))
+	}
+}
+
+// Ten failed attempts of an account from one address lock the account for
+// that address: the right password from there is refused and not even
+// looked at, while the account signs in from another address and another
+// account from the same one (BUGS UM21).
 func TestLoginRefusesALockedAccount(t *testing.T) {
-	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+	eachWorld(t, setup{trustProxy: "loopback"}, func(t *testing.T, w *world) {
 		w.addUser(user{name: "alice"})
 		w.addUser(user{name: "bob"})
-		w.exec(`INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES ('alice', ` +
-			w.db.Pick(`strftime('%Y-%m-%d %H:%M:%f', 'now', '+600 seconds')`, `NOW() + INTERVAL '600 seconds'`) + `, 10)`)
-		a := w.agent()
+		failFrom(w, "alice", "198.51.100.30", 10, 5)
+		a := w.agentFrom("198.51.100.30")
 
-		// The right password does not help, and it is not even looked at
 		res := a.post("/api/auth/login", login("alice", password))
 		if res.status != http.StatusTooManyRequests || (res.body != lockedOut(600) && res.body != lockedOut(599)) {
 			t.Errorf("locked account: %d %s", res.status, res.body)
@@ -162,25 +174,27 @@ func TestLoginRefusesALockedAccount(t *testing.T) {
 		if res.cookie("bd.sid") != "" {
 			t.Errorf("a refused sign-in set a session cookie: %q", res.cookies())
 		}
-		equal(t, "audit", w.audit(), []string{"login_blocked|Account/IP locked; ip=127.0.0.1|127.0.0.1|0"})
-		equal(t, "attempts", w.attempts(), nil)
-		if n := w.int(`SELECT COUNT(*) FROM account_lockouts WHERE username = 'alice'`); n != 1 {
-			t.Error("the refused sign-in removed the lockout")
+		equal(t, "audit", w.audit(), []string{"login_blocked|Account/IP locked; ip=198.51.100.30|198.51.100.30|0"})
+		if n := len(w.attempts()); n != 10 {
+			t.Errorf("%d attempts after the refused sign-in, want the 10 failures", n)
 		}
 		want(t, "still signed out", a.get("/api/auth/verify"), http.StatusUnauthorized, notSignedIn)
 
 		// Another account from the same address signs in
-		res = a.post("/api/auth/login", login("bob", password))
-		if res.status != http.StatusOK {
+		if res := a.post("/api/auth/login", login("bob", password)); res.status != http.StatusOK {
 			t.Errorf("another account: %d %s", res.status, res.body)
+		}
+		// The account signs in from another address
+		if res := w.agentFrom("198.51.100.31").post("/api/auth/login", login("alice", password)); res.status != http.StatusOK {
+			t.Errorf("the locked account from another address: %d %s", res.status, res.body)
 		}
 
 		// The checks of the body come first
 		want(t, "no password", a.post("/api/auth/login", `{"username":"alice"}`), http.StatusBadRequest, invalidCredentials)
 
 		// A lockout that ended does not refuse
-		w.exec(`UPDATE account_lockouts SET locked_until = ` + w.db.Pick(`'2000-01-01 00:00:00'`, `'2000-01-01 00:00:00+00'`))
-		if res := w.agent().post("/api/auth/login", login("alice", password)); res.status != http.StatusOK {
+		w.exec(`UPDATE login_attempts SET created_at = ` + w.db.Pick(`datetime('now', '-20 minutes')`, `NOW() - INTERVAL '20 minutes'`))
+		if res := a.post("/api/auth/login", login("alice", password)); res.status != http.StatusOK {
 			t.Errorf("after the lockout: %d %s", res.status, res.body)
 		}
 	})
@@ -214,11 +228,11 @@ func TestLoginRefusesAnAddressWithTooManyFailures(t *testing.T) {
 }
 
 // A user name that is not text is refused before the lockout is looked
-// up, also where a lockout of its text form exists (BUGS UM20).
+// up, also where its text form is locked (BUGS UM20).
 func TestLoginLockoutOfNamesThatAreNoText(t *testing.T) {
 	eachWorld(t, setup{}, func(t *testing.T, w *world) {
 		for _, name := range []string{"12345.0", "12345", "abc"} {
-			w.exec(`INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES (?, '2099-01-01 00:00:00', 10)`, name)
+			failFrom(w, name, "127.0.0.1", 10, 0)
 		}
 		want(t, "number with a lockout", w.agent().post("/api/auth/login", `{"username":12345,"password":"x"}`), http.StatusBadRequest, invalidCredentials)
 		want(t, "list with a lockout", w.agent().post("/api/auth/login", `{"username":["abc"],"password":"x"}`), http.StatusBadRequest, invalidCredentials)
@@ -226,12 +240,13 @@ func TestLoginLockoutOfNamesThatAreNoText(t *testing.T) {
 	})
 }
 
-// A lockout whose end is no time the console can read refuses for a
-// minute.
+// A lockout whose last failure has a time the console cannot read (SQLite
+// holds any text) refuses for a minute.
 func TestLoginLockoutWithAnEndThatIsNoTime(t *testing.T) {
 	w := newWorld(t, nil, setup{})
 	w.addUser(user{name: "alice"})
-	w.exec(`INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES ('alice', 'soon', 10)`)
+	failFrom(w, "alice", "127.0.0.1", 9, 0)
+	w.exec(`INSERT INTO login_attempts (username, ip_address, success, created_at) VALUES ('alice', '127.0.0.1', 0, 'soon')`)
 	res := w.agent().post("/api/auth/login", login("alice", password))
 	want(t, "unreadable end", res, http.StatusTooManyRequests, lockedOut(60))
 	if retry := res.header.Get("Retry-After"); retry != "60" {
@@ -239,23 +254,34 @@ func TestLoginLockoutWithAnEndThatIsNoTime(t *testing.T) {
 	}
 }
 
-// Ten failed attempts for a name lock it: the eleventh sign-in is refused
-// before its password is looked at, the right one included.
+// Ten failed attempts for a name from one address lock it there: the
+// eleventh sign-in from that address is refused before its password is
+// looked at, the right one included. Ten failures spread over ten
+// addresses lock nothing (BUGS UM21).
 func TestLoginLockoutAfterTenFailures(t *testing.T) {
-	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+	eachWorld(t, setup{trustProxy: "loopback"}, func(t *testing.T, w *world) {
 		w.addUser(user{name: "alice"})
-		a := w.agent()
+		for i := 1; i <= 10; i++ {
+			from := w.agentFrom(fmt.Sprintf("198.51.100.%d", i))
+			if res := from.post("/api/auth/login", login("alice", "not-the-password")); res.status != http.StatusUnauthorized {
+				t.Fatalf("failure %d from its own address: %d %s", i, res.status, res.body)
+			}
+		}
+		if res := w.agentFrom("198.51.100.1").post("/api/auth/login", login("alice", password)); res.status != http.StatusOK {
+			t.Errorf("after ten failures from ten addresses: %d %s", res.status, res.body)
+		}
+		a := w.agentFrom("203.0.113.40")
 		for i := 1; i <= 10; i++ {
 			if res := a.post("/api/auth/login", login("alice", "not-the-password")); res.status != http.StatusUnauthorized {
-				t.Fatalf("failure %d: %d %s", i, res.status, res.body)
+				t.Fatalf("failure %d from one address: %d %s", i, res.status, res.body)
 			}
 		}
 		res := a.post("/api/auth/login", login("alice", password))
 		if res.status != http.StatusTooManyRequests || (res.body != lockedOut(900) && res.body != lockedOut(899)) {
-			t.Errorf("after ten failures: %d %s", res.status, res.body)
+			t.Errorf("after ten failures from one address: %d %s", res.status, res.body)
 		}
-		if n := len(w.attempts()); n != 10 {
-			t.Errorf("%d attempts recorded, want 10", n)
+		if n := len(w.attempts()); n != 21 {
+			t.Errorf("%d attempts recorded, want 21", n)
 		}
 	})
 }
@@ -263,8 +289,6 @@ func TestLoginLockoutAfterTenFailures(t *testing.T) {
 func TestLoginSignsIn(t *testing.T) {
 	eachWorld(t, setup{}, func(t *testing.T, w *world) {
 		alice := w.addUser(user{name: "alice"})
-		// A lockout that has ended is removed by the sign-in
-		w.exec(`INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES ('alice', '2000-01-01 00:00:00', 10)`)
 		a := w.agent()
 		// A visitor who already has a session (here with a field in it)
 		a.setSession(`{"before":"sign-in"}`)
@@ -298,9 +322,6 @@ func TestLoginSignsIn(t *testing.T) {
 			fmt.Sprintf("login|User logged in; ip=127.0.0.1; ua=auth-test/1; fingerprint=none|127.0.0.1|%d", alice),
 		})
 		equal(t, "attempts", w.attempts(), []string{"alice|127.0.0.1|1"})
-		if n := w.int(`SELECT COUNT(*) FROM account_lockouts WHERE username = 'alice'`); n != 0 {
-			t.Error("a sign-in left the account's lockout in place")
-		}
 		if at := w.text(`SELECT CAST(last_login AS TEXT) FROM users WHERE id = ?`, alice); at == "" {
 			t.Error("the sign-in is not noted on the account")
 		}

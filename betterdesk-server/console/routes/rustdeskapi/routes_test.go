@@ -471,7 +471,8 @@ func TestTheAuditListsComeFromTheAPIServer(t *testing.T) {
 }
 
 // A sign-in without a user name or without a password is refused before
-// anything else, and a locked account gets 429 with the lockout's end.
+// anything else, and an account locked for the client's address (ten
+// failed sign-ins from there) gets 429 with the lockout's end.
 func TestTheSignInRefusals(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := world(t, db, nil)
@@ -480,7 +481,11 @@ func TestTheSignInRefusals(t *testing.T) {
 				t.Errorf("%s: %d %s", body, got.Status, got.Body)
 			}
 		}
-		w.Exec("INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES ('e2e_viewer', '2999-01-01 00:00:00', 5)", nil)
+		for i := 1; i <= 10; i++ {
+			if got := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"username":"e2e_viewer","password":"x"}`)}); got.Status != http.StatusUnauthorized {
+				t.Fatalf("failure %d: %d %s", i, got.Status, got.Body)
+			}
+		}
 		got := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"username":"e2e_viewer","password":"x"}`)})
 		if got.Status != http.StatusTooManyRequests || !strings.HasPrefix(got.Body, `{"error":"`) || !strings.Contains(got.Body, `"retry_after":`) {
 			t.Errorf("a locked account: %d %s", got.Status, got.Body)

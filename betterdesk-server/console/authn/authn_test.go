@@ -435,23 +435,23 @@ func TestTouchLastLoginAndUserByID(t *testing.T) {
 	})
 }
 
-// On SQLite the end of a lockout is the UTC text the column holds, read to
+// On SQLite the time of an attempt is the UTC text the column holds, read to
 // the millisecond; text that is no time of that form gives none.
-func TestLockoutEndOfSQLiteText(t *testing.T) {
+func TestAttemptTimeOfSQLiteText(t *testing.T) {
 	db := storetest.Migrated(t)
 	ctx := context.Background()
 	var text store.Time
 	if err := store.SelectRow(ctx, db, `SELECT '2026-11-10 05:15:00.123'`).Scan(&text); err != nil {
 		t.Fatal(err)
 	}
-	end, ok := lockoutEnd(text, false)
+	end, ok := attemptTime(text, false)
 	if want := time.Date(2026, 11, 10, 5, 15, 0, 123e6, time.UTC); !ok || !end.Equal(want) {
 		t.Errorf("SQLite text: %v, %v; want %v", end, ok, want)
 	}
 	for _, bad := range []string{"", "soon", "2026-11-10T05:15:00Z", "2026-11-10"} {
 		var odd store.Time
 		_ = store.SelectRow(ctx, db, `SELECT ?`, bad).Scan(&odd)
-		if _, ok := lockoutEnd(odd, false); ok {
+		if _, ok := attemptTime(odd, false); ok {
 			t.Errorf("SQLite text %q counts as a time", bad)
 		}
 	}

@@ -308,35 +308,34 @@ func countRecentFailed(ctx context.Context, q store.Querier, column string, valu
 	return n, nil
 }
 
-func lockAccount(ctx context.Context, q store.Querier, username any, lockedUntil string, attemptCount int64) error {
-	_, err := q.Exec(ctx, `INSERT INTO account_lockouts (username, locked_until, attempt_count) VALUES (?, ?, ?)
-		ON CONFLICT(username) DO UPDATE SET locked_until = excluded.locked_until, attempt_count = excluded.attempt_count`,
-		username, lockedUntil, attemptCount)
+// recentFailures returns the times of the newest failed attempts of the
+// name from the address since its last successful one from there, newest
+// first, at most limit.
+func recentFailures(ctx context.Context, q store.Querier, username any, ip string, limit int) ([]store.Time, error) {
+	query := q.Pick(
+		`SELECT created_at FROM login_attempts WHERE username = ? AND ip_address = ? AND success = 0
+			AND id > (SELECT COALESCE(MAX(id), 0) FROM login_attempts WHERE username = ? AND ip_address = ? AND success = 1)
+			ORDER BY id DESC LIMIT ?`,
+		`SELECT created_at FROM login_attempts WHERE username = ? AND ip_address = ? AND NOT success
+			AND id > (SELECT COALESCE(MAX(id), 0) FROM login_attempts WHERE username = ? AND ip_address = ? AND success)
+			ORDER BY id DESC LIMIT ?`)
+	rows, err := store.Select(ctx, q, query, username, ip, username, ip, limit)
 	if err != nil {
-		return fmt.Errorf("lock an account: %w", err)
+		return nil, fmt.Errorf("read the failed sign-in attempts: %w", err)
 	}
-	return nil
-}
-
-// getAccountLockout returns the end of the account's lockout when it is
-// still in the future by the database's clock. found is false otherwise.
-func getAccountLockout(ctx context.Context, q store.Querier, username any) (lockedUntil store.Time, found bool, err error) {
-	query := `SELECT locked_until FROM account_lockouts WHERE username = ? AND locked_until > ` + store.NowSQL(q.Dialect())
-	err = store.SelectRow(ctx, q, query, username).Scan(&lockedUntil)
-	if errors.Is(err, sql.ErrNoRows) {
-		return lockedUntil, false, nil
+	defer rows.Close()
+	var times []store.Time
+	for rows.Next() {
+		var at store.Time
+		if err := rows.Scan(&at); err != nil {
+			return nil, fmt.Errorf("read a failed sign-in attempt: %w", err)
+		}
+		times = append(times, at)
 	}
-	if err != nil {
-		return lockedUntil, false, fmt.Errorf("look up an account lockout: %w", err)
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("read the failed sign-in attempts: %w", err)
 	}
-	return lockedUntil, true, nil
-}
-
-func clearAccountLockout(ctx context.Context, q store.Querier, username any) error {
-	if _, err := q.Exec(ctx, `DELETE FROM account_lockouts WHERE username = ?`, username); err != nil {
-		return fmt.Errorf("clear an account lockout: %w", err)
-	}
-	return nil
+	return times, nil
 }
 
 func cleanupOldLoginAttempts(ctx context.Context, q store.Querier) error {
