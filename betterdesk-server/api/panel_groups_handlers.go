@@ -107,20 +107,33 @@ func (s *Server) handlePanelDeviceGroupsList(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusOK, map[string]any{"groups": out, "total": len(out)})
 }
 
-// panelGroupBody is a submitted group. Note and TeamID are nil when the
-// body leaves them out: an update then keeps the stored ones.
+// panelGroupBody is a submitted group. Note, TeamID and the access lists
+// are nil when the body leaves them out: an update then keeps the stored
+// ones.
 type panelGroupBody struct {
-	GUID          string   `json:"guid"`
-	Name          string   `json:"name"`
-	Note          *string  `json:"note"`
-	TeamID        *string  `json:"team_id"`
-	SourceType    string   `json:"source_type"`
-	TagFilter     string   `json:"tag_filter"`
-	AllowedUsers  []string `json:"allowed_users"`
-	AllowedGroups []string `json:"allowed_groups"`
+	GUID          string    `json:"guid"`
+	Name          string    `json:"name"`
+	Note          *string   `json:"note"`
+	TeamID        *string   `json:"team_id"`
+	SourceType    string    `json:"source_type"`
+	TagFilter     string    `json:"tag_filter"`
+	AllowedUsers  *[]string `json:"allowed_users"`
+	AllowedGroups *[]string `json:"allowed_groups"`
 	// The console's form also accepts a single comma-separated string.
-	AllowedUsersRaw  string `json:"allowed_users_csv"`
-	AllowedGroupsRaw string `json:"allowed_groups_csv"`
+	AllowedUsersRaw  *string `json:"allowed_users_csv"`
+	AllowedGroupsRaw *string `json:"allowed_groups_csv"`
+}
+
+// accessList is the access list a body sends: the array, or else the
+// comma-separated field. sent is false when the body has neither.
+func accessList(list *[]string, csv *string) (names []string, sent bool) {
+	if list != nil && len(*list) > 0 {
+		return *list, true
+	}
+	if csv != nil && *csv != "" {
+		return strings.Split(*csv, ","), true
+	}
+	return nil, list != nil || csv != nil
 }
 
 // handlePanelDeviceGroupsSave creates or updates a group and its ACL.
@@ -158,6 +171,9 @@ func (s *Server) handlePanelDeviceGroupsSave(w http.ResponseWriter, r *http.Requ
 	if body.TeamID != nil {
 		teamID = truncStr(strings.TrimSpace(*body.TeamID), 64)
 	}
+	// The form may send either arrays or one comma-separated field.
+	users, usersSent := accessList(body.AllowedUsers, body.AllowedUsersRaw)
+	groups, groupsSent := accessList(body.AllowedGroups, body.AllowedGroupsRaw)
 
 	var created bool
 	if body.GUID == "" {
@@ -190,6 +206,19 @@ func (s *Server) handlePanelDeviceGroupsSave(w http.ResponseWriter, r *http.Requ
 		if body.TeamID == nil {
 			teamID = existing.TeamID
 		}
+		if !usersSent || !groupsSent {
+			acl, err := store.GetDeviceGroupACL(body.GUID)
+			if err != nil {
+				writeInternalError(w, err, "GetDeviceGroupACL")
+				return
+			}
+			if acl != nil && !usersSent {
+				users = acl.AllowedUsers
+			}
+			if acl != nil && !groupsSent {
+				groups = acl.AllowedUserGroups
+			}
+		}
 		update := &db.DeviceGroup{
 			GUID:       body.GUID,
 			Name:       body.Name,
@@ -204,15 +233,6 @@ func (s *Server) handlePanelDeviceGroupsSave(w http.ResponseWriter, r *http.Requ
 		}
 	}
 
-	// The form may send either arrays or one comma-separated field.
-	users := body.AllowedUsers
-	if len(users) == 0 && body.AllowedUsersRaw != "" {
-		users = strings.Split(body.AllowedUsersRaw, ",")
-	}
-	groups := body.AllowedGroups
-	if len(groups) == 0 && body.AllowedGroupsRaw != "" {
-		groups = strings.Split(body.AllowedGroupsRaw, ",")
-	}
 	if err := store.SetDeviceGroupACL(body.GUID, &db.DeviceGroupACL{
 		AllowedUsers:      users,
 		AllowedUserGroups: groups,

@@ -357,13 +357,59 @@ func TestPanelGroupSaveAnswersTheStoredAccessList(t *testing.T) {
 		t.Errorf("answered access list: %s", got)
 	}
 	resp, body = doPanelJSON(t, http.MethodPost, base+"/api/panel/device-groups", map[string]any{
-		"guid": body["guid"], "name": "Support", "allowed_users": []string{"nobody-has-this-name"},
+		"guid": body["guid"], "name": "Support", "allowed_users": []string{"nobody-has-this-name"}, "allowed_groups": []string{},
 	})
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("update: %d %v", resp.StatusCode, body)
 	}
 	if got := fmt.Sprint(body["allowed_users"], body["allowed_groups"]); got != "[] []" {
 		t.Errorf("answered access list after an update with an unknown name: %s", got)
+	}
+}
+
+// TestPanelGroupUpdateKeepsAccessListsItLeavesOut: an update whose body
+// leaves an access list out keeps the stored one, as the console's own
+// writer did; a list the body sends is written, an empty one clears it, in
+// either of the two forms (BUGS DGR7).
+func TestPanelGroupUpdateKeepsAccessListsItLeavesOut(t *testing.T) {
+	srv, _ := newInternalServer(t, nil)
+	for _, name := range []string{"op-a", "op-b"} {
+		if err := srv.db.CreateUser(&db.User{Username: name, PasswordHash: "hash", Role: auth.RoleOperator}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	group := &db.UserGroup{Name: "Ops"}
+	if err := srv.db.CreateUserGroup(group); err != nil {
+		t.Fatal(err)
+	}
+	status, answer := asConsole(t, srv, http.MethodPost, "/api/panel/device-groups",
+		`{"name":"Support","allowed_users":["op-a"],"allowed_groups":["`+group.GUID+`"]}`)
+	var created struct{ GUID string }
+	if err := json.Unmarshal([]byte(answer), &created); status != http.StatusCreated || err != nil {
+		t.Fatalf("create: %d %s", status, answer)
+	}
+	stored := func() string {
+		t.Helper()
+		acl, err := srv.db.(db.PanelGroupStore).GetDeviceGroupACL(created.GUID)
+		if err != nil || acl == nil {
+			t.Fatalf("GetDeviceGroupACL: %v %v", acl, err)
+		}
+		return fmt.Sprint(acl.AllowedUsers, acl.AllowedUserGroups)
+	}
+	for _, c := range []struct{ lists, want string }{
+		{``, "[op-a] [" + group.GUID + "]"},
+		{`,"allowed_users":["op-b"]`, "[op-b] [" + group.GUID + "]"},
+		{`,"allowed_groups_csv":""`, "[op-b] []"},
+		{`,"allowed_users_csv":"op-a,op-b"`, "[op-a op-b] []"},
+		{`,"allowed_users":[]`, "[] []"},
+	} {
+		body := `{"guid":"` + created.GUID + `","name":"Support"` + c.lists + `}`
+		if status, answer := asConsole(t, srv, http.MethodPost, "/api/panel/device-groups", body); status != http.StatusOK {
+			t.Fatalf("update %s: %d %s", body, status, answer)
+		}
+		if got := stored(); got != c.want {
+			t.Errorf("access lists after an update with %q: %s, want %s", c.lists, got, c.want)
+		}
 	}
 }
 
