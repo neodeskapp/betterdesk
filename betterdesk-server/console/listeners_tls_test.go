@@ -320,9 +320,9 @@ func configuredPublicHost(scenario oracleScenario) string {
 }
 
 // publicHostPage is the known difference of a redirect scenario whose
-// PANEL_PUBLIC_HOST names no host: where Node redirected to the bound
-// address or to localhost, the plain port answers the page that asks to
-// set PANEL_PUBLIC_HOST (BUGS UM41, DECISIONS A69).
+// PANEL_PUBLIC_HOST names no host and whose console binds every address:
+// where Node redirected to localhost, the plain port answers the page that
+// asks to set PANEL_PUBLIC_HOST (BUGS UM41, DECISIONS A69).
 func publicHostPage(method string) func(t *testing.T, got []reply, closed bool) string {
 	return func(t *testing.T, got []reply, closed bool) string {
 		if len(got) != 1 || got[0].status != http.StatusOK || got[0].header.Get("Location") != "" ||
@@ -338,8 +338,9 @@ func publicHostPage(method string) func(t *testing.T, got []reply, closed bool) 
 // sends every request to the host chosen at the start (PANEL_PUBLIC_HOST
 // from the environment, else from the public endpoints file), whatever
 // Host header and target the request had. Without a PANEL_PUBLIC_HOST
-// that names a host, where Node used the bound address or localhost, it
-// answers a page that asks to set it.
+// that names a host it redirects to the address the console binds, as
+// Node did; a console that binds every address, where Node used
+// localhost, answers a page that asks to set it.
 func TestRedirectAgainstNode(t *testing.T) {
 	certs := makeTestCerts(t)
 	db := storetest.Migrated(t)
@@ -353,7 +354,7 @@ func TestRedirectAgainstNode(t *testing.T) {
 	ipv6, pages := 0, 0
 	for _, scenario := range f.Scenarios {
 		known, page := knownRedirect, false
-		if _, source := listen.RedirectHost(configuredPublicHost(scenario), scenario.Env["HOST"]); source != "config" {
+		if _, source := listen.RedirectHost(configuredPublicHost(scenario), scenario.Env["HOST"]); source == "fallback" {
 			pages, page = pages+1, true
 			known = map[string]func(t *testing.T, got []reply, closed bool) string{}
 			for _, e := range scenario.Exchanges {

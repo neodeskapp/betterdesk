@@ -53,10 +53,10 @@ func Redirect(host string, httpsPort int) http.Handler {
 }
 
 // PublicHostPage is the plain port of a console in HTTPS mode that has no
-// public host (PANEL_PUBLIC_HOST names none): with nothing to name the
-// HTTPS address, every request gets a short page that says to open the
-// console with https:// and asks the administrator to set
-// PANEL_PUBLIC_HOST, instead of a redirect to a host the console would
+// public host (PANEL_PUBLIC_HOST names none) and binds every address: with
+// nothing to name the HTTPS address, every request gets a short page that
+// says to open the console with https:// and asks the administrator to
+// set PANEL_PUBLIC_HOST, instead of a redirect to a host the console would
 // have to guess. The page is plain HTML in English, with no script and
 // nothing of the request in it. CONNECT is closed without an answer, and
 // a target the redirect refuses is refused the same way.

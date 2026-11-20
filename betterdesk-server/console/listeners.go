@@ -146,12 +146,13 @@ func (s *Server) openListeners(ctx context.Context) error {
 		if _, port, err := net.SplitHostPort(addr); err == nil {
 			httpsPort, _ = strconv.Atoi(port)
 		}
-		// The host is chosen once: PANEL_PUBLIC_HOST. Without it the plain
-		// port answers a page that asks to set it
+		// The host is chosen once: PANEL_PUBLIC_HOST, else the one address
+		// the console binds. A console that binds every address has no host
+		// to name, and the plain port answers a page that asks to set it
 		configured := s.deps.ServerInfo.ReadPanelPublicHostValue()
 		host, source := listen.RedirectHost(configured, cfg.Host)
 		plain := listen.PublicHostPage(httpsPort)
-		if source == "config" {
+		if source != "fallback" {
 			plain = listen.Redirect(host, httpsPort)
 		}
 		redirect, err := s.serve(ctx, plainPort, "HTTP redirect", plain, nil)
@@ -159,7 +160,7 @@ func (s *Server) openListeners(ctx context.Context) error {
 			return err
 		}
 		s.net.redirectAddr = redirect
-		if _, port, err := net.SplitHostPort(redirect); err == nil && source != "config" {
+		if _, port, err := net.SplitHostPort(redirect); err == nil && source == "fallback" {
 			bound, _ := strconv.Atoi(port)
 			warn("%s", listen.PublicHostWarning(configured, bound))
 		}
