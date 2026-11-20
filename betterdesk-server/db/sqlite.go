@@ -1,9 +1,11 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -793,71 +795,99 @@ func (s *SQLiteDB) usersHasLegacyRoleCheck() bool {
 		strings.Contains(low, "'viewer'")
 }
 
+// legacyRoleCheck is the three-role CHECK of the pre-Phase-52 users table,
+// as a table constraint (with the comma before it) or a column constraint.
+var legacyRoleCheck = regexp.MustCompile(`(?is),?\s*CHECK\s*\(\s*"?role"?\s+IN\s*\([^()]*\)\s*\)`)
+
+// usersTableName is the start of the users table's definition, up to its
+// name.
+var usersTableName = regexp.MustCompile("(?is)^CREATE\\s+TABLE\\s+(IF\\s+NOT\\s+EXISTS\\s+)?(\"users\"|`users`|\\[users\\]|users)")
+
+// usersWithoutRoleCheck is the definition of the users table as users_new,
+// without the legacy role CHECK. ok is false when the definition does not
+// have the one CHECK in a known form.
+func usersWithoutRoleCheck(definition string) (string, bool) {
+	if len(legacyRoleCheck.FindAllStringIndex(definition, -1)) != 1 || !usersTableName.MatchString(definition) {
+		return "", false
+	}
+	out := legacyRoleCheck.ReplaceAllString(definition, "")
+	return usersTableName.ReplaceAllString(out, "CREATE TABLE users_new"), true
+}
+
 // migrateUsersDropLegacyRoleCheck rebuilds the users table without the legacy
 // three-role CHECK so Phase 52 roles (super_admin, global_admin, …) can sync.
+// The new table is the old definition without that CHECK, so every column
+// stays, the console's too, with its indexes and triggers. Foreign keys are
+// off on the connection during the rebuild (the pragma does nothing inside
+// a transaction): dropping the old table must not delete the rows of other
+// tables that reference users with ON DELETE CASCADE.
 func (s *SQLiteDB) migrateUsersDropLegacyRoleCheck() error {
 	if !s.usersHasLegacyRoleCheck() {
 		return nil
 	}
+	ctx := context.Background()
+	conn, err := s.db.Conn(ctx)
+	if err != nil {
+		return fmt.Errorf("db: users role-check migration: %w", err)
+	}
+	defer conn.Close()
+
+	var definition string
+	if err := conn.QueryRowContext(ctx, `SELECT sql FROM sqlite_master WHERE type='table' AND name='users'`).Scan(&definition); err != nil {
+		return fmt.Errorf("db: read the users table's definition: %w", err)
+	}
+	createUsersNew, ok := usersWithoutRoleCheck(definition)
+	if !ok {
+		log.Printf("[db] WARN: users table keeps its legacy role CHECK: its definition has a form the migration does not know")
+		return nil
+	}
+	var rebuild []string
+	rows, err := conn.QueryContext(ctx, `SELECT sql FROM sqlite_master WHERE tbl_name='users' AND type IN ('index', 'trigger') AND sql IS NOT NULL`)
+	if err != nil {
+		return fmt.Errorf("db: read the users table's indexes: %w", err)
+	}
+	for rows.Next() {
+		var stmt string
+		if err := rows.Scan(&stmt); err != nil {
+			rows.Close()
+			return fmt.Errorf("db: read the users table's indexes: %w", err)
+		}
+		rebuild = append(rebuild, stmt)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("db: read the users table's indexes: %w", err)
+	}
 	log.Printf("[db] migrating users table: dropping legacy role CHECK constraint")
 
-	tx, err := s.db.Begin()
+	// legacy_alter_table: the rename leaves views and triggers of other
+	// tables that name users as they are, without checking them while users
+	// is gone
+	if _, err := conn.ExecContext(ctx, `PRAGMA foreign_keys=OFF`); err != nil {
+		return fmt.Errorf("db: disable foreign_keys for users rebuild: %w", err)
+	}
+	defer func() { _, _ = conn.ExecContext(ctx, `PRAGMA foreign_keys=ON`) }()
+	if _, err := conn.ExecContext(ctx, `PRAGMA legacy_alter_table=ON`); err != nil {
+		return fmt.Errorf("db: users rebuild: %w", err)
+	}
+	defer func() { _, _ = conn.ExecContext(ctx, `PRAGMA legacy_alter_table=OFF`) }()
+	tx, err := conn.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("db: begin users role-check migration: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	if _, err := tx.Exec(`PRAGMA foreign_keys=OFF`); err != nil {
-		return fmt.Errorf("db: disable foreign_keys for users rebuild: %w", err)
-	}
-
-	const createUsersNew = `CREATE TABLE users_new (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		username TEXT UNIQUE NOT NULL,
-		password_hash TEXT NOT NULL,
-		role TEXT NOT NULL DEFAULT 'viewer',
-		auth_provider TEXT NOT NULL DEFAULT 'local',
-		totp_secret TEXT DEFAULT '',
-		totp_enabled INTEGER DEFAULT 0,
-		totp_recovery_codes TEXT DEFAULT NULL,
-		is_server_admin INTEGER DEFAULT 0,
-		guid TEXT DEFAULT '',
-		created_at TEXT DEFAULT (datetime('now')),
-		last_login TEXT DEFAULT ''
-	)`
-	if _, err := tx.Exec(createUsersNew); err != nil {
-		return fmt.Errorf("db: create users_new: %w", err)
-	}
-
-	copySQL := `INSERT INTO users_new (
-		id, username, password_hash, role, auth_provider, totp_secret, totp_enabled,
-		totp_recovery_codes, is_server_admin, guid, created_at, last_login
-	)
-	SELECT
-		id, username, password_hash, role,
-		COALESCE(auth_provider, 'local'),
-		COALESCE(totp_secret, ''),
-		COALESCE(totp_enabled, 0),
-		totp_recovery_codes,
-		COALESCE(is_server_admin, 0),
-		COALESCE(guid, ''),
-		COALESCE(created_at, datetime('now')),
-		COALESCE(last_login, '')
-	FROM users`
-	if _, err := tx.Exec(copySQL); err != nil {
-		return fmt.Errorf("db: copy users → users_new: %w", err)
-	}
-	if _, err := tx.Exec(`DROP TABLE users`); err != nil {
-		return fmt.Errorf("db: drop legacy users: %w", err)
-	}
-	if _, err := tx.Exec(`ALTER TABLE users_new RENAME TO users`); err != nil {
-		return fmt.Errorf("db: rename users_new: %w", err)
-	}
-	if _, err := tx.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username)`); err != nil {
-		return fmt.Errorf("db: recreate users username index: %w", err)
-	}
-	if _, err := tx.Exec(`PRAGMA foreign_keys=ON`); err != nil {
-		return fmt.Errorf("db: re-enable foreign_keys: %w", err)
+	statements := append([]string{
+		createUsersNew,
+		`INSERT INTO users_new SELECT * FROM users`,
+		`DROP TABLE users`,
+		`ALTER TABLE users_new RENAME TO users`,
+	}, rebuild...)
+	statements = append(statements, `CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username)`)
+	for _, stmt := range statements {
+		if _, err := tx.ExecContext(ctx, stmt); err != nil {
+			return fmt.Errorf("db: users role-check migration: %w\nStatement: %s", err, stmt)
+		}
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("db: commit users role-check migration: %w", err)
