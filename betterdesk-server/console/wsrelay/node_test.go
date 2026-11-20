@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/ws"
 	"github.com/unitronix/betterdesk-server/console/ws/wstest"
 )
@@ -686,7 +687,10 @@ func TestNodeScenarios(t *testing.T) {
 					return []InterfaceAddr{{"IPv4", "127.0.0.1", true}, {"IPv4", rec.RelayHost, false}}
 				},
 			})
-			reg := ws.New(ws.Options{Session: wstest.OracleSession, Permission: oraclePermission})
+			// The oracle took the first X-Forwarded-For entry as the client's
+			// address; here a proxy on loopback is trusted, as behind a
+			// reverse proxy on the same machine (see the RM24 fixes)
+			reg := ws.New(ws.Options{Session: wstest.OracleSession, Permission: oraclePermission, ClientIP: trustLoopback(t)})
 			svc.Register(reg)
 			srv := httptest.NewServer(reg)
 			p.addr = strings.TrimPrefix(srv.URL, "http://")
@@ -804,6 +808,28 @@ var fixes = []fix{
 	// relay reads the second, which is no relay request for the link's
 	// device
 	{bug: "RM20", scenario: "guest relay", step: 19, events: `[{"socket":"g","close":1005,"reason":""},{"socket":"g","end":true},{"tcp":"hbbr#7","closed":true}]`},
+	// The address is the one TRUST_PROXY gives (a proxy on loopback here):
+	// " 10.0.0.1 , 10.0.0.9" is 10.0.0.9, the address the trusted proxy
+	// saw, not the first entry, so the socket gets a budget of its own and
+	// the later connections to the signal server count one up
+	{bug: "RM24", scenario: "per-address limit", step: 7, events: `[{"socket":"list","head":` + head101 + `},{"tcp":"hbbs#5","accept":true}]`},
+	{bug: "RM24", scenario: "per-address limit", step: 9, events: `[{"socket":"again","head":` + head101 + `},{"tcp":"hbbs#6","accept":true}]`},
+	{bug: "RM24", scenario: "per-address limit", step: 11, events: `[{"socket":"socket1","head":` + head101 + `},{"tcp":"hbbs#7","accept":true}]`},
+	{bug: "RM24", scenario: "per-address limit", step: 12, events: `[{"socket":"socket2","head":` + head101 + `},{"tcp":"hbbs#8","accept":true}]`},
+}
+
+// head101 is the answer to a handshake of the oracle's client, as a JSON
+// string.
+const head101 = `"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"`
+
+// trustLoopback is the client address under TRUST_PROXY=loopback.
+func trustLoopback(t *testing.T) func(*http.Request) string {
+	t.Helper()
+	tp, err := httpx.ParseTrustProxy("loopback")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return tp.ClientIP
 }
 
 // fixFor is the fix of a step, ok false for a step no fix changed.
