@@ -1,17 +1,18 @@
 package settings
 
 import (
+	"errors"
 	"math"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/branding"
 	"github.com/unitronix/betterdesk-server/console/kit"
 )
 
-// The routes that write the saved appearance profiles. Their errors go to
-// the client with the message the service gave (BUGS BR11).
+// The routes that write the saved appearance profiles. A refusal answers
+// with the fixed text of the service's error; a failure of the database
+// with the server error.
 
 type profileID struct {
 	value int64
@@ -21,9 +22,8 @@ type profileID struct {
 
 // parseProfileID is parseInt(req.params.id, 10) of the routes: leading
 // white space and a sign, then the digits up to the first other
-// character. ok is false where JavaScript has no finite number. Ids beyond
-// what int64 holds become its largest or smallest value; no row has such
-// an id.
+// character. ok is false where JavaScript has no finite number and for an
+// id beyond 32 bits, which no profile has.
 func parseProfileID(r *http.Request) (profileID, bool) {
 	s := branding.Trim(r.PathValue("id"))
 	sign := ""
@@ -42,20 +42,28 @@ func parseProfileID(r *http.Request) (profileID, bool) {
 	}
 	// digits only: the one error is a number too large, which is +-Inf
 	n, _ := strconv.ParseFloat(sign+s[:end], 64)
-	if math.IsInf(n, 0) {
+	if n > math.MaxInt32 || n < math.MinInt32 {
 		return profileID{}, false
 	}
 	text, _ := branding.ToString(n)
-	id := profileID{text: text}
+	return profileID{value: int64(n), text: text}, true
+}
+
+// profileError answers a failed profile route: 409 for a name that is
+// taken, 400 with the text of another refusal of the service ("Profile
+// not found" among them), and 500 with the server error for the rest,
+// which is logged.
+func (h *handlers) profileError(w http.ResponseWriter, r *http.Request, what string, err error) {
+	var refusal *branding.Error
 	switch {
-	case n >= math.MaxInt64:
-		id.value = math.MaxInt64
-	case n <= math.MinInt64:
-		id.value = math.MinInt64
+	case errors.Is(err, branding.ErrProfileNameTaken):
+		kit.Fail(w, r, http.StatusConflict, branding.Message(err))
+	case errors.As(err, &refusal) && refusal.Err == nil:
+		kit.Fail(w, r, http.StatusBadRequest, refusal.Message)
 	default:
-		id.value = int64(n)
+		h.log.Error(what+" error:", err)
+		kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
 	}
-	return id, true
 }
 
 // jsText is String(value || ”).trim().
@@ -80,17 +88,7 @@ type idAnswer struct {
 // {name, description, branding}: a profile of the settings in branding
 // when that is an object, else of the current settings.
 func (h *handlers) createProfile(w http.ResponseWriter, r *http.Request) {
-	fail := func(err error) {
-		h.log.Error("Create branding profile error:", err)
-		message := branding.Message(err)
-		switch {
-		case strings.Contains(message, "UNIQUE"):
-			message = "Profile name already exists"
-		case message == "":
-			message = kit.T(r, "errors.server_error", nil)
-		}
-		kit.Fail(w, r, http.StatusBadRequest, message)
-	}
+	fail := func(err error) { h.profileError(w, r, "Create branding profile", err) }
 	body, err := requestBody(r)
 	if err != nil {
 		fail(err)
@@ -98,12 +96,12 @@ func (h *handlers) createProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	name, err := jsText(branding.Field(body, "name"))
 	if err != nil {
-		fail(err)
+		fail(branding.ErrInvalidProfileName)
 		return
 	}
 	description, err := jsText(branding.Field(body, "description"))
 	if err != nil {
-		fail(err)
+		fail(branding.ErrInvalidProfileDescription)
 		return
 	}
 	if name == "" {
@@ -136,10 +134,7 @@ func (h *handlers) updateProfile(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusBadRequest, "Invalid profile id")
 		return
 	}
-	fail := func(err error) {
-		h.log.Error("Update branding profile error:", err)
-		failMessage(w, r, http.StatusBadRequest, err, kit.T(r, "errors.server_error", nil))
-	}
+	fail := func(err error) { h.profileError(w, r, "Update branding profile", err) }
 	body, err := requestBody(r)
 	if err != nil {
 		fail(err)
@@ -194,10 +189,7 @@ func (h *handlers) duplicateProfile(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusBadRequest, "Invalid profile id")
 		return
 	}
-	fail := func(err error) {
-		h.log.Error("Duplicate branding profile error:", err)
-		failMessage(w, r, http.StatusBadRequest, err, kit.T(r, "errors.server_error", nil))
-	}
+	fail := func(err error) { h.profileError(w, r, "Duplicate branding profile", err) }
 	body, err := requestBody(r)
 	if err != nil {
 		fail(err)
@@ -215,17 +207,21 @@ func (h *handlers) duplicateProfile(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, idAnswer{Success: true, Data: idData{ID: newID}})
 }
 
-// deleteProfile answers DELETE /api/settings/branding/profiles/{id}. It
-// answers success also when there was no such profile (BUGS BR11).
+// deleteProfile answers DELETE /api/settings/branding/profiles/{id}, 404
+// when there is no such profile.
 func (h *handlers) deleteProfile(w http.ResponseWriter, r *http.Request) {
 	id, ok := parseProfileID(r)
 	if !ok {
 		kit.Fail(w, r, http.StatusBadRequest, "Invalid profile id")
 		return
 	}
-	if _, err := h.d.Branding.DeleteProfile(r.Context(), id.value); err != nil {
-		h.log.Error("Delete branding profile error:", err)
-		failMessage(w, r, http.StatusBadRequest, err, kit.T(r, "errors.server_error", nil))
+	deleted, err := h.d.Branding.DeleteProfile(r.Context(), id.value)
+	if err != nil {
+		h.profileError(w, r, "Delete branding profile", err)
+		return
+	}
+	if !deleted {
+		kit.Fail(w, r, http.StatusNotFound, "Profile not found")
 		return
 	}
 	_ = h.d.LogAction(r, "branding_profile_delete", "Deleted profile #"+id.text)

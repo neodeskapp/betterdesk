@@ -46,20 +46,16 @@ func TestProfileChain(t *testing.T) {
 			`{"name":0}`:              "Profile name is required",
 			`{}`:                      "Profile name is required",
 			`["First"]`:               "Profile name is required",
-			`{"name":{"toString":1}}`: "Cannot convert object to primitive value",
-			`{"name":"x","description":{"toString":1}}`: "Cannot convert object to primitive value",
+			`{"name":{"toString":1}}`: "Invalid profile name",
+			`{"name":"x","description":{"toString":1}}`: "Invalid profile description",
 		} {
 			if res := admin.Do("POST", "/api/settings/branding/profiles", body); res.Status != http.StatusBadRequest || res.Body != `{"success":false,"error":"`+want+`"}` {
 				t.Errorf("create %s: %d %s", body, res.Status, res.Body)
 			}
 		}
+		// a name that is taken is 409 on both databases (BUGS BR11)
 		taken := admin.Do("POST", "/api/settings/branding/profiles", `{"name":"First"}`)
-		wantTaken := `{"success":false,"error":"Profile name already exists"}`
-		if db.IsPostgres() {
-			// the database's own message has no UNIQUE in it (BUGS BR11)
-			wantTaken = `{"success":false,"error":"duplicate key value violates unique constraint \"branding_profiles_name_key\""}`
-		}
-		if taken.Status != http.StatusBadRequest || taken.Body != wantTaken {
+		if taken.Status != http.StatusConflict || taken.Body != `{"success":false,"error":"Profile name already exists"}` {
 			t.Errorf("taken: %d %s", taken.Status, taken.Body)
 		}
 
@@ -80,6 +76,8 @@ func TestProfileChain(t *testing.T) {
 			"":                       `404`,
 			"999999":                 `400 {"success":false,"error":"Profile not found"}`,
 			strings.Repeat("9", 400): `400 {"success":false,"error":"Invalid profile id"}`,
+			"3000000000":             `400 {"success":false,"error":"Invalid profile id"}`,
+			"-2147483649":            `400 {"success":false,"error":"Invalid profile id"}`,
 		} {
 			res := admin.Do("PUT", "/api/settings/branding/profiles/"+path, `{"name":"x"}`)
 			got := strconv.Itoa(res.Status)
@@ -90,8 +88,11 @@ func TestProfileChain(t *testing.T) {
 				t.Errorf("update %q: %s", path, got)
 			}
 		}
-		if res := admin.Do("PUT", "/api/settings/branding/profiles/"+first, `{"name":{"toString":1}}`); res.Body != `{"success":false,"error":"Cannot convert object to primitive value"}` {
+		if res := admin.Do("PUT", "/api/settings/branding/profiles/"+first, `{"name":{"toString":1}}`); res.Body != `{"success":false,"error":"Invalid profile name"}` {
 			t.Errorf("update with a name that is no text: %s", res.Body)
+		}
+		if res := admin.Do("PUT", "/api/settings/branding/profiles/"+first, `{"name":"Second"}`); res.Status != http.StatusConflict || res.Body != `{"success":false,"error":"Profile name already exists"}` {
+			t.Errorf("update to a taken name: %d %s", res.Status, res.Body)
 		}
 
 		res = admin.Do("POST", "/api/settings/branding/profiles/"+second+"/apply", "{}")
@@ -127,7 +128,7 @@ func TestProfileChain(t *testing.T) {
 		if name != "Second 2" {
 			t.Errorf("copy with a taken name named %q", name)
 		}
-		for body, want := range map[string]string{`{"name":5}`: "newName.trim is not a function", `{"name":null}`: ""} {
+		for body, want := range map[string]string{`{"name":5}`: "Invalid profile name", `{"name":["x"]}`: "Invalid profile name", `{"name":null}`: ""} {
 			res := admin.Do("POST", "/api/settings/branding/profiles/"+first+"/duplicate", body)
 			if want == "" {
 				if res.Status != http.StatusOK {
@@ -152,12 +153,13 @@ func TestProfileChain(t *testing.T) {
 		if got := lastAudit(t, w); got != "branding_profile_delete|Deleted profile #"+copied+"|127.0.0.1|1" {
 			t.Errorf("delete audit: %s", got)
 		}
-		// a profile that is not there: success, and audited (BUGS BR11)
-		if res := admin.Do("DELETE", "/api/settings/branding/profiles/-0", ""); res.Body != `{"success":true}` {
+		// a profile that is not there: 404, and nothing audited (BUGS BR11)
+		before = len(w.AuditRows())
+		if res := admin.Do("DELETE", "/api/settings/branding/profiles/-0", ""); res.Status != http.StatusNotFound || res.Body != `{"success":false,"error":"Profile not found"}` {
 			t.Errorf("delete -0: %d %s", res.Status, res.Body)
 		}
-		if got := lastAudit(t, w); got != "branding_profile_delete|Deleted profile #0|127.0.0.1|1" {
-			t.Errorf("delete -0 audit: %s", got)
+		if rows := w.AuditRows(); len(rows) != before {
+			t.Errorf("a delete of nothing was audited: %v", rows[before:])
 		}
 		var count int
 		if err := db.QueryRow(t.Context(), "SELECT COUNT(*) FROM branding_profiles WHERE id = ?", copied).Scan(&count); err != nil || count != 0 {

@@ -180,6 +180,26 @@ func fixedCSS(branding *Object, got string, recorded any) bool {
 	return false
 }
 
+// fixedProfileAnswer reports BR11 for the answer of a profile step of
+// TestOracleStore: a refusal has a fixed text where Node passed on the
+// database's or JavaScript's own message.
+func fixedProfileAnswer(step any, got, want string) bool {
+	switch property(step, "op") {
+	case "profileCreate", "profileUpdate", "profileDuplicate":
+	default:
+		return false
+	}
+	switch got {
+	case "throws Error: Profile name already exists":
+		return strings.Contains(want, "UNIQUE constraint failed") || strings.Contains(want, "duplicate key value")
+	case "throws Error: Invalid profile name", "throws Error: Invalid profile description":
+		return strings.HasPrefix(want, "throws TypeError: ")
+	case "throws Error: The stored settings of the profile cannot be read":
+		return strings.HasPrefix(want, "throws SyntaxError: ")
+	}
+	return false
+}
+
 // storeFixes follows TestOracleStore through the steps a fix changes on
 // purpose. Such a step leaves another state than Node's, which stays until
 // a later step makes it Node's again (a reset, rows written straight, the
@@ -302,7 +322,7 @@ func (f *storeFixes) recordedProfiles(recorded any) any {
 // that the state was Node's again soon after each.
 func (f *storeFixes) check() {
 	f.t.Helper()
-	for bug, atLeast := range map[string]int{"BR1": 5, "BR2": 1, "BR7": 1, "BR12": 1} {
+	for bug, atLeast := range map[string]int{"BR1": 5, "BR2": 1, "BR7": 1, "BR11": 1, "BR12": 1} {
 		if f.fixed[bug] < atLeast {
 			f.t.Errorf("%d steps of the scenario are changed by the fix of %s, the recording has more", f.fixed[bug], bug)
 		}

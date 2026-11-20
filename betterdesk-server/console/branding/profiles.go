@@ -5,6 +5,15 @@ import (
 	"strconv"
 )
 
+// The refusals of the profile functions, each with the text the routes
+// answer with.
+var (
+	ErrProfileNameTaken          = &Error{Name: "Error", Message: "Profile name already exists"}
+	ErrInvalidProfileName        = &Error{Name: "Error", Message: "Invalid profile name"}
+	ErrInvalidProfileDescription = &Error{Name: "Error", Message: "Invalid profile description"}
+	ErrUnreadableProfile         = &Error{Name: "Error", Message: "The stored settings of the profile cannot be read"}
+)
+
 // ListProfiles returns the saved profiles without their settings, sorted
 // by name.
 func (s *Service) ListProfiles(ctx context.Context) ([]Profile, error) {
@@ -25,7 +34,7 @@ func profileData(data any) string {
 // and cut at 80 characters, the description at 200. brandingData is the
 // theme to store; when it is not a theme (type "betterdesk-theme") the
 // current settings are stored. An empty name fails with "Profile name is
-// required", a name that exists with the message of the database.
+// required", a name that exists with ErrProfileNameTaken.
 func (s *Service) CreateProfile(ctx context.Context, name, description string, brandingData any) (id int64, err error) {
 	defer catch(&err)
 	trimmed := substring(trim(name), 80)
@@ -52,9 +61,10 @@ type ProfileUpdate struct {
 func isNullish(v any) bool { return v == nil || v == Undefined }
 
 // UpdateProfile changes the name, the description or the settings of a
-// profile. It fails with "Profile not found", with the message of
-// JSON.parse when the stored settings are kept and are not JSON, and with
-// a TypeError for a name or description that cannot be turned into text.
+// profile. It fails with "Profile not found", with ErrUnreadableProfile
+// when the stored settings are kept and are not JSON, with
+// ErrInvalidProfileName or ErrInvalidProfileDescription for one that
+// cannot be turned into text, and with ErrProfileNameTaken.
 func (s *Service) UpdateProfile(ctx context.Context, id int64, updates ProfileUpdate) (err error) {
 	defer catch(&err)
 	profile, found, err := getBrandingProfile(ctx, s.opts.DB, id)
@@ -66,11 +76,19 @@ func (s *Service) UpdateProfile(ctx context.Context, id int64, updates ProfileUp
 	}
 	name := profile.Name
 	if !isNullish(updates.Name) {
-		name = substring(trim(toString(updates.Name)), 80)
+		text, err := textOf(updates.Name, ErrInvalidProfileName)
+		if err != nil {
+			return err
+		}
+		name = substring(trim(text), 80)
 	}
 	description := profile.Description.String
 	if !isNullish(updates.Description) {
-		description = substring(toString(updates.Description), 200)
+		text, err := textOf(updates.Description, ErrInvalidProfileDescription)
+		if err != nil {
+			return err
+		}
+		description = substring(text, 200)
 	}
 	var data any
 	if Truthy(updates.Branding) {
@@ -78,7 +96,7 @@ func (s *Service) UpdateProfile(ctx context.Context, id int64, updates ProfileUp
 	} else {
 		parsed, err := parseJSON(profile.Data)
 		if err != nil {
-			return err
+			return ErrUnreadableProfile
 		}
 		data = parsed
 	}
@@ -132,11 +150,20 @@ func (s *Service) DeleteProfile(ctx context.Context, id int64) (deleted bool, er
 	return true, nil
 }
 
+// textOf is String(value), and refusal for a value that cannot be turned
+// into text.
+func textOf(value any, refusal *Error) (text string, err error) {
+	if try(func() { text = toString(value) }) != nil {
+		return "", refusal
+	}
+	return text, nil
+}
+
 // DuplicateProfile copies a profile and returns the id of the copy.
 // newName is the name for the copy; empty or Undefined means "<name>
 // (copy)". A name that is taken gets " 2", " 3" ... appended. It fails
-// with "Profile not found", and with a TypeError when newName is neither
-// text nor empty.
+// with "Profile not found", and with ErrInvalidProfileName when newName
+// is neither text nor Undefined.
 func (s *Service) DuplicateProfile(ctx context.Context, id int64, newName any) (newID int64, err error) {
 	defer catch(&err)
 	profile, found, err := getBrandingProfile(ctx, s.opts.DB, id)
@@ -151,10 +178,8 @@ func (s *Service) DuplicateProfile(ctx context.Context, id int64, newName any) (
 	case string:
 		baseName = trim(given)
 	case undefinedType:
-	case nil:
-		throwType("Cannot read properties of null (reading 'trim')")
 	default:
-		throwType("newName.trim is not a function")
+		return 0, ErrInvalidProfileName
 	}
 	if baseName == "" {
 		baseName = profile.Name + " (copy)"

@@ -39,7 +39,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Cannot convert object to primitive value",
+     "error": "Invalid profile name",
      "success": false
     }
    }

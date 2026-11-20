@@ -1021,13 +1021,9 @@ func TestProfiles(t *testing.T) {
 		if err != nil || second != 2 {
 			t.Fatalf("create: %d, %v", second, err)
 		}
-		_, err = s.CreateProfile(ctx, "Default", "", nil)
-		wantUnique := "UNIQUE constraint failed: branding_profiles.name"
-		if db.IsPostgres() {
-			wantUnique = `duplicate key value violates unique constraint "branding_profiles_name_key"`
-		}
-		if Message(err) != wantUnique {
-			t.Errorf("a name that is taken: %q, want %q", Message(err), wantUnique)
+		// a name that is taken, told by the database's error code (BUGS BR11)
+		if _, err = s.CreateProfile(ctx, "Default", "", nil); err != ErrProfileNameTaken {
+			t.Errorf("a name that is taken: %v", err)
 		}
 
 		list, err := s.ListProfiles(ctx)
@@ -1094,8 +1090,10 @@ func TestProfiles(t *testing.T) {
 		if _, err := s.DuplicateProfile(ctx, 99, ""); Message(err) != "Profile not found" {
 			t.Errorf("duplicate a missing profile: %v", err)
 		}
-		if _, err := s.DuplicateProfile(ctx, second, 5.0); Message(err) != "newName.trim is not a function" {
-			t.Errorf("duplicate with a number as name: %v", err)
+		for _, name := range []any{5.0, nil, []any{"x"}} {
+			if _, err := s.DuplicateProfile(ctx, second, name); err != ErrInvalidProfileName {
+				t.Errorf("duplicate with %s as name: %v", Stringify(name), err)
+			}
 		}
 
 		// updates: what is not given stays
@@ -1119,8 +1117,14 @@ func TestProfiles(t *testing.T) {
 		if _, err := db.Exec(ctx, "UPDATE branding_profiles SET data = 'xyz' WHERE id = ?", first); err != nil {
 			t.Fatal(err)
 		}
-		if err := s.UpdateProfile(ctx, first, ProfileUpdate{Name: "x"}); Message(err) != `Unexpected token 'x', "xyz" is not valid JSON` {
+		if err := s.UpdateProfile(ctx, first, ProfileUpdate{Name: "x"}); err != ErrUnreadableProfile {
 			t.Errorf("update a profile whose settings are no JSON: %v", err)
+		}
+		if err := s.UpdateProfile(ctx, first, ProfileUpdate{Name: "Renamed", Branding: object("appName", "x")}); err != ErrProfileNameTaken {
+			t.Errorf("rename to a taken name: %v", err)
+		}
+		if err := s.UpdateProfile(ctx, first, ProfileUpdate{Description: mustParse(t, `{"toString":1}`)}); err != ErrInvalidProfileDescription {
+			t.Errorf("a description that is no text: %v", err)
 		}
 		if applied, err := s.ApplyProfile(ctx, first); applied || err != nil {
 			t.Errorf("apply a profile whose settings are no JSON: %v, %v", applied, err)

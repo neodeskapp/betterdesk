@@ -37,7 +37,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "newName.trim is not a function",
+     "error": "Invalid profile name",
      "success": false
     }
    }

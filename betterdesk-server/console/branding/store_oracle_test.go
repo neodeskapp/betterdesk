@@ -211,6 +211,8 @@ func TestOracleStore(t *testing.T) {
 			switch {
 			case err != nil && property(result, "db") != Undefined && !errors.As(err, &own):
 				// a failure of the database on both sides; the wording is the driver's
+			case got != want && fixedProfileAnswer(step, got, want):
+				fixes.fixed["BR11"]++
 			case got != want:
 				fail(i, step, "answer", got, want)
 			}

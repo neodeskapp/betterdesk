@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgconn"
+	"modernc.org/sqlite"
+	sqlite3 "modernc.org/sqlite/lib"
 
 	"github.com/unitronix/betterdesk-server/console/store"
 )
@@ -250,20 +252,20 @@ func deleteBrandingProfile(ctx context.Context, q store.Querier, id int64) error
 	return err
 }
 
-// uniqueNameError gives the failure of writing a profile the message the
-// console's database drivers gave it: PostgreSQL's own text, and for a name
-// that is taken on SQLite "UNIQUE constraint failed: ...". The route that
-// creates profiles looks for "UNIQUE" in it, which only SQLite's has.
+// uniqueNameError is ErrProfileNameTaken for a write of a profile that
+// another profile's name refused (the unique constraint: PostgreSQL's code
+// 23505, SQLite's constraint code), and err otherwise.
 func uniqueNameError(err error) error {
 	if err == nil {
 		return nil
 	}
 	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		return &Error{Name: "error", Message: pgErr.Message, Err: err}
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		return ErrProfileNameTaken
 	}
-	if strings.Contains(err.Error(), "UNIQUE constraint failed: branding_profiles.name") {
-		return &Error{Name: "SqliteError", Message: "UNIQUE constraint failed: branding_profiles.name", Err: err}
+	var sqliteErr *sqlite.Error
+	if errors.As(err, &sqliteErr) && sqliteErr.Code() == sqlite3.SQLITE_CONSTRAINT_UNIQUE {
+		return ErrProfileNameTaken
 	}
 	return err
 }
