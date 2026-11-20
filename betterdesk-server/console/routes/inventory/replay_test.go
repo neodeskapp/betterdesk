@@ -28,8 +28,8 @@ import (
 //     console's route table. Express took one of them for the end of the
 //     mount, so /api/inventory//PC-1 was the device PC-1.
 //
-// The steps the bug fixes change are checked by unreadableListed and
-// listedByType (fixes_test.go).
+// The steps the bug fixes change are listed in readFixes, or checked by
+// unreadableListed and listedByType (fixes_test.go).
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
@@ -38,7 +38,8 @@ func TestNodeAnswers(t *testing.T) {
 		defer done(t)
 		changed := map[string]int{}
 		typed := listedByType(changed)
-		w.Run(replay.Load(t, db, "node"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		defer readFixes.Unused(t, db)
+		w.Run(replay.Load(t, db, "node"), readFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			switch {
 			case listed(t, step, got), typed(t, step, got):
 				return true
@@ -56,7 +57,7 @@ func TestNodeAnswers(t *testing.T) {
 				return true
 			}
 			return false
-		})
+		}))
 		if elsewhere != 2 || slashes != 1 {
 			t.Errorf("%d answers were compared by status only and %d had two slashes, want 2 and 1", elsewhere, slashes)
 		}

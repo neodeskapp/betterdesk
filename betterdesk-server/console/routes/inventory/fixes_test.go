@@ -323,3 +323,33 @@ func TestListMembersHaveTheirTypes(t *testing.T) {
 		}
 	})
 }
+
+// A telemetry value that is NULL is null in a device's report on both
+// databases, where PostgreSQL answered 0 (BUGS AI3).
+func TestTelemetryNullIsNullOnBothDatabases(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		w.Exec("INSERT INTO device_inventory (device_id, hardware, software) VALUES ('D1', '{}', '{}'), ('D2', '{}', '{}')", nil)
+		w.Exec(`INSERT INTO device_telemetry (device_id, cpu_usage_percent, memory_used_bytes, memory_total_bytes, uptime_secs) VALUES ('D1', NULL, NULL, NULL, NULL), ('D2', 12.5, 1024, 0, 60)`, nil)
+		for id, want := range map[string]string{
+			"D1": `"cpu_usage_percent":null,"memory_used_bytes":null,"memory_total_bytes":null,"uptime_secs":null`,
+			"D2": `"cpu_usage_percent":12.5,"memory_used_bytes":1024,"memory_total_bytes":0,"uptime_secs":60`,
+		} {
+			if got := w.Do(replay.Request{Role: "admin", Path: "/api/inventory/" + id}); got.Status != 200 || !strings.Contains(got.Body, want) {
+				t.Errorf("the report of %s: %d %s, want %s", id, got.Status, got.Body, want)
+			}
+		}
+	})
+}
+
+// readFixes are the steps of testdata/node_*.json that the bug fixes
+// change, by their request.
+var readFixes replay.Fixes
+
+// AI3: a telemetry value that is NULL is null on PostgreSQL too, where
+// Node answered 0.
+var _ = readFixes.Add("AI3", map[string]replay.Fix{
+	"admin GET /api/inventory/EMPTY ": {Dialect: "postgres", Status: 200, Has: []string{
+		`"telemetry":{"device_id":"EMPTY","cpu_usage_percent":null,"memory_used_bytes":null,"memory_total_bytes":null,"uptime_secs":null,"timestamp":null,"received_at":null}`,
+	}},
+})

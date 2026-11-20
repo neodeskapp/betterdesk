@@ -148,7 +148,7 @@ func inventoryOf(ctx context.Context, db *store.DB, id string) (*inventory, erro
 //
 // On SQLite every column goes out with whatever it holds. On PostgreSQL
 // the four numbers are numbers also where the driver handed over text (a
-// bigint), and 0 where the column is NULL.
+// bigint), and null where the column is NULL, as on SQLite.
 type telemetry struct {
 	DeviceID         jsbind.Cell `json:"device_id"`
 	CPUUsagePercent  any         `json:"cpu_usage_percent"`
@@ -159,8 +159,8 @@ type telemetry struct {
 	ReceivedAt       any         `json:"received_at"`
 }
 
-// plus is "+value" for a number column of PostgreSQL: the number, and 0
-// for NULL. A real goes out with the digits of a four-byte number.
+// plus is a number column of PostgreSQL as a number: null for NULL. A
+// real goes out with the digits of a four-byte number.
 type plus struct {
 	real  store.Float
 	whole jsbind.Cell
@@ -170,10 +170,10 @@ type plus struct {
 
 // MarshalJSON implements json.Marshaler.
 func (p *plus) MarshalJSON() ([]byte, error) {
-	if p.isReal {
-		if !p.real.Valid {
-			return []byte("0"), nil
-		}
+	switch {
+	case p.isReal && !p.real.Valid, !p.isReal && p.whole.Value().IsNull():
+		return []byte("null"), nil
+	case p.isReal:
 		return p.real.MarshalJSON()
 	}
 	return number(p.whole.Value().ToNumber()).MarshalJSON()
