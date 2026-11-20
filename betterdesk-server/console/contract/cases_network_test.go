@@ -246,6 +246,10 @@ func init() {
 		contract.Case{Name: "history-from-far-ahead", Path: "/api/network/targets/{tcp}/history", Query: url.Values{"from": {"2999-01-01"}}, Roles: few},
 		contract.Case{Name: "history-to-long-ago", Path: "/api/network/targets/{tcp}/history", Query: url.Values{"to": {"2000-01-01"}}, Roles: few},
 		contract.Case{Name: "history-from-twice", Path: "/api/network/targets/{tcp}/history", Query: url.Values{"from": {"2000-01-01", "2001-01-01"}}, Roles: few},
+		contract.Case{Name: "history-to-twice", Path: "/api/network/targets/{tcp}/history", Query: url.Values{"to": {"2999-01-01", "2999-01-02"}}, Roles: few},
+		contract.Case{Name: "history-from-not-a-time", Path: "/api/network/targets/{tcp}/history", Query: url.Values{"from": {"never"}}, Roles: few},
+		contract.Case{Name: "history-to-not-a-time", Path: "/api/network/targets/{tcp}/history", Query: url.Values{"to": {"never"}}, Roles: few},
+		contract.Case{Name: "history-from-in-brackets", Path: "/api/network/targets/{tcp}/history", Query: url.Values{"from[x]": {"1"}}, Roles: few},
 		contract.Case{Name: "history-unknown", Path: "/api/network/targets/999999999/history", Roles: few},
 		contract.Case{Name: "history-not-a-number", Path: "/api/network/targets/first/history", Roles: few},
 

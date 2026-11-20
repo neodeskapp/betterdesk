@@ -356,6 +356,19 @@ var stepDifferences = map[string]struct {
 	"list ?check_type[is]=tcp":                           {status: 400, text: invalidCheckTypeFilter},
 	"list ?check_type[a][b]=tcp":                         {status: 400, text: invalidCheckTypeFilter},
 	"list ?enabled=true&check_type[]=tcp&check_type[]=x": {status: 400, text: invalidCheckTypeFilter},
+	// NM14: the history's from and to are times given once, compared as
+	// times on both databases, so on SQLite a time with a T and a zone
+	// takes in what the same time with a space does; anything else is 400
+	"history ?from=2026-01-01T00:15:00.000Z": {sameAs: "history ?from=2026-01-01 00:15:00"},
+	"history ?to=2026-01-01T00:15:00.000Z":   {sameAs: "history ?to=2026-01-01 00:15:00"},
+	"history ?from=never":                    {status: 400, text: invalidFrom},
+	"history ?from=1":                        {status: 400, text: invalidFrom},
+	"history ?from=a&from=b":                 {status: 400, text: invalidFrom},
+	"history ?from=a&from=b&limit=1":         {status: 400, text: invalidFrom},
+	"history ?from[]=2000-01-01":             {status: 400, text: invalidFrom},
+	"history ?from[]=a&to[]=b":               {status: 400, text: invalidFrom},
+	"history ?from[x]=1":                     {status: 400, text: invalidFrom},
+	"history ?to[x]=1&from[y]=2":             {status: 400, text: invalidFrom},
 	// SC3: 0.0.1.0 is in 0.0.0.0/8, which the guard refuses
 	"resolve: 256": {status: 500, text: `{"error":"Hostname 256 resolves to blocked address 0.0.1.0"}`},
 	// NM7: a timeout below 1 is refused before anything leaves the server
@@ -373,6 +386,7 @@ var stepDifferences = map[string]struct {
 const (
 	invalidLimit           = `{"error":"Invalid limit"}`
 	invalidCheckTypeFilter = `{"error":"Invalid check_type"}`
+	invalidFrom            = `{"error":"Invalid from"}`
 )
 
 // refusedTargets are the steps whose body the checks of a target refuse

@@ -118,8 +118,6 @@ type queryValue struct {
 	kind  queryKind
 	text  string
 	items []string
-	// keys are the keys of an object, in the order of items.
-	keys []string
 }
 
 type queryKind uint8
@@ -146,7 +144,6 @@ func query(rawQuery, name string) queryValue {
 		switch {
 		case key == name:
 			v.items = append(v.items, value)
-			v.keys = append(v.keys, "")
 		case strings.HasPrefix(key, name+"[") && strings.HasSuffix(key, "]"):
 			inner := key[len(name)+1 : len(key)-1]
 			if inner != "" && strings.Trim(inner, "0123456789") != "" {
@@ -155,7 +152,6 @@ func query(rawQuery, name string) queryValue {
 				v.kind = queryList
 			}
 			v.items = append(v.items, value)
-			v.keys = append(v.keys, inner)
 		}
 	}
 	switch {
@@ -177,35 +173,4 @@ func queryDecode(s string) string {
 		return strings.ReplaceAll(s, "+", " ")
 	}
 	return decoded
-}
-
-// truthy is !!v: an empty string is false, everything else that is there
-// is true.
-func (v queryValue) truthy() bool {
-	return v.kind == queryList || v.kind == queryObject || v.kind == queryString && v.text != ""
-}
-
-// param is the value as a statement parameter.
-func (v queryValue) param() netmonitor.Param {
-	switch v.kind {
-	case queryString:
-		return netmonitor.Text(v.text)
-	case queryList:
-		params := make([]netmonitor.Param, len(v.items))
-		for i, item := range v.items {
-			params[i] = netmonitor.Text(item)
-		}
-		return netmonitor.List(params...)
-	case queryObject:
-		o := object{}
-		for i, item := range v.items {
-			o = append(o, member{v.keys[i], item})
-		}
-		out, err := o.MarshalJSON()
-		if err != nil {
-			out = []byte("{}")
-		}
-		return netmonitor.Object(string(out))
-	}
-	return netmonitor.Null()
 }

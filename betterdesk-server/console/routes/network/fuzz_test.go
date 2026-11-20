@@ -23,26 +23,22 @@ func FuzzQuery(f *testing.F) {
 	}
 	f.Fuzz(func(t *testing.T, raw string) {
 		v := query(raw, "limit")
-		if len(v.items) != len(v.keys) {
-			t.Fatalf("%q: %d values for %d keys", raw, len(v.items), len(v.keys))
-		}
 		switch v.kind {
 		case queryUndefined:
-			if len(v.items) != 0 || v.truthy() {
+			if len(v.items) != 0 {
 				t.Fatalf("%q: nothing, with %+v", raw, v)
 			}
 		case queryString:
-			if len(v.items) != 1 || v.text != v.items[0] || v.truthy() != (v.text != "") {
+			if len(v.items) != 1 || v.text != v.items[0] {
 				t.Fatalf("%q: a string, with %+v", raw, v)
 			}
 		case queryList, queryObject:
-			if len(v.items) == 0 || !v.truthy() {
+			if len(v.items) == 0 {
 				t.Fatalf("%q: a list or an object, with %+v", raw, v)
 			}
 		default:
 			t.Fatalf("%q: kind %d", raw, v.kind)
 		}
-		_ = v.param()
 	})
 }
 

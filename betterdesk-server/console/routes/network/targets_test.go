@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -284,6 +285,73 @@ func TestTargetFiltersAnswerAlikeOnBothDatabases(t *testing.T) {
 			}
 			if status != 200 || strings.Join(got, " ") != want {
 				t.Errorf("targets?%s: %d %q, want 200 %q", query, status, strings.Join(got, " "), want)
+			}
+		}
+	})
+}
+
+// The history's from and to are times, compared as times on both
+// databases: a date alone as to takes in that whole day, and a time
+// between two microseconds is rounded into the window. Anything else is
+// 400 on both, where SQLite compared the text and PostgreSQL failed on
+// what it could not read as a time (BUGS NM14).
+func TestHistoryWindowAnswersAlikeOnBothDatabases(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db, names{})
+		body := `{"name":"Printer","host":"10.1.2.3","check_type":"tcp","port":9}`
+		if rec := w.do("adm", "POST", "/api/network/targets", &body, ""); rec.Code != 201 {
+			t.Fatalf("create: %d %s", rec.Code, rec.Body.String())
+		}
+		for _, at := range []string{"2019-03-03 23:59:59", "2019-03-04 10:00:00", "2019-03-04 23:59:59", "2019-03-05 00:00:00"} {
+			if _, err := db.Exec(context.Background(), "INSERT INTO network_checks (target_id, status, checked_at) VALUES (1, 'up', ?)", db.Pick(at, at+"+00")); err != nil {
+				t.Fatal(err)
+			}
+		}
+		history := func(query string) (int, string) {
+			t.Helper()
+			rec := w.do("vera", "GET", "/api/network/targets/1/history?"+query, nil, "")
+			return rec.Code, rec.Body.String()
+		}
+		for query, want := range map[string]string{
+			"from=never": "from", "to=never": "to", "from=1": "from", "from=2019-13-01": "from", "from=2019-02-30": "from",
+			"from=2019-03-04%2025:00:00": "from", "to=2019-03-04T10": "to", "from=%202019-03-04": "from",
+			"from=0000-01-01": "from", "from=0001-01-01T00:00:00%2B01:00": "from", "to=9999-12-31T23:00:00-05:00": "to",
+			"from=a&from=b": "from", "from=a&from=b&limit=1": "from", "to=2019-03-04&to=2019-03-05": "to",
+			"from[x]=1": "from", "to[x]=1": "to", "from[]=2019-03-04": "from", "from[]=a&to[]=b": "from", "to[x]=1&from[y]=2": "from",
+		} {
+			if status, answer := history(query); status != 400 || answer != `{"error":"Invalid `+want+`"}` {
+				t.Errorf("history?%s: %d %s, want 400 Invalid %s", query, status, answer, want)
+			}
+		}
+		for query, want := range map[string]string{
+			"":                                  "4 3 2 1",
+			"from=&to=":                         "4 3 2 1",
+			"from":                              "4 3 2 1",
+			"from=2019-03-04":                   "4 3 2",
+			"to=2019-03-04":                     "3 2 1",
+			"from=2019-03-04&to=2019-03-04":     "3 2",
+			"from=2019-03-04T10:00:00Z":         "4 3 2",
+			"from=2019-03-04T10:00:00.5Z":       "4 3",
+			"from=2019-03-04T10:00:00.0000001Z": "4 3",
+			"to=2019-03-04T10:00:00.000Z":       "2 1",
+			"to=2019-03-04T09:59:59.9999999Z":   "1",
+			"from=2019-03-04%2010:00:00":        "4 3 2",
+			"from=2019-03-04T12:00:00%2B02:00":  "4 3 2",
+			"to=2019-03-04T05:00:00-05:00":      "2 1",
+			"from=0001-01-01&to=9999-12-31":     "4 3 2 1",
+			"from=2019-03-04%2010:00:00&to=2019-03-04%2023:59:59&limit=1": "3",
+		} {
+			status, answer := history(query)
+			var checks []struct {
+				ID int `json:"id"`
+			}
+			_ = json.Unmarshal([]byte(answer), &checks)
+			ids := make([]string, len(checks))
+			for i, c := range checks {
+				ids[i] = fmt.Sprint(c.ID)
+			}
+			if status != 200 || strings.Join(ids, " ") != want {
+				t.Errorf("history?%s: %d %q, want 200 %q: %s", query, status, strings.Join(ids, " "), want, answer)
 			}
 		}
 	})

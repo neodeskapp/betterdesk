@@ -4,11 +4,13 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/netmonitor"
+	"github.com/unitronix/betterdesk-server/console/store"
 )
 
 // checkTarget answers POST /targets/{id}/check: it runs the target's
@@ -36,7 +38,7 @@ func (h *handlers) checkTarget(w http.ResponseWriter, r *http.Request) {
 
 // history answers GET /targets/{id}/history: the target's checks, the
 // newest first, at most ?limit= of them (historyLimit), from ?from= to
-// ?to=. An id that names no row has none.
+// ?to= (historyBound). An id that names no row has none.
 func (h *handlers) history(w http.ResponseWriter, r *http.Request) {
 	n, ok := historyLimit(r.URL.RawQuery)
 	if !ok {
@@ -45,13 +47,15 @@ func (h *handlers) history(w http.ResponseWriter, r *http.Request) {
 	}
 	limit := netmonitor.Num(netmonitor.Number(n))
 	filter := netmonitor.HistoryFilter{Limit: &limit}
-	if from := query(r.URL.RawQuery, "from"); from.truthy() {
-		p := from.param()
-		filter.From = &p
-	}
-	if to := query(r.URL.RawQuery, "to"); to.truthy() {
-		p := to.param()
-		filter.To = &p
+	for _, end := range []struct {
+		name  string
+		into  **netmonitor.Param
+		isEnd bool
+	}{{"from", &filter.From, false}, {"to", &filter.To, true}} {
+		if *end.into, ok = historyBound(h.db, r.URL.RawQuery, end.name, end.isEnd); !ok {
+			fail(w, r, http.StatusBadRequest, "Invalid "+end.name)
+			return
+		}
 	}
 	id, ok := pathID(r)
 	if !ok {
@@ -94,6 +98,47 @@ func historyLimit(rawQuery string) (int, bool) {
 		return maxHistory, true
 	}
 	return n, true
+}
+
+// historyBound reads ?from= (isEnd false) or ?to= (isEnd true) of the
+// history: nil without one or with an empty one, else the time as db
+// compares it with checked_at. The time is a date, or a date and time as
+// the console writes them, with or without a zone (none is UTC), in the
+// years 1 to 9999 in UTC, given once; ok is false for anything else. A
+// date alone as to takes in that whole day.
+func historyBound(db *store.DB, rawQuery, name string, isEnd bool) (*netmonitor.Param, bool) {
+	text, _, err := jsbind.QueryText(rawQuery, name)
+	if err != nil {
+		return nil, false
+	}
+	if text == "" {
+		return nil, true
+	}
+	at, err := time.Parse(time.DateOnly, text)
+	switch {
+	case err == nil && isEnd:
+		at = at.AddDate(0, 0, 1).Add(-time.Microsecond)
+	case err != nil:
+		var ok bool
+		if at, ok = store.ParseTime(text); !ok {
+			return nil, false
+		}
+	}
+	// Both databases hold checked_at to the microsecond at most: from
+	// rounds up to one and to down, so a time between two of them takes
+	// in the same checks on both
+	rounded := at.UTC().Truncate(time.Microsecond)
+	if !isEnd && rounded.Before(at) {
+		rounded = rounded.Add(time.Microsecond)
+	}
+	if year := rounded.Year(); year < 1 || year > 9999 {
+		return nil, false
+	}
+	// PostgreSQL reads the instant from the text with its zone. SQLite
+	// compares texts, which in the form datetime('now') writes, in UTC,
+	// sort as the times do
+	p := netmonitor.Text(rounded.Format(db.Pick("2006-01-02 15:04:05.999999", "2006-01-02T15:04:05.999999Z07:00")))
+	return &p, true
 }
 
 // toolTimeout is the timeout of a tool's body in milliseconds, the default
