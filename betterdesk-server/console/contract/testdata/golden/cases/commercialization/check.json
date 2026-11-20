@@ -107,7 +107,15 @@
    },
    "volatile": [
     {
+     "path": "contract_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
      "path": "org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "package_id",
      "pattern": "^[9aA+/_=-]{36}$"
     }
    ],
@@ -115,8 +123,13 @@
     "kind": "json",
     "json": {
      "allowed": true,
-     "has_billing": false,
-     "org_id": "<volatile>"
+     "contract_id": "<volatile>",
+     "currency": "EUR",
+     "has_billing": true,
+     "org_id": "<volatile>",
+     "package_id": "<volatile>",
+     "package_name": "Demo Business Care",
+     "remaining_minutes": 940
     }
    }
   }

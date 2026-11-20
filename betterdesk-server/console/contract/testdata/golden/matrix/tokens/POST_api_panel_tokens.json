@@ -103,19 +103,23 @@
    },
    "volatile": [
     {
+     "path": "data.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
      "path": "data.token",
      "pattern": "^[9aA+/_=-]{32}$"
     },
     {
      "path": "data.token_prefix",
-     "pattern": "^[9aA+/_=-]{32}$"
+     "pattern": "^[9aA+/_=-]{8}$"
     }
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "created_at": "0001-01-01T00:00:00Z",
+      "created_at": "<volatile>",
       "id": 1,
       "max_uses": 0,
       "name": "",
@@ -155,19 +159,23 @@
    },
    "volatile": [
     {
+     "path": "data.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
      "path": "data.token",
      "pattern": "^[9aA+/_=-]{32}$"
     },
     {
      "path": "data.token_prefix",
-     "pattern": "^[9aA+/_=-]{32}$"
+     "pattern": "^[9aA+/_=-]{8}$"
     }
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "created_at": "0001-01-01T00:00:00Z",
+      "created_at": "<volatile>",
       "id": 2,
       "max_uses": 0,
       "name": "",
@@ -207,19 +215,23 @@
    },
    "volatile": [
     {
+     "path": "data.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
      "path": "data.token",
      "pattern": "^[9aA+/_=-]{32}$"
     },
     {
      "path": "data.token_prefix",
-     "pattern": "^[9aA+/_=-]{32}$"
+     "pattern": "^[9aA+/_=-]{8}$"
     }
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "created_at": "0001-01-01T00:00:00Z",
+      "created_at": "<volatile>",
       "id": 3,
       "max_uses": 0,
       "name": "",
@@ -259,19 +271,23 @@
    },
    "volatile": [
     {
+     "path": "data.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
      "path": "data.token",
      "pattern": "^[9aA+/_=-]{32}$"
     },
     {
      "path": "data.token_prefix",
-     "pattern": "^[9aA+/_=-]{32}$"
+     "pattern": "^[9aA+/_=-]{8}$"
     }
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "created_at": "0001-01-01T00:00:00Z",
+      "created_at": "<volatile>",
       "id": 4,
       "max_uses": 0,
       "name": "",
