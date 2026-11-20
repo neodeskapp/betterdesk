@@ -213,6 +213,8 @@ func TestOracleStore(t *testing.T) {
 				// a failure of the database on both sides; the wording is the driver's
 			case got != want && fixedProfileAnswer(step, got, want):
 				fixes.fixed["BR11"]++
+			case got != want && fixedImportAnswer(step, got):
+				fixes.fixed["BR5"]++
 			case got != want:
 				fail(i, step, "answer", got, want)
 			}

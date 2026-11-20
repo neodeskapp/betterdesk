@@ -406,8 +406,11 @@ func (s *Service) exportPreset() *Object {
 
 // ImportPreset applies a theme file. It answers false when preset is not
 // a theme (type "betterdesk-theme" with an appearance or a branding
-// part). The appearance part wins when both are there. Values are cut to
-// their length limits and then stored as SaveBranding stores them.
+// part). When both are there, the flat settings of the branding part are
+// laid over the appearance part: the console's own export writes both,
+// and only the flat part holds every setting by its stored name (the
+// custom CSS among them). Values are cut to their length limits and then
+// stored as SaveBranding stores them.
 func (s *Service) ImportPreset(ctx context.Context, preset any) (ok bool, err error) {
 	defer catch(&err)
 	if !Truthy(preset) || property(preset, "type") != "betterdesk-theme" {
@@ -417,11 +420,12 @@ func (s *Service) ImportPreset(ctx context.Context, preset any) (ok bool, err er
 	if !Truthy(branding) && !Truthy(appearance) {
 		return false, nil
 	}
-	var input *Object
+	input := NewObject()
 	if Truthy(appearance) {
 		input = flattenAppearanceInput(object("appearance", appearance))
-	} else {
-		input = flattenAppearanceInput(branding)
+	}
+	if Truthy(branding) {
+		entries(flattenAppearanceInput(branding), func(key string, value any) { input.Set(key, value) })
 	}
 	sanitized := NewObject()
 	for _, pair := range defaultSettings {

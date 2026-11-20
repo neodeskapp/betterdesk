@@ -146,8 +146,7 @@ func TestExportImportReset(t *testing.T) {
 		if got := lastAudit(t, w); got != "branding_import|Imported branding preset|127.0.0.1|1" {
 			t.Errorf("import audit: %s", got)
 		}
-		// the exported appearance part wins, and it names the app (BUGS BR5
-		// is about the parts it does not bring back)
+		// the import brings the exported settings back (BUGS BR5)
 		if got := w.Server.Deps().Branding.GetBranding().Text("appName"); got != "Exported" {
 			t.Errorf("after the import: %s", got)
 		}

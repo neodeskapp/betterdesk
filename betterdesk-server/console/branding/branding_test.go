@@ -815,16 +815,35 @@ func TestExportAndImport(t *testing.T) {
 		}
 		b := s.GetBranding()
 		colors, _ := b.Get("colors")
-		// An import reads the appearance part of an export and finds only
-		// the settings whose names are the same in both shapes: identity,
-		// fonts, colours, glass. Theme mode, backgrounds, sign-in texts and
-		// custom CSS do not come back (BUGS BR5).
-		if b.Text("appName") != "Exported" || colors.(*Object).Text("bgPrimary") != "#010203" {
-			t.Errorf("after the import, what should have come back: %s", clip(Stringify(b)))
+		// every setting of an export comes back: the flat part is laid over
+		// the appearance part (BUGS BR5)
+		if b.Text("appName") != "Exported" || colors.(*Object).Text("bgPrimary") != "#010203" ||
+			b.Text("themeMode") != "custom" || b.Text("bgType") != "color" || b.Text("bgColor") != "#040506" || b.Text("customCss") != ".a{}" {
+			t.Errorf("after the import of an export: %s", clip(Stringify(b)))
 		}
-		if b.Text("themeMode") != "system" || b.Text("bgType") != "none" || b.Text("bgColor") != "" || b.Text("customCss") != "" {
-			t.Errorf("after the import, what the Node console lost too: themeMode %q, bgType %q, bgColor %q, customCss %q",
-				b.Text("themeMode"), b.Text("bgType"), b.Text("bgColor"), b.Text("customCss"))
+		// so does a profile made of the settings of the moment
+		if err := s.ResetBranding(ctx); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.SaveBranding(ctx, object("loginTitle", "Welcome", "footerText", "Footer", "bgType", "gradient", "bgGradient", "linear-gradient(#000, #fff)")); err != nil {
+			t.Fatal(err)
+		}
+		id, err := s.CreateProfile(ctx, "Now", "", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := s.ResetBranding(ctx); err != nil {
+			t.Fatal(err)
+		}
+		if applied, err := s.ApplyProfile(ctx, id); !applied || err != nil {
+			t.Fatalf("apply: %v, %v", applied, err)
+		}
+		if b := s.GetBranding(); b.Text("loginTitle") != "Welcome" || b.Text("footerText") != "Footer" || b.Text("bgType") != "gradient" || b.Text("bgGradient") != "linear-gradient(#000, #fff)" {
+			t.Errorf("after applying a profile of the settings: %s", clip(Stringify(b)))
+		}
+		// an appearance part alone still applies what its names say
+		if ok, err := s.ImportPreset(ctx, object("type", "betterdesk-theme", "appearance", object("identity", object("appName", "From the appearance")))); !ok || err != nil || s.GetBranding().Text("appName") != "From the appearance" {
+			t.Errorf("import of an appearance part: %v, %v, %q", ok, err, s.GetBranding().Text("appName"))
 		}
 		// with the flat part alone everything comes back
 		if ok, err := s.ImportPreset(ctx, object("type", "betterdesk-theme", "branding", property(exported, "branding"))); !ok || err != nil {

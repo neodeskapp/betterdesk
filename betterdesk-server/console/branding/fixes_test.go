@@ -324,6 +324,11 @@ func (f *storeFixes) before(step any) {
 	// BR12: rows written straight that the console reads otherwise
 	case property(step, "op") == "rows" && oddRows(property(step, "rows")):
 		bug = "BR12"
+	// BR5: a theme with both parts, whose flat part now counts
+	case property(step, "op") == "import" && bothParts(property(step, "preset")):
+		bug = "BR5"
+	case property(step, "op") == "profileApply" && bothParts(f.profileData(id)):
+		bug = "BR5"
 	case property(step, "op") == "profileApply" && anyValue(f.profileData(id), wrappedCSSWord):
 		bug = "BR7"
 	}
@@ -406,7 +411,7 @@ func (f *storeFixes) recordedProfiles(recorded any) any {
 // that the state was Node's again soon after each.
 func (f *storeFixes) check() {
 	f.t.Helper()
-	for bug, atLeast := range map[string]int{"BR1": 5, "BR2": 1, "BR7": 1, "BR11": 1, "BR12": 1} {
+	for bug, atLeast := range map[string]int{"BR1": 5, "BR2": 1, "BR5": 1, "BR7": 1, "BR11": 1, "BR12": 1} {
 		if f.fixed[bug] < atLeast {
 			f.t.Errorf("%d steps of the scenario are changed by the fix of %s, the recording has more", f.fixed[bug], bug)
 		}
@@ -417,6 +422,26 @@ func (f *storeFixes) check() {
 			f.t.Errorf("after the steps the fix of %s changes, the state stayed other than Node's for %d steps", bug, steps)
 		}
 	}
+}
+
+// fixedImportAnswer reports BR5 for the answer of an import of
+// TestOracleStore with both parts: the console now reads the branding
+// part too, so a value there that cannot be turned into text throws, and
+// one PostgreSQL cannot store (a zero byte) fails the save, where Node,
+// reading the appearance part alone, answered true.
+func fixedImportAnswer(step any, got string) bool {
+	return property(step, "op") == "import" && bothParts(property(step, "preset")) &&
+		(got == "true" || strings.HasPrefix(got, "throws TypeError: ") || strings.HasPrefix(got, "throws Error: save the branding settings: "))
+}
+
+// bothParts reports a theme with an appearance and a branding part, which
+// an import now takes both of, where Node took the appearance part alone
+// (BR5).
+func bothParts(preset any) bool {
+	if !isObjectLike(preset) {
+		return false
+	}
+	return Truthy(property(preset, "appearance")) && Truthy(property(preset, "branding"))
 }
 
 // oddRows reports stored rows that the console reads otherwise than Node
