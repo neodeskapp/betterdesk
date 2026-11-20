@@ -132,20 +132,21 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 
 // hostname is the name a device is shown under: the note the console has
 // for it, else the hostname in its info, else its id. A device the
-// console cannot look up, or whose info it cannot read, has its id. The
-// hostname in an info can be any JSON value and goes out as it is.
+// console cannot look up has its id, and so has one without a note whose
+// info cannot be read. The hostname in an info can be any JSON value and
+// goes out as it is.
 func (h *handlers) hostname(r *http.Request, id string) any {
 	fallback := jsjson.Quoted(id)
 	p, err := h.peerByID(r.Context(), id)
-	if err != nil || p == nil {
-		return fallback
-	}
-	info, err := p.parsedInfo()
 	switch {
-	case err != nil:
+	case err != nil || p == nil:
 		return fallback
 	case p.note != "":
 		return jsjson.Quoted(p.note)
+	}
+	info, err := p.parsedInfo()
+	if err != nil {
+		return fallback
 	}
 	if name := info.Get("hostname"); name.Truthy() {
 		return name

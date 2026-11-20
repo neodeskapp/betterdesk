@@ -41,12 +41,20 @@ var beyondTheQueryParser = regexp.MustCompile(`\?(from\[25\]=|from\[day\]=x&to\[
 //     mount, so /api/activity//D1 was the device D1.
 //   - Windows the query parser does not take apart, see
 //     beyondTheQueryParser.
+//
+// The steps the bug fixes change are listed in activityFixes, or checked
+// by renamed (fixes_test.go).
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
-		guarded, elsewhere, slashes, unparsed := 0, 0, 0, 0
-		w.Run(replay.Load(t, db, "node"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		guarded, elsewhere, slashes, unparsed, renames := 0, 0, 0, 0, 0
+		rec := replay.Load(t, db, "node")
+		named := renamed(notesOf(t, rec), &renames)
+		defer activityFixes.Unused(t, db)
+		w.Run(rec, activityFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			switch {
+			case named(t, step, got):
+				return true
 			case step.Role == "guest_issuer" && step.Status == 403 && got.Status == 403 && strings.Contains(got.Body, `"code":"panel_access_denied"`):
 				guarded++
 				return true
@@ -67,7 +75,7 @@ func TestNodeAnswers(t *testing.T) {
 				return true
 			}
 			return false
-		})
+		}))
 		if guarded != 5 {
 			t.Errorf("%d answers were the panel access guard's, want the guest issuer's 5", guarded)
 		}
@@ -78,6 +86,9 @@ func TestNodeAnswers(t *testing.T) {
 		// there only the index is left
 		if want := map[bool]int{false: 9, true: 3}[db.IsPostgres()]; unparsed != want {
 			t.Errorf("%d windows were beyond the query parser, want %d", unparsed, want)
+		}
+		if renames == 0 {
+			t.Errorf("no answer shows a device under a name the fixes give it")
 		}
 	})
 }
