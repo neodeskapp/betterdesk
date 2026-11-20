@@ -197,29 +197,65 @@ func TestRateLimiters(t *testing.T) {
 	}
 }
 
-// A file below a folder whose name starts with a dot is not sent, as the
-// old console's file sender refused it.
-func TestADownloadFromADotFolderIsNotFound(t *testing.T) {
+// An install below a folder whose name starts with a dot serves its
+// attachments: only a dot in a name below the attachment folder hides a
+// file (BUGS TK10). Such a file is refused with the console's JSON error,
+// without the attachment's name (BUGS TK9).
+func TestADownloadBelowADotFolder(t *testing.T) {
 	w := replay.NewWorld(t, storetest.Migrated(t), func(cfg *config.Config) {
 		cfg.ConsoleDir = filepath.Join(cfg.DataDir, ".hidden", "console")
 	})
-	for _, body := range []string{`{"title":"dots"}`} {
-		if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tickets", Body: replay.Text(body)}); got.Status != 201 {
-			t.Fatalf("create: %d %s", got.Status, got.Body)
-		}
+	if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tickets", Body: replay.Text(`{"title":"dots"}`)}); got.Status != 201 {
+		t.Fatalf("create: %d %s", got.Status, got.Body)
 	}
 	if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tickets/1/attachments", Body: replay.Text(`{"filename":"a.txt","data":"aGk=","mimetype":"Text/Plain; Format=flowed"}`)}); got.Status != 201 {
 		t.Fatalf("attach: %d %s", got.Status, got.Body)
 	}
-	got := w.Do(replay.Request{Role: "admin", Path: "/api/tickets/attachments/1"})
-	if got.Status != 404 || got.Body != `{"success":false,"error":"Internal Server Error"}` {
-		t.Errorf("download: %d %s", got.Status, got.Body)
+	if got := w.Do(replay.Request{Role: "admin", Path: "/api/tickets/attachments/1"}); got.Status != 200 || got.Body != "hi" {
+		t.Errorf("download: %d %s, want the file", got.Status, got.Body)
 	}
-	// The refusal is JSON and names no file (BUGS TK9)
+
+	if err := os.WriteFile(filepath.Join(uploads(w), ".hidden-file"), []byte("secret"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	w.Exec("INSERT INTO ticket_attachments (ticket_id, filename, storage_path, uploaded_by) VALUES (1, 'h.txt', '.hidden-file', 'admin')", nil)
+	got := w.Do(replay.Request{Role: "admin", Path: "/api/tickets/attachments/2"})
+	if got.Status != 404 || got.Body != `{"success":false,"error":"Internal Server Error"}` {
+		t.Errorf("download of a dot file: %d %s", got.Status, got.Body)
+	}
 	if ct := got.Header.Get("Content-Type"); ct != "application/json; charset=utf-8" {
 		t.Errorf("Content-Type of the refusal = %q", ct)
 	}
 	if cd := got.Header.Get("Content-Disposition"); cd != "" {
 		t.Errorf("Content-Disposition of the refusal = %q", cd)
+	}
+}
+
+// A row holds the name of its file in the attachment folder, and a row
+// from before, which holds the absolute path of another install, finds
+// its file by the name in the folder where it is now (BUGS TK10).
+func TestADownloadAfterTheInstallMoved(t *testing.T) {
+	w := replay.NewWorld(t, storetest.Migrated(t), nil)
+	if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tickets", Body: replay.Text(`{"title":"moved"}`)}); got.Status != 201 {
+		t.Fatalf("create: %d %s", got.Status, got.Body)
+	}
+	if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tickets/1/attachments", Body: replay.Text(`{"filename":"a.txt","data":"aGk="}`)}); got.Status != 201 {
+		t.Fatalf("attach: %d %s", got.Status, got.Body)
+	}
+	var name string
+	if err := w.DB.QueryRow(t.Context(), "SELECT storage_path FROM ticket_attachments WHERE id = 1").Scan(&name); err != nil || !randomPart.MatchString(name) || strings.ContainsAny(name, `/\`) {
+		t.Fatalf("storage_path = %q, %v; want the name of the file alone", name, err)
+	}
+	for _, old := range []string{"/opt/betterdesk/web-nodejs/data/attachments/" + name, `C:\BetterDesk\web-nodejs\data\attachments\` + name} {
+		w.Exec("UPDATE ticket_attachments SET storage_path = ? WHERE id = 1", []any{old})
+		if got := w.Do(replay.Request{Role: "admin", Path: "/api/tickets/attachments/1"}); got.Status != 200 || got.Body != "hi" {
+			t.Errorf("download of the row %s: %d %s, want the file", old, got.Status, got.Body)
+		}
+	}
+	if got := w.Do(replay.Request{Role: "admin", Method: "DELETE", Path: "/api/tickets/1"}); got.Status != 200 {
+		t.Fatalf("delete: %d %s", got.Status, got.Body)
+	}
+	if _, err := os.Stat(filepath.Join(uploads(w), name)); !os.IsNotExist(err) {
+		t.Errorf("the file of the deleted ticket is still there: %v", err)
 	}
 }

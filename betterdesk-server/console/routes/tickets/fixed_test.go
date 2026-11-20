@@ -366,3 +366,12 @@ var _ = ticketFixes.Add("TK8", map[string]replay.Fix{
 	"admin GET /api/tickets/attachments/24 ": {Status: 200, Answer: `mime " "`, Headers: octet, Dialect: "postgres"},
 	"admin GET /api/tickets/attachments/25 ": {Status: 200, Answer: `mime "` + longType + `"`, Headers: octet, Dialect: "postgres"},
 })
+
+// TK10: a row finds its file by its name in the attachment folder. The
+// rows of the recording that point at /etc/hostname and at a file above
+// the folder name files the folder does not have, where Node refused the
+// paths with 500 "outside allowed directory".
+var _ = ticketFixes.Add("TK10", map[string]replay.Fix{
+	"admin GET /api/tickets/attachments/2 ": {NodeStatus: 500, Status: 404, Answer: `{"error":"Attachment file missing"}`},
+	"admin GET /api/tickets/attachments/3 ": {NodeStatus: 500, Status: 404, Answer: `{"error":"Attachment file missing"}`},
+})

@@ -457,10 +457,9 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, done{Success: true})
 }
 
-// uploadsDir is the folder of the attachment files: data/attachments
-// beside the old console's files, where they always were, and where the
-// rows of existing attachments point. A console that has no such folder
-// keeps them in its data folder.
+// uploadsDir is the folder of the attachment files: data/attachments in
+// the console's folder, where they always were. A console that has no
+// such folder keeps them in its data folder.
 func uploadsDir(cfg *config.Config) string {
 	if cfg.ConsoleDir != "" {
 		return filepath.Join(cfg.ConsoleDir, "data", "attachments")

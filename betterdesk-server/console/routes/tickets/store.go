@@ -293,8 +293,9 @@ func addComment(ctx context.Context, db *store.DB, ticketID jsbind.Value, author
 	return id, nil
 }
 
-// attachment is a row of ticket_attachments. StoragePath is where the
-// file lies; it never goes into an answer.
+// attachment is a row of ticket_attachments. StoragePath names the file
+// in the attachment folder (older rows: its absolute path); it never goes
+// into an answer.
 type attachment struct {
 	ID          jsbind.Cell      `json:"id"`
 	Filename    string           `json:"filename"`

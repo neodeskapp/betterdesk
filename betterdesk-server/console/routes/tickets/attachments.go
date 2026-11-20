@@ -31,9 +31,28 @@ func (h *handlers) makeUploads() {
 }
 
 // confined returns the path of a stored file after checking that it lies
-// in the attachment folder, also when it is reached through a link.
+// in the attachment folder, also when it is reached through a link. A row
+// holds the file's name in the folder. A row written before holds an
+// absolute path, of which the name counts, so its file is found where the
+// folder is now, also after the install moved.
 func (h *handlers) confined(storagePath string) (string, error) {
-	return safepath.ResolveWithinRoot(storagePath, h.uploads)
+	path, err := safepath.ResolveChild(h.uploads, storagePath[strings.LastIndexAny(storagePath, `/\`)+1:])
+	if err != nil {
+		return "", err
+	}
+	return safepath.ResolveWithinRoot(path, h.uploads)
+}
+
+// hiddenBelow reports whether a part of the path below the attachment
+// folder starts with a dot. Such a file is not sent; the folders above
+// it, where the console is installed, do not count.
+func (h *handlers) hiddenBelow(path string) bool {
+	root, err := filepath.EvalSymlinks(h.uploads)
+	if err != nil {
+		root = h.uploads
+	}
+	below, err := filepath.Rel(root, path)
+	return err != nil || hasDotPart(below)
 }
 
 // removeFile deletes the file of an attachment. A file that is gone, or a
@@ -102,7 +121,7 @@ type attachedDetail struct {
 // attach answers POST /api/tickets/{id}/attachments with the body
 // {filename, data, mimetype?}, data being the file in base64. The file is
 // written to the attachment folder under the ticket's id, 16 random hex
-// digits and the cleaned name; its row follows.
+// digits and the cleaned name; its row follows, with that name.
 func (h *handlers) attach(w http.ResponseWriter, r *http.Request) {
 	t, err := ticketByID(r.Context(), h.db, ticketID(r, "id"))
 	if err != nil {
@@ -136,12 +155,13 @@ func (h *handlers) attach(w http.ResponseWriter, r *http.Request) {
 	if err == nil && !filename.IsString() {
 		err = errors.New("filename.replace is not a function")
 	}
-	var storagePath string
+	var stored, storagePath string
 	name := safeName(filename.Str())
 	if err == nil {
 		random := make([]byte, 8)
 		if _, err = h.random(random); err == nil {
-			storagePath, err = safepath.ResolveChild(h.uploads, number(t.ID)+"_"+hex.EncodeToString(random)+"_"+name)
+			stored = number(t.ID) + "_" + hex.EncodeToString(random) + "_" + name
+			storagePath, err = safepath.ResolveChild(h.uploads, stored)
 		}
 	}
 	if err == nil {
@@ -149,11 +169,11 @@ func (h *handlers) attach(w http.ResponseWriter, r *http.Request) {
 	}
 	var id jsbind.Cell
 	if err == nil {
-		stored := "application/octet-stream"
+		mediatype := "application/octet-stream"
 		if mediaType(mimetype.Str()) {
-			stored = mimetype.Str()
+			mediatype = mimetype.Str()
 		}
-		id, err = addAttachment(r.Context(), h.db, t.id(), name, jsbind.String(stored), len(file), storagePath, kit.User(r).Username)
+		id, err = addAttachment(r.Context(), h.db, t.id(), name, jsbind.String(mediatype), len(file), stored, kit.User(r).Username)
 		if err != nil {
 			// A file without a row is reached by nothing
 			_ = os.Remove(storagePath)
@@ -218,8 +238,8 @@ func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
 	w.Header()["Content-Type"] = []string{contentType}
 
 	failed := func(w http.ResponseWriter, r *http.Request, status int, err error) { h.fileError(w, r, status, err) }
-	if info.IsDir() || hasDotPart(path) {
-		// A folder is no file, and a path through a dot folder is hidden
+	if info.IsDir() || h.hiddenBelow(path) {
+		// A folder is no file, and a file whose name starts with a dot is hidden
 		failed(w, r, http.StatusNotFound, fmt.Errorf("cannot send %s", filepath.Base(path)))
 		return
 	}
@@ -229,8 +249,7 @@ func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
 	}))
 }
 
-// hasDotPart reports whether a part of the path starts with a dot. Such
-// a file is not sent.
+// hasDotPart reports whether a part of the path starts with a dot.
 func hasDotPart(path string) bool {
 	for _, part := range strings.Split(filepath.ToSlash(path), "/") {
 		if len(part) > 1 && part[0] == '.' {

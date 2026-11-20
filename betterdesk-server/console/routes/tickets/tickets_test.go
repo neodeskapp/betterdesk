@@ -306,11 +306,12 @@ func TestAnUploadIsStoredUnderTheTicketAndARandomName(t *testing.T) {
 		t.Errorf("mode of the stored file: %v", info.Mode())
 	}
 	var stored string
-	if err := g.db.QueryRow(context.Background(), "SELECT storage_path FROM ticket_attachments WHERE id = 1").Scan(&stored); err != nil || stored != path {
-		t.Errorf("storage_path = %q, %v; want %q", stored, err, path)
+	if err := g.db.QueryRow(context.Background(), "SELECT storage_path FROM ticket_attachments WHERE id = 1").Scan(&stored); err != nil || stored != filepath.Base(path) {
+		t.Errorf("storage_path = %q, %v; want %q", stored, err, filepath.Base(path))
 	}
 
-	// A row that points out of the folder is not served and not deleted
+	// A row that points out of the folder is read by its name in the folder:
+	// the file there is missing, and the one outside is not deleted
 	outside := filepath.Join(t.TempDir(), "secret.txt")
 	if err := os.WriteFile(outside, []byte("secret"), 0o600); err != nil {
 		t.Fatal(err)
@@ -318,7 +319,7 @@ func TestAnUploadIsStoredUnderTheTicketAndARandomName(t *testing.T) {
 	if _, err := g.db.Exec(context.Background(), "INSERT INTO ticket_attachments (ticket_id, filename, storage_path, uploaded_by) VALUES (1, 'x', ?, 'x')", outside); err != nil {
 		t.Fatal(err)
 	}
-	g.want(g.do("admin", "GET", "/api/tickets/attachments/2", ""), 500, `{"error":"Internal server error"}`)
+	g.want(g.do("admin", "GET", "/api/tickets/attachments/2", ""), 404, `{"error":"Attachment file missing"}`)
 	link := filepath.Join(g.h.uploads, "1_link")
 	if err := os.Symlink(outside, link); err == nil {
 		if _, err := g.db.Exec(context.Background(), "INSERT INTO ticket_attachments (ticket_id, filename, storage_path, uploaded_by) VALUES (1, 'l', ?, 'x')", link); err != nil {
