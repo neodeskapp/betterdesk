@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/discovery"
 	"github.com/unitronix/betterdesk-server/console/listen"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
@@ -536,6 +537,34 @@ func TestClientAPICertificateWarning(t *testing.T) {
 		}
 		if warns := strings.Contains(logged.String(), invalid); warns != c.warns {
 			t.Errorf("RUSTDESK_API_TLS=%q, key %s: warned %v, want %v; log:\n%s", c.mode, c.key, warns, c.warns, logged.String())
+		}
+	}
+}
+
+// TestLANAnnouncesTheConsoleListener: LAN discovery announces the port
+// and scheme of the listener that serves the console: the HTTPS port with
+// a certificate (not the plain port, which only redirects), and http on
+// the plain port in HTTPS mode without a usable certificate.
+func TestLANAnnouncesTheConsoleListener(t *testing.T) {
+	certs := makeTestCerts(t)
+	db := storetest.Migrated(t)
+	for _, c := range []struct {
+		scenario string
+		https    bool
+		listener string
+	}{
+		{"https", true, "https"},
+		{"fallback missing files", false, "console"},
+		{"proxy", false, "console"},
+	} {
+		g, err := newGoStack(t, db, oracleScenarioNamed(t, c.scenario), certs, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := g.s.announced(discovery.Settings{})
+		_, port, _ := net.SplitHostPort(g.ports[c.listener])
+		if want, _ := strconv.Atoi(port); got.HTTPS != c.https || got.Port != float64(want) {
+			t.Errorf("%s: announces https %v port %v, want https %v port %d", c.scenario, got.HTTPS, got.Port, c.https, want)
 		}
 	}
 }

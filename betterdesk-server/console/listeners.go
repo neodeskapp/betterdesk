@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/discovery"
 	"github.com/unitronix/betterdesk-server/console/listen"
 	"github.com/unitronix/betterdesk-server/logging"
 )
@@ -153,6 +154,21 @@ func (s *Server) openListeners(ctx context.Context) error {
 		s.net.redirectAddr = redirect
 	}
 	return nil
+}
+
+// announced are LAN discovery settings with the port and scheme of the
+// listener that serves the console, once it listens: the HTTPS listener
+// with a certificate, the plain one otherwise (also in HTTPS mode without
+// a usable certificate). Before that the configured plain port.
+func (s *Server) announced(settings discovery.Settings) discovery.Settings {
+	settings.HTTPS = s.net.cert != nil
+	settings.Port = float64(s.cfg.Port)
+	if _, port, err := net.SplitHostPort(s.net.addr); err == nil {
+		if n, err := strconv.Atoi(port); err == nil {
+			settings.Port = float64(n)
+		}
+	}
+	return settings
 }
 
 // startClientAPI opens the client API port, if there is one.

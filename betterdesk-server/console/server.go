@@ -415,14 +415,15 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	s.jobs.Add("integration housekeeping", sweeps.RunIntegration)
 	s.jobs.Add("online status sync", sweeps.RunStatusSync)
 	if cfg.NodeUpstream == nil {
-		lan := discovery.FromEnv(getenv, discovery.Settings{PubKeyPath: cfg.PubKeyPath, Port: float64(cfg.Port), APIPort: float64(cfg.APIPort), HTTPS: cfg.HTTPS,
-			Version: cfg.Version})
-		s.jobs.Add("LAN discovery", discovery.NewLAN(lan).Run)
+		// The jobs start after the listeners and announce the port and
+		// scheme of the one that serves the console (listeners.go)
+		lan := discovery.FromEnv(getenv, discovery.Settings{PubKeyPath: cfg.PubKeyPath, APIPort: float64(cfg.APIPort), Version: cfg.Version})
+		s.jobs.Add("LAN discovery", func(ctx context.Context) { discovery.NewLAN(s.announced(lan)).Run(ctx) })
 		// The old console announced itself over mDNS only where someone had
 		// installed bonjour-service by hand; no installer or image did. So
 		// the announcement runs only when PANEL_MDNS asks for it.
 		if mdns := getenv("PANEL_MDNS"); mdns != "" && mdns != "off" && mdns != "0" {
-			s.jobs.Add("mDNS announcement", discovery.NewMDNS(lan).Run)
+			s.jobs.Add("mDNS announcement", func(ctx context.Context) { discovery.NewMDNS(s.announced(lan)).Run(ctx) })
 		}
 	}
 	registerRoutes(s.deps)

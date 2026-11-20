@@ -44,10 +44,11 @@ type Settings struct {
 	// announcement as written, built from the host, port and scheme when
 	// empty.
 	PublicURL string
-	// Port is the console's port and APIPort the client API port.
+	// Port is the port of the console's listener and APIPort the client
+	// API port.
 	Port    float64
 	APIPort float64
-	// HTTPS says whether the console is on HTTPS (HTTPS_ENABLED).
+	// HTTPS says whether the console's listener is on HTTPS.
 	HTTPS bool
 	// Version is the product version.
 	Version string
