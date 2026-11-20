@@ -17,6 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
@@ -171,7 +172,7 @@ func compareReset(t *testing.T, c resetCase, status int, stdout, stderr string, 
 func describeRow(ctx context.Context, username, role, hash, oldHash, password string, hasPassword bool) resetRow {
 	r := resetRow{Username: username, Role: role, Prefix: hash[:min(7, len(hash))], Length: len(hash), Old: hash == oldHash}
 	// The old hash is for another password: no need to check it
-	if hasPassword && !r.Old && strings.HasPrefix(hash, "$2") {
+	if hasPassword && !r.Old {
 		r.Verifies, _ = authn.CheckPassword(ctx, password, hash)
 	}
 	return r
@@ -285,10 +286,35 @@ func postgresColumns(t *testing.T, dsn, schema string) []string {
 	return columns
 }
 
-// resetFix turns a recorded run into what reset-password answers since a
-// bug fix changed it on purpose, and names the bug ("" for a run no fix
-// changed).
-func resetFix(c *resetCase, start serverStart) string {
+// resetHashLength is the length of the API server's password hash:
+// "pbkdf2-sha256$600000$", 32 hex digits of salt, "$", 64 of hash.
+const resetHashLength = 118
+
+// resetFix turns a recorded run into what reset-password answers since
+// bug fixes changed it on purpose, and names the bugs (none for a run no
+// fix changed).
+func resetFix(c *resetCase, start serverStart) []string {
+	bugs := []string{}
+	if bug := resetFixRun(c, start); bug != "" {
+		bugs = append(bugs, bug)
+	}
+	// S12: the new hash is the API server's PBKDF2 hash, where the script
+	// wrote bcrypt with cost 12 ("$2b$12$", 60 letters)
+	if c.Status == 0 {
+		c.Stdout = strings.Replace(c.Stdout, "Hash type: bcrypt, length: 60\n",
+			fmt.Sprintf("Hash type: pbkdf2-sha256, length: %d\n", resetHashLength), 1)
+		for i, row := range c.State.Rows {
+			if !row.Old {
+				c.State.Rows[i].Prefix, c.State.Rows[i].Length = "pbkdf2-", resetHashLength
+			}
+		}
+		bugs = append(bugs, "S12")
+	}
+	return bugs
+}
+
+// resetFixRun is the part of resetFix that changes how a run ends.
+func resetFixRun(c *resetCase, start serverStart) string {
 	// BN5: a password under 6 characters is refused before the database
 	// is chosen or opened: nothing is printed about it and nothing made
 	if password, ok := resetPasswordOf(c.Argv); ok && utf16Length(password) < 6 {
@@ -336,7 +362,7 @@ func TestResetPasswordLikeNode(t *testing.T) {
 	start := newServerStart(t, dsn)
 	fixed := map[string]int{}
 	for i := range cases {
-		if bug := resetFix(&cases[i], start); bug != "" {
+		for _, bug := range resetFix(&cases[i], start) {
 			fixed[bug]++
 		}
 	}
@@ -732,7 +758,39 @@ func TestResetPasswordTakesThePasswordFromStandardInputOnly(t *testing.T) {
 	if err := db.QueryRow("SELECT password_hash FROM users WHERE username = 'admin'").Scan(&hash); err != nil {
 		t.Fatal(err)
 	}
-	if ok, _ := authn.CheckPassword(context.Background(), "Secret-123", hash); !ok || !strings.HasPrefix(hash, "$2b$12$") {
+	if ok, _ := authn.CheckPassword(context.Background(), "Secret-123", hash); !ok {
 		t.Errorf("the first line without its line end is not the password: %s", hash[:7])
+	}
+}
+
+// reset-password hashes the password as the API server does, so neither
+// sign-in re-hashes it and both accept it (S12).
+func TestResetPasswordHashesAsTheAPIServer(t *testing.T) {
+	root := t.TempDir()
+	file := filepath.Join(root, "db_v2.sqlite3")
+	status, out := runReset(t, map[string]string{"DB_PATH": file, "CONSOLE_DIR": root}, root)
+	if status != 0 {
+		t.Fatalf("%d %q", status, out)
+	}
+	db, err := sql.Open("sqlite", "file:"+file+"?mode=ro")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	var hash string
+	if err := db.QueryRow("SELECT password_hash FROM users WHERE username = 'admin'").Scan(&hash); err != nil {
+		t.Fatal(err)
+	}
+	if prefix := fmt.Sprintf("pbkdf2-sha256$%d$", auth.PasswordIterations); !strings.HasPrefix(hash, prefix) || len(hash) != resetHashLength {
+		t.Errorf("hash %.21s... of length %d, want %s... of length %d", hash, len(hash), prefix, resetHashLength)
+	}
+	if !auth.VerifyPassword(hash, "Neu-Passw0rd") || auth.NeedsRehash(hash) {
+		t.Error("the API server does not take the hash as its own")
+	}
+	if ok, _ := authn.CheckPassword(context.Background(), "Neu-Passw0rd", hash); !ok {
+		t.Error("the console's sign-in does not take the hash")
+	}
+	if want := fmt.Sprintf("Hash type: pbkdf2-sha256, length: %d\n", resetHashLength); !strings.Contains(out, want) {
+		t.Errorf("output %q, want %q in it", out, want)
 	}
 }

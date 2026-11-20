@@ -10,10 +10,10 @@
 // # Passwords
 //
 // New hashes are the API server's ("pbkdf2-sha256$600000$...", made by
-// auth.HashPasswordFrom), so the API server's sign-in keeps them. A stored
-// hash can also be the API server's older PBKDF2 form or a bcrypt hash
-// ("$2b$", "$2a$", "$2$") that older consoles and the reset-password
-// command write; the console checks every form and replaces none.
+// auth.HashPasswordFrom, also by the reset-password command), so the API
+// server's sign-in keeps them. A stored hash can also be the API server's
+// older PBKDF2 form or a bcrypt hash ("$2b$", "$2a$", "$2$") that older
+// consoles wrote; the console checks every form and replaces none.
 // bcrypt.go says exactly which bcrypt texts verify.
 //
 // # Sign-in

@@ -3,9 +3,31 @@ package authn
 import (
 	"context"
 	"crypto/rand"
+	"fmt"
+	"io"
 	"strings"
 	"testing"
 )
+
+// bcryptHash makes a "$2b$" hash of password with a salt from random, as
+// older consoles stored them. The console itself writes none.
+func bcryptHash(ctx context.Context, random io.Reader, password string, cost uint) (string, error) {
+	if cost < bcryptMinCost {
+		cost = bcryptMinCost
+	}
+	if cost > bcryptMaxCost {
+		cost = bcryptMaxCost
+	}
+	salt := make([]byte, bcryptSaltLen)
+	if _, err := io.ReadFull(random, salt); err != nil {
+		return "", fmt.Errorf("bcrypt salt: %w", err)
+	}
+	hash, err := bcryptRaw(ctx, bcryptKey(password, 'b'), cost, salt)
+	if err != nil {
+		return "", err
+	}
+	return bcryptFormat('b', cost, salt, hash), nil
+}
 
 // TestBcrypt2aLongPasswordUsesTheFirst72Bytes: for a "$2a$" or "$2$" hash
 // a password of any length counts with its first 72 bytes, as for "$2b$";

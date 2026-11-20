@@ -19,6 +19,7 @@ import (
 	// The SQLite driver ("sqlite")
 	_ "modernc.org/sqlite"
 
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/console/authn"
 	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
@@ -32,7 +33,7 @@ const resetUsage = "Usage: betterdesk-server reset-password [username]   (the ne
 // resetOptions are what reset-password reads besides Env. Tests replace
 // them.
 type resetOptions struct {
-	// random is the source of the bcrypt salt.
+	// random is the source of the password hash's salt.
 	random io.Reader
 	// terminal reports whether standard input is a terminal.
 	terminal func(io.Reader) bool
@@ -58,10 +59,12 @@ type resetOptions struct {
 // The new password is the first line of standard input, without its line
 // end. It is never taken from the arguments and never printed, and a
 // terminal on standard input is refused, because the password would show
-// as it is typed. The script's --delete-all is not taken.
+// as it is typed. The script's --delete-all is not taken. The password is
+// stored as the API server stores it (auth.HashPasswordFrom, PBKDF2), so
+// both sign-ins take it and neither replaces the hash.
 //
-// It prints what the script printed and exits with 0 when the password
-// was set and 1 otherwise.
+// It prints what the script printed, with the hash's type and length, and
+// exits with 0 when the password was set and 1 otherwise.
 func ResetPassword(args []string, env Env) int {
 	cwd, _ := os.Getwd()
 	return resetPassword(args, env, resetOptions{
@@ -182,13 +185,13 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 		return 1
 	}
 
-	hash, err := authn.NewPasswordHash(ctx, opts.random, password)
+	hash, err := auth.HashPasswordFrom(opts.random, auth.PasswordIterations, password)
 	if err != nil {
 		fmt.Fprintf(e, "Error: %v\n", err)
 		return 1
 	}
 	if valid, err := authn.CheckPassword(ctx, password, hash); err != nil || !valid {
-		fmt.Fprintln(e, "CRITICAL: bcrypt self-test failed! The generated hash cannot verify the password.")
+		fmt.Fprintln(e, "CRITICAL: password hash self-test failed! The generated hash cannot verify the password.")
 		return 1
 	}
 
@@ -220,7 +223,7 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 		fmt.Fprintf(e, "Error: %s\n", sqliteMessage(err))
 		return 1
 	}
-	fmt.Fprintf(o, "Hash type: bcrypt, length: %d\n", len(hash))
+	fmt.Fprintf(o, "Hash type: pbkdf2-sha256, length: %d\n", len(hash))
 	if err := users.Close(); err != nil {
 		fmt.Fprintf(e, "Error: %s\n", sqliteMessage(err))
 		return 1

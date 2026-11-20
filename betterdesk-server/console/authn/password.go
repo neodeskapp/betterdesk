@@ -6,16 +6,12 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"errors"
-	"io"
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/auth"
 )
 
 const (
-	// resetCost is the bcrypt cost of the reset-password command's hashes.
-	resetCost = 12
-
 	// dummyHash is compared with the password of an unknown user, so that
 	// an unknown name takes as long as a wrong password: a hash of the
 	// form and cost HashPassword makes, which no password fits.
@@ -90,15 +86,6 @@ func pbkdf2Equal(password string, salt []byte, iterations int, expected []byte) 
 // the same form, so a sign-in on either side leaves the hash as it is.
 func (s *Service) HashPassword(_ context.Context, password string) (string, error) {
 	return auth.HashPasswordFrom(s.rand, s.hashIterations, toWellFormed(password))
-}
-
-// NewPasswordHash is the hash the reset-password command writes, which
-// opens no console: bcrypt with cost 12 and the salt from random, "$2b$12$"
-// and 53 more letters. bcrypt reads at most the first 72 bytes of a
-// password. Both sides check such a hash; the API server replaces it with
-// its own form at its next sign-in.
-func NewPasswordHash(ctx context.Context, random io.Reader, password string) (string, error) {
-	return bcryptHash(ctx, random, toWellFormed(password), resetCost)
 }
 
 // CheckPassword is VerifyPassword without a Service.

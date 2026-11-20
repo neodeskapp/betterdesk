@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/subtle"
 	"fmt"
-	"io"
 	"strings"
 
 	"golang.org/x/crypto/blowfish"
@@ -219,23 +218,4 @@ func bcryptCompare(ctx context.Context, password, stored string) (bool, error) {
 	}
 	want := bcryptFormat(p.minor, p.cost, p.salt, hash)
 	return subtle.ConstantTimeCompare([]byte(want), []byte(p.text)) == 1, nil
-}
-
-// bcryptHash makes a "$2b$" hash of password with a salt from random.
-func bcryptHash(ctx context.Context, random io.Reader, password string, cost uint) (string, error) {
-	if cost < bcryptMinCost {
-		cost = bcryptMinCost
-	}
-	if cost > bcryptMaxCost {
-		cost = bcryptMaxCost
-	}
-	salt := make([]byte, bcryptSaltLen)
-	if _, err := io.ReadFull(random, salt); err != nil {
-		return "", fmt.Errorf("bcrypt salt: %w", err)
-	}
-	hash, err := bcryptRaw(ctx, bcryptKey(password, 'b'), cost, salt)
-	if err != nil {
-		return "", err
-	}
-	return bcryptFormat('b', cost, salt, hash), nil
 }
