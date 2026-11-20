@@ -155,13 +155,25 @@ func TestRealClock(t *testing.T) {
 	}
 }
 
-// The first look of a wait after an abort.
-func TestNextLook(t *testing.T) {
-	start := time.UnixMilli(10_000)
-	cases := map[int64]int64{9_000: 10_200, 10_000: 10_200, 10_001: 10_200, 10_200: 10_200, 10_201: 10_400, 13_037: 13_200}
-	for at, want := range cases {
-		if got := nextLook(start, time.UnixMilli(at)).UnixMilli(); got != want {
-			t.Errorf("nextLook(10000, %d) = %d, want %d", at, got, want)
-		}
+
+// An abort ends the wait in progress at once, and every wait after it
+// before it starts (BUGS SA1).
+func TestAnAbortEndsTheWaitAtOnce(t *testing.T) {
+	start := time.UnixMilli(1_700_000_000_000)
+	clock := &fakeClock{now: start}
+	s := New(Options{Settings: newMapSettings(), Clock: clock, Snapshot: func() Snapshot { return Snapshot{} }})
+	if !s.Start() {
+		t.Fatal("did not start")
+	}
+	r := <-s.starts
+	clock.at(start.Add(3037*time.Millisecond), func() { s.RequestAbort() })
+	if err := r.pause(context.Background(), baselineWait); err != errAborted {
+		t.Fatalf("the wait ended with %v", err)
+	}
+	if got := clock.now.Sub(start); got != 3037*time.Millisecond {
+		t.Errorf("the wait ended %v after its start, the abort came after 3.037s", got)
+	}
+	if err := r.pause(context.Background(), rampInterval); err != errAborted || clock.now.Sub(start) != 3037*time.Millisecond {
+		t.Errorf("a wait after the abort: %v at %v", err, clock.now.Sub(start))
 	}
 }

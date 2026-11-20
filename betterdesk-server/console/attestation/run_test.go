@@ -1,11 +1,14 @@
 package attestation
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strconv"
@@ -475,6 +478,11 @@ func play(t *testing.T, db *store.DB, sc *scenarioRecord, start time.Time) []str
 // progress, the result, the stored row, the state after it, and the
 // connections opened, the messages sent and the connections closed, at
 // the same times. Each database replays the recording made on it.
+//
+// The scenarios a bug fix changed on purpose (runFixes) differ from Node's
+// runs in the ways testdata/runs_fixed.json holds, and in no other.
+// ATTESTATION_RECORD_FIXED=1 writes that file from this run and fails for
+// a listed scenario that runs as Node did.
 func TestRunsAsNodeRanThem(t *testing.T) {
 	files := map[string]runFile{}
 	for _, dialect := range []string{"sqlite", "postgres"} {
@@ -482,6 +490,12 @@ func TestRunsAsNodeRanThem(t *testing.T) {
 		readGzipJSON(t, "runs_"+dialect+".json.gz", &f)
 		files[dialect] = f
 	}
+	recording := os.Getenv("ATTESTATION_RECORD_FIXED") == "1"
+	fixed := map[string]map[string]fixedRun{}
+	if !recording {
+		fixed = loadFixedRuns(t)
+	}
+	written := map[string]map[string]fixedRun{}
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		f := files["sqlite"]
 		if db.IsPostgres() {
@@ -490,14 +504,107 @@ func TestRunsAsNodeRanThem(t *testing.T) {
 		if len(f.Scenarios) < 30 {
 			t.Fatalf("only %d scenarios", len(f.Scenarios))
 		}
-		runs := 0
+		written[f.Dialect] = map[string]fixedRun{}
+		runs, listed := 0, 0
 		for i := range f.Scenarios {
 			sc := &f.Scenarios[i]
 			runs += len(sc.Runs)
-			for _, d := range play(t, db, sc, time.UnixMilli(f.Start)) {
-				t.Errorf("%s: %s", sc.Name, d)
+			diffs := play(t, db, sc, time.UnixMilli(f.Start))
+			bug, isListed := runFixes[sc.Name]
+			switch {
+			case isListed && recording:
+				listed++
+				if len(diffs) == 0 {
+					t.Errorf("%s is listed for %s but runs as Node ran it", sc.Name, bug)
+				}
+				written[f.Dialect][sc.Name] = fixedRun{Bug: bug, Differences: diffs}
+			case isListed:
+				listed++
+				want := fixed[f.Dialect][sc.Name]
+				if want.Bug != bug {
+					t.Errorf("%s is listed for %s, %s holds it for %q", sc.Name, bug, fixedRunsFile, want.Bug)
+				}
+				if strings.Join(diffs, "\n") != strings.Join(want.Differences, "\n") {
+					t.Errorf("%s (%s) differs from Node's run otherwise than %s holds:\n%s\nwant:\n%s",
+						sc.Name, bug, fixedRunsFile, strings.Join(diffs, "\n"), strings.Join(want.Differences, "\n"))
+				}
+			default:
+				for _, d := range diffs {
+					t.Errorf("%s: %s", sc.Name, d)
+				}
 			}
+		}
+		if !recording && len(fixed[f.Dialect]) != listed {
+			t.Errorf("%s holds %d scenarios of %s, runFixes lists %d", fixedRunsFile, len(fixed[f.Dialect]), f.Dialect, listed)
 		}
 		t.Logf("%s: %d scenarios, %d runs", f.Dialect, len(f.Scenarios), runs)
 	})
+	if recording {
+		writeFixedRuns(t, written)
+	}
+}
+
+// runFixes are the scenarios a bug fix of BUGS.md changed on purpose, with
+// the bug. A scenario that several fixes change stays with the first.
+var runFixes = map[string]string{
+	// A wait ends the moment an abort comes, not at its next look
+	"abort-in-baseline":          "SA1",
+	"abort-twice":                "SA1",
+	"abort-in-first-pause":       "SA1",
+	"abort-in-ramp-pause":        "SA1",
+	"abort-at-end-of-ramp-pause": "SA1",
+	"abort-while-connecting":     "SA1",
+	"abort-in-stabilize":         "SA1",
+	"abort-estimate-stabilize":   "SA1",
+	"two-runs":                   "SA1",
+	"stored-result-falsy":        "SA1",
+}
+
+// fixedRun is how a listed scenario differs from Node's run.
+type fixedRun struct {
+	Bug         string   `json:"bug"`
+	Differences []string `json:"differences"`
+}
+
+const fixedRunsFile = "runs_fixed.json"
+
+// loadFixedRuns reads testdata/runs_fixed.json: per database, per
+// scenario, the differences. No file means none.
+func loadFixedRuns(t *testing.T) map[string]map[string]fixedRun {
+	t.Helper()
+	raw, err := os.ReadFile(filepath.Join("testdata", fixedRunsFile))
+	if os.IsNotExist(err) && len(runFixes) == 0 {
+		return map[string]map[string]fixedRun{}
+	}
+	if err != nil {
+		t.Fatalf("read %s: %v", fixedRunsFile, err)
+	}
+	var fixed map[string]map[string]fixedRun
+	if err := json.Unmarshal(raw, &fixed); err != nil {
+		t.Fatalf("parse %s: %v", fixedRunsFile, err)
+	}
+	return fixed
+}
+
+// writeFixedRuns writes testdata/runs_fixed.json, or removes it when no
+// scenario is listed.
+func writeFixedRuns(t *testing.T, fixed map[string]map[string]fixedRun) {
+	t.Helper()
+	path := filepath.Join("testdata", fixedRunsFile)
+	if len(runFixes) == 0 {
+		if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+			t.Fatal(err)
+		}
+		return
+	}
+	var out bytes.Buffer
+	enc := json.NewEncoder(&out)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", " ")
+	if err := enc.Encode(fixed); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, out.Bytes(), 0o644); err != nil {
+		t.Fatal(err)
+	}
 }

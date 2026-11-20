@@ -48,8 +48,6 @@ const (
 	connectTimeout     = 8 * time.Second
 	probeTimeout       = 5 * time.Second
 	errorRateAbort     = 0.05
-	// watchInterval is how often a waiting run looks for an abort.
-	watchInterval = 200 * time.Millisecond
 )
 
 // Options configure the service. Settings is required; any other zero
@@ -210,7 +208,6 @@ func (s *Service) RequestAbort() bool {
 	s.abortRequested = true
 	if r := s.current; r != nil && !r.aborted {
 		r.aborted = true
-		r.abortAt = s.opts.Clock.Now()
 		close(r.abort)
 	}
 	if s.pool != nil {

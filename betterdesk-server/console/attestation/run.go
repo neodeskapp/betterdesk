@@ -15,16 +15,10 @@ import (
 type run struct {
 	s       *Service
 	started time.Time
-	// abort is closed at the first abort request of the test; aborted and
-	// abortAt (guarded by s.mu) say whether and when it came
-	abort   chan struct{}
-	aborted bool
-	abortAt time.Time
-	// watches are the start times of the waits of this test. Each wait
-	// looks for an abort every watchInterval from its start, and keeps
-	// looking after it ended, until the test is aborted: the first look
-	// after the abort marks the test as aborted for the waits after it.
-	watches   []time.Time
+	// abort is closed at the first abort request of the test; aborted
+	// (guarded by s.mu) says whether it came
+	abort     chan struct{}
+	aborted   bool
 	rampSteps []any
 }
 
@@ -35,11 +29,11 @@ type stable struct {
 	metrics     *metrics
 }
 
-// abortTime is when the test was asked to stop, if it was.
-func (r *run) abortTime() (time.Time, bool) {
+// wasAborted says whether the test was asked to stop.
+func (r *run) wasAborted() bool {
 	r.s.mu.Lock()
 	defer r.s.mu.Unlock()
-	return r.abortAt, r.aborted
+	return r.aborted
 }
 
 // abortRequested is runState.abortRequested.
@@ -49,65 +43,22 @@ func (r *run) abortRequested() bool {
 	return r.s.abortRequested
 }
 
-// nextLook is the first look of a wait that started at start, at or after
-// at.
-func nextLook(start, at time.Time) time.Time {
-	if !at.After(start) {
-		return start.Add(watchInterval)
-	}
-	n := (at.Sub(start) + watchInterval - 1) / watchInterval
-	return start.Add(n * watchInterval)
-}
-
-// marked says whether a wait has seen the abort by now.
-func (r *run) marked(now time.Time) bool {
-	at, ok := r.abortTime()
-	if !ok {
-		return false
-	}
-	for _, w := range r.watches {
-		if !nextLook(w, at).After(now) {
-			return true
-		}
-	}
-	return false
-}
-
 // pause waits for d (sleep(ms, abortSignal)). It fails with errAborted at
-// once when a wait has seen an abort already, and at its own first look
-// after an abort that comes while it waits.
+// once when the test was aborted before, and the moment an abort comes
+// while it waits.
 func (r *run) pause(ctx context.Context, d time.Duration) error {
-	clock := r.s.opts.Clock
-	start := clock.Now()
-	if r.marked(start) {
+	if r.wasAborted() {
 		return errAborted
 	}
-	r.watches = append(r.watches, start)
-	deadline := start.Add(d)
-	for {
-		wake, aborts := deadline, false
-		at, aborted := r.abortTime()
-		if aborted {
-			if look := nextLook(start, at); look.Before(deadline) {
-				wake, aborts = look, true
-			}
-		}
-		var signal <-chan struct{}
-		if !aborted {
-			signal = r.abort
-		}
-		reached, err := clock.SleepUntil(ctx, wake, signal)
-		if err != nil {
-			return err
-		}
-		if !reached {
-			continue
-		}
-		if aborts {
-			return errAborted
-		}
-		return nil
+	clock := r.s.opts.Clock
+	reached, err := clock.SleepUntil(ctx, clock.Now().Add(d), r.abort)
+	if err != nil {
+		return err
 	}
+	if !reached {
+		return errAborted
+	}
+	return nil
 }
 
 // loadTest is runLoadTest after its start: the baseline, the probe, the
