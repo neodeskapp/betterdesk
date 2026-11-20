@@ -108,8 +108,14 @@ func init() {
 		contract.Case{
 			Name: "info", Path: "/api/settings/info",
 			// nodeVersion names the runtime of the process that answers;
-			// the uptimes and the memory change from second to second
-			Volatile: []string{"~data.app.nodeVersion", "~data.goServer.uptime", "data.server.uptime", "data.server.memoryUsage"},
+			// the uptimes and the memory change from second to second. How
+			// many devices count as online depends on how long ago the
+			// device of an earlier group reported, so it changes within a
+			// full run.
+			Volatile: []string{
+				"~data.app.nodeVersion", "~data.goServer.uptime", "data.server.uptime", "data.server.memoryUsage",
+				"data.stats.online", "data.stats.offline",
+			},
 		},
 		contract.Case{Name: "server-info", Path: "/api/settings/server-info"},
 		contract.Case{
