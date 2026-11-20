@@ -262,11 +262,12 @@ func TestResolvePort(t *testing.T) {
 
 func TestCapabilityBit(t *testing.T) {
 	for status, want := range map[string]bool{
-		"CapEff:\t0000000000001000\n":                       true,
-		"CapEff:\t0000000000000400\n":                       false, // CAP_NET_BIND_SERVICE, bit 10
+		"CapEff:\t0000000000000400\n":                       true,  // CAP_NET_BIND_SERVICE, bit 10
+		"CapEff:\t0000000000001000\n":                       false, // CAP_NET_ADMIN, bit 12
+		"CapEff:\t0000000000000c00\n":                       true,
 		"Name:\tx\nCapEff:\t000001ffffffffff\nCapBnd:\t0\n": true,
 		"CapEff:\t0000000000000000\n":                       false,
-		"CapInh:\t0000000000001000\n":                       false,
+		"CapInh:\t0000000000000400\n":                       false,
 		"":                                                  false,
 	} {
 		if got := capabilityBit(status); got != want {

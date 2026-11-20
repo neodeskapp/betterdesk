@@ -28,9 +28,8 @@ func ResolvePort(configured, fallback int, label string, canBindLow func() bool,
 
 // CanBindLowPorts reports whether the process counts as one that may
 // bind ports below 1024: it runs as root, BETTERDESK_HAS_BIND_SERVICE is
-// 1, true, yes or y, or (on Linux) bit 12 of its effective capabilities
-// is set. Bit 12 is CAP_NET_ADMIN; CAP_NET_BIND_SERVICE is bit 10. The
-// old console tested bit 12, and the installers set the variable.
+// 1, true, yes or y, or (on Linux) it has CAP_NET_BIND_SERVICE among its
+// effective capabilities.
 func CanBindLowPorts(getenv func(string) string) bool {
 	if os.Getuid() == 0 {
 		return true
@@ -51,8 +50,12 @@ func CanBindLowPorts(getenv func(string) string) bool {
 
 var capEffLine = regexp.MustCompile(`(?m)^CapEff:\s*([0-9a-fA-F]+)`)
 
-// capabilityBit reads the bit of the CapEff line of /proc/self/status
-// that the old console took for the right to bind low ports: bit 12.
+// capNetBindService is the bit of CAP_NET_BIND_SERVICE in a capability
+// set.
+const capNetBindService = 10
+
+// capabilityBit reads whether the CapEff line of /proc/self/status has
+// CAP_NET_BIND_SERVICE.
 func capabilityBit(status string) bool {
 	m := capEffLine.FindStringSubmatch(status)
 	if m == nil {
@@ -70,7 +73,7 @@ func capabilityBit(status string) bool {
 	if err != nil {
 		return false
 	}
-	return value&(1<<12) != 0
+	return value&(1<<capNetBindService) != 0
 }
 
 // InUse reports a listen error because the address is taken.
