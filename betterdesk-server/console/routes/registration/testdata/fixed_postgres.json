@@ -1,5 +1,185 @@
 [
  {
+  "step": "116 POST /api/help/requests/999/accept",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/acknowledge",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "117 POST /api/help/requests/999/resolve",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/resolve",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "131 POST /api/bd/api/help/requests/999/accept",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/acknowledge",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "132 POST /api/bd/api/help/requests/999/resolve",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/resolve",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "150 POST /api/help/requests/999/accept",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/acknowledge",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "151 POST /api/help/requests/999/resolve",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/resolve",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "165 POST /api/bd/api/help/requests/999/accept",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/acknowledge",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "166 POST /api/bd/api/help/requests/999/resolve",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/resolve",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "184 POST /api/help/requests/999/accept",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/acknowledge",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "185 POST /api/help/requests/999/resolve",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/resolve",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "199 POST /api/bd/api/help/requests/999/accept",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/acknowledge",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "200 POST /api/bd/api/help/requests/999/resolve",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/resolve",
+    "body": ""
+   }
+  ]
+ },
+ {
   "step": "205 GET /api/registrations",
   "bugs": [
    "UM12"
@@ -54,6 +234,126 @@
   ],
   "status": 403,
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
+ },
+ {
+  "step": "252 POST /api/help/requests/999/accept",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/acknowledge",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "253 POST /api/help/requests/999/resolve",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/resolve",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "267 POST /api/bd/api/help/requests/999/accept",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/acknowledge",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "268 POST /api/bd/api/help/requests/999/resolve",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/resolve",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "286 POST /api/help/requests/999/accept",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/acknowledge",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "287 POST /api/help/requests/999/resolve",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/resolve",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "301 POST /api/bd/api/help/requests/999/accept",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/acknowledge",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "302 POST /api/bd/api/help/requests/999/resolve",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/999/resolve",
+    "body": ""
+   }
+  ]
  },
  {
   "step": "315 POST /api/bd/register-request",
@@ -1538,6 +1838,59 @@
    {
     "method": "GET",
     "url": "/api/help/requests?limit=200",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "631 POST /api/help/requests/x%20y/accept",
+  "bugs": [
+   "C5"
+  ],
+  "status": 400,
+  "answer": "{\"success\":false,\"error\":\"Invalid requestId\"}"
+ },
+ {
+  "step": "632 POST /api/help/requests/99999999999999999999999999999999999999999999999999/accept",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/99999999999999999999999999999999999999999999999999/acknowledge",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "633 not found POST /api/help/requests/26/accept",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/26/acknowledge",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "step": "634 not found POST /api/help/requests/26/resolve",
+  "bugs": [
+   "C5"
+  ],
+  "status": 404,
+  "answer": "{\"success\":false,\"error\":\"not found\"}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/help/requests/26/resolve",
     "body": ""
    }
   ]

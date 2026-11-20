@@ -294,14 +294,30 @@ func (h *handlers) helpResolve(w http.ResponseWriter, r *http.Request) {
 	h.helpAction(w, r, helpResolved, h.d.GoAPI.ResolveHelpRequest, "Failed to resolve")
 }
 
-// helpAction asks the API server to accept or resolve a request; 502 with
-// its error when it does not. The console writes its own audit entry and
+// helpRefusals are the failures of an accept or resolve that are about the
+// request's id, with the status they answer: the API server's reasons for
+// a request it does not have and for an id it cannot read, and the
+// client's for an id it does not send. The client's answer holds the
+// reason only, so the reason tells them apart.
+var helpRefusals = map[string]int{
+	"not found":         http.StatusNotFound,
+	"invalid id":        http.StatusBadRequest,
+	"Invalid requestId": http.StatusBadRequest,
+}
+
+// helpAction asks the API server to accept or resolve a request; 404 or
+// 400 with the reason when the id names no request, 502 with its error
+// when it fails otherwise. The console writes its own audit entry and
 // remembers the account's name for the list, both under the request's id
 // as the list shows it (helpActionID).
 func (h *handlers) helpAction(w http.ResponseWriter, r *http.Request, action string, call func(context.Context, string) *goapi.Object, fallback string) {
 	result := call(r.Context(), r.PathValue("id"))
 	if !result.Bool("success") {
-		failure(w, r, http.StatusBadGateway, orValue(result.Get("error"), fallback))
+		status := http.StatusBadGateway
+		if reason, isText := result.Get("error").(string); isText && helpRefusals[reason] != 0 {
+			status = helpRefusals[reason]
+		}
+		failure(w, r, status, orValue(result.Get("error"), fallback))
 		return
 	}
 	id := helpActionID(r.PathValue("id"), result.Get("data"))

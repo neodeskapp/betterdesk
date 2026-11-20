@@ -644,6 +644,42 @@ func TestLostRaceIsRefused(t *testing.T) {
 	})
 }
 
+// An accept or resolve of a request the API server does not have answers
+// 404, and one of an id it cannot read, or that the console does not send,
+// 400, each with the reason, where they answered 502. Any other failure of
+// the API server is still 502. Nothing is written to the audit log
+// (BUGS C5).
+func TestHelpActionOfAnUnknownRequest(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		api := routetest.NewAPI().
+			On("POST /api/help/requests/999999999/acknowledge", http.StatusNotFound, `{"error":"not found"}`).
+			On("POST /api/help/requests/999999999/resolve", http.StatusNotFound, `{"error":"not found"}`).
+			On("POST /api/help/requests/0/acknowledge", http.StatusBadRequest, `{"error":"invalid id"}`).
+			On("POST /api/help/requests/7/resolve", http.StatusInternalServerError, `{"error":"internal"}`).
+			On("POST /api/help/requests/8/acknowledge", http.StatusServiceUnavailable, ``)
+		w := routetest.New(t, routetest.Options{DB: db, API: api})
+		operator := w.As("operator")
+		for _, c := range []struct {
+			path, want string
+			status     int
+		}{
+			{"/api/help/requests/999999999/accept", `{"success":false,"error":"not found"}`, 404},
+			{"/api/bd/api/help/requests/999999999/resolve", `{"success":false,"error":"not found"}`, 404},
+			{"/api/help/requests/0/accept", `{"success":false,"error":"invalid id"}`, 400},
+			{"/api/help/requests/x%20y/resolve", `{"success":false,"error":"Invalid requestId"}`, 400},
+			{"/api/help/requests/7/resolve", `{"success":false,"error":"internal"}`, 502},
+			{"/api/help/requests/8/accept", `{"success":false,"error":"Request failed with status code 503"}`, 502},
+		} {
+			if got := operator.Do(http.MethodPost, c.path, "{}"); got.Status != c.status || got.Body != c.want {
+				t.Errorf("%s: %d %s, want %d %s", c.path, got.Status, got.Body, c.status, c.want)
+			}
+		}
+		if rows := w.AuditRows(); len(rows) != 0 {
+			t.Errorf("audit %q", rows)
+		}
+	})
+}
+
 // An accept through another spelling of the id ("021") names the request
 // the API server answered for (21), in the audit entry and in the list
 // (BUGS RG11).
