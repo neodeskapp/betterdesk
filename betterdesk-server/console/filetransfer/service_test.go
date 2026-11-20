@@ -325,6 +325,10 @@ func TestAChunkGivenAsALengthIsCapped(t *testing.T) {
 		if err == nil || err.Error() != "Chunk too large (max 262144 bytes)" {
 			t.Errorf("a length of %v: %v", length, err)
 		}
+		// The length is refused before the bytes are made
+		if chunk, err := bufferFrom(goapi.NewObject("length", length)); chunk != nil || err != errChunkTooLarge {
+			t.Errorf("bufferFrom of a length of %v: %d bytes, %v", length, len(chunk), err)
+		}
 	}
 	if got := s.GetProgress(record.ID).BytesTransferred; got != 1000 {
 		t.Errorf("%d bytes after the refused chunks", got)
@@ -508,7 +512,7 @@ func TestAChunkThatIsNotBase64IsRefused(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, text := range []string{"ŁQ==", "😀QUJD", "QU JD", "QUJD\n", "QU-_", "QQ=A", "Q===", "Q", "QUJDR", "QQ="} {
+	for _, text := range []string{"ŁQ==", "😀QUJD", "QU JD", "QUJD\n", "QUJD\nRA", "QUJD\r\nRA", "QU-_", "QQ=A", "Q===", "Q", "QUJDR", "QQ="} {
 		if _, err := s.ReceiveChunk(record.ID, float64(1), text); err == nil || err.Error() != "Chunk is no base64 text" {
 			t.Errorf("chunk %q: %v", text, err)
 		}
