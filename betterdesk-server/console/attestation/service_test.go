@@ -155,7 +155,6 @@ func TestRealClock(t *testing.T) {
 	}
 }
 
-
 // An abort ends the wait in progress at once, and every wait after it
 // before it starts (BUGS SA1).
 func TestAnAbortEndsTheWaitAtOnce(t *testing.T) {
@@ -175,5 +174,54 @@ func TestAnAbortEndsTheWaitAtOnce(t *testing.T) {
 	}
 	if err := r.pause(context.Background(), rampInterval); err != errAborted || clock.now.Sub(start) != 3037*time.Millisecond {
 		t.Errorf("a wait after the abort: %v at %v", err, clock.now.Sub(start))
+	}
+}
+
+// scriptedDialer connects or fails in the order of its script and keeps
+// the connections it made.
+type scriptedDialer struct {
+	script []bool
+	conns  []*trackedConn
+}
+
+type trackedConn struct{ closed, drained bool }
+
+func (c *trackedConn) Send([]byte) error                                 { return nil }
+func (c *trackedConn) AwaitMessage(context.Context, time.Duration) error { return nil }
+func (c *trackedConn) Drain()                                            { c.drained = true }
+func (c *trackedConn) Close()                                            { c.closed = true }
+
+func (d *scriptedDialer) Dial(context.Context, string, time.Duration) (Conn, error) {
+	ok := d.script[len(d.conns)%len(d.script)]
+	c := &trackedConn{}
+	d.conns = append(d.conns, c)
+	if !ok {
+		return nil, errors.New("connect ECONNREFUSED")
+	}
+	return c, nil
+}
+
+// A relay pair whose second connection fails closes its first one: it
+// stays neither open nor outside the pool (BUGS SA3).
+func TestAHalfOpenRelayPairIsClosed(t *testing.T) {
+	dialer := &scriptedDialer{script: []bool{true, false}}
+	s := New(Options{Settings: newMapSettings(), Dialer: dialer, Clock: &fakeClock{now: time.UnixMilli(1_700_000_000_000)}})
+	if !s.Start() {
+		t.Fatal("did not start")
+	}
+	r := <-s.starts
+	if err := r.addRelayPairs(context.Background(), "ws://relay"); err != nil {
+		t.Fatal(err)
+	}
+	if len(dialer.conns) != 2*batchRelay {
+		t.Fatalf("%d dials", len(dialer.conns))
+	}
+	for i := 0; i < len(dialer.conns); i += 2 {
+		if first := dialer.conns[i]; !first.closed {
+			t.Errorf("the first connection of pair %d is left open", i/2)
+		}
+	}
+	if _, _, pairs, _, attempts := r.counts(); pairs != 0 || attempts != 2*batchRelay || s.pool.failures != batchRelay {
+		t.Errorf("%d pairs, %d attempts, %d failures", pairs, attempts, s.pool.failures)
 	}
 }

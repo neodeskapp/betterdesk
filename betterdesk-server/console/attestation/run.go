@@ -269,7 +269,7 @@ func (r *run) addSignal(ctx context.Context, url string) error {
 // addRelayPairs opens batchRelay pairs of connections to the relay, both
 // of a pair asking for the same session (addRelayPairs). A pair whose
 // second connection fails counts as one failure, and its first connection
-// is left open, outside the pool. Only the end of ctx is an error.
+// is closed. Only the end of ctx is an error.
 func (r *run) addRelayPairs(ctx context.Context, url string) error {
 	if url == "" {
 		return nil
@@ -299,7 +299,7 @@ func (r *run) addRelayPairs(ctx context.Context, url string) error {
 				r.s.mu.Unlock()
 				continue
 			}
-			first.Drain()
+			first.Close()
 		}
 		if ctx.Err() != nil {
 			return ctx.Err()

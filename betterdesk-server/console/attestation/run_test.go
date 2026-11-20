@@ -558,6 +558,8 @@ var runFixes = map[string]string{
 	"abort-estimate-stabilize":   "SA1",
 	"two-runs":                   "SA1",
 	"stored-result-falsy":        "SA1",
+	// The first connection of a relay pair whose second one fails is closed
+	"relay-pair-half-open": "SA3",
 }
 
 // fixedRun is how a listed scenario differs from Node's run.

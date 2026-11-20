@@ -68,6 +68,13 @@
     "run 0 ends at 19500, node 19536"
    ]
   },
+  "relay-pair-half-open": {
+   "bug": "SA3",
+   "differences": [
+    "event 36 of 123 (node 122): node map[op:connect socket:10 t:10040 timeout:8000 url:ws://127.0.0.1:21119 verify:true], go map[op:close socket:8 t:10040]",
+    "123 events, node 122"
+   ]
+  },
   "stored-result-falsy": {
    "bug": "SA1",
    "differences": [
@@ -148,6 +155,13 @@
    "bug": "SA1",
    "differences": [
     "run 0 ends at 19500, node 19536"
+   ]
+  },
+  "relay-pair-half-open": {
+   "bug": "SA3",
+   "differences": [
+    "event 36 of 123 (node 122): node map[op:connect socket:10 t:10040 timeout:8000 url:ws://127.0.0.1:21119 verify:true], go map[op:close socket:8 t:10040]",
+    "123 events, node 122"
    ]
   },
   "stored-result-falsy": {
