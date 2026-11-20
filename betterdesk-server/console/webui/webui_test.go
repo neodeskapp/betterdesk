@@ -51,7 +51,7 @@ func encodedBase(base string) string { return strings.ReplaceAll(base, "/", "%2F
 func TestSignedOutGoesToSignInWithTheWayBack(t *testing.T) {
 	bases(t, func(t *testing.T, h *Host, base, _ string) {
 		a := serve(h, "GET", base+"/devices?open=123", nil)
-		wantRedirect(t, a, "a console page", 302, "/login?return="+encodedBase(base)+"%2Fdevices%3Fopen%3D123")
+		wantRedirect(t, a, "a console page", 302, base+"/login?return="+encodedBase(base)+"%2Fdevices%3Fopen%3D123")
 		if a.get("Vary") != "Accept" || a.get("Content-Type") != "text/plain; charset=utf-8" ||
 			a.body != "Found. Redirecting to "+a.get("Location") {
 			t.Errorf("redirect without Accept: Vary %q, type %q, body %q", a.get("Vary"), a.get("Content-Type"), a.body)
@@ -74,15 +74,36 @@ func TestSignedOutGoesToSignInWithTheWayBack(t *testing.T) {
 			home = "/"
 		}
 		a = serve(h, "GET", base+"/organizations/a%5Cb", nil)
-		wantRedirect(t, a, "a page whose path holds an encoded backslash", 302, "/login?return="+strings.ReplaceAll(home, "/", "%2F"))
+		wantRedirect(t, a, "a page whose path holds an encoded backslash", 302, base+"/login?return="+strings.ReplaceAll(home, "/", "%2F"))
 	})
+}
+
+// A build for another base has its sign-in page under that base: someone
+// signed out is sent there, not to /login, which no page answers (W5).
+func TestSignedOutUnderAnotherBaseGoesToItsSignIn(t *testing.T) {
+	h, _ := testHost(t, "/app2")
+	for target, want := range map[string]string{
+		"/app2/devices?open=1": "/app2/login?return=%2Fapp2%2Fdevices%3Fopen%3D1",
+		"/app2":                "/app2/login?return=%2Fapp2",
+		"/app2/":               "/app2/login?return=%2Fapp2%2F",
+	} {
+		a := serve(h, "GET", target, nil)
+		wantRedirect(t, a, target, 302, want)
+		// The address it leads to is the sign-in page
+		wantPage(t, serve(h, "GET", a.get("Location"), nil), "the sign-in page of "+target, 200)
+	}
+	a := serve(h, "GET", "/app2/devices", map[string]string{"Cookie": "bd.sid=s%3Agone.sig"})
+	wantRedirect(t, a, "after a session ended", 302, "/app2/login?expired=1&return=%2Fapp2%2Fdevices")
+	// At the root nothing changes
+	root, _ := testHost(t, "")
+	wantRedirect(t, serve(root, "GET", "/devices", nil), "at the root", 302, "/login?return=%2Fdevices")
 }
 
 func TestProAccountsGetNoConsole(t *testing.T) {
 	bases(t, func(t *testing.T, h *Host, base, _ string) {
 		pro := map[string]string{"X-Test-User": "pro"}
 		a := serve(h, "GET", base+"/devices", pro)
-		wantRedirect(t, a, "a console page for a pro account", 302, "/login?return="+encodedBase(base)+"%2Fdevices")
+		wantRedirect(t, a, "a console page for a pro account", 302, base+"/login?return="+encodedBase(base)+"%2Fdevices")
 		wantStatus(t, serve(h, "GET", base+"/remote", pro), "the remote dashboard for a pro account", 302)
 		wantPage(t, serve(h, "GET", base+"/devices", map[string]string{"X-Test-User": "viewer"}), "a console page for a viewer", 200)
 		wantPage(t, serve(h, "GET", base+"/devices", map[string]string{"X-Test-User": "norole"}), "a console page for a session without a role", 200)
@@ -319,10 +340,10 @@ func TestProAccountKeepsTheSignInPage(t *testing.T) {
 func TestExpiredNoticeOnlyAfterASessionEnded(t *testing.T) {
 	bases(t, func(t *testing.T, h *Host, base, _ string) {
 		b := encodedBase(base)
-		wantRedirect(t, serve(h, "GET", base+"/devices?open=1", nil), "a first visit", 302, "/login?return="+b+"%2Fdevices%3Fopen%3D1")
+		wantRedirect(t, serve(h, "GET", base+"/devices?open=1", nil), "a first visit", 302, base+"/login?return="+b+"%2Fdevices%3Fopen%3D1")
 		wantRedirect(t, serve(h, "GET", base+"/devices", map[string]string{"Cookie": "bd.sid=s%3Agone.sig"}), "after a session ended", 302,
-			"/login?expired=1&return="+b+"%2Fdevices")
-		wantRedirect(t, serve(h, "GET", base+"/devices", map[string]string{"Cookie": "theme=dark"}), "another cookie", 302, "/login?return="+b+"%2Fdevices")
+			base+"/login?expired=1&return="+b+"%2Fdevices")
+		wantRedirect(t, serve(h, "GET", base+"/devices", map[string]string{"Cookie": "theme=dark"}), "another cookie", 302, base+"/login?return="+b+"%2Fdevices")
 		// The remote sign-in has no such notice
 		wantRedirect(t, serve(h, "GET", base+"/remote", map[string]string{"Cookie": "bd.sid=x"}), "a remote page", 302, base+"/remote/login?return="+b+"%2Fremote")
 	})

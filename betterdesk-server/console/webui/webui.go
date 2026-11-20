@@ -382,7 +382,8 @@ func (h *Host) servePage(w http.ResponseWriter, r *http.Request, req request) bo
 		if !ok {
 			back = home
 		}
-		httpx.Redirect(w, r, http.StatusFound, httpx.LoginRedirectURL(r, &back))
+		// The sign-in page is under the base, as the remote one above
+		httpx.Redirect(w, r, http.StatusFound, h.base+httpx.LoginRedirectURL(r, &back))
 		return true
 	}
 	h.sendPage(w, r, p, http.StatusOK, p.html)

@@ -250,6 +250,20 @@ func intended(base string, c *goldenCase) string {
 			return "W1"
 		}
 	}
+	// W5: with a build for another base, the sign-in page someone signed
+	// out is sent to is under that base
+	if loc := c.Answer["location"]; base != "" && c.Status == http.StatusFound && strings.HasPrefix(loc, "/login") {
+		c.Answer["location"] = base + loc
+		if c.Body != nil {
+			body := strings.Replace(*c.Body, "Redirecting to /login", "Redirecting to "+base+"/login", 1)
+			c.Body = &body
+		}
+		// The body names the address once, also where HEAD leaves it out
+		if n, err := strconv.Atoi(c.Answer["content-length"]); err == nil && n > 0 {
+			c.Answer["content-length"] = strconv.Itoa(n + len(base))
+		}
+		return "W5"
+	}
 	// W2: an error whose message holds "csrf" keeps its own status; the
 	// answer is no CSRF refusal. Node's recording has only the refusal, so
 	// the status is what is compared
