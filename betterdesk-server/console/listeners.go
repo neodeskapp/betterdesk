@@ -215,6 +215,11 @@ func (s *Server) serve(ctx context.Context, port int, label string, h http.Handl
 		srv.DisableGeneralOptionsHandler = true
 		srv.ConnContext = listen.ConnContext
 	}
+	if label != "HTTP redirect" {
+		// A path with a broken percent escape gets the console's 400, not
+		// net/http's own
+		ln = listen.BrokenEscapes(ln, s.brokenEscape(), srv.ReadHeaderTimeout)
+	}
 	s.net.servers = append(s.net.servers, srv)
 	go func() {
 		if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {

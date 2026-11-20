@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -580,6 +581,55 @@ func TestHTTPSFallbackCookiesAreNotSecure(t *testing.T) {
 	}
 	if res := w.agent().get("/login", "Accept", "text/html"); res.status != http.StatusOK || strings.Contains(res.header.Get("Content-Security-Policy"), "upgrade-insecure-requests") {
 		t.Errorf("sign-in page %d, policy %q", res.status, res.header.Get("Content-Security-Policy"))
+	}
+}
+
+// TestBrokenEscapeGetsTheConsolesAnswer: a request whose path has a
+// broken percent escape, which net/http refuses before any handler, gets
+// the console's 400 with the security headers (JSON under /api/) on the
+// console's listener, plain and with TLS, also as the second request of a
+// connection, which then closes (BUGS P2). The answer names the path
+// segment that does not decode, as the old console's router did.
+func TestBrokenEscapeGetsTheConsolesAnswer(t *testing.T) {
+	certs := makeTestCerts(t)
+	db := storetest.Migrated(t)
+	text := func(s string, delay int) oraclePart {
+		data := base64.StdEncoding.EncodeToString([]byte(s))
+		return oraclePart{Data: &data, Delay: delay}
+	}
+	for _, c := range []struct {
+		scenario, listener string
+		secure             bool
+	}{{"proxy", "console", false}, {"https", "https", true}} {
+		g, err := newGoStack(t, db, oracleScenarioNamed(t, c.scenario), certs, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got, closed, _ := send(g.ports[c.listener], c.secure, []oraclePart{
+			text("GET /api/nothing HTTP/1.1\r\nHost: localhost\r\n\r\n", 0),
+			text("GET /api/devices/%zz HTTP/1.1\r\nHost: localhost\r\n\r\n", 300),
+		}, 5*time.Second)
+		answers := parseReplies(got, "GET")
+		if len(answers) != 2 || !closed {
+			t.Fatalf("%s: %d answers, closed %v: %q", c.scenario, len(answers), closed, got)
+		}
+		a := answers[1]
+		if a.status != http.StatusBadRequest || a.header.Get("Content-Type") != "application/json; charset=utf-8" ||
+			string(a.body) != `{"success":false,"error":"Internal Server Error"}` {
+			t.Errorf("%s: %d %q %s", c.scenario, a.status, a.header.Get("Content-Type"), a.body)
+		}
+		for _, name := range []string{"Content-Security-Policy", "X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy"} {
+			if a.header.Get(name) == "" || a.header.Get(name) != answers[0].header.Get(name) {
+				t.Errorf("%s: %s %q, the 404 before it %q", c.scenario, name, a.header.Get(name), answers[0].header.Get(name))
+			}
+		}
+	}
+	// Outside production the answer says which segment does not decode
+	w := goOnly(t, setup{})
+	rec := httptest.NewRecorder()
+	w.s.brokenEscape().ServeHTTP(rec, &http.Request{Method: "GET", RequestURI: "/api/devices/a%zz/b%yy?x=%zz", URL: &url.URL{Path: "/api/devices/a%zz/b%yy"}, Header: http.Header{}})
+	if rec.Code != http.StatusBadRequest || rec.Body.String() != `{"success":false,"error":"Failed to decode param 'a%zz'"}` {
+		t.Errorf("development: %d %s", rec.Code, rec.Body)
 	}
 }
 

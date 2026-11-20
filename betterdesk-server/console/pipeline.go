@@ -3,6 +3,8 @@ package console
 import (
 	"context"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/httpx"
@@ -41,7 +43,7 @@ func (s *Server) steps() []step {
 		d.WebUI.ServerError(w, r, err, status)
 	}
 	return []step{
-		{1, "security headers", middleware.SecurityHeaders(middleware.SecurityOptions{HTTPS: cfg.HTTPS, HSTS: middleware.HSTSEnabled(cfg.HTTPS, cfg.HSTSEnabled, cfg.AllowSelfSignedCerts)})},
+		{1, "security headers", s.securityHeaders()},
 		{3, "CORS", middleware.CORS()},
 		{4, "bodies", middleware.Bodies(middleware.BodyOptions{OnError: onError})},
 		{6, "session", d.Sessions.Middleware},
@@ -58,6 +60,32 @@ func (s *Server) steps() []step {
 		{18, "routes", stage(s.router)},
 		{19, "web app", s.withoutNode(s.webApp)},
 	}
+}
+
+// securityHeaders is step 1.
+func (s *Server) securityHeaders() kit.Middleware {
+	cfg := s.cfg
+	return middleware.SecurityHeaders(middleware.SecurityOptions{HTTPS: cfg.HTTPS, HSTS: middleware.HSTSEnabled(cfg.HTTPS, cfg.HSTSEnabled, cfg.AllowSelfSignedCerts)})
+}
+
+// brokenEscape answers a request whose path has a broken percent escape
+// (/api/devices/%zz). net/http refuses such a request before any handler,
+// and the console's listeners hand it here (listen.BrokenEscapes). The
+// answer is the old console's: the security headers of step 1 and 400
+// from the error handler, as its router refused a parameter it could not
+// decode (JSON under /api/), for the path segment that holds the escape.
+// The connection closes after it.
+func (s *Server) brokenEscape() http.Handler {
+	return s.securityHeaders()(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		segment := ""
+		for _, part := range strings.Split(httpx.RawPath(r), "/") {
+			if _, err := url.PathUnescape(part); err != nil {
+				segment = part
+				break
+			}
+		}
+		s.deps.WebUI.ServerError(w, r, &kit.ParamError{Raw: segment}, http.StatusBadRequest)
+	}))
 }
 
 // buildPipeline chains the steps in front of the end of the pipeline.
