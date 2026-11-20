@@ -49,7 +49,7 @@ request.
 | 1 | `/api/` | `SessionRead` |
 | 2 | each poll path (below) | `Widget` |
 | 3 | each settings read path (below) | `PanelRead` |
-| 4 | `/api/panel` | `Widget` |
+| 4 | `/api/panel`, `/api/dashboard` | `Widget` |
 | 5 | `/api/desktop/layout` | `PanelPreference` |
 | 6 | `/api/` | `API` |
 
@@ -77,7 +77,7 @@ What that adds up to:
   `/api/desktop/layout`.
 - Anything else below `/api` (writes, and everything without a session):
   `API` per address, unless `API` skips it. Requests at or below a poll
-  path or `/api/panel` also count against `Widget`.
+  path, `/api/panel` or `/api/dashboard` also count against `Widget`.
 - The mounts match below the path too, the skips of `API` only the exact
   path: `GET /api/devices/7` without a session counts against `Widget`
   and `API`, `GET /api/devices` against `Widget` alone.
@@ -85,10 +85,11 @@ What that adds up to:
   `/api/settings/branding/backgrounds`, `/branding/export`,
   `/branding/profiles` and `/api/settings/fonts/local`. Writes below a
   read path do not count against it.
-- `GET /api/dashboard/<anything else>` without a session counts against
-  no limiter.
+- `GET /api/dashboard/<anything>` without a session counts against
+  `Widget`.
 - The mounts match in any letter case, the path lists of the skips do
-  not: `GET /API/devices` counts against `Widget` and `API`.
+  not: `GET /API/devices` counts against `Widget` and `API`. The skips
+  read the path as sent: `GET /api//devices` counts against `API`.
 
 ## On routes: `Limiter.Middleware`
 

@@ -260,11 +260,13 @@ type mount struct {
 //  1. SessionRead under /api/
 //  2. Widget under each poll path
 //  3. PanelRead under each settings read path
-//  4. Widget under /api/panel
+//  4. Widget under /api/panel and /api/dashboard
 //  5. PanelPreference under /api/desktop/layout
 //  6. API under /api/
 //
 // "Under" is the path itself and everything below it, in any letter case.
+// The skips of the limiters read the path as the client sent it, so
+// /api//devices is no poll path.
 // Each limiter counts a request once, also when the request is under two
 // of its mounts (a path below two read paths) or passes it again on its
 // route (API on /api/logs/recent). The first limiter that refuses answers
@@ -278,7 +280,7 @@ func (s *Set) AppLevel() func(http.Handler) http.Handler {
 	for _, p := range readPaths {
 		mounts = append(mounts, mount{p, s.PanelRead})
 	}
-	mounts = append(mounts, mount{"/api/panel", s.Widget}, mount{"/api/desktop/layout", s.PanelPreference}, mount{"/api/", s.API})
+	mounts = append(mounts, mount{"/api/panel", s.Widget}, mount{"/api/dashboard", s.Widget}, mount{"/api/desktop/layout", s.PanelPreference}, mount{"/api/", s.API})
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -289,11 +291,10 @@ func (s *Set) AppLevel() func(http.Handler) http.Handler {
 			}
 			r = countOnce(r)
 			for _, m := range mounts {
-				sub, base, ok := httpx.StripMount(raw, m.path)
-				if !ok {
+				if _, _, ok := httpx.StripMount(raw, m.path); !ok {
 					continue
 				}
-				if !m.limiter.allow(w, r, resolveAPIPath(base, sub, raw)) {
+				if !m.limiter.allow(w, r, raw) {
 					return
 				}
 			}

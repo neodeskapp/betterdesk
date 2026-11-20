@@ -26,7 +26,7 @@ type Config struct {
 	// Key names who a request counts against.
 	Key func(r *http.Request) string
 	// Skip is true for requests that are not counted. apiPath is the
-	// request's path as /api/..., also when the limiter sits below /api.
+	// request's path as the client sent it.
 	Skip func(r *http.Request, apiPath string) bool
 	// Now is the clock. nil means time.Now.
 	Now func() time.Time
@@ -202,28 +202,10 @@ func (l *Limiter) allow(w http.ResponseWriter, r *http.Request, apiPath string) 
 // Middleware puts the limiter in front of a route.
 func (l *Limiter) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		raw := httpx.RawPath(r)
-		if l.allow(w, r, resolveAPIPath("", raw, raw)) {
+		if l.allow(w, r, httpx.RawPath(r)) {
 			next.ServeHTTP(w, r)
 		}
 	})
-}
-
-// resolveAPIPath is the request's path in its /api/... form: base is the
-// mount point the limiter sits under as the client spelled it, sub the
-// path below it, original the whole path. The comparison is by letter
-// case, so a limiter under /API does not see /api paths.
-func resolveAPIPath(base, sub, original string) string {
-	isAPI := func(p string) bool { return p == "/api" || strings.HasPrefix(p, "/api/") }
-	switch {
-	case isAPI(base):
-		return "/api" + sub
-	case isAPI(sub):
-		return sub
-	case isAPI(original):
-		return original
-	}
-	return sub
 }
 
 // parseIntOr is parseInt(s, 10) || fallback, which is how the console

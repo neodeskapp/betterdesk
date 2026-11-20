@@ -444,23 +444,6 @@ func TestPathClassification(t *testing.T) {
 	if len(pollPaths) != 20 || len(readPaths) != 24 {
 		t.Errorf("%d poll paths and %d read paths, the console has 20 and 24", len(pollPaths), len(readPaths))
 	}
-
-	// The path is rejoined with the /api mount it was cut from
-	for _, c := range []struct{ base, sub, original, want string }{
-		{"/api", "/bd/notifications", "/api/bd/notifications", "/api/bd/notifications"},
-		{"/api", "/registrations/count", "/api/registrations/count", "/api/registrations/count"},
-		{"/api", "/", "/api", "/api/"},
-		{"", "/api/desktop/layout", "/api/desktop/layout", "/api/desktop/layout"},
-		{"/api/devices", "/", "/api/devices", "/api/"},
-		{"/API", "/devices", "/API/devices", "/devices"},
-		{"/x", "/y", "/api/z", "/api/z"},
-		{"", "/remote/a", "/remote/a", "/remote/a"},
-		{"/apix", "/y", "/apix/y", "/y"},
-	} {
-		if got := resolveAPIPath(c.base, c.sub, c.original); got != c.want {
-			t.Errorf("resolveAPIPath(%q, %q, %q) = %q, want %q", c.base, c.sub, c.original, got, c.want)
-		}
-	}
 }
 
 func statuses(h http.Handler, n int, newRequest func() *http.Request) []int {
@@ -571,7 +554,10 @@ func TestAppLevelMounts(t *testing.T) {
 		{"POST", "/api/desktop/layout", "7", "panelPreferenceLimiter"},
 		{"GET", "/api/desktop/layout", "7", "sessionReadLimiter panelPreferenceLimiter"},
 		{"GET", "/api/desktop/layout", "", "panelPreferenceLimiter apiLimiter"},
-		{"GET", "/api/dashboard/anything", "", ""},
+		{"GET", "/api/dashboard/anything", "", "widgetLimiter"},
+		{"POST", "/api/dashboard/anything", "", "widgetLimiter apiLimiter"},
+		{"GET", "/api/dashboard/activity", "", "widgetLimiter"},
+		{"GET", "/api//devices", "", "apiLimiter"},
 		{"GET", "/API/devices", "", "widgetLimiter apiLimiter"},
 		{"GET", "/api/logs/recent", "", "apiLimiter"},
 		{"POST", "/api/auth/login", "", "apiLimiter"},
@@ -587,6 +573,36 @@ func TestAppLevelMounts(t *testing.T) {
 		}
 		if got := strings.Join(seen, " "); got != tc.want {
 			t.Errorf("%s %s (user %q): counted by %q, want %q", tc.method, tc.target, tc.user, got, tc.want)
+		}
+	}
+}
+
+// Every request below /api counts against a limiter, signed in or out:
+// paths below /api/dashboard/ count against Widget, and a doubled slash
+// is no poll path.
+func TestEveryAPIRequestCountsSomewhere(t *testing.T) {
+	set := newSet(&clock{}, nil)
+	counted := 0
+	for _, l := range set.All() {
+		l.counted = func(*http.Request, string, int64, int64, bool) { counted++ }
+	}
+	h := set.AppLevel()(http.HandlerFunc(ok))
+	for _, target := range []string{
+		"/api/dashboard/anything", "/api/dashboard/stats", "/API/Dashboard/x", "/api/dashboard", "/api//devices", "/api//dashboard/client-config",
+		"/api//panel/x", "/api/devices", "/api/devices/7", "/api/panel/x", "/api/settings/info", "/api/x", "/api/",
+	} {
+		for _, method := range []string{"GET", "HEAD", "POST"} {
+			for _, user := range []string{"", "7"} {
+				counted = 0
+				r := request(method, target, "203.0.113.1")
+				if user != "" {
+					r.Header.Set("X-User", user)
+				}
+				hit(h, r)
+				if counted == 0 {
+					t.Errorf("%s %s (user %q) counted against no limiter", method, target, user)
+				}
+			}
 		}
 	}
 }

@@ -234,6 +234,14 @@ var intendedCounts = map[string]struct {
 	"small: settings read paths/s7-34": {200, "[[apiLimiter 1 5 passed]]"},
 	"small: settings read paths/s7-35": {200, "[[apiLimiter 2 5 passed]]"},
 	"small: settings read paths/s7-36": {200, "[[apiLimiter 3 5 passed]]"},
+	// Widget counts everything below /api/dashboard, whose reads API
+	// skips, and /api//devices is no poll path, so API counts it (BUGS M3)
+	"small: poll paths/s6-19": {200, "[[widgetLimiter 1 4 passed]]"},
+	"small: poll paths/s6-20": {200, "[[widgetLimiter 2 4 passed]]"},
+	"small: poll paths/s6-21": {200, "[[widgetLimiter 3 4 passed]]"},
+	"small: poll paths/s6-22": {200, "[[widgetLimiter 4 4 passed] [apiLimiter 1 5 passed]]"},
+	"small: poll paths/s6-23": {429, "[[widgetLimiter 5 4 refused]]"},
+	"small: poll paths/s6-44": {200, "[[apiLimiter 2 5 passed]]"},
 }
 
 func TestConsoleLimitersAgainstNode(t *testing.T) {
