@@ -112,17 +112,18 @@ func (h *handlers) upload(w http.ResponseWriter, r *http.Request) {
 }
 
 // updatePeerInfo writes what a report says about the device into the info
-// of the device's row in the console's table, if the console knows the
-// device. The info keeps its members and gets hostname, os, os_version,
-// cpu, cpu_cores and memory_mb from the report; a member the report has no
-// true value for is left out, also where the info had it.
+// of the device's row in the console's table, if the console has one that
+// is not marked deleted. The info gets hostname, os, os_version, cpu,
+// cpu_cores and memory_mb where the report has a true value for them, and
+// keeps its other members. No info (NULL) is an empty object; an info that
+// is no object stays as it is.
 //
-// It fails where the old route's try block threw: the info is no JSON or
-// the text null, the memory is an object JavaScript cannot make a number
-// of, or the database refuses the new info (PostgreSQL does not take the
-// character U+0000 in a JSON document).
+// It fails where the info is no JSON or the text null, the memory is an
+// object JavaScript cannot make a number of, or the database refuses the
+// new info (PostgreSQL does not take the character U+0000 in a JSON
+// document).
 func (h *handlers) updatePeerInfo(ctx context.Context, id string, hardware jsjson.Value) error {
-	p, err := h.peerByID(ctx, id)
+	p, err := readPeer(ctx, h.db, id)
 	if err != nil || p == nil {
 		return err
 	}
@@ -130,7 +131,14 @@ func (h *handlers) updatePeerInfo(ctx context.Context, id string, hardware jsjso
 	if err != nil {
 		return err
 	}
+	if !p.info.Valid {
+		old, _ = jsjson.Parse("{}")
+	}
+	if old.Kind() != jsjson.Object {
+		return nil
+	}
 	info := spread(old)
+	changed := false
 	cpu, memory := hardware.Get("cpu"), hardware.Get("memory")
 	for _, m := range []struct {
 		name  string
@@ -142,21 +150,22 @@ func (h *handlers) updatePeerInfo(ctx context.Context, id string, hardware jsjso
 		{"cpu", cpu.Get("brand")},
 		{"cpu_cores", cpu.Get("logical_cores")},
 	} {
-		value := m.value
-		if !value.Truthy() {
-			value = jsjson.Value{}
+		if m.value.Truthy() {
+			info.set(m.name, m.value)
+			changed = true
 		}
-		info.set(m.name, value)
 	}
-	var megabytes jsjson.Value
 	if total := memory.Get("total_bytes"); total.Truthy() {
 		bytes, err := total.Num()
 		if err != nil {
 			return err
 		}
-		megabytes = jsjson.OfNumber(round(bytes / megabyte))
+		info.set("memory_mb", jsjson.OfNumber(round(bytes/megabyte)))
+		changed = true
 	}
-	info.set("memory_mb", megabytes)
+	if !changed {
+		return nil
+	}
 	return updatePeer(ctx, h.db, id, info.json())
 }
 
@@ -168,24 +177,11 @@ type object struct {
 	members map[string]jsjson.Value
 }
 
-// spread is {...v}: the members of an object, the elements of an array
-// and the UTF-16 units of a text, by their index; nothing of a number, a
-// flag or null.
+// spread is {...v} for an object: its members, in its order.
 func spread(v jsjson.Value) *object {
 	o := &object{members: map[string]jsjson.Value{}}
-	switch v.Kind() {
-	case jsjson.Object:
-		for _, key := range v.Keys() {
-			o.set(key, v.Get(key))
-		}
-	case jsjson.Array:
-		for i, item := range v.Items() {
-			o.set(fmt.Sprint(i), item)
-		}
-	case jsjson.String:
-		for i, unit := range jsjson.Units(v.Str()) {
-			o.set(fmt.Sprint(i), jsjson.OfText(unit))
-		}
+	for _, key := range v.Keys() {
+		o.set(key, v.Get(key))
 	}
 	return o
 }

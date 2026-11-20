@@ -1,7 +1,6 @@
 package inventory
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -9,17 +8,13 @@ import (
 )
 
 // What {...info, hostname: ..., ...} and JSON.stringify make of the info
-// of a device, for each kind of value the info can be. The texts are what
-// Node wrote (node_device_sqlite.json has them for whole uploads).
+// of a device that is an object. The texts are what Node wrote
+// (node_device_sqlite.json has them for whole uploads).
 func TestSpreadAndJSON(t *testing.T) {
 	for _, tt := range []struct{ info, want string }{
 		{`{}`, `{"hostname":"pc","memory_mb":2}`},
 		{`{"b":1,"2":"two","a":2,"1":"one","hostname":"old"}`, `{"1":"one","2":"two","b":1,"a":2,"hostname":"pc","memory_mb":2}`},
 		{`{"memory_mb":7,"os":"old"}`, `{"memory_mb":2,"hostname":"pc"}`},
-		{`[1,"x",null]`, `{"0":1,"1":"x","2":null,"hostname":"pc","memory_mb":2}`},
-		{`"a😀"`, `{"0":"a","1":"\ud83d","2":"\ude00","hostname":"pc","memory_mb":2}`},
-		{`5`, `{"hostname":"pc","memory_mb":2}`},
-		{`null`, `{"hostname":"pc","memory_mb":2}`},
 		{`{"__proto__":{"x":1}}`, `{"__proto__":{"x":1},"hostname":"pc","memory_mb":2}`},
 	} {
 		info, err := jsjson.Parse(tt.info)
@@ -36,8 +31,8 @@ func TestSpreadAndJSON(t *testing.T) {
 	}
 }
 
-// What the spread makes of any JSON value, with the members the upload
-// sets: JSON that reads back as an object, with the value's members, then
+// What the spread makes of any JSON object, with the members the upload
+// sets: JSON that reads back as an object, with the object's members, then
 // the new ones, in the order JavaScript keeps them, and nothing for a
 // member left undefined.
 func FuzzSpread(f *testing.F) {
@@ -46,7 +41,7 @@ func FuzzSpread(f *testing.F) {
 	}
 	f.Fuzz(func(t *testing.T, text, hostname string, megabytes float64) {
 		info, err := jsjson.Parse(text)
-		if err != nil {
+		if err != nil || info.Kind() != jsjson.Object {
 			return
 		}
 		o := spread(info)
@@ -60,22 +55,9 @@ func FuzzSpread(f *testing.F) {
 
 		var keys []string
 		value := map[string]jsjson.Value{}
-		switch info.Kind() {
-		case jsjson.Object:
-			for _, key := range info.Keys() {
-				keys = append(keys, key)
-				value[key] = info.Get(key)
-			}
-		case jsjson.Array:
-			for i, item := range info.Items() {
-				keys = append(keys, fmt.Sprint(i))
-				value[fmt.Sprint(i)] = item
-			}
-		case jsjson.String:
-			for i, unit := range jsjson.Units(info.Str()) {
-				keys = append(keys, fmt.Sprint(i))
-				value[fmt.Sprint(i)] = jsjson.OfText(unit)
-			}
+		for _, key := range info.Keys() {
+			keys = append(keys, key)
+			value[key] = info.Get(key)
 		}
 		if _, ok := value["os"]; ok {
 			keys = deleted(keys, "os")

@@ -1,7 +1,11 @@
 package inventory_test
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -353,3 +357,78 @@ var _ = readFixes.Add("AI3", map[string]replay.Fix{
 		`"telemetry":{"device_id":"EMPTY","cpu_usage_percent":null,"memory_used_bytes":null,"memory_total_bytes":null,"uptime_secs":null,"timestamp":null,"received_at":null}`,
 	}},
 })
+
+// An upload sets the members of the device's info that the report has a
+// value for and keeps the others. An info that is no object stays as it
+// is, and a device the console's table lacks, or has deleted, is not
+// written there. Node removed what the report left out, spread a list or
+// a text into the keys 0, 1, ..., and copied a device of the signal
+// server's table into the console's, bringing back a deleted one (BUGS
+// AI13).
+func TestUploadKeepsTheInfoTheReportDoesNotName(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		storetest.GoServer(t, db)
+		w := replay.NewWorld(t, db, nil)
+		for i, device := range []string{"keep-1", "list-1", "text-1", "gone-1", "sig-1"} {
+			w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at) VALUES (?, ?, 5, ?, '2999-01-01 00:00:00')",
+				[]any{fmt.Sprintf("tok-%d", i), sha256Hex(fmt.Sprintf("tok-%d", i)), device})
+		}
+		deleted := db.Pick("1", "TRUE")
+		for _, row := range [][]any{
+			{"keep-1", `{"hostname":"old","os":"Old OS","cpu":"Old CPU","memory_mb":1,"note":"mine"}`, db.Pick("0", "FALSE")},
+			{"list-1", `[1,2]`, db.Pick("0", "FALSE")},
+			{"text-1", `"text"`, db.Pick("0", "FALSE")},
+			{"gone-1", `{"hostname":"gone"}`, deleted},
+		} {
+			w.Exec("INSERT INTO peer (id, note, info, is_deleted) VALUES (?, '', ?, "+row[2].(string)+")", row[:2])
+		}
+		w.Exec("INSERT INTO peers (id, hostname) VALUES ('sig-1', 'from-the-signal-server')", nil)
+		w.Exec("INSERT INTO peers (id, hostname) VALUES ('gone-1', 'back')", nil)
+		upload := func(i int, device, hardware string) {
+			t.Helper()
+			body := `{"device_id":"` + device + `","hardware":` + hardware + `}`
+			got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/inventory", Body: replay.Text(body), Headers: map[string]string{"Authorization": fmt.Sprintf("Bearer tok-%d", i)}})
+			if got.Status != 200 {
+				t.Errorf("upload of %s: %d %s", device, got.Status, got.Body)
+			}
+		}
+		upload(0, "keep-1", `{"hostname":"new","os_name":"","cpu":{"brand":null,"logical_cores":4}}`)
+		upload(1, "list-1", `{"hostname":"new"}`)
+		upload(2, "text-1", `{"hostname":"new"}`)
+		upload(3, "gone-1", `{"hostname":"new"}`)
+		upload(4, "sig-1", `{"hostname":"new"}`)
+		info := func(id string) any {
+			var rows []struct{ Info string }
+			_ = json.Unmarshal([]byte(w.Rows("SELECT "+db.Pick("info", "info::text AS info")+" FROM peer WHERE id = ?", []any{id})), &rows)
+			if len(rows) != 1 {
+				return nil
+			}
+			var v any
+			_ = json.Unmarshal([]byte(rows[0].Info), &v)
+			return v
+		}
+		want := map[string]any{"hostname": "new", "os": "Old OS", "cpu": "Old CPU", "cpu_cores": 4.0, "memory_mb": 1.0, "note": "mine"}
+		if got := info("keep-1"); !reflect.DeepEqual(got, want) {
+			t.Errorf("the info of keep-1: %v, want %v", got, want)
+		}
+		if got := info("list-1"); !reflect.DeepEqual(got, []any{1.0, 2.0}) {
+			t.Errorf("the info of list-1: %v, want it unchanged", got)
+		}
+		if got := info("text-1"); got != "text" {
+			t.Errorf("the info of text-1: %v, want it unchanged", got)
+		}
+		if got := w.Rows("SELECT id, CASE WHEN is_deleted"+db.Pick(" = 1", "")+" THEN 1 ELSE 0 END AS deleted FROM peer WHERE id IN ('gone-1', 'sig-1') ORDER BY id", nil); got != `[{"id":"gone-1","deleted":1}]` {
+			t.Errorf("the console's rows of gone-1 and sig-1: %s, want only gone-1, deleted", got)
+		}
+		if got := info("gone-1"); !reflect.DeepEqual(got, map[string]any{"hostname": "gone"}) {
+			t.Errorf("the info of gone-1: %v, want it unchanged", got)
+		}
+	})
+}
+
+// sha256Hex is the SHA-256 of a text in lower-case hex, as access tokens
+// are stored.
+func sha256Hex(text string) string {
+	sum := sha256.Sum256([]byte(text))
+	return hex.EncodeToString(sum[:])
+}
