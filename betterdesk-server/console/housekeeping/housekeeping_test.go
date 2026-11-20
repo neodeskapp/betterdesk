@@ -3,10 +3,13 @@ package housekeeping_test
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -141,6 +144,109 @@ func orderedKeys(t *testing.T, raw json.RawMessage) []string {
 	return keys
 }
 
+// The seeds of the recording place rows relative to the time of the run.
+// On SQLite the clean-ups compare times as text, so where a time written
+// as a date alone ("2026-11-12") or with a T ("2026-11-12T23:00:00.000Z")
+// falls against a cut-off ("2026-11-12 13:00:00") depends on the hour of
+// the day the run is in: such a text sorts before the cut-off only when
+// its date does (a date alone also on the cut-off's own day). The
+// recording holds for the hour Node ran in; for these rows the tests work
+// out the outcome for the hour they run in, by the same text comparison.
+var hourBound = regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}(T.*)?$`)
+
+// retention is what the hourly clean-up keeps of each table, in days, in
+// the order it deletes them.
+var retention = []struct {
+	table string
+	days  int
+}{{"peer_metrics", 7}, {"audit_connections", 90}, {"audit_files", 90}, {"audit_alarms", 90}}
+
+// textRow is a row whose time is an hourBound text: the first two
+// columns of the query that found it (table and id, or id and online
+// flag) and the time.
+type textRow struct {
+	first, second, text string
+}
+
+// hourBoundRows lists the rows of a query whose third column, a time,
+// holds an hourBound text. Only SQLite stores times as text.
+func hourBoundRows(t *testing.T, db *store.DB, query string) []textRow {
+	t.Helper()
+	if db.Dialect() != store.SQLite {
+		return nil
+	}
+	var out []textRow
+	for _, line := range rows(t, db, query) {
+		parts := strings.SplitN(line, "|", 3)
+		if len(parts) == 3 && hourBound.MatchString(parts[2]) {
+			out = append(out, textRow{parts[0], parts[1], parts[2]})
+		}
+	}
+	return out
+}
+
+// sqliteNow is the database's clock on SQLite, the zero time elsewhere.
+func sqliteNow(t *testing.T, db *store.DB) time.Time {
+	t.Helper()
+	if db.Dialect() != store.SQLite {
+		return time.Time{}
+	}
+	var seconds int64
+	if err := db.QueryRow(context.Background(), `SELECT CAST(strftime('%s', 'now') AS INTEGER)`).Scan(&seconds); err != nil {
+		t.Fatal(err)
+	}
+	return time.Unix(seconds, 0).UTC()
+}
+
+// leftAtThisHour is the recorded list of rows left ("table|id", ordered by
+// table and id), with each hourBound row of a table the clean-up reached
+// left or gone as the text comparison with that table's cut-off decides
+// now.
+func leftAtThisHour(want []string, bound []textRow, cutoffs map[string]string) []string {
+	left := map[string]bool{}
+	for _, key := range want {
+		left[key] = true
+	}
+	for _, r := range bound {
+		cutoff, reached := cutoffs[r.first]
+		if !reached {
+			continue
+		}
+		key := r.first + "|" + r.second
+		if r.text < cutoff {
+			delete(left, key)
+		} else {
+			left[key] = true
+		}
+	}
+	out := make([]string, 0, len(left))
+	for key := range left {
+		out = append(out, key)
+	}
+	sort.Slice(out, func(a, b int) bool {
+		ta, ia, _ := strings.Cut(out[a], "|")
+		tb, ib, _ := strings.Cut(out[b], "|")
+		na, _ := strconv.Atoi(ia)
+		nb, _ := strconv.Atoi(ib)
+		return ta < tb || ta == tb && na < nb
+	})
+	return out
+}
+
+// cutoffsUntil are the cut-offs of the tables the clean-up deletes from
+// before it meets the missing table ("" for none), as datetime('now',
+// '-<days> days') writes them.
+func cutoffsUntil(now time.Time, missing string) map[string]string {
+	out := map[string]string{}
+	for _, r := range retention {
+		if r.table == missing {
+			break
+		}
+		out[r.table] = now.AddDate(0, 0, -r.days).Format("2006-01-02 15:04:05")
+	}
+	return out
+}
+
 // TestIntegrationAgainstNode replays the Node adapter's hourly clean-up
 // on rows of every age and form: the same rows must be left, and when a
 // table is missing the run must stop there, leaving the tables after it
@@ -152,29 +258,56 @@ func TestIntegrationAgainstNode(t *testing.T) {
 			t.Fatalf("recording has %d integration runs", len(rec.Integration))
 		}
 		ctx := context.Background()
+		const times = `SELECT 'peer_metrics', id, created_at FROM peer_metrics UNION ALL SELECT 'audit_connections', id, created_at FROM audit_connections
+    UNION ALL SELECT 'audit_files', id, created_at FROM audit_files UNION ALL SELECT 'audit_alarms', id, created_at FROM audit_alarms`
 
 		full := rec.Integration[0]
 		run(t, db, full.Seed)
+		bound := hourBoundRows(t, db, times)
+		now := sqliteNow(t, db)
 		if err := housekeeping.Integration(ctx, db); err != nil {
 			t.Fatalf("Integration: %v", err)
 		}
 		const left = `SELECT 'peer_metrics' AS t, id FROM peer_metrics UNION ALL SELECT 'audit_connections', id FROM audit_connections
     UNION ALL SELECT 'audit_files', id FROM audit_files UNION ALL SELECT 'audit_alarms', id FROM audit_alarms ORDER BY t, id`
-		if got, want := strings.Join(rows(t, db, left), "\n"), strings.Join(recorded(t, full.Left), "\n"); got != want {
-			t.Errorf("rows left after the clean-up:\n got %s\nwant %s", got, want)
+		want := leftAtThisHour(recorded(t, full.Left), bound, cutoffsUntil(now, ""))
+		if got := strings.Join(rows(t, db, left), "\n"); got != strings.Join(want, "\n") {
+			t.Errorf("rows left after the clean-up at %s:\n got %s\nwant %s", now, got, strings.Join(want, "\n"))
 		}
 
 		broken := rec.Integration[1]
 		run(t, db, broken.Seed)
+		const timesWithout = `SELECT 'peer_metrics', id, created_at FROM peer_metrics UNION ALL SELECT 'audit_connections', id, created_at FROM audit_connections
+    UNION ALL SELECT 'audit_alarms', id, created_at FROM audit_alarms`
+		bound = hourBoundRows(t, db, timesWithout)
+		now = sqliteNow(t, db)
 		if err := housekeeping.Integration(ctx, db); err == nil {
 			t.Error("a run on a database without audit_files reports no error")
 		}
 		const leftWithout = `SELECT 'peer_metrics' AS t, id FROM peer_metrics UNION ALL SELECT 'audit_connections', id FROM audit_connections
         UNION ALL SELECT 'audit_alarms', id FROM audit_alarms ORDER BY t, id`
-		if got, want := strings.Join(rows(t, db, leftWithout), "\n"), strings.Join(recorded(t, broken.Left), "\n"); got != want {
-			t.Errorf("rows left after the clean-up stopped at the missing table:\n got %s\nwant %s", got, want)
+		want = leftAtThisHour(recorded(t, broken.Left), bound, cutoffsUntil(now, "audit_files"))
+		if got := strings.Join(rows(t, db, leftWithout), "\n"); got != strings.Join(want, "\n") {
+			t.Errorf("rows left after the clean-up stopped at the missing table, at %s:\n got %s\nwant %s", now, got, strings.Join(want, "\n"))
 		}
 	})
+}
+
+// TestHourBoundRowsFollowTheTextComparison pins the rule the replays above
+// use for the rows whose outcome depends on the hour.
+func TestHourBoundRowsFollowTheTextComparison(t *testing.T) {
+	bound := []textRow{
+		{"peer_metrics", "1", "2026-11-12"}, {"peer_metrics", "2", "2026-11-13"},
+		{"peer_metrics", "3", "2026-11-12T23:59:59.000Z"}, {"peer_metrics", "4", "2026-11-11T23:59:59.000Z"},
+		{"audit_files", "5", "2026-01-01"},
+	}
+	got := leftAtThisHour([]string{"peer_metrics|1", "peer_metrics|9"}, bound, map[string]string{"peer_metrics": "2026-11-12 13:00:00"})
+	if want := "peer_metrics|2 peer_metrics|3 peer_metrics|9"; strings.Join(got, " ") != want {
+		t.Errorf("left %q, want %q", got, want)
+	}
+	if got := cutoffsUntil(time.Date(2026, 11, 20, 0, 30, 0, 0, time.UTC), "audit_files"); fmt.Sprint(got) != "map[audit_connections:2026-08-22 00:30:00 peer_metrics:2026-11-13 00:30:00]" {
+		t.Errorf("cut-offs %v", got)
+	}
 }
 
 // TestStalePeersAgainstNode replays the stale device clean-up with every
@@ -194,20 +327,61 @@ func TestStalePeersAgainstNode(t *testing.T) {
 				t.Errorf("threshold of %q = %v, want %v", c.Value, got, want)
 			}
 			run(t, db, c.Seed)
+			wantRows, wantChanges := staleAtThisHour(t, db, recorded(t, c.Rows), c.Changes, jobs.StaleThreshold())
 			changes, err := groups.CleanupStaleOnlinePeers(context.Background(), jobs.StaleThreshold())
 			switch {
 			case c.Error != nil && err == nil:
 				t.Errorf("threshold %q: no error, Node failed with %s", c.Value, *c.Error)
 			case c.Error == nil && err != nil:
 				t.Errorf("threshold %q: %v", c.Value, err)
-			case c.Changes != nil && changes != *c.Changes:
-				t.Errorf("threshold %q: %d rows changed, Node %d", c.Value, changes, *c.Changes)
+			case wantChanges != nil && changes != *wantChanges:
+				t.Errorf("threshold %q: %d rows changed, want %d (Node %d)", c.Value, changes, *wantChanges, *c.Changes)
 			}
-			if got, want := strings.Join(rows(t, db, "SELECT id, status_online FROM peer ORDER BY id"), " "), strings.Join(recorded(t, c.Rows), " "); got != want {
+			if got, want := strings.Join(rows(t, db, "SELECT id, status_online FROM peer ORDER BY id"), " "), strings.Join(wantRows, " "); got != want {
 				t.Errorf("threshold %q: devices afterwards\n got %s\nwant %s", c.Value, got, want)
 			}
 		}
 	})
+}
+
+// staleAtThisHour is the recorded outcome of a stale device sweep ("id|
+// status_online" per device, the number of rows changed), with each online
+// device whose last contact is an hourBound text set offline or left as
+// the text comparison with the cut-off, datetime('now', '-<threshold>
+// seconds'), decides now. Call it after the seed and before the sweep.
+func staleAtThisHour(t *testing.T, db *store.DB, want []string, changes *int64, threshold float64) ([]string, *int64) {
+	t.Helper()
+	bound := hourBoundRows(t, db, "SELECT id, status_online, last_online FROM peer")
+	if len(bound) == 0 {
+		return want, changes
+	}
+	var cutoff sql.NullString
+	if err := db.QueryRow(context.Background(), `SELECT datetime('now', '-' || ? || ' seconds')`, threshold).Scan(&cutoff); err != nil {
+		t.Fatal(err)
+	}
+	out := append([]string(nil), want...)
+	var n int64
+	if changes != nil {
+		n = *changes
+	}
+	for _, r := range bound {
+		id := r.first
+		if r.second != "1" {
+			continue
+		}
+		goes := cutoff.Valid && r.text < cutoff.String
+		for i, line := range out {
+			if line == id+"|0" && !goes {
+				out[i], n = id+"|1", n-1
+			} else if line == id+"|1" && goes {
+				out[i], n = id+"|0", n+1
+			}
+		}
+	}
+	if changes == nil {
+		return out, nil
+	}
+	return out, &n
 }
 
 // TestSettingsAgainstNode reads STATUS_SYNC_INTERVAL the way server.js
