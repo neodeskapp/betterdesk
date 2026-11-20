@@ -102,7 +102,6 @@ runs before the sign-in check, so requests without a session count too.
 | `Login` | `POST /api/auth/login` (`auth.routes.js`) | first |
 | `TOTPVerify` | `POST /api/auth/totp/verify` (`auth.routes.js`) | first |
 | `PasswordChange` | `POST /api/auth/password` (`auth.routes.js`) | after the sign-in check |
-| `PasswordChange` | `POST /api/users`, `POST /api/users/:id/reset-password` (`users.routes.js`) | after the sign-in and permission checks |
 | `PanelRead` | `GET /api/users/avatars`, `GET /api/users/:id/avatar` (`avatars.routes.js`) | after the sign-in check |
 | `RDClientPage` | `GET /api/remote/login-info`, `/api/remote/guest-info`, `/api/remote/desk`, `/api/remote/viewer/:deviceId`, `/remote-cdap/:deviceId`, `/remote-desktop/:deviceId` (`remote.routes.js`) | first |
 | `RDClientPage` | `GET /api/guest/access-links/validate`, `GET /api/guest/access-links/peers`, `POST /api/guest/mesh/devices/:id/desktop` (`guest.routes.js`) | first |
