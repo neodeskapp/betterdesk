@@ -17,10 +17,6 @@ type apiFailure struct {
 
 const unreachable = "Go server unreachable"
 
-// notText is the message of the error JavaScript raises when a value
-// cannot be turned into text.
-const notText = "Cannot convert object to primitive value"
-
 // pass sends one call to the API server and hands its answer to the
 // client: the same status and the same JSON. Without an answer the client
 // gets 500 "Go server unreachable"; a call refused before it was sent with
@@ -134,13 +130,14 @@ func (h *handlers) saveGroups(w http.ResponseWriter, r *http.Request) {
 }
 
 // download answers GET /api/mesh/download.msh: the settings file a mesh
-// agent is installed with. The query goes to the API server (name,
-// mesh_id, mesh_server). Whatever type the API server names, the file
-// goes out as application/octet-stream under the name meshagents.msh.
+// agent is installed with. The parameters the API server reads (name,
+// mesh_id, mesh_server) go on, each one text; others are left out.
+// Whatever type the API server names, the file goes out as
+// application/octet-stream under the name meshagents.msh.
 func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
-	search, ok := requestQuery(r).search()
-	if !ok {
-		kit.JSON(w, r, http.StatusInternalServerError, apiFailure{Error: notText})
+	search, bad := requestQuery(r).only("name", "mesh_id", "mesh_server")
+	if bad != "" {
+		badParameter(w, r, bad)
 		return
 	}
 	resp, err := h.api.Get(r.Context(), withSearch("/mesh/download.msh", search))
@@ -153,11 +150,12 @@ func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
 }
 
 // validateShare answers GET /api/mesh/share/validate, which needs no
-// session: the link's token is the credential.
+// session: the link's token is the credential. token and peer_id go on,
+// each one text.
 func (h *handlers) validateShare(w http.ResponseWriter, r *http.Request) {
-	search, ok := requestQuery(r).search()
-	if !ok {
-		kit.JSON(w, r, http.StatusInternalServerError, apiFailure{Error: unreachable})
+	search, bad := requestQuery(r).only("token", "peer_id")
+	if bad != "" {
+		badParameter(w, r, bad)
 		return
 	}
 	h.pass(w, r, http.MethodGet, withSearch("/mesh/share/validate", search))

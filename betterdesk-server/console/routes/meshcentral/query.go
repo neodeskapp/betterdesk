@@ -9,14 +9,16 @@ import (
 	"unicode/utf8"
 
 	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/unitronix/betterdesk-server/console/kit"
 )
 
-// The mesh routes hand the whole query of a request on to the API server
-// and read link tokens from it. Both depend on how the console has always
-// read a query: repeated and bracketed parameters (a=1&a=2, a[]=1, a[x]=1)
-// become lists and objects, and such a value turned into text is "1,2" or
-// "[object Object]". This file reads a query that way and writes it out
-// again the way the old routes did.
+// The mesh routes hand the parameters of a request's query that the API
+// server reads on to it, and read link tokens from the query. Both depend
+// on how the console has always read a query: repeated and bracketed
+// parameters (a=1&a=2, a[]=1, a[x]=1) become lists and objects, and such
+// a value turned into text is "1,2" or "[object Object]". This file reads
+// a query that way and writes parameters out the way the old routes did;
+// a parameter that goes on has to be one text.
 
 // query is the parsed query of a request: a text, a list ([]any) or an
 // object (*object) per parameter.
@@ -50,26 +52,34 @@ func (q *query) delete(name string) {
 	q.values.delete(name)
 }
 
-// search writes the query as the text that goes to the API server: one
-// name=value per parameter, a list as its elements joined by commas, an
-// object as "[object Object]". ok is false when a value cannot be turned
-// into text.
-func (q *query) search() (text string, ok bool) {
+// only writes the parameters of the names, in the order of the query, as
+// the text that goes to the API server: one name=value per parameter.
+// The others are left out. bad is the first of them whose value is no
+// single text (given twice, a list or an object), and then text is "".
+func (q *query) only(names ...string) (text, bad string) {
 	var b strings.Builder
-	for i, key := range q.values.keys() {
-		v, _ := q.values.get(key)
-		value, ok := toText(v)
-		if !ok {
-			return "", false
+	for _, key := range q.values.keys() {
+		if !slices.Contains(names, key) {
+			continue
 		}
-		if i > 0 {
+		v, _ := q.values.get(key)
+		value, isText := v.(string)
+		if !isText {
+			return "", key
+		}
+		if b.Len() > 0 {
 			b.WriteByte('&')
 		}
 		formEncode(&b, key)
 		b.WriteByte('=')
 		formEncode(&b, value)
 	}
-	return b.String(), true
+	return b.String(), ""
+}
+
+// badParameter answers 400 for a parameter that is no single text.
+func badParameter(w http.ResponseWriter, r *http.Request, name string) {
+	kit.JSON(w, r, http.StatusBadRequest, apiFailure{Error: "Invalid query parameter: " + name})
 }
 
 // formEncode writes s the way a form is encoded: letters, digits and

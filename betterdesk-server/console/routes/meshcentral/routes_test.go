@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -371,11 +372,11 @@ func TestDownload(t *testing.T) {
 		t.Errorf("the API server got %q", got)
 	}
 
-	// The query goes on as the old console wrote it out
+	// The parameters the API server reads go on as the old console wrote
+	// them out
 	queries := []struct{ query, sent string }{
 		{"name=Contract%20Mesh&mesh_server=wss://example.test/agent.ashx", "?name=Contract+Mesh&mesh_server=wss%3A%2F%2Fexample.test%2Fagent.ashx"},
-		{"name=a&name=b&mesh_id[x]=1", "?name=a%2Cb&mesh_id=%5Bobject+Object%5D"},
-		{"name[]=a~*", "?name=a%7E*"},
+		{"name=a~*", "?name=a%7E*"},
 		{"name=", "?name="},
 		{"=x&&", ""},
 	}
@@ -384,10 +385,6 @@ func TestDownload(t *testing.T) {
 		if got, want := w.sent(), "GET /mesh/download.msh"+c.sent; got != want {
 			t.Errorf("query %q: the API server got %q, want %q", c.query, got, want)
 		}
-	}
-	expect(t, "a query without a text", w.do("admin", "GET", "/api/mesh/download.msh?name[toString]=x", ""), 500, `{"error":"Cannot convert object to primitive value"}`)
-	if got := w.sent(); got != "" {
-		t.Errorf("a query without a text reached the API server: %s", got)
 	}
 
 	// The file's type and name are set here, whatever the API server says
@@ -425,8 +422,7 @@ func TestValidateShare(t *testing.T) {
 	cases := []struct{ query, sent string }{
 		{"", "GET /mesh/share/validate"},
 		{"?token=abc&peer_id=900100001", "GET /mesh/share/validate?token=abc&peer_id=900100001"},
-		{"?token[]=abc&peer_id[x]=1", "GET /mesh/share/validate?token=abc&peer_id=%5Bobject+Object%5D"},
-		{"?peer_id=1&token=a&token=b", "GET /mesh/share/validate?peer_id=1&token=a%2Cb"},
+		{"?peer_id=1&x=y&token=a", "GET /mesh/share/validate?peer_id=1&token=a"},
 	}
 	for _, role := range []string{"", "viewer"} {
 		for _, c := range cases {
@@ -436,9 +432,50 @@ func TestValidateShare(t *testing.T) {
 			}
 		}
 	}
-	expect(t, "a query without a text", w.do("", "GET", "/api/mesh/share/validate?token[toString]=x", ""), 500, `{"error":"Go server unreachable"}`)
-	if got := w.sent(); got != "" {
-		t.Errorf("a query without a text reached the API server: %s", got)
+}
+
+// TestOnlyKnownParametersGoOn: the agent file, the share link check and
+// the desktop route with a link hand on only the parameters the API
+// server reads, each as one text, and refuse a list or an object among
+// them with 400, where the old console wrote "a,b" or "[object Object]"
+// or failed with 500 (BUGS.md MC2).
+func TestOnlyKnownParametersGoOn(t *testing.T) {
+	w := newWorld(t, func(_, path string) answer {
+		if path == "/mesh/share/validate" {
+			return jsonAnswer(200, `{"valid":true}`)
+		}
+		return jsonAnswer(200, `{"relay_id":"r1"}`)
+	})
+	for _, c := range []struct{ target, status, sent string }{
+		{"GET /api/mesh/download.msh?name=n&evil=1&mesh_id=m&mesh_server=s", "200", "GET /mesh/download.msh?name=n&mesh_id=m&mesh_server=s"},
+		{"GET /api/mesh/download.msh?name=a&name=b", "400 name", ""},
+		{"GET /api/mesh/download.msh?name[]=a", "400 name", ""},
+		{"GET /api/mesh/download.msh?mesh_id[x]=1", "400 mesh_id", ""},
+		{"GET /api/mesh/download.msh?mesh_server[toString]=x", "400 mesh_server", ""},
+		{"GET /api/mesh/download.msh?other[]=1&name=n", "200", "GET /mesh/download.msh?name=n"},
+		{"GET /api/mesh/share/validate?token=t&peer_id=p&relay_base=x", "200", "GET /mesh/share/validate?token=t&peer_id=p"},
+		{"GET /api/mesh/share/validate?token[]=abc", "400 token", ""},
+		{"GET /api/mesh/share/validate?peer_id=1&peer_id=2", "400 peer_id", ""},
+		{"GET /api/mesh/share/validate?token[toString]=x", "400 token", ""},
+		{"POST /api/mesh/devices/d1/desktop?mesh_share=s&record=1&evil=1&relay_base=x", "200",
+			"GET /mesh/share/validate?token=s&peer_id=d1\nPOST /mesh/devices/d1/desktop?mesh_share=s&record=1&relay_base=x"},
+		{"POST /api/mesh/devices/d1/desktop?mesh_share=a&mesh_share=b", "400 mesh_share", ""},
+		{"POST /api/mesh/devices/d1/desktop?mesh_share=s&record[]=1", "400 record", ""},
+		{"POST /api/mesh/devices/d1/desktop?mesh_share=s&view_only[x]=1", "400 view_only", ""},
+		{"POST /api/mesh/devices/d1/desktop?mesh_share=s&x[toString]=1", "200",
+			"GET /mesh/share/validate?token=s&peer_id=d1\nPOST /mesh/devices/d1/desktop?mesh_share=s"},
+	} {
+		method, target, _ := strings.Cut(c.target, " ")
+		rec := w.do("admin", method, target, "")
+		status, name, _ := strings.Cut(c.status, " ")
+		if name != "" {
+			expect(t, c.target, rec, 400, `{"error":"Invalid query parameter: `+name+`"}`)
+		} else if strconv.Itoa(rec.Code) != status {
+			t.Errorf("%s: %d %s", c.target, rec.Code, rec.Body.String())
+		}
+		if got := w.sent(); got != c.sent {
+			t.Errorf("%s: the API server got %q, want %q", c.target, got, c.sent)
+		}
 	}
 }
 
@@ -476,8 +513,7 @@ func TestDesktopWithALink(t *testing.T) {
 			"GET /mesh/share/validate?token=abc&peer_id=d+1"},
 		{"an answer that is no object", `"yes"`, "", "?mesh_share=abc", 403, badShare,
 			"GET /mesh/share/validate?token=abc&peer_id=d+1"},
-		{"a share token given twice", `{"valid":true}`, "", "?mesh_share=a&mesh_share=b", 200, tunnel,
-			"GET /mesh/share/validate?token=a%2Cb&peer_id=d+1\nPOST /mesh/devices/d%201/desktop?mesh_share=a%2Cb"},
+		{"a share token given twice", `{"valid":true}`, "", "?mesh_share=a&mesh_share=b", 400, `{"error":"Invalid query parameter: mesh_share"}`, ""},
 		{"the share link goes first", `{"valid":true}`, `{"valid":false}`, "?guest=g&mesh_share=s", 200, tunnel,
 			"GET /mesh/share/validate?token=s&peer_id=d+1\nPOST /mesh/devices/d%201/desktop?guest=g&mesh_share=s"},
 
@@ -507,8 +543,8 @@ func TestDesktopWithALink(t *testing.T) {
 			"GET /guest/access-links/validate?token=abc&peer_id=d+1\nPOST /mesh/devices/d%201/desktop?view_only=0&guest=abc"},
 		{"a guest link the API server refuses outright", "", `!403`, "?guest=abc", 403, badShare,
 			"GET /guest/access-links/validate?token=abc&peer_id=d+1"},
-		{"another parameter that has no text", "", `{"valid":true}`, "?guest=abc&x[toString]=1", 500, `{"error":"Go server unreachable"}`,
-			"GET /guest/access-links/validate?token=abc&peer_id=d+1"},
+		{"another parameter that has no text is left out", "", `{"valid":true}`, "?guest=abc&x[toString]=1", 200, tunnel,
+			"GET /guest/access-links/validate?token=abc&peer_id=d+1\nPOST /mesh/devices/d%201/desktop?guest=abc"},
 	}
 	for _, role := range []string{"", "viewer", "admin"} {
 		for _, s := range steps {

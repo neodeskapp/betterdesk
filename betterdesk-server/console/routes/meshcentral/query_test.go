@@ -21,6 +21,10 @@ type vector struct {
 	Watch    json.RawMessage `json:"watch"`
 }
 
+// notText is the message of the error JavaScript raises when a value
+// cannot be turned into text.
+const notText = "Cannot convert object to primitive value"
+
 // expected reads a recorded value: its text, or that JavaScript raised an
 // error there.
 func expected(t *testing.T, raw json.RawMessage) (text string, ok bool) {
@@ -66,8 +70,11 @@ func TestQueryVectors(t *testing.T) {
 			}
 		}
 		q := parseQuery(v.Q)
-		search, ok := q.search()
-		check("search", v.Search, search, ok)
+		// The routes write out only parameters that are one text each
+		// (BUGS.md MC2); Node's text of a query is the rule for those
+		if search, bad := q.only(q.values.keys()...); bad == "" {
+			check("search", v.Search, search, true)
+		}
 		share, ok := trimmedText(q.get("mesh_share"))
 		check("share", v.Share, share, ok)
 		guest, ok := trimmedText(orValue(q.get("guest"), q.get("t")))
@@ -80,8 +87,9 @@ func TestQueryVectors(t *testing.T) {
 		if !truthy(watching.get("view_only")) {
 			watching.set("view_only", "1")
 		}
-		watch, ok := watching.search()
-		check("search with view_only", v.Watch, watch, ok)
+		if watch, bad := watching.only(watching.values.keys()...); bad == "" {
+			check("search with view_only", v.Watch, watch, true)
+		}
 	}
 	if err := lines.Err(); err != nil {
 		t.Fatal(err)
@@ -109,9 +117,10 @@ func TestRequestQueryReadsTheRequestLine(t *testing.T) {
 		r := httptest.NewRequest("GET", "/x", nil)
 		path, raw, _ := strings.Cut(c.target, "?")
 		r.URL.Path, r.URL.RawQuery = path, raw
-		got, ok := requestQuery(r).search()
-		if !ok || got != c.want {
-			t.Errorf("%q: search = %q (text %v), want %q", c.target, got, ok, c.want)
+		q := requestQuery(r)
+		got, bad := q.only(q.values.keys()...)
+		if bad != "" || got != c.want {
+			t.Errorf("%q: search = %q (bad %q), want %q", c.target, got, bad, c.want)
 		}
 	}
 }
@@ -128,8 +137,11 @@ func FuzzParseQuery(f *testing.F) {
 	}
 	f.Fuzz(func(t *testing.T, raw string) {
 		q := parseQuery(raw)
-		search, ok := q.search()
-		if !ok {
+		search, bad := q.only(q.values.keys()...)
+		if bad != "" {
+			if _, isText := q.get(bad).(string); isText {
+				t.Fatalf("%q: the text of %q was refused", raw, bad)
+			}
 			return
 		}
 		for i := 0; i < len(search); i++ {

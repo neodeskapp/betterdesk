@@ -14,7 +14,9 @@ import (
 //   - Someone with a link, signed in or not: ?mesh_share=<token> for a
 //     share link, ?guest=<token> or ?t=<token> for a guest link. The API
 //     server says whether the token is good for this device, and the
-//     request goes on with the whole query. A guest link's token goes on
+//     request goes on with the token and the flags of the tunnel
+//     (linkParameters), each one text: a list or an object among them
+//     is 400. A guest link's token goes on
 //     as guest, without t, so the API server checks the link again and
 //     writes the tunnel to the link's creator; a link that only allows
 //     watching sets view_only=1, whatever the query says.
@@ -41,6 +43,10 @@ func (h *handlers) desktop(w http.ResponseWriter, r *http.Request) {
 	}
 	if share == "" && guest == "" {
 		h.desktopForSession.ServeHTTP(w, r)
+		return
+	}
+	if _, bad := query.only(linkParameters...); bad != "" {
+		badParameter(w, r, bad)
 		return
 	}
 
@@ -70,13 +76,13 @@ func (h *handlers) desktop(w http.ResponseWriter, r *http.Request) {
 			query.set("view_only", "1")
 		}
 	}
-	search, ok := query.search()
-	if !ok {
-		kit.JSON(w, r, http.StatusInternalServerError, apiFailure{Error: unreachable})
-		return
-	}
+	search, _ := query.only(linkParameters...)
 	h.pass(w, r, http.MethodPost, withSearch(devicePath(id, "desktop"), search))
 }
+
+// linkParameters are the parameters of a desktop request with a link that
+// the API server reads: the link's token and the flags of the tunnel.
+var linkParameters = []string{"mesh_share", "guest", "view_only", "record", "relay_base"}
 
 // desktopTunnel opens the tunnel for a signed-in account.
 func (h *handlers) desktopTunnel(w http.ResponseWriter, r *http.Request) {
