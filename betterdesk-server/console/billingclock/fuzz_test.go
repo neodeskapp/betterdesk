@@ -106,7 +106,7 @@ func FuzzHostZone(f *testing.F) {
 			LookupEnv: func(string) (string, bool) { return tz, true },
 			Realpath:  func(p string) (string, error) { return p, nil },
 		})
-		if zone != "" && !IsValidIANATimezone(zone) {
+		if _, ok := resolveZone(zone); zone != "" && !ok {
 			t.Fatalf("TZ %q gave %q, which Intl does not take", tz, zone)
 		}
 	})

@@ -23,6 +23,7 @@ import (
 	"math"
 	"regexp"
 	"strings"
+	"time"
 	"unicode/utf16"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -227,17 +228,22 @@ func IsValidNTPServerEntry(entry string) bool {
 	return ssrfguard.IsIP(s) != 0 || ntpHostName.MatchString(s)
 }
 
-// IsValidIANATimezone reports whether tz, trimmed, is a time zone
-// Intl.DateTimeFormat takes, of at most 64 characters: a name of the
-// tz database as ICU knows it, in any letter case, or an offset (+01,
-// +0100, +01:00).
+// IsValidIANATimezone reports whether tz, trimmed, is a time zone the
+// server uses for its billing months, of at most 64 characters: a name
+// of the tz database, spelled as the server's loader (time.LoadLocation)
+// loads it, that Intl.DateTimeFormat takes too. Other letter case,
+// offsets (+01:00) and names only ICU knows (IST) are refused: the
+// server could not load them and would fall back to its own zone.
 func IsValidIANATimezone(tz string) bool {
 	value := jsTrim(tz)
-	if value == "" || utf16Length(value) > 64 {
+	if value == "" || value == "Local" || utf16Length(value) > 64 {
 		return false
 	}
-	_, ok := resolveZone(value)
-	return ok
+	if _, ok := resolveZone(value); !ok {
+		return false
+	}
+	_, err := time.LoadLocation(value)
+	return err == nil
 }
 
 // textOr is String(value ?? fallback).
