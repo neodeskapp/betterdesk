@@ -129,8 +129,8 @@
       "api_port": "21121",
       "app_name": "BetterDesk Support Agent",
       "public_key": "<volatile>",
-      "relay_host": "127.0.0.1",
-      "server_host": "127.0.0.1",
+      "relay_host": "<hostname>",
+      "server_host": "<hostname>",
       "use_https": false
      },
      "success": true

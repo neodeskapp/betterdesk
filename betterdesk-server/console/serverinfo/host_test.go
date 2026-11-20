@@ -206,6 +206,7 @@ func TestResolveEndpointsAgainstNode(t *testing.T) {
 	sources := map[string]int{}
 	ipv6 := &ipv6Cases{t: t}
 	all := m
+	si2 := 0
 	for i, c := range v.Resolve {
 		label := "case " + strconv.Itoa(i)
 		m := ipv6.mismatches(all, c.Cfg, c.Env, c.Durable, c.Legacy, c.Headers, c.QueryHost)
@@ -230,6 +231,10 @@ func TestResolveEndpointsAgainstNode(t *testing.T) {
 		}
 
 		c.Endpoints.Relay, c.NoReq.Relay = relayUM4(c.Endpoints.Relay), relayUM4(c.NoReq.Relay)
+		if req != nil && c.Endpoints.Sources.Host == SourceConfig && onlyThisMachineReaches(c.Endpoints.Host) {
+			c.Endpoints, c.Host = requestHostEndpoints(s, req, c.Endpoints)
+			si2++
+		}
 		if got := s.ResolveRustDeskEndpoints(req, c.QueryHost); got != c.Endpoints {
 			m.errorf("%s: endpoints %+v, want %+v", label, got, c.Endpoints)
 		}
@@ -245,6 +250,9 @@ func TestResolveEndpointsAgainstNode(t *testing.T) {
 		st.check(t, m, label, c.After)
 		sources[c.Endpoints.Sources.Host]++
 		sources["api:"+c.Endpoints.Sources.API]++
+	}
+	if si2 < 100 {
+		t.Errorf("only %d cases give the request's host for an API address only this machine reaches (SI2)", si2)
 	}
 	for _, source := range []string{SourceEnv, SourceQuery, SourcePanelHost, SourceConfig, SourceRequest, "api:" + SourceDerived, "api:" + SourceEnv} {
 		if sources[source] < 20 {
@@ -335,5 +343,36 @@ func TestResolveIPv6Endpoints(t *testing.T) {
 	got = s.ResolveRustDeskEndpoints(&RequestHost{Host: "[::1]:5000"}, "")
 	if got.Host != "::1" || got.Relay != "[::1]:21117" || got.API != "http://[::1]:21114" || got.Sources.Host != SourceRequest {
 		t.Errorf("for the request's host: %+v", got)
+	}
+}
+
+// TestClientFacingHostSkipsLoopbackAPIHost gives clients the request's
+// host when the host of the console's own API address is a loopback
+// address, 0.0.0.0 or a name without a dot (BUGS SI2: a fresh install gave
+// out 127.0.0.1, a split Docker install the server container's name).
+// Without a request the API address's host stays.
+func TestClientFacingHostSkipsLoopbackAPIHost(t *testing.T) {
+	req := &RequestHost{Host: "desk.example.com:5000"}
+	for apiURL, want := range map[string]string{
+		"http://127.0.0.1:21114/api":         "desk.example.com request",
+		"http://127.0.0.2:21114/api":         "desk.example.com request",
+		"http://localhost:21114/api":         "desk.example.com request",
+		"http://betterdesk-server:21114/api": "desk.example.com request",
+		"http://[::1]:21114/api":             "desk.example.com request",
+		"http://0.0.0.0:21114/api":           "desk.example.com request",
+		"http://api.example.com:21114/api":   "api.example.com config",
+		"http://192.0.2.10:21114/api":        "192.0.2.10 config",
+	} {
+		s := New(Options{APIURL: apiURL, GoAPIPort: 21114, DataDir: t.TempDir(), EnvPath: filepath.Join(t.TempDir(), ".env"), Getenv: envMap(nil)})
+		got := s.ResolveRustDeskEndpoints(req, "")
+		if got.Host+" "+got.Sources.Host != want {
+			t.Errorf("API address %s: host %q from %q, want %s", apiURL, got.Host, got.Sources.Host, want)
+		}
+		if host := s.ResolveClientFacingHost(req, ""); host+" "+got.Sources.Host != want {
+			t.Errorf("API address %s: client-facing host %q", apiURL, host)
+		}
+		if none := s.ResolveRustDeskEndpoints(nil, ""); none.Sources.Host != SourceConfig || none.Host != s.DefaultServerHost() {
+			t.Errorf("API address %s without a request: %+v", apiURL, none)
+		}
 	}
 }

@@ -234,7 +234,20 @@ func (s *Service) ReadPanelPublicHost() string {
 	return s.ReadPanelPublicHostValue()
 }
 
-// clientFacingHost picks the host and names its source.
+// isMachineLocalHost reports whether a client elsewhere cannot reach host:
+// a loopback address, 0.0.0.0 or ::, or a name without a dot (localhost,
+// a container's name). An IPv6 address may be in brackets.
+func isMachineLocalHost(host string) bool {
+	h := strings.TrimSuffix(strings.TrimPrefix(host, "["), "]")
+	if addr, err := netip.ParseAddr(h); err == nil {
+		return addr.IsLoopback() || addr.IsUnspecified()
+	}
+	return !strings.Contains(h, ".")
+}
+
+// clientFacingHost picks the host and names its source. The host of the
+// console's own API address gives way to the request's host when no
+// client elsewhere can reach it (isMachineLocalHost).
 func (s *Service) clientFacingHost(req *RequestHost, queryHost string, public PublicEndpoints, panelHost string) (host, source string) {
 	if public.PublicServerID != "" {
 		return public.PublicServerID, SourceEnv
@@ -249,7 +262,7 @@ func (s *Service) clientFacingHost(req *RequestHost, queryHost string, public Pu
 			return normalized.Host, SourcePanelHost
 		}
 	}
-	if fromAPI := s.DefaultServerHost(); fromAPI != "" {
+	if fromAPI := s.DefaultServerHost(); fromAPI != "" && (req == nil || !isMachineLocalHost(fromAPI)) {
 		return fromAPI, SourceConfig
 	}
 	if req != nil {
@@ -265,7 +278,8 @@ func (s *Service) clientFacingHost(req *RequestHost, queryHost string, public Pu
 // ResolveClientFacingHost returns the host a client should use, the first
 // of: the public server ID setting, queryHost when it is a valid host,
 // PANEL_PUBLIC_HOST when it is one, the host of the configured API
-// address, the host of the request, "localhost". req may be nil.
+// address unless a request came and that host is one only this machine
+// reaches, the host of the request, "localhost". req may be nil.
 func (s *Service) ResolveClientFacingHost(req *RequestHost, queryHost string) string {
 	settings := s.readPublicEnv()
 	host, _ := s.clientFacingHost(req, queryHost, settings.endpoints(), settings.get(PanelPublicHostKey))

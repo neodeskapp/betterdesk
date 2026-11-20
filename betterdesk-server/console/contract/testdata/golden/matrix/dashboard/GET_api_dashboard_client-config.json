@@ -80,11 +80,11 @@
    "volatile": [
     {
      "path": "data.config_uri",
-     "pattern": "^[9aA+/_=-]{8}:[9aA+/_=-]{183}$"
+     "pattern": "^[9aA+/_=-]{8}:[9aA+/_=-]+$"
     },
     {
      "path": "data.deploy_config_string",
-     "pattern": "^[9aA+/_=-]{174}$"
+     "pattern": "^[9aA+/_=-]+$"
     },
     {
      "path": "data.public_key",
@@ -99,22 +99,22 @@
     "kind": "json",
     "json": {
      "data": {
-      "api_url": "http://127.0.0.1:21121",
-      "client_server_host": "127.0.0.1",
+      "api_url": "http://<hostname>:21121",
+      "client_server_host": "<hostname>",
       "config_uri": "<volatile>",
       "deploy_config_string": "<volatile>",
       "endpoint_sources": {
-       "api": "config",
-       "host": "config",
-       "relay": "config"
+       "api": "request",
+       "host": "request",
+       "relay": "request"
       },
       "env_override_active": false,
       "has_public_key": true,
-      "phone_unreachable_host": true,
+      "phone_unreachable_host": false,
       "public_key": "<volatile>",
       "qr": "<volatile>",
-      "relay_server": "127.0.0.1:21117",
-      "server_id": "127.0.0.1"
+      "relay_server": "<hostname>:21117",
+      "server_id": "<hostname>"
      },
      "success": true
     }

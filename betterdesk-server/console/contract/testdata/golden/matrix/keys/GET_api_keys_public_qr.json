@@ -87,11 +87,11 @@
     "kind": "json",
     "json": {
      "data": {
-      "api_url": "http://127.0.0.1:21121",
-      "phone_unreachable_host": true,
+      "api_url": "http://<hostname>:21121",
+      "phone_unreachable_host": false,
       "qr": "<volatile>",
-      "relay_server": "127.0.0.1:21117",
-      "server_id": "127.0.0.1"
+      "relay_server": "<hostname>:21117",
+      "server_id": "<hostname>"
      },
      "success": true
     }

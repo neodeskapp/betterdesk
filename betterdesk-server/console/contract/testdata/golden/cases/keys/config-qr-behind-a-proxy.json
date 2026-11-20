@@ -84,11 +84,11 @@
     "kind": "json",
     "json": {
      "data": {
-      "api_url": "http://127.0.0.1:21121",
-      "phone_unreachable_host": true,
+      "api_url": "http://proxy.example.org:21121",
+      "phone_unreachable_host": false,
       "qr": "<volatile>",
-      "relay_server": "127.0.0.1:21117",
-      "server_id": "127.0.0.1"
+      "relay_server": "proxy.example.org:21117",
+      "server_id": "proxy.example.org"
      },
      "success": true
     }

@@ -256,18 +256,18 @@ func TestAPIKeyThatIsMissingOrEmpty(t *testing.T) {
 
 func TestServerInfo(t *testing.T) {
 	w := newWorld(t, map[string]string{".api_key": apiKey}, nil)
-	// The host of the configured API address wins over the request's own
-	// host (BUGS SI2). A host asked for keeps its letter case and loses
-	// its port.
+	// The configured API address is on loopback, so the request's own host
+	// is given out (BUGS SI2). A host asked for keeps its letter case and
+	// loses its port.
 	want(t, "default", w.get("viewer", "/api/keys/server-info"), 200,
-		`{"success":true,"data":{"server_id":"127.0.0.1","relay_server":"127.0.0.1:21117","api_url":"http://127.0.0.1:21114","api_key_masked":"0123****cdef",`+
-			`"endpoint_sources":{"host":"config","relay":"config","api":"config"},"env_override_active":false}}`)
+		`{"success":true,"data":{"server_id":"console.test","relay_server":"console.test:21117","api_url":"http://console.test:21114","api_key_masked":"0123****cdef",`+
+			`"endpoint_sources":{"host":"request","relay":"request","api":"request"},"env_override_active":false}}`)
 	want(t, "a host asked for", w.get("viewer", "/api/keys/server-info?host=Console.Example.org:5000"), 200,
 		`{"success":true,"data":{"server_id":"Console.Example.org","relay_server":"Console.Example.org:21117","api_url":"http://Console.Example.org:21114","api_key_masked":"0123****cdef",`+
 			`"endpoint_sources":{"host":"query","relay":"query","api":"query"},"env_override_active":false}}`)
 	for _, query := range []string{"host=a.example&host=b.example", "host[]=a.example", "host%5Bx%5D=a.example", "host=not%20a%20host", "host="} {
 		rec := w.get("viewer", "/api/keys/server-info?"+query)
-		if !strings.Contains(rec.Body.String(), `"server_id":"127.0.0.1"`) || !strings.Contains(rec.Body.String(), `"host":"config"`) {
+		if !strings.Contains(rec.Body.String(), `"server_id":"console.test"`) || !strings.Contains(rec.Body.String(), `"host":"request"`) {
 			t.Errorf("%s: %s", query, rec.Body.String())
 		}
 	}
@@ -286,10 +286,12 @@ func TestServerInfo(t *testing.T) {
 func TestConfigQR(t *testing.T) {
 	for _, route := range []string{"/api/keys/public/qr", "/api/keys/qr"} {
 		w := newWorld(t, map[string]string{"id_ed25519.pub": validKey}, nil)
-		payload := serverinfo.ConfigPayload{Host: "127.0.0.1", Relay: "127.0.0.1:21117", API: "http://127.0.0.1:21114", Key: validKey}
+		// The request's host, since the configured API address is on
+		// loopback (BUGS SI2)
+		payload := serverinfo.ConfigPayload{Host: "console.test", Relay: "console.test:21117", API: "http://console.test:21114", Key: validKey}
 		want(t, route, w.get("viewer", route), 200,
-			`{"success":true,"data":{"qr":"qr:`+serverinfo.EncodeRustDeskConfigURI(payload)+`","server_id":"127.0.0.1","relay_server":"127.0.0.1:21117",`+
-				`"api_url":"http://127.0.0.1:21114","phone_unreachable_host":true}}`)
+			`{"success":true,"data":{"qr":"qr:`+serverinfo.EncodeRustDeskConfigURI(payload)+`","server_id":"console.test","relay_server":"console.test:21117",`+
+				`"api_url":"http://console.test:21114","phone_unreachable_host":false}}`)
 
 		payload = serverinfo.ConfigPayload{Host: "desk.example.org", Relay: "desk.example.org:21117", API: "http://desk.example.org:21114", Key: validKey}
 		want(t, route+" for a host", w.get("viewer", route+"?host=desk.example.org"), 200,
@@ -301,7 +303,7 @@ func TestConfigQR(t *testing.T) {
 
 		// A relay of its own is named beside the host
 		w = newWorld(t, map[string]string{"id_ed25519.pub": validKey}, map[string]string{"PUBLIC_RELAY_SERVER": "relay.example.org"})
-		if rec := w.get("viewer", route); !strings.Contains(rec.Body.String(), `"server_id":"127.0.0.1","relay_server":"relay.example.org:21117","api_url":"http://127.0.0.1:21114"`) {
+		if rec := w.get("viewer", route); !strings.Contains(rec.Body.String(), `"server_id":"console.test","relay_server":"relay.example.org:21117","api_url":"http://console.test:21114"`) {
 			t.Errorf("%s with a public relay: %s", route, rec.Body.String())
 		}
 

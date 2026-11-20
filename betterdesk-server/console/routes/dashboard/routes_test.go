@@ -248,18 +248,20 @@ func TestClientConfig(t *testing.T) {
 			`"client_server_host":"` + host + `","endpoint_sources":{"host":"` + source + `","relay":"` + source + `","api":"` + source + `"},` +
 			`"env_override_active":false,"phone_unreachable_host":` + flag + `,"qr":"qr:` + serverinfo.EncodeRustDeskConfigURI(payload) + `"}}`
 	}
-	want(t, "default", w.get("viewer", "/api/dashboard/client-config"), 200, expect("127.0.0.1", "config", true))
+	// The configured API address is on loopback, so the request's host is
+	// given out (BUGS SI2)
+	want(t, "default", w.get("viewer", "/api/dashboard/client-config"), 200, expect("console.test", "request", false))
 	want(t, "for a host", w.get("viewer", "/api/dashboard/client-config?host=desk.example.org"), 200, expect("desk.example.org", "query", false))
 	want(t, "for a .local name", w.get("viewer", "/api/dashboard/client-config?host=nas.local"), 200, expect("nas.local", "query", true))
 	for _, query := range []string{"host=a.example&host=b.example", "host[]=a.example", "host%5Bx%5D=a.example", "host=bad%20host", "host="} {
-		want(t, query, w.get("viewer", "/api/dashboard/client-config?"+query), 200, expect("127.0.0.1", "config", true))
+		want(t, query, w.get("viewer", "/api/dashboard/client-config?"+query), 200, expect("console.test", "request", false))
 	}
 
 	// Without a key the fields stay and the QR code is null
 	w = newWorld(t, nil, nil)
 	body := w.get("viewer", "/api/dashboard/client-config").Body.String()
-	if !strings.HasPrefix(body, `{"success":true,"data":{"server_id":"127.0.0.1","relay_server":"127.0.0.1:21117","api_url":"http://127.0.0.1:21114","public_key":"","has_public_key":false,`) ||
-		!strings.HasSuffix(body, `"env_override_active":false,"phone_unreachable_host":true,"qr":null}}`) {
+	if !strings.HasPrefix(body, `{"success":true,"data":{"server_id":"console.test","relay_server":"console.test:21117","api_url":"http://console.test:21114","public_key":"","has_public_key":false,`) ||
+		!strings.HasSuffix(body, `"env_override_active":false,"phone_unreachable_host":false,"qr":null}}`) {
 		t.Errorf("without a key: %s", body)
 	}
 }

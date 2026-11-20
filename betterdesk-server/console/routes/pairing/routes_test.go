@@ -74,10 +74,11 @@ func TestEveryRouteNeedsASessionAndThePermission(t *testing.T) {
 // The suggested address is the host clients are given: the public server
 // ID setting, else PANEL_PUBLIC_HOST, else the host of the API address,
 // as the spec tree's route answers it (upstream 3.5.264 resolves its
-// pairing page's host this way).
+// pairing page's host this way). An API address on loopback gives way to
+// the request's host (BUGS SI2).
 func TestHostIsTheClientFacingHost(t *testing.T) {
 	w := newWorld(t, nil)
-	want(t, "configured API address", w.do("admin", "GET", "/api/panel/pairing/host", ""), 200, `{"success":true,"host":"127.0.0.1"}`)
+	want(t, "configured API address on loopback", w.do("admin", "GET", "/api/panel/pairing/host", ""), 200, `{"success":true,"host":"example.com"}`)
 	w.env["PANEL_PUBLIC_HOST"] = "Desk.Example.org:5443"
 	want(t, "PANEL_PUBLIC_HOST", w.do("admin", "GET", "/api/panel/pairing/host", ""), 200, `{"success":true,"host":"Desk.Example.org"}`)
 	w.env["PUBLIC_SERVER_ID"] = "id.example.org"

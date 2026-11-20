@@ -355,3 +355,30 @@ func withoutCarriedComments(node, got string) bool {
 	}
 	return j == len(gotLines)
 }
+
+// onlyThisMachineReaches reports whether Node gave clients a host of the
+// console's own API address that no client elsewhere reaches: a loopback
+// address, 0.0.0.0, or a name without a dot (SI2).
+func onlyThisMachineReaches(host string) bool {
+	return strings.HasPrefix(host, "127.") || host == "[::1]" || host == "0.0.0.0" || host == "[::]" || !strings.Contains(host, ".")
+}
+
+// requestHostEndpoints is what Go gives where Node gave such a host while
+// a request came (SI2): the request's host, and the relay and the API
+// address that followed Node's host follow it; the client-facing host is
+// the same. The answer without a request stays Node's.
+func requestHostEndpoints(s *Service, req *RequestHost, node ResolvedEndpoints) (ResolvedEndpoints, string) {
+	raw := req.ForwardedHost
+	if raw == "" {
+		raw = req.Host
+	}
+	out := node
+	out.Host, out.Sources.Host = StripRequestHost(raw), SourceRequest
+	if node.Sources.Relay == SourceConfig {
+		out.Relay, out.Sources.Relay = s.RelayEndpointForHost(out.Host, ""), SourceRequest
+	}
+	if node.Sources.API == SourceConfig {
+		out.API, out.Sources.API = s.APIURLForHost(out.Host, s.DefaultUseHTTPS()), SourceRequest
+	}
+	return out, out.Host
+}
