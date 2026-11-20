@@ -106,8 +106,9 @@ type StaticFoldersOptions struct {
 	// Production is NODE_ENV=production. It gives the files a max-age of 7
 	// days (30 for uploads and wallpapers) in place of 0.
 	Production bool
-	// OnError answers a file request that failed after the file was found
-	// (412, 416) or on a disk error.
+	// OnError answers a file request that failed on a disk error. A
+	// precondition that does not hold (412) and a range outside the file
+	// (416) are answered by the step itself, without a body.
 	OnError ErrorHandler
 	// FS replaces the operating system's files.
 	FS httpx.StaticFS
@@ -147,6 +148,7 @@ func StaticFolders(opts StaticFoldersOptions) func(http.Handler) http.Handler {
 		for i := len(mounts) - 1; i >= 0; i-- {
 			m := mounts[i]
 			m.options.OnError = onError
+			m.options.AnswerClientErrors = true
 			m.options.FS = opts.FS
 			root := filepath.Clean(m.dir)
 			switch {

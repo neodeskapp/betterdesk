@@ -653,6 +653,13 @@ func knownDifference(v vector) (difference, bool) {
 	return difference{}, false
 }
 
+// clientFileError reports a vector where Node passed a file's failed
+// precondition (412) or range (416) to its error handler (M6).
+func clientFileError(v vector) bool {
+	return strings.HasPrefix(v.Name, "static ") && v.Error != nil &&
+		(v.Error.Status == http.StatusPreconditionFailed || v.Error.Status == http.StatusRequestedRangeNotSatisfiable)
+}
+
 // bugFix matches the reason of a difference a bug fix makes: it starts
 // with the bug's id from BUGS.md.
 var bugFix = regexp.MustCompile(`^[A-Z]+[0-9]+: `)
@@ -670,7 +677,7 @@ func replay(t *testing.T, mode string, minimum int) {
 	p, server := startPipeline(t, file)
 	addr := server.Listener.Addr().String()
 	skipped := map[string]int{}
-	aborts := 0
+	aborts, fileErrors := 0, 0
 	for _, v := range file.Vectors {
 		name := v.ID + " " + v.Name
 		resp, body := exchange(t, addr, v.requestBytes(t), v.Method, v.AbortAfter)
@@ -711,6 +718,13 @@ func replay(t *testing.T, mode string, minimum int) {
 			continue
 		}
 		wantHeaders, gotHeaders := headerMap(want.Headers), responseHeaders(resp)
+		if clientFileError(v) {
+			// M6: the static step answers these itself, without a body
+			v.Error, wantBody = nil, nil
+			delete(wantHeaders, "content-type")
+			wantHeaders["content-length"] = "0"
+			fileErrors++
+		}
 		var skipHeaders []string
 		if _, has := wantHeaders["content-length"]; !has {
 			// Node streamed the answer; whether Go knows the length is its server's business
@@ -769,6 +783,7 @@ func replay(t *testing.T, mode string, minimum int) {
 	for reason, n := range skipped {
 		t.Logf("%d vectors not compared: %s", n, reason)
 	}
+	t.Logf("%d failed preconditions and ranges of files compared as the static step's own answer (M6)", fileErrors)
 	// A difference a bug fix makes on purpose names its bug first; those are
 	// counted apart from what Go cannot answer as Node did
 	total, fixed := 0, 0

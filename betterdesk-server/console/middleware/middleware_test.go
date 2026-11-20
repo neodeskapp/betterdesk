@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -1561,13 +1562,72 @@ func TestStaticFoldersMaxAge(t *testing.T) {
 	if rec := get(StaticFolders(partial)(next), "/protos/message.proto"); rec.Code != http.StatusTeapot {
 		t.Errorf("unset protos folder: %d", rec.Code)
 	}
-	// Errors of a found file go to OnError
-	var status int
-	withErr := opts
-	withErr.OnError = func(w http.ResponseWriter, _ *http.Request, s int, _ error) { status = s; w.WriteHeader(s) }
-	req := httptest.NewRequest("GET", "/favicon.svg", nil)
-	req.Header.Set("Range", "bytes=5-")
-	if rec := serve(StaticFolders(withErr)(next), req); rec.Code != 416 || status != 416 {
-		t.Errorf("unsatisfiable range: %d, OnError %d", rec.Code, status)
+}
+
+// failingOpen finds every file of the real disk but cannot open one.
+type failingOpen struct{}
+
+func (failingOpen) Stat(name string) (fs.FileInfo, error) { return os.Stat(name) }
+
+func (failingOpen) Open(string) (io.ReadSeekCloser, error) { return nil, errors.New("disk on fire") }
+
+// A precondition that does not hold and a range outside the file are the
+// client's answer, not a failure of the server: the step answers 412 and
+// 416 itself, with the file's validators and no body, and OnError is not
+// called (M6). A file that cannot be read still goes to OnError.
+func TestStaticFoldersAnswerPreconditionAndRange(t *testing.T) {
+	site := t.TempDir()
+	full := filepath.Join(site, "uploads", "big.bin")
+	_ = os.MkdirAll(filepath.Dir(full), 0o755)
+	_ = os.WriteFile(full, bytes.Repeat([]byte("x"), 1000), 0o644)
+	var called []int
+	opts := StaticFoldersOptions{UploadsDir: filepath.Join(site, "uploads"), Production: true,
+		OnError: func(w http.ResponseWriter, r *http.Request, s int, _ error) {
+			called = append(called, s)
+			httpx.WriteJSON(w, r, s, map[string]any{"success": false, "error": "Internal Server Error"})
+		}}
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusTeapot) })
+	h := SecurityHeaders(SecurityOptions{})(StaticFolders(opts)(next))
+	cases := []struct {
+		method, name, value string
+		status              int
+		contentRange        string
+	}{
+		{"GET", "If-Match", `"nope"`, 412, ""},
+		{"HEAD", "If-Match", `"nope"`, 412, ""},
+		{"GET", "If-Unmodified-Since", "Sat, 03 Jun 2000 00:00:00 GMT", 412, ""},
+		{"GET", "Range", "bytes=5000-", 416, "bytes */1000"},
+		{"HEAD", "Range", "bytes=5-2", 416, "bytes */1000"},
+	}
+	for _, c := range cases {
+		called = nil
+		req := httptest.NewRequest(c.method, "/uploads/big.bin", nil)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set(c.name, c.value)
+		rec := serve(h, req)
+		hd := rec.Header()
+		if rec.Code != c.status || rec.Body.Len() != 0 || len(called) != 0 {
+			t.Errorf("%s with %s %s: %d %q, OnError %v; want %d without a body", c.method, c.name, c.value, rec.Code, rec.Body.String(), called, c.status)
+		}
+		if hd.Get("Content-Type") != "" || hd.Get("Content-Length") != "0" || hd.Get("ETag") == "" || hd.Get("Last-Modified") == "" || hd.Get("Content-Range") != c.contentRange {
+			t.Errorf("%s with %s %s: headers %v", c.method, c.name, c.value, hd)
+		}
+		if hd.Get("X-Frame-Options") != "DENY" {
+			t.Errorf("%s with %s %s: the security headers are gone: %v", c.method, c.name, c.value, hd)
+		}
+	}
+	// What holds is still answered with the file
+	req := httptest.NewRequest("GET", "/uploads/big.bin", nil)
+	req.Header.Set("Range", "bytes=0-9")
+	if rec := serve(h, req); rec.Code != 206 || rec.Body.String() != "xxxxxxxxxx" {
+		t.Errorf("a range in the file: %d %q", rec.Code, rec.Body.String())
+	}
+	// A file that cannot be read is a failure of the server
+	called = nil
+	broken := opts
+	broken.FS = failingOpen{}
+	rec := serve(StaticFolders(broken)(next), httptest.NewRequest("GET", "/uploads/big.bin", nil))
+	if rec.Code != 500 || len(called) != 1 || called[0] != 500 {
+		t.Errorf("a file that cannot be opened: %d, OnError %v", rec.Code, called)
 	}
 }

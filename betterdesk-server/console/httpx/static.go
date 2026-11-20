@@ -70,6 +70,10 @@ type StaticOptions struct {
 	// Headers of the file (ETag, Content-Range, ...) are already set.
 	// Without OnError the answer is the status text as plain text.
 	OnError func(w http.ResponseWriter, r *http.Request, status int, err error)
+	// AnswerClientErrors answers 412 and 416 here, with the file's headers
+	// and no body, in place of OnError: a precondition that does not hold
+	// and a range outside the file are no failures of the server.
+	AnswerClientErrors bool
 	// FS replaces the operating system's files.
 	FS StaticFS
 }
@@ -245,6 +249,13 @@ type staticRequest struct {
 func (q *staticRequest) fail(status int, err error) {
 	if !q.forward && status < 500 {
 		q.next.ServeHTTP(q.w, q.r)
+		return
+	}
+	if q.s.opts.AnswerClientErrors && (status == http.StatusPreconditionFailed || status == http.StatusRequestedRangeNotSatisfiable) {
+		h := q.w.Header()
+		h.Del("Content-Type")
+		h.Set("Content-Length", "0")
+		q.w.WriteHeader(status)
 		return
 	}
 	if err == nil {
