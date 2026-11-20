@@ -112,7 +112,7 @@ func storedRows(rec *replay.Recording, w *replay.World) (replay.Check, map[strin
 				block, selecting = nil, false
 			}
 			r := report{
-				device:     tokens[strings.TrimPrefix(step.Headers["Authorization"], "Bearer ")],
+				device:     tokens[strings.TrimSpace(strings.TrimPrefix(step.Headers["Authorization"], "Bearer "))],
 				nodeStored: step.Status == 200,
 				goStored:   got.Status == 200,
 			}

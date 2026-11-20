@@ -13,7 +13,6 @@ import (
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
@@ -30,20 +29,7 @@ func (h *handlers) failReport(w http.ResponseWriter, r *http.Request, err error)
 	kit.Fail(w, r, http.StatusInternalServerError, "Internal server error")
 }
 
-// parsed is a member of the body as JSON.parse made it, undefined when
-// the body has no such member.
-func parsed(v middleware.Value) (jsjson.Value, error) {
-	if !v.Exists() {
-		return jsjson.Value{}, nil
-	}
-	value, err := jsjson.Parse(string(v.Raw()))
-	if err != nil {
-		return jsjson.Value{}, fmt.Errorf("read a member of the body: %w", err)
-	}
-	return value, nil
-}
-
-// report answers POST activity with the body {device_id, sessions?,
+// report answers POST activity with the body {device_id?, sessions?,
 // idle_seconds?, timestamp?}: the sessions of the report that are objects
 // with a start and an end (500 at most) are stored, and the report's
 // summary replaces the one of the same device and time. The summary
@@ -51,30 +37,19 @@ func parsed(v middleware.Value) (jsjson.Value, error) {
 // text that is one (anything else counts 0). Then the idle time is
 // checked against the alert rules in the background.
 //
-// The device guards came first. The route compares the body's device_id
-// with the token's device once more, as it is: a number that passed the
-// guard as its text is refused here, with success false.
+// The device guards came first: the report is the token's device's, and
+// a device the body, the query or X-Device-Id names is that device. A body
+// that is no JSON object is 400.
 //
 // The values of a session are stored as they came, and a session the
 // database cannot take fails the report with no session stored.
 func (h *handlers) report(w http.ResponseWriter, r *http.Request) {
 	device := kit.Device(r).DeviceID
+	if middleware.BodyValue(r).Kind() != middleware.KindObject {
+		kit.Fail(w, r, http.StatusBadRequest, "Invalid report")
+		return
+	}
 	body := kit.Body(r)
-	deviceID, err := parsed(body.Get("device_id"))
-	if err != nil {
-		h.failReport(w, r, err)
-		return
-	}
-	if !deviceID.Truthy() {
-		kit.Fail(w, r, http.StatusBadRequest, "Missing device_id")
-		return
-	}
-	// The guard put the token's device into the request, never empty
-	if deviceID.Kind() != jsjson.String || deviceID.Str() != device {
-		kit.Fail(w, r, http.StatusForbidden, "Device ID mismatch")
-		return
-	}
-
 	var stored []middleware.JSONObject
 	sessions, _ := body.Get("sessions").Array()
 	for _, s := range sessions {
@@ -94,7 +69,7 @@ func (h *handlers) report(w http.ResponseWriter, r *http.Request) {
 		total += seconds(session.Get("duration_secs"))
 	}
 	idle := jsbind.Of(body.Get("idle_seconds"))
-	err = upsertActivitySummary(r.Context(), h.db, device, summary{
+	err := upsertActivitySummary(r.Context(), h.db, device, summary{
 		IdleSeconds:     orZero(idle),
 		SessionCount:    jsbind.Number(float64(len(stored))),
 		TotalActiveSecs: jsbind.Number(math.Round(total)),

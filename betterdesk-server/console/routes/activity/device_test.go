@@ -30,11 +30,21 @@ var refusedSteps = map[string]string{
 	"53 POST /api/bd/activity?device_id%5B%5D=device-a": "DV4",
 }
 
-// storedSteps are the reports of the device recordings that Node failed
-// with 500 and the Go console stores since a bug fix of BUGS.md, by name
-// and bug. "" in the database's place means the step is no such report
-// there.
+// storedSteps are the reports of the device recordings that Node refused
+// or failed and the Go console stores since a bug fix of BUGS.md, by name
+// and bug on SQLite and on PostgreSQL. "" in the database's place means
+// the step is no such report there.
 var storedSteps = map[string][2]string{
+	// The report is the token's device's: one that names its device only
+	// in the query or in X-Device-Id, or nowhere, is stored.
+	"26 POST /api/activity/activity":              {"AI17", "AI17"},
+	"30 POST /api/activity/activity":              {"AI17", "AI17"},
+	"32 POST /api/bd/activity":                    {"AI17", "AI17"},
+	"33 POST /api/bd/activity":                    {"AI17", "AI17"},
+	"34 POST /api/bd/activity":                    {"AI17", "AI17"},
+	"51 POST /api/bd/activity?device_id=device-a": {"AI17", "AI17"},
+	"57 POST /api/bd/activity":                    {"AI17", "AI17"},
+	"59 POST /api/bd/activity":                    {"AI17", "AI17"},
 	// A session that is null is skipped; a duration that is no number
 	// counts 0, also in a session that is not stored; the log line counts
 	// the stored sessions.
@@ -47,6 +57,12 @@ var storedSteps = map[string][2]string{
 	// PostgreSQL took the total "0 7 30" for no number
 	"207 POST /api/bd/activity": {"", "AI16"},
 }
+
+// invalidReports are the steps of the device recordings whose body is no
+// JSON object, which the route refuses as no report since it takes the
+// device from the token (BUGS AI17), where Node asked for the body's
+// device_id.
+var invalidReports = map[string]string{"257 POST /api/bd/activity": "AI17"}
 
 // TestNodeDeviceAnswers replays what the Node console's device route
 // answered with its real database adapter, device guards and alert rules
@@ -78,6 +94,13 @@ func TestNodeDeviceAnswers(t *testing.T) {
 			if stored(t, step, got) {
 				return true
 			}
+			if bug, ok := invalidReports[step.Name]; ok {
+				answered[step.Name] = true
+				if got.Status != 400 || got.Body != `{"success":false,"error":"Invalid report"}` {
+					t.Errorf("%s (%s): %d %s, want 400 Invalid report", step.Name, bug, got.Status, got.Body)
+				}
+				return true
+			}
 			if bugs, ok := storedSteps[step.Name]; ok && bugs[map[bool]int{false: 0, true: 1}[db.IsPostgres()]] != "" {
 				answered[step.Name] = true
 				if got.Status != 200 || got.Body != `{"success":true}` {
@@ -105,10 +128,15 @@ func TestNodeDeviceAnswers(t *testing.T) {
 			t.Errorf("%d answers were compared by status only, want the 1 of the body that is no JSON", elsewhere)
 		}
 		if want := map[bool]map[string]int{
-			false: {"alerts": 4, "sessions": 1, "summaries": 32},
-			true:  {"alerts": 5, "sessions": 1, "summaries": 26},
+			false: {"alerts": 4, "sessions": 2, "summaries": 34},
+			true:  {"alerts": 5, "sessions": 2, "summaries": 28},
 		}[db.IsPostgres()]; !maps.Equal(differ, want) {
 			t.Errorf("statements whose rows differ from Node's, by table: %v, want %v", differ, want)
+		}
+		for name := range invalidReports {
+			if !answered[name] {
+				t.Errorf("the listed step %q is not in the recording", name)
+			}
 		}
 		for name, bugs := range storedSteps {
 			if !answered[name] && bugs[map[bool]int{false: 0, true: 1}[db.IsPostgres()]] != "" {
@@ -245,6 +273,47 @@ func TestTheSummaryCountsWhatIsStored(t *testing.T) {
 			if got := w.Rows("SELECT session_count, total_active_secs FROM activity_summaries", nil); got != want {
 				t.Errorf("%s: the summary %s, want %s", c.name, got, want)
 			}
+		}
+	})
+}
+
+// A report is stored for the device of its token. The guard has compared
+// every device the request names with the token's, so a report that names
+// its device only in the query or in X-Device-Id, or nowhere, is stored,
+// where Node asked for the body's device_id (400 "Missing device_id"). A
+// device_id that is no text or another device's is the guard's refusal,
+// without success, before the route (BUGS AI17).
+func TestTheReportTakesTheTokensDevice(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		tokenDeviceA(w)
+		report := func(deviceID, timestamp string) *string {
+			return replay.Text(`{` + deviceID + `"sessions":[],"idle_seconds":5,"timestamp":"` + timestamp + `"}`)
+		}
+		for _, c := range []struct {
+			name, path, timestamp, deviceID string
+			headers                         map[string]string
+		}{
+			{"only in the query", "/api/bd/activity?device_id=device-a", "2011-03-04T10:01:00.000Z", "", deviceA},
+			{"only in X-Device-Id", "/api/bd/activity", "2011-03-04T10:02:00.000Z", "", map[string]string{"Authorization": "Bearer tok-device-a", "X-Device-Id": "device-a"}},
+			{"nowhere", "/api/activity/activity", "2011-03-04T10:03:00.000Z", "", deviceA},
+			{"as empty text", "/api/bd/activity", "2011-03-04T10:04:00.000Z", `"device_id":"",`, deviceA},
+			{"as null", "/api/bd/activity", "2011-03-04T10:05:00.000Z", `"device_id":null,`, deviceA},
+		} {
+			got := w.Do(replay.Request{Method: "POST", Path: c.path, Body: report(c.deviceID, c.timestamp), Headers: c.headers})
+			if got.Status != 200 || got.Body != `{"success":true}` {
+				t.Errorf("a report naming its device %s: %d %s, want it stored", c.name, got.Status, got.Body)
+			}
+		}
+		for _, deviceID := range []string{`"device_id":["device-a"],`, `"device_id":5,`, `"device_id":"device-b",`, `"device_id":{"toString":1},`} {
+			got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/activity", Body: report(deviceID, "2011-03-04T11:00:00.000Z"), Headers: deviceA})
+			if got.Status != 403 || got.Body != `{"error":"Device ID mismatch"}` {
+				t.Errorf("a report with %s: %d %s, want the guard's 403", deviceID, got.Status, got.Body)
+			}
+		}
+		want := `[{"device_id":"device-a","n":5}]`
+		if got := w.Rows("SELECT device_id, COUNT(*) AS n FROM activity_summaries GROUP BY device_id", nil); got != want {
+			t.Errorf("the summaries: %s, want %s", got, want)
 		}
 	})
 }
