@@ -420,11 +420,7 @@ func fontFaceCSS(family, weight, url, format string) string {
 func (s *Service) RegisterUploadedFont(family any, filePath, fileName string) (font *Object, err error) {
 	defer catch(&err)
 	s.ensureFontsDir()
-	display := substring(trim(toString(or(family, "Custom Font"))), 80)
-	if display == "" {
-		throw("Font family name is required")
-	}
-	safeName := sanitizeFontName(display)
+	display, safeName := uploadedFontName(family)
 	dir := s.fontDir(safeName)
 	if !exists(dir) {
 		if err := os.MkdirAll(dir, 0o777); err != nil {
@@ -455,6 +451,18 @@ func (s *Service) RegisterUploadedFont(family any, filePath, fileName string) (f
 		"cssPath", "/fonts/"+safeName+"/font.css",
 		"downloaded", true,
 	), nil
+}
+
+// uploadedFontName is the name an uploaded font is installed under: the
+// family trimmed and cut at 80 characters ("Custom Font" for nothing), and
+// its folder name. It throws "Font family name is required" for a blank
+// family and "Invalid font family name" for one that gives no folder name.
+func uploadedFontName(family any) (display, safeName string) {
+	display = substring(trim(toString(or(family, "Custom Font"))), 80)
+	if display == "" {
+		throw("Font family name is required")
+	}
+	return display, sanitizeFontName(display)
 }
 
 func writeFile(path string, data []byte) error {

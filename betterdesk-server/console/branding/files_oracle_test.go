@@ -586,7 +586,11 @@ func (r *filesReplay) uploadSteps() {
 					names = append(names, name)
 				}
 			}
-			if got, want := Stringify(names), Stringify(property(entry, "tmp")); got != want {
+			wantTmp, fixed := tmpAfterUploads(property(entry, "tmp"))
+			if fixed {
+				r.fixed["BR3"]++
+			}
+			if got, want := Stringify(names), Stringify(wantTmp); got != want {
 				t.Errorf("%s: the temporary folder\n got  %s\n want %s", what, got, want)
 			}
 		}
@@ -688,6 +692,9 @@ func TestOracleFiles(t *testing.T) {
 		}
 		if r.fixed["BR10"] < 3 {
 			t.Errorf("%d background uploads name a target every object has, the recording has more (BUGS BR10)", r.fixed["BR10"])
+		}
+		if r.fixed["BR3"] == 0 {
+			t.Error("no refused font upload left a temporary file in the recording, it has some (BUGS BR3)")
 		}
 	})
 	t.Run("themes", func(t *testing.T) { r.t = t; r.themes() })

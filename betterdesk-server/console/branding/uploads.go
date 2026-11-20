@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -216,13 +215,16 @@ func (s *Service) ApplyBackground(ctx context.Context, target, url string) (bran
 }
 
 // UploadFont installs an uploaded font file. family is the name the form
-// sent; nothing stands for the file name without its extension. The bytes
-// go to TempDir as font-upload-<milliseconds><.ttf or .woff2> first and
-// from there into the font's folder (see RegisterUploadedFont). A file
-// name that does not end in .ttf is stored as .woff2.
+// sent; nothing stands for the file name without its extension. A name
+// that RegisterUploadedFont would refuse is refused before anything is
+// written. The bytes go to a temporary file in TempDir with a random name
+// (font-upload-<digits><.ttf or .woff2>), from there into the font's
+// folder (see RegisterUploadedFont), and the temporary file goes in every
+// case. A file name that does not end in .ttf is stored as .woff2.
 func (s *Service) UploadFont(family any, originalName string, content []byte) (font *Object, err error) {
 	defer catch(&err)
 	name := fontUploadFamily(family, originalName)
+	uploadedFontName(name)
 	ext := ".woff2"
 	if toLower(posixExtname(originalName)) == ".ttf" {
 		ext = ".ttf"
@@ -232,11 +234,19 @@ func (s *Service) UploadFont(family any, originalName string, content []byte) (f
 			return nil, fsError(err, "mkdir", s.opts.TempDir)
 		}
 	}
-	tmpPath := filepath.Join(s.opts.TempDir, "font-upload-"+strconv.FormatInt(s.opts.Now().UnixMilli(), 10)+ext)
-	if err := writeFile(tmpPath, content); err != nil {
-		return nil, err
+	tmp, err := os.CreateTemp(s.opts.TempDir, "font-upload-*"+ext)
+	if err != nil {
+		return nil, fsError(err, "open", filepath.Join(s.opts.TempDir, "font-upload-"+ext))
 	}
-	return s.RegisterUploadedFont(name, tmpPath, posixBasename(filepath.ToSlash(tmpPath)))
+	defer os.Remove(tmp.Name())
+	_, err = tmp.Write(content)
+	if closeErr := tmp.Close(); err == nil {
+		err = closeErr
+	}
+	if err != nil {
+		return nil, fsError(err, "write", tmp.Name())
+	}
+	return s.RegisterUploadedFont(name, tmp.Name(), posixBasename(filepath.ToSlash(tmp.Name())))
 }
 
 // FontUploadFamily is the name UploadFont gives a font: the family the

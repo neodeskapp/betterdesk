@@ -336,9 +336,8 @@ func TestUploadFont(t *testing.T) {
 		if rows := w.AuditRows(); len(rows) != auditBefore {
 			t.Errorf("refused uploads were audited: %v", rows[auditBefore:])
 		}
-		// the refusal of the name comes after the file was written to the
-		// temporary folder, and the file stays there (BUGS BR3)
-		if left := files(t, tmp); len(left) != 1 || !strings.HasPrefix(left[0], "font-upload-") {
+		// a refused name leaves no temporary file (BUGS BR3)
+		if left := files(t, tmp); len(left) != 0 {
 			t.Errorf("temporary files after a refused name: %v", left)
 		}
 	})

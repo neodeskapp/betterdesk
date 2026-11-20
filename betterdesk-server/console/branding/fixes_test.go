@@ -202,6 +202,22 @@ func (r *filesReplay) refusedRedirect(step, entry, value any, err error) bool {
 	return true
 }
 
+// tmpAfterUploads is BR3 in the replay of the uploads: the temporary
+// folder Node left, without the files of refused font uploads, which the
+// console removes. fixed says that there were such files.
+func tmpAfterUploads(recorded any) (names []any, fixed bool) {
+	list, _ := recorded.([]any)
+	names = []any{}
+	for _, name := range list {
+		if strings.HasPrefix(toString(name), "font-upload-<MS>") {
+			fixed = true
+			continue
+		}
+		names = append(names, name)
+	}
+	return names, fixed
+}
+
 // noFontFolder is the answer of Node for a font name without an ASCII
 // letter or digit, where the console finds no installed font (BR2).
 const noFontFolder = "throws Error: Invalid font family name"
