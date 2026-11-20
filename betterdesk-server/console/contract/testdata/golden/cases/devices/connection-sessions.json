@@ -2,7 +2,10 @@
  "id": "devices/connection-sessions",
  "request": {
   "method": "GET",
-  "path": "/api/devices/900100001/connection-sessions?limit=3"
+  "path": "/api/devices/900100001/connection-sessions?limit=3",
+  "notes": [
+   "header Accept-Encoding: identity"
+  ]
  },
  "recordings": 2,
  "answers": [
@@ -33,6 +36,8 @@
     "x-xss-protection": "0"
    },
    "volatile": [
+    "data.count",
+    "data.sessions",
     "data.sessions[*].duration_seconds"
    ],
    "body": {
@@ -79,70 +84,20 @@
     "x-xss-protection": "0"
    },
    "volatile": [
+    "data.count",
+    "data.sessions",
     {
      "path": "data.sessions[*].duration_seconds",
      "integer": true
-    },
-    {
-     "path": "data.sessions[*].ended_at",
-     "format": "9999-99-99A99:99:99A"
-    },
-    {
-     "path": "data.sessions[*].started_at",
-     "format": "9999-99-99A99:99:99A"
     }
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "count": 3,
+      "count": 0,
       "peer_id": "900100001",
-      "sessions": [
-       {
-        "active": false,
-        "duration_seconds": 0,
-        "ended_at": "<volatile>",
-        "host_id": "900100001",
-        "id": 1,
-        "peer_id": "900100023",
-        "peer_ip": "10.0.3.42",
-        "peer_name": "demo-support-pixel",
-        "source": "signal",
-        "started_at": "<volatile>",
-        "transport": "punch_hole",
-        "username": "demo_operator"
-       },
-       {
-        "active": false,
-        "duration_seconds": 0,
-        "ended_at": "<volatile>",
-        "host_id": "900100001",
-        "id": 4,
-        "peer_id": "900100023",
-        "peer_ip": "10.0.3.42",
-        "peer_name": "demo-support-pixel",
-        "source": "signal",
-        "started_at": "<volatile>",
-        "transport": "punch_hole",
-        "username": "admin"
-       },
-       {
-        "active": false,
-        "duration_seconds": 0,
-        "ended_at": "<volatile>",
-        "host_id": "900100001",
-        "id": 3,
-        "peer_id": "900100023",
-        "peer_ip": "10.0.3.42",
-        "peer_name": "demo-support-pixel",
-        "relay_uuid": "demo-relay-900100001-2",
-        "source": "signal",
-        "started_at": "<volatile>",
-        "transport": "request_relay",
-        "username": "admin"
-       }
-      ]
+      "sessions": []
      },
      "success": true
     }

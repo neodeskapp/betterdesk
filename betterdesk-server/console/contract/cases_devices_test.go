@@ -124,6 +124,9 @@ func init() {
 			// Which sessions the seed gives a device, and how many, depends
 			// on the hour it runs at: it puts them where the device was
 			// online. The replay of routes/devices pins the list itself.
+			// Without compression, so the length of the list decides no
+			// header.
+			Headers:  map[string]string{"Accept-Encoding": "identity"},
 			Volatile: []string{"data.sessions[*].duration_seconds", "~data.sessions", "~data.count"},
 		},
 		contract.Case{Name: "connection-sessions-none", Path: "/api/devices/900100018/connection-sessions"},
