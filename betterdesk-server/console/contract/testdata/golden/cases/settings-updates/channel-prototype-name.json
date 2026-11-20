@@ -13,7 +13,7 @@
    "roles": [
     "admin"
    ],
-   "status": 200,
+   "status": 400,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -37,11 +37,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "data": {
-      "previousBranch": "dev",
-      "previousChannel": "development"
-     },
-     "success": true
+     "error": "Invalid channel. Use stable or development.",
+     "success": false
     }
    }
   }

@@ -45,41 +45,16 @@ func (h *handlers) getChannel(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, answer{Success: true, Data: h.d.Updater.Channel()})
 }
 
-// prototypeKeys are the names every JavaScript object has from
-// Object.prototype. The old route looked a channel up in a plain object,
-// so these passed its check (BUGS UPD2).
-var prototypeKeys = map[string]bool{
-	"constructor": true, "__defineGetter__": true, "__defineSetter__": true, "hasOwnProperty": true,
-	"__lookupGetter__": true, "__lookupSetter__": true, "isPrototypeOf": true, "propertyIsEnumerable": true,
-	"toString": true, "valueOf": true, "__proto__": true, "toLocaleString": true,
-}
-
-// channelSwitchedToNothing is the answer of a switch to a name the old
-// route only found on Object.prototype: the channel, branch and label of
-// such an entry are undefined.
-type channelSwitchedToNothing struct {
-	PreviousBranch  string `json:"previousBranch"`
-	PreviousChannel string `json:"previousChannel"`
-}
-
 // setChannel answers POST /api/settings/updates/channel with the body
-// {channel: "stable" | "development"}.
+// {channel: "stable" | "development"}. Any other name is refused.
 func (h *handlers) setChannel(w http.ResponseWriter, r *http.Request) {
 	value := jsbind.Of(kit.Body(r).Get("channel"))
 	name := value.ToString()
-	if !value.Truthy() || (name != updater.ChannelStable && name != updater.ChannelDevelopment && !prototypeKeys[name]) {
+	if !value.Truthy() || (name != updater.ChannelStable && name != updater.ChannelDevelopment) {
 		kit.JSON(w, r, http.StatusBadRequest, failure{Error: "Invalid channel. Use stable or development."})
 		return
 	}
-	var result any
-	var err error
-	if prototypeKeys[name] {
-		var previous string
-		previous, err = h.d.Updater.SetBranchUndefined()
-		result = channelSwitchedToNothing{PreviousBranch: previous, PreviousChannel: updater.ChannelOf(previous)}
-	} else {
-		result, err = h.d.Updater.SetChannel(name)
-	}
+	result, err := h.d.Updater.SetChannel(name)
 	if err != nil {
 		var docker *updater.ErrDockerChannel
 		if errors.As(err, &docker) {

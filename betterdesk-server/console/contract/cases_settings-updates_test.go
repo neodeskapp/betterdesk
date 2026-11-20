@@ -116,8 +116,8 @@ func init() {
 		contract.Case{Name: "channel-number", Method: "POST", Path: "/api/settings/updates/channel", Body: map[string]any{"channel": 1}, Roles: admin},
 		contract.Case{Name: "channel-development", Method: "POST", Path: "/api/settings/updates/channel", Body: map[string]any{"channel": "development"}, Roles: writers},
 		contract.Case{Name: "channel-after-the-switch", Path: "/api/settings/updates/channel", Roles: admin},
-		// The old route looked the name up in a plain object, where
-		// "toString" exists too (BUGS UPD2).
+		// A name every JavaScript object has is no channel: the old route
+		// took it (BUGS UPD2).
 		contract.Case{Name: "channel-prototype-name", Method: "POST", Path: "/api/settings/updates/channel", Body: map[string]any{"channel": "toString"}, Roles: admin},
 		contract.Case{Name: "channel-list-of-one", Method: "POST", Path: "/api/settings/updates/channel", Body: map[string]any{"channel": []any{"development"}}, Roles: admin},
 		contract.Case{Name: "channel-back-to-stable", Method: "POST", Path: "/api/settings/updates/channel", Body: map[string]any{"channel": "stable"}, Roles: writers},

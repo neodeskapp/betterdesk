@@ -239,12 +239,18 @@ func TestChannelRoute(t *testing.T) {
 	if res := admin.Do("POST", "/api/settings/updates/channel", `{"channel":["stable"]}`); !strings.Contains(res.Body, `"branch":"main"`) {
 		t.Errorf("a list of one: %s", res.Body)
 	}
-	// The old route's prototype bug (BUGS UPD2).
-	if res := admin.Do("POST", "/api/settings/updates/channel", `{"channel":"toString"}`); res.Body != `{"success":true,"data":{"previousBranch":"main","previousChannel":"stable"}}` {
-		t.Errorf("toString %s", res.Body)
+	// The names every JavaScript object has are no channels (UPD2): they
+	// are refused and nothing is written
+	for _, name := range []string{"toString", "constructor", "__proto__", "valueOf", "hasOwnProperty", "toLocaleString"} {
+		if res := admin.Do("POST", "/api/settings/updates/channel", `{"channel":"`+name+`"}`); res.Status != 400 || res.Body != `{"success":false,"error":"Invalid channel. Use stable or development."}` {
+			t.Errorf("%s: %d %s", name, res.Status, res.Body)
+		}
 	}
-	if text, _ := os.ReadFile(env); string(text) != "UPDATE_GITHUB_BRANCH=undefined\n" {
+	if text, _ := os.ReadFile(env); string(text) != "UPDATE_GITHUB_BRANCH=main\n" {
 		t.Errorf("env %q", text)
+	}
+	if res := admin.Do("GET", "/api/settings/updates/channel", ""); !strings.Contains(res.Body, `"branch":"main"`) {
+		t.Errorf("channel after the refused names: %s", res.Body)
 	}
 	docker := newWorld(t, true)
 	if res := docker.As("admin").Do("POST", "/api/settings/updates/channel", `{"channel":"stable"}`); res.Status != 400 || !strings.Contains(res.Body, `"code":"DOCKER_IMAGE_CHANNEL"`) {

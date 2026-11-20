@@ -198,12 +198,10 @@ func TestChannel(t *testing.T) {
 	if in.svc.Branch() != "dev" {
 		t.Error("the process did not switch")
 	}
-	if _, err := in.svc.SetChannel("nightly"); err == nil {
-		t.Error("an unknown channel was accepted")
-	}
-	previous, err := in.svc.SetBranchUndefined()
-	if err != nil || previous != "dev" || in.svc.Branch() != "undefined" {
-		t.Errorf("undefined: %q %v %q", previous, err, in.svc.Branch())
+	for _, name := range []string{"nightly", "toString", "constructor", "__proto__"} {
+		if _, err := in.svc.SetChannel(name); err == nil || in.svc.Branch() != "dev" {
+			t.Errorf("the channel %q was accepted: %v, branch %q", name, err, in.svc.Branch())
+		}
 	}
 	docker := newInstall(t, func(o *Options) { o.Docker = true })
 	if _, err := docker.svc.SetChannel("development"); err == nil || !strings.Contains(err.Error(), "BETTERDESK_IMAGE_TAG=dev") {

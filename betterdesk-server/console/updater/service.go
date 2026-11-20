@@ -460,28 +460,3 @@ func (s *Service) LastResult(ctx context.Context) any {
 
 // PublicKeysConfigured reports whether a manifest signature is checked.
 func (s *Service) PublicKeysConfigured() bool { return len(s.keys()) > 0 }
-
-// SetBranchUndefined is the switch to a channel name that the old route
-// only found on Object.prototype ("toString", "constructor" and the
-// like): the old console wrote UPDATE_GITHUB_BRANCH=undefined into the
-// env file and used that branch from then on (BUGS UPD2). It returns the
-// branch before the switch.
-func (s *Service) SetBranchUndefined() (string, error) {
-	if s.ImageMode() {
-		return "", &ErrDockerChannel{Message: "Docker image deployments cannot switch update channel from the panel. " +
-			"Set BETTERDESK_IMAGE_TAG=latest (or a release version) in compose/.env, then run: docker compose pull && docker compose up -d"}
-	}
-	previous := s.Branch()
-	existing, err := os.ReadFile(s.opts.EnvFile)
-	if err != nil && !os.IsNotExist(err) {
-		return "", fmt.Errorf("read %s: %w", s.opts.EnvFile, err)
-	}
-	updated := serverinfo.UpsertEnvKey(string(existing), "UPDATE_GITHUB_BRANCH", "undefined")
-	if err := os.WriteFile(s.opts.EnvFile, []byte(updated), 0o600); err != nil {
-		return "", fmt.Errorf("write %s: %w", s.opts.EnvFile, err)
-	}
-	s.mu.Lock()
-	s.branch = "undefined"
-	s.mu.Unlock()
-	return previous, nil
-}

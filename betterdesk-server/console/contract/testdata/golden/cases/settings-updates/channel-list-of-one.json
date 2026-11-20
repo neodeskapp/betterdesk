@@ -43,8 +43,8 @@
       "branch": "dev",
       "channel": "development",
       "label": "Development",
-      "previousBranch": "undefined",
-      "previousChannel": "stable"
+      "previousBranch": "dev",
+      "previousChannel": "development"
      },
      "success": true
     }
