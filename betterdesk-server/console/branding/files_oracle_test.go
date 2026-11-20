@@ -344,19 +344,23 @@ func (r *filesReplay) fontSteps() {
 		if left := property(recorded, "tmpLeft"); left != Undefined {
 			want += " tmpLeft=" + toString(left)
 		}
-		if got := r.result(value, err) + extra; got != want {
-			if bug := fixedFontStep(step, want, value, err); bug != "" {
-				r.fixed[bug]++
-			} else {
-				t.Errorf("font step %d %s\n got  %s\n want %s", i, clip(Stringify(step)), clip(got), clip(want))
+		if r.refusedRedirect(step, entry, value, err) {
+			r.fixed["BR16"]++
+		} else {
+			if got := r.result(value, err) + extra; got != want {
+				if bug := fixedFontStep(step, want, value, err); bug != "" {
+					r.fixed[bug]++
+				} else {
+					t.Errorf("font step %d %s\n got  %s\n want %s", i, clip(Stringify(step)), clip(got), clip(want))
+				}
 			}
-		}
-		asked := r.google.requests
-		if asked == nil {
-			asked = []any{}
-		}
-		if got, want := Stringify(asked), Stringify(or(property(entry, "requests"), []any{})); got != want {
-			t.Errorf("font step %d %s: requests\n got  %s\n want %s", i, clip(Stringify(step)), got, want)
+			asked := r.google.requests
+			if asked == nil {
+				asked = []any{}
+			}
+			if got, want := Stringify(asked), Stringify(or(property(entry, "requests"), []any{})); got != want {
+				t.Errorf("font step %d %s: requests\n got  %s\n want %s", i, clip(Stringify(step)), got, want)
+			}
 		}
 		if got, want := Stringify(tree(t, r.fontsDir())), Stringify(property(entry, "fonts")); got != want {
 			t.Errorf("font step %d %s: the fonts folder\n got  %s\n want %s", i, clip(Stringify(step)), clip(got), clip(want))
@@ -671,6 +675,9 @@ func TestOracleFiles(t *testing.T) {
 		r.fontSteps()
 		if r.fixed["BR2"] == 0 {
 			t.Error("no font step looks up a name without ASCII letters, the recording has some (BUGS BR2)")
+		}
+		if r.fixed["BR16"] == 0 {
+			t.Error("no font download was sent away from Google Fonts, the recording has one (BUGS BR16)")
 		}
 	})
 	t.Run("uploads", func(t *testing.T) {

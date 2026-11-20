@@ -536,15 +536,19 @@ func (s *Service) generateFontCSS(headingFont, bodyFont any) string {
 	return css
 }
 
+// maxFontRedirects is how many redirects one fetch of the font download
+// follows.
+const maxFontRedirects = 5
+
 // fetchURL gets a URL for the font download: one fixed User-Agent,
-// redirects followed by hand to whatever Location names, 200 as the only
-// good status, 15 seconds per request.
+// redirects followed by hand, at most five and only to Google Fonts over
+// https, 200 as the only good status, 15 seconds per request.
 func (s *Service) fetchURL(ctx context.Context, url string) ([]byte, error) {
 	client := &http.Client{
 		Transport:     s.opts.HTTP,
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 	}
-	for {
+	for redirects := 0; ; redirects++ {
 		data, next, err := fetchOnce(ctx, client, url)
 		if err != nil {
 			return nil, err
@@ -552,8 +556,26 @@ func (s *Service) fetchURL(ctx context.Context, url string) ([]byte, error) {
 		if next == "" {
 			return data, nil
 		}
+		if redirects == maxFontRedirects {
+			return nil, &Error{Name: "Error", Message: "Too many redirects"}
+		}
+		if !toGoogleFonts(next) {
+			return nil, &Error{Name: "Error", Message: "Redirect away from Google Fonts refused"}
+		}
 		url = next
 	}
+}
+
+// toGoogleFonts reports a redirect the font download follows: an https
+// address on fonts.googleapis.com or fonts.gstatic.com. One without a
+// host is left to the request, which refuses it as no URL.
+func toGoogleFonts(location string) bool {
+	u, err := neturl.Parse(location)
+	if err != nil || u.Host == "" {
+		return err == nil
+	}
+	host := strings.ToLower(u.Hostname())
+	return u.Scheme == "https" && (host == "fonts.googleapis.com" || host == "fonts.gstatic.com")
 }
 
 func fetchOnce(ctx context.Context, client *http.Client, url string) (data []byte, redirect string, err error) {

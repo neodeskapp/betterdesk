@@ -134,6 +134,74 @@ func fixedUploadAnswer(entry any) (body, audit any, bug string) {
 		[]any{[]any{"branding_bg_upload", "Uploaded background: " + m[2]}}, "BR10"
 }
 
+// refusedRedirect is BR16 in the replay of the font steps: a download
+// that Node followed to another host than Google Fonts. The console
+// refuses that redirect, so the file behind it is missing. It checks that
+// the console asked for everything Node asked for but the other host and
+// stored every file but that one, then writes the file and font.css as
+// Node had them, so the fonts folder (compared next) and the steps after
+// it are Node's again. It reports whether the step was one of these.
+func (r *filesReplay) refusedRedirect(step, entry, value any, err error) bool {
+	if property(step, "op") != "call" || property(step, "fn") != "downloadFont" {
+		return false
+	}
+	var allowed, refused []any
+	requests, _ := property(entry, "requests").([]any)
+	for _, req := range requests {
+		if strings.HasPrefix(toString(property(req, "url")), "https://fonts.") {
+			allowed = append(allowed, req)
+		} else {
+			refused = append(refused, req)
+		}
+	}
+	if len(refused) == 0 {
+		return false
+	}
+	t := r.t
+	t.Helper()
+	if got, want := Stringify(or(r.google.requests, []any{})), Stringify(or(allowed, []any{})); got != want {
+		t.Errorf("a download sent away from Google Fonts: requests\n got  %s\n want %s", got, want)
+	}
+	want, _ := expected(property(entry, "result"))
+	node, parseErr := parseJSON(want)
+	stored, isResult := value.(*Object)
+	if err != nil || parseErr != nil || !isResult {
+		t.Fatalf("a download sent away from Google Fonts: %v, Node %s", err, want)
+	}
+	nodeFiles, _ := property(node, "files").([]any)
+	files, _ := property(stored, "files").([]any)
+	have := map[string]bool{}
+	for _, f := range files {
+		have[toString(f)] = true
+	}
+	family := toString(argAt(args(object("a", property(step, "args"))), 0))
+	safeName := sanitizeFontName(family)
+	var faces []string
+	missing := 0
+	for _, f := range nodeFiles {
+		name := toString(f)
+		weight := reWeightFile.FindStringSubmatch(name)
+		if weight == nil {
+			t.Fatalf("a stored file without a weight: %s", name)
+		}
+		faces = append(faces, fontFaceCSS(orText(trim(family), "sans-serif"), weight[1], "/fonts/"+safeName+"/"+name, "woff2"))
+		if have[name] {
+			continue
+		}
+		if missing == len(refused) {
+			t.Fatalf("the console is missing more files than Node fetched elsewhere: %s for %s", Stringify(files), Stringify(nodeFiles))
+		}
+		answer := r.google.answers[toString(property(refused[missing], "url"))]
+		r.write(filepath.Join(r.fontsDir(), safeName, name), []byte(answer.Text("body")))
+		missing++
+	}
+	if missing != len(refused) {
+		t.Errorf("a download sent away from Google Fonts: the console stored %s, Node %s", Stringify(files), Stringify(nodeFiles))
+	}
+	r.write(filepath.Join(r.fontsDir(), safeName, "font.css"), []byte(strings.Join(faces, "\n\n")))
+	return true
+}
+
 // noFontFolder is the answer of Node for a font name without an ASCII
 // letter or digit, where the console finds no installed font (BR2).
 const noFontFolder = "throws Error: Invalid font family name"
