@@ -572,6 +572,9 @@ var runFixes = map[string]string{
 	"stored-result-falsy":        "SA1",
 	// The first connection of a relay pair whose second one fails is closed
 	"relay-pair-half-open": "SA3",
+	// An aborted test stores nothing, and a batch stops at the abort
+	"abort-in-probe":               "SA2",
+	"abort-while-connecting-first": "SA2",
 }
 
 // fixedRun is how a listed scenario differs from Node's run.

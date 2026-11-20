@@ -135,6 +135,10 @@ func (r *run) loadTest(ctx context.Context) (*branding.Object, error) {
 			}
 		}
 	}
+	// An aborted test stores no result: the one before stays
+	if r.abortRequested() {
+		return nil, errAborted
+	}
 
 	s.mu.Lock()
 	s.phase = "stabilize"
@@ -161,6 +165,9 @@ func (r *run) loadTest(ctx context.Context) (*branding.Object, error) {
 		if err := r.pause(ctx, stabilizeInterval); err != nil && err != errAborted {
 			return nil, err
 		}
+	}
+	if r.abortRequested() {
+		return nil, errAborted
 	}
 
 	mode := "estimated"
@@ -196,7 +203,7 @@ func (r *run) loadTest(ctx context.Context) (*branding.Object, error) {
 	result.Set("testedAt", stamp)
 	result.Set("completedAt", stamp)
 	result.Set("durationMs", float64(now.UnixMilli()-r.started.UnixMilli()))
-	result.Set("aborted", r.abortRequested())
+	result.Set("aborted", false)
 	result.Set("metricsHost", finalMetrics.hostname)
 	result.Set("finalMetrics", finalObject)
 	result.Set("baseline", baseline.object())
@@ -245,6 +252,9 @@ func (r *run) addSignal(ctx context.Context, url string) error {
 		return nil
 	}
 	for i := 0; i < batchSignal; i++ {
+		if r.abortRequested() {
+			return nil
+		}
 		r.s.mu.Lock()
 		r.s.pool.attempts++
 		r.s.mu.Unlock()
@@ -276,6 +286,9 @@ func (r *run) addRelayPairs(ctx context.Context, url string) error {
 		return nil
 	}
 	for i := 0; i < batchRelay; i++ {
+		if r.abortRequested() {
+			return nil
+		}
 		id := make([]byte, 8)
 		if _, err := io.ReadFull(r.s.opts.Random, id); err != nil {
 			return fmt.Errorf("relay session id: %w", err)

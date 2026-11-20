@@ -184,6 +184,8 @@ func TestAnAbortEndsTheWaitAtOnce(t *testing.T) {
 type scriptedDialer struct {
 	script []bool
 	conns  []*trackedConn
+	// after is called with the number of dials so far after each one
+	after func(n int)
 }
 
 type trackedConn struct{ closed, drained bool }
@@ -197,6 +199,9 @@ func (d *scriptedDialer) Dial(context.Context, string, time.Duration) (Conn, err
 	ok := d.script[len(d.conns)%len(d.script)]
 	c := &trackedConn{}
 	d.conns = append(d.conns, c)
+	if d.after != nil {
+		d.after(len(d.conns))
+	}
 	if !ok {
 		return nil, errors.New("connect ECONNREFUSED")
 	}
@@ -256,5 +261,62 @@ func TestANewRunStartsWithEmptyProgress(t *testing.T) {
 	}
 	if _, kept := progress.Get("result"); kept {
 		t.Errorf("the progress keeps the result of the run before: %s", branding.Stringify(progress))
+	}
+}
+
+// An aborted capacity test stores no result: the one before stays, also
+// for the public badge (BUGS SA2, DECISIONS A52).
+func TestAnAbortedTestStoresNothing(t *testing.T) {
+	ctx := context.Background()
+	settings := newMapSettings()
+	before := `{"valid":true,"tier":"iron","maxConnections":30}`
+	settings.rows[ResultKey] = &before
+	start := time.UnixMilli(1_700_000_000_000)
+	clock := &fakeClock{now: start}
+	s := New(Options{
+		Settings: settings, Clock: clock, Dialer: &scriptedDialer{script: []bool{false}},
+		Snapshot: func() Snapshot {
+			return Snapshot{CPU: 10, MemTotal: 1 << 30, MemPercent: 20, CPUCount: 2, Hostname: "h"}
+		},
+	})
+	if !s.Start() {
+		t.Fatal("did not start")
+	}
+	r := <-s.starts
+	// After the baseline, while the run stabilizes
+	clock.at(start.Add(13*time.Second), func() { s.RequestAbort() })
+	if _, err := s.execute(ctx, r); err != errAborted {
+		t.Errorf("the aborted run ended with %v", err)
+	}
+	if len(settings.writes) != 0 {
+		t.Errorf("stored %q", settings.writes)
+	}
+	if got := branding.Stringify(s.Status(ctx).LastResult); got != before {
+		t.Errorf("last result %s", got)
+	}
+}
+
+// An abort in the middle of a batch of connections opens none of the
+// rest (BUGS SA2).
+func TestAnAbortStopsTheBatch(t *testing.T) {
+	dialer := &scriptedDialer{script: []bool{true}}
+	s := New(Options{Settings: newMapSettings(), Dialer: dialer, Clock: &fakeClock{now: time.UnixMilli(1_700_000_000_000)}})
+	if !s.Start() {
+		t.Fatal("did not start")
+	}
+	r := <-s.starts
+	dialer.after = func(n int) {
+		if n == 2 {
+			s.RequestAbort()
+		}
+	}
+	if err := r.addSignal(context.Background(), "ws://signal"); err != nil {
+		t.Fatal(err)
+	}
+	if len(dialer.conns) != 2 {
+		t.Errorf("%d connections opened, the abort came after the second", len(dialer.conns))
+	}
+	if err := r.addRelayPairs(context.Background(), "ws://relay"); err != nil || len(dialer.conns) != 2 {
+		t.Errorf("relay pairs after the abort: %v, %d connections", err, len(dialer.conns))
 	}
 }
