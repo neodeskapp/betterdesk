@@ -30,16 +30,32 @@ func normalize(s string) string {
 	return sqliteNow.ReplaceAllString(s, "<now, SQLite form>")
 }
 
-// checkAnswer compares status and body after normalize, and the headers
-// the recording kept: Content-Type, and Content-Disposition with the day
-// of the export, which has to be today in UTC.
-func checkAnswer(t *testing.T, step replay.Step, got replay.Answer) bool {
+// checkAnswers is a Check that compares status and body after
+// answerFixes and normalize, and the headers the recording kept:
+// Content-Type, and Content-Disposition with the day of the export, which
+// has to be today in UTC. used counts the steps each answer fix changed.
+func checkAnswers(used map[string]int) replay.Check {
+	return func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		t.Helper()
+		answer := step.Answer
+		for _, f := range answerFixes {
+			if rewritten := f.rewrite(answer); rewritten != answer {
+				used[f.bug]++
+				answer = rewritten
+			}
+		}
+		return checkAnswer(t, step, answer, got)
+	}
+}
+
+// checkAnswer is checkAnswers with Node's answer to compare with.
+func checkAnswer(t *testing.T, step replay.Step, answer string, got replay.Answer) bool {
 	t.Helper()
 	if step.Method == "" {
 		return false
 	}
 	label := step.Name + " as " + step.Role
-	if want, have := normalize(step.Answer), normalize(got.Body); got.Status != step.Status || want != have {
+	if want, have := normalize(answer), normalize(got.Body); got.Status != step.Status || want != have {
 		t.Errorf("%s: %s %s\n   node: %d %s\n     go: %d %s", label, step.Method, step.Path, step.Status, want, got.Status, have)
 		return true
 	}
@@ -80,7 +96,12 @@ var _ = reportFixes.Add("RP1", signedOutWrites())
 // recordedSteps are the steps of the recording on SQLite; the recording
 // on PostgreSQL sends the same requests.
 func recordedSteps() []replay.Step {
-	raw, err := os.ReadFile(filepath.Join("testdata", "node_sqlite.json"))
+	return recordedStepsOn("sqlite")
+}
+
+// recordedStepsOn are the steps of the recording on one database.
+func recordedStepsOn(dialect string) []replay.Step {
+	raw, err := os.ReadFile(filepath.Join("testdata", "node_"+dialect+".json"))
 	if err != nil {
 		panic(err)
 	}
@@ -90,6 +111,36 @@ func recordedSteps() []replay.Step {
 	}
 	return rec.Steps
 }
+
+// answerFix is a change a bug fix makes to answers wherever they show a
+// part of a report: in many steps, also in a request sent again with
+// another answer, which reportFixes cannot tell apart. Node's answer of a
+// step reportFixes does not list goes through rewrite before it is
+// compared.
+type answerFix struct {
+	bug     string
+	rewrite func(answer string) string
+}
+
+// answerFixes are the package's answer changes, after reportFixes.
+var answerFixes = []answerFix{
+	// RP3: the reports count names each as its own key, so the seeded
+	// device whose system is "constructor" counts 1, where Node wrote the
+	// text of the function every object inherits with a "1" added. The
+	// device report, generated, saved or read back, changes there and only
+	// there.
+	{"RP3", func(answer string) string {
+		return nativeCount.ReplaceAllStringFunc(answer, func(count string) string {
+			m := nativeCount.FindStringSubmatch(count)
+			return m[1] + ":" + strconv.Itoa(len(m[2]))
+		})
+	}},
+}
+
+// nativeCount is a count Node made of a name every object has, in JSON
+// or in JSON inside a JSON text: the key, then the function's text with a
+// "1" per count.
+var nativeCount = regexp.MustCompile(`(\\?"[^"\\]+\\?"):\\?"function \w+\(\) \{ \[native code\] \}(1+)\\?"`)
 
 // bodyMember is a member of the JSON object a step sent, and whether the
 // body is an object that has it.
@@ -216,7 +267,7 @@ func signedOutWrites() map[string]replay.Fix {
 // for the accounts the route decides for, every report and its CSV, saved
 // reports of every kind, ids in many spellings. The Go console has to
 // answer the same behind its whole pipeline, byte for byte, but for the
-// steps the bug fixes change (reportFixes).
+// steps the bug fixes change (reportFixes and answerFixes).
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
@@ -225,6 +276,12 @@ func TestNodeAnswers(t *testing.T) {
 			t.Fatalf("the recording has %d steps", len(rec.Steps))
 		}
 		defer reportFixes.Unused(t, db)
-		w.Run(rec, reportFixes.Check(w, checkAnswer))
+		used := map[string]int{}
+		w.Run(rec, reportFixes.Check(w, checkAnswers(used)))
+		for _, f := range answerFixes {
+			if used[f.bug] == 0 {
+				t.Errorf("the answer fix of %s changes no step of the recording", f.bug)
+			}
+		}
 	})
 }

@@ -27,12 +27,14 @@ func TestMathRound(t *testing.T) {
 	}
 }
 
-func TestTallyCountsAsAPlainObject(t *testing.T) {
+// TestTallyCountsEveryName: a name every JavaScript object has counts
+// from 1 like any other, __proto__ too (BUGS.md RP3).
+func TestTallyCountsEveryName(t *testing.T) {
 	counts := newTally()
-	for _, name := range []string{"b", "10", "constructor", "__proto__", "2", "b", "constructor", "toString", "4294967295", "01"} {
+	for _, name := range []string{"b", "10", "constructor", "__proto__", "2", "b", "constructor", "toString", "4294967295", "01", "__proto__"} {
 		counts.add(name)
 	}
-	const want = `{"2":1,"10":1,"b":2,"constructor":"function Object() { [native code] }11","toString":"function toString() { [native code] }1","4294967295":1,"01":1}`
+	const want = `{"2":1,"10":1,"b":2,"constructor":2,"__proto__":2,"toString":1,"4294967295":1,"01":1}`
 	if got := string(Stringify(counts.counts)); got != want {
 		t.Errorf("tally:\n got %s\nwant %s", got, want)
 	}

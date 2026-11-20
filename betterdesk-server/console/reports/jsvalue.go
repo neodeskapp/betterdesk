@@ -243,38 +243,10 @@ func DefaultZoneName(t time.Time) string {
 	return name
 }
 
-// inherited holds, as text, the members every JavaScript object has from
-// Object.prototype. An object used to count names reads them where a
-// name is one of them.
-var inherited = map[string]string{
-	"constructor":          "function Object() { [native code] }",
-	"__defineGetter__":     "function __defineGetter__() { [native code] }",
-	"__defineSetter__":     "function __defineSetter__() { [native code] }",
-	"hasOwnProperty":       "function hasOwnProperty() { [native code] }",
-	"__lookupGetter__":     "function __lookupGetter__() { [native code] }",
-	"__lookupSetter__":     "function __lookupSetter__() { [native code] }",
-	"isPrototypeOf":        "function isPrototypeOf() { [native code] }",
-	"propertyIsEnumerable": "function propertyIsEnumerable() { [native code] }",
-	"toString":             "function toString() { [native code] }",
-	"valueOf":              "function valueOf() { [native code] }",
-	"toLocaleString":       "function toLocaleString() { [native code] }",
-}
-
-// isInherited reports whether every plain object already has a member of
-// that name, __proto__ included.
-func isInherited(name string) bool {
-	_, ok := inherited[name]
-	return ok || name == "__proto__"
-}
-
-// tally is a plain object that counts names:
-//
-//	counts[name] = (counts[name] || 0) + 1
-//
-// A name an object inherits does not count from 1: it starts as the text
-// of the inherited function with "1" added, and each further one adds
-// another "1". __proto__ never becomes a key. The keys come out in
-// JavaScript's order: whole numbers first.
+// tally counts names, each name as its own key: constructor, __proto__
+// and the other members every JavaScript object has count from 1 like
+// any other name. The keys come out in JavaScript's order: whole numbers
+// first.
 type tally struct {
 	counts *goapi.Object
 }
@@ -282,21 +254,8 @@ type tally struct {
 func newTally() *tally { return &tally{counts: goapi.NewObject()} }
 
 func (t *tally) add(name string) {
-	if name == "__proto__" {
-		return
-	}
-	switch current := t.counts.Get(name).(type) {
-	case float64:
-		t.counts.Set(name, current+1)
-	case string:
-		t.counts.Set(name, current+"1")
-	default:
-		if text, ok := inherited[name]; ok {
-			t.counts.Set(name, text+"1")
-			return
-		}
-		t.counts.Set(name, float64(1))
-	}
+	n, _ := t.counts.Get(name).(float64)
+	t.counts.Set(name, n+1)
 }
 
 // fromDriver turns a value the Go driver read into the value the old

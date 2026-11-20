@@ -4,9 +4,9 @@
 //
 // Each report reads its tables as the old console's database adapter did
 // and computes with the values its JavaScript had, so a report has the
-// same bytes on each database as before: counts kept in plain objects
-// (names every object inherits count oddly, see tally), times as text on
-// SQLite and as dates on PostgreSQL, numbers as JavaScript prints them.
+// same bytes on each database as before: counts by name (see tally),
+// times as text on SQLite and as dates on PostgreSQL, numbers as
+// JavaScript prints them.
 package reports
 
 import (
@@ -261,11 +261,6 @@ func (e *Engine) activity(ctx context.Context, f Filters) (*goapi.Object, error)
 		for _, app := range apps {
 			name := or(app.Get("app_name"), true, "Unknown")
 			key := e.clock.String(name)
-			if isInherited(key) {
-				// appUsage[name] is the inherited member, which takes the
-				// sums; no entry of the report gets them
-				continue
-			}
 			entry, _ := usage.Get(key).(*appUsage)
 			if entry == nil {
 				entry = &appUsage{name: name, category: or(app.Get("category"), true, "")}

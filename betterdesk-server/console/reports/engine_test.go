@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -171,6 +173,88 @@ var _ = fixEngine("RP2", map[string]engineFix{
 	`empty {"type":"hasOwnProperty"}`: unknownType("hasOwnProperty"),
 })
 
+// engineRule is a bug fix that changes the reports of every case of a
+// world in one way: where Go's report differs from Node's, same compares
+// the two (Node's first).
+type engineRule struct {
+	bug, world string
+	same       func(node, got string) error
+}
+
+// engineRules are the fixes of whole worlds, after engineFixes.
+var engineRules []engineRule
+
+func ruleEngine(bug string, same func(node, got string) error, worlds ...string) bool {
+	for _, world := range worlds {
+		engineRules = append(engineRules, engineRule{bug: bug, world: world, same: same})
+	}
+	return true
+}
+
+// RP3: names are counted each as its own key, so a name every JavaScript
+// object has counts from 1 (Node counted the inherited function's text,
+// and never __proto__), and apps with such names stay in the top
+// applications.
+var _ = ruleEngine("RP3", withoutObjectMembers, "fleet", "many")
+
+// objectMembers are the names every JavaScript object has.
+var objectMembers = map[string]bool{
+	"constructor": true, "__proto__": true, "__defineGetter__": true, "__defineSetter__": true, "hasOwnProperty": true,
+	"__lookupGetter__": true, "__lookupSetter__": true, "isPrototypeOf": true, "propertyIsEnumerable": true,
+	"toString": true, "valueOf": true, "toLocaleString": true,
+}
+
+// withoutObjectMembers compares two reports without the names every
+// JavaScript object has: their counts leave the distributions and their
+// apps the top applications. What is left of Go's top applications comes
+// first in Node's, as Go's list makes room for the apps it keeps.
+func withoutObjectMembers(node, got string) error {
+	if strings.Contains(got, "[native code]") {
+		return errors.New("go counts a name as a function's text")
+	}
+	var reports [2]struct {
+		Rest map[string]any
+		Data map[string]any
+	}
+	for i, text := range []string{node, got} {
+		if err := json.Unmarshal([]byte(text), &reports[i].Rest); err != nil {
+			return err
+		}
+		reports[i].Data, _ = reports[i].Rest["data"].(map[string]any)
+		delete(reports[i].Rest, "data")
+		for key, v := range reports[i].Data {
+			if counts, ok := v.(map[string]any); ok && strings.HasSuffix(key, "_distribution") {
+				for name := range counts {
+					if objectMembers[name] {
+						delete(counts, name)
+					}
+				}
+			}
+		}
+		if apps, ok := reports[i].Data["top_applications"].([]any); ok {
+			kept := []any{}
+			for _, app := range apps {
+				if name, _ := app.(map[string]any)["name"].(string); !objectMembers[name] {
+					kept = append(kept, app)
+				}
+			}
+			reports[i].Data["top_applications"] = kept
+		}
+	}
+	nodeApps, _ := reports[0].Data["top_applications"].([]any)
+	goApps, _ := reports[1].Data["top_applications"].([]any)
+	if len(goApps) > len(nodeApps) || !reflect.DeepEqual(goApps, nodeApps[:len(goApps)]) {
+		return fmt.Errorf("the top applications differ in more than the names every object has")
+	}
+	if goApps != nil {
+		reports[0].Data["top_applications"], reports[1].Data["top_applications"] = nil, nil
+	}
+	if !reflect.DeepEqual(reports[0], reports[1]) {
+		return fmt.Errorf("the reports differ in more than the names every object has")
+	}
+	return nil
+}
+
 // engineFixOf is the fix of a case on db, with the key it is listed under.
 func engineFixOf(db *store.DB, world, body string) (string, engineFix, bool) {
 	for _, key := range []string{world + " " + body, "* " + body} {
@@ -209,6 +293,44 @@ func checkEngineFix(t *testing.T, key string, f engineFix, report *Report, err e
 	}
 }
 
+// TestNamesEveryObjectHasCount: a platform, ticket category or app named
+// after a member every JavaScript object has counts like any other name,
+// and such an app stays in the top applications (BUGS.md RP3).
+func TestNamesEveryObjectHasCount(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		for _, q := range []string{
+			`INSERT INTO peer (id, info, status_online, is_banned, is_deleted) VALUES ('1', '{"os":"constructor"}', FALSE, FALSE, FALSE),
+				('2', '{"os":"__proto__"}', FALSE, FALSE, FALSE), ('3', '{"os":"constructor"}', FALSE, FALSE, FALSE)`,
+			`INSERT INTO tickets (title, created_by, category, priority) VALUES ('a', 'x', '__proto__', 'valueOf'), ('b', 'x', 'toString', 'low')`,
+			`INSERT INTO activity_summaries (device_id, total_active_secs, idle_seconds, reported_at, received_at) VALUES ('A', 60, 0, '2019-11-01T00:00:00.000Z', '2019-11-01 00:00:00')`,
+			`INSERT INTO activity_sessions (device_id, app_name, category, started_at, ended_at, duration_secs) VALUES
+				('A', 'constructor', 'x', '2019-11-01T01:00:00.000Z', '2019-11-01T02:00:00.000Z', 30),
+				('A', '__proto__', 'y', '2019-11-01T02:00:00.000Z', '2019-11-01T03:00:00.000Z', 20),
+				('A', 'Chrome', 'browser', '2019-11-01T03:00:00.000Z', '2019-11-01T04:00:00.000Z', 10)`,
+		} {
+			if _, err := db.Exec(ctx, q); err != nil {
+				t.Fatal(err)
+			}
+		}
+		e := New(Options{DB: db})
+		for typ, want := range map[string]string{
+			"devices": `"platform_distribution":{"constructor":2,"__proto__":1}`,
+			"tickets": `"category_distribution":{"__proto__":1,"toString":1},"priority_distribution":{"valueOf":1,"low":1}`,
+			"activity": `"top_applications":[{"name":"constructor","category":"x","total_secs":30,"sessions":1,"devices":1},` +
+				`{"name":"__proto__","category":"y","total_secs":20,"sessions":1,"devices":1},{"name":"Chrome","category":"browser","total_secs":10,"sessions":1,"devices":1}]`,
+		} {
+			report, err := e.Generate(ctx, jsbind.String(typ), Filters{})
+			if err != nil {
+				t.Fatalf("%s: %v", typ, err)
+			}
+			if got, _ := report.MarshalJSON(); !strings.Contains(string(got), want) {
+				t.Errorf("%s: %s\nwant %s", typ, got, want)
+			}
+		}
+	})
+}
+
 // TestNodeReports makes every report the Node engine made
 // (testdata/engine_*.json, written by testdata/nodeoracle/engine.js) on
 // the same rows and compares the JSON and the CSV of every part, byte for
@@ -228,7 +350,22 @@ func TestNodeReports(t *testing.T) {
 				t.Errorf("the fix of %s names no case of the recordings: %s", f.bug, key)
 			}
 		}
+		for _, rule := range engineRules {
+			if !used["rule "+rule.bug+" "+rule.world] {
+				t.Errorf("the fix of %s changes no report of the world %s", rule.bug, rule.world)
+			}
+		}
 	})
+}
+
+// ruleOf is the rule of a world.
+func ruleOf(world string) (engineRule, bool) {
+	for _, rule := range engineRules {
+		if rule.world == world {
+			return rule, true
+		}
+	}
+	return engineRule{}, false
 }
 
 func replayRecording(t *testing.T, db *store.DB, file string, used map[string]bool) {
@@ -294,6 +431,13 @@ func replayRecording(t *testing.T, db *store.DB, file string, used map[string]bo
 				continue
 			}
 			got, _ := report.MarshalJSON()
+			if rule, ruled := ruleOf(world.Name); ruled && string(got) != *c.Report {
+				used["rule "+rule.bug+" "+world.Name] = true
+				if err := rule.same(*c.Report, string(got)); err != nil {
+					fail("%s %s (%s): %v:\n node: %s\n   go: %s", world.Name, c.Body, rule.bug, err, *c.Report, got)
+				}
+				continue
+			}
 			if string(got) != *c.Report {
 				fail("%s %s:\n node: %s\n   go: %s", world.Name, c.Body, *c.Report, got)
 			}
