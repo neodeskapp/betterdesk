@@ -38,6 +38,10 @@
    },
    "volatile": [
     {
+     "path": "collected_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
      "path": "received_at",
      "format": "9999-99-99 99:99:99"
     }
@@ -45,42 +49,11 @@
    "body": {
     "kind": "json",
     "json": {
-     "collected_at": "5.0",
+     "collected_at": "<volatile>",
      "device_id": "900100001",
-     "hardware": {
-      "architecture": "x86_64",
-      "cpu": {
-       "brand": "Intel(R) Core(TM) i5-12500",
-       "logical_cores": 8,
-       "usage_percent": 10.4
-      },
-      "disks": [
-       {
-        "device": "C:",
-        "filesystem": "NTFS",
-        "mount_point": "C:\\",
-        "total_gb": 951.6,
-        "used_gb": 890.7
-       }
-      ],
-      "hostname": "demo-reception-01",
-      "memory": {
-       "total_bytes": 34359738368,
-       "used_bytes": 14317376441
-      },
-      "os_name": "Windows 11 Pro",
-      "os_version": "23H2 (22631.4460)"
-     },
+     "hardware": "not an object",
      "received_at": "<volatile>",
-     "software": {
-      "apps": [
-       {
-        "name": "Contract Editor",
-        "publisher": "Contract",
-        "version": "1.0"
-       }
-      ]
-     }
+     "software": {}
     }
    }
   }

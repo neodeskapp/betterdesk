@@ -516,3 +516,70 @@ func changedUpload(db *store.DB) (check replay.Check, done func(t *testing.T)) {
 			}
 		}
 }
+
+// The values of the two uploads have their types, the same on both
+// databases: a time of collection or of telemetry is a time, the CPU load
+// a finite number, the memory in bytes and the uptime in seconds whole
+// numbers from 0 that their columns hold, and a report holds no U+0000
+// and no half of a surrogate pair. Anything else is 400 and stores
+// nothing, where SQLite stored it as it came and PostgreSQL answered 500
+// (BUGS AI15).
+func TestUploadValuesHaveTheirTypes(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		tokenDeviceA(w)
+		send := func(path, body string) replay.Answer {
+			return w.Do(replay.Request{Method: "POST", Path: path, Body: replay.Text(body), Headers: deviceA})
+		}
+		good := `"cpu_usage_percent":12.5,"memory_used_bytes":1048576,"memory_total_bytes":2097152,"uptime_secs":60,"timestamp":"2011-03-04T10:00:00.000Z"`
+		if got := send("/api/bd/telemetry", `{"device_id":"device-a",`+good+`}`); got.Status != 200 {
+			t.Fatalf("good telemetry: %d %s", got.Status, got.Body)
+		}
+		stored := w.Rows("SELECT cpu_usage_percent, memory_used_bytes, memory_total_bytes, uptime_secs FROM device_telemetry", nil)
+		for _, c := range []struct{ name, values string }{
+			{"cpu_usage_percent", `"hot"`}, {"cpu_usage_percent", `"50"`}, {"cpu_usage_percent", `true`}, {"cpu_usage_percent", `[]`},
+			{"cpu_usage_percent", `{}`}, {"cpu_usage_percent", `1e400`}, {"cpu_usage_percent", `1e39`},
+			{"memory_used_bytes", `1.5`}, {"memory_used_bytes", `-1`}, {"memory_used_bytes", `"1024"`}, {"memory_used_bytes", `1e30`},
+			{"memory_total_bytes", `false`}, {"memory_total_bytes", `{"toString":1}`},
+			{"uptime_secs", `0.5`}, {"uptime_secs", `"60"`}, {"uptime_secs", `3000000000`},
+			{"timestamp", `5`}, {"timestamp", `"garbage"`}, {"timestamp", `true`}, {"timestamp", `"2011-13-01T00:00:00Z"`},
+		} {
+			body := `{"device_id":"device-a",` + strings.Replace(good, `"`+c.name+`":`, `"`+c.name+`":`+c.values+`,"was_`+c.name+`":`, 1) + `}`
+			if got := send("/api/bd/telemetry", body); got.Status != 400 || got.Body != `{"success":false,"error":"Invalid `+c.name+`"}` {
+				t.Errorf("telemetry with %s %s: %d %s, want 400 Invalid %s", c.name, c.values, got.Status, got.Body, c.name)
+			}
+		}
+		if got := w.Rows("SELECT cpu_usage_percent, memory_used_bytes, memory_total_bytes, uptime_secs FROM device_telemetry", nil); got != stored {
+			t.Errorf("the telemetry after the refused uploads: %s, want %s", got, stored)
+		}
+		if got := send("/api/bd/telemetry", `{"device_id":"device-a","cpu_usage_percent":null,"timestamp":null}`); got.Status != 200 {
+			t.Errorf("telemetry without values: %d %s, want it stored", got.Status, got.Body)
+		}
+
+		report := func(hardware, software, collectedAt string) string {
+			return `{"device_id":"device-a","hardware":` + hardware + `,"software":` + software + `,"collected_at":` + collectedAt + `}`
+		}
+		if got := send("/api/bd/inventory", report(`{"hostname":"pc"}`, `{"apps":[]}`, `"2011-03-04T10:00:00.000Z"`)); got.Status != 200 {
+			t.Fatalf("a good report: %d %s", got.Status, got.Body)
+		}
+		for _, c := range []struct{ name, body string }{
+			{"collected_at", report(`{"hostname":"x"}`, `{}`, `5`)},
+			{"collected_at", report(`{"hostname":"x"}`, `{}`, `"garbage"`)},
+			{"collected_at", report(`{"hostname":"x"}`, `{}`, `["2011-03-04T10:00:00.000Z"]`)},
+			{"hardware", report(`{"hostname":"a\u0000b"}`, `{}`, `null`)},
+			{"hardware", report(`{"disks":[{"mount_point":"\ud800"}]}`, `{}`, `null`)},
+			{"hardware", report(`{"\udc00":1}`, `{}`, `null`)},
+			{"software", report(`{"hostname":"x"}`, `{"apps":[{"name":"\u0000"}]}`, `null`)},
+		} {
+			if got := send("/api/bd/inventory", c.body); got.Status != 400 || got.Body != `{"success":false,"error":"Invalid `+c.name+`"}` {
+				t.Errorf("the report %s: %d %s, want 400 Invalid %s", c.body, got.Status, got.Body, c.name)
+			}
+		}
+		if got := w.Rows("SELECT hardware FROM device_inventory", nil); got != `[{"hardware":"{\"hostname\":`+db.Pick("", " ")+`\"pc\"}"}]` {
+			t.Errorf("the report after the refused uploads: %s, want the good one", got)
+		}
+		if got := send("/api/bd/inventory", report(`{"hostname":"a😀"}`, `{}`, `false`)); got.Status != 200 {
+			t.Errorf("a report with a whole surrogate pair and no time: %d %s, want it stored", got.Status, got.Body)
+		}
+	})
+}

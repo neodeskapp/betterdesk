@@ -3,12 +3,15 @@ package inventory
 import (
 	"context"
 	"fmt"
+	"math"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/alerts"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
@@ -54,9 +57,12 @@ type done struct {
 // software?, collected_at?}: the device's report replaces the one it sent
 // before, as it came.
 //
-// The device guards came first. A disk whose size or name cannot be made
-// a number or text (an object that has a member named toString) is 400,
-// before anything is stored. After the report is stored, the device's
+// The device guards came first. Before anything is stored, the report is
+// checked: collected_at, when it is given, is a time; hardware and
+// software hold no U+0000 and no half of a surrogate pair, which the JSON
+// column of PostgreSQL does not take; and a disk whose size or name cannot
+// be made a number or text (an object that has a member named toString)
+// is refused. Each is 400. After the report is stored, the device's
 // info in the console's table of devices gets the host name, the system,
 // the processor and the memory of the report; what goes wrong there is
 // logged and changes nothing else. Then the fullest disk is checked
@@ -80,12 +86,25 @@ func (h *handlers) upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	collectedAt, ok := timeOf(kit.Body(r).Get("collected_at"))
+	if !ok {
+		kit.Fail(w, r, http.StatusBadRequest, "Invalid collected_at")
+		return
+	}
+	for _, part := range []struct {
+		name  string
+		value jsjson.Value
+	}{{"hardware", hardware}, {"software", software}} {
+		if !storable(part.value) {
+			kit.Fail(w, r, http.StatusBadRequest, "Invalid "+part.name)
+			return
+		}
+	}
 	fullest, unread := fullestDisk(hardware.Get("disks"))
 	if len(unread) > 0 {
 		kit.Fail(w, r, http.StatusBadRequest, "Invalid disks")
 		return
 	}
-	collectedAt := jsbind.Of(kit.Body(r).Get("collected_at")).Or(jsbind.String(store.ISOTime(time.Now())))
 	if err := upsertInventory(r.Context(), h.db, device, hardware, software, collectedAt); err != nil {
 		h.failUpload(w, r, h.log, err)
 		return
@@ -212,9 +231,11 @@ func (o *object) json() string {
 // telemetry answers POST telemetry with the body {device_id,
 // cpu_usage_percent?, memory_used_bytes?, memory_total_bytes?,
 // uptime_secs?, timestamp?}: the device's load replaces the one it sent
-// before. A missing value is 0, a missing time the time of arrival, and
-// every value is stored as it came. Then the CPU load and the used memory
-// are checked against the alert rules in the background.
+// before. A missing value is 0 and a missing time the time of arrival.
+// The CPU load is a finite number, the memory and the uptime whole
+// numbers from 0 that their columns hold, and the time a time; anything
+// else is 400. Then the CPU load and the used memory are checked against
+// the alert rules in the background.
 func (h *handlers) telemetry(w http.ResponseWriter, r *http.Request) {
 	device := kit.Device(r).DeviceID
 	deviceID, err := member(r, "device_id")
@@ -227,13 +248,36 @@ func (h *handlers) telemetry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	body := kit.Body(r)
-	cpu, used, total := jsbind.Of(body.Get("cpu_usage_percent")), jsbind.Of(body.Get("memory_used_bytes")), jsbind.Of(body.Get("memory_total_bytes"))
+	values := map[string]jsbind.Value{}
+	for _, field := range []struct {
+		name     string
+		max      float64
+		fraction bool
+	}{
+		{"cpu_usage_percent", math.MaxFloat32, true},
+		{"memory_used_bytes", maxBytes, false},
+		{"memory_total_bytes", maxBytes, false},
+		{"uptime_secs", math.MaxInt32, false},
+	} {
+		value, ok := numberOf(body.Get(field.name), field.max, field.fraction)
+		if !ok {
+			kit.Fail(w, r, http.StatusBadRequest, "Invalid "+field.name)
+			return
+		}
+		values[field.name] = value
+	}
+	timestamp, ok := timeOf(body.Get("timestamp"))
+	if !ok {
+		kit.Fail(w, r, http.StatusBadRequest, "Invalid timestamp")
+		return
+	}
+	cpu, used, total := values["cpu_usage_percent"], values["memory_used_bytes"], values["memory_total_bytes"]
 	err = upsertTelemetry(r.Context(), h.db, device, deviceTelemetry{
 		CPUUsagePercent:  orZero(cpu),
 		MemoryUsedBytes:  orZero(used),
 		MemoryTotalBytes: orZero(total),
-		UptimeSecs:       orZero(jsbind.Of(body.Get("uptime_secs"))),
-		Timestamp:        jsbind.Of(body.Get("timestamp")).Or(jsbind.String(store.ISOTime(time.Now()))),
+		UptimeSecs:       orZero(values["uptime_secs"]),
+		Timestamp:        timestamp,
 	})
 	if err != nil {
 		h.failUpload(w, r, h.telemetryLog, err)
@@ -245,6 +289,69 @@ func (h *handlers) telemetry(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	kit.JSON(w, r, http.StatusOK, done{Success: true})
+}
+
+// maxBytes is the largest number of bytes the uploads take: the largest
+// whole number JavaScript and the BIGINT columns hold exactly.
+const maxBytes = 1<<53 - 1
+
+// numberOf reads a value of the telemetry: undefined for a value that is
+// not given or null, else a JSON number up to max, whole and from 0
+// unless fraction says it may be any finite number. ok is false for
+// anything else.
+func numberOf(v middleware.Value, max float64, fraction bool) (jsbind.Value, bool) {
+	if !v.Exists() || v.Kind() == middleware.KindNull {
+		return jsbind.Undefined, true
+	}
+	n, isNumber := v.Float()
+	switch {
+	case !isNumber || math.IsNaN(n) || math.Abs(n) > max:
+		return jsbind.Value{}, false
+	case !fraction && (n < 0 || n != math.Trunc(n)):
+		return jsbind.Value{}, false
+	}
+	return jsbind.Number(n), true
+}
+
+// timeOf reads collected_at or timestamp: the time of arrival when it is
+// not given or false for JavaScript, else text that is a time. ok is false
+// for anything else.
+func timeOf(v middleware.Value) (jsbind.Value, bool) {
+	if !v.Truthy() {
+		return jsbind.String(store.ISOTime(time.Now())), true
+	}
+	text, isText := v.Str()
+	if !isText {
+		return jsbind.Value{}, false
+	}
+	at, ok := store.ParseTime(text)
+	if year := at.UTC().Year(); !ok || year < 1 || year > 9999 {
+		return jsbind.Value{}, false
+	}
+	return jsbind.String(text), true
+}
+
+// storable reports whether a report's part holds no U+0000 and no half of
+// a surrogate pair, in its texts or in the names of its members.
+func storable(v jsjson.Value) bool {
+	text := func(s string) bool { return !strings.ContainsRune(s, 0) && jsjson.WellFormed(s) == s }
+	switch v.Kind() {
+	case jsjson.String:
+		return text(v.Str())
+	case jsjson.Array:
+		for _, item := range v.Items() {
+			if !storable(item) {
+				return false
+			}
+		}
+	case jsjson.Object:
+		for _, key := range v.Keys() {
+			if !text(key) || !storable(v.Get(key)) {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // orZero is v ?? 0.

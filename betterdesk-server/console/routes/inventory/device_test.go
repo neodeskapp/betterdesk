@@ -38,8 +38,10 @@ import (
 // The steps the device guards answer now (BUGS AI12) are checked by
 // guardedByKit, and withoutShortTokens changes the rows read after them.
 // The statements of the info after the uploads are checked by keptInfo
-// (BUGS AI13, stored_test.go), and the uploads whose answer a fix changes
-// by changedUpload (fixes_test.go).
+// (BUGS AI13), the uploads refused for the types of their values and the
+// statements after them by typedUploads and typedRows (BUGS AI15, both in
+// stored_test.go), and the other uploads whose answer a fix changes by
+// changedUpload (fixes_test.go).
 func TestNodeDeviceAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
@@ -51,12 +53,15 @@ func TestNodeDeviceAnswers(t *testing.T) {
 		// The copies find only the deleted row of the seed, as it was
 		kept, differ := keptInfo(&rec, w, `[{"id":"del-1","uuid":"","status_online":0}]`)
 		changed, changedDone := changedUpload(db)
+		rows, rowsDiffer := typedRows(&rec, w)
+		typedCount := 0
+		typed := typedUploads(&typedCount)
 		w.Run(rec, deviceFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			engine.Wait()
-			if kept(t, step, got) || changed(t, step, got) {
+			if kept(t, step, got) || rows(t, step, got) || changed(t, step, got) {
 				return true
 			}
-			if byGuards(t, step, got) {
+			if byGuards(t, step, got) || typed(t, step, got) {
 				return true
 			}
 			if headers, ok := withoutSpaceAround(step.Headers); ok {
@@ -85,7 +90,10 @@ func TestNodeDeviceAnswers(t *testing.T) {
 			t.Errorf("no answer was the device guards'")
 		}
 		changedDone(t)
-		if want := map[bool]int{false: 95, true: 38}[db.IsPostgres()]; *differ != want {
+		if want := map[bool]int{false: 129, true: 70}[db.IsPostgres()]; typedCount != 109 || *rowsDiffer != want {
+			t.Errorf("%d uploads were refused for their types and %d statements read rows that are no longer Node's, want 109 and %d", typedCount, *rowsDiffer, want)
+		}
+		if want := map[bool]int{false: 98, true: 38}[db.IsPostgres()]; *differ != want {
 			t.Errorf("%d statements of the info differ from Node's, want %d", *differ, want)
 		}
 	})
