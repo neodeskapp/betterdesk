@@ -149,3 +149,48 @@ func TestPeerSyncRunsOncePer30Seconds(t *testing.T) {
 		t.Errorf("read after 30 seconds: %v devices, want 2", got)
 	}
 }
+
+// On SQLite the stale device sweep compares last contacts as times, in
+// any form datetime() reads and as Unix seconds for digits alone, so a
+// time written with a T goes once it is older than the threshold and a
+// recent number stays (BUGS JB11). Text that is no time compares as text,
+// as before.
+func TestStaleSweepReadsTimesOfEveryForm(t *testing.T) {
+	db := storetest.Migrated(t)
+	for id, value := range map[string]string{
+		"iso-old":   `strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1000 seconds')`,
+		"iso-new":   `strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-100 seconds')`,
+		"unix-old":  `strftime('%s', 'now', '-1000 seconds')`,
+		"unix-new":  `strftime('%s', 'now', '-100 seconds')`,
+		"plain-old": `datetime('now', '-1000 seconds')`,
+		"plain-new": `datetime('now', '-100 seconds')`,
+		"empty":     `''`,
+		"garbage":   `'garbage'`,
+	} {
+		exec(t, db, `INSERT INTO peer (id, status_online, last_online) VALUES ('`+id+`', 1, `+value+`)`)
+	}
+	s := devicegroups.New(devicegroups.Options{DB: db})
+	changed, err := s.CleanupStaleOnlinePeers(context.Background(), 500)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if changed != 4 {
+		t.Errorf("%d devices set offline, want 4", changed)
+	}
+	var offline []string
+	res, err := db.Query(context.Background(), `SELECT id FROM peer WHERE status_online = 0 ORDER BY id`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Close()
+	for res.Next() {
+		var id string
+		if err := res.Scan(&id); err != nil {
+			t.Fatal(err)
+		}
+		offline = append(offline, id)
+	}
+	if got := strings.Join(offline, " "); got != "empty iso-old plain-old unix-old" {
+		t.Errorf("offline after the sweep: %s", got)
+	}
+}

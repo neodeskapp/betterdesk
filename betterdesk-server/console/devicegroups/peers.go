@@ -289,12 +289,18 @@ func (s *Service) CascadePeerIDChange(ctx context.Context, oldID, newID string) 
 // bound as a floating-point number, as the old console's driver bound
 // every JavaScript number: on SQLite the time modifier reads "-90.0
 // seconds".
+//
+// On SQLite, where the column is text, the last contact is compared as a
+// time: in any form datetime() reads (with a space or a T, a date
+// alone), digits alone as Unix seconds. Text that datetime() cannot read
+// is compared as text.
 func (s *Service) CleanupStaleOnlinePeers(ctx context.Context, thresholdSeconds float64) (int64, error) {
 	query := s.db.Pick(`
                 UPDATE peer SET status_online = 0
                 WHERE status_online = 1
                   AND last_online IS NOT NULL
-                  AND last_online < datetime('now', '-' || ? || ' seconds')`, `
+                  AND COALESCE(CASE WHEN last_online NOT GLOB '*[^0-9]*' THEN datetime(last_online, 'unixepoch') ELSE datetime(last_online) END, last_online)
+                      < datetime('now', '-' || ? || ' seconds')`, `
                 UPDATE peer SET status_online = FALSE
                 WHERE status_online = TRUE
                   AND last_online IS NOT NULL

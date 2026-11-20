@@ -145,15 +145,12 @@ func orderedKeys(t *testing.T, raw json.RawMessage) []string {
 }
 
 // The seeds of the recording place rows relative to the time of the run.
-// On SQLite the stale device sweep compares times as text, so where a
-// time written as a date alone ("2026-11-12") or with a T
-// ("2026-11-12T23:00:00.000Z") falls against a cut-off ("2026-11-12
-// 13:00:00") depends on the hour of the day the run is in: such a text
-// sorts before the cut-off only when its date does (a date alone also on
-// the cut-off's own day). The recording holds for the hour Node ran in;
-// for these rows the tests work out the outcome for the hour they run in,
-// by the same text comparison.
-var hourBound = regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}(T.*)?$`)
+// On SQLite Node compared times as text, so where a time written as a
+// date alone ("2026-11-12") or with a T ("2026-11-12T23:00:00.000Z") fell
+// against a cut-off ("2026-11-12 13:00:00") depended on the hour of the
+// day Node ran in, and a number always sorted before it. The console
+// compares such rows as times (BUGS JB11); the tests work out their
+// outcome for the moment they run in (timeRows).
 
 // readableTime is a time text SQLite's datetime() reads: a date, with an
 // optional time after a space or a T.
@@ -163,12 +160,12 @@ var readableTime = regexp.MustCompile(`^([0-9]{4}-[0-9]{2}-[0-9]{2})(?:[ T]([0-9
 // text.
 var unixSeconds = regexp.MustCompile(`^[0-9]+$`)
 
-// timeRows lists the rows of a query (table, id, time) whose time the
-// hourly clean-up reads as a time on SQLite, with the time as datetime()
-// writes it: text datetime() reads, and digits alone as Unix seconds
-// (BUGS JB11). Their outcome is the time comparison with the cut-off;
-// that of the other rows is Node's text comparison, which the recording
-// holds.
+// timeRows lists the rows of a query (table, id, time; or id, online
+// flag, time) whose time the clean-ups read as a time on SQLite, with the
+// time as datetime() writes it: text datetime() reads, and digits alone
+// as Unix seconds (BUGS JB11). Their outcome is the time comparison with
+// the cut-off; that of the other rows is Node's text comparison, which
+// the recording holds.
 func timeRows(t *testing.T, db *store.DB, query string) []textRow {
 	t.Helper()
 	if db.Dialect() != store.SQLite {
@@ -202,28 +199,11 @@ var retention = []struct {
 	days  int
 }{{"peer_metrics", 7}, {"audit_connections", 90}, {"audit_files", 90}, {"audit_alarms", 90}}
 
-// textRow is a row whose time is an hourBound text: the first two
+// textRow is a row whose time reads as a time (timeRows): the first two
 // columns of the query that found it (table and id, or id and online
 // flag) and the time.
 type textRow struct {
 	first, second, text string
-}
-
-// hourBoundRows lists the rows of a query whose third column, a time,
-// holds an hourBound text. Only SQLite stores times as text.
-func hourBoundRows(t *testing.T, db *store.DB, query string) []textRow {
-	t.Helper()
-	if db.Dialect() != store.SQLite {
-		return nil
-	}
-	var out []textRow
-	for _, line := range rows(t, db, query) {
-		parts := strings.SplitN(line, "|", 3)
-		if len(parts) == 3 && hourBound.MatchString(parts[2]) {
-			out = append(out, textRow{parts[0], parts[1], parts[2]})
-		}
-	}
-	return out
 }
 
 // sqliteNow is the database's clock on SQLite, the zero time elsewhere.
@@ -240,9 +220,9 @@ func sqliteNow(t *testing.T, db *store.DB) time.Time {
 }
 
 // leftAtThisHour is the recorded list of rows left ("table|id", ordered by
-// table and id), with each hourBound row of a table the clean-up reached
-// left or gone as the text comparison with that table's cut-off decides
-// now.
+// table and id), with each row of bound in a table the clean-up reached
+// left or gone as the comparison of its time with that table's cut-off
+// decides now.
 func leftAtThisHour(want []string, bound []textRow, cutoffs map[string]string) []string {
 	left := map[string]bool{}
 	for _, key := range want {
@@ -432,12 +412,13 @@ func TestStalePeersAgainstNode(t *testing.T) {
 
 // staleAtThisHour is the recorded outcome of a stale device sweep ("id|
 // status_online" per device, the number of rows changed), with each online
-// device whose last contact is an hourBound text set offline or left as
-// the text comparison with the cut-off, datetime('now', '-<threshold>
-// seconds'), decides now. Call it after the seed and before the sweep.
+// device whose last contact reads as a time on SQLite (timeRows) set
+// offline or left as the time comparison with the cut-off,
+// datetime('now', '-<threshold> seconds'), decides now, where Node
+// compared text (BUGS JB11). Call it after the seed and before the sweep.
 func staleAtThisHour(t *testing.T, db *store.DB, want []string, changes *int64, threshold float64) ([]string, *int64) {
 	t.Helper()
-	bound := hourBoundRows(t, db, "SELECT id, status_online, last_online FROM peer")
+	bound := timeRows(t, db, "SELECT id, status_online, last_online FROM peer")
 	if len(bound) == 0 {
 		return want, changes
 	}
