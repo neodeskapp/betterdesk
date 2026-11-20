@@ -39,7 +39,9 @@ func init() {
 		get("logs-source-as-object", "/api/logs/recent", url.Values{"source[name]": {"go"}}, few...),
 		get("logs-source-empty", "/api/logs/recent", url.Values{"source": {""}}, few...),
 
-		get("database-stats", "/api/database/stats", nil),
+		// The rows of a table and the size of the file grow with what the
+		// suite did before
+		contract.Case{Name: "database-stats", Path: "/api/database/stats", Volatile: []string{"tables[*].count", "~size"}},
 		get("containers", "/api/docker/containers", nil),
 
 		exec("exec-no-command", map[string]any{}),

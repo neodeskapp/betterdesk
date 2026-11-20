@@ -44,6 +44,9 @@ var (
 			"disks[#]", "processes[#]",
 			"node.heapTotal", "node.heapUsed", "node.rss", "node.uptime", "node.pid",
 		},
+		// The rows of each table and the size of the database grow with
+		// what the matrix did before.
+		"GET /api/database/stats": {"tables[*].count", "~size"},
 		"GET /api/server-management/resources": {
 			"~snapshot.arch", "snapshot.cpuCount", "~snapshot.cpuModel", "~snapshot.release", "~snapshot.platform",
 			"snapshot.mem.total", "snapshot.mem.free", "snapshot.mem.used", "snapshot.mem.percent",

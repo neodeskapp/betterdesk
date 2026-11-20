@@ -32,6 +32,10 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "size",
+    "tables[*].count"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -69,6 +73,10 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "size",
+    "tables[*].count"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -86,9 +94,10 @@
     "super_admin",
     "admin"
    ],
-   "status": 500,
+   "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "application/json; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
@@ -103,6 +112,7 @@
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
      "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
+    "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -110,10 +120,372 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "size",
+    {
+     "path": "tables[*].count",
+     "integer": true
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "error": "Failed to get database stats"
+     "size": "<volatile>",
+     "tables": [
+      {
+       "count": 0,
+       "name": "access_policies"
+      },
+      {
+       "count": 0,
+       "name": "access_tokens"
+      },
+      {
+       "count": 0,
+       "name": "account_lockouts"
+      },
+      {
+       "count": 0,
+       "name": "activity_sessions"
+      },
+      {
+       "count": 0,
+       "name": "activity_summaries"
+      },
+      {
+       "count": 0,
+       "name": "address_books"
+      },
+      {
+       "count": 0,
+       "name": "agent_bundle_builds"
+      },
+      {
+       "count": 0,
+       "name": "agent_bundles"
+      },
+      {
+       "count": 0,
+       "name": "agent_templates"
+      },
+      {
+       "count": 0,
+       "name": "alert_history"
+      },
+      {
+       "count": 0,
+       "name": "alert_rules"
+      },
+      {
+       "count": 0,
+       "name": "api_keys"
+      },
+      {
+       "count": 0,
+       "name": "audit_alarms"
+      },
+      {
+       "count": 0,
+       "name": "audit_connections"
+      },
+      {
+       "count": 0,
+       "name": "audit_files"
+      },
+      {
+       "count": 0,
+       "name": "audit_log"
+      },
+      {
+       "count": 0,
+       "name": "billing_contracts"
+      },
+      {
+       "count": 0,
+       "name": "billing_currencies"
+      },
+      {
+       "count": 0,
+       "name": "billing_packages"
+      },
+      {
+       "count": 0,
+       "name": "billing_period_totals"
+      },
+      {
+       "count": 0,
+       "name": "billing_session_ledger"
+      },
+      {
+       "count": 0,
+       "name": "billing_sessions"
+      },
+      {
+       "count": 0,
+       "name": "billing_work_reports"
+      },
+      {
+       "count": 0,
+       "name": "branding_config"
+      },
+      {
+       "count": 0,
+       "name": "branding_profiles"
+      },
+      {
+       "count": 0,
+       "name": "chat_groups"
+      },
+      {
+       "count": 0,
+       "name": "chat_messages"
+      },
+      {
+       "count": 0,
+       "name": "client_feature_policies"
+      },
+      {
+       "count": 0,
+       "name": "client_sessions"
+      },
+      {
+       "count": 0,
+       "name": "device_connection_mode_commands"
+      },
+      {
+       "count": 0,
+       "name": "device_connection_policies"
+      },
+      {
+       "count": 0,
+       "name": "device_folder_assignments"
+      },
+      {
+       "count": 0,
+       "name": "device_group_members"
+      },
+      {
+       "count": 0,
+       "name": "device_group_user_access"
+      },
+      {
+       "count": 0,
+       "name": "device_group_user_group_access"
+      },
+      {
+       "count": 0,
+       "name": "device_groups"
+      },
+      {
+       "count": 0,
+       "name": "device_inventory"
+      },
+      {
+       "count": 0,
+       "name": "device_telemetry"
+      },
+      {
+       "count": 0,
+       "name": "device_telemetry_commands"
+      },
+      {
+       "count": 0,
+       "name": "device_telemetry_snapshots"
+      },
+      {
+       "count": 0,
+       "name": "device_tokens"
+      },
+      {
+       "count": 0,
+       "name": "dlp_events"
+      },
+      {
+       "count": 0,
+       "name": "dlp_policies"
+      },
+      {
+       "count": 0,
+       "name": "email_notification_log"
+      },
+      {
+       "count": 0,
+       "name": "folders"
+      },
+      {
+       "count": 0,
+       "name": "help_requests"
+      },
+      {
+       "count": 0,
+       "name": "id_change_history"
+      },
+      {
+       "count": 0,
+       "name": "login_attempts"
+      },
+      {
+       "count": 0,
+       "name": "network_checks"
+      },
+      {
+       "count": 0,
+       "name": "network_targets"
+      },
+      {
+       "count": 0,
+       "name": "notification_reads"
+      },
+      {
+       "count": 0,
+       "name": "org_address_books"
+      },
+      {
+       "count": 0,
+       "name": "org_devices"
+      },
+      {
+       "count": 0,
+       "name": "org_invitations"
+      },
+      {
+       "count": 0,
+       "name": "org_peer_credentials"
+      },
+      {
+       "count": 0,
+       "name": "org_settings"
+      },
+      {
+       "count": 0,
+       "name": "org_users"
+      },
+      {
+       "count": 0,
+       "name": "organizations"
+      },
+      {
+       "count": 0,
+       "name": "panel_access_policies"
+      },
+      {
+       "count": 0,
+       "name": "panel_sessions"
+      },
+      {
+       "count": 0,
+       "name": "peer"
+      },
+      {
+       "count": 0,
+       "name": "peer_availability_events"
+      },
+      {
+       "count": 0,
+       "name": "peer_connection_sessions"
+      },
+      {
+       "count": 0,
+       "name": "peer_metrics"
+      },
+      {
+       "count": 0,
+       "name": "peer_sysinfo"
+      },
+      {
+       "count": 0,
+       "name": "peers"
+      },
+      {
+       "count": 0,
+       "name": "pending_registrations"
+      },
+      {
+       "count": 0,
+       "name": "relay_sessions"
+      },
+      {
+       "count": 0,
+       "name": "remote_commands"
+      },
+      {
+       "count": 0,
+       "name": "remote_targets"
+      },
+      {
+       "count": 0,
+       "name": "role_permissions"
+      },
+      {
+       "count": 0,
+       "name": "saved_reports"
+      },
+      {
+       "count": 0,
+       "name": "server_config"
+      },
+      {
+       "count": 0,
+       "name": "settings"
+      },
+      {
+       "count": 0,
+       "name": "strategies"
+      },
+      {
+       "count": 0,
+       "name": "strategy_assignments"
+      },
+      {
+       "count": 0,
+       "name": "studio_flows"
+      },
+      {
+       "count": 0,
+       "name": "tenant_devices"
+      },
+      {
+       "count": 0,
+       "name": "tenant_users"
+      },
+      {
+       "count": 0,
+       "name": "tenants"
+      },
+      {
+       "count": 0,
+       "name": "ticket_attachments"
+      },
+      {
+       "count": 0,
+       "name": "ticket_comments"
+      },
+      {
+       "count": 0,
+       "name": "tickets"
+      },
+      {
+       "count": 0,
+       "name": "user_avatars"
+      },
+      {
+       "count": 0,
+       "name": "user_group_members"
+      },
+      {
+       "count": 0,
+       "name": "user_groups"
+      },
+      {
+       "count": 0,
+       "name": "user_peer_grants"
+      },
+      {
+       "count": 0,
+       "name": "users"
+      }
+     ],
+     "type": "SQLite"
     }
    }
   }

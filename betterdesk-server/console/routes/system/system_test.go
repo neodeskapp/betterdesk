@@ -2,6 +2,7 @@ package system
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"io/fs"
 	"math"
@@ -277,11 +278,29 @@ func TestLogsFromFiles(t *testing.T) {
 	}
 }
 
-func TestDatabaseStatsKeepsItsOldAnswer(t *testing.T) {
+// TestDatabaseStatsAnswersTheTables: the database statistics are the type
+// of the database, the row count of each table and the size, where the
+// route always failed with 500 (BUGS.md C1).
+func TestDatabaseStatsAnswersTheTables(t *testing.T) {
 	s := linuxSite(t, &shell{}, nil)
 	rec := s.call(s.signIn("admin"), "GET", "/api/database/stats", "")
-	if rec.Code != 500 || rec.Body.String() != `{"error":"Failed to get database stats"}` {
-		t.Errorf("got %d %s", rec.Code, rec.Body.String())
+	var got struct {
+		Type   string `json:"type"`
+		Tables []struct {
+			Name  string `json:"name"`
+			Count any    `json:"count"`
+		} `json:"tables"`
+		Size string `json:"size"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil || rec.Code != 200 {
+		t.Fatalf("%d %s: %v", rec.Code, rec.Body.String(), err)
+	}
+	counts := map[string]any{}
+	for _, table := range got.Tables {
+		counts[table.Name] = table.Count
+	}
+	if got.Type != "SQLite" || got.Size != "-" || counts["panel_sessions"] != 1.0 {
+		t.Errorf("stats: %s", rec.Body.String())
 	}
 }
 

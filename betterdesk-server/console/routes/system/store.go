@@ -47,14 +47,17 @@ type databaseStats struct {
 	LastBackup string       `json:"last_backup,omitempty"`
 }
 
-// databaseStats answers GET /api/database/stats.
-//
-// The old route called two functions of the database layer that it never
-// had, so every request ended in its error answer, and that answer is
-// what the route sends (BUGS.md C1). collectStats is what the route was
-// written to send.
+// databaseStats answers GET /api/database/stats: the type of the
+// database, the row count of each table, its size and the time of the
+// newest backup. A database that cannot be listed is 500.
 func (h *handlers) databaseStats(w http.ResponseWriter, r *http.Request) {
-	kit.JSON(w, r, http.StatusInternalServerError, plainError{"Failed to get database stats"})
+	stats, err := h.collectStats(r.Context())
+	if err != nil {
+		h.log.Error("database stats:", err)
+		kit.JSON(w, r, http.StatusInternalServerError, plainError{"Failed to get database stats"})
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, stats)
 }
 
 // collectStats counts the rows of every table with a safe name and reads
