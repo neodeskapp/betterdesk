@@ -107,15 +107,57 @@ func TestCheckArgumentsLikeNode(t *testing.T) {
 	}
 }
 
+// ipv6Matches are the IPv6 hosts (as URL.hostname gives them, and
+// without the brackets) with the certificate entry that is the same
+// address. The script compared the bracketed host with the names as text
+// and never matched them; the check compares the address (BN9).
+var ipv6Matches = map[string]string{
+	"[::1]":            "IP Address:0:0:0:0:0:0:0:1",
+	"::1":              "IP Address:0:0:0:0:0:0:0:1",
+	"::ffff:127.0.0.1": "IP Address:0:0:0:0:0:FFFF:7F00:1",
+}
+
 func TestCertificateHostnameLikeNode(t *testing.T) {
 	v := loadCheckVectors(t)
+	changed := 0
 	for _, c := range v.Hostname {
-		if got := certificateHostname(c.SAN, c.Host); got != c.Match {
-			t.Errorf("%q for %q: %v, Node %v", c.SAN, c.Host, got, c.Match)
+		want := c.Match
+		if entry, ok := ipv6Matches[c.Host]; ok && strings.Contains(c.SAN, entry) {
+			want = true
+			changed++
+		}
+		if got := certificateHostname(c.SAN, c.Host); got != want {
+			t.Errorf("%q for %q: %v, want %v (Node %v)", c.SAN, c.Host, got, want, c.Match)
 		}
 	}
 	if len(v.Hostname) < 500 {
 		t.Fatalf("only %d vectors", len(v.Hostname))
+	}
+	if changed == 0 {
+		t.Error("no IPv6 vector with its own address: BN9 is not covered")
+	}
+	t.Logf("%d IPv6 vectors match their address where Node's script did not (BN9)", changed)
+}
+
+// An HTTPS check of an IPv6 URL passes when the certificate names the
+// address (BN9).
+func TestCertificateHostnameOfIPv6(t *testing.T) {
+	for _, c := range []struct {
+		san, host string
+		want      bool
+	}{
+		{"IP Address:0:0:0:0:0:0:0:1", "[::1]", true},
+		{"DNS:localhost, IP Address:0:0:0:0:0:0:0:1", "[::1]", true},
+		{"IP Address:2001:DB8:0:0:0:0:0:7", "[2001:db8::7]", true},
+		{"IP Address:2001:DB8:0:0:0:0:0:8", "[2001:db8::7]", false},
+		{"IP Address:127.0.0.1", "[::1]", false},
+		{"DNS:localhost", "[::1]", false},
+		{"IP Address:127.0.0.1", "127.0.0.1", true},
+		{"IP Address:127.0.0.2", "127.0.0.1", false},
+	} {
+		if got := certificateHostname(c.san, c.host); got != c.want {
+			t.Errorf("%q for %q: %v, want %v", c.san, c.host, got, c.want)
+		}
 	}
 }
 

@@ -281,17 +281,25 @@ var sanPrefix = regexp.MustCompile(`(?i)^(?:DNS|IP Address|IP):`)
 
 // certificateHostname is the script's own look at the certificate after
 // the answer (checkCertificateHostname), on its subjectaltname: the host
-// is one of the names, or matches a "*.name" by its end.
+// is one of the names, or matches a "*.name" by its end. hostname is the
+// URL's host name, with the brackets of an IPv6 address or without them:
+// an address is compared as an address, in the form the TLS check uses,
+// so [::1] is the certificate's 0:0:0:0:0:0:0:1.
 func certificateHostname(subjectAltName, hostname string) bool {
+	hostname = strings.TrimSuffix(strings.TrimPrefix(hostname, "["), "]")
 	if hostname == "" {
 		return false
 	}
+	ip := canonicalIP(hostname)
 	for _, name := range strings.Split(subjectAltName, ",") {
 		name = sanPrefix.ReplaceAllString(jsbind.Trim(name), "")
 		if name == "" {
 			continue
 		}
 		if name == hostname || (strings.HasPrefix(name, "*.") && strings.HasSuffix(hostname, name[1:])) {
+			return true
+		}
+		if ip != "" && canonicalIP(name) == ip {
 			return true
 		}
 	}
