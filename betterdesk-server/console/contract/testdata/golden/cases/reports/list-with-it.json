@@ -32,7 +32,8 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "[*].payload"
+    "[*].payload",
+    "[0].id"
    ],
    "body": {
     "kind": "json",
@@ -66,7 +67,8 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "[*].payload"
+    "[*].payload",
+    "[0].id"
    ],
    "body": {
     "kind": "json",
@@ -79,182 +81,8 @@
   },
   {
    "roles": [
-    "viewer"
-   ],
-   "status": 200,
-   "headers": {
-    "cache-control": "no-cache, no-store, must-revalidate",
-    "content-encoding": "gzip",
-    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "application/json; charset=utf-8",
-    "cross-origin-resource-policy": "same-origin",
-    "etag": "<present>",
-    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "ratelimit-limit": "1000000",
-    "ratelimit-policy": "1000000;w=60",
-    "ratelimit-remaining": "<n>",
-    "ratelimit-reset": "<n>",
-    "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": [
-     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
-    ],
-    "vary": "Accept-Encoding",
-    "x-content-type-options": "nosniff",
-    "x-dns-prefetch-control": "off",
-    "x-download-options": "noopen",
-    "x-frame-options": "DENY",
-    "x-permitted-cross-domain-policies": "none",
-    "x-xss-protection": "0"
-   },
-   "volatile": [
-    {
-     "path": "[*].created_at",
-     "format": "9999-99-99 99:99:99"
-    },
-    "[*].payload"
-   ],
-   "body": {
-    "kind": "json",
-    "json": [
-     {
-      "created_at": "<volatile>",
-      "created_by": "e2e_admin",
-      "filters": "{\"from\":\"2026-01-01\",\"limit\":5}",
-      "id": 15,
-      "payload": "<volatile>",
-      "report_type": "tickets",
-      "title": "Contract ticket report"
-     },
-     {
-      "created_at": "<volatile>",
-      "created_by": "admin",
-      "filters": "{}",
-      "id": 1,
-      "payload": "<volatile>",
-      "report_type": "devices",
-      "title": "Demo weekly device summary"
-     },
-     {
-      "created_at": "<volatile>",
-      "created_by": "admin",
-      "filters": "{}",
-      "id": 2,
-      "payload": "<volatile>",
-      "report_type": "tickets",
-      "title": "Demo open tickets"
-     },
-     {
-      "created_at": "<volatile>",
-      "created_by": "admin",
-      "filters": "{}",
-      "id": 3,
-      "payload": "<volatile>",
-      "report_type": "inventory",
-      "title": "Demo hardware inventory"
-     },
-     {
-      "created_at": "<volatile>",
-      "created_by": "admin",
-      "filters": "{}",
-      "id": 4,
-      "payload": "<volatile>",
-      "report_type": "activity",
-      "title": "Demo app usage this week"
-     }
-    ]
-   }
-  },
-  {
-   "roles": [
-    "super_admin"
-   ],
-   "status": 200,
-   "headers": {
-    "cache-control": "no-cache, no-store, must-revalidate",
-    "content-encoding": "gzip",
-    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "application/json; charset=utf-8",
-    "cross-origin-resource-policy": "same-origin",
-    "etag": "<present>",
-    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "ratelimit-limit": "1000000",
-    "ratelimit-policy": "1000000;w=60",
-    "ratelimit-remaining": "<n>",
-    "ratelimit-reset": "<n>",
-    "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": [
-     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
-    ],
-    "vary": "Accept-Encoding",
-    "x-content-type-options": "nosniff",
-    "x-dns-prefetch-control": "off",
-    "x-download-options": "noopen",
-    "x-frame-options": "DENY",
-    "x-permitted-cross-domain-policies": "none",
-    "x-xss-protection": "0"
-   },
-   "volatile": [
-    {
-     "path": "[*].created_at",
-     "format": "9999-99-99 99:99:99"
-    },
-    "[*].payload"
-   ],
-   "body": {
-    "kind": "json",
-    "json": [
-     {
-      "created_at": "<volatile>",
-      "created_by": "e2e_admin",
-      "filters": "{\"from\":\"2026-01-01\",\"limit\":5}",
-      "id": 21,
-      "payload": "<volatile>",
-      "report_type": "tickets",
-      "title": "Contract ticket report"
-     },
-     {
-      "created_at": "<volatile>",
-      "created_by": "admin",
-      "filters": "{}",
-      "id": 1,
-      "payload": "<volatile>",
-      "report_type": "devices",
-      "title": "Demo weekly device summary"
-     },
-     {
-      "created_at": "<volatile>",
-      "created_by": "admin",
-      "filters": "{}",
-      "id": 2,
-      "payload": "<volatile>",
-      "report_type": "tickets",
-      "title": "Demo open tickets"
-     },
-     {
-      "created_at": "<volatile>",
-      "created_by": "admin",
-      "filters": "{}",
-      "id": 3,
-      "payload": "<volatile>",
-      "report_type": "inventory",
-      "title": "Demo hardware inventory"
-     },
-     {
-      "created_at": "<volatile>",
-      "created_by": "admin",
-      "filters": "{}",
-      "id": 4,
-      "payload": "<volatile>",
-      "report_type": "activity",
-      "title": "Demo app usage this week"
-     }
-    ]
-   }
-  },
-  {
-   "roles": [
+    "viewer",
+    "super_admin",
     "admin"
    ],
    "status": 200,
@@ -288,7 +116,11 @@
      "path": "[*].created_at",
      "format": "9999-99-99 99:99:99"
     },
-    "[*].payload"
+    "[*].payload",
+    {
+     "path": "[0].id",
+     "integer": true
+    }
    ],
    "body": {
     "kind": "json",
@@ -297,7 +129,7 @@
       "created_at": "<volatile>",
       "created_by": "e2e_admin",
       "filters": "{\"from\":\"2026-01-01\",\"limit\":5}",
-      "id": 27,
+      "id": 0,
       "payload": "<volatile>",
       "report_type": "tickets",
       "title": "Contract ticket report"

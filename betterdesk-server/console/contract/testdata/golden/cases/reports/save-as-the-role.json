@@ -34,6 +34,9 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "id"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -66,6 +69,9 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "id"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -102,6 +108,10 @@
     {
      "path": "created_at",
      "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "id",
+     "integer": true
     }
    ],
    "body": {
@@ -110,7 +120,7 @@
      "created_at": "<volatile>",
      "created_by": "e2e_super_admin",
      "filters": "{}",
-     "id": 20,
+     "id": 0,
      "payload": "{\"total_targets\":0,\"up\":0,\"down\":0,\"unknown\":0,\"targets\":[]}",
      "report_type": "network",
      "title": "Network as the role"
@@ -146,6 +156,10 @@
     {
      "path": "created_at",
      "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "id",
+     "integer": true
     }
    ],
    "body": {
@@ -154,7 +168,7 @@
      "created_at": "<volatile>",
      "created_by": "e2e_admin",
      "filters": "{}",
-     "id": 26,
+     "id": 0,
      "payload": "{\"total_targets\":0,\"up\":0,\"down\":0,\"unknown\":0,\"targets\":[]}",
      "report_type": "network",
      "title": "Network as the role"
