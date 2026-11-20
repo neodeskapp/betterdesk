@@ -98,33 +98,25 @@ func numberOr(v middleware.Value, fallback float64) float64 {
 }
 
 // find returns the index of the element whose "id" is the text id, -1
-// when there is none. A null in the list is an error.
-func find(items []any, id string) (int, error) {
+// when there is none. Elements that are no objects are skipped.
+func find(items []any, id string) int {
 	for i, item := range items {
-		value, err := member(item, "id")
-		if err != nil {
-			return -1, err
-		}
-		if value == id {
-			return i, nil
+		if member(item, "id") == id {
+			return i
 		}
 	}
-	return -1, nil
+	return -1
 }
 
 // addressTaken reports whether an element other than skip has the
 // address.
-func addressTaken(items []any, address string, skip int) (bool, error) {
+func addressTaken(items []any, address string, skip int) bool {
 	for i, item := range items {
-		value, err := member(item, "address")
-		if err != nil {
-			return false, err
-		}
-		if i != skip && value == address {
-			return true, nil
+		if i != skip && member(item, "address") == address {
+			return true
 		}
 	}
-	return false, nil
+	return false
 }
 
 // listRelays answers GET /api/panel/scaling/relays: {"data":[...]}.
@@ -141,15 +133,12 @@ func (h *handlers) listRelays(w http.ResponseWriter, r *http.Request) {
 // getRelay answers GET /api/panel/scaling/relays/{nodeId}.
 func (h *handlers) getRelay(w http.ResponseWriter, r *http.Request) {
 	relays, err := h.load(r.Context(), keyRelays)
-	i := -1
-	if err == nil {
-		i, err = find(relays, r.PathValue("nodeId"))
-	}
 	if err != nil {
 		h.log.Error("[Scaling] read relay:", err)
 		fail(w, r, http.StatusInternalServerError, "failed to load relay node")
 		return
 	}
+	i := find(relays, r.PathValue("nodeId"))
 	if i < 0 {
 		fail(w, r, http.StatusNotFound, "not found")
 		return
@@ -168,11 +157,7 @@ func (h *handlers) createRelay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	relays, err := h.load(r.Context(), keyRelays)
-	var taken bool
-	if err == nil {
-		taken, err = addressTaken(relays, text(body.Get("address"), ""), -1)
-	}
-	if err == nil && taken {
+	if err == nil && addressTaken(relays, text(body.Get("address"), ""), -1) {
 		fail(w, r, http.StatusConflict, "a relay with this address already exists")
 		return
 	}
@@ -207,17 +192,13 @@ func (h *handlers) updateRelay(w http.ResponseWriter, r *http.Request) {
 	relays, err := h.load(r.Context(), keyRelays)
 	i := -1
 	if err == nil {
-		i, err = find(relays, r.PathValue("nodeId"))
+		i = find(relays, r.PathValue("nodeId"))
 	}
 	if err == nil && i < 0 {
 		fail(w, r, http.StatusNotFound, "not found")
 		return
 	}
-	var taken bool
-	if err == nil {
-		taken, err = addressTaken(relays, text(body.Get("address"), ""), i)
-	}
-	if err == nil && taken {
+	if err == nil && addressTaken(relays, text(body.Get("address"), ""), i) {
 		fail(w, r, http.StatusConflict, "another relay already uses this address")
 		return
 	}
@@ -242,11 +223,7 @@ func (h *handlers) updateRelay(w http.ResponseWriter, r *http.Request) {
 // 404 when no entry has the id.
 func (h *handlers) remove(w http.ResponseWriter, r *http.Request, key, id, failure string) {
 	items, err := h.load(r.Context(), key)
-	i := -1
-	if err == nil {
-		i, err = find(items, id)
-	}
-	if err == nil && i < 0 {
+	if err == nil && find(items, id) < 0 {
 		// Every entry with the id goes, and without one nothing is stored
 		fail(w, r, http.StatusNotFound, "not found")
 		return
@@ -254,7 +231,7 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request, key, id, failu
 	if err == nil {
 		kept := []any{}
 		for _, item := range items {
-			if value, _ := member(item, "id"); value != id {
+			if member(item, "id") != id {
 				kept = append(kept, item)
 			}
 		}
@@ -297,7 +274,8 @@ type capacityData struct {
 
 // capacity answers GET /api/panel/scaling/capacity: the sums of what the
 // relays are configured for, 50 sessions and 100 Mbit/s when they sum to
-// nothing, and 500 devices plus 200 for each relay.
+// nothing, and 500 devices plus 200 for each relay. Entries of the list
+// that are no objects are no relays.
 func (h *handlers) capacity(w http.ResponseWriter, r *http.Request) {
 	relays, err := h.load(r.Context(), keyRelays)
 	if err != nil {
@@ -305,17 +283,16 @@ func (h *handlers) capacity(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusInternalServerError, "failed to compute capacity")
 		return
 	}
-	data := capacityData{RelayCount: len(relays), MaxDevices: 500 + len(relays)*200}
+	var data capacityData
 	for _, relay := range relays {
-		sessions, err := member(relay, "max_sessions")
-		if err != nil {
-			fail(w, r, http.StatusInternalServerError, "failed to compute capacity")
-			return
+		if _, isObject := relay.(*object); !isObject {
+			continue
 		}
-		bandwidth, _ := member(relay, "max_bandwidth_mbps")
-		data.MaxSessions += number(sessions)
-		data.MaxBandwidthMbps += number(bandwidth)
+		data.RelayCount++
+		data.MaxSessions += number(member(relay, "max_sessions"))
+		data.MaxBandwidthMbps += number(member(relay, "max_bandwidth_mbps"))
 	}
+	data.MaxDevices = 500 + data.RelayCount*200
 	if data.MaxSessions == 0 {
 		data.MaxSessions = 50
 	}

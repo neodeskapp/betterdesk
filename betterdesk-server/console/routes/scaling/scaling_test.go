@@ -332,7 +332,7 @@ func TestRelayLimitAndStoredOddities(t *testing.T) {
 			}
 		}
 		// Entries that are no objects are listed and never match an id; a
-		// null fails every route that looks into the entries
+		// null is skipped like them (BUGS.md SC16)
 		if err := setSetting(ctx, db, keyRelays, `[1,"r-a",[2],{"id":"r-b","address":"b:1"}]`); err != nil {
 			t.Fatal(err)
 		}
@@ -342,19 +342,24 @@ func TestRelayLimitAndStoredOddities(t *testing.T) {
 		if status, answer := s.send(admin, "GET", relays+"/r-b", ""); status != 200 || answer != `{"data":{"id":"r-b","address":"b:1"}}` {
 			t.Errorf("the object among odd entries: %d %s", status, answer)
 		}
-		if err := setSetting(ctx, db, keyRelays, `[null,{"id":"r-b","address":"b:1"}]`); err != nil {
-			t.Fatal(err)
-		}
-		for name, c := range map[string]struct{ method, path, body, want string }{
-			"list":     {"GET", relays, "", `200 {"data":[null,{"id":"r-b","address":"b:1"}]}`},
-			"read":     {"GET", relays + "/r-b", "", `500 {"error":"failed to load relay node"}`},
-			"create":   {"POST", relays, `{"name":"x","address":"c:1"}`, `500 {"error":"failed to save relay node"}`},
-			"update":   {"PUT", relays + "/r-b", `{"name":"x","address":"c:1"}`, `500 {"error":"failed to update relay node"}`},
-			"delete":   {"DELETE", relays + "/r-b", "", `500 {"error":"failed to delete relay node"}`},
-			"capacity": {"GET", "/api/panel/scaling/capacity", "", `500 {"error":"failed to compute capacity"}`},
+		const withNull = `[null,{"id":"r-b","address":"b:1","max_sessions":7}]`
+		for _, c := range []struct{ name, method, path, body, want, stored string }{
+			{"list", "GET", relays, "", `200 {"data":` + withNull + `}`, withNull},
+			{"read", "GET", relays + "/r-b", "", `200 {"data":{"id":"r-b","address":"b:1","max_sessions":7}}`, withNull},
+			{"create", "POST", relays, `{"name":"x","address":"c:1"}`, `201 {"data":{"id":"r-0000000000000001",`, `[null,{"id":"r-b",`},
+			{"create at a taken address", "POST", relays, `{"name":"x","address":"b:1"}`, `409 {"error":"a relay with this address already exists"}`, withNull},
+			{"update", "PUT", relays + "/r-b", `{"name":"x","address":"c:1"}`, `200 {"data":{"id":"r-b","address":"c:1","max_sessions":50,`, `[null,{"id":"r-b","address":"c:1",`},
+			{"delete", "DELETE", relays + "/r-b", "", `200 {"ok":true}`, `[null]`},
+			{"capacity", "GET", "/api/panel/scaling/capacity", "", `200 {"data":{"relay_count":1,"max_devices":700,"max_sessions":7,"max_bandwidth_mbps":100}}`, withNull},
 		} {
-			if status, answer := s.send(admin, c.method, c.path, c.body); fmt.Sprintf("%d %s", status, answer) != c.want {
-				t.Errorf("%s with a null in the list: %d %s, want %s", name, status, answer, c.want)
+			if err := setSetting(ctx, db, keyRelays, withNull); err != nil {
+				t.Fatal(err)
+			}
+			if status, answer := s.send(admin, c.method, c.path, c.body); !strings.HasPrefix(fmt.Sprintf("%d %s", status, answer), c.want) {
+				t.Errorf("%s with a null in the list: %d %s, want %s", c.name, status, answer, c.want)
+			}
+			if got := stored(t, db, keyRelays); !strings.HasPrefix(got, c.stored) {
+				t.Errorf("%s with a null in the list stored %s, want %s", c.name, got, c.stored)
 			}
 		}
 	})
@@ -530,11 +535,15 @@ func FuzzStoredListAndBody(f *testing.F) {
 			if !bytes.Equal(text, second) {
 				t.Fatalf("parseArray(%q) writes %q, then %q", raw, text, second)
 			}
-			for _, item := range items {
-				_, _ = member(item, "id")
+			for i, item := range items {
+				if member(item, "id") == "r-1" && find(items, "r-1") > i {
+					t.Fatalf("find skips the entry %d of %q", i, raw)
+				}
 			}
-			_, _ = find(items, "r-1")
-			_, _ = addressTaken(items, "a:1", -1)
+			if i := find(items, "r-1"); i >= 0 && member(items[i], "id") != "r-1" {
+				t.Fatalf("find gives the entry %d of %q", i, raw)
+			}
+			addressTaken(items, "a:1", -1)
 		}
 		if !json.Valid([]byte(raw)) || !strings.HasPrefix(strings.TrimSpace(raw), "{") {
 			return

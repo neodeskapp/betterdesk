@@ -106,7 +106,7 @@ func (h *handlers) updateRule(w http.ResponseWriter, r *http.Request) {
 	rules, err := h.load(r.Context(), keyRules)
 	i := -1
 	if err == nil {
-		i, err = find(rules, r.PathValue("ruleId"))
+		i = find(rules, r.PathValue("ruleId"))
 	}
 	if err == nil && i < 0 {
 		fail(w, r, http.StatusNotFound, "not found")

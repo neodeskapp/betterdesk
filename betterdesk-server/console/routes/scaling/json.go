@@ -227,21 +227,13 @@ func writeNumber(b *bytes.Buffer, f float64) {
 	}
 }
 
-// errNotAnObject is the TypeError JavaScript throws when a member is read
-// from null: a stored list with a null in it fails the routes that look
-// into its elements.
-var errNotAnObject = errors.New("cannot read a member of null")
-
-// member is element[key] as JavaScript reads it: the value for an
-// object, nothing for a number, a text or a list, and an error for null.
-func member(element any, key string) (any, error) {
-	switch x := element.(type) {
-	case nil:
-		return nil, errNotAnObject
-	case *object:
-		return x.m[key], nil
+// member is element[key] for an element of a stored list that is an
+// object, and nothing for any other element, null too.
+func member(element any, key string) any {
+	if x, ok := element.(*object); ok {
+		return x.m[key]
 	}
-	return nil, nil
+	return nil
 }
 
 // isJSSpace reports the white space and line ends of JavaScript's trim and
