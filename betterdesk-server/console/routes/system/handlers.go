@@ -154,9 +154,10 @@ var logFiles = map[bool][]string{
 
 // logs answers GET /api/logs/recent?source=go|console&limit=50: the last
 // lines of the server's or the console's log, at most 200, from the
-// journal or else from the first log file that exists. Any source but
-// "go" is the console's log, and the source goes back as it came. A limit
-// that cannot be read as text (limit[toString]=1) is answered with 500.
+// journal or else from the first log file that exists. A limit below 1 is
+// the default of 50. Any source but "go" is the console's log, and the
+// source goes back as it came. A limit that cannot be read as text
+// (limit[toString]=1) is answered with 500.
 func (h *handlers) logs(w http.ResponseWriter, r *http.Request) {
 	var source any = "console"
 	if given := queryValue(r.URL.RawQuery, "source"); given != nil && given != "" {
@@ -167,7 +168,7 @@ func (h *handlers) logs(w http.ResponseWriter, r *http.Request) {
 		kit.JSON(w, r, http.StatusInternalServerError, plainError{"Failed to read logs"})
 		return
 	}
-	limit := math.Min(parseIntOr(limitText, 50), 200)
+	limit := logLimit(limitText)
 	n := numberText(limit)
 	server := source == "go"
 
@@ -207,20 +208,21 @@ func (h *handlers) logs(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, answer)
 }
 
-// lastLines is lines.slice(-limit): the last limit lines, and for a
-// negative limit everything from that line on.
+// logLimit is the number of log lines a limit asks for: at most 200, and
+// 50 for a limit below 1 or without digits.
+func logLimit(text string) float64 {
+	if limit := math.Min(parseIntOr(text, 50), 200); limit >= 1 {
+		return limit
+	}
+	return 50
+}
+
+// lastLines is the last limit lines, limit at least 1.
 func lastLines(lines []string, limit float64) []string {
-	start := float64(len(lines)) - limit
-	if limit < 0 {
-		start = -limit
+	if start := float64(len(lines)) - limit; start > 0 {
+		return lines[int(start):]
 	}
-	switch {
-	case start <= 0:
-		return lines
-	case start >= float64(len(lines)):
-		return nil
-	}
-	return lines[int(start):]
+	return lines
 }
 
 type container struct {
@@ -298,12 +300,13 @@ const (
 )
 
 // speedTest answers GET /api/speed-test?size=1048576 with that many
-// bytes "B", at most 10 MB, for the client to time the download.
+// bytes "B", at most 10 MB, for the client to time the download. A size
+// below 1 is the default of 1 MB.
 func (h *handlers) speedTest(w http.ResponseWriter, r *http.Request) {
 	sizeText, _ := queryText(r.URL.RawQuery, "size")
 	size := int64(math.Min(parseIntOr(sizeText, speedTestDefault), speedTestMax))
-	if size < 0 {
-		size = 0
+	if size < 1 {
+		size = speedTestDefault
 	}
 	header := w.Header()
 	header.Set("Content-Type", "application/octet-stream")

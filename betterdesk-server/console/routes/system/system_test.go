@@ -206,9 +206,9 @@ func TestLogs(t *testing.T) {
 	// The limit as the command gets it, and the source as it goes back
 	cases := []struct{ query, n, source string }{
 		{"?limit=7", "7", `"console"`}, {"?limit=0", "50", `"console"`}, {"?limit=abc", "50", `"console"`}, {"?limit=1000", "200", `"console"`},
-		{"?limit=12.9", "12", `"console"`}, {"?limit=%2015px", "15", `"console"`}, {"?limit=-3", "-3", `"console"`}, {"?limit=3&limit=9", "3", `"console"`},
-		{"?limit=-99999999999999999999999", "-1e+23", `"console"`},
-		{"?limit=-" + strings.Repeat("9", 400), "-Infinity", `"console"`}, {"?limit=" + strings.Repeat("9", 400), "200", `"console"`},
+		{"?limit=12.9", "12", `"console"`}, {"?limit=%2015px", "15", `"console"`}, {"?limit=-3", "50", `"console"`}, {"?limit=3&limit=9", "3", `"console"`},
+		{"?limit=-99999999999999999999999", "50", `"console"`}, {"?limit=1", "1", `"console"`},
+		{"?limit=-" + strings.Repeat("9", 400), "50", `"console"`}, {"?limit=" + strings.Repeat("9", 400), "200", `"console"`},
 		{"?source=", "50", `"console"`}, {"?source=kernel", "50", `"kernel"`}, {"?source=GO", "50", `"GO"`}, {"?source=a%22b+c", "50", `"a\"b c"`},
 		{"?source=go&source=console", "50", `["go","console"]`}, {"?source[]=go", "50", `["go"]`}, {"?source%5Bname%5D=go&source[x]=1", "50", `{"name":"go","x":"1"}`},
 	}
@@ -247,8 +247,8 @@ func TestLogsFromFiles(t *testing.T) {
 	for query, want := range map[string]string{
 		"?source=go":          `{"source":"go","lines":["a","b","c","d"]}`,
 		"?source=go&limit=3":  `{"source":"go","lines":["c","d"]}`,
-		"?source=go&limit=-1": `{"source":"go","lines":["b","c","d"]}`,
-		"?source=go&limit=-9": `{"source":"go","lines":[]}`,
+		"?source=go&limit=-1": `{"source":"go","lines":["a","b","c","d"]}`,
+		"?source=go&limit=-9": `{"source":"go","lines":["a","b","c","d"]}`,
 		"?limit=2":            `{"source":"console","lines":["y","z"]}`,
 		"?source=other":       `{"source":"other","lines":["x","y","z"]}`,
 	} {
@@ -455,7 +455,7 @@ func TestSpeedTest(t *testing.T) {
 	viewer := s.signIn("viewer")
 	for query, size := range map[string]int{
 		"": 1048576, "?size=10": 10, "?size=65536": 65536, "?size=65537": 65537, "?size=0": 1048576, "?size=abc": 1048576, "?size=2048kb": 2048,
-		"?size=99999999": 10485760, "?size=5.9": 5, "?size=7&size=9": 7, "?size[]=11": 11, "?size[a]=1": 1048576, "?size=-5": 0,
+		"?size=99999999": 10485760, "?size=5.9": 5, "?size=7&size=9": 7, "?size[]=11": 11, "?size[a]=1": 1048576, "?size=-5": 1048576, "?size=-0": 1048576,
 	} {
 		rec := s.call(viewer, "GET", "/api/speed-test"+query, "")
 		h := rec.Header()
@@ -552,7 +552,9 @@ func FuzzCommandOutput(f *testing.F) {
 				t.Fatalf("disk %+v", d)
 			}
 		}
-		lastLines(strings.Split(text, "\n"), parseIntOr(text, 50))
+		if limit := logLimit(text); limit < 1 || limit > 200 || float64(len(lastLines(strings.Split(text, "\n"), limit))) > limit {
+			t.Fatalf("limit %v of %q", limit, text)
+		}
 		switch v := queryValue(raw, "source").(type) {
 		case nil, string, []string:
 		case orderedObject:
