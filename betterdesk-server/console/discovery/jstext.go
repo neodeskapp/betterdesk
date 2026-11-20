@@ -187,17 +187,3 @@ func parseIntOr(text string, fallback float64) float64 {
 	}
 	return value
 }
-
-// toUint16 is what Node's socket bind makes of a port number: ToUint32,
-// then the low 16 bits. 0 asks the system for any free port.
-func toUint16(n float64) uint16 {
-	if math.IsNaN(n) || math.IsInf(n, 0) {
-		return 0
-	}
-	n = math.Trunc(n)
-	m := math.Mod(n, 1<<32)
-	if m < 0 {
-		m += 1 << 32
-	}
-	return uint16(uint64(m) & 0xffff)
-}

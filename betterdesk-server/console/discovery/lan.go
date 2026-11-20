@@ -51,8 +51,11 @@ type Settings struct {
 	// Version is the product version.
 	Version string
 	// DiscoveryPort is DISCOVERY_PORT read as parseInt(value, 10) ||
-	// 21119.
+	// 21119, and 21119 for a number outside 1 to 65535.
 	DiscoveryPort float64
+	// BadDiscoveryPort is the DISCOVERY_PORT that was no port, for the
+	// warning; "" when there was none.
+	BadDiscoveryPort string
 	// MDNS is PANEL_MDNS as written: "off" or "0" turn the mDNS
 	// announcement off.
 	MDNS string
@@ -69,6 +72,9 @@ func FromEnv(getenv func(string) string, s Settings) Settings {
 	s.PublicHost = getenv("PANEL_PUBLIC_HOST")
 	s.PublicURL = getenv("PANEL_PUBLIC_URL")
 	s.DiscoveryPort = parseIntOr(getenv("DISCOVERY_PORT"), 21119)
+	if !(s.DiscoveryPort >= 1 && s.DiscoveryPort <= 65535) {
+		s.BadDiscoveryPort, s.DiscoveryPort = getenv("DISCOVERY_PORT"), 21119
+	}
 	s.MDNS = getenv("PANEL_MDNS")
 	return s
 }
@@ -220,7 +226,10 @@ func NewLAN(settings Settings) *LAN {
 // nothing it meets ends the process.
 func (l *LAN) Run(ctx context.Context) {
 	port := l.settings.DiscoveryPort
-	conn, err := l.listen(ctx, net.JoinHostPort("0.0.0.0", strconv.Itoa(int(toUint16(port)))))
+	if l.settings.BadDiscoveryPort != "" {
+		l.logf("WARN: LAN Discovery: DISCOVERY_PORT=%q is no port (1-65535); using %s", l.settings.BadDiscoveryPort, numberString(port))
+	}
+	conn, err := l.listen(ctx, net.JoinHostPort("0.0.0.0", strconv.Itoa(int(port))))
 	if err != nil {
 		if errors.Is(err, syscall.EADDRINUSE) {
 			l.logf("WARN: LAN Discovery: port %s already in use, service disabled", numberString(port))

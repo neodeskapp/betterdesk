@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -202,30 +203,62 @@ func TestProbesAgainstNode(t *testing.T) {
 	}
 }
 
-// TestDiscoveryPortsAgainstNode reads DISCOVERY_PORT values that are no
-// port the way Node did: the number in the log line, and the port the
-// socket gets (the low 16 bits; 0 lets the system pick one).
+// TestDiscoveryPortsAgainstNode reads DISCOVERY_PORT values as Node did:
+// the number it announces, logs and binds. A number outside 1 to 65535
+// is 21119 with a warning, where Node bound another port than it named
+// (the low 16 bits; 0 let the system pick one) (BUGS JB4).
 func TestDiscoveryPortsAgainstNode(t *testing.T) {
+	outside := 0
 	for _, c := range loadLAN(t).Ports {
-		port := FromEnv(func(key string) string {
+		settings := FromEnv(func(key string) string {
 			if key == "DISCOVERY_PORT" {
 				return c.Value
 			}
 			return ""
-		}, Settings{}).DiscoveryPort
-		if want := "  LAN Discovery active on UDP port " + numberString(port); len(c.Logs) != 1 || c.Logs[0] != want {
-			t.Errorf("%q: Node logged %q, Go would log %q", c.Value, c.Logs, want)
+		}, Settings{})
+		raw := strings.Trim(string(c.Port), `"`)
+		if want := "  LAN Discovery active on UDP port " + raw; len(c.Logs) != 1 || c.Logs[0] != want {
+			t.Errorf("%q: Node logged %q, not %q", c.Value, c.Logs, want)
 		}
-		if raw := strings.Trim(string(c.Port), `"`); raw != numberString(port) {
-			t.Errorf("%q: port %s, Node %s", c.Value, numberString(port), raw)
+		want, wantBound, warn := raw, c.Bound, ""
+		if node, err := strconv.ParseFloat(raw, 64); err != nil || !(node >= 1 && node <= 65535) {
+			outside++
+			want, wantBound, warn = "21119", 21119, c.Value
 		}
-		bound := toUint16(port)
-		switch {
-		case bound == 0 && c.Bound == 0:
-			t.Errorf("%q: Node bound no port", c.Value)
-		case bound != 0 && float64(bound) != c.Bound:
-			t.Errorf("%q: binds %d, Node bound %v", c.Value, bound, c.Bound)
+		if got := numberString(settings.DiscoveryPort); got != want {
+			t.Errorf("%q: port %s, want %s (Node %s)", c.Value, got, want, raw)
 		}
+		if bound := float64(int(settings.DiscoveryPort)); bound != wantBound {
+			t.Errorf("%q: binds %v, want %v (Node %v)", c.Value, bound, wantBound, c.Bound)
+		}
+		if settings.BadDiscoveryPort != warn {
+			t.Errorf("%q: the value to warn about is %q, want %q", c.Value, settings.BadDiscoveryPort, warn)
+		}
+	}
+	if outside == 0 {
+		t.Error("no recorded value outside 1 to 65535")
+	}
+}
+
+// TestResponderWarnsAboutAPortOutOfRange logs the DISCOVERY_PORT it did
+// not take and binds 21119.
+func TestResponderWarnsAboutAPortOutOfRange(t *testing.T) {
+	log := &lines{}
+	lan := NewLAN(FromEnv(func(key string) string {
+		if key == "DISCOVERY_PORT" {
+			return "70000"
+		}
+		return ""
+	}, Settings{}))
+	lan.logf = log.logf
+	var bound string
+	lan.listen = func(_ context.Context, address string) (net.PacketConn, error) {
+		bound = address
+		return nil, fmt.Errorf("not in this test")
+	}
+	lan.Run(context.Background())
+	if bound != "0.0.0.0:21119" || !strings.Contains(log.String(), `WARN: LAN Discovery: DISCOVERY_PORT="70000" is no port (1-65535); using 21119`) {
+		t.Errorf("bound %q, log %q", bound, log.String())
 	}
 }
 
@@ -264,17 +297,18 @@ func TestResponderAnswersOverUDP(t *testing.T) {
 		Port:          5000,
 		APIPort:       21121,
 		Version:       "1.0",
-		DiscoveryPort: 65536, // the low 16 bits are 0: any free port
+		DiscoveryPort: 21119,
 	}
 	lan := NewLAN(settings)
 	lan.logf = log.logf
 	bound := make(chan net.PacketConn, 1)
 	listen := lan.listen
 	lan.listen = func(ctx context.Context, address string) (net.PacketConn, error) {
-		if address != "0.0.0.0:0" {
-			t.Errorf("binds %s, want 0.0.0.0:0", address)
+		if address != "0.0.0.0:21119" {
+			t.Errorf("binds %s, want 0.0.0.0:21119", address)
 		}
-		conn, err := listen(ctx, address)
+		// Any free port, so the test does not need 21119
+		conn, err := listen(ctx, "0.0.0.0:0")
 		if err == nil {
 			bound <- conn
 		}
@@ -316,7 +350,7 @@ func TestResponderAnswersOverUDP(t *testing.T) {
 			t.Errorf("reply from port %d, want %d", from.(*net.UDPAddr).Port, port)
 		}
 		want := `{"type":"betterdesk-announce","version":1,"server":{"name":"host-` + fmt.Sprint(i) +
-			`","version":"1.0","port":5000,"apiPort":21121,"protocol":"http","publicKey":"","addresses":[],"discoveryPort":65536,"panelUrl":"http://127.0.0.1:5000"}}`
+			`","version":"1.0","port":5000,"apiPort":21121,"protocol":"http","publicKey":"","addresses":[],"discoveryPort":21119,"panelUrl":"http://127.0.0.1:5000"}}`
 		if string(buf[:n]) != want {
 			t.Errorf("reply %d %s, want %s", i, buf[:n], want)
 		}
@@ -331,7 +365,7 @@ func TestResponderAnswersOverUDP(t *testing.T) {
 	case <-time.After(10 * time.Second):
 		t.Fatal("Run did not return when its context ended")
 	}
-	if got := log.String(); got != "  LAN Discovery active on UDP port 65536" {
+	if got := log.String(); got != "  LAN Discovery active on UDP port 21119" {
 		t.Errorf("log %q", got)
 	}
 }
