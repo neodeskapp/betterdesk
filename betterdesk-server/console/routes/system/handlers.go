@@ -1,7 +1,10 @@
 package system
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
+	"io"
 	"io/fs"
 	"math"
 	"net/http"
@@ -184,7 +187,7 @@ func (h *handlers) logs(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(lines) == 0 {
 		for _, path := range logFiles[server] {
-			content, err := h.o.ReadFile(path)
+			tail, err := h.tail(path, int(limit))
 			if errors.Is(err, fs.ErrNotExist) {
 				continue
 			}
@@ -192,7 +195,7 @@ func (h *handlers) logs(w http.ResponseWriter, r *http.Request) {
 				kit.JSON(w, r, http.StatusInternalServerError, plainError{"Failed to read logs"})
 				return
 			}
-			lines = lastLines(strings.Split(decodeUTF8(content), "\n"), limit)
+			lines = lastLines(tail, limit)
 			break
 		}
 	}
@@ -215,6 +218,46 @@ func logLimit(text string) float64 {
 		return limit
 	}
 	return 50
+}
+
+const (
+	tailBlock = 64 << 10
+	tailMax   = 8 << 20
+)
+
+// tail is the end of a log file split into lines: at least the last
+// limit+1 lines (the first of them may be cut), read backwards in blocks
+// of 64 KiB, at most 8 MiB. Where the read did not reach the start of the
+// file, its first line, which may be cut, is left out.
+func (h *handlers) tail(path string, limit int) ([]string, error) {
+	f, err := h.o.OpenFile(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	size, err := f.Seek(0, io.SeekEnd)
+	if err != nil {
+		return nil, fmt.Errorf("find the end of %s: %w", path, err)
+	}
+	var buf []byte
+	pos := size
+	for pos > 0 && bytes.Count(buf, []byte{'\n'}) <= limit && len(buf) < tailMax {
+		n := min(int64(tailBlock), pos)
+		pos -= n
+		block := make([]byte, n)
+		if _, err := f.Seek(pos, io.SeekStart); err != nil {
+			return nil, fmt.Errorf("seek in %s: %w", path, err)
+		}
+		if _, err := io.ReadFull(f, block); err != nil {
+			return nil, fmt.Errorf("read %s: %w", path, err)
+		}
+		buf = append(block, buf...)
+	}
+	lines := strings.Split(decodeUTF8(buf), "\n")
+	if pos > 0 {
+		lines = lines[1:]
+	}
+	return lines, nil
 }
 
 // lastLines is the last limit lines, limit at least 1.

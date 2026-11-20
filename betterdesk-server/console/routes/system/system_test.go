@@ -1,9 +1,12 @@
 package system
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"io/fs"
 	"math"
 	"os"
@@ -38,6 +41,18 @@ func (s *shell) run(_ context.Context, command string, timeout time.Duration) (s
 
 func noFiles(string) ([]byte, error) { return nil, fs.ErrNotExist }
 
+// opener opens the files read finds, in memory.
+func opener(read func(string) ([]byte, error)) func(string) (io.ReadSeekCloser, error) {
+	return func(path string) (io.ReadSeekCloser, error) {
+		content, err := read(path)
+		if err != nil {
+			return nil, err
+		}
+		n := 0
+		return countingFile{bytes.NewReader(content), &n}, nil
+	}
+}
+
 func fixedProcess() ProcessInfo {
 	return ProcessInfo{PID: 4711, Uptime: 90, HeapUsed: 12, HeapTotal: 20, RSS: 64}
 }
@@ -46,7 +61,7 @@ func linuxSite(t *testing.T, sh *shell, read func(string) ([]byte, error)) *site
 	if read == nil {
 		read = noFiles
 	}
-	return newSite(t, Options{Run: sh.run, Platform: "linux", TotalMemory: func() uint64 { return 8 << 30 }, ReadFile: read, Process: fixedProcess})
+	return newSite(t, Options{Run: sh.run, Platform: "linux", TotalMemory: func() uint64 { return 8 << 30 }, OpenFile: opener(read), Process: fixedProcess})
 }
 
 func TestRoutesInTheOrderOfTheOldFile(t *testing.T) {
@@ -152,7 +167,7 @@ func TestInfoOnWindowsAndElsewhere(t *testing.T) {
 		processCommand: "chrome|120.5|512.3\r\nSystem||0.1\r\nbroken|1\r\n",
 		diskCommand:    "\r\nNode,DeviceID,FreeSpace,Size\r\nPC,C:,1000,5000\r\nPC,D:,,\r\nPC,,5,5\r\n",
 	}}
-	s := newSite(t, Options{Run: sh.run, Platform: "win32", ReadFile: noFiles, Process: fixedProcess})
+	s := newSite(t, Options{Run: sh.run, Platform: "win32", OpenFile: opener(noFiles), Process: fixedProcess})
 	rec := s.call(s.signIn("viewer"), "GET", "/api/system/info", "")
 	want := `{"processes":[{"name":"chrome","cpu":120.5,"mem":512.3},{"name":"System","cpu":0,"mem":0.1}],` +
 		`"disks":[{"mount":"C:","name":"C:","total":5000,"used":4000,"free":1000}],` +
@@ -165,7 +180,7 @@ func TestInfoOnWindowsAndElsewhere(t *testing.T) {
 	}
 
 	other := &shell{}
-	s = newSite(t, Options{Run: other.run, Platform: "darwin", ReadFile: noFiles, Process: fixedProcess})
+	s = newSite(t, Options{Run: other.run, Platform: "darwin", OpenFile: opener(noFiles), Process: fixedProcess})
 	rec = s.call(s.signIn("viewer"), "GET", "/api/system/info", "")
 	if !strings.HasPrefix(rec.Body.String(), `{"processes":[],"disks":[],"node":`) || len(other.ran) != 0 {
 		t.Errorf("another system: %s, commands %q", rec.Body.String(), other.ran)
@@ -272,9 +287,66 @@ func TestLogsFromFiles(t *testing.T) {
 	}
 	// Nothing anywhere, and no journal on other systems
 	other := &shell{}
-	elsewhere := newSite(t, Options{Run: other.run, Platform: "win32", ReadFile: noFiles, Process: fixedProcess})
+	elsewhere := newSite(t, Options{Run: other.run, Platform: "win32", OpenFile: opener(noFiles), Process: fixedProcess})
 	if rec := elsewhere.call(elsewhere.signIn("viewer"), "GET", "/api/logs/recent?source=go", ""); rec.Body.String() != `{"source":"go","lines":[]}` || len(other.ran) != 0 {
 		t.Errorf("windows: %s, commands %q", rec.Body.String(), other.ran)
+	}
+}
+
+// countingFile is a file in memory that counts the bytes read from it.
+type countingFile struct {
+	*bytes.Reader
+	read *int
+}
+
+func (f countingFile) Read(p []byte) (int, error) {
+	n, err := f.Reader.Read(p)
+	*f.read += n
+	return n, err
+}
+
+func (countingFile) Close() error { return nil }
+
+// TestLogsReadOnlyTheEndOfALargeFile: the log route reads the end of a log
+// file, not all of it, and still gives its last lines, also where a line
+// is cut by the blocks it reads (BUGS.md SC13).
+func TestLogsReadOnlyTheEndOfALargeFile(t *testing.T) {
+	var content strings.Builder
+	for i := 0; i < 200000; i++ {
+		fmt.Fprintf(&content, "line %06d %s\n", i, strings.Repeat("ü", 40))
+	}
+	read := 0
+	open := func(path string) (io.ReadSeekCloser, error) {
+		if path != "/opt/rustdesk/betterdesk-server.log" {
+			return nil, fs.ErrNotExist
+		}
+		return countingFile{bytes.NewReader([]byte(content.String())), &read}, nil
+	}
+	s := newSite(t, Options{Run: (&shell{}).run, Platform: "linux", TotalMemory: func() uint64 { return 8 << 30 }, OpenFile: open, Process: fixedProcess})
+	viewer := s.signIn("viewer")
+	// The line end at the end of the file counts as a line, as it did
+	for limit, first := range map[string]int{"3": 199998, "200": 199801, "": 199951} {
+		read = 0
+		rec := s.call(viewer, "GET", "/api/logs/recent?source=go&limit="+limit, "")
+		var got struct{ Lines []string }
+		if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil || rec.Code != 200 {
+			t.Fatalf("limit %q: %d %s", limit, rec.Code, rec.Body.String())
+		}
+		if len(got.Lines) != 200000-first || !strings.HasPrefix(got.Lines[0], fmt.Sprintf("line %06d ", first)) || !strings.HasPrefix(got.Lines[len(got.Lines)-1], "line 199999 ") {
+			t.Errorf("limit %q: %d lines from %q", limit, len(got.Lines), got.Lines[0])
+		}
+		if read > 1<<20 {
+			t.Errorf("limit %q: %d bytes read of a file of %d", limit, read, content.Len())
+		}
+	}
+
+	// A file with a line too long to read: the read stops at 8 MiB and
+	// leaves out the line it cut
+	content.Reset()
+	content.WriteString(strings.Repeat("x", 9<<20) + "\na\nb\n")
+	read = 0
+	if rec := s.call(viewer, "GET", "/api/logs/recent?source=go", ""); rec.Body.String() != `{"source":"go","lines":["a","b"]}` || read > 9<<20 {
+		t.Errorf("a long line: %d bytes read, %.80s", read, rec.Body.String())
 	}
 }
 

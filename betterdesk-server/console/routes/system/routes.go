@@ -9,6 +9,7 @@ package system
 
 import (
 	"context"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -30,9 +31,10 @@ type Options struct {
 	Platform string
 	// TotalMemory is the machine's memory in bytes (os.totalmem()).
 	TotalMemory func() uint64
-	// ReadFile reads a log file. An error that is fs.ErrNotExist means the
-	// file is not there; any other error fails the request.
-	ReadFile func(path string) ([]byte, error)
+	// OpenFile opens a log file for reading. An error that is
+	// fs.ErrNotExist means the file is not there; any other error fails
+	// the request.
+	OpenFile func(path string) (io.ReadSeekCloser, error)
 	// Process describes the console's own process.
 	Process func() ProcessInfo
 	// DatabaseFile is the SQLite file whose size the database statistics
@@ -106,8 +108,8 @@ func newHandlers(log *kit.Logger, db *store.DB, o Options) *handlers {
 	if o.TotalMemory == nil {
 		o.TotalMemory = totalMemory
 	}
-	if o.ReadFile == nil {
-		o.ReadFile = os.ReadFile
+	if o.OpenFile == nil {
+		o.OpenFile = func(path string) (io.ReadSeekCloser, error) { return os.Open(path) }
 	}
 	if o.Process == nil {
 		started := time.Now()
