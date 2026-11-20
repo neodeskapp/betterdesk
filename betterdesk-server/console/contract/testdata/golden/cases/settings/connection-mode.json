@@ -74,15 +74,24 @@
     "json": {
      "data": {
       "allow_shared_nat_initiator": false,
-      "deployment": "docker",
+      "deployment": "defaults",
       "logged_in_only_initiator": false,
       "mode": "p2p_first",
       "operator_only_outbound": false,
       "p2p_fallback_ms": 2000,
-      "runtime": null,
+      "runtime": {
+       "allow_shared_nat_initiator": false,
+       "always_use_relay": false,
+       "logged_in_only_initiator": false,
+       "operator_only_outbound": false,
+       "p2p_fallback_ms": 2000,
+       "p2p_first": true,
+       "relay_servers": "",
+       "same_nat_relay": true
+      },
       "same_nat_relay": true,
-      "source": "docker",
-      "writable": true
+      "source": "defaults",
+      "writable": false
      },
      "success": true
     }
