@@ -262,31 +262,13 @@ func (h *handlers) score(r *http.Request, healthRes, keysRes, auditRes, blocklis
 			{"blocklist", "Blocklist Available", blocklistRes.ok},
 		},
 		Stats: overviewStats{FailedLogins: failedLogins, Bans: bans, ConfigChanges: configChanges, APIKeys: len(keys), OldKeys: oldKeys},
-		TLS:   tlsState{API: tls, WSS: secureSocket(r)},
+		// The browser reached the console over HTTPS, by the connection or
+		// by a proxy the settings trust
+		TLS: tlsState{API: tls, WSS: kit.Secure(r)},
 	}, true
 }
 
 func isNonFinite(f float64) bool { return math.IsNaN(f) || math.IsInf(f, 0) }
-
-// secureSocket reports whether the browser reached the console over
-// HTTPS: by the connection, or by the first X-Forwarded-Proto it sent,
-// whoever set that header.
-func secureSocket(r *http.Request) bool {
-	if kit.Secure(r) {
-		return true
-	}
-	first, _, _ := strings.Cut(strings.Join(r.Header.Values("X-Forwarded-Proto"), ", "), ",")
-	return strings.ToLower(strings.TrimFunc(first, isSpace)) == "https"
-}
-
-// isSpace reports the white space JavaScript's trim removes.
-func isSpace(r rune) bool {
-	switch r {
-	case '\t', '\n', '\v', '\f', '\r', ' ', 0xA0, 0x1680, 0x2028, 0x2029, 0x202F, 0x205F, 0x3000, 0xFEFF:
-		return true
-	}
-	return r >= 0x2000 && r <= 0x200A
-}
 
 type failure struct {
 	Success bool   `json:"success"`

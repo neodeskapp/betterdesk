@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
 )
 
@@ -60,12 +61,26 @@ func TestOverviewThroughTheConsole(t *testing.T) {
 	if !reflect.DeepEqual(calls, []string{"GET /api/audit/events?limit=500", "GET /api/blocklist", "GET /api/health", "GET /api/keys"}) {
 		t.Errorf("the API server was asked %q", calls)
 	}
-	// The browser's own word for the scheme counts, whoever set the header
-	if got := admin.Do("GET", "/api/panel/security-audit/overview", "", "X-Forwarded-Proto", "HTTPS, http"); !strings.HasSuffix(got.Body, `"wss":true}}`) {
-		t.Errorf("with X-Forwarded-Proto https: %s", got.Body)
-	}
-	if got := admin.Do("GET", "/api/panel/security-audit/overview", "", "X-Forwarded-Proto", "http, https"); !strings.HasSuffix(got.Body, `"wss":false}}`) {
-		t.Errorf("with X-Forwarded-Proto http first: %s", got.Body)
+}
+
+// TestOverviewIgnoresAForwardedSchemeItDoesNotTrust: tls.wss follows the
+// scheme the proxy settings give, so a client that sends X-Forwarded-Proto
+// itself cannot make it true (BUGS.md TH14).
+func TestOverviewIgnoresAForwardedSchemeItDoesNotTrust(t *testing.T) {
+	for _, c := range []struct {
+		trust, proto, wss string
+	}{
+		{"", "https", "false"}, {"", "HTTPS, http", "false"},
+		{"true", "https", "true"}, {"true", "http, https", "false"},
+	} {
+		trust, err := httpx.ParseTrustProxy(c.trust)
+		if err != nil {
+			t.Fatal(err)
+		}
+		admin := routetest.New(t, routetest.Options{API: newAPI(), Config: func(cfg *config.Config) { cfg.TrustProxy = trust }}).As("admin")
+		if got := admin.Do("GET", "/api/panel/security-audit/overview", "", "X-Forwarded-Proto", c.proto); !strings.HasSuffix(got.Body, `"wss":`+c.wss+`}}`) {
+			t.Errorf("TRUST_PROXY=%q, X-Forwarded-Proto %q: %s", c.trust, c.proto, got.Body)
+		}
 	}
 }
 

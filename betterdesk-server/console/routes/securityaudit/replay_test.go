@@ -146,6 +146,13 @@ func fixScenarios(bug string, status int, answer func(node string) string, names
 var _ = fixScenarios("TH13", 200, func(string) string { return `{"events":[],"total":0}` },
 	"events, an empty answer", "events, a null answer", "events, a zero answer", "events, a false answer", "events, an empty text answer")
 
+// TH14: tls.wss follows the scheme the proxy settings give; the scenarios
+// trust no proxy, so an X-Forwarded-Proto the client sent itself no
+// longer makes it true.
+var _ = fixScenarios("TH14", 200, func(node string) string { return strings.Replace(node, `"wss":true`, `"wss":false`, 1) },
+	`overview, forwarded proto "https"`, `overview, forwarded proto "HTTPS"`, `overview, forwarded proto " https "`,
+	`overview, forwarded proto "https, http"`, `overview, forwarded proto "https,http"`)
+
 func TestRoutesMatchNode(t *testing.T) {
 	used := map[string]bool{}
 	for _, sc := range loadScenarios(t) {
