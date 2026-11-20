@@ -3,7 +3,10 @@
  "request": {
   "method": "PUT",
   "path": "/api/server-attestation/badge-config",
-  "body": {},
+  "body": {
+   "badgeTitle": "",
+   "tierLabels": {}
+  },
   "notes": [
    "sent as admin in every role's turn"
   ]

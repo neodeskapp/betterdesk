@@ -184,11 +184,20 @@ func TestRoutesAsNodeAnswered(t *testing.T) {
 		}
 	}
 
+	refusedEmpty := 0
 	for i, c := range v.Put {
 		settings := newFakeSettings()
 		settings.failWrite = c.Mode == "failWrite"
 		var logs []logged
 		h := testHandlers(settings, brandOf(t, c.Brand), v.Translations[c.Texts], c.Mode == "failLog", &logs)
+		if withoutTexts(c.Body) {
+			// C6: a body with none of the texts is refused and stores
+			// nothing, where Node stored the default texts
+			refusedEmpty++
+			c.Put = answer{Status: http.StatusBadRequest, Body: `{"success":false,"error":"Invalid badge configuration"}`}
+			c.Writes, c.Logs = nil, nil
+			c.Get = call(testHandlers(newFakeSettings(), brandOf(t, c.Brand), v.Translations[c.Texts], false, &[]logged{}).badgeConfig, http.MethodGet, "")
+		}
 		if got := call(h.saveBadgeConfig, http.MethodPut, c.Body); got != c.Put {
 			differ("put %d %s (%s, %s):\n  node %d %s\n    go %d %s", i, c.Body, c.Texts, c.Mode, c.Put.Status, c.Put.Body, got.Status, got.Body)
 		}
@@ -241,6 +250,9 @@ func TestRoutesAsNodeAnswered(t *testing.T) {
 	if rereads == 0 {
 		differ("no get with a failed read: the fix of SA5 changes no vector")
 	}
+	if refusedEmpty == 0 {
+		differ("no put without texts: the fix of C6 changes no vector")
+	}
 
 	for i, c := range v.Public {
 		settings := newFakeSettings()
@@ -292,4 +304,19 @@ func show(s *string) string {
 	}
 	b, _ := json.Marshal(*s)
 	return string(b)
+}
+
+// withoutTexts reports whether a request body is a JSON object, or none,
+// with neither badgeTitle nor tierLabels.
+func withoutTexts(body string) bool {
+	if strings.TrimSpace(body) == "" {
+		return true
+	}
+	var fields map[string]json.RawMessage
+	if json.Unmarshal([]byte(body), &fields) != nil {
+		return false
+	}
+	_, title := fields["badgeTitle"]
+	_, labels := fields["tierLabels"]
+	return !title && !labels
 }

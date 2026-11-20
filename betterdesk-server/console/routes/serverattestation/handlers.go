@@ -84,11 +84,13 @@ type badgeAnswer struct {
 
 // saveBadgeConfig answers PUT /api/server-attestation/badge-config: it
 // stores the texts of the body, cleaned, and notes the change in the
-// audit log. A body that is a JSON array is refused.
+// audit log. A body that is a JSON array, and one with neither badgeTitle
+// nor tierLabels (which would store the empty default texts), is refused.
 func (h *handlers) saveBadgeConfig(w http.ResponseWriter, r *http.Request) {
 	body, err := requestBody(r)
 	if err == nil {
-		if _, list := body.([]any); list {
+		object, isObject := body.(*branding.Object)
+		if !isObject || (!object.Has("badgeTitle") && !object.Has("tierLabels")) {
 			kit.Fail(w, r, http.StatusBadRequest, "Invalid badge configuration")
 			return
 		}

@@ -212,12 +212,15 @@ func init() {
 		contract.Case{Name: "badge-config-after-refusals", Path: "/api/server-attestation/badge-config", Roles: some},
 		contract.Case{Name: "public-after-refusals", Path: "/api/public/server-attestation", Roles: some},
 
-		// No body is the empty texts; then every role's turn ends with them
+		// No body is refused; the empty texts reset every role's turn
 		contract.Case{
 			Name: "put-no-body", Method: "PUT", Path: "/api/server-attestation/badge-config",
 			RawBody: "", ContentType: "application/json", Roles: contract.Roles("admin"),
 		},
-		contract.Case{Name: "put-reset", Method: "PUT", Path: "/api/server-attestation/badge-config", Body: map[string]any{}, As: "admin"},
+		contract.Case{
+			Name: "put-reset", Method: "PUT", Path: "/api/server-attestation/badge-config",
+			Body: map[string]any{"badgeTitle": "", "tierLabels": map[string]any{}}, As: "admin",
+		},
 		contract.Case{Name: "badge-config-after-reset", Path: "/api/server-attestation/badge-config", Roles: some},
 		contract.Case{Name: "public-after-reset", Path: "/api/public/server-attestation", Roles: some},
 	)
