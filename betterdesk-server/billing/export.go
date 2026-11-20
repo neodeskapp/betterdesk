@@ -41,6 +41,16 @@ type SessionExportRow struct {
 	EndedAt       *time.Time
 }
 
+// csvText makes a text cell safe to open in a spreadsheet: a cell that
+// starts with a character a spreadsheet reads as the start of a formula
+// gets a single quote in front, so it shows as text.
+func csvText(s string) string {
+	if s != "" && strings.ContainsRune("=+-@\t\r", rune(s[0])) {
+		return "'" + s
+	}
+	return s
+}
+
 // WriteReportsCSV writes work reports as CSV bytes.
 func WriteReportsCSV(rows []ReportExportRow) ([]byte, error) {
 	var buf bytes.Buffer
@@ -48,8 +58,9 @@ func WriteReportsCSV(rows []ReportExportRow) ([]byte, error) {
 	_ = w.Write([]string{"session_id", "device_id", "org_id", "operator_id", "summary", "category", "ticket_ref", "billed_minutes", "amount", "currency", "created_at"})
 	for _, r := range rows {
 		_ = w.Write([]string{
-			r.SessionID, r.DeviceID, r.OrgID, r.OperatorID, r.Summary, r.Category, r.TicketRef,
-			strconv.Itoa(r.BilledMin), fmt.Sprintf("%.2f", r.Amount), r.Currency, r.CreatedAt.Format(time.RFC3339),
+			csvText(r.SessionID), csvText(r.DeviceID), csvText(r.OrgID), csvText(r.OperatorID),
+			csvText(r.Summary), csvText(r.Category), csvText(r.TicketRef),
+			strconv.Itoa(r.BilledMin), fmt.Sprintf("%.2f", r.Amount), csvText(r.Currency), r.CreatedAt.Format(time.RFC3339),
 		})
 	}
 	w.Flush()
@@ -67,8 +78,8 @@ func WriteSessionsCSV(rows []SessionExportRow) ([]byte, error) {
 			ended = r.EndedAt.Format(time.RFC3339)
 		}
 		_ = w.Write([]string{
-			r.ID, r.OrgID, r.DeviceID, r.OperatorID, r.Status, r.BillingPhase,
-			strconv.Itoa(r.BilledMinutes), fmt.Sprintf("%.2f", r.AmountOverage), r.Currency,
+			csvText(r.ID), csvText(r.OrgID), csvText(r.DeviceID), csvText(r.OperatorID), csvText(r.Status), csvText(r.BillingPhase),
+			strconv.Itoa(r.BilledMinutes), fmt.Sprintf("%.2f", r.AmountOverage), csvText(r.Currency),
 			r.StartedAt.Format(time.RFC3339), ended,
 		})
 	}
