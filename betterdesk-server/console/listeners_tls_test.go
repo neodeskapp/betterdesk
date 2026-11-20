@@ -10,11 +10,14 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/listen"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
@@ -267,7 +270,20 @@ func TestRedirectAgainstNode(t *testing.T) {
 	if len(f.Scenarios) < 11 {
 		t.Fatalf("only %d redirect scenarios", len(f.Scenarios))
 	}
+	ipv6 := 0
 	for _, scenario := range f.Scenarios {
+		// An IPv6 host goes into the redirect in brackets, where Node put it
+		// in bare (BUGS UM40)
+		if host, _ := listen.RedirectHost(scenario.Env["PANEL_PUBLIC_HOST"], scenario.Env["HOST"]); strings.Contains(host, ":") {
+			ipv6++
+			exchanges := make([]oracleExchange, len(scenario.Exchanges))
+			for i, e := range scenario.Exchanges {
+				raw, _ := base64.StdEncoding.DecodeString(e.Got)
+				e.Got = base64.StdEncoding.EncodeToString(replaceInAnswers(raw, "https://"+host+":", "https://["+host+"]:"))
+				exchanges[i] = e
+			}
+			scenario.Exchanges = exchanges
+		}
 		t.Run(scenario.Name, func(t *testing.T) {
 			g, err := newGoStack(t, db, scenario, certs, nil)
 			if err != nil {
@@ -286,6 +302,34 @@ func TestRedirectAgainstNode(t *testing.T) {
 			}
 		})
 	}
+	if ipv6 == 0 {
+		t.Error("no redirect scenario with an IPv6 host")
+	}
+}
+
+var contentLength = regexp.MustCompile(`(?mi)^Content-Length: *([0-9]+)\r$`)
+
+// replaceInAnswers replaces from with to in the head and the body of each
+// HTTP answer in raw, with the Content-Length of the new body.
+func replaceInAnswers(raw []byte, from, to string) []byte {
+	var out []byte
+	for len(raw) > 0 {
+		end := bytes.Index(raw, []byte("\r\n\r\n"))
+		if end < 0 {
+			return append(out, raw...)
+		}
+		head, rest := string(raw[:end+4]), raw[end+4:]
+		n := 0
+		if m := contentLength.FindStringSubmatch(head); m != nil {
+			n, _ = strconv.Atoi(m[1])
+		}
+		n = min(n, len(rest))
+		body := bytes.ReplaceAll(rest[:n], []byte(from), []byte(to))
+		head = contentLength.ReplaceAllString(strings.ReplaceAll(head, from, to), "Content-Length: "+strconv.Itoa(len(body))+"\r")
+		out = append(append(out, head...), body...)
+		raw = rest[n:]
+	}
+	return out
 }
 
 func TestConsoleHTTPSAgainstNode(t *testing.T) {

@@ -71,17 +71,30 @@ func isASCIIText(s string) bool {
 	return true
 }
 
+// bracketed is the address Node built for an IPv6 host with the host put
+// in brackets and without its zone, as the redirect writes it: Node put
+// the address in as it was, which no browser can follow (BUGS UM40).
+func bracketed(nodeURL, host string) (string, bool) {
+	normal, ok := normalizeConfiguredHost(host)
+	if !ok || ssrfguard.IsIP(normal) != 6 {
+		return nodeURL, false
+	}
+	address, _, _ := strings.Cut(normal, "%")
+	return strings.Replace(nodeURL, "https://"+normal, "https://["+address+"]", 1), true
+}
+
 // TestRedirectHostMatchesNode replays lib/redirectHost.js: the host each
 // configured value names, the host chosen from a configured value and a
 // listen address, and the address built from a host, a port and a request
-// target. The only differences are URLs with international host names,
-// which name no host here.
+// target. The differences are URLs with international host names, which
+// name no host here, and IPv6 hosts, which go into the address in
+// brackets.
 func TestRedirectHostMatchesNode(t *testing.T) {
 	rec, build := loadRedirectRecording(t)
 	if len(rec.Normalize) < 4000 || len(rec.Resolve) < 1000 || len(build) < 3000 {
 		t.Fatalf("vectors: %d, %d, %d", len(rec.Normalize), len(rec.Resolve), len(build))
 	}
-	idna, failed := 0, 0
+	idna, ipv6, zones, failed := 0, 0, 0, 0
 	for _, c := range rec.Normalize {
 		raw := ""
 		if c[0] != nil {
@@ -115,15 +128,25 @@ func TestRedirectHostMatchesNode(t *testing.T) {
 		t.Errorf("RedirectHost(%q, %q) = %q %q, Node %q %q", c[0], c[1], host, source, c[2], c[3])
 	}
 	for _, c := range build {
-		if got := SafeRedirectURL(c.host, c.port, c.target); got != c.want {
+		want, isIPv6 := bracketed(c.want, c.host)
+		if isIPv6 {
+			ipv6++
+			if normal, _ := normalizeConfiguredHost(c.host); strings.Contains(normal, "%") {
+				zones++
+			}
+		}
+		if got := SafeRedirectURL(c.host, c.port, c.target); got != want {
 			failed++
-			t.Errorf("SafeRedirectURL(%q, %d, %q) = %q, Node %q", c.host, c.port, c.target, got, c.want)
+			t.Errorf("SafeRedirectURL(%q, %d, %q) = %q, want %q (Node %q)", c.host, c.port, c.target, got, want, c.want)
 		}
 		if failed > 20 {
 			t.FailNow()
 		}
 	}
-	t.Logf("%d normalize, %d resolve, %d build vectors; %d differ for international host names", len(rec.Normalize), len(rec.Resolve), len(build), idna)
+	if ipv6 < 100 || zones == 0 {
+		t.Errorf("only %d build vectors with an IPv6 host, %d with a zone", ipv6, zones)
+	}
+	t.Logf("%d normalize, %d resolve, %d build vectors; %d differ for international host names, %d for IPv6 hosts", len(rec.Normalize), len(rec.Resolve), len(build), idna, ipv6)
 }
 
 // TestRedirectIgnoresTheRequestHost: the Host header, an absolute request
@@ -200,6 +223,10 @@ func FuzzRedirectHost(f *testing.F) {
 		if !ok {
 			normal = "localhost"
 		}
+		if ssrfguard.IsIP(normal) == 6 {
+			address, _, _ := strings.Cut(normal, "%")
+			normal = "[" + address + "]"
+		}
 		origin := "https://" + normal
 		if port > 0 && port != 443 {
 			origin += ":" + strconv.Itoa(port)
@@ -228,7 +255,7 @@ func FuzzRedirectHost(f *testing.F) {
 		// What a browser reads as the host: up to the first "/" after
 		// the scheme (the path always starts with one)
 		rest := strings.TrimPrefix(location, "https://")
-		if authority, _, _ := strings.Cut(rest, "/"); !strings.Contains(normal, ":") && authority != strings.TrimPrefix(origin, "https://") {
+		if authority, _, _ := strings.Cut(rest, "/"); authority != strings.TrimPrefix(origin, "https://") {
 			t.Fatalf("Location %q names %q, want %q", location, authority, strings.TrimPrefix(origin, "https://"))
 		}
 	})

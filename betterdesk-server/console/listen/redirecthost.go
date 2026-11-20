@@ -73,9 +73,10 @@ func RedirectHost(configured, listenHost string) (host, source string) {
 
 // SafeRedirectURL is the address of the redirect (buildSafeRedirectUrl):
 // https://, the host as normalizeConfiguredHost gives it ("localhost"
-// when it gives none), the HTTPS port unless it is 443 or not above 0,
-// and the request target when it is a path that starts with one "/"; any
-// other target (an absolute URL, "//host/...", "*") becomes "/".
+// when it gives none; an IPv6 address in brackets and without its zone,
+// which browsers take in no URL), the HTTPS port unless it is 443 or not
+// above 0, and the request target when it is a path that starts with one
+// "/"; any other target (an absolute URL, "//host/...", "*") becomes "/".
 func SafeRedirectURL(host string, httpsPort int, target string) string {
 	return redirectOrigin(host, httpsPort) + samePath(target)
 }
@@ -84,6 +85,10 @@ func redirectOrigin(host string, httpsPort int) string {
 	safe, ok := normalizeConfiguredHost(host)
 	if !ok {
 		safe = "localhost"
+	}
+	if ssrfguard.IsIP(safe) == 6 {
+		address, _, _ := strings.Cut(safe, "%")
+		safe = "[" + address + "]"
 	}
 	suffix := ""
 	if httpsPort > 0 && httpsPort != 443 {
