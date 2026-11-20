@@ -12,10 +12,6 @@ import (
 	"github.com/unitronix/betterdesk-server/console/ws"
 )
 
-// writeQueue is how many messages may wait for the TCP connection. The
-// old service buffered without a limit; here the socket's reader waits.
-const writeQueue = 64
-
 // bridge is one browser socket and its TCP connection.
 type bridge struct {
 	s                *Service
@@ -48,7 +44,7 @@ type bridge struct {
 	dialed    chan struct{}
 	connected chan struct{}
 	done      chan struct{}
-	writes    chan []byte
+	writes    *outQueue
 	wg        sync.WaitGroup
 
 	mu             sync.Mutex
@@ -83,7 +79,7 @@ func (s *Service) bridge(conn *ws.Conn, ip, label, target string, messageTranspo
 		background: context.WithoutCancel(conn.Context()), cancel: cancel,
 		unregister: func() {},
 		dialed:     make(chan struct{}), connected: make(chan struct{}), done: make(chan struct{}),
-		writes: make(chan []byte, writeQueue),
+		writes: newOutQueue(),
 	}
 	if messageTransport {
 		b.tcpDecoder = &frameDecoder{}
@@ -193,10 +189,7 @@ func (b *bridge) onMessage(data []byte) {
 		}
 		payload = framed
 	}
-	select {
-	case b.writes <- payload:
-	case <-b.done:
-	}
+	b.writes.push(payload)
 }
 
 // readTargets runs the target checks on a message of a guest or of an
@@ -374,16 +367,15 @@ func (b *bridge) writeTCP() {
 	tcp := b.tcp
 	b.mu.Unlock()
 	for {
-		select {
-		case p := <-b.writes:
-			if _, err := tcp.Write(p); err != nil {
-				if !b.isCleaned() {
-					logf("ERROR: WS proxy [%s]: TCP error (%s): %s", b.label, b.target, err.Error())
-					b.cleanup("tcp-error", err.Error())
-				}
-				return
+		p, ok := b.writes.pop()
+		if !ok {
+			return
+		}
+		if _, err := tcp.Write(p); err != nil {
+			if !b.isCleaned() {
+				logf("ERROR: WS proxy [%s]: TCP error (%s): %s", b.label, b.target, err.Error())
+				b.cleanup("tcp-error", err.Error())
 			}
-		case <-b.done:
 			return
 		}
 	}
@@ -521,6 +513,7 @@ func (b *bridge) cleanup(cause, detail string) {
 		}()
 	}
 	close(b.done)
+	b.writes.close()
 	b.cancel()
 	if tcp != nil {
 		_ = tcp.Close()
