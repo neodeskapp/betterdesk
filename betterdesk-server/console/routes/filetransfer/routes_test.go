@@ -119,7 +119,7 @@ func TestVectors(t *testing.T) {
 	}
 	w := newWorld(t)
 	etags := map[string]string{}
-	failures, unstored, noPath := 0, 0, 0
+	failures, unstored, noPath, refusedDownloads := 0, 0, 0, 0
 	for i, v := range vectors {
 		switch {
 		case v.Feed != nil:
@@ -152,6 +152,9 @@ func TestVectors(t *testing.T) {
 			req.Headers = headers
 		}
 		rec, _ := w.Do(req, nil)
+		if refusedDownload(&v) {
+			refusedDownloads++
+		}
 		want, _ := base64.StdEncoding.DecodeString(v.Body)
 		got := rec.Body.Bytes()
 		isJSON := strings.HasPrefix(v.Headers["content-type"], "application/json")
@@ -239,6 +242,35 @@ func TestVectors(t *testing.T) {
 	if noPath == 0 {
 		t.Error("no answer names the path of a file: the fix of FT6 changes no vector")
 	}
+	if refusedDownloads == 0 {
+		t.Error("no download fails after its file was found: the fix of FT7 changes no vector")
+	}
+}
+
+// downloadFailed is the body Node answered a download with that failed
+// after its file was found.
+const downloadFailed = `{"error":"Download failed"}`
+
+// refusedDownload is the fix of FT7 on a vector: a download whose range
+// lies beyond the file answers 416, one whose condition fails 412, as JSON
+// without the file's type and name, where Node answered 500 under them.
+func refusedDownload(v *vector) bool {
+	body, _ := base64.StdEncoding.DecodeString(v.Body)
+	if v.Status != http.StatusInternalServerError || string(body) != downloadFailed || v.Headers["content-disposition"] == "" {
+		return false
+	}
+	v.Status = http.StatusPreconditionFailed
+	if _, ranged := v.Request.Headers["Range"]; ranged {
+		v.Status = http.StatusRequestedRangeNotSatisfiable
+	}
+	headers := map[string]string{}
+	for name, value := range v.Headers {
+		headers[name] = value
+	}
+	headers["content-type"] = "application/json; charset=utf-8"
+	delete(headers, "content-disposition")
+	v.Headers = headers
+	return true
 }
 
 // nodeTempPath is the path of a transfer's file in a record of the Node

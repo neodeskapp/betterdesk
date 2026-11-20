@@ -12,7 +12,6 @@ package filetransfer
 import (
 	"net/http"
 	"path/filepath"
-	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/filetransfer"
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -139,8 +138,8 @@ func (h *handlers) cancel(w http.ResponseWriter, r *http.Request) {
 
 // download answers GET /transfers/{id}/download with the file of a
 // completed transfer, as an attachment under the transfer's file name. A
-// request for a part of the file that cannot be served, and a file that
-// went away meanwhile, end as 500 "Download failed".
+// part of the file beyond its end is 416, a failed condition 412, and a
+// file that went away meanwhile 500, each {"error":"Download failed"}.
 func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	transfer := h.transfers.GetTransfer(id)
@@ -157,22 +156,22 @@ func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusNotFound, "File not found on server")
 		return
 	}
-	// The error goes out as JSON under the file's own type when the file
-	// was found before the request failed: the type is set by then, and
-	// only its charset is put to utf-8.
-	failed := func(w http.ResponseWriter, r *http.Request) {
-		if fileType := w.Header().Get("Content-Type"); fileType != "" {
-			media, _, _ := strings.Cut(fileType, ";")
-			w.Header().Set("Content-Type", strings.TrimSpace(media)+"; charset=utf-8")
-		}
-		fail(w, r, http.StatusInternalServerError, "Download failed")
+	// A request the file server refuses gets its status (416 for a range
+	// beyond the file, 412 for a condition that fails, 500 for a disk
+	// error) and the JSON error without the file's type and name
+	failed := func(w http.ResponseWriter, r *http.Request, status int) {
+		w.Header().Del("Content-Type")
+		w.Header().Del("Content-Disposition")
+		fail(w, r, status, "Download failed")
 	}
 	files := httpx.NewStatic(filepath.Dir(path), httpx.StaticOptions{
 		NoFallthrough: true,
 		NoIndex:       true,
 		NoRedirect:    true,
-		OnError:       func(w http.ResponseWriter, r *http.Request, _ int, _ error) { failed(w, r) },
+		OnError:       func(w http.ResponseWriter, r *http.Request, status int, _ error) { failed(w, r, status) },
 	})
 	w.Header().Set("Content-Disposition", `attachment; filename="`+transfer.Filename+`"`)
-	files.ServeName(w, r, filepath.Base(path), http.HandlerFunc(failed))
+	files.ServeName(w, r, filepath.Base(path), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		failed(w, r, http.StatusInternalServerError)
+	}))
 }
