@@ -220,7 +220,7 @@ func init() {
 		contract.Case{
 			Name: "contracts-query-without-text", Path: "/api/panel/billing/contracts", Query: url.Values{"status[toString]": {"x"}},
 			Volatile: []string{"contracts[*].current_period_ym"},
-			Roles: few,
+			Roles:    few,
 		},
 		contract.Case{
 			Name: "contract-create", Method: "POST", Path: "/api/panel/billing/contracts",
