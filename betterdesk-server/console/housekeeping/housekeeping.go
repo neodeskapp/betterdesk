@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/unitronix/betterdesk-server/logging"
 )
 
 // IntegrationInterval is how often the old metrics, client audit rows and
@@ -75,11 +76,18 @@ type Options struct {
 	StatusSyncInterval string
 	// HeartbeatStaleThreshold is HEARTBEAT_STALE_THRESHOLD as written:
 	// the seconds after which a device counts as gone, 90 when it is no
-	// number or zero.
+	// number, zero, or outside 1 second to 30 days.
 	HeartbeatStaleThreshold string
 	// NewTicker makes the clock of the jobs; time.NewTicker when nil.
 	NewTicker func(d time.Duration) (<-chan time.Time, func())
+	// Logf gets the warnings about settings out of range; nil writes to
+	// the console's log.
+	Logf func(format string, args ...any)
 }
+
+// The longest stale threshold the sweep takes: a larger one (or one below
+// a second) sets every device offline or none, or fails on PostgreSQL.
+const maxStaleThreshold = 30 * 24 * 3600
 
 // Jobs are the two periodic clean-ups.
 type Jobs struct {
@@ -89,7 +97,8 @@ type Jobs struct {
 }
 
 // New returns the jobs, with the intervals read the way the old console
-// read them (parseInt(value, 10) || default).
+// read them (parseInt(value, 10) || default), and a value out of range
+// replaced by the default with a warning.
 func New(opts Options) *Jobs {
 	if opts.NewTicker == nil {
 		opts.NewTicker = func(d time.Duration) (<-chan time.Time, func()) {
@@ -97,11 +106,19 @@ func New(opts Options) *Jobs {
 			return t.C, t.Stop
 		}
 	}
+	if opts.Logf == nil {
+		opts.Logf = func(format string, args ...any) { logging.Logf("console", format, args...) }
+	}
 	seconds := parseIntOr(opts.StatusSyncInterval, 15)
+	threshold := parseIntOr(opts.HeartbeatStaleThreshold, 90)
+	if !(threshold >= 1 && threshold <= maxStaleThreshold) {
+		opts.Logf("WARN: HEARTBEAT_STALE_THRESHOLD=%q is outside 1 to %d seconds; using 90", opts.HeartbeatStaleThreshold, maxStaleThreshold)
+		threshold = 90
+	}
 	return &Jobs{
 		opts:      opts,
 		interval:  timerDelay(seconds * 1000),
-		threshold: parseIntOr(opts.HeartbeatStaleThreshold, 90),
+		threshold: threshold,
 	}
 }
 

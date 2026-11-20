@@ -346,25 +346,40 @@ func TestStalePeersAgainstNode(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		rec := load(t, db.Dialect())
 		groups := devicegroups.New(devicegroups.Options{DB: db})
+		ninety := -1
+		for i, c := range rec.Stale {
+			if c.Value == "90" {
+				ninety = i
+			}
+		}
+		if ninety < 0 {
+			t.Fatal("the recording has no sweep with the threshold 90")
+		}
 		for _, c := range rec.Stale {
-			jobs := housekeeping.New(housekeeping.Options{HeartbeatStaleThreshold: c.Value})
+			jobs := housekeeping.New(housekeeping.Options{HeartbeatStaleThreshold: c.Value, Logf: func(string, ...any) {}})
 			want, err := strconv.ParseFloat(c.Threshold, 64)
 			if err != nil {
 				t.Fatalf("threshold %q: %v", c.Threshold, err)
+			}
+			// A threshold outside 1 second to 30 days is 90, and the sweep
+			// goes as Node's with 90 went (BUGS JB9)
+			outcome := c
+			if !(want >= 1 && want <= 30*24*3600) {
+				want, outcome = 90, rec.Stale[ninety]
 			}
 			if got := jobs.StaleThreshold(); got != want {
 				t.Errorf("threshold of %q = %v, want %v", c.Value, got, want)
 			}
 			run(t, db, c.Seed)
-			wantRows, wantChanges := staleAtThisHour(t, db, recorded(t, c.Rows), c.Changes, jobs.StaleThreshold())
+			wantRows, wantChanges := staleAtThisHour(t, db, recorded(t, outcome.Rows), outcome.Changes, jobs.StaleThreshold())
 			changes, err := groups.CleanupStaleOnlinePeers(context.Background(), jobs.StaleThreshold())
 			switch {
-			case c.Error != nil && err == nil:
-				t.Errorf("threshold %q: no error, Node failed with %s", c.Value, *c.Error)
-			case c.Error == nil && err != nil:
+			case outcome.Error != nil && err == nil:
+				t.Errorf("threshold %q: no error, Node failed with %s", c.Value, *outcome.Error)
+			case outcome.Error == nil && err != nil:
 				t.Errorf("threshold %q: %v", c.Value, err)
 			case wantChanges != nil && changes != *wantChanges:
-				t.Errorf("threshold %q: %d rows changed, want %d (Node %d)", c.Value, changes, *wantChanges, *c.Changes)
+				t.Errorf("threshold %q: %d rows changed, want %d (Node %d)", c.Value, changes, *wantChanges, *outcome.Changes)
 			}
 			if got, want := strings.Join(rows(t, db, "SELECT id, status_online FROM peer ORDER BY id"), " "), strings.Join(wantRows, " "); got != want {
 				t.Errorf("threshold %q: devices afterwards\n got %s\nwant %s", c.Value, got, want)
@@ -422,13 +437,37 @@ func TestSettingsAgainstNode(t *testing.T) {
 		t.Fatalf("recording has %d settings", len(rec.Settings))
 	}
 	for _, c := range rec.Settings {
-		jobs := housekeeping.New(housekeeping.Options{StatusSyncInterval: c.Value, HeartbeatStaleThreshold: c.Value})
+		jobs := housekeeping.New(housekeeping.Options{StatusSyncInterval: c.Value, HeartbeatStaleThreshold: c.Value, Logf: func(string, ...any) {}})
 		if got, want := jobs.StatusSyncInterval(), time.Duration(c.DelayMs*float64(time.Millisecond)); got != want {
 			t.Errorf("interval of %q = %v, want %v", c.Value, got, want)
 		}
 		want, _ := strconv.ParseFloat(c.Threshold, 64)
+		// Outside 1 second to 30 days the threshold is 90 (BUGS JB9)
+		if !(want >= 1 && want <= 30*24*3600) {
+			want = 90
+		}
 		if got := jobs.StaleThreshold(); got != want {
 			t.Errorf("threshold of %q = %v, want %v", c.Value, got, want)
+		}
+	}
+}
+
+// TestStaleThresholdOutOfRange: a HEARTBEAT_STALE_THRESHOLD outside 1
+// second to 30 days is 90, with a warning that names the value.
+func TestStaleThresholdOutOfRange(t *testing.T) {
+	for value, want := range map[string]float64{
+		"-5": 90, "99999999999": 90, "2592001": 90, "1e400": 1, "1": 1, "2592000": 2592000, "45": 45, "": 90, "abc": 90,
+	} {
+		var logged []string
+		jobs := housekeeping.New(housekeeping.Options{HeartbeatStaleThreshold: value, Logf: func(format string, args ...any) {
+			logged = append(logged, fmt.Sprintf(format, args...))
+		}})
+		if got := jobs.StaleThreshold(); got != want {
+			t.Errorf("HEARTBEAT_STALE_THRESHOLD=%q: %v, want %v", value, got, want)
+		}
+		warned := len(logged) == 1 && strings.Contains(logged[0], "HEARTBEAT_STALE_THRESHOLD") && strings.Contains(logged[0], strconv.Quote(value))
+		if outOfRange := value == "-5" || value == "99999999999" || value == "2592001"; warned != outOfRange {
+			t.Errorf("HEARTBEAT_STALE_THRESHOLD=%q: logged %q", value, logged)
 		}
 	}
 }
