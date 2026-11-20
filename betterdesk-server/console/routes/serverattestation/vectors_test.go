@@ -209,6 +209,7 @@ func TestRoutesAsNodeAnswered(t *testing.T) {
 		}
 	}
 
+	rereads := 0
 	for i, c := range v.Get {
 		settings := newFakeSettings()
 		settings.rows[attestation.BadgeConfigKey] = c.Config
@@ -221,9 +222,24 @@ func TestRoutesAsNodeAnswered(t *testing.T) {
 		changed := `{"badgeTitle":"changed behind its back"}`
 		settings.rows[attestation.BadgeConfigKey] = &changed
 		settings.failing = map[string]bool{}
-		if got := call(h.badgeConfig, http.MethodGet, ""); got != c.Second {
-			differ("second get %d %s:\n  node %s\n    go %s", i, show(c.Config), c.Second.Body, got.Body)
+		second := c.Second
+		if c.Failing {
+			// SA5: the defaults of a failed read are not kept, the second
+			// request reads the row as a console that starts with it does
+			rereads++
+			fresh := newFakeSettings()
+			fresh.rows[attestation.BadgeConfigKey] = &changed
+			second = call(testHandlers(fresh, brandOf(t, c.Brand), v.Translations[c.Texts], false, &logs).badgeConfig, http.MethodGet, "")
+			if second == c.Second {
+				differ("second get %d after a failed read answers as Node did", i)
+			}
 		}
+		if got := call(h.badgeConfig, http.MethodGet, ""); got != second {
+			differ("second get %d %s:\n  node %s\n    go %s", i, show(c.Config), second.Body, got.Body)
+		}
+	}
+	if rereads == 0 {
+		differ("no get with a failed read: the fix of SA5 changes no vector")
 	}
 
 	for i, c := range v.Public {

@@ -287,7 +287,8 @@ func publicBadge(result any, config BadgeConfig, t Translate, brandName any) *br
 // settings at every call; a setting that cannot be read counts as
 // missing. brandName is the console's name from the branding.
 func SignInBadge(ctx context.Context, settings Settings, brandName string, t Translate) *branding.Object {
-	return signInBadge(LastResult(ctx, settings), readBadgeConfig(ctx, settings), brandName, t)
+	config, _ := readBadgeConfig(ctx, settings)
+	return signInBadge(LastResult(ctx, settings), config, brandName, t)
 }
 
 // signInBadge picks the sign-in page's fields from the public badge.
@@ -320,21 +321,22 @@ func defaultBadgeConfig() BadgeConfig { return BadgeConfig{} }
 
 // readBadgeConfig reads the stored badge texts (getBadgeConfig without
 // its cache). A row that cannot be read, or texts that cannot be made
-// text, give the default texts.
-func readBadgeConfig(ctx context.Context, settings Settings) BadgeConfig {
+// text, give the default texts; read is false when the row could not be
+// read.
+func readBadgeConfig(ctx context.Context, settings Settings) (c BadgeConfig, read bool) {
 	raw, found, err := settings.Get(ctx, BadgeConfigKey)
 	if err != nil {
-		return defaultBadgeConfig()
+		return defaultBadgeConfig(), false
 	}
 	var input any
 	if found {
 		input = raw
 	}
-	c, err := NormalizeBadgeConfig(input)
+	c, err = NormalizeBadgeConfig(input)
 	if err != nil {
-		return defaultBadgeConfig()
+		return defaultBadgeConfig(), true
 	}
-	return c
+	return c, true
 }
 
 // LastResult is the stored result of the last capacity test

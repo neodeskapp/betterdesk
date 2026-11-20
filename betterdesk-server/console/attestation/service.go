@@ -221,7 +221,8 @@ func (s *Service) RequestAbort() bool {
 
 // BadgeConfig is the badge texts (getBadgeConfig). The stored row is read
 // once; later calls answer what was read or saved last. A row that cannot
-// be read gives the default texts, and they are kept as well.
+// be read gives the default texts for that call, and the next call reads
+// the row again.
 func (s *Service) BadgeConfig(ctx context.Context) BadgeConfig {
 	s.mu.Lock()
 	cached := s.badge
@@ -229,10 +230,12 @@ func (s *Service) BadgeConfig(ctx context.Context) BadgeConfig {
 	if cached != nil {
 		return *cached
 	}
-	c := readBadgeConfig(ctx, s.opts.Settings)
-	s.mu.Lock()
-	s.badge = &c
-	s.mu.Unlock()
+	c, read := readBadgeConfig(ctx, s.opts.Settings)
+	if read {
+		s.mu.Lock()
+		s.badge = &c
+		s.mu.Unlock()
+	}
 	return c
 }
 

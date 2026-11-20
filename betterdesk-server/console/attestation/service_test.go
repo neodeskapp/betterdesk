@@ -70,7 +70,8 @@ func TestServeEndsARunWhenTheConsoleStops(t *testing.T) {
 }
 
 // A failed save keeps the texts read before; a read that fails gives the
-// defaults, and they are kept until a save.
+// defaults for that request, and the next one reads the row again (BUGS
+// SA5).
 func TestBadgeConfigIsReadOnce(t *testing.T) {
 	ctx := context.Background()
 	settings := newMapSettings()
@@ -108,8 +109,8 @@ func TestBadgeConfigIsReadOnce(t *testing.T) {
 		t.Errorf("unreadable texts %+v", got)
 	}
 	failing.failing[BadgeConfigKey] = false
-	if got := s.BadgeConfig(ctx); got != (BadgeConfig{}) {
-		t.Errorf("texts after the failed read %+v", got)
+	if got := s.BadgeConfig(ctx).BadgeTitle; got != "First" {
+		t.Errorf("title after the failed read %q", got)
 	}
 }
 
