@@ -344,6 +344,32 @@ func httpsMode(o *Options) {
 	o.TrustProxy = trust
 }
 
+// In HTTPS mode without a usable certificate (Secure off) the cookie keeps
+// its HTTPS name; it is Secure on a request that came over HTTPS through a
+// trusted proxy, and not on one over plain HTTP, which then keeps its
+// session (BUGS LS3).
+func TestFallbackCookieIsSecureOnlyOverHTTPS(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		f := newFixture(t, db, func(o *Options) {
+			httpsMode(o)
+			o.Secure = false
+		})
+		proxied := get("/")
+		proxied.RemoteAddr = "127.0.0.1:50000"
+		proxied.Header.Set("X-Forwarded-Proto", "https")
+		for _, c := range []struct {
+			name   string
+			r      *http.Request
+			secure bool
+		}{{"plain", get("/"), false}, {"through a proxy over HTTPS", proxied, true}} {
+			cookies := setCookies(f.serve(c.r, write("x", 1)))
+			if len(cookies) != 1 || !strings.HasPrefix(cookies[0], "betterdesk.sid=") || strings.HasSuffix(cookies[0], "; HttpOnly; Secure; SameSite=Lax") != c.secure {
+				t.Errorf("%s: Set-Cookie %q, Secure %v", c.name, cookies, c.secure)
+			}
+		}
+	})
+}
+
 func TestSecureCookieOverPlainHTTP(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		f := newFixture(t, db, httpsMode)

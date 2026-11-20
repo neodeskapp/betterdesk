@@ -99,7 +99,7 @@ func (m *Manager) newSession(r *http.Request) (*Session, error) {
 func (s *Session) reset() {
 	s.data = newFields()
 	s.data.set(cookieKey, nil)
-	s.cookie = newCookieState(s.m.now(), s.m.policy.IdleTimeoutMs, s.m.secure)
+	s.cookie = newCookieState(s.m.now(), s.m.policy.IdleTimeoutMs, s.m.secureCookie(s.req))
 }
 
 // restore fills the session from stored JSON.

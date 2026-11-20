@@ -35,7 +35,8 @@ type Options struct {
 	HTTPS bool
 	// Secure marks the cookie Secure: set it when the console serves
 	// HTTPS. In HTTPS mode without a usable certificate the console serves
-	// plain HTTP, and the cookie keeps its HTTPS name without Secure.
+	// plain HTTP: the cookie keeps its HTTPS name and is Secure only for a
+	// request that came over HTTPS (through a proxy TrustProxy trusts).
 	Secure bool
 	// Policy holds the lifetimes and the per-account limit (see
 	// PolicyFromEnv). The zero value is the default policy.
@@ -60,6 +61,7 @@ type Options struct {
 type Manager struct {
 	table         *table
 	secret        string
+	https         bool
 	secure        bool
 	cookieName    string
 	policy        Policy
@@ -82,6 +84,7 @@ func New(ctx context.Context, opts Options) (*Manager, error) {
 	}
 	m := &Manager{
 		secret:        opts.Secret,
+		https:         opts.HTTPS,
 		secure:        opts.Secure,
 		cookieName:    cookieNameHTTP,
 		policy:        opts.Policy.normalized(),
@@ -225,6 +228,13 @@ func (m *Manager) cookieHeader(s *Session) string {
 
 func clearCookie(w http.ResponseWriter, name string) {
 	cookie.Clear(w, name, cookie.Attributes{})
+}
+
+// secureCookie reports whether a new session's cookie is Secure: when the
+// console serves HTTPS, and in HTTPS mode without a certificate when the
+// request came over HTTPS.
+func (m *Manager) secureCookie(r *http.Request) bool {
+	return m.secure || m.https && r != nil && m.secureRequest(r)
 }
 
 // secureRequest reports whether the request came over HTTPS: on a TLS
