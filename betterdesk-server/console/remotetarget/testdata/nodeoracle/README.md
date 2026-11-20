@@ -34,9 +34,8 @@ and SHA-256.
 
 `TestNodeScenarios` replays every step against a made-up API handler in Go
 that behaves the same, reached in process as the console reaches the API
-server. Two differences are allowed there: the tunnel's handshake has no
-X-API-Key (the in-process handler carries the console's identity), and a session whose
-user object has no name sends the name at the session's top in X-Username
-(the Go session reads it there), where Node sent `user#<id>`.
+server. The tunnel's handshake has no X-API-Key (the in-process handler
+carries the console's identity) and no X-Username or X-Role (BUGS RM11);
+the steps a bug fix changed are in the test's list of fixes.
 
     tools/dev.sh "cd betterdesk-server/console/remotetarget/testdata && node nodeoracle/gateway.js"

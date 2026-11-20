@@ -302,6 +302,118 @@ func canonical(raw string) string {
 	return string(b)
 }
 
+// withoutAccountHeaders is a tunnel handshake Node recorded without the
+// account's X-Username and X-Role, which the gateway no longer sends
+// (RM11; the API server reads neither, BUGS G7).
+func withoutAccountHeaders(t *testing.T, raw json.RawMessage) json.RawMessage {
+	t.Helper()
+	var hs map[string]any
+	if err := json.Unmarshal(raw, &hs); err != nil {
+		t.Fatal(err)
+	}
+	if headers, ok := hs["headers"].(map[string]any); ok {
+		delete(headers, "x-username")
+		delete(headers, "x-role")
+	}
+	out, err := json.Marshal(hs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+// fix is a step of the recording that a bug fix changed on purpose: what
+// the browser sockets and the tunnels see there since the fix, as the
+// oracle would have noted it.
+type fix struct {
+	bug, scenario string
+	step          int
+	events        string
+}
+
+// head101 is the answer to a handshake of the oracle's client.
+const head101 = `"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"`
+
+// tunnelOf is the handshake of a tunnel to rt_echo-0001 as the oracle
+// noted it.
+func tunnelOf(socket string) string {
+	return `{"socket":"` + socket + `","handshake":{"method":"GET","url":"/api/remote-targets/rt_echo-0001/tunnel","headers":{"sec-websocket-version":"13"}}}`
+}
+
+// fixes are the steps the bug fixes changed. The tests of each fix pin
+// what it does; here the steps say only what the replay sees instead.
+var fixes = []fix{
+	// A name that cannot go into a header is not sent, so these accounts
+	// get a working socket and a tunnel, where Node wrote 101 and then 502;
+	// the later tunnel of the scenario counts two up
+	{bug: "RM11", scenario: "names in headers", step: 0, events: `[{"socket":"a","head":` + head101 + `},` + tunnelOf("up1") + `]`},
+	{bug: "RM11", scenario: "names in headers", step: 1, events: `[{"socket":"b","head":"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: guacamole\r\n\r\n"},` + tunnelOf("up2") + `]`},
+	{bug: "RM11", scenario: "names in headers", step: 2, events: `[{"socket":"c","head":` + head101 + `},` + tunnelOf("up3") + `]`},
+	{bug: "RM11", scenario: "names in headers", step: 3, events: `[{"socket":"up3","text":"still works"},{"socket":"c","text":"echo:still works"}]`},
+}
+
+// fixFor is the fix of a step, ok false for a step no fix changed.
+func fixFor(scenario string, step int) (fix, bool) {
+	for _, f := range fixes {
+		if f.scenario == scenario && f.step == step {
+			return f, true
+		}
+	}
+	return fix{}, false
+}
+
+// apply returns the step's events since the fix. A fix that changes
+// nothing is stale and fails the test.
+func (f fix) apply(t *testing.T, events []json.RawMessage) []json.RawMessage {
+	t.Helper()
+	var fixed []json.RawMessage
+	if err := json.Unmarshal([]byte(f.events), &fixed); err != nil {
+		t.Fatalf("the %s fix of %q step %d: %v", f.bug, f.scenario, f.step, err)
+	}
+	if eventKeys(t, fixed) == eventKeys(t, events) {
+		t.Errorf("the %s fix of %q step %d changes nothing", f.bug, f.scenario, f.step)
+	}
+	return fixed
+}
+
+// eventKeys is the events of a step per socket, for comparing.
+func eventKeys(t *testing.T, events []json.RawMessage) string {
+	t.Helper()
+	per := map[string][]string{}
+	for _, raw := range events {
+		var e event
+		if err := json.Unmarshal(raw, &e); err != nil {
+			t.Fatal(err)
+		}
+		if e.RawHS != nil {
+			e.RawHS = withoutAccountHeaders(t, e.RawHS)
+		}
+		per[e.Socket] = append(per[e.Socket], e.key())
+	}
+	return fmt.Sprint(per)
+}
+
+// TestFixesNameRecordedSteps: every fix names a step of the recording.
+func TestFixesNameRecordedSteps(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("testdata", "node_gateway.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var rec recording
+	if err := json.Unmarshal(raw, &rec); err != nil {
+		t.Fatal(err)
+	}
+	steps := map[string]int{}
+	for _, sc := range rec.Scenarios {
+		steps[sc.Name] = len(sc.Steps)
+	}
+	for _, f := range fixes {
+		if n, ok := steps[f.scenario]; !ok || f.step < 0 || f.step >= n {
+			t.Errorf("the %s fix names step %d of %q, which the recording does not have", f.bug, f.step, f.scenario)
+		}
+	}
+}
+
 func nodeCall(raw json.RawMessage) string {
 	var c struct {
 		GetRemoteTarget *string           `json:"getRemoteTarget"`
@@ -548,17 +660,18 @@ func TestNodeScenarios(t *testing.T) {
 				p.mu.Unlock()
 				calls, upstream := w.take()
 				got = append(got, upstream...)
+				events := s.Events
+				if f, ok := fixFor(sc.Name, i); ok {
+					events = f.apply(t, events)
+				}
 				want := map[string][]string{}
-				for _, raw := range s.Events {
+				for _, raw := range events {
 					var e event
 					if err := json.Unmarshal(raw, &e); err != nil {
 						t.Fatal(err)
 					}
-					if e.RawHS != nil && sc.Name == "checks" && st.Open == "m" {
-						// A session whose user has no name: Node sent
-						// user#<id>, the Go session reads the name at
-						// the session's top (testdata/nodeoracle/README.md)
-						e.RawHS = json.RawMessage(strings.Replace(string(e.RawHS), `"user#12"`, `"sso"`, 1))
+					if e.RawHS != nil {
+						e.RawHS = withoutAccountHeaders(t, e.RawHS)
 					}
 					want[e.Socket] = append(want[e.Socket], e.key())
 				}

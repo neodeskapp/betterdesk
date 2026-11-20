@@ -9,17 +9,14 @@
 // which decides the role at the API server. This one opens it on the API
 // server's handler in the same process (ws.DialHandler on
 // goapi.Client.Handler), which carries the console's identity, as the
-// CDAP proxies do. The API server reads neither X-Username nor X-Role
-// (BUGS G7); they are sent as before.
+// CDAP proxies do. The account is not named to the tunnel: the API server
+// reads no X-Username or X-Role (BUGS G7).
 package remotetarget
 
 import (
 	"context"
-	"crypto/sha1"
-	"encoding/base64"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -115,21 +112,6 @@ func (g *Gateway) serve(u *ws.Upgrade) {
 		u.RefuseRaw(refusal(http.StatusNotFound))
 		return
 	}
-	username := ""
-	if user != nil {
-		username = user.Username
-	}
-	if username == "" {
-		username = "user#" + strconv.FormatInt(sn.UserID(), 10)
-	}
-	if (!headerText(username) || !headerText(role)) && u.HandshakeValid() {
-		// The old client threw on such a header while it was being made,
-		// right after the handshake was answered; the upgrade's catch then
-		// wrote its 502 on the same connection and ended it (BUGS RM11).
-		logging.Logf("console", "WARN: [remote-target] upgrade rejected: the account's name cannot be sent in a header")
-		u.RefuseRaw(switchingHead(u.R) + refusal(http.StatusBadGateway))
-		return
-	}
 	browser, ok := u.Accept(ws.AcceptOptions{MaxPayload: MaxPayload})
 	if !ok {
 		return
@@ -137,9 +119,6 @@ func (g *Gateway) serve(u *ws.Upgrade) {
 	defer browser.Wait()
 	stopWatch := g.watch(u, browser, sn.UserID(), id)
 	defer stopWatch()
-	header := http.Header{}
-	header.Set("X-Username", latin1(username))
-	header.Set("X-Role", latin1(role))
 	tunnel := "/api/remote-targets/" + goapi.EncodeURIComponent(id) + "/tunnel"
 	// Messages wait while the tunnel opens; a failed tunnel or one that
 	// ends closes the browser's socket without a status code, and the
@@ -147,7 +126,7 @@ func (g *Gateway) serve(u *ws.Upgrade) {
 	// passed on.
 	ws.Pass(browser, ws.PassOptions{
 		Dial: func(ctx context.Context) (*ws.Upstream, error) {
-			return ws.DialHandler(ctx, g.opts.API, tunnel, ws.DialOptions{Header: header, MaxPayload: MaxPayload})
+			return ws.DialHandler(ctx, g.opts.API, tunnel, ws.DialOptions{MaxPayload: MaxPayload})
 		},
 		Queue: true,
 		OnFail: func(err error) {
@@ -208,42 +187,4 @@ func (g *Gateway) stillAllowed(u *ws.Upgrade, parent context.Context, userID int
 	}
 	visible, err := g.opts.CanAccess(ctx, sn.User(), target)
 	return err == nil && visible
-}
-
-// acceptGUID is the websocket handshake's fixed key suffix (RFC 6455).
-const acceptGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-
-// switchingHead is the head of the 101 answer as the websocket library
-// wrote it: its four lines, the subprotocol when the client offered one
-// (the first), an empty line.
-func switchingHead(r *http.Request) string {
-	sum := sha1.Sum([]byte(strings.TrimSpace(strings.Join(r.Header.Values("Sec-WebSocket-Key"), ", ")) + acceptGUID))
-	head := "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: " +
-		base64.StdEncoding.EncodeToString(sum[:]) + "\r\n"
-	if offered := strings.Join(r.Header.Values("Sec-WebSocket-Protocol"), ", "); offered != "" {
-		first, _, _ := strings.Cut(offered, ",")
-		head += "Sec-WebSocket-Protocol: " + strings.TrimSpace(first) + "\r\n"
-	}
-	return head + "\r\n"
-}
-
-// headerText reports whether Node's HTTP client took s as a header value:
-// tabs, printable ASCII and the characters U+0080 to U+00FF.
-func headerText(s string) bool {
-	for _, r := range s {
-		if r != '\t' && (r < 0x20 || r == 0x7f || r > 0xff) {
-			return false
-		}
-	}
-	return true
-}
-
-// latin1 is s as Node's HTTP client wrote a header value: one byte per
-// character, for a text headerText takes.
-func latin1(s string) string {
-	b := make([]byte, 0, len(s))
-	for _, r := range s {
-		b = append(b, byte(r))
-	}
-	return string(b)
 }

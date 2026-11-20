@@ -156,9 +156,9 @@ func TestStopEndsTheTunnel(t *testing.T) {
 	check()
 }
 
-// The tunnel gets the account in X-Username and X-Role, no API key (the
-// handler carries the console's identity), no Origin and no cookie of
-// the browser.
+// The tunnel gets no account headers (X-Username, X-Role, which the API
+// server does not read: RM11), no API key (the handler carries the
+// console's identity), no Origin and no cookie of the browser.
 func TestTunnelHandshake(t *testing.T) {
 	check := wstest.Goroutines(t)
 	var mu sync.Mutex
@@ -186,7 +186,7 @@ func TestTunnelHandshake(t *testing.T) {
 	c.Wait(2*time.Second, func(_ []wstest.Frame, closed bool) bool { return closed })
 	mu.Lock()
 	defer mu.Unlock()
-	for name, want := range map[string]string{"X-Api-Key": "", "X-Username": "olga", "X-Role": "operator", "Origin": "", "Cookie": ""} {
+	for name, want := range map[string]string{"X-Api-Key": "", "X-Username": "", "X-Role": "", "Origin": "", "Cookie": ""} {
 		if v := got.Get(name); v != want {
 			t.Errorf("%s: %q, want %q", name, v, want)
 		}
@@ -196,19 +196,19 @@ func TestTunnelHandshake(t *testing.T) {
 	check()
 }
 
-// A name with a character above U+00FF, or a control character other than
-// a tab, cannot go into a header: the browser gets the 101 and then the
-// gateway's 502 on the same connection, and no tunnel is opened. A name
-// in Latin-1 goes as one byte per character.
-func TestNamesThatCannotBeAHeader(t *testing.T) {
+// Every account gets its tunnel, also one whose name could not go into a
+// header (a character above U+00FF, a control character other than a
+// tab), where the old gateway answered 101 and then 502 on the same
+// connection: the name is not sent (RM11).
+func TestEveryNameGetsATunnel(t *testing.T) {
 	check := wstest.Goroutines(t)
 	var mu sync.Mutex
-	var names []string
+	tunnels := 0
 	w := &world{}
 	addr, stop := gateway(t, w, func(o *Options) {
 		o.API = http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			mu.Lock()
-			names = append(names, r.Header.Get("X-Username"))
+			tunnels++
 			mu.Unlock()
 			http.NotFound(rw, r)
 		})
@@ -218,37 +218,21 @@ func TestNamesThatCannotBeAHeader(t *testing.T) {
 			"Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n" +
 			`X-Oracle-Session: {"userId":7,"user":{"id":7,"username":"` + name + `","role":"operator"}}` + "\r\n\r\n"
 	}
-	want := "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n" +
-		"HTTP/1.1 502 Bad Gateway\r\nConnection: close\r\n\r\n"
-	for _, name := range []string{`Łukasz`, `bell\u0007`, `nul\u0000`, `del\u007f`} {
+	names := []string{`Łukasz`, `bell\u0007`, `nul\u0000`, `del\u007f`, `jörg`}
+	for _, name := range names {
 		got, err := wstest.Raw(addr, request(name))
 		if err != nil {
 			t.Fatal(err)
 		}
-		if got != want {
+		if !strings.HasPrefix(got, "HTTP/1.1 101") || strings.Contains(got, "502 Bad Gateway") {
 			t.Errorf("%s: %q", name, got)
 		}
-	}
-	// A handshake the library refuses gets the library's answer first
-	bad, err := wstest.Raw(addr, strings.Replace(request(`Łukasz`), "Version: 13", "Version: 7", 1))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !strings.HasPrefix(bad, "HTTP/1.1 400 Bad Request\r\n") {
-		t.Errorf("a bad handshake: %q", bad)
-	}
-	got, err := wstest.Raw(addr, request(`jörg`))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !strings.HasPrefix(got, "HTTP/1.1 101") {
-		t.Errorf("a Latin-1 name: %q", got)
 	}
 	stop()
 	mu.Lock()
 	defer mu.Unlock()
-	if len(names) != 1 || names[0] != "j\xf6rg" {
-		t.Errorf("tunnels opened for %q, want one for the Latin-1 name in one byte per character", names)
+	if tunnels != len(names) {
+		t.Errorf("%d tunnels opened for %d accounts", tunnels, len(names))
 	}
 	check()
 }
