@@ -181,3 +181,52 @@ func TestTheSnapshotHasNoSMTPPassword(t *testing.T) {
 		}
 	})
 }
+
+// BK16: the scheduled backup's SMB password stays out of the snapshot as
+// the SMTP password does, and a restore keeps the stored one.
+func TestTheSnapshotHasNoSMBPassword(t *testing.T) {
+	dialects(t, func(t *testing.T, dialect string) {
+		in := newInstall(t, dialect)
+		setValue(t, in, "scheduled_backup_smb", `{"host":"nas","share":"backups$","domain":"WORK","username":"backup","password":"hunter2","mountPath":"/mnt/nas"}`)
+		s := in.snapshotService(t)
+		snap, err := s.CreateBackup(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		text, err := SnapshotJSON(snap)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(string(text), "hunter2") {
+			t.Fatal("the snapshot holds the SMB password")
+		}
+		share := snap.Object("console").Object("settings").Str("scheduled_backup_smb")
+		if share != `{"host":"nas","share":"backups$","domain":"WORK","username":"backup","mountPath":"/mnt/nas"}` {
+			t.Errorf("SMB share in the snapshot: %s", share)
+		}
+
+		setValue(t, in, "scheduled_backup_smb", `{"host":"old","share":"s","password":"newer"}`)
+		if res := restoreSettings(t, s, string(text)); len(res.Warnings) != 0 {
+			t.Fatalf("restore: %+v", res)
+		}
+		if got := storedValue(t, in, "scheduled_backup_smb"); got != `{"host":"nas","share":"backups$","domain":"WORK","username":"backup","mountPath":"/mnt/nas","password":"newer"}` {
+			t.Errorf("after the restore: %s", got)
+		}
+
+		older := `{"_format":"betterdesk-backup","_version":1,"console":{"settings":{"scheduled_backup_smb":"{\"host\":\"h\",\"password\":\"from-the-file\"}"}}}`
+		restoreSettings(t, s, older)
+		if got := storedValue(t, in, "scheduled_backup_smb"); got != `{"host":"h","password":"from-the-file"}` {
+			t.Errorf("after an older snapshot: %s", got)
+		}
+
+		// a member named like the other setting's secret is no secret here
+		setValue(t, in, "scheduled_backup_smb", `{"host":"nas","pass":"x"}`)
+		snap, err = s.CreateBackup(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := snap.Object("console").Object("settings").Str("scheduled_backup_smb"); got != `{"host":"nas","pass":"x"}` {
+			t.Errorf("SMB share with a member pass: %s", got)
+		}
+	})
+}
