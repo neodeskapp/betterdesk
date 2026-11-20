@@ -160,12 +160,20 @@ func PageRules() []Rule {
 
 // FindRule returns the rule for a path: of all rules that match, the one
 // with the longest pattern, and of several equally long ones the first in
-// the table. The comparison is exact, also in letter case.
+// the table. The path is compared as rulePath gives it.
 func FindRule(path string) (Rule, bool) {
 	return findRuleIn(RouteRules, path)
 }
 
+// rulePath is the path as the rules see it. The console's routes match
+// their fixed parts in any ASCII letter case, so the path is lower-cased:
+// every rule is.
+func rulePath(path string) string {
+	return asciiLower(path)
+}
+
 func findRuleIn(rules []Rule, path string) (Rule, bool) {
+	path = rulePath(path)
 	var best Rule
 	found := false
 	for _, rule := range rules {
@@ -224,15 +232,15 @@ type GuardResult struct {
 
 // Guard maps the request to its panel section and checks the account's
 // level there. path is the request path as it was sent, without the query
-// and without decoding. Guard stores the section in the context, where
-// HasPermission reads it.
+// and without decoding; letters count in either case, as for the routes.
+// Guard stores the section in the context, where HasPermission reads it.
 func (c *Context) Guard(method, path string) GuardResult {
 	rule, ok := FindRule(path)
 	if !ok || c.UserID == 0 || !c.HasUser {
 		return GuardResult{Verdict: VerdictNoRule, Decision: pass()}
 	}
 	c.Section = rule.Section
-	api := strings.HasPrefix(path, apiPrefix)
+	api := strings.HasPrefix(rulePath(path), apiPrefix)
 	if !api && (method == "GET" || method == "HEAD") {
 		return GuardResult{Verdict: VerdictPage, Section: rule.Section, Decision: pass()}
 	}

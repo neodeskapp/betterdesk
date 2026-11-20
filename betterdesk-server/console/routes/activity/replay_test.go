@@ -148,18 +148,17 @@ func TestTheRoutesAtBothMounts(t *testing.T) {
 }
 
 // Every route asks for a session and for the permission audit.view
-// itself. Under /api/activity the panel access guard in front of the
-// group asks first and answers. The guard reads the address as it was
-// written, and the routes answer in any letter case, so in another
-// spelling it is the route's own checks that answer: the sign-in page
-// for nobody, and a refusal for a role that had the permission taken
-// away.
+// itself. The panel access guard in front of the group asks first and
+// answers, in any letter case of the address, as the routes answer (BUGS
+// PA1). Signed out, an address in another spelling does not start with
+// /api/ for the sign-in check, which sends the sign-in page.
 func TestPermissions(t *testing.T) {
 	w := replay.NewWorldWithRoles(t, storetest.Migrated(t), nil, replay.RoleOverrides{"operator": {"audit.view": false}})
+	const guarded = `{"success":false,"error":"Panel access denied: activity","code":"panel_access_denied"}`
 	for _, path := range []string{"/api/activity", "/api/activity/D1", "/api/activity/D1/top"} {
 		got := w.Do(replay.Request{Role: "operator", Path: path})
-		if want := `{"success":false,"error":"Panel access denied: activity","code":"panel_access_denied"}`; got.Status != 403 || got.Body != want {
-			t.Errorf("GET %s without audit.view: %d %s, want 403 %s", path, got.Status, got.Body, want)
+		if got.Status != 403 || got.Body != guarded {
+			t.Errorf("GET %s without audit.view: %d %s, want 403 %s", path, got.Status, got.Body, guarded)
 		}
 		got = w.Do(replay.Request{Path: path})
 		if want := `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`; got.Status != 401 || got.Body != want {
@@ -170,8 +169,8 @@ func TestPermissions(t *testing.T) {
 		}
 
 		spelled := "/API/Activity" + strings.TrimPrefix(path, "/api/activity")
-		if got := w.Do(replay.Request{Role: "operator", Path: spelled}); got.Status != 403 || strings.Contains(got.Body, "panel_access_denied") {
-			t.Errorf("GET %s without audit.view: %d %s, want the 403 of the route's permission check", spelled, got.Status, got.Body)
+		if got := w.Do(replay.Request{Role: "operator", Path: spelled}); got.Status != 403 || got.Body != guarded {
+			t.Errorf("GET %s without audit.view: %d %s, want 403 %s", spelled, got.Status, got.Body, guarded)
 		}
 		if got := w.Do(replay.Request{Path: spelled}); got.Status != 302 || !strings.HasPrefix(got.Header.Get("Location"), "/login") {
 			t.Errorf("GET %s signed out: %d to %q, want 302 to the sign-in page", spelled, got.Status, got.Header.Get("Location"))

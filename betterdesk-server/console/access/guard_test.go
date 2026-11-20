@@ -62,8 +62,13 @@ var guardPaths = []struct {
 	{"/x/users", ""}, {"/app/users", ""}, {"users", ""}, {"/users%2Fx", ""}, {" /users", ""},
 	{"/users ", ""}, {"/users?tab=1", ""}, {"", ""}, {"//", ""}, {"/index", ""},
 
-	// letter case is exact
-	{"/USERS", ""}, {"/Users", ""}, {"/API/users", ""}, {"/api/Users", ""}, {"/api/USERS/1", ""}, {"/Settings", ""},
+	// letter case does not count, as for the routes (PA1)
+	{"/USERS", "users"}, {"/Users", "users"}, {"/API/users", "users"}, {"/api/Users", "users"}, {"/api/USERS/1", "users"},
+	{"/Settings", ""}, {"/API/SETTINGS/Ldap", "settings"}, {"/Api/Settings/Branding", ""}, {"/API/PANEL/ACCESS/users/1", "users"},
+	{"/API/BD/Transfers", "files"}, {"/Api/Bd/Policies/7", "dataguard"}, {"/API/Automation/Rules", "automation"},
+	// only ASCII letters: the routes match the escaped path, where any other
+	// letter is a percent escape
+	{"/api/uſers", ""}, {"/api/ticKets", ""}, {"/api/%75sers", ""},
 
 	// the second mount below /api/bd of the file transfer routes (FT8)
 	{"/api/bd/transfer", "files"}, {"/api/bd/transfers", "files"}, {"/api/bd/transfers/abc/download", "files"},
@@ -183,7 +188,7 @@ func TestGuardVerdicts(t *testing.T) {
 	methods := []string{"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"}
 	checked := 0
 	for _, c := range guardPaths {
-		api := strings.HasPrefix(c.path, "/api/")
+		api := strings.HasPrefix(strings.ToLower(c.path), "/api/")
 		for _, method := range methods {
 			label := method + " " + c.path
 			read := method == "GET" || method == "HEAD" || method == "OPTIONS"
@@ -336,6 +341,43 @@ func TestGuardWithoutPolicy(t *testing.T) {
 	ctx := &Context{UserID: 7, HasUser: true, Role: "admin"}
 	if got := ctx.Guard("GET", "/api/users"); got.Verdict != VerdictDenied {
 		t.Errorf("no policy: %+v", got)
+	}
+}
+
+// PA1: routes match in any letter case, so the guard must too. An account
+// whose row closes a section gets no answer of the section's API, and no
+// write of its pages, by writing the path in other letters.
+func TestGuardMatchesInAnyLetterCase(t *testing.T) {
+	closed := func() *Context {
+		return &Context{UserID: 7, HasUser: true, Role: "global_admin", Policy: policyWith("users", LevelNone)}
+	}
+	wantBody := `{"success":false,"error":"Panel access denied: users","code":"panel_access_denied"}`
+	for _, c := range []struct{ method, path string }{
+		{"GET", "/api/users"}, {"GET", "/API/users"}, {"GET", "/api/Users"}, {"GET", "/Api/USERS/3"},
+		{"HEAD", "/API/USERS"}, {"POST", "/API/Users"}, {"DELETE", "/api/users/3"}, {"PUT", "/API/PANEL/ACCESS/users/3"},
+	} {
+		got := closed().Guard(c.method, c.path)
+		if got.Verdict != VerdictDenied || got.Section != "users" || got.Decision.Answer != AnswerJSON || jsJSON(t, got.Decision.Body) != wantBody {
+			t.Errorf("%s %s with users at none: %+v", c.method, c.path, got)
+		}
+	}
+	// A page in other letters is a page of the section: it loads, so the
+	// app shows its own no-access view, and a write to it is refused.
+	if got := closed().Guard("GET", "/USERS"); got.Verdict != VerdictPage || got.Section != "users" {
+		t.Errorf("GET /USERS: %+v", got)
+	}
+	if got := closed().Guard("POST", "/Users"); got.Verdict != VerdictDenied || got.Decision.Answer != AnswerErrorPage {
+		t.Errorf("POST /Users: %+v", got)
+	}
+}
+
+// The guard lower-cases the path before it compares, so a rule with an
+// upper-case letter would match nothing.
+func TestRulesAreLowerCase(t *testing.T) {
+	for _, rule := range RouteRules {
+		if p := rule.pattern(); p != strings.ToLower(p) {
+			t.Errorf("rule %+v has upper-case letters", rule)
+		}
 	}
 }
 

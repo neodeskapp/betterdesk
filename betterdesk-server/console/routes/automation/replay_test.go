@@ -269,14 +269,13 @@ func state(w *replay.World) string {
 // Every route asks for a session and for the permission server.config
 // itself, and reads and writes nothing for an account without it.
 //
-// Under /api/automation the panel access guard in front of the group asks
-// first: it refuses nobody a read who may see devices, and refuses the
-// writes of everybody who may not edit them, a server admin included. The
-// guard reads the address as it was written and the routes answer in any
-// letter case, so in another spelling it is the route's own checks that
-// answer: the sign-in page for nobody, a refusal for a role without the
-// permission (as a page, because the address does not start with /api/),
-// and the answer for a server admin, who has it.
+// The panel access guard in front of the group asks first, in any letter
+// case of the address, as the routes answer (BUGS PA1): it refuses nobody
+// a read who may see devices, and refuses the writes of everybody who may
+// not edit them, a server admin included. In another spelling the address
+// does not start with /api/ for the route's own checks: nobody signed in
+// gets the sign-in page, and a role without the permission a refusal as a
+// page.
 func TestPermissions(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		seedOne(t, db)
@@ -311,13 +310,19 @@ func TestPermissions(t *testing.T) {
 			if got := w.Do(request("viewer", "/api/automation", i)); got.Status != 403 || got.Body != want {
 				t.Errorf("%s as a viewer: %d %s, want 403 %s", name, got.Status, got.Body, want)
 			}
-			if got := w.Do(request("viewer", "/API/Automation", i)); got.Status != 403 || got.Body != deniedPage {
-				t.Errorf("%s as a viewer, in another spelling: %d %s, want 403 %s", name, got.Status, got.Body, deniedPage)
+			want = deniedPage
+			if write {
+				want = guarded
+			}
+			if got := w.Do(request("viewer", "/API/Automation", i)); got.Status != 403 || got.Body != want {
+				t.Errorf("%s as a viewer, in another spelling: %d %s, want 403 %s", name, got.Status, got.Body, want)
 			}
 			// A server admin has the permission, and the guard refuses its writes
 			if write {
-				if got := w.Do(request("server_admin", "/api/automation", i)); got.Status != 403 || got.Body != guarded {
-					t.Errorf("%s as a server admin: %d %s, want 403 %s", name, got.Status, got.Body, guarded)
+				for _, mount := range []string{"/api/automation", "/API/Automation"} {
+					if got := w.Do(request("server_admin", mount, i)); got.Status != 403 || got.Body != guarded {
+						t.Errorf("%s as a server admin at %s: %d %s, want 403 %s", name, mount, got.Status, got.Body, guarded)
+					}
 				}
 			}
 		}
@@ -325,12 +330,15 @@ func TestPermissions(t *testing.T) {
 			t.Errorf("the refused requests changed something:\nbefore %s\n after %s", before, after)
 		}
 
-		// With the permission every route answers: an operator who was given
-		// it, and a server admin where the guard does not look
+		// With the permission every route answers, in either spelling: an
+		// operator who was given it, and a server admin for the reads
 		for i, route := range one {
 			role, mount := "operator", "/api/automation"
 			if i%2 == 1 {
 				role, mount = "server_admin", "/API/Automation"
+				if route.method != "GET" {
+					role = "operator"
+				}
 			}
 			want := 200
 			if route.method == "POST" && !strings.HasSuffix(route.path, "/ack") {

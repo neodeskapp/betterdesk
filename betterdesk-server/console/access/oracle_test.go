@@ -199,6 +199,9 @@ func TestOracleFindRule(t *testing.T) {
 	}
 	longer := append(append([]Rule(nil), RouteRules...), v.Extra...)
 	for _, c := range v.Nested {
+		if pathDiffersFromNode(c.Path) {
+			continue
+		}
 		rule, ok := findRuleIn(longer, c.Path)
 		if ok != (c.Section != nil) || (ok && rule.Section != *c.Section) {
 			t.Errorf("with nested rules, findRuleIn(%q) = %q (found %v), Node finds %s", c.Path, rule.Section, ok, deref(c.Section))
@@ -207,8 +210,17 @@ func TestOracleFindRule(t *testing.T) {
 	if len(v.Cases) < 1000 {
 		t.Fatalf("only %d cases", len(v.Cases))
 	}
+	differ := 0
 	for _, c := range v.Cases {
 		rule, ok := FindRule(c.Path)
+		if pathDiffersFromNode(c.Path) {
+			// PA1: Go reads the path as rulePath gives it.
+			differ++
+			if same, sameOK := FindRule(rulePath(c.Path)); same != rule || sameOK != ok {
+				t.Errorf("FindRule(%q) = %+v, for %q it is %+v", c.Path, rule, rulePath(c.Path), same)
+			}
+			continue
+		}
 		switch {
 		case c.Rule == nil && ok:
 			t.Errorf("FindRule(%q) = %+v, Node finds none", c.Path, rule)
@@ -216,6 +228,16 @@ func TestOracleFindRule(t *testing.T) {
 			t.Errorf("FindRule(%q) = %+v (found %v), Node finds %+v", c.Path, rule, ok, *c.Rule)
 		}
 	}
+	if differ == 0 || differ > len(v.Cases)/4 {
+		t.Errorf("%d of %d paths read other than in Node", differ, len(v.Cases))
+	}
+}
+
+// pathDiffersFromNode reports whether the guard reads a path other than
+// Node's guard did, which compared it as sent (PA1): Go reads it
+// lower-cased (rulePath).
+func pathDiffersFromNode(path string) bool {
+	return rulePath(path) != path
 }
 
 // oracleSession is a session as the Node vectors describe it.
@@ -263,8 +285,36 @@ func TestOracleGuard(t *testing.T) {
 			t.Errorf("RequiredLevel(%s) = %s, Node says %s", method, got, v.RequiredLevels[i])
 		}
 	}
-	checked := 0
+	// PA1: a path Go reads other than Node is answered as Node answered the
+	// path Go reads, where the vectors have that one.
+	byPath := make(map[string][]int, len(v.Cases))
 	for _, c := range v.Cases {
+		byPath[c.Path] = c.R
+	}
+	checked, differ, uncompared := 0, 0, 0
+	for _, c := range v.Cases {
+		if pathDiffersFromNode(c.Path) {
+			differ++
+			r, ok := byPath[rulePath(c.Path)]
+			if !ok {
+				// No vector for it: the answer must be Go's for that path.
+				uncompared++
+				rule, _ := FindRule(c.Path)
+				for _, method := range v.Methods {
+					for _, session := range v.Sessions {
+						a, b := session.context(), session.context()
+						a.Policy, b.Policy = policyWith(rule.Section, LevelRead), policyWith(rule.Section, LevelRead)
+						got, want := a.Guard(method, c.Path), b.Guard(method, rulePath(c.Path))
+						if got.Verdict != want.Verdict || got.Section != want.Section || got.Decision.Status != want.Decision.Status ||
+							got.Decision.Answer != want.Decision.Answer || jsJSON(t, got.Decision.Body) != jsJSON(t, want.Decision.Body) {
+							t.Fatalf("%s %s: %+v, for %s %+v", method, c.Path, got, rulePath(c.Path), want)
+						}
+					}
+				}
+				continue
+			}
+			c.R = r
+		}
 		rule, _ := FindRule(c.Path)
 		key := rule.Section
 		if key == "" {
@@ -317,6 +367,9 @@ func TestOracleGuard(t *testing.T) {
 	}
 	if checked < 100000 {
 		t.Fatalf("only %d guard vectors ran", checked)
+	}
+	if differ == 0 || differ == uncompared {
+		t.Errorf("%d paths read other than in Node, %d of them without a vector for the path Go reads", differ, uncompared)
 	}
 }
 
