@@ -142,6 +142,27 @@ func mdnsSettings(env map[string]string, config nodeConfig, ifaces []Interface, 
 	})
 }
 
+// asPublished are settings of a recorded scenario with the address Node
+// announced for a console on loopback or on every address given as
+// PANEL_PUBLIC_URL. Go announces a console on loopback only with a public
+// address, and one on every address at a network address (BUGS JB2);
+// with the same address set it sends what Node sent.
+func asPublished(s Settings) Settings {
+	if s.PublicURL != "" || s.PublicHost != "" {
+		return s
+	}
+	host := strings.TrimSuffix(strings.TrimPrefix(s.Host, "["), "]")
+	if !s.LoopbackOnly() && host != "0.0.0.0" && host != "::" {
+		return s
+	}
+	url := s.protocol() + "://" + s.Host
+	if !(s.HTTPS && s.Port == 443 || !s.HTTPS && s.Port == 80) {
+		url += ":" + numberString(s.Port)
+	}
+	s.PublicURL = url
+	return s
+}
+
 // fakeSocket records what the announcement sends, at the test's clock.
 type fakeSocket struct {
 	packets chan []byte
@@ -430,8 +451,23 @@ func TestMDNSScheduleAgainstNode(t *testing.T) {
 	if len(rec.Scenarios) < 10 {
 		t.Fatalf("recording has %d scenarios", len(rec.Scenarios))
 	}
+	silent := 0
 	for i, s := range rec.Scenarios {
 		settings := mdnsSettings(s.Env, s.Config, toInterfaces(s.Interfaces), s.Hostname)
+		if published := asPublished(settings); published.PublicURL != settings.PublicURL && settings.mdnsEnabled() {
+			// Not announced at an address Node made of a loopback or wildcard
+			// address: said so in the log; announced as Node did with that
+			// address published (BUGS JB2)
+			h := startHarness(settings, s.Random, 1)
+			h.stop(t, true)
+			if loopback := settings.LoopbackOnly(); loopback || len(addresses(toInterfaces(s.Interfaces))) == 0 {
+				silent++
+				if len(h.sock.sent) != 0 || h.logs.String() != "WARN: [server] mDNS panel discovery disabled: "+ErrNoAddress.Error() {
+					t.Errorf("scenario %d %v: %d datagrams, log %q", i, s.Env, len(h.sock.sent), h.logs.String())
+				}
+			}
+			settings = published
+		}
 		want := localized(t, nodeSends(s.Events), s.Hostname)
 		h := startHarness(settings, s.Random, len(want))
 		if len(want) > 0 {
@@ -463,6 +499,26 @@ func TestMDNSScheduleAgainstNode(t *testing.T) {
 			t.Errorf("scenario %d %v: log %q, Node %q", i, s.Env, gotLogs, wantLogs)
 		}
 	}
+	if silent == 0 {
+		t.Error("no scenario of a console on loopback")
+	}
+}
+
+// TestMDNSAnnouncesAWildcardConsoleAtItsAddress: a console that listens
+// on every address is published with the machine's first network address
+// in its TXT record, where Node wrote 0.0.0.0 (BUGS JB2).
+func TestMDNSAnnouncesAWildcardConsoleAtItsAddress(t *testing.T) {
+	ifaces := []Interface{
+		{Name: "lo", Entries: []Address{{Family: "IPv4", Address: "127.0.0.1", Internal: true, MAC: "00:00:00:00:00:00"}}},
+		{Name: "eth0", Entries: []Address{{Family: "IPv4", Address: "192.168.1.20", MAC: "aa:bb:cc:dd:ee:ff"}}},
+	}
+	settings := mdnsSettings(map[string]string{"HOST": "0.0.0.0"}, nodeConfig{Port: 5000, AppVersion: "1.0"}, ifaces, "desk")
+	m := NewMDNS(settings)
+	m.logf = func(string, ...any) {}
+	svc, ok := m.prepare()
+	if !ok || string(svc.txt[0]) != "url=http://192.168.1.20:5000" {
+		t.Fatalf("published %v: %q", ok, svc.txt)
+	}
 }
 
 // goodbyeOf is the goodbye of the service the settings describe.
@@ -484,7 +540,7 @@ func goodbyeOf(t *testing.T, settings Settings) []byte {
 func TestMDNSSaysGoodbyeAtStop(t *testing.T) {
 	rec := loadMDNS(t)
 	s := rec.Scenarios[0]
-	settings := mdnsSettings(s.Env, s.Config, toInterfaces(s.Interfaces), s.Hostname)
+	settings := asPublished(mdnsSettings(s.Env, s.Config, toInterfaces(s.Interfaces), s.Hostname))
 	conflict := nodeSends(rec.Conflict.Events)
 	nodeGoodbye, _ := base64.StdEncoding.DecodeString(conflict[len(conflict)-1].Bytes)
 	nodeGoodbye = withLocalHost(t, nodeGoodbye, s.Hostname)
@@ -517,7 +573,7 @@ func TestMDNSSaysGoodbyeAtStop(t *testing.T) {
 func TestMDNSConflictAgainstNode(t *testing.T) {
 	rec := loadMDNS(t)
 	s := rec.Scenarios[0]
-	settings := mdnsSettings(s.Env, s.Config, toInterfaces(s.Interfaces), s.Hostname)
+	settings := asPublished(mdnsSettings(s.Env, s.Config, toInterfaces(s.Interfaces), s.Hostname))
 	packet, _ := base64.StdEncoding.DecodeString(rec.Conflict.Packet)
 
 	nodeConflict := localized(t, nodeSends(rec.Conflict.Events), s.Hostname)
@@ -713,7 +769,7 @@ func TestMDNSAnswersAgainstNode(t *testing.T) {
 func TestMDNSAnswersWhileRunning(t *testing.T) {
 	rec := loadMDNS(t)
 	s := rec.Scenarios[0]
-	settings := mdnsSettings(s.Env, s.Config, toInterfaces(s.Interfaces), s.Hostname)
+	settings := asPublished(mdnsSettings(s.Env, s.Config, toInterfaces(s.Interfaces), s.Hostname))
 	h := startHarness(settings, s.Random, 5)
 	for i := 0; i < 4; i++ {
 		h.clock.fire(t)

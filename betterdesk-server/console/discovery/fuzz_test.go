@@ -66,7 +66,7 @@ func FuzzDecodeMessage(f *testing.F) {
 		Interfaces: func() ([]Interface, error) {
 			return []Interface{{Name: "eth0", Entries: []Address{{Family: "IPv4", Address: "10.0.0.1", MAC: "02:00:00:00:00:01"}}}}, nil
 		},
-		Host:    "127.0.0.1",
+		Host:    "10.0.0.1",
 		Port:    5000,
 		Version: "1.0",
 	}

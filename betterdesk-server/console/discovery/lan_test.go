@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -115,7 +116,11 @@ func TestAnnouncementsAgainstNode(t *testing.T) {
 		t.Fatalf("recording has %d announcements", len(rec.Announcements))
 	}
 	dir := t.TempDir()
+	silenced, moved := 0, 0
 	for i, c := range rec.Announcements {
+		if host := c.Env["HOST"]; c.Env["PANEL_PUBLIC_URL"] == "" && c.Env["PANEL_PUBLIC_HOST"] == "" && (host == "0.0.0.0" || host == "::") {
+			moved++
+		}
 		keyPath := filepath.Join(dir, fmt.Sprintf("key-%d.pub", i))
 		switch {
 		case c.Key == nil:
@@ -153,13 +158,57 @@ func TestAnnouncementsAgainstNode(t *testing.T) {
 			t.Errorf("case %d: discovery port %v, Node %v", i, settings.DiscoveryPort, c.Config.DiscoveryPort)
 		}
 		got, err := settings.Announcement()
+		want, silent := announcedAs(t, c.Env, decode64(t, c.Reply))
+		if silent {
+			silenced++
+			if !errors.Is(err, ErrNoAddress) {
+				t.Errorf("case %d (env %v): announced %s, want nothing", i, c.Env, got)
+			}
+			continue
+		}
 		if err != nil {
 			t.Fatalf("case %d: %v", i, err)
 		}
-		if want := decode64(t, c.Reply); !bytes.Equal(got, want) {
+		if !bytes.Equal(got, want) {
 			t.Errorf("case %d (env %v):\n got %s\nwant %s", i, c.Env, got, want)
 		}
 	}
+	if silenced == 0 || moved == 0 {
+		t.Errorf("%d announcements silenced, %d moved to a network address", silenced, moved)
+	}
+}
+
+// announcedAs is Node's announcement as Go sends it: nothing (silent) for
+// a console on loopback with no public address, and for one that listens
+// on every address the first of the announced addresses in panelUrl, not
+// 0.0.0.0 or ::; nothing when there is none (BUGS JB2).
+func announcedAs(t *testing.T, env map[string]string, reply []byte) ([]byte, bool) {
+	t.Helper()
+	if env["PANEL_PUBLIC_URL"] != "" || env["PANEL_PUBLIC_HOST"] != "" {
+		return reply, false
+	}
+	var node struct {
+		Server struct {
+			Addresses []string `json:"addresses"`
+			PanelURL  string   `json:"panelUrl"`
+		} `json:"server"`
+	}
+	if err := json.Unmarshal(reply, &node); err != nil {
+		t.Fatal(err)
+	}
+	host := strings.TrimSuffix(strings.TrimPrefix(env["HOST"], "["), "]")
+	switch {
+	case host == "" || host == "localhost" || strings.HasPrefix(host, "127.") || host == "::1":
+		return nil, true
+	case host == "0.0.0.0" || host == "::":
+		if len(node.Server.Addresses) == 0 {
+			return nil, true
+		}
+		scheme, rest, _ := strings.Cut(node.Server.PanelURL, "://")
+		moved := scheme + "://" + node.Server.Addresses[0] + strings.TrimPrefix(rest, env["HOST"])
+		return bytes.Replace(reply, []byte(`"panelUrl":"`+node.Server.PanelURL+`"`), []byte(`"panelUrl":"`+moved+`"`), 1), false
+	}
+	return reply, false
 }
 
 // TestInterfaceOrderAgainstNode puts interface names in the order of the
@@ -240,16 +289,44 @@ func TestDiscoveryPortsAgainstNode(t *testing.T) {
 	}
 }
 
+// TestLoopbackConsoleIsNotAnnounced: a console that listens on loopback
+// only, with no public address set, binds no discovery port and says why;
+// a public host or URL announces it.
+func TestLoopbackConsoleIsNotAnnounced(t *testing.T) {
+	for _, c := range []struct {
+		env   map[string]string
+		binds bool
+	}{
+		{map[string]string{}, false},
+		{map[string]string{"HOST": "127.0.0.1"}, false},
+		{map[string]string{"HOST": "localhost"}, false},
+		{map[string]string{"HOST": "::1"}, false},
+		{map[string]string{"HOST": "127.0.0.1", "PANEL_PUBLIC_HOST": "desk.lan"}, true},
+		{map[string]string{"PANEL_PUBLIC_URL": "https://desk.example"}, true},
+		{map[string]string{"HOST": "0.0.0.0"}, true},
+		{map[string]string{"HOST": "192.168.1.10"}, true},
+	} {
+		log := &lines{}
+		lan := NewLAN(FromEnv(func(key string) string { return c.env[key] }, Settings{}))
+		lan.logf = log.logf
+		bound := false
+		lan.listen = func(context.Context, string) (net.PacketConn, error) {
+			bound = true
+			return nil, fmt.Errorf("not in this test")
+		}
+		lan.Run(context.Background())
+		if bound != c.binds || !c.binds && log.String() != "  LAN Discovery off: "+ErrNoAddress.Error() {
+			t.Errorf("env %v: bound %v, log %q", c.env, bound, log.String())
+		}
+	}
+}
+
 // TestResponderWarnsAboutAPortOutOfRange logs the DISCOVERY_PORT it did
 // not take and binds 21119.
 func TestResponderWarnsAboutAPortOutOfRange(t *testing.T) {
 	log := &lines{}
-	lan := NewLAN(FromEnv(func(key string) string {
-		if key == "DISCOVERY_PORT" {
-			return "70000"
-		}
-		return ""
-	}, Settings{}))
+	env := map[string]string{"DISCOVERY_PORT": "70000", "HOST": "0.0.0.0"}
+	lan := NewLAN(FromEnv(func(key string) string { return env[key] }, Settings{}))
 	lan.logf = log.logf
 	var bound string
 	lan.listen = func(_ context.Context, address string) (net.PacketConn, error) {
@@ -293,7 +370,7 @@ func TestResponderAnswersOverUDP(t *testing.T) {
 	settings := Settings{
 		Hostname:      func() (string, error) { return fmt.Sprintf("host-%d", built.Add(1)), nil },
 		Interfaces:    func() ([]Interface, error) { return nil, nil },
-		Host:          "127.0.0.1",
+		Host:          "192.168.1.10",
 		Port:          5000,
 		APIPort:       21121,
 		Version:       "1.0",
@@ -350,7 +427,7 @@ func TestResponderAnswersOverUDP(t *testing.T) {
 			t.Errorf("reply from port %d, want %d", from.(*net.UDPAddr).Port, port)
 		}
 		want := `{"type":"betterdesk-announce","version":1,"server":{"name":"host-` + fmt.Sprint(i) +
-			`","version":"1.0","port":5000,"apiPort":21121,"protocol":"http","publicKey":"","addresses":[],"discoveryPort":21119,"panelUrl":"http://127.0.0.1:5000"}}`
+			`","version":"1.0","port":5000,"apiPort":21121,"protocol":"http","publicKey":"","addresses":[],"discoveryPort":21119,"panelUrl":"http://192.168.1.10:5000"}}`
 		if string(buf[:n]) != want {
 			t.Errorf("reply %d %s, want %s", i, buf[:n], want)
 		}

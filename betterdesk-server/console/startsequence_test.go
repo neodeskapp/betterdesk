@@ -9,8 +9,9 @@ import (
 )
 
 // quiet keeps the discovery jobs off the network in these tests: the
-// mDNS announcement off, the LAN responder on a port the system picks.
-var quiet = map[string]string{"PANEL_MDNS": "off", "DISCOVERY_PORT": "65536"}
+// mDNS announcement off; the LAN responder announces nothing for a
+// console on loopback, the address these tests listen on.
+var quiet = map[string]string{"PANEL_MDNS": "off"}
 
 // TestDiscoveryRunsOnlyWithoutNode pins that LAN discovery and the mDNS
 // announcement bind their ports only when no Node console is behind this
@@ -19,7 +20,7 @@ func TestDiscoveryRunsOnlyWithoutNode(t *testing.T) {
 	both := []string{"integration housekeeping", "online status sync"}
 	own := []string{"LAN discovery", "mDNS announcement"}
 
-	alone := newWorld(t, setup{env: map[string]string{"PANEL_MDNS": "on", "DISCOVERY_PORT": "65536"}})
+	alone := newWorld(t, setup{env: map[string]string{"PANEL_MDNS": "on"}})
 	for _, name := range append(both, own...) {
 		if !slices.Contains(alone.s.Jobs().Names(), name) {
 			t.Errorf("without a Node console %q must run here, jobs = %q", name, alone.s.Jobs().Names())
@@ -43,7 +44,7 @@ func TestDiscoveryRunsOnlyWithoutNode(t *testing.T) {
 // bonjour-service had been installed by hand.
 func TestMDNSOnlyWhenAsked(t *testing.T) {
 	for _, value := range []string{"", "off", "0"} {
-		w := newWorld(t, setup{env: map[string]string{"PANEL_MDNS": value, "DISCOVERY_PORT": "65536"}})
+		w := newWorld(t, setup{env: map[string]string{"PANEL_MDNS": value}})
 		if slices.Contains(w.s.Jobs().Names(), "mDNS announcement") {
 			t.Errorf("PANEL_MDNS=%q: the announcement runs, jobs = %q", value, w.s.Jobs().Names())
 		}

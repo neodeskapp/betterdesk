@@ -257,7 +257,7 @@ func (s Settings) mdnsEnabled() bool { return s.MDNS != "off" && s.MDNS != "0" }
 // prepare works out the service from the settings, as the old console
 // did before it published: nothing when PANEL_MDNS is off or the
 // console's address is no URL, the reason in the log when the service
-// cannot be described.
+// cannot be described or there is no address to announce.
 func (m *MDNS) prepare() (*service, bool) {
 	if !m.settings.mdnsEnabled() {
 		return nil, false
@@ -266,7 +266,16 @@ func (m *MDNS) prepare() (*service, bool) {
 		m.logf("WARN: [server] mDNS panel discovery disabled: %v", err)
 		return nil, false
 	}
-	panelURL := m.settings.PanelURL()
+	ifaces, err := m.settings.interfaces()
+	if err != nil {
+		m.logf("WARN: [server] mDNS panel discovery disabled: %v", err)
+		return nil, false
+	}
+	panelURL, err := m.settings.PanelURL(addresses(ifaces))
+	if err != nil {
+		m.logf("WARN: [server] mDNS panel discovery disabled: %v", err)
+		return nil, false
+	}
 	parsed, ok := ssrfguard.ParseURL(panelURL)
 	if !ok {
 		return nil, false

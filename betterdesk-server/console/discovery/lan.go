@@ -14,6 +14,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -106,30 +107,76 @@ func (s Settings) protocol() string {
 	return "http"
 }
 
+// ErrNoAddress says there is no address of the console that others on the
+// network could open: it listens on loopback only, or on every address of
+// a machine without a network address, and PANEL_PUBLIC_URL and
+// PANEL_PUBLIC_HOST are unset. Nothing is announced then.
+var ErrNoAddress = errors.New("the console listens on no address others can reach and neither PANEL_PUBLIC_URL nor PANEL_PUBLIC_HOST is set")
+
+// LoopbackOnly reports whether the console listens on loopback only
+// (HOST is a loopback address or localhost) and nothing names a public
+// address.
+func (s Settings) LoopbackOnly() bool {
+	if s.PublicURL != "" || s.PublicHost != "" {
+		return false
+	}
+	host := strings.TrimSuffix(strings.TrimPrefix(s.Host, "["), "]")
+	ip := net.ParseIP(host)
+	return strings.EqualFold(host, "localhost") || ip != nil && ip.IsLoopback()
+}
+
 // PanelURL is the console's address in the announcement:
 // PANEL_PUBLIC_URL, else scheme, host and the port unless it is the
-// scheme's own.
-func (s Settings) PanelURL() string {
+// scheme's own. The host is PANEL_PUBLIC_HOST, else HOST; a console that
+// listens on every address (0.0.0.0, ::) is announced at the first of
+// addresses, the machine's IPv4 addresses that are not loopback.
+func (s Settings) PanelURL(addresses []string) (string, error) {
 	if s.PublicURL != "" {
-		return decodeUTF8([]byte(s.PublicURL))
+		return decodeUTF8([]byte(s.PublicURL)), nil
 	}
 	host := s.PublicHost
 	if host == "" {
-		host = s.Host
+		switch strings.TrimSuffix(strings.TrimPrefix(s.Host, "["), "]") {
+		case "0.0.0.0", "::", "":
+			if len(addresses) == 0 {
+				return "", ErrNoAddress
+			}
+			host = addresses[0]
+		default:
+			if s.LoopbackOnly() {
+				return "", ErrNoAddress
+			}
+			host = s.Host
+		}
 	}
 	protocol := s.protocol()
 	url := protocol + "://" + decodeUTF8([]byte(host))
 	if (protocol == "https" && s.Port == 443) || (protocol == "http" && s.Port == 80) {
-		return url
+		return url, nil
 	}
-	return url + ":" + numberString(s.Port)
+	return url + ":" + numberString(s.Port), nil
+}
+
+// addresses are the IPv4 addresses of the interfaces that are not
+// loopback.
+func addresses(ifaces []Interface) []string {
+	var out []string
+	for _, iface := range ifaces {
+		for _, entry := range iface.Entries {
+			if entry.Family == "IPv4" && !entry.Internal {
+				out = append(out, entry.Address)
+			}
+		}
+	}
+	return out
 }
 
 // Announcement is the answer to a probe, as the old console's
 // JSON.stringify wrote it: the machine's name, the product version, the
 // ports, the scheme, the public key, the IPv4 addresses that are not
 // loopback, the discovery port and the console's address. Hostname,
-// interfaces and key are read anew for each answer.
+// interfaces and key are read anew for each answer. Without an address
+// to announce it is ErrNoAddress.
 func (s Settings) Announcement() ([]byte, error) {
 	publicKey := ""
 	if raw, err := os.ReadFile(s.PubKeyPath); err == nil {
@@ -140,6 +187,11 @@ func (s Settings) Announcement() ([]byte, error) {
 		return nil, err
 	}
 	name, err := s.hostname()
+	if err != nil {
+		return nil, err
+	}
+	list := addresses(ifaces)
+	panelURL, err := s.PanelURL(list)
 	if err != nil {
 		return nil, err
 	}
@@ -156,23 +208,16 @@ func (s Settings) Announcement() ([]byte, error) {
 	out = append(out, `,"publicKey":`...)
 	out = appendJSONString(out, publicKey)
 	out = append(out, `,"addresses":[`...)
-	first := true
-	for _, iface := range ifaces {
-		for _, entry := range iface.Entries {
-			if entry.Family != "IPv4" || entry.Internal {
-				continue
-			}
-			if !first {
-				out = append(out, ',')
-			}
-			first = false
-			out = appendJSONString(out, entry.Address)
+	for i, address := range list {
+		if i > 0 {
+			out = append(out, ',')
 		}
+		out = appendJSONString(out, address)
 	}
 	out = append(out, `],"discoveryPort":`...)
 	out = appendJSONNumber(out, s.DiscoveryPort)
 	out = append(out, `,"panelUrl":`...)
-	out = appendJSONString(out, s.PanelURL())
+	out = appendJSONString(out, panelURL)
 	return append(out, "}}"...), nil
 }
 
@@ -222,9 +267,15 @@ func NewLAN(settings Settings) *LAN {
 
 // Run binds 0.0.0.0 at the discovery port (an address others may bind
 // too, as Node's reuseAddr allowed) and answers probes until ctx ends.
-// A port that cannot be bound is logged and the responder stays off;
-// nothing it meets ends the process.
+// A console that listens on loopback only, with no public address set,
+// is not announced: Run logs that and returns. A port that cannot be
+// bound is logged and the responder stays off; nothing it meets ends the
+// process.
 func (l *LAN) Run(ctx context.Context) {
+	if l.settings.LoopbackOnly() {
+		l.logf("  LAN Discovery off: %v", ErrNoAddress)
+		return
+	}
 	port := l.settings.DiscoveryPort
 	if l.settings.BadDiscoveryPort != "" {
 		l.logf("WARN: LAN Discovery: DISCOVERY_PORT=%q is no port (1-65535); using %s", l.settings.BadDiscoveryPort, numberString(port))
