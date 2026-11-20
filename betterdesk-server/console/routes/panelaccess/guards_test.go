@@ -101,7 +101,7 @@ func TestGuards(t *testing.T) {
 		{"GET", "/api/panel/access/users/6", view, "", 200},
 		{"PUT", "/api/panel/access/users/6", edit, edit, 200},
 		{"GET", "/api/panel/access/groups/team-1", view, "", 200},
-		{"PUT", "/api/panel/access/groups/team-1", edit, edit, 500}, // a group's policy cannot be saved (BUGS UM2)
+		{"PUT", "/api/panel/access/groups/team-1", edit, edit, 500}, // a group's policy with section rows cannot be saved (BUGS UM2)
 	} {
 		name := tc.method + " " + tc.target
 		if rec := call("", tc.method, tc.target); rec.Code != 401 || rec.Body.String() != signedOut {

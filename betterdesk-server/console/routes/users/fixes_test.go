@@ -36,6 +36,10 @@ type fix struct {
 	// endsSessionsOf are the roles whose sessions the step ends in the Go
 	// console and not in Node.
 	endsSessionsOf []string
+	// undo are the tables, parents first, whose rows are put back after
+	// the step as they were before it (restore): Node's request failed and
+	// wrote nothing where the Go console's goes through.
+	undo []string
 	// pinnedBy names the recording that pins a step this one does not
 	// compare: neither its answer nor its rows nor its calls. It is for a
 	// step whose request Node failed and the Go console carries out, and
@@ -99,11 +103,24 @@ func fixFor(rec recording, name string) (fix, bool) {
 	return fix{}, false
 }
 
+// deletedGroup is a group delete Node failed: the group's policy, which
+// the delete empties first, has no section rows and needs no ceiling, so
+// the Go console deletes the group (BUGS UM2). Node's group stayed, and
+// the steps after it find it again.
+var deletedGroup = fix{
+	bug: "UM2", status: http.StatusOK, answer: is(`{"success":true}`),
+	undo: []string{"user_groups", "user_group_members", "device_group_user_group_access", "panel_access_policies", "client_feature_policies", "audit_log"},
+}
+
 // fixes are the steps the Go console answers otherwise, by the step's
 // name. The names of the steps before the renames (section 9 of the
 // oracle) are the same on every database shape; later ones carry the
 // shape in front.
 var fixes = map[string]fix{
+	"161 DELETE /api/panel/user-groups/{patched}":   deletedGroup,
+	"162 DELETE /api/panel/user-groups/{patched}":   deletedGroup,
+	"163 DELETE /api/panel/user-groups/{byGlobal}":  deletedGroup,
+	"164 DELETE /api/panel/user-groups/%20ug-gamma": deletedGroup,
 	// A username that is no text: Node created viewers named as each
 	// database's driver stored the value; true failed on SQLite.
 	"190 POST /api/users": {bug: "US6", status: http.StatusBadRequest, answer: is(invalidUsername), node: func(n *nodeWrites) {

@@ -123,9 +123,14 @@ func TestSaveForAnAccountWithAnUnknownRole(t *testing.T) {
 		if err != nil || jsJSON(t, saved.Sections) != `[{"resource_key":"devices","access_level":"none"}]` {
 			t.Errorf("rows for an unknown role: %s, %v", jsJSON(t, saved.Sections), err)
 		}
-		// A user group still cannot be saved (BUGS UM2).
-		if _, err := s.SavePolicy(ctx, "group", "g1", nil, nil); err == nil {
-			t.Error("a user group policy was saved")
+		// A user group's policy without section rows needs no ceiling and is
+		// saved, so a group can be deleted; one with rows still cannot be
+		// saved (BUGS UM2).
+		if _, err := s.SavePolicy(ctx, "group", "g1", nil, nil); err != nil {
+			t.Errorf("an empty user group policy: %v", err)
+		}
+		if _, err := s.SavePolicy(ctx, "group", "g1", []any{map[string]any{"resource_key": "devices", "access_level": "read"}}, nil); !errors.Is(err, errGroupCeiling) {
+			t.Errorf("a user group policy with rows: %v", err)
 		}
 		// A policy without section rows looks up no ceiling, so a role
 		// lookup that fails stops only a save with rows.
@@ -575,6 +580,20 @@ func TestPolicyStore(t *testing.T) {
 		}
 		if rows, _ := s.PanelAccessPolicies(ctx, "group", "ops"); jsJSON(t, rows) != `[{"resource_key":"chat","access_level":"write"}]` {
 			t.Errorf("the group's rows after a failed save: %v", rows)
+		}
+		// Without section rows it is saved: deleting a group empties its
+		// policy that way first (BUGS UM2).
+		mustExec(t, db, `INSERT INTO panel_access_policies (subject_type, subject_id, resource_key, access_level) VALUES (?, ?, ?, ?)`,
+			"group", "spare", "chat", "write")
+		groupSaved, err := s.SavePolicy(ctx, "group", "spare", nil, []any{map[string]any{"feature_key": "audio", "enabled": false}})
+		if err != nil || len(groupSaved.Sections) != 0 || len(groupSaved.Features) != 1 {
+			t.Errorf("save for group spare without rows: %+v, %v", groupSaved, err)
+		}
+		if rows, _ := s.PanelAccessPolicies(ctx, "group", "spare"); len(rows) != 0 {
+			t.Errorf("the group's rows after a save without rows: %v", rows)
+		}
+		if rows, _ := s.ClientFeaturePolicies(ctx, "group", "spare"); jsJSON(t, rows) != `[{"feature_key":"audio","enabled":false}]` {
+			t.Errorf("the group's features after a save without rows: %s", jsJSON(t, rows))
 		}
 
 		// A write replaces all rows of its subject.

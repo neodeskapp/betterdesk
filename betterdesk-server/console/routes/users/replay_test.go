@@ -250,6 +250,9 @@ func (p *replayer) run() {
 			continue
 		}
 		f, fixed := fixFor(p.rec, step.Name)
+		if fixed && len(f.undo) > 0 {
+			p.snapshot(f.undo)
+		}
 		got := p.send(step)
 		if fixed && f.pinnedBy != "" {
 			p.api.Calls()
@@ -281,6 +284,9 @@ func (p *replayer) run() {
 			report("step %d %q: calls to the API server\n   node: %q\n     go: %q", i, step.Name, wantCalls, haveCalls)
 		}
 		p.nodeGUIDs(step)
+		if fixed && len(f.undo) > 0 {
+			p.restore(f.undo)
+		}
 		if fixed && f.node != nil {
 			f.node(&nodeWrites{p: p, step: step})
 		}
@@ -293,6 +299,45 @@ func (p *replayer) run() {
 	}
 	if failed > 40 {
 		t.Errorf("%d more differences", failed-40)
+	}
+}
+
+// snapshot copies the rows of tables into tables of their own, for
+// restore.
+func (p *replayer) snapshot(tables []string) {
+	p.t.Helper()
+	ctx := context.Background()
+	for _, table := range tables {
+		for _, query := range []string{`DROP TABLE IF EXISTS replay_undo_` + table, `CREATE TABLE replay_undo_` + table + ` AS SELECT * FROM ` + table} {
+			if _, err := p.db.Exec(ctx, query); err != nil {
+				p.t.Fatalf("snapshot of %s: %v", table, err)
+			}
+		}
+	}
+}
+
+// restore puts the rows of tables back as snapshot copied them: every
+// table is emptied, children first, and filled again in the order its
+// rows had, parents first. On PostgreSQL an emptied table is rewritten
+// first, so the rows come back in that order on disk too and rows that
+// sort alike keep the order the recording has.
+func (p *replayer) restore(tables []string) {
+	p.t.Helper()
+	ctx := context.Background()
+	exec := func(table, query string) {
+		if _, err := p.db.Exec(ctx, query); err != nil {
+			p.t.Fatalf("restore %s: %v", table, err)
+		}
+	}
+	for i := len(tables) - 1; i >= 0; i-- {
+		exec(tables[i], `DELETE FROM `+tables[i])
+		if p.db.IsPostgres() {
+			exec(tables[i], `VACUUM FULL `+tables[i])
+		}
+	}
+	for _, table := range tables {
+		exec(table, `INSERT INTO `+table+` SELECT * FROM replay_undo_`+table)
+		exec(table, `DROP TABLE replay_undo_`+table)
 	}
 }
 

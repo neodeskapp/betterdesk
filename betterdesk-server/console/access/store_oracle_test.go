@@ -270,6 +270,13 @@ func TestOracleStore(t *testing.T) {
 					continue
 				}
 			}
+			// UM2: a user group's policy without section rows needs no
+			// ceiling and is saved, where Node failed for every group.
+			if saved, isSave := result.(SavedPolicy); step.Op == "savePolicy" && step.Error && step.Status == nil && err == nil &&
+				step.Type == SubjectGroup && isSave && len(saved.Sections) == 0 {
+				differ++
+				continue
+			}
 			if step.Op == "rawPolicies" && unknownRole[id] {
 				differ++
 				continue

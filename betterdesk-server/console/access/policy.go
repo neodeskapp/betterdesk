@@ -334,9 +334,10 @@ type SavedPolicy struct {
 // "sections" and "features" of a submitted policy (decoded JSON). Each
 // section row is capped at the subject's role ceiling first (see
 // subjectCeiling and rowCeiling); when the ceiling cannot be worked out
-// nothing is written. An account's policy without section rows needs no
-// ceiling. The two lists are written one after the other, each in its own
-// transaction, and the second is written even when the first fails.
+// nothing is written. A policy without section rows, an account's or a
+// user group's, needs no ceiling: deleting a user group empties its policy
+// that way. The two lists are written one after the other, each in its
+// own transaction, and the second is written even when the first fails.
 func (s *Service) SavePolicy(ctx context.Context, subjectType, subjectID string, sections, features any) (SavedPolicy, error) {
 	id, err := ValidateSubject(subjectType, subjectID)
 	if err != nil {
@@ -346,7 +347,7 @@ func (s *Service) SavePolicy(ctx context.Context, subjectType, subjectID string,
 		Sections: NormalizeSectionPolicies(sections),
 		Features: NormalizeFeaturePolicies(features),
 	}
-	if len(saved.Sections) > 0 || subjectType != SubjectUser {
+	if len(saved.Sections) > 0 {
 		ceiling, err := s.subjectCeiling(ctx, subjectType, id)
 		if err != nil {
 			return SavedPolicy{}, err

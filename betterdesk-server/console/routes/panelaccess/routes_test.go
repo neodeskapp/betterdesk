@@ -217,20 +217,27 @@ func TestGroupPolicy(t *testing.T) {
 			t.Errorf("order of the answer: %s", got.Body)
 		}
 
-		// A group's policy cannot be saved (BUGS UM2): the save fails after
-		// the group was found and the subject checked, and stores nothing.
+		// A group's policy with section rows cannot be saved (BUGS UM2): the
+		// save fails after the group was found and the subject checked, and
+		// stores nothing.
 		serverError := `{"success":false,"error":"Server error"}`
-		for _, body := range []string{policy, `{}`} {
-			if got = admin.Do("PUT", "/api/panel/access/groups/team-1", body); got.Status != 500 || got.Body != serverError {
-				t.Errorf("save %s: %d %s", body, got.Status, got.Body)
-			}
+		if got = admin.Do("PUT", "/api/panel/access/groups/team-1", policy); got.Status != 500 || got.Body != serverError {
+			t.Errorf("save the policy: %d %s", got.Status, got.Body)
 		}
 		if rows := w.AuditRows(); len(rows) != 0 {
-			t.Errorf("audit log after failed saves: %q", rows)
+			t.Errorf("audit log after a failed save: %q", rows)
 		}
 		got = admin.Do("GET", "/api/panel/access/groups/team-1", "")
 		if a = decode(t, got); got.Status != 200 || string(a.Data.Sections) != "[]" || string(a.Data.Features) != "[]" {
 			t.Errorf("after: %d %s", got.Status, got.Body)
+		}
+		// One without section rows needs no ceiling and is saved.
+		if got = admin.Do("PUT", "/api/panel/access/groups/team-1", `{}`); got.Status != 200 ||
+			!strings.HasPrefix(got.Body, `{"success":true,"data":{"group_guid":"team-1","sections":[],"features":[],"effective":{`) {
+			t.Errorf("save nothing: %d %s", got.Status, got.Body)
+		}
+		if rows := w.AuditRows(); len(rows) != 1 || !strings.HasPrefix(rows[0], "user_group_access_policy_updated|Updated access policy for group team-1|") {
+			t.Errorf("audit log after a save without rows: %q", rows)
 		}
 
 		// Stored rows are read as they are: a group has no ceiling.
@@ -258,8 +265,8 @@ func TestGroupPolicy(t *testing.T) {
 		if got := admin.Do("PUT", "/api/panel/access/groups/odd%20guid", policy); got.Status != 400 || got.Body != `{"success":false,"error":"Invalid policy subject"}` {
 			t.Errorf("save for a guid with a space: %d %s", got.Status, got.Body)
 		}
-		if rows := w.AuditRows(); len(rows) != 0 {
-			t.Errorf("audit log after refused saves: %q", rows)
+		if rows := w.AuditRows(); len(rows) != 1 {
+			t.Errorf("audit log after refused saves: %q; want only the save without rows", rows)
 		}
 	})
 }
