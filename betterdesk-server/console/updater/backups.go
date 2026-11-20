@@ -190,15 +190,17 @@ func (s *Service) PruneBackups(keep int) Pruned {
 	return out
 }
 
-// retention is the number of backups to keep after a new one: the
-// setting backup_retention_count when it is a positive number, else
-// BACKUP_RETENTION_COUNT, else all.
+// retention is the number of backups to keep after a new one, 0 for all.
+// A stored setting backup_retention_count decides, as the retention route
+// shows it: a positive number, else all (0 is "keep every backup"). Only
+// without one does BACKUP_RETENTION_COUNT count.
 func (s *Service) retention(ctx context.Context) int {
 	if s.opts.Setting != nil {
 		if value, found, err := s.opts.Setting(ctx, "backup_retention_count"); err == nil && found && value != "" {
 			if n, ok := parseLeadingInt(value); ok && n > 0 {
 				return n
 			}
+			return 0
 		}
 	}
 	if n, ok := parseLeadingInt(s.getenv("BACKUP_RETENTION_COUNT")); ok && n > 0 {

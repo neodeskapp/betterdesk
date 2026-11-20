@@ -100,15 +100,19 @@ func TestDeleteAndPruneBackups(t *testing.T) {
 	}
 }
 
-// After a backup the old ones are pruned to the retention: the setting
-// when it is a positive number, else BACKUP_RETENTION_COUNT.
+// After a backup the old ones are pruned to the retention: the stored
+// setting when there is one (a positive number, else all), else
+// BACKUP_RETENTION_COUNT.
 func TestBackupRetention(t *testing.T) {
 	for _, tc := range []struct {
 		setting, env string
 		found        bool
 		want         int
 	}{
-		{"2", "", true, 2}, {"0", "3", true, 3}, {"abc", "", true, 0}, {"", "1", false, 1}, {"2x", "", true, 2}, {"", "", false, 0},
+		{"2", "", true, 2}, {"abc", "", true, 0}, {"", "1", false, 1}, {"2x", "", true, 2}, {"", "", false, 0},
+		// A stored setting decides, as the retention route reads it: 0
+		// keeps every backup, also with the variable set (UPD5)
+		{"0", "3", true, 0}, {"abc", "3", true, 0}, {"-2", "3", true, 0}, {"2", "3", true, 2}, {"", "3", true, 3},
 	} {
 		in := newInstall(t, func(o *Options) {
 			o.Setting = func(context.Context, string) (string, bool, error) { return tc.setting, tc.found, nil }
