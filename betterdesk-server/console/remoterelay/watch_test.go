@@ -81,10 +81,12 @@ func TestViewerEndsWithItsSession(t *testing.T) {
 					}
 					return goapi.NewObject("id", id), nil
 				},
-				CanAccess: func(_ context.Context, user *session.User, device *goapi.Object) (bool, error) {
+				// The scope looks at the device only, so another account's
+				// session is caught by the account check alone
+				CanAccess: func(_ context.Context, _ *session.User, _ *goapi.Object) (bool, error) {
 					world.mu.Lock()
 					defer world.mu.Unlock()
-					return user != nil && user.ID == 7 && !world.outside, nil
+					return !world.outside, nil
 				},
 				SessionCheck: 30 * time.Millisecond,
 			})

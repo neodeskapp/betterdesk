@@ -75,10 +75,12 @@ func TestRemoteTargetEndsWithItsSession(t *testing.T) {
 					}
 					return goapi.NewObject("id", id)
 				},
-				CanAccess: func(_ context.Context, user *session.User, _ *goapi.Object) (bool, error) {
+				// The scope looks at the target only, so another account's
+				// session is caught by the account check alone
+				CanAccess: func(_ context.Context, _ *session.User, _ *goapi.Object) (bool, error) {
 					changing.mu.Lock()
 					defer changing.mu.Unlock()
-					return user != nil && user.ID == 7 && !changing.outside, nil
+					return !changing.outside, nil
 				},
 				API:          http.HandlerFunc(tunnels.api),
 				SessionCheck: 30 * time.Millisecond,
