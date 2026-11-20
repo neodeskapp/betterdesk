@@ -153,8 +153,10 @@ func TestRelays(t *testing.T) {
 		check("list", "GET", relays, "", 200, `{"data":[`+first+`]}`)
 		check("same address", "POST", relays, `{"name":"Twin","address":"relay.example.com:21117"}`, 409, `{"error":"a relay with this address already exists"}`)
 		check("health", "GET", relays+"/r-0000000000000001/health", "", 200, `{"data":null,"note":"live relay telemetry not yet available"}`)
-		check("health of an unknown relay", "GET", relays+"/nope/health", "", 200, `{"data":null,"note":"live relay telemetry not yet available"}`)
+		// An id no relay has is 404, as for reading it (BUGS.md SC17)
+		check("health of an unknown relay", "GET", relays+"/nope/health", "", 404, `{"error":"not found"}`)
 		check("metrics", "GET", relays+"/r-0000000000000001/metrics", "", 200, `{"data":[],"note":"live relay telemetry not yet available"}`)
+		check("metrics of an unknown relay", "GET", "/api/bd"+relays+"/nope/metrics", "", 404, `{"error":"not found"}`)
 
 		// Defaults: 50 sessions and 100 Mbit/s when the body gives no number
 		const second = `{"id":"r-0000000000000002","created_at":"2026-11-10T12:00:00.003Z","name":"Edge 2","address":"[2001:db8::7]:443","location":"","max_sessions":50,"max_bandwidth_mbps":100,"updated_at":"2026-11-10T12:00:00.004Z","connected_devices":0,"active_sessions":0,"bandwidth_mbps":0,"cpu":0,"memory":0,"status":"unknown"}`

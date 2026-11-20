@@ -252,17 +252,37 @@ func (h *handlers) deleteRelay(w http.ResponseWriter, r *http.Request) {
 
 const noTelemetry = "live relay telemetry not yet available"
 
+// knownRelay answers 404 for an id no relay has, and 500 when the relays
+// cannot be read; it reports whether the id is a relay's.
+func (h *handlers) knownRelay(w http.ResponseWriter, r *http.Request) bool {
+	relays, err := h.load(r.Context(), keyRelays)
+	if err != nil {
+		h.log.Error("[Scaling] read relay:", err)
+		fail(w, r, http.StatusInternalServerError, "failed to load relay node")
+		return false
+	}
+	if find(relays, r.PathValue("nodeId")) < 0 {
+		fail(w, r, http.StatusNotFound, "not found")
+		return false
+	}
+	return true
+}
+
 // relayHealth answers GET /api/panel/scaling/relays/{nodeId}/health. The
 // console has no live data of relays: the answer is the same for every
-// id, known or not.
+// relay.
 func (h *handlers) relayHealth(w http.ResponseWriter, r *http.Request) {
-	kit.JSON(w, r, http.StatusOK, noteAnswer{Data: nil, Note: noTelemetry})
+	if h.knownRelay(w, r) {
+		kit.JSON(w, r, http.StatusOK, noteAnswer{Data: nil, Note: noTelemetry})
+	}
 }
 
 // relayMetrics answers GET /api/panel/scaling/relays/{nodeId}/metrics
-// with an empty list, for every id.
+// with an empty list, for every relay.
 func (h *handlers) relayMetrics(w http.ResponseWriter, r *http.Request) {
-	kit.JSON(w, r, http.StatusOK, noteAnswer{Data: []any{}, Note: noTelemetry})
+	if h.knownRelay(w, r) {
+		kit.JSON(w, r, http.StatusOK, noteAnswer{Data: []any{}, Note: noTelemetry})
+	}
 }
 
 type capacityData struct {
