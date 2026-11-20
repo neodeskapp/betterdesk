@@ -75,8 +75,9 @@ func csvFields(text string) ([][]string, bool) {
 }
 
 // FuzzToCSV writes rows of any JSON as CSV and reads them back: there is
-// a line per row after the header, a field per column, and each field is
-// the JavaScript text of the value, or empty for null and missing values.
+// a line per row after the header, a field per column of any row, and
+// each field is the JSON of a list or an object, the JavaScript text of
+// any other value, or empty for null and missing values.
 func FuzzToCSV(f *testing.F) {
 	for _, seed := range []string{
 		`[{"a":1,"b":"x"}]`, `[{"a,b":"q\"","c":"line\nbreak"},{"c":null}]`, `[{"2":1,"10":2,"x":[1,[2,"a,b"]]}]`,
@@ -101,11 +102,18 @@ func FuzzToCSV(f *testing.F) {
 			}
 			return
 		}
-		first, isObject := rows[0].(*goapi.Object)
-		if !isObject {
-			return
+		var columns []string
+		seen := map[string]bool{}
+		for _, row := range rows {
+			if o, isObject := row.(*goapi.Object); isObject {
+				for _, key := range o.Keys() {
+					if !seen[key] {
+						seen[key] = true
+						columns = append(columns, key)
+					}
+				}
+			}
 		}
-		columns := first.Keys()
 		lines, readable := csvFields(out)
 		if !readable {
 			t.Fatalf("%s gave CSV that does not read back: %q", text, out)
@@ -129,7 +137,11 @@ func FuzzToCSV(f *testing.F) {
 			for r, row := range rows {
 				v, found := prop(row, column)
 				want := ""
-				if found && v != nil {
+				switch {
+				case !found || v == nil:
+				case isObject(v):
+					want = string(Stringify(v))
+				default:
 					want = e.clock.String(v)
 				}
 				if lines[r+1][i] != want {

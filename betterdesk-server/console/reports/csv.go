@@ -6,21 +6,31 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/unitronix/betterdesk-server/console/store"
 )
 
-// ToCSV is toCsv(rows): a header line with the keys of the first row,
-// then one line per row, joined by "\n" with no line end after the last
-// and no byte order mark. A value is its JavaScript text (a date in the
-// zone of the process), null and missing values are empty, and a value
-// with a comma, a quote or "\n" is quoted with its quotes doubled; "\r"
-// alone is not quoted. No rows give the empty text.
+// ToCSV is toCsv(rows): a header line with the keys of every row in the
+// order they first come, then one line per row, joined by "\n" with no
+// line end after the last and no byte order mark. A list or an object is
+// written as JSON, a time as the ISO text the JSON answers carry, any
+// other value as its JavaScript text; null and missing values are empty.
+// A value with a comma, a quote, "\n" or "\r" is quoted with its quotes
+// doubled. No rows give the empty text.
 func (e *Engine) ToCSV(rows []any) string {
 	if len(rows) == 0 {
 		return ""
 	}
 	var columns []string
-	if first, ok := rows[0].(*goapi.Object); ok {
-		columns = first.Keys()
+	seen := map[string]bool{}
+	for _, row := range rows {
+		if o, ok := row.(*goapi.Object); ok {
+			for _, key := range o.Keys() {
+				if !seen[key] {
+					seen[key] = true
+					columns = append(columns, key)
+				}
+			}
+		}
 	}
 	lines := make([]string, 0, len(rows)+1)
 	cells := make([]string, len(columns))
@@ -38,13 +48,21 @@ func (e *Engine) ToCSV(rows []any) string {
 	return strings.Join(lines, "\n")
 }
 
-// csvCell is escape(v) of toCsv; found false is undefined.
+// csvCell is a value in a CSV line; found false is undefined.
 func (e *Engine) csvCell(v any, found bool) string {
 	if !found || v == nil {
 		return ""
 	}
-	s := e.clock.String(v)
-	if strings.ContainsAny(s, ",\"\n") {
+	var s string
+	switch t := v.(type) {
+	case []any, *goapi.Object:
+		s = string(Stringify(t))
+	case Date:
+		s = store.ISOTime(t.T)
+	default:
+		s = e.clock.String(v)
+	}
+	if strings.ContainsAny(s, ",\"\n\r") {
 		return `"` + strings.ReplaceAll(s, `"`, `""`) + `"`
 	}
 	return s

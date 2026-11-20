@@ -26,11 +26,12 @@ type Options struct {
 	DB *store.DB
 	// Now is the clock for generated_at. Default time.Now.
 	Now func() time.Time
-	// Location is the time zone of the process (TZ), which a PostgreSQL
-	// time in a CSV export is written in. Default time.Local.
+	// Location is the time zone of the process (TZ), in which a
+	// PostgreSQL time is written where a report counts values by their
+	// text. Default time.Local.
 	Location *time.Location
-	// ZoneName names the zone of a time in a CSV export, as JavaScript
-	// does in Date.toString ("Coordinated Universal Time"). Default
+	// ZoneName names the zone of such a time, as JavaScript does in
+	// Date.toString ("Coordinated Universal Time"). Default
 	// DefaultZoneName.
 	ZoneName func(time.Time) string
 	// SyncPeers brings the console's device table up to date with the

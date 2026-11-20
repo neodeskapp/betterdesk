@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -467,6 +468,84 @@ func TestReportsSurviveADeviceWithNullInfo(t *testing.T) {
 	})
 }
 
+// jsDate is a time as JavaScript's Date.toString writes it, with the name
+// of its zone in brackets.
+var jsDate = regexp.MustCompile(`^([A-Z][a-z]{2} [A-Z][a-z]{2} \d{2} \d{4} \d{2}:\d{2}:\d{2} GMT[+-]\d{4}) \(.*\)$`)
+
+// sameCSV compares a CSV the Go engine wrote with Node's after RP6: the
+// export quotes a value with "\r", writes lists and objects as JSON and
+// times in the ISO form, and takes its columns from every row. Both are
+// read back field by field. A field is Node's, or Node's time to the
+// second (Node's form has no milliseconds), or the JSON of Node's list
+// (Node joined it with commas) or of an object (Node wrote "[object
+// Object]"). Columns Go adds after Node's are free.
+func sameCSV(node, got string) error {
+	nodeLines, ok := csvFields(node)
+	if !ok {
+		return fmt.Errorf("node's csv does not read back")
+	}
+	goLines, ok := csvFields(got)
+	if !ok {
+		return fmt.Errorf("go's csv does not read back")
+	}
+	if len(nodeLines) != len(goLines) {
+		return fmt.Errorf("%d lines, node has %d", len(goLines), len(nodeLines))
+	}
+	c := clock{loc: time.UTC, zoneName: DefaultZoneName}
+	for i, nodeLine := range nodeLines {
+		goLine := goLines[i]
+		if len(goLine) < len(nodeLine) {
+			return fmt.Errorf("line %d has %d fields, node's %d", i, len(goLine), len(nodeLine))
+		}
+		for j, want := range nodeLine {
+			have := goLine[j]
+			if have == want {
+				continue
+			}
+			if m := jsDate.FindStringSubmatch(want); m != nil {
+				at, err := time.Parse("Mon Jan 02 2006 15:04:05 GMT-0700", m[1])
+				iso, isoErr := time.Parse(time.RFC3339Nano, have)
+				if err == nil && isoErr == nil && store.ISOTime(iso.Truncate(time.Second)) == store.ISOTime(at) {
+					continue
+				}
+			}
+			if parsed, err := goapi.Parse([]byte(have)); err == nil {
+				if _, isList := parsed.([]any); isList && c.String(parsed) == want {
+					continue
+				}
+				if _, isObject := parsed.(*goapi.Object); isObject && want == "[object Object]" {
+					continue
+				}
+			}
+			return fmt.Errorf("line %d field %d is %q, node's %q", i, j, have, want)
+		}
+	}
+	return nil
+}
+
+// TestCSVQuotesCarriageReturnsAndWritesISOTimes: the CSV export quotes a
+// value with a carriage return, writes a list or an object as JSON and a
+// PostgreSQL time in the ISO form of the JSON answers, whatever the zone
+// of the process, and takes its columns from every row (BUGS.md RP6).
+func TestCSVQuotesCarriageReturnsAndWritesISOTimes(t *testing.T) {
+	berlin, err := time.LoadLocation("Europe/Berlin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := New(Options{Location: berlin})
+	rows := []any{
+		goapi.NewObject("a", "only\rcarriage", "list", []any{1.0, "a,b", nil}, "obj", goapi.NewObject("x", 1.0),
+			"at", Date{T: time.Date(2019, 11, 26, 1, 25, 25, 500e6, time.UTC)}),
+		goapi.NewObject("a", "plain", "extra", true),
+	}
+	want := "a,list,obj,at,extra\n" +
+		"\"only\rcarriage\",\"[1,\"\"a,b\"\",null]\",\"{\"\"x\"\":1}\",2019-11-26T01:25:25.500Z,\n" +
+		"plain,,,,true"
+	if got := e.ToCSV(rows); got != want {
+		t.Errorf("csv:\n got %q\nwant %q", got, want)
+	}
+}
+
 // TestNodeReports makes every report the Node engine made
 // (testdata/engine_*.json, written by testdata/nodeoracle/engine.js) on
 // the same rows and compares the JSON and the CSV of every part, byte for
@@ -496,6 +575,9 @@ func TestNodeReports(t *testing.T) {
 			if !used["rewrite "+r.bug] {
 				t.Errorf("the fix of %s changes no report", r.bug)
 			}
+		}
+		if !used["csv RP6"] {
+			t.Error("the fix of RP6 changes no csv")
 		}
 	})
 }
@@ -594,7 +676,10 @@ func replayRecording(t *testing.T, db *store.DB, file string, used map[string]bo
 			}
 			for _, s := range c.CSV {
 				if csv := e.ToCSV(report.CSVRows(valueOf(t, s.Section))); csv != s.CSV {
-					fail("%s %s, csv of %s:\n node: %q\n   go: %q", world.Name, c.Body, s.Section, s.CSV, csv)
+					used["csv RP6"] = true
+					if err := sameCSV(s.CSV, csv); err != nil {
+						fail("%s %s, csv of %s (RP6): %v:\n node: %q\n   go: %q", world.Name, c.Body, s.Section, err, s.CSV, csv)
+					}
 				}
 			}
 		}
@@ -606,7 +691,10 @@ func replayRecording(t *testing.T, db *store.DB, file string, used map[string]bo
 		}
 		list, _ := rows.([]any)
 		if got := e.ToCSV(list); got != c.CSV {
-			fail("toCsv(%s):\n node: %q\n   go: %q", c.Rows, c.CSV, got)
+			used["csv RP6"] = true
+			if err := sameCSV(c.CSV, got); err != nil {
+				fail("toCsv(%s) (RP6): %v:\n node: %q\n   go: %q", c.Rows, err, c.CSV, got)
+			}
 		}
 	}
 	if failures > 30 {

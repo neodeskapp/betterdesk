@@ -233,6 +233,32 @@ func restoreAsNode(t *testing.T, w *replay.World, step replay.Step) {
 	w.Exec("UPDATE saved_reports SET filters = "+value+", payload = "+value+" WHERE id = ?", []any{stored(row.Filters), stored(row.Payload), row.ID})
 }
 
+// RP6: the CSV export writes an object as JSON, where Node wrote "[object
+// Object]" (the seeded banned device whose note is an object), and a
+// PostgreSQL time in the ISO form, where Node wrote the long local form.
+// Such an export keeps its header; console/reports compares the fields
+// with Node's one by one.
+var _ = reportFixes.Add("RP6", csvFixes("sqlite"))
+var _ = reportFixes.Add("RP6", csvFixes("postgres"))
+
+func csvFixes(dialect string) map[string]replay.Fix {
+	steps := map[string]replay.Fix{}
+	for _, step := range recordedStepsOn(dialect) {
+		if step.Path != "/api/reports/generate/csv" || step.Status != 200 || !strings.Contains(step.Answer, "[object Object]") && !jsTime.MatchString(step.Answer) {
+			continue
+		}
+		header, _, _ := strings.Cut(step.Answer, "\n")
+		steps[replay.FixKey(step)] = replay.Fix{
+			Dialect: dialect, Status: 200, Has: []string{header + "\n"}, Lacks: []string{"[object Object]", " GMT"},
+			Headers: map[string]string{"Content-Type": "text/csv; charset=utf-8"},
+		}
+	}
+	return steps
+}
+
+// jsTime is a time in the form of JavaScript's Date.toString.
+var jsTime = regexp.MustCompile(`\d{2}:\d{2}:\d{2} GMT[+-]\d{4} \(`)
+
 // answerFix is a change a bug fix makes to answers wherever they show a
 // part of a report: in many steps, also in a request sent again with
 // another answer, which reportFixes cannot tell apart. Node's answer of a

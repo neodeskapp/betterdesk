@@ -29,8 +29,7 @@ type handlers struct {
 	now    func() time.Time
 }
 
-// Register adds the group's routes below the mount (/api/reports). The
-// engine writes times of PostgreSQL into a CSV in the zone of the process.
+// Register adds the group's routes below the mount (/api/reports).
 func Register(d *kit.Deps) {
 	opts := engine.Options{DB: d.Store}
 	if d.DeviceGroups != nil {
