@@ -180,7 +180,7 @@ func (h *handlers) listSaved(w http.ResponseWriter, r *http.Request) {
 }
 
 // getSaved answers GET /api/reports/saved/{id}: the saved report with its
-// payload parsed. A payload that is text and no JSON is 500.
+// payload parsed. A payload that is text and no JSON is {}.
 func (h *handlers) getSaved(w http.ResponseWriter, r *http.Request) {
 	report, err := savedReportByID(r.Context(), h.db, number(r, "id"))
 	if err != nil {
@@ -197,9 +197,7 @@ func (h *handlers) getSaved(w http.ResponseWriter, r *http.Request) {
 	if text, isText := payload.(string); isText {
 		parsed, err := engine.ParseJSON(text)
 		if err != nil {
-			h.log.Error("get saved/:id error:", err)
-			fail(w, r, http.StatusInternalServerError, "Failed to fetch report")
-			return
+			parsed = goapi.NewObject()
 		}
 		payload = parsed
 	} else if !engine.Truthy(payload) {

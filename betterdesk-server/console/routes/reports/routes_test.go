@@ -238,6 +238,23 @@ func TestActivityRangeMustBeTimes(t *testing.T) {
 	})
 }
 
+// TestSavedReportWithAPayloadThatIsNoJSON: a saved report whose payload
+// is text and no JSON is read with the payload {}, where it answered 500
+// (BUGS.md RP8).
+func TestSavedReportWithAPayloadThatIsNoJSON(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		if _, err := db.Exec(context.Background(), `INSERT INTO saved_reports (id, title, report_type, filters, payload, created_by)
+			VALUES (7, 'Broken', 'devices', '{}', `+db.Pick(`'not json'`, `'"not json"'`)+`, 'admin')`); err != nil {
+			t.Fatal(err)
+		}
+		got := w.As("viewer").Do("GET", "/api/reports/saved/7", "")
+		if got.Status != 200 || !strings.Contains(got.Body, `"title":"Broken","report_type":"devices","filters":`) || !strings.Contains(got.Body, `"payload":{},`) {
+			t.Errorf("saved report with a payload that is no JSON: %d %s", got.Status, got.Body)
+		}
+	})
+}
+
 // TestDatabaseFailures: a failing query answers each route's own 500.
 func TestDatabaseFailures(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {

@@ -256,6 +256,42 @@ func csvFixes(dialect string) map[string]replay.Fix {
 	return steps
 }
 
+// RP8: a saved report whose payload is text and no JSON (the seeded report
+// 2) is read with the payload {}, where Node answered 500. The answer is
+// the row as Node's list of saved reports shows it, with that payload.
+var _ = reportFixes.Add("RP8", brokenPayloads("sqlite"))
+var _ = reportFixes.Add("RP8", brokenPayloads("postgres"))
+
+func brokenPayloads(dialect string) map[string]replay.Fix {
+	steps := recordedStepsOn(dialect)
+	var row *goapi.Object
+	for _, step := range steps {
+		if step.Method != "GET" || step.Path != "/api/reports/saved" || step.Status != 200 {
+			continue
+		}
+		list, err := goapi.Parse([]byte(step.Answer))
+		if err != nil {
+			panic(err)
+		}
+		for _, item := range list.([]any) {
+			if o, _ := item.(*goapi.Object); o != nil && o.Get("id") == 2.0 {
+				row = o.Clone().Set("payload", goapi.NewObject())
+			}
+		}
+		break
+	}
+	if row == nil {
+		panic("RP8: Node's list of saved reports has no report 2")
+	}
+	fixes := map[string]replay.Fix{}
+	for _, step := range steps {
+		if step.Path == "/api/reports/saved/2" && step.Status == 500 {
+			fixes[replay.FixKey(step)] = replay.Fix{Dialect: dialect, Status: 200, Answer: string(engine.Stringify(row))}
+		}
+	}
+	return fixes
+}
+
 // jsTime is a time in the form of JavaScript's Date.toString.
 var jsTime = regexp.MustCompile(`\d{2}:\d{2}:\d{2} GMT[+-]\d{4} \(`)
 
