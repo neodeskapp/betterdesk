@@ -5,20 +5,19 @@ import (
 	"strings"
 )
 
-// The cleaning rules are regular expressions written for JavaScript. Three
-// things differ in Go and are spelled out in the patterns below:
+// The CSS cleaning rules are regular expressions written for JavaScript.
+// Two things differ in Go and are spelled out in the patterns below:
 //
 //   - \s is JavaScript's white space (jsSpaceClass), not only ASCII.
 //   - "Ignore case" covers ASCII letters only. Go's (?i) would also let
 //     ſ stand for s and the Kelvin sign for k, so every letter is written
 //     as a class: [sS].
-//   - There are no back references, so a rule that names its closing tag
-//     through one lists every tag as its own alternative.
+//
+// SVG markup is cleaned with a parser instead (svg.go).
 
 const (
 	sp    = `[` + jsSpaceClass + `]`
 	notSp = `[^` + jsSpaceClass + `>]`
-	anyCh = `(?s:.)`
 )
 
 // ci spells a word so that each ASCII letter matches in both cases.
@@ -51,29 +50,10 @@ func ciAny(words ...string) string {
 }
 
 var (
-	svgPairedTags = []string{"script", "foreignobject", "iframe", "embed", "object", "applet", "animate", "set", "style", "use", "image"}
-	svgSingleTags = []string{"script", "foreignobject", "iframe", "embed", "object", "applet", "style", "use", "image"}
-	urlSchemes    = ciAny("javascript", "data", "vbscript", "file")
+	urlSchemes = ciAny("javascript", "data", "vbscript", "file")
 
-	reXMLInstruction = regexp.MustCompile(`<\?` + anyCh + `*?\?>`)
-	reDoctype        = regexp.MustCompile(`<!` + ci("doctype") + anyCh + `*?>`)
-
-	// An element that can run script or load something, with its content
-	// up to the closing tag of the same name
-	reSVGDangerousTags = regexp.MustCompile(func() string {
-		parts := make([]string, len(svgPairedTags))
-		for i, tag := range svgPairedTags {
-			parts[i] = `<` + sp + `*` + ci(tag) + `\b[^>]*>` + anyCh + `*?<` + sp + `*/` + sp + `*` + ci(tag) + sp + `*>`
-		}
-		return strings.Join(parts, `|`)
-	}())
-	reSVGDangerousSelfClosing = regexp.MustCompile(`<` + sp + `*` + ciAny(svgSingleTags...) + `\b[^>]*/>`)
-
-	// An event handler or a script link, with the rest of the tag
-	reSVGDangerousAttrs = regexp.MustCompile(sp + `(?:` + ci("on") + `\w+|` + ci("xlink:href") + sp + `*=` + sp + `*["']` + sp + `*` + urlSchemes + `:)[^>]*`)
-	reSVGOnAttr         = regexp.MustCompile(sp + `+` + ci("on") + `[a-zA-Z]+` + sp + `*=` + sp + `*(?:"[^"]*"|'[^']*'|` + notSp + `*)`)
-	reSVGScriptHref     = regexp.MustCompile(`\b(?:` + ci("xlink:") + `)?` + ci("href") + sp + `*=` + sp + `*["']` + sp + `*` + urlSchemes + `:[^"']*`)
-	reSVGCSSExpression  = regexp.MustCompile(`\b(?:` + ci("expression") + `|` + ci("@import") + `|` + ci("url") + sp + `*\(` + sp + `*["']?` + sp + `*` + urlSchemes + `:)`)
+	// An event handler attribute with its value
+	reEventAttr = regexp.MustCompile(sp + `+` + ci("on") + `[a-zA-Z]+` + sp + `*=` + sp + `*(?:"[^"]*"|'[^']*'|` + notSp + `*)`)
 
 	reCSSStyleTag   = regexp.MustCompile(`<` + sp + `*/?` + sp + `*` + ci("style") + `[^>]*>`)
 	reCSSAnyTag     = regexp.MustCompile(`<[^>]*>`)
@@ -131,29 +111,6 @@ func remover(re *regexp.Regexp, with string) func(string) string {
 	return func(s string) string { return re.ReplaceAllLiteralString(s, with) }
 }
 
-// SanitizeSVG removes from SVG markup what can run script or fetch from
-// elsewhere: processing instructions and DOCTYPE, script-like elements,
-// event handler attributes, script links and CSS expressions. A value that
-// is not a string gives "".
-func SanitizeSVG(svg any) string {
-	s, ok := svg.(string)
-	if !ok || s == "" {
-		return ""
-	}
-	s = reXMLInstruction.ReplaceAllLiteralString(s, "")
-	s = reDoctype.ReplaceAllLiteralString(s, "")
-	s = stripUntilStable(s,
-		remover(reSVGDangerousTags, ""),
-		remover(reSVGDangerousSelfClosing, ""),
-	)
-	s = stripUntilStable(s,
-		remover(reSVGDangerousAttrs, ""),
-		remover(reSVGScriptHref, ` href="#"`),
-		remover(reSVGCSSExpression, "blocked-"),
-	)
-	return stripUntilStable(s, scriptTag.strip, styleTag.strip, remover(reSVGOnAttr, " "))
-}
-
 // SanitizeCSSColorValue cleans a colour or gradient that goes into the
 // generated stylesheet. Only letters, digits, white space and # % . , ( )
 // / - stay, "expression(" and "url(" are taken out until none is left (also
@@ -205,7 +162,7 @@ func sanitizeCustomCSS(value any) string {
 		remover(reCSSAnyTag, ""),
 		scriptTag.strip,
 		styleTag.strip,
-		remover(reSVGOnAttr, " "),
+		remover(reEventAttr, " "),
 		remover(reCSSImport, ""),
 		remover(reCSSExpression, ""),
 		remover(reCSSBehavior, ""),

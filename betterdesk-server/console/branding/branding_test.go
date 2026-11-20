@@ -361,8 +361,9 @@ func TestSaveCleansValues(t *testing.T) {
 		for key, want := range map[string]string{
 			"appName":    "42",
 			"faviconSvg": `<svg><rect width="4" height="4"/></svg>`,
-			// the cut of a script link leaves its closing quote behind
-			"logoSvg":                 `<svg><a  href="#"">x</a></svg>`,
+			// the script link goes, and so does the XLink link, as the
+			// prefix xlink is not declared (BUGS BR13)
+			"logoSvg":                 `<svg><a>x</a><use/><style>*{}</style></svg>`,
 			"bgImageUrl":              "https://example.com/a%20b.png",
 			"bgColor":                 "redbodydisplaynone",
 			"bgGradient":              "linear-gradient(135deg, #111 0%, #222 100%) background x)",
@@ -852,13 +853,16 @@ func TestExportAndImport(t *testing.T) {
 			t.Errorf("after the import of the flat part: %s", clip(Stringify(b)))
 		}
 		// the flat part is used when there is no appearance part
-		flatOnly := object("type", "betterdesk-theme", "branding", object("appName", strings.Repeat("n", 600), "customCss", ".b{}", "logoSvg", strings.Repeat("<g>", 20000)))
+		// an SVG of 50,000 characters stays whole, one longer is cut and so
+		// no longer a document
+		svgOf := func(length int) string { return "<svg><desc>" + strings.Repeat("d", length-24) + "</desc></svg>" }
+		flatOnly := object("type", "betterdesk-theme", "branding", object("appName", strings.Repeat("n", 600), "customCss", ".b{}", "logoSvg", svgOf(50000), "faviconSvg", svgOf(50001)))
 		if ok, err := s.ImportPreset(ctx, flatOnly); !ok || err != nil {
 			t.Fatal(ok, err)
 		}
 		b = s.GetBranding()
-		if len(b.Text("appName")) != 500 || b.Text("customCss") != ".b{}" || len(b.Text("logoSvg")) != 50000 {
-			t.Errorf("length limits of an import: appName %d, customCss %q, logoSvg %d", len(b.Text("appName")), b.Text("customCss"), len(b.Text("logoSvg")))
+		if len(b.Text("appName")) != 500 || b.Text("customCss") != ".b{}" || b.Text("logoSvg") != svgOf(50000) || b.Text("faviconSvg") != "" {
+			t.Errorf("length limits of an import: appName %d, customCss %q, logoSvg %d, faviconSvg %d", len(b.Text("appName")), b.Text("customCss"), len(b.Text("logoSvg")), len(b.Text("faviconSvg")))
 		}
 		for _, bad := range []any{nil, "x", 5.0, object(), object("type", "betterdesk-theme"), object("type", "other", "branding", object()), []any{}} {
 			if ok, err := s.ImportPreset(ctx, bad); ok || err != nil {

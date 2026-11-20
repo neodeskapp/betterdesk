@@ -194,9 +194,10 @@ func (s *Service) LoadBranding(ctx context.Context) *Object {
 
 // brandingFromRows lays stored settings over the defaults. A setting
 // without a row keeps its default: the plain sign-in layout and the
-// built-in slides among them. A row whose key is no setting is ignored,
-// and a row that cannot be read (a slide list with a value that cannot be
-// turned into text) is logged and leaves its setting as it was.
+// built-in slides among them. The SVG markup of the logo and favicon is
+// cleaned (SanitizeSVG) as on a save. A row whose key is no setting is
+// ignored, and a row that cannot be read (a slide list with a value that
+// cannot be turned into text) is logged and leaves its setting as it was.
 func brandingFromRows(rows []configRow, logf func(format string, args ...any)) *Object {
 	branding := DefaultBranding()
 	for _, row := range rows {
@@ -224,6 +225,10 @@ func applyRow(branding *Object, row configRow) {
 		branding.Set("loginSlides", sanitizeLoginSlides(row.value))
 	case "loginPromoMode":
 		branding.Set("loginPromoMode", normalizeLoginPromoMode(row.value))
+	case "logoSvg", "faviconSvg":
+		// a row an older version stored, or one restored from a backup,
+		// went through an older cleaner or none
+		branding.Set(row.key, SanitizeSVG(row.value))
 	default:
 		if branding.Has(row.key) {
 			branding.Set(row.key, row.value)

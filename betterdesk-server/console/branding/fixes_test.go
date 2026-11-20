@@ -44,7 +44,7 @@ func hasCSSWord(text string, rules []*regexp.Regexp) bool {
 // nodeCustomCSS and nodeColor are the CSS cleaners as Node ran them: the
 // rules for words once each, after the tags.
 func nodeCustomCSS(text string) string {
-	css := stripUntilStable(text, remover(reCSSStyleTag, ""), remover(reCSSAnyTag, ""), scriptTag.strip, styleTag.strip, remover(reSVGOnAttr, " "))
+	css := stripUntilStable(text, remover(reCSSStyleTag, ""), remover(reCSSAnyTag, ""), scriptTag.strip, styleTag.strip, remover(reEventAttr, " "))
 	for i, re := range customCSSWords {
 		with := ""
 		if i == len(customCSSWords)-1 {
@@ -69,6 +69,65 @@ func nodeColor(text string) string {
 	return substring(out, 400)
 }
 
+// The rules of Node's SVG cleaner, which worked on the text.
+var (
+	anyCh         = `(?s:.)`
+	svgPairedTags = []string{"script", "foreignobject", "iframe", "embed", "object", "applet", "animate", "set", "style", "use", "image"}
+	svgSingleTags = []string{"script", "foreignobject", "iframe", "embed", "object", "applet", "style", "use", "image"}
+
+	reXMLInstruction = regexp.MustCompile(`<\?` + anyCh + `*?\?>`)
+	reDoctype        = regexp.MustCompile(`<!` + ci("doctype") + anyCh + `*?>`)
+	// an element that can run script or load something, with its content
+	// up to the closing tag of the same name (Go has no back references,
+	// so every tag is its own alternative)
+	reSVGDangerousTags = regexp.MustCompile(func() string {
+		parts := make([]string, len(svgPairedTags))
+		for i, tag := range svgPairedTags {
+			parts[i] = `<` + sp + `*` + ci(tag) + `\b[^>]*>` + anyCh + `*?<` + sp + `*/` + sp + `*` + ci(tag) + sp + `*>`
+		}
+		return strings.Join(parts, `|`)
+	}())
+	reSVGDangerousSelfClosing = regexp.MustCompile(`<` + sp + `*` + ciAny(svgSingleTags...) + `\b[^>]*/>`)
+	// an event handler or a script link, with the rest of the tag
+	reSVGDangerousAttrs = regexp.MustCompile(sp + `(?:` + ci("on") + `\w+|` + ci("xlink:href") + sp + `*=` + sp + `*["']` + sp + `*` + urlSchemes + `:)[^>]*`)
+	reSVGScriptHref     = regexp.MustCompile(`\b(?:` + ci("xlink:") + `)?` + ci("href") + sp + `*=` + sp + `*["']` + sp + `*` + urlSchemes + `:[^"']*`)
+	reSVGCSSExpression  = regexp.MustCompile(`\b(?:` + ci("expression") + `|` + ci("@import") + `|` + ci("url") + sp + `*\(` + sp + `*["']?` + sp + `*` + urlSchemes + `:)`)
+)
+
+// nodeSVG is Node's SVG cleaner (sanitizeSvg), which the recordings hold.
+func nodeSVG(s string) string {
+	if s == "" {
+		return ""
+	}
+	s = reXMLInstruction.ReplaceAllLiteralString(s, "")
+	s = reDoctype.ReplaceAllLiteralString(s, "")
+	s = stripUntilStable(s, remover(reSVGDangerousTags, ""), remover(reSVGDangerousSelfClosing, ""))
+	s = stripUntilStable(s, remover(reSVGDangerousAttrs, ""), remover(reSVGScriptHref, ` href="#"`), remover(reSVGCSSExpression, "blocked-"))
+	return stripUntilStable(s, scriptTag.strip, styleTag.strip, remover(reEventAttr, " "))
+}
+
+// fixedSVG checks a recorded call of sanitizeSvg whose answer differs
+// (BR13): the console's answer must be SVG without problems that cleaning
+// again leaves as it is, and when the argument and Node's answer are both
+// SVG documents, it must draw the same shapes as Node's answer.
+func fixedSVG(t testing.TB, a []any, got, want string) bool {
+	t.Helper()
+	answer, err := parseJSON(got)
+	out, isText := answer.(string)
+	if err != nil || !isText || len(svgProblems(out)) > 0 || SanitizeSVG(out) != out {
+		return false
+	}
+	in, _ := argAt(a, 0).(string)
+	node, err := parseJSON(want)
+	nodeText, nodeIsText := node.(string)
+	if _, isDoc := svgDrawing(in); !isDoc || err != nil || !nodeIsText {
+		return true
+	}
+	nodeShapes, nodeIsDoc := svgDrawing(nodeText)
+	shapes, _ := svgDrawing(out)
+	return !nodeIsDoc || shapes == nodeShapes
+}
+
 // wrappedCSSWord reports a text that a CSS cleaner now cleans otherwise
 // than Node did: one with a word wrapped around itself (BR7).
 func wrappedCSSWord(v any) bool {
@@ -80,10 +139,18 @@ func wrappedCSSWord(v any) bool {
 }
 
 // fixedPure checks a recorded call of TestOraclePure whose answer a fix
-// changes on purpose. It returns the bug id when Go answered as the fix
-// says, and "" for a call no fix changes or one Go answers otherwise
-// (which is then reported against Node's answer).
-func fixedPure(name string, a []any, got string) string {
+// changes on purpose (got is the console's answer, want Node's). It
+// returns the bug id when Go answered as the fix says, and "" for a call
+// no fix changes or one Go answers otherwise (which is then reported
+// against Node's answer).
+func fixedPure(t testing.TB, name string, a []any, got, want string) string {
+	// BR13: SVG is read with a parser and cleaned with allowlists
+	if name == "sanitizeSvg" {
+		if fixedSVG(t, a, got, want) {
+			return "BR13"
+		}
+		return ""
+	}
 	// BR7: the CSS cleaners run until nothing is left to remove
 	rules := colorWords
 	if name == "sanitizeCustomCss" {
@@ -384,6 +451,16 @@ func (f *storeFixes) before(step any) {
 		bug = "BR5"
 	case property(step, "op") == "profileApply" && anyValue(f.profileData(id), wrappedCSSWord):
 		bug = "BR7"
+	// BR13: an SVG setting the console cleans otherwise than Node, on the
+	// way in, and in rows written straight on the way out
+	case property(step, "op") == "rows" && svgSettingValue(property(step, "rows"), cleanedOnRead):
+		bug = "BR13"
+	case property(step, "op") == "save" && svgSettingValue(property(step, "updates"), cleanedOtherwise(0)):
+		bug = "BR13"
+	case property(step, "op") == "import" && svgSettingValue(property(step, "preset"), cleanedOtherwise(50000)):
+		bug = "BR13"
+	case property(step, "op") == "profileApply" && svgSettingValue(f.profileData(id), cleanedOtherwise(50000)):
+		bug = "BR13"
 	}
 	if bug != "" {
 		f.diverged = bug
@@ -464,7 +541,7 @@ func (f *storeFixes) recordedProfiles(recorded any) any {
 // that the state was Node's again soon after each.
 func (f *storeFixes) check() {
 	f.t.Helper()
-	for bug, atLeast := range map[string]int{"BR1": 5, "BR2": 1, "BR5": 1, "BR7": 1, "BR11": 1, "BR12": 1} {
+	for bug, atLeast := range map[string]int{"BR1": 5, "BR2": 1, "BR5": 1, "BR7": 1, "BR11": 1, "BR12": 1, "BR13": 1} {
 		if f.fixed[bug] < atLeast {
 			f.t.Errorf("%d steps of the scenario are changed by the fix of %s, the recording has more", f.fixed[bug], bug)
 		}
@@ -485,6 +562,21 @@ func (f *storeFixes) check() {
 func fixedImportAnswer(step any, got string) bool {
 	return property(step, "op") == "import" && bothParts(property(step, "preset")) &&
 		(got == "true" || strings.HasPrefix(got, "throws TypeError: ") || strings.HasPrefix(got, "throws Error: save the branding settings: "))
+}
+
+// fixedSVGAnswer reports BR13 for the answer of a save, an import or a
+// profile applied in TestOracleStore that PostgreSQL refused in Node for a
+// zero byte in the SVG markup of the logo or favicon: the console cleans
+// such markup to "", as it is no XML, so the write goes through.
+func (f *storeFixes) fixedSVGAnswer(step any, got, want string) bool {
+	if got != "undefined" && got != "true" || !strings.Contains(want, `invalid byte sequence for encoding "UTF8": 0x00`) {
+		return false
+	}
+	zeroByte := func(v any) bool {
+		text, ok := v.(string)
+		return ok && strings.ContainsRune(text, 0)
+	}
+	return svgSettingValue(step, zeroByte) || property(step, "op") == "profileApply" && svgSettingValue(f.profileData(f.profileID(step)), zeroByte)
 }
 
 // bothParts reports a theme with an appearance and a branding part, which
@@ -517,6 +609,59 @@ func oddRows(rows any) bool {
 		}
 	}
 	return false
+}
+
+// svgSettingValue reports whether test holds for a value of logoSvg or
+// faviconSvg anywhere in v: under that key in an object (also one handed
+// over as JSON text), or as the value of a stored row [key, value].
+func svgSettingValue(v any, test func(any) bool) bool {
+	switch x := v.(type) {
+	case []any:
+		if len(x) == 2 && (x[0] == "logoSvg" || x[0] == "faviconSvg") && test(x[1]) {
+			return true
+		}
+		for _, item := range x {
+			if svgSettingValue(item, test) {
+				return true
+			}
+		}
+	case *Object:
+		found := false
+		entries(x, func(key string, value any) {
+			found = found || (key == "logoSvg" || key == "faviconSvg") && test(value) || svgSettingValue(value, test)
+		})
+		return found
+	case string:
+		if text := trim(x); strings.HasPrefix(text, "[") || strings.HasPrefix(text, "{") {
+			if parsed, err := parseJSON(x); err == nil {
+				return svgSettingValue(parsed, test)
+			}
+		}
+	}
+	return false
+}
+
+// cleanedOtherwise is a test for svgSettingValue: a value that the
+// console cleans otherwise than Node did when it is saved, after it is
+// cut at limit characters (0: not cut).
+func cleanedOtherwise(limit int) func(any) bool {
+	return func(v any) bool {
+		var text string
+		if err := try(func() { text = toString(v) }); err != nil {
+			return false
+		}
+		if limit > 0 {
+			text = substring(text, limit)
+		}
+		return SanitizeSVG(text) != nodeSVG(text)
+	}
+}
+
+// cleanedOnRead is a test for svgSettingValue: a stored value that the
+// console cleans when it reads it, where Node took it as it was.
+func cleanedOnRead(v any) bool {
+	text, ok := v.(string)
+	return ok && SanitizeSVG(text) != text
 }
 
 // isControlAddress reports a picture address on this server with a
@@ -651,6 +796,58 @@ func TestBackgroundAddressWithALineBreakStaysInItsDeclaration(t *testing.T) {
 		setRows(t, s, [2]string{"bgType", "image"}, [2]string{"bgImageUrl", attack})
 		if css := mustCSS(t, s); strings.Contains(css, "display:none") || strings.Contains(css, "url(") {
 			t.Errorf("the stylesheet of a stored row:\n%s", css)
+		}
+	})
+}
+
+// TestStoredSVGIsCleanedOnRead: the logo and favicon an older version
+// stored are cleaned when the settings are read, so what Node's cleaner
+// let through reaches neither the favicon nor the settings the web app
+// and the remote pages get; the stored rows stay as they are until the
+// next save (BUGS BR13).
+func TestStoredSVGIsCleanedOnRead(t *testing.T) {
+	const (
+		stored  = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 4"><a href="java&#115;cript:alert(1)"><rect width="4" height="4"/></a></svg>`
+		cleaned = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 4"><a><rect width="4" height="4"/></a></svg>`
+		clean   = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 4"><circle cx="2" cy="2" r="2"/></svg>`
+	)
+	if nodeSVG(stored) != stored {
+		t.Fatalf("Node's cleaner changes the stored logo: %q", nodeSVG(stored))
+	}
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		s := newService(t, db)
+		ctx := context.Background()
+		setRows(t, s, [2]string{"logoType", "svg"}, [2]string{"logoSvg", stored}, [2]string{"faviconSvg", stored})
+		b := s.GetBranding()
+		if b.Text("logoSvg") != cleaned || b.Text("faviconSvg") != cleaned || s.GenerateFavicon() != cleaned {
+			t.Errorf("read: logo %q, favicon setting %q, favicon %q", b.Text("logoSvg"), b.Text("faviconSvg"), s.GenerateFavicon())
+		}
+		if got := Stringify(s.BootstrapBranding("x")); !strings.Contains(got, `"logoSvg":"`+strings.ReplaceAll(cleaned, `"`, `\"`)+`"`) {
+			t.Errorf("bootstrap: %s", got)
+		}
+		if value, _ := storedValue(t, s, "logoSvg"); value != stored {
+			t.Errorf("the stored row was changed: %q", value)
+		}
+		// a clean one is read as it is, one with nothing left gives the
+		// default favicon and logo
+		setRows(t, s, [2]string{"logoType", "svg"}, [2]string{"logoSvg", clean}, [2]string{"faviconSvg", clean})
+		if b := s.GetBranding(); b.Text("logoSvg") != clean || s.GenerateFavicon() != clean || b.Text("logoType") != "svg" {
+			t.Errorf("a clean logo: %q, favicon %q, type %q", b.Text("logoSvg"), s.GenerateFavicon(), b.Text("logoType"))
+		}
+		defaultIcon, err := os.ReadFile(filepath.Join("testdata", "console", "public", "favicon.svg"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		setRows(t, s, [2]string{"logoType", "svg"}, [2]string{"logoSvg", "<svg><script>x</svg>"}, [2]string{"faviconSvg", `<svg onload="x()"`})
+		if b := s.GetBranding(); b.Text("logoSvg") != "" || b.Text("logoType") != "default" || s.GenerateFavicon() != string(defaultIcon) {
+			t.Errorf("markup that is no SVG document: logo %q, type %q, favicon %q", b.Text("logoSvg"), b.Text("logoType"), s.GenerateFavicon())
+		}
+		// a save stores what it reads
+		if err := s.SaveBranding(ctx, object("logoSvg", stored)); err != nil {
+			t.Fatal(err)
+		}
+		if value, _ := storedValue(t, s, "logoSvg"); value != cleaned {
+			t.Errorf("saved: %q", value)
 		}
 	})
 }

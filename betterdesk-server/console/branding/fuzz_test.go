@@ -372,6 +372,11 @@ func FuzzBrandingSettings(f *testing.F) {
 				t.Fatalf("stored %s %q does not pass its own check again (%q, %v)", key, stored, again, ok)
 			}
 		}
+		for _, key := range []string{"logoSvg", "faviconSvg"} {
+			if problems := svgProblems(branding.Text(key)); len(problems) > 0 {
+				t.Fatalf("stored %s %q: %s", key, branding.Text(key), strings.Join(problems, "; "))
+			}
+		}
 
 		css, err := s.GenerateThemeCSS()
 		if err != nil {
@@ -468,16 +473,16 @@ func FuzzBrandingURL(f *testing.F) {
 	})
 }
 
-var (
-	reLeftoverScript = regexp.MustCompile(`<` + sp + `*/?` + sp + `*` + ciAny("script", "style") + `\b[^>]*>`)
-	reLeftoverOn     = regexp.MustCompile(sp + `+` + ci("on") + `[a-zA-Z]+` + sp + `*=`)
-)
-
 // FuzzSanitizers checks the cleaning of SVG markup, colours and custom
 // CSS: no panic, and the promises each of them makes.
 func FuzzSanitizers(f *testing.F) {
-	for _, seed := range []string{"", "<svg onload=x><script>alert(1)</script></svg>", "<scr<script>ipt>", "red;}body{}", "expexpression(ression(", "@im@import;port", "</style", "<a href=\"javascript:x\">", "ſcript", "url( 'data:x' )"} {
+	for _, seed := range []string{"", "<svg onload=x><script>alert(1)</script></svg>", "<scr<script>ipt>", "red;}body{}", "expexpression(ression(", "@im@import;port", "</style", "<a href=\"javascript:x\">", "ſcript", "url( 'data:x' )",
+		`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><a xlink:href="java&#115;cript:x"><use href="#a"/></a></svg>`,
+		`<svg><style>.a{fill:url(#g)}</style><title>t</title><g style="fill:red"><text>x &amp; y</text></g></svg>`} {
 		f.Add(seed)
+	}
+	for _, svg := range shippedSVGs(f) {
+		f.Add(svg)
 	}
 	for _, function := range []string{"sanitizeSvg", "sanitizeCustomCss", "sanitizeCssColorValue"} {
 		vectorSeeds(f, "pure", function, 150, func(arg any) {
@@ -489,12 +494,14 @@ func FuzzSanitizers(f *testing.F) {
 	f.Fuzz(func(t *testing.T, input string) {
 		input = decodeUTF8([]byte(input))
 
+		// one SVG document with nothing that runs or loads, or nothing at
+		// all, which cleaning again leaves as it is (BUGS BR13)
 		svg := SanitizeSVG(input)
-		if again := SanitizeSVG(svg); reLeftoverScript.MatchString(svg) || reLeftoverOn.MatchString(svg) {
-			t.Fatalf("SanitizeSVG(%q) = %q still has a script or style tag or an event handler (again: %q)", input, svg, again)
+		if problems := svgProblems(svg); len(problems) > 0 {
+			t.Fatalf("SanitizeSVG(%q) = %q: %s", input, svg, strings.Join(problems, "; "))
 		}
-		if len(svg) > len(input)+len(` href="#"`)*strings.Count(strings.ToLower(input), "href")+len("blocked-")*(strings.Count(strings.ToLower(input), "expression")+strings.Count(strings.ToLower(input), "import")+strings.Count(strings.ToLower(input), "url")) {
-			t.Fatalf("SanitizeSVG(%q) grew to %q", input, svg)
+		if again := SanitizeSVG(svg); again != svg {
+			t.Fatalf("SanitizeSVG(%q) = %q, cleaned again %q", input, svg, again)
 		}
 
 		colour, err := SanitizeCSSColorValue(input)

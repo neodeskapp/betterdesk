@@ -209,7 +209,7 @@ var pureCalls = map[string]func(s *Service, a []any) (any, error){
 // TestOraclePure replays the functions that need no database.
 func TestOraclePure(t *testing.T) {
 	fixed := replayCalls(t, "pure", 30000)
-	for bug, atLeast := range map[string]int{"BR1": 60, "BR7": 3} {
+	for bug, atLeast := range map[string]int{"BR1": 60, "BR7": 3, "BR13": 2600} {
 		if fixed[bug] < atLeast {
 			t.Errorf("%d calls answer as the fix of %s says, the recording has more", fixed[bug], bug)
 		}
@@ -250,7 +250,7 @@ func replayCalls(t *testing.T, file string, atLeast int) map[string]int {
 				value, err := call(s, a)
 				got := outcome(value, err)
 				if want, same := sameOutcome(got, vector); !same {
-					if bug := fixedPure(name, a, got); bug != "" {
+					if bug := fixedPure(t, name, a, got, want); bug != "" {
 						fixed[bug]++
 						continue
 					}
