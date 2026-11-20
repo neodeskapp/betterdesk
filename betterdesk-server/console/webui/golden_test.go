@@ -138,7 +138,11 @@ func TestAnswersMatchNode(t *testing.T) {
 				}
 
 				differences := 0
+				fixed := map[string]int{}
 				for _, c := range golden.Cases {
+					if bug := intended(&c); bug != "" {
+						fixed[bug]++
+					}
 					rec := httptest.NewRecorder()
 					replay(h, rec, rawRequest(c.Method, c.Target, c.Headers))
 					res := rec.Result()
@@ -207,9 +211,30 @@ func TestAnswersMatchNode(t *testing.T) {
 				if differences > 0 {
 					t.Errorf("%d of %d answers differ from Node", differences, len(golden.Cases))
 				}
+				for bug, n := range fixed {
+					t.Logf("%s: %d answers compared with the fix's answer in place of Node's", bug, n)
+				}
 			})
 		}
 	}
+}
+
+// intended turns a recorded answer into what the console answers since a
+// bug fix changed it on purpose, and names the bug ("" for an answer no
+// fix changed).
+func intended(c *goldenCase) string {
+	// W1: the way back after sign-in is checked with its dot segments
+	// resolved; one the check refuses sends to the start
+	if loc := c.Answer["location"]; c.Status == http.StatusFound && strings.Contains(loc, "/.") {
+		if _, ok := httpx.SafeReturnPath(loc); !ok && c.Body != nil {
+			c.Answer["location"] = "/"
+			body := strings.ReplaceAll(*c.Body, loc, "/")
+			c.Body = &body
+			c.Answer["content-length"] = strconv.Itoa(len(body))
+			return "W1"
+		}
+	}
+	return ""
 }
 
 func clip(s string) string {

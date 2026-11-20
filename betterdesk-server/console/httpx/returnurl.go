@@ -24,10 +24,10 @@ var sessionCookies = []string{"bd.sid", "betterdesk.sid"}
 //     would become "//evil.example");
 //   - it is not a sign-in page, sign-out, the API or a socket.
 //
-// The answer is what the URL parser of Node 22 makes of the path: dot
+// The answer is what a browser's URL parser makes of the path: dot
 // segments (also written %2e) are resolved, spaces at the end are dropped,
-// and the characters a URL cannot carry are percent-encoded. That parser
-// overlooks dot segments in one case (keepsDotSegments), and so does this.
+// and the characters a URL cannot carry are percent-encoded. The checks
+// look at the resolved path, so /a/.b/../../logout is refused as /logout.
 func SafeReturnPath(raw string) (string, bool) {
 	if raw == "" || len(raw) > 4*maxReturnLength {
 		return "", false
@@ -234,11 +234,7 @@ func normalizeReturnPath(raw string) (path, search, hash string) {
 		rest, query, hasQuery = rest[:i], rest[i+1:], true
 	}
 
-	if keepsDotSegments(rest[1:]) {
-		path = rest
-	} else {
-		path = resolveDotSegments(rest[1:])
-	}
+	path = resolveDotSegments(rest[1:])
 	if hasQuery && query != "" {
 		search = "?" + percentEncode(query, queryEncodeSet)
 	}
@@ -272,26 +268,6 @@ func resolveDotSegments(p string) string {
 		}
 	}
 	return "/" + strings.Join(segments, "/")
-}
-
-// keepsDotSegments reports whether the URL parser of Node 22 (ada 2.9.2)
-// leaves a path, given without its leading slash, exactly as written. It
-// does when the path holds no "%" and nothing to percent-encode, does not
-// start with a dot, and the first "/." in it starts an ordinary name such
-// as ".well-known": it then overlooks every "." and ".." segment after that
-// name. SafeReturnPath answers what Node answers, so the same paths pass
-// here with their dot segments.
-func keepsDotSegments(p string) bool {
-	if p == "" || p[0] == '.' {
-		return false
-	}
-	for i := 0; i < len(p); i++ {
-		if c := p[i]; c <= 0x20 || c >= 0x7F || c == '%' || strings.IndexByte(pathEncodeSet, c) >= 0 {
-			return false
-		}
-	}
-	i := strings.Index(p, "/.")
-	return i >= 0 && i+2 < len(p) && p[i+2] != '.' && p[i+2] != '/'
 }
 
 func isSingleDot(segment string) bool {

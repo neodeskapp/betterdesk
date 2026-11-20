@@ -44,9 +44,21 @@ func TestSafeReturnPathMatchesNode(t *testing.T) {
 	if len(vectors) < 3000 {
 		t.Fatalf("only %d vectors", len(vectors))
 	}
-	accepted, failed := 0, 0
+	accepted, failed, resolved := 0, 0, 0
 	for _, v := range vectors {
 		got, ok := SafeReturnPath(v.In)
+		if v.Out != nil && hasDotSegment(*v.Out) {
+			// W1: Node's parser left the dot segments in; the browser
+			// resolves them, and so does SafeReturnPath before its checks
+			resolved++
+			want, wantOK := resolvedByBrowser(*v.Out)
+			if ok != wantOK || got != want {
+				t.Errorf("SafeReturnPath(%q) = %q, %v; Node gives %q, which the browser reads as %q (%v)", short(v.In), short(got), ok, short(*v.Out), short(want), wantOK)
+				failed++
+			}
+			accepted++
+			continue
+		}
 		switch {
 		case v.Out == nil && ok:
 			t.Errorf("SafeReturnPath(%q) = %q, Node refuses it", short(v.In), short(got))
@@ -68,6 +80,62 @@ func TestSafeReturnPathMatchesNode(t *testing.T) {
 	if accepted < 1000 || len(vectors)-accepted < 1000 {
 		t.Errorf("%d accepted and %d refused vectors: both kinds must be well covered", accepted, len(vectors)-accepted)
 	}
+	if resolved == 0 || resolved*10 > len(vectors) {
+		t.Errorf("%d of %d vectors where Node kept dot segments, expected some but under a tenth", resolved, len(vectors))
+	}
+	t.Logf("%d vectors compared with the path the browser makes of Node's answer (W1)", resolved)
+}
+
+// hasDotSegment reports whether the path of a return path still has a "."
+// or ".." segment.
+func hasDotSegment(returnPath string) bool {
+	path := returnPath
+	if i := strings.IndexAny(path, "?#"); i >= 0 {
+		path = path[:i]
+	}
+	for _, segment := range strings.Split(path, "/") {
+		if isSingleDot(segment) || isDoubleDot(segment) {
+			return true
+		}
+	}
+	return false
+}
+
+// resolvedByBrowser is what a browser makes of a return path whose
+// characters are already encoded, by the URL standard's path state: a "."
+// segment goes, a ".." segment takes the one before it with it, and either
+// one at the end leaves a slash. It also says whether the console may send
+// someone there.
+func resolvedByBrowser(returnPath string) (string, bool) {
+	path, rest := returnPath, ""
+	if i := strings.IndexAny(path, "?#"); i >= 0 {
+		path, rest = path[:i], path[i:]
+	}
+	parts := strings.Split(path[1:], "/")
+	var kept []string
+	for i, part := range parts {
+		last := i == len(parts)-1
+		switch {
+		case part == ".." || strings.EqualFold(part, ".%2e") || strings.EqualFold(part, "%2e.") || strings.EqualFold(part, "%2e%2e"):
+			if len(kept) > 0 {
+				kept = kept[:len(kept)-1]
+			}
+			if last {
+				kept = append(kept, "")
+			}
+		case part == "." || strings.EqualFold(part, "%2e"):
+			if last {
+				kept = append(kept, "")
+			}
+		default:
+			kept = append(kept, part)
+		}
+	}
+	path = "/" + strings.Join(kept, "/")
+	if strings.HasPrefix(path, "//") || blockedPrefix.MatchString(path) {
+		return "", false
+	}
+	return path + rest, true
 }
 
 func TestSafeReturnPathKeepsConsolePaths(t *testing.T) {
@@ -144,15 +212,15 @@ func TestSafeReturnPathNormalises(t *testing.T) {
 	}
 }
 
-// Node 22's URL parser leaves dot segments alone after a name that starts
-// with a dot, and the console's answers are Node's (BUGS.md W1). The same
-// paths with something to encode, a "%" or a leading dot are resolved.
-func TestSafeReturnPathKeepsDotSegmentsWhereNodeDoes(t *testing.T) {
+// Dot segments are resolved in every path before the checks, also after a
+// name that starts with a dot, where Node 22's URL parser left them alone
+// (W1): the browser resolves them, so /a/.b/../../logout is /logout.
+func TestSafeReturnPathResolvesDotSegmentsAfterADotName(t *testing.T) {
 	for in, want := range map[string]string{
-		"/a/.b/../x":               "/a/.b/../x",
-		"/a/.b/./c":                "/a/.b/./c",
-		"/a/.b/..?x y":             "/a/.b/..?x%20y",
-		"/a/.well-known/../../x#h": "/a/.well-known/../../x#h",
+		"/a/.b/../x":               "/a/x",
+		"/a/.b/./c":                "/a/.b/c",
+		"/a/.b/..?x y":             "/a/?x%20y",
+		"/a/.well-known/../../x#h": "/x#h",
 		"/a/.b/../x y":             "/a/x%20y",
 		"/a/.b/%2e%2e/x":           "/a/x",
 		"/a./../x":                 "/x",
@@ -163,8 +231,10 @@ func TestSafeReturnPathKeepsDotSegmentsWhereNodeDoes(t *testing.T) {
 			t.Errorf("SafeReturnPath(%q) = %q, %v; want %q", in, got, ok, want)
 		}
 	}
-	if got, ok := SafeReturnPath("/.b/../login"); ok {
-		t.Errorf("SafeReturnPath(/.b/../login) = %q, want it refused", got)
+	for _, in := range []string{"/.b/../login", "/a/.b/../../logout", "/a/.well-known/../../api/auth/logout", "/x/.y/../../login?return=/z", "/a/.b/../..//evil.example"} {
+		if got, ok := SafeReturnPath(in); ok {
+			t.Errorf("SafeReturnPath(%q) = %q, want it refused", in, got)
+		}
 	}
 }
 
@@ -333,7 +403,7 @@ func FuzzSafeReturnPath(f *testing.F) {
 			t.Fatalf("%q gives %q, a blocked path", in, out)
 		}
 		for _, segment := range strings.Split(path, "/") {
-			if (isSingleDot(segment) || isDoubleDot(segment)) && !keepsDotSegments(path[1:]) {
+			if isSingleDot(segment) || isDoubleDot(segment) {
 				t.Fatalf("%q gives %q with a dot segment left", in, out)
 			}
 		}
