@@ -58,3 +58,48 @@ func TestUpdateChecksLikeCreate(t *testing.T) {
 		}
 	})
 }
+
+// A cooldown of 0, or none, is the default of 300 seconds on a new rule
+// and in a change, so the stored value is the one the alert engine uses;
+// any other whole number is stored as it is (BUGS AE3, AU2, DECISIONS
+// A73).
+func TestCooldownZeroIsTheDefault(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		seedOne(t, db)
+		w := replay.NewWorld(t, db, nil)
+		cooldown := func(id string) string {
+			t.Helper()
+			return w.Rows("SELECT cooldown_secs FROM alert_rules WHERE id = "+id, nil)
+		}
+		for _, body := range []string{
+			`{"name":"zero","condition_type":"custom","cooldown_secs":0}`,
+			`{"name":"null","condition_type":"custom","cooldown_secs":null}`,
+			`{"name":"none","condition_type":"custom"}`,
+		} {
+			got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/automation/rules", Body: replay.Text(body)})
+			if got.Status != 201 {
+				t.Fatalf("create %s: %d %s", body, got.Status, got.Body)
+			}
+		}
+		for _, id := range []string{"3", "4", "5"} {
+			if got := cooldown(id); got != `[{"cooldown_secs":300}]` {
+				t.Errorf("new rule %s: %s, want 300", id, got)
+			}
+		}
+		for _, tt := range []struct{ body, stored string }{
+			{`{"cooldown_secs":60}`, "60"},
+			{`{"cooldown_secs":0}`, "300"},
+			{`{"cooldown_secs":45}`, "45"},
+			{`{"cooldown_secs":null}`, "300"},
+			{`{"name":"renamed"}`, "300"},
+		} {
+			got := w.Do(replay.Request{Role: "admin", Method: "PATCH", Path: "/api/automation/rules/1", Body: replay.Text(tt.body)})
+			if got.Status != 200 {
+				t.Fatalf("change %s: %d %s", tt.body, got.Status, got.Body)
+			}
+			if stored := cooldown("1"); stored != `[{"cooldown_secs":`+tt.stored+`}]` {
+				t.Errorf("after %s: %s, want %s", tt.body, stored, tt.stored)
+			}
+		}
+	})
+}

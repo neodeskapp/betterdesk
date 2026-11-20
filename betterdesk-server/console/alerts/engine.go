@@ -275,7 +275,8 @@ func (e *Engine) evaluateAgainst(ctx context.Context, rules []Rule, deviceID jsb
 
 // ruleCooldown is a rule's cooldown in seconds: the stored value when it is
 // a whole number above 0 (also text of one, which SQLite can hold), else
-// DefaultCooldownSecs, also for 0, which a new rule stores as 300. The
+// DefaultCooldownSecs, also for 0 and null, which the rule routes store as
+// 300 on a new rule and in a change; older rows can hold them. The
 // error is the TypeError for a value JavaScript cannot make a number of.
 func ruleCooldown(stored jsbind.Value) (float64, error) {
 	secs, err := jsNumber(stored)

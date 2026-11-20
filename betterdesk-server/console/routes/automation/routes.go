@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/unitronix/betterdesk-server/console/alerts"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/devicemount"
@@ -185,7 +186,7 @@ func (h *handlers) createRule(w http.ResponseWriter, r *http.Request) {
 		ConditionValue: value,
 		Severity:       severity,
 		ScopeDeviceID:  get("scope_device_id").Or(jsbind.Null),
-		CooldownSecs:   get("cooldown_secs").Or(jsbind.Number(300)),
+		CooldownSecs:   get("cooldown_secs").Or(jsbind.Number(alerts.DefaultCooldownSecs)),
 		NotifyEmails:   get("notify_emails").Or(jsbind.String("")),
 		Enabled:        !turnedOff(get("enabled")),
 		CreatedBy:      kit.User(r).Username,
@@ -220,7 +221,8 @@ func (h *handlers) rule(w http.ResponseWriter, r *http.Request) {
 
 // updateRule answers PATCH rules/{id}: every member of the body that
 // names a field of a rule is written, null included, with the checks of
-// the create. The name has to be a text that is not blank, the type, the
+// the create. A cooldown_secs of 0 or null is stored as the default of
+// 300 seconds, as on a new rule. The name has to be a text that is not blank, the type, the
 // comparison and the severity one of theirs, the fields of wrongType have
 // their type, and condition_value is not null. enabled is read as on a
 // new rule: off for false, 0, "0" and "false".
@@ -283,7 +285,12 @@ func (h *handlers) updateRule(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, column := range []string{"condition_value", "severity", "scope_device_id", "cooldown_secs", "notify_emails"} {
 		if body.Has(column) {
-			changes = append(changes, change{column, jsbind.Of(body.Get(column))})
+			value := jsbind.Of(body.Get(column))
+			if column == "cooldown_secs" {
+				// 0 and null are the default, as on a new rule
+				value = value.Or(jsbind.Number(alerts.DefaultCooldownSecs))
+			}
+			changes = append(changes, change{column, value})
 		}
 	}
 	if body.Has("enabled") {

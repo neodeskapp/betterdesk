@@ -1144,3 +1144,12 @@ var _ = panelFixes.Add("EM14", map[string]replay.Fix{
 	`admin PATCH /api/automation/rules/2 {"notify_emails":"a\\b"}`:                                                 {Status: 400, Answer: `{"error":"Invalid notify_emails"}`, After: nodeRuleUpdate},
 	`admin PATCH /api/automation/rules/2 {"notify_emails":"{a,b}"}`:                                                {Status: 400, Answer: `{"error":"Invalid notify_emails"}`, After: nodeRuleUpdate},
 })
+
+// AE3, AU2: a change to a cooldown of 0 or null stores the default of 300 seconds, as a new rule
+// does, where the old route stored 0 or NULL and the alert engine used 300 for them. After writes
+// what Node's request wrote, so the steps that read the rule compare with Node's answers; the
+// stored 300 is in TestCooldownZeroIsTheDefault.
+var _ = panelFixes.Add("AE3", map[string]replay.Fix{
+	`admin PATCH /api/automation/rules/2 {"cooldown_secs":0}`:    {Status: 200, Answer: `{"success":true}`, After: nodeRuleUpdate},
+	`admin PATCH /api/automation/rules/2 {"cooldown_secs":null}`: {Status: 200, Answer: `{"success":true}`, After: nodeRuleUpdate},
+})

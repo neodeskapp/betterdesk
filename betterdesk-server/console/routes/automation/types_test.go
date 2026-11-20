@@ -50,7 +50,7 @@ func TestRuleFieldsHaveTheirTypes(t *testing.T) {
 		}
 
 		// Values of the type are stored as they are, the same on both
-		// databases
+		// databases; a cooldown of 0 is the default of 300 (BUGS AE3)
 		got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/automation/rules",
 			Body: replay.Text(`{"name":"Typed","condition_type":"custom","description":"text","condition_value":-12.25,"scope_device_id":"D7","cooldown_secs":2147483647,"notify_emails":"ops@example.com"}`)})
 		if got.Status != 201 {
@@ -62,7 +62,7 @@ func TestRuleFieldsHaveTheirTypes(t *testing.T) {
 			t.Fatalf("rule 2 changed with every type right: %d %s", got.Status, got.Body)
 		}
 		const columns = "SELECT id, description, condition_value, scope_device_id, cooldown_secs, notify_emails FROM alert_rules WHERE id > 1 ORDER BY id"
-		want := `[{"id":2,"description":null,"condition_value":7,"scope_device_id":null,"cooldown_secs":0,"notify_emails":null},` +
+		want := `[{"id":2,"description":null,"condition_value":7,"scope_device_id":null,"cooldown_secs":300,"notify_emails":null},` +
 			`{"id":3,"description":"text","condition_value":-12.25,"scope_device_id":"D7","cooldown_secs":2147483647,"notify_emails":"ops@example.com"}]`
 		if stored := w.Rows(columns, nil); stored != want {
 			t.Errorf("stored:\n     %s\nwant %s", stored, want)
