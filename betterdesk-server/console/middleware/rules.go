@@ -33,7 +33,8 @@ type jsonOnlyAnswer struct {
 //
 //	415 {"success":false,"error":"Content-Type must be application/json"}
 //
-// The path is compared as the client wrote it: /API/x is not under /api/.
+// The path is compared in any letter case, as the router matches routes:
+// /API/x is under /api/, and /API/chat/UPLOAD is an upload.
 func RequireJSON() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +43,7 @@ func RequireJSON() func(http.Handler) http.Handler {
 				next.ServeHTTP(w, r)
 				return
 			}
-			p := httpx.RawPath(r)
+			p := strings.ToLower(httpx.RawPath(r))
 			if !strings.HasPrefix(p, "/api/") || strings.Contains(p, "/upload") || strings.Contains(p, "/import") || multipartPaths[p] || IsJSON(r) {
 				next.ServeHTTP(w, r)
 				return

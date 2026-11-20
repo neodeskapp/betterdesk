@@ -302,7 +302,7 @@ func TestRequireJSON(t *testing.T) {
 		{"OPTIONS", bare("OPTIONS", "/api/x", ""), 200},
 		{"not the API", post("/login", "application/x-www-form-urlencoded", "a=1"), 200},
 		{"/api without slash", post("/api", "text/plain", "x"), 200},
-		{"upper case is not /api/", post("/API/x", "text/plain", "x"), 200},
+		{"upper case is /api/ too", post("/API/x", "text/plain", "x"), 415},
 		// tests/requireJsonContentType.test.js
 		{"multipart restore", post("/api/settings/restore", multipart, "x"), 200},
 		{"multipart module archive", post("/api/generator/module/install-local", multipart, "x"), 200},
@@ -314,7 +314,7 @@ func TestRequireJSON(t *testing.T) {
 		{"upload anywhere in the path", post("/api/x/uploads/y", "text/plain", "x"), 200},
 		{"import path", post("/api/languages/import", multipart, "x"), 200},
 		{"upload in the query only", post("/api/x?y=/upload", "text/plain", "x"), 415},
-		{"Upload in upper case", post("/api/Upload", "text/plain", "x"), 415},
+		{"Upload in upper case", post("/api/Upload", "text/plain", "x"), 200},
 	}
 	for _, c := range cases {
 		rec := serve(h, c.req)
@@ -328,6 +328,27 @@ func TestRequireJSON(t *testing.T) {
 			if rec.Header().Get("Content-Type") != "application/json; charset=utf-8" {
 				t.Errorf("%s: Content-Type %q", c.name, rec.Header().Get("Content-Type"))
 			}
+		}
+	}
+}
+
+// The router matches /API/x as /api/x, so the rule has to as well (M2).
+func TestRequireJSONInAnyLetterCase(t *testing.T) {
+	h := RequireJSON()(http.HandlerFunc(okHandler))
+	for _, target := range []string{"/API/x", "/Api/devices", "/aPi/x/y", "/API/"} {
+		for _, contentType := range []string{"text/plain", "application/x-www-form-urlencoded", ""} {
+			if rec := serve(h, post(target, contentType, "a=1")); rec.Code != http.StatusUnsupportedMediaType {
+				t.Errorf("POST %s as %q: status %d, want 415", target, contentType, rec.Code)
+			}
+		}
+		if rec := serve(h, post(target, "application/json", "{}")); rec.Code != http.StatusOK {
+			t.Errorf("POST %s as JSON: status %d, want 200", target, rec.Code)
+		}
+	}
+	// The exemptions name the same routes in any letter case
+	for _, target := range []string{"/API/chat/upload", "/api/CHAT/UPLOAD", "/Api/Settings/Restore", "/api/languages/IMPORT"} {
+		if rec := serve(h, post(target, "multipart/form-data; boundary=x", "x")); rec.Code != http.StatusOK {
+			t.Errorf("POST %s as multipart: status %d, want 200", target, rec.Code)
 		}
 	}
 }

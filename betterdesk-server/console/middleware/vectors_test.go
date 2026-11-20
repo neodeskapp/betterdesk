@@ -645,9 +645,17 @@ func knownDifference(v vector) (difference, bool) {
 		return difference{"UTF-7 bodies are not supported: 415 instead of being parsed", 415, ""}, true
 	case strings.Contains(v.Name, "body in file crlf"):
 		return difference{"a boundary followed by other text ends the part in busboy; Go keeps reading the file", 200, "\"size\":18"}, true
+	case strings.HasPrefix(v.Name, "rule ") && strings.HasPrefix(v.Path, "/API/"):
+		return difference{"M2: the JSON-only rule takes /API/ as /api/, as the router does", 415, "Content-Type must be application/json"}, true
+	case strings.HasPrefix(v.Name, "rule ") && v.Path == "/api/Upload":
+		return difference{"M2: the JSON-only rule takes /Upload as /upload, as the router does", 200, `"path":"/api/Upload"`}, true
 	}
 	return difference{}, false
 }
+
+// bugFix matches the reason of a difference a bug fix makes: it starts
+// with the bug's id from BUGS.md.
+var bugFix = regexp.MustCompile(`^[A-Z]+[0-9]+: `)
 
 // messageTypes are the error types whose text is the same in both
 // servers. Syntax errors of JSON and of compressed data are worded by the
@@ -761,15 +769,24 @@ func replay(t *testing.T, mode string, minimum int) {
 	for reason, n := range skipped {
 		t.Logf("%d vectors not compared: %s", n, reason)
 	}
-	total := 0
-	for _, n := range skipped {
-		total += n
+	// A difference a bug fix makes on purpose names its bug first; those are
+	// counted apart from what Go cannot answer as Node did
+	total, fixed := 0, 0
+	for reason, n := range skipped {
+		if bugFix.MatchString(reason) {
+			fixed += n
+		} else {
+			total += n
+		}
 	}
 	if mode == "http" && aborts < 2 {
 		t.Errorf("%d aborted requests replayed, expected the recorded ones", aborts)
 	}
 	if total > 12 {
 		t.Errorf("%d vectors skipped as known differences; that list should stay short", total)
+	}
+	if fixed > 24 {
+		t.Errorf("%d vectors skipped as differences of bug fixes; a fix that changes this many needs its own check", fixed)
 	}
 }
 
