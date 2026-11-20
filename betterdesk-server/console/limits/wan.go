@@ -118,6 +118,11 @@ type WANOptions struct {
 	// Log gets one line per request; warn is true for a status of 400 and
 	// above. nil writes through the logging package.
 	Log func(warn bool, line string)
+	// GatewayTimeout answers a request that arrived whole and is not
+	// answered in time with 504 {"error":"Gateway Timeout"}, for a port
+	// that passes requests on and waits for the answer. Otherwise such a
+	// request is closed without an answer.
+	GatewayTimeout bool
 }
 
 type wanMessage struct {
@@ -128,8 +133,8 @@ type wanMessage struct {
 // order:
 //
 //  1. A timeout: a request not answered in time gets 408 while its body
-//     is still arriving, and is closed without an answer once it has
-//     arrived whole.
+//     is still arriving, and once it has arrived whole is closed without
+//     an answer, or gets 504 with GatewayTimeout.
 //  2. Headers: no caching, no framing, no content types to sniff, and the
 //     CORS headers for GET and POST. OPTIONS ends here with 204.
 //  3. A log line when the answer is out.
@@ -247,7 +252,7 @@ func WANStack(opts WANOptions) func(http.Handler) http.Handler {
 			ctx, cancel := context.WithCancel(r.Context())
 			defer cancel()
 			r = r.WithContext(ctx)
-			tw := &timeoutWriter{ResponseWriter: w, header: h.Clone()}
+			tw := &timeoutWriter{ResponseWriter: w, header: h.Clone(), gateway: opts.GatewayTimeout}
 			start := opts.Now()
 			status := 0
 			defer func() {
@@ -277,9 +282,9 @@ func WANStack(opts WANOptions) func(http.Handler) http.Handler {
 			case p := <-panicked:
 				panic(p)
 			case <-timer.C:
-				switch tw.timeout() {
+				switch what, code := tw.timeout(r); what {
 				case timedOutAnswered:
-					status = http.StatusRequestTimeout
+					status = code
 					return
 				case timedOutDropped:
 					// The request had arrived whole: the connection ends
@@ -358,13 +363,15 @@ type timeoutWriter struct {
 	finished bool
 	// whole says the request, body included, has arrived
 	whole bool
+	// gateway answers a whole request 504 at the timeout
+	gateway bool
 }
 
 // What the timeout did.
 const (
 	// timedOutLate: the handler had started its answer
 	timedOutLate = iota
-	// timedOutAnswered: 408 went out
+	// timedOutAnswered: 408 or 504 went out
 	timedOutAnswered
 	// timedOutDropped: nothing went out, the connection is to be closed
 	timedOutDropped
@@ -414,25 +421,31 @@ func (t *timeoutWriter) Write(p []byte) (int, error) {
 	return t.ResponseWriter.Write(p)
 }
 
-// timeout ends the request unless the handler has started its answer: a
-// request still arriving gets 408, as Node's request timeout answered;
-// one that arrived whole gets nothing, as Node destroyed the socket of a
-// complete request that timed out.
-func (t *timeoutWriter) timeout() int {
+// timeout ends the request unless the handler has started its answer, and
+// says what it did and with which status: a request still arriving gets
+// 408, as Node's request timeout answered; one that arrived whole gets 504
+// on a port that waits for another server, else nothing, as Node destroyed
+// the socket of a complete request that timed out.
+func (t *timeoutWriter) timeout(r *http.Request) (int, int) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.finished || t.code != 0 {
-		return timedOutLate
+		return timedOutLate, 0
 	}
 	t.timedOut = true
-	if t.whole {
-		return timedOutDropped
+	switch {
+	case t.whole && t.gateway:
+		t.code = http.StatusGatewayTimeout
+		httpx.WriteJSON(t.ResponseWriter, r, http.StatusGatewayTimeout, wanMessage{"Gateway Timeout"})
+		return timedOutAnswered, t.code
+	case t.whole:
+		return timedOutDropped, 0
 	}
 	t.code = http.StatusRequestTimeout
 	// The rest of the body is not waited for
 	t.ResponseWriter.Header().Set("Connection", "close")
 	t.ResponseWriter.WriteHeader(http.StatusRequestTimeout)
-	return timedOutAnswered
+	return timedOutAnswered, t.code
 }
 
 // finish ends the handler's turn and returns the status that went out. A

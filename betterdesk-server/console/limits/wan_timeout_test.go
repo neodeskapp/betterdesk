@@ -55,6 +55,43 @@ func TestClientAPITimeoutDropsAWholeRequest(t *testing.T) {
 	}
 }
 
+// With GatewayTimeout a request that arrived whole and is still waiting
+// when the time is up gets 504 with the port's headers, and the handler's
+// late answer goes nowhere.
+func TestClientAPITimeoutAnswersAGatewayTimeout(t *testing.T) {
+	release := make(chan struct{})
+	done := make(chan struct{})
+	var lateWrite error
+	h := wanHandler(WANOptions{Timeout: 30 * time.Millisecond, GatewayTimeout: true}, func(w http.ResponseWriter, r *http.Request) {
+		defer close(done)
+		<-release
+		_, lateWrite = w.Write([]byte("late"))
+	})
+	server := httptest.NewServer(h)
+	defer server.Close()
+	res, err := http.Get(server.URL + "/api/peers")
+	if err != nil {
+		t.Fatalf("no answer: %v", err)
+	}
+	body, _ := io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode != http.StatusGatewayTimeout || string(body) != `{"error":"Gateway Timeout"}` ||
+		res.Header.Get("Content-Type") != "application/json; charset=utf-8" || res.Header.Get("X-Frame-Options") != "DENY" {
+		t.Errorf("slow handler: %d %q %v", res.StatusCode, body, res.Header)
+	}
+	close(release)
+	<-done
+	if !errors.Is(lateWrite, http.ErrHandlerTimeout) {
+		t.Errorf("late write: %v", lateWrite)
+	}
+	// A body still arriving gets 408 as without the option
+	got := rawExchange(t, server.Listener.Addr().String(),
+		"POST /api/heartbeat HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\nContent-Length: 100\r\n\r\n{\"a\":", 3*time.Second)
+	if !strings.HasPrefix(got, "HTTP/1.1 408 ") {
+		t.Errorf("stalled body: %q", got)
+	}
+}
+
 // rawExchange sends text to the server and reads until it closes.
 func rawExchange(t *testing.T, addr, text string, after time.Duration) string {
 	t.Helper()

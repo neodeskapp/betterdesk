@@ -714,6 +714,16 @@ func knownProxyMode(t *testing.T) map[string]func(t *testing.T, got []reply, clo
 	for id, check := range knownClientAPI {
 		known[id] = check
 	}
+	// An API answer slower than the port's 10 seconds: Node closed the
+	// connection without an answer; Go answers the forward's 504 (BUGS LS8)
+	for _, id := range []string{"slow upstream", "slow upstream post"} {
+		known[id] = func(_ *testing.T, got []reply, closed bool) string {
+			if len(got) != 1 || got[0].status != http.StatusGatewayTimeout || string(got[0].body) != `{"error":"Gateway Timeout"}` || !closed {
+				return fmt.Sprintf("want 504 Gateway Timeout and a close, got %v %q closed %v", statuses(got), firstBody(got), closed)
+			}
+			return ""
+		}
+	}
 	local := oracleScenarioNamed(t, "legacy")
 	for _, id := range proxyRegistration {
 		var want []reply

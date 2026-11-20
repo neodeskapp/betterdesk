@@ -130,7 +130,9 @@ func NewClientAPI(opts ClientAPIOptions) *ClientAPI {
 			routes.ServeHTTP(w, r)
 		})
 	}
-	stack := limits.WANStack(limits.WANOptions{ClientIP: trust.ClientIP, Now: opts.Now})(inner)
+	// In proxy mode a request still waiting for the server's API when the
+	// port's time is up gets 504, as the forward's own timeout answers
+	stack := limits.WANStack(limits.WANOptions{ClientIP: trust.ClientIP, Now: opts.Now, GatewayTimeout: opts.Proxy})(inner)
 	c.handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		Served(r)
 		if r.Method == http.MethodConnect {
