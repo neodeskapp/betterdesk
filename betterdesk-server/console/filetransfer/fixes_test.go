@@ -28,6 +28,9 @@ var stepFixes = []struct{ bug, steps string }{
 	// A chunk takes no more than MaxChunkSize bytes and no byte beyond the
 	// size, and a completed transfer does not start over
 	{"FT3", "130-300,372-375,854-856,1058-1063,2153-2173,2585-2595,2597-2608,2845-2853,4010-4015,4017,4211-4218,4635-4643,4798-4800,5054-5065,5229-5230"},
+	// The sweep fails a transfer that waited 30 minutes for its first chunk,
+	// and the file of a completed transfer goes with its record
+	{"FT4", "345-363,1389-1393,2378-2386,2570-2578,2580-2584,3140-3169,3437-3450,5047-5053"},
 }
 
 // rewrite is a fix that changes Node's answer of every step alike. It

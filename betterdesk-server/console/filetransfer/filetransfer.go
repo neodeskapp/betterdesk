@@ -14,11 +14,10 @@
 //
 // # Housekeeping
 //
-// Sweep, which Run calls once a minute, fails a transfer that is active
-// and got no chunk for 30 minutes, and removes its file. It drops the
-// record of a transfer that was completed, failed or cancelled more than
-// an hour ago; the file of a completed one is left where it is. A
-// transfer that never got its first chunk stays pending for good.
+// Sweep, which Run calls once a minute, fails a transfer that is pending
+// or active and got no chunk for 30 minutes, and removes its file. It
+// drops the record of a transfer that was completed, failed or cancelled
+// more than an hour ago, with its file.
 package filetransfer
 
 import (
@@ -707,13 +706,14 @@ func (s *Service) Sweep() {
 	kept := s.order[:0]
 	for _, id := range s.order {
 		t := s.transfers[id]
-		if t.Status == StatusActive && now-t.UpdatedAt > TransferTimeout.Milliseconds() {
+		if (t.Status == StatusActive || t.Status == StatusPending) && now-t.UpdatedAt > TransferTimeout.Milliseconds() {
 			t.Status = StatusFailed
 			s.opts.Logger.Warn(fmt.Sprintf("[FileTransfer] Transfer %s timed out", id))
 			removeFile(t.TempPath)
 		}
 		finished := t.Status == StatusCompleted || t.Status == StatusFailed || t.Status == StatusCancelled
 		if finished && now-t.UpdatedAt > Retention.Milliseconds() {
+			removeFile(t.TempPath)
 			delete(s.transfers, id)
 			continue
 		}

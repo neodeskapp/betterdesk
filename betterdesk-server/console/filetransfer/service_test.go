@@ -101,10 +101,17 @@ func TestSweep(t *testing.T) {
 	if got := s.GetTransfer(active).Status; got != StatusActive {
 		t.Fatalf("after exactly 30 minutes the active transfer is %s", got)
 	}
+	if got := s.GetTransfer(pending).Status; got != StatusPending {
+		t.Fatalf("after exactly 30 minutes the pending transfer is %s", got)
+	}
 	*now = now.Add(time.Millisecond)
 	s.Sweep()
 	if got := s.GetTransfer(active).Status; got != StatusFailed {
 		t.Fatalf("after 30 minutes and a millisecond the active transfer is %s", got)
+	}
+	// A transfer that never got a chunk times out as well (BUGS FT4)
+	if got := s.GetTransfer(pending).Status; got != StatusFailed {
+		t.Fatalf("after 30 minutes and a millisecond the pending transfer is %s", got)
 	}
 	if _, err := os.Stat(activeFile); !os.IsNotExist(err) {
 		t.Errorf("the file of the failed transfer is still there: %v", err)
@@ -117,17 +124,18 @@ func TestSweep(t *testing.T) {
 	}
 	*now = now.Add(time.Millisecond)
 	s.Sweep()
-	if s.GetTransfer(done) != nil || s.GetTransfer(active) != nil {
+	if s.GetTransfer(done) != nil || s.GetTransfer(active) != nil || s.GetTransfer(pending) != nil {
 		t.Error("finished transfers are still listed after more than an hour")
 	}
-	if _, err := os.Stat(doneFile); err != nil {
-		t.Errorf("the file of the completed transfer was removed with its record: %v", err)
+	// The file of a completed transfer goes with its record (BUGS FT4)
+	if _, err := os.Stat(doneFile); !os.IsNotExist(err) {
+		t.Errorf("the file of the completed transfer stays after its record: %v", err)
 	}
-	if s.GetTransfer(pending) == nil {
-		t.Error("the pending transfer was swept")
-	}
-	if list := s.ListTransfers(Filter{}); len(list) != 1 || list[0].ID != pending {
+	if list := s.ListTransfers(Filter{}); len(list) != 0 {
 		t.Errorf("the list holds %d transfers", len(list))
+	}
+	if entries, _ := os.ReadDir(s.opts.Dir); len(entries) != 0 {
+		t.Errorf("%d files left in the transfers folder", len(entries))
 	}
 }
 
