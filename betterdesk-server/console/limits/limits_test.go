@@ -101,12 +101,16 @@ func TestEveryLimiterHasItsOwnAnswer(t *testing.T) {
 	}
 	for _, l := range set.All() {
 		h := l.Middleware(http.HandlerFunc(ok))
-		// a request each limiter counts: a signed-in read for SessionRead, a write for the rest
+		// a request each limiter counts: a signed-in read for SessionRead, a
+		// read for PanelRead, a write for the rest
 		newRequest := func() *http.Request {
 			r := request("POST", "/x", "203.0.113.1")
-			if l == set.SessionRead {
+			switch l {
+			case set.SessionRead:
 				r = request("GET", "/x", "203.0.113.1")
 				r.Header.Set("X-User", "7")
+			case set.PanelRead:
+				r = request("GET", "/x", "203.0.113.1")
 			}
 			return r
 		}
@@ -437,8 +441,8 @@ func TestPathClassification(t *testing.T) {
 			t.Errorf("IsPanelRead(%s) = %v", p, !want)
 		}
 	}
-	if len(pollPaths) != 22 || len(readPaths) != 24 {
-		t.Errorf("%d poll paths and %d read paths, the console has 22 and 24", len(pollPaths), len(readPaths))
+	if len(pollPaths) != 20 || len(readPaths) != 24 {
+		t.Errorf("%d poll paths and %d read paths, the console has 20 and 24", len(pollPaths), len(readPaths))
 	}
 
 	// The path is rejoined with the /api mount it was cut from
@@ -557,11 +561,11 @@ func TestAppLevelMounts(t *testing.T) {
 		{"GET", "/api/devices/7", "", "widgetLimiter apiLimiter"},
 		{"GET", "/api/settings/info", "", "panelReadLimiter"},
 		{"GET", "/api/settings/info", "7", "sessionReadLimiter panelReadLimiter"},
-		{"PUT", "/api/settings/info", "7", "panelReadLimiter apiLimiter"},
-		{"GET", "/api/settings/branding/backgrounds", "", "panelReadLimiter panelReadLimiter"},
-		{"GET", "/api/settings/fonts/local", "", "panelReadLimiter panelReadLimiter"},
-		{"GET", "/api/settings/branding/export", "", "panelReadLimiter panelReadLimiter"},
-		{"GET", "/api/settings/branding/profiles", "", "panelReadLimiter panelReadLimiter"},
+		{"PUT", "/api/settings/info", "7", "apiLimiter"},
+		{"GET", "/api/settings/branding/backgrounds", "", "panelReadLimiter"},
+		{"GET", "/api/settings/fonts/local", "", "panelReadLimiter"},
+		{"GET", "/api/settings/branding/export", "", "panelReadLimiter"},
+		{"GET", "/api/settings/branding/profiles", "", "panelReadLimiter"},
 		{"GET", "/api/panel/x", "", "widgetLimiter"},
 		{"POST", "/api/panel/x", "", "widgetLimiter apiLimiter"},
 		{"POST", "/api/desktop/layout", "7", "panelPreferenceLimiter"},
@@ -569,7 +573,7 @@ func TestAppLevelMounts(t *testing.T) {
 		{"GET", "/api/desktop/layout", "", "panelPreferenceLimiter apiLimiter"},
 		{"GET", "/api/dashboard/anything", "", ""},
 		{"GET", "/API/devices", "", "widgetLimiter apiLimiter"},
-		{"GET", "/api/logs/recent", "", "widgetLimiter"},
+		{"GET", "/api/logs/recent", "", "apiLimiter"},
 		{"POST", "/api/auth/login", "", "apiLimiter"},
 	}
 	for _, tc := range cases {
@@ -617,14 +621,64 @@ func TestRefusalStopsTheChain(t *testing.T) {
 func TestRouteLimiterSeesTheAPIPath(t *testing.T) {
 	set := newSet(&clock{}, nil)
 	h := set.API.Middleware(http.HandlerFunc(ok))
-	// GET /api/logs/recent and /api/database/stats carry apiLimiter, which skips poll paths
+	// GET /api/logs/recent and /api/database/stats carry apiLimiter and are
+	// no poll paths, so it counts them; it skips a poll path
 	for _, target := range []string{"/api/logs/recent", "/api/database/stats?x=1"} {
-		if rec := hit(h, request("GET", target, "203.0.113.1")); rec.Header().Get("RateLimit-Limit") != "" {
-			t.Errorf("GET %s was counted", target)
+		if rec := hit(h, request("GET", target, "203.0.113.1")); rec.Header().Get("RateLimit-Limit") != "100" {
+			t.Errorf("GET %s was not counted", target)
 		}
 	}
-	if rec := hit(h, request("POST", "/api/logs/recent", "203.0.113.1")); rec.Header().Get("RateLimit-Limit") != "100" {
-		t.Error("a write to a poll path is counted")
+	if rec := hit(h, request("GET", "/api/devices", "203.0.113.1")); rec.Header().Get("RateLimit-Limit") != "" {
+		t.Error("a read of a poll path is counted")
+	}
+	if rec := hit(h, request("POST", "/api/devices", "203.0.113.1")); rec.Header().Get("RateLimit-Limit") != "100" {
+		t.Error("a write to a poll path is not counted")
+	}
+}
+
+// Each limiter counts a request once: a path below two settings read
+// paths counts once against PanelRead, a write below one not at all (it
+// counts reads), and a route that carries API itself counts once against
+// it.
+func TestEachLimiterCountsARequestOnce(t *testing.T) {
+	set := newSet(&clock{}, nil)
+	var seen []string
+	for _, l := range set.All() {
+		l.counted = func(_ *http.Request, name string, _, _ int64, _ bool) { seen = append(seen, name) }
+	}
+	routes := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch httpx.RawPath(r) {
+		case "/api/logs/recent", "/api/database/stats":
+			set.API.Middleware(http.HandlerFunc(ok)).ServeHTTP(w, r)
+		case "/api/users/avatars":
+			set.PanelRead.Middleware(http.HandlerFunc(ok)).ServeHTTP(w, r)
+		default:
+			ok(w, r)
+		}
+	})
+	h := set.AppLevel()(routes)
+	for _, c := range []struct{ method, target, user, want string }{
+		{"GET", "/api/settings/branding/backgrounds", "", "panelReadLimiter"},
+		{"GET", "/api/settings/branding/export", "7", "sessionReadLimiter panelReadLimiter"},
+		{"HEAD", "/api/settings/branding/profiles", "", "panelReadLimiter"},
+		{"GET", "/api/settings/fonts/local", "", "panelReadLimiter"},
+		{"PUT", "/api/settings/branding", "7", "apiLimiter"},
+		{"POST", "/api/settings/fonts/local", "", "apiLimiter"},
+		{"DELETE", "/api/settings/branding/profiles/3", "7", "apiLimiter"},
+		{"GET", "/api/logs/recent", "", "apiLimiter"},
+		{"GET", "/api/database/stats", "", "apiLimiter"},
+		{"GET", "/api/logs/recent", "7", "sessionReadLimiter"},
+		{"GET", "/api/users/avatars", "7", "sessionReadLimiter panelReadLimiter"},
+	} {
+		seen = nil
+		r := request(c.method, c.target, "203.0.113.1")
+		if c.user != "" {
+			r.Header.Set("X-User", c.user)
+		}
+		hit(h, r)
+		if got := strings.Join(seen, " "); got != c.want {
+			t.Errorf("%s %s (user %q): counted by %q, want %q", c.method, c.target, c.user, got, c.want)
+		}
 	}
 }
 

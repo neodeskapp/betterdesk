@@ -46,8 +46,6 @@ var pollPaths = []string{
 	"/api/users",
 	"/api/audit-log",
 	"/api/system/info",
-	"/api/logs/recent",
-	"/api/database/stats",
 	"/api/docker/containers",
 	"/api/settings/restart-status",
 	"/api/folders",
@@ -213,7 +211,8 @@ func NewSet(opts Options) *Set {
 	s.Widget = limiter("widgetLimiter", minute, env("WIDGET_RATE_LIMIT_MAX", 600), "Too many widget requests. Please slow down.", s.addressKey,
 		func(r *http.Request, _ string) bool { return signedInRead(r) })
 	s.PanelRead = limiter("panelReadLimiter", window, panelReads, "Too many panel read requests. Please slow down.",
-		func(r *http.Request) string { return s.userOrAddressKey("panel-read:", r) }, nil)
+		func(r *http.Request) string { return s.userOrAddressKey("panel-read:", r) },
+		func(r *http.Request, _ string) bool { return !isRead(r) })
 	s.PanelPreference = limiter("panelPreferenceLimiter", minute, env("PANEL_PREFERENCE_RATE_LIMIT_MAX", 30), "Too many layout save requests. Please slow down.",
 		func(r *http.Request) string { return s.userOrAddressKey("pref:", r) }, nil)
 	s.RDClientPage = limiter("rdClientPageLimiter", minute, env("RDCLIENT_PAGE_RATE_LIMIT_MAX", 120), "Too many remote page requests. Please slow down.", s.addressKey, nil)
@@ -266,9 +265,9 @@ type mount struct {
 //  6. API under /api/
 //
 // "Under" is the path itself and everything below it, in any letter case.
-// A request counts once for every mount it is under, so a path below two
-// read paths (/api/settings/branding/backgrounds, /api/settings/fonts/local)
-// counts twice against PanelRead. The first limiter that refuses answers
+// Each limiter counts a request once, also when the request is under two
+// of its mounts (a path below two read paths) or passes it again on its
+// route (API on /api/logs/recent). The first limiter that refuses answers
 // 429 and the later ones do not count. The client sees the RateLimit
 // headers of the last limiter that counted.
 func (s *Set) AppLevel() func(http.Handler) http.Handler {
@@ -288,6 +287,7 @@ func (s *Set) AppLevel() func(http.Handler) http.Handler {
 				next.ServeHTTP(w, r)
 				return
 			}
+			r = countOnce(r)
 			for _, m := range mounts {
 				sub, base, ok := httpx.StripMount(raw, m.path)
 				if !ok {

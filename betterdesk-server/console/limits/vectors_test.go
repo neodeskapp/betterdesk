@@ -203,10 +203,43 @@ func limitHeader(name string) bool {
 	return strings.HasPrefix(name, "ratelimit") || name == "retry-after" || name == "content-type" || name == "content-length" || name == "etag"
 }
 
+// intendedCounts are the recorded steps the console counts otherwise than
+// Node on purpose, by scenario and step: the status and the limiters that
+// count the request with their counts. The headers and the body follow
+// from them.
+var intendedCounts = map[string]struct {
+	status int
+	trace  string
+}{
+	// Each limiter counts a request once, PanelRead counts only reads, and
+	// /api/logs/recent is no poll path, so API counts it (BUGS S16)
+	"small: poll paths/s6-37":          {200, "[[apiLimiter 1 5 passed]]"},
+	"small: poll paths/s6-38":          {200, "[[apiLimiter 2 5 passed]]"},
+	"small: settings read paths/s7-8":  {200, "[[panelReadLimiter 1 6 passed]]"},
+	"small: settings read paths/s7-9":  {200, "[[panelReadLimiter 2 6 passed]]"},
+	"small: settings read paths/s7-10": {200, "[[panelReadLimiter 3 6 passed]]"},
+	"small: settings read paths/s7-11": {200, "[[panelReadLimiter 4 6 passed]]"},
+	"small: settings read paths/s7-12": {200, "[[panelReadLimiter 1 6 passed]]"},
+	"small: settings read paths/s7-13": {200, "[[panelReadLimiter 2 6 passed]]"},
+	"small: settings read paths/s7-14": {200, "[[panelReadLimiter 3 6 passed]]"},
+	"small: settings read paths/s7-15": {200, "[[panelReadLimiter 4 6 passed]]"},
+	"small: settings read paths/s7-16": {200, "[[panelReadLimiter 1 6 passed]]"},
+	"small: settings read paths/s7-17": {200, "[[panelReadLimiter 2 6 passed]]"},
+	"small: settings read paths/s7-18": {200, "[[panelReadLimiter 3 6 passed] [apiLimiter 1 5 passed]]"},
+	"small: settings read paths/s7-19": {200, "[[panelReadLimiter 4 6 passed] [apiLimiter 2 5 passed]]"},
+	"small: settings read paths/s7-30": {200, "[[apiLimiter 1 5 passed]]"},
+	"small: settings read paths/s7-31": {200, "[[apiLimiter 2 5 passed]]"},
+	"small: settings read paths/s7-32": {200, "[[apiLimiter 3 5 passed]]"},
+	"small: settings read paths/s7-33": {200, "[[apiLimiter 4 5 passed]]"},
+	"small: settings read paths/s7-34": {200, "[[apiLimiter 1 5 passed]]"},
+	"small: settings read paths/s7-35": {200, "[[apiLimiter 2 5 passed]]"},
+	"small: settings read paths/s7-36": {200, "[[apiLimiter 3 5 passed]]"},
+}
+
 func TestConsoleLimitersAgainstNode(t *testing.T) {
 	var file consoleVectors
 	loadJSON(t, "console.json", &file)
-	total := 0
+	total, intended := 0, 0
 	for _, scenario := range file.Scenarios {
 		now := file.Base
 		var trace [][]any
@@ -234,6 +267,13 @@ func TestConsoleLimitersAgainstNode(t *testing.T) {
 			handler.ServeHTTP(rec, s.request())
 			name := fmt.Sprintf("%s: %s at %d %s %s", scenario.Name, s.ID, s.At, s.Method, s.Path)
 
+			if want, ok := intendedCounts[scenario.Name+"/"+s.ID]; ok {
+				intended++
+				if rec.Code != want.status || fmt.Sprint(trace) != want.trace {
+					t.Errorf("%s: status %d, counted %v; want %d, %s (Node: %d, %v)", name, rec.Code, trace, want.status, want.trace, s.Answer.Status, s.Trace)
+				}
+				continue
+			}
 			if rec.Code != s.Answer.Status {
 				t.Errorf("%s: status %d, want %d", name, rec.Code, s.Answer.Status)
 			}
@@ -251,6 +291,9 @@ func TestConsoleLimitersAgainstNode(t *testing.T) {
 	}
 	if total < 900 {
 		t.Errorf("%d steps replayed, expected the recorded 1023", total)
+	}
+	if intended != len(intendedCounts) {
+		t.Errorf("%d of the %d intended differences met a recorded step", intended, len(intendedCounts))
 	}
 }
 

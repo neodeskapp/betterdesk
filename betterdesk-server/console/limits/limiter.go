@@ -1,7 +1,9 @@
 package limits
 
 import (
+	"context"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -138,11 +140,33 @@ func ceilSeconds(ms int64) int64 {
 	return ms / 1000
 }
 
+// countedKey is the context key of the limiters that counted a request
+// (countedBy), so that each counts it once, however many of its mounts
+// and routes the request passes.
+type countedKey struct{}
+
+type countedBy struct{ limiters []*Limiter }
+
+// countOnce returns r marked for counting each limiter once.
+func countOnce(r *http.Request) *http.Request {
+	if _, ok := r.Context().Value(countedKey{}).(*countedBy); ok {
+		return r
+	}
+	return r.WithContext(context.WithValue(r.Context(), countedKey{}, &countedBy{}))
+}
+
 // allow counts the request and sets the RateLimit headers. When the
-// request is over the limit it writes the 429 answer and returns false.
+// request is over the limit it writes the 429 answer and returns false. A
+// request this limiter counted before passes uncounted.
 func (l *Limiter) allow(w http.ResponseWriter, r *http.Request, apiPath string) bool {
 	if l.cfg.Skip != nil && l.cfg.Skip(r, apiPath) {
 		return true
+	}
+	if by, ok := r.Context().Value(countedKey{}).(*countedBy); ok {
+		if slices.Contains(by.limiters, l) {
+			return true
+		}
+		by.limiters = append(by.limiters, l)
 	}
 	now := l.nowMs()
 	hits, reset := l.hit(l.cfg.Key(r), now)
