@@ -114,6 +114,7 @@ func (s *Service) serveAgent(u *ws.Upgrade) {
 		}
 		logf("[RemoteRelay] Agent disconnected: %s", deviceID)
 		sess.broadcastText(`{"type":"agent-disconnected"}`)
+		s.dropIfEmptyLocked(sess, deviceID)
 	}
 	s.mu.Unlock()
 }
@@ -230,6 +231,7 @@ read:
 	if len(sess.viewers) == 0 {
 		s.stopStreamLocked(sess, deviceID, "last viewer left")
 		s.scheduleIdleCloseLocked(sess, deviceID)
+		s.dropIfEmptyLocked(sess, deviceID)
 	}
 	s.mu.Unlock()
 }

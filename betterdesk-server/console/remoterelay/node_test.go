@@ -508,6 +508,98 @@ func (p *player) call(st step) string {
 	return ""
 }
 
+// fix is a step of the recording that a bug fix changed on purpose: what
+// the Go service does there since the fix, as the oracle would have noted
+// it. events, when set, replaces what the sockets saw; result, when set,
+// replaces what the step's call returned.
+type fix struct {
+	bug, scenario string
+	step          int
+	events        string
+	result        string
+}
+
+// fixes are the steps the bug fixes changed. The tests of each fix pin
+// what it does; here the steps say only what the replay sees instead.
+var fixes = []fix{
+	// A session without agent and viewer is gone: dev1's agent left
+	// earlier in the scenario
+	{bug: "RM8", scenario: "single-use token", step: 23, result: `["dev2","dev-3"]`},
+	{bug: "RM8", scenario: "streaming", step: 45, result: `null`},
+	{bug: "RM8", scenario: "streaming", step: 46, result: `[]`},
+	{bug: "RM8", scenario: "viewer first", step: 29, result: `null`},
+	{bug: "RM8", scenario: "viewer first", step: 30, result: `[]`},
+}
+
+// fixFor is the fix of a step, ok false for a step no fix changed.
+func fixFor(scenario string, step int) (fix, bool) {
+	for _, f := range fixes {
+		if f.scenario == scenario && f.step == step {
+			return f, true
+		}
+	}
+	return fix{}, false
+}
+
+// apply returns what the step looks like since the fix. A fix that
+// changes nothing is stale and fails the test.
+func (f fix) apply(t *testing.T, result json.RawMessage, events []json.RawMessage) (json.RawMessage, []json.RawMessage) {
+	t.Helper()
+	changed := false
+	if f.result != "" {
+		changed = canonical(f.result) != canonical(string(result))
+		result = json.RawMessage(f.result)
+	}
+	if f.events != "" {
+		var fixed []json.RawMessage
+		if err := json.Unmarshal([]byte(f.events), &fixed); err != nil {
+			t.Fatalf("the %s fix of %q step %d: %v", f.bug, f.scenario, f.step, err)
+		}
+		if eventKeys(t, fixed) != eventKeys(t, events) {
+			changed = true
+		}
+		events = fixed
+	}
+	if !changed {
+		t.Errorf("the %s fix of %q step %d changes nothing", f.bug, f.scenario, f.step)
+	}
+	return result, events
+}
+
+// eventKeys is the events of a step per socket, for comparing.
+func eventKeys(t *testing.T, events []json.RawMessage) string {
+	t.Helper()
+	per := map[string][]string{}
+	for _, raw := range events {
+		var e event
+		if err := json.Unmarshal(raw, &e); err != nil {
+			t.Fatal(err)
+		}
+		per[e.Socket] = append(per[e.Socket], e.key())
+	}
+	return fmt.Sprint(per)
+}
+
+// TestFixesNameRecordedSteps: every fix names a step of the recording.
+func TestFixesNameRecordedSteps(t *testing.T) {
+	rec := loadRecording(t)
+	steps := map[string]int{}
+	for _, sc := range rec.Scenarios {
+		steps[sc.Name] = len(sc.Steps)
+	}
+	seen := map[string]bool{}
+	for _, f := range fixes {
+		if n, ok := steps[f.scenario]; !ok || f.step < 0 || f.step >= n {
+			t.Errorf("the %s fix names step %d of %q, which the recording does not have", f.bug, f.step, f.scenario)
+		}
+		key := fmt.Sprintf("%s/%d", f.scenario, f.step)
+		if seen[key] {
+			t.Errorf("two fixes name step %d of %q", f.step, f.scenario)
+		}
+		seen[key] = true
+	}
+}
+
 // canonical writes a JSON text with sorted keys, for comparing results.
 func canonical(raw string) string {
 	var v any
@@ -594,11 +686,15 @@ func TestNodeScenarios(t *testing.T) {
 					p.quietFor(10)
 				}
 				got := p.take()
-				if st.Call != "" && canonical(result) != canonical(string(s.Result)) {
-					t.Errorf("step %d %s: result\n node: %s\n   go: %s", i, st.Call, s.Result, result)
+				stepResult, events := s.Result, s.Events
+				if f, ok := fixFor(sc.Name, i); ok {
+					stepResult, events = f.apply(t, stepResult, events)
+				}
+				if st.Call != "" && canonical(result) != canonical(string(stepResult)) {
+					t.Errorf("step %d %s: result\n node: %s\n   go: %s", i, st.Call, stepResult, result)
 				}
 				want := map[string][]string{}
-				for _, raw := range s.Events {
+				for _, raw := range events {
 					var e event
 					if err := json.Unmarshal(raw, &e); err != nil {
 						t.Fatal(err)

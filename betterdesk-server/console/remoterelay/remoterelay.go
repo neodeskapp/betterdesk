@@ -4,7 +4,9 @@
 // the viewers' sockets /ws/remote-viewer/<id> get them and send input.
 // It also keeps the single-use tokens POST /api/bd/remote-agent-token
 // gives out for the agent's socket. Sessions and tokens live in this
-// process only, as they did in Node, and a session is never removed.
+// process only, as they did in Node. A session goes once it has neither
+// an agent nor a viewer, a token when its time is up and another is
+// issued.
 //
 // Where a message made the Node process end (a text message that is the
 // JSON null, a message the relay writes out again that is nested too
@@ -147,7 +149,7 @@ func (s *Service) nowMillis() int64 { return s.clock.Now().UnixMilli() }
 // IssueRemoteAgentToken makes the single-use token of a device's agent
 // socket, good for a minute, and replaces the device's earlier one
 // (issueRemoteAgentToken): 32 random bytes as hex, and the lifetime in
-// seconds.
+// seconds. The tokens whose time is up go at the same time.
 func (s *Service) IssueRemoteAgentToken(deviceID string) (token string, expiresIn int) {
 	b := make([]byte, 32)
 	if _, err := io.ReadFull(s.opts.Random, b); err != nil {
@@ -155,7 +157,13 @@ func (s *Service) IssueRemoteAgentToken(deviceID string) (token string, expiresI
 	}
 	token = hex.EncodeToString(b)
 	s.mu.Lock()
-	s.tokens[deviceID] = agentToken{token: token, expiresAt: s.nowMillis() + AgentTokenTTL.Milliseconds()}
+	now := s.nowMillis()
+	for id, entry := range s.tokens {
+		if now > entry.expiresAt {
+			delete(s.tokens, id)
+		}
+	}
+	s.tokens[deviceID] = agentToken{token: token, expiresAt: now + AgentTokenTTL.Milliseconds()}
 	s.mu.Unlock()
 	return token, int(AgentTokenTTL / time.Second)
 }
@@ -205,7 +213,7 @@ func (s *Service) SessionState(deviceID string) *SessionState {
 }
 
 // ActiveSessions lists the device ids that have a session, in the order
-// the sessions were made (getActiveSessions). Sessions are never removed.
+// the sessions were made (getActiveSessions).
 func (s *Service) ActiveSessions() []string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -222,6 +230,25 @@ func (s *Service) sessionLocked(deviceID string) *remoteSession {
 		s.order = append(s.order, deviceID)
 	}
 	return sess
+}
+
+// dropIfEmptyLocked removes a session that has neither an agent nor a
+// viewer, with its idle timer.
+func (s *Service) dropIfEmptyLocked(sess *remoteSession, deviceID string) {
+	if sess.agent != nil || len(sess.viewers) > 0 || s.sessions[deviceID] != sess {
+		return
+	}
+	if sess.idle != nil {
+		sess.idle.Stop()
+		sess.idle = nil
+	}
+	delete(s.sessions, deviceID)
+	for i, id := range s.order {
+		if id == deviceID {
+			s.order = append(s.order[:i:i], s.order[i+1:]...)
+			break
+		}
+	}
 }
 
 // broadcastLocked sends a message to every viewer that is open.

@@ -37,9 +37,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "sessions": [
-      "900100001"
-     ]
+     "sessions": []
     }
    }
   }
