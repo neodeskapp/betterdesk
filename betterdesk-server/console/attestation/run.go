@@ -29,13 +29,6 @@ type stable struct {
 	metrics     *metrics
 }
 
-// wasAborted says whether the test was asked to stop.
-func (r *run) wasAborted() bool {
-	r.s.mu.Lock()
-	defer r.s.mu.Unlock()
-	return r.aborted
-}
-
 // abortRequested is runState.abortRequested.
 func (r *run) abortRequested() bool {
 	r.s.mu.Lock()
@@ -43,13 +36,10 @@ func (r *run) abortRequested() bool {
 	return r.s.abortRequested
 }
 
-// pause waits for d (sleep(ms, abortSignal)). It fails with errAborted at
-// once when the test was aborted before, and the moment an abort comes
-// while it waits.
+// pause waits for d (sleep(ms, abortSignal)). It fails with errAborted the
+// moment an abort comes, and at once when the test was aborted before:
+// the abort channel is closed then.
 func (r *run) pause(ctx context.Context, d time.Duration) error {
-	if r.wasAborted() {
-		return errAborted
-	}
 	clock := r.s.opts.Clock
 	reached, err := clock.SleepUntil(ctx, clock.Now().Add(d), r.abort)
 	if err != nil {
