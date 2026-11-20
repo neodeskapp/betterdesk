@@ -312,6 +312,17 @@ func resetFix(c *resetCase, start serverStart) string {
 		}
 		return "BN6"
 	}
+	// BN7: the database is the one the server opens, DB_URL first; the
+	// script took DB_PATH first. Here DB_URL names a folder that is not
+	// there, and the accounts in DB_PATH's file keep their passwords
+	if dbURL, dbPath := c.Env["DB_URL"], c.Env["DB_PATH"]; dbURL != "" && dbPath != "" && dbURL != dbPath && c.Status == 0 {
+		c.Status, c.Stdout = 1, "Auth database (SQLite): "+dbURL+"\n"
+		c.Stderr = "Error: Cannot open database because the directory does not exist\n"
+		for i := range c.State.Rows {
+			c.State.Rows[i].Old, c.State.Rows[i].Verifies, c.State.Rows[i].Length = true, false, 60
+		}
+		return "BN7"
+	}
 	return ""
 }
 
@@ -588,6 +599,68 @@ func TestResetPasswordMakesTheUsersTableOfAServerStart(t *testing.T) {
 		t.Errorf("PostgreSQL users columns\n got %v\nwant %v", got, start.postgresColumns)
 	}
 	startServerSchema(t, pgDSN)
+}
+
+// reset-password writes into the database the server opens: DB_URL first,
+// by its scheme, where the installers put a PostgreSQL install's URL;
+// then the console's keys (BN7).
+func TestResetPasswordUsesTheServersDatabase(t *testing.T) {
+	root := t.TempDir()
+	serverFile, consoleFile := filepath.Join(root, "server.sqlite3"), filepath.Join(root, "console.sqlite3")
+	accountIn := func(file string) bool {
+		sdb, err := sql.Open("sqlite", "file:"+file+"?mode=ro")
+		if err != nil {
+			return false
+		}
+		defer sdb.Close()
+		var n int
+		return sdb.QueryRow("SELECT count(*) FROM users WHERE username = 'admin'").Scan(&n) == nil && n == 1
+	}
+	// A file in DB_URL wins over DB_PATH and over DB_TYPE=postgres
+	for _, env := range []map[string]string{
+		{"DB_URL": serverFile, "DB_PATH": consoleFile},
+		{"DB_URL": serverFile, "DB_TYPE": "postgres", "DATABASE_URL": "postgres://nobody@127.0.0.1:1/none"},
+	} {
+		env["CONSOLE_DIR"] = root
+		if status, out := runReset(t, env, root); status != 0 || !strings.Contains(out, "Auth database (SQLite): "+serverFile+"\n") {
+			t.Errorf("%v: %d %q", env, status, out)
+		}
+		if !accountIn(serverFile) || accountIn(consoleFile) {
+			t.Errorf("%v: the account is not in DB_URL's file alone", env)
+		}
+	}
+
+	dsn := os.Getenv(storetest.PostgresEnv)
+	if dsn == "" {
+		t.Logf("no %s: PostgreSQL is left out", storetest.PostgresEnv)
+		return
+	}
+	// A postgres:// DB_URL is PostgreSQL, without DB_TYPE and next to a
+	// DB_PATH
+	pgDSN, schema, drop := freshSchema(t, dsn, "bd_reset_url")
+	defer drop()
+	for _, env := range []map[string]string{
+		{"DB_URL": pgDSN},
+		{"DB_URL": strings.Replace(pgDSN, "postgres://", "postgresql://", 1), "DB_PATH": consoleFile},
+	} {
+		env["CONSOLE_DIR"] = root
+		if status, out := runReset(t, env, root); status != 0 || !strings.HasPrefix(out, "Auth database (PostgreSQL): ") {
+			t.Errorf("%v: %d %q", env, status, out)
+		}
+	}
+	cfg, err := pgx.ParseConfig(dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	admin := stdlib.OpenDB(*cfg)
+	defer admin.Close()
+	var n int
+	if err := admin.QueryRow("SELECT count(*) FROM " + schema + ".users WHERE username = 'admin'").Scan(&n); err != nil || n != 1 {
+		t.Errorf("PostgreSQL account: %d %v", n, err)
+	}
+	if _, err := os.Stat(consoleFile); err == nil {
+		t.Error("a file named by DB_PATH was made")
+	}
 }
 
 // A password that is too short is refused before anything is opened: the

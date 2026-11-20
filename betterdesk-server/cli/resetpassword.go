@@ -45,9 +45,11 @@ type resetOptions struct {
 // ResetPassword is "reset-password [username]", what reset-password.js
 // did: it sets the password of an account, or makes an admin account of
 // that name when there is none (the name is "admin" when not given), on
-// the database the console uses (DB_TYPE postgres with DATABASE_URL, else
-// the SQLite file DB_PATH, DB_URL, or db_v2.sqlite3 in KEYS_PATH,
-// RUSTDESK_DIR or the data folder). It reads the console's env file for
+// the database the server and its console use: DB_URL as the server reads
+// it (PostgreSQL for a postgres:// URL, else a SQLite file), else DB_TYPE
+// postgres with DATABASE_URL, else the SQLite file DB_PATH, or
+// db_v2.sqlite3 in KEYS_PATH, RUSTDESK_DIR or the data folder. It reads
+// the console's env file for
 // what the environment does not set, as the script read its .env: the
 // file BETTERDESK_ENV_FILE names (main loads it), else the .env in
 // CONSOLE_DIR. A database without a users table is first set up as a
@@ -122,14 +124,22 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 
 	ctx := context.Background()
 	var users *sql.DB
+	// The database is the one the server opens: DB_URL by its scheme,
+	// then the console's keys
 	dialect, dsn := "sqlite", ""
-	if dbType := strings.ToLower(orElse(getenv("DB_TYPE"), "sqlite")); dbType == "postgres" || dbType == "postgresql" {
-		dialect = "postgres"
-		dsn = getenv("DATABASE_URL")
+	dbURL := getenv("DB_URL")
+	dbType := strings.ToLower(orElse(getenv("DB_TYPE"), "sqlite"))
+	switch {
+	case isPostgresURL(dbURL):
+		dialect, dsn = "postgres", dbURL
+	case dbURL == "" && (dbType == "postgres" || dbType == "postgresql"):
+		dialect, dsn = "postgres", getenv("DATABASE_URL")
 		if dsn == "" {
 			fmt.Fprintln(e, "DB_TYPE=postgres but DATABASE_URL is not set")
 			return 1
 		}
+	}
+	if dialect == "postgres" {
 		u, err := url.Parse(dsn)
 		if err != nil || u.Scheme == "" {
 			fmt.Fprintln(e, "Error: Invalid URL")
@@ -266,10 +276,18 @@ func firstLine(r io.Reader) (line string, ok bool, err error) {
 	return serverinfo.DecodeUTF8([]byte(text)), true, nil
 }
 
-// sqlitePath is the database file reset-password.js opened: DB_PATH, else
-// DB_URL, else db_v2.sqlite3 in KEYS_PATH, RUSTDESK_DIR or the data folder.
+// isPostgresURL reports whether a DB_URL names PostgreSQL, as the server
+// tells it (db.Open).
+func isPostgresURL(dsn string) bool {
+	lower := strings.ToLower(dsn)
+	return strings.HasPrefix(lower, "postgres://") || strings.HasPrefix(lower, "postgresql://")
+}
+
+// sqlitePath is the SQLite file of the server and the console: DB_URL,
+// else DB_PATH, else db_v2.sqlite3 in KEYS_PATH, RUSTDESK_DIR or the data
+// folder.
 func sqlitePath(getenv func(string) string, opts resetOptions) string {
-	if p := orElse(getenv("DB_PATH"), getenv("DB_URL")); p != "" {
+	if p := orElse(getenv("DB_URL"), getenv("DB_PATH")); p != "" {
 		return p
 	}
 	dir := orElse(getenv("KEYS_PATH"), getenv("RUSTDESK_DIR"))
