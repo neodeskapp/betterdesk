@@ -10,6 +10,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/reqquery"
+	"github.com/unitronix/betterdesk-server/console/store"
 )
 
 // The client audit records: connections, file transfers and alarms that
@@ -138,13 +139,17 @@ func (h *handlers) reportFile(w http.ResponseWriter, r *http.Request) {
 			files = append(files, goapi.NewObject("name", sanitize(name, maxPathLen), "size", size))
 		}
 	}
+	// is_file is a boolean in the console's own PostgreSQL table and an
+	// integer in the API server's and on SQLite: the flag is written as the
+	// table the store found takes it (DECISIONS D2)
 	isFile := member(body, "is_file") != false
 	var fileFlag jsbind.Value
-	if h.d.Store.IsPostgres() {
+	switch {
+	case h.d.Store.Shape().Table("audit_files").Type("is_file") == store.TypeBoolean:
 		fileFlag = jsbind.Bool(isFile)
-	} else if isFile {
+	case isFile:
 		fileFlag = jsbind.Number(1)
-	} else {
+	default:
 		fileFlag = jsbind.Number(0)
 	}
 	err := h.store.exec(r.Context(), `

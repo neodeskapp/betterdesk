@@ -159,11 +159,18 @@ func enableTOTP(ctx context.Context, q store.Querier, id int64, codesJSON string
 	return nil
 }
 
-func disableTOTP(ctx context.Context, q store.Querier, id int64) error {
-	query := q.Pick(
-		`UPDATE users SET totp_enabled = 0, totp_secret = NULL, totp_recovery_codes = NULL WHERE id = ?`,
-		`UPDATE users SET totp_enabled = FALSE, totp_secret = NULL, totp_recovery_codes = NULL WHERE id = ?`)
-	if _, err := q.Exec(ctx, query, id); err != nil {
+// disableTOTP deletes the secret and the recovery codes. The API server's
+// users table takes no NULL secret: there the secret is written as "",
+// which reads as none on both sides (DECISIONS D2).
+func disableTOTP(ctx context.Context, db *store.DB, id int64) error {
+	var secret any
+	if db.Shape().Table("users").Column("totp_secret").NotNull {
+		secret = ""
+	}
+	query := db.Pick(
+		`UPDATE users SET totp_enabled = 0, totp_secret = ?, totp_recovery_codes = NULL WHERE id = ?`,
+		`UPDATE users SET totp_enabled = FALSE, totp_secret = ?, totp_recovery_codes = NULL WHERE id = ?`)
+	if _, err := db.Exec(ctx, query, secret, id); err != nil {
 		return fmt.Errorf("turn off two-factor sign-in for user %d: %w", id, err)
 	}
 	return nil

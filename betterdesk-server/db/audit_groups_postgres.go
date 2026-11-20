@@ -88,22 +88,28 @@ func (pg *PostgresDB) CountAuditConnections(f AuditFilter) (int, error) {
 
 // ── Audit: File Transfers ─────────────────────────────────────────────
 
-// InsertAuditFile records a file-transfer event.
+// InsertAuditFile records a file-transfer event. is_file is written as the
+// column takes it: an integer, or a boolean in the web console's shape.
 func (pg *PostgresDB) InsertAuditFile(a *AuditFile) error {
 	filesJSON := a.FilesJSON
 	if filesJSON == "" {
 		filesJSON = "[]"
 	}
+	var isFile any = a.IsFile
+	if pg.auditFileFlagBool.Load() {
+		isFile = a.IsFile != 0
+	}
 	_, err := pg.pool.Exec(pg.ctx,
 		`INSERT INTO audit_files (host_id, host_uuid, peer_id, direction, path, is_file, num_files, files_json, ip, peer_name)
 		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-		a.HostID, a.HostUUID, a.PeerID, a.Direction, a.Path, a.IsFile, a.NumFiles, filesJSON, a.IP, a.PeerName)
+		a.HostID, a.HostUUID, a.PeerID, a.Direction, a.Path, isFile, a.NumFiles, filesJSON, a.IP, a.PeerName)
 	return err
 }
 
 // ListAuditFiles returns file-transfer audit records matching the filter.
+// is_file reads as 1 or 0 in either shape of the table.
 func (pg *PostgresDB) ListAuditFiles(f AuditFilter) ([]*AuditFile, error) {
-	q := `SELECT id, host_id, host_uuid, peer_id, direction, path, is_file, num_files, files_json, ip, peer_name, created_at::text
+	q := `SELECT id, host_id, host_uuid, peer_id, direction, path, is_file::int, num_files, files_json, ip, peer_name, created_at::text
 	      FROM audit_files WHERE 1=1`
 	var args []any
 	i := 1

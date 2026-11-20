@@ -1,7 +1,6 @@
 package store_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -149,21 +148,68 @@ func sharedTableOperations(t *testing.T, sdb *store.DB, goServerFirst bool) {
 	if rows := queryStrings(t, sdb, `SELECT data FROM address_books`); len(rows) != 1 || rows[0][0] != `{"peers":[]}` {
 		t.Errorf("console reads address books %v", rows)
 	}
-	saveErr := gdb.SaveAddressBook("from-go", "legacy", `{"peers":["1"]}`)
-	if byName {
-		if saveErr != nil {
-			t.Errorf("signal server: save address book: %v", saveErr)
-		}
-		if data, err := gdb.GetAddressBook("from-go", "legacy"); err != nil || data != `{"peers":["1"]}` {
-			t.Errorf("signal server: read its address book = %q, %v", data, err)
-		}
-		if data, err := gdb.GetAddressBook("from-console", "legacy"); err != nil || data != `{"peers":[]}` {
-			t.Errorf("signal server: read the console's address book = %q, %v", data, err)
-		}
-	} else if saveErr == nil || !strings.Contains(saveErr.Error(), "username") {
-		// BUGS.md D5: the signal server cannot use the table in the
-		// console's SQLite shape. When that is fixed, this branch goes.
-		t.Errorf("signal server on the console's SQLite address_books: error = %v, want the known failure on the username column", saveErr)
+	// The signal server follows the shape it finds (BUGS D5)
+	if err := gdb.SaveAddressBook("from-go", "legacy", `{"peers":["1"]}`); err != nil {
+		t.Errorf("signal server: save address book: %v", err)
+	}
+	if err := gdb.SaveAddressBook("from-go", "legacy", `{"peers":["2"]}`); err != nil {
+		t.Errorf("signal server: save address book again: %v", err)
+	}
+	if data, err := gdb.GetAddressBook("from-go", "legacy"); err != nil || data != `{"peers":["2"]}` {
+		t.Errorf("signal server: read its address book = %q, %v", data, err)
+	}
+	if data, err := gdb.GetAddressBook("from-console", "legacy"); err != nil || data != `{"peers":[]}` {
+		t.Errorf("signal server: read the console's address book = %q, %v", data, err)
+	}
+	if rows := queryStrings(t, sdb, `SELECT data FROM address_books WHERE data = '{"peers":["2"]}'`); len(rows) != 1 {
+		t.Errorf("console reads the signal server's address book %v", rows)
+	}
+	goUser, err := gdb.GetUser("from-go")
+	if err != nil || goUser == nil {
+		t.Fatalf("signal server: read user from-go: %v", err)
+	}
+	if err := gdb.RenameUser(goUser.ID, "from-go-renamed"); err != nil {
+		t.Errorf("signal server: rename a user with an address book: %v", err)
+	}
+	if data, err := gdb.GetAddressBook("from-go-renamed", "legacy"); err != nil || data != `{"peers":["2"]}` {
+		t.Errorf("signal server: the renamed user's address book = %q, %v", data, err)
+	}
+
+	// Client file transfer rows: the flag is a boolean in the console's
+	// PostgreSQL shape and an integer everywhere else; both sides write
+	// and read it (BUGS D5)
+	if err := gdb.InsertAuditFile(&serverdb.AuditFile{HostID: "100", PeerID: "200", Path: "/a", IsFile: 1}); err != nil {
+		t.Errorf("signal server: insert file audit row: %v", err)
+	}
+	if err := gdb.InsertAuditFile(&serverdb.AuditFile{HostID: "101", PeerID: "200", Path: "/b", IsFile: 0}); err != nil {
+		t.Errorf("signal server: insert folder audit row: %v", err)
+	}
+	mustExec(t, sdb, `INSERT INTO audit_files (host_id, host_uuid, peer_id, direction, path, is_file, num_files, files_json, ip, peer_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		"300", "", "400", 0, "/c", store.BoolArg(shape.Table("audit_files").Type("is_file"), false), 1, "[]", "10.0.0.2", "")
+	files, err := gdb.ListAuditFiles(serverdb.AuditFilter{Limit: 10})
+	if err != nil || len(files) != 3 {
+		t.Errorf("signal server lists %d file audit rows, %v, want 3", len(files), err)
+	}
+	flags := map[string]int{}
+	for _, f := range files {
+		flags[f.HostID] = f.IsFile
+	}
+	if flags["100"] != 1 || flags["101"] != 0 || flags["300"] != 0 {
+		t.Errorf("signal server reads the flags %v", flags)
+	}
+	if rows := queryStrings(t, sdb, `SELECT host_id FROM audit_files ORDER BY host_id`); len(rows) != 3 {
+		t.Errorf("console reads file audit rows %v", rows)
+	}
+
+	// The second factor goes off on either shape of users: the signal
+	// server's takes no NULL secret (BUGS D5)
+	var secret any
+	if shape.Table("users").Column("totp_secret").NotNull {
+		secret = ""
+	}
+	mustExec(t, sdb, `UPDATE users SET totp_secret = ?, totp_recovery_codes = NULL WHERE username = ?`, secret, "from-console")
+	if u, err := gdb.GetUser("from-console"); err != nil || u == nil || u.TOTPSecret != "" {
+		t.Errorf("signal server: read the user without a second factor = %+v, %v", u, err)
 	}
 
 	// Client audit rows

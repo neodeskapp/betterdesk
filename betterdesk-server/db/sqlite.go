@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -18,6 +19,11 @@ type SQLiteDB struct {
 	db   *sql.DB
 	mu   sync.RWMutex // serialize writes (SQLite limitation)
 	gate *availabilityGate
+
+	// addressBooksByUserID says address_books has the web console's own
+	// SQLite shape, keyed by user_id instead of username: the table was
+	// there before this server made its own. Migrate reads it.
+	addressBooksByUserID atomic.Bool
 }
 
 // OpenSQLite opens or creates a SQLite database at the given path.
@@ -776,6 +782,10 @@ func (s *SQLiteDB) Migrate() error {
 	if err := s.migrateBillingOrgContracts(); err != nil {
 		return err
 	}
+
+	// A table both programs create keeps the shape of the one that made
+	// it; writes follow that shape (DECISIONS D2)
+	s.addressBooksByUserID.Store(!s.hasColumn("address_books", "username"))
 
 	return nil
 }
@@ -2271,10 +2281,13 @@ func (s *SQLiteDB) RenameUser(id int64, newUsername string) error {
 
 	// Address books are keyed by (username, ab_type): rename in place, and drop
 	// any book already stored under the new name to avoid a PK conflict.
-	_, _ = tx.Exec(`DELETE FROM address_books WHERE username = ?`, newUsername)
-	if _, err := tx.Exec(`UPDATE address_books SET username = ? WHERE username = ?`, newUsername, oldUsername); err != nil {
-		if !isMissingTable(err) {
-			return fmt.Errorf("db: RenameUser address books: %w", err)
+	// The console's own shape keys them by user id, which a rename keeps.
+	if !s.addressBooksByUserID.Load() {
+		_, _ = tx.Exec(`DELETE FROM address_books WHERE username = ?`, newUsername)
+		if _, err := tx.Exec(`UPDATE address_books SET username = ? WHERE username = ?`, newUsername, oldUsername); err != nil {
+			if !isMissingTable(err) {
+				return fmt.Errorf("db: RenameUser address books: %w", err)
+			}
 		}
 	}
 
@@ -2659,31 +2672,40 @@ func (s *SQLiteDB) CleanupExpiredTokens() (int64, error) {
 
 // ── Address Book ──────────────────────────────────────────────────────
 
-// GetAddressBook retrieves the address book data for a user.
+// GetAddressBook retrieves the address book data for a user. On the web
+// console's own shape of the table the book is found by the user's id.
 func (s *SQLiteDB) GetAddressBook(username, abType string) (string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
+	query := `SELECT data FROM address_books WHERE username = ? AND ab_type = ?`
+	if s.addressBooksByUserID.Load() {
+		query = `SELECT data FROM address_books WHERE user_id = (SELECT id FROM users WHERE username = ?) AND ab_type = ?`
+	}
 	var data string
-	err := s.db.QueryRow(
-		`SELECT data FROM address_books WHERE username = ? AND ab_type = ?`,
-		username, abType).Scan(&data)
+	err := s.db.QueryRow(query, username, abType).Scan(&data)
 	if err == sql.ErrNoRows {
 		return "{}", nil
 	}
 	return data, err
 }
 
-// SaveAddressBook stores the address book data for a user (upsert).
+// SaveAddressBook stores the address book data for a user (upsert). On the
+// web console's own shape of the table the book is stored under the user's
+// id; a user that does not exist has none.
 func (s *SQLiteDB) SaveAddressBook(username, abType, data string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	_, err := s.db.Exec(
-		`INSERT INTO address_books (username, ab_type, data, updated_at)
+	query := `INSERT INTO address_books (username, ab_type, data, updated_at)
 		 VALUES (?, ?, ?, datetime('now'))
-		 ON CONFLICT(username, ab_type) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`,
-		username, abType, data)
+		 ON CONFLICT(username, ab_type) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`
+	if s.addressBooksByUserID.Load() {
+		query = `INSERT INTO address_books (user_id, ab_type, data, updated_at)
+		 VALUES ((SELECT id FROM users WHERE username = ?), ?, ?, datetime('now'))
+		 ON CONFLICT(user_id, ab_type) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`
+	}
+	_, err := s.db.Exec(query, username, abType, data)
 	return err
 }
 

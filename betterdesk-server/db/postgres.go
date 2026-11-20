@@ -6,6 +6,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -25,6 +26,12 @@ type PostgresDB struct {
 	notifyFunc func(channel, payload string)
 
 	gate *availabilityGate
+
+	// auditFileFlagBool says audit_files.is_file is a boolean, as in the
+	// web console's own shape of the table (this server's is an integer):
+	// the table was there before this server made its own. Migrate reads
+	// it.
+	auditFileFlagBool atomic.Bool
 }
 
 // OpenPostgres connects to a PostgreSQL server. The dsn must use the
@@ -773,6 +780,16 @@ func (pg *PostgresDB) Migrate() error {
 	if err := pg.migrateBillingOrgContracts(); err != nil {
 		return err
 	}
+
+	// A table both programs create keeps the shape of the one that made
+	// it; writes follow that shape (DECISIONS D2)
+	var flagType string
+	if err := pg.pool.QueryRow(pg.ctx, `
+		SELECT data_type FROM information_schema.columns
+		WHERE table_schema = current_schema() AND table_name = 'audit_files' AND column_name = 'is_file'`).Scan(&flagType); err != nil {
+		return fmt.Errorf("db: read the shape of audit_files: %w", err)
+	}
+	pg.auditFileFlagBool.Store(flagType == "boolean")
 
 	return nil
 }
