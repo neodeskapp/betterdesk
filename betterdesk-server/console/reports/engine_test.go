@@ -255,6 +255,20 @@ func withoutObjectMembers(node, got string) error {
 	return nil
 }
 
+// RP4: a device whose info is the JSON null, or on SQLite whose tags are
+// no text, is read with info {}; the device and security reports, which
+// Node failed, count it.
+var _ = fixEngine("RP4", map[string]engineFix{
+	`device info that is null {"type":"devices"}`: {has: []string{
+		`"total_devices":2,"online":0,"offline":2,"banned":0,"platform_distribution":{"Fine":1,"Unknown":1}`,
+	}},
+	`device info that is null {"type":"security"}`: {has: []string{`"banned_devices":[]`}},
+	`device tags that are no text {"type":"devices"}`: {dialect: "sqlite", has: []string{
+		`"total_devices":1,"online":0,"offline":1,"banned":0,"platform_distribution":{"Unknown":1}`,
+	}},
+	`device tags that are no text {"type":"security"}`: {dialect: "sqlite", has: []string{`"banned_devices":[]`}},
+})
+
 // engineFixOf is the fix of a case on db, with the key it is listed under.
 func engineFixOf(db *store.DB, world, body string) (string, engineFix, bool) {
 	for _, key := range []string{world + " " + body, "* " + body} {
@@ -319,6 +333,42 @@ func TestNamesEveryObjectHasCount(t *testing.T) {
 			"tickets": `"category_distribution":{"__proto__":1,"toString":1},"priority_distribution":{"valueOf":1,"low":1}`,
 			"activity": `"top_applications":[{"name":"constructor","category":"x","total_secs":30,"sessions":1,"devices":1},` +
 				`{"name":"__proto__","category":"y","total_secs":20,"sessions":1,"devices":1},{"name":"Chrome","category":"browser","total_secs":10,"sessions":1,"devices":1}]`,
+		} {
+			report, err := e.Generate(ctx, jsbind.String(typ), Filters{})
+			if err != nil {
+				t.Fatalf("%s: %v", typ, err)
+			}
+			if got, _ := report.MarshalJSON(); !strings.Contains(string(got), want) {
+				t.Errorf("%s: %s\nwant %s", typ, got, want)
+			}
+		}
+	})
+}
+
+// TestReportsSurviveADeviceWithNullInfo: a device whose info is the JSON
+// null, or on SQLite whose tags are no text, is read with info {} and
+// cannot fail the device and security reports (BUGS.md RP4).
+func TestReportsSurviveADeviceWithNullInfo(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		queries := []string{
+			`INSERT INTO peer (id, note, info, status_online, is_banned, banned_reason, is_deleted) VALUES
+				('1', 'Front desk', ` + db.Pick(`'null'`, `'"null"'`) + `, FALSE, TRUE, 'Stolen', FALSE),
+				('2', '', '{"os":"Linux"}', TRUE, FALSE, '', FALSE)`,
+		}
+		if !db.IsPostgres() {
+			queries = append(queries, `INSERT INTO peer (id, info, status_online, is_banned, is_deleted, tags) VALUES ('3', '{"os":"Linux"}', 0, 0, 0, X'00')`)
+		}
+		for _, q := range queries {
+			if _, err := db.Exec(ctx, q); err != nil {
+				t.Fatal(err)
+			}
+		}
+		e := New(Options{DB: db})
+		linux := db.Pick(`"Linux":2`, `"Linux":1`)
+		for typ, want := range map[string]string{
+			"devices":  `"platform_distribution":{"Unknown":1,` + linux + `}`,
+			"security": `"banned_devices":[{"id":"1","hostname":"Front desk","ip":"","ban_reason":"Stolen"}]`,
 		} {
 			report, err := e.Generate(ctx, jsbind.String(typ), Filters{})
 			if err != nil {

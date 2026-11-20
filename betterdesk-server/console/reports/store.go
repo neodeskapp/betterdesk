@@ -2,7 +2,6 @@ package reports
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -19,14 +18,6 @@ import (
 // getAllPeers and getPeerStats first copied the signal server's devices
 // into the console's peer table (syncGoPeers). Options.SyncPeers is that
 // copy.
-
-// errNullInfo is the TypeError parsePeer threw for a device whose info is
-// the JSON text null.
-var errNullInfo = errors.New("Cannot read properties of null (reading 'hostname')")
-
-// errTagsNotText is the TypeError parsePeer threw on SQLite for tags that
-// are neither empty nor text.
-var errTagsNotText = errors.New("row.tags.split is not a function")
 
 func (e *Engine) rows(ctx context.Context, query string, args ...any) ([]*goapi.Object, error) {
 	return SelectRows(ctx, e.db, e.clock.loc, query, args...)
@@ -50,19 +41,15 @@ func (e *Engine) allPeers(ctx context.Context) ([]peer, error) {
 	}
 	peers := make([]peer, 0, len(rows))
 	for _, row := range rows {
-		p, err := e.parsePeer(row)
-		if err != nil {
-			return nil, err
-		}
-		peers = append(peers, p)
+		peers = append(peers, e.parsePeer(row))
 	}
 	return peers, nil
 }
 
 // parsePeer reads a row of peer as parsePeer of the adapter did: the info
-// column is JSON (text on SQLite, jsonb on PostgreSQL); info that is the
-// JSON null makes it throw.
-func (e *Engine) parsePeer(row *goapi.Object) (peer, error) {
+// column is JSON (text on SQLite, jsonb on PostgreSQL). Info that is no
+// object has no members, like {}; the tags are not read.
+func (e *Engine) parsePeer(row *goapi.Object) peer {
 	var info any = goapi.NewObject()
 	raw := row.Get("info")
 	if e.db.IsPostgres() {
@@ -81,16 +68,6 @@ func (e *Engine) parsePeer(row *goapi.Object) (peer, error) {
 			info = parsed
 		}
 	}
-	if info == nil {
-		return peer{}, errNullInfo
-	}
-	if !e.db.IsPostgres() {
-		if tags := row.Get("tags"); Truthy(tags) {
-			if _, isText := tags.(string); !isText {
-				return peer{}, errTagsNotText
-			}
-		}
-	}
 	p := peer{id: row.Get("id")}
 	hostname, found := prop(info, "hostname")
 	p.hostname = or(row.Get("note"), true, or(hostname, found, ""))
@@ -105,7 +82,7 @@ func (e *Engine) parsePeer(row *goapi.Object) (peer, error) {
 	} else {
 		p.online, p.banned = row.Get("status_online") == float64(1), row.Get("is_banned") == float64(1)
 	}
-	return p, nil
+	return p
 }
 
 // peerStats is getPeerStats(): {total, online, banned, offline}.
