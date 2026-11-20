@@ -59,7 +59,7 @@ FROM alpine:3.22
 
 LABEL maintainer="UNITRONIX"
 LABEL description="BetterDesk — server and web console in one process"
-LABEL version="3.5.264"
+LABEL version="3.5.265"
 
 # Runtime packages (retry for transient DNS failures). sqlite stays for the
 # admin credential bootstrap, which counts users with the sqlite3 CLI.
