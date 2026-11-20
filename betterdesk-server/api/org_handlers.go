@@ -147,8 +147,9 @@ func (s *Server) handleListOrgs(w http.ResponseWriter, r *http.Request) {
 		orgs = []*db.Organization{}
 	}
 
-	// Data scoping: non-admin users only see orgs they belong to
-	if userRole != auth.RoleAdmin {
+	// Data scoping: users below the super admin roles only see orgs they
+	// belong to
+	if !auth.IsSuperAdminRole(userRole) {
 		var filtered []*db.Organization
 		for _, org := range orgs {
 			member, err := s.db.GetOrgUserByUsername(org.ID, username)

@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/config"
 	"github.com/unitronix/betterdesk-server/db"
 	"github.com/unitronix/betterdesk-server/peer"
@@ -63,6 +66,52 @@ func TestAssignUserToOrgAcceptsNumericOrgID(t *testing.T) {
 	}
 	if orgUser.OrgID != "42" || orgUser.ServerUserID != user.ID || orgUser.Role != "operator" {
 		t.Fatalf("unexpected org user: %+v", orgUser)
+	}
+}
+
+// TestListOrganizationsSuperAdminSeesAll: the organization list skips the
+// membership filter for both super admin roles, admin and super_admin;
+// other roles see the organizations they belong to (BUGS G15).
+func TestListOrganizationsSuperAdminSeesAll(t *testing.T) {
+	srv, database := newInternalServer(t, nil)
+	for _, org := range []*db.Organization{
+		{ID: "org-a", Name: "Acme", Slug: "acme", CreatedAt: time.Now().UTC()},
+		{ID: "org-b", Name: "Beta", Slug: "beta", CreatedAt: time.Now().UTC()},
+	} {
+		if err := database.CreateOrganization(org); err != nil {
+			t.Fatal(err)
+		}
+	}
+	member := &db.User{Username: "member", PasswordHash: "hash", Role: auth.RoleOperator}
+	if err := database.CreateUser(member); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := database.LinkUserToOrg("org-b", member.ID, "operator"); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		id   Identity
+		want string
+	}{
+		{Identity{Username: "root", Role: auth.RoleSuperAdmin}, "org-a,org-b"},
+		{Identity{Username: "boss", Role: auth.RoleAdmin}, "org-a,org-b"},
+		{Identity{Username: "member", Role: auth.RoleOperator}, "org-b"},
+	} {
+		status, body := callAs(t, srv, c.id, http.MethodGet, "/api/org", "")
+		var list struct {
+			Organizations []db.Organization `json:"organizations"`
+		}
+		if err := json.Unmarshal([]byte(body), &list); status != http.StatusOK || err != nil {
+			t.Fatalf("list as %s: %d %s", c.id.Role, status, body)
+		}
+		var ids []string
+		for _, org := range list.Organizations {
+			ids = append(ids, org.ID)
+		}
+		sort.Strings(ids)
+		if got := strings.Join(ids, ","); got != c.want {
+			t.Errorf("organizations of %s: %q, want %q", c.id.Role, got, c.want)
+		}
 	}
 }
 
